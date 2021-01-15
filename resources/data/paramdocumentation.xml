@@ -10,15 +10,16 @@
   <!-- Special controls - bit of a hack but here they are -->
   <special id="scene-select" help_url="#the-scene-concept"/>
   <special id="osc-select" help_url="#oscillators"/>
-  <special id="mpe-menu" help_url="#mpe"/>
+  <special id="mpe-menu" help_url="#mpe-options"/>
   <special id="tun-menu" help_url="#tuning-options"/>
   <special id="zoom-menu" help_url="#zoom"/>
   <special id="patch-browser" help_url="#patch-browser"/>
   <special id="wavetables" help_url="#wavetable"/>
-  <special id="mseg-editor" help_url="#mseg-editor"/>
+  <special id="mseg-editor" help_url="#multi-segment-envelope-generator-mseg"/>
 
-  <special id="macro-modbutton" help_url="#assignable-controllers"/>
+  <special id="macro-modbutton" help_url="#macros"/>
   <special id="lfo-modbutton" help_url="#lfos"/>
+  <special id="internalmod-modbutton" help_url="#internal-modulators"/>
   <special id="other-modbutton" help_url="#voice-and-note-properties"/>
 
   <!-- Params for CG 0 -->
@@ -31,33 +32,33 @@
   <param id="filter.waveshaper_drive" help_url="#other-sound-shaping-parameters"/>
   <param id="filter.waveshaper_type" help_url="#other-sound-shaping-parameters"/>
   <param id="global.active_scene" help_url="#scene-select-and-scene-mode"/>
-  <param id="global.character" help_url="#fx-bypass-character-and-master-volume"/>
+  <param id="global.character" help_url="#fx-bypass-character-and-global-volume"/>
   <param id="scene.drift" help_url="#other-sound-generation-parameters"/>
   <param id="scene.fmdepth" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.fmrouting" help_url="#other-sound-shaping-parameters"/>
   <param id="global.fx1_return" help_url="#fx-section"/>
   <param id="global.fx2_return" help_url="#fx-section"/>
-  <param id="global.fx_bypass" help_url="#fx-bypass-character-and-master-volume"/>
+  <param id="global.fx_bypass" help_url="#fx-bypass-character-and-global-volume"/>
   <param id="global.fx_disable" help_url="#fx-section"/>
   <param id="scene.gain" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.keytrack_root" help_url="#other-sound-shaping-parameters"/>
-  <param id="global.master_volume" help_url="#fx-bypass-character-and-master-volume"/>
+  <param id="global.volume" help_url="#fx-bypass-character-and-global-volume"/>
   <param id="scene.noise_color" help_url="#other-sound-generation-parameters"/>
-  <param id="scene.pan" help_url="#output-stage"/>
+  <param id="scene.pan" help_url="#scene-output"/>
   <param id="scene.pbrange_dn" help_url="#other-sound-generation-parameters"/>
   <param id="scene.pbrange_up" help_url="#other-sound-generation-parameters"/>
   <param id="scene.playmode" help_url="#other-sound-generation-parameters"/>
-  <param id="global.polylimit" help_url="#scene-select-and-scene-mode"/>
+  <param id="scene.polylimit" help_url="#scene-select-and-scene-mode"/>
   <param id="global.scene_mode" help_url="#scene-select-and-scene-mode"/>
-  <param id="scene.send_fx_1" help_url="#output-stage"/>
-  <param id="scene.send_fx_2" help_url="#output-stage"/>
-  <param id="global.splitkey" help_url="#scene-select-and-scene-mode"/>
+  <param id="scene.send_fx_1" help_url="#scene-output"/>
+  <param id="scene.send_fx_2" help_url="#scene-output"/>
+  <param id="scene.splitpoint" help_url="#scene-select-and-scene-mode"/>
   <param id="scene.velocity_sensitivity" help_url="#other-sound-shaping-parameters"/>
-  <param id="scene.volume" help_url="#output-stage"/>
-  <param id="scene.width" help_url="#output-stage"/>
+  <param id="scene.volume" help_url="#scene-output"/>
+  <param id="scene.width" help_url="#scene-output"/>
   <param id="scene.octave" help_url="#other-sound-generation-parameters"/>
   <param id="scene.pitch" help_url="#other-sound-generation-parameters"/>
-  <param id="scene.portatime" help_url="#other-sound-generation-parameters"/>
+  <param id="scene.portamento" help_url="#other-sound-generation-parameters"/>
 
   <!-- Params for CG 2 -->
   <param id="osc.keytrack" help_url=""/>
@@ -206,16 +207,16 @@
 
   <!-- Params for CG 6 -->
   <param id="lfo.amplitude" help_url="#parameters"/>
-  <param id="lfo.attack" help_url="#lfo-eg"/>
-  <param id="lfo.decay" help_url="#lfo-eg"/>
+  <param id="lfo.attack" help_url="#lfo-envelope-generator"/>
+  <param id="lfo.decay" help_url="#lfo-envelope-generator"/>
   <param id="lfo.deform" help_url="#parameters"/>
-  <param id="lfo.delay" help_url="#lfo-eg"/>
-  <param id="lfo.hold" help_url="#lfo-eg"/>
+  <param id="lfo.delay" help_url="#lfo-envelope-generator"/>
+  <param id="lfo.hold" help_url="#lfo-envelope-generator"/>
   <param id="lfo.phase" help_url="#parameters"/>
   <param id="lfo.rate" help_url="#parameters"/>
-  <param id="lfo.release" help_url="#lfo-eg"/>
+  <param id="lfo.release" help_url="#lfo-envelope-generator"/>
   <param id="lfo.shape" help_url="#parameters"/>
-  <param id="lfo.sustain" help_url="#lfo-eg"/>
+  <param id="lfo.sustain" help_url="#lfo-envelope-generator"/>
   <param id="lfo.triggermode" help_url="#parameters"/>
   <param id="lfo.unipolar" help_url="#parameters"/>
 
