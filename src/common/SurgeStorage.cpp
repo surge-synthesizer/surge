@@ -1064,6 +1064,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
       {
          clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
+         strncpy(clipboard_wt_names[0], getPatch().scene[scene].osc[entry].wavetable_display_name, 256 );
       }
       break;
    case cp_lfo:
@@ -1090,6 +1091,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
       for (int i = 0; i < n_oscs; i++)
       {
          clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
+         strncpy(clipboard_wt_names[i], getPatch().scene[scene].osc[i].wavetable_display_name, 256 );
       }
       clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
    }
@@ -1194,6 +1196,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
       for (int i = 0; i < n_oscs; i++)
       {
          getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
+         strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i], 256 );
       }
       getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
    }
@@ -1227,6 +1230,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
          if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
          {
             getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
+            strncpy(getPatch().scene[scene].osc[entry].wavetable_display_name, clipboard_wt_names[0], 256 );
          }
 
          // copy modroutings
