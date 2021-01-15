@@ -68,9 +68,23 @@ public:
    virtual const char* group_label(int id) override;
    virtual int group_label_ypos(int id) override;
 
-
 private:
-   BiquadFilter band1, band2, band3, band4, band5, band6, band7, band8, band9, band10, band11;
+   float freqs[11] = {30.f, 60.f, 120.f, 250.f, 500.f, 1000.f, 2000.f, 4000.f, 8000.f, 12000.f, 16000.f};
+   std::string band_names[11] =
+   {
+      "30 Hz",
+      "60 Hz",
+      "120 Hz",
+      "250 Hz",
+      "500 Hz",
+      "1 kHz",
+      "2 kHz",
+      "4 kHz",
+      "8 kHz",
+      "12 kHz",
+      "16 kHz",
+   };
+   std::array<BiquadFilter, 11> bands;
    int bi; // block increment (to keep track of events not occurring every n blocks)
 };
 
