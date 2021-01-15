@@ -1011,6 +1011,7 @@ private:
    MSEGStorage clipboard_msegs[n_lfos];
    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
    Wavetable clipboard_wt[n_oscs];
+   char clipboard_wt_names[n_oscs][256];
    MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
 
 public:

@@ -82,6 +82,7 @@ struct MSEGControlRegion : public CViewContainer, public Surge::UI::SkinConsumin
 struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, public Surge::UI::CursorControlAdapter<MSEGCanvas>
 {
    MSEGCanvas(const CRect& size,
+              SurgeStorage *storage,
               LFOStorage* lfodata,
               MSEGStorage* ms,
               MSEGEditor::State* eds,
@@ -90,6 +91,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
        : CControl(size), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr)
    {
       setSkin( skin, b );
+      this->storage = storage;
       this->ms = ms;
       this->eds = eds;
       this->lfodata = lfodata;
@@ -2075,7 +2077,12 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                       return m;
                    };
 
-      contextMenu->addEntry( "[?] MSEG Segment" );
+      auto msurl = storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor" ) : std::string();
+      auto hurl = SurgeGUIEditor::fullyResolvedHelpURL( msurl );
+
+      addCb( contextMenu, "[?] MSEG Segment", [hurl](){
+        Surge::UserInteractions::openURL(hurl);
+      } );
 
       contextMenu->addSeparator();
 
@@ -2406,6 +2413,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    MSEGEditor::State *eds;
    LFOStorage *lfodata;
    MSEGControlRegion *controlregion = nullptr;
+   SurgeStorage *storage = nullptr;
    float loopDragTime = -1, loopDragEnd = -1;
    bool loopDragIsStart = false;
 
@@ -2807,7 +2815,7 @@ struct MSEGMainEd : public CViewContainer {
 
       int controlHeight = 35;
 
-      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), lfodata, ms, eds, skin, bmp );
+      auto msegCanv = new MSEGCanvas( CRect( CPoint( 0, 0 ), CPoint( size.getWidth(), size.getHeight() - controlHeight ) ), storage, lfodata, ms, eds, skin, bmp );
             
       auto msegControl = new MSEGControlRegion(CRect( CPoint( 0, size.getHeight() - controlHeight ), CPoint(  size.getWidth(), controlHeight ) ), msegCanv,
                                                storage, lfodata, ms, eds, skin, bmp );
