@@ -2275,6 +2275,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
          {
             hu = helpURLForSpecial( "lfo-modbutton" );
          }
+         else if ((modsource >= ms_ampeg && modsource <= ms_filtereg) ||
+                  (modsource >= ms_random_bipolar && modsource <= ms_filtereg) )
+         {
+            hu = helpURLForSpecial( "internalmod-modbutton" );
+         }
+
          else
          {
             hu = helpURLForSpecial( "other-modbutton" );
