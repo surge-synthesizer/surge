@@ -1257,6 +1257,7 @@ elseif( UNIX AND NOT APPLE )
     TARGET install-vst3-global
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/lib/vst3
     COMMAND echo "Installing vst3 unit locally into ${CMAKE_INSTALL_PREFIX}/lib/vst3"
     COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3" "${CMAKE_INSTALL_PREFIX}/lib/vst3"
     )
