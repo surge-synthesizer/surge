@@ -15,7 +15,11 @@
 
 #include "CursorControlGuard.h"
 #include <atomic>
+#if ESCAPE_FROM_VSTGUI
+#include "efvg/escape_from_vstgui.h"
+#else
 #include "vstgui/lib/cframe.h"
+#endif
 
 #if MAC
 #include <CoreGraphics/CoreGraphics.h>

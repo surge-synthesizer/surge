@@ -15,6 +15,9 @@
 
 #pragma once
 
+// FIXME remove this
+#if ! ESCAPE_FROM_VSTGUI
+
 #include "vstgui/vstgui.h"
 
 union rgbpixel
@@ -62,3 +65,5 @@ private:
    VSTGUI::SharedPointer<VSTGUI::CBitmap> _bitmap;
    VSTGUI::SharedPointer<VSTGUI::CBitmapPixelAccess> _bitmapAccess;
 };
+
+#endif

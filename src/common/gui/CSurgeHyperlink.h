@@ -15,7 +15,11 @@
 
 #pragma once
 
+#if ESCAPE_FROM_VSTGUI
+#include <efvg/escape_from_vstgui.h>
+#else
 #include "vstgui/vstgui.h"
+#endif
 #include <string>
 #include "UserInteractions.h"
 

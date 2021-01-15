@@ -114,14 +114,82 @@ struct SvgBrowser : public VSTGUI::IKeyboardHook
       
       CLASS_METHODS( SurgeSVGRenderComponent, VSTGUI::CControl )
    };
-   
+
+   struct ARedBox : public VSTGUI::CView
+   {
+      explicit ARedBox(const VSTGUI::CRect &r ) : VSTGUI::CView(r) {}
+      ~ARedBox() = default;
+      VSTGUI::CColor bg = VSTGUI::CColor(0,0,0);
+      void draw(VSTGUI::CDrawContext *dc ) override
+      {
+         auto s = getViewSize();
+
+         dc->setFillColor( bg );
+         dc->drawRect(s, VSTGUI::kDrawFilled );
+         dc->setFrameColor(VSTGUI::kBlueCColor);
+         dc->drawRect(s,VSTGUI::kDrawStroked);
+
+         auto r = VSTGUI::CRect(VSTGUI::CPoint(20,20), VSTGUI::CPoint(10,15));
+
+         dc->setFillColor( VSTGUI::kRedCColor );
+         dc->setFrameColor(VSTGUI::CColor(0,255,0));
+         dc->drawRect( r, VSTGUI::kDrawFilledAndStroked);
+
+         dc->setFrameColor(VSTGUI::CColor(255,180,0));
+         dc->drawLine(VSTGUI::CPoint(0,0),VSTGUI::CPoint(40,40));
+
+         auto mr = VSTGUI::CRect(mouseLoc, VSTGUI::CPoint(10,10));
+         dc->setFillColor(VSTGUI::kWhiteCColor);
+         dc->drawRect(mr, VSTGUI::kDrawFilled);
+      }
+
+      VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where,
+                                               const VSTGUI::CButtonState& buttons) override
+      {
+         bg = VSTGUI::CColor(40,20,0);
+         invalid();
+         return VSTGUI::kMouseEventHandled;
+      }
+      VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where,
+                                              const VSTGUI::CButtonState& buttons) override
+      {
+         bg = VSTGUI::CColor(0,0,0);
+         invalid();
+         return VSTGUI::kMouseEventHandled;
+      }
+      VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where,
+                                            const VSTGUI::CButtonState& buttons) override
+      {
+         bg = VSTGUI::CColor(200,100,0);
+         invalid();
+         return VSTGUI::kMouseEventHandled;
+      }
+      VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where,
+                                          const VSTGUI::CButtonState& buttons) override
+      {
+         bg = VSTGUI::CColor(70,20,0);
+         invalid();
+         return VSTGUI::kMouseEventHandled;
+      }
+      VSTGUI::CPoint mouseLoc;
+      VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where,
+                                             const VSTGUI::CButtonState& buttons) override
+      {
+         mouseLoc = where;
+         invalid();
+         return VSTGUI::kMouseEventHandled;
+      }
+   };
+
    SvgBrowser(VSTGUI::CFrame *f) : frame(f)
       {
          f->setBackgroundColor( VSTGUI::CColor( 200, 200, 210 ) );
 
          VSTGUI::CRect sz;
          f->getSize(sz);
-        
+         auto rb = new ARedBox(VSTGUI::CRect(10,10,200,200));
+         f->addView(rb);
+#if 0
          {
             VSTGUI::CRect pos( VSTGUI::CPoint( 0, 0 ), VSTGUI::CPoint( sz.getWidth(), 20 ) );
             l = new VSTGUI::CTextLabel(pos);
@@ -139,6 +207,7 @@ struct SvgBrowser : public VSTGUI::IKeyboardHook
          f->addView( svg );
          
          f->registerKeyboardHook( this );
+#endif
       }
 
    virtual int32_t onKeyDown(const VstKeyCode &code, VSTGUI::CFrame *f) override {

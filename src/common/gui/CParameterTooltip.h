@@ -19,6 +19,7 @@
 #include <iostream>
 #include "SkinSupport.h"
 #include "SkinColors.h"
+#include "RuntimeFont.h"
 
 class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
@@ -82,7 +83,7 @@ public:
    {
       if (visible)
       {
-         dc->setFont(VSTGUI::kNormalFontSmall);
+         dc->setFont(Surge::GUI::getLatoAtSize(9));
 
          auto frameCol = skin->getColor(Colors::InfoWindow::Border);
          auto bgCol = skin->getColor(Colors::InfoWindow::Background);

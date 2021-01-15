@@ -1,3 +1,53 @@
+#if ESCAPE_FROM_VSTGUI
+#include <JuceHeader.h>
+#include "CScalableBitmap.h"
+
+CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame *f)
+: VSTGUI::CBitmap(d)
+{
+   if( d.u.type == VSTGUI::CResourceDescription::kIntegerType )
+   {
+      std::string fn = "bmp00" + std::to_string(d.u.id) + "_svg";
+      int bds;
+      auto bd = BinaryData::getNamedResource(fn.c_str(), bds);
+      if( bd )
+      {
+         drawable = juce::Drawable::createFromImageData( bd, bds );
+      }
+   }
+}
+
+CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame* f)
+:VSTGUI::CBitmap(VSTGUI::CResourceDescription(0))
+{
+
+}
+
+CScalableBitmap::~CScalableBitmap() = default;
+
+void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
+{}
+
+void CScalableBitmap::draw(VSTGUI::CDrawContext* context, const VSTGUI::CRect& rect, const VSTGUI::CPoint& offset, float alpha)
+{
+   VSTGUI::CBitmap::draw(context, rect, offset, alpha);
+}
+
+void CScalableBitmap::addPNGForZoomLevel(std::string fname, int zoomLevel)
+{
+
+}
+
+void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel)
+{
+
+}
+#else
+
+#if MAC
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "globals.h"
 #include "guihelpers.h"
 #include "CScalableBitmap.h"
@@ -7,16 +57,17 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
 #if MAC
-#include <CoreFoundation/CoreFoundation.h>
 #include "vstgui/lib/platform/mac/macglobals.h"
-#include <strstream>
 #endif
 #if LINUX
 #include "ScalablePiggy.h"
 #endif
 #if WINDOWS
+#if ! ESCAPE_FROM_VSTGUI
 #include "vstgui/lib/platform/iplatformresourceinputstream.h"
+#endif
 #endif
 #include <unordered_map>
 
@@ -606,3 +657,4 @@ void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel)
    pngZooms[zoomLevel].second =
        std::move(std::make_unique<VSTGUI::CBitmap>(pngZooms[zoomLevel].first.c_str()));
 }
+#endif

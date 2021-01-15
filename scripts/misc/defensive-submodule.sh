@@ -19,7 +19,7 @@ popd
 
 grep path .gitmodules | awk '{ print $3 }' | xargs -n 1 git submodule update --recursive --init --depth=1 --jobs=5
 
-export JUCE_V=6.0.4
+export JUCE_V=6.0.7
 mkdir -p libs/juce-${JUCE_V}/juce
 git clone git://github.com/juce-framework/JUCE libs/juce-${JUCE_V}/juce --depth=1 -b ${JUCE_V}
  

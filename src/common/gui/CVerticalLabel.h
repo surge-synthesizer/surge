@@ -14,7 +14,11 @@
 */
 
 #pragma once
+#if ESCAPE_FROM_VSTGUI
+#include "efvg/escape_from_vstgui.h"
+#else
 #include "vstcontrols.h"
+#endif
 
 class CVerticalLabel : public VSTGUI::CTextLabel
 {

@@ -4,6 +4,7 @@
 #include "UIInstrumentation.h"
 #include "CScalableBitmap.h"
 #include <iostream>
+#include <cassert>
 
 using namespace VSTGUI;
 

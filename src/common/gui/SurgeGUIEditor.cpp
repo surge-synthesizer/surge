@@ -176,6 +176,7 @@ enum special_tags
    start_paramtags,
 };
 
+#if ! TARGET_JUCE_UI
 // TODO: CHECK REFERENCE COUNTING
 struct SGEDropAdapter : public VSTGUI::IDropTarget, public VSTGUI::ReferenceCounted<int> {
    SurgeGUIEditor *buddy = nullptr;
@@ -235,6 +236,7 @@ struct SGEDropAdapter : public VSTGUI::IDropTarget, public VSTGUI::ReferenceCoun
       return false;
    }
 };
+#endif
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 
@@ -346,6 +348,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
       ** a function since the above defaults are initialized as dll
       ** statics if we are not runtime).
       */
+#if ! TARGET_JUCE_UI
 #if MAC
       SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
       SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
@@ -382,7 +385,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
       patchNameFont = patchfont;
       lfoTypeFont = lfofont;
       aboutFont = aboutfont;
-
+#endif
    }
 
    /*
@@ -413,16 +416,19 @@ SurgeGUIEditor::~SurgeGUIEditor()
    synth->storage.getPatch().dawExtraState.isPopulated = isPop;
    if (frame)
    {
+#if ! TARGET_JUCE_UI
       getFrame()->unregisterKeyboardHook(this);
+#endif
       frame->close();
    }
+#if ! TARGET_JUCE_UI
    if( dropAdapter )
    {
       dropAdapter->buddy = nullptr;
       dropAdapter->forget();
       dropAdapter = nullptr;
    }
-
+#endif
 }
 
 void SurgeGUIEditor::idle()
@@ -1056,6 +1062,7 @@ void SurgeGUIEditor::refresh_mod()
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
 {
+#if ! TARGET_JUCE_UI
    if(code.virt != 0 )
    {
       switch (code.virt)
@@ -1117,6 +1124,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode& code, CFrame* frame)
          break;
       }
    }
+#endif
    return -1;
 }
 
@@ -1494,8 +1502,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
          // Room for improvement, obviously
          lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "" );
          lfoNameLabel->setTransparency(true);
+#if ! TARGET_JUCE_UI
          VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 10, kBoldFace);
          lfoNameLabel->setFont(fnt);
+#endif
          lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
          lfoNameLabel->setHoriAlign(kCenterText);
          frame->addView(lfoNameLabel);
@@ -1510,7 +1520,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
          fxPresetLabel->setTransparency(true);
          fxPresetLabel->setFont(displayFont);
          fxPresetLabel->setHoriAlign(kRightText);
+#if ! TARGET_JUCE_UI
          fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
+#endif
          frame->addView(fxPresetLabel);
          break;
       }
@@ -1739,13 +1751,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
          auto frcoln = currentSkin->propertyValue(l, "frame_color", "#FFFFFF00");
          auto frcol = currentSkin->getColor(frcoln, kTransparentCColor);
 
-         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fsize, fstyle);
 
          auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), mtext.fromJust().c_str());
          lb->setTransparency((bgcol == kTransparentCColor && frcol == kTransparentCColor));
-         lb->setAntialias(true);
          lb->setHoriAlign(txtalign);
+
+#if ! TARGET_JUCE_UI
+         lb->setAntialias(true);
+         VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", fsize, fstyle);
          lb->setFont(fnt);
+#endif
+
          lb->setFontColor(col);
          lb->setBackColor(bgcol);
          lb->setFrameColor(frcol);
@@ -1862,7 +1878,11 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    // !!! always call this !!!
    super::open(parent);
 
+#if !TARGET_JUCE_UI
    PlatformType platformType = kDefaultNative;
+#else
+   int platformType = 0;
+#endif
 #endif
 
 #if TARGET_VST3
@@ -1894,6 +1914,10 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
 
    CFrame *nframe = new CFrame(wsize, this);
 
+#if TARGET_JUCE_UI
+   nframe->juceComponent()->setTransform(juce::AffineTransform().scaled(1.25));
+#endif
+
    bitmapStore.reset(new SurgeBitmaps());
    bitmapStore->setupBitmapsForFrame(nframe);
    currentSkin->reloadSkin(bitmapStore);
@@ -1909,6 +1933,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
     * and think - sigh. VSTGUI.
     */
 
+#if ! TARGET_JUCE_UI
    dropAdapter = new SGEDropAdapter(this);
    dropAdapter->remember();
 
@@ -1916,6 +1941,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    nframe->getAttribute( 'vcdt', dt );
    if( dt ) dt->forget();
    nframe->setAttribute('vcdt', dropAdapter );
+#endif
 
    frame = nframe;
 
@@ -1951,7 +1977,9 @@ bool PLUGIN_API SurgeGUIEditor::open(void* parent, const PlatformType& platformT
    /*
    ** Register only once (when we open)
    */
+#if ! TARGET_JUCE_UI
    frame->registerKeyboardHook(this);
+#endif
    reloadFromSkin();
    openOrRecreateEditor();
 
@@ -4663,6 +4691,10 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl* control, bool modulate,
    }
 
    CRect r2 = control->getViewSize();
+#if TARGET_JUCE_UI
+   auto tl = control->getTopLeft();
+   r2.offset(tl.x, tl.y);
+#endif
 
    // OK this is a heuristic to stop deform overpainting and stuff
    if( r2.bottom > getWindowSizeY() - r.getHeight() - 2 )
@@ -6978,9 +7010,9 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
    else
       containerSize.moveTo(CPoint(0, 0));
 
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> headerFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> btnFont = new VSTGUI::CFontDesc("Lato", 8);
-   
+   auto headerFont = Surge::GUI::getLatoAtSize(9, kBoldFace);
+   auto btnFont = Surge::GUI::getLatoAtSize(8);
+
    auto outerc = new CViewContainer(containerSize);
    outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
    editorOverlayC->addView(outerc);
@@ -7133,9 +7165,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string& value,
 
       rr.offset( - rr.right + fs.getWidth() - 10, 0 );
 
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnts = new VSTGUI::CFontDesc("Lato", 9);
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fntt = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
+   auto fnt = Surge::GUI::getLatoAtSize(11);
+   auto fnts = Surge::GUI::getLatoAtSize(9);
+   auto fntt = Surge::GUI::getLatoAtSize(9, kBoldFace);
 
    auto window = new CViewContainer(rr);
    window->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
@@ -7309,7 +7341,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
    VSTGUI::CGradient* presscg = VSTGUI::CGradient::create(presscsm);
    presscg->addColorStop(0, pressbtnbg);
 
-   VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt = new VSTGUI::CFontDesc("Lato", 11);
+   auto fnt = Surge::GUI::getLatoAtSize(11);
 
    auto label = CRect(CPoint(10, 10), CPoint(47, 19));
    auto pnamelbl = new CTextLabel(label, "Name");
@@ -7516,11 +7548,13 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       else
          hs->deactivated = false;
 
+#if ! TARGET_JUCE_UI
       auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "" );
       if( ff.size() > 0 )
       {
          hs->setFont(new CFontDesc(ff.c_str(), 9 ));
       }
+#endif
 
       if (p->valtype == vt_int || p->valtype == vt_bool)
       {

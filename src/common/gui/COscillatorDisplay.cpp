@@ -261,6 +261,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
          CPoint clip0( 0.f, valScale * linesAreInBy ), clip1(valScale, valScale * (1.0-linesAreInBy) );
          tf.transform(mid0);
+
          tf.transform(mid1);
          tf.transform(top0);
          tf.transform(top1);
@@ -331,15 +332,11 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
       if( use_display )
       {
-      /*
          CRect oldcr;
-         dc->getClipRect(oldcr);
+#if TARGET_JUCE_UI
          dc->setClipRect(waveBoundsRect);
-      */
+#endif
          dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
-      /*
-         dc->setClipRect(oldcr);
-       */
       }
       dc->restoreGlobalState();
 
@@ -478,7 +475,10 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint& where, const CButtonSt
          getFrame()->addView(contextMenu); // add to frame
          contextMenu->setDirty();
          contextMenu->popup();
+#if ! TARGET_JUCE_UI
+         // wth is this?
          contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
+#endif
          // getFrame()->looseFocus(pContext);
 
          getFrame()->removeView(contextMenu, true); // remove from frame and forget

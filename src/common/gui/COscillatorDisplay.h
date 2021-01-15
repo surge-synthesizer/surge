@@ -32,7 +32,9 @@ public:
       this->storage = storage;
       controlstate = 0;
 
+#if ! TARGET_JUCE_UI
       cdisurf = new CDIBitmap(getWidth(), getHeight());
+#endif
 
       int bgcol = 0xff161616;
       int fgcol = 0x00ff9000;
@@ -72,11 +74,14 @@ public:
 #else
          coltable[i] = r | (g << 8) | (b << 16) | (a << 24);
 #endif
+
       }
    }
    virtual ~COscillatorDisplay()
    {
+#if !TARGET_JUCE_UI
       delete cdisurf;
+#endif
    }
    virtual void draw(VSTGUI::CDrawContext* dc) override;
 
@@ -114,7 +119,9 @@ protected:
    SurgeStorage* storage;
    unsigned int controlstate;
    unsigned int coltable[256];
+#if ! TARGET_JUCE_UI
    CDIBitmap* cdisurf;
+#endif
 
    bool doingDrag = false;
 

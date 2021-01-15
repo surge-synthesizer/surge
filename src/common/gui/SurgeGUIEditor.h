@@ -34,6 +34,11 @@ typedef VSTGUI::LinuxAEffGUIEditor EditorType;
 #include "vstgui/plugin-bindings/aeffguieditor.h"
 typedef VSTGUI::AEffGUIEditor EditorType;
 #endif
+#elif TARGET_JUCE_UI
+#include <JuceHeader.h>
+#include "efvg/escape_from_vstgui.h"
+typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
+#define PARENT_PLUGIN_TYPE juce::AudioProcessorEditor
 #else
 #include "vstgui/plugin-bindings/plugguieditor.h"
 typedef VSTGUI::PluginGUIEditor EditorType;
@@ -545,7 +550,11 @@ private:
    bool blinkstate = false;
    PARENT_PLUGIN_TYPE* _effect = nullptr;
    void* _userdata = nullptr;
+#if TARGET_JUCE_UI
+   std::shared_ptr<int> _idleTimer; // FIXME
+#else
    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
+#endif
    int firstIdleCountdown = 0;
 
    /*

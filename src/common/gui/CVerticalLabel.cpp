@@ -20,8 +20,14 @@ using namespace VSTGUI;
 
 void CVerticalLabel::draw(VSTGUI::CDrawContext* dc)
 {
+#if TARGET_JUCE_UI
+   auto t = getText().getString();
+   auto q = t.size();
+#else
    auto t = getText();
    auto q = strlen(t);
+#endif
+
    auto f = getFont();
    auto fh = f->getSize();
    auto ht = 0.f;

@@ -38,7 +38,7 @@ CAboutBox::CAboutBox(const CRect& size,
    auto center = vs.getCenter();
    auto margin = 20;
    auto lblh = 16, lblvs = 15;
-   auto boldFont = new VSTGUI::CFontDesc("Lato", 11, kBoldFace);
+   auto boldFont = Surge::GUI::getLatoAtSize( 11 , kBoldFace);
    
    /* dark semitransparent background */
 
@@ -233,7 +233,7 @@ CAboutBox::CAboutBox(const CRect& size,
    yp = vs.bottom - lblvs - margin;
 
    addTwoColumnLabel("Current Skin:", skin->displayName, true, skin->root + skin->name, 76, 175, false, true);
-   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != nullptr), skin->authorURL, 76, 175, false, true);
+   addTwoColumnLabel("Skin Author:", skin->author, (skin->authorURL != ""), skin->authorURL, 76, 175, false, true);
 
    /* top left copyright and credits */
 
@@ -286,6 +286,9 @@ void CAboutBox::valueChanged(CControl* pControl)
    if( pControl->getTag() == tag_copy )
    {
       std::string identifierLine = infoStringForClipboard;  // don't forget the space at the end
+#if TARGET_JUCE_UI
+      std::cout << "IMPLEMENT JUCE COPY AND PASTE" << std::endl;
+#else
 #if LINUX
       auto xc = popen( "xclip -selection c", "w" );
       if( ! xc )
@@ -298,6 +301,7 @@ void CAboutBox::valueChanged(CControl* pControl)
 #else
       auto a = CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText );
       getFrame()->setClipboard(a);
+#endif
 #endif
    }
 }

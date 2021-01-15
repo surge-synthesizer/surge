@@ -42,6 +42,10 @@ using PluginLayer = SurgeLv2Wrapper;
 #elif TARGET_JUCE
 class JUCEPluginLayerProxy;
 using PluginLayer = JUCEPluginLayerProxy;
+#elif TARGET_JUCE_SYNTH
+#include <JuceHeader.h>
+
+using PluginLayer = juce::AudioProcessor;
 #elif TARGET_HEADLESS
 class HeadlessPluginLayerProxy;
 using PluginLayer = HeadlessPluginLayerProxy;

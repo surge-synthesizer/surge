@@ -92,12 +92,15 @@ public:
    
    void SetQuantitizedDispValue(float f);
 
+#if ! TARGET_JUCE_UI
    void setFont( VSTGUI::CFontRef f ) {
       if( labfont ) labfont->forget();
       labfont = f;
       labfont->remember();
    }
+#endif
    VSTGUI::CFontRef labfont = nullptr;
+
 
    CLASS_METHODS(CSurgeSlider, CControl)
 
