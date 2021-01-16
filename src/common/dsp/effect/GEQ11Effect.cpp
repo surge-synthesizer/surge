@@ -16,14 +16,21 @@
 #include "GEQ11Effect.h"
 
 GEQ11Effect::GEQ11Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage),
+    band4(storage), band5(storage), band6(storage), band7(storage),
+    band8(storage), band9(storage), band10(storage), band11(storage)
 {
-   bands.fill(storage);
-
-   for (auto& band : bands)
-   {
-      band.setBlockSize(BLOCK_SIZE * slowrate); // does not matter ATM as they're smoothed
-   }
+   band1.setBlockSize(BLOCK_SIZE * slowrate); // does not matter ATM as they're smoothed
+   band2.setBlockSize(BLOCK_SIZE * slowrate);
+   band3.setBlockSize(BLOCK_SIZE * slowrate);
+   band4.setBlockSize(BLOCK_SIZE * slowrate);
+   band5.setBlockSize(BLOCK_SIZE * slowrate);
+   band6.setBlockSize(BLOCK_SIZE * slowrate);
+   band7.setBlockSize(BLOCK_SIZE * slowrate);
+   band8.setBlockSize(BLOCK_SIZE * slowrate);
+   band9.setBlockSize(BLOCK_SIZE * slowrate);
+   band10.setBlockSize(BLOCK_SIZE * slowrate);
+   band11.setBlockSize(BLOCK_SIZE * slowrate);
 
    gain.set_blocksize(BLOCK_SIZE);
 }
@@ -34,12 +41,17 @@ GEQ11Effect::~GEQ11Effect()
 void GEQ11Effect::init()
 {
    setvars(true);
-
-   for (auto &band : bands)
-   {
-      band.suspend();
-   }
-
+   band1.suspend();
+   band2.suspend();
+   band3.suspend();
+   band4.suspend();
+   band5.suspend();
+   band6.suspend();
+   band7.suspend();
+   band8.suspend();
+   band9.suspend();
+   band10.suspend();
+   band11.suspend();
    bi = 0;
 }
 
@@ -48,25 +60,47 @@ void GEQ11Effect::setvars(bool init)
    if (init)
    {
       // Set the bands to 0dB so the EQ fades in init
-      int i = 0;
-      for (auto& band : bands)
-      {
-         band.coeff_peakEQ(band.calc_omega_from_Hz(freqs[i]), 0.5, 1.f);
-         band.coeff_instantize();
-         i++;
-      }
+      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, 1.f);
+      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, 1.f);
+      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, 1.f);
+      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, 1.f);
+      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, 1.f);
+      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, 1.f);
+      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, 1.f);
+      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, 1.f);
+      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, 1.f);
+      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, 1.f);
+      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, 1.f);
+
+      band1.coeff_instantize();
+      band2.coeff_instantize();
+      band3.coeff_instantize();
+      band4.coeff_instantize();
+      band5.coeff_instantize();
+      band6.coeff_instantize();
+      band7.coeff_instantize();
+      band8.coeff_instantize();
+      band9.coeff_instantize();
+      band10.coeff_instantize();
+      band11.coeff_instantize();
 
       gain.set_target(1.f);
+
       gain.instantize();
    }
    else
    {
-      int i = 0;
-      for (auto& band : bands)
-      {
-         band.coeff_peakEQ(band.calc_omega_from_Hz(freqs[i]), 0.5, 1.f);
-         i++;
-      }
+      band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *f[geq11_30]);
+      band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *f[geq11_60]);
+      band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *f[geq11_120]);
+      band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *f[geq11_250]);
+      band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *f[geq11_500]);
+      band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *f[geq11_1k]);
+      band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *f[geq11_2k]);
+      band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *f[geq11_4k]);
+      band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *f[geq11_8k]);
+      band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *f[geq11_12k]);
+      band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *f[geq11_16k]);
    }
 }
 
@@ -76,15 +110,28 @@ void GEQ11Effect::process(float* dataL, float* dataR)
       setvars(false);
    bi = (bi + 1) & slowrate_m1;
 
-   int i = 0;
-   for (auto& band : bands)
-   {
-      if (! fxdata->p[i].deactivated)
-      {
-         band.process_block(dataL, dataR);
-      }
-      i++;
-   }
+   if (! fxdata->p[geq11_30].deactivated)
+      band1.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_60].deactivated)
+      band2.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_120].deactivated)
+      band3.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_250].deactivated)
+      band4.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_500].deactivated)
+      band5.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_1k].deactivated)
+      band6.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_2k].deactivated)
+      band7.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_4k].deactivated)
+      band8.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_8k].deactivated)
+      band9.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_12k].deactivated)
+      band10.process_block(dataL, dataR);
+   if (! fxdata->p[geq11_16k].deactivated)
+      band11.process_block(dataL, dataR);
 
    gain.set_target_smoothed(db_to_linear(*f[geq11_gain]));
    gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
