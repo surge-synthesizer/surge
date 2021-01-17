@@ -361,7 +361,7 @@ public:
    HalfRateFilter halfbandA, halfbandB, halfbandIN; // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
    std::list<SurgeVoice*> voices[n_scenes];
    std::unique_ptr<Effect> fx[n_fx_slots];
-   bool halt_engine = false;
+   std::atomic<bool> halt_engine;
    MidiChannelState channelState[16];
    bool mpeEnabled = false;
    int mpeVoices = 0;
