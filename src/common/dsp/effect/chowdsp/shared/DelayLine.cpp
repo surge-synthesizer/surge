@@ -24,6 +24,8 @@
 */
 
 #include <algorithm>
+#include <cmath>
+#include <basic_dsp.h>
 #include "DelayLine.h"
 
 namespace chowdsp
@@ -48,7 +50,7 @@ void DelayLine<SampleType, InterpolationType>::setDelay (SampleType newDelayInSa
 {
     auto upperLimit = (SampleType) (totalSize - 1);
 
-    delay     = std::clamp (newDelayInSamples, (SampleType) 0, upperLimit);
+    delay     = limit_range (newDelayInSamples, (SampleType) 0, upperLimit);
     delayInt  = static_cast<int> (std::floor (delay));
     delayFrac = delay - (SampleType) delayInt;
 
@@ -86,7 +88,7 @@ void DelayLine<SampleType, InterpolationType>::reset()
 
     std::fill (this->v.begin(), this->v.end(), static_cast<SampleType> (0));
 
-    for (size_t ch = 0; ch < bufferData.size(); ++ch)
+    for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
         std::fill (this->bufferData[ch].begin(), this->bufferData[ch].end(), static_cast<SampleType> (0));
 }
 

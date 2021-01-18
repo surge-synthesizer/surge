@@ -120,7 +120,7 @@ void Neuron::init_default_values()
 
 void Neuron::set_params()
 {
-    auto bf_clamped = std::clamp (*f[neuron_bf], 0.0f, 1.0f);
+    auto bf_clamped = limit_range (*f[neuron_bf], 0.0f, 1.0f);
 
     Wf.setTargetValue(*f[neuron_wf] * 20.0f);
     Wh.setTargetValue(db_to_linear(*f[neuron_wh]));
