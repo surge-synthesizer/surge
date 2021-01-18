@@ -239,7 +239,7 @@ CAboutBox::CAboutBox(const CRect& size,
    xp = margin;
    yp = margin;
 
-   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors", 600);
+   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio, Surge Synth Team and individual contributors", 600);
    yp += lblvs;
    addLabel("Released under the GNU General Public License, v3", 600);
    yp += lblvs;
