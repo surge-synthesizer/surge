@@ -239,7 +239,7 @@ CAboutBox::CAboutBox(const CRect& size,
    xp = margin;
    yp = margin;
 
-   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors", 600);
+   addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear + " by Vember Audio and individual contributors in the Surge Synth Team", 600);
    yp += lblvs;
    addLabel("Released under the GNU General Public License, v3", 600);
    yp += lblvs;
@@ -251,7 +251,7 @@ CAboutBox::CAboutBox(const CRect& size,
    yp += lblvs;
    addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 600);
    yp += lblvs;
-   addLabel("Sallen-Key and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), licensed under GNU GPL v3 license", 600);
+   addLabel("K35 and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), licensed under GNU GPL v3 license", 600);
    yp += lblvs;
    addLabel("Cutoff Warp and Resonance Warp filters by Jatin Chowdhury, licensed under GNU GPL v3 license", 600);
    yp += lblvs;
