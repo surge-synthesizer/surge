@@ -7688,7 +7688,6 @@ bool SurgeGUIEditor::canDropTarget(const std::string& fname)
 }
 bool SurgeGUIEditor::onDrop( const std::string& fname)
 {
-   std::cout << "Dropped " << fname << std::endl;
    fs::path fPath(fname);
    std::string fExt(path_to_string(fPath.extension()));
    std::transform(fExt.begin(), fExt.end(), fExt.begin(),
