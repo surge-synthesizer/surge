@@ -903,7 +903,12 @@ void SurgeStorage::perform_queued_wtloads()
          }
          else if (patch.scene[sc].osc[o].wt.queue_filename[0])
          {
-            patch.scene[sc].osc[o].queue_type = ot_wavetable;
+            if (!(patch.scene[sc].osc[o].type.val.i == ot_wavetable ||
+                  patch.scene[sc].osc[o].type.val.i == ot_window))
+            {
+               patch.scene[sc].osc[o].queue_type = ot_wavetable;
+            }
+
             patch.scene[sc].osc[o].wt.current_id = -1;
             load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt, &patch.scene[sc].osc[o]);
             patch.scene[sc].osc[o].wt.refresh_display = true;
