@@ -361,7 +361,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
        * Choose to only warn on windows since (1) mac includes Lato in the bundle so this
        * never happens there and (2) linux has all sorts of font noise
        */
-      static bool warnedAboutLato = false;
+      static bool warnedAboutLato = Surge::Storage::getUserDefaultValue(&(synth->storage), "warnedAboutLato", 0 );
       if( ! warnedAboutLato )
       {
          Surge::UserInteractions::promptError(
@@ -370,6 +370,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE* effect, SurgeSynthesizer* syn
              "Surge will run anwyay, but some of your labels may clip or be mis-rendered.",
              "Unable to resolve Lato Font");
          warnedAboutLato = true;
+         Surge::Storage::updateUserDefaultValue( &(synth->storage), "warnedAboutLato", 1 );
       }
       SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
       SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
