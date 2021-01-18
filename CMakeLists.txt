@@ -457,7 +457,7 @@ elseif( UNIX AND NOT APPLE )
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${PIGGY_INPUTS}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
-    COMMAND python ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy.py ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
+    COMMAND ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
     )
 
   if( LINUX_ON_ARM )
@@ -951,7 +951,7 @@ if( BUILD_LV2 )
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
-      COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
+      COMMAND scripts/linux/generate-lv2-ttl ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
       )
   elseif( UNIX AND NOT APPLE )
     add_custom_command(
@@ -961,7 +961,7 @@ if( BUILD_LV2 )
       COMMAND echo "Packaging up LV2 component"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
-      COMMAND python scripts/linux/generate-lv2-ttl.py ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
+      COMMAND scripts/linux/generate-lv2-ttl ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
       )
   endif()
 
