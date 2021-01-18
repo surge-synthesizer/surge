@@ -213,7 +213,8 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                   block_pos++;
                }
                val = val / averagingWindow;
-               val = ((-val + 1.0f) * 0.5f * 0.8 + 0.1) * valScale;
+               float scaleDownBy = 0.235;
+               val = ((-val + 1.0f) * 0.5f * (1.0 - scaleDownBy) + 0.5 * scaleDownBy) * valScale;
             }
             block_pos++;
             float xc = valScale * i / totalSamples;
@@ -249,18 +250,26 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
       dc->saveGlobalState();
 
+      CRect waveBoundsRect;
       if (c == 0)
       {
+         float linesAreInBy = 0.1;
          // OK so draw the rules
          CPoint mid0(0.f, valScale / 2.f), mid1(valScale, valScale / 2.f);
-         CPoint top0(0.f, valScale * 0.9), top1(valScale, valScale * 0.9);
-         CPoint bot0(0.f, valScale * 0.1), bot1(valScale, valScale * 0.1);
+         CPoint top0(0.f, valScale * (1.0-linesAreInBy)), top1(valScale, valScale * (1.0-linesAreInBy));
+         CPoint bot0(0.f, valScale * linesAreInBy), bot1(valScale, valScale * linesAreInBy);
+
+         CPoint clip0( 0.f, valScale * linesAreInBy ), clip1(valScale, valScale * (1.0-linesAreInBy) );
          tf.transform(mid0);
          tf.transform(mid1);
          tf.transform(top0);
          tf.transform(top1);
          tf.transform(bot0);
          tf.transform(bot1);
+         tf.transform(clip0);
+         tf.transform(clip1);
+
+         waveBoundsRect = CRect( clip0.x, clip0.y-0.5, clip1.x, clip1.y+0.5 ); // allow draws on the line
          dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
          dc->setLineWidth(1.0);
@@ -321,7 +330,15 @@ void COscillatorDisplay::draw(CDrawContext* dc)
          dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave));
 
       if( use_display )
+      {
+         //dc->setFillColor(VSTGUI::CColor( 255,200,200,80));
+         //dc->drawRect(waveBoundsRect, kDrawFilled );
+         CRect oldcr;
+         dc->getClipRect(oldcr);
+         dc->setClipRect(waveBoundsRect);
          dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
+         dc->setClipRect(oldcr);
+      }
       dc->restoreGlobalState();
 
       path->forget();
