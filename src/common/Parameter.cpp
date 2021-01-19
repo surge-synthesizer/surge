@@ -1564,7 +1564,29 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    {
       if (temposync)
       {
-         sprintf(txt, "%.*f %c", dp, 10.f * modulationDepth, '%');
+         switch( displaymode )
+         {
+         case TypeIn:
+            sprintf(txt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+            break;
+         case Menu:
+            sprintf( txt, "%s%.*f %s",(modulationDepth>0)?"+":"", dp, modulationDepth * 100, "%" );
+            break;
+         case InfoWindow:
+            if( iw )
+            {
+               iw->val = tempoSyncNotationValue(val.f);
+
+               char ltxt[256];
+               sprintf(ltxt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+               iw->dvalplus = ltxt;
+               sprintf(ltxt, "%.*f %c", dp, -100.f * modulationDepth, '%');
+               iw->dvalminus = ltxt;
+               iw->valplus = iw->dvalplus;
+               iw->valminus = iw->dvalminus;
+            }
+            break;
+         }
       }
       else
       {
@@ -1882,35 +1904,65 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    }
    default:
    {
-      float v = val.f * 100.f;
-      float mp = (val.f + modulationDepth) * 100.f;
-      float mn = (val.f - modulationDepth) * 100.f;
-
-      switch( displaymode )
+      if( temposync )
       {
-      case TypeIn:
-         sprintf( txt, "%.*f", dp, mp - v );
-         break;
-      case Menu:
-         if (isBipolar)
+         auto mp = modulationDepth;
+         switch( displaymode )
          {
-            sprintf(txt, "%.*f ... %.*f %c", dp, mn,  dp, mp, '%');
+         case TypeIn: {
+            sprintf(txt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+            break;
          }
-         else
-            sprintf(txt, "%.*f ... %.*f %c", dp, v, dp, mp, '%');
-         break;
-      case InfoWindow:
+         case Menu: {
+            if (isBipolar)
+            {
+               sprintf(txt, "+/- %.*f %c", dp, 100.f * mp, '%');
+            }
+            else
+            {
+               sprintf(txt, "%.*f %c", dp, 100.f * mp, '%');
+            }
+            break;
+         }
+         case InfoWindow: {
+            std::string pm = isBipolar ? "+/-" : "";
+            sprintf(txt, "%s %s%.*f %c", tempoSyncNotationValue(val.f).c_str(), pm.c_str(), dp,
+                    mp * 100.f, '%');
+            break;
+         }
+         }
+      }
+      else
       {
-         if (isBipolar)
-         {
-            sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v, uppersep, dp, mp, '%');
-         }
-         else
-            sprintf(txt, "%.*f %s %.*f %c", dp, v, uppersep, dp, mp, '%');
-         break;
-      }
-      }
+         float v = val.f * 100.f;
+         float mp = (val.f + modulationDepth) * 100.f;
+         float mn = (val.f - modulationDepth) * 100.f;
 
+         switch (displaymode)
+         {
+         case TypeIn:
+            sprintf(txt, "%.*f", dp, mp - v);
+            break;
+         case Menu:
+            if (isBipolar)
+            {
+               sprintf(txt, "%.*f ... %.*f %c", dp, mn, dp, mp, '%');
+            }
+            else
+               sprintf(txt, "%.*f ... %.*f %c", dp, v, dp, mp, '%');
+            break;
+         case InfoWindow: {
+            if (isBipolar)
+            {
+               sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v, uppersep, dp, mp,
+                       '%');
+            }
+            else
+               sprintf(txt, "%.*f %s %.*f %c", dp, v, uppersep, dp, mp, '%');
+            break;
+         }
+         }
+      }
       break;
    }
    }
@@ -1919,6 +1971,13 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
 float Parameter::quantize_modulation( float inputval )
 {
+   if( temposync )
+   {
+      auto sv = inputval * ( val_max.f - val_min.f ); //this is now a 0->1 for 0 -> 100%
+      float res = (float)( (int)( sv * 10.0 ) / 10.f );
+      return res / (val_max.f - val_min.f );
+   }
+
    float res = (float) ( (int)( inputval * 20 ) / 20.f ); // sure why not
    return res;
 }
@@ -3047,7 +3106,7 @@ float Parameter::calculate_modulation_value_from_string( const std::string &s, b
    {
       if (temposync)
       {
-         auto mv = (float)std::atof( s.c_str() ) / 10.0;
+         auto mv = (float)std::atof( s.c_str() ) / 100.0;
          auto rmv = mv / ( get_extended(val_max.f) - get_extended(val_min.f) );
          return rmv;
       }
