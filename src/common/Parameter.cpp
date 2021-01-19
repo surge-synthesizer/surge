@@ -1564,6 +1564,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    {
       if (temposync)
       {
+         dp = (detailedMode ? 6 : 2);
+
          switch( displaymode )
          {
          case TypeIn:
@@ -1906,7 +1908,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
    {
       if( temposync )
       {
-         auto mp = modulationDepth;
+         dp = (detailedMode ? 6 : 2);
+
+         auto mp =  modulationDepth;
+         auto mn = -modulationDepth;
          switch( displaymode )
          {
          case TypeIn: {
@@ -1925,9 +1930,16 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             break;
          }
          case InfoWindow: {
-            std::string pm = isBipolar ? "+/-" : "";
-            sprintf(txt, "%s %s%.*f %c", tempoSyncNotationValue(val.f).c_str(), pm.c_str(), dp,
-                    mp * 100.f, '%');
+            std::string vs = tempoSyncNotationValue(val.f);
+            if (isBipolar)
+            {
+               sprintf(txt, "%.*f %s %s %s %.*f %c", dp, mn, lowersep, vs.c_str(), uppersep, dp, mp,
+                       '%');
+            }
+            else
+            {
+               sprintf(txt, "%s %s %.*f %c", vs.c_str(), uppersep, dp, mp, '%');
+            }
             break;
          }
          }
