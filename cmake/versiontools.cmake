@@ -44,7 +44,7 @@ if ("${GIT_COMMIT_HASH}" STREQUAL "")
 endif()
 
 if( WIN32 )
-  set( SURGE_BUILD_ARCH "Intel" )
+  set( SURGE_BUILD_ARCH "x86" )
 else()
   execute_process(
     COMMAND uname -m
