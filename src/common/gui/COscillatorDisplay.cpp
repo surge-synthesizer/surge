@@ -139,6 +139,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 #endif
 
    float valScale = 100.0f;
+   float scaleDownBy = 0.235;
 
    auto size = getViewSize();
 
@@ -213,7 +214,6 @@ void COscillatorDisplay::draw(CDrawContext* dc)
                   block_pos++;
                }
                val = val / averagingWindow;
-               float scaleDownBy = 0.235;
                val = ((-val + 1.0f) * 0.5f * (1.0 - scaleDownBy) + 0.5 * scaleDownBy) * valScale;
             }
             block_pos++;
@@ -253,7 +253,7 @@ void COscillatorDisplay::draw(CDrawContext* dc)
       CRect waveBoundsRect;
       if (c == 0)
       {
-         float linesAreInBy = 0.1;
+         float linesAreInBy = scaleDownBy * 0.5;
          // OK so draw the rules
          CPoint mid0(0.f, valScale / 2.f), mid1(valScale, valScale / 2.f);
          CPoint top0(0.f, valScale * (1.0-linesAreInBy)), top1(valScale, valScale * (1.0-linesAreInBy));
@@ -331,13 +331,15 @@ void COscillatorDisplay::draw(CDrawContext* dc)
 
       if( use_display )
       {
-         //dc->setFillColor(VSTGUI::CColor( 255,200,200,80));
-         //dc->drawRect(waveBoundsRect, kDrawFilled );
+      /*
          CRect oldcr;
          dc->getClipRect(oldcr);
          dc->setClipRect(waveBoundsRect);
+      */
          dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
+      /*
          dc->setClipRect(oldcr);
+       */
       }
       dc->restoreGlobalState();
 
