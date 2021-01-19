@@ -39,14 +39,19 @@ class Neuron : public Effect
 public:
     enum neuron_params
     {
-        neuron_wh = 0,
-        neuron_wf,
-        neuron_uf,
-        neuron_uh,
-        neuron_bf,
-        neuron_freq,
+        neuron_drive_wh = 0,
+        neuron_squash_wf,
+        neuron_stab_uf,
+        neuron_asym_uh,
+        neuron_bias_bf,
+        
+        neuron_comb_freq,
+        neuron_comb_sep,
+        
+        neuron_width,
+        neuron_gain,
 
-        neuron_num_ctrls,
+        neuron_num_params,
     };
 
     Neuron(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
@@ -90,13 +95,15 @@ private:
     SmoothedValue<float, ValueSmoothingTypes::Linear> Uf = 0.5f;
     SmoothedValue<float, ValueSmoothingTypes::Linear> Uh = 0.5f;
     SmoothedValue<float, ValueSmoothingTypes::Linear> bf = 0.0f;
-    SmoothedValue<float, ValueSmoothingTypes::Linear> delaySmooth = 0.0f;
+    SmoothedValue<float, ValueSmoothingTypes::Linear> delay1Smooth = 0.0f;
+    SmoothedValue<float, ValueSmoothingTypes::Linear> delay2Smooth = 0.0f;
 
     float y1[2] = {0.0f, 0.0f};
 
     BiquadFilter dc_blocker;
-    lipol_ps makeup alignas(16);
-    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay { 1 << 18 };
+    lipol_ps makeup alignas(16), width alignas(16), outgain alignas(16);
+    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay1{1 << 18};
+    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay2{1 << 18};
     Oversampling<2, BLOCK_SIZE> os;
 };
 
