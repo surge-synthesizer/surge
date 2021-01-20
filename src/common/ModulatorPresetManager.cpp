@@ -256,6 +256,32 @@ std::vector<Category> getPresets( SurgeStorage *s )
                resMap[rd].name = catName;
                resMap[rd].parentPath = pd;
                resMap[rd].path = rd;
+
+               /*
+                * We only create categories if we find a preset. So that means parent directories
+                * with just subdirs need categories made. This recurses up as far as we need to go
+                */
+               while (pd != "" && resMap.find(pd) == resMap.end())
+               {
+                  auto cd = pd;
+                  catName = cd;
+                  ppos = cd.rfind(fs::path::preferred_separator);
+
+                  if (ppos != std::string::npos)
+                  {
+                     pd = cd.substr(0, ppos);
+                     catName = cd.substr(ppos + 1);
+                  }
+                  else
+                  {
+                     pd = "";
+                  }
+
+                  resMap[cd] = Category();
+                  resMap[cd].name = catName;
+                  resMap[cd].parentPath = pd;
+                  resMap[cd].path = cd;
+               }
             }
 
             Preset prs;
@@ -269,6 +295,7 @@ std::vector<Category> getPresets( SurgeStorage *s )
          // That's OK!
       }
    }
+
    std::vector<Category> res;
    for (auto& m : resMap)
    {
