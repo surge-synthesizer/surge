@@ -42,8 +42,8 @@ void Neuron::init()
 
     os.reset();
 
-    delay1.prepare(dsamplerate, BLOCK_SIZE, 2);
-    delay2.prepare(dsamplerate, BLOCK_SIZE, 2);
+    delay1.prepare(dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2);
+    delay2.prepare(dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2);
     delay1.setDelay(0.0f);
     delay2.setDelay(0.0f);
 
@@ -51,7 +51,7 @@ void Neuron::init()
     y1[1] = 0.0f;
 
     dc_blocker.suspend();
-    dc_blocker.coeff_HP(5.0f / samplerate, 0.707);
+    dc_blocker.coeff_HP(35.0f / samplerate, 0.707);
     dc_blocker.coeff_instantize();
 
     width.instantize();
@@ -114,11 +114,11 @@ void Neuron::set_params()
    auto freqHz2 =
        (2 * 3.14159265358979323846) * 440 *
        storage->note_to_pitch_ignoring_tuning(*f[neuron_comb_freq] + *f[neuron_comb_sep]);
-   auto delayTimeSec1 = 1.0f / (float)freqHz1;
-   auto delayTimeSec2 = 1.0f / (float)freqHz2;
+   auto delayTimeSec1 = 1.0f / (float) freqHz1;
+   auto delayTimeSec2 = 1.0f / (float) freqHz2;
 
-   delay1Smooth.setTargetValue(delayTimeSec1 * samplerate);
-   delay2Smooth.setTargetValue(delayTimeSec2 * samplerate);
+   delay1Smooth.setTargetValue(delayTimeSec1 * 0.5f * samplerate * os.getOSRatio());
+   delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * samplerate * os.getOSRatio());
 
    // calc makeup gain
    auto drive_makeup = [](float wh) -> float

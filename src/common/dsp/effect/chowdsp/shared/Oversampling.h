@@ -105,10 +105,10 @@ public:
     }
 
     /** Returns the size of the upsampled blocks */
-    inline size_t getUpBlockSize() const noexcept { return up_block_size; }
+    inline constexpr size_t getUpBlockSize() const noexcept { return up_block_size; }
 
     /** Returns the oversampling ratio */
-    inline size_t getOSRatio() const noexcept { return osRatio; }
+    inline constexpr size_t getOSRatio() const noexcept { return osRatio; }
 
     float leftUp  alignas(16)[up_block_size];
     float rightUp alignas(16)[up_block_size];
