@@ -2320,13 +2320,17 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                        };
          typeTo("Hold", MSEGStorage::segment::Type::HOLD);
          typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
-         typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
          typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-         typeTo("Bump", MSEGStorage::segment::Type::BUMP);
+         typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
+
+         contextMenu->addSeparator();
          typeTo("Sine", MSEGStorage::segment::Type::SINE);
-         typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
          typeTo("Triangle", MSEGStorage::segment::Type::TRIANGLE);
+         typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
          typeTo("Square", MSEGStorage::segment::Type::SQUARE);
+
+         contextMenu->addSeparator();
+         typeTo("Bump", MSEGStorage::segment::Type::BUMP);
          typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"), MSEGStorage::segment::Type::SMOOTH_STAIRS);
          typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);

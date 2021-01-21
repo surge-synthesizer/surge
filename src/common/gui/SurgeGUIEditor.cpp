@@ -2698,6 +2698,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                           if( useS == "" ) useS = "-";
                           strncpy(synth->storage.getPatch().CustomControllerLabel[ccid], useS.c_str(),
                                   16);
+                          synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0; // to be sure
                           ((CModulationSourceButton*)control)
                               ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
 
