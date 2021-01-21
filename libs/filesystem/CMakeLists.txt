@@ -1,44 +1,41 @@
 project(filesystem VERSION 0.0.0 LANGUAGES CXX)
 
+set(INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
+set(HEADER_DIR "${INC_DIR}/${PROJECT_NAME}")
+
 function(generate_header FS_HEADER FS_NAMESPACE)
   message(STATUS "${PROJECT_NAME}: Using ${FS_NAMESPACE} from ${FS_HEADER}")
-  set(INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
-  set(HEADER_DIR "${INC_DIR}/${PROJECT_NAME}")
   set(HEADER_FILE "${HEADER_DIR}/import.h")
   configure_file(src/import.h.in "${HEADER_FILE}" @ONLY)
   target_sources(${PROJECT_NAME} INTERFACE "${HEADER_FILE}")
-  target_include_directories(${PROJECT_NAME} INTERFACE "${INC_DIR}")
 endfunction()
 
-function(use_fallback_fs)
-  add_library(${PROJECT_NAME}
-    src/directory_iterator.cpp
-    src/filesystem.cpp
-    src/path.cpp
-    src/recursive_directory_iterator.cpp
-    src/util.h
-    include/${PROJECT_NAME}/directory_entry.h
-    include/${PROJECT_NAME}/directory_iterator.h
-    include/${PROJECT_NAME}/filesystem.h
-    include/${PROJECT_NAME}/filesystem_error.h
-    include/${PROJECT_NAME}/path.h
-    include/${PROJECT_NAME}/recursive_directory_iterator.h
-  )
-  target_include_directories(${PROJECT_NAME} PUBLIC include)
+function(use_ghc_fs)
+  # Don't export GHC symbols from ELF shared objects
+  set(HEADER_FILE "${HEADER_DIR}/ghc-filesystem.h")
+  file(STRINGS ghc-filesystem/include/ghc/filesystem.hpp HEADER_DATA NEWLINE_CONSUME NO_HEX_CONVERSION)
+  string(REPLACE "__attribute__((visibility(\"default\")))" "" HEADER_DATA "${HEADER_DATA}")
+  file(WRITE "${HEADER_FILE}" ${HEADER_DATA})
 
-  target_sources(surge-tests INTERFACE src/tests.cpp)
-  generate_header("\"filesystem/filesystem.h\"" "Surge::filesystem")
+  add_library(${PROJECT_NAME} src/ghc-filesystem.cpp "${HEADER_FILE}")
+  generate_header("\"filesystem/ghc-filesystem.h\"" "ghc::filesystem")
+  target_compile_definitions(${PROJECT_NAME}
+    INTERFACE GHC_FILESYSTEM_FWD
+    PUBLIC GHC_RAISE_UNICODE_ERRORS GHC_WIN_WSTRING_STRING_TYPE
+    PRIVATE GHC_FILESYSTEM_IMPLEMENTATION
+  )
+  target_include_directories(${PROJECT_NAME} PUBLIC "${INC_DIR}")
 endfunction()
 
 function(use_platform_fs)
   add_library(${PROJECT_NAME} INTERFACE)
   generate_header("<filesystem>" "std::filesystem")
+  target_include_directories(${PROJECT_NAME} INTERFACE "${INC_DIR}")
 endfunction()
 
-set(SURGE_DEVEL_FORCE_FALLBACK_FS OFF CACHE BOOL "Force fallback std::filesystem impl (development only)")
-mark_as_advanced(FORCE SURGE_DEVEL_FORCE_FALLBACK_FS)
-if (${SURGE_DEVEL_FORCE_FALLBACK_FS})
-  use_fallback_fs()
+set(SURGE_FILESYSTEM_FORCE_GHC OFF CACHE BOOL "Force GHC filesystem implementation")
+if (${SURGE_FILESYSTEM_FORCE_GHC})
+  use_ghc_fs()
 else()
   include(CheckCXXSourceCompiles)
   check_cxx_source_compiles("
@@ -50,7 +47,7 @@ else()
   if (SURGE_FILESYSTEM_STD_FS_FOUND)
     use_platform_fs()
   else()
-    use_fallback_fs()
+    use_ghc_fs()
   endif()
 endif()
 
