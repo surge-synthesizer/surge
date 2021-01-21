@@ -54,6 +54,8 @@
 #include "filesystem/import.h"
 #include "effect/Effect.h"
 
+#include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -2922,7 +2924,9 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
 {
    void* sy = lpParam;
 #endif
+
    SurgeSynthesizer* synth = (SurgeSynthesizer*)sy;
+   std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
    if( synth->patchid_queue >= 0 )
    {
       int patchid = synth->patchid_queue;
@@ -2942,6 +2946,7 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
    synth->getParent()->patchChanged();
 #endif
    synth->halt_engine = false;
+
    return 0;
 }
 
@@ -3147,10 +3152,12 @@ void SurgeSynthesizer::process()
    }
    else if (patchid_queue >= 0 || has_patchid_file)
    {
-      masterfade = max(0.f, masterfade - 0.025f);
+      masterfade = max(0.f, masterfade - 0.05f);
       mfade = masterfade * masterfade;
+
       if (masterfade < 0.0001f)
       {
+         std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
          // spawn patch-loading thread
          halt_engine = true;
 

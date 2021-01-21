@@ -129,6 +129,7 @@ public:
     * so if you swpan or init the fx[s] object lock this mutex
     */
    std::mutex fxSpawnMutex;
+   std::mutex patchLoadSpawnMutex;
    enum FXReorderMode { NONE, SWAP, COPY, MOVE };
    void reorderFx( int source, int target, FXReorderMode m  ); // This is safe to call from the UI thread since it just edits the sync
 
@@ -345,7 +346,7 @@ public:
    bool refresh_overflow = false;
    float refresh_ctrl_queue_value[8];
    bool process_input;
-   int patchid_queue;
+   std::atomic<int> patchid_queue;
    bool has_patchid_file;
    char patchid_file[FILENAME_MAX];
 
