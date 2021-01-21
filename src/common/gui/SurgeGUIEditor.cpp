@@ -954,6 +954,9 @@ void SurgeGUIEditor::toggle_mod_editing()
 {
    mod_editor = !mod_editor;
    refresh_mod();
+   auto iw = dynamic_cast<CParameterTooltip*>(infowindow);
+   if( iw && iw->isVisible() )
+      iw->Hide();
 }
 
 void SurgeGUIEditor::refresh_mod()
@@ -1182,7 +1185,7 @@ public:
 
    CMouseEventResult onMouseDown(CPoint& where, const CButtonState& buttons) override
    {
-      if (buttons & (kMButton | kButton4 | kButton5))
+      if (buttons & ( kMButton | kButton4 | kButton5))
       {
          if (editor)
          {
