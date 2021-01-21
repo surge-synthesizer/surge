@@ -105,7 +105,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     ** For now, the format of our defaults file is so simple that we don't need to mess
     ** around with tinyxml to create it, just to parse it
     */
-    std::ofstream dFile(defaultsFileName(storage));
+    std::ofstream dFile(string_to_path(defaultsFileName(storage)));
     if (!dFile.is_open())
     {
         std::ostringstream emsg;
