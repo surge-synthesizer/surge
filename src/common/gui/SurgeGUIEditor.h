@@ -142,6 +142,19 @@ public:
 #endif
 
    bool pause_idle_updates = false;
+   int enqueuePatchId = -1;
+   void flushEnqueuedPatchId()
+   {
+      auto t = enqueuePatchId;
+      enqueuePatchId = -1;
+      if( t >= 0 )
+      {
+         synth->patchid_queue = t;
+         // Looks scary but remember this only runs if audio thread is off
+         synth->processThreadunsafeOperations();
+         patchCountdown = 30;
+      }
+   }
 protected:
    int32_t onKeyDown(const VstKeyCode& code,
                      VSTGUI::CFrame* frame) override; ///< should return 1 if no further key down processing
