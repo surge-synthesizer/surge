@@ -3828,6 +3828,11 @@ void SurgeGUIEditor::valueChanged(CControl* control)
       int id = ((CPatchBrowser*)control)->sel_id;
       // synth->load_patch(id);
       enqueuePatchId = id;
+
+#if LINUX
+      // On linux the popup memny will be gon eso we gotta process
+      flushEnqueuedPatchId();
+#endif
       return;
    }
    break;
