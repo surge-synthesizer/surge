@@ -442,8 +442,21 @@ void SurgeGUIEditor::idle()
    if (!synth)
       return;
 
+   if( pause_idle_updates )
+      return;
+
    if (editor_open && frame && !synth->halt_engine)
    {
+      /*
+       * USEFUL for testing stress patch changes
+       *
+      static int runct = 0;
+      if( runct++ == 5 )
+      {
+         synth->patchid_queue = rand() % 1800;
+         runct = 0;
+      }
+        */
       hasIdleRun = true;
       if( firstIdleCountdown )
       {
@@ -483,7 +496,7 @@ void SurgeGUIEditor::idle()
          }
       }
 
-      if( patchCountdown >= 0 )
+      if( patchCountdown >= 0 && ! pause_idle_updates )
       {
          patchCountdown --;
          if( patchCountdown < 0 && synth->patchid_queue >= 0 )

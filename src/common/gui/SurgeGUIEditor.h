@@ -141,7 +141,7 @@ public:
 
 #endif
 
-
+   bool pause_idle_updates = false;
 protected:
    int32_t onKeyDown(const VstKeyCode& code,
                      VSTGUI::CFrame* frame) override; ///< should return 1 if no further key down processing

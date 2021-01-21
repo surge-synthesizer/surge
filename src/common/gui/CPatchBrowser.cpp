@@ -203,12 +203,48 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
          contextMenu->addEntry(hi);
       }
    }
-   
-   getFrame()->addView(contextMenu); // add to frame
-   contextMenu->setDirty();
-   contextMenu->popup();
-   getFrame()->removeView(contextMenu, true); // remove from frame and forget
 
+   if( sge )
+   {
+      /*
+       * So why are we doing this? Well idle updates (like automation of something
+       * that causes a rebuild) can rebuild the UI under us, but also, since the menu
+       * sends a message to the synth to queue a rebuild, it is possible that the load,
+       * process and rebuild could happen *before* popup returns. So imagine
+       *
+       * addView
+       * popup() [frees the ui queue so the idle is running again
+       *     - click menu
+       *     - set patchid queue
+       *     - audio loads the patch
+       *     - idle queue runs (normally this happens after popup closes)
+       *     - UI rebuilds
+       * popup returns
+       * remove self from frame - but hey I've been GCed by that rebuild
+       * splat
+       *
+       * in the normal course of course you get
+       *
+       * addView
+       * popup()
+       *      - click menu
+       *      - patch id queue
+       * close()
+       * idle runs after close
+       *
+       * but not every time. So on slower boxes sometimes (and only sometimes)
+       * the menu would crash. Solve this by having the idle skipped while the
+       * menu is open.
+       */
+      sge->pause_idle_updates = true;
+
+      getFrame()->addView(contextMenu); // add to frame
+      contextMenu->setDirty();
+      contextMenu->popup();
+      getFrame()->removeView(contextMenu, true); // remove from frame and forget
+
+      sge->pause_idle_updates = false;
+   }
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
