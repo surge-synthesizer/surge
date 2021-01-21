@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -13,13 +13,4 @@
 ** open source in September 2018.
 */
 
-#pragma once
-
-inline bool is_dot_or_dotdot(const char *s) noexcept
-{
-    if (*s++ != '.')
-        return false;
-    if (*s && *s++ != '.')
-        return false;
-    return !*s;
-}
+#include "filesystem/import.h"
