@@ -244,6 +244,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint& where, const CButtonState& 
       getFrame()->removeView(contextMenu, true); // remove from frame and forget
 
       sge->pause_idle_updates = false;
+
+      sge->flushEnqueuedPatchId();
    }
    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }

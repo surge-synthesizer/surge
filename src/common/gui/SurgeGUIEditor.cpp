@@ -3826,9 +3826,7 @@ void SurgeGUIEditor::valueChanged(CControl* control)
    {
       int id = ((CPatchBrowser*)control)->sel_id;
       // synth->load_patch(id);
-      synth->patchid_queue = id;
-      synth->processThreadunsafeOperations();
-      patchCountdown = 30;
+      enqueuePatchId = id;
       return;
    }
    break;
