@@ -441,7 +441,7 @@ bailOnPortable:
    {
       WindowWT.size = 0;
       std::ostringstream oss;
-      oss << "Unable to load '" << datapath << "/windows.wt'. This file is required for Surge to work "
+      oss << "Unable to load '" << datapath << "windows.wt'. This file is required for Surge to work "
           << "properly. This occurs when Surge is incorrectly installed and its resources are not found at "
 #if MAC
           << "the global or local user Library/Application Support/Surge directory."

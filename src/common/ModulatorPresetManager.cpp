@@ -102,7 +102,7 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
 
    if( ! doc.SaveFile(fullLocation) )
    {
-      // uhh ... do somethign I guess?
+      // uhh ... do something I guess?
       std::cout << "Could not save" << std::endl;
    }
 
@@ -110,7 +110,7 @@ void savePresetToUser( const fs::path & location, SurgeStorage *s, int scene, in
 }
 
 /*
- * Given a compelted path, load the preset into our storage
+ * Given a completed path, load the preset into our storage
  */
 void loadPresetFrom( const fs::path &location, SurgeStorage *s, int scene, int lfoid )
 {
@@ -215,7 +215,7 @@ std::vector<Category> getPresets( SurgeStorage *s )
       return scanedPresets;
 
    // Do a dual directory traversal of factory and user data with the fs::directory_iterator stuff looking for .lfopreset
-   auto factoryPath = fs::path( { string_to_path(s->datapath) / fs::path{ PresetDir } } );
+   auto factoryPath = fs::path( { string_to_path(s->datapath) / fs::path{ "modulator_presets" } } );
    auto userPath = fs::path( { string_to_path(s->userDataPath) / fs::path{ PresetDir } } );
 
    std::map<std::string, Category> resMap; // handy it is sorted!
