@@ -3740,7 +3740,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
                whichForReal = q;
             }
          }
-         fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, whichForReal, mv->at(i).depth));
+         auto depth = getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id);
+         fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, whichForReal, depth));
       }
       if( m == FXReorderMode::SWAP )
       {
@@ -3756,8 +3757,9 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
                   whichForReal = q;
                }
             }
+            auto depth = getModulation(fxsync[target].p[whichForReal].id, (modsources)mv->at(i).source_id);
             fxmodsync[source].push_back(
-                std::make_tuple(mv->at(i).source_id, whichForReal, mv->at(i).depth));
+                std::make_tuple(mv->at(i).source_id, whichForReal, depth));
          }
       }
    }
