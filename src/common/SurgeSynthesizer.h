@@ -383,6 +383,8 @@ public:
 
    bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
    FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
+   bool fx_reload_mod[n_fx_slots];
+   std::array<std::vector<std::tuple<int,int,float>>, n_fx_slots> fxmodsync;
    int fx_suspend_bitmask;
 
    // hold pedal stuff

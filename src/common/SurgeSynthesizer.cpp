@@ -97,6 +97,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer* parent, std::string suppliedData
    {
       memcpy((void*)&fxsync[i], (void*)&storage.getPatch().fx[i], sizeof(FxStorage));
       fx_reload[i] = false;
+      fx_reload_mod[i] = false;
    }
 
    allNotesOff();
@@ -2165,15 +2166,27 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             ** disastrously bad meaning. #2036. But only do this if it is a one FX change
             ** (not a patch load)
             */
-            if( ! force_reload_all ) 
-               for(int j=0; j<n_fx_params; j++)
+            if( ! force_reload_all )
+            {
+               for (int j = 0; j < n_fx_params; j++)
                {
-                  auto p = &( storage.getPatch().fx[s].p[j] );
-                  for( int ms=1; ms<n_modsources; ms++ )
+                  auto p = &(storage.getPatch().fx[s].p[j]);
+                  for (int ms = 1; ms < n_modsources; ms++)
                   {
-                     clearModulation(p->id, (modsources)ms, true );
+                     clearModulation(p->id, (modsources)ms, true);
                   }
                }
+               if (fx_reload_mod[s])
+               {
+                  for (auto& t : fxmodsync[s])
+                  {
+                     setModulation(storage.getPatch().fx[s].p[std::get<1>(t)].id,
+                                   (modsources)std::get<0>(t), std::get<2>(t));
+                  }
+                  fxmodsync[s].clear();
+                  fx_reload_mod[s] = false;
+               }
+            }
             
          }
          else
@@ -2205,6 +2218,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             fx[s]->init();
          }
          fx_reload[s] = false;
+         fx_reload_mod[s] = false;
          refresh_editor = true;
          something_changed = true;
       }
@@ -3654,9 +3668,14 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
    if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
       return;
 
+   std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
+
    FxStorage so, to;
    memcpy((void*)&so, (void*)(&storage.getPatch().fx[source]), sizeof(FxStorage));
    memcpy((void*)&to, (void*)(&storage.getPatch().fx[target]), sizeof(FxStorage));
+
+   fxmodsync[source].clear();
+   fxmodsync[target].clear();
 
    fxsync[target].type.val.i = so.type.val.i;
    Effect* t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
@@ -3701,6 +3720,46 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m )
       if( m == FXReorderMode::SWAP )
          cp( fxsync[source].p[i], to.p[i] );
       cp( fxsync[target].p[i], so.p[i] );
+   }
+
+   // Now swap the routings. FX routings are always global
+   std::vector<ModulationRouting>* mv = nullptr;
+   mv = &(storage.getPatch().modulation_global);
+   int n = mv->size();
+   for (int i = 0; i < n; ++i)
+   {
+      if (mv->at(i).destination_id >= fxsync[source].p[0].id &&
+          mv->at(i).destination_id <= fxsync[source].p[n_fx_params - 1].id)
+      {
+         fx_reload_mod[target] = true;
+         int whichForReal = -1;
+         for( int q=0; q<n_fx_params; ++q )
+         {
+            if (mv->at(i).destination_id == fxsync[source].p[q].id)
+            {
+               whichForReal = q;
+            }
+         }
+         fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, whichForReal, mv->at(i).depth));
+      }
+      if( m == FXReorderMode::SWAP )
+      {
+         if (mv->at(i).destination_id >= fxsync[target].p[0].id &&
+             mv->at(i).destination_id <= fxsync[target].p[n_fx_params - 1].id)
+         {
+            fx_reload_mod[source] = true;
+            int whichForReal = -1;
+            for (int q = 0; q < n_fx_params; ++q)
+            {
+               if (mv->at(i).destination_id == fxsync[target].p[q].id)
+               {
+                  whichForReal = q;
+               }
+            }
+            fxmodsync[source].push_back(
+                std::make_tuple(mv->at(i).source_id, whichForReal, mv->at(i).depth));
+         }
+      }
    }
 
    load_fx_needed = true;
