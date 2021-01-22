@@ -164,7 +164,7 @@ void SkinDB::rescanForSkins(SurgeStorage* storage)
    // Run over the skins parsing the name
    for( auto &e : availableSkins )
    {
-      auto x = e.root + e.name + "/skin.xml";
+      auto x = e.root + e.name + PATH_SEPARATOR + "skin.xml";
 
       TiXmlDocument doc;
       // Obviously fix this

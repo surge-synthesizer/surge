@@ -37,7 +37,7 @@ bool haveReadDefaultsFile = false;
 
 std::string defaultsFileName(SurgeStorage *storage)
 {
-    std::string fn = storage->userDefaultFilePath + "/SurgeUserDefaults.xml";
+    std::string fn = storage->userDefaultFilePath + PATH_SEPARATOR + "SurgeUserDefaults.xml";
     return fn;
 }
 
