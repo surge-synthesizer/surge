@@ -1129,14 +1129,24 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
             if( es.lastEval == hoveredSegment )
             {
+               bool skipThisAdd = false;
                if( !hlpathUsed )
                {
                   // We always want to hit the start
-                  beginP(highlightPath, i, valpx( ms->segments[hoveredSegment].v0));
+                  if (ms->segmentStart[hoveredSegment] >= ms->axisStart)
+                     beginP(highlightPath, i, valpx(ms->segments[hoveredSegment].v0));
+                  else
+                  {
+                     skipThisAdd = true;
+                     beginP(highlightPath, i, v);
+                     beginP(highlightPath, i, v);
+                  }
                   hlpathUsed = true;
                }
-
-               addP( highlightPath, i, v );
+               if (!skipThisAdd)
+               {
+                  addP(highlightPath, i, v);
+               }
             }
 
             if( i == 0 )
