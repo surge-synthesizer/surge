@@ -47,6 +47,8 @@ Type: files; Name: "{cf}\VST3\Surge.vst3"
 ;; and since there have been changes in patch subfoldering for factory and 3rd party folders in Surge 1.7, delete them first to ensure clean slate
 Type: filesandordirs; Name: "{commonappdata}\Surge\patches_3rdparty"
 Type: filesandordirs; Name: "{commonappdata}\Surge\patches_factory"
+;; and since there have been changes in some factory wavetable names in Surge 1.8.1, delete them first to ensure clean slate
+Type: filesandordirs; Name: "{commonappdata}\Surge\wavetables"
 
 [Components]
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
