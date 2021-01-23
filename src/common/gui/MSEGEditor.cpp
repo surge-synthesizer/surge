@@ -2088,7 +2088,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
 
       if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
       {
-         if (tts <= ms->loop_end && tts != ms->loop_start)
+         if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
          {
             auto cbStart = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]()
                {
@@ -2097,7 +2097,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
                });
          }
    
-         if (tts >= ms->loop_start && tts != ms->loop_end)
+         if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
          {
             auto cbEnd = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"), [this, tts, t]()
                {
