@@ -89,7 +89,7 @@ def comparewt(fn1, fn2):
 
 def comparereswt(fn):
     lr = "resources/data/wavetables/" + fn + ".wt"
-    hr = "resources/data/wavetables/" + fn + " hires.wt"
+    hr = "resources/data/wavetables/" + fn + " HQ.wt"
     comparewt(lr, hr)
 
 
@@ -139,18 +139,18 @@ def squarewindowed(x, n):
     return r
 
 
-def make_hires_of(name, genf):
+def make_high_quality_of(name, genf):
     infn = "resources/data/wavetables/" + name + ".wt"
-    outfn = "resources/data/wavetables/" + name + " hires.wt"
+    outfn = "resources/data/wavetables/" + name + " HQ.wt"
     ind = readwt(infn)
 
     generatewt(outfn, genf, 512, len(ind))
 
 
-make_hires_of("generated/sine pd", sinepd)
-make_hires_of("generated/sine half", sinehalf)
-make_hires_of("generated/sine power", sinepower)
-make_hires_of("generated/sine fm 2x", sinefm2)
-make_hires_of("generated/sine fm 3x", sinefm3)
-make_hires_of("generated/sine windowed", sinewindowed)
-make_hires_of("generated/square windowed", squarewindowed)
+make_high_quality_of("generated/Sine PD", sinepd)
+make_high_quality_of("generated/Sine Half", sinehalf)
+make_high_quality_of("generated/Sine Power", sinepower)
+make_high_quality_of("generated/Sine FM 2x", sinefm2)
+make_high_quality_of("generated/Sine FM 3x", sinefm3)
+make_high_quality_of("generated/Sine Windowed", sinewindowed)
+make_high_quality_of("generated/Square Windowed", squarewindowed)
