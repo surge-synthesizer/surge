@@ -5550,6 +5550,18 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                                 VSTGUI::COptionMenu::kNoDrawStyle |
                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
 
+#if WINDOWS
+#define SUPPORTS_TOUCH_MENU 1
+#else
+#define SUPPORTS_TOUCH_MENU 0
+#endif
+
+#if SUPPORTS_TOUCH_MENU
+   bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage), "touchMouseMode", false);
+#else
+   bool touchMode = false;
+#endif
+
    // Mouse behavior submenu
    int mid = 0;
    COptionMenu* mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
@@ -5569,6 +5581,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                              CSurgeSlider::sliderMoveRateState);
    });
    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kLegacy));
+   menuItem->setEnabled(!touchMode);
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
@@ -5577,6 +5590,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                              CSurgeSlider::sliderMoveRateState);
    });
    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
+   menuItem->setEnabled(!touchMode);
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
@@ -5585,6 +5599,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                              CSurgeSlider::sliderMoveRateState);
    });
    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
+   menuItem->setEnabled(!touchMode);
    mid++;
 
    menuItem = addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
@@ -5593,6 +5608,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
                                              CSurgeSlider::sliderMoveRateState);
    });
    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
+   menuItem->setEnabled(!touchMode);
    mid++;
 
    mouseSubMenu->addSeparator(mid++);
@@ -5603,6 +5619,24 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
       Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", 1 - tsMode);
    });
    menuItem->setChecked(tsMode);
+   menuItem->setEnabled(!touchMode);
+
+#if SUPPORTS_TOUCH_MENU
+   mouseSubMenu->addSeparator();
+   menuItem = addCallbackMenu(
+       mouseSubMenu, Surge::UI::toOSCaseForMenu("Use Touch Screen Settings"), [this, touchMode]() {
+          Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "touchMouseMode",
+                                                 !touchMode);
+          if (!touchMode)
+          {
+             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                    "showCursorWhileEditing", true);
+             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
+                                                    CSurgeSlider::kExact);
+          }
+       });
+   menuItem->setChecked(touchMode);
+#endif
 
    std::string mouseMenuName = Surge::UI::toOSCaseForMenu("Mouse Behavior");
 
