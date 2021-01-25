@@ -527,6 +527,10 @@ bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &
 {
     if( ! is_metacontroller )
     {
+#if ENABLE_WHEEL_FOR_ALTERNATE
+       /*
+        * This code selects the modulator improperly.
+        */
        if (hasAlternate)
        {
           accumWheelDistance += distance;
@@ -546,6 +550,7 @@ bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &
              }
           }
        }
+#endif
        return false;
     }
 
