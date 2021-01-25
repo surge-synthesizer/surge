@@ -18,7 +18,7 @@ details below and also in [the contributors section of the Surge website](https:
 Surge currently builds on macOS as a 64-bit AU, VST2 and VST3, Windows as a 64- and 32-bit VST2 and VST3,
 and Linux as a 64-bit VST2, VST3 and LV2. We provide binary distributions of the AU and VST3 on our webpage.
 
-This README serves as the root of developer documentation for the project.
+This README serves as the root of developer documentation for Surge.
 
 # Developing Surge
 
