@@ -5626,7 +5626,7 @@ VSTGUI::COptionMenu* SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect& menuRec
 #if SUPPORTS_TOUCH_MENU
    mouseSubMenu->addSeparator();
    menuItem = addCallbackMenu(
-       mouseSubMenu, Surge::UI::toOSCaseForMenu("Use Touch Screen Settings"), [this, touchMode]() {
+       mouseSubMenu, Surge::UI::toOSCaseForMenu("Touchscreen Mode"), [this, touchMode]() {
           Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "touchMouseMode",
                                                  !touchMode);
           if (!touchMode)
