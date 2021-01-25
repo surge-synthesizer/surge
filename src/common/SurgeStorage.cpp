@@ -939,30 +939,32 @@ void SurgeStorage::load_wt(int id, Wavetable* wt, OscillatorStorage *osc)
 
 void SurgeStorage::load_wt(string filename, Wavetable* wt, OscillatorStorage *osc)
 {
-   if( osc )
-   {
-      char sep = PATH_SEPARATOR;
-      auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
-      std::string fnnoext = fn.substr( 0, fn.find_last_of('.' ) );
-      
-      if( fnnoext.length() > 0 )
-      {
-         strncpy( osc->wavetable_display_name, fnnoext.c_str(), 256 );
-      }
-   }
    wt->queue_filename[0] = 0;
    string extension = filename.substr(filename.find_last_of('.'), filename.npos);
    for (unsigned int i = 0; i < extension.length(); i++)
       extension[i] = tolower(extension[i]);
+   bool loaded = false;
    if (extension.compare(".wt") == 0)
-      load_wt_wt(filename, wt);
+      loaded = load_wt_wt(filename, wt);
    else if (extension.compare(".wav") == 0)
-      load_wt_wav_portable(filename, wt);
+      loaded = load_wt_wav_portable(filename, wt);
    else
    {
        std::ostringstream oss;
        oss << "Unable to load file with extension " << extension << "! Surge only supports .wav and .wt wavetable files!";
        Surge::UserInteractions::promptError(oss.str(), "Error" );
+   }
+
+   if( osc && loaded )
+   {
+      char sep = PATH_SEPARATOR;
+      auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
+      std::string fnnoext = fn.substr( 0, fn.find_last_of('.' ) );
+
+      if( fnnoext.length() > 0 )
+      {
+         strncpy( osc->wavetable_display_name, fnnoext.c_str(), 256 );
+      }
    }
 }
 

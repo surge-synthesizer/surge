@@ -59,7 +59,8 @@ struct FcloseGuard {
     }
                 
 };
-void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
+
+bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 {
    std::string uitag = "Wavetable Import Error";
 #if WAV_STDOUT_INFO
@@ -73,7 +74,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         std::ostringstream oss;
         oss << "Unable to open file '" << fn << "'!";
         Surge::UserInteractions::promptError(oss.str(), uitag );
-        return;
+        return false;
     }
     FcloseGuard closeOnReturn(fp);
     
@@ -86,7 +87,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
        std::ostringstream oss;
        oss << "'" << fn << "' does not contain a valid RIFF header chunk!";
        Surge::UserInteractions::promptError(oss.str(), uitag );
-       return;
+       return false;
     }
 
     if( ! four_chars(riff, 'R', 'I', 'F', 'F' ) &&
@@ -96,7 +97,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
        oss << "'" << fn << "' is not a standard RIFF/WAVE file. Header is: " << riff[0] << riff[1] << riff[2]
            << riff[3] << " " << wav[0] << wav[1] << wav[2] << wav[3] << ".";
        Surge::UserInteractions::promptError(oss.str(), uitag );
-       return;
+       return false;
     }
     
     // WAV HEADER
@@ -180,7 +181,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                     << numChannels << "-channel file.";
                 
                 Surge::UserInteractions::promptError( oss.str(), uitag );
-                return;
+                return false;
             }
         }
         else if( four_chars(chunkType, 'c', 'l', 'm', ' '))
@@ -338,7 +339,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
         if (wavdata) free(wavdata);
-        return;
+        return false;
     }
     
     int loopCount = datasamples / loopLen;
@@ -411,7 +412,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
         if (wavdata) free(wavdata);
-        return;
+        return false;
     }
 
     wh.n_samples = 1 << sh;
@@ -458,7 +459,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         Surge::UserInteractions::promptError( oss.str(), uitag );
                                               
         if( wavdata ) free( wavdata );
-        return;
+        return false;
     }
 
     if( wavdata && wt )
@@ -468,7 +469,7 @@ void SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         waveTableDataMutex.unlock();
         free( wavdata );
     }
-    return;
+    return true;
 }
 
 void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
