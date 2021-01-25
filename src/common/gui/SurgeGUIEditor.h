@@ -152,7 +152,7 @@ public:
          synth->patchid_queue = t;
          // Looks scary but remember this only runs if audio thread is off
          synth->processThreadunsafeOperations();
-         patchCountdown = 30;
+         patchCountdown = 200;
       }
    }
 protected:
