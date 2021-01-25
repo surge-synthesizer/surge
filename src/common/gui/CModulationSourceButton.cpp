@@ -530,7 +530,12 @@ bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &
        if (hasAlternate)
        {
           accumWheelDistance += distance;
-          if (accumWheelDistance > 2 || accumWheelDistance < -2)
+#if WINDOWS
+          bool doTick = accumWheelDistance != 0;
+#else
+          bool doTick = accumWheelDistance > 2 || accumWheelDistance < -2;
+#endif
+          if (doTick)
           {
              accumWheelDistance = 0;
              auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
