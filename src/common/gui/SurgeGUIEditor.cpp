@@ -7941,3 +7941,15 @@ void SurgeGUIEditor::hideAboutBox()
       aboutbox = nullptr;
    }
 }
+
+void SurgeGUIEditor::toggleAlternateFor(VSTGUI::CControl* c)
+{
+   auto cms = dynamic_cast<CModulationSourceButton*>(c);
+   if (cms)
+   {
+      modsource = (modsources)(cms->getTag() - tag_mod_source0);
+      cms->setUseAlternate(!cms->useAlternate);
+      modsource_is_alternate[modsource] = cms->useAlternate;
+      this->refresh_mod();
+   }
+}

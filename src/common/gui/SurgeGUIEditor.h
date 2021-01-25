@@ -441,6 +441,10 @@ private:
 
    bool modsource_is_alternate[n_modsources];
 
+public:
+   void toggleAlternateFor(VSTGUI::CControl* c);
+
+private:
    VSTGUI::CControl *vu[16];
    VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
    VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;

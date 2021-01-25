@@ -526,8 +526,24 @@ double CModulationSourceButton::getMouseDeltaScaling(const CPoint& where, const 
 bool CModulationSourceButton::onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons)
 {
     if( ! is_metacontroller )
-        return false;
-    
+    {
+       if (hasAlternate)
+       {
+          accumWheelDistance += distance;
+          if (accumWheelDistance > 2 || accumWheelDistance < -2)
+          {
+             accumWheelDistance = 0;
+             auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
+             if (sge)
+             {
+                sge->toggleAlternateFor(this);
+                return true;
+             }
+          }
+       }
+       return false;
+    }
+
     auto rate = 1.f;
 
 #if WINDOWS
