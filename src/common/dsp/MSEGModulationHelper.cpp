@@ -206,12 +206,32 @@ float valueAt(int ip, float fup, float df, MSEGStorage* ms, EvaluatorState *es, 
       bool scurveMirrored = false;
       if( r.type == MSEGStorage::segment::SCURVE )
       {
-         if( df != 0 )
+         /* There is a pathological case here where the deform is non-zero but very small
+          * where this results in a floating point underflow. That is, if df is e1-7 then
+          * e^df - 1 is basically the last decimal place and you get floating point rouding
+          * quantization. So treat all deforms less than 1e-4 as zero.
+          *
+          * This is totally warranted because we work in float space.
+          * Remember e^x = 1 + x + x^2/2 + ... we are in a situation where df = 1e-4
+          * and adf = 1e-3 so adf^2 = 1e-6 == 0 at floating point. Safe to ignore on
+          * the scale of values of 1. So
+          *
+          * (e^(af)-1) / (e^a - 1)
+          * (1 + af - 1) / (1 + a - 1)
+          * = f
+          *
+          * or: to floating point precision any deform below 1e-4 is the same as no
+          * deform up to errors (and those errors are not what we want on the output).
+          *
+          * See issue #3708 for an example.
+          */
+         if (fabs(df) > 1e-4)
          {
             // Deform moves the center point
-            auto adf = df  * 10;
-            frac = ( exp( adf * frac ) - 1 ) / ( exp( adf ) - 1 );
+            auto adf = df * 10;
+            frac = (exp(adf * frac) - 1) / (exp(adf) - 1);
          }
+
          if( frac > 0.5 )
          {
             frac = 1 - (frac - 0.5 ) * 2;
