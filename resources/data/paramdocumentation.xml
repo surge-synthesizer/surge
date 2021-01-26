@@ -1,4 +1,4 @@
-param-doc>
+<param-doc>
   <ctrl_group group="0" group_name="cg_GLOBAL" help_url="https://surge-synthesizer.github.io/manual/"/>
   <ctrl_group group="2" group_name="cg_OSC" help_url="#oscillators"/>
   <ctrl_group group="3" group_name="cg_MIX" help_url="#mixer"/>
