@@ -193,7 +193,6 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_bias_bf].set_type(ct_percent);
     fxdata->p[neuron_bias_bf].posy_offset = 1;
 
-
     fxdata->p[neuron_comb_freq].set_name("Frequency");
     fxdata->p[neuron_comb_freq].set_type(ct_freq_audible);
     fxdata->p[neuron_comb_freq].posy_offset = 3;
@@ -202,7 +201,6 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_comb_sep].set_name("Separation");
     fxdata->p[neuron_comb_sep].set_type(ct_freq_mod);
     fxdata->p[neuron_comb_sep].posy_offset = 3;
-
 
     fxdata->p[neuron_lfo_wave].set_name("Waveform");
     fxdata->p[neuron_lfo_wave].set_type(ct_flangerwave);
@@ -215,7 +213,6 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_lfo_depth].set_name("Depth");
     fxdata->p[neuron_lfo_depth].set_type(ct_percent);
     fxdata->p[neuron_lfo_depth].posy_offset = 5;
-
 
     fxdata->p[neuron_width].set_name("Width");
     fxdata->p[neuron_width].set_type(ct_decibel_narrow);
@@ -236,7 +233,7 @@ void Neuron::init_default_values()
 
     fxdata->p[neuron_comb_freq].val.f = 70.0f;
     fxdata->p[neuron_comb_sep].val.f = 0.5f;
-    
+
     fxdata->p[neuron_lfo_wave].val.i = 0;
     fxdata->p[neuron_lfo_rate].val.f = -2.f;
     fxdata->p[neuron_lfo_depth].val.f = 0.f;
