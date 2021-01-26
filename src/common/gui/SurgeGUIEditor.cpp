@@ -5080,10 +5080,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
    if (lt_function == shapev) 
       what = "Env";     // TODO FIXME: When function LFO type is added, remove it from this condition!
 
+   auto msurl = SurgeGUIEditor::helpURLForSpecial("lfo-presets");
+   auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+
    COptionMenu* lfoSubMenu =
        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-   addCallbackMenu(lfoSubMenu, "[?] Modulator Presets", [](){} ); // FIXME - help needed
+   addCallbackMenu(lfoSubMenu, "[?] LFO Presets", [hurl]()
+       {
+          Surge::UserInteractions::openURL(hurl);
+       }),
+
    lfoSubMenu->addSeparator();
+
    addCallbackMenu( lfoSubMenu,
                    Surge::UI::toOSCaseForMenu("Save " + what + " As..."),
                    [this, currentLfoId, what](){
