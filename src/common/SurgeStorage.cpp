@@ -1429,7 +1429,7 @@ void SurgeStorage::init_tables()
       waveshapers[wst_soft][i] = (float)tanh(x);
       waveshapers[wst_hard][i] = (float)pow(tanh(pow(::abs(x), 5.0)), 0.2);
       if (x < 0)
-         waveshapers[wst_hard][i] = -waveshapers[1][i];
+         waveshapers[wst_hard][i] = -waveshapers[wst_hard][i];
       waveshapers[wst_asym][i] = (float)shafted_tanh(x + 0.5) - shafted_tanh(0.5);
       waveshapers[wst_sine][i] = (float)sin((double)((double)i - 512.0) * M_PI / 512.0);
       waveshapers[wst_digital][i] = (float)tanh(x);
