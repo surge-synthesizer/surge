@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<lfo shape="8">
+    <params>
+        <rate v="1.000000" temposync="1" deform_type="0" extend_range="0" deactivated="0" />
+        <phase v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <magnitude v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <deform v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <trigmode i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <unipolar i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+    </params>
+    <mseg activeSegments="8" endpointMode="1" editMode="0" loopMode="2" loopStart="0" loopEnd="7" hSnapDefault="0.125000" vSnapDefault="0.125000" hSnap="0.125000" vSnap="0.125000" axisWidth="19.132858" axisStart="0.000000">
+        <segments>
+            <segment duration="1.000000" v0="-1.000000" nv1="1.000000" cpduration="0.500000" cpv="0.743455" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="1.000000" v0="1.000000" nv1="-0.750000" cpduration="0.125000" cpv="0.438163" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="2.000000" v0="-0.750000" nv1="0.750000" cpduration="0.533715" cpv="-0.002749" type="4" useDeform="1" invertDeform="0" />
+            <segment duration="2.000000" v0="0.750000" nv1="-0.500000" cpduration="1.000000" cpv="0.356405" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="3.000000" v0="-0.500000" nv1="0.500000" cpduration="0.863380" cpv="-0.386372" type="10" useDeform="1" invertDeform="0" />
+            <segment duration="0.000000" v0="0.500000" nv1="-0.750000" cpduration="0.000000" cpv="-0.355529" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="4.000000" v0="-0.750000" nv1="0.750000" cpduration="1.000000" cpv="-0.134489" type="4" useDeform="1" invertDeform="0" />
+            <segment duration="2.000000" v0="0.750000" nv1="-1.000000" cpduration="0.250000" cpv="0.493484" type="1" useDeform="1" invertDeform="0" />
+        </segments>
+    </mseg>
+</lfo>

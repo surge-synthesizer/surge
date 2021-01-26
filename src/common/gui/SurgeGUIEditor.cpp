@@ -5114,29 +5114,22 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
    if (!presetCategories.empty())
       lfoSubMenu->addSeparator();
 
-   std::unordered_map<std::string, std::pair<COptionMenu*, bool>> subMenuMaps;
+  std::unordered_map<std::string, std::pair<COptionMenu*, bool>> subMenuMaps;
    subMenuMaps[""] = std::make_pair(lfoSubMenu, true);
-   for( auto const &cat : presetCategories )
+   for (auto const& cat : presetCategories)
    {
-      COptionMenu *catSubMenu = new COptionMenu( menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+      COptionMenu* catSubMenu =
+          new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
       subMenuMaps[cat.path] = std::make_pair(catSubMenu, false);
-
-      for( auto const &p : cat.presets )
-         addCallbackMenu(catSubMenu,
-                         p.name,
-                         [this, p, currentLfoId](){
-                            Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId );
-                            auto newshape = this->synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
-
-                            if( editorOverlay && editorOverlayTag == "msegEditor" )
-                            {
-                               closeMSEGEditor();
-                               if( newshape == lt_mseg )
-                                  showMSEGEditor();
-                            }
-
-                            this->synth->refresh_editor = true;
-                         });
+   }
+   for (auto const& cat : presetCategories)
+   {
+      if (subMenuMaps.find(cat.path) == subMenuMaps.end())
+      {
+         // should never happen
+         continue;
+      }
+      auto catSubMenu = subMenuMaps[cat.path].first;
       auto parentMenu = lfoSubMenu;
       if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
       {
@@ -5144,15 +5137,65 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
          if (!subMenuMaps[cat.parentPath].second)
          {
             subMenuMaps[cat.parentPath].second = true;
-            if (parentMenu->getNbEntries() > 0)
-               parentMenu->addSeparator();
          }
       }
-      parentMenu->addEntry(catSubMenu, cat.name.c_str());
+
+      auto catname = cat.name;
+
+#if WINDOWS
+      Surge::Storage::findReplaceSubstring(catname, std::string("&"), std::string("&&"));
+#endif
+
+      parentMenu->addEntry(catSubMenu, catname.c_str());
       catSubMenu->forget();
    }
 
+   for (auto const& cat : presetCategories)
+   {
+      if (subMenuMaps.find(cat.path) == subMenuMaps.end())
+      {
+         // should never happen
+         continue;
+      }
+
+      auto catSubMenu = subMenuMaps[cat.path].first;
+
+      if (catSubMenu->getNbEntries() > 0 && cat.presets.size() > 0)
+      {
+         catSubMenu->addSeparator();
+      }
+
+      for (auto const& p : cat.presets)
+      {
+         auto pname = p.name;
+
+#if WINDOWS
+         Surge::Storage::findReplaceSubstring(pname, std::string("&"), std::string("&&"));
+#endif
+
+      addCallbackMenu(catSubMenu, pname, [this, p, currentLfoId]()
+         {
+            Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage), current_scene, currentLfoId);
+
+            auto newshape = this->synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
+            
+            if (editorOverlay && editorOverlayTag == "msegEditor")
+            {
+               closeMSEGEditor();
+
+               if (newshape == lt_mseg)
+               {
+                  showMSEGEditor();
+               }
+            }
+            
+            this->synth->refresh_editor = true;
+         });
+      }
+   }
+
    lfoSubMenu->addSeparator();
+
    addCallbackMenu(lfoSubMenu, Surge::UI::toOSCaseForMenu("Rescan Presets"),
                    []() { Surge::ModulatorPreset::forcePresetRescan(); });
    return lfoSubMenu;
