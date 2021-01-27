@@ -282,6 +282,7 @@ enum fx_type
    fxt_airwindows,
    fxt_neuron,
    fxt_geq11,
+   fxt_resonator,
 
    n_fx_types,
 };
@@ -304,6 +305,7 @@ const char fx_type_names[n_fx_types][16] =
    "Airwindows",
    "Neuron",
    "Graphic EQ",
+   "Resonator",
 };
 
 enum fx_bypass

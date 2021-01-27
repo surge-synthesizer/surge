@@ -433,17 +433,35 @@ void Parameter::set_type(int ctrltype)
       val_max.f = 15;
       val_default.f = -18;
       break;
+   case ct_freq_reson_band1:
+      valtype = vt_float;
+      val_min.f = -46.4936f; // 30 Hz
+      val_max.f = -6.6305f; // 300 Hz
+      val_default.f = -25.65f;  // 100 Hz
+      break;
+   case ct_freq_reson_band2:
+      valtype = vt_float;
+      val_min.f = -6.6305f; // 300 Hz
+      val_max.f = 21.23265f; // 1500 Hz
+      val_default.f = 8.038216f; // 700 Hz
+      break;
+   case ct_freq_reson_band3:
+      valtype = vt_float;
+      val_min.f = 21.23265f; // 1500 Hz
+      val_max.f = 49.09578; // 7500 Hz
+      val_default.f = 35.90135f; // 3500 Hz
+      break;
    case ct_freq_vocoder_low:
       valtype = vt_float;
-      val_min.f = -36; // 55hz
-      val_max.f = 36; // 3520 hz
+      val_min.f = -36; // 55 Hz
+      val_max.f = 36; // 3520 Hz
       val_default.f = -3;
       break;
    case ct_freq_vocoder_high:
       valtype = vt_float;
-      val_min.f = 0; // 440 hz
-      val_max.f = 60; // ~14.3 khz
-      val_default.f = 49; // ~7.4khz
+      val_min.f = 0; // 440 Hz
+      val_max.f = 60; // ~14.3 kHz
+      val_default.f = 49; // ~7.4 kHz
       break;
    case ct_freq_mod:
       valtype = vt_float;
@@ -761,6 +779,12 @@ void Parameter::set_type(int ctrltype)
       valtype = vt_int;
       val_default.i = 0;
       break;
+   case ct_reson_mode:
+      val_min.i = 0;
+      val_max.i = 3;
+      valtype = vt_int;
+      val_default.i = 1;
+      break;
    case ct_vocoder_bandcount:
       val_min.i = 4;
       val_max.i = 20;
@@ -945,6 +969,9 @@ void Parameter::set_type(int ctrltype)
    case ct_freq_hpf:
    case ct_freq_audible:
    case ct_freq_audible_deactivatable:
+   case ct_freq_reson_band1:
+   case ct_freq_reson_band2:
+   case ct_freq_reson_band3:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
       displayType = ATwoToTheBx;
@@ -2011,6 +2038,9 @@ void Parameter::get_display_alt(char* txt, bool external, float ef)
    case ct_freq_hpf:
    case ct_freq_audible:
    case ct_freq_audible_deactivatable:
+   case ct_freq_reson_band1:
+   case ct_freq_reson_band2:
+   case ct_freq_reson_band3:
    case ct_freq_vocoder_low:
    case ct_freq_vocoder_high:
    {
@@ -2537,6 +2567,23 @@ void Parameter::get_display(char* txt, bool external, float ef)
          }
       }
       break;
+      case ct_reson_mode:
+         switch (i)
+         {
+         case 0:
+            sprintf(txt, "Lowpass");
+            break;
+         case 1:
+            sprintf(txt, "Bandpass");
+            break;
+         case 2:
+            sprintf(txt, "Bandpass+Notch");
+            break;
+         case 3:
+            sprintf(txt, "Highpass");
+            break;
+         }
+      break;
       case ct_vocoder_modulator_mode:
            {
               std::string type;
@@ -2789,6 +2836,9 @@ bool Parameter::can_setvalue_from_string()
    case ct_decibel_deactivatable:
    case ct_freq_audible:
    case ct_freq_audible_deactivatable:
+   case ct_freq_reson_band1:
+   case ct_freq_reson_band2:
+   case ct_freq_reson_band3:
    case ct_freq_shift:
    case ct_freq_hpf:
    case ct_freq_vocoder_low:
