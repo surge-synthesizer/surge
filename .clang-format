@@ -1,64 +1,21 @@
 ---
+BasedOnStyle: LLVM
+IndentWidth: 4
+---
 Language: Cpp
 BasedOnStyle: LLVM
-IndentWidth: 3
-CompactNamespaces: true
-FixNamespaceComments: true
-PointerAlignment: Left
-SortIncludes: false
-Standard: Cpp11
-IndentCaseLabels: false
-MaxEmptyLinesToKeep: 1
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass: true
-  AfterFunction: true
-  AfterControlStatement: true
-  AfterEnum: true
-  AfterStruct: true
-  AfterNamespace: true
-  SplitEmptyFunction: false
-  AfterUnion: true
-  BeforeCatch: true
-  BeforeElse: true
-
-AccessModifierOffset: -3
+IndentWidth: 4
+AlignAfterOpenBracket: Align
+BreakBeforeBraces: Allman
 ColumnLimit: 100
-BinPackParameters: false
-
-AllowShortIfStatementsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
-AlwaysBreakAfterReturnType: None
-BreakBeforeTernaryOperators: true
+SortIncludes: false
 ---
 Language: ObjC
 BasedOnStyle: LLVM
-IndentWidth: 3
-CompactNamespaces: true
-FixNamespaceComments: true
-PointerAlignment: Left
-SortIncludes: false
-Standard: Cpp11
-IndentCaseLabels: false
-MaxEmptyLinesToKeep: 1
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterClass: true
-  AfterFunction: true
-  AfterControlStatement: true
-  AfterEnum: true
-  AfterStruct: true
-  AfterNamespace: true
-  SplitEmptyFunction: false
-  AfterUnion: true
-  BeforeCatch: true
-  BeforeElse: true
-
-AccessModifierOffset: -3
+IndentWidth: 4
+AlignAfterOpenBracket: Align
+BreakBeforeBraces: Allman
 ColumnLimit: 100
-BinPackParameters: false
+SortIncludes: false
+---
 
-AllowShortIfStatementsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
-AlwaysBreakAfterReturnType: None
-BreakBeforeTernaryOperators: true

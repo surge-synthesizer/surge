@@ -13,7 +13,7 @@ if( ${Git_FOUND} )
             POST_BUILD
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMAND cmake -E make_directory surge-extra-content
-            COMMAND ${GIT_EXECUTABLE} clone ${SURGE_EXTRA_CONTENT_REPO} surge-extra-content
+            COMMAND ${GIT_EXECUTABLE} clone ${SURGE_EXTRA_CONTENT_REPO} surge-extra-content || echo "Already there"
             )
     add_custom_command(TARGET download-extra-content
             POST_BUILD
