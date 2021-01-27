@@ -84,6 +84,7 @@ TEST_CASE( "All Patches are Loadable", "[io]" )
    int i=0;
    for( auto p : surge->storage.patch_list )
    {
+      INFO( "Loading patch [" << p.name  << "] from [" << surge->storage.patch_category[p.category].name << "]" );
       surge->loadPatch(i);
       ++i;
 
