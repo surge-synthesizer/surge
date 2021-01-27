@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<lfo shape="8">
+    <params>
+        <rate v="1.000000" temposync="1" deform_type="0" extend_range="0" deactivated="0" />
+        <phase v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <magnitude v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <deform v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <trigmode i="0" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <unipolar i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+    </params>
+    <mseg activeSegments="4" endpointMode="2" editMode="0" loopMode="2" loopStart="0" loopEnd="3" hSnapDefault="0.125000" vSnapDefault="0.250000" hSnap="0.125000" vSnap="0.250000" axisWidth="1.000000" axisStart="0.000000">
+        <segments>
+            <segment duration="0.500000" v0="-1.000000" nv1="-0.500000" cpduration="0.500000" cpv="-0.606196" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="0.375000" v0="-0.500000" nv1="1.000000" cpduration="0.591774" cpv="0.859136" type="1" useDeform="1" invertDeform="1" />
+            <segment duration="0.109155" v0="1.000000" nv1="1.000000" cpduration="0.573727" cpv="0.859136" type="1" useDeform="1" invertDeform="1" />
+            <segment duration="0.015845" v0="1.000000" nv1="-1.000000" cpduration="0.090000" cpv="-0.922417" type="1" useDeform="0" invertDeform="0" />
+        </segments>
+    </mseg>
+</lfo>

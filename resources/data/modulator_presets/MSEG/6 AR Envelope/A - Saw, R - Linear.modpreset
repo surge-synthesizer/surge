@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<lfo shape="8">
+    <params>
+        <rate v="1.000000" temposync="1" deform_type="0" extend_range="0" deactivated="0" />
+        <phase v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <magnitude v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <deform v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <trigmode i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <unipolar i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+    </params>
+    <mseg activeSegments="3" endpointMode="2" editMode="0" loopMode="1" loopStart="-1" loopEnd="2" hSnapDefault="0.062500" vSnapDefault="0.062500" hSnap="0.062500" vSnap="0.062500" axisWidth="1.041922" axisStart="0.002349">
+        <segments>
+            <segment duration="0.062500" v0="-1.000000" nv1="1.000000" cpduration="0.031250" cpv="0.800000" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="0.062500" v0="1.000000" nv1="0.750000" cpduration="0.026316" cpv="0.038733" type="10" useDeform="1" invertDeform="0" />
+            <segment duration="5.875000" v0="0.750000" nv1="-1.000000" cpduration="0.764228" cpv="0.595839" type="1" useDeform="1" invertDeform="0" />
+        </segments>
+    </mseg>
+</lfo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<lfo shape="8">
+    <params>
+        <rate v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <phase v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <magnitude v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <deform v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <trigmode i="0" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <unipolar i="0" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+    </params>
+    <mseg activeSegments="27" endpointMode="2" editMode="0" loopMode="2" loopStart="-1" loopEnd="-1" hSnapDefault="0.125000" vSnapDefault="0.250000" hSnap="0.000000" vSnap="0.000000" axisWidth="1.000000" axisStart="0.000000">
+        <segments>
+            <segment duration="0.060569" v0="0.000000" nv1="0.419192" cpduration="0.000000" cpv="0.608821" type="1" useDeform="1" invertDeform="0" />
+            <segment duration="0.082514" v0="0.419192" nv1="-0.805555" cpduration="0.000000" cpv="-0.785329" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.096559" v0="-0.805555" nv1="-0.043771" cpduration="0.000000" cpv="-0.549639" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.035990" v0="-0.043771" nv1="-0.683502" cpduration="0.000000" cpv="-0.875285" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.029846" v0="-0.683502" nv1="-0.178451" cpduration="0.000000" cpv="-0.642231" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.034235" v0="-0.178451" nv1="0.528619" cpduration="0.000000" cpv="-0.600143" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.034235" v0="0.528619" nv1="-1.000000" cpduration="0.000000" cpv="-0.869505" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.028968" v0="-1.000000" nv1="-0.250000" cpduration="0.000000" cpv="-0.583309" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.037746" v0="-0.250000" nv1="-0.430976" cpduration="0.000000" cpv="-0.713780" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.024579" v0="-0.430976" nv1="0.048822" cpduration="0.000000" cpv="-0.566473" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.037746" v0="0.048822" nv1="-0.691919" cpduration="0.000000" cpv="-0.899773" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.035990" v0="-0.691919" nv1="0.768518" cpduration="0.000000" cpv="-0.890624" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.042135" v0="0.768518" nv1="0.246633" cpduration="0.000000" cpv="-0.675901" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.038624" v0="0.246633" nv1="-0.494108" cpduration="0.000000" cpv="-0.789537" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.037746" v0="-0.494108" nv1="-0.069024" cpduration="0.000000" cpv="-0.528595" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.014923" v0="-0.069024" nv1="-0.637205" cpduration="0.000000" cpv="-0.671693" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.035112" v0="-0.637205" nv1="0.629629" cpduration="0.000000" cpv="-0.701154" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.028090" v0="0.629629" nv1="-0.250000" cpduration="0.000000" cpv="-0.876407" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.016679" v0="-0.250000" nv1="0.246633" cpduration="0.000000" cpv="-0.608561" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.043890" v0="0.246633" nv1="-0.182660" cpduration="0.000000" cpv="-0.755867" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.049157" v0="-0.182660" nv1="-0.717172" cpduration="0.000000" cpv="-0.524386" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.038624" v0="-0.717172" nv1="0.090909" cpduration="0.000000" cpv="-0.570682" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.024579" v0="0.090909" nv1="1.000000" cpduration="0.000000" cpv="-0.722198" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.027212" v0="1.000000" nv1="0.086700" cpduration="0.000000" cpv="-0.851887" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.028090" v0="0.086700" nv1="-0.553030" cpduration="0.000000" cpv="-0.743241" type="3" useDeform="1" invertDeform="0" />
+            <segment duration="0.023701" v0="-0.553030" nv1="-0.132155" cpduration="0.000000" cpv="-0.675901" type="3" useDeform="1" invertDeform="1" />
+            <segment duration="0.012465" v0="-0.132155" nv1="-0.004209" cpduration="0.000000" cpv="-0.010239" type="3" useDeform="1" invertDeform="0" />
+        </segments>
+    </mseg>
+</lfo>
