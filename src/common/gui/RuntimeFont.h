@@ -1,8 +1,12 @@
 #pragma once
 
+#if ESCAPE_FROM_VSTGUI
+#include <efvg/escape_from_vstgui.h>
+#else
 #include "vstgui/vstgui.h"
 #include "vstgui/lib/cfont.h"
 #include "vstgui/lib/platform/iplatformfont.h"
+#endif
 
 namespace Surge
 {
@@ -20,7 +24,9 @@ namespace GUI
  *
  * The implementation is OS Specific.
  */
+bool initializeRuntimeFontForOS();
 void initializeRuntimeFont();
+VSTGUI::CFontRef getLatoAtSize(float size, int style = VSTGUI::kNormalFace);
 
 }
 }

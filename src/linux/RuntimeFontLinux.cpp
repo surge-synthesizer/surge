@@ -9,14 +9,9 @@ namespace Surge
 namespace GUI
 {
 
-void initializeRuntimeFont()
+bool initializeRuntimeFontForOS()
 {
-    /*
-    ** Someone may have already initialized the globals. Don't do it twice
-    */
-    if (displayFont != NULL || patchNameFont != NULL)
-        return;
-
+#if ! TARGET_JUCE_UI
     /*
     ** If Lato isn't installed, bail and use defaults
     */
@@ -28,21 +23,12 @@ void initializeRuntimeFont()
            /*
            ** Lato is not installed; bail out
            */
-           return;
+           return false;
         }
     }
+#endif
 
-    /*
-    ** Set up the global fonts
-    */
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> minifont = new VSTGUI::CFontDesc("Lato", 9);
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> patchfont = new VSTGUI::CFontDesc("Lato", 13);
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> lfofont = new VSTGUI::CFontDesc("Lato", 8);
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> aboutfont = new VSTGUI::CFontDesc("Lato", 10);
-    displayFont = minifont;
-    patchNameFont = patchfont;
-    lfoTypeFont = lfofont;
-    aboutFont = aboutfont;
+    return true;
 }
 
 }

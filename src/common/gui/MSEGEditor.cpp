@@ -703,8 +703,8 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    const int gridMaxVSteps = 10;
 
    inline void drawAxis( CDrawContext *dc ) {
-      auto primaryFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
-      auto secondaryFont = new VSTGUI::CFontDesc("Lato", 7);
+      auto primaryFont = Surge::GUI::getLatoAtSize(9 , kBoldFace);
+      auto secondaryFont = Surge::GUI::getLatoAtSize(7);
 
       auto haxisArea = getHAxisArea();
       auto tpx = timeToPx();
@@ -1266,14 +1266,18 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
          else
          {
              dc->setFrameColor(secondaryHGridColor);
+#if ! TARGET_JUCE_UI
              CCoord dashes[] = {2, 5};
              dc->setLineStyle(CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+#endif
          }
 
+#if ! TARGET_JUCE_UI
          if (!(val == -1.f && dc->getLineStyle() != kLineSolid))    // make sure never to draw a dashed line at the bottom
          {
             dc->drawLine(CPoint(drawArea.left - ticklen, v), CPoint(drawArea.right, v));
          }
+#endif
       }
 
       // draw hover loop markers
@@ -1942,7 +1946,7 @@ struct MSEGCanvas : public CControl, public Surge::UI::SkinConsumingComponent, p
    }
 
    int wheelAxisCount = 0;
-   bool onWheel(const CPoint& where,
+   virtual bool onWheel(const CPoint& where,
                 const CMouseWheelAxis& axis,
                 const float& distance,
                 const CButtonState& buttons) override
@@ -2662,8 +2666,8 @@ void MSEGControlRegion::rebuild()
 {
    removeAll();
 
-   auto labelFont = new VSTGUI::CFontDesc("Lato", 9, kBoldFace);
-   auto editFont = new VSTGUI::CFontDesc("Lato", 9);
+   auto labelFont = Surge::GUI::getLatoAtSize( 9, kBoldFace);
+   auto editFont = Surge::GUI::getLatoAtSize( 9);
    
    int height = getViewSize().getHeight();
    int margin = 2;

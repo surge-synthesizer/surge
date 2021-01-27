@@ -5,13 +5,17 @@
 ** load bitmaps at multiple resolutions and draw them scaled accordingly
 */
 
+#if ESCAPE_FROM_VSTGUI
+#include "efvg/escape_from_vstgui.h"
+typedef int NSVGimage;
+#else
 #include "vstgui/vstgui.h"
+#include "nanosvg.h"
+#endif
 
 #include <vector>
 #include <map>
 #include <atomic>
-
-#include "nanosvg.h"
 
 class CScalableBitmap : public VSTGUI::CBitmap
 {

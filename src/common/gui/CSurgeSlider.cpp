@@ -56,7 +56,9 @@ CSurgeSlider::CSurgeSlider(const CPoint& loc,
    this->storage = storage;
 
    labfont = displayFont;
+#if !TARGET_JUCE_UI
    labfont->remember();
+#endif
 
    modmode = 0;
    disabled = false;

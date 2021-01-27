@@ -12,26 +12,26 @@
 
 #include "vstcontrols.h"
 
-namespace Surge
-{
-namespace GUI
-{
+      namespace Surge
+      {
+      namespace GUI
+      {
 
-/*
-** Return the backing scale factor. This is the scale factor which maps a phyiscal
-** pixel to a logical pixel. It is in units that a high density display (so 4 physical
-** pixels in a single pixel square) would have a backing scale factor of 2.0.
-**
-** We retain this value as a float and do not scale it by 100, like we do with
-** user specified scales, to better match the OS API
-*/    
-float  getDisplayBackingScaleFactor(VSTGUI::CFrame *); 
+      /*
+      ** Return the backing scale factor. This is the scale factor which maps a phyiscal
+      ** pixel to a logical pixel. It is in units that a high density display (so 4 physical
+      ** pixels in a single pixel square) would have a backing scale factor of 2.0.
+      **
+      ** We retain this value as a float and do not scale it by 100, like we do with
+      ** user specified scales, to better match the OS API
+      */
+      float  getDisplayBackingScaleFactor(VSTGUI::CFrame *);
 
-/*
-** Return the screen dimensions of the best screen containing this frame. If the
-** frame is not valid or has not yet been shown or so on, return a screen of
-** size 0x0 at position 0,0.
-*/
-VSTGUI::CRect  getScreenDimensions(VSTGUI::CFrame *);
-}
-}
+      /*
+      ** Return the screen dimensions of the best screen containing this frame. If the
+      ** frame is not valid or has not yet been shown or so on, return a screen of
+      ** size 0x0 at position 0,0.
+      */
+      VSTGUI::CRect  getScreenDimensions(VSTGUI::CFrame *);
+      }
+      }

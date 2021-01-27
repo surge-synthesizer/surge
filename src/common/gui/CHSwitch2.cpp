@@ -68,14 +68,13 @@ void CHSwitch2::draw(CDrawContext* dc)
       {
          CPoint hwhere(0, heightOfOneImage *
                        (long)(frameOffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
-         
+
          hoverOnBmp->draw(dc, getViewSize(), hwhere, 0xff);
       }
       else if( hoverBmp && doingHover )
       {
          CPoint hwhere(0, heightOfOneImage *
                       (long)(frameOffset + ((hoverValue * (float)(rows * columns - 1) + 0.5f))));
-         
          hoverBmp->draw(dc, getViewSize(), hwhere, 0xff);
       }
    }

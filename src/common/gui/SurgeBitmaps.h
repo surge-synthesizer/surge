@@ -1,7 +1,11 @@
 #pragma once
 
 #include "resource.h"
+#if ESCAPE_FROM_VSTGUI
+#include "efvg/escape_from_vstgui.h"
+#else
 #include "vstgui/vstgui.h"
+#endif
 #include <map>
 #include <atomic>
 #include <algorithm>

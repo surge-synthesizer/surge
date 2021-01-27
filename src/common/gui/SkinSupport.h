@@ -14,9 +14,14 @@
 #include "DebugHelpers.h"
 #include "globals.h"
 
+#if ESCAPE_FROM_VSTGUI
+#include "efvg/escape_from_vstgui.h"
+#else
 #include "vstgui/lib/ccolor.h"
 #include "vstgui/lib/crect.h"
 #include "vstgui/lib/cpoint.h"
+#endif
+
 #include "SkinModel.h"
 #include "SkinColors.h"
 #include "filesystem/import.h"
@@ -35,9 +40,11 @@ class SurgeBitmaps;
 class CScalableBitmap;
 class TiXmlElement;
 
+#if ! ESCAPE_FROM_VSTGUI
 namespace VSTGUI {
    class CFrame;
 }
+#endif
 
 #define FIXMEERROR SkinDB::get().errorStream
 

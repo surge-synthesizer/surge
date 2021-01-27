@@ -1,3 +1,5 @@
+#if ! ESCAPE_FROM_VSTGUI
+
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 
@@ -119,3 +121,4 @@ CColor CDIBitmap::int_to_ccol(unsigned int col)
 
    return color;
 }
+#endif
