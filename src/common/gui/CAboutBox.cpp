@@ -122,6 +122,7 @@ CAboutBox::CAboutBox(const CRect& size,
 
    // start from bottom margin up, this is why we subtract label vertical spacing (lblvs) 
    yp = vs.bottom - lblvs - margin;
+   addTwoColumnLabel( "Plugin:", storage->installedPath, false, "", 76, 500, true, true );
    addTwoColumnLabel("Factory Data:", storage->datapath, true, storage->datapath, 76, 500, true, true);
    addTwoColumnLabel("User Data:", storage->userDataPath, true, storage->userDataPath, 76, 500, true, true);
 

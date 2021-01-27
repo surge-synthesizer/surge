@@ -75,6 +75,29 @@ using namespace std;
 #if WINDOWS
 void dummyExportedWindowsToLookupDLL() {
 }
+#else
+#include <dlfcn.h>
+std::string getDLLPath()
+{
+   Dl_info info;
+   if (dladdr((const void*)getDLLPath, &info))
+   {
+      auto res = std::string( info.dli_fname );
+#if MAC
+      for (int i = 0; i < 3; i++)
+      {
+         size_t delPos = res.find_last_of ('/');
+         if (delPos == std::string::npos)
+         {
+            return "<error>"; // unexpected
+         }
+         res.erase (delPos, res.length () - delPos);
+      }
+#endif
+      return res;
+   }
+   return "";
+}
 #endif
 
 
@@ -184,6 +207,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
    if (!homePath)
       throw Surge::Error("The environment variable HOME does not exist",
                          "Surge failed to initialize");
+
+   installedPath = getDLLPath();
 #endif
 
 #if MAC
@@ -330,8 +355,11 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
          goto bailOnPortable;
       }
 
+
       // The pathBuf variable should now contain the full filepath for this DLL.
       fs::path path(pathBuf);
+      installedPath = path_to_string(path);
+
       path.remove_filename();
       dllPath = path;
       path /= L"SurgeData";
