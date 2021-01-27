@@ -1,5 +1,6 @@
 #include "DistortionEffect.h"
 #include <vt_dsp/halfratefilter.h>
+#include "QuadFilterUnit.h"
 
 // feedback can get tricky with packed SSE
 
@@ -63,7 +64,9 @@ void DistortionEffect::process(float* dataL, float* dataR)
    bi = (bi + 1) & slowrate_m1;
 
    band1.process_block(dataL, dataR);
-   drive.set_target_smoothed(db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive])));
+   auto dS = drive.get_target();
+   auto dE = db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
+   drive.set_target_smoothed(dE);
    outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
    float fb = *f[dist_feedback];
    int ws = *pdata_ival[dist_model];
@@ -76,6 +79,18 @@ void DistortionEffect::process(float* dataL, float* dataR)
 
    drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
+   bool useSSEShaper = ( ws + wst_soft == wst_digital ||
+                        ws + wst_soft == wst_sine );
+
+   auto wsop = GetQFPtrWaveshaper(wst_soft + ws);
+
+   float dD = 0.f;
+   float dNow = dS;
+   if( useSSEShaper )
+   {
+      dD = (dE - dS) / (BLOCK_SIZE * dist_OS_bits);
+   }
+
    for (int k = 0; k < BLOCK_SIZE; k++)
    {
       float a = (k & 16) ? 0.00000001 : -0.00000001; // denormal thingy
@@ -86,8 +101,27 @@ void DistortionEffect::process(float* dataL, float* dataR)
          L = Lin + fb * L;
          R = Rin + fb * R;
          lp1.process_sample_nolag(L, R);
-         L = lookup_waveshape(wst_soft + ws, L);
-         R = lookup_waveshape(wst_soft + ws, R);
+
+         if( useSSEShaper )
+         {
+            float sb[4];
+            auto dInv = 1.f / dNow;
+
+            sb[0] = L * dInv;
+            sb[1] = R * dInv;
+            auto lr128 = _mm_load_ps(sb);
+            auto wsres = wsop(lr128, _mm_set1_ps(dNow));
+            _mm_store_ps(sb, wsres);
+            L = sb[0];
+            R = sb[1];
+
+            dNow += dD;
+         }
+         else
+         {
+            L = lookup_waveshape(wst_soft + ws, L);
+            R = lookup_waveshape(wst_soft + ws, R);
+         }
          L += a;
          R += a; // denormal
          lp2.process_sample_nolag(L, R);
@@ -95,6 +129,7 @@ void DistortionEffect::process(float* dataL, float* dataR)
          bR[s + (k << dist_OS_bits)] = R;
       }
    }
+
 
    hr_a.process_block_D2(bL, bR, 128);
    hr_b.process_block_D2(bL, bR, 64);
