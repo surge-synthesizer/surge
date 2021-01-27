@@ -1183,7 +1183,7 @@ void CLFOGui::openPopup(CPoint &where)
    contextMenu->addSeparator();
 
    auto sge = dynamic_cast<SurgeGUIEditor*>(listener);
-   std::string openname = (sge->editorOverlayTag != "msegEditor") ? "Open MSEG Editor" : "Close MSEG Editor";
+   std::string openname = (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR)) ? "Open MSEG Editor" : "Close MSEG Editor";
    addCb(contextMenu, Surge::UI::toOSCaseForMenu(openname), [this, sge]()
                                  {
                                     if (sge)
@@ -1195,7 +1195,7 @@ void CLFOGui::openPopup(CPoint &where)
    auto lpoff = addCb(contextMenu, Surge::UI::toOSCaseForMenu("No Looping"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
-                                      if (sge->editorOverlayTag == "msegEditor")
+                                      if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                       {
                                          sge->closeMSEGEditor();
                                          sge->showMSEGEditor();
@@ -1207,7 +1207,7 @@ void CLFOGui::openPopup(CPoint &where)
    auto lpon = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Always"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::LOOP;
-                                      if (sge->editorOverlayTag == "msegEditor")
+                                      if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                       {
                                          sge->closeMSEGEditor();
                                          sge->showMSEGEditor();
@@ -1219,7 +1219,7 @@ void CLFOGui::openPopup(CPoint &where)
    auto lpgate = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Until Release"), [this, sge]()
                                    {
                                       ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
-                                      if (sge->editorOverlayTag == "msegEditor")
+                                      if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                       {
                                          sge->closeMSEGEditor();
                                          sge->showMSEGEditor();

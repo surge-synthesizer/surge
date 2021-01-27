@@ -345,14 +345,39 @@ public:
    int getWindowSizeX() const { return wsx; }
    int getWindowSizeY() const { return wsy; }
 
-   void setEditorOverlay( VSTGUI::CView *c,
+   /*
+    * We have an enumerated set of overlay tags which we can push
+    * to the UI. You *have* to give a new overlay type a tag in
+    * order for it to work.
+    */
+   enum OverlayTags
+   {
+      NO_EDITOR,
+      MSEG_EDITOR,
+      STORE_PATCH
+   };
+
+   void addEditorOverlay( VSTGUI::CView *c,
                           std::string editorTitle, // A window display title - whatever you want
-                          std::string editorTag, // A tag by editor class. Please unique, no spaces.
-                          const VSTGUI::CPoint &topleft = VSTGUI::CPoint( 0, 0 ),
+                          OverlayTags editorTag, // A tag by editor class. Please unique, no spaces.
+                          const VSTGUI::CPoint &topleft = VSTGUI::CPoint(0, 0),
                           bool modalOverlay = true,
                           bool hasCloseButton = true,
-                          std::function<void()> onClose = [](){} );
-   void dismissEditorOverlay();
+                          std::function<void()> onClose = []() {});
+   void dismissEditorOfType(OverlayTags ofType);
+   OverlayTags topmostEditorTag() {
+      if( ! editorOverlay.size() ) return NO_EDITOR;
+      return editorOverlay.back().first;
+   }
+   bool isAnyOverlayPresent( OverlayTags tag )
+   {
+      for( auto el : editorOverlay )
+      {
+         if( el.first == tag ) return true;
+      }
+      return false;
+   }
+
 
 
    std::string getDisplayForTag( long tag );
@@ -474,16 +499,16 @@ private:
    int typeinResetCounter = -1;
    std::string typeinResetLabel = "";
 
-   VSTGUI::CViewContainer *editorOverlay = nullptr;
-   VSTGUI::CView* editorOverlayContentsWeakReference =
-       nullptr; // Use this very very carefully. It may hold a dangling ref until #3223
-   std::function<void()> editorOverlayOnClose = [](){};
+   // Data structures for a list of overlays and associated data witht hem
+   std::vector<std::pair<OverlayTags, VSTGUI::CViewContainer *>> editorOverlay;
+   std::unordered_map<VSTGUI::CViewContainer *, VSTGUI::CView*> editorOverlayContentsWeakReference;
+   std::unordered_map<VSTGUI::CViewContainer *, std::function<void()>> editorOverlayOnClose;
 
    VSTGUI::CViewContainer *minieditOverlay = nullptr;
    VSTGUI::CTextEdit *minieditTypein = nullptr;
    std::function<void( const char* )> minieditOverlayDone = [](const char *){};
 public:
-   std::string editorOverlayTag, editorOverlayTagAtClose;
+   std::string editorOverlayTagAtClose; // FIXME what is this?
    void promptForMiniEdit(const std::string& value,
                           const std::string& prompt,
                           const std::string& title,

@@ -17,8 +17,9 @@
 #include "vstcontrols.h"
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
+#include "RefreshableOverlay.h"
 
-struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent {
+struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent, public RefreshableOverlay {
    /*
     * Because this is 'late' in the build (in the gui) there is a copy of this structure in
     * the DawExtraState. If you add something to this state, add it there too. Revisit that
