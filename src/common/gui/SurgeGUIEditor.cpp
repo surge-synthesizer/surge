@@ -3496,7 +3496,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
 
                      char tmptxt[512];
                      sprintf(tmptxt, "Edit %s -> %s: %s", (char*)modulatorName(ms, true).c_str(),
-                             p->get_name(), modtxt );
+                             p->get_full_name(), modtxt );
                      addCallbackMenu(contextMenu, tmptxt, [this, p, control, ms ]() {
                                                              this->promptForUserValueEntry( p, control, ms );
                                                           });
@@ -3511,7 +3511,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl* control, CButtonState b
                   {
                      char tmptxt[256];
                      snprintf(tmptxt, 256, "Clear %s -> %s", (char*)modulatorName(ms, true).c_str(),
-                             p->get_name() );
+                             p->get_full_name() );
                      // clear_ms[ms] = eid;
                      // contextMenu->addEntry(tmptxt, eid++);
                      addCallbackMenu(contextMenu, tmptxt, [this, ms, ptag]() {
