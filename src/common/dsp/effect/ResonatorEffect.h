@@ -61,6 +61,13 @@ class ResonatorEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
+    QuadFilterUnitState *qfus = nullptr;
+    HalfRateFilter halfbandOUT, halfbandIN;
+    FilterCoefficientMaker coeff[3][2];
+    float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
+    float WP[3][2];
+    float Reg[3][2][n_filter_registers];
+
   private:
     int bi; // block increment (to keep track of events not occurring every n blocks)
 };
