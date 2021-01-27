@@ -246,6 +246,10 @@
             <snapshot name="To Tape" p0="42" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5" p6="1" />
         </type>
     </type>
+    <separator/>
+    <type i="15" name="Neuron">
+        <snapshot name="Init" />
+    </type>
 </fx>
 <customctrl>
     <entry p="0" ctrl="41" />

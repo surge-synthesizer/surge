@@ -539,6 +539,26 @@ public:
       }
       return "<error>";
    }
+   std::string getParamInfo( const SurgePyNamedParam &id )
+   {
+      const auto val = getParamVal( id );
+      const auto min = getParamMin( id );
+      const auto max = getParamMax( id );
+      const auto def = getParamDef( id );
+      const auto val_type = getParamValType( id );
+      const auto display = getParamDisplay( id );
+
+      std::ostringstream oss;
+      oss << "Parameter name: "         << id.getName() << std::endl;
+      oss << "Parameter value: "        << val << std::endl;
+      oss << "Parameter min: "          << min << std::endl;
+      oss << "Parameter max: "          << max << std::endl;
+      oss << "Parameter default: "      << def << std::endl;
+      oss << "Parameter value type: "   << val_type << std::endl;
+      oss << "Parameter display value: " << display << std::endl;
+
+      return oss.str();
+   }
 
    void setParamVal( const SurgePyNamedParam &id, float f )
    {
@@ -868,6 +888,8 @@ PYBIND11_MODULE(surgepy, m) {
 
        .def("getParamDisplay", &SurgeSynthesizerWithPythonExtensions::getParamDisplay,
             "Parameter value display (stringified and formatted)")
+       .def("getParamInfo", &SurgeSynthesizerWithPythonExtensions::getParamInfo,
+            "Parameter value info (formatted)")
 
        .def("setParamVal", &SurgeSynthesizerWithPythonExtensions::setParamVal,
             "Set a parameter value", py::arg("param"), py::arg("toThis"))
@@ -1043,6 +1065,7 @@ PYBIND11_MODULE(surgepy, m) {
    C(fxt_flanger);
    C(fxt_ringmod);
    C(fxt_airwindows);
+   C(fxt_neuron);
 
    C(fxslot_ains1);
    C(fxslot_ains2);

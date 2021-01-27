@@ -205,6 +205,8 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.h
+  src/common/dsp/effect/chowdsp/Neuron.cpp
+  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp

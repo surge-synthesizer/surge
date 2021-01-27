@@ -29,6 +29,7 @@ void copy_block_USUD(float* src,
                      float* dst,
                      unsigned int nquads); // copy block (unaligned source + destination)
 void mul_block(float* src1, float* src2, float* dst, unsigned int nquads);
+void mul_block(float* src1, float scalar, float* dst, unsigned int nquads);
 void add_block(float* src1, float* src2, float* dst, unsigned int nquads);
 void subtract_block(float* src1, float* src2, float* dst, unsigned int nquads);
 void encodeMS(float* L, float* R, float* M, float* S, unsigned int nquads);
