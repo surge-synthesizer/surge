@@ -117,6 +117,11 @@
         <snapshot name="Sweetspot" p0="0" p1="0" p2="0" p3="-1.68886" p4="0.25" p5="0.8" p6="0.3" p7="6" p8="4" p9="0.8" />
         <snapshot name="Talky" p0="0.057143" p1="0.858929" p2="-0.401786" p3="-1.998566" p4="0.718750" p5="0.586607" p6="0.694643" />
     </type>
+    <!--
+    <type i="17" name="Resonator">
+        <snapshot name="Init"/>
+    </type>
+    -->
     <type i="4" name="Rotary Speaker">
         <snapshot name="Init" p0="-7.00000" p1="0.000000" p2="0.000000" />
         <snapshot name="Fast" p0="2.981253" p1="0.251786" p2="0.495536" />

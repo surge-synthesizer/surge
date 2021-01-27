@@ -142,6 +142,10 @@ enum ctrltypes
    ct_phaser_spread,
    ct_decibel_narrow_deactivatable,
    ct_decibel_extra_narrow_deactivatable,
+   ct_freq_reson_band1,
+   ct_freq_reson_band2,
+   ct_freq_reson_band3,
+   ct_reson_mode,
    num_ctrltypes,
 };
 

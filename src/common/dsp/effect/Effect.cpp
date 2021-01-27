@@ -11,6 +11,7 @@
 #include "Reverb1Effect.h"
 #include "Reverb2Effect.h"
 #include "FlangerEffect.h"
+#include "ResonatorEffect.h"
 #include "RingModulatorEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/Neuron.h"
@@ -56,6 +57,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new chowdsp::Neuron(storage, fxdata, pd);
    case fxt_geq11:
       return new GEQ11Effect(storage, fxdata, pd);
+   case fxt_resonator:
+      return new ResonatorEffect(storage, fxdata, pd);
    default:
       return 0;
    };
