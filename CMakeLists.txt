@@ -1625,3 +1625,6 @@ add_custom_target(code-quality-pipeline-checks)
 add_dependencies(code-quality-pipeline-checks download-extra-content)
 
 # Coming in 1.9: CLang Format checks and others
+set( CLANG_REQUIRED_DIRS libs/escape-from-vstgui libs/filesystem src )
+add_custom_command(TARGET code-quality-pipeline-checks
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
