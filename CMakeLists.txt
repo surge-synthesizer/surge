@@ -1627,4 +1627,7 @@ add_dependencies(code-quality-pipeline-checks download-extra-content)
 # Coming in 1.9: CLang Format checks and others
 set( CLANG_REQUIRED_DIRS libs/escape-from-vstgui libs/filesystem src )
 add_custom_command(TARGET code-quality-pipeline-checks
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+        POST_BUILD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMAND ${CMAKE_COMMAND} -E echo About to check clang-format
+        COMMAND git diff --name-only --diff-filter=MA ${CLANG_REQUIRED_DIRS} | xargs clang-format --dry-run --Werror )
