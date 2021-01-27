@@ -281,6 +281,7 @@ enum fx_type
    fxt_ringmod,
    fxt_airwindows,
    fxt_neuron,
+   fxt_geq11,
 
    n_fx_types,
 };
@@ -302,6 +303,7 @@ const char fx_type_names[n_fx_types][16] =
    "Ring Mod",
    "Airwindows",
    "Neuron",
+   "Graphic EQ",
 };
 
 enum fx_bypass

@@ -140,6 +140,8 @@ enum ctrltypes
    ct_airwindows_param_integral,
    ct_amplitude_clipper,
    ct_phaser_spread,
+   ct_decibel_narrow_deactivatable,
+   ct_decibel_extra_narrow_deactivatable,
    num_ctrltypes,
 };
 

@@ -1,6 +1,7 @@
 #include "DualDelayEffect.h"
 #include "ChorusEffectImpl.h"
 #include "Eq3BandEffect.h"
+#include "GEQ11Effect.h"
 #include "FreqshiftEffect.h"
 #include "PhaserEffect.h"
 #include "RotarySpeakerEffect.h"
@@ -53,6 +54,8 @@ Effect* spawn_effect(int id, SurgeStorage* storage, FxStorage* fxdata, pdata* pd
       return new AirWindowsEffect( storage, fxdata, pd );
    case fxt_neuron:
       return new chowdsp::Neuron(storage, fxdata, pd);
+   case fxt_geq11:
+      return new GEQ11Effect(storage, fxdata, pd);
    default:
       return 0;
    };

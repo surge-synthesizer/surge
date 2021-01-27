@@ -197,6 +197,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/Eq3BandEffect.cpp
   src/common/dsp/effect/FreqshiftEffect.cpp
   src/common/dsp/effect/FlangerEffect.cpp
+  src/common/dsp/effect/GEQ11Effect.cpp
   src/common/dsp/effect/PhaserEffect.cpp
   src/common/dsp/effect/Reverb1Effect.cpp
   src/common/dsp/effect/Reverb2Effect.cpp
@@ -515,7 +516,7 @@ elseif( UNIX AND NOT APPLE )
 
   set(OS_INCLUDE_DIRECTORIES
     src/linux
-          
+
     ${CAIRO_INCLUDE_DIRS}
     ${FONTCONFIG_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}

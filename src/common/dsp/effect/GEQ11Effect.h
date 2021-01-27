@@ -25,7 +25,7 @@
 #include <vt_dsp/lipol.h>
 
 
-class Eq3BandEffect : public Effect
+class GEQ11Effect : public Effect
 {
    lipol_ps gain alignas(16);
    lipol_ps mix alignas(16);
@@ -34,31 +34,30 @@ class Eq3BandEffect : public Effect
          R alignas(16)[BLOCK_SIZE];
 
 public:
-   enum eq3_params
+   enum geq11_params
    {
-       eq3_gain1 = 0,
-       eq3_freq1,
-       eq3_bw1,
+       geq11_30 = 0,
+       geq11_60,
+       geq11_120,
+       geq11_250,
+       geq11_500,
+       geq11_1k,
+       geq11_2k,
+       geq11_4k,
+       geq11_8k,
+       geq11_12k,
+       geq11_16k,
 
-       eq3_gain2,
-       eq3_freq2,
-       eq3_bw2,
+       geq11_gain,
 
-       eq3_gain3,
-       eq3_freq3,
-       eq3_bw3,
-
-       eq3_gain,
-       eq3_mix,
-
-       eq3_num_ctrls,
+       geq11_num_ctrls,
    };
 
-   Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~Eq3BandEffect();
+   GEQ11Effect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
+   virtual ~GEQ11Effect();
    virtual const char* get_effectname() override
    {
-      return "EQ";
+      return "Graphic EQ";
    }
    virtual void init() override;
    virtual void process(float* dataL, float* dataR) override;
@@ -66,14 +65,27 @@ public:
    void setvars(bool init);
    virtual void init_ctrltypes() override;
    virtual void init_default_values() override;
-   virtual const char* group_label(int id) override; 
+   virtual const char* group_label(int id) override;
    virtual int group_label_ypos(int id) override;
-
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
 
 
 private:
-   BiquadFilter band1, band2, band3;
+   float freqs[11] = {30.f, 60.f, 120.f, 250.f, 500.f, 1000.f, 2000.f, 4000.f, 8000.f, 12000.f, 16000.f};
+   std::string band_names[11] =
+   {
+      "30 Hz",
+      "60 Hz",
+      "120 Hz",
+      "250 Hz",
+      "500 Hz",
+      "1 kHz",
+      "2 kHz",
+      "4 kHz",
+      "8 kHz",
+      "12 kHz",
+      "16 kHz",
+   };
+   BiquadFilter band1, band2, band3, band4, band5, band6, band7, band8, band9, band10, band11;
    int bi; // block increment (to keep track of events not occurring every n blocks)
 };
 
