@@ -15,11 +15,11 @@
 
 #pragma once
 
-inline bool is_dot_or_dotdot(const char* s) noexcept
+inline bool is_dot_or_dotdot(const char *s) noexcept
 {
-   if (*s++ != '.')
-      return false;
-   if (*s && *s++ != '.')
-      return false;
-   return !*s;
+    if (*s++ != '.')
+        return false;
+    if (*s && *s++ != '.')
+        return false;
+    return !*s;
 }

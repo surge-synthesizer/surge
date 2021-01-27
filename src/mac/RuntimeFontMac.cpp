@@ -5,7 +5,6 @@
 #include "vstgui/lib/platform/mac/macglobals.h"
 #include "UserInteractions.h"
 
-
 namespace Surge
 {
 namespace GUI
@@ -18,10 +17,11 @@ bool initializeRuntimeFontForOS()
     ** and register them using the CoreText Font Manager API
     */
     CFURLRef url = nullptr;
-    url = CFBundleCopyResourceURL(VSTGUI::getBundleRef(), CFSTR("Lato-Regular"), CFSTR("ttf"), CFSTR("fonts"));
+    url = CFBundleCopyResourceURL(VSTGUI::getBundleRef(), CFSTR("Lato-Regular"), CFSTR("ttf"),
+                                  CFSTR("fonts"));
     if (url)
     {
-        CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL );
+        CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL);
         CFRelease(url);
     }
     else
@@ -32,5 +32,5 @@ bool initializeRuntimeFontForOS()
     return true;
 }
 
-}
-}
+} // namespace GUI
+} // namespace Surge

@@ -8,58 +8,46 @@ static float lfo_range = 1000;
 
 inline float lfo_phaseincrement(int samples, float rate)
 {
-   rate = 1 - rate;
-   return samples * env_phasemulti / (1 + lfo_range * rate * rate * rate);
+    rate = 1 - rate;
+    return samples * env_phasemulti / (1 + lfo_range * rate * rate * rate);
 }
 
 inline float dB_to_scamp(float in) // ff rev2
 {
-   float v = powf(10.f, -0.05f * in);
-   v = std::max(0.f, v);
-   v = std::min(1.f, v);
-   return v;
+    float v = powf(10.f, -0.05f * in);
+    v = std::max(0.f, v);
+    v = std::min(1.f, v);
+    return v;
 }
 
-inline double linear_to_dB(double in)
-{
-   return 20 * log10(in);
-}
+inline double linear_to_dB(double in) { return 20 * log10(in); }
 
-inline double dB_to_linear(double in)
-{
-   return pow((double)10, 0.05 * in);
-}
+inline double dB_to_linear(double in) { return pow((double)10, 0.05 * in); }
 
-inline float r2amp_to_dB(float in)
-{
-   return 0;
-}
+inline float r2amp_to_dB(float in) { return 0; }
 
-inline float timecent_to_seconds(float in)
-{
-   return powf(2, in / 1200);
-}
+inline float timecent_to_seconds(float in) { return powf(2, in / 1200); }
 
 inline float seconds_to_envtime(float in) // ff rev2
 {
-   float v = powf(in / 30.f, 1.f / 3.f);
-   v = std::max(0.f, v);
-   v = std::min(1.f, v);
-   return v;
+    float v = powf(in / 30.f, 1.f / 3.f);
+    v = std::max(0.f, v);
+    v = std::min(1.f, v);
+    return v;
 }
 
-inline char* get_notename(char* s, int i_value, int i_offset)
+inline char *get_notename(char *s, int i_value, int i_offset)
 {
-   int octave = (i_value / 12) - i_offset;
-   char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-   sprintf(s, "%s%i", notenames[i_value % 12], octave);
-   return s;
+    int octave = (i_value / 12) - i_offset;
+    char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    sprintf(s, "%s%i", notenames[i_value % 12], octave);
+    return s;
 }
 
 inline float timecent_to_envtime(float in)
 {
-   // return seconds_to_envtime(timecent_to_seconds(in));
-   return (in / 1200.f);
+    // return seconds_to_envtime(timecent_to_seconds(in));
+    return (in / 1200.f);
 }
 
 /*
@@ -68,13 +56,14 @@ inline float timecent_to_envtime(float in)
 */
 namespace Surge
 {
-class ScopedLocale {
-public:
+class ScopedLocale
+{
+  public:
     ScopedLocale() noexcept
 #if WINDOWS
-    : locale(::_strdup(::setlocale(LC_NUMERIC, nullptr)))
-#else    
-    : locale(::strdup(::setlocale(LC_NUMERIC, nullptr)))
+        : locale(::_strdup(::setlocale(LC_NUMERIC, nullptr)))
+#else
+        : locale(::strdup(::setlocale(LC_NUMERIC, nullptr)))
 #endif
     {
         ::setlocale(LC_NUMERIC, "C");
@@ -89,7 +78,7 @@ public:
         }
     }
 
-private:
-    char* const locale;
+  private:
+    char *const locale;
 };
-}
+} // namespace Surge

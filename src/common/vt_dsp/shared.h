@@ -4,8 +4,8 @@
 
 inline float i2f_binary_cast(int i)
 {
-   float* f = (float*)&i;
-   return *f;
+    float *f = (float *)&i;
+    return *f;
 };
 
 const __m128 m128_mask_signbit = _mm_set1_ps(i2f_binary_cast(0x80000000));

@@ -17,36 +17,36 @@
 #pragma once
 #include "Parameter.h"
 
-template< int N >
-struct DeactivationGroup 
+template <int N> struct DeactivationGroup
 {
-   std::array<Parameter *, N> groupParams;
-   std::array<int, N> deactivationValue;
+    std::array<Parameter *, N> groupParams;
+    std::array<int, N> deactivationValue;
 
-   void addDeactivationGroupMember( int i, Parameter *p ) {
-      groupParams[i] = p;
-      deactivationValue[i] = p->deactivated;
-   }
+    void addDeactivationGroupMember(int i, Parameter *p)
+    {
+        groupParams[i] = p;
+        deactivationValue[i] = p->deactivated;
+    }
 
-   void scan() {
-      std::cout << "SCAN" << std::endl;
-      bool newvalue = false;
-      for( int i=0; i<N; ++i )
-      {
-         if( groupParams[i]->deactivated != deactivationValue[i] )
-         {
-            newvalue = groupParams[i]->deactivated;
-            goto apply;
-         }
-         deactivationValue[i] = groupParams[i]->deactivated;
-      }
-      return;
-   apply:
-      for( int i=0; i<N; ++i )
-      {
-         std::cout << "Activating " << groupParams[i]->get_name() << std::endl;
-         groupParams[i]->deactivated = newvalue;
-      }
-   }
-   
+    void scan()
+    {
+        std::cout << "SCAN" << std::endl;
+        bool newvalue = false;
+        for (int i = 0; i < N; ++i)
+        {
+            if (groupParams[i]->deactivated != deactivationValue[i])
+            {
+                newvalue = groupParams[i]->deactivated;
+                goto apply;
+            }
+            deactivationValue[i] = groupParams[i]->deactivated;
+        }
+        return;
+    apply:
+        for (int i = 0; i < N; ++i)
+        {
+            std::cout << "Activating " << groupParams[i]->get_name() << std::endl;
+            groupParams[i]->deactivated = newvalue;
+        }
+    }
 };

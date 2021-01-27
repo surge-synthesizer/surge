@@ -21,35 +21,34 @@ namespace Surge
 namespace ObjCUtil
 {
 void loadUrlToPath(
-    const std::string& urlS,
-    const fs::path& path,
-    const std::function<void(const std::string& url)>& onDone,
-    const std::function<void(const std::string& url, const std::string& msg)>& onError)
+    const std::string &urlS, const fs::path &path,
+    const std::function<void(const std::string &url)> &onDone,
+    const std::function<void(const std::string &url, const std::string &msg)> &onError)
 {
-   NSString* urlns = [NSString stringWithCString:urlS.c_str()
-                                        encoding:[NSString defaultCStringEncoding]];
-   NSURL* url = [NSURL URLWithString:urlns];
-
-   // use the error: nullable here
-   // https://developer.apple.com/documentation/foundation/nsdata/1547238-datawithcontentsofurl?language=objc
-   NSError* err = nil;
-   NSData* data = [NSData dataWithContentsOfURL:url options:NSDataReadingUncached error:&err];
-   if (err)
-   {
-      onError(urlS, [[err localizedDescription] UTF8String]);
-      return;
-   }
-
-   NSString* pathns = [NSString stringWithCString:path_to_string(path).c_str()
+    NSString *urlns = [NSString stringWithCString:urlS.c_str()
                                          encoding:[NSString defaultCStringEncoding]];
-   if (![data writeToFile:pathns atomically:NO])
-   {
-      onError(urlS, "Unable to write to file");
-      return;
-   }
+    NSURL *url = [NSURL URLWithString:urlns];
 
-   // And if we are all OK
-   onDone(urlS);
+    // use the error: nullable here
+    // https://developer.apple.com/documentation/foundation/nsdata/1547238-datawithcontentsofurl?language=objc
+    NSError *err = nil;
+    NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingUncached error:&err];
+    if (err)
+    {
+        onError(urlS, [[err localizedDescription] UTF8String]);
+        return;
+    }
+
+    NSString *pathns = [NSString stringWithCString:path_to_string(path).c_str()
+                                          encoding:[NSString defaultCStringEncoding]];
+    if (![data writeToFile:pathns atomically:NO])
+    {
+        onError(urlS, "Unable to write to file");
+        return;
+    }
+
+    // And if we are all OK
+    onDone(urlS);
 }
 }
 

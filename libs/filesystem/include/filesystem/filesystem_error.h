@@ -17,17 +17,23 @@
 
 #include <system_error>
 
-namespace Surge { namespace filesystem {
+namespace Surge
+{
+namespace filesystem
+{
 
 class filesystem_error : public std::system_error //                     [fs.class.filesystem_error]
 {
-public:
-   filesystem_error(const std::string& what_arg, std::error_code ec)
-   : system_error(ec, std::string{"filesystem error: "} + what_arg) {}
+  public:
+    filesystem_error(const std::string &what_arg, std::error_code ec)
+        : system_error(ec, std::string{"filesystem error: "} + what_arg)
+    {
+    }
 
-   filesystem_error(int errnum, const std::string& what_arg) // non-standard convenience overload
-   : filesystem_error(what_arg, std::error_code{errnum, std::generic_category()})
-   {}
+    filesystem_error(int errnum, const std::string &what_arg) // non-standard convenience overload
+        : filesystem_error(what_arg, std::error_code{errnum, std::generic_category()})
+    {
+    }
 };
 
 } // namespace filesystem

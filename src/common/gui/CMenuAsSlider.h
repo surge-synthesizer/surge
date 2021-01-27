@@ -21,95 +21,111 @@
 #include "CursorControlGuard.h"
 #include "SkinSupport.h"
 
-class CMenuAsSlider : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent,
+class CMenuAsSlider : public VSTGUI::CControl,
+                      public Surge::UI::SkinConsumingComponent,
                       public Surge::UI::CursorControlAdapter<CMenuAsSlider>
 {
-public:
-   CMenuAsSlider(const VSTGUI::CPoint& loc,
-                 VSTGUI::IControlListener* listener,
-                 long tag,
-                 std::shared_ptr<SurgeBitmaps> bitmapStore,
-                 SurgeStorage* storage = nullptr) : CMenuAsSlider( loc, VSTGUI::CPoint( 133, 22 ), listener, tag, bitmapStore, storage ) {}
-   CMenuAsSlider(const VSTGUI::CPoint& loc,
-                 const VSTGUI::CPoint& size,
-                 VSTGUI::IControlListener* listener,
-                 long tag,
-                 std::shared_ptr<SurgeBitmaps> bitmapStore,
-                 SurgeStorage* storage = nullptr);
-   virtual ~CMenuAsSlider();
-   virtual void draw(VSTGUI::CDrawContext*) override;
-   void setLabel( const char* lab ) { label = lab; }
+  public:
+    CMenuAsSlider(const VSTGUI::CPoint &loc, VSTGUI::IControlListener *listener, long tag,
+                  std::shared_ptr<SurgeBitmaps> bitmapStore, SurgeStorage *storage = nullptr)
+        : CMenuAsSlider(loc, VSTGUI::CPoint(133, 22), listener, tag, bitmapStore, storage)
+    {
+    }
+    CMenuAsSlider(const VSTGUI::CPoint &loc, const VSTGUI::CPoint &size,
+                  VSTGUI::IControlListener *listener, long tag,
+                  std::shared_ptr<SurgeBitmaps> bitmapStore, SurgeStorage *storage = nullptr);
+    virtual ~CMenuAsSlider();
+    virtual void draw(VSTGUI::CDrawContext *) override;
+    void setLabel(const char *lab) { label = lab; }
 
-   virtual bool onWheel(const VSTGUI::CPoint& where, const float &distane, const VSTGUI::CButtonState& buttons) override;
+    virtual bool onWheel(const VSTGUI::CPoint &where, const float &distane,
+                         const VSTGUI::CButtonState &buttons) override;
 
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseDown(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse down event occurs
+    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
+                                                const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
+                                                   const VSTGUI::CButtonState &buttons) override;
 
-   virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
-      {
-         isHover = true;
-         wheelDistance = 0;
-         invalid();
-         return VSTGUI::kMouseEventHandled;
-      }
-   
-   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override
-      {
-         isHover = false;
-         wheelDistance = 0;
-         invalid();
-         return VSTGUI::kMouseEventHandled;
-      }
+    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                                     const VSTGUI::CButtonState &buttons) override
+    {
+        isHover = true;
+        wheelDistance = 0;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
 
+    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons) override
+    {
+        isHover = false;
+        wheelDistance = 0;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
 
-   void setMinMax( int i, int x ) {
-      iMin = i; iMax = x;
-   }
+    void setMinMax(int i, int x)
+    {
+        iMin = i;
+        iMax = x;
+    }
 
-   void setDeactivated( bool d ) { deactivated = d; }
-   bool deactivated = false;
-   
-   CLASS_METHODS(CMenuAsSlider, CControl)
-   bool in_hover = false;
-   SurgeStorage* storage = nullptr;
+    void setDeactivated(bool d) { deactivated = d; }
+    bool deactivated = false;
 
-   int bgid = IDB_MENU_AS_SLIDER;
-   void setBackgroundID(int q) { bgid = q; onSkinChanged(); }
+    CLASS_METHODS(CMenuAsSlider, CControl)
+    bool in_hover = false;
+    SurgeStorage *storage = nullptr;
 
-   bool filtermode = false;
-   void setFilterMode(bool b) {
-      filtermode = b;
-      invalid();
-   }
-   
-   virtual void onSkinChanged() override;
+    int bgid = IDB_MENU_AS_SLIDER;
+    void setBackgroundID(int q)
+    {
+        bgid = q;
+        onSkinChanged();
+    }
 
-   VSTGUI::CRect dragRegion;
-   bool hasDragRegion = false;
-   VSTGUI::CPoint dragStart;
-   void setDragRegion( const VSTGUI::CRect &dragRegion );
+    bool filtermode = false;
+    void setFilterMode(bool b)
+    {
+        filtermode = b;
+        invalid();
+    }
 
-   int dglphyid = -1, dglyphsize = -1;
-   void setDragGlyph( int id, int size = 18 ) {
-      dglphyid = id; dglyphsize = size; onSkinChanged();
-   }
-   std::vector<std::pair<int,int>> glyphIndexMap;
+    virtual void onSkinChanged() override;
 
-   std::vector<int> intOrdering;
-   float nextValueInOrder( float valueFrom, int inc );
+    VSTGUI::CRect dragRegion;
+    bool hasDragRegion = false;
+    VSTGUI::CPoint dragStart;
+    void setDragRegion(const VSTGUI::CRect &dragRegion);
 
-private:
-   VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr, *pGlyphHover = nullptr;
-   std::string label = "";
-   bool isHover = false;
-   bool isDragRegionDrag = false;
-   enum {
-      unk,
-      dirx,
-      diry
-   } dragDir = unk;
-   float wheelDistance = 0;
-   
-   int iMin = 0, iMax = 10;
+    int dglphyid = -1, dglyphsize = -1;
+    void setDragGlyph(int id, int size = 18)
+    {
+        dglphyid = id;
+        dglyphsize = size;
+        onSkinChanged();
+    }
+    std::vector<std::pair<int, int>> glyphIndexMap;
+
+    std::vector<int> intOrdering;
+    float nextValueInOrder(float valueFrom, int inc);
+
+  private:
+    VSTGUI::CBitmap *pBackground = nullptr, *pBackgroundHover = nullptr, *pGlyph = nullptr,
+                    *pGlyphHover = nullptr;
+    std::string label = "";
+    bool isHover = false;
+    bool isDragRegionDrag = false;
+    enum
+    {
+        unk,
+        dirx,
+        diry
+    } dragDir = unk;
+    float wheelDistance = 0;
+
+    int iMin = 0, iMax = 10;
 };

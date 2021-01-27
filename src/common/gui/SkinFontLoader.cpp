@@ -20,26 +20,26 @@
 #include <CoreText/CoreText.h>
 #endif
 
-void Surge::UI::addFontSearchPathToSystem(const fs::path& p)
+void Surge::UI::addFontSearchPathToSystem(const fs::path &p)
 {
 #if MAC
-   // Mac is traverse for TTF files and add to the path
-   for(  const fs::path& ent : fs::directory_iterator(p))
-   {
-      if( ent.extension().native() == ".ttf" )
-      {
-         CFURLRef url = nullptr;
-         auto path = path_to_string(ent);
-         url = CFURLCreateFromFileSystemRepresentation(NULL, (const unsigned char*)path.c_str(),
-                                                       path.size(), false);
-         if (url)
-         {
-            CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL);
-            CFRelease(url);
-         }
-      }
-   }
+    // Mac is traverse for TTF files and add to the path
+    for (const fs::path &ent : fs::directory_iterator(p))
+    {
+        if (ent.extension().native() == ".ttf")
+        {
+            CFURLRef url = nullptr;
+            auto path = path_to_string(ent);
+            url = CFURLCreateFromFileSystemRepresentation(NULL, (const unsigned char *)path.c_str(),
+                                                          path.size(), false);
+            if (url)
+            {
+                CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL);
+                CFRelease(url);
+            }
+        }
+    }
 #else
-   std::cerr << "Unsupported font search path addition" << std::endl;
+    std::cerr << "Unsupported font search path addition" << std::endl;
 #endif
 }

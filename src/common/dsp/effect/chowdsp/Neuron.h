@@ -32,11 +32,12 @@ namespace chowdsp
 ** a sort of "neuron" model commonly used in recurrent neural networks.
 **
 ** For more details on the original idea and implementation of this effect,
-** please see this Medium article: https://jatinchowdhury18.medium.com/complex-nonlinearities-episode-10-gated-recurrent-distortion-6d60948323cf
+** please see this Medium article:
+*https://jatinchowdhury18.medium.com/complex-nonlinearities-episode-10-gated-recurrent-distortion-6d60948323cf
 */
 class Neuron : public Effect
 {
-public:
+  public:
     enum neuron_params
     {
         neuron_drive_wh = 0,
@@ -44,49 +45,45 @@ public:
         neuron_stab_uf,
         neuron_asym_uh,
         neuron_bias_bf,
-        
+
         neuron_comb_freq,
         neuron_comb_sep,
-        
+
         neuron_width,
         neuron_gain,
 
         neuron_num_params,
     };
 
-    Neuron(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
+    Neuron(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~Neuron();
 
-    virtual const char* get_effectname() override
-    {
-        return "Neuron";
-    }
+    virtual const char *get_effectname() override { return "Neuron"; }
 
     virtual void init() override;
-    virtual void process(float* dataL, float* dataR) override;
+    virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
 
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
-    virtual const char* group_label(int id) override; 
+    virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
-private:
+  private:
     void set_params();
-    void process_internal(float* dataL, float* dataR, const int numSamples);
+    void process_internal(float *dataL, float *dataR, const int numSamples);
 
-    inline float processSample (float x, float yPrev) noexcept
+    inline float processSample(float x, float yPrev) noexcept
     {
-        float f = sigmoid (Wf.getNextValue()*x + Uf.getNextValue()*yPrev + bf.getNextValue());
-        return f*yPrev + (1.0f-f) * std::tanh (Wh.getNextValue()*x + Uh.getNextValue()*f*yPrev);
+        float f = sigmoid(Wf.getNextValue() * x + Uf.getNextValue() * yPrev + bf.getNextValue());
+        return f * yPrev +
+               (1.0f - f) * std::tanh(Wh.getNextValue() * x + Uh.getNextValue() * f * yPrev);
     }
 
-    inline float sigmoid (float x) const noexcept
-    {
-        return 1.0f / (1.0f + std::exp (-x));
-    }
+    inline float sigmoid(float x) const noexcept { return 1.0f / (1.0f + std::exp(-x)); }
 
-    enum {
+    enum
+    {
         numSteps = 200,
     };
 

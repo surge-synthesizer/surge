@@ -20,46 +20,44 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-
 class WavetableOscillator : public AbstractBlitOscillator
 {
-public:
-   enum wt_params
-   {
-      wt_morph = 0,
-      wt_skewv,
-      wt_saturate,
-      wt_formant,
-      wt_skewh,
-      wt_unison_detune,
-      wt_unison_voices,
-   };
+  public:
+    enum wt_params
+    {
+        wt_morph = 0,
+        wt_skewv,
+        wt_saturate,
+        wt_formant,
+        wt_skewh,
+        wt_unison_detune,
+        wt_unison_voices,
+    };
 
-   lipol_ps li_hpf, li_DC, li_integratormult;
-   WavetableOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
-   virtual void init(float pitch, bool is_display = false) override;
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual void process_block(
-       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override; 
-   virtual ~WavetableOscillator();
+    lipol_ps li_hpf, li_DC, li_integratormult;
+    WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    virtual void init(float pitch, bool is_display = false) override;
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                               float FMdepth = 0.f) override;
+    virtual ~WavetableOscillator();
 
-private:
-   void convolute(int voice, bool FM, bool stereo);
-   template <bool is_init> void update_lagvals();
-   inline float distort_level(float);
-   bool first_run;
-   float oscpitch[MAX_UNISON];
-   float dc, dc_uni[MAX_UNISON], last_level[MAX_UNISON];
-   float pitch;
-   int mipmap[MAX_UNISON], mipmap_ofs[MAX_UNISON];
-   lag<float> FMdepth, hpf_coeff, integrator_mult, l_hskew, l_vskew, l_clip, l_shape;
-   float formant_t, formant_last, pitch_last, pitch_t;
-   float tableipol, last_tableipol;
-   float hskew, last_hskew;
-   int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant, tableid, last_tableid;
-   int FMdelay;
-   float FMmul_inv;
-   int sampleloop;
+  private:
+    void convolute(int voice, bool FM, bool stereo);
+    template <bool is_init> void update_lagvals();
+    inline float distort_level(float);
+    bool first_run;
+    float oscpitch[MAX_UNISON];
+    float dc, dc_uni[MAX_UNISON], last_level[MAX_UNISON];
+    float pitch;
+    int mipmap[MAX_UNISON], mipmap_ofs[MAX_UNISON];
+    lag<float> FMdepth, hpf_coeff, integrator_mult, l_hskew, l_vskew, l_clip, l_shape;
+    float formant_t, formant_last, pitch_last, pitch_t;
+    float tableipol, last_tableipol;
+    float hskew, last_hskew;
+    int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant, tableid, last_tableid;
+    int FMdelay;
+    float FMmul_inv;
+    int sampleloop;
 };
-

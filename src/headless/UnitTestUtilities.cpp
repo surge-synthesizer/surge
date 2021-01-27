@@ -11,160 +11,163 @@ namespace Surge
 namespace Test
 {
 
-double frequencyFromData( float *buffer, int nS, int nC, int audioChannel,
-                          int start, int trimTo )
+double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo)
 {
-   float *leftTrimmed = new float[trimTo];
+    float *leftTrimmed = new float[trimTo];
 
-   for( int i=0; i<trimTo; ++i )
-      leftTrimmed[i] = buffer[ (i + start) * 2 + audioChannel ];
+    for (int i = 0; i < trimTo; ++i)
+        leftTrimmed[i] = buffer[(i + start) * 2 + audioChannel];
 
-   // OK so now look for sample times between positive/negative crosses
-   int v = -1;
-   uint64_t dSample = 0, crosses = 0;
-   const int minSamplesBetweenCrosses = 10;
-   int lc = -1;
-   const int upswingWindow = 5;
-   for( int i=upswingWindow; i<trimTo - 1; ++i )
-   {
-      if( leftTrimmed[i-upswingWindow] < 0 && leftTrimmed[i] < 0 && leftTrimmed[i+1] >= 0 && i - lc > minSamplesBetweenCrosses )
-      {
-         lc = i;
-         if( v > 0 )
-         {
-            dSample += ( i - v );
-            crosses ++;
-         }
-         v = i;
-      }
-   }
-   
-   float aSample = 1.f * dSample / crosses;
+    // OK so now look for sample times between positive/negative crosses
+    int v = -1;
+    uint64_t dSample = 0, crosses = 0;
+    const int minSamplesBetweenCrosses = 10;
+    int lc = -1;
+    const int upswingWindow = 5;
+    for (int i = upswingWindow; i < trimTo - 1; ++i)
+    {
+        if (leftTrimmed[i - upswingWindow] < 0 && leftTrimmed[i] < 0 && leftTrimmed[i + 1] >= 0 &&
+            i - lc > minSamplesBetweenCrosses)
+        {
+            lc = i;
+            if (v > 0)
+            {
+                dSample += (i - v);
+                crosses++;
+            }
+            v = i;
+        }
+    }
 
-   float time = aSample / samplerate;
-   float freq = 1.0 / time;
+    float aSample = 1.f * dSample / crosses;
 
-   delete[] leftTrimmed;
-   return freq;
+    float time = aSample / samplerate;
+    float freq = 1.0 / time;
+
+    delete[] leftTrimmed;
+    return freq;
 }
 
-double RMSFromData( float *buffer, int nS, int nC, int audioChannel,
-                             int start, int trimTo )
+double RMSFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo)
 {
-   float *leftTrimmed = new float[trimTo];
+    float *leftTrimmed = new float[trimTo];
 
-   for( int i=0; i<trimTo; ++i )
-      leftTrimmed[i] = buffer[ (i + start) * 2 + audioChannel ];
+    for (int i = 0; i < trimTo; ++i)
+        leftTrimmed[i] = buffer[(i + start) * 2 + audioChannel];
 
-   // OK so now look for sample times between positive/negative crosses
-   double RMS=0;
-   int ct = 0;
-   for( int i=0; i<trimTo -1; ++i )
-   {
-      RMS += leftTrimmed[i] * leftTrimmed[i];
-      ct ++;
-   }
-   RMS /= ct;
-   RMS = sqrt(RMS);
-   
-   delete[] leftTrimmed;
-   return RMS;
+    // OK so now look for sample times between positive/negative crosses
+    double RMS = 0;
+    int ct = 0;
+    for (int i = 0; i < trimTo - 1; ++i)
+    {
+        RMS += leftTrimmed[i] * leftTrimmed[i];
+        ct++;
+    }
+    RMS /= ct;
+    RMS = sqrt(RMS);
+
+    delete[] leftTrimmed;
+    return RMS;
 }
 
-double frequencyForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
-                         int seconds, int audioChannel,
-                         int midiChannel )
+double frequencyForNote(std::shared_ptr<SurgeSynthesizer> surge, int note, int seconds,
+                        int audioChannel, int midiChannel)
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, samplerate * seconds, 64, midiChannel );
-   float *buffer;
-   int nS, nC;
-   Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
-   for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
-   
-   REQUIRE( nC == 2 );
-   REQUIRE( nS >= samplerate * seconds );
-   REQUIRE( nS <= samplerate * seconds + 4 * BLOCK_SIZE );
+    auto events = Surge::Headless::makeHoldNoteFor(note, samplerate * seconds, 64, midiChannel);
+    float *buffer;
+    int nS, nC;
+    Surge::Headless::playAsConfigured(surge, events, &buffer, &nS, &nC);
+    for (auto i = 0; i < 500; ++i)
+        surge->process(); // Ring out any transients on this synth
 
-   // Trim off the leading and trailing
-   int nSTrim = (int)(nS / 2 * 0.8);
-   int start = (int)( nS / 2 * 0.05 );
+    REQUIRE(nC == 2);
+    REQUIRE(nS >= samplerate * seconds);
+    REQUIRE(nS <= samplerate * seconds + 4 * BLOCK_SIZE);
 
-   auto freq = frequencyFromData( buffer, nS, nC, audioChannel, start, nSTrim );
-   delete[] buffer;
+    // Trim off the leading and trailing
+    int nSTrim = (int)(nS / 2 * 0.8);
+    int start = (int)(nS / 2 * 0.05);
 
-   return freq;
+    auto freq = frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim);
+    delete[] buffer;
+
+    return freq;
 }
 
-std::pair<double,double> frequencyAndRMSForNote( std::shared_ptr<SurgeSynthesizer> surge, int note,
-                                                 int seconds, int audioChannel,
-                                                 int midiChannel )
+std::pair<double, double> frequencyAndRMSForNote(std::shared_ptr<SurgeSynthesizer> surge, int note,
+                                                 int seconds, int audioChannel, int midiChannel)
 {
-   auto events = Surge::Headless::makeHoldNoteFor( note, samplerate * seconds, 64, midiChannel );
-   float *buffer;
-   int nS, nC;
-   Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
-   for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
-   
-   REQUIRE( nC == 2 );
-   REQUIRE( nS >= samplerate * seconds );
-   REQUIRE( nS <= samplerate * seconds + 4 * BLOCK_SIZE );
+    auto events = Surge::Headless::makeHoldNoteFor(note, samplerate * seconds, 64, midiChannel);
+    float *buffer;
+    int nS, nC;
+    Surge::Headless::playAsConfigured(surge, events, &buffer, &nS, &nC);
+    for (auto i = 0; i < 500; ++i)
+        surge->process(); // Ring out any transients on this synth
 
-   // Trim off the leading and trailing
-   int nSTrim = (int)(nS / 2 * 0.8);
-   int start = (int)( nS / 2 * 0.05 );
+    REQUIRE(nC == 2);
+    REQUIRE(nS >= samplerate * seconds);
+    REQUIRE(nS <= samplerate * seconds + 4 * BLOCK_SIZE);
 
-   auto freq = frequencyFromData( buffer, nS, nC, audioChannel, start, nSTrim );
-   auto rms = RMSFromData( buffer, nS, nC, audioChannel, start, nSTrim );
-   delete[] buffer;
+    // Trim off the leading and trailing
+    int nSTrim = (int)(nS / 2 * 0.8);
+    int start = (int)(nS / 2 * 0.05);
 
-   return std::make_pair(freq,rms);
+    auto freq = frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim);
+    auto rms = RMSFromData(buffer, nS, nC, audioChannel, start, nSTrim);
+    delete[] buffer;
+
+    return std::make_pair(freq, rms);
 }
 
-double frequencyForEvents( std::shared_ptr<SurgeSynthesizer> surge,
-                           Surge::Headless::playerEvents_t &events,
-                           int audioChannel,
-                           int startSample, int endSample )
+double frequencyForEvents(std::shared_ptr<SurgeSynthesizer> surge,
+                          Surge::Headless::playerEvents_t &events, int audioChannel,
+                          int startSample, int endSample)
 {
-   float *buffer;
-   int nS, nC;
-   
-   Surge::Headless::playAsConfigured( surge, events, &buffer, &nS, &nC );
-   for( auto i=0; i<500; ++i ) surge->process(); // Ring out any transients on this synth
+    float *buffer;
+    int nS, nC;
 
-   REQUIRE( startSample < nS );
-   REQUIRE( endSample < nS );
-   
-   auto freq = frequencyFromData( buffer, nS, nC, audioChannel, startSample, endSample - startSample );
-   delete[] buffer;
+    Surge::Headless::playAsConfigured(surge, events, &buffer, &nS, &nC);
+    for (auto i = 0; i < 500; ++i)
+        surge->process(); // Ring out any transients on this synth
 
-   return freq;
+    REQUIRE(startSample < nS);
+    REQUIRE(endSample < nS);
+
+    auto freq =
+        frequencyFromData(buffer, nS, nC, audioChannel, startSample, endSample - startSample);
+    delete[] buffer;
+
+    return freq;
 }
 
-void copyScenedataSubset(SurgeStorage *storage, int scene, int start, int end) {
-   int s = storage->getPatch().scene_start[scene];
-   for(int i=start; i<end; ++i )
-   {
-      storage->getPatch().scenedata[scene][i-s].i =
-         storage->getPatch().param_ptr[i]->val.i;
-   }
+void copyScenedataSubset(SurgeStorage *storage, int scene, int start, int end)
+{
+    int s = storage->getPatch().scene_start[scene];
+    for (int i = start; i < end; ++i)
+    {
+        storage->getPatch().scenedata[scene][i - s].i = storage->getPatch().param_ptr[i]->val.i;
+    }
 }
 
-void setupStorageRanges(Parameter *start, Parameter *endIncluding,
-                        int &storage_id_start, int &storage_id_end) {
-   int min_id = 100000, max_id = -1;
-   Parameter *oap = start;
-   while( oap <= endIncluding )
-   {
-      if( oap->id >= 0 )
-      {
-         if( oap->id > max_id ) max_id = oap->id;
-         if( oap->id < min_id ) min_id = oap->id;
-      }
-      oap++;
-   }
-   
-   storage_id_start = min_id;
-   storage_id_end = max_id + 1;
+void setupStorageRanges(Parameter *start, Parameter *endIncluding, int &storage_id_start,
+                        int &storage_id_end)
+{
+    int min_id = 100000, max_id = -1;
+    Parameter *oap = start;
+    while (oap <= endIncluding)
+    {
+        if (oap->id >= 0)
+        {
+            if (oap->id > max_id)
+                max_id = oap->id;
+            if (oap->id < min_id)
+                min_id = oap->id;
+        }
+        oap++;
+    }
+
+    storage_id_start = min_id;
+    storage_id_end = max_id + 1;
 }
 
 /*
@@ -172,55 +175,57 @@ void setupStorageRanges(Parameter *start, Parameter *endIncluding,
 */
 std::shared_ptr<SurgeSynthesizer> surgeOnSine()
 {
-   auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(44100);
 
-   std::string otp = "Init Sine";
-   bool foundInitSine = false;
-   for (int i = 0; i < surge->storage.patch_list.size(); ++i)
-   {
-      Patch p = surge->storage.patch_list[i];
-      if (p.name == otp)
-      {
-         surge->loadPatch(i);
-         foundInitSine = true;
-         break;
-      }
-   }
-   if( ! foundInitSine )
-      return nullptr;
-   else
-      return surge;
+    std::string otp = "Init Sine";
+    bool foundInitSine = false;
+    for (int i = 0; i < surge->storage.patch_list.size(); ++i)
+    {
+        Patch p = surge->storage.patch_list[i];
+        if (p.name == otp)
+        {
+            surge->loadPatch(i);
+            foundInitSine = true;
+            break;
+        }
+    }
+    if (!foundInitSine)
+        return nullptr;
+    else
+        return surge;
 }
 
-void makePlotPNGFromData( std::string pngFileName,
-                          std::string plotTitle,
-                          float *buffer, int nS, int nC,
-                          int startSample, int endSample )
+void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
+                         int nC, int startSample, int endSample)
 {
 #if MAC
-   if( nC != 2 )
-      std::cout << "This won't work really" << std::endl;
-   
-   if( startSample < 0 ) startSample = 0;
-   if( endSample < 0 ) endSample = nS;
+    if (nC != 2)
+        std::cout << "This won't work really" << std::endl;
 
-   auto csvnm = std::tmpnam( nullptr );
-   std::cout << "Creating csvnm " << csvnm << std::endl;
-   std::ofstream ofs( csvnm );
-   for( int i=startSample; i<endSample; ++i )
-   {
-      ofs << i << ", " << buffer[ i * nC ] << ", " << buffer[ i * nC + 1 ] << std::endl;
-   }
-   ofs.close();
+    if (startSample < 0)
+        startSample = 0;
+    if (endSample < 0)
+        endSample = nS;
 
-   std::string cmd = "python3 scripts/misc/csvtoPlot.py \"" + std::string( csvnm ) + "\" \"" + pngFileName + "\" \"" + plotTitle + "\"";
-   std::cout << "Running " << cmd << std::endl;
-   system( cmd.c_str() );
+    auto csvnm = std::tmpnam(nullptr);
+    std::cout << "Creating csvnm " << csvnm << std::endl;
+    std::ofstream ofs(csvnm);
+    for (int i = startSample; i < endSample; ++i)
+    {
+        ofs << i << ", " << buffer[i * nC] << ", " << buffer[i * nC + 1] << std::endl;
+    }
+    ofs.close();
+
+    std::string cmd = "python3 scripts/misc/csvtoPlot.py \"" + std::string(csvnm) + "\" \"" +
+                      pngFileName + "\" \"" + plotTitle + "\"";
+    std::cout << "Running " << cmd << std::endl;
+    system(cmd.c_str());
 #else
-   std::cout << "makePlotPNGFromData is only on mac for now (since @baconpaul just uses it to debug)" << std::endl;
-#endif   
+    std::cout
+        << "makePlotPNGFromData is only on mac for now (since @baconpaul just uses it to debug)"
+        << std::endl;
+#endif
 }
 
-
-}
-}
+} // namespace Test
+} // namespace Surge

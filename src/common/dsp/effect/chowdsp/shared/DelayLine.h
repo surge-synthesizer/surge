@@ -32,32 +32,33 @@ namespace chowdsp
 {
 
 /** Base class for delay lines with any interpolation type */
-template <typename SampleType>
-class DelayLineBase
+template <typename SampleType> class DelayLineBase
 {
-public:
+  public:
     DelayLineBase() = default;
 
-    virtual void setDelay (SampleType /* newDelayInSamples */) = 0;
+    virtual void setDelay(SampleType /* newDelayInSamples */) = 0;
     virtual SampleType getDelay() const = 0;
 
-    virtual void prepare (double sampleRate, size_t blockSize, size_t nChannels) = 0;
+    virtual void prepare(double sampleRate, size_t blockSize, size_t nChannels) = 0;
     virtual void reset() = 0;
 
-    virtual void pushSample (size_t /* channel */, SampleType /* sample */) = 0;
-    virtual SampleType popSample (size_t /* channel */, SampleType /* delayInSamples */, bool /* updateReadPointer */) = 0;
+    virtual void pushSample(size_t /* channel */, SampleType /* sample */) = 0;
+    virtual SampleType popSample(size_t /* channel */, SampleType /* delayInSamples */,
+                                 bool /* updateReadPointer */) = 0;
 
-    void copyState (const DelayLineBase<SampleType>& other)
+    void copyState(const DelayLineBase<SampleType> &other)
     {
         for (size_t ch = 0; ch < bufferData.size(); ++ch)
-            std::copy (other.bufferData[ch].begin(), other.bufferData[ch].end(), bufferData[ch].begin());
-        
-        std::copy (other.v.begin(), other.v.end(), v.begin());
-        std::copy (other.writePos.begin(), other.writePos.end(), writePos.begin());
-        std::copy (other.readPos.begin(), other.readPos.end(), readPos.begin());
+            std::copy(other.bufferData[ch].begin(), other.bufferData[ch].end(),
+                      bufferData[ch].begin());
+
+        std::copy(other.v.begin(), other.v.end(), v.begin());
+        std::copy(other.writePos.begin(), other.writePos.end(), writePos.begin());
+        std::copy(other.readPos.begin(), other.readPos.end(), readPos.begin());
     }
 
-protected:
+  protected:
     std::vector<std::vector<SampleType>> bufferData;
     std::vector<SampleType> v;
     std::vector<size_t> writePos, readPos;
@@ -81,24 +82,24 @@ protected:
 template <typename SampleType, typename InterpolationType = DelayLineInterpolationTypes::Linear>
 class DelayLine : public DelayLineBase<SampleType>
 {
-public:
+  public:
     //==============================================================================
     /** Default constructor. */
     DelayLine();
 
     /** Constructor. */
-    explicit DelayLine (size_t maximumDelayInSamples);
+    explicit DelayLine(size_t maximumDelayInSamples);
 
     //==============================================================================
     /** Sets the delay in samples. */
-    void setDelay (SampleType newDelayInSamples) override;
+    void setDelay(SampleType newDelayInSamples) override;
 
     /** Returns the current delay in samples. */
     SampleType getDelay() const override;
 
     //==============================================================================
     /** Initialises the processor. */
-    void prepare (double sampleRate, size_t blockSize, size_t nChannels) override;
+    void prepare(double sampleRate, size_t blockSize, size_t nChannels) override;
 
     /** Resets the internal state variables of the processor. */
     void reset() override;
@@ -112,7 +113,7 @@ public:
 
         @see setDelay, popSample, process
     */
-    void pushSample (size_t channel, SampleType sample) override;
+    void pushSample(size_t channel, SampleType sample) override;
 
     /** Pops a single sample from one channel of the delay line.
 
@@ -131,7 +132,8 @@ public:
 
         @see setDelay, pushSample, process
     */
-    SampleType popSample (size_t channel, SampleType delayInSamples = -1, bool updateReadPointer = true) override;
+    SampleType popSample(size_t channel, SampleType delayInSamples = -1,
+                         bool updateReadPointer = true) override;
 
     //==============================================================================
     /** Processes the input and output samples supplied in the processing context.
@@ -141,21 +143,22 @@ public:
 
         @see setDelay
     */
-    void process (const SampleType* inputSamples, SampleType* outputSamples, const size_t numSamples, size_t channel)
+    void process(const SampleType *inputSamples, SampleType *outputSamples, const size_t numSamples,
+                 size_t channel)
     {
         for (size_t i = 0; i < numSamples; ++i)
         {
-            pushSample (channel, inputSamples[i]);
-            outputSamples[i] = popSample (channel);
+            pushSample(channel, inputSamples[i]);
+            outputSamples[i] = popSample(channel);
         }
     }
 
-private:
-    inline SampleType interpolateSample (size_t channel) noexcept
+  private:
+    inline SampleType interpolateSample(size_t channel) noexcept
     {
         auto index = (this->readPos[channel] + delayInt);
-        return interpolator.call (this->bufferData[channel].data(),
-            index, delayFrac, this->v[channel]);
+        return interpolator.call(this->bufferData[channel].data(), index, delayFrac,
+                                 this->v[channel]);
     }
 
     //==============================================================================

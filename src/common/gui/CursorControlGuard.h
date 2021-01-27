@@ -41,23 +41,23 @@ namespace UI
  */
 struct CursorControlGuard
 {
-   enum MotionMode {
-      SHOW_AT_LOCATION, // Use the where from construction or setShowLocation when you show
-      SHOW_AT_MOUSE_MOTION_POINT // Use the point of construction when you show
-   } motionMode = SHOW_AT_LOCATION;
-   VSTGUI::CPoint showLocation; // In physical screen cordinates
+    enum MotionMode
+    {
+        SHOW_AT_LOCATION, // Use the where from construction or setShowLocation when you show
+        SHOW_AT_MOUSE_MOTION_POINT // Use the point of construction when you show
+    } motionMode = SHOW_AT_LOCATION;
+    VSTGUI::CPoint showLocation; // In physical screen cordinates
 
-   CursorControlGuard();
-   CursorControlGuard(VSTGUI::CFrame *, const VSTGUI::CPoint &where);
-   ~CursorControlGuard();
+    CursorControlGuard();
+    CursorControlGuard(VSTGUI::CFrame *, const VSTGUI::CPoint &where);
+    ~CursorControlGuard();
 
-   void setShowLocationFromFrameLocation( VSTGUI::CFrame *, const VSTGUI::CPoint &where );
-   void setShowLocationFromViewLocation( VSTGUI::CView *, const VSTGUI::CPoint &where );
-   bool resetToShowLocation();
+    void setShowLocationFromFrameLocation(VSTGUI::CFrame *, const VSTGUI::CPoint &where);
+    void setShowLocationFromViewLocation(VSTGUI::CView *, const VSTGUI::CPoint &where);
+    bool resetToShowLocation();
 
-private:
-   void doHide();
-
+  private:
+    void doHide();
 };
 
 /*
@@ -75,122 +75,117 @@ private:
  */
 
 template <typename T> // We assume T is a CView subclass
-struct CursorControlAdapter {
-   CursorControlAdapter( SurgeStorage *s )
-   {
-      if( s )
-         hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
-   }
-
-   void startCursorHide()
-   {
-      if( hideCursor )
-      {
-         ccadapterGuard = std::make_shared<CursorControlGuard>();
-      }
-   }
-
-   void startCursorHide( const VSTGUI::CPoint &where )
-   {
-      if( hideCursor )
-      {
-         ccadapterGuard = std::make_shared<CursorControlGuard>();
-         ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
-      }
-   }
-
-   void setCursorLocation( const VSTGUI::CPoint &where )
-   {
-      if( ccadapterGuard )
-         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
-   }
-
-   bool resetToShowLocation()
-   {
-      if( ccadapterGuard  )
-         return ccadapterGuard->resetToShowLocation();
-      return false;
-   }
-
-   void endCursorHide()
-   {
-      ccadapterGuard = nullptr;
-   }
-
-   void endCursorHide( const VSTGUI::CPoint &where )
-   {
-      if( ccadapterGuard )
-         ccadapterGuard->setShowLocationFromViewLocation(asT(), where );
-      ccadapterGuard = nullptr;
-   }
-
-   T* asT() { return static_cast<T*>( this ); }
-
-   bool hideCursor = true;
-   std::shared_ptr<CursorControlGuard> ccadapterGuard;
-};
-
-template <typename T>
-struct CursorControlAdapterWithMouseDelta : public CursorControlAdapter<T>
+struct CursorControlAdapter
 {
-   CursorControlAdapterWithMouseDelta(SurgeStorage *s) : CursorControlAdapter<T>(s) {}
+    CursorControlAdapter(SurgeStorage *s)
+    {
+        if (s)
+            hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
+    }
 
-   bool hideIsEnqueued = false;
-   VSTGUI::CPoint enqueuedLocation;
-   void onMouseDownCursorHelper( const VSTGUI::CPoint &where )
-   {
-      hideIsEnqueued = false;
-      deltapoint = where;
-      origdeltapoint = where;
-   }
+    void startCursorHide()
+    {
+        if (hideCursor)
+        {
+            ccadapterGuard = std::make_shared<CursorControlGuard>();
+        }
+    }
 
-   void enqueueCursorHideIfMoved( const VSTGUI::CPoint &where )
-   {
-      hideIsEnqueued = true;
-      enqueuedLocation = where;
-   }
-   void unenqueueCursorHideIfMoved()
-   {
-      hideIsEnqueued = false;
-   }
-   VSTGUI::CMouseEventResult onMouseMovedCursorHelper( const VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons )
-   {
-      if( hideIsEnqueued )
-      {
-         CursorControlAdapter<T>::startCursorHide(enqueuedLocation);
-         hideIsEnqueued = false;
-      }
-      auto scale = CursorControlAdapter<T>::asT()->getMouseDeltaScaling(where, buttons);
-      float dx = (where.x -deltapoint.x);
-      float dy = (where.y - deltapoint.y);
-      CursorControlAdapter<T>::asT()->onMouseMoveDelta(where, buttons, scale * (where.x - deltapoint.x),
-                       scale * (where.y - deltapoint.y));
-      auto odx = where.x - origdeltapoint.x;
-      auto ody = where.y - origdeltapoint.y;
-      auto delt = sqrt( odx * odx + ody * ody );
+    void startCursorHide(const VSTGUI::CPoint &where)
+    {
+        if (hideCursor)
+        {
+            ccadapterGuard = std::make_shared<CursorControlGuard>();
+            ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
+        }
+    }
 
-      /*
-       * Windows10 and macos don't need this but Windows8.1 really
-       * craps out with fractional cursor moves so make sure we have
-       * something big move wise before we reset.
-       */
-      if( delt > 10 )
-      {
-         if (CursorControlAdapter<T>::asT()->resetToShowLocation())
-            deltapoint = origdeltapoint;
-         else
-            deltapoint = where;
-      }
-      else
-      {
-         deltapoint = where;
-      }
-      return VSTGUI::kMouseEventHandled;
-   }
+    void setCursorLocation(const VSTGUI::CPoint &where)
+    {
+        if (ccadapterGuard)
+            ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
+    }
 
-private:
-   VSTGUI::CPoint deltapoint, origdeltapoint;
+    bool resetToShowLocation()
+    {
+        if (ccadapterGuard)
+            return ccadapterGuard->resetToShowLocation();
+        return false;
+    }
+
+    void endCursorHide() { ccadapterGuard = nullptr; }
+
+    void endCursorHide(const VSTGUI::CPoint &where)
+    {
+        if (ccadapterGuard)
+            ccadapterGuard->setShowLocationFromViewLocation(asT(), where);
+        ccadapterGuard = nullptr;
+    }
+
+    T *asT() { return static_cast<T *>(this); }
+
+    bool hideCursor = true;
+    std::shared_ptr<CursorControlGuard> ccadapterGuard;
 };
 
-}
-}
+template <typename T> struct CursorControlAdapterWithMouseDelta : public CursorControlAdapter<T>
+{
+    CursorControlAdapterWithMouseDelta(SurgeStorage *s) : CursorControlAdapter<T>(s) {}
+
+    bool hideIsEnqueued = false;
+    VSTGUI::CPoint enqueuedLocation;
+    void onMouseDownCursorHelper(const VSTGUI::CPoint &where)
+    {
+        hideIsEnqueued = false;
+        deltapoint = where;
+        origdeltapoint = where;
+    }
+
+    void enqueueCursorHideIfMoved(const VSTGUI::CPoint &where)
+    {
+        hideIsEnqueued = true;
+        enqueuedLocation = where;
+    }
+    void unenqueueCursorHideIfMoved() { hideIsEnqueued = false; }
+    VSTGUI::CMouseEventResult onMouseMovedCursorHelper(const VSTGUI::CPoint &where,
+                                                       const VSTGUI::CButtonState &buttons)
+    {
+        if (hideIsEnqueued)
+        {
+            CursorControlAdapter<T>::startCursorHide(enqueuedLocation);
+            hideIsEnqueued = false;
+        }
+        auto scale = CursorControlAdapter<T>::asT()->getMouseDeltaScaling(where, buttons);
+        float dx = (where.x - deltapoint.x);
+        float dy = (where.y - deltapoint.y);
+        CursorControlAdapter<T>::asT()->onMouseMoveDelta(
+            where, buttons, scale * (where.x - deltapoint.x), scale * (where.y - deltapoint.y));
+        auto odx = where.x - origdeltapoint.x;
+        auto ody = where.y - origdeltapoint.y;
+        auto delt = sqrt(odx * odx + ody * ody);
+
+        /*
+         * Windows10 and macos don't need this but Windows8.1 really
+         * craps out with fractional cursor moves so make sure we have
+         * something big move wise before we reset.
+         */
+        if (delt > 10)
+        {
+            if (CursorControlAdapter<T>::asT()->resetToShowLocation())
+                deltapoint = origdeltapoint;
+            else
+                deltapoint = where;
+        }
+        else
+        {
+            deltapoint = where;
+        }
+        return VSTGUI::kMouseEventHandled;
+    }
+
+  private:
+    VSTGUI::CPoint deltapoint, origdeltapoint;
+};
+
+} // namespace UI
+} // namespace Surge

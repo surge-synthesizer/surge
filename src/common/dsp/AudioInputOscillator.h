@@ -20,40 +20,37 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-
 class AudioInputOscillator : public Oscillator
 {
-public:
-   enum audioin_params
-   {
-      audioin_channel = 0,
-      audioin_gain,
-      audioin_sceneAchan,
-      audioin_sceneAgain,
-      audioin_sceneAmix,
-      audioin_lowcut,
-      audioin_highcut,
-   };
+  public:
+    enum audioin_params
+    {
+        audioin_channel = 0,
+        audioin_gain,
+        audioin_sceneAchan,
+        audioin_sceneAgain,
+        audioin_sceneAmix,
+        audioin_lowcut,
+        audioin_highcut,
+    };
 
-   /* add controls:
-   limiter?
-   */
+    /* add controls:
+    limiter?
+    */
 
-   AudioInputOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
-   virtual void init(float pitch, bool is_display = false) override;
-   virtual void process_block(
-       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
-   virtual ~AudioInputOscillator();
-   virtual void init_ctrltypes(int scene, int osc) override;
-   virtual void init_default_values() override;
-   virtual bool allow_display() override
-   {
-      return false;
-   }
-   bool isInSceneB;
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    AudioInputOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    virtual void init(float pitch, bool is_display = false) override;
+    virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                               float FMdepth = 0.f) override;
+    virtual ~AudioInputOscillator();
+    virtual void init_ctrltypes(int scene, int osc) override;
+    virtual void init_default_values() override;
+    virtual bool allow_display() override { return false; }
+    bool isInSceneB;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
-private:
-   BiquadFilter lp, hp;
-   void applyFilter();
+  private:
+    BiquadFilter lp, hp;
+    void applyFilter();
 };

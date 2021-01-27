@@ -31,7 +31,8 @@ namespace chowdsp
 ** @param: OSFactor     sets the oversampling ratio as a power of two. i.e. Ratio = 2^OSFactor
 ** @param: block_size   size of the blocks of audio before upsampling
 ** @param: FilterOrd    sets the order of the anti-imaging/anti-aliasing filters
-** @param: steep        sets whether to use the filters in "steep" mode (see vt_dsp/halfratefilter.h)
+** @param: steep        sets whether to use the filters in "steep" mode (see
+*vt_dsp/halfratefilter.h)
 **
 ** The class should be used in the processign callback as follows:
 ** Then use the following code to process samples:
@@ -44,7 +45,7 @@ namespace chowdsp
 **     os.downsample(dataL, dataR);
 ** }
 ** @endcode
-*/ 
+*/
 template <size_t OSFactor, size_t block_size, size_t FilterOrd = 3, bool steep = false>
 class Oversampling
 {
@@ -55,33 +56,33 @@ class Oversampling
     static constexpr size_t up_block_size = block_size * osRatio;
     static constexpr size_t block_size_quad = block_size / 4;
 
-public:
+  public:
     Oversampling()
     {
         for (size_t i = 0; i < OSFactor; ++i)
         {
-            hr_filts_up[i] = std::make_unique<HalfRateFilter> (FilterOrd, steep);
-            hr_filts_down[i] = std::make_unique<HalfRateFilter> (FilterOrd, steep);
+            hr_filts_up[i] = std::make_unique<HalfRateFilter>(FilterOrd, steep);
+            hr_filts_down[i] = std::make_unique<HalfRateFilter>(FilterOrd, steep);
         }
     }
 
     /** Resets the processing pipeline */
     void reset()
     {
-        for(size_t i = 0; i < OSFactor; ++i)
+        for (size_t i = 0; i < OSFactor; ++i)
         {
             hr_filts_up[i]->reset();
             hr_filts_down[i]->reset();
         }
 
-        std::fill(leftUp,  &leftUp[up_block_size],  0.0f);
+        std::fill(leftUp, &leftUp[up_block_size], 0.0f);
         std::fill(rightUp, &rightUp[up_block_size], 0.0f);
     }
 
     /** Upsamples the audio in the input arrays, and stores the upsampled audio internally */
-    inline void upsample(float* leftIn, float* rightIn) noexcept
+    inline void upsample(float *leftIn, float *rightIn) noexcept
     {
-        copy_block(leftIn,  leftUp,  block_size_quad);
+        copy_block(leftIn, leftUp, block_size_quad);
         copy_block(rightIn, rightUp, block_size_quad);
 
         for (size_t i = 0; i < OSFactor; ++i)
@@ -91,16 +92,17 @@ public:
         }
     }
 
-    /** Downsamples that audio in the internal buffers, and stores the downsampled audio in the input arrays */
-    inline void downsample(float* leftOut, float* rightOut) noexcept
+    /** Downsamples that audio in the internal buffers, and stores the downsampled audio in the
+     * input arrays */
+    inline void downsample(float *leftOut, float *rightOut) noexcept
     {
         for (size_t i = OSFactor; i > 0; --i)
         {
             auto numSamples = block_size * (1 << i);
-            hr_filts_down[i - 1]->process_block_D2 (leftUp, rightUp, numSamples);
+            hr_filts_down[i - 1]->process_block_D2(leftUp, rightUp, numSamples);
         }
-        
-        copy_block(leftUp,  leftOut,  block_size_quad);
+
+        copy_block(leftUp, leftOut, block_size_quad);
         copy_block(rightUp, rightOut, block_size_quad);
     }
 
@@ -110,7 +112,7 @@ public:
     /** Returns the oversampling ratio */
     inline constexpr size_t getOSRatio() const noexcept { return osRatio; }
 
-    float leftUp  alignas(16)[up_block_size];
+    float leftUp alignas(16)[up_block_size];
     float rightUp alignas(16)[up_block_size];
 };
 

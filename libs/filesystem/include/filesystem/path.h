@@ -19,65 +19,74 @@
 #include <string>
 #include <utility>
 
-namespace Surge { namespace filesystem {
+namespace Surge
+{
+namespace filesystem
+{
 
 class path //                                                                        [fs.class.path]
 {
-public:
-   using value_type = char;
-   using string_type = std::basic_string<value_type>;
+  public:
+    using value_type = char;
+    using string_type = std::basic_string<value_type>;
 
-   static constexpr value_type preferred_separator = '/';
+    static constexpr value_type preferred_separator = '/';
 
-   // constructors and destructor                                                [fs.path.construct]
-   path() = default;
-   explicit path(string_type p) noexcept // Hint: Did you mean to use string_to_path()?
-   : pth(std::move(p)) {}
+    // constructors and destructor [fs.path.construct]
+    path() = default;
+    explicit path(string_type p) noexcept // Hint: Did you mean to use string_to_path()?
+        : pth(std::move(p))
+    {
+    }
 
-   // appends                                                                       [fs.path.append]
-   path& operator/=(const path& rhs);
+    // appends [fs.path.append]
+    path &operator/=(const path &rhs);
 
-   // modifiers                                                                  [fs.path.modifiers]
-   void clear() noexcept { pth.clear(); }
-   path& make_preferred() noexcept { return *this; }
-   path& remove_filename();
-   path& replace_filename(const path& replacement);
-   path& replace_extension(const path& replacement = path{});
+    // modifiers [fs.path.modifiers]
+    void clear() noexcept { pth.clear(); }
+    path &make_preferred() noexcept { return *this; }
+    path &remove_filename();
+    path &replace_filename(const path &replacement);
+    path &replace_extension(const path &replacement = path{});
 
-   // concatenation                                                                 [fs.path.concat]
-   path& operator+=(const path& p) { pth += p.pth; return *this; }
+    // concatenation [fs.path.concat]
+    path &operator+=(const path &p)
+    {
+        pth += p.pth;
+        return *this;
+    }
 
-   // native format observers                                                   [fs.path.native.obs]
-   const string_type& native() const noexcept { return pth; }
-   const value_type* c_str() const noexcept { return pth.c_str(); }
-   operator string_type() const { return pth; }
-   const std::string& string() const noexcept { return pth; }
-   const std::string& u8string() const noexcept { return pth; }
+    // native format observers [fs.path.native.obs]
+    const string_type &native() const noexcept { return pth; }
+    const value_type *c_str() const noexcept { return pth.c_str(); }
+    operator string_type() const { return pth; }
+    const std::string &string() const noexcept { return pth; }
+    const std::string &u8string() const noexcept { return pth; }
 
-   // generic format observers                                                 [fs.path.generic.obs]
-   const std::string& generic_string() const noexcept { return pth; }
-   const std::string& generic_u8string() const noexcept { return pth; }
+    // generic format observers [fs.path.generic.obs]
+    const std::string &generic_string() const noexcept { return pth; }
+    const std::string &generic_u8string() const noexcept { return pth; }
 
-   // decomposition                                                              [fs.path.decompose]
-   path filename() const;
-   path stem() const;
-   path extension() const;
+    // decomposition [fs.path.decompose]
+    path filename() const;
+    path stem() const;
+    path extension() const;
 
-   // query                                                                          [fs.path.query]
-   bool empty() const noexcept { return pth.empty(); }
-   bool has_filename() const noexcept { return !pth.empty() && pth.back() != preferred_separator; }
-   bool has_stem() const noexcept;
-   bool has_extension() const noexcept;
-   bool is_absolute() const noexcept { return !pth.empty() && pth.front() == preferred_separator; }
-   bool is_relative() const noexcept { return !is_absolute(); }
+    // query [fs.path.query]
+    bool empty() const noexcept { return pth.empty(); }
+    bool has_filename() const noexcept { return !pth.empty() && pth.back() != preferred_separator; }
+    bool has_stem() const noexcept;
+    bool has_extension() const noexcept;
+    bool is_absolute() const noexcept { return !pth.empty() && pth.front() == preferred_separator; }
+    bool is_relative() const noexcept { return !is_absolute(); }
 
-   friend path operator/(const path& lhs, const path& rhs) { return path(lhs) /= rhs; }
-   friend std::ostream& operator<<(std::ostream& os, const path& p);
+    friend path operator/(const path &lhs, const path &rhs) { return path(lhs) /= rhs; }
+    friend std::ostream &operator<<(std::ostream &os, const path &p);
 
-private:
-   string_type pth;
+  private:
+    string_type pth;
 
-   friend class directory_iterator;
+    friend class directory_iterator;
 };
 
 } // namespace filesystem

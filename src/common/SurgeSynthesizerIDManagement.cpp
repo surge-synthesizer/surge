@@ -60,124 +60,124 @@
 ** 3. So almost all your old automation would map to the wrong spot in your DAW.
 **
 ** So this file exists to "not have that happen" (or more accurately "make it so that cannot
- * happen when we expand"). How does it work?
- *
- * Well first, SurgeSynthesizer has had all of its internal APIs to do things like get and set
- * parameters converted from int as index to an ID object as index. This solves one of the biggest
- * confusing points, which is "is the int I am taking about the param index, the GUI index, the DAW
- * index, or the DAW ID". Once that's done you get obvious constructors for those, which are the
- * from methods. (Note the fromGUITag is a static on SurgeGUIEditor since that requires GUI information
- * but also is only called from GUI-aware clients).
- *
- * And then you have two strategies.
- *
- * For hosts which match the DAW index and DAW ID (! PLUGIN_ID_AND_INDEX_ARE_DISTINCT, which in
- * this implementation are the VST2, LV2 and AU) you build everything on the DAWSideIndex and
- * the SynthID and basically convert back and forth using get methods at control points.
- *
- * For the VST3 which can issue IDs for its parameters non-monotonically, we have the DAWSideIndex
- * and the DAWSideID as distinct values. This means that when we add an item in 'order' we can
- * keep its ID as whatever we want and not break stremaing in the future.
- *
- * And then these classes implement the 1.8-style ID management which is
- *
- * (INDEX version)
- *    DAW params 0->7 map to the custom controls, which have SynthID metaparam_offset_i
- *    DAW params 8->n_params map to the params, which have identical SynthID values
- *    DAW params n_params -> n_params + 7 map to the first 8 params, displaces by the controls, which have
- *         SynthID 0-7.
- *
- *  The ID version basically keeps the DAW ID and the SynthID the same for now. In a future version
- *  where we expand SynthIDs (which remember will need to be continugous) that constraint will break
- *  to preserve streaming.
+* happen when we expand"). How does it work?
+*
+* Well first, SurgeSynthesizer has had all of its internal APIs to do things like get and set
+* parameters converted from int as index to an ID object as index. This solves one of the biggest
+* confusing points, which is "is the int I am taking about the param index, the GUI index, the DAW
+* index, or the DAW ID". Once that's done you get obvious constructors for those, which are the
+* from methods. (Note the fromGUITag is a static on SurgeGUIEditor since that requires GUI
+*information but also is only called from GUI-aware clients).
+*
+* And then you have two strategies.
+*
+* For hosts which match the DAW index and DAW ID (! PLUGIN_ID_AND_INDEX_ARE_DISTINCT, which in
+* this implementation are the VST2, LV2 and AU) you build everything on the DAWSideIndex and
+* the SynthID and basically convert back and forth using get methods at control points.
+*
+* For the VST3 which can issue IDs for its parameters non-monotonically, we have the DAWSideIndex
+* and the DAWSideID as distinct values. This means that when we add an item in 'order' we can
+* keep its ID as whatever we want and not break stremaing in the future.
+*
+* And then these classes implement the 1.8-style ID management which is
+*
+* (INDEX version)
+*    DAW params 0->7 map to the custom controls, which have SynthID metaparam_offset_i
+*    DAW params 8->n_params map to the params, which have identical SynthID values
+*    DAW params n_params -> n_params + 7 map to the first 8 params, displaces by the controls, which
+*have SynthID 0-7.
+*
+*  The ID version basically keeps the DAW ID and the SynthID the same for now. In a future version
+*  where we expand SynthIDs (which remember will need to be continugous) that constraint will break
+*  to preserve streaming.
 */
 
 #include "SurgeSynthesizer.h"
 #include "DebugHelpers.h"
 
-bool SurgeSynthesizer::fromDAWSideIndex( int i, ID &q ) {
-   q.dawindex = i;
-   if( i < num_metaparameters )
-   {
-      q.synthid = i + metaparam_offset;
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-      q.dawid = i + metaparam_offset;
-#endif
-      return true;
-   }
-   else if( i < n_total_params )
-   {
-      q.synthid = i;
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-      q.dawid = i;
-#endif
-      return true;
-   }
-   else if( i >= n_total_params && i < n_total_params + num_metaparameters)
-   {
-      q.synthid = i - n_total_params;
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-      q.dawid = i - n_total_params;
-#endif
-      return true;
-   }
-   return false;
-}
-
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-bool SurgeSynthesizer::fromDAWSideId( int i, ID &q ) {
-   q.dawid = i;
-   q.synthid = i;
-
-   if( i >= metaparam_offset )
-   {
-      q.dawindex = i - metaparam_offset;
-   }
-   else if( i < num_metaparameters )
-   {
-      q.dawindex = i + n_total_params;
-   }
-   else
-   {
-      q.dawindex = i;
-   }
-   
-   // TODO - generate the index
-   return true;
-}
-#endif
-
-bool SurgeSynthesizer::fromSynthSideId( int i, ID &q ) {
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-   q.dawid = i;
-#endif
-   q.synthid = i;
-
-   if( i >= metaparam_offset )
-   {
-      q.dawindex = i - metaparam_offset;
-   }
-   else if( i < num_metaparameters )
-   {
-      q.dawindex = i + n_total_params;
-   }
-   else
-   {
-      q.dawindex = i;
-   }
-   return true;
-}
-
-
-bool SurgeSynthesizer::fromSynthSideIdWithGuiOffset(int i,
-                                                    int start_paramtags,
-                                                    int start_metacontrol_tag,
-                                                    ID& q)
+bool SurgeSynthesizer::fromDAWSideIndex(int i, ID &q)
 {
-   bool res = false;
-   if( i >= start_paramtags  && i <= start_paramtags + n_total_params )
-      res = fromSynthSideId(i-start_paramtags, q ); // wrong for macros and stuff
-   else if( i >= start_metacontrol_tag && i <= start_metacontrol_tag + num_metaparameters )
-      res = fromSynthSideId(i-start_metacontrol_tag+metaparam_offset, q );
-   return res;
+    q.dawindex = i;
+    if (i < num_metaparameters)
+    {
+        q.synthid = i + metaparam_offset;
+#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
+        q.dawid = i + metaparam_offset;
+#endif
+        return true;
+    }
+    else if (i < n_total_params)
+    {
+        q.synthid = i;
+#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
+        q.dawid = i;
+#endif
+        return true;
+    }
+    else if (i >= n_total_params && i < n_total_params + num_metaparameters)
+    {
+        q.synthid = i - n_total_params;
+#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
+        q.dawid = i - n_total_params;
+#endif
+        return true;
+    }
+    return false;
+}
+
+#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
+bool SurgeSynthesizer::fromDAWSideId(int i, ID &q)
+{
+    q.dawid = i;
+    q.synthid = i;
+
+    if (i >= metaparam_offset)
+    {
+        q.dawindex = i - metaparam_offset;
+    }
+    else if (i < num_metaparameters)
+    {
+        q.dawindex = i + n_total_params;
+    }
+    else
+    {
+        q.dawindex = i;
+    }
+
+    // TODO - generate the index
+    return true;
+}
+#endif
+
+bool SurgeSynthesizer::fromSynthSideId(int i, ID &q)
+{
+#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
+    q.dawid = i;
+#endif
+    q.synthid = i;
+
+    if (i >= metaparam_offset)
+    {
+        q.dawindex = i - metaparam_offset;
+    }
+    else if (i < num_metaparameters)
+    {
+        q.dawindex = i + n_total_params;
+    }
+    else
+    {
+        q.dawindex = i;
+    }
+    return true;
+}
+
+bool SurgeSynthesizer::fromSynthSideIdWithGuiOffset(int i, int start_paramtags,
+                                                    int start_metacontrol_tag, ID &q)
+{
+    bool res = false;
+    if (i >= start_paramtags && i <= start_paramtags + n_total_params)
+        res = fromSynthSideId(i - start_paramtags, q); // wrong for macros and stuff
+    else if (i >= start_metacontrol_tag && i <= start_metacontrol_tag + num_metaparameters)
+        res = fromSynthSideId(i - start_metacontrol_tag + metaparam_offset, q);
+    return res;
 }

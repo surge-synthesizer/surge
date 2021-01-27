@@ -10,140 +10,137 @@
 
 class alignas(16) AirWindowsEffect : public Effect
 {
-public:
-   AirWindowsEffect( SurgeStorage *storage, FxStorage *fxdata, pdata *pd );
-   virtual ~AirWindowsEffect();
+  public:
+    AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~AirWindowsEffect();
 
-   virtual const char* get_effectname() override { return "Airwindows"; };
+    virtual const char *get_effectname() override { return "Airwindows"; };
 
-   virtual void init() override;
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
+    virtual void init() override;
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
 
-   virtual void updateAfterReload() override;
+    virtual void updateAfterReload() override;
 
-   void resetCtrlTypes( bool useStreamedValues );
-   
-   virtual void process( float *dataL, float *dataR ) override;
+    void resetCtrlTypes(bool useStreamedValues);
 
-   virtual const char* group_label(int id) override;
-   virtual int group_label_ypos(int id) override;
+    virtual void process(float *dataL, float *dataR) override;
 
-   // TODO ringout and only control and suspend
-   virtual void suspend() override
-   {
-      hasInvalidated = true;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-      if( fxdata ) {
-         fxdata->p[0].deactivated = true;
-         if( fxdata->p[1].ctrltype == ct_none )
-         {
-            setupSubFX( fxdata->p[0].val.i, true );
-         }
-      }
-   }
+    // TODO ringout and only control and suspend
+    virtual void suspend() override
+    {
+        hasInvalidated = true;
 
-   lag<float, true> param_lags[n_fx_params - 1];
-   
-   void setupSubFX(int awfx, bool useStreamedValues );
-   std::unique_ptr<AirWinBaseClass> airwin;
-   int lastSelected = -1;
-   
-   std::vector<AirWinBaseClass::Registration> fxreg;
-   std::vector<int> fxregOrdering;
-
-   struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper {
-      AWFxSelectorMapper( AirWindowsEffect *fx ) {
-         this->fx = fx;
-      };
-
-      virtual int remapStreamedIndexToDisplayIndex( int i ) override {
-         return fx->fxreg[i].displayOrder;
-      }
-      virtual std::string nameAtStreamedIndex( int i ) override {
-         return fx->fxreg[i].name;
-      }
-      virtual bool hasGroupNames() override { return true; }
-      
-      virtual std::string groupNameAtStreamedIndex( int i ) override {
-         return fx->fxreg[i].groupName;
-      }
-
-      bool supportsTotalIndexOrdering() override
-      {
-         return true;
-      }
-
-      const std::vector<int> totalIndexOrdering() override
-      {
-         return fx->fxregOrdering;
-      }
-      AirWindowsEffect *fx;
-   };
-
-   struct AWFxParamFormatter : public ParameterExternalFormatter {
-      AWFxParamFormatter( AirWindowsEffect *fx, int i ) : fx( fx ), idx( i ) { }
-      virtual void formatValue( float value, char *txt, int txtlen ) override {
-         if (fx && fx->airwin)
-         {
-            char lab[256], dis[256];
-            // In case we aren't initialized by the AW
-            lab[0] = 0;
-            dis[0] = 0;
-            if (fx->airwin->isParameterIntegral(idx))
+        if (fxdata)
+        {
+            fxdata->p[0].deactivated = true;
+            if (fxdata->p[1].ctrltype == ct_none)
             {
-               fx->airwin->getIntegralDisplayForValue(idx, value, dis );
-               lab[0] = 0;
+                setupSubFX(fxdata->p[0].val.i, true);
+            }
+        }
+    }
+
+    lag<float, true> param_lags[n_fx_params - 1];
+
+    void setupSubFX(int awfx, bool useStreamedValues);
+    std::unique_ptr<AirWinBaseClass> airwin;
+    int lastSelected = -1;
+
+    std::vector<AirWinBaseClass::Registration> fxreg;
+    std::vector<int> fxregOrdering;
+
+    struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper
+    {
+        AWFxSelectorMapper(AirWindowsEffect *fx) { this->fx = fx; };
+
+        virtual int remapStreamedIndexToDisplayIndex(int i) override
+        {
+            return fx->fxreg[i].displayOrder;
+        }
+        virtual std::string nameAtStreamedIndex(int i) override { return fx->fxreg[i].name; }
+        virtual bool hasGroupNames() override { return true; }
+
+        virtual std::string groupNameAtStreamedIndex(int i) override
+        {
+            return fx->fxreg[i].groupName;
+        }
+
+        bool supportsTotalIndexOrdering() override { return true; }
+
+        const std::vector<int> totalIndexOrdering() override { return fx->fxregOrdering; }
+        AirWindowsEffect *fx;
+    };
+
+    struct AWFxParamFormatter : public ParameterExternalFormatter
+    {
+        AWFxParamFormatter(AirWindowsEffect *fx, int i) : fx(fx), idx(i) {}
+        virtual void formatValue(float value, char *txt, int txtlen) override
+        {
+            if (fx && fx->airwin)
+            {
+                char lab[256], dis[256];
+                // In case we aren't initialized by the AW
+                lab[0] = 0;
+                dis[0] = 0;
+                if (fx->airwin->isParameterIntegral(idx))
+                {
+                    fx->airwin->getIntegralDisplayForValue(idx, value, dis);
+                    lab[0] = 0;
+                }
+                else
+                {
+                    if (fx->fxdata->p[0].deactivated)
+                    {
+                        fx->airwin->setParameter(idx, value);
+                    }
+
+                    if (fx->storage)
+                    {
+                        auto detailedMode = Surge::Storage::getUserDefaultValue(
+                            fx->storage, "highPrecisionReadouts", 0);
+
+                        fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
+                    }
+
+                    fx->airwin->getParameterLabel(idx, lab);
+                    fx->airwin->getParameterDisplay(idx, dis, value, true);
+                }
+                sprintf(txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
             }
             else
             {
-               if (fx->fxdata->p[0].deactivated)
-               {
-                  fx->airwin->setParameter(idx, value);
-               }
-
-               if (fx->storage)
-               {
-                  auto detailedMode = Surge::Storage::getUserDefaultValue(fx->storage, "highPrecisionReadouts", 0);
-
-                  fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
-               }
-
-               fx->airwin->getParameterLabel(idx, lab);
-               fx->airwin->getParameterDisplay(idx, dis, value, true);
+                sprintf(txt, "AWA.ERROR %lf", value);
             }
-            sprintf( txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " " ), lab );
-         }
-         else
-         {
-            sprintf( txt, "AWA.ERROR %lf", value );
-         }
-      }
+        }
 
-      virtual bool stringToValue( const char* txt, float &outVal ) override {
-         if( fx && fx->airwin )
-         {
-            float v;
-
-            if (fx->airwin->parseParameterValueFromString(idx, txt, v))
+        virtual bool stringToValue(const char *txt, float &outVal) override
+        {
+            if (fx && fx->airwin)
             {
-               if (v < 0.f || v > 1.f)
-               {
-                  return false;
-               }
+                float v;
 
-               outVal = v;
-               return true;
+                if (fx->airwin->parseParameterValueFromString(idx, txt, v))
+                {
+                    if (v < 0.f || v > 1.f)
+                    {
+                        return false;
+                    }
+
+                    outVal = v;
+                    return true;
+                }
             }
-         }
-         return false;
-      }
-      AirWindowsEffect *fx;
-      int idx;
-   };
+            return false;
+        }
+        AirWindowsEffect *fx;
+        int idx;
+    };
 
-   std::array<std::unique_ptr<AWFxParamFormatter>, n_fx_params - 1> fxFormatters;
-   
+    std::array<std::unique_ptr<AWFxParamFormatter>, n_fx_params - 1> fxFormatters;
 
-   std::unique_ptr<AWFxSelectorMapper> mapper;
+    std::unique_ptr<AWFxSelectorMapper> mapper;
 };

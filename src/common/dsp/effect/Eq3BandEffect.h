@@ -24,56 +24,50 @@
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 
-
 class Eq3BandEffect : public Effect
 {
-   lipol_ps gain alignas(16);
-   lipol_ps mix alignas(16);
+    lipol_ps gain alignas(16);
+    lipol_ps mix alignas(16);
 
-   float L alignas(16)[BLOCK_SIZE],
-         R alignas(16)[BLOCK_SIZE];
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
-public:
-   enum eq3_params
-   {
-       eq3_gain1 = 0,
-       eq3_freq1,
-       eq3_bw1,
+  public:
+    enum eq3_params
+    {
+        eq3_gain1 = 0,
+        eq3_freq1,
+        eq3_bw1,
 
-       eq3_gain2,
-       eq3_freq2,
-       eq3_bw2,
+        eq3_gain2,
+        eq3_freq2,
+        eq3_bw2,
 
-       eq3_gain3,
-       eq3_freq3,
-       eq3_bw3,
+        eq3_gain3,
+        eq3_freq3,
+        eq3_bw3,
 
-       eq3_gain,
-       eq3_mix,
+        eq3_gain,
+        eq3_mix,
 
-       eq3_num_ctrls,
-   };
+        eq3_num_ctrls,
+    };
 
-   Eq3BandEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~Eq3BandEffect();
-   virtual const char* get_effectname() override
-   {
-      return "EQ";
-   }
-   virtual void init() override;
-   virtual void process(float* dataL, float* dataR) override;
-   virtual void suspend() override;
-   void setvars(bool init);
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual const char* group_label(int id) override; 
-   virtual int group_label_ypos(int id) override;
+    Eq3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~Eq3BandEffect();
+    virtual const char *get_effectname() override { return "EQ"; }
+    virtual void init() override;
+    virtual void process(float *dataL, float *dataR) override;
+    virtual void suspend() override;
+    void setvars(bool init);
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
-
-private:
-   BiquadFilter band1, band2, band3;
-   int bi; // block increment (to keep track of events not occurring every n blocks)
+  private:
+    BiquadFilter band1, band2, band3;
+    int bi; // block increment (to keep track of events not occurring every n blocks)
 };
-

@@ -1,4 +1,4 @@
-/* 
+/*
 **  SurgeMessage provides basic functions for the synth to report messages back to the user
 **  with a platform-neutral API. A platform-specific version of each implementation is
 **  registered at startup.
@@ -7,7 +7,7 @@
 **
 **    Surge::UserInteractions::reportProblem()
 **
-**  or what not. 
+**  or what not.
 */
 
 #pragma once
@@ -52,16 +52,14 @@ void showHTML(const std::string &html);
 
 // Open a folder in the system appropriate file browser (finder on macOS, explorer on win,
 // etc)
-void openFolderInFileBrowser(const std::string& folder);
+void openFolderInFileBrowser(const std::string &folder);
 
 // Prompt for a file to open; call the callback if you pick one
-void promptFileOpenDialog(const std::string& initialDirectory,
-                          const std::string& filterSuffix,
-                          const std::string& filterDescription,
+void promptFileOpenDialog(const std::string &initialDirectory, const std::string &filterSuffix,
+                          const std::string &filterDescription,
                           std::function<void(std::string)> callbackOnOpen,
-                          bool canSelectDirectories = false,
-                          bool canCreateDirectories = false,
-                          SurgeGUIEditor* guiEditor = nullptr);
-};
+                          bool canSelectDirectories = false, bool canCreateDirectories = false,
+                          SurgeGUIEditor *guiEditor = nullptr);
+}; // namespace UserInteractions
 
-};
+}; // namespace Surge

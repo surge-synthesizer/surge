@@ -18,48 +18,47 @@
 
 using namespace VSTGUI;
 
-void CVerticalLabel::draw(VSTGUI::CDrawContext* dc)
+void CVerticalLabel::draw(VSTGUI::CDrawContext *dc)
 {
 #if TARGET_JUCE_UI
-   auto t = getText().getString();
-   auto q = t.size();
+    auto t = getText().getString();
+    auto q = t.size();
 #else
-   auto t = getText();
-   auto q = strlen(t);
+    auto t = getText();
+    auto q = strlen(t);
 #endif
 
-   auto f = getFont();
-   auto fh = f->getSize();
-   auto ht = 0.f;
-   for( int i=0; i<q; ++i )
-   {
-      if( t[i] == '-' )
-         ht = ht;
-      else if( t[i] == ' '  )
-         ht += fh * 0.5;
-      else
-         ht += fh;
-   }
+    auto f = getFont();
+    auto fh = f->getSize();
+    auto ht = 0.f;
+    for (int i = 0; i < q; ++i)
+    {
+        if (t[i] == '-')
+            ht = ht;
+        else if (t[i] == ' ')
+            ht += fh * 0.5;
+        else
+            ht += fh;
+    }
 
-   float start = ( getViewSize().getHeight() - ht ) * 0.5;
-   auto vs = getViewSize();
-   float ypos = vs.top + start;
-   for( int i=0; i<q; ++i )
-   {
-      if( t[i] == '-' ) continue;
-      auto cht = fh;
-      if( t[i] == ' '  )
-         cht = fh * 0.5;
-      auto p = CRect( CPoint( vs.left, ypos ), CPoint( vs.getWidth(), cht ));
-      ypos += cht;
-      char txt[2];
-      txt[0] = t[i];
-      txt[1] = 0;
+    float start = (getViewSize().getHeight() - ht) * 0.5;
+    auto vs = getViewSize();
+    float ypos = vs.top + start;
+    for (int i = 0; i < q; ++i)
+    {
+        if (t[i] == '-')
+            continue;
+        auto cht = fh;
+        if (t[i] == ' ')
+            cht = fh * 0.5;
+        auto p = CRect(CPoint(vs.left, ypos), CPoint(vs.getWidth(), cht));
+        ypos += cht;
+        char txt[2];
+        txt[0] = t[i];
+        txt[1] = 0;
 
-      dc->setFont( getFont() );
-      dc->setFontColor( getFontColor() );
-      dc->drawString(txt, p );
-   }
-
-
+        dc->setFont(getFont());
+        dc->setFontColor(getFontColor());
+        dc->drawString(txt, p);
+    }
 }

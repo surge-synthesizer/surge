@@ -40,326 +40,340 @@ using namespace std;
 //--------------------------------------------------------------------
 struct fxChunkSetCustom
 {
-   int chunkMagic; // 'CcnK'
-   int byteSize;   // of this chunk, excl. magic + byteSize
+    int chunkMagic; // 'CcnK'
+    int byteSize;   // of this chunk, excl. magic + byteSize
 
-   int fxMagic; // 'FPCh'
-   int version;
-   int fxID; // fx unique id
-   int fxVersion;
+    int fxMagic; // 'FPCh'
+    int version;
+    int fxID; // fx unique id
+    int fxVersion;
 
-   int numPrograms;
-   char prgName[28];
+    int numPrograms;
+    char prgName[28];
 
-   int chunkSize;
-   // char chunk[8]; // variable
+    int chunkSize;
+    // char chunk[8]; // variable
 };
 
 void SurgeSynthesizer::incrementPatch(bool nextPrev)
 {
-   int n = storage.patch_list.size();
-   if (!n)
-      return;
+    int n = storage.patch_list.size();
+    if (!n)
+        return;
 
-   /*
-   ** Ideally we would never call this with an out
-   ** of range patchid, but the init case where we
-   ** have a non-loaded in memory patch proves that
-   ** false, as may some other cases. So add this
-   ** defensive approach. See #319
-   */
-   if( patchid < 0 || patchid > n-1 )
-   {
-       // Find patch 0 category 0 and select it
-       int ccid = storage.patchCategoryOrdering[0];
+    /*
+    ** Ideally we would never call this with an out
+    ** of range patchid, but the init case where we
+    ** have a non-loaded in memory patch proves that
+    ** false, as may some other cases. So add this
+    ** defensive approach. See #319
+    */
+    if (patchid < 0 || patchid > n - 1)
+    {
+        // Find patch 0 category 0 and select it
+        int ccid = storage.patchCategoryOrdering[0];
 
-       int target = n+1;
-       for(auto &patch : storage.patch_list)
-       {
-           if(patch.category == ccid && patch.order < target)
-               target = patch.order;
-       }
-       
-       patchid_queue = storage.patchOrdering[target];
-       current_category_id = ccid;
-   }
-   else
-   {
-       int order = storage.patch_list[patchid].order;
-       int category = storage.patch_list[patchid].category;
-       
-       if (nextPrev) {
-           do {
-               order = (order >= (n - 1)) ? 0 : order + 1;
-           } while (storage.patch_list[storage.patchOrdering[order]].category !=
-                    category);
-       } else {
-           do {
-               order = (order <= 0) ? n - 1 : order - 1;
-           } while (storage.patch_list[storage.patchOrdering[order]].category !=
-                    category);
-       }
-       patchid_queue = storage.patchOrdering[order];
-   }
-   processThreadunsafeOperations();
-   return;
+        int target = n + 1;
+        for (auto &patch : storage.patch_list)
+        {
+            if (patch.category == ccid && patch.order < target)
+                target = patch.order;
+        }
+
+        patchid_queue = storage.patchOrdering[target];
+        current_category_id = ccid;
+    }
+    else
+    {
+        int order = storage.patch_list[patchid].order;
+        int category = storage.patch_list[patchid].category;
+
+        if (nextPrev)
+        {
+            do
+            {
+                order = (order >= (n - 1)) ? 0 : order + 1;
+            } while (storage.patch_list[storage.patchOrdering[order]].category != category);
+        }
+        else
+        {
+            do
+            {
+                order = (order <= 0) ? n - 1 : order - 1;
+            } while (storage.patch_list[storage.patchOrdering[order]].category != category);
+        }
+        patchid_queue = storage.patchOrdering[order];
+    }
+    processThreadunsafeOperations();
+    return;
 }
 
 void SurgeSynthesizer::incrementCategory(bool nextPrev)
 {
-   int n = storage.patch_category.size();
-   if (!n)
-      return;
+    int n = storage.patch_category.size();
+    if (!n)
+        return;
 
-   // See comment above and #319
-   if(current_category_id < 0 || current_category_id > n-1 )
-   {
-       current_category_id = storage.patchCategoryOrdering[0];
-   }
-   else
-   {
-       int order = storage.patch_category[current_category_id].order;
-       int orderOrig = order;
-       do
-       {
-           if (nextPrev)
-               order = (order >= (n - 1)) ? 0 : order + 1;
-           else
-               order = (order <= 0) ? n - 1 : order - 1;
+    // See comment above and #319
+    if (current_category_id < 0 || current_category_id > n - 1)
+    {
+        current_category_id = storage.patchCategoryOrdering[0];
+    }
+    else
+    {
+        int order = storage.patch_category[current_category_id].order;
+        int orderOrig = order;
+        do
+        {
+            if (nextPrev)
+                order = (order >= (n - 1)) ? 0 : order + 1;
+            else
+                order = (order <= 0) ? n - 1 : order - 1;
 
-           current_category_id = storage.patchCategoryOrdering[order];
-       }
-       while (storage.patch_category[current_category_id].numberOfPatchesInCatgory == 0 && order != orderOrig);
-       // That order != orderOrig isn't needed unless we have an entire empty category tree, in which case it stops an inf loop
-   }
-   
-   // Find the first patch within the category.
-   for (auto p : storage.patchOrdering)
-   {
-       if (storage.patch_list[p].category == current_category_id)
-       {
-           patchid_queue = p;
-           processThreadunsafeOperations();
-           return;
-      }
-   }
+            current_category_id = storage.patchCategoryOrdering[order];
+        } while (storage.patch_category[current_category_id].numberOfPatchesInCatgory == 0 &&
+                 order != orderOrig);
+        // That order != orderOrig isn't needed unless we have an entire empty category tree, in
+        // which case it stops an inf loop
+    }
+
+    // Find the first patch within the category.
+    for (auto p : storage.patchOrdering)
+    {
+        if (storage.patch_list[p].category == current_category_id)
+        {
+            patchid_queue = p;
+            processThreadunsafeOperations();
+            return;
+        }
+    }
 }
 
 void SurgeSynthesizer::loadPatch(int id)
 {
-   if (id < 0)
-      id = 0;
-   if (id >= storage.patch_list.size())
-      id = id % storage.patch_list.size();
+    if (id < 0)
+        id = 0;
+    if (id >= storage.patch_list.size())
+        id = id % storage.patch_list.size();
 
-   patchid = id;
+    patchid = id;
 
-   Patch e = storage.patch_list[id];
-   loadPatchByPath(path_to_string(e.path).c_str(), e.category, e.name.c_str());
+    Patch e = storage.patch_list[id];
+    loadPatchByPath(path_to_string(e.path).c_str(), e.category, e.name.c_str());
 }
 
-bool SurgeSynthesizer::loadPatchByPath( const char* fxpPath, int categoryId, const char* patchName )
+bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName)
 {
-   FILE* f = fopen(fxpPath, "rb");
-   if (!f)
-      return false;
-   fxChunkSetCustom fxp;
-   auto read = fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
-   // FIXME - error if read != chunk size
-   if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
-       (vt_read_int32BE(fxp.fxID) != 'cjs3'))
-   {
-      fclose(f);
-      auto cm = vt_read_int32BE(fxp.chunkMagic);
-      auto fm = vt_read_int32BE(fxp.fxMagic);
-      auto id = vt_read_int32BE(fxp.fxID);
+    FILE *f = fopen(fxpPath, "rb");
+    if (!f)
+        return false;
+    fxChunkSetCustom fxp;
+    auto read = fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
+    // FIXME - error if read != chunk size
+    if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
+        (vt_read_int32BE(fxp.fxID) != 'cjs3'))
+    {
+        fclose(f);
+        auto cm = vt_read_int32BE(fxp.chunkMagic);
+        auto fm = vt_read_int32BE(fxp.fxMagic);
+        auto id = vt_read_int32BE(fxp.fxID);
 
-      std::ostringstream oss;
-      oss << "Unable to load " << patchName << ".fxp!";
-      //if( cm != 'CcnK' )
-      //{
-      //   oss << "ChunkMagic is not 'CcnK'. ";
-      //}
-      //if( fm != 'FPCh' )
-      //{
-      //   oss << "FxMagic is not 'FPCh'. ";
-      //}
-      //if( id != 'cjs3' )
-      //{
-      //   union {
-      //      char c[4];
-      //      int id;
-      //   } q;
-      //   q.id = id;
-      //   oss << "Synth ID is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected 'cjs3'. ";
-      //}
-      oss << "This error usually occurs when you attempt to load an .fxp that belongs to another plugin into Surge.";
-      Surge::UserInteractions::promptError( oss.str(), "Unknown FXP File" );
-      return false;
-   }
+        std::ostringstream oss;
+        oss << "Unable to load " << patchName << ".fxp!";
+        // if( cm != 'CcnK' )
+        //{
+        //   oss << "ChunkMagic is not 'CcnK'. ";
+        //}
+        // if( fm != 'FPCh' )
+        //{
+        //   oss << "FxMagic is not 'FPCh'. ";
+        //}
+        // if( id != 'cjs3' )
+        //{
+        //   union {
+        //      char c[4];
+        //      int id;
+        //   } q;
+        //   q.id = id;
+        //   oss << "Synth ID is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected
+        //   'cjs3'. ";
+        //}
+        oss << "This error usually occurs when you attempt to load an .fxp that belongs to another "
+               "plugin into Surge.";
+        Surge::UserInteractions::promptError(oss.str(), "Unknown FXP File");
+        return false;
+    }
 
-   int cs = vt_read_int32BE(fxp.chunkSize);
-   void* data = malloc(cs);
-   assert(data);
-   size_t actual_cs = fread(data, 1, cs, f);
-   int error = ferror(f);
-   if (error)
-      perror("Error while loading patch!");
-   fclose(f);
+    int cs = vt_read_int32BE(fxp.chunkSize);
+    void *data = malloc(cs);
+    assert(data);
+    size_t actual_cs = fread(data, 1, cs, f);
+    int error = ferror(f);
+    if (error)
+        perror("Error while loading patch!");
+    fclose(f);
 
-   storage.getPatch().comment = "";
-   storage.getPatch().author = "";
-   if( categoryId >= 0 )
-   {
-      storage.getPatch().category = storage.patch_category[categoryId].name;
-   }
-   else
-   {
-      storage.getPatch().category = "Drag & Drop";
-   }
-   current_category_id = categoryId;
-   storage.getPatch().name = patchName;
+    storage.getPatch().comment = "";
+    storage.getPatch().author = "";
+    if (categoryId >= 0)
+    {
+        storage.getPatch().category = storage.patch_category[categoryId].name;
+    }
+    else
+    {
+        storage.getPatch().category = "Drag & Drop";
+    }
+    current_category_id = categoryId;
+    storage.getPatch().name = patchName;
 
-   loadRaw(data, cs, true);
-   free(data);
+    loadRaw(data, cs, true);
+    free(data);
 
-   /*
-   ** OK so at this point we may have loaded a patch with a tuning override
-   */
-   if( storage.getPatch().patchTuning.tuningStoredInPatch )
-   {
-       if( storage.isStandardTuning )
-       {
-          try {
-             storage.retuneToScale(Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents ));
-             if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
-             {
-                storage.remapToKeyboard(Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
-             }
-          }
-          catch( Tunings::TuningError &e )
-          {
-             Surge::UserInteractions::promptError( e.what(), "Error restoring tuning!" );
-             storage.retuneToStandardTuning();
-          }
-       }
-       else
-       {
-           auto okc = Surge::UserInteractions::promptOKCancel(std::string("Loaded patch contains a custom tuning, but there is ") +
-                                                              "already a user-selected tuning in place. Do you want to replace the currently loaded tuning " +
-                                                              "with the tuning stored in the patch? (The rest of the patch will load normally.)",
-                                                              "Replace Tuning");
-           if( okc == Surge::UserInteractions::MessageResult::OK )
-           {
-              try {
-                 storage.retuneToScale(Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
-                 if( storage.getPatch().patchTuning.mappingContents.size() > 1 )
-                 {
-                    storage.remapToKeyboard(Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents ) );
-                 }
-              }
-              catch( Tunings::TuningError &e )
-              {
-                 Surge::UserInteractions::promptError( e.what(), "Error Restoring Tuning" );
-                 storage.retuneToStandardTuning();
-              }
-           }
-       }
-                                 
-   }
-   
-   masterfade = 1.f;
-   /*
-   ** Notify the host display that the patch name has changed
-   */
-   updateDisplay();
-   return true;
+    /*
+    ** OK so at this point we may have loaded a patch with a tuning override
+    */
+    if (storage.getPatch().patchTuning.tuningStoredInPatch)
+    {
+        if (storage.isStandardTuning)
+        {
+            try
+            {
+                storage.retuneToScale(
+                    Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+                if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+                {
+                    storage.remapToKeyboard(
+                        Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
+                }
+            }
+            catch (Tunings::TuningError &e)
+            {
+                Surge::UserInteractions::promptError(e.what(), "Error restoring tuning!");
+                storage.retuneToStandardTuning();
+            }
+        }
+        else
+        {
+            auto okc = Surge::UserInteractions::promptOKCancel(
+                std::string("Loaded patch contains a custom tuning, but there is ") +
+                    "already a user-selected tuning in place. Do you want to replace the currently "
+                    "loaded tuning " +
+                    "with the tuning stored in the patch? (The rest of the patch will load "
+                    "normally.)",
+                "Replace Tuning");
+            if (okc == Surge::UserInteractions::MessageResult::OK)
+            {
+                try
+                {
+                    storage.retuneToScale(
+                        Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+                    if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+                    {
+                        storage.remapToKeyboard(
+                            Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
+                    }
+                }
+                catch (Tunings::TuningError &e)
+                {
+                    Surge::UserInteractions::promptError(e.what(), "Error Restoring Tuning");
+                    storage.retuneToStandardTuning();
+                }
+            }
+        }
+    }
+
+    masterfade = 1.f;
+    /*
+    ** Notify the host display that the patch name has changed
+    */
+    updateDisplay();
+    return true;
 }
 
-void SurgeSynthesizer::enqueuePatchForLoad(void* data, int size)
+void SurgeSynthesizer::enqueuePatchForLoad(void *data, int size)
 {
-   {
-      std::lock_guard<std::mutex> g(rawLoadQueueMutex);
+    {
+        std::lock_guard<std::mutex> g(rawLoadQueueMutex);
 
-      if( enqueuedLoadData ) // this means we missed one because we only free under the lock
-         free(enqueuedLoadData);
+        if (enqueuedLoadData) // this means we missed one because we only free under the lock
+            free(enqueuedLoadData);
 
-      enqueuedLoadData = data;
-      enqueuedLoadSize = size;
-      rawLoadEnqueued = true;
-      rawLoadNeedsUIDawExtraState = false;
-   }
+        enqueuedLoadData = data;
+        enqueuedLoadSize = size;
+        rawLoadEnqueued = true;
+        rawLoadNeedsUIDawExtraState = false;
+    }
 }
 
 void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 {
-   bool expected = true;
-   void *freeThis = nullptr;
-   if( rawLoadEnqueued.compare_exchange_weak(expected,true) && expected )
-   {
-      std::lock_guard<std::mutex> g(rawLoadQueueMutex);
-      rawLoadEnqueued = false;
-      loadRaw( enqueuedLoadData, enqueuedLoadSize );
-      loadFromDawExtraState();
+    bool expected = true;
+    void *freeThis = nullptr;
+    if (rawLoadEnqueued.compare_exchange_weak(expected, true) && expected)
+    {
+        std::lock_guard<std::mutex> g(rawLoadQueueMutex);
+        rawLoadEnqueued = false;
+        loadRaw(enqueuedLoadData, enqueuedLoadSize);
+        loadFromDawExtraState();
 
-      freeThis = enqueuedLoadData;
-      enqueuedLoadData = nullptr;
-      rawLoadNeedsUIDawExtraState = true;
-   }
-   if( freeThis )
-      free( freeThis ); // do this outside the lock
+        freeThis = enqueuedLoadData;
+        enqueuedLoadData = nullptr;
+        rawLoadNeedsUIDawExtraState = true;
+    }
+    if (freeThis)
+        free(freeThis); // do this outside the lock
 }
 
-
-void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
+void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 {
-   halt_engine = true;
-   allNotesOff();
-   for (int s = 0; s < n_scenes; s++)
-      for (int i = 0; i < n_customcontrollers; i++)
-         storage.getPatch().scene[s].modsources[ms_ctrl1 + i]->reset();
+    halt_engine = true;
+    allNotesOff();
+    for (int s = 0; s < n_scenes; s++)
+        for (int i = 0; i < n_customcontrollers; i++)
+            storage.getPatch().scene[s].modsources[ms_ctrl1 + i]->reset();
 
-   storage.getPatch().init_default_values();
-   storage.getPatch().load_patch(data, size, preset);
-   storage.getPatch().update_controls(false, nullptr, true);
-   for (int i = 0; i < n_fx_slots; i++)
-   {
-      memcpy((void*)&fxsync[i], (void*)&storage.getPatch().fx[i], sizeof(FxStorage));
-      fx_reload[i] = true;
-   }
+    storage.getPatch().init_default_values();
+    storage.getPatch().load_patch(data, size, preset);
+    storage.getPatch().update_controls(false, nullptr, true);
+    for (int i = 0; i < n_fx_slots; i++)
+    {
+        memcpy((void *)&fxsync[i], (void *)&storage.getPatch().fx[i], sizeof(FxStorage));
+        fx_reload[i] = true;
+    }
 
-   loadFx(false, true);
+    loadFx(false, true);
 
-   for (int sc = 0; sc < n_scenes; sc++)
-   {
-      setParameter01(storage.getPatch().scene[sc].f2_cutoff_is_offset.id, storage.getPatch().scene[sc].f2_cutoff_is_offset.get_value_f01());
-   }
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        setParameter01(storage.getPatch().scene[sc].f2_cutoff_is_offset.id,
+                       storage.getPatch().scene[sc].f2_cutoff_is_offset.get_value_f01());
+    }
 
-   halt_engine = false;
-   patch_loaded = true;
-   refresh_editor = true;
+    halt_engine = false;
+    patch_loaded = true;
+    refresh_editor = true;
 
-   if (patchid < 0)	
-   {
-      /*
-      ** new patch just loaded so I look up and set the current category and patch.
-      ** This is used to draw checkmarks in the menu. If for some reason we don't
-      ** find one, nothing will break
-      */
-      int cnt = storage.patch_list.size();
-      string name = storage.getPatch().name;
-      string cat = storage.getPatch().category;
-      for (int p = 0; p < cnt; ++p)
-      {
-         if (storage.patch_list[p].name == name &&
-            storage.patch_category[storage.patch_list[p].category].name == cat)
-         {
-            current_category_id = storage.patch_list[p].category;
-            patchid = p;
-            break;
-         }
-      }
-   }
+    if (patchid < 0)
+    {
+        /*
+        ** new patch just loaded so I look up and set the current category and patch.
+        ** This is used to draw checkmarks in the menu. If for some reason we don't
+        ** find one, nothing will break
+        */
+        int cnt = storage.patch_list.size();
+        string name = storage.getPatch().name;
+        string cat = storage.getPatch().category;
+        for (int p = 0; p < cnt; ++p)
+        {
+            if (storage.patch_list[p].name == name &&
+                storage.patch_category[storage.patch_list[p].category].name == cat)
+            {
+                current_category_id = storage.patch_list[p].category;
+                patchid = p;
+                break;
+            }
+        }
+    }
 }
 
 #if MAC || LINUX
@@ -367,101 +381,94 @@ void SurgeSynthesizer::loadRaw(const void* data, int size, bool preset)
 #include <sys/stat.h>
 #endif
 
-string SurgeSynthesizer::getUserPatchDirectory()
-{
-   return storage.userDataPath;
-}
+string SurgeSynthesizer::getUserPatchDirectory() { return storage.userDataPath; }
 string SurgeSynthesizer::getLegacyUserPatchDirectory()
 {
-   return storage.datapath + "patches_user" + PATH_SEPARATOR;
+    return storage.datapath + "patches_user" + PATH_SEPARATOR;
 }
-
 
 void SurgeSynthesizer::savePatch()
 {
-   if (storage.getPatch().category.empty())
-      storage.getPatch().category = "Default";
+    if (storage.getPatch().category.empty())
+        storage.getPatch().category = "Default";
 
-   fs::path savepath = string_to_path(getUserPatchDirectory());
-   savepath /= (string_to_path(storage.getPatch().category));
+    fs::path savepath = string_to_path(getUserPatchDirectory());
+    savepath /= (string_to_path(storage.getPatch().category));
 
-   create_directories(savepath);
+    create_directories(savepath);
 
-   string legalname = storage.getPatch().name;
-   for (int i = 0; i < legalname.length(); i++)
-   {
-      switch (legalname[i])
-      {
-      case '<':
-         legalname[i] = '[';
-         break;
-      case '>':
-         legalname[i] = ']';
-         break;
-      case '*':
-      case '?':
-      case '"':
-      case '\\':
-      case '|':
-      case '/':
-      case ':':
-         legalname[i] = ' ';
-         break;
-      }
-   }
+    string legalname = storage.getPatch().name;
+    for (int i = 0; i < legalname.length(); i++)
+    {
+        switch (legalname[i])
+        {
+        case '<':
+            legalname[i] = '[';
+            break;
+        case '>':
+            legalname[i] = ']';
+            break;
+        case '*':
+        case '?':
+        case '"':
+        case '\\':
+        case '|':
+        case '/':
+        case ':':
+            legalname[i] = ' ';
+            break;
+        }
+    }
 
-   fs::path filename = savepath;
-   filename /= string_to_path(legalname + ".fxp");
+    fs::path filename = savepath;
+    filename /= string_to_path(legalname + ".fxp");
 
-   bool checkExists = true;
+    bool checkExists = true;
 #if LINUX
-   // Overwrite prompt hangs UI in Bitwig 3.3
-   checkExists = (hostProgram.find("bitwig") != std::string::npos);
+    // Overwrite prompt hangs UI in Bitwig 3.3
+    checkExists = (hostProgram.find("bitwig") != std::string::npos);
 #endif
-   if (checkExists && fs::exists(filename))
-   {
-      if (Surge::UserInteractions::promptOKCancel(
-              std::string("The patch '" + storage.getPatch().name + "' already exists in '" +
-                          storage.getPatch().category +
-                          "'. Are you sure you want to overwrite it?"),
-              std::string("Overwrite patch")) == Surge::UserInteractions::CANCEL)
-         return;
-   }
-   savePatchToPath(filename);
+    if (checkExists && fs::exists(filename))
+    {
+        if (Surge::UserInteractions::promptOKCancel(
+                std::string("The patch '" + storage.getPatch().name + "' already exists in '" +
+                            storage.getPatch().category +
+                            "'. Are you sure you want to overwrite it?"),
+                std::string("Overwrite patch")) == Surge::UserInteractions::CANCEL)
+            return;
+    }
+    savePatchToPath(filename);
 }
 
 void SurgeSynthesizer::savePatchToPath(fs::path filename)
 {
-   std::ofstream f(filename, std::ios::out | std::ios::binary);
-   if (!f)
-      return;
+    std::ofstream f(filename, std::ios::out | std::ios::binary);
+    if (!f)
+        return;
 
-   fxChunkSetCustom fxp;
-   fxp.chunkMagic = vt_write_int32BE('CcnK');
-   fxp.fxMagic = vt_write_int32BE('FPCh');
-   fxp.fxID = vt_write_int32BE('cjs3');
-   fxp.numPrograms = vt_write_int32BE(1);
-   fxp.version = vt_write_int32BE(1);
-   fxp.fxVersion = vt_write_int32BE(1);
-   strncpy(fxp.prgName, storage.getPatch().name.c_str(), 28);
+    fxChunkSetCustom fxp;
+    fxp.chunkMagic = vt_write_int32BE('CcnK');
+    fxp.fxMagic = vt_write_int32BE('FPCh');
+    fxp.fxID = vt_write_int32BE('cjs3');
+    fxp.numPrograms = vt_write_int32BE(1);
+    fxp.version = vt_write_int32BE(1);
+    fxp.fxVersion = vt_write_int32BE(1);
+    strncpy(fxp.prgName, storage.getPatch().name.c_str(), 28);
 
-   void* data;
-   unsigned int datasize = storage.getPatch().save_patch(&data);
+    void *data;
+    unsigned int datasize = storage.getPatch().save_patch(&data);
 
-   fxp.chunkSize = vt_write_int32BE(datasize);
-   fxp.byteSize = 0;
+    fxp.chunkSize = vt_write_int32BE(datasize);
+    fxp.byteSize = 0;
 
-   f.write((char*)&fxp, sizeof(fxChunkSetCustom));
-   f.write((char*)data, datasize);
-   f.close();
+    f.write((char *)&fxp, sizeof(fxChunkSetCustom));
+    f.write((char *)data, datasize);
+    f.close();
 
-   // refresh list
-   storage.refresh_patchlist();
-   refresh_editor = true;
-   midiprogramshavechanged = true;
+    // refresh list
+    storage.refresh_patchlist();
+    refresh_editor = true;
+    midiprogramshavechanged = true;
 }
 
-unsigned int SurgeSynthesizer::saveRaw(void** data)
-{
-   return storage.getPatch().save_patch(data);
-}
+unsigned int SurgeSynthesizer::saveRaw(void **data) { return storage.getPatch().save_patch(data); }

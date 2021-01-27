@@ -16,29 +16,31 @@
 
 //==============================================================================
 /**
-*/
-class SurgefxAudioProcessorEditor  : public AudioProcessorEditor, AsyncUpdater
+ */
+class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
 {
-public:
-    SurgefxAudioProcessorEditor (SurgefxAudioProcessor&);
+  public:
+    SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
     ~SurgefxAudioProcessorEditor();
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint(Graphics &) override;
     void resized() override;
 
     void paramsChangedCallback();
     void setEffectType(int i);
 
     virtual void handleAsyncUpdate() override;
-    
-    enum RadioGroupIds {
+
+    enum RadioGroupIds
+    {
         FxTypeGroup = 1776
     };
-private:
+
+  private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    SurgefxAudioProcessor& processor;
+    SurgefxAudioProcessor &processor;
 
     Slider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
@@ -50,8 +52,8 @@ private:
 
     void blastToggleState(int i);
     void resetLabels();
-    
+
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SurgefxAudioProcessorEditor)
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessorEditor)
 };

@@ -8,7 +8,8 @@
 #include "public.sdk/source/vst2.x/audioeffectx.h"
 #include "vstgui/lib/platform/platform_x11.h"
 
-namespace VSTGUI {
+namespace VSTGUI
+{
 
 /* X11 main loop, triggered by idle()
  * No timing guarantees, since the host calls it for us, but better than a black window!
@@ -18,215 +19,212 @@ namespace VSTGUI {
 //------------------------------------------------------------------------
 struct ExternalEventHandler
 {
-	X11::IEventHandler* eventHandler{nullptr};
-	int fd{-1};
+    X11::IEventHandler *eventHandler{nullptr};
+    int fd{-1};
 };
 
 //------------------------------------------------------------------------
 struct ExternalTimerHandler
 {
-	X11::ITimerHandler* timerHandler{nullptr};
-	uint64_t interval{0};
+    X11::ITimerHandler *timerHandler{nullptr};
+    uint64_t interval{0};
 };
 
 //------------------------------------------------------------------------
 class LinuxRunLoop : public X11::IRunLoop
 {
-public:
-	using IEventHandler = X11::IEventHandler;
-	using ITimerHandler = X11::ITimerHandler;
+  public:
+    using IEventHandler = X11::IEventHandler;
+    using ITimerHandler = X11::ITimerHandler;
 
-	static LinuxRunLoop& instance ();
+    static LinuxRunLoop &instance();
 
-	LinuxRunLoop () {};
+    LinuxRunLoop(){};
 
-	bool registerEventHandler (int fd, IEventHandler* handler) override;
-	bool unregisterEventHandler (IEventHandler* handler) override;
+    bool registerEventHandler(int fd, IEventHandler *handler) override;
+    bool unregisterEventHandler(IEventHandler *handler) override;
 
-	bool registerTimer (uint64_t interval, ITimerHandler* handler) override;
-	bool unregisterTimer (ITimerHandler* handler) override;
+    bool registerTimer(uint64_t interval, ITimerHandler *handler) override;
+    bool unregisterTimer(ITimerHandler *handler) override;
 
-	void forget () override {}
-	void remember () override {}
+    void forget() override {}
+    void remember() override {}
 
-	void idle();
+    void idle();
 
-private:
-	std::vector<ExternalEventHandler> eventHandlers;
-	std::vector<ExternalTimerHandler> timerHandlers;
+  private:
+    std::vector<ExternalEventHandler> eventHandlers;
+    std::vector<ExternalTimerHandler> timerHandlers;
 };
 
 //------------------------------------------------------------------------
-LinuxRunLoop& LinuxRunLoop::instance ()
+LinuxRunLoop &LinuxRunLoop::instance()
 {
-	static LinuxRunLoop instance;
-	return instance;
+    static LinuxRunLoop instance;
+    return instance;
 }
 
 //------------------------------------------------------------------------
-bool LinuxRunLoop::registerEventHandler (int fd, IEventHandler* handler)
+bool LinuxRunLoop::registerEventHandler(int fd, IEventHandler *handler)
 {
-	// printf("%s %i %p\n", __func__, fd, handler);
-	if (handler == nullptr)
-		return false;
-	eventHandlers.push_back({ handler, fd });
-	return true;
+    // printf("%s %i %p\n", __func__, fd, handler);
+    if (handler == nullptr)
+        return false;
+    eventHandlers.push_back({handler, fd});
+    return true;
 }
 
 //------------------------------------------------------------------------
-bool LinuxRunLoop::unregisterEventHandler (IEventHandler* handler)
+bool LinuxRunLoop::unregisterEventHandler(IEventHandler *handler)
 {
-	// printf("%s %p\n", __func__, handler);
-	for (auto it = eventHandlers.begin(); it != eventHandlers.end(); it++)
-	{
-		if (it->eventHandler == handler)
-		{
-			eventHandlers.erase(it);
-			return true;
-		}
-	}
-	return false;
+    // printf("%s %p\n", __func__, handler);
+    for (auto it = eventHandlers.begin(); it != eventHandlers.end(); it++)
+    {
+        if (it->eventHandler == handler)
+        {
+            eventHandlers.erase(it);
+            return true;
+        }
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------
-bool LinuxRunLoop::registerTimer (uint64_t interval, ITimerHandler* handler)
+bool LinuxRunLoop::registerTimer(uint64_t interval, ITimerHandler *handler)
 {
-	// printf("%s %lu %p\n", __func__, static_cast<unsigned long>(interval), handler);
-	if (handler == nullptr)
-		return false;
-	timerHandlers.push_back({ handler, interval });
-	return true;
+    // printf("%s %lu %p\n", __func__, static_cast<unsigned long>(interval), handler);
+    if (handler == nullptr)
+        return false;
+    timerHandlers.push_back({handler, interval});
+    return true;
 }
 
 //------------------------------------------------------------------------
-bool LinuxRunLoop::unregisterTimer (ITimerHandler* handler)
+bool LinuxRunLoop::unregisterTimer(ITimerHandler *handler)
 {
-	// printf("%s %p\n", __func__, handler);
-	for (auto it = timerHandlers.begin(); it != timerHandlers.end(); it++)
-	{
-		if (it->timerHandler == handler)
-		{
-			timerHandlers.erase(it);
-			return true;
-		}
-	}
-	return false;
+    // printf("%s %p\n", __func__, handler);
+    for (auto it = timerHandlers.begin(); it != timerHandlers.end(); it++)
+    {
+        if (it->timerHandler == handler)
+        {
+            timerHandlers.erase(it);
+            return true;
+        }
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------
-void LinuxRunLoop::idle ()
+void LinuxRunLoop::idle()
 {
-	// TODO check timing in a smart way
+    // TODO check timing in a smart way
 
-	for (auto& timer : timerHandlers)
-		timer.timerHandler->onTimer();
+    for (auto &timer : timerHandlers)
+        timer.timerHandler->onTimer();
 
-	for (auto& timer : eventHandlers)
-		timer.eventHandler->onEvent();
+    for (auto &timer : eventHandlers)
+        timer.eventHandler->onEvent();
 }
 
 //-----------------------------------------------------------------------------
 // LinuxAEffGUIEditor Implementation
 //-----------------------------------------------------------------------------
-LinuxAEffGUIEditor::LinuxAEffGUIEditor (void* pEffect)
-	: AEffEditor ((AudioEffect*)pEffect),
-	  inIdle (false)
+LinuxAEffGUIEditor::LinuxAEffGUIEditor(void *pEffect)
+    : AEffEditor((AudioEffect *)pEffect), inIdle(false)
 {
-	((AudioEffect*)pEffect)->setEditor (this);
-	systemWindow = nullptr;
+    ((AudioEffect *)pEffect)->setEditor(this);
+    systemWindow = nullptr;
 }
 
 //-----------------------------------------------------------------------------
-LinuxAEffGUIEditor::~LinuxAEffGUIEditor ()
-{
-}
+LinuxAEffGUIEditor::~LinuxAEffGUIEditor() {}
 
 //-----------------------------------------------------------------------------
 #if VST_2_1_EXTENSIONS
-bool LinuxAEffGUIEditor::onKeyDown (VstKeyCode& keyCode)
+bool LinuxAEffGUIEditor::onKeyDown(VstKeyCode &keyCode)
 {
-	return frame ? frame->onKeyDown (keyCode) > 0 : false;
+    return frame ? frame->onKeyDown(keyCode) > 0 : false;
 }
 
 //-----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::onKeyUp (VstKeyCode& keyCode)
+bool LinuxAEffGUIEditor::onKeyUp(VstKeyCode &keyCode)
 {
-	return frame ? frame->onKeyUp (keyCode) > 0 : false;
+    return frame ? frame->onKeyUp(keyCode) > 0 : false;
 }
 #endif
 
 //-----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::open (void* ptr)
+bool LinuxAEffGUIEditor::open(void *ptr)
 {
-	frame = new CFrame (CRect (0, 0, 0, 0), this);
-	getFrame ()->setTransparency (true);
+    frame = new CFrame(CRect(0, 0, 0, 0), this);
+    getFrame()->setTransparency(true);
 
-	IPlatformFrameConfig* config = nullptr;
-	X11::FrameConfig x11config;
-	x11config.runLoop = &LinuxRunLoop::instance();
-	config = &x11config;
+    IPlatformFrameConfig *config = nullptr;
+    X11::FrameConfig x11config;
+    x11config.runLoop = &LinuxRunLoop::instance();
+    config = &x11config;
 
     // printf("%s %p %p\n", __func__, frame, ptr);
-	getFrame ()->open (ptr, kDefaultNative, config);
+    getFrame()->open(ptr, kDefaultNative, config);
 
-	systemWindow = ptr;
-	return AEffEditor::open (ptr);
+    systemWindow = ptr;
+    return AEffEditor::open(ptr);
 }
 
 //-----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::idle2 ()
+bool LinuxAEffGUIEditor::idle2()
 {
-	if (inIdle)
-	{
-		fprintf(stderr, "%s: Caught recursive idle call\n", __func__);
-		return false;
-	}
+    if (inIdle)
+    {
+        fprintf(stderr, "%s: Caught recursive idle call\n", __func__);
+        return false;
+    }
 
-	inIdle = true;
+    inIdle = true;
 
-	AEffEditor::idle ();
-	if (frame)
-		frame->idle ();
+    AEffEditor::idle();
+    if (frame)
+        frame->idle();
 
-	LinuxRunLoop::instance().idle();
+    LinuxRunLoop::instance().idle();
 
-	inIdle = false;
-	return true;
+    inIdle = false;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
 int32_t LinuxAEffGUIEditor::knobMode = kCircularMode;
 
 //-----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::setKnobMode (int32_t val)
+bool LinuxAEffGUIEditor::setKnobMode(int32_t val)
 {
-	LinuxAEffGUIEditor::knobMode = val;
-	return true;
+    LinuxAEffGUIEditor::knobMode = val;
+    return true;
 }
 
 //-----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::getRect (ERect **ppErect)
+bool LinuxAEffGUIEditor::getRect(ERect **ppErect)
 {
-	*ppErect = &rect;
-	return true;
+    *ppErect = &rect;
+    return true;
 }
 
 // -----------------------------------------------------------------------------
-bool LinuxAEffGUIEditor::beforeSizeChange (const CRect& newSize, const CRect& oldSize)
+bool LinuxAEffGUIEditor::beforeSizeChange(const CRect &newSize, const CRect &oldSize)
 {
-	AudioEffectX* eX = (AudioEffectX*)effect;
-	if (eX && eX->canHostDo ((char*)"sizeWindow"))
-	{
-		if (eX->sizeWindow ((VstInt32)newSize.getWidth (), (VstInt32)newSize.getHeight ()))
-		{
-			return true;
-		}
-		return false;
-	}
+    AudioEffectX *eX = (AudioEffectX *)effect;
+    if (eX && eX->canHostDo((char *)"sizeWindow"))
+    {
+        if (eX->sizeWindow((VstInt32)newSize.getWidth(), (VstInt32)newSize.getHeight()))
+        {
+            return true;
+        }
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
-} // VSTGUI
+} // namespace VSTGUI
 
 #endif // TARGET_VST guard

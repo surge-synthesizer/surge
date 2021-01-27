@@ -13,8 +13,9 @@ namespace Headless
 
 std::shared_ptr<SurgeSynthesizer> createSurge(int sr);
 
-void writeToStream(const float* data, int nSamples, int nChannels, std::ostream& str);
-void writeToWav(const float* data, int nSamples, int nChannels, float sampleRate, std::string wavFileName);
+void writeToStream(const float *data, int nSamples, int nChannels, std::ostream &str);
+void writeToWav(const float *data, int nSamples, int nChannels, float sampleRate,
+                std::string wavFileName);
 
 /*
 ** One imagines expansions along these lines:

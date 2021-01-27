@@ -39,10 +39,10 @@ const int HRFilterI16[64] = {
 int min_F32_tables = 3;
 
 #if MAC || LINUX
-bool _BitScanReverse(unsigned int* result, unsigned int bits)
+bool _BitScanReverse(unsigned int *result, unsigned int bits)
 {
-   *result = __builtin_ctz(bits);
-   return true;
+    *result = __builtin_ctz(bits);
+    return true;
 }
 #endif
 
@@ -50,44 +50,43 @@ bool _BitScanReverse(unsigned int* result, unsigned int bits)
 //! fits
 size_t RequiredWTSize(int TableSize, int TableCount)
 {
-   int Size = 0;
+    int Size = 0;
 
-   TableCount += 3; // for sample padding. Should match the "3" in the AppendSilence block below.
-   while (TableSize > 0)
-   {
-      Size += TableCount * (TableSize + FIRoffsetI16 + FIRipolI16_N);
+    TableCount += 3; // for sample padding. Should match the "3" in the AppendSilence block below.
+    while (TableSize > 0)
+    {
+        Size += TableCount * (TableSize + FIRoffsetI16 + FIRipolI16_N);
 
-      TableSize = TableSize >> 1;
-   }
-   return Size;
+        TableSize = TableSize >> 1;
+    }
+    return Size;
 }
-
 
 int GetWTIndex(int WaveIdx, int WaveSize, int NumWaves, int MipMap, int Padding = 0)
 {
-   int Index = WaveIdx * ((WaveSize >> MipMap) + Padding);
-   int Offset = NumWaves * WaveSize;
-   for (int i = 0; i < MipMap; i++)
-   {
-      Index += Offset >> i;
-      Index += Padding * NumWaves;
-   }
-   assert((Index + WaveSize - 1) < max_wtable_samples);
-   return Index;
+    int Index = WaveIdx * ((WaveSize >> MipMap) + Padding);
+    int Offset = NumWaves * WaveSize;
+    for (int i = 0; i < MipMap; i++)
+    {
+        Index += Offset >> i;
+        Index += Padding * NumWaves;
+    }
+    assert((Index + WaveSize - 1) < max_wtable_samples);
+    return Index;
 }
 
 Wavetable::Wavetable()
 {
-   dataSizes = 35000;
-   TableF32Data = (float *)malloc(dataSizes * sizeof(float));
-   TableI16Data = (short *)malloc(dataSizes * sizeof(short));
-   memset(TableF32Data, 0, dataSizes * sizeof(float));
-   memset(TableI16Data, 0, dataSizes * sizeof(short));
-   memset(TableF32WeakPointers, 0, sizeof(TableF32WeakPointers));
-   memset(TableI16WeakPointers, 0, sizeof(TableI16WeakPointers));
-   current_id = -1;
-   queue_id = -1;
-   refresh_display = true; // I have never been drawn so assume I need refresh if asked
+    dataSizes = 35000;
+    TableF32Data = (float *)malloc(dataSizes * sizeof(float));
+    TableI16Data = (short *)malloc(dataSizes * sizeof(short));
+    memset(TableF32Data, 0, dataSizes * sizeof(float));
+    memset(TableI16Data, 0, dataSizes * sizeof(short));
+    memset(TableF32WeakPointers, 0, sizeof(TableF32WeakPointers));
+    memset(TableI16WeakPointers, 0, sizeof(TableI16WeakPointers));
+    current_id = -1;
+    queue_id = -1;
+    refresh_display = true; // I have never been drawn so assume I need refresh if asked
 }
 
 Wavetable::~Wavetable()
@@ -98,244 +97,245 @@ Wavetable::~Wavetable()
 
 void Wavetable::allocPointers(size_t newSize)
 {
-   free(TableF32Data);
-   free(TableI16Data);
-   dataSizes = newSize;
-   TableF32Data = (float *)malloc(dataSizes * sizeof(float));
-   TableI16Data = (short *)malloc(dataSizes * sizeof(short));
-   memset(TableF32Data, 0, dataSizes * sizeof(float));
-   memset(TableI16Data, 0, dataSizes * sizeof(short));
+    free(TableF32Data);
+    free(TableI16Data);
+    dataSizes = newSize;
+    TableF32Data = (float *)malloc(dataSizes * sizeof(float));
+    TableI16Data = (short *)malloc(dataSizes * sizeof(short));
+    memset(TableF32Data, 0, dataSizes * sizeof(float));
+    memset(TableI16Data, 0, dataSizes * sizeof(short));
 }
 
-void Wavetable::Copy(Wavetable* wt)
+void Wavetable::Copy(Wavetable *wt)
 {
-   size = wt->size;
-   size_po2 = wt->size_po2;
-   flags = wt->flags;
-   dt = wt->dt;
-   n_tables = wt->n_tables;
+    size = wt->size;
+    size_po2 = wt->size_po2;
+    flags = wt->flags;
+    dt = wt->dt;
+    n_tables = wt->n_tables;
 
-   current_id = -1;
-   queue_id = -1;
+    current_id = -1;
+    queue_id = -1;
 
-   if( dataSizes < wt->dataSizes )
-   {
-       allocPointers(wt->dataSizes);
-   }
+    if (dataSizes < wt->dataSizes)
+    {
+        allocPointers(wt->dataSizes);
+    }
 
-   memcpy(TableF32Data, wt->TableF32Data, dataSizes * sizeof(float));
-   memcpy(TableI16Data, wt->TableI16Data, dataSizes * sizeof(short));
+    memcpy(TableF32Data, wt->TableF32Data, dataSizes * sizeof(float));
+    memcpy(TableI16Data, wt->TableI16Data, dataSizes * sizeof(short));
 
-   for (int i = 0; i < max_mipmap_levels; i++)
-   {
-      for (int j = 0; j < max_subtables; j++)
-      {
-         if (wt->TableF32WeakPointers[i][j])
-         {
-            size_t Offset = wt->TableF32WeakPointers[i][j] - wt->TableF32Data;
-            TableF32WeakPointers[i][j] = TableF32Data + Offset;
-         }
-         else
-            TableF32WeakPointers[i][j] = NULL;
+    for (int i = 0; i < max_mipmap_levels; i++)
+    {
+        for (int j = 0; j < max_subtables; j++)
+        {
+            if (wt->TableF32WeakPointers[i][j])
+            {
+                size_t Offset = wt->TableF32WeakPointers[i][j] - wt->TableF32Data;
+                TableF32WeakPointers[i][j] = TableF32Data + Offset;
+            }
+            else
+                TableF32WeakPointers[i][j] = NULL;
 
-         if (wt->TableI16WeakPointers[i][j])
-         {
-            size_t Offset = wt->TableI16WeakPointers[i][j] - wt->TableI16Data;
-            TableI16WeakPointers[i][j] = TableI16Data + Offset;
-         }
-         else
-            TableI16WeakPointers[i][j] = NULL;
-      }
-   }
+            if (wt->TableI16WeakPointers[i][j])
+            {
+                size_t Offset = wt->TableI16WeakPointers[i][j] - wt->TableI16Data;
+                TableI16WeakPointers[i][j] = TableI16Data + Offset;
+            }
+            else
+                TableI16WeakPointers[i][j] = NULL;
+        }
+    }
 }
 
-bool Wavetable::BuildWT(void* wdata, wt_header& wh, bool AppendSilence)
+bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
 {
-   assert(wdata);
+    assert(wdata);
 
-   flags = vt_read_int16LE(wh.flags);
-   n_tables = vt_read_int16LE(wh.n_tables);
-   size = vt_read_int32LE(wh.n_samples);
+    flags = vt_read_int16LE(wh.flags);
+    n_tables = vt_read_int16LE(wh.n_tables);
+    size = vt_read_int32LE(wh.n_samples);
 
-   size_t req_size = RequiredWTSize(size, n_tables);
-   
-   if (req_size > dataSizes)
-   {
-       allocPointers(req_size);
-   }
+    size_t req_size = RequiredWTSize(size, n_tables);
 
-   int wdata_tables = n_tables;
+    if (req_size > dataSizes)
+    {
+        allocPointers(req_size);
+    }
 
-   if (AppendSilence)
-   {
-       n_tables += 3; // this "3" should match the "3" in RequiredWTSize
-   }
+    int wdata_tables = n_tables;
+
+    if (AppendSilence)
+    {
+        n_tables += 3; // this "3" should match the "3" in RequiredWTSize
+    }
 
 #if WINDOWS
-   unsigned long MSBpos;
-   _BitScanReverse(&MSBpos, size);
+    unsigned long MSBpos;
+    _BitScanReverse(&MSBpos, size);
 #else
-   unsigned int MSBpos;
-   _BitScanReverse(&MSBpos, size);
+    unsigned int MSBpos;
+    _BitScanReverse(&MSBpos, size);
 #endif
 
-   size_po2 = MSBpos;
+    size_po2 = MSBpos;
 
-   dt = 1.0f / size;
+    dt = 1.0f / size;
 
-   for (int i = 0; i < max_mipmap_levels; i++)
-   {
-      for (int j = 0; j < max_subtables; j++)
-      {
-         // TODO WARNING: Crashes here with patchbyte!
-         /*free(wt->TableF32WeakPointers[i][j]);
-         free(wt->TableI16WeakPointers[i][j]);
-         wt->TableF32WeakPointers[i][j] = 0;
-         wt->TableI16WeakPointers[i][j] = 0;*/
-      }
-   }
-   for (int j = 0; j < this->n_tables; j++)
-   {
-      TableF32WeakPointers[0][j] = TableF32Data + GetWTIndex(j, size, n_tables, 0);
-      TableI16WeakPointers[0][j] =
-          TableI16Data + GetWTIndex(j, size, n_tables, 0,
-                                    FIRipolI16_N); // + padding for a "non-wrapping" interpolator
-   }
-   for (int j = this->n_tables; j < min_F32_tables;
-        j++) // W-TABLE need at least 3 tables to work properly
-   {
-      unsigned int s = this->size;
-      int l = 0;
-      while (s && (l < max_mipmap_levels))
-      {
-         TableF32WeakPointers[l][j] = TableF32Data + GetWTIndex(j, size, n_tables, l);
-         memset(TableF32WeakPointers[l][j], 0, s * sizeof(float));
-         s = s >> 1;
-         l++;
-      }
-   }
+    for (int i = 0; i < max_mipmap_levels; i++)
+    {
+        for (int j = 0; j < max_subtables; j++)
+        {
+            // TODO WARNING: Crashes here with patchbyte!
+            /*free(wt->TableF32WeakPointers[i][j]);
+            free(wt->TableI16WeakPointers[i][j]);
+            wt->TableF32WeakPointers[i][j] = 0;
+            wt->TableI16WeakPointers[i][j] = 0;*/
+        }
+    }
+    for (int j = 0; j < this->n_tables; j++)
+    {
+        TableF32WeakPointers[0][j] = TableF32Data + GetWTIndex(j, size, n_tables, 0);
+        TableI16WeakPointers[0][j] =
+            TableI16Data + GetWTIndex(j, size, n_tables, 0,
+                                      FIRipolI16_N); // + padding for a "non-wrapping" interpolator
+    }
+    for (int j = this->n_tables; j < min_F32_tables;
+         j++) // W-TABLE need at least 3 tables to work properly
+    {
+        unsigned int s = this->size;
+        int l = 0;
+        while (s && (l < max_mipmap_levels))
+        {
+            TableF32WeakPointers[l][j] = TableF32Data + GetWTIndex(j, size, n_tables, l);
+            memset(TableF32WeakPointers[l][j], 0, s * sizeof(float));
+            s = s >> 1;
+            l++;
+        }
+    }
 
-   if (this->flags & wtf_int16)
-   {
-      for (int j = 0; j < wdata_tables; j++)
-      {
-         vt_copyblock_W_LE(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
-                           &((short*)wdata)[this->size * j], this->size);
-         if( this->flags & wtf_int16_is_16 )
-         {
-            i16toi15_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
-                           &this->TableI16WeakPointers[0][j][FIRoffsetI16],
-                           this->size);
-         }
-         i152float_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
-                         this->TableF32WeakPointers[0][j], this->size);
-      }
-   }
-   else
-   {
-      for (int j = 0; j < wdata_tables; j++)
-      {
-         vt_copyblock_DW_LE((int*)this->TableF32WeakPointers[0][j], &((int*)wdata)[this->size * j],
-                            this->size);
-         float2i15_block(this->TableF32WeakPointers[0][j],
-                         &this->TableI16WeakPointers[0][j][FIRoffsetI16], this->size);
-      }
-   }
+    if (this->flags & wtf_int16)
+    {
+        for (int j = 0; j < wdata_tables; j++)
+        {
+            vt_copyblock_W_LE(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                              &((short *)wdata)[this->size * j], this->size);
+            if (this->flags & wtf_int16_is_16)
+            {
+                i16toi15_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                               &this->TableI16WeakPointers[0][j][FIRoffsetI16], this->size);
+            }
+            i152float_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                            this->TableF32WeakPointers[0][j], this->size);
+        }
+    }
+    else
+    {
+        for (int j = 0; j < wdata_tables; j++)
+        {
+            vt_copyblock_DW_LE((int *)this->TableF32WeakPointers[0][j],
+                               &((int *)wdata)[this->size * j], this->size);
+            float2i15_block(this->TableF32WeakPointers[0][j],
+                            &this->TableI16WeakPointers[0][j][FIRoffsetI16], this->size);
+        }
+    }
 
-   // clear any appended tables (not read, but included in table for post-silence)
-   for (int j = wdata_tables; j < this->n_tables; j++)
-   {
-      memset(this->TableF32WeakPointers[0][j], 0, this->size * sizeof(float));
-      memset(this->TableI16WeakPointers[0][j], 0, this->size * sizeof(short));
-   }
+    // clear any appended tables (not read, but included in table for post-silence)
+    for (int j = wdata_tables; j < this->n_tables; j++)
+    {
+        memset(this->TableF32WeakPointers[0][j], 0, this->size * sizeof(float));
+        memset(this->TableI16WeakPointers[0][j], 0, this->size * sizeof(short));
+    }
 
-   for (int j = 0; j < wdata_tables; j++)
-   {
-      memcpy(&this->TableI16WeakPointers[0][j][this->size + FIRoffsetI16],
-             &this->TableI16WeakPointers[0][j][FIRoffsetI16], FIRoffsetI16 * sizeof(short));
-      memcpy(&this->TableI16WeakPointers[0][j][0], &this->TableI16WeakPointers[0][j][this->size],
-             FIRoffsetI16 * sizeof(short));
-   }
+    for (int j = 0; j < wdata_tables; j++)
+    {
+        memcpy(&this->TableI16WeakPointers[0][j][this->size + FIRoffsetI16],
+               &this->TableI16WeakPointers[0][j][FIRoffsetI16], FIRoffsetI16 * sizeof(short));
+        memcpy(&this->TableI16WeakPointers[0][j][0], &this->TableI16WeakPointers[0][j][this->size],
+               FIRoffsetI16 * sizeof(short));
+    }
 
-   MipMapWT();
-   return true;
+    MipMapWT();
+    return true;
 }
 
 void Wavetable::MipMapWT()
 {
-   int levels = 1;
-   while (((1 << levels) < size) & (levels < max_mipmap_levels))
-      levels++;
-   int ns = this->n_tables;
+    int levels = 1;
+    while (((1 << levels) < size) & (levels < max_mipmap_levels))
+        levels++;
+    int ns = this->n_tables;
 
-   const int filter_size = 63;
-   const int filter_id_of = (filter_size - 1) >> 1;
+    const int filter_size = 63;
+    const int filter_id_of = (filter_size - 1) >> 1;
 
-   /*FILE *F;
-   F = fopen("d:\\sdump.lala","wb");*/
+    /*FILE *F;
+    F = fopen("d:\\sdump.lala","wb");*/
 
-   // fwrite(this->TableI16WeakPointers[0][0],size*sizeof(short),1,F);
-   for (int l = 1; l < levels; l++)
-   {
-      int psize = size >> (l - 1);
-      int lsize = size >> l;
+    // fwrite(this->TableI16WeakPointers[0][0],size*sizeof(short),1,F);
+    for (int l = 1; l < levels; l++)
+    {
+        int psize = size >> (l - 1);
+        int lsize = size >> l;
 
-      for (int s = 0; s < ns; s++)
-      {
-         this->TableF32WeakPointers[l][s] = TableF32Data + GetWTIndex(s, size, n_tables, l);
-         this->TableI16WeakPointers[l][s] =
-             TableI16Data + GetWTIndex(s, size, n_tables, l, FIRipolI16_N);
+        for (int s = 0; s < ns; s++)
+        {
+            this->TableF32WeakPointers[l][s] = TableF32Data + GetWTIndex(s, size, n_tables, l);
+            this->TableI16WeakPointers[l][s] =
+                TableI16Data + GetWTIndex(s, size, n_tables, l, FIRipolI16_N);
 
-         if (this->flags & wtf_is_sample)
-         {
-            for (int i = 0; i < lsize; i++)
+            if (this->flags & wtf_is_sample)
             {
-               this->TableF32WeakPointers[l][s][i] = 0;
-               for (int a = 0; a < filter_size; a++)
-               {
-                  int srcindex = (i << 1) + a - filter_id_of;
-                  int srctable = max(0, s + (srcindex / psize));
-                  srcindex = srcindex & (psize - 1);
-                  if (srctable < ns)
-                     this->TableF32WeakPointers[l][s][i] +=
-                         hrfilter[a] * this->TableF32WeakPointers[l - 1][srctable][srcindex];
-               }
-               this->TableI16WeakPointers[l][s][i + FIRoffsetI16] = 0; // not supported in int16 atm
+                for (int i = 0; i < lsize; i++)
+                {
+                    this->TableF32WeakPointers[l][s][i] = 0;
+                    for (int a = 0; a < filter_size; a++)
+                    {
+                        int srcindex = (i << 1) + a - filter_id_of;
+                        int srctable = max(0, s + (srcindex / psize));
+                        srcindex = srcindex & (psize - 1);
+                        if (srctable < ns)
+                            this->TableF32WeakPointers[l][s][i] +=
+                                hrfilter[a] * this->TableF32WeakPointers[l - 1][srctable][srcindex];
+                    }
+                    this->TableI16WeakPointers[l][s][i + FIRoffsetI16] =
+                        0; // not supported in int16 atm
+                }
             }
-         }
-         else
-         {
-            for (int i = 0; i < lsize; i++)
+            else
             {
-               this->TableF32WeakPointers[l][s][i] = 0;
-               for (int a = 0; a < filter_size; a++)
-               {
-                  this->TableF32WeakPointers[l][s][i] +=
-                      hrfilter[a] * this->TableF32WeakPointers[l - 1][s][(
-                                        ((i << 1) + a - filter_id_of) & (psize - 1))];
-               }
-               int ival = 0;
-               for (int a = 0; a < filter_size; a++)
-               {
-                  ival += HRFilterI16[a] *
-                          this->TableI16WeakPointers[l - 1][s][(((i << 1) + a - 31) & (psize - 1)) +
-                                                               FIRoffsetI16];
-               }
-               this->TableI16WeakPointers[l][s][i + FIRoffsetI16] = ival >> 16;
+                for (int i = 0; i < lsize; i++)
+                {
+                    this->TableF32WeakPointers[l][s][i] = 0;
+                    for (int a = 0; a < filter_size; a++)
+                    {
+                        this->TableF32WeakPointers[l][s][i] +=
+                            hrfilter[a] * this->TableF32WeakPointers[l - 1][s][(
+                                              ((i << 1) + a - filter_id_of) & (psize - 1))];
+                    }
+                    int ival = 0;
+                    for (int a = 0; a < filter_size; a++)
+                    {
+                        ival += HRFilterI16[a] *
+                                this->TableI16WeakPointers[l - 1][s]
+                                                          [(((i << 1) + a - 31) & (psize - 1)) +
+                                                           FIRoffsetI16];
+                    }
+                    this->TableI16WeakPointers[l][s][i + FIRoffsetI16] = ival >> 16;
+                }
             }
-         }
-         // float2i16_block(this->TableF32WeakPointers[l][s],this->TableI16WeakPointers[l][s],lsize);
-         memcpy(&this->TableI16WeakPointers[l][s][lsize + FIRoffsetI16],
-                &this->TableI16WeakPointers[l][s][FIRoffsetI16], FIRoffsetI16 * sizeof(short));
-         memcpy(&this->TableI16WeakPointers[l][s][0], &this->TableI16WeakPointers[l][s][lsize],
-                FIRoffsetI16 * sizeof(short));
-      }
-      // fwrite(this->TableI16WeakPointers[l][0],lsize*sizeof(short),1,F);
-   }
-   // fclose(F);
+            // float2i16_block(this->TableF32WeakPointers[l][s],this->TableI16WeakPointers[l][s],lsize);
+            memcpy(&this->TableI16WeakPointers[l][s][lsize + FIRoffsetI16],
+                   &this->TableI16WeakPointers[l][s][FIRoffsetI16], FIRoffsetI16 * sizeof(short));
+            memcpy(&this->TableI16WeakPointers[l][s][0], &this->TableI16WeakPointers[l][s][lsize],
+                   FIRoffsetI16 * sizeof(short));
+        }
+        // fwrite(this->TableI16WeakPointers[l][0],lsize*sizeof(short),1,F);
+    }
+    // fclose(F);
 
-   // TODO I16 mipmaps end up out of phase
-   // The click/knot/bug probably results from the fact that there is no padding in the beginning,
-   // so it becomes out of phase at mipmap switch - makes sense because as they were off by a whole
-   // sample at the mipmap switch, which can not be explained by the halfrate filter
+    // TODO I16 mipmaps end up out of phase
+    // The click/knot/bug probably results from the fact that there is no padding in the beginning,
+    // so it becomes out of phase at mipmap switch - makes sense because as they were off by a whole
+    // sample at the mipmap switch, which can not be explained by the halfrate filter
 }

@@ -21,98 +21,111 @@
 #include "SkinSupport.h"
 #include "CursorControlGuard.h"
 
-
-class CModulationSourceButton : public VSTGUI::CControl,
-                                public Surge::UI::SkinConsumingComponent,
-                                public Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>
+class CModulationSourceButton
+    : public VSTGUI::CControl,
+      public Surge::UI::SkinConsumingComponent,
+      public Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>
 {
-public:
-   CModulationSourceButton(const VSTGUI::CRect& size,
-                           VSTGUI::IControlListener* listener,
-                           long tag,
-                           int state,
-                           int msid,
-                           std::shared_ptr<SurgeBitmaps> bitmapStore,
-                           SurgeStorage* storage);
-   ~CModulationSourceButton();
+  public:
+    CModulationSourceButton(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
+                            int state, int msid, std::shared_ptr<SurgeBitmaps> bitmapStore,
+                            SurgeStorage *storage);
+    ~CModulationSourceButton();
 
-   virtual void setValue(float val) override
-   {
-      if (value != val)
-         invalid();
-      value = val;
-   }
+    virtual void setValue(float val) override
+    {
+        if (value != val)
+            invalid();
+        value = val;
+    }
 
-   virtual void onMouseMoveDelta(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons, double dx, double dy);
-   virtual double getMouseDeltaScaling(const VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons);
-   virtual bool onWheel(const VSTGUI::CPoint& where, const float &distance, const VSTGUI::CButtonState& buttons) override;
+    virtual void onMouseMoveDelta(const VSTGUI::CPoint &where, const VSTGUI::CButtonState &buttons,
+                                  double dx, double dy);
+    virtual double getMouseDeltaScaling(const VSTGUI::CPoint &where,
+                                        const VSTGUI::CButtonState &buttons);
+    virtual bool onWheel(const VSTGUI::CPoint &where, const float &distance,
+                         const VSTGUI::CButtonState &buttons) override;
 
-   int state, msid, controlstate;
+    int state, msid, controlstate;
 
-   bool tint, used, blink;
-   int dispval;
-   bool click_is_editpart, event_is_drag, is_metacontroller, bipolar;
-   char label[16];
-   VSTGUI::CRect  MCRect;
-   VSTGUI::CPoint LastPoint;
-   VSTGUI::CPoint SourcePoint;
-   float OldValue;
+    bool tint, used, blink;
+    int dispval;
+    bool click_is_editpart, event_is_drag, is_metacontroller, bipolar;
+    char label[16];
+    VSTGUI::CRect MCRect;
+    VSTGUI::CPoint LastPoint;
+    VSTGUI::CPoint SourcePoint;
+    float OldValue;
 
-   SurgeStorage* storage = nullptr;
+    SurgeStorage *storage = nullptr;
 
-   VSTGUI::CBitmap *bmp = nullptr, *arrow = nullptr;
+    VSTGUI::CBitmap *bmp = nullptr, *arrow = nullptr;
 
-   void setlabel(const char*);
-   void set_ismeta(bool);
-   virtual void setBipolar(bool);
-   void update_rt_vals(bool ntint, float fdispval, bool used);
-   int get_state()
-   {
-      return state;
-   }
+    void setlabel(const char *);
+    void set_ismeta(bool);
+    virtual void setBipolar(bool);
+    void update_rt_vals(bool ntint, float fdispval, bool used);
+    int get_state() { return state; }
 
-   bool hasAlternate = false;
-   int alternateId;
-   std::string alternateLabel;
-   virtual void setAlternate( int alt, const std::string &altLabel ) {
-      hasAlternate = true;
-      this->alternateId = alt;
-      this->alternateLabel = altLabel;
-   }
-   bool useAlternate = false;
-   void setUseAlternate( bool f ) { useAlternate = f; if( hasAlternate ) { invalid(); setDirty(); } }
-   
-   virtual void draw(VSTGUI::CDrawContext* dc) override;
-   // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      hovered = true;
-      invalid();
-      return VSTGUI::kMouseEventHandled;
-   }
-   virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      hovered = false;
-      invalid();
-      return VSTGUI::kMouseEventHandled;
-   }
-   bool hovered = false;
+    bool hasAlternate = false;
+    int alternateId;
+    std::string alternateLabel;
+    virtual void setAlternate(int alt, const std::string &altLabel)
+    {
+        hasAlternate = true;
+        this->alternateId = alt;
+        this->alternateLabel = altLabel;
+    }
+    bool useAlternate = false;
+    void setUseAlternate(bool f)
+    {
+        useAlternate = f;
+        if (hasAlternate)
+        {
+            invalid();
+            setDirty();
+        }
+    }
 
-   bool secondaryHover = false;
-   void setSecondaryHover( bool sh ) {
-      if( sh != secondaryHover )
-      {
-         secondaryHover = sh;
-         invalid();
-      }
-   }
+    virtual void draw(VSTGUI::CDrawContext *dc) override;
+    // virtual void mouse (VSTGUI::CDrawContext *pContext, VSTGUI::CPoint &where, long button = -1);
+    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
+                                                  const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
+                                                   const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
+                                                const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                                     const VSTGUI::CButtonState &buttons) override
+    {
+        hovered = true;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
+    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons) override
+    {
+        hovered = false;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
+    bool hovered = false;
 
-   VSTGUI::CControl *dragLabel = nullptr;
-   VSTGUI::CPoint dragOffset, dragStart, lastBarDraw;
-   bool hasMovedBar = false;
+    bool secondaryHover = false;
+    void setSecondaryHover(bool sh)
+    {
+        if (sh != secondaryHover)
+        {
+            secondaryHover = sh;
+            invalid();
+        }
+    }
 
-   float accumWheelDistance = 0;
+    VSTGUI::CControl *dragLabel = nullptr;
+    VSTGUI::CPoint dragOffset, dragStart, lastBarDraw;
+    bool hasMovedBar = false;
 
-   CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
+    float accumWheelDistance = 0;
+
+    CLASS_METHODS(CModulationSourceButton, VSTGUI::CControl)
 };
