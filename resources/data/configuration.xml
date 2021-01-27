@@ -42,6 +42,18 @@
     <type i="16" name="Graphic EQ">
         <snapshot name="Init" />
     </type>
+    <!--
+    <type i="17" name="Resonator">
+        <snapshot name="Init" />
+    </type>
+    -->
+    <separator />
+    <type i="8" name="Conditioner">
+        <snapshot name="Init" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.014269" p5="0.000000" p6="0.000000" p7="0.000000" />
+        <snapshot name="Limiter 1" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.742889" p5="-0.085714" p6="0.000000" p7="-9.257149" />
+        <snapshot name="Limiter 2" p0="0" p1="0" p2="0" p3="0" p4="-6" p5="0" p6="0.01" p7="0" />
+        <snapshot name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
+    </type>
     <type i="5" name="Distortion">
         <snapshot name="Init" p0="0.000000" p1="3.817860" p2="1.944644" p3="38.421448" p4="0.000000" p5="0.000000" p6="0.000000" p7="3.000000" p8="2.031250" p9="30.535736" />
         <snapshot name="Bright 1" p0="6.004265" p1="47.901802" p2="2.999101" p3="70.000000" p4="0.000000" p5="0.000000" p6="6.004417" p7="54.079567" p8="2.998620" p9="70.000000" p10="0.000000" />
@@ -61,12 +73,10 @@
         <snapshot name="Warm 4" p0="5.039993" p1="21.238914" p2="1.944644" p3="26.235390" p4="0.000000" p5="0.000000" p6="3.985725" p7="2.237354" p8="2.031250" p9="42.229935" p10="0.000000" />
         <snapshot name="Warm 5" p0="5.039993" p1="21.238914" p2="1.944644" p3="14.228958" p4="0.000000" p5="0.000000" p6="3.985725" p7="2.237354" p8="2.031250" p9="26.222519" p10="0.000000" />
     </type>
-    <type i="8" name="Conditioner">
-        <snapshot name="Init" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.014269" p5="0.000000" p6="0.000000" p7="0.000000" />
-        <snapshot name="Limiter 1" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.742889" p5="-0.085714" p6="0.000000" p7="-9.257149" />
-        <snapshot name="Limiter 2" p0="0" p1="0" p2="0" p3="0" p4="-6" p5="0" p6="0.01" p7="0" />
-        <snapshot name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
+    <type i="15" name="Neuron">
+        <snapshot name="Init" />
     </type>
+    <separator />
     <type i="7" name="Frequency Shifter">
         <snapshot name="Init" p0="0.000000" p1="1.000000" p2="-8.000000" p3="0.000000" p4="1.000000" />
         <snapshot name="Chorusy" p0="-0.071431" p1="0.925000" p2="-8.000000" p2_temposync="1" p3="0.000000" p4="0.291964" />
@@ -117,11 +127,6 @@
         <snapshot name="Sweetspot" p0="0" p1="0" p2="0" p3="-1.68886" p4="0.25" p5="0.8" p6="0.3" p7="6" p8="4" p9="0.8" />
         <snapshot name="Talky" p0="0.057143" p1="0.858929" p2="-0.401786" p3="-1.998566" p4="0.718750" p5="0.586607" p6="0.694643" />
     </type>
-    <!--
-    <type i="17" name="Resonator">
-        <snapshot name="Init"/>
-    </type>
-    -->
     <type i="4" name="Rotary Speaker">
         <snapshot name="Init" p0="-7.00000" p1="0.000000" p2="0.000000" />
         <snapshot name="Fast" p0="2.981253" p1="0.251786" p2="0.495536" />
@@ -254,11 +259,8 @@
             <snapshot name="To Tape" p0="42" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5" p6="1" />
         </type>
     </type>
-    <separator/>
-    <type i="15" name="Neuron">
-        <snapshot name="Init" />
-    </type>
 </fx>
+
 <customctrl>
     <entry p="0" ctrl="41" />
     <entry p="1" ctrl="42" />
@@ -269,4 +271,5 @@
     <entry p="6" ctrl="47" />
     <entry p="7" ctrl="48" />
 </customctrl>
+
 <midictrl />
