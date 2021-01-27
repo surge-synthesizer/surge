@@ -1,4 +1,5 @@
 #include "RotarySpeakerEffect.h"
+#include "QuadFilterUnit.h"
 
 using namespace std;
 
@@ -247,16 +248,34 @@ void RotarySpeakerEffect::process(float* dataL, float* dataR)
          gain_comp_factor = 1.f + ((drive.v - compensateStartsAt) * compensate);
    }
 
+   bool useSSEShaper = ( ws + wst_soft == wst_digital ||
+                         ws + wst_soft == wst_sine );
+
+   auto wsop = GetQFPtrWaveshaper(wst_soft + ws);
+
+
    for (k = 0; k < BLOCK_SIZE; k++)
    {
       float input;
 
       if (!fxdata->p[rot_drive].deactivated)
       {
-          input = lookup_waveshape(wst_soft + ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;   // ws + 1 to start on wst_soft
-          input /= gain_comp_factor;
+         drive_factor = 1.f + (drive.v * drive.v * 15.f);
+         if( useSSEShaper )
+         {
+            auto inp = _mm_set1_ps(0.5 * ( dataL[k] + dataR[k] ));
+            auto wsres = wsop( inp, _mm_set1_ps(drive_factor));
+            float r[4];
+            _mm_store_ps(r, wsres );
+            input = r[0] * gain_tweak;   // ws + 1 to start on wst_soft
+         }
+         else
+         {
+            input = lookup_waveshape(wst_soft + ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;   // ws + 1 to start on wst_soft
+         }
+         input /= gain_comp_factor;
 
-          drive.process();
+         drive.process();
       }
       else
       {
