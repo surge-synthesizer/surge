@@ -22,22 +22,24 @@
 
 #include <cstdint>
 
-namespace Surge { namespace filesystem {
+namespace Surge
+{
+namespace filesystem
+{
 
 // path factory functions                                                          [fs.path.factory]
-template<class Source>
-inline path u8path(const Source& source) { return path{source}; }
+template <class Source> inline path u8path(const Source &source) { return path{source}; }
 
 // filesystem operations                                                               [fs.op.funcs]
-bool create_directories(const path& p);
-bool create_directory(const path& p);
-bool exists(const path& p);
-std::uintmax_t file_size(const path& p);
-std::uintmax_t file_size(const path& p, std::error_code& ec) noexcept;
-bool is_directory(const path& p);
-bool is_regular_file(const path& p);
-bool remove(const path& p);
-std::uintmax_t remove_all(const path& p);
+bool create_directories(const path &p);
+bool create_directory(const path &p);
+bool exists(const path &p);
+std::uintmax_t file_size(const path &p);
+std::uintmax_t file_size(const path &p, std::error_code &ec) noexcept;
+bool is_directory(const path &p);
+bool is_regular_file(const path &p);
+bool remove(const path &p);
+std::uintmax_t remove_all(const path &p);
 
 } // namespace filesystem
 

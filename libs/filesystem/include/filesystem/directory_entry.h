@@ -17,23 +17,26 @@
 
 #include "filesystem/path.h"
 
-namespace Surge { namespace filesystem {
+namespace Surge
+{
+namespace filesystem
+{
 
 class directory_entry //                                                  [fs.class.directory_entry]
 {
-public:
-   // constructors and destructor                                                [fs.dir.entry.cons]
-   directory_entry() = default;
-   explicit directory_entry(const path& p) : pth(p) {}
+  public:
+    // constructors and destructor [fs.dir.entry.cons]
+    directory_entry() = default;
+    explicit directory_entry(const path &p) : pth(p) {}
 
-   // modifiers                                                                  [fs.dir.entry.mods]
-   const class path& path() const noexcept { return pth; }
-   operator const class path& () const noexcept { return pth; }
+    // modifiers [fs.dir.entry.mods]
+    const class path &path() const noexcept { return pth; }
+    operator const class path &() const noexcept { return pth; }
 
-private:
-   class path pth;
+  private:
+    class path pth;
 
-   friend class directory_iterator;
+    friend class directory_iterator;
 };
 
 } // namespace filesystem

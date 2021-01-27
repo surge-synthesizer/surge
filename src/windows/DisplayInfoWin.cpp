@@ -10,7 +10,7 @@ namespace GUI
 {
 
 using namespace VSTGUI;
-    
+
 float getDisplayBackingScaleFactor(CFrame *f)
 {
     /*
@@ -33,14 +33,14 @@ float getDisplayBackingScaleFactor(CFrame *f)
 
     return 2.0;
 }
-    
+
 CRect getScreenDimensions(CFrame *)
 {
     RECT desktop;
     const HWND hDesktop = GetDesktopWindow();
     GetWindowRect(hDesktop, &desktop);
-    return CRect(CPoint(0,0), CPoint(desktop.right,desktop.bottom));
+    return CRect(CPoint(0, 0), CPoint(desktop.right, desktop.bottom));
 }
 
-}
-}
+} // namespace GUI
+} // namespace Surge

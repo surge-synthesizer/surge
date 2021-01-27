@@ -20,47 +20,47 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-
 class SampleAndHoldOscillator : public AbstractBlitOscillator
 {
-private:
-   lipol_ps li_hpf, li_DC, li_integratormult;
+  private:
+    lipol_ps li_hpf, li_DC, li_integratormult;
 
-public:
-   enum shnoise_params
-   {
-      shn_correlation = 0,
-      shn_width,
-      shn_lowcut,
-      shn_highcut,
-      shn_sync,
-      shn_unison_detune,
-      shn_unison_voices,
-   };
+  public:
+    enum shnoise_params
+    {
+        shn_correlation = 0,
+        shn_width,
+        shn_lowcut,
+        shn_highcut,
+        shn_sync,
+        shn_unison_detune,
+        shn_unison_voices,
+    };
 
-   SampleAndHoldOscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
-   virtual void init(float pitch, bool is_display = false) override;
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual void process_block(
-       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
-   virtual ~SampleAndHoldOscillator();
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    SampleAndHoldOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    virtual void init(float pitch, bool is_display = false) override;
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                               float FMdepth = 0.f) override;
+    virtual ~SampleAndHoldOscillator();
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
-private:
-   BiquadFilter lp, hp;
-   void applyFilter();
+  private:
+    BiquadFilter lp, hp;
+    void applyFilter();
 
-   void convolute(int voice, bool FM, bool stereo);
-   template <bool FM> void process_blockT(float pitch, float depth, float drift = 0);
-   template <bool is_init> void update_lagvals();
-   bool first_run;
-   float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
-       last_level2[MAX_UNISON], pwidth[MAX_UNISON];
-   float pitch;
-   lag<double> FMdepth, l_pw, l_shape, l_smooth, l_sub, l_sync;
-   int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;
-   int FMdelay;
-   float FMmul_inv;
-   std::function<float()> urng; // A uniform -1,1 RNG
+    void convolute(int voice, bool FM, bool stereo);
+    template <bool FM> void process_blockT(float pitch, float depth, float drift = 0);
+    template <bool is_init> void update_lagvals();
+    bool first_run;
+    float dc, dc_uni[MAX_UNISON], elapsed_time[MAX_UNISON], last_level[MAX_UNISON],
+        last_level2[MAX_UNISON], pwidth[MAX_UNISON];
+    float pitch;
+    lag<double> FMdepth, l_pw, l_shape, l_smooth, l_sub, l_sync;
+    int id_pw, id_shape, id_smooth, id_sub, id_sync, id_detune;
+    int FMdelay;
+    float FMmul_inv;
+    std::function<float()> urng; // A uniform -1,1 RNG
 };

@@ -29,51 +29,49 @@ using namespace std;
 #include "WavetableOscillator.h"
 #include "WindowOscillator.h"
 
-Oscillator*
-spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
+Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
+                      pdata *localcopy)
 {
-   Oscillator* osc = 0;
-   switch (osctype)
-   {
-   case ot_classic:
-      return new SurgeSuperOscillator(storage, oscdata, localcopy);
-   case ot_wavetable:
-      return new WavetableOscillator(storage, oscdata, localcopy);
-   case ot_window:
-   {
-      // In the event we are misconfigured, window oscillator will segfault. If you still play
-      // after clicking through 100 warnings, let's just give you a sine
-      if( storage && storage->WindowWT.size == 0 )
-         return new SineOscillator( storage, oscdata, localcopy );
- 
-      return new WindowOscillator(storage, oscdata, localcopy);
-   }
-   case ot_shnoise:
-      return new SampleAndHoldOscillator(storage, oscdata, localcopy);
-   case ot_audioinput:
-      return new AudioInputOscillator(storage, oscdata, localcopy);
-   case ot_FM3:
-      return new FM3Oscillator(storage, oscdata, localcopy);
-   case ot_FM2:
-      return new FM2Oscillator(storage, oscdata, localcopy);
-   case ot_sine:
-   default:
-      return new SineOscillator(storage, oscdata, localcopy);
-   }
-   return osc;
+    Oscillator *osc = 0;
+    switch (osctype)
+    {
+    case ot_classic:
+        return new SurgeSuperOscillator(storage, oscdata, localcopy);
+    case ot_wavetable:
+        return new WavetableOscillator(storage, oscdata, localcopy);
+    case ot_window:
+    {
+        // In the event we are misconfigured, window oscillator will segfault. If you still play
+        // after clicking through 100 warnings, let's just give you a sine
+        if (storage && storage->WindowWT.size == 0)
+            return new SineOscillator(storage, oscdata, localcopy);
+
+        return new WindowOscillator(storage, oscdata, localcopy);
+    }
+    case ot_shnoise:
+        return new SampleAndHoldOscillator(storage, oscdata, localcopy);
+    case ot_audioinput:
+        return new AudioInputOscillator(storage, oscdata, localcopy);
+    case ot_FM3:
+        return new FM3Oscillator(storage, oscdata, localcopy);
+    case ot_FM2:
+        return new FM2Oscillator(storage, oscdata, localcopy);
+    case ot_sine:
+    default:
+        return new SineOscillator(storage, oscdata, localcopy);
+    }
+    return osc;
 }
 
-Oscillator::Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy)
+Oscillator::Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
     : master_osc(0)
 {
-   // assert(storage);
-   assert(oscdata);
-   this->storage = storage;
-   this->oscdata = oscdata;
-   this->localcopy = localcopy;
-   ticker = 0;
+    // assert(storage);
+    assert(oscdata);
+    this->storage = storage;
+    this->oscdata = oscdata;
+    this->localcopy = localcopy;
+    ticker = 0;
 }
 
-Oscillator::~Oscillator()
-{}
-
+Oscillator::~Oscillator() {}

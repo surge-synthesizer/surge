@@ -21,54 +21,46 @@
 
 class ResonatorEffect : public Effect
 {
-   lipol_ps gain alignas(16);
-   lipol_ps mix alignas(16);
+    lipol_ps gain alignas(16);
+    lipol_ps mix alignas(16);
 
-   float L alignas(16)[BLOCK_SIZE],
-         R alignas(16)[BLOCK_SIZE];
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
-public:
-   enum resonator_params
-   {
-       resonator_freq1 = 0,
-       resonator_res1,
-       resonator_gain1,
+  public:
+    enum resonator_params
+    {
+        resonator_freq1 = 0,
+        resonator_res1,
+        resonator_gain1,
 
-       resonator_freq2,
-       resonator_res2,
-       resonator_gain2,
+        resonator_freq2,
+        resonator_res2,
+        resonator_gain2,
 
-       resonator_freq3,
-       resonator_res3,
-       resonator_gain3,
+        resonator_freq3,
+        resonator_res3,
+        resonator_gain3,
 
-       resonator_mode,
-       resonator_gain,
-       resonator_mix,
+        resonator_mode,
+        resonator_gain,
+        resonator_mix,
 
-       resonator_num_ctrls,
-   };
+        resonator_num_ctrls,
+    };
 
-   ResonatorEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~ResonatorEffect();
-   virtual const char* get_effectname() override
-   {
-      return "Resonator";
-   }
-   virtual void init() override;
-   virtual void process(float* dataL, float* dataR) override;
-   virtual int get_ringout_decay() override
-   {
-      return -1;
-   }
-   virtual void suspend() override;
-   void setvars(bool init);
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual const char* group_label(int id) override; 
-   virtual int group_label_ypos(int id) override;
+    ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~ResonatorEffect();
+    virtual const char *get_effectname() override { return "Resonator"; }
+    virtual void init() override;
+    virtual void process(float *dataL, float *dataR) override;
+    virtual int get_ringout_decay() override { return -1; }
+    virtual void suspend() override;
+    void setvars(bool init);
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-private:
-   int bi; // block increment (to keep track of events not occurring every n blocks)
+  private:
+    int bi; // block increment (to keep track of events not occurring every n blocks)
 };
-

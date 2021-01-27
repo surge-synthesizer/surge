@@ -12,7 +12,6 @@
 ** IDB_MAIN_BG + SCALE_OFFSET_300 in your non-rc code.
 */
 
-
 // Offset IDB_MAIN_BG by SCALABLE_100_OFFSET value and so on
 #define IDB_MAIN_BG_SCALE_SVG 80102
 

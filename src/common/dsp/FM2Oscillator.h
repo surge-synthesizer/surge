@@ -22,29 +22,30 @@
 
 class FM2Oscillator : public Oscillator
 {
-public:
-   enum fm2_params
-   {
-      fm2_m1amount = 0,
-      fm2_m1ratio,
-      fm2_m2amount,
-      fm2_m2ratio,
-      fm2_m12offset,
-      fm2_m12phase,
-      fm2_feedback,
-   };
+  public:
+    enum fm2_params
+    {
+        fm2_m1amount = 0,
+        fm2_m1ratio,
+        fm2_m2amount,
+        fm2_m2ratio,
+        fm2_m12offset,
+        fm2_m12phase,
+        fm2_feedback,
+    };
 
-   FM2Oscillator(SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
-   virtual void init(float pitch, bool is_display = false) override;
-   virtual void process_block(
-       float pitch, float drift = 0.f, bool stereo = false, bool FM = false, float FMdepth = 0.f) override;
-   virtual ~FM2Oscillator();
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   double phase, lastoutput;
-   quadr_osc RM1, RM2;
-   float driftlfo, driftlfo2;
-   float fb_val;
-   lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    FM2Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    virtual void init(float pitch, bool is_display = false) override;
+    virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                               float FMdepth = 0.f) override;
+    virtual ~FM2Oscillator();
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    double phase, lastoutput;
+    quadr_osc RM1, RM2;
+    float driftlfo, driftlfo2;
+    float fb_val;
+    lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 };

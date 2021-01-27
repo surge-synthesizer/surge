@@ -22,11 +22,10 @@
 
 class CVerticalLabel : public VSTGUI::CTextLabel
 {
-public:
-   CVerticalLabel(const VSTGUI::CRect &pos, VSTGUI::UTF8String txt ) : CTextLabel( pos, txt ) {}
+  public:
+    CVerticalLabel(const VSTGUI::CRect &pos, VSTGUI::UTF8String txt) : CTextLabel(pos, txt) {}
 
-   virtual void draw(VSTGUI::CDrawContext *pContext) override;
+    virtual void draw(VSTGUI::CDrawContext *pContext) override;
 
-   CLASS_METHODS(CVerticalLabel, VSTGUI::CTextLabel );
-
+    CLASS_METHODS(CVerticalLabel, VSTGUI::CTextLabel);
 };

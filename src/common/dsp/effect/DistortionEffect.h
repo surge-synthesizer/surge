@@ -24,55 +24,46 @@
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 
-
-
 class DistortionEffect : public Effect
 {
-   HalfRateFilter hr_a alignas(16),
-                  hr_b alignas(16);
-   lipol_ps drive alignas(16),
-            outgain alignas(16);
+    HalfRateFilter hr_a alignas(16), hr_b alignas(16);
+    lipol_ps drive alignas(16), outgain alignas(16);
 
-public:
-   DistortionEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~DistortionEffect();
-   virtual const char* get_effectname() override
-   {
-      return "distortion";
-   }
-   virtual void init() override;
-   virtual void process(float* dataL, float* dataR) override;
-   virtual void suspend() override;
-   virtual int get_ringout_decay() override
-   {
-      return 1000;
-   }
-   void setvars(bool init);
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual const char* group_label(int id) override;
-   virtual int group_label_ypos(int id) override;
+  public:
+    DistortionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~DistortionEffect();
+    virtual const char *get_effectname() override { return "distortion"; }
+    virtual void init() override;
+    virtual void process(float *dataL, float *dataR) override;
+    virtual void suspend() override;
+    virtual int get_ringout_decay() override { return 1000; }
+    void setvars(bool init);
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
-   enum dist_params
-   {
-      dist_preeq_gain = 0,
-      dist_preeq_freq,
-      dist_preeq_bw,
-      dist_preeq_highcut,
-      dist_drive,
-      dist_feedback,
-      dist_posteq_gain,
-      dist_posteq_freq,
-      dist_posteq_bw,
-      dist_posteq_highcut,
-      dist_gain,
-      dist_model,
-   };
+    enum dist_params
+    {
+        dist_preeq_gain = 0,
+        dist_preeq_freq,
+        dist_preeq_bw,
+        dist_preeq_highcut,
+        dist_drive,
+        dist_feedback,
+        dist_posteq_gain,
+        dist_posteq_freq,
+        dist_posteq_bw,
+        dist_posteq_highcut,
+        dist_gain,
+        dist_model,
+    };
 
-private:
-   BiquadFilter band1, band2, lp1, lp2;
-   int bi; // block increment (to keep track of events not occurring every n blocks)
-   float L, R;
+  private:
+    BiquadFilter band1, band2, lp1, lp2;
+    int bi; // block increment (to keep track of events not occurring every n blocks)
+    float L, R;
 };

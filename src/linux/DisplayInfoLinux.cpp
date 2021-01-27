@@ -11,23 +11,19 @@ namespace GUI
 {
 
 using namespace VSTGUI;
-    
-float getDisplayBackingScaleFactor(CFrame *)
-{
-    return 2.0;
-}
 
+float getDisplayBackingScaleFactor(CFrame *) { return 2.0; }
 
 /*
 ** We make a static single screen assumption for now so cache the screen size and only
 ** query Xlib for it once.
-*/    
+*/
 int dispinfoScreenW = -1;
 int dispinfoScreenH = -1;
-    
+
 CRect getScreenDimensions(CFrame *)
 {
-    if(dispinfoScreenW < 0 || dispinfoScreenH < 0 )
+    if (dispinfoScreenW < 0 || dispinfoScreenH < 0)
     {
         /*
         ** For now make the assumption of single screen to at least avoid
@@ -35,10 +31,10 @@ CRect getScreenDimensions(CFrame *)
         **
         ** FIXME: Deal with multi-display linux
         */
-        Display* d = XOpenDisplay(nullptr);
-        if(d)
+        Display *d = XOpenDisplay(nullptr);
+        if (d)
         {
-            Screen*  s = DefaultScreenOfDisplay(d);
+            Screen *s = DefaultScreenOfDisplay(d);
             dispinfoScreenW = s->width;
             dispinfoScreenH = s->height;
             XCloseDisplay(d);
@@ -49,9 +45,9 @@ CRect getScreenDimensions(CFrame *)
             dispinfoScreenH = 0;
         }
     }
-        
-    return CRect(CPoint(0,0), CPoint(dispinfoScreenW, dispinfoScreenH)); 
+
+    return CRect(CPoint(0, 0), CPoint(dispinfoScreenW, dispinfoScreenH));
 }
 
-}
-}
+} // namespace GUI
+} // namespace Surge

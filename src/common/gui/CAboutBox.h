@@ -22,20 +22,17 @@ class SurgeGUIEditor;
 
 class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
 {
-public:
-   CAboutBox( const VSTGUI::CRect &size,
-             SurgeGUIEditor *editor,
-             SurgeStorage *storage,
-             const std::string &host,
-             Surge::UI::Skin::ptr_t skin,
-             std::shared_ptr<SurgeBitmaps> bitmapStore );
-   VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where,
-                                       const VSTGUI::CButtonState& buttons) override;
-   VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where,
-                                         const VSTGUI::CButtonState& buttons) override;
-   void valueChanged(VSTGUI::CControl* pControl) override;
+  public:
+    CAboutBox(const VSTGUI::CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
+              const std::string &host, Surge::UI::Skin::ptr_t skin,
+              std::shared_ptr<SurgeBitmaps> bitmapStore);
+    VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
+                                        const VSTGUI::CButtonState &buttons) override;
+    VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
+                                          const VSTGUI::CButtonState &buttons) override;
+    void valueChanged(VSTGUI::CControl *pControl) override;
 
-   SurgeGUIEditor *editor;
-   SurgeStorage *storage;
-   std::string infoStringForClipboard = "";
+    SurgeGUIEditor *editor;
+    SurgeStorage *storage;
+    std::string infoStringForClipboard = "";
 };

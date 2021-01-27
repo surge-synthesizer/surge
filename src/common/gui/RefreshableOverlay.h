@@ -16,9 +16,10 @@
 #ifndef SURGE_REFRESHABLEOVERLAY_H
 #define SURGE_REFRESHABLEOVERLAY_H
 
-class RefreshableOverlay {
-public:
-   virtual void forceRefresh() = 0;
+class RefreshableOverlay
+{
+  public:
+    virtual void forceRefresh() = 0;
 };
 
 #endif // SURGE_REFRESHABLEOVERLAY_H

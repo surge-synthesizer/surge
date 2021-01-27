@@ -5,8 +5,6 @@
 
 class HeadlessPluginLayerProxy
 {
-public:
-    void updateDisplay()
-    {
-    }
+  public:
+    void updateDisplay() {}
 };

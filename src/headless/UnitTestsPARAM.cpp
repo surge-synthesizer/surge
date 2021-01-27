@@ -13,21 +13,21 @@
 
 using namespace Surge::Test;
 
-TEST_CASE( "Param String Inversion", "[parm]" )
+TEST_CASE("Param String Inversion", "[parm]")
 {
-   SECTION( "Inverting" )
-   {
-      Parameter pq;
-      std::vector<int> supportedTypes;
-      for( int i=0; i<num_ctrltypes; ++i )
-      {
-         pq.set_type(i);
-         if( pq.can_setvalue_from_string() && pq.valtype == vt_float )
-         {
-            supportedTypes.push_back( i );
-         }
-      }
-      REQUIRE( supportedTypes.size() > 0 );
+    SECTION("Inverting")
+    {
+        Parameter pq;
+        std::vector<int> supportedTypes;
+        for (int i = 0; i < num_ctrltypes; ++i)
+        {
+            pq.set_type(i);
+            if (pq.can_setvalue_from_string() && pq.valtype == vt_float)
+            {
+                supportedTypes.push_back(i);
+            }
+        }
+        REQUIRE(supportedTypes.size() > 0);
 #if 0      
       for( auto type : supportedTypes )
       {
@@ -50,6 +50,6 @@ TEST_CASE( "Param String Inversion", "[parm]" )
             REQUIRE( v01 == Approx( val ).margin( .01 ) );
          }
       }
-#endif      
-   }
+#endif
+    }
 }

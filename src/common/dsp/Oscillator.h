@@ -7,6 +7,5 @@
 
 #include "OscillatorBase.h"
 
-
-Oscillator*
-spawn_osc(int osctype, SurgeStorage* storage, OscillatorStorage* oscdata, pdata* localcopy);
+Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
+                      pdata *localcopy);

@@ -24,120 +24,108 @@
 #include "CScalableBitmap.h"
 #include "CursorControlGuard.h"
 
-
 class CScalableBitmap;
 
-class CLFOGui : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent,
+class CLFOGui : public VSTGUI::CControl,
+                public Surge::UI::SkinConsumingComponent,
                 public Surge::UI::CursorControlAdapter<CLFOGui>
 {
-public:
-   const static int margin = 2;
-   const static int margin2 = 7;
-   const static int lpsize = 50;
-   const static int scale = 18;
-   const static int splitpoint = lpsize + 20;
-    
-   void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext* context, int orientation);
+  public:
+    const static int margin = 2;
+    const static int margin2 = 7;
+    const static int lpsize = 50;
+    const static int scale = 18;
+    const static int splitpoint = lpsize + 20;
 
-   CLFOGui(const VSTGUI::CRect& size,
-           bool trigmaskedit,
-           VSTGUI::IControlListener* listener = 0,
-           long tag = 0,
-           LFOStorage* lfodata = 0,
-           SurgeStorage* storage = 0,
-           StepSequencerStorage* ss = 0,
-           MSEGStorage* ms = 0,
-           FormulaModulatorStorage* fs = 0,
-           std::shared_ptr<SurgeBitmaps> ibms = nullptr)
-      : VSTGUI::CControl(size, listener, tag, 0),
-        bitmapStore( ibms ),
-         Surge::UI::CursorControlAdapter<CLFOGui>( storage )
-   {
-      this->lfodata = lfodata;
-      this->storage = storage;
-      this->ss = ss;
-      this->ms = ms;
-      this->fs = fs;
-      edit_trigmask = trigmaskedit;
-      controlstate = 0;
+    void drawtri(VSTGUI::CRect r, VSTGUI::CDrawContext *context, int orientation);
 
-      for( int i=0; i<16; ++i )
-         draggedIntoTrigTray[i] = false;
+    CLFOGui(const VSTGUI::CRect &size, bool trigmaskedit, VSTGUI::IControlListener *listener = 0,
+            long tag = 0, LFOStorage *lfodata = 0, SurgeStorage *storage = 0,
+            StepSequencerStorage *ss = 0, MSEGStorage *ms = 0, FormulaModulatorStorage *fs = 0,
+            std::shared_ptr<SurgeBitmaps> ibms = nullptr)
+        : VSTGUI::CControl(size, listener, tag, 0),
+          bitmapStore(ibms), Surge::UI::CursorControlAdapter<CLFOGui>(storage)
+    {
+        this->lfodata = lfodata;
+        this->storage = storage;
+        this->ss = ss;
+        this->ms = ms;
+        this->fs = fs;
+        edit_trigmask = trigmaskedit;
+        controlstate = 0;
 
-      typeImg = nullptr;
-   }
+        for (int i = 0; i < 16; ++i)
+            draggedIntoTrigTray[i] = false;
 
-   void resetColorTable()
-   {
-      auto d = skin->getColor(Colors::LFO::Waveform::Wave);
-   }
-   // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
-   virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
-   virtual bool onWheel(const VSTGUI::CPoint& where, const float& distance, const VSTGUI::CButtonState& buttons) override;
+        typeImg = nullptr;
+    }
 
-   virtual void onSkinChanged() override {
-      resetColorTable();
-   }
-   
-   virtual ~CLFOGui()
-   {
-   }
-   virtual void draw(VSTGUI::CDrawContext* dc) override;
-   void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
-   
-   void invalidateIfIdIsInRange(int id);
-   void invalidateIfAnythingIsTemposynced();
+    void resetColorTable() { auto d = skin->getColor(Colors::LFO::Waveform::Wave); }
+    // virtual void mouse (CDrawContext *pContext, VSTGUI::CPoint &where, long buttons = -1);
+    virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
+                                                  const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
+                                                const VSTGUI::CButtonState &buttons) override;
+    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
+                                                   const VSTGUI::CButtonState &buttons) override;
+    virtual bool onWheel(const VSTGUI::CPoint &where, const float &distance,
+                         const VSTGUI::CButtonState &buttons) override;
 
-   void setTimeSignature(int n, int d ) {
-      tsNum = n;
-      tsDen = d;
-   }
+    virtual void onSkinChanged() override { resetColorTable(); }
 
-   void openPopup(VSTGUI::CPoint &where);
+    virtual ~CLFOGui() {}
+    virtual void draw(VSTGUI::CDrawContext *dc) override;
+    void drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp, VSTGUI::CRect &leftpanel);
 
-   bool insideTypeSelector( const VSTGUI::CPoint &where ) {
-      return rect_shapes.pointInside(where);
-   }
-         
-   virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+    void invalidateIfIdIsInRange(int id);
+    void invalidateIfAnythingIsTemposynced();
 
-protected:
-   LFOStorage* lfodata;
-   StepSequencerStorage* ss;
-   MSEGStorage* ms;
-   FormulaModulatorStorage* fs;
-   SurgeStorage* storage;
-   std::shared_ptr<SurgeBitmaps> bitmapStore;
-   int tsNum = 4, tsDen = 4;
-   
-   
-   VSTGUI::CRect shaperect[n_lfo_types];
-   VSTGUI::CRect steprect[n_stepseqsteps];
-   VSTGUI::CRect gaterect[n_stepseqsteps];
-   VSTGUI::CRect rect_ls, rect_le, rect_shapes, rect_steps, rect_steps_retrig;
-   VSTGUI::CRect ss_shift_left, ss_shift_right;
-   bool edit_trigmask;
-   int controlstate;
-   int selectedSSrow = -1;
+    void setTimeSignature(int n, int d)
+    {
+        tsNum = n;
+        tsDen = d;
+    }
 
-   int draggedStep = -1;
-   int keyModMult = 0;
-   bool forcedCursorToMSEGHand = false;
+    void openPopup(VSTGUI::CPoint &where);
 
+    bool insideTypeSelector(const VSTGUI::CPoint &where) { return rect_shapes.pointInside(where); }
 
-   bool draggedIntoTrigTray[16];
-   int mouseDownTrigTray = -1;
-   VSTGUI::CButtonState trigTrayButtonState;
-   VSTGUI::CPoint rmStepStart, rmStepCurr;
-   VSTGUI::CPoint barDragTop;
+    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons) override;
 
-   bool enqueueCursorHide = false;
+  protected:
+    LFOStorage *lfodata;
+    StepSequencerStorage *ss;
+    MSEGStorage *ms;
+    FormulaModulatorStorage *fs;
+    SurgeStorage *storage;
+    std::shared_ptr<SurgeBitmaps> bitmapStore;
+    int tsNum = 4, tsDen = 4;
 
-   int ss_shift_hover = 0;
-   int lfo_type_hover = -1;
-   CScalableBitmap *typeImg, *typeImgHover, *typeImgHoverOn;
-   
-   CLASS_METHODS(CLFOGui, VSTGUI::CControl)
+    VSTGUI::CRect shaperect[n_lfo_types];
+    VSTGUI::CRect steprect[n_stepseqsteps];
+    VSTGUI::CRect gaterect[n_stepseqsteps];
+    VSTGUI::CRect rect_ls, rect_le, rect_shapes, rect_steps, rect_steps_retrig;
+    VSTGUI::CRect ss_shift_left, ss_shift_right;
+    bool edit_trigmask;
+    int controlstate;
+    int selectedSSrow = -1;
+
+    int draggedStep = -1;
+    int keyModMult = 0;
+    bool forcedCursorToMSEGHand = false;
+
+    bool draggedIntoTrigTray[16];
+    int mouseDownTrigTray = -1;
+    VSTGUI::CButtonState trigTrayButtonState;
+    VSTGUI::CPoint rmStepStart, rmStepCurr;
+    VSTGUI::CPoint barDragTop;
+
+    bool enqueueCursorHide = false;
+
+    int ss_shift_hover = 0;
+    int lfo_type_hover = -1;
+    CScalableBitmap *typeImg, *typeImgHover, *typeImgHoverOn;
+
+    CLASS_METHODS(CLFOGui, VSTGUI::CControl)
 };

@@ -22,43 +22,50 @@
 #include <memory>
 #include <system_error>
 
-namespace Surge { namespace filesystem {
+namespace Surge
+{
+namespace filesystem
+{
 
 class directory_iterator //                                            [fs.class.directory_iterator]
 {
-public:
-   using iterator_category = std::input_iterator_tag;
-   using value_type = directory_entry;
-   using difference_type = ptrdiff_t;
-   using pointer = const value_type*;
-   using reference = const value_type&;
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using value_type = directory_entry;
+    using difference_type = ptrdiff_t;
+    using pointer = const value_type *;
+    using reference = const value_type &;
 
-   // member functions                                                          [fs.dir.itr.members]
-   directory_iterator() = default;
-   explicit directory_iterator(const path& p);
-   directory_iterator(const path& p, std::error_code& ec);
+    // member functions [fs.dir.itr.members]
+    directory_iterator() = default;
+    explicit directory_iterator(const path &p);
+    directory_iterator(const path &p, std::error_code &ec);
 
-   const value_type& operator*() const noexcept;
-   const value_type* operator->() const noexcept { return &**this; }
+    const value_type &operator*() const noexcept;
+    const value_type *operator->() const noexcept { return &**this; }
 
-   directory_iterator& operator++();
+    directory_iterator &operator++();
 
-private:
-   struct Impl;
-   std::shared_ptr<Impl> d;
+  private:
+    struct Impl;
+    std::shared_ptr<Impl> d;
 
-   explicit directory_iterator(const path::string_type& p);
+    explicit directory_iterator(const path::string_type &p);
 
-   friend bool operator==(const directory_iterator& lhs, const directory_iterator& rhs) noexcept
-   { return lhs.d == rhs.d; }
+    friend bool operator==(const directory_iterator &lhs, const directory_iterator &rhs) noexcept
+    {
+        return lhs.d == rhs.d;
+    }
 
-   friend bool operator!=(const directory_iterator& lhs, const directory_iterator& rhs) noexcept
-   { return !(lhs == rhs); }
+    friend bool operator!=(const directory_iterator &lhs, const directory_iterator &rhs) noexcept
+    {
+        return !(lhs == rhs);
+    }
 };
 
 // non-member functions                                                      [fs.dir.itr.nonmembers]
 inline directory_iterator begin(directory_iterator it) noexcept { return it; }
-inline directory_iterator end(const directory_iterator&) noexcept { return directory_iterator(); }
+inline directory_iterator end(const directory_iterator &) noexcept { return directory_iterator(); }
 
 } // namespace filesystem
 

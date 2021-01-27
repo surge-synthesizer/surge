@@ -20,50 +20,55 @@
 
 class CSwitchControl : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
-public:
-   CSwitchControl(const VSTGUI::CRect& size, VSTGUI::IControlListener* listener, long tag, VSTGUI::CBitmap* background);
-   virtual void draw(VSTGUI::CDrawContext* dc) override;
-   virtual void setValue(float f) override;
-   virtual VSTGUI::CMouseEventResult
-   onMouseDown(VSTGUI::CPoint& where,
-               const VSTGUI::CButtonState& buttons) override; ///< called when a mouse down event occurs
-   virtual VSTGUI::CMouseEventResult
-   onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override; ///< called when a mouse up event occurs
-   virtual VSTGUI::CMouseEventResult
-   onMouseMoved(VSTGUI::CPoint& where,
-                const VSTGUI::CButtonState& buttons) override; ///< called when a mouse move event occurs
+  public:
+    CSwitchControl(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
+                   VSTGUI::CBitmap *background);
+    virtual void draw(VSTGUI::CDrawContext *dc) override;
+    virtual void setValue(float f) override;
+    virtual VSTGUI::CMouseEventResult onMouseDown(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse down event occurs
+    virtual VSTGUI::CMouseEventResult onMouseUp(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse up event occurs
+    virtual VSTGUI::CMouseEventResult onMouseMoved(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse move event occurs
 
-   virtual VSTGUI::CMouseEventResult onMouseEntered (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorHand );
-      doingHover = true;
-      wheelDistance = 0.f;
-      invalid();
-      return VSTGUI::kMouseEventHandled;
-   }
-   virtual VSTGUI::CMouseEventResult onMouseExited (VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override {
-      // getFrame()->setCursor( VSTGUI::kCursorDefault );
-      doingHover = false;
-      invalid();
-      return VSTGUI::kMouseEventHandled;
-   }
+    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                                     const VSTGUI::CButtonState &buttons) override
+    {
+        // getFrame()->setCursor( VSTGUI::kCursorHand );
+        doingHover = true;
+        wheelDistance = 0.f;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
+    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons) override
+    {
+        // getFrame()->setCursor( VSTGUI::kCursorDefault );
+        doingHover = false;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
 
-   bool onWheel(const VSTGUI::CPoint& where,
-                const float& distance,
-                const VSTGUI::CButtonState& buttons) override;
+    bool onWheel(const VSTGUI::CPoint &where, const float &distance,
+                 const VSTGUI::CButtonState &buttons) override;
 
-   int ivalue = 0, imax = 0, value_direction = 0;
-   bool is_itype = false;
-   bool lookedForHover = false;
-   bool doingHover = false;
-   CScalableBitmap *hoverBmp = nullptr;
+    int ivalue = 0, imax = 0, value_direction = 0;
+    bool is_itype = false;
+    bool lookedForHover = false;
+    bool doingHover = false;
+    CScalableBitmap *hoverBmp = nullptr;
 
-   // This is different from mouseEnabled since we still allow RMB
-   bool unValueClickable = false;
+    // This is different from mouseEnabled since we still allow RMB
+    bool unValueClickable = false;
 
-private:
-   bool down = false;
-   float heightOfSingleImage;
-   float wheelDistance = 0;
+  private:
+    bool down = false;
+    float heightOfSingleImage;
+    float wheelDistance = 0;
 
-   CLASS_METHODS(CSwitchControl, VSTGUI::CControl)
+    CLASS_METHODS(CSwitchControl, VSTGUI::CControl)
 };

@@ -26,56 +26,51 @@
 
 class RotarySpeakerEffect : public Effect
 {
-public:
-   lipol_ps width alignas(16), mix alignas(16);
+  public:
+    lipol_ps width alignas(16), mix alignas(16);
 
-   RotarySpeakerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~RotarySpeakerEffect();
-   virtual void process_only_control() override;
-   virtual const char* get_effectname() override
-   {
-      return "rotary";
-   }
-   virtual void process(float* dataL, float* dataR) override;
-   virtual int get_ringout_decay() override
-   {
-      return max_delay_length >> 5;
-   }
-   void setvars(bool init);
-   virtual void suspend() override;
-   virtual void init() override;
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual const char* group_label(int id) override;
-   virtual int group_label_ypos(int id) override;
+    RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~RotarySpeakerEffect();
+    virtual void process_only_control() override;
+    virtual const char *get_effectname() override { return "rotary"; }
+    virtual void process(float *dataL, float *dataR) override;
+    virtual int get_ringout_decay() override { return max_delay_length >> 5; }
+    void setvars(bool init);
+    virtual void suspend() override;
+    virtual void init() override;
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-   virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision) override;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
-   enum rotary_params
-   {
-      rot_horn_rate = 0,
-      rot_doppler,
-      rot_tremolo,
-      rot_rotor_rate,
-      rot_drive,
-      rot_waveshape,
-      rot_width,
-      rot_mix,
+    enum rotary_params
+    {
+        rot_horn_rate = 0,
+        rot_doppler,
+        rot_tremolo,
+        rot_rotor_rate,
+        rot_drive,
+        rot_waveshape,
+        rot_width,
+        rot_mix,
 
-      rot_num_params,
-   };
+        rot_num_params,
+    };
 
-protected:
-   float buffer[max_delay_length];
-   int wpos;
-   // filter *lp[2],*hp[2];
-   // biquadunit rotor_lpL,rotor_lpR;
-   BiquadFilter xover, lowbass;
-   // float
-   // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
-   quadr_osc lfo;
-   quadr_osc lf_lfo;
-   lipol<float> dL, dR, hornamp[2];
-   lag<float, true> drive;
-   bool first_run;
+  protected:
+    float buffer[max_delay_length];
+    int wpos;
+    // filter *lp[2],*hp[2];
+    // biquadunit rotor_lpL,rotor_lpR;
+    BiquadFilter xover, lowbass;
+    // float
+    // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
+    quadr_osc lfo;
+    quadr_osc lf_lfo;
+    lipol<float> dL, dR, hornamp[2];
+    lag<float, true> drive;
+    bool first_run;
 };

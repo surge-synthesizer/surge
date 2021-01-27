@@ -69,14 +69,12 @@
 #define IDB_VUMETER_BARS 181
 // == /SVG == Do not remove this comment
 
-
 #define IDC_NAME 1001
 #define IDC_CATEGORY 1002
 #define IDC_DESCRIPTION 1003
 #define IDC_AUTHOR 1004
 #define IDC_TEDIT 1024
 #define IDC_TPROMPT 1025
-
 
 #define IDR_LATO_FONT 501
 

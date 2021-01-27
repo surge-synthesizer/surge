@@ -20,124 +20,119 @@ extern CFontRef displayFont;
 
 // CSnapshotMenu
 
-CSnapshotMenu::CSnapshotMenu(const CRect& size,
-                             IControlListener* listener,
-                             long tag,
-                             SurgeStorage* storage)
+CSnapshotMenu::CSnapshotMenu(const CRect &size, IControlListener *listener, long tag,
+                             SurgeStorage *storage)
     : COptionMenu(size, nullptr, tag, 0)
 {
-   this->storage = storage;
-   this->listenerNotForParent = listener;
+    this->storage = storage;
+    this->listenerNotForParent = listener;
 }
-CSnapshotMenu::~CSnapshotMenu()
-{}
+CSnapshotMenu::~CSnapshotMenu() {}
 
-CMouseEventResult CSnapshotMenu::onMouseDown(CPoint& where, const CButtonState& button)
+CMouseEventResult CSnapshotMenu::onMouseDown(CPoint &where, const CButtonState &button)
 {
-   if (listenerNotForParent && (button & (kMButton | kButton4 | kButton5)))
-   {
-      listenerNotForParent->controlModifierClicked(this, button);
-      return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-   }
-   return COptionMenu::onMouseDown(where, button);
-}
-
-void CSnapshotMenu::draw(CDrawContext* dc)
-{
-   setDirty(false);
+    if (listenerNotForParent && (button & (kMButton | kButton4 | kButton5)))
+    {
+        listenerNotForParent->controlModifierClicked(this, button);
+        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+    return COptionMenu::onMouseDown(where, button);
 }
 
-bool CSnapshotMenu::canSave()
-{
-   return false;
-}
+void CSnapshotMenu::draw(CDrawContext *dc) { setDirty(false); }
+
+bool CSnapshotMenu::canSave() { return false; }
 
 void CSnapshotMenu::populate()
 {
-   int main = 0, sub = 0;
-   const long max_main = 128, max_sub = 256;
+    int main = 0, sub = 0;
+    const long max_main = 128, max_sub = 256;
 
-   int idx = 0;
-   TiXmlElement* sect = storage->getSnapshotSection(mtype);
-   if (sect)
-   {
-      TiXmlElement* type = sect->FirstChildElement();
+    int idx = 0;
+    TiXmlElement *sect = storage->getSnapshotSection(mtype);
+    if (sect)
+    {
+        TiXmlElement *type = sect->FirstChildElement();
 
-      while (type)
-      {
-         if( type->Value() && strcmp( type->Value(), "type" ) == 0  )
-         {
-            auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
-            if( sm )
-               addToTopLevelTypeMenu(type, sm, idx);
-         }
-         else if( type->Value() && strcmp( type->Value(), "separator" ) == 0 )
-            addSeparator();
-         type = type->NextSiblingElement();
-         main++;
-         if (main >= max_main)
-            break;
-      }
-   }
-   maxIdx = idx;
+        while (type)
+        {
+            if (type->Value() && strcmp(type->Value(), "type") == 0)
+            {
+                auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+                if (sm)
+                    addToTopLevelTypeMenu(type, sm, idx);
+            }
+            else if (type->Value() && strcmp(type->Value(), "separator") == 0)
+                addSeparator();
+            type = type->NextSiblingElement();
+            main++;
+            if (main >= max_main)
+                break;
+        }
+    }
+    maxIdx = idx;
 }
 
-bool CSnapshotMenu::loadSnapshotByIndex( int idx )
+bool CSnapshotMenu::loadSnapshotByIndex(int idx)
 {
-   int cidx = 0;
-   // This isn't that efficient but you know
-   TiXmlElement *sect = storage->getSnapshotSection(mtype);
-   if( sect )
-   {
-      std::queue<TiXmlElement *> typeD;
-      typeD.push( TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type")) );
-      while( ! typeD.empty() )
-      {
-         auto type = typeD.front();
-         typeD.pop();
-         int type_id = 0;
-         type->Attribute("i", &type_id);
-         TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
-         while (snapshot)
-         {
-            int snapshotTypeID = type_id, tmpI = 0;
-            if (snapshot->Attribute("i", &tmpI) != nullptr)
+    int cidx = 0;
+    // This isn't that efficient but you know
+    TiXmlElement *sect = storage->getSnapshotSection(mtype);
+    if (sect)
+    {
+        std::queue<TiXmlElement *> typeD;
+        typeD.push(TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type")));
+        while (!typeD.empty())
+        {
+            auto type = typeD.front();
+            typeD.pop();
+            int type_id = 0;
+            type->Attribute("i", &type_id);
+            TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
+            while (snapshot)
             {
-               snapshotTypeID = tmpI;
+                int snapshotTypeID = type_id, tmpI = 0;
+                if (snapshot->Attribute("i", &tmpI) != nullptr)
+                {
+                    snapshotTypeID = tmpI;
+                }
+
+                if (cidx == idx)
+                {
+                    selectedIdx = cidx;
+                    loadSnapshot(snapshotTypeID, snapshot, cidx);
+                    if (listenerNotForParent)
+                        listenerNotForParent->valueChanged(this);
+                    return true;
+                }
+                snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
+                cidx++;
             }
 
-            if( cidx == idx )
+            auto subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
+            while (subType)
             {
-               selectedIdx = cidx;
-               loadSnapshot( snapshotTypeID, snapshot, cidx);
-               if( listenerNotForParent )
-                  listenerNotForParent->valueChanged( this );
-               return true;
+                typeD.push(subType);
+                subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
             }
-            snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
-            cidx++;
-         }
 
-         auto subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
-         while( subType )
-         {
-            typeD.push(subType);
-            subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
-         }
-
-         auto next = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
-         if( next )
-            typeD.push( next );
-      }
-   }
-   if( idx < 0 && cidx + idx > 0 ) {
-      // I've gone off the end
-      return( loadSnapshotByIndex( cidx + idx ) );
-   }
-   return false;
+            auto next = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
+            if (next)
+                typeD.push(next);
+        }
+    }
+    if (idx < 0 && cidx + idx > 0)
+    {
+        // I've gone off the end
+        return (loadSnapshotByIndex(cidx + idx));
+    }
+    return false;
 }
 
-VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, VSTGUI::COptionMenu *parent, int &main, int &sub, const long &max_sub, int &idx)
+VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type,
+                                                                   VSTGUI::COptionMenu *parent,
+                                                                   int &main, int &sub,
+                                                                   const long &max_sub, int &idx)
 {
     /*
     ** Begin by grabbing all the snapshot elements
@@ -146,31 +141,31 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     int type_id = 0;
     type->Attribute("i", &type_id);
     sub = 0;
-    COptionMenu* subMenu = new COptionMenu(getViewSize(), 0, main, 0, 0, kNoDrawStyle);
-    TiXmlElement* snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
+    COptionMenu *subMenu = new COptionMenu(getViewSize(), 0, main, 0, 0, kNoDrawStyle);
+    TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
     while (snapshot)
     {
         txt = snapshot->Attribute("name");
 
-        #if WINDOWS
-            Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
-        #endif
+#if WINDOWS
+        Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
+#endif
 
         int snapshotTypeID = type_id;
         int tmpI;
         if (snapshot->Attribute("i", &tmpI) != nullptr)
         {
-           snapshotTypeID = tmpI;
+            snapshotTypeID = tmpI;
         }
 
-        if( firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end() )
-           firstSnapshotByType[snapshotTypeID] = idx;
+        if (firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end())
+            firstSnapshotByType[snapshotTypeID] = idx;
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
-        auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem* item) {
-                         this->selectedIdx = idx;
-                         this->loadSnapshot(snapshotTypeID, snapshot, idx);
-                         if( this->listenerNotForParent )
-                            this->listenerNotForParent->valueChanged( this );
+        auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem *item) {
+            this->selectedIdx = idx;
+            this->loadSnapshot(snapshotTypeID, snapshot, idx);
+            if (this->listenerNotForParent)
+                this->listenerNotForParent->valueChanged(this);
         };
         loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
         idx++;
@@ -184,26 +179,24 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
             break;
     }
 
-
     /*
     ** Next see if we have any subordinate types
     */
-    TiXmlElement* subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
+    TiXmlElement *subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
     while (subType)
     {
         populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
     }
 
-
     /*
     ** Then add myself to parent
     */
     txt = type->Attribute("name");
 
-    #if WINDOWS
-        Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
-    #endif
+#if WINDOWS
+    Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
+#endif
 
     if (sub)
     {
@@ -213,14 +206,14 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     {
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
 
-       if( firstSnapshotByType.find(type_id) == firstSnapshotByType.end() )
-          firstSnapshotByType[type_id] = idx;
+        if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
+            firstSnapshotByType[type_id] = idx;
 
-        auto action = [this, type_id, idx](CCommandMenuItem* item) {
-                         this->selectedIdx = 0;
-                         this->loadSnapshot(type_id, nullptr, idx);
-                         if( this->listenerNotForParent )
-                            this->listenerNotForParent->valueChanged(this);
+        auto action = [this, type_id, idx](CCommandMenuItem *item) {
+            this->selectedIdx = 0;
+            this->loadSnapshot(type_id, nullptr, idx);
+            if (this->listenerNotForParent)
+                this->listenerNotForParent->valueChanged(this);
         };
 
         loadArgsByIndex.push_back(std::make_pair(type_id, nullptr));
@@ -230,96 +223,95 @@ VSTGUI::COptionMenu* CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     }
 
     subMenu->forget();
-    if( sub )
-       return subMenu; // OK to return forgoten since it has lifetime of parent
+    if (sub)
+        return subMenu; // OK to return forgoten since it has lifetime of parent
     else
-       return nullptr;
+        return nullptr;
 }
 
 // COscMenu
 
-COscMenu::COscMenu(const CRect& size,
-                   IControlListener* listener,
-                   long tag,
-                   SurgeStorage* storage,
-                   OscillatorStorage* osc,
-                   std::shared_ptr<SurgeBitmaps> bitmapStore)
+COscMenu::COscMenu(const CRect &size, IControlListener *listener, long tag, SurgeStorage *storage,
+                   OscillatorStorage *osc, std::shared_ptr<SurgeBitmaps> bitmapStore)
     : CSnapshotMenu(size, listener, tag, storage)
 {
-   strcpy(mtype, "osc");
-   this->osc = osc;
-   this->storage = storage;
-   auto tb = bitmapStore->getBitmap(IDB_OSC_MENU);
-   bmp = tb;
-   populate();
+    strcpy(mtype, "osc");
+    this->osc = osc;
+    this->storage = storage;
+    auto tb = bitmapStore->getBitmap(IDB_OSC_MENU);
+    bmp = tb;
+    populate();
 }
 
-void COscMenu::draw(CDrawContext* dc)
+void COscMenu::draw(CDrawContext *dc)
 {
-   if( ! attemptedHoverLoad )
-   {
-      hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(skinControl,dynamic_cast<CScalableBitmap*>(bmp),
-                                                             associatedBitmapStore, Surge::UI::Skin::HOVER);
-      attemptedHoverLoad = true;
-   }
-   CRect size = getViewSize();
-   int i = osc->type.val.i;
-   int y = i * size.getHeight();
+    if (!attemptedHoverLoad)
+    {
+        hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
+            skinControl, dynamic_cast<CScalableBitmap *>(bmp), associatedBitmapStore,
+            Surge::UI::Skin::HOVER);
+        attemptedHoverLoad = true;
+    }
+    CRect size = getViewSize();
+    int i = osc->type.val.i;
+    int y = i * size.getHeight();
 
-   if (bmp)
-      bmp->draw(dc, size, CPoint(0, y), 0xff);
+    if (bmp)
+        bmp->draw(dc, size, CPoint(0, y), 0xff);
 
-   if( isHovered && hoverBmp )
-      hoverBmp->draw(dc,size,CPoint(0,y), 0xff);
+    if (isHovered && hoverBmp)
+        hoverBmp->draw(dc, size, CPoint(0, y), 0xff);
 
-   setDirty(false);
+    setDirty(false);
 }
 
-void COscMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
+void COscMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {
-   assert(within_range(0, type, n_osc_types));
-   auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-   if (sge)
-   {
-      auto sc = sge->current_scene;
-      sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
-   }
-   osc->queue_type = type;
-   osc->queue_xmldata = e;
+    assert(within_range(0, type, n_osc_types));
+    auto sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+    if (sge)
+    {
+        auto sc = sge->current_scene;
+        sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
+    }
+    osc->queue_type = type;
+    osc->queue_xmldata = e;
 }
 
-bool COscMenu::onWheel( const VSTGUI::CPoint &where, const float &distance, const VSTGUI::CButtonState &buttons )
+bool COscMenu::onWheel(const VSTGUI::CPoint &where, const float &distance,
+                       const VSTGUI::CButtonState &buttons)
 {
-   accumWheel += distance;
-#if WINDOWS // rough hack but it still takes too many mousewheel clicks to get outside of Classic osc subfolder onto other osc types!
-   accumWheel += distance;
+    accumWheel += distance;
+#if WINDOWS // rough hack but it still takes too many mousewheel clicks to get outside of Classic
+            // osc subfolder onto other osc types!
+    accumWheel += distance;
 #endif
 
-   auto *sge = dynamic_cast<SurgeGUIEditor*>(listenerNotForParent);
-   if (sge)
-   {
-      auto sc = sge->current_scene;
-      int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
-      if (accumWheel < -1)
-      {
-         currentIdx = currentIdx + 1;
-         if( currentIdx >= maxIdx )
-            currentIdx = 0;
-         accumWheel = 0;
-         auto args = loadArgsByIndex[currentIdx];
-         loadSnapshot(args.first, args.second, currentIdx);
-      }
-      else if (accumWheel > 1)
-      {
-         currentIdx = currentIdx - 1;
-         if( currentIdx < 0 )
-            currentIdx = maxIdx - 1;
-         accumWheel = 0;
-         auto args = loadArgsByIndex[currentIdx];
-         loadSnapshot(args.first, args.second, currentIdx);
-      }
-   }
-   return true;
+    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+    if (sge)
+    {
+        auto sc = sge->current_scene;
+        int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
+        if (accumWheel < -1)
+        {
+            currentIdx = currentIdx + 1;
+            if (currentIdx >= maxIdx)
+                currentIdx = 0;
+            accumWheel = 0;
+            auto args = loadArgsByIndex[currentIdx];
+            loadSnapshot(args.first, args.second, currentIdx);
+        }
+        else if (accumWheel > 1)
+        {
+            currentIdx = currentIdx - 1;
+            if (currentIdx < 0)
+                currentIdx = maxIdx - 1;
+            accumWheel = 0;
+            auto args = loadArgsByIndex[currentIdx];
+            loadSnapshot(args.first, args.second, currentIdx);
+        }
+    }
+    return true;
 }
 
 /*void COscMenu::load_snapshot(int type, TiXmlElement *e)
@@ -353,273 +345,271 @@ j;
 
 std::vector<float> CFxMenu::fxCopyPaste;
 
-CFxMenu::CFxMenu(const CRect& size,
-                 IControlListener* listener,
-                 long tag,
-                 SurgeStorage* storage,
-                 FxStorage* fx,
-                 FxStorage* fxbuffer,
-                 int slot)
+CFxMenu::CFxMenu(const CRect &size, IControlListener *listener, long tag, SurgeStorage *storage,
+                 FxStorage *fx, FxStorage *fxbuffer, int slot)
     : CSnapshotMenu(size, listener, tag, storage)
 {
-   strcpy(mtype, "fx");
-   this->fx = fx;
-   this->fxbuffer = fxbuffer;
-   this->slot = slot;
-   selectedName = "";
-   populate();
+    strcpy(mtype, "fx");
+    this->fx = fx;
+    this->fxbuffer = fxbuffer;
+    this->slot = slot;
+    selectedName = "";
+    populate();
 }
 
-
-void CFxMenu::draw(CDrawContext* dc)
+void CFxMenu::draw(CDrawContext *dc)
 {
-   CRect lbox = getViewSize();
-   lbox.right--;
-   lbox.bottom--;
+    CRect lbox = getViewSize();
+    lbox.right--;
+    lbox.bottom--;
 
-   if( ! triedToLoadBmp )
-   {
-      triedToLoadBmp = true;
-      pBackground = associatedBitmapStore->getBitmap(IDB_MENU_AS_SLIDER);
-      pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
-          skinControl, dynamic_cast<CScalableBitmap*>(pBackground), associatedBitmapStore,
-          Surge::UI::Skin::HoverType::HOVER);
-   }
+    if (!triedToLoadBmp)
+    {
+        triedToLoadBmp = true;
+        pBackground = associatedBitmapStore->getBitmap(IDB_MENU_AS_SLIDER);
+        pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
+            skinControl, dynamic_cast<CScalableBitmap *>(pBackground), associatedBitmapStore,
+            Surge::UI::Skin::HoverType::HOVER);
+    }
 
-   if( pBackground )
-   {
-      pBackground->draw(dc, getViewSize(), CPoint(0,0), 0xff );
-   }
+    if (pBackground)
+    {
+        pBackground->draw(dc, getViewSize(), CPoint(0, 0), 0xff);
+    }
 
-   if( isHovered && pBackgroundHover )
-   {
-      pBackgroundHover->draw(dc, getViewSize(), CPoint(0,0), 0xff );
-   }
+    if (isHovered && pBackgroundHover)
+    {
+        pBackgroundHover->draw(dc, getViewSize(), CPoint(0, 0), 0xff);
+    }
 
-   // hover color and position
-   auto fgc = skin->getColor(Colors::Effect::Menu::Text);
+    // hover color and position
+    auto fgc = skin->getColor(Colors::Effect::Menu::Text);
 
-   if( isHovered )
-      fgc = skin->getColor( Colors::Effect::Menu::TextHover);
+    if (isHovered)
+        fgc = skin->getColor(Colors::Effect::Menu::TextHover);
 
-   dc->setFontColor(fgc);
-   dc->setFont(displayFont);
+    dc->setFontColor(fgc);
+    dc->setFont(displayFont);
 
-   CRect txtbox(getViewSize());
-   txtbox.inset( 2, 2 );
-   txtbox.left += 4;
-   txtbox.right -= 12;
-   dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
-   
-   char fxname[NAMECHARS];
-   sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
-   dc->drawString(fxname, txtbox, kRightText, true);
+    CRect txtbox(getViewSize());
+    txtbox.inset(2, 2);
+    txtbox.left += 4;
+    txtbox.right -= 12;
+    dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
 
-   setDirty(false);
+    char fxname[NAMECHARS];
+    sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
+    dc->drawString(fxname, txtbox, kRightText, true);
+
+    setDirty(false);
 }
 
-void CFxMenu::loadSnapshot(int type, TiXmlElement* e, int idx)
+void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {
-   if (!type)
-      fxbuffer->type.val.i = type;
+    if (!type)
+        fxbuffer->type.val.i = type;
 
-   if (e)
-   {
-      fxbuffer->type.val.i = type;
-      // storage->patch.update_controls();
-      selectedName = e->Attribute( "name" );
+    if (e)
+    {
+        fxbuffer->type.val.i = type;
+        // storage->patch.update_controls();
+        selectedName = e->Attribute("name");
 
-      Effect* t_fx = spawn_effect(type, storage, fxbuffer, 0);
-      if (t_fx)
-      {
-         t_fx->init_ctrltypes();
-         t_fx->init_default_values();
-         delete t_fx;
-      }
+        Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
+        if (t_fx)
+        {
+            t_fx->init_ctrltypes();
+            t_fx->init_default_values();
+            delete t_fx;
+        }
 
-      for (int i = 0; i < n_fx_params; i++)
-      {
-         double d;
-         int j;
-         char lbl[256], sublbl[256];
-         sprintf(lbl, "p%i", i);
-         if (fxbuffer->p[i].valtype == vt_float)
-         {
-            if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
-               fxbuffer->p[i].set_storage_value((float)d);
-         }
-         else
-         {
-            if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
-               fxbuffer->p[i].set_storage_value(j);
-         }
+        for (int i = 0; i < n_fx_params; i++)
+        {
+            double d;
+            int j;
+            char lbl[256], sublbl[256];
+            sprintf(lbl, "p%i", i);
+            if (fxbuffer->p[i].valtype == vt_float)
+            {
+                if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                    fxbuffer->p[i].set_storage_value((float)d);
+            }
+            else
+            {
+                if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    fxbuffer->p[i].set_storage_value(j);
+            }
 
-         sprintf(sublbl, "p%i_temposync", i);
-         fxbuffer->p[i].temposync =
-             ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-         sprintf(sublbl, "p%i_extend_range", i);
-         fxbuffer->p[i].extend_range =
-             ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-      }
-   }
+            sprintf(sublbl, "p%i_temposync", i);
+            fxbuffer->p[i].temposync =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            sprintf(sublbl, "p%i_extend_range", i);
+            fxbuffer->p[i].extend_range =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+        }
+    }
 #if TARGET_LV2
-   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-   if( sge )
-   {
-      sge->forceautomationchangefor( &(fxbuffer->type) );
-      for( int i=0; i<n_fx_params; ++i )
-         sge->forceautomationchangefor( &(fxbuffer->p[i] ) );
-   }
+    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+    if (sge)
+    {
+        sge->forceautomationchangefor(&(fxbuffer->type));
+        for (int i = 0; i < n_fx_params; ++i)
+            sge->forceautomationchangefor(&(fxbuffer->p[i]));
+    }
 #endif
-
 }
-void CFxMenu::saveSnapshot(TiXmlElement* e, const char* name)
+void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
 {
-   if (fx->type.val.i == 0)
-      return;
-   TiXmlElement* t = TINYXML_SAFE_TO_ELEMENT(e->FirstChild("type"));
-   while (t)
-   {
-      int ii;
-      if ((t->QueryIntAttribute("i", &ii) == TIXML_SUCCESS) && (ii == fx->type.val.i))
-      {
-         // if name already exists, delete old entry
-         TiXmlElement* sn = TINYXML_SAFE_TO_ELEMENT(t->FirstChild("snapshot"));
-         while (sn)
-         {
-            if (sn->Attribute("name") && !strcmp(sn->Attribute("name"), name))
+    if (fx->type.val.i == 0)
+        return;
+    TiXmlElement *t = TINYXML_SAFE_TO_ELEMENT(e->FirstChild("type"));
+    while (t)
+    {
+        int ii;
+        if ((t->QueryIntAttribute("i", &ii) == TIXML_SUCCESS) && (ii == fx->type.val.i))
+        {
+            // if name already exists, delete old entry
+            TiXmlElement *sn = TINYXML_SAFE_TO_ELEMENT(t->FirstChild("snapshot"));
+            while (sn)
             {
-               t->RemoveChild(sn);
-               break;
+                if (sn->Attribute("name") && !strcmp(sn->Attribute("name"), name))
+                {
+                    t->RemoveChild(sn);
+                    break;
+                }
+                sn = TINYXML_SAFE_TO_ELEMENT(sn->NextSibling("snapshot"));
             }
-            sn = TINYXML_SAFE_TO_ELEMENT(sn->NextSibling("snapshot"));
-         }
 
-         TiXmlElement neu("snapshot");
+            TiXmlElement neu("snapshot");
 
-         for (int p = 0; p < n_fx_params; p++)
-         {
-            char lbl[256], txt[256], sublbl[256];
-            sprintf(lbl, "p%i", p);
-            if (fx->p[p].ctrltype != ct_none)
+            for (int p = 0; p < n_fx_params; p++)
             {
-               neu.SetAttribute(lbl, fx->p[p].get_storage_value(txt));
+                char lbl[256], txt[256], sublbl[256];
+                sprintf(lbl, "p%i", p);
+                if (fx->p[p].ctrltype != ct_none)
+                {
+                    neu.SetAttribute(lbl, fx->p[p].get_storage_value(txt));
 
-               if (fx->p[p].temposync)
-               {
-                  sprintf(sublbl, "p%i_temposync", p);
-                  neu.SetAttribute(sublbl, "1");
-               }
-               if (fx->p[p].extend_range)
-               {
-                  sprintf(sublbl, "p%i_extend_range", p);
-                  neu.SetAttribute(sublbl, "1");
-               }
+                    if (fx->p[p].temposync)
+                    {
+                        sprintf(sublbl, "p%i_temposync", p);
+                        neu.SetAttribute(sublbl, "1");
+                    }
+                    if (fx->p[p].extend_range)
+                    {
+                        sprintf(sublbl, "p%i_extend_range", p);
+                        neu.SetAttribute(sublbl, "1");
+                    }
+                }
             }
-         }
-         neu.SetAttribute("name", name);
-         t->InsertEndChild(neu);
-         return;
-      }
-      t = TINYXML_SAFE_TO_ELEMENT(t->NextSibling("type"));
-   }
+            neu.SetAttribute("name", name);
+            t->InsertEndChild(neu);
+            return;
+        }
+        t = TINYXML_SAFE_TO_ELEMENT(t->NextSibling("type"));
+    }
 }
 
 bool CFxMenu::scanForUserPresets = true;
-std::unordered_map<int,std::vector<CFxMenu::UserPreset>> CFxMenu::userPresets;
+std::unordered_map<int, std::vector<CFxMenu::UserPreset>> CFxMenu::userPresets;
 
 void CFxMenu::rescanUserPresets()
 {
-   userPresets.clear();
-   scanForUserPresets = false;
+    userPresets.clear();
+    scanForUserPresets = false;
 
-   auto ud = storage->userFXPath;
+    auto ud = storage->userFXPath;
 
-   std::vector< fs::path > sfxfiles;
+    std::vector<fs::path> sfxfiles;
 
-   std::deque<fs::path> workStack;
-   workStack.push_back(fs::path(ud));
-   while (!workStack.empty())
-   {
-      auto top = workStack.front();
-      workStack.pop_front();
-      if( fs::is_directory(top) )
-      {
-         for (auto& d : fs::directory_iterator(top))
-         {
-            if (fs::is_directory(d))
+    std::deque<fs::path> workStack;
+    workStack.push_back(fs::path(ud));
+    while (!workStack.empty())
+    {
+        auto top = workStack.front();
+        workStack.pop_front();
+        if (fs::is_directory(top))
+        {
+            for (auto &d : fs::directory_iterator(top))
             {
-               workStack.push_back(d);
+                if (fs::is_directory(d))
+                {
+                    workStack.push_back(d);
+                }
+                else if (path_to_string(d.path().extension()) == ".srgfx")
+                {
+                    sfxfiles.push_back(d.path());
+                }
             }
-            else if (path_to_string(d.path().extension()) == ".srgfx")
-            {
-               sfxfiles.push_back( d.path() );
-            }
-         }
-      }
-   }
+        }
+    }
 
-   for(const auto& f : sfxfiles)
-   {
-      {
-         UserPreset preset;
-         preset.file = path_to_string(f);
-         TiXmlDocument d;
-         int t;
-         
-         if( ! d.LoadFile( f ) ) goto badPreset;
-         
-         auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild( "single-fx" ) );
-         if( ! r ) goto badPreset;
-         
-         auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild( "snapshot" ) );
-         if( ! s ) goto badPreset;
-         
-         if( ! s->Attribute( "name" ) ) goto badPreset;
-         preset.name = s->Attribute( "name" );
-         
-         if( s->QueryIntAttribute( "type", &t ) != TIXML_SUCCESS ) goto badPreset;
-         preset.type = t;
-         
-         for( int i=0; i<n_fx_params; ++i )
-         {
-            double fl;
-            std::string p = "p";
-            if( s->QueryDoubleAttribute( (p + std::to_string(i)).c_str(), &fl ) == TIXML_SUCCESS )
+    for (const auto &f : sfxfiles)
+    {
+        {
+            UserPreset preset;
+            preset.file = path_to_string(f);
+            TiXmlDocument d;
+            int t;
+
+            if (!d.LoadFile(f))
+                goto badPreset;
+
+            auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
+            if (!r)
+                goto badPreset;
+
+            auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
+            if (!s)
+                goto badPreset;
+
+            if (!s->Attribute("name"))
+                goto badPreset;
+            preset.name = s->Attribute("name");
+
+            if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
+                goto badPreset;
+            preset.type = t;
+
+            for (int i = 0; i < n_fx_params; ++i)
             {
-               preset.p[i] = fl;
+                double fl;
+                std::string p = "p";
+                if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
+                {
+                    preset.p[i] = fl;
+                }
+                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
+                        TIXML_SUCCESS &&
+                    fl != 0)
+                {
+                    preset.ts[i] = true;
+                }
+                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(),
+                                            &fl) == TIXML_SUCCESS &&
+                    fl != 0)
+                {
+                    preset.er[i] = fl;
+                }
             }
-            if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_temposync" ).c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+            if (userPresets.find(preset.type) == userPresets.end())
+                userPresets[preset.type] = std::vector<UserPreset>();
+            userPresets[preset.type].push_back(preset);
+        }
+    badPreset:;
+    }
+
+    for (auto &a : userPresets)
+        std::sort(a.second.begin(), a.second.end(), [](UserPreset a, UserPreset b) {
+            if (a.type == b.type)
             {
-               preset.ts[i] = true;
+                return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
             }
-            if( s->QueryDoubleAttribute( (p + std::to_string(i) + "_extend_range").c_str(), &fl ) == TIXML_SUCCESS && fl != 0 )
+            else
             {
-               preset.er[i] = fl;
+                return a.type < b.type;
             }
-         }
-         if( userPresets.find(preset.type) == userPresets.end() )
-            userPresets[preset.type] = std::vector<UserPreset>();
-         userPresets[preset.type].push_back(preset);
-      }
-   badPreset:
-            ;
-   }
-   
-   for( auto &a : userPresets )
-      std::sort( a.second.begin(), a.second.end(),
-                 [](UserPreset a, UserPreset b)
-                    {
-                       if( a.type == b.type )
-                       {
-                          return _stricmp( a.name.c_str(), b.name.c_str() ) < 0;
-                       }
-                       else
-                       {
-                          return a.type < b.type;
-                       }
-                    }
-         );
+        });
 }
 
 void CFxMenu::populate()
@@ -627,9 +617,9 @@ void CFxMenu::populate()
     /*
     ** Are there user presets
     */
-    if( scanForUserPresets || true ) // for now
+    if (scanForUserPresets || true) // for now
     {
-       rescanUserPresets();
+        rescanUserPresets();
     }
 
     CSnapshotMenu::populate();
@@ -641,64 +631,56 @@ void CFxMenu::populate()
     this->addSeparator();
 
     auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
-    auto copy = [this](CCommandMenuItem* item) {
-        this->copyFX();
-    };
+    auto copy = [this](CCommandMenuItem *item) { this->copyFX(); };
     copyItem->setActions(copy, nullptr);
     this->addEntry(copyItem);
 
     auto pasteItem = new CCommandMenuItem(CCommandMenuItem::Desc("Paste"));
-    auto paste = [this](CCommandMenuItem* item) {
-        this->pasteFX();
-    };
+    auto paste = [this](CCommandMenuItem *item) { this->pasteFX(); };
     pasteItem->setActions(paste, nullptr);
     this->addEntry(pasteItem);
 
     this->addSeparator();
 
-    if( fx->type.val.i != fxt_off )
+    if (fx->type.val.i != fxt_off)
     {
-       auto saveItem = new CCommandMenuItem(
-           CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
-       saveItem->setActions([this](CCommandMenuItem *item) {
-                               this->saveFX();
-                            });
-       this->addEntry(saveItem);
+        auto saveItem = new CCommandMenuItem(
+            CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
+        saveItem->setActions([this](CCommandMenuItem *item) { this->saveFX(); });
+        this->addEntry(saveItem);
     }
-
 
     auto rescanItem = new CCommandMenuItem(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh FX Preset List")));
     rescanItem->setActions([this](CCommandMenuItem *item) {
-                              scanForUserPresets = true;
-                              auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-                              if( sge )
-                                 sge->queueRebuildUI();
-                           });
+        scanForUserPresets = true;
+        auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+        if (sge)
+            sge->queueRebuildUI();
+    });
     this->addEntry(rescanItem);
-
 }
-
 
 void CFxMenu::copyFX()
 {
     /*
-    ** This is a junky implementation until I figure out save and load which will require me to stream this
+    ** This is a junky implementation until I figure out save and load which will require me to
+    *stream this
     */
-    if( fxCopyPaste.size() == 0 )
+    if (fxCopyPaste.size() == 0)
     {
-        fxCopyPaste.resize( n_fx_params * 4 + 1 ); // type then (val; ts; extend; deact)
+        fxCopyPaste.resize(n_fx_params * 4 + 1); // type then (val; ts; extend; deact)
     }
 
     fxCopyPaste[0] = fx->type.val.i;
-    for( int i=0; i<n_fx_params; ++i )
+    for (int i = 0; i < n_fx_params; ++i)
     {
         int vp = i * 4 + 1;
         int tp = i * 4 + 2;
         int xp = i * 4 + 3;
         int dp = i * 4 + 4;
 
-        switch( fx->p[i].valtype )
+        switch (fx->p[i].valtype)
         {
         case vt_float:
             fxCopyPaste[vp] = fx->p[i].val.f;
@@ -712,20 +694,19 @@ void CFxMenu::copyFX()
         fxCopyPaste[xp] = fx->p[i].extend_range;
         fxCopyPaste[dp] = fx->p[i].deactivated;
     }
-    memcpy((void*)fxbuffer,(void*)fx,sizeof(FxStorage));
-
+    memcpy((void *)fxbuffer, (void *)fx, sizeof(FxStorage));
 }
 
 void CFxMenu::pasteFX()
 {
-    if( fxCopyPaste.size() == 0 )
+    if (fxCopyPaste.size() == 0)
     {
         return;
     }
 
     fxbuffer->type.val.i = (int)fxCopyPaste[0];
 
-    Effect* t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+    Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
     if (t_fx)
     {
         t_fx->init_ctrltypes();
@@ -740,18 +721,18 @@ void CFxMenu::pasteFX()
         int xp = i * 4 + 3;
         int dp = i * 4 + 4;
 
-        switch( fxbuffer->p[i].valtype )
+        switch (fxbuffer->p[i].valtype)
         {
         case vt_float:
         {
             fxbuffer->p[i].val.f = fxCopyPaste[vp];
-            if( fxbuffer->p[i].val.f < fxbuffer->p[i].val_min.f )
+            if (fxbuffer->p[i].val.f < fxbuffer->p[i].val_min.f)
             {
-               fxbuffer->p[i].val.f = fxbuffer->p[i].val_min.f;
+                fxbuffer->p[i].val.f = fxbuffer->p[i].val_min.f;
             }
-            if( fxbuffer->p[i].val.f > fxbuffer->p[i].val_max.f )
+            if (fxbuffer->p[i].val.f > fxbuffer->p[i].val_max.f)
             {
-               fxbuffer->p[i].val.f = fxbuffer->p[i].val_max.f;
+                fxbuffer->p[i].val.f = fxbuffer->p[i].val_max.f;
             }
         }
         break;
@@ -766,174 +747,168 @@ void CFxMenu::pasteFX()
         fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
     }
 
-    selectedName = std::string( "Copied " ) + fx_type_names[ fxbuffer->type.val.i ];
+    selectedName = std::string("Copied ") + fx_type_names[fxbuffer->type.val.i];
 
-    if( listenerNotForParent )
-       listenerNotForParent->valueChanged( this );
-
+    if (listenerNotForParent)
+        listenerNotForParent->valueChanged(this);
 }
 
 void CFxMenu::saveFX()
 {
-   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-   if( sge )
-   {
-      sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
-                             CPoint(-1,-1), [this](const std::string& s) { this->saveFXIn(s); });
-   }
-
-
+    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+    if (sge)
+    {
+        sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
+                               CPoint(-1, -1), [this](const std::string &s) { this->saveFXIn(s); });
+    }
 }
-void CFxMenu::saveFXIn( const std::string &s )
+void CFxMenu::saveFXIn(const std::string &s)
 {
-   char fxName[256];
-   fxName[0] = 0;
-   strncpy( fxName, s.c_str(), 256 );
-   
-   if( strlen( fxName ) == 0 )
-   {
-      return;
-   }
+    char fxName[256];
+    fxName[0] = 0;
+    strncpy(fxName, s.c_str(), 256);
 
-   if( ! Surge::Storage::isValidName( fxName ) )
-   {
-      return;
-   }
+    if (strlen(fxName) == 0)
+    {
+        return;
+    }
 
+    if (!Surge::Storage::isValidName(fxName))
+    {
+        return;
+    }
 
-   int ti = fx->type.val.i;
-   
-   std::ostringstream oss;
-   oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
+    int ti = fx->type.val.i;
 
-   auto pn = oss.str();
-   fs::create_directories(string_to_path(pn));
+    std::ostringstream oss;
+    oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
 
-   auto fn = pn + fxName + ".srgfx";
-   std::ofstream pfile( fn, std::ios::out );
-   if( ! pfile.is_open() )
-   {
-      Surge::UserInteractions::promptError( std::string( "Unable to open FX preset file '" ) + fn + "' for writing!",
-                                            "Error" );
-      return;
-   }
+    auto pn = oss.str();
+    fs::create_directories(string_to_path(pn));
 
-   pfile << "<single-fx streaming_versio=\"" << ff_revision << "\">\n";
+    auto fn = pn + fxName + ".srgfx";
+    std::ofstream pfile(fn, std::ios::out);
+    if (!pfile.is_open())
+    {
+        Surge::UserInteractions::promptError(
+            std::string("Unable to open FX preset file '") + fn + "' for writing!", "Error");
+        return;
+    }
 
-   // take care of 5 special XML characters
-   std::string fxNameSub(fxName);
-   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
-   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
-   Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
-   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
-   Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
+    pfile << "<single-fx streaming_versio=\"" << ff_revision << "\">\n";
 
-   pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
+    // take care of 5 special XML characters
+    std::string fxNameSub(fxName);
+    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
+    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
+    Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
+    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
+    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
 
-   pfile << "     type=\"" <<  fx->type.val.i << "\"\n";
-   for( int i=0; i<n_fx_params; ++i )
-   {
-      if( fx->p[i].ctrltype != ct_none )
-      {
-         switch( fx->p[i].valtype )
-         {
-         case vt_float:
-            pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
-            break;
-         case vt_int:
-            pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
-            break;
-         }
+    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
 
-         if( fx->p[i].can_temposync() && fx->p[i].temposync )
-         {
-            pfile << "     p" << i << "_temposync=\"1\"\n";
-         }
-         if( fx->p[i].can_extend_range() && fx->p[i].extend_range )
-         {
-            pfile << "     p" << i << "_extend_range=\"1\"\n";
-         }
-      }
-   }
+    pfile << "     type=\"" << fx->type.val.i << "\"\n";
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        if (fx->p[i].ctrltype != ct_none)
+        {
+            switch (fx->p[i].valtype)
+            {
+            case vt_float:
+                pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
+                break;
+            case vt_int:
+                pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
+                break;
+            }
 
-   pfile << "  />\n";
-   pfile << "</single-fx>\n";
-   pfile.close();
+            if (fx->p[i].can_temposync() && fx->p[i].temposync)
+            {
+                pfile << "     p" << i << "_temposync=\"1\"\n";
+            }
+            if (fx->p[i].can_extend_range() && fx->p[i].extend_range)
+            {
+                pfile << "     p" << i << "_extend_range=\"1\"\n";
+            }
+        }
+    }
 
-   scanForUserPresets = true;
-   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-   if( sge )
-      sge->queueRebuildUI();
+    pfile << "  />\n";
+    pfile << "</single-fx>\n";
+    pfile.close();
+
+    scanForUserPresets = true;
+    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+    if (sge)
+        sge->queueRebuildUI();
 }
 
-void CFxMenu::loadUserPreset( const UserPreset &p )
+void CFxMenu::loadUserPreset(const UserPreset &p)
 {
-   fxbuffer->type.val.i = p.type;
+    fxbuffer->type.val.i = p.type;
 
-   Effect* t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
-   if (t_fx)
-   {
-      t_fx->init_ctrltypes();
-      t_fx->init_default_values();
-      delete t_fx;
-   }
+    Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+    if (t_fx)
+    {
+        t_fx->init_ctrltypes();
+        t_fx->init_default_values();
+        delete t_fx;
+    }
 
-   for (int i = 0; i < n_fx_params; i++)
-   {
-      switch( fxbuffer->p[i].valtype )
-      {
-      case vt_float:
-      {
-         fxbuffer->p[i].val.f = p.p[i];
-      }
-      break;
-      case vt_int:
-         fxbuffer->p[i].val.i = (int)p.p[i];
-         break;
-      default:
-         break;
-      }
-      fxbuffer->p[i].temposync = (int)p.ts[i];;
-      fxbuffer->p[i].extend_range = (int)p.er[i];
-   }
+    for (int i = 0; i < n_fx_params; i++)
+    {
+        switch (fxbuffer->p[i].valtype)
+        {
+        case vt_float:
+        {
+            fxbuffer->p[i].val.f = p.p[i];
+        }
+        break;
+        case vt_int:
+            fxbuffer->p[i].val.i = (int)p.p[i];
+            break;
+        default:
+            break;
+        }
+        fxbuffer->p[i].temposync = (int)p.ts[i];
+        ;
+        fxbuffer->p[i].extend_range = (int)p.er[i];
+    }
 
-   selectedIdx = -1;
-   selectedName = p.name;
+    selectedIdx = -1;
+    selectedName = p.name;
 
-   if( listenerNotForParent )
-      listenerNotForParent->valueChanged( this );
-
+    if (listenerNotForParent)
+        listenerNotForParent->valueChanged(this);
 }
 
 void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu, int &idx)
 {
-   if( ! type || ! subMenu ) return;
+    if (!type || !subMenu)
+        return;
 
-   int type_id = 0;
-   type->Attribute("i", &type_id);
+    int type_id = 0;
+    type->Attribute("i", &type_id);
 
-   if( userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0 )
-      return;
+    if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+        return;
 
-   auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
-   factory_add->setEnabled(0);
+    auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
+    factory_add->setEnabled(0);
 
-   auto user_add = subMenu->addEntry("USER PRESETS");
-   user_add->setEnabled(0);
+    auto user_add = subMenu->addEntry("USER PRESETS");
+    user_add->setEnabled(0);
 
-   for( auto &ps : userPresets[type_id] )
-   {
-      auto fxName = ps.name;
+    for (auto &ps : userPresets[type_id])
+    {
+        auto fxName = ps.name;
 
 #if WINDOWS
-      Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
+        Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
 #endif
 
-      auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
-      i->setActions([this,ps](CCommandMenuItem *item)
-                       {
-                          this->loadUserPreset(ps);
-                       } );
-      subMenu->addEntry(i);
-   }
+        auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
+        i->setActions([this, ps](CCommandMenuItem *item) { this->loadUserPreset(ps); });
+        subMenu->addEntry(i);
+    }
 }

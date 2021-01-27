@@ -23,27 +23,28 @@ static FILE *confp;
 
 bool Surge::Debug::openConsole()
 {
-#if WINDOWS   
-    if( ! winconinitialized )
+#if WINDOWS
+    if (!winconinitialized)
     {
         winconinitialized = true;
         AllocConsole();
         freopen_s(&confp, "CONOUT$", "w", stdout);
         std::cout << "SURGE DEBUG CONSOLE\n\n"
-                  << "This is where we show stdout from Surge, for debugging purposes. If you close this window, Surge will crash!\n"
-                  << "Version: " << Build::FullVersionStr << ", built on " << Build::BuildDate << " at " << Build::BuildTime
-                  << "\n\n" << std::endl;
+                  << "This is where we show stdout from Surge, for debugging purposes. If you "
+                     "close this window, Surge will crash!\n"
+                  << "Version: " << Build::FullVersionStr << ", built on " << Build::BuildDate
+                  << " at " << Build::BuildTime << "\n\n"
+                  << std::endl;
     }
     return winconinitialized;
 #else
     return true;
-#endif    
+#endif
 }
 bool Surge::Debug::toggleConsole()
 {
 #if WINDOWS
-    
-    
+
     if (!winconinitialized)
     {
         openConsole();
@@ -61,30 +62,35 @@ bool Surge::Debug::toggleConsole()
 #endif
 }
 
-void Surge::Debug::stackTraceToStdout( int depth )
+void Surge::Debug::stackTraceToStdout(int depth)
 {
 #if MAC || LINUX
-    void* callstack[128];
+    void *callstack[128];
     int i, frames = backtrace(callstack, 128);
-    char** strs = backtrace_symbols(callstack, frames);
-   if( depth < 0 ) depth = frames;
-   printf( "-------- Stack Trace (%d frames of %d depth showing) --------\n", depth, frames );
-    for (i = 1; i < frames && i < depth; ++i) {
-        printf( "  [%3d]: %s\n", i, strs[i] );
+    char **strs = backtrace_symbols(callstack, frames);
+    if (depth < 0)
+        depth = frames;
+    printf("-------- Stack Trace (%d frames of %d depth showing) --------\n", depth, frames);
+    for (i = 1; i < frames && i < depth; ++i)
+    {
+        printf("  [%3d]: %s\n", i, strs[i]);
     }
     free(strs);
 #endif
-
 }
 
 static std::atomic<int> lcdepth(0);
-Surge::Debug::LifeCycleToConsole::LifeCycleToConsole(std::string st) : s(st) {
-   lcdepth ++;
-   for( int i=0; i<lcdepth; ++i ) printf( ">--" );
-   printf( "> %s\n", st.c_str() );
+Surge::Debug::LifeCycleToConsole::LifeCycleToConsole(std::string st) : s(st)
+{
+    lcdepth++;
+    for (int i = 0; i < lcdepth; ++i)
+        printf(">--");
+    printf("> %s\n", st.c_str());
 }
-Surge::Debug::LifeCycleToConsole::~LifeCycleToConsole() {
-   for( int i=0; i<lcdepth; ++i ) printf( "<--" );
-   printf( "< %s\n", s.c_str() );
-   lcdepth --;
+Surge::Debug::LifeCycleToConsole::~LifeCycleToConsole()
+{
+    for (int i = 0; i < lcdepth; ++i)
+        printf("<--");
+    printf("< %s\n", s.c_str());
+    lcdepth--;
 }

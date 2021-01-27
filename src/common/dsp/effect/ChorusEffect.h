@@ -24,52 +24,45 @@
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 
-
 template <int v> class ChorusEffect : public Effect
 {
-   lipol_ps feedback alignas(16),
-            mix alignas(16),
-            width alignas(16);
-   __m128 voicepanL4 alignas(16)[v],
-          voicepanR4 alignas(16)[v];
-   float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE interpolation without wrapping
+    lipol_ps feedback alignas(16), mix alignas(16), width alignas(16);
+    __m128 voicepanL4 alignas(16)[v], voicepanR4 alignas(16)[v];
+    float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
+                                                            // interpolation without wrapping
 
-public:
-   enum chorus_params
-   {
-      ch_time,
-      ch_rate,
-      ch_depth,
-      ch_feedback,
-      ch_lowcut,
-      ch_highcut,
-      ch_mix,
-      ch_width,
+  public:
+    enum chorus_params
+    {
+        ch_time,
+        ch_rate,
+        ch_depth,
+        ch_feedback,
+        ch_lowcut,
+        ch_highcut,
+        ch_mix,
+        ch_width,
 
-      ch_num_params,
-   };
+        ch_num_params,
+    };
 
-   ChorusEffect<v>(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~ChorusEffect();
-   virtual const char* get_effectname() override
-   {
-      return "chorus";
-   }
-   virtual void init() override;
-   virtual void process(float* dataL, float* dataR) override;
-   virtual void suspend() override;
-   void setvars(bool init);
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual const char* group_label(int id) override;
-   virtual int group_label_ypos(int id) override;
+    ChorusEffect<v>(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~ChorusEffect();
+    virtual const char *get_effectname() override { return "chorus"; }
+    virtual void init() override;
+    virtual void process(float *dataL, float *dataR) override;
+    virtual void suspend() override;
+    void setvars(bool init);
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-private:
-   lag<float, true> time[v];
-   float voicepan[v][2];
-   float envf;
-   int wpos;
-   BiquadFilter lp, hp;
-   double lfophase[v];
+  private:
+    lag<float, true> time[v];
+    float voicepan[v][2];
+    float envf;
+    int wpos;
+    BiquadFilter lp, hp;
+    double lfophase[v];
 };
-

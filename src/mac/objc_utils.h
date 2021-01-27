@@ -28,9 +28,8 @@ namespace Surge
 namespace ObjCUtil
 {
 void loadUrlToPath(
-    const std::string& url,
-    const fs::path& path,
-    const std::function<void(const std::string& url)>& onDone,
-    const std::function<void(const std::string& url, const std::string& msg)>& onError);
+    const std::string &url, const fs::path &path,
+    const std::function<void(const std::string &url)> &onDone,
+    const std::function<void(const std::string &url, const std::string &msg)> &onError);
 }
 } // namespace Surge

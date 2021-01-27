@@ -9,8 +9,6 @@
 #if LINUX || MAC
 namespace VSTGUI
 {
-void doAssert(const char*, const char*, const char*)
-{
-}
-}
+void doAssert(const char *, const char *, const char *) {}
+} // namespace VSTGUI
 #endif

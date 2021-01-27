@@ -28,27 +28,26 @@ namespace Storage
 #if BUILD_DEFERRED_ASSET_LOADER
 class DeferredAssetLoader
 {
-public:
-   explicit DeferredAssetLoader(SurgeStorage* s);
+  public:
+    explicit DeferredAssetLoader(SurgeStorage *s);
 
-   typedef std::string url_t;
+    typedef std::string url_t;
 
-   bool hasCachedCopyOf(const url_t& url);
-   fs::path pathOfCachedCopy(const url_t& url);
-   void retrieveSingleAsset(const url_t& url,
-                            std::function<void(const url_t&)> onRetrieved,
-                            std::function<void(const url_t&, const std::string& msg)> onError);
+    bool hasCachedCopyOf(const url_t &url);
+    fs::path pathOfCachedCopy(const url_t &url);
+    void retrieveSingleAsset(const url_t &url, std::function<void(const url_t &)> onRetrieved,
+                             std::function<void(const url_t &, const std::string &msg)> onError);
 
-   /*
-    * For Surge 1.9 and using this for wavetables we will need an API something like this:
-    *
-   void retrieveMultipleAssets(const std::vector<url_t> & assets,
-                               std::function<void()> onAllRetrieved,
-                               std::function<void(const std::vector<url_t>)> onSomeFailed);
-   */
+    /*
+     * For Surge 1.9 and using this for wavetables we will need an API something like this:
+     *
+    void retrieveMultipleAssets(const std::vector<url_t> & assets,
+                                std::function<void()> onAllRetrieved,
+                                std::function<void(const std::vector<url_t>)> onSomeFailed);
+    */
 
-private:
-   fs::path cacheDir;
+  private:
+    fs::path cacheDir;
 };
 #endif
 

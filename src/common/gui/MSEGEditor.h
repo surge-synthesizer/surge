@@ -19,17 +19,22 @@
 #include "SkinSupport.h"
 #include "RefreshableOverlay.h"
 
-struct MSEGEditor : public VSTGUI::CViewContainer, public Surge::UI::SkinConsumingComponent, public RefreshableOverlay {
-   /*
-    * Because this is 'late' in the build (in the gui) there is a copy of this structure in
-    * the DawExtraState. If you add something to this state, add it there too. Revisit that
-    * decision in 1.9 perhaps but #3316 is very late in the 18 cycle, which is why we
-    * needed the extra storage.
-    */
-   struct State {
-      int timeEditMode = 0;
-   };
-   MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
-   ~MSEGEditor();
-   void forceRefresh();
+struct MSEGEditor : public VSTGUI::CViewContainer,
+                    public Surge::UI::SkinConsumingComponent,
+                    public RefreshableOverlay
+{
+    /*
+     * Because this is 'late' in the build (in the gui) there is a copy of this structure in
+     * the DawExtraState. If you add something to this state, add it there too. Revisit that
+     * decision in 1.9 perhaps but #3316 is very late in the 18 cycle, which is why we
+     * needed the extra storage.
+     */
+    struct State
+    {
+        int timeEditMode = 0;
+    };
+    MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
+               Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
+    ~MSEGEditor();
+    void forceRefresh();
 };

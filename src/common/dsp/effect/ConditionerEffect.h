@@ -29,53 +29,43 @@ const int lookahead = 1 << 7;
 
 class ConditionerEffect : public Effect
 {
-   lipol_ps ampL alignas(16),
-            ampR alignas(16),
-            width alignas(16),
-            postamp alignas(16);
+    lipol_ps ampL alignas(16), ampR alignas(16), width alignas(16), postamp alignas(16);
 
-public:
-   ConditionerEffect(SurgeStorage* storage, FxStorage* fxdata, pdata* pd);
-   virtual ~ConditionerEffect();
-   virtual const char* get_effectname() override
-   {
-      return "conditioner";
-   }
-   virtual void init() override;
-   virtual void process_only_control() override;
-   virtual void process(float* dataL, float* dataR) override;
-   virtual int get_ringout_decay() override
-   {
-      return 100;
-   }
-   virtual void suspend() override;
-   void setvars(bool init);
-   virtual void init_ctrltypes() override;
-   virtual void init_default_values() override;
-   virtual int vu_type(int id) override;
-   virtual int vu_ypos(int id) override;
-   virtual const char* group_label(int id) override;
-   virtual int group_label_ypos(int id) override;
+  public:
+    ConditionerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~ConditionerEffect();
+    virtual const char *get_effectname() override { return "conditioner"; }
+    virtual void init() override;
+    virtual void process_only_control() override;
+    virtual void process(float *dataL, float *dataR) override;
+    virtual int get_ringout_decay() override { return 100; }
+    virtual void suspend() override;
+    void setvars(bool init);
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
+    virtual int vu_type(int id) override;
+    virtual int vu_ypos(int id) override;
+    virtual const char *group_label(int id) override;
+    virtual int group_label_ypos(int id) override;
 
-   enum cond_params
-   {
-      cond_bass = 0,
-      cond_treble,
-      cond_width,
-      cond_balance,
-      cond_threshold,
-      cond_attack,
-      cond_release,
-      cond_gain,
-   };
+    enum cond_params
+    {
+        cond_bass = 0,
+        cond_treble,
+        cond_width,
+        cond_balance,
+        cond_threshold,
+        cond_attack,
+        cond_release,
+        cond_gain,
+    };
 
-private:
-   BiquadFilter band1, band2;
-   float ef;
-   lipol<float, true> a_rate, r_rate;
-   float lamax[lookahead << 1];
-   float delayed[2][lookahead];
-   int bufpos;
-   float filtered_lamax, filtered_lamax2, gain;
+  private:
+    BiquadFilter band1, band2;
+    float ef;
+    lipol<float, true> a_rate, r_rate;
+    float lamax[lookahead << 1];
+    float delayed[2][lookahead];
+    int bufpos;
+    float filtered_lamax, filtered_lamax2, gain;
 };
-
