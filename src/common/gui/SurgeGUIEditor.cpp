@@ -7470,7 +7470,8 @@ VSTGUI::CControl *SurgeGUIEditor::layoutComponentForSkin( std::shared_ptr<Surge:
       if( p->ctrltype == ct_airwindows_fx ||
           p->ctrltype == ct_flangermode ||
           p->ctrltype == ct_flangerwave ||
-          p->ctrltype == ct_distortion_waveshape )
+          p->ctrltype == ct_distortion_waveshape ||
+          p->ctrltype == ct_reson_mode )
       {
          loc.offset( 2, 2 );
          auto hs = new CMenuAsSlider(loc,

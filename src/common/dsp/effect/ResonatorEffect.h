@@ -17,7 +17,7 @@
 #include "Effect.h"
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
-
+#include "QuadFilterUnit.h"
 
 class ResonatorEffect : public Effect
 {
