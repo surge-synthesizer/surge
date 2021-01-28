@@ -4,7 +4,9 @@
  * IF YOU ARE READING THIS and you haven't been following the convresation on discord it will
  * look terrible and broken and wierd. That's because right now it is. If you want some context
  * here *please please* chat with @baconpaul in the #surge-development channel on discord or
- * check the pinned 'status' issue on the surge github.
+ * check the pinned 'status' issue on the surge github. This code has all sorts of problems
+ * (dependencies out of order, memory leaks, etc...) which I'm working through as I bootstrap
+ * our way out of vstgui.
  */
 
 #ifndef SURGE_ESCAPE_FROM_VSTGUI_H
@@ -16,6 +18,25 @@
 
 #if MAC
 #include <CoreFoundation/CoreFoundation.h>
+#endif
+
+#if MAC
+#define DEBUG_EFVG_MEMORY 1
+#define DEBUG_EFVG_MEMORY_STACKS 0
+#else
+#define DEBUG_EFVG_MEMORY 0
+#define DEBUG_EFVG_MEMORY_STACKS 0
+#endif
+
+#if DEBUG_EFVG_MEMORY
+#include <unordered_map>
+
+#if MAC || LINUX
+#include <execinfo.h>
+#include <stdio.h>
+#include <cstdlib>
+#endif
+
 #endif
 
 #include <JuceHeader.h>
@@ -39,21 +60,129 @@ namespace EscapeNS
 {
 namespace Internal
 {
+#if DEBUG_EFVG_MEMORY
+struct DebugAllocRecord
+{
+    DebugAllocRecord() { record("CONSTRUCT"); }
+    void record(const std::string &where)
+    {
+#if DEBUG_EFVG_MEMORY_STACKS
+#if MAC || LINUX
+        void *callstack[128];
+        int i, frames = backtrace(callstack, 128);
+        char **strs = backtrace_symbols(callstack, frames);
+        std::ostringstream oss;
+        oss << "----- " << where << " -----\n";
+        for (i = 3; i < frames - 1 && i < 20; ++i)
+        {
+            oss << strs[i] << "\n";
+        }
+        free(strs);
+        records.push_back(oss.str());
+#endif
+#endif
+    }
+    int remembers = 0, forgets = 0;
+    std::vector<std::string> records;
+};
+struct FakeRefcount;
+
+inline std::unordered_map<FakeRefcount *, DebugAllocRecord> *getAllocMap()
+{
+    static std::unordered_map<FakeRefcount *, DebugAllocRecord> map;
+    return &map;
+}
+
+struct RefActivity
+{
+    int creates = 0, deletes = 0;
+};
+inline RefActivity *getRefActivity()
+{
+    static RefActivity r;
+    return &r;
+}
+
+#endif
 struct FakeRefcount
 {
-    virtual ~FakeRefcount() = default;
+    explicit FakeRefcount(bool doDebug = true, bool alwaysLeak = false)
+        : doDebug(doDebug), alwaysLeak(alwaysLeak)
+    {
+#if DEBUG_EFVG_MEMORY
+        if (doDebug)
+        {
+            getAllocMap()->emplace(std::make_pair(this, DebugAllocRecord()));
+            getRefActivity()->creates++;
+        }
+#else
+        if (alwaysLeak)
+        {
+            std::cout << "YOU LEFT ALWAYS LEAK ON SILLY" << std::endl;
+        }
+#endif
+    }
+    virtual ~FakeRefcount()
+    {
+#if DEBUG_EFVG_MEMORY
+        if (doDebug)
+        {
+            getAllocMap()->erase(this);
+            getRefActivity()->deletes++;
+        }
+#endif
+    }
 
-    virtual void remember() { refCount++; }
+    virtual void remember()
+    {
+        refCount++;
+#if DEBUG_EFVG_MEMORY
+        if (doDebug)
+        {
+            (*getAllocMap())[this].remembers++;
+            (*getAllocMap())[this].record("Remember");
+        }
+#endif
+    }
     virtual void forget()
     {
         refCount--;
+#if DEBUG_EFVG_MEMORY
+        if (doDebug)
+        {
+            (*getAllocMap())[this].forgets++;
+            (*getAllocMap())[this].record("Forget");
+        }
+#endif
         if (refCount == 0)
         {
-            delete this;
+            if (!alwaysLeak)
+                delete this;
         }
     }
-    int64_t refCount = 1;
+    int64_t refCount = 0;
+    bool doDebug = true, alwaysLeak = false;
 };
+
+#if DEBUG_EFVG_MEMORY
+
+inline void showMemoryOutstanding()
+{
+    std::cout << "Total activity : Create=" << getRefActivity()->creates
+              << " Delete=" << getRefActivity()->deletes << std::endl;
+    for (auto &p : *(getAllocMap()))
+    {
+        if (p.first->doDebug)
+        {
+            std::cout << "Still here! " << p.first << " " << p.first->refCount << " "
+                      << p.second.remembers << " " << p.second.forgets << " "
+                      << typeid(*(p.first)).name() << std::endl;
+            for (auto &r : p.second.records)
+                std::cout << r << "\n" << std::endl;
+        }
+    }
+}
+#endif
 } // namespace Internal
 
 #if MAC
@@ -556,7 +685,12 @@ struct CDrawContext
         }
     }
 
-    CGraphicsPath *createGraphicsPath() { return new CGraphicsPath(); }
+    CGraphicsPath *createGraphicsPath()
+    {
+        auto res = new CGraphicsPath();
+        res->remember();
+        return res;
+    }
 };
 
 struct COffscreenContext : public CDrawContext
@@ -593,7 +727,11 @@ struct CResourceDescription
 
 struct CBitmap : public Internal::FakeRefcount
 {
-    CBitmap(const CResourceDescription &d) : desc(d) {}
+    CBitmap(const CResourceDescription &d) : desc(d), Internal::FakeRefcount(false, false) {}
+    virtual ~CBitmap()
+    {
+        // std::cout << " Deleting bitmap with " << desc.u.id << std::endl;
+    }
 
     void draw(CDrawContext *dc, const CRect &r, const CPoint &off = CPoint(), float alpha = 1.0)
     {
@@ -616,7 +754,7 @@ template <typename T> struct juceCViewConnector : public T
     void setViewCompanion(CViewWithJuceComponent<T> *v)
     {
         viewCompanion = v;
-        viewCompanion->remember();
+        // viewCompanion->remember();
     }
     CViewWithJuceComponent<T> *viewCompanion = nullptr;
     void paint(juce::Graphics &g) override;
@@ -632,7 +770,9 @@ template <typename T> struct juceCViewConnector : public T
 template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefcount
 {
     CViewWithJuceComponent(const CRect &size) : size(size) {}
-    virtual ~CViewWithJuceComponent() = default;
+    virtual ~CViewWithJuceComponent(){
+        // Here we probably have to make sure that the juce component is removed
+    };
     virtual juce::Component *juceComponent()
     {
         if (!comp)
@@ -774,18 +914,16 @@ struct CViewContainer : public CView
             e->forget();
         }
         views.clear();
-        if (bg)
-            bg->forget();
     }
     void setTransparency(bool) { UNIMPL; }
 
     CBitmap *bg = nullptr;
     void setBackground(CBitmap *b)
     {
+        b->remember();
         if (bg)
             bg->forget();
         bg = b;
-        bg->remember();
     }
     void setBackgroundColor(const CColor &c) { UNIMPL; }
     int getNbViews()
@@ -816,11 +954,12 @@ struct CViewContainer : public CView
         }
         views.insert(v);
     }
-    void removeView(CView *v, bool somethingAboutForgettingFigureThisOut = true)
+    void removeView(CView *v, bool doForget = true)
     {
         views.erase(v);
         juceComponent()->removeChildComponent(v->juceComponent());
-        v->forget();
+        if (doForget)
+            v->forget();
     }
 
     void addView(COptionMenu *)
@@ -896,7 +1035,7 @@ struct CFrame : public CViewContainer
     void setDirty(bool b = true) { invalid(); }
 
     void open(void *parent, int) { UNIMPL; }
-    void close() { UNIMPL; }
+    void close() { removeAll(); }
 
     COLPAIR(FocusColor);
 
@@ -932,8 +1071,10 @@ struct CControl : public CView
     }
     ~CControl()
     {
-        if (bg)
+        /* if (bg)
             bg->forget();
+            It seems that is not the semantic of CControl!
+            */
     }
 
     virtual void looseFocus() { UNIMPL; }
@@ -977,11 +1118,13 @@ struct CControl : public CView
     CBitmap *bg = nullptr;
     void setBackground(CBitmap *b)
     {
+        // This order in case b == bg
+        if (b)
+            b->remember();
         if (bg)
             bg->forget();
+
         bg = b;
-        if (bg)
-            bg->remember();
     }
     CBitmap *getBackground() { return bg; }
 
@@ -1116,9 +1259,9 @@ struct CSlider : public CControl
     {
         kHorizontal = 1U << 0U,
         kVertical = 1U << 1U,
-        kTop,
-        kRight,
-        kBottom,
+        kTop = 1U << 31U,
+        kRight = kTop,
+        kBottom = kTop,
     };
 };
 
@@ -1239,6 +1382,9 @@ struct COptionMenu : public CControl
     COptionMenu(const CRect &r, IControlListener *l, int32_t tag, int, int = 0, int = 0)
         : CControl(r, l), menu()
     {
+        // Obviously fix this
+        alwaysLeak = true;
+        doDebug = false;
         UNIMPL;
     }
     void setNbItemsPerColumn(int c) { UNIMPL; }
@@ -1281,9 +1427,6 @@ struct COptionMenu : public CControl
     inline void setHeight(float h) { DUNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }
     int getNbEntries() { return 0; }
-
-    void remember() override {}
-    void forget() override {}
 };
 
 enum DragOperation

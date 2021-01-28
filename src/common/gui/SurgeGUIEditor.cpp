@@ -430,6 +430,10 @@ SurgeGUIEditor::~SurgeGUIEditor()
         dropAdapter = nullptr;
     }
 #endif
+
+#if TARGET_JUCE_UI
+    frame->forget();
+#endif
 }
 
 void SurgeGUIEditor::idle()
@@ -1970,6 +1974,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformT
 
 #if TARGET_JUCE_UI
     nframe->juceComponent()->setTransform(juce::AffineTransform().scaled(1.25));
+    nframe->remember();
 #endif
 
     bitmapStore.reset(new SurgeBitmaps());

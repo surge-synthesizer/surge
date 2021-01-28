@@ -130,6 +130,12 @@ SurgeSynthEditor::~SurgeSynthEditor()
 {
     idleTimer->stopTimer();
     adapter->close();
+    if (adapter->bitmapStore)
+        adapter->bitmapStore->clearAllLoadedBitmaps();
+    adapter.reset(nullptr);
+#if DEBUG_EFVG_MEMORY
+    EscapeNS::Internal::showMemoryOutstanding();
+#endif
 }
 
 void SurgeSynthEditor::handleAsyncUpdate() {}
