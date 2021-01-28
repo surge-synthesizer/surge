@@ -17,6 +17,7 @@ class SurgeBitmaps
   public:
     SurgeBitmaps();
     virtual ~SurgeBitmaps();
+    void clearAllLoadedBitmaps(); // Call very carefully.
 
     void setupBitmapsForFrame(VSTGUI::CFrame *f);
     void setPhysicalZoomFactor(int pzf);

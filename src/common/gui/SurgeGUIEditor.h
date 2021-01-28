@@ -477,8 +477,10 @@ class SurgeGUIEditor : public EditorType,
     int selectedFX[8];
     std::string fxPresetName[8];
 
+  public:
     std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
 
+  private:
     bool modsource_is_alternate[n_modsources];
 
   public:

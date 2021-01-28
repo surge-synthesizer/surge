@@ -24,6 +24,13 @@ SurgeBitmaps::~SurgeBitmaps()
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeBitmaps::~SurgeBitmaps");
 #endif
+    clearAllLoadedBitmaps();
+    instances--;
+    // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
+}
+
+void SurgeBitmaps::clearAllLoadedBitmaps()
+{
     for (auto pair : bitmap_registry)
     {
         pair.second->forget();
@@ -39,8 +46,6 @@ SurgeBitmaps::~SurgeBitmaps()
     bitmap_registry.clear();
     bitmap_file_registry.clear();
     bitmap_stringid_registry.clear();
-    instances--;
-    // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 void SurgeBitmaps::clearAllBitmapOffscreenCaches()
