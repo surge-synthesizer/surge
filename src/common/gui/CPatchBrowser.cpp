@@ -35,12 +35,12 @@ void CPatchBrowser::draw(CDrawContext *dc)
     cat.left += 3;
     cat.right = cat.left + 150;
     cat.setHeight(pbrowser.getHeight() / 2);
+    cat.offset(0, (pbrowser.getHeight() / 2) - 1);
 
-    auth = cat;
-    auth.offset(0, pbrowser.getHeight() / 2);
-
-    cat.offset(0, 1);
-    auth.offset(0, -1);
+    auth.right -= 3;
+    auth.left = auth.right - 150;
+    auth.top = cat.top;
+    auth.bottom = cat.bottom;
 
     // debug draws
     // dc->drawRect(pbrowser);
@@ -57,7 +57,7 @@ void CPatchBrowser::draw(CDrawContext *dc)
     // category/author name
     dc->setFont(displayFont);
     dc->drawString(category.c_str(), cat, kLeftText, true);
-    dc->drawString(author.c_str(), auth, kLeftText, true);
+    dc->drawString(author.c_str(), auth, kRightText, true);
 
     setDirty(false);
 }
