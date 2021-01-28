@@ -32,38 +32,44 @@ class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingCo
         current_patch = -1;
         current_category = -1;
     }
+
     void setIDs(int category, int patch)
     {
         current_category = category;
         current_patch = patch;
     }
+
     void setLabel(std::string l)
     {
         pname = l;
         setDirty(true);
     }
+
     void setCategory(std::string l)
     {
         if (l.length())
         {
-            std::string s = l;
-            // for (int i=0; i<s.length(); i++) s[i] = toupper(s[i]);
-            category = "Category: " + s;
+            category = "Category: " + path_to_string(string_to_path(l).filename());
         }
         else
+        {
             category = "";
+        }
+
         setDirty(true);
     }
+
     void setAuthor(std::string l)
     {
         if (l.length())
         {
-            std::string s = l;
-            // for (int i=0; i<s.length(); i++) s[i] = toupper(s[i]);
-            author = "Author: " + s;
+            author = "By: " + l;
         }
         else
+        {
             author = "";
+        }
+
         setDirty(true);
     }
 
