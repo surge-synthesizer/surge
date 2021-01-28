@@ -48,6 +48,16 @@ class ResonatorEffect : public Effect
         resonator_num_ctrls,
     };
 
+    enum resonator_modes
+    {
+        rm_lowpass = 0,
+        rm_bandpass,
+        rm_bandpass_n,
+        rm_highpass,
+
+        rm_num_modes,
+    };
+
     ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~ResonatorEffect();
     virtual const char *get_effectname() override { return "Resonator"; }
@@ -64,6 +74,7 @@ class ResonatorEffect : public Effect
     QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
     FilterCoefficientMaker coeff[3][2];
+    lag<float, true> cutoff[3], resonance[3], bandGain[3];
     float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
     float WP[3][2];
     float Reg[3][2][n_filter_registers];

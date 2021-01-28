@@ -249,6 +249,9 @@ bool Parameter::can_extend_range()
     {
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
+    case ct_freq_reson_band1:
+    case ct_freq_reson_band2:
+    case ct_freq_reson_band3:
     case ct_freq_shift:
     case ct_decibel_extendable:
     case ct_decibel_narrow_extendable:
@@ -420,9 +423,9 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_reson_band1:
         valtype = vt_float;
-        val_min.f = -46.4936f;   // 30 Hz
+        val_min.f = -34.4936f;   // 60 Hz
         val_max.f = -6.6305f;    // 300 Hz
-        val_default.f = -25.65f; // 100 Hz
+        val_default.f = -18.6305f; // 150 Hz
         break;
     case ct_freq_reson_band2:
         valtype = vt_float;
@@ -1368,10 +1371,42 @@ void Parameter::set_storage_value(float f)
 float Parameter::get_extended(float f)
 {
     if (!extend_range)
-        return f;
+    {
+        switch (ctrltype)
+        {
+        case ct_freq_reson_band1:
+        {
+            val_max.f = -6.6305f;  // 300 Hz
+            return f;
+        }
+        case ct_freq_reson_band2:
+        {
+            val_min.f = -6.6305f;  // 300 Hz
+            val_max.f = 21.23265f; // 1500 Hz
+            return f;
+        }
+        case ct_freq_reson_band3:
+        {
+            val_min.f = 21.23265f; // 1500 Hz
+            return f;
+        }
+        default:
+        {
+            return f;
+        }
+        }
+    }
 
     switch (ctrltype)
     {
+    case ct_freq_reson_band1:
+    case ct_freq_reson_band2:
+    case ct_freq_reson_band3:
+    {
+        val_min.f = -34.4936f; // 60 Hz
+        val_max.f = 49.09578;  // 7500 Hz
+        return f;
+    }
     case ct_freq_shift:
         return 100.f * f;
     case ct_pitch_semi7bp:
@@ -1394,12 +1429,18 @@ float Parameter::get_extended(float f)
     case ct_fmratio:
     {
         if (f > 16)
+        {
             return ((f - 16) * 31.f / 16.f + 1);
+        }
         else
+        {
             return -((16 - f) * 31.f / 16.f + 1);
+        }
     }
     default:
+    {
         return f;
+    }
     }
 }
 

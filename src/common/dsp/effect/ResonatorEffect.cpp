@@ -23,10 +23,17 @@ ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     mix.set_blocksize(BLOCK_SIZE);
 
     qfus = (QuadFilterUnitState *)_aligned_malloc(2 * sizeof(QuadFilterUnitState), 16);
+
     for (int e = 0; e < 3; ++e)
+    {
         for (int c = 0; c < 2; ++c)
+        {
             for (int q = 0; q < n_filter_registers; ++q)
+            {
                 Reg[e][c][q] = 0;
+            }
+        }
+    }
 }
 
 ResonatorEffect::~ResonatorEffect() { _aligned_free(qfus); }
@@ -41,6 +48,14 @@ void ResonatorEffect::setvars(bool init)
 {
     if (init)
     {
+
+        for (int i = 0; i < 3; ++i)
+        {
+            cutoff[i].instantize();
+            resonance[i].instantize();
+            bandGain[i].instantize();
+        }
+
         gain.set_target(1.f);
         mix.set_target(1.f);
 
@@ -52,17 +67,33 @@ void ResonatorEffect::setvars(bool init)
     }
     else
     {
+        for (int i = 0; i < 3; ++i)
+        {
+            cutoff[i].newValue(
+                fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+            resonance[i].newValue(
+                fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
+            bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+        }
     }
 }
 
-inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+inline void set1f(__m128 &m, int i, float f)
+{
+    *((float *)&m + i) = f;
+}
 
-inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
+inline float get1f(__m128 m, int i)
+{
+    return *((float *)&m + i);
+}
 
 void ResonatorEffect::process(float *dataL, float *dataR)
 {
     if (bi == 0)
+    {
         setvars(false);
+    }
     bi = (bi + 1) & slowrate_m1;
 
     /*
@@ -79,32 +110,57 @@ void ResonatorEffect::process(float *dataL, float *dataR)
      * and the frequency of the particular band.
      */
     auto whichModel = *pdata_ival[resonator_mode];
-
     int type = 0, subtype = 0;
+
     switch (whichModel)
     {
-    case 0:
+    case rm_lowpass:
+    {
         type = fut_lp12;
-        subtype = 0;
-        // You need to adjust this switch statement
+        subtype = st_Rough;
         break;
+    }
+    case rm_bandpass:
+    case rm_bandpass_n:
+    {
+        type = fut_bp12;
+        subtype = st_Rough;
+        break;
+    }
+    case rm_highpass:
+    {
+        type = fut_hp12;
+        subtype = st_Rough;
+        break;
+    }
     default:
+    {
         type = fut_none;
         subtype = 0;
         break;
     }
+    }
+
     FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
+    float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75};  // prevent self-oscillation
+
+    for (int i = 0; i < 3; ++i)
+    {
+        cutoff[i].newValue(
+            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+        resonance[i].newValue(
+            fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
+        bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+    }
 
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
      */
     for (int e = 0; e < 3; ++e)
     {
-        float frequencyInPitch = *f[resonator_freq1 + e * 3];
-        float resonance = *f[resonator_res1 + e * 3];
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(frequencyInPitch, resonance, type, subtype, storage);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype, storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
@@ -126,14 +182,6 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    /*
-     * FIXME - smooth this
-     */
-    float bankGain[3];
-    for (int i = 0; i < 3; ++i)
-    {
-        bankGain[i] = *f[resonator_gain1 + i * 3]; // probably some units wrk here
-    }
 
     /* Run the filters. You need to grab a smoothed gain here rather than the hardcoded 0.3 */
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
@@ -152,14 +200,32 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             r128 = _mm_set1_ps(dataOS[1][s]);
         }
 
+        float mixl = 0, mixr = 0;
         float tl[4], tr[4];
+
         _mm_store_ps(tl, l128);
         _mm_store_ps(tr, r128);
-        float mixl = 0, mixr = 0;
+
         for (int i = 0; i < 3; ++i)
         {
-            mixl += tl[i] * bankGain[i];
-            mixr += tr[i] * bankGain[i];
+            if (whichModel == 2 && i == 1)
+            {
+                mixl -= tl[i] * bandGain[i].v;
+                mixr -= tr[i] * bandGain[i].v;
+            }
+            else
+            {
+                mixl += tl[i] * bandGain[i].v;
+                mixr += tr[i] * bandGain[i].v;
+            }
+
+            // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
+            if (s % 2 == 0)
+            {
+                cutoff[i].process();
+                resonance[i].process();
+                bandGain[i].process();
+            }
         }
 
         dataOS[0][s] = mixl;
@@ -178,6 +244,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             }
         }
     }
+
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
@@ -206,11 +273,11 @@ const char *ResonatorEffect::group_label(int id)
     switch (id)
     {
     case 0:
-        return "Low Band";
+        return "Band 1";
     case 1:
-        return "Mid Band";
+        return "Band 2";
     case 2:
-        return "High Band";
+        return "Band 3";
     case 3:
         return "Output";
     }
@@ -242,11 +309,11 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_res1].set_name("Resonance 1");
     fxdata->p[resonator_res1].set_type(ct_percent);
     fxdata->p[resonator_res1].posy_offset = 1;
-    fxdata->p[resonator_res1].val_default.f = 0.5f;
+    fxdata->p[resonator_res1].val_default.f = 0.75f;
     fxdata->p[resonator_gain1].set_name("Gain 1");
     fxdata->p[resonator_gain1].set_type(ct_amplitude);
     fxdata->p[resonator_gain1].posy_offset = 1;
-    fxdata->p[resonator_gain1].val_default.f = 0.5f;
+    fxdata->p[resonator_gain1].val_default.f = 0.7937005f;
 
     fxdata->p[resonator_freq2].set_name("Frequency 2");
     fxdata->p[resonator_freq2].set_type(ct_freq_reson_band2);
@@ -254,11 +321,11 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_res2].set_name("Resonance 2");
     fxdata->p[resonator_res2].set_type(ct_percent);
     fxdata->p[resonator_res2].posy_offset = 3;
-    fxdata->p[resonator_res2].val_default.f = 0.5f;
+    fxdata->p[resonator_res2].val_default.f = 0.75f;
     fxdata->p[resonator_gain2].set_name("Gain 2");
     fxdata->p[resonator_gain2].set_type(ct_amplitude);
     fxdata->p[resonator_gain2].posy_offset = 3;
-    fxdata->p[resonator_gain2].val_default.f = 0.5f;
+    fxdata->p[resonator_gain2].val_default.f = 0.7937005f;
 
     fxdata->p[resonator_freq3].set_name("Frequency 3");
     fxdata->p[resonator_freq3].set_type(ct_freq_reson_band3);
@@ -266,11 +333,11 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_res3].set_name("Resonance 3");
     fxdata->p[resonator_res3].set_type(ct_percent);
     fxdata->p[resonator_res3].posy_offset = 5;
-    fxdata->p[resonator_res3].val_default.f = 0.5f;
+    fxdata->p[resonator_res3].val_default.f = 0.75f;
     fxdata->p[resonator_gain3].set_name("Gain 3");
     fxdata->p[resonator_gain3].set_type(ct_amplitude);
     fxdata->p[resonator_gain3].posy_offset = 5;
-    fxdata->p[resonator_gain3].val_default.f = 0.5f;
+    fxdata->p[resonator_gain3].val_default.f = 0.7937005f;
 
     fxdata->p[resonator_mode].set_name("Mode");
     fxdata->p[resonator_mode].set_type(ct_reson_mode);
@@ -286,17 +353,17 @@ void ResonatorEffect::init_ctrltypes()
 
 void ResonatorEffect::init_default_values()
 {
-    fxdata->p[resonator_freq1].val.f = -25.65f; // 100 Hz
-    fxdata->p[resonator_res1].val.f = 0.5f;
-    fxdata->p[resonator_gain1].val.f = 0.5f;
+    fxdata->p[resonator_freq1].val.f = -18.6305f; // 150 Hz
+    fxdata->p[resonator_res1].val.f = 0.75f;
+    fxdata->p[resonator_gain1].val.f = 0.7937005f;  // -6 dB on the dot
 
     fxdata->p[resonator_freq2].val.f = 8.038216f; // 700 Hz
-    fxdata->p[resonator_res2].val.f = 0.5f;
-    fxdata->p[resonator_gain2].val.f = 0.5f;
+    fxdata->p[resonator_res2].val.f = 0.75f;
+    fxdata->p[resonator_gain2].val.f = 0.7937005f;
 
     fxdata->p[resonator_freq3].val.f = 35.90135f; // 3500 Hz
-    fxdata->p[resonator_res3].val.f = 0.5f;
-    fxdata->p[resonator_gain3].val.f = 0.5f;
+    fxdata->p[resonator_res3].val.f = 0.75f;
+    fxdata->p[resonator_gain3].val.f = 0.7937005f;
 
     fxdata->p[resonator_mode].val.i = 1;
     fxdata->p[resonator_gain].val.f = 0.f;
