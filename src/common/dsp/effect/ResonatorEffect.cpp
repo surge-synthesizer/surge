@@ -48,8 +48,11 @@ void ResonatorEffect::setvars(bool init)
 {
     if (init)
     {
+
         for (int i = 0; i < 3; ++i)
         {
+            cutoff[i].instantize();
+            resonance[i].instantize();
             bandGain[i].instantize();
         }
 
@@ -66,6 +69,10 @@ void ResonatorEffect::setvars(bool init)
     {
         for (int i = 0; i < 3; ++i)
         {
+            cutoff[i].newValue(
+                fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+            resonance[i].newValue(
+                fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
             bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
         }
     }
@@ -137,18 +144,23 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
     float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75};  // prevent self-oscillation
 
+    for (int i = 0; i < 3; ++i)
+    {
+        cutoff[i].newValue(
+            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+        resonance[i].newValue(
+            fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
+        bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+    }
+
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
      */
     for (int e = 0; e < 3; ++e)
     {
-        float frequencyInPitch = 
-            fxdata->p[resonator_freq1 + e * 3].get_extended(*f[resonator_freq1 + e * 3]);
-        float resonance = *f[resonator_res1 + e * 3] * rescomp[whichModel];
-
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(frequencyInPitch, resonance, type, subtype, storage);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype, storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
@@ -170,10 +182,6 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    for (int i = 0; i < 3; ++i)
-    {
-        bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
-    }
 
     /* Run the filters. You need to grab a smoothed gain here rather than the hardcoded 0.3 */
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
@@ -214,6 +222,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
             if (s % 2 == 0)
             {
+                cutoff[i].process();
+                resonance[i].process();
                 bandGain[i].process();
             }
         }
