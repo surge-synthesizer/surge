@@ -150,6 +150,10 @@ void CLFOGui::draw(CDrawContext *dc)
             memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
 
             auto desiredRate = log2(1.f / totalEnvTime);
+            if (lfodata->shape.val.i == lt_mseg)
+            {
+                desiredRate = log2(ms->totalDuration / totalEnvTime);
+            }
 
             deactivateStorage.rate.deactivated = false;
             deactivateStorage.rate.val.f = desiredRate;
