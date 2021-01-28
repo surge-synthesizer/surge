@@ -146,6 +146,8 @@ void Wavetable::Copy(Wavetable *wt)
                 TableI16WeakPointers[i][j] = NULL;
         }
     }
+
+    current_id = wt->current_id;
 }
 
 bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
