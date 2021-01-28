@@ -3435,7 +3435,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                     if (p->deactivated)
                     {
-                        if (p->ctrltype == ct_envtime_deactivatable)
+                        if (p->ctrltype == ct_envtime_linkable_delay)
                         {
                             txt = Surge::UI::toOSCaseForMenu("Unlink from Left Channel");
                         }
@@ -3451,7 +3451,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     }
                     else
                     {
-                        if (p->ctrltype == ct_envtime_deactivatable)
+                        if (p->ctrltype == ct_envtime_linkable_delay)
                         {
                             txt = Surge::UI::toOSCaseForMenu("Link to Left Channel");
                         }

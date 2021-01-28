@@ -71,8 +71,8 @@ void DualDelayEffect::setvars(bool init)
     {
         timeL.newValue(
             samplerate *
-                ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
-                 storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[isLinked].val.f)) +
+                ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
+                 storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[dly_time_left].val.f)) +
             LFOval - FIRoffset);
         timeR.newValue(
             samplerate * ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
@@ -258,7 +258,7 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_time_left].set_name("Left");
     fxdata->p[dly_time_left].set_type(ct_envtime);
     fxdata->p[dly_time_right].set_name("Right");
-    fxdata->p[dly_time_right].set_type(ct_envtime_deactivatable);
+    fxdata->p[dly_time_right].set_type(ct_envtime_linkable_delay);
     fxdata->p[dly_feedback].set_name("Feedback");
     fxdata->p[dly_feedback].set_type(ct_percent);
     fxdata->p[dly_crossfeed].set_name("Crossfeed");
