@@ -236,6 +236,7 @@ bool Parameter::can_temposync()
     case ct_lforate:
     case ct_lforate_deactivatable:
     case ct_envtime:
+    case ct_envtime_deactivatable:
     case ct_envtime_lfodecay:
     case ct_reverbpredelaytime:
         return true;
@@ -290,6 +291,7 @@ bool Parameter::can_deactivate()
     case ct_decibel_deactivatable:
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
+    case ct_envtime_deactivatable:
         return true;
     }
     return false;
@@ -519,6 +521,7 @@ void Parameter::set_type(int ctrltype)
         val_default.f = -8;
         break;
     case ct_envtime:
+    case ct_envtime_deactivatable:
     case ct_envtime_lfodecay:
         valtype = vt_float;
         val_min.f = -8;
@@ -981,6 +984,7 @@ void Parameter::set_type(int ctrltype)
         // THERE IS NO BREAK HERE ON PURPOSE so we group to the others
     case ct_portatime:
     case ct_envtime:
+    case ct_envtime_deactivatable:
     case ct_reverbtime:
     case ct_reverbpredelaytime:
     case ct_chorusmodtime:
@@ -1226,6 +1230,7 @@ void Parameter::bound_value(bool force_integer)
         }
         case ct_portatime:
         case ct_envtime:
+        case ct_envtime_deactivatable:
         case ct_envtime_lfodecay:
         case ct_reverbtime:
         case ct_reverbpredelaytime:
@@ -2915,6 +2920,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_decibel_fmdepth:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:
+    case ct_envtime_deactivatable:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
     case ct_freq_reson_band1:
