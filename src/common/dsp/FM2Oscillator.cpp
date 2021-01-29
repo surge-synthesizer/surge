@@ -31,7 +31,7 @@ void FM2Oscillator::init(float pitch, bool is_display)
     // phase = oscdata->retrigger.val.b ? ((oscdata->startphase.val.f) * M_PI * 2) : 0.f;
     lastoutput = 0.0;
     driftlfo = 0;
-    driftlfo2 = 0;
+    driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     fb_val = 0.0;
     double ph = localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f * 2.0 * M_PI;
     RM1.set_phase(ph);

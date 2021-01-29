@@ -106,7 +106,7 @@ void WavetableOscillator::init(float pitch, bool is_display)
         mipmap[i] = 0;
         mipmap_ofs[i] = 0;
         driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
+        driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 }
 
