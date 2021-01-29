@@ -13,6 +13,7 @@ PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
         memset(biquad[i], 0, sizeof(BiquadFilter));
         new (biquad[i]) BiquadFilter(storage);
     }
+
     n_bq_units_initialised = n_bq_units;
     feedback.setBlockSize(BLOCK_SIZE * slowrate);
     width.set_blocksize(BLOCK_SIZE);
@@ -37,8 +38,10 @@ void PhaserEffect::init()
     {
         biquad[i]->suspend();
     }
+
     clear_block(L, BLOCK_SIZE_QUAD);
     clear_block(R, BLOCK_SIZE_QUAD);
+
     mix.set_target(1.f);
     width.instantize();
     mix.instantize();
@@ -58,6 +61,7 @@ inline void PhaserEffect::init_stages()
             memset(biquad[k], 0, sizeof(BiquadFilter));
             new (biquad[k]) BiquadFilter(storage);
         }
+
         n_bq_units_initialised = n_bq_units;
     }
 }
@@ -70,29 +74,20 @@ void PhaserEffect::process_only_control()
                  (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     lfophase += (float)slowrate * rate;
+    
+    // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
     if (lfophase > 1)
-        lfophase = fmod(
-            lfophase,
-            1.0); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
+    {
+        lfophase = fmod(lfophase, 1.0);
+    }
+
     float lfophaseR = lfophase + 0.5 * *f[ph_stereo];
+
     if (lfophaseR > 1)
+    {
         lfophaseR = fmod(lfophaseR, 1.0);
+    }
 }
-
-// in the original phaser we had {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12}
-float legacy_freq[4] = {
-    1.5 / 12,
-    19.5 / 12,
-    35 / 12,
-    50 / 12,
-};
-
-float legacy_span[4] = {
-    2.0,
-    1.5,
-    1.0,
-    0.5,
-};
 
 void PhaserEffect::setvars()
 {
@@ -102,13 +97,19 @@ void PhaserEffect::setvars()
                   (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     lfophase += (float)slowrate * rate;
+    
+    // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
     if (lfophase > 1)
-        lfophase = fmod(
-            lfophase,
-            1.0); // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
+    {
+        lfophase = fmod(lfophase, 1.0);
+    }
+
     float lfophaseR = lfophase + 0.5 * *f[ph_stereo];
+    
     if (lfophaseR > 1)
+    {
         lfophaseR = fmod(lfophaseR, 1.0);
+    }
 
     double lfoout = 1.f - fabs(2.0 - 4.0 * lfophase);
     double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
@@ -131,12 +132,11 @@ void PhaserEffect::setvars()
     {
         for (int i = 0; i < n_stages; i++)
         {
-            double centre = powf(2, (i + 1.0) * 2 / n_stages);
-            double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * centre +
+            double center = powf(2, (i + 1.0) * 2 / n_stages);
+            double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
                                                      2.0 / (i + 1) * lfoout * *f[ph_mod_depth]);
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] +
-                                                  *f[ph_spread] * centre *
+            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center *
                                                       (2.0 / (i + 1) * lfooutR * *f[ph_mod_depth]));
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }
@@ -149,7 +149,10 @@ void PhaserEffect::setvars()
 void PhaserEffect::process(float *dataL, float *dataR)
 {
     if (bi == 0)
+    {
         setvars();
+    }
+
     bi = (bi + 1) & slowrate_m1;
 
     for (int i = 0; i < BLOCK_SIZE; i++)
@@ -165,6 +168,7 @@ void PhaserEffect::process(float *dataL, float *dataR)
             dL = biquad[2 * curr_stage]->process_sample(dL);
             dR = biquad[2 * curr_stage + 1]->process_sample(dR);
         }
+
         L[i] = dL;
         R[i] = dR;
     }
@@ -211,6 +215,7 @@ int PhaserEffect::group_label_ypos(int id)
 void PhaserEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
+
     fxdata->p[ph_stages].set_name("Count");
     fxdata->p[ph_stages].set_type(ct_phaser_stages);
     fxdata->p[ph_center].set_name("Center");
@@ -247,6 +252,7 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_width].posy_offset = 7;
     fxdata->p[ph_mix].posy_offset = 11;
 }
+
 void PhaserEffect::init_default_values()
 {
     fxdata->p[ph_stages].val.i = 4;
@@ -267,15 +273,26 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision,
 int PhaserEffect::get_ringout_decay()
 {
     auto fb = *f[ph_feedback];
+
     // The ringout is longer at high feedbacks. This is just a heuristic based on
     // testing with the patch in #2663. Note that at feedbacks above 1 (from
     // modulation or control pushes) you can get infinite self modulation
     // so run forever then
+
     if (fb > 1 || fb < -1)
+    {
         return -1;
+    }
+
     if (fb > 0.9 || fb < -0.9)
+    {
         return 5000;
+    }
+
     if (fb > 0.5 || fb < -0.5)
+    {
         return 3000;
+    }
+
     return 1000;
 }

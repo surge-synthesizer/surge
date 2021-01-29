@@ -30,9 +30,9 @@ struct Color
 } // namespace Surge
 namespace Colors
 {
-namespace AboutBox
+namespace AboutPage
 {
-extern const Surge::Skin::Color Text, Link;
+extern const Surge::Skin::Color Text, ColumnText, Link, LinkHover;
 }
 
 namespace Dialog
