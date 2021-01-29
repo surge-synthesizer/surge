@@ -62,13 +62,13 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 0 -> 1 new EG attack shapes (0>1, 1>2, 2>2)
 // 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min
 // 2 -> 3 filter subtypes added: comb defaults to 1 and legacy ladder to 3
-// 3 -> 4 comb +/- combined into one filtertype (subtype 0,0->0 0,1->1 1,0->2 1,1->3 )
+// 3 -> 4 comb +/- combined into one filter type (subtype 0, 0->0; 0, 1->1; 1,0 -> 2; 1,1 -> 3 )
 // 4 -> 5 stereo filter configuration got seperate pan controls
-// 5 -> 6 new filter sound in v1.2 (same parameters, but different sound and changed resonance
-// response) 6 -> 7 custom controller state now stored (in DAW recall) 7 -> 8 larger resonance range
-// (old filters are set to subtype 1)
+// 5 -> 6 new filter sound in v1.2 (same parameters, different sound - changed resonance response)
+// 6 -> 7 custom controller state now stored (in DAW recall)
+// 7 -> 8 larger resonance range (old filters are set to subtype 1)
 //        pan2 -> width
-// 8 -> 9 macros extended to 8 (offset IDs larger than ctrl7 by +1)
+// 8 -> 9 macros extended to 8 (offset IDs larger than ctrl7 by + 1)
 //        macros can have names (guess for pre-rev9 patches)
 // 9 -> 10 added Character parameter
 // 10 -> 11 (1.6.2 release) added DAW extra state
@@ -76,10 +76,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 12 -> 13 (1.7.0 release) slider deactivation
 //                          sine LP/HP filters
 //                          sine/FM2/FM3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 nightlies) add phaser number of stages parameter
+// 13 -> 14 (1.8.0 nightlies) add phaser stages/center/spread parameters
 //                            add ability to configure vocoder modulator mono/sterao/L/R
 //                            add comb filter tuning and compatibility block
-// 14 -> 15 (1.8.0 release) apply the great filter remap of #3006
+// 14 -> 15 (1.8.0 release) apply the great filter remap (GitHub issue #3006)
 
 const int ff_revision = 15;
 
@@ -255,13 +255,20 @@ enum fx_type
     fxt_neuron,
     fxt_geq11,
     fxt_resonator,
+    fxt_chow,
+    fxt_exciter,
+    fxt_ensemble,
+    fxt_combulator,
+    fxt_nimbus,
 
     n_fx_types,
 };
+
 const char fx_type_names[n_fx_types][16] = {
-    "Off",     "Delay",      "Reverb 1",    "Phaser", "Rotary",     "Distortion",
-    "EQ",      "Freq Shift", "Conditioner", "Chorus", "Vocoder",    "Reverb 2",
-    "Flanger", "Ring Mod",   "Airwindows",  "Neuron", "Graphic EQ", "Resonator",
+    "Off",     "Delay",      "Reverb 1",    "Phaser",      "Rotary",     "Distortion",
+    "EQ",      "Freq Shift", "Conditioner", "Chorus",      "Vocoder",    "Reverb 2",
+    "Flanger", "Ring Mod",   "Airwindows",  "Neuron",      "Graphic EQ", "Resonator",
+    "CHOW",    "Exciter",    "Ensemble",    "Combulator",  "Nimbus", 
 };
 
 enum fx_bypass

@@ -19,7 +19,9 @@
 </osc>
 <fx>
     <type i="0" name="Off" />
+
     <separator />
+
     <type i="6" name="EQ">
         <snapshot name="Init" p0="0.000000" p1="-27.251785" p2="2.000000" p3="0.000000" p4="6.000000" p5="2.000000" p6="0.000000" p7="54.964317" p8="2.223215" />
         <snapshot name="Air" p0="0.000000" p1="-27.251785" p2="2.000000" p3="0.000000" p4="6.000000" p5="2.000000" p6="7.971434" p7="61.039318" p8="2.785716" />
@@ -39,21 +41,21 @@
         <snapshot name="Smiley Curve" p0="10.285721" p1="-27.251785" p2="2.000000" p3="0.000000" p4="6.000000" p5="2.000000" p6="11.057152" p7="54.964317" p8="2.223215" />
         <snapshot name="Warm" p0="4" p1="-13.65" p2="0.71" p3="0" p4="6" p5="2" p6="0" p7="54.9643" p8="2.22322" p9="0" p10="1" />
     </type>
+<!--     <type i="19" name="Exciter">
+        <snapshot name="Init" />
+    </type> -->
     <type i="16" name="Graphic EQ">
         <snapshot name="Init" />
     </type>
-    <!--
     <type i="17" name="Resonator">
         <snapshot name="Init" />
     </type>
-    -->
+
     <separator />
-    <type i="8" name="Conditioner">
-        <snapshot name="Init" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.014269" p5="0.000000" p6="0.000000" p7="0.000000" />
-        <snapshot name="Limiter 1" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.742889" p5="-0.085714" p6="0.000000" p7="-9.257149" />
-        <snapshot name="Limiter 2" p0="0" p1="0" p2="0" p3="0" p4="-6" p5="0" p6="0.01" p7="0" />
-        <snapshot name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
-    </type>
+
+<!--     <type i="18" name="CHOW">
+        <snapshot name="Init" />
+    </type> -->
     <type i="5" name="Distortion">
         <snapshot name="Init" p0="0.000000" p1="3.817860" p2="1.944644" p3="38.421448" p4="0.000000" p5="0.000000" p6="0.000000" p7="3.000000" p8="2.031250" p9="30.535736" />
         <snapshot name="Bright 1" p0="6.004265" p1="47.901802" p2="2.999101" p3="70.000000" p4="0.000000" p5="0.000000" p6="6.004417" p7="54.079567" p8="2.998620" p9="70.000000" p10="0.000000" />
@@ -76,7 +78,12 @@
     <type i="15" name="Neuron">
         <snapshot name="Init" />
     </type>
+
     <separator />
+
+<!--     <type i="21" name="Combulator">
+        <snapshot name="Init" />
+    </type> -->
     <type i="7" name="Frequency Shifter">
         <snapshot name="Init" p0="0.000000" p1="1.000000" p2="-8.000000" p3="0.000000" p4="1.000000" />
         <snapshot name="Chorusy" p0="-0.071431" p1="0.925000" p2="-8.000000" p2_temposync="1" p3="0.000000" p4="0.291964" />
@@ -85,6 +92,9 @@
         <snapshot name="Pulsating" p0="-0.250003" p1="-0.589286" p2="-4" p2_temposync="1" p3="0.7" p4="0.3" />
         <snapshot name="The Future Will Be Like This" p0="1.428571" p0_extend_range="1" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.811607" p4="0.200893" />
     </type>
+<!--     <type i="22" name="Nimbus">
+        <snapshot name="Init" />
+    </type> -->
     <type i="13" name="Ring Modulator">
         <snapshot name="Init" />
         <snapshot name="Crusher" p0="11" p1="60" p2="0.0714279" p3="2" p4="0.205357" p5="0.767857" p6="-60" p7="38.2131" p8="0.776786" />
@@ -92,7 +102,9 @@
     <type i="10" name="Vocoder">
         <snapshot name="Init" />
     </type>
+
     <separator />
+
     <type i="9" name="Chorus">
         <snapshot name="Init (Dry)" p0="-7.885717" p1="-2.850000" p2="0.669643" p3="0.000000" p4="-23.625008" p5="65.662498" p6="0.500000" />
         <snapshot name="Init (Send)" p0="-7.885717" p1="-2.850000" p2="0.669643" p3="0.000000" p4="-23.625008" p5="65.662498" p6="1.000000" />
@@ -106,6 +118,9 @@
         <snapshot name="Sweet" p0="-6.77858" p1="0.405992" p2="0.18" p3="0" p4="-23.625" p5="70" p6="0.5" p7="12" />
         <snapshot name="Unison" p0="-5.65714" p1="-4.94314" p2="0.803572" p3="0.408928" p4="-23.625" p5="65.6625" p6="0.5" p7="12" />
     </type>
+<!--     <type i="20" name="Ensemble">
+        <snapshot name="Init" />
+    </type> -->
     <type i="12" name="Flanger">
         <snapshot name="Init" p0="1" p1="0" p2="-2" p3="0.75" p4="3" p5="60" p6="12" p7="0.25" p8="0.2" p9="0" p10="1" />
         <snapshot name="Big Chorus" p0="0" p1="0" p2="-3.16072" p3="1" p4="4" p5="29" p6="0" p7="0" p8="0" p9="0" p10="1" />
@@ -135,7 +150,9 @@
         <snapshot name="Slow" p0="1.293751" p1="0.251786" p2="0.495536" />
         <snapshot name="Turn The Rotor" p0="-0.532016" p1="0.2" p2="0.11" p3="0.282144" p4="0" p5="0" p6="12" p7="0.25" />
     </type>
+
     <separator />
+
     <type i="1" name="Delay">
         <snapshot name="Init (Dry)" p0="-1.000000" p0_temposync="1" p1="-1.000000" p1_temposync="1" p2="0.000000" p3="0.000000" p4="-14.105346" p5="48.289276" p6="-1.179463" p7="0.000000" p8="0.000000" p9="0.000000" p10="0.250000" />
         <snapshot name="Init (Send)" p0="-1.000000" p0_temposync="1" p1="-1.000000" p1_temposync="1" p2="0.000000" p3="0.000000" p4="-14.105346" p5="48.289276" p6="-1.179463" p7="0.000000" p8="0.000000" p9="0.000000" p10="1.000000" />
@@ -191,7 +208,9 @@
         <snapshot name="Grain Delay" p0="-4" p1="-0.54" p2="3.1375" p3="0" p4="0.03" p5="0.65" p6="0.15" p7="0.35" p8="0" p9="0.35" />
         <snapshot name="Warm Hall" p0="-4" p1="0.6" p2="-3.32143" p3="1" p4="1" p5="0.5" p6="0" p7="0.803572" p8="-1" p9="0.35" />
     </type>
+
     <separator />
+
     <type i="14" name="Airwindows">
         <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000" />
         <type i="14" name="Ambience">
@@ -258,6 +277,12 @@
             <snapshot name="Iron Oxide" p0="41" p1="0.5" p2="0.562341" p3="0.562341" p4="0.5" p5="0.5" p6="0.5" p7="1" />
             <snapshot name="To Tape" p0="42" p1="0.5" p2="0.5" p3="0.5" p4="0.5" p5="0.5" p6="1" />
         </type>
+    </type>
+    <type i="8" name="Conditioner">
+        <snapshot name="Init" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.014269" p5="0.000000" p6="0.000000" p7="0.000000" />
+        <snapshot name="Limiter 1" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.742889" p5="-0.085714" p6="0.000000" p7="-9.257149" />
+        <snapshot name="Limiter 2" p0="0" p1="0" p2="0" p3="0" p4="-6" p5="0" p6="0.01" p7="0" />
+        <snapshot name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
     </type>
 </fx>
 
