@@ -44,11 +44,16 @@ Type: filesandordirs; Name: "{cf}\VST3\SurgeEffectsBank.vst3"
 Type: filesandordirs; Name: "{cf}\VST3\Surge Synth Team\SurgeEffectsBank.vst3"
 ;; also since we're now putting the .vst3 file in SST subfolder, remove old one
 Type: files; Name: "{cf}\VST3\Surge.vst3"
-;; and since there have been changes in patch subfoldering for factory and 3rd party folders in Surge 1.7, delete them first to ensure clean slate
+;; clean up factory data folder, except tuning-library folder (users might link to their own custom tunings into this folder)
+Type: filesandordirs; Name: "{commonappdata}\Surge\modulator_presets"
 Type: filesandordirs; Name: "{commonappdata}\Surge\patches_3rdparty"
 Type: filesandordirs; Name: "{commonappdata}\Surge\patches_factory"
-;; and since there have been changes in some factory wavetable names in Surge 1.8.1, delete them first to ensure clean slate
+Type: filesandordirs; Name: "{commonappdata}\Surge\skins"
 Type: filesandordirs; Name: "{commonappdata}\Surge\wavetables"
+Type: filesandordirs; Name: "{commonappdata}\Surge\wavetables_3rdparty"
+Type: files; Name: "{commonappdata}\Surge\windows.wt"
+Type: files; Name: "{commonappdata}\Surge\configuration.xml"
+Type: files; Name: "{commonappdata}\Surge\paramdocumentation.xml"
 
 [Components]
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
