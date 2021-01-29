@@ -2,9 +2,12 @@
 
 namespace Colors
 {
-namespace AboutBox
+namespace AboutPage
 {
-const Surge::Skin::Color Text("aboutbox.text", 255, 255, 255), Link("aboutbox.link", 46, 134, 255);
+const Surge::Skin::Color Text("about.page.text", 255, 255, 255),
+    ColumnText("about.page.column.text", 255, 144, 0),
+    Link("about.page.link", 45, 134, 254),
+    LinkHover("about.page.hover.link", 96, 196, 255);
 }
 
 namespace Dialog

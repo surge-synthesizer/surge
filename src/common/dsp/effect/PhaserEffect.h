@@ -74,4 +74,8 @@ class PhaserEffect : public Effect
     float lfophase;
     int bi; // block increment (to keep track of events not occurring every n blocks)
     void init_stages();
+
+    // before stages/spread added parameters we had 4 stages at fixed frequencies and modulation depth span
+    float legacy_freq[4] = {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12 };
+    float legacy_span[4] = {2.0, 1.5, 1.0, 0.5 };
 };

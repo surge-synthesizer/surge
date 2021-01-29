@@ -56,10 +56,10 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     auto xp = margin, yp = 20;
 
     /* text label construction lambdas */
-    auto addLabel = [this, &xp, &yp, &lblh](std::string text, int width) {
+    auto addLabel = [this, &xp, &yp, &lblh, skin](std::string text, int width) {
         auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(width, lblh)), text.c_str());
         l1->setFont(aboutFont);
-        l1->setFontColor(kWhiteCColor);
+        l1->setFontColor(skin->getColor(Colors::AboutPage::Text));
         l1->setMouseableArea(CRect());
         l1->setTransparency(true);
         l1->setHoriAlign(kLeftText);
@@ -72,7 +72,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
                                     bool subtractYoffset = false) {
         auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(col1width, lblh)), title.c_str());
         l1->setFont(boldFont);
-        l1->setFontColor(CColor(255, 144, 0));
+        l1->setFontColor(skin->getColor(Colors::AboutPage::ColumnText));
         l1->setMouseableArea(CRect());
         l1->setTransparency(true);
         l1->setHoriAlign(kLeftText);
@@ -85,8 +85,8 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
             l2->setFont(aboutFont);
             l2->setURL(URL);
             l2->setLabel(val.c_str());
-            l2->setLabelColor(CColor(45, 134, 254));
-            l2->setHoverColor(CColor(96, 196, 255));
+            l2->setLabelColor(skin->getColor(Colors::AboutPage::Link));
+            l2->setHoverColor(skin->getColor(Colors::AboutPage::LinkHover));
             addView(l2);
         }
         else
@@ -94,7 +94,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
             auto l2 = new CTextLabel(CRect(CPoint(xp + col1width, yp), CPoint(col2width, lblh)),
                                      val.c_str());
             l2->setFont(aboutFont);
-            l2->setFontColor(kWhiteCColor);
+            l2->setFontColor(skin->getColor(Colors::AboutPage::Text));
             l2->setTransparency(true);
             l2->setHoriAlign(kLeftText);
             l2->setMouseableArea(CRect());
@@ -183,11 +183,11 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     copy->setFont(boldFont);
     copy->setFrameColor(CColor(0, 0, 0, 0));
     copy->setFrameColorHighlighted(CColor(0, 0, 0, 0));
-    copy->setHoverTextColor(CColor(96, 196, 255));
+    copy->setHoverTextColor(skin->getColor(Colors::AboutPage::LinkHover));
     copy->setGradient(nullptr);
     copy->setGradientHighlighted(nullptr);
-    copy->setTextColor(CColor(45, 134, 254));
-    copy->setTextColorHighlighted(CColor(96, 196, 255));
+    copy->setTextColor(skin->getColor(Colors::AboutPage::Link));
+    copy->setTextColorHighlighted(skin->getColor(Colors::AboutPage::LinkHover));
     copy->setTextAlignment(kLeftText);
     addView(copy);
 
