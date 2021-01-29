@@ -33,7 +33,7 @@
 
 #if MAC || LINUX
 #include <execinfo.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cstdlib>
 #endif
 
@@ -202,25 +202,27 @@ struct CPoint
 {
     CPoint() : x(0), y(0) {}
     CPoint(float x, float y) : x(x), y(y) {}
+    CPoint(const juce::Point<float> &p) : x(p.x), y(p.y) {}
     float x, y;
 
     bool operator==(const CPoint &that) const { return (x == that.x && y == that.y); }
-    bool operator!=(const CPoint &that) { return !(*this == that); }
-    CPoint operator-(const CPoint &that) { return CPoint(x - that.x, y - that.y); }
+    bool operator!=(const CPoint &that) const { return !(*this == that); }
+    CPoint operator-(const CPoint &that) const { return {x - that.x, y - that.y}; }
     CPoint offset(float dx, float dy)
     {
         x += dx;
         y += dy;
         return *this;
     }
+
+    operator juce::Point<float>() const { return juce::Point<float>(x, y); }
 };
 
 struct CRect
 {
-    // REDO this to use bottom and have a to/from juce rect cast
-    double top, bottom, left, right;
-    CRect() {}
-    CRect(juce::Rectangle<int> rect) { UNIMPL; }
+    double top = 0, bottom = 0, left = 0, right = 0;
+    CRect() = default;
+    CRect(juce::Rectangle<int> rect) { DUNIMPL; }
     CRect(const CPoint &corner, const CPoint &size)
     {
         top = corner.y;
@@ -257,10 +259,12 @@ struct CRect
     inline void setHeight(float h) { bottom = top + h; }
     inline void setWidth(float h) { right = left + h; }
 
-    inline CRect inset(float, float)
+    inline CRect inset(float dx, float dy)
     {
-        // update in place
-        UNIMPL;
+        left += dx;
+        right -= dx;
+        top += dy;
+        bottom -= dy;
         return *this;
     }
     inline CRect offset(float x, float y)
@@ -272,35 +276,47 @@ struct CRect
         return *this;
     }
     inline CRect moveTo(CPoint p) { return moveTo(p.x, p.y); }
-    inline CRect moveTo(float, float)
+    inline CRect moveTo(float x, float y)
     {
-        UNIMPL;
+        auto dx = x - left;
+        auto dy = y - top;
+        top += dy;
+        left += dx;
+        bottom += dy;
+        right += dx;
         return *this;
     }
-    inline bool pointInside(const CPoint &where) const
-    {
-        UNIMPL;
-        return false;
-    }
+    inline bool pointInside(const CPoint &where) const { return asJuceFloatRect().contains(where); }
     inline CPoint getCenter()
     {
-        UNIMPL;
-        return CPoint();
+        auto p = asJuceFloatRect().getCentre();
+        return p;
     }
-    inline CRect extend(float, float)
+    inline CRect extend(float dx, float dy) { return inset(-dx, -dy); }
+    inline CRect bound(CRect &rect)
     {
-        UNIMPL;
-        return *this;
-    }
-    inline CRect bound(CRect &toThis)
-    {
-        UNIMPL;
+        if (left < rect.left)
+            left = rect.left;
+        if (top < rect.top)
+            top = rect.top;
+        if (right > rect.right)
+            right = rect.right;
+        if (bottom > rect.bottom)
+            bottom = rect.bottom;
+        if (bottom < top)
+            bottom = top;
+        if (right < left)
+            right = left;
         return *this;
     }
 
     operator juce::Rectangle<float>() const
     {
         return juce::Rectangle<float>(left, top, getWidth(), getHeight());
+    }
+    juce::Rectangle<float> asJuceFloatRect() const
+    {
+        return static_cast<juce::Rectangle<float>>(*this);
     }
     juce::Rectangle<int> asJuceIntRect() const
     {
@@ -786,8 +802,10 @@ template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefco
     virtual void draw(CDrawContext *dc) { UNIMPL; };
     CRect getViewSize()
     {
+        // FIXME - this should reajju just use the cast-operator
         auto b = juceComponent()->getBounds();
-        return CRect(0, 0, juceComponent()->getWidth(), juceComponent()->getHeight());
+        return CRect(CPoint(b.getX(), b.getY()),
+                     CPoint(juceComponent()->getWidth(), juceComponent()->getHeight()));
     }
 
     CPoint getTopLeft()
@@ -987,13 +1005,9 @@ struct CViewContainer : public CView
     }
     void removeAll(bool b = true)
     {
-        std::cout << "Doing a removeAll" << std::endl;
-        Surge::Debug::stackTraceToStdout(8);
-
-        if (ed)
-            ed->getJuceEditor()->removeAllChildren();
         for (auto e : views)
         {
+            ed->getJuceEditor()->removeChildComponent(e->juceComponent());
             e->forget();
         }
         views.clear();
@@ -1029,7 +1043,6 @@ struct CFrame : public CViewContainer
     }
     void invalidRect(const CRect &r)
     {
-        UNIMPL;
         invalid();
     }
     void setDirty(bool b = true) { invalid(); }
@@ -1271,6 +1284,10 @@ template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g
     if (viewCompanion)
     {
         auto dc = std::make_unique<CDrawContext>(g);
+        auto b = T::getBounds();
+        auto t = juce::AffineTransform().translated(-b.getX(), -b.getY());
+        juce::Graphics::ScopedSaveState gs(g);
+        g.addTransform(t);
         viewCompanion->draw(dc.get());
     }
 }

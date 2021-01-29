@@ -85,6 +85,7 @@ buildwin/
 build-arm/
 buildiwyu/
 cmake-build-*/
+bwd/
 
 # Reaper
 *.RPP-bak
@@ -94,3 +95,6 @@ VERSION_GIT_INFO
 
 # Juce until we add a submodule
 libs/juce-*
+
+# A place for BP to store stuff
+ignore/*

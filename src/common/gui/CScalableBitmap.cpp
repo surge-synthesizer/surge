@@ -7,6 +7,7 @@ CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame 
 {
     if (d.u.type == VSTGUI::CResourceDescription::kIntegerType)
     {
+        resourceID = d.u.id;
         std::string fn = "bmp00" + std::to_string(d.u.id) + "_svg";
         int bds;
         auto bd = BinaryData::getNamedResource(fn.c_str(), bds);
@@ -20,6 +21,8 @@ CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame 
 CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame *f)
     : VSTGUI::CBitmap(VSTGUI::CResourceDescription(0))
 {
+    this->fname = fname;
+    drawable = juce::Drawable::createFromImageFile(juce::File(fname));
 }
 
 CScalableBitmap::~CScalableBitmap() = default;
