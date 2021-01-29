@@ -4887,10 +4887,6 @@ void SurgeGUIEditor::draw_infowindow(int ptag, CControl *control, bool modulate,
     }
 
     CRect r2 = control->getViewSize();
-#if TARGET_JUCE_UI
-    auto tl = control->getTopLeft();
-    r2.offset(tl.x, tl.y);
-#endif
 
     // OK this is a heuristic to stop deform overpainting and stuff
     if (r2.bottom > getWindowSizeY() - r.getHeight() - 2)
