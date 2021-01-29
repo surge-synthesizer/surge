@@ -30,7 +30,7 @@ void FM3Oscillator::init(float pitch, bool is_display)
     phase = 0.0;
     lastoutput = 0.0;
     driftlfo = 0;
-    driftlfo2 = 0;
+    driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     fb_val = 0.0;
     AM.set_phase(0.0);
     RM1.set_phase(0.0);

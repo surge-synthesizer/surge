@@ -84,6 +84,8 @@ void WindowOscillator::init(float pitch, bool is_display)
             else
                 Window.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
                                 << 16;
+
+            Window.DriftLFO[i][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
         }
     }
 

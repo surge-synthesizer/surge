@@ -295,7 +295,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
         state[i] = 0.f;
         pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
         driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
+        driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 }
 

@@ -78,7 +78,7 @@ void SineOscillator::init(float pitch, bool is_display)
             phase[i] = 0.f;
         lastvalue[i] = 0.f;
         driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
+        driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
         sinus[i].set_phase(phase[i]);
     }
 
