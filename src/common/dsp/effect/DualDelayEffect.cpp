@@ -65,6 +65,8 @@ void DualDelayEffect::setvars(bool init)
     else
         LFOval = ca * LFOval - lfo_increment;
 
+    auto isLinked = fxdata->p[dly_time_right].deactivated ? dly_time_left : dly_time_right;
+
     if (init)
     {
         timeL.newValue(
@@ -73,9 +75,8 @@ void DualDelayEffect::setvars(bool init)
                  storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[dly_time_left].val.f)) +
             LFOval - FIRoffset);
         timeR.newValue(
-            samplerate *
-                ((fxdata->p[dly_time_right].temposync ? storage->temposyncratio_inv : 1.f) *
-                 storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[dly_time_right].val.f)) -
+            samplerate * ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
+                          storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[isLinked].val.f)) -
             LFOval - FIRoffset);
     }
     else
@@ -85,9 +86,8 @@ void DualDelayEffect::setvars(bool init)
                           storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_left])) +
             LFOval - FIRoffset);
         timeR.newValue(
-            samplerate *
-                ((fxdata->p[dly_time_right].temposync ? storage->temposyncratio_inv : 1.f) *
-                 storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_right])) -
+            samplerate * ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
+                          storage->note_to_pitch_ignoring_tuning(12 * *f[isLinked])) -
             LFOval - FIRoffset);
     }
 
@@ -258,7 +258,7 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_time_left].set_name("Left");
     fxdata->p[dly_time_left].set_type(ct_envtime);
     fxdata->p[dly_time_right].set_name("Right");
-    fxdata->p[dly_time_right].set_type(ct_envtime);
+    fxdata->p[dly_time_right].set_type(ct_envtime_linkable_delay);
     fxdata->p[dly_feedback].set_name("Feedback");
     fxdata->p[dly_feedback].set_type(ct_percent);
     fxdata->p[dly_crossfeed].set_name("Crossfeed");
@@ -294,10 +294,12 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_mix].posy_offset = 9;
     fxdata->p[dly_width].posy_offset = 5;
 }
+
 void DualDelayEffect::init_default_values()
 {
     fxdata->p[dly_time_left].val.f = -2.f;
     fxdata->p[dly_time_right].val.f = -2.f;
+    fxdata->p[dly_time_right].deactivated = false;
     fxdata->p[dly_feedback].val.f = 0.0f;
     fxdata->p[dly_crossfeed].val.f = 0.0f;
     fxdata->p[dly_lowcut].val.f = -24.f;

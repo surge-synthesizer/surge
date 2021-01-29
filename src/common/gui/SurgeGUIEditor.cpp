@@ -3431,16 +3431,36 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 }
                 if (p->can_deactivate())
                 {
+                    std::string txt;
+
                     if (p->deactivated)
                     {
-                        addCallbackMenu(contextMenu, "Activate", [this, p]() {
+                        if (p->ctrltype == ct_envtime_linkable_delay)
+                        {
+                            txt = Surge::UI::toOSCaseForMenu("Unlink from Left Channel");
+                        }
+                        else
+                        {
+                            txt = Surge::UI::toOSCaseForMenu("Activate");
+                        }
+
+                        addCallbackMenu(contextMenu, txt.c_str(), [this, p]() {
                             p->deactivated = false;
                             this->synth->refresh_editor = true;
                         });
                     }
                     else
                     {
-                        addCallbackMenu(contextMenu, "Deactivate", [this, p]() {
+                        if (p->ctrltype == ct_envtime_linkable_delay)
+                        {
+                            txt = Surge::UI::toOSCaseForMenu("Link to Left Channel");
+                        }
+                        else
+                        {
+                            txt = Surge::UI::toOSCaseForMenu("Deactivate");
+                        }
+
+                        addCallbackMenu(contextMenu, txt.c_str(), [this, p]() {
                             p->deactivated = true;
                             this->synth->refresh_editor = true;
                         });
@@ -6749,7 +6769,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, CControl *c, int ms)
         if (!p->can_setvalue_from_string())
         {
             typeinValue->setFontColor(VSTGUI::kRedCColor);
-            typeinValue->setText("Edit coming soon!");
+            typeinValue->setText("Not available");
         }
     }
 
