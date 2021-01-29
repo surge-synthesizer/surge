@@ -235,12 +235,18 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     /* and preserve those registers and stuff. This all works */
     for (int c = 0; c < 2; ++c)
     {
+        for (int i = 0; i < n_cm_coeffs; i++)
+        {
+            for (int e = 0; e < 3; ++e)
+            {
+                coeff[e][c].C[i] = get1f(qfus[c].C[i], e);
+            }
+        }
         for (int i = 0; i < n_filter_registers; i++)
         {
             for (int e = 0; e < 3; ++e)
             {
                 Reg[e][c][i] = get1f(qfus[c].R[i], e);
-                coeff[e][c].C[i] = get1f(qfus[c].C[i], e);
             }
         }
     }

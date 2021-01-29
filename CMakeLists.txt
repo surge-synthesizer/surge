@@ -64,6 +64,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     endif()
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
+    add_compile_options(
+      -Werror
+    )
   endif()
 endif()
 
