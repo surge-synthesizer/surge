@@ -23,3 +23,6 @@
 [submodule "libs/pybind11"]
 	path = libs/pybind11
 	url = https://github.com/pybind/pybind11
+[submodule "libs/eurorack/eurorack"]
+	path = libs/eurorack/eurorack
+	url = https://github.com/pichenettes/eurorack.git

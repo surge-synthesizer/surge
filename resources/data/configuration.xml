@@ -92,9 +92,9 @@
         <snapshot name="Pulsating" p0="-0.250003" p1="-0.589286" p2="-4" p2_temposync="1" p3="0.7" p4="0.3" />
         <snapshot name="The Future Will Be Like This" p0="1.428571" p0_extend_range="1" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.811607" p4="0.200893" />
     </type>
-<!--     <type i="22" name="Nimbus">
+    <type i="22" name="Nimbus (WIP)">
         <snapshot name="Init" />
-    </type> -->
+    </type>
     <type i="13" name="Ring Modulator">
         <snapshot name="Init" />
         <snapshot name="Crusher" p0="11" p1="60" p2="0.0714279" p3="2" p4="0.205357" p5="0.767857" p6="-60" p7="38.2131" p8="0.776786" />
