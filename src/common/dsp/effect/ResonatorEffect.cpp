@@ -146,10 +146,17 @@ void ResonatorEffect::process(float *dataL, float *dataR)
 
     for (int i = 0; i < 3; ++i)
     {
-        cutoff[i].newValue(
-            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
-        resonance[i].newValue(
-            fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
+        auto boundcutoff = limit_range(
+            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]),
+            fxdata->p[resonator_freq1 + i * 3].val_min.f,
+            fxdata->p[resonator_freq1 + i * 3].val_max.f);
+        
+        auto boundres = limit_range(*f[resonator_res1 + i * 3],
+            fxdata->p[resonator_res1 + i * 3].val_min.f,
+            fxdata->p[resonator_res1 + i * 3].val_max.f);
+        
+        cutoff[i].newValue(boundcutoff);
+        resonance[i].newValue(boundres);
         bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
     }
 
