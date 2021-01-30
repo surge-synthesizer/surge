@@ -396,11 +396,11 @@ int FlangerEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 11;
+        return 9;
     case 2:
-        return 19;
+        return 17;
     case 3:
-        return 25;
+        return 23;
     }
     return 0;
 }
@@ -442,17 +442,20 @@ void FlangerEffect::init_ctrltypes()
     fxdata->p[fl_mix].set_name("Mix");
     fxdata->p[fl_mix].set_type(ct_percent_bidirectional);
 
-    for (int i = fl_mode; i < fl_num_params; ++i)
-    {
-        auto a = 1;
-        if (i >= fl_voices)
-            a += 2;
-        if (i >= fl_feedback)
-            a += 2;
-        if (i >= fl_width)
-            a += 2;
-        fxdata->p[i].posy_offset = a;
-    }
+    fxdata->p[fl_wave].posy_offset = -1;
+    fxdata->p[fl_rate].posy_offset = -1;
+    fxdata->p[fl_depth].posy_offset = -1;
+
+    fxdata->p[fl_voices].posy_offset = 1;
+    fxdata->p[fl_voice_basepitch].posy_offset = 1;
+    fxdata->p[fl_voice_spacing].posy_offset = 1;
+
+    fxdata->p[fl_feedback].posy_offset = 3;
+    fxdata->p[fl_damping].posy_offset = 3;
+
+    fxdata->p[fl_mode].posy_offset = 23;
+    fxdata->p[fl_width].posy_offset = 7;
+    fxdata->p[fl_mix].posy_offset = 7;
 }
 
 void FlangerEffect::init_default_values()

@@ -142,6 +142,8 @@ const char *Neuron::group_label(int id)
     case 1:
         return "Comb";
     case 2:
+        return "Modulation";
+    case 3:
         return "Output";
     }
 
@@ -158,6 +160,8 @@ int Neuron::group_label_ypos(int id)
         return 13;
     case 2:
         return 19;
+    case 3:
+        return 27;
     }
     return 0;
 }
@@ -189,6 +193,7 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_bias_bf].set_type(ct_percent);
     fxdata->p[neuron_bias_bf].posy_offset = 1;
 
+
     fxdata->p[neuron_comb_freq].set_name("Frequency");
     fxdata->p[neuron_comb_freq].set_type(ct_freq_audible);
     fxdata->p[neuron_comb_freq].posy_offset = 3;
@@ -198,13 +203,27 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_comb_sep].set_type(ct_freq_mod);
     fxdata->p[neuron_comb_sep].posy_offset = 3;
 
+
+    fxdata->p[neuron_lfo_wave].set_name("Waveform");
+    fxdata->p[neuron_lfo_wave].set_type(ct_flangerwave);
+    fxdata->p[neuron_lfo_wave].posy_offset = 5;
+
+    fxdata->p[neuron_lfo_rate].set_name("Rate");
+    fxdata->p[neuron_lfo_rate].set_type(ct_lforate);
+    fxdata->p[neuron_lfo_rate].posy_offset = 5;
+
+    fxdata->p[neuron_lfo_depth].set_name("Depth");
+    fxdata->p[neuron_lfo_depth].set_type(ct_percent);
+    fxdata->p[neuron_lfo_depth].posy_offset = 5;
+
+
     fxdata->p[neuron_width].set_name("Width");
     fxdata->p[neuron_width].set_type(ct_decibel_narrow);
-    fxdata->p[neuron_width].posy_offset = 5;
+    fxdata->p[neuron_width].posy_offset = 7;
 
     fxdata->p[neuron_gain].set_name("Gain");
     fxdata->p[neuron_gain].set_type(ct_decibel_narrow);
-    fxdata->p[neuron_gain].posy_offset = 5;
+    fxdata->p[neuron_gain].posy_offset = 7;
 }
 
 void Neuron::init_default_values()
@@ -214,8 +233,14 @@ void Neuron::init_default_values()
     fxdata->p[neuron_stab_uf].val.f = 0.5f;
     fxdata->p[neuron_asym_uh].val.f = 1.0f;
     fxdata->p[neuron_bias_bf].val.f = 0.0f;
+
     fxdata->p[neuron_comb_freq].val.f = 70.0f;
     fxdata->p[neuron_comb_sep].val.f = 0.5f;
+    
+    fxdata->p[neuron_lfo_wave].val.i = 0;
+    fxdata->p[neuron_lfo_rate].val.f = -2.f;
+    fxdata->p[neuron_lfo_depth].val.f = 0.f;
+
     fxdata->p[neuron_width].val.f = 0.0f;
     fxdata->p[neuron_gain].val.f = 0.0f;
 }

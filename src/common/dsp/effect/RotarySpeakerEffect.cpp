@@ -118,8 +118,8 @@ void RotarySpeakerEffect::init_ctrltypes()
     fxdata->p[rot_horn_rate].posy_offset = 1;
     fxdata->p[rot_rotor_rate].posy_offset = -3;
 
-    fxdata->p[rot_drive].posy_offset = -1;
-    fxdata->p[rot_waveshape].posy_offset = -1;
+    fxdata->p[rot_drive].posy_offset = 1;
+    fxdata->p[rot_waveshape].posy_offset = -3;
 
     fxdata->p[rot_doppler].posy_offset = 11;
     fxdata->p[rot_tremolo].posy_offset = 11;
