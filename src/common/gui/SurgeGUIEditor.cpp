@@ -3393,7 +3393,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
                     {
-                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Extend Range"),
+                        std::string txt = p->ctrltype == ct_reson_res_extendable ? "Modulation Extends into Self-oscillation" : "Extend Range";
+
+                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
                                         [this, p]() {
                                             p->extend_range = !p->extend_range;
                                             this->synth->refresh_editor = true;
