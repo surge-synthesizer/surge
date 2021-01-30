@@ -96,12 +96,9 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     }
     bi = (bi + 1) & slowrate_m1;
 
-    /*
-     * Strategy: Upsample, Set the coefficients, run the filter, Downsample
-     */
-
-    // Upsample phase. This wqorks and needs no more attention.
+    // Upsample phase. This works and needs no more attention.
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
+
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
 
     /*
@@ -151,12 +148,21 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             fxdata->p[resonator_freq1 + i * 3].val_min.f,
             fxdata->p[resonator_freq1 + i * 3].val_max.f);
         
-        auto boundres = limit_range(*f[resonator_res1 + i * 3],
-            fxdata->p[resonator_res1 + i * 3].val_min.f,
-            fxdata->p[resonator_res1 + i * 3].val_max.f);
+        float resval;
+        
+        if (fxdata->p[resonator_res1 + i * 3].extend_range)
+        {
+            resval = *f[resonator_res1 + i * 3];
+        }
+        else
+        {
+            resval = limit_range(*f[resonator_res1 + i * 3],
+                fxdata->p[resonator_res1 + i * 3].val_min.f,
+                fxdata->p[resonator_res1 + i * 3].val_max.f);
+        }
         
         cutoff[i].newValue(boundcutoff);
-        resonance[i].newValue(boundres);
+        resonance[i].newValue(resval);
         bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
     }
 
@@ -180,19 +186,23 @@ void ResonatorEffect::process(float *dataL, float *dataR)
                 set1f(qfus[c].R[i], e, Reg[e][c][i]);
             }
 
-            qfus[c].DB[e] = filterDelay[e][c];
-            qfus[c].WP[e] = WP[e][c];
-            qfus[c].WP[0] = subtype;
+            //qfus[c].DB[e] = filterDelay[e][c];
+            //qfus[c].WP[e] = WP[e][c];
+            //qfus[c].WP[0] = subtype;
 
             qfus[c].active[e] = 0xFFFFFFFF;
             qfus[c].active[3] = 0;
         }
     }
 
-
     /* Run the filters. You need to grab a smoothed gain here rather than the hardcoded 0.3 */
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
+        // preprocess audio in through asymmetric waveshaper
+        // this mimicks Polymoog's power supply which only operated on positive rails
+        dataOS[0][s] = lookup_waveshape(wst_asym, dataOS[0][s]);
+        dataOS[1][s] = lookup_waveshape(wst_asym, dataOS[1][s]);
+
         auto l128 = _mm_setzero_ps();
         auto r128 = _mm_setzero_ps();
 
@@ -226,6 +236,10 @@ void ResonatorEffect::process(float *dataL, float *dataR)
                 mixr += tr[i] * bandGain[i].v;
             }
 
+            // soft-clip output for good measure
+            mixl = lookup_waveshape(wst_soft, mixl);
+            mixr = lookup_waveshape(wst_soft, mixr);
+
             // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
             if (s % 2 == 0)
             {
@@ -258,13 +272,13 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    for (int e = 0; e < 3; ++e)
+/*    for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
         {
             WP[e][c] = qfus[c].WP[e];
         }
-    }
+    } */
 
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
@@ -320,7 +334,7 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_freq1].set_type(ct_freq_reson_band1);
     fxdata->p[resonator_freq1].posy_offset = 1;
     fxdata->p[resonator_res1].set_name("Resonance 1");
-    fxdata->p[resonator_res1].set_type(ct_percent);
+    fxdata->p[resonator_res1].set_type(ct_reson_res_extendable);
     fxdata->p[resonator_res1].posy_offset = 1;
     fxdata->p[resonator_res1].val_default.f = 0.75f;
     fxdata->p[resonator_gain1].set_name("Gain 1");
@@ -332,7 +346,7 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_freq2].set_type(ct_freq_reson_band2);
     fxdata->p[resonator_freq2].posy_offset = 3;
     fxdata->p[resonator_res2].set_name("Resonance 2");
-    fxdata->p[resonator_res2].set_type(ct_percent);
+    fxdata->p[resonator_res2].set_type(ct_reson_res_extendable);
     fxdata->p[resonator_res2].posy_offset = 3;
     fxdata->p[resonator_res2].val_default.f = 0.75f;
     fxdata->p[resonator_gain2].set_name("Gain 2");
@@ -344,7 +358,7 @@ void ResonatorEffect::init_ctrltypes()
     fxdata->p[resonator_freq3].set_type(ct_freq_reson_band3);
     fxdata->p[resonator_freq3].posy_offset = 5;
     fxdata->p[resonator_res3].set_name("Resonance 3");
-    fxdata->p[resonator_res3].set_type(ct_percent);
+    fxdata->p[resonator_res3].set_type(ct_reson_res_extendable);
     fxdata->p[resonator_res3].posy_offset = 5;
     fxdata->p[resonator_res3].val_default.f = 0.75f;
     fxdata->p[resonator_gain3].set_name("Gain 3");

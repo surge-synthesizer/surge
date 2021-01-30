@@ -147,6 +147,7 @@ enum ctrltypes
     ct_freq_reson_band3,
     ct_reson_mode,
     ct_envtime_linkable_delay,
+    ct_reson_res_extendable,
     num_ctrltypes,
 };
 
