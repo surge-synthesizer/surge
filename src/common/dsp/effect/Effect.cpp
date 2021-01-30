@@ -1,5 +1,6 @@
 #include "DualDelayEffect.h"
 #include "ChorusEffectImpl.h"
+#include "CombulatorEffect.h"
 #include "Eq3BandEffect.h"
 #include "GEQ11Effect.h"
 #include "FreqshiftEffect.h"
@@ -59,6 +60,12 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new GEQ11Effect(storage, fxdata, pd);
     case fxt_resonator:
         return new ResonatorEffect(storage, fxdata, pd);
+    case fxt_combulator:
+        return new CombulatorEffect(storage, fxdata, pd);
+    case fxt_chow:
+    case fxt_exciter:
+    case fxt_ensemble:
+    case fxt_nimbus:
     default:
         return 0;
     };
