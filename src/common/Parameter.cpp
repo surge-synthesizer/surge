@@ -1142,6 +1142,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_airwindows_param:
         case ct_airwindows_param_bipolar:
         case ct_lfodeform:
+        case ct_reson_res_extendable:
         {
             val.f = floor(val.f * 100) / 100.0;
             break;
