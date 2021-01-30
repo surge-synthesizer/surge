@@ -212,9 +212,9 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_preeq_bw].posy_offset = 1;
     fxdata->p[dist_preeq_highcut].posy_offset = 1;
 
-    fxdata->p[dist_drive].posy_offset = 3;
-    fxdata->p[dist_feedback].posy_offset = 3;
-    fxdata->p[dist_model].posy_offset = -7;
+    fxdata->p[dist_drive].posy_offset = 5;
+    fxdata->p[dist_feedback].posy_offset = 5;
+    fxdata->p[dist_model].posy_offset = -11;
 
     fxdata->p[dist_posteq_gain].posy_offset = 7;
     fxdata->p[dist_posteq_freq].posy_offset = 7;

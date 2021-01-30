@@ -49,6 +49,10 @@ class Neuron : public Effect
         neuron_comb_freq,
         neuron_comb_sep,
 
+        neuron_lfo_wave,
+        neuron_lfo_rate,
+        neuron_lfo_depth,
+
         neuron_width,
         neuron_gain,
 
