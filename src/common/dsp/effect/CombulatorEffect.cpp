@@ -52,9 +52,9 @@ void CombulatorEffect::setvars(bool init)
         for (int i = 0; i < 3; ++i)
         {
             cutoff[i].instantize();
-            resonance[i].instantize();
             bandGain[i].instantize();
         }
+        resonance.instantize();
 
         mix.set_target(1.f);
 
@@ -68,10 +68,10 @@ void CombulatorEffect::setvars(bool init)
     {
         for (int i = 0; i < 3; ++i)
         {
-            cutoff[i].newValue(*f[combulator_freq1 + i * 3]);
-            resonance[i].newValue(*f[combulator_feedback]);
-            bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i * 3]));
+            cutoff[i].newValue(*f[combulator_freq1 + i]);
+            bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
+        resonance.newValue(*f[combulator_feedback]);
     }
 
     width.set_target_smoothed(db_to_linear(*f[combulator_width]));
@@ -114,10 +114,10 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     for (int i = 0; i < 3; ++i)
     {
-        cutoff[i].newValue(*f[combulator_freq1 + i * 3]);
-        resonance[i].newValue(*f[combulator_feedback]);
-        bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i * 3]));
+        cutoff[i].newValue(*f[combulator_freq1 + i]);
+        bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
     }
+    resonance.newValue(*f[combulator_feedback]);
 
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
@@ -126,7 +126,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v, type, subtype, storage);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance.v, type, subtype, storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
@@ -181,8 +181,12 @@ void CombulatorEffect::process(float *dataL, float *dataR)
             if (s % 2 == 0)
             {
                 cutoff[i].process();
-                resonance[i].process();
                 bandGain[i].process();
+
+                if (i == 0)
+                {
+                   resonance.process();
+                }
             }
         }
 
