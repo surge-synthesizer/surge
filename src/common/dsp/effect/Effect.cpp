@@ -16,6 +16,7 @@
 #include "RingModulatorEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/Neuron.h"
+#include "chowdsp/Chow.h"
 #include "DebugHelpers.h"
 
 using namespace std;
@@ -63,6 +64,7 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_combulator:
         return new CombulatorEffect(storage, fxdata, pd);
     case fxt_chow:
+        return new chowdsp::Chow(storage, fxdata, pd);
     case fxt_exciter:
     case fxt_ensemble:
     case fxt_nimbus:
