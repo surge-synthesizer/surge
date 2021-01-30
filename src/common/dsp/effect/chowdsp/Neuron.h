@@ -18,6 +18,7 @@
 #include "../Effect.h"
 #include "BiquadFilter.h"
 #include "shared/DelayLine.h"
+#include "shared/ModControl.h"
 #include "shared/Oversampling.h"
 #include "shared/SmoothedValue.h"
 
@@ -106,6 +107,8 @@ class Neuron : public Effect
     chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay1{1 << 18};
     chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay2{1 << 18};
     Oversampling<2, BLOCK_SIZE> os;
+
+    ModControl modLFO;
 };
 
 } // namespace chowdsp

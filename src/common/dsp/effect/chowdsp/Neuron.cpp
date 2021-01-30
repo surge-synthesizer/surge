@@ -77,6 +77,7 @@ void Neuron::process(float *dataL, float *dataR)
     decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
 
     outgain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
+    modLFO.post_process();
 }
 
 void Neuron::process_internal(float *dataL, float *dataR, const int numSamples)
@@ -86,8 +87,9 @@ void Neuron::process_internal(float *dataL, float *dataR, const int numSamples)
         dataL[k] = processSample(dataL[k], y1[0]);
         dataR[k] = processSample(dataR[k], y1[1]);
 
-        delay1.setDelay(delay1Smooth.getNextValue());
-        delay2.setDelay(delay2Smooth.getNextValue());
+        auto lfo_val = 1.0f + 0.5f * modLFO.value();
+        delay1.setDelay(delay1Smooth.getNextValue() * lfo_val);
+        delay2.setDelay(delay2Smooth.getNextValue() * lfo_val);
         delay1.pushSample(0, dataL[k]);
         delay2.pushSample(1, dataR[k]);
 
@@ -117,6 +119,13 @@ void Neuron::set_params()
 
     delay1Smooth.setTargetValue(delayTimeSec1 * 0.5f * samplerate * os.getOSRatio());
     delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * samplerate * os.getOSRatio());
+
+    // modulation settings
+    float rate = envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
+                 (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
+    int mwave = *pdata_ival[neuron_lfo_wave];
+    float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
+    modLFO.pre_process(mwave, rate, depth_val);
 
     // calc makeup gain
     auto drive_makeup = [](float wh) -> float { return std::exp(-0.11898f * wh) + 1.0f; };
