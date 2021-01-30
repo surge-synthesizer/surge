@@ -81,9 +81,9 @@
 
     <separator />
 
-<!--     <type i="21" name="Combulator">
+     <type i="21" name="Combulator">
         <snapshot name="Init" />
-    </type> -->
+    </type>
     <type i="7" name="Frequency Shifter">
         <snapshot name="Init" p0="0.000000" p1="1.000000" p2="-8.000000" p3="0.000000" p4="1.000000" />
         <snapshot name="Chorusy" p0="-0.071431" p1="0.925000" p2="-8.000000" p2_temposync="1" p3="0.000000" p4="0.291964" />

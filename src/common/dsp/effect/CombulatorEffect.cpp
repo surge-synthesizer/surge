@@ -34,6 +34,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
             }
         }
     }
+    memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB + FIRipol_N) * sizeof(float));
 }
 
 CombulatorEffect::~CombulatorEffect() { _aligned_free(qfus); }
@@ -68,7 +69,10 @@ void CombulatorEffect::setvars(bool init)
     {
         for (int i = 0; i < 3; ++i)
         {
-            cutoff[i].newValue(*f[combulator_freq1 + i]);
+            if (i == 0)
+                cutoff[i].newValue(*f[combulator_freq1]);
+            else
+                cutoff[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
             bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
         resonance.newValue(*f[combulator_feedback]);
@@ -89,11 +93,7 @@ inline float get1f(__m128 m, int i)
 
 void CombulatorEffect::process(float *dataL, float *dataR)
 {
-    if (bi == 0)
-    {
-        setvars(false);
-    }
-    bi = (bi + 1) & slowrate_m1;
+    setvars(false);
 
     /*
      * Strategy: Upsample, Set the coefficients, run the filter, Downsample
@@ -111,13 +111,6 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     int type = fut_comb_pos, subtype = 1;
 
     FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
-
-    for (int i = 0; i < 3; ++i)
-    {
-        cutoff[i].newValue(*f[combulator_freq1 + i]);
-        bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
-    }
-    resonance.newValue(*f[combulator_feedback]);
 
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
@@ -141,7 +134,6 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
             qfus[c].DB[e] = filterDelay[e][c];
             qfus[c].WP[e] = WP[e][c];
-            qfus[c].WP[0] = subtype;
 
             qfus[c].active[e] = 0xFFFFFFFF;
             qfus[c].active[3] = 0;
@@ -176,22 +168,26 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         {
             mixl += tl[i] * bandGain[i].v;
             mixr += tr[i] * bandGain[i].v;
+        }
 
-            // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
-            if (s % 2 == 0)
+        dataOS[0][s] = mixl;
+        dataOS[1][s] = mixr;
+
+        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other
+        // sample
+        if (s % 2 == 0)
+        {
+            for (auto i = 0; i < 3; ++i)
             {
                 cutoff[i].process();
                 bandGain[i].process();
 
                 if (i == 0)
                 {
-                   resonance.process();
+                    resonance.process();
                 }
             }
         }
-
-        dataOS[0][s] = mixl;
-        dataOS[1][s] = mixr;
     }
 
     /* and preserve those registers and stuff. This all works */
@@ -283,11 +279,11 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_freq1].set_name("Frequency 1");
     fxdata->p[combulator_freq1].set_type(ct_freq_audible);
     fxdata->p[combulator_freq1].posy_offset = 3;
-    fxdata->p[combulator_freq2].set_name("Frequency 2");
-    fxdata->p[combulator_freq2].set_type(ct_freq_audible);
+    fxdata->p[combulator_freq2].set_name("Frequency 2 Offset");
+    fxdata->p[combulator_freq2].set_type(ct_pitch);
     fxdata->p[combulator_freq2].posy_offset = 3;
-    fxdata->p[combulator_freq3].set_name("Frequency 3");
-    fxdata->p[combulator_freq3].set_type(ct_freq_audible);
+    fxdata->p[combulator_freq3].set_name("Frequency 3 Offset");
+    fxdata->p[combulator_freq3].set_type(ct_pitch);
     fxdata->p[combulator_freq3].posy_offset = 3;
     fxdata->p[combulator_feedback].set_name("Feedback");
     fxdata->p[combulator_feedback].set_type(ct_percent);
