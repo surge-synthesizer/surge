@@ -41,10 +41,13 @@
 
 #include <JuceHeader.h>
 
+// The layers of unimpl. Really bad (D), standard, and we are OK with it for now (OKUNIMPL);
 #define DUNIMPL                                                                                    \
     std::cout << "Unimplemented : " << __func__ << " at " << __FILE__ << ":" << __LINE__           \
               << std::endl;
-#define UNIMPL void(0);
+//#define UNIMPL void(0);
+#define UNIMPL DUNIMPL
+#define OKUNIMPL void(0);
 
 typedef int VstKeyCode;
 
@@ -492,8 +495,8 @@ constexpr CLineStyle kLineSolid;
 struct CDrawMode
 {
     CDrawMode() = default;
-    CDrawMode(const CDrawModeFlags &f) { UNIMPL; }
-    CDrawMode(uint32_t x) { UNIMPL; }
+    CDrawMode(const CDrawModeFlags &f) { OKUNIMPL; }
+    CDrawMode(uint32_t x) { OKUNIMPL; }
 };
 
 struct CGraphicsTransform
@@ -514,7 +517,14 @@ struct CGraphicsTransform
 
     CRect transform(CRect &r)
     {
-        UNIMPL;
+        auto jr = r.asJuceFloatRect();
+        auto tl = jr.getTopLeft();
+        auto br = jr.getBottomRight();
+
+        juceT.transformPoint(tl.x, tl.y);
+        juceT.transformPoint(br.x, br.y);
+
+        r = CRect(tl.x, tl.y, br.x, br.y);
         return r;
     }
     CPoint transform(CPoint &r)
@@ -567,19 +577,15 @@ struct CDrawContext
     juce::Graphics &g;
     explicit CDrawContext(juce::Graphics &g) : g(g) {}
 
-    void setLineStyle(const CLineStyle &s) { UNIMPL; }
-    void setDrawMode(uint32_t m) { UNIMPL; }
-    void setDrawMode(const CDrawMode &m) { UNIMPL; }
+    void setLineStyle(const CLineStyle &s) { OKUNIMPL; }
+    void setDrawMode(uint32_t m) { OKUNIMPL; }
+    void setDrawMode(const CDrawMode &m) { OKUNIMPL; }
     CDrawMode getDrawMode()
     {
-        UNIMPL;
+        OKUNIMPL;
         return CDrawMode();
     }
-    float getStringWidth(const std::string &s)
-    {
-        UNIMPL;
-        return 0;
-    }
+    float getStringWidth(const std::string &s) { return font->font.getStringWidth(s); }
     void fillLinearGradient(CGraphicsPath *p, const CGradient &, const CPoint &, const CPoint &,
                             bool, CGraphicsTransform *tf)
     {
@@ -591,9 +597,9 @@ struct CDrawContext
         Transform(CDrawContext &dc, CGraphicsTransform &tf) { UNIMPL; }
     };
 
-    void saveGlobalState() { UNIMPL; }
+    void saveGlobalState() { g.saveState(); }
 
-    void restoreGlobalState() { UNIMPL; }
+    void restoreGlobalState() { g.restoreState(); }
 
     void getClipRect(CRect &r) const { UNIMPL; }
     void setClipRect(const CRect &r) { g.reduceClipRegion(r.asJuceIntRect()); }
@@ -645,8 +651,8 @@ struct CDrawContext
 
     CGraphicsPath *createRoundRectGraphicsPath(const CRect &r, float radius)
     {
-        UNIMPL;
         auto ct = new CGraphicsPath();
+        ct->path.addRoundedRectangle(r.left, r.top, r.getWidth(), r.getHeight(), radius);
         ct->remember();
         return ct;
     }
@@ -684,7 +690,6 @@ struct CDrawContext
         g.setFont(font->font);
         g.setColour(fontColor);
         g.drawText(juce::CharPointer_UTF8(t), r, al);
-        UNIMPL;
     }
     void drawString(const char *, const CPoint &, int = 0, bool = true) { UNIMPL; }
     void drawEllipse(const CRect &r, const CDrawStyle &s)
@@ -893,17 +898,14 @@ template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefco
 };
 
 #define GSPAIR(x, sT, gT, gTV)                                                                     \
-    void set##x(sT v) { UNIMPL; }                                                                  \
-    gT get##x() const                                                                              \
-    {                                                                                              \
-        UNIMPL;                                                                                    \
-        return gTV;                                                                                \
-    }
+    gT m_##x = gTV;                                                                                \
+    virtual void set##x(sT v) { m_##x = v; }                                                       \
+    virtual gT get##x() const { return m_##x; }
 
 #define COLPAIR(x)                                                                                 \
     CColor m_##x;                                                                                  \
-    void set##x(const CColor &v) { m_##x = v; }                                                    \
-    CColor get##x() const { return m_##x; }
+    virtual void set##x(const CColor &v) { m_##x = v; }                                            \
+    virtual CColor get##x() const { return m_##x; }
 
 struct CView : public CViewWithJuceComponent<juce::Component>
 {
@@ -913,11 +915,11 @@ struct CView : public CViewWithJuceComponent<juce::Component>
     CFrame *frame = nullptr;
     CFrame *getFrame() { return frame; }
 
-    CView *getParentView()
-    {
-        UNIMPL;
-        return nullptr;
-    }
+    CView *parentView = nullptr;
+    CView *getParentView() { return parentView; }
+
+    virtual void onAdded() {}
+    virtual void efvg_resolveDeferredAdds(){};
 
     EscapeFromVSTGUI::JuceVSTGUIEditorAdapterBase *ed = nullptr; // FIX ME obviously
 };
@@ -933,7 +935,8 @@ struct CViewContainer : public CView
         }
         views.clear();
     }
-    void setTransparency(bool) { UNIMPL; }
+    bool transparent = true;
+    void setTransparency(bool b) { transparent = b; }
 
     CBitmap *bg = nullptr;
     void setBackground(CBitmap *b)
@@ -943,41 +946,52 @@ struct CViewContainer : public CView
             bg->forget();
         bg = b;
     }
-    void setBackgroundColor(const CColor &c) { UNIMPL; }
-    int getNbViews()
-    {
-        UNIMPL;
-        return 0;
-    }
+    CColor bgcol;
+    void setBackgroundColor(const CColor &c) { bgcol = c; }
+    int getNbViews() { return views.size(); }
     CView *getView(int i)
     {
-        UNIMPL;
+        if (i >= 0 && i < views.size())
+            return views[i];
         return nullptr;
     }
 
+    void onAdded() override { std::cout << "CVC Added" << std::endl; }
     void addView(CView *v)
     {
         v->remember();
         v->ed = ed;
         v->frame = frame;
+        v->parentView = this;
         auto jc = v->juceComponent();
         jc->setTransform(juceComponent()->getTransform());
         if (jc && ed)
         {
             ed->getJuceEditor()->addAndMakeVisible(*jc);
+            v->efvg_resolveDeferredAdds();
+            v->onAdded();
         }
         else
         {
-            std::cout << "Skipping add" << std::endl;
+            deferredAdds.push_back(v);
         }
-        views.insert(v);
+        views.push_back(v);
     }
     void removeView(CView *v, bool doForget = true)
     {
-        views.erase(v);
+        auto pos = std::find(views.begin(), views.end(), v);
+        if (pos == views.end())
+        {
+            std::cout << "WIERD ERROR";
+            jassert(false);
+            return;
+        }
+        views.erase(pos);
         juceComponent()->removeChildComponent(v->juceComponent());
+        v->parentView = nullptr;
         if (doForget)
             v->forget();
+        invalid();
     }
 
     void addView(COptionMenu *)
@@ -1000,7 +1014,8 @@ struct CViewContainer : public CView
     }
     CView *getFocusView()
     {
-        UNIMPL;
+        // UNIMPL;
+        // FIXME!!
         return nullptr;
     }
     void removeAll(bool b = true)
@@ -1018,9 +1033,29 @@ struct CViewContainer : public CView
         {
             bg->draw(dc, getViewSize());
         }
+        else if (!transparent)
+        {
+            dc->setFillColor(bgcol);
+            dc->drawRect(getViewSize(), kDrawFilled);
+        }
+        else
+        {
+        }
     }
 
-    std::unordered_set<CView *> views;
+    void efvg_resolveDeferredAdds() override
+    {
+        for (auto v : deferredAdds)
+        {
+            v->ed = ed;
+            juceComponent()->addAndMakeVisible(v->juceComponent());
+            v->efvg_resolveDeferredAdds();
+        }
+        deferredAdds.clear();
+    }
+
+    std::vector<CView *> deferredAdds;
+    std::vector<CView *> views;
 };
 
 struct CFrame : public CViewContainer
@@ -1100,7 +1135,7 @@ struct CControl : public CView
     }
     virtual float getValue() { return value; }
     virtual void setValue(float v) { value = v; }
-    virtual void setDefaultValue(float v) { UNIMPL; }
+    virtual void setDefaultValue(float v) { vdef = v; }
     virtual void setVisible(bool b) { UNIMPL; }
     virtual void setMouseEnabled(bool) { UNIMPL; }
     virtual bool getMouseEnabled()
@@ -1126,7 +1161,7 @@ struct CControl : public CView
         // UNIMPL;
     }
 
-    void setBackColor(const CColor &c) { UNIMPL; }
+    COLPAIR(BackColor);
 
     CBitmap *bg = nullptr;
     void setBackground(CBitmap *b)
@@ -1190,6 +1225,7 @@ struct CControl : public CView
     float value = 0.f;
     float vmax = 1.f;
     float vmin = 0.f;
+    float vdef = 0.f;
     bool editing = false;
     IControlListener *listener = nullptr;
 };
@@ -1209,10 +1245,18 @@ struct CTextLabel : public CControl
 {
     CTextLabel(const CRect &r, const char *s, void * = nullptr) : CControl(r)
     {
-        lab = std::make_unique<juce::Label>("fromVSTGUI", s);
+        lab = std::make_unique<juce::Label>("fromVSTGUI", juce::CharPointer_UTF8(s));
         lab->setBounds(r.asJuceIntRect());
     }
+
+    void setFont(CFontRef v) override
+    {
+        lab->setFont(v->font);
+
+        CControl::setFont(v);
+    }
     juce::Component *juceComponent() override { return lab.get(); }
+
     GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
     std::unique_ptr<juce::Label> lab;
 };
@@ -1364,8 +1408,8 @@ template <typename T> inline void juceCViewConnector<T>::mouseExit(const juce::M
 struct CMenuItem
 {
     virtual ~CMenuItem() {}
-    void setChecked(bool b = true) { UNIMPL; }
-    void setEnabled(bool b = true) { UNIMPL; }
+    void setChecked(bool b = true) { OKUNIMPL; }
+    void setEnabled(bool b = true) { OKUNIMPL; }
 
     virtual void remember() {}
     virtual void forget() {}
@@ -1402,7 +1446,7 @@ struct COptionMenu : public CControl
         // Obviously fix this
         alwaysLeak = true;
         doDebug = false;
-        UNIMPL;
+        OKUNIMPL;
     }
     void setNbItemsPerColumn(int c) { UNIMPL; }
     void setEnabled(bool) { UNIMPL; }
@@ -1441,7 +1485,7 @@ struct COptionMenu : public CControl
     }
     void checkEntry(int, bool) { UNIMPL; }
     void popup() { menu.show(); }
-    inline void setHeight(float h) { DUNIMPL; }
+    inline void setHeight(float h) { UNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }
     int getNbEntries() { return 0; }
 };
