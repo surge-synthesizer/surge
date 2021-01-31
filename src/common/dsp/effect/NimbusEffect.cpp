@@ -63,14 +63,14 @@ void NimbusEffect::process(float *dataL, float *dataR)
     processor->set_quality(*pdata_ival[nmb_quality]);
     auto parm = processor->mutable_parameters();
 
-    parm->dry_wet = *f[nmb_mix_aka_blend];
+    parm->dry_wet = *f[nmb_mix];
     parm->freeze = *f[nmb_freeze] > 0.5;
 
     parm->position = limit_range(*f[nmb_position], 0.f, 1.f);
     parm->size = limit_range(*f[nmb_size], 0.f, 1.f);
-    parm->density = limit_range(*f[nmb_density], 0.f, 1.f);
-    parm->pitch = limit_range(24 * *f[nmb_pitch], -48.f, 48.f); // FIXME obviously use a pitch
+    parm->density = limit_range((float)((*f[nmb_density] + 1.f) * 0.5), 0.f, 1.f);
     parm->texture = limit_range(*f[nmb_texture], 0.f, 1.f);
+    parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
     parm->stereo_spread = limit_range(*f[nmb_spread], 0.f, 1.f);
     parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
     parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
@@ -117,9 +117,9 @@ int NimbusEffect::group_label_ypos(int id)
     case 1:
         return 7;
     case 2:
-        return 19;
+        return 21;
     case 3:
-        return 25;
+        return 27;
     }
     return 0;
 }
@@ -138,28 +138,29 @@ void NimbusEffect::init_ctrltypes()
     fxdata->p[nmb_quality].posy_offset = ypos;
 
     ypos += 2;
-    fxdata->p[nmb_position].set_name("Grain Position");
+    fxdata->p[nmb_position].set_name("Position");
     fxdata->p[nmb_position].set_type(ct_percent);
     fxdata->p[nmb_position].posy_offset = ypos;
-    fxdata->p[nmb_size].set_name("Grain Size");
+    fxdata->p[nmb_size].set_name("Size");
     fxdata->p[nmb_size].set_type(ct_percent);
+    fxdata->p[nmb_size].val_default.f = 0.5;
     fxdata->p[nmb_size].posy_offset = ypos;
-    fxdata->p[nmb_density].set_name("Grain Density");
-    fxdata->p[nmb_density].set_type(ct_percent);
+    fxdata->p[nmb_pitch].set_name("Pitch");
+    fxdata->p[nmb_pitch].set_type(ct_pitch4oct);
+    fxdata->p[nmb_pitch].posy_offset = ypos;
+    fxdata->p[nmb_density].set_name("Density");
+    fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
     fxdata->p[nmb_density].posy_offset = ypos;
-    fxdata->p[nmb_texture].set_name("Grain Texture");
+    fxdata->p[nmb_texture].set_name("Texture");
     fxdata->p[nmb_texture].set_type(ct_percent);
     fxdata->p[nmb_texture].posy_offset = ypos;
-
-    fxdata->p[nmb_pitch].set_name("Grain Pitch");
-    fxdata->p[nmb_pitch].set_type(ct_percent_bidirectional);
-    fxdata->p[nmb_pitch].val_max.f = 2.0;
-    fxdata->p[nmb_pitch].val_min.f = -2.0;
-    fxdata->p[nmb_pitch].posy_offset = ypos;
+    fxdata->p[nmb_spread].set_name("Spread");
+    fxdata->p[nmb_spread].set_type(ct_percent);
+    fxdata->p[nmb_spread].posy_offset = ypos;
 
     ypos += 2;
     fxdata->p[nmb_freeze].set_name("Freeze");
-    fxdata->p[nmb_freeze].set_type(ct_percent); // so it is modulatable. 50% above is frozed
+    fxdata->p[nmb_freeze].set_type(ct_float_toggle); // so it is modulatable. 50% above is frozen
     fxdata->p[nmb_freeze].posy_offset = ypos;
     fxdata->p[nmb_feedback].set_name("Feedback");
     fxdata->p[nmb_feedback].set_type(ct_percent);
@@ -170,27 +171,24 @@ void NimbusEffect::init_ctrltypes()
     fxdata->p[nmb_reverb].set_type(ct_percent);
     fxdata->p[nmb_reverb].posy_offset = ypos;
 
-    fxdata->p[nmb_spread].set_name("Spread");
-    fxdata->p[nmb_spread].set_type(ct_percent);
-    fxdata->p[nmb_spread].posy_offset = ypos;
-
-    fxdata->p[nmb_mix_aka_blend].set_name("Blend / Mix");
-    fxdata->p[nmb_mix_aka_blend].set_type(ct_percent);
-    fxdata->p[nmb_mix_aka_blend].posy_offset = ypos;
+    fxdata->p[nmb_mix].set_name("Mix");
+    fxdata->p[nmb_mix].set_type(ct_percent);
+    fxdata->p[nmb_mix].val_default.f = 0.5;
+    fxdata->p[nmb_mix].posy_offset = ypos;
 }
 
 void NimbusEffect::init_default_values()
 {
     fxdata->p[nmb_mode].val.i = 0;
     fxdata->p[nmb_quality].val.i = 0;
-    fxdata->p[nmb_position].val.f = 0.5;
+    fxdata->p[nmb_position].val.f = 0.f;
     fxdata->p[nmb_size].val.f = 0.5;
-    fxdata->p[nmb_density].val.f = 0.5;
-    fxdata->p[nmb_texture].val.f = 0.5;
-    fxdata->p[nmb_pitch].val.f = 0;
-    fxdata->p[nmb_freeze].val.f = 0;
-    fxdata->p[nmb_feedback].val.f = 0;
-    fxdata->p[nmb_reverb].val.f = 0;
-    fxdata->p[nmb_spread].val.f = 0;
-    fxdata->p[nmb_mix_aka_blend].val.f = 0.5;
+    fxdata->p[nmb_density].val.f = 0.f;
+    fxdata->p[nmb_texture].val.f = 0.f;
+    fxdata->p[nmb_pitch].val.f = 0.f;
+    fxdata->p[nmb_freeze].val.f = 0.f;
+    fxdata->p[nmb_feedback].val.f = 0.f;
+    fxdata->p[nmb_reverb].val.f = 0.f;
+    fxdata->p[nmb_spread].val.f = 0.f;
+    fxdata->p[nmb_mix].val.f = 0.5;
 }

@@ -33,16 +33,16 @@ class NimbusEffect : public Effect
 
         nmb_position,
         nmb_size,
+        nmb_pitch,
         nmb_density,
         nmb_texture,
-        nmb_pitch,
+        nmb_spread,
 
         nmb_freeze,
         nmb_feedback,
 
         nmb_reverb,
-        nmb_spread,
-        nmb_mix_aka_blend,
+        nmb_mix,
 
         nmb_num_params,
     };
@@ -50,7 +50,7 @@ class NimbusEffect : public Effect
   public:
     NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~NimbusEffect();
-    virtual const char *get_effectname() override { return "nimbus"; }
+    virtual const char *get_effectname() override { return "Nimbus"; }
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;

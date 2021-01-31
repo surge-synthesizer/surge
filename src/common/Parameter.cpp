@@ -378,6 +378,12 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 60;
         val_default.f = 0;
         break;
+    case ct_pitch4oct:
+        valtype = vt_float;
+        val_min.f = -48;
+        val_max.f = 48;
+        val_default.f = 0;
+        break;
     case ct_syncpitch:
         valtype = vt_float;
         val_min.f = 0;
@@ -587,6 +593,12 @@ void Parameter::set_type(int ctrltype)
         val_min.i = 0;
         val_max.i = 1;
         val_default.i = 0;
+        break;
+    case ct_float_toggle:
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 1.f;
+        val_default.f = 0.f;
         break;
     case ct_osctype:
         valtype = vt_int;
@@ -921,7 +933,7 @@ void Parameter::set_type(int ctrltype)
     case ct_nimbusquality:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // sin, tri, saw, s&h
+        val_max.i = 3; // mono LQ, stereo LQ, mono HQ, stereo HQ
         val_default.i = 0;
         break;
 
@@ -984,6 +996,7 @@ void Parameter::set_type(int ctrltype)
     case ct_flangerspacing:
         displayInfo.extendFactor = 12.0;
     case ct_pitch:
+    case ct_pitch4oct:
     case ct_syncpitch:
     case ct_freq_mod:
     case ct_flangerpitch:
@@ -1175,6 +1188,7 @@ void Parameter::bound_value(bool force_integer)
             break;
         }
         case ct_pitch:
+        case ct_pitch4oct:
         case ct_pitch_semi7bp:
         case ct_syncpitch:
         {
@@ -2378,11 +2392,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 }
             }
             break;
+        }
         case ct_chow_ratio:
         {
             sprintf(txt, "1 : %.*f", (detailedMode ? 6 : 2), f);
             break;
         }
+        case ct_float_toggle:
+        {
+            sprintf(txt, f > 0.5 ? "On" : "Off");
+            break;
         }
         default:
             sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
@@ -2756,16 +2775,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Granular");
+                sprintf(txt, "Granularizer");
                 break;
             case 1:
-                sprintf(txt, "Stretch");
+                sprintf(txt, "Pitch Shifter");
                 break;
             case 2:
                 sprintf(txt, "Looping Delay");
                 break;
             case 3:
-                sprintf(txt, "Spectral");
+                sprintf(txt, "Spectral Madness");
                 break;
             }
         }
@@ -2775,16 +2794,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Mono Lo");
+                sprintf(txt, "16k 8-bit Mono");
                 break;
             case 1:
-                sprintf(txt, "Stereo Lo");
+                sprintf(txt, "16k 8-bit Stereo");
                 break;
             case 2:
-                sprintf(txt, "Mono High");
+                sprintf(txt, "32k 16-bit Mono");
                 break;
             case 3:
-                sprintf(txt, "Stereo High");
+                sprintf(txt, "32k 16-bit Stereo");
                 break;
             }
         }
@@ -2984,6 +3003,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:
+    case ct_pitch4oct:
     case ct_fmratio:
     case ct_syncpitch:
     case ct_amplitude:
