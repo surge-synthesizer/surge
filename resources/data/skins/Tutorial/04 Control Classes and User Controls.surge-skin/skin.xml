@@ -43,7 +43,7 @@ analogy lead you astray, especially in your optimism for how much we ahve implem
 
     <!--[doc]
     We can also create a class for switches, which we will use here to override one of the prev-next buttons
-    -->
+    [doc]-->
     <class name="loud-prev-next" parent="CHSwitch2" image="loud_pn" hover_image="loud_pn_hover"/>
   </component-classes>
   <controls>
