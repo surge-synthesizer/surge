@@ -34,7 +34,9 @@ class Chow : public Effect
     {
         chow_thresh = 0,
         chow_ratio,
-        chow_os,
+        chow_flip,
+        
+        chow_mix,
 
         chow_num_ctrls,
     };
@@ -42,7 +44,7 @@ class Chow : public Effect
     Chow(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~Chow();
 
-    virtual const char *get_effectname() override { return "Chow"; }
+    virtual const char *get_effectname() override { return "CHOW"; }
 
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
@@ -63,11 +65,11 @@ class Chow : public Effect
         SmoothSteps = 200,
     };
 
-    lipol_ps makeup alignas(16);
+    bool cur_os = true;
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
+    lipol_ps makeup alignas(16), mix alignas(16);
     Oversampling<2, BLOCK_SIZE> os;
-
     SmoothedValue<float, ValueSmoothingTypes::Multiplicative> thresh_smooth, ratio_smooth;
-    bool cur_os = false;
 };
 
 } // namespace chowdsp

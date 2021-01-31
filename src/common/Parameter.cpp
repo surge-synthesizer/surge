@@ -885,7 +885,6 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_default.f = 0;
         break;
-
     case ct_airwindows_param_integral:
         val_min.i = 0;
         val_max.i = 1;
@@ -897,6 +896,12 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 1;
         valtype = vt_float;
         val_default.f = 0.5;
+        break;
+    case ct_chow_ratio:
+        val_min.f = 1;
+        val_max.f = 20;
+        valtype = vt_float;
+        val_default.f = 10.f;
         break;
 
     case ct_none:
@@ -2350,6 +2355,11 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 }
             }
             break;
+        case ct_chow_ratio:
+        {
+            sprintf(txt, "1 : %.*f", (detailedMode ? 6 : 2), f);
+            break;
+        }
         }
         default:
             sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
@@ -2971,6 +2981,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_airwindows_param:
     case ct_airwindows_param_bipolar:
     case ct_reson_res_extendable:
+    case ct_chow_ratio:
     {
         return true;
         break;
@@ -3179,6 +3190,16 @@ bool Parameter::set_value_from_string(std::string s)
 
     switch (ctrltype)
     {
+    case ct_chow_ratio:
+    {
+        if (nv < val_min.f || nv > val_max.f)
+        {
+            return false;
+        }
+        val.f = nv;
+        return true;
+    }
+    break;
     case ct_fmratio:
     {
         if (absolute)

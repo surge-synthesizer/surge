@@ -148,6 +148,7 @@ enum ctrltypes
     ct_reson_mode,
     ct_envtime_linkable_delay,
     ct_reson_res_extendable,
+    ct_chow_ratio,
     num_ctrltypes,
 };
 
