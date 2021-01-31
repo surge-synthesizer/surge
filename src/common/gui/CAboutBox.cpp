@@ -12,6 +12,11 @@
 #include "CScalableBitmap.h"
 #include "CTextButtonWithHover.h"
 
+#if WINDOWS
+// For __cpuid so we can get processor name
+#include <intrin.h>
+#endif
+
 using namespace VSTGUI;
 
 enum abouttags
@@ -146,7 +151,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     std::string flavor = "Standalone";
 #endif
 
-    std::string arch = Surge::Build::BuildArch;
+    std::string arch = std::string(Surge::Build::BuildArch);
 #if MAC
     std::string platform = "macOS";
 #if ARM_NEON
@@ -154,6 +159,25 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 #endif
 #elif WINDOWS
     std::string platform = "Windows";
+
+    int CPUInfo[4] = {-1};
+    unsigned nExIds, i = 0;
+    char CPUBrandString[0x40];
+    // Get the information associated with each extended ID.
+    __cpuid(CPUInfo, 0x80000000);
+    nExIds = CPUInfo[0];
+    for (i = 0x80000000; i <= nExIds; ++i)
+    {
+        __cpuid(CPUInfo, i);
+        // Interpret CPU brand string
+        if (i == 0x80000002)
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000003)
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000004)
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    }
+    arch = CPUBrandString;
 #elif LINUX
     std::string platform = "Linux";
 #else
@@ -161,8 +185,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 #endif
 
     std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
-    std::string system = arch + " CPU, " + platform + " " + flavor + ", " + bitness;
-    ;
+    std::string system = platform + " " + bitness + " " + flavor + " on " + arch;
 
     infoStringForClipboard = "Surge Synthesizer\n";
 
