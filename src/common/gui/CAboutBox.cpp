@@ -268,6 +268,9 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
              600);
     yp += lblvs;
     addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 600);
+    yp += lblvs;
+    addLabel("Nimbus effect based on eurorack software by émilie Gillet, licensed under GNU GPL v3",
+             600);
 }
 
 CMouseEventResult CAboutBox::onMouseDown(CPoint &where, const CButtonState &buttons)

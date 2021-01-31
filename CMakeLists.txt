@@ -110,17 +110,19 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h)
+add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp src/common/dsp/effect/NimbusEffect.h)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
 add_subdirectory(libs/catch2)
+add_subdirectory(libs/eurorack)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
 
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
+  surge::eurorack
   surge::filesystem
   surge::tinyxml
 )

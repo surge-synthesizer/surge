@@ -826,6 +826,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_flangerwave:
+        valtype = vt_int;
         val_min.i = 0;
         val_max.i = 3; // sin, tri, saw, s&h
         val_default.i = 0;
@@ -902,6 +903,20 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 20;
         valtype = vt_float;
         val_default.f = 10.f;
+        break;
+
+    case ct_nimbusmode:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 3; // sin, tri, saw, s&h
+        val_default.i = 0;
+        break;
+
+    case ct_nimbusquality:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 3; // sin, tri, saw, s&h
+        val_default.i = 0;
         break;
 
     case ct_none:
@@ -2728,6 +2743,44 @@ void Parameter::get_display(char *txt, bool external, float ef)
             }
             break;
         }
+        case ct_nimbusmode:
+        {
+            switch (i)
+            {
+            case 0:
+                sprintf(txt, "Granular");
+                break;
+            case 1:
+                sprintf(txt, "Stretch");
+                break;
+            case 2:
+                sprintf(txt, "Looping Delay");
+                break;
+            case 3:
+                sprintf(txt, "Spectral");
+                break;
+            }
+        }
+        break;
+        case ct_nimbusquality:
+        {
+            switch (i)
+            {
+            case 0:
+                sprintf(txt, "Mono Lo");
+                break;
+            case 1:
+                sprintf(txt, "Stereo Lo");
+                break;
+            case 2:
+                sprintf(txt, "Mono High");
+                break;
+            case 3:
+                sprintf(txt, "Stereo High");
+                break;
+            }
+        }
+        break;
         default:
             sprintf(txt, "%i", i);
             break;

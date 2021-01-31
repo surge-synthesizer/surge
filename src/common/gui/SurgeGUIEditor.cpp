@@ -7676,7 +7676,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         // This is still a bit of a special case
         if (p->ctrltype == ct_airwindows_fx || p->ctrltype == ct_flangermode ||
             p->ctrltype == ct_flangerwave || p->ctrltype == ct_distortion_waveshape ||
-            p->ctrltype == ct_reson_mode || p->ctrltype == ct_vocoder_bandcount)
+            p->ctrltype == ct_reson_mode || p->ctrltype == ct_vocoder_bandcount ||
+            p->ctrltype == ct_nimbusmode || p->ctrltype == ct_nimbusquality)
         {
             loc.offset(2, 2);
             auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,

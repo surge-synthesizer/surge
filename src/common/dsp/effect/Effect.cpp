@@ -14,6 +14,7 @@
 #include "FlangerEffect.h"
 #include "ResonatorEffect.h"
 #include "RingModulatorEffect.h"
+#include "NimbusEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/Neuron.h"
 #include "chowdsp/Chow.h"
@@ -65,9 +66,11 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new CombulatorEffect(storage, fxdata, pd);
     case fxt_chow:
         return new chowdsp::Chow(storage, fxdata, pd);
+    case fxt_nimbus:
+        return new NimbusEffect(storage, fxdata, pd);
     case fxt_exciter:
     case fxt_ensemble:
-    case fxt_nimbus:
+
     default:
         return 0;
     };
