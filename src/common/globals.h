@@ -76,6 +76,7 @@ const int OB_LENGTH_QUAD = OB_LENGTH >> 2;
 const float BLOCK_SIZE_INV = (1.f / BLOCK_SIZE);
 const float BLOCK_SIZE_OS_INV = (1.f / BLOCK_SIZE_OS);
 const int MAX_FB_COMB = 2048; // must be 2^n
+const int MAX_FB_COMB_EXTENDED = 2048 * 64; // Only exposed in Combulator
 const int MAX_VOICES = 64;
 const int MAX_UNISON = 16;
 const int N_OUTPUTS = 2;

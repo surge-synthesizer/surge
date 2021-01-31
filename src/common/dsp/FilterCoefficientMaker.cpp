@@ -509,8 +509,13 @@ void FilterCoefficientMaker::Coeff_LP4L(float freq, float reso, int subtype)
     FromDirect(c);
 }
 
-void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
+void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int isubtype)
 {
+    int subtype = isubtype & QFUSubtypeMasks::UNMASK_SUBTYPE;
+    bool extended = isubtype & QFUSubtypeMasks::EXTENDED_COMB;
+
+    int comb_length = extended ? MAX_FB_COMB_EXTENDED : MAX_FB_COMB;
+
     float dtime = (1.f / 440.f) * storage->note_to_pitch_inv_ignoring_tuning(freq);
     dtime = dtime * dsamplerate_os;
 
@@ -520,8 +525,16 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int subtype)
         dtime -= FIRoffset;
     }
 
-    dtime = limit_range(dtime, (float)FIRipol_N, (float)MAX_FB_COMB - FIRipol_N);
-    reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
+    dtime = limit_range(dtime, (float)FIRipol_N, (float)comb_length - FIRipol_N);
+    if (extended)
+    {
+        // extended use is not from the filter bank so allow full feedback range
+        reso = limit_range(reso, -1.f, 1.f);
+    }
+    else
+    {
+        reso = ((subtype & 2) ? -1.0f : 1.0f) * limit_range(reso, 0.f, 1.f);
+    }
 
     float c[n_cm_coeffs];
     memset(c, 0, sizeof(float) * n_cm_coeffs);
