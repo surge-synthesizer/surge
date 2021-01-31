@@ -110,7 +110,7 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp src/common/dsp/effect/NimbusEffect.h)
+add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -300,26 +300,28 @@ set(SURGE_GUI_SOURCES
   src/common/gui/CModulationSourceButton.cpp
   src/common/gui/CNumberField.cpp
   src/common/gui/COscillatorDisplay.cpp
+  src/common/gui/CParameterTooltip.h
   src/common/gui/CPatchBrowser.cpp
   src/common/gui/CScalableBitmap.cpp
   src/common/gui/CSnapshotMenu.cpp
+  src/common/gui/CSurgeHyperlink.cpp
   src/common/gui/CSurgeSlider.cpp
   src/common/gui/CSurgeVuMeter.cpp
   src/common/gui/CSwitchControl.cpp
+  src/common/gui/CTextButtonWithHover.cpp
+  src/common/gui/CursorControlGuard.cpp
+  src/common/gui/CVerticalLabel.cpp
+  src/common/gui/guihelpers.cpp
+  src/common/ModulatorPresetManager.cpp
   src/common/gui/MSEGEditor.cpp
+  src/common/gui/RuntimeFont.cpp
+  src/common/gui/SkinFontLoader.cpp
+  src/common/gui/SkinImageMaps.h
   src/common/gui/SkinSupport.cpp
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
-  src/common/gui/UIInstrumentation.cpp
-  src/common/gui/guihelpers.cpp
-  src/common/gui/CVerticalLabel.cpp
-  src/common/gui/CursorControlGuard.cpp
-  src/common/gui/SkinFontLoader.cpp
-  src/common/gui/SkinImageMaps.h
-  src/common/gui/CSurgeHyperlink.cpp
-  src/common/ModulatorPresetManager.cpp
-        src/common/gui/CTextButtonWithHover.cpp src/common/gui/CTextButtonWithHover.h src/common/gui/RefreshableOverlay.h src/common/gui/RuntimeFont.cpp)
+  src/common/gui/UIInstrumentation.cpp)
 
 set(SURGE_VST3_SOURCES
   src/vst3/SurgeVst3Processor.cpp

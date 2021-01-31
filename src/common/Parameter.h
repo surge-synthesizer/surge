@@ -152,6 +152,8 @@ enum ctrltypes
     ct_chow_ratio,
     ct_nimbusmode,
     ct_nimbusquality,
+    ct_pitch4oct,
+    ct_float_toggle,
     num_ctrltypes,
 };
 

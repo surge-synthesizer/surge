@@ -1657,6 +1657,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case ct_lfodeform:
         case ct_airwindows_param_bipolar:
         case ct_pitch:
+        case ct_pitch4oct:
             style |= kBipolar;
             break;
         case ct_lfoamplitude:
