@@ -17,6 +17,13 @@
 #include <intrin.h>
 #endif
 
+#if MAC
+#include <sys/sysctl.h>
+#endif
+
+#include <sstream>
+#include <string>
+
 using namespace VSTGUI;
 
 enum abouttags
@@ -154,9 +161,23 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     std::string arch = std::string(Surge::Build::BuildArch);
 #if MAC
     std::string platform = "macOS";
+
+    char buffer[1024];
+    size_t bufsz = sizeof(buffer);
+    if (sysctlbyname("machdep.cpu.brand_string", (void *)(&buffer), &bufsz, nullptr, (size_t)0) < 0)
+    {
 #if ARM_NEON
-    arch = "Apple Silicon";
+        arch = "Apple Silicon";
 #endif
+    }
+    else
+    {
+        arch = buffer;
+#if ARM_NEON
+        arch += " (Apple Silicon)";
+#endif
+    }
+
 #elif WINDOWS
     std::string platform = "Windows";
 
@@ -180,6 +201,30 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     arch = CPUBrandString;
 #elif LINUX
     std::string platform = "Linux";
+
+    // Lets see what /proc/cpuinfo has to say for us
+    // on intels this is "model name"
+    auto pinfo = std::ifstream("/proc/cpuinfo");
+    if (pinfo.is_open())
+    {
+        std::string line;
+        while (std::getline(pinfo, line))
+        {
+            if (line.find("model name") == 0)
+            {
+                auto colon = line.find(":");
+                arch = line.substr(colon + 1);
+                break;
+            }
+            if (line.find("Model") == 0) // rasperry pi branch
+            {
+                auto colon = line.find(":");
+                arch = line.substr(colon + 1);
+                break;
+            }
+        }
+    }
+    pinfo.close();
 #else
     std::string platform = "GLaDOS, Orac or Skynet";
 #endif
