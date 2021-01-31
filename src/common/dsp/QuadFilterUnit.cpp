@@ -519,6 +519,7 @@ __m128 SNHquad(QuadFilterUnitState *__restrict f, __m128 in)
     return f->R[1];
 }
 
+template <int COMB_SIZE> // COMB_SIZE must be a power of 2
 __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
 {
     assert(FIRipol_M == 256); // changing the constant requires updating the code below
@@ -542,7 +543,7 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
     {
         if (f->active[i])
         {
-            int RP = (f->WP[i] - DTi[i] - FIRoffset) & (MAX_FB_COMB - 1);
+            int RP = (f->WP[i] - DTi[i] - FIRoffset) & (COMB_SIZE - 1);
 
             // SINC interpolation (12 samples)
             __m128 a = _mm_loadu_ps(&f->DB[i][RP]);
@@ -573,10 +574,10 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
             __m128 t = _mm_load_ss((float *)&d + i);
             _mm_store_ss(&f->DB[i][f->WP[i]], t);
             if (f->WP[i] < FIRipol_N)
-                _mm_store_ss(&f->DB[i][f->WP[i] + MAX_FB_COMB], t);
+                _mm_store_ss(&f->DB[i][f->WP[i] + COMB_SIZE], t);
 
             // Increment write position
-            f->WP[i] = (f->WP[i] + 1) & (MAX_FB_COMB - 1);
+            f->WP[i] = (f->WP[i] + 1) & (COMB_SIZE - 1);
         }
     }
     return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
@@ -798,7 +799,14 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
         return SNHquad;
     case fut_comb_pos:
     case fut_comb_neg:
-        return COMBquad_SSE2;
+        if (subtype & QFUSubtypeMasks::EXTENDED_COMB)
+        {
+            return COMBquad_SSE2<MAX_FB_COMB_EXTENDED>;
+        }
+        else
+        {
+            return COMBquad_SSE2<MAX_FB_COMB>;
+        }
     case fut_vintageladder:
         switch (subtype)
         {

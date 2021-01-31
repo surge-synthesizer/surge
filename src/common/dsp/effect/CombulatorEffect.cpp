@@ -34,7 +34,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
             }
         }
     }
-    memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB + FIRipol_N) * sizeof(float));
+    memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
 }
 
 CombulatorEffect::~CombulatorEffect() { _aligned_free(qfus); }
@@ -110,7 +110,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
      */
     int type = fut_comb_pos, subtype = 1;
 
-    FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
+    FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype | QFUSubtypeMasks::EXTENDED_COMB);
 
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
@@ -119,7 +119,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance.v, type, subtype, storage);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance.v, type,
+                                   subtype | QFUSubtypeMasks::EXTENDED_COMB, storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
@@ -277,7 +278,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_noise_mix].posy_offset = 1;
 
     fxdata->p[combulator_freq1].set_name("Frequency 1");
-    fxdata->p[combulator_freq1].set_type(ct_freq_audible);
+    fxdata->p[combulator_freq1].set_type(ct_freq_audible_with_very_low_lowerbound);
     fxdata->p[combulator_freq1].posy_offset = 3;
     fxdata->p[combulator_freq2].set_name("Frequency 2 Offset");
     fxdata->p[combulator_freq2].set_type(ct_pitch);
@@ -286,7 +287,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_freq3].set_type(ct_pitch);
     fxdata->p[combulator_freq3].posy_offset = 3;
     fxdata->p[combulator_feedback].set_name("Feedback");
-    fxdata->p[combulator_feedback].set_type(ct_percent);
+    fxdata->p[combulator_feedback].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_feedback].posy_offset = 3;
 
     fxdata->p[combulator_gain1].set_name("Comb 1");
@@ -306,7 +307,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_width].set_type(ct_decibel_narrow);
     fxdata->p[combulator_width].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
-    fxdata->p[combulator_mix].set_type(ct_percent);
+    fxdata->p[combulator_mix].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_mix].posy_offset = 7;
 }
 
