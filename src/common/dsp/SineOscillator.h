@@ -25,13 +25,13 @@ class SineOscillator : public Oscillator
   public:
     enum sine_params
     {
-        sin_shape,
-        sin_feedback,
-        sin_FMmode,
-        sin_lowcut,
-        sin_highcut,
-        sin_unison_detune,
-        sin_unison_voices,
+        sine_shape,
+        sine_feedback,
+        sine_FMmode,
+        sine_lowcut,
+        sine_highcut,
+        sine_unison_detune,
+        sine_unison_voices,
     };
 
     SineOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
@@ -44,7 +44,7 @@ class SineOscillator : public Oscillator
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
 
-    quadr_osc sinus[MAX_UNISON];
+    quadr_osc sine[MAX_UNISON];
     double phase[MAX_UNISON];
     float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
     float fb_val;

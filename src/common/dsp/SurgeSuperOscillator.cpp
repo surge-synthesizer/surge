@@ -259,8 +259,12 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
     l_sync.setRate(rate);
 
     n_unison = limit_range(oscdata->p[sso_unison_voices].val.i, 1, MAX_UNISON);
+    
     if (is_display)
+    {
         n_unison = 1;
+    }
+
     prepare_unison(n_unison);
 
     memset(oscbuffer, 0, sizeof(float) * (OB_LENGTH + FIRipol_N));
@@ -289,8 +293,9 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
             drand = (double)rand() / RAND_MAX;
             oscstate[i] = st;
             syncstate[i] = st;
-            last_level[i] = 0.0;
+            last_level[i] = 0.f;
         }
+
         dc_uni[i] = 0.f;
         state[i] = 0.f;
         pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
