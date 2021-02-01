@@ -594,7 +594,14 @@ struct CDrawContext
 
     struct Transform
     {
-        Transform(CDrawContext &dc, CGraphicsTransform &tf) { UNIMPL; }
+        juce::Graphics *g = nullptr;
+        Transform(CDrawContext &dc, CGraphicsTransform &tf)
+        {
+            dc.g.saveState();
+            dc.g.addTransform(tf.juceT);
+            g = &(dc.g);
+        }
+        ~Transform() { g->restoreState(); }
     };
 
     void saveGlobalState() { g.saveState(); }
@@ -628,26 +635,40 @@ struct CDrawContext
         case kDrawFilled:
         {
             g.setColour(fillColor);
-            g.fillRect(r.asJuceIntRect());
+            g.fillRect(r.asJuceFloatRect());
             break;
         }
         case kDrawStroked:
         {
             g.setColour(frameColor);
-            g.drawRect(r.asJuceIntRect());
+            g.drawRect(r.asJuceFloatRect());
             break;
         }
         case kDrawFilledAndStroked:
         {
             g.setColour(fillColor);
-            g.fillRect(r.asJuceIntRect());
+            g.fillRect(r.asJuceFloatRect());
             g.setColour(frameColor);
-            g.drawRect(r.asJuceIntRect());
+            g.drawRect(r.asJuceFloatRect());
         }
         }
     }
 
-    void drawPolygon(const std::vector<CPoint> &, CDrawStyle s) { UNIMPL; }
+    void drawPolygon(const std::vector<CPoint> &l, CDrawStyle s)
+    {
+        juce::Path path;
+        bool started = false;
+        for (auto &p : l)
+        {
+            if (!started)
+                path.startNewSubPath(p);
+            else
+                path.lineTo(p);
+        }
+        g.setColour(kRedCColor.asJuceColour());
+        g.fillPath(path);
+        OKUNIMPL;
+    }
 
     CGraphicsPath *createRoundRectGraphicsPath(const CRect &r, float radius)
     {
@@ -691,7 +712,14 @@ struct CDrawContext
         g.setColour(fontColor);
         g.drawText(juce::CharPointer_UTF8(t), r, al);
     }
-    void drawString(const char *, const CPoint &, int = 0, bool = true) { UNIMPL; }
+    void drawString(const char *c, const CPoint &p, int = 0, bool = true)
+    {
+        OKUNIMPL;
+        auto w = font->font.getStringWidth(juce::CharPointer_UTF8(c));
+        auto h = font->font.getHeight();
+        auto r = CRect(p, CPoint(w, h));
+        drawString(c, r);
+    }
     void drawEllipse(const CRect &r, const CDrawStyle &s)
     {
         if (s == kDrawFilled || s == kDrawFilledAndStroked)
@@ -785,25 +813,23 @@ template <typename T> struct juceCViewConnector : public T
     void mouseExit(const juce::MouseEvent &e) override;
     void mouseMove(const juce::MouseEvent &e) override;
     void mouseDrag(const juce::MouseEvent &e) override;
+    void mouseDoubleClick(const juce::MouseEvent &e) override;
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override;
+    void mouseMagnify(const juce::MouseEvent &event, float scaleFactor) override;
 };
 
+class CView;
+
 // Clena this up obviously
-template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefcount
+struct CViewBase : public Internal::FakeRefcount
 {
-    CViewWithJuceComponent(const CRect &size) : size(size) {}
-    virtual ~CViewWithJuceComponent(){
+    CViewBase(const CRect &size) : size(size) {}
+    virtual ~CViewBase(){
         // Here we probably have to make sure that the juce component is removed
     };
-    virtual juce::Component *juceComponent()
-    {
-        if (!comp)
-        {
-            comp = std::make_unique<juceCViewConnector<T>>();
-            comp->setBounds(size.asJuceIntRect());
-            comp->setViewCompanion(this);
-        }
-        return comp.get();
-    }
+    virtual juce::Component *juceComponent() = 0;
+
     virtual void draw(CDrawContext *dc) { UNIMPL; };
     CRect getViewSize()
     {
@@ -852,14 +878,12 @@ template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefco
 
     virtual bool onWheel(const CPoint &where, const float &distance, const CButtonState &buttons)
     {
-        UNIMPL;
         return false;
     }
 
     virtual bool onWheel(const CPoint &where, const CMouseWheelAxis &, const float &distance,
                          const CButtonState &buttons)
     {
-        UNIMPL;
         return false;
     }
 
@@ -882,7 +906,7 @@ template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefco
     }
     bool isDirty()
     {
-        UNIMPL;
+        OKUNIMPL;
         return true;
     }
     void setVisible(bool b) { UNIMPL; }
@@ -893,8 +917,30 @@ template <typename T> struct CViewWithJuceComponent : public Internal::FakeRefco
     }
     void setSize(const CRect &s) { UNIMPL; }
     void setSize(float w, float h) { UNIMPL; }
-    std::unique_ptr<juceCViewConnector<T>> comp;
     CRect size;
+
+    CView *parentView = nullptr;
+    CView *getParentView() { return parentView; }
+
+    CFrame *frame = nullptr;
+    CFrame *getFrame();
+};
+
+template <typename T> struct CViewWithJuceComponent : public CViewBase
+{
+    CViewWithJuceComponent(const CRect &size) : CViewBase(size) {}
+    std::unique_ptr<juceCViewConnector<T>> comp;
+
+    juce::Component *juceComponent() override
+    {
+        if (!comp)
+        {
+            comp = std::make_unique<juceCViewConnector<T>>();
+            comp->setBounds(size.asJuceIntRect());
+            comp->setViewCompanion(this);
+        }
+        return comp.get();
+    }
 };
 
 #define GSPAIR(x, sT, gT, gTV)                                                                     \
@@ -912,17 +958,23 @@ struct CView : public CViewWithJuceComponent<juce::Component>
     CView(const CRect &size) : CViewWithJuceComponent<juce::Component>(size) {}
     ~CView() {}
 
-    CFrame *frame = nullptr;
-    CFrame *getFrame() { return frame; }
-
-    CView *parentView = nullptr;
-    CView *getParentView() { return parentView; }
-
     virtual void onAdded() {}
     virtual void efvg_resolveDeferredAdds(){};
 
     EscapeFromVSTGUI::JuceVSTGUIEditorAdapterBase *ed = nullptr; // FIX ME obviously
 };
+
+inline CFrame *CViewBase::getFrame()
+{
+    if (!frame)
+    {
+        if (parentView)
+        {
+            return parentView->getFrame();
+        }
+    }
+    return frame;
+}
 
 struct CViewContainer : public CView
 {
@@ -935,7 +987,7 @@ struct CViewContainer : public CView
         }
         views.clear();
     }
-    bool transparent = true;
+    bool transparent = false;
     void setTransparency(bool b) { transparent = b; }
 
     CBitmap *bg = nullptr;
@@ -959,6 +1011,9 @@ struct CViewContainer : public CView
     void onAdded() override { std::cout << "CVC Added" << std::endl; }
     void addView(CView *v)
     {
+        if (!v)
+            return;
+
         v->remember();
         v->ed = ed;
         v->frame = frame;
@@ -1043,6 +1098,11 @@ struct CViewContainer : public CView
         }
     }
 
+    CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
+    {
+        std::cout << "CViewContainer::onMouseDown" << std::endl;
+        return kMouseEventNotHandled;
+    }
     void efvg_resolveDeferredAdds() override
     {
         for (auto v : deferredAdds)
@@ -1267,8 +1327,10 @@ struct CTextEdit : public CControl
               const char *txt = nullptr)
         : CControl(r, l, tag)
     {
-        UNIMPL;
+        texted = std::make_unique<juce::TextEditor>();
     }
+    std::unique_ptr<juce::TextEditor> texted;
+    juce::Component *juceComponent() override { return texted.get(); }
     GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
     GSPAIR(ImmediateTextChange, bool, bool, true);
 };
@@ -1375,7 +1437,13 @@ template <typename T> inline void juceCViewConnector<T>::mouseDown(const juce::M
 {
     auto b = T::getBounds().getTopLeft();
     CPoint w(e.x + b.x, e.y + b.y);
-    auto r = viewCompanion->onMouseDown(w, CButtonState());
+    CViewBase *curr = viewCompanion;
+    auto r = kMouseEventNotHandled;
+    while (curr && r == kMouseEventNotHandled)
+    {
+        r = curr->onMouseDown(w, CButtonState());
+        curr = curr->getParentView();
+    }
     if (r == kMouseEventNotHandled)
     {
         T::mouseDown(e);
@@ -1401,6 +1469,54 @@ template <typename T> inline void juceCViewConnector<T>::mouseExit(const juce::M
     if (r == kMouseEventNotHandled)
     {
         T::mouseExit(e);
+    }
+}
+
+template <typename T> inline void juceCViewConnector<T>::mouseDoubleClick(const juce::MouseEvent &e)
+{
+    auto b = T::getBounds().getTopLeft();
+    CPoint w(e.x + b.x, e.y + b.y);
+    auto bs = CButtonState() | kDoubleClick;
+
+    auto r = viewCompanion->onMouseDown(w, CButtonState(bs));
+    if (r == kMouseEventNotHandled)
+    {
+        T::mouseDoubleClick(e);
+    }
+}
+template <typename T>
+inline void juceCViewConnector<T>::mouseWheelMove(const juce::MouseEvent &e,
+                                                  const juce::MouseWheelDetails &wheel)
+{
+    auto b = T::getBounds().getTopLeft();
+    CPoint w(e.x + b.x, e.y + b.y);
+
+    OKUNIMPL;
+    float mouseScaleFactor = 3;
+
+    auto r = viewCompanion->onWheel(w, kMouseWheelAxisX, mouseScaleFactor * wheel.deltaX,
+                                    CButtonState()) ||
+             viewCompanion->onWheel(w, kMouseWheelAxisY, -mouseScaleFactor * wheel.deltaY,
+                                    CButtonState());
+
+    if (!r)
+    {
+        r = viewCompanion->onWheel(w, -mouseScaleFactor * wheel.deltaY, CButtonState());
+    }
+    if (!r)
+    {
+        T::mouseWheelMove(e, wheel);
+    }
+}
+template <typename T>
+inline void juceCViewConnector<T>::mouseMagnify(const juce::MouseEvent &event, float scaleFactor)
+{
+    std::cout << "scaleFactor is " << scaleFactor << std::endl;
+    auto b = T::getBounds().getTopLeft();
+    CPoint w(event.x + b.x, event.y + b.y);
+    if (!viewCompanion->magnify(w, scaleFactor))
+    {
+        T::mouseMagnify(event, scaleFactor);
     }
 }
 

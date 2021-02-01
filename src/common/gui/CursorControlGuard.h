@@ -79,8 +79,12 @@ struct CursorControlAdapter
 {
     CursorControlAdapter(SurgeStorage *s)
     {
+#if !TARGET_JUCE_UI
         if (s)
             hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
+#else
+        hideCursor = false;
+#endif
     }
 
     void startCursorHide()
