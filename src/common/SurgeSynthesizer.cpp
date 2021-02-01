@@ -2306,7 +2306,6 @@ bool SurgeSynthesizer::loadOscalgos()
             }
 
             TiXmlElement *e = (TiXmlElement *)storage.getPatch().scene[s].osc[i].queue_xmldata;
-
             if (e)
             {
                 resend = true;
@@ -2327,6 +2326,12 @@ bool SurgeSynthesizer::loadOscalgos()
                             storage.getPatch().scene[s].osc[i].p[k].val.i = j;
                     }
                 }
+                int rt;
+                if (e->QueryIntAttribute("retrigger", &rt) == TIXML_SUCCESS)
+                {
+                    storage.getPatch().scene[s].osc[i].retrigger.val.b = rt;
+                }
+
                 storage.getPatch().scene[s].osc[i].queue_xmldata = 0;
             }
             if (resend)
