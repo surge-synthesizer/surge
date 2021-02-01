@@ -39,13 +39,11 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     this->editor = editor;
     this->storage = storage;
 
+#if TARGET_JUCE_UI
+    setTransparency(false);
+    setBackgroundColor(CColor(0, 0, 0, 212));
+#else
     setTransparency(true);
-
-    auto vs = getViewSize();
-    auto center = vs.getCenter();
-    auto margin = 20;
-    auto lblh = 16, lblvs = 15;
-    auto boldFont = Surge::GUI::getLatoAtSize(11, kBoldFace);
 
     /* dark semitransparent background */
 
@@ -55,6 +53,13 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     bg->setMouseableArea(CRect()); // Make sure I don't get clicked on
     bg->setBackColor(CColor(0, 0, 0, 212));
     addView(bg);
+#endif
+
+    auto vs = getViewSize();
+    auto center = vs.getCenter();
+    auto margin = 20;
+    auto lblh = 16, lblvs = 15;
+    auto boldFont = Surge::GUI::getLatoAtSize(11, kBoldFace);
 
     /* big centered Surge logo */
     auto logo = bitmapStore->getBitmap(IDB_ABOUT_BG);
@@ -140,7 +145,11 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     /* bottom left version info */
 
+#if TARGET_JUCE_UI
+    std::string version = std::string("Surge XT ") + Surge::Build::FullVersionStr;
+#else
     std::string version = Surge::Build::FullVersionStr;
+#endif
     std::string buildinfo = "Built on " + (std::string)Surge::Build::BuildDate + " at " +
                             (std::string)Surge::Build::BuildTime + ", using " +
                             (std::string)Surge::Build::BuildLocation + " host '" +
