@@ -400,7 +400,7 @@ enum adsr_purpose
 };
 
 /*
- * How does the sustain pedal work in mono mode? Current modes for this are
+ * How does the sustain pedal work in mono mode? Current modes for this are:
  *
  * HOLD_ALL_NOTES (the default). If you release a note with the pedal down
  * it does not release
@@ -444,9 +444,9 @@ struct MidiChannelState
     float timbre;
 };
 
-// I have used the ordering here in SurgeGUIEditor to iterate. Be careful if tyoe or retrigger move
+// I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
 // from first/last position.
-struct OscillatorStorage : public CountedSetUserData // The counted set is the wt tables
+struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
 {
     Parameter type;
     Parameter pitch, octave;
@@ -462,9 +462,8 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
 
 struct FilterStorage
 {
-    Parameter type;
-    Parameter subtype; // NOTE: In SurgeSynthesizer we assume that type and subtype are adjacent in
-                       // param space. See comment there.
+    Parameter type;    // NOTE: In SurgeSynthesizer we assume that type and subtype are
+    Parameter subtype; // adjacent in param space. See comment there.
     Parameter cutoff;
     Parameter resonance;
     Parameter envmod;
@@ -484,8 +483,8 @@ struct ADSRStorage
     Parameter mode;
 };
 
-// I have used the ordering here in CLFOGui to iterate. Be careful if rate or release move from
-// first/last position.
+// I have used the ordering here in CLFOGui to iterate.
+// Be careful if Rate or LFO EG Release move from first/last position!
 struct LFOStorage
 {
     Parameter rate, shape, start_phase, magnitude, deform;
@@ -495,7 +494,7 @@ struct LFOStorage
 
 struct FxStorage
 {
-    // Just a heads up if you change this please go look at fx_reorder in SurgeSorage too
+    // Just a heads up: if you change this, please go look at fx_reorder in SurgeStorage too!
     Parameter type;
     Parameter return_level;
     Parameter p[n_fx_params];
@@ -510,9 +509,9 @@ struct SurgeSceneStorage
     Parameter osc_solo;
     Parameter level_o1, level_o2, level_o3, level_noise, level_ring_12, level_ring_23, level_pfg;
     Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12,
-        mute_ring_23; // all mute parameters must be contiguous
+        mute_ring_23; // all mute parameters must be contiguous!
     Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12,
-        solo_ring_23; // all solo parameters must be contiguous
+        solo_ring_23; // all solo parameters must be contiguous!
     Parameter route_o1, route_o2, route_o3, route_noise, route_ring_12, route_ring_23;
     Parameter vca_level;
     Parameter pbrange_dn, pbrange_up;
@@ -553,13 +552,13 @@ struct MSEGStorage
     struct segment
     {
         float duration;
-        float dragDuration; // Snap Mode Helper
+        float dragDuration; // Snap mode helper
         float v0;
-        float dragv0; // in snap mode, this is the location we are dragged to. It is just
-                      // convenience storage.
-        float nv1;    // this is the v0 of the neighbor and is here just for convenience.
+        float dragv0; // In snap mode, this is the location we are dragged to.
+                      // It is just convenience storage.
+        float nv1;    // This is the v0 of the neighbor and is here just for convenience.
                       // MSEGModulationHelper::rebuildCache will set it
-        float dragv1; // only used in the endpoint
+        float dragv1; // Only used in the endpoint
         float cpduration, cpv, dragcpv, dragcpratio = 0.5;
         bool useDeform = true;
         bool invertDeform = false;
@@ -575,36 +574,36 @@ struct MSEGStorage
             TRIANGLE,
             HOLD,
             SAWTOOTH,
-            RESERVED, // used to be Spike, but it broke some MSEG model constraints, so we ditched
-                      // it - can add a different curve type later on!
+            RESERVED, // used to be Spike, but it broke some MSEG model constraints,
+                      // so we ditched it - can add a different curve type later on!
             BUMP,
             SMOOTH_STAIRS,
         } type;
     };
 
-    // These values are streamed so please don't change the integer values
+    // These values are streamed so please don't change the integer values!
     enum EndpointMode
     {
         LOCKED = 1,
         FREE = 2
     } endpointMode = FREE;
 
-    // These values are streamed so please don't change the integer values
+    // These values are streamed so please don't change the integer values!
     enum EditMode
     {
         ENVELOPE = 0, // no constraints on horizontal time axis
-        LFO = 1, // MSEG editing is constrained to just one phase unit (0 ... 1), useful for single
-                 // cycle waveform editing
+        LFO = 1,      // MSEG editing is constrained to just one phase unit (0 ... 1)
+                      // useful for single cycle waveform editing
     } editMode = ENVELOPE;
 
-    // These values are streamed so please don't change the integer values
+    // These values are streamed so please don't change the integer values!
     enum LoopMode
     {
-        ONESHOT = 1, // Play the MSEG front to back and then output the final value
-        LOOP = 2,    // Play the MSEG front to loop end and then return to loop start
-        GATED_LOOP =
-            3 // Play the MSEG front to loop end, then return to loop start, but if at any time
-              // a note off is generated, jump to loop end at current value and progress to end once
+        ONESHOT = 1,   // Play the MSEG front to back and then output the final value
+        LOOP = 2,      // Play the MSEG front to loop end and then return to loop start
+        GATED_LOOP = 3 // Play the MSEG front to loop end, then return to loop start,
+                       // but if at any time a note off is generated, jump to loop end
+                       // at current value and progress to end once
     } loopMode = LOOP;
 
     int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
@@ -612,8 +611,8 @@ struct MSEGStorage
     int n_activeSegments = 0;
     std::array<segment, max_msegs> segments;
 
-    // These are calculated values which derive from the segment which we cache for efficiency.
-    // If you edit the segments then MSEGModulationHelper::rebuildCache can rebuild them
+    // These are calculated values which derive from the segment, which we cache for efficiency.
+    // If you edit the segments, then MSEGModulationHelper::rebuildCache can rebuild them
     float totalDuration;
     std::array<float, max_msegs> segmentStart, segmentEnd;
     float durationToLoopEnd;
@@ -621,11 +620,11 @@ struct MSEGStorage
     float envelopeModeDuration = -1, envelopeModeNV1 = -2; // -2 as sentinel since NV1 is -1/1
 
     /*
-     * These "UI" type things we decided, late in 18, are actually a critical part of
+     * These "UI" type things we decided, late in 1.8, are actually a critical part of
      * the modelling experience, so even if they aren't required to actually evaluate
      * the model, we decided to move them to the model and the patch, rather than the
      * dawExtraState. Note that vSnap and hSnap are also streamed into the DES at write
-     * time and optionaly streamed out based on a user pref.
+     * time and optionally streamed out based on a user preference.
      */
     static constexpr float defaultVSnapDefault = 0.25, defaultHSnapDefault = 0.125;
     float vSnapDefault = defaultVSnapDefault, hSnapDefault = defaultHSnapDefault;
@@ -640,7 +639,7 @@ struct FormulaModulatorStorage
 };
 
 /*
-** There are a collection of things we want your DAW to save about your particular instance
+** There is a collection of things we want your DAW to save about your particular instance
 ** but don't want saved in your patch. So have this extra structure in the patch which we
 ** can activate/populate from the DAW hosts. See #915
 */
@@ -719,7 +718,7 @@ class SurgePatch
     unsigned int save_xml(void **data);
     unsigned int save_RIFF(void **data);
 
-    // Factor these so the LFO Preset Mechanism can use them also
+    // Factor these so the LFO preset mechanism can use them as well
     void msegToXMLElement(MSEGStorage *ms, TiXmlElement &parent) const;
     void msegFromXMLElement(MSEGStorage *ms, TiXmlElement *parent, bool restoreSnaps) const;
     void stepSeqToXmlElement(StepSequencerStorage *ss, TiXmlElement &parent, bool streamMask) const;
@@ -809,7 +808,7 @@ enum surge_copysource
     n_copysources,
 };
 
-/* STORAGE layer			*/
+/* storage layer */
 
 class alignas(16) SurgeStorage
 {
@@ -957,7 +956,7 @@ class alignas(16) SurgeStorage
     std::unordered_map<int, std::string> helpURL_controlgroup;
     std::unordered_map<std::string, std::string> helpURL_paramidentifier;
     std::unordered_map<std::string, std::string> helpURL_specials;
-    // Alterhately make this unordered and provide a hash
+    // Alternately make this unordered and provide a hash
     std::map<std::pair<std::string, int>, std::string> helpURL_paramidentifier_typespecialized;
 
     int subtypeMemory[n_scenes][n_filterunits_per_scene][n_fu_types];
@@ -1009,8 +1008,8 @@ std::string appendDirectory(const std::string &root, const std::string &path1,
 } // namespace Surge
 
 /*
-** ToElement does a this && check to check nulls. (As does ToDocument and so on).
-** gcc -O3 on linux optimizes that away giving crashes. So do this instead
-** See github issue #469
+** ToElement does this && check to check nulls (as does ToDocument and so on).
+** gcc -O3 on Linux optimizes that away giving crashes. So do this instead
+** See GitHub issue #469
 */
 #define TINYXML_SAFE_TO_ELEMENT(expr) ((expr) ? (expr)->ToElement() : NULL)

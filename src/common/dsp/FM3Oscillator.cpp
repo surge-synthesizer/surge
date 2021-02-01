@@ -26,15 +26,15 @@ FM3Oscillator::FM3Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, 
 
 void FM3Oscillator::init(float pitch, bool is_display)
 {
-    // phase = oscdata->retrigger.val.b ? ((oscdata->startphase.val.f) * M_PI * 2) : 0.f;
-    phase = 0.0;
-    lastoutput = 0.0;
-    driftlfo = 0;
+    phase =
+        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
+    lastoutput = 0.f;
+    driftlfo = 0.f;
     driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
-    fb_val = 0.0;
-    AM.set_phase(0.0);
-    RM1.set_phase(0.0);
-    RM2.set_phase(0.0);
+    fb_val = 0.f;
+    AM.set_phase(phase);
+    RM1.set_phase(phase);
+    RM2.set_phase(phase);
 }
 
 FM3Oscillator::~FM3Oscillator() {}
@@ -49,8 +49,11 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     auto m1 = oscdata->p[fm3_m1ratio].get_extended(
         localcopy[oscdata->p[fm3_m1ratio].param_id_in_scene].f);
+
     if (m1 < 0)
+    {
         m1 = 1.0 / m1;
+    }
 
     if (oscdata->p[fm3_m1ratio].absolute)
     {
@@ -66,8 +69,11 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     auto m2 = oscdata->p[fm3_m2ratio].get_extended(
         localcopy[oscdata->p[fm3_m2ratio].param_id_in_scene].f);
+
     if (m2 < 0)
+    {
         m2 = 1.0 / m2;
+    }
 
     if (oscdata->p[fm3_m2ratio].absolute)
     {
@@ -93,7 +99,9 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
     AbsModDepth.newValue(32.0 * M_PI * d3 * d3 * d3);
 
     if (FM)
+    {
         FMdepth.newValue(32.0 * M_PI * fmdepth * fmdepth * fmdepth);
+    }
 
     FeedbackDepth.newValue(abs(fb_val));
 
@@ -103,11 +111,14 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
         RM2.process();
         AM.process();
 
-        output[k] = phase + RelModDepth1.v * RM1.r + RelModDepth2.v * RM2.r + AbsModDepth.v * AM.r +
-                    lastoutput;
+        output[k] = phase + RelModDepth1.v * RM1.r +
+                            RelModDepth2.v * RM2.r +
+                            AbsModDepth.v * AM.r + lastoutput;
 
         if (FM)
+        {
             output[k] += FMdepth.v * master_osc[k];
+        }
 
         output[k] = sin(output[k]);
         lastoutput =
@@ -115,13 +126,19 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
         phase += omega;
         if (phase > 2.0 * M_PI)
+        {
             phase -= 2.0 * M_PI;
+        }
 
         RelModDepth1.process();
         RelModDepth2.process();
         AbsModDepth.process();
+
         if (FM)
+        {
             FMdepth.process();
+        }
+
         FeedbackDepth.process();
     }
     if (stereo)
@@ -135,17 +152,25 @@ void FM3Oscillator::init_ctrltypes()
     oscdata->p[fm3_m1amount].set_name("M1 Amount");
     oscdata->p[fm3_m1amount].set_type(ct_percent);
     if (oscdata->p[fm3_m1ratio].absolute)
+    {
         oscdata->p[fm3_m1ratio].set_name("M1 Frequency");
+    }
     else
+    {
         oscdata->p[fm3_m1ratio].set_name("M1 Ratio");
+    }
     oscdata->p[fm3_m1ratio].set_type(ct_fmratio);
 
     oscdata->p[fm3_m2amount].set_name("M2 Amount");
     oscdata->p[fm3_m2amount].set_type(ct_percent);
     if (oscdata->p[fm3_m2ratio].absolute)
+    {
         oscdata->p[fm3_m2ratio].set_name("M2 Frequency");
+    }
     else
+    {
         oscdata->p[fm3_m2ratio].set_name("M2 Ratio");
+    }
     oscdata->p[fm3_m2ratio].set_type(ct_fmratio);
 
     oscdata->p[fm3_m3amount].set_name("M3 Amount");
@@ -160,14 +185,22 @@ void FM3Oscillator::init_default_values()
 {
     oscdata->p[fm3_m1amount].val.f = 0.f;
     if (oscdata->p[fm3_m1ratio].absolute || oscdata->p[fm3_m1ratio].extend_range)
+    {
         oscdata->p[fm3_m1ratio].val_default.f = 16.f;
+    }
     else
+    {
         oscdata->p[fm3_m1ratio].val.f = 1.f;
+    }
     oscdata->p[fm3_m2amount].val.f = 0.f;
     if (oscdata->p[fm3_m1ratio].absolute || oscdata->p[fm3_m1ratio].extend_range)
+    {
         oscdata->p[fm3_m2ratio].val.f = 16.f;
+    }
     else
+    {
         oscdata->p[fm3_m2ratio].val.f = 1.f;
+    }
     oscdata->p[fm3_m3amount].val.f = 0.f;
     oscdata->p[fm3_m3freq].val.f = 0.f;
     oscdata->p[fm3_feedback].val.f = 0.f;
@@ -180,9 +213,15 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision,
     {
         oscdata->p[fm3_feedback].set_type(ct_osc_feedback);
     }
+
     if (streamingRevision < 14)
     {
         oscdata->p[fm3_m1ratio].absolute = false;
         oscdata->p[fm3_m2ratio].absolute = false;
+    }
+    
+    if (streamingRevision < 15)
+    {
+        oscdata->retrigger.val.b = true;
     }
 }

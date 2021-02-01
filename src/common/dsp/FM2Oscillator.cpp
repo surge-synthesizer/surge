@@ -28,17 +28,17 @@ double calcmd(double x) { return x * x * x * 8.0 * M_PI; }
 
 void FM2Oscillator::init(float pitch, bool is_display)
 {
-    // phase = oscdata->retrigger.val.b ? ((oscdata->startphase.val.f) * M_PI * 2) : 0.f;
+    phase =
+        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
     lastoutput = 0.0;
     driftlfo = 0;
     driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     fb_val = 0.0;
-    double ph = localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f * 2.0 * M_PI;
+    double ph = (localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f + phase) * 2.0 * M_PI;
     RM1.set_phase(ph);
     RM2.set_phase(ph);
     phase = -sin(ph) * (calcmd(localcopy[oscdata->p[fm2_m1amount].param_id_in_scene].f) +
-                        calcmd(localcopy[oscdata->p[fm2_m2amount].param_id_in_scene].f)) -
-            ph;
+                        calcmd(localcopy[oscdata->p[fm2_m2amount].param_id_in_scene].f)) - ph;
 }
 
 FM2Oscillator::~FM2Oscillator() {}
@@ -50,14 +50,12 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
         localcopy[oscdata->p[fm2_feedback].param_id_in_scene].f);
 
     double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
-    double shift = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * dsamplerate_inv;
+    double sh = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * dsamplerate_inv;
 
     RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
-                                   (double)localcopy[oscdata->p[fm2_m1ratio].param_id_in_scene].i +
-                               shift));
+                           (double)localcopy[oscdata->p[fm2_m1ratio].param_id_in_scene].i + sh));
     RM2.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
-                                   (double)localcopy[oscdata->p[fm2_m2ratio].param_id_in_scene].i -
-                               shift));
+                           (double)localcopy[oscdata->p[fm2_m2ratio].param_id_in_scene].i - sh));
 
     double d1 = localcopy[oscdata->p[fm2_m1amount].param_id_in_scene].f;
     double d2 = localcopy[oscdata->p[fm2_m2amount].param_id_in_scene].f;
@@ -134,5 +132,10 @@ void FM2Oscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 12)
     {
         oscdata->p[fm2_feedback].set_type(ct_osc_feedback);
+    }
+    
+    if (streamingRevision < 15)
+    {
+        oscdata->retrigger.val.b = true;
     }
 }

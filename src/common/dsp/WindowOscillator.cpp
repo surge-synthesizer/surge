@@ -48,7 +48,11 @@ void WindowOscillator::init(float pitch, bool is_display)
     float out_attenuation_inv = sqrt((float)NumUnison);
     OutAttenuation = 1.0f / (out_attenuation_inv * 16777216.f);
 
-    if (NumUnison == 1)
+    bool odd;
+    float mid;
+    int half;
+
+    if (NumUnison == 1 || is_display)
     {
         DetuneBias = 1;
         DetuneOffset = 0;
@@ -62,10 +66,13 @@ void WindowOscillator::init(float pitch, bool is_display)
         DetuneBias = (float)2.f / ((float)NumUnison - 1.f);
         DetuneOffset = -1.f;
 
-        bool odd = NumUnison & 1;
-        float mid = NumUnison * 0.5 - 0.5;
-        int half = NumUnison >> 1;
-
+        odd = NumUnison & 1;
+        mid = NumUnison * 0.5 - 0.5;
+        half = NumUnison >> 1;
+    }
+    
+    if (!is_display)
+    {
         for (int i = 0; i < NumUnison; i++)
         {
             float d = fabs((float)i - mid) / mid;
@@ -79,11 +86,15 @@ void WindowOscillator::init(float pitch, bool is_display)
             Window.Gain[i][1] = limit_range((int)(float)(128.f * megapanR(d)), 0, 255);
 
             if (oscdata->retrigger.val.b)
+            {
                 Window.Pos[i] =
                     (storage->WindowWT.size + ((storage->WindowWT.size * i) / NumUnison)) << 16;
+            }
             else
-                Window.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
-                                << 16;
+            {
+                Window.Pos[i] =
+                    (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1))) << 16;
+            }
 
             Window.DriftLFO[i][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
         }
@@ -390,5 +401,13 @@ void WindowOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
         oscdata->p[win_highcut].deactivated = true;
         oscdata->p[win_formant].set_type(ct_osc_feedback);
+    }
+    
+    if (streamingRevision < 15)
+    {
+        if (oscdata->p[win_unison_voices].val.i == 1)
+        {
+            oscdata->retrigger.val.b = true;
+        }
     }
 }
