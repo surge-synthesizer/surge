@@ -434,7 +434,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_min.f = -72;
         val_max.f = 15;
-        val_default.f = -18;
+        val_default.f = -72;
         break;
     case ct_freq_reson_band1:
         valtype = vt_float;
