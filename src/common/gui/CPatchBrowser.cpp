@@ -245,7 +245,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
         sge->pause_idle_updates = false;
 
-#if !LINUX
+#if !LINUX || TARGET_JUCE_UI
         // on linux none of this matters because popup always returns right away
         // so if we flush now it actually crashes us for the above reason.
         // INstead linux should flush in the valueChanged callback

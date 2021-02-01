@@ -1975,7 +1975,6 @@ bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformT
     CFrame *nframe = new CFrame(wsize, this);
 
 #if TARGET_JUCE_UI
-    nframe->juceComponent()->setTransform(juce::AffineTransform().scaled(1.25));
     nframe->remember();
 #endif
 
@@ -4042,7 +4041,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         // synth->load_patch(id);
         enqueuePatchId = id;
 
-#if LINUX
+#if LINUX || TARGET_JUCE_UI
         // On linux the popup memny will be gon eso we gotta process
         flushEnqueuedPatchId();
 #endif
@@ -5114,6 +5113,13 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
+#if TARGET_JUCE_UI
+    zoomFactor = zf;
+    if (currentSkin && resizeWindow)
+        parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
+    parentEd->setScaleFactor(zf * 0.01);
+#else
+
     if (zf < minimumZoom)
     {
         zf = minimumZoom;
@@ -5163,6 +5169,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     zoom_callback(this, resizeWindow);
 
     setBitmapZoomFactor(zoomFactor);
+#endif
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
@@ -6427,7 +6434,11 @@ void SurgeGUIEditor::reloadFromSkin()
     rect.right = wsx * sf;
     rect.bottom = wsy * sf;
 
+#if TARGET_JUCE_UI
+    setZoomFactor(getZoomFactor(), true);
+#else
     setZoomFactor(getZoomFactor());
+#endif
     clearOffscreenCachesAtZero = 1;
 
     // update MSEG editor if opened
