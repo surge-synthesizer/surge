@@ -209,14 +209,14 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
         if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
             firstSnapshotByType[type_id] = idx;
 
-        auto action = [this, type_id, idx](CCommandMenuItem *item) {
+        auto action = [this, type_id, type, idx](CCommandMenuItem *item) {
             this->selectedIdx = 0;
-            this->loadSnapshot(type_id, nullptr, idx);
+            this->loadSnapshot(type_id, type, idx);
             if (this->listenerNotForParent)
                 this->listenerNotForParent->valueChanged(this);
         };
 
-        loadArgsByIndex.push_back(std::make_pair(type_id, nullptr));
+        loadArgsByIndex.push_back(std::make_pair(type_id, type));
         idx++;
         actionItem->setActions(action, nullptr);
         parent->addEntry(actionItem);
