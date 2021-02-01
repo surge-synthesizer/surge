@@ -403,7 +403,7 @@ void WindowOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[win_formant].set_type(ct_osc_feedback);
     }
     
-    if (streamingRevision < 15)
+    if (streamingRevision <= 15)
     {
         if (oscdata->p[win_unison_voices].val.i == 1)
         {

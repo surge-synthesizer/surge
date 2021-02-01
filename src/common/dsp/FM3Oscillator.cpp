@@ -214,13 +214,13 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[fm3_feedback].set_type(ct_osc_feedback);
     }
 
-    if (streamingRevision < 14)
+    if (streamingRevision <= 13)
     {
         oscdata->p[fm3_m1ratio].absolute = false;
         oscdata->p[fm3_m2ratio].absolute = false;
     }
     
-    if (streamingRevision < 15)
+    if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
     }

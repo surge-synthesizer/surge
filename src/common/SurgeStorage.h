@@ -80,8 +80,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                            add ability to configure vocoder modulator mono/sterao/L/R
 //                            add comb filter tuning and compatibility block
 // 14 -> 15 (1.8.0 release) apply the great filter remap (GitHub issue #3006)
+// 15 -> 16 (1.8.2 release) implement oscillator retrigger consistently (GitHub issue #3171)
 
-const int ff_revision = 15;
+const int ff_revision = 16;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];

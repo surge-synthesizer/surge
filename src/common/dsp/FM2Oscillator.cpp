@@ -134,7 +134,7 @@ void FM2Oscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[fm2_feedback].set_type(ct_osc_feedback);
     }
     
-    if (streamingRevision < 15)
+    if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
     }
