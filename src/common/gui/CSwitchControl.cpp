@@ -62,7 +62,7 @@ void CSwitchControl::setValue(float f)
 
 CMouseEventResult CSwitchControl::onMouseDown(CPoint &where, const CButtonState &buttons)
 {
-    if (listener && (buttons & (kMButton | kButton4 | kButton5)))
+    if (listener && (buttons & (kRButton | kMButton | kButton4 | kButton5)))
     {
         listener->controlModifierClicked(this, buttons);
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;

@@ -65,17 +65,20 @@ CursorControlGuard::~CursorControlGuard()
     if (hideCount == 0)
     {
         resetToShowLocation();
+#if !TARGET_JUCE_UI
 #if MAC
         CGDisplayShowCursor(kCGDirectMainDisplay);
 #elif WINDOWS
         ShowCursor(true);
 #elif LINUX
 #endif
+#endif
     }
 }
 
 bool CursorControlGuard::resetToShowLocation()
 {
+#if !TARGET_JUCE_UI
 #if MAC
     if (motionMode == SHOW_AT_LOCATION)
     {
@@ -93,16 +96,19 @@ bool CursorControlGuard::resetToShowLocation()
     }
 #elif LINUX
 #endif
+#endif
     return false;
 }
 
 void CursorControlGuard::doHide()
 {
+#if !TARGET_JUCE_UI
 #if MAC
     CGDisplayHideCursor(kCGDirectMainDisplay);
 #elif WINDOWS
     ShowCursor(false);
 #elif LINUX
+#endif
 #endif
 }
 

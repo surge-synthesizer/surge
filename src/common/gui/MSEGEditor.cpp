@@ -29,6 +29,12 @@
 #include "CursorControlGuard.h"
 #include "guihelpers.h"
 
+#if LINUX || TARGET_JUCE_UI
+#define DISABLE_CURSOR_HIDING 1
+#else
+#define DISABLE_CURSOR_HIDING 0
+#endif
+
 using namespace VSTGUI;
 
 struct MSEGCanvas;
@@ -1238,9 +1244,14 @@ struct MSEGCanvas : public CControl,
         Surge::UI::NonIntegralAntiAliasGuard naig(dc);
 #endif
 
+#if TARGET_JUCE_UI
+        std::cout << "FIX GRADIENT" << std::endl;
+#else
         dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
+#endif
         fillpath->forget();
-        cg->forget();
+        if (cg)
+            cg->forget();
 
         dc->setLineWidth(1);
 
@@ -1655,7 +1666,7 @@ struct MSEGCanvas : public CControl,
 
         if (!gotHZ)
         {
-#if !LINUX
+#if !DISABLE_CURSOR_HIDING
             // Lin doesn't cursor hide so this hand is bad there
             getFrame()->setCursor(kCursorHand);
 #endif
@@ -1891,7 +1902,7 @@ struct MSEGCanvas : public CControl,
                     dragY *= 0.2;
                 }
                 h.onDrag(dragX, dragY, where);
-#if !LINUX
+#if !DISABLE_CURSOR_HIDING
                 float dx = where.x - cursorHideOrigin.x;
                 float dy = where.y - cursorHideOrigin.y;
                 if (dx * dx + dy * dy > 100 && cursorResetPosition)
