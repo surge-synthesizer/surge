@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "DspUtilities.h"
 
 namespace chowdsp

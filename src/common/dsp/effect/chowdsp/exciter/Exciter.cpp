@@ -80,9 +80,11 @@ void Exciter::set_params()
     auto drive = 8.f * std::pow(*f[exciter_drive], 1.5f) * drive_makeup;
     drive_gain.set_target_smoothed(drive);
 
-    // attack/release @TODO: connect to params
-    levelDetector.set_attack_time(10.f);
-    levelDetector.set_release_time(100.f);
+    // attack/release params
+    auto attack_ms = std::pow(2.0f, fxdata->p[exciter_att].displayInfo.b * *f[exciter_att]);
+    auto release_ms = 10.0f * std::pow(2.0f, fxdata->p[exciter_rel].displayInfo.b * *f[exciter_rel]);
+    levelDetector.set_attack_time(attack_ms);
+    levelDetector.set_release_time(release_ms);
 
     // "Mix" param
     wet_gain.set_target_smoothed(limit_range(*f[exciter_mix], 0.f, 1.f));
@@ -109,14 +111,17 @@ void Exciter::init_ctrltypes()
     fxdata->p[exciter_tone].val_default.f = 0.5f;
     fxdata->p[exciter_tone].posy_offset = 1;
 
-    // @TODO: figure out parameter mappings
     fxdata->p[exciter_att].set_name("Attack");
-    fxdata->p[exciter_att].set_type(ct_percent);
+    fxdata->p[exciter_att].set_type(ct_comp_attack_ms);
+    fxdata->p[exciter_att].val_max.f = std::log2(20.0f) / fxdata->p[exciter_att].displayInfo.b;
+    fxdata->p[exciter_att].val_min.f = std::log2(5.f) / fxdata->p[exciter_att].displayInfo.b;
     fxdata->p[exciter_att].val_default.f = 0.5f;
     fxdata->p[exciter_att].posy_offset = 3;
 
     fxdata->p[exciter_rel].set_name("Release");
-    fxdata->p[exciter_rel].set_type(ct_percent);
+    fxdata->p[exciter_rel].set_type(ct_comp_release_ms);
+    fxdata->p[exciter_rel].val_max.f = std::log2(20.f) / fxdata->p[exciter_rel].displayInfo.b;
+    fxdata->p[exciter_rel].val_min.f = std::log2(5.f) / fxdata->p[exciter_rel].displayInfo.b;
     fxdata->p[exciter_rel].val_default.f = 0.5f;
     fxdata->p[exciter_rel].posy_offset = 3;
 
@@ -130,6 +135,8 @@ void Exciter::init_default_values()
 {
     fxdata->p[exciter_drive].val.f = 0.5f;
     fxdata->p[exciter_tone].val.f = 0.5f;
+    fxdata->p[exciter_att].val.f = 0.5f;
+    fxdata->p[exciter_rel].val.f = 0.5f;
     fxdata->p[exciter_mix].val.f = 0.5f;
 }
 

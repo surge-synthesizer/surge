@@ -154,6 +154,8 @@ enum ctrltypes
     ct_nimbusquality,
     ct_pitch4oct,
     ct_float_toggle,
+    ct_comp_attack_ms,
+    ct_comp_release_ms,
     num_ctrltypes,
 };
 

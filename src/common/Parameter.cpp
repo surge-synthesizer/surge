@@ -937,6 +937,14 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
 
+    case ct_comp_attack_ms:
+    case ct_comp_release_ms:
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 1.f;
+        val_default.f = 0.5f;
+        break;
+
     case ct_none:
     default:
         sprintf(dispname, "-");
@@ -1134,6 +1142,20 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 1.0;
         displayInfo.unit[0] = 0;
         displayInfo.decimals = 3;
+        break;
+
+    case ct_comp_attack_ms:
+        displayType = ATwoToTheBx;
+        displayInfo.a = 1.0f;
+        displayInfo.b = std::log2(100.0f / 1.0f);
+        sprintf(displayInfo.unit, "ms");
+        break;
+    
+    case ct_comp_release_ms:
+        displayType = ATwoToTheBx;
+        displayInfo.a = 10.0f;
+        displayInfo.b = std::log2(1000.0f / 10.0f);
+        sprintf(displayInfo.unit, "ms");
         break;
     }
 }
@@ -3064,6 +3086,8 @@ bool Parameter::can_setvalue_from_string()
     case ct_airwindows_param_bipolar:
     case ct_reson_res_extendable:
     case ct_chow_ratio:
+    case ct_comp_attack_ms:
+    case ct_comp_release_ms:
     {
         return true;
         break;
