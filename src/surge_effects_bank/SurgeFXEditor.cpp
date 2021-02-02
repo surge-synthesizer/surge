@@ -11,15 +11,23 @@
 #include "SurgeFXProcessor.h"
 #include "SurgeFXEditor.h"
 
-static std::vector<std::string> fxnm = {
-    "chorus", "flanger", "phaser", "rotary", "delay", "reverb1", "reverb2",
+static std::vector<std::vector<std::string>> fxnm = {
+    {"Eq", "GEq", "Reson", "Exciter", "Chow", "Dist", "Neuron"},
+    {"Chorus", "Ens", "Flanger", "Phaser", "Rotary", "Delay", "Reverb1", "Reverb2"},
+    {"Combs", "Freq", "Nimbus", "Ring Mod", "Vocoder", "Airwin", "Cond"}};
+static std::vector<std::vector<int>> fxt = {
+    {fxt_eq, fxt_geq11, fxt_resonator, fxt_exciter, fxt_chow, fxt_distortion, fxt_neuron},
+    {fxt_chorus4, fxt_ensemble, fxt_flanger, fxt_phaser, fxt_rotaryspeaker, fxt_delay, fxt_reverb,
+     fxt_reverb2},
+    {fxt_combulator, fxt_freqshift, fxt_nimbus, fxt_ringmod, fxt_vocoder, fxt_airwindows,
+     fxt_conditioner}};
+static std::vector<std::vector<int>> fxgroup = {
+    {0, 0, 0, 0, 1, 1, 1}, {2, 2, 2, 2, 2, 3, 3, 3}, {4, 4, 4, 4, 4, 5, 5}};
 
-    "eq",     "dist",    "cond",   "freq",   "ring",  "voco",    "airwin"};
-static std::vector<int> fxt = {fxt_chorus4, fxt_flanger,    fxt_phaser,      fxt_rotaryspeaker,
-                               fxt_delay,   fxt_reverb,     fxt_reverb2,
-
-                               fxt_eq,      fxt_distortion, fxt_conditioner, fxt_freqshift,
-                               fxt_ringmod, fxt_vocoder,    fxt_airwindows};
+// https://piccianeri.com/wp-content/uploads/2016/10/Complementary-palette-f27400.jpg
+static std::vector<juce::Colour> fxbuttoncolors = {
+    juce::Colour(0xFF038294), juce::Colour(0xFFFFAB5E), juce::Colour(0xFF026775),
+    juce::Colour(0xFF964800), juce::Colour(0xFF43a4b1), juce::Colour(0xFFF27400)};
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
@@ -29,9 +37,10 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setLookAndFeel(surgeLookFeel.get());
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(500, 55 * 6 + 150);
+    setSize(540, 55 * 6 + 80 + 50 * fxt.size());
     setResizable(false, false); // For now
 
+    int ypos0 = 50 * fxt.size() - 10;
     for (int i = 0; i < n_fx_params; ++i)
     {
         fxParamSliders[i].setRange(0.0, 1.0, 0.001);
@@ -39,7 +48,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                                    NotificationType::dontSendNotification);
         fxParamSliders[i].setSliderStyle(Slider::SliderStyle::RotaryHorizontalVerticalDrag);
         fxParamSliders[i].setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * 60 + 100, 55, 55};
+        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * 60 + ypos0, 55, 55};
         fxParamSliders[i].setBounds(position);
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
@@ -56,7 +65,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         };
         addAndMakeVisible(&(fxParamSliders[i]));
 
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55, (i % 6) * 60 + 100 + 12, 13,
+        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55, (i % 6) * 60 + ypos0 + 12, 13,
                                    55 - 24};
         fxTempoSync[i].setBounds(tsPos);
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
@@ -73,7 +82,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
         addAndMakeVisible(&(fxTempoSync[i]));
 
-        juce::Rectangle<int> dispPos{(i / 6) * getWidth() / 2 + 4 + 55 + 15, (i % 6) * 60 + 100,
+        juce::Rectangle<int> dispPos{(i / 6) * getWidth() / 2 + 4 + 55 + 15, (i % 6) * 60 + ypos0,
                                      getWidth() / 2 - 68 - 15, 55};
         fxParamDisplay[i].setBounds(dispPos);
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
@@ -85,29 +94,71 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     }
 
     int en = processor.getEffectType();
-    int buttonsPerRow = 7;
-    for (int i = 0; i < n_fx; ++i)
+    int maxButtonsPerRow = 0;
+    for (auto &e : fxt)
+        maxButtonsPerRow = std::max(maxButtonsPerRow, (int)e.size());
+
+    int buttonsPerRow = maxButtonsPerRow;
+    int i = 0;
+    for (int row = 0; row < fxt.size(); ++row)
     {
-        selectType[i].setButtonText(fxnm[i]);
-        int bxsz = (getWidth() - 20) / buttonsPerRow;
+        std::unordered_set<int> groupsPerRow;
+        for (auto g : fxgroup[row])
+        {
+            groupsPerRow.insert(g);
+        }
+        auto nGroups = groupsPerRow.size();
+
+        int bxsz = (getWidth() - 40) / buttonsPerRow;
         int bxmg = 10;
         int bysz = 40;
         int bymg = 10;
-        juce::Rectangle<int> bpos{(i % buttonsPerRow) * bxsz + bxmg,
-                                  (i / buttonsPerRow) * bysz + bymg, bxsz, bysz};
-        selectType[i].setRadioGroupId(FxTypeGroup);
-        selectType[i].setBounds(bpos);
-        selectType[i].setClickingTogglesState(true);
-        selectType[i].onClick = [this, i] { this->setEffectType(fxt[i]); };
-        if (fxt[i] == en)
+
+        int xPos = bxmg;
+        if (nGroups > 2)
         {
-            selectType[i].setToggleState(true, NotificationType::dontSendNotification);
+            xPos -= bxmg / 3 * (nGroups - 2);
         }
-        else
+
+        if (fxt[row].size() < buttonsPerRow)
         {
-            selectType[i].setToggleState(false, NotificationType::dontSendNotification);
+            xPos += bxsz * (buttonsPerRow - fxt[row].size()) * 0.5;
         }
-        addAndMakeVisible(selectType[i]);
+
+        int currGrp = fxgroup[row][0];
+        for (int col = 0; col < fxt[row].size(); ++col)
+        {
+            auto nm = fxnm[row][col];
+            auto ty = fxt[row][col];
+            selectType[i].setButtonText(nm);
+            selectType[i].setColour(SurgeLookAndFeel::fxButtonFill,
+                                    fxbuttoncolors[fxgroup[row][col]]);
+            typeByButtonIndex[i] = ty;
+
+            if (fxgroup[row][col] != currGrp)
+            {
+                currGrp = fxgroup[row][col];
+                xPos += bxsz / 3;
+            }
+
+            juce::Rectangle<int> bpos{xPos, row * bysz + bymg, bxsz, bysz};
+            xPos += bxsz;
+
+            selectType[i].setRadioGroupId(FxTypeGroup);
+            selectType[i].setBounds(bpos);
+            selectType[i].setClickingTogglesState(true);
+            selectType[i].onClick = [this, ty] { this->setEffectType(ty); };
+            if (ty == en)
+            {
+                selectType[i].setToggleState(true, NotificationType::dontSendNotification);
+            }
+            else
+            {
+                selectType[i].setToggleState(false, NotificationType::dontSendNotification);
+            }
+            addAndMakeVisible(selectType[i]);
+            ++i;
+        }
     }
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
@@ -169,9 +220,10 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
 
 void SurgefxAudioProcessorEditor::blastToggleState(int w)
 {
-    for (auto i = 0; i < n_fx; ++i)
+    for (auto i = 0; i < n_fx_types; ++i)
     {
-        selectType[i].setToggleState(fxt[i] == w + 1, NotificationType::dontSendNotification);
+        selectType[i].setToggleState(typeByButtonIndex[i] == w + 1,
+                                     NotificationType::dontSendNotification);
     }
 }
 
