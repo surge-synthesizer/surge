@@ -33,7 +33,6 @@
 #include <CoreServices/CoreServices.h>
 #elif LINUX
 #include <stdlib.h>
-#include "ConfigurationXml.h"
 #else
 #include <windows.h>
 #include <shellapi.h>
@@ -432,13 +431,6 @@ bailOnPortable:
 
     userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
 
-#if LINUX
-    if (!snapshotloader.Parse((const char *)&configurationXmlStart, 0, TIXML_ENCODING_UTF8))
-    {
-
-        throw Surge::Error("Failed to parse the configuration", "Surge failed to initialize");
-    }
-#else
     const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
 
     if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
@@ -448,7 +440,6 @@ bailOnPortable:
                          "Surge is not properly installed.");
         Surge::UserInteractions::promptError(exc);
     }
-#endif
 
     load_midi_controllers();
 
