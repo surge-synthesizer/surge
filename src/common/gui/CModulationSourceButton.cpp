@@ -220,14 +220,16 @@ void CModulationSourceButton::draw(CDrawContext *dc)
     if (is_metacontroller)
     {
         MCRect = sze;
-        MCRect.left++;
-        MCRect.top++;
         MCRect.top += 12;
-        MCRect.bottom--;
-        MCRect.right--;
+
+        auto mrect = MCRect;
+        mrect.left++;
+        mrect.top++;
+        mrect.bottom--;
+        mrect.right--;
         dc->setFillColor(skin->getColor(Colors::ModSource::Used::Background));
-        dc->drawRect(MCRect, kDrawFilled);
-        CRect brect(MCRect);
+        dc->drawRect(mrect, kDrawFilled);
+        CRect brect(mrect);
         brect.inset(1, 1);
         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
         dc->drawRect(brect, kDrawFilled);
