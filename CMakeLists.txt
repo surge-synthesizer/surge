@@ -488,19 +488,11 @@ elseif( UNIX AND NOT APPLE )
     COMMAND ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
     )
 
-  if( LINUX_ON_ARM )
-    set( cxml src/linux/ConfigurationXmlARM.S )
-  else()
-    set( cxml src/linux/ConfigurationXml.S )
-  endif()
-
   file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
 
   # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
   set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
   set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
-
-  set(SURGE_OS_SHARED_SOURCES ${cxml} )
 
   set(SURGE_OS_GUI_SOURCES
     ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
@@ -1059,11 +1051,6 @@ if( BUILD_HEADLESS )
 
   if( UNIX AND NOT APPLE )
     find_package(Threads REQUIRED)
-    if( LINUX_ON_ARM )
-      target_sources( surge-headless PRIVATE src/linux/ConfigurationXmlARM.S )
-    else()
-      target_sources( surge-headless PRIVATE src/linux/ConfigurationXml.S )
-    endif()
     target_link_libraries(surge-headless
       PRIVATE
       Threads::Threads
@@ -1632,11 +1619,6 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   if( UNIX AND NOT APPLE )
     message( STATUS "Manually adding ${PYTHON_LIBRARIES} to surgepy target" )
     find_package(Threads REQUIRED)
-    if( LINUX_ON_ARM )
-      target_sources( surgepy PRIVATE src/linux/ConfigurationXmlARM.S )
-    else()
-      target_sources( surgepy PRIVATE src/linux/ConfigurationXml.S )
-    endif()
     target_link_libraries(surgepy
             PRIVATE
             Threads::Threads
