@@ -1420,6 +1420,8 @@ struct CTextEdit : public CControl, public juce::TextEditor::Listener
             listener->valueChanged(this);
     }
 
+    void setTextInset(const CPoint &inset) { OKUNIMPL; }
+
     std::unique_ptr<juceCViewConnector<juce::TextEditor>> texted;
     juce::Component *juceComponent() override { return texted.get(); }
 
