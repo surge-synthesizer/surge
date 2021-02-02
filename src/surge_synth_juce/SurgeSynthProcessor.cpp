@@ -163,11 +163,31 @@ AudioProcessorEditor *SurgeSynthProcessor::createEditor() { return new SurgeSynt
 //==============================================================================
 void SurgeSynthProcessor::getStateInformation(MemoryBlock &destData)
 {
-    std::unique_ptr<XmlElement> xml(new XmlElement("surgesynth"));
-    copyXmlToBinary(*xml, destData);
+    surge->populateDawExtraState();
+    auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
+    if (sse)
+    {
+        sse->populateForStreaming(surge.get());
+    }
+
+    void *data = nullptr; // surgeInstance owns this on return
+    unsigned int stateSize = surge->saveRaw(&data);
+    destData.setSize(stateSize);
+    destData.copyFrom(data, 0, stateSize);
 }
 
-void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes) {}
+void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
+{
+    // FIXME - casting away constness is gross
+    surge->loadRaw(data, sizeInBytes, false);
+
+    surge->loadFromDawExtraState();
+    auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
+    if (sse)
+    {
+        sse->populateFromStreaming(surge.get());
+    }
+}
 
 //==============================================================================
 // This creates new instances of the plugin..

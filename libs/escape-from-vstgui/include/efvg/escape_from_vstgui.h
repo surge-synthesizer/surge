@@ -186,7 +186,23 @@ inline void showMemoryOutstanding()
     }
 }
 #endif
+
+inline std::unordered_set<FakeRefcount *> *getForgetMeLater()
+{
+    static std::unordered_set<FakeRefcount *> fml;
+    return &fml;
+}
+
+inline void enqueueForget(FakeRefcount *c) { getForgetMeLater()->insert(c); }
+
 } // namespace Internal
+
+inline void efvgIdle()
+{
+    for (auto v : *(Internal::getForgetMeLater()))
+        v->forget();
+    Internal::getForgetMeLater()->clear();
+}
 
 #if MAC
 inline CFBundleRef getBundleRef() { return nullptr; }
@@ -551,6 +567,7 @@ enum CTxtFace
 struct CFontInternal
 {
     juce::Font font;
+    CFontInternal() {}
     CFontInternal(const juce::Font &f) : font(f) {}
     float getSize() { return font.getHeight(); }
     void remember() {}
@@ -795,18 +812,28 @@ struct CBitmap : public Internal::FakeRefcount
     std::unique_ptr<juce::Drawable> drawable;
 };
 
-template <typename T> struct CViewWithJuceComponent;
+struct CViewBase;
 
-template <typename T> struct juceCViewConnector : public T
+struct OnRemovedHandler
+{
+    virtual void onRemoved() = 0;
+};
+
+template <typename T> struct juceCViewConnector : public T, public OnRemovedHandler
 {
     juceCViewConnector() : T() {}
-    void setViewCompanion(CViewWithJuceComponent<T> *v)
-    {
-        viewCompanion = v;
-        // viewCompanion->remember();
-    }
-    CViewWithJuceComponent<T> *viewCompanion = nullptr;
+    ~juceCViewConnector();
+    void setViewCompanion(CViewBase *v);
+    void onRemoved() override;
+
+    CViewBase *viewCompanion = nullptr;
     void paint(juce::Graphics &g) override;
+
+    void traverseMouseParents(
+        const juce::MouseEvent &e,
+        std::function<CMouseEventResult(CViewBase *, const CPoint &, const CButtonState &)> vf,
+        std::function<void(const juce::MouseEvent &)> jf);
+
     void mouseDown(const juce::MouseEvent &e) override;
     void mouseUp(const juce::MouseEvent &e) override;
     void mouseEnter(const juce::MouseEvent &e) override;
@@ -916,7 +943,7 @@ struct CViewBase : public Internal::FakeRefcount
         return true;
     }
     void setSize(const CRect &s) { UNIMPL; }
-    void setSize(float w, float h) { UNIMPL; }
+    void setSize(float w, float h) { juceComponent()->setBounds(0, 0, w, h); }
     CRect size;
 
     CView *parentView = nullptr;
@@ -1019,10 +1046,9 @@ struct CViewContainer : public CView
         v->frame = frame;
         v->parentView = this;
         auto jc = v->juceComponent();
-        jc->setTransform(juceComponent()->getTransform());
         if (jc && ed)
         {
-            ed->getJuceEditor()->addAndMakeVisible(*jc);
+            juceComponent()->addAndMakeVisible(*jc);
             v->efvg_resolveDeferredAdds();
             v->onAdded();
         }
@@ -1031,6 +1057,23 @@ struct CViewContainer : public CView
             deferredAdds.push_back(v);
         }
         views.push_back(v);
+    }
+
+    void removeViewInternals(CView *v, bool forgetChildren = true)
+    {
+        auto cvc = dynamic_cast<CViewContainer *>(v);
+        if (cvc)
+        {
+            cvc->removeAll(forgetChildren);
+        }
+
+        juceComponent()->removeChildComponent(v->juceComponent());
+        auto orh = dynamic_cast<OnRemovedHandler *>(v->juceComponent());
+        if (orh)
+        {
+            orh->onRemoved();
+        }
+        v->parentView = nullptr;
     }
     void removeView(CView *v, bool doForget = true)
     {
@@ -1041,9 +1084,8 @@ struct CViewContainer : public CView
             jassert(false);
             return;
         }
+        removeViewInternals(v, doForget);
         views.erase(pos);
-        juceComponent()->removeChildComponent(v->juceComponent());
-        v->parentView = nullptr;
         if (doForget)
             v->forget();
         invalid();
@@ -1077,8 +1119,11 @@ struct CViewContainer : public CView
     {
         for (auto e : views)
         {
-            ed->getJuceEditor()->removeChildComponent(e->juceComponent());
-            e->forget();
+            removeViewInternals(e, b);
+            if (b)
+            {
+                e->forget();
+            }
         }
         views.clear();
     }
@@ -1236,7 +1281,7 @@ struct CControl : public CView
     }
     CBitmap *getBackground() { return bg; }
 
-    GSPAIR(Font, CFontRef, CFontRef, nullptr);
+    GSPAIR(Font, CFontRef, CFontRef, std::make_shared<CFontInternal>());
 
     COLPAIR(FontColor);
     GSPAIR(Transparency, bool, bool, false);
@@ -1303,35 +1348,90 @@ struct OfCourseItHasAStringType
 
 struct CTextLabel : public CControl
 {
-    CTextLabel(const CRect &r, const char *s, void * = nullptr) : CControl(r)
+    CTextLabel(const CRect &r, const char *s, CBitmap *bg = nullptr) : CControl(r)
     {
-        lab = std::make_unique<juce::Label>("fromVSTGUI", juce::CharPointer_UTF8(s));
-        lab->setBounds(r.asJuceIntRect());
+        if (bg)
+        {
+            img = std::make_unique<juceCViewConnector<juce::Component>>();
+            img->setBounds(r.asJuceIntRect());
+            img->addAndMakeVisible(*(bg->drawable.get()));
+            img->setViewCompanion(this);
+        }
+        else
+        {
+            lab = std::make_unique<juceCViewConnector<juce::Label>>();
+            lab->setText(juce::CharPointer_UTF8(s), juce::dontSendNotification);
+            lab->setBounds(r.asJuceIntRect());
+            lab->setViewCompanion(this);
+            lab->setJustificationType(juce::Justification::centred);
+        }
     }
 
     void setFont(CFontRef v) override
     {
-        lab->setFont(v->font);
+        if (lab)
+            lab->setFont(v->font);
 
         CControl::setFont(v);
     }
-    juce::Component *juceComponent() override { return lab.get(); }
+    juce::Component *juceComponent() override
+    {
+        if (lab)
+            return lab.get();
+        return img.get();
+    }
+
+    CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
+    {
+        std::cout << "TL OMD" << std::endl;
+        return CViewBase::onMouseDown(where, buttons);
+    }
+
+    void setFontColor(const CColor &v) override
+    {
+        CControl::setFontColor(v);
+        if (lab)
+        {
+            lab->setColour(juce::Label::ColourIds::textColourId, v.asJuceColour());
+        }
+    }
 
     GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
-    std::unique_ptr<juce::Label> lab;
+    std::unique_ptr<juceCViewConnector<juce::Label>> lab;
+    std::unique_ptr<juceCViewConnector<juce::Component>> img;
 };
 
-struct CTextEdit : public CControl
+struct CTextEdit : public CControl, public juce::TextEditor::Listener
 {
     CTextEdit(const CRect &r, IControlListener *l = nullptr, long tag = -1,
               const char *txt = nullptr)
         : CControl(r, l, tag)
     {
-        texted = std::make_unique<juce::TextEditor>();
+        texted = std::make_unique<juceCViewConnector<juce::TextEditor>>();
+        texted->setText(juce::CharPointer_UTF8(txt), juce::dontSendNotification);
+        texted->setBounds(r.asJuceIntRect());
+        texted->setViewCompanion(this);
+        texted->addListener(this);
     }
-    std::unique_ptr<juce::TextEditor> texted;
+
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override
+    {
+        if (listener)
+            listener->valueChanged(this);
+    }
+
+    std::unique_ptr<juceCViewConnector<juce::TextEditor>> texted;
     juce::Component *juceComponent() override { return texted.get(); }
-    GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
+
+    void setText(const OfCourseItHasAStringType &st)
+    {
+        texted->setText(juce::CharPointer_UTF8(st.getString().c_str()));
+    }
+    OfCourseItHasAStringType getText()
+    {
+        return OfCourseItHasAStringType(texted->getText().toRawUTF8());
+    }
+
     GSPAIR(ImmediateTextChange, bool, bool, true);
 };
 
@@ -1384,6 +1484,19 @@ struct CSlider : public CControl
     };
 };
 
+template <typename T> inline juceCViewConnector<T>::~juceCViewConnector() {}
+
+template <typename T> inline void juceCViewConnector<T>::onRemoved()
+{
+    // Internal::enqueueForget(viewCompanion);
+    viewCompanion = nullptr;
+}
+template <typename T> inline void juceCViewConnector<T>::setViewCompanion(CViewBase *v)
+{
+    viewCompanion = v;
+    // viewCompanion->remember();
+}
+
 template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g)
 {
     T::paint(g);
@@ -1398,42 +1511,11 @@ template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g
     }
 }
 
-template <typename T> inline void juceCViewConnector<T>::mouseMove(const juce::MouseEvent &e)
-{
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    auto r = viewCompanion->onMouseMoved(w, CButtonState());
-    if (r == kMouseEventNotHandled)
-    {
-        T::mouseMove(e);
-    }
-}
-
-template <typename T> inline void juceCViewConnector<T>::mouseDrag(const juce::MouseEvent &e)
-{
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    auto r = viewCompanion->onMouseMoved(w, CButtonState());
-    if (r == kMouseEventNotHandled)
-    {
-        T::mouseDrag(e);
-    }
-}
-
-template <typename T> inline void juceCViewConnector<T>::mouseUp(const juce::MouseEvent &e)
-{
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    auto r = viewCompanion->onMouseUp(w, CButtonState());
-    if (r == kMouseEventNotHandled)
-    {
-        T::mouseUp(e);
-    }
-}
-template <typename T> inline void juceCViewConnector<T>::mouseDown(const juce::MouseEvent &e)
+template <typename T>
+inline void juceCViewConnector<T>::traverseMouseParents(
+    const juce::MouseEvent &e,
+    std::function<CMouseEventResult(CViewBase *, const CPoint &, const CButtonState &)> vf,
+    std::function<void(const juce::MouseEvent &)> jf)
 {
     auto b = T::getBounds().getTopLeft();
     CPoint w(e.x + b.x, e.y + b.y);
@@ -1441,39 +1523,58 @@ template <typename T> inline void juceCViewConnector<T>::mouseDown(const juce::M
     auto r = kMouseEventNotHandled;
     while (curr && r == kMouseEventNotHandled)
     {
-        r = curr->onMouseDown(w, CButtonState());
+        r = vf(curr, w, CButtonState());
         curr = curr->getParentView();
     }
     if (r == kMouseEventNotHandled)
     {
-        T::mouseDown(e);
+        jf(e);
     }
 }
+
+template <typename T> inline void juceCViewConnector<T>::mouseDown(const juce::MouseEvent &e)
+{
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseDown(b, c); },
+        [this](auto e) { T::mouseDown(e); });
+}
+
+template <typename T> inline void juceCViewConnector<T>::mouseUp(const juce::MouseEvent &e)
+{
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseUp(b, c); },
+        [this](auto e) { T::mouseUp(e); });
+}
+template <typename T> inline void juceCViewConnector<T>::mouseMove(const juce::MouseEvent &e)
+{
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseMoved(b, c); },
+        [this](auto e) { T::mouseMove(e); });
+}
+
+template <typename T> inline void juceCViewConnector<T>::mouseDrag(const juce::MouseEvent &e)
+{
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseMoved(b, c); },
+        [this](auto e) { T::mouseDrag(e); });
+}
+
 template <typename T> inline void juceCViewConnector<T>::mouseEnter(const juce::MouseEvent &e)
 {
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    auto r = viewCompanion->onMouseEntered(w, CButtonState());
-    if (r == kMouseEventNotHandled)
-    {
-        T::mouseEnter(e);
-    }
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseEntered(b, c); },
+        [this](auto e) { T::mouseEnter(e); });
 }
 template <typename T> inline void juceCViewConnector<T>::mouseExit(const juce::MouseEvent &e)
 {
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    auto r = viewCompanion->onMouseExited(w, CButtonState());
-    if (r == kMouseEventNotHandled)
-    {
-        T::mouseExit(e);
-    }
+    traverseMouseParents(
+        e, [](auto *a, auto b, auto c) { return a->onMouseExited(b, c); },
+        [this](auto e) { T::mouseExit(e); });
 }
 
 template <typename T> inline void juceCViewConnector<T>::mouseDoubleClick(const juce::MouseEvent &e)
 {
+    OKUNIMPL; // wanna do parent thing
     auto b = T::getBounds().getTopLeft();
     CPoint w(e.x + b.x, e.y + b.y);
     auto bs = CButtonState() | kDoubleClick;
@@ -1600,7 +1701,7 @@ struct COptionMenu : public CControl
         return res;
     }
     void checkEntry(int, bool) { UNIMPL; }
-    void popup() { menu.show(); }
+    void popup() { menu.showMenuAsync(juce::PopupMenu::Options()); }
     inline void setHeight(float h) { UNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }
     int getNbEntries() { return 0; }

@@ -39,11 +39,14 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void controlBeginEdit(VSTGUI::CControl *c) override {}
     void controlEndEdit(VSTGUI::CControl *c) override {}
 
+    void populateForStreaming(SurgeSynthesizer *s);
+    void populateFromStreaming(SurgeSynthesizer *s);
+
     struct IdleTimer : juce::Timer
     {
         IdleTimer(SurgeSynthEditor *ed) : ed(ed) {}
         ~IdleTimer() = default;
-        void timerCallback() override { ed->idle(); }
+        void timerCallback() override;
         SurgeSynthEditor *ed;
     };
     void idle();

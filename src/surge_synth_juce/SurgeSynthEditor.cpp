@@ -18,8 +18,8 @@
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : AudioProcessorEditor(&p), processor(p), EscapeFromVSTGUI::JuceVSTGUIEditorAdapter(this)
 {
-    setSize(1200, 800);
-    setResizable(false, false); // For now
+    setSize(BASE_WINDOW_SIZE_X, BASE_WINDOW_SIZE_Y);
+    setResizable(true, false); // For now
 
     adapter = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
     adapter->open(nullptr);
@@ -50,6 +50,24 @@ void SurgeSynthEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+}
+
+void SurgeSynthEditor::IdleTimer::timerCallback()
+{
+    VSTGUI::efvgIdle();
+    ed->idle();
+}
+
+void SurgeSynthEditor::populateForStreaming(SurgeSynthesizer *s)
+{
+    if (adapter)
+        adapter->populateDawExtraState(s);
+}
+
+void SurgeSynthEditor::populateFromStreaming(SurgeSynthesizer *s)
+{
+    if (adapter)
+        adapter->loadFromDAWExtraState(s);
 }
 
 namespace Surge
