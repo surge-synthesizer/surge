@@ -1208,7 +1208,7 @@ struct MSEGCanvas : public CControl,
         }
 
         int uniLimit = 0;
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
         // Linux has a bug that it ignores the zoom
         auto tfpath = CGraphicsTransform()
                           .scale(1.0 / pathScale, 1.0 / pathScale)

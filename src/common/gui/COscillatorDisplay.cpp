@@ -134,7 +134,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
     int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be
                              // an integer multiple of it
 
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
     Surge::UI::NonIntegralAntiAliasGuard naag(dc);
 #endif
 
@@ -240,7 +240,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
                                             .scale(getWidth() / valScale, h / valScale)
                                             .translate(size.getTopLeft().x, size.getTopLeft().y)
                                             .translate(0, extraYTranslate);
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
         auto tmps = size;
         dc->getCurrentTransform().transform(tmps);
         VSTGUI::CGraphicsTransform tpath = VSTGUI::CGraphicsTransform()
@@ -305,7 +305,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
                     float xoff = (xd == 0 ? esize : 0);
                     auto er = CRect(dotPoint.x - esize + xoff, dotPoint.y - esize,
                                     dotPoint.x + esize + xoff, dotPoint.y + esize);
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
                     dc->drawPoint(dotPoint, pointColor);
 #else
                     dc->setFillColor(pointColor);
@@ -327,7 +327,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         }
 
         dc->setLineWidth(1.3);
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
         dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 #else
         dc->setDrawMode(VSTGUI::kAntiAliasing);

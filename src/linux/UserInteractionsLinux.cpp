@@ -24,7 +24,14 @@ namespace Surge
 namespace UserInteractions
 {
 
-// @jpcima: string quoting for shell commands to use with popen.
+/*
+ * Setting this unsets LD_LIB_PATH for the zenity spawns for error and file open.
+ * The rest are left as an exercise for someone else to do!
+ */
+static bool isArdour = false;
+void useWorkaroundsForArdoursAncientGTK(bool b) { isArdour = true; }
+
+// @jpcima: string quoting for shell commands to use wfith popen.
 static std::string escapeForPosixShell(const std::string &str)
 {
     std::string esc;
@@ -53,12 +60,35 @@ static std::string escapeForPosixShell(const std::string &str)
 
 void promptError(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
-    if (vfork() == 0)
+    if (isArdour)
     {
-        if (execlp("zenity", "zenity", "--error", "--text", message.c_str(), "--title",
-                   title.c_str(), (char *)nullptr) < 0)
+        /*
+        You would think this would work! But it drops the display environment so it does not.
+        If you would like to improve this code, we welcome pull requests!
+        if (vfork() == 0)
         {
-            _exit(0);
+            const char *args[] = { "zenity", "--error", "--text", message.c_str(), "--title",
+        title.c_str(), nullptr }; const char *ardourEnv[] = { "LD_LIBRARY_PATH=", nullptr }; if
+        (execvpe("zenity", (char * const*)args, (char * const*)ardourEnv) < 0)
+            {
+                _exit(0);
+            }
+        }*/
+        std::string zc = "LD_LIBRARY_PATH= zenity --error --text \"";
+        zc += message + "\" --title \"" + title + "\"";
+        std::cout << "About to run [" << zc << "]" << std::endl;
+        if (!system(zc.c_str()))
+            std::cout << "Can't run zenity. Oh well." << std::endl;
+    }
+    else
+    {
+        if (vfork() == 0)
+        {
+            if (execlp("zenity", "zenity", "--error", "--text", message.c_str(), "--title",
+                       title.c_str(), (char *)nullptr) < 0)
+            {
+                _exit(0);
+            }
         }
     }
     std::cerr << "Surge Error\n" << title << "\n" << message << "\n" << std::flush;
@@ -71,7 +101,11 @@ void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
 
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
-    if (vfork() == 0)
+    if (isArdour)
+    {
+        promptError(message, title, guiEditor);
+    }
+    else if (vfork() == 0)
     {
         if (execlp("zenity", "zenity", "--info", "--text", message.c_str(), "--title",
                    title.c_str(), (char *)nullptr) < 0)
@@ -168,6 +202,9 @@ void promptFileOpenDialog(const std::string &initialDirectory, const std::string
     std::string zenityCommand;
     zenityCommand.reserve(1024);
 
+    if (isArdour)
+        zenityCommand.append("LD_LIBRARY_PATH= ");
+
     zenityCommand.append("zenity --file-selection");
 
     if (!initialDirectory.empty())
@@ -189,6 +226,7 @@ void promptFileOpenDialog(const std::string &initialDirectory, const std::string
     // option not implemented
     (void)canCreateDirectories;
 
+    std::cout << "Zenity command is '" << zenityCommand << "'" << std::endl;
     FILE *z = popen(zenityCommand.c_str(), "r");
     if (!z)
     {
