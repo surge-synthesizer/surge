@@ -1328,6 +1328,8 @@ endif()
 if( ${BUILD_SURGE_JUCE_PLUGINS} )
   include( cmake/get-juce.cmake )
 
+  add_custom_target(surge-juce-pipeline-targets)
+
   message( STATUS "Building JUCE targets with ${JUCE_LIB_DIR}" )
   add_subdirectory( ${JUCE_LIB_DIR} )
 
@@ -1419,6 +1421,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
     add_dependencies( Surge-Effects-Bank-Packaged surge-fx_VST3 )
     add_dependencies( Surge-Effects-Bank-Packaged surge-fx_Standalone )
 
+    add_dependencies(surge-juce-pipeline-targets surge-fx_Standalone)
     add_custom_command(
             TARGET Surge-Effects-Bank-Packaged
             POST_BUILD
@@ -1542,6 +1545,13 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             TARGET_JUCE_SYNTH=1
             TARGET_HEADLESS=1
             TARGET_JUCE_UI=1)
+
+    if( WIN32 )
+      target_compile_options(surge-xt PRIVATE /FIprecompiled.h)
+    endif()
+
+    add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
+   
   endif()
 endif()
 
