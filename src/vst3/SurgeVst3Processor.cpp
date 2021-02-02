@@ -34,6 +34,16 @@ using namespace Steinberg::Vst;
         return 0;                                                                                  \
     }
 
+#if LINUX
+namespace Surge
+{
+namespace UserInteractions
+{
+void useWorkaroundsForArdoursAncientGTK(bool b);
+}
+} // namespace Surge
+#endif
+
 SurgeVst3Processor::SurgeVst3Processor() : surgeInstance() {}
 
 SurgeVst3Processor::~SurgeVst3Processor() { destroySurge(); }
@@ -90,6 +100,14 @@ tresult PLUGIN_API SurgeVst3Processor::initialize(FUnknown *context)
         surgeInstance->hostProgram = hn8;
     }
     surgeInstance->setupActivateExtraOutputs();
+
+#if LINUX
+    if (surgeInstance->hostProgram.find("rdour") != std::string::npos)
+    {
+        std::cout << "Hey I'm running in Ardour!" << std::endl;
+        Surge::UserInteractions::useWorkaroundsForArdoursAncientGTK(true);
+    }
+#endif
 
     return kResultOk;
 }

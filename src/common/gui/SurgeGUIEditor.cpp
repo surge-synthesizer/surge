@@ -105,7 +105,7 @@ DEF_CLASS_IID(IPlugViewContentScaleSupport);
 
 #include "filesystem/import.h"
 
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
 #include "vstgui/lib/platform/platform_x11.h"
 #include "vstgui/lib/platform/linux/x11platform.h"
 #endif

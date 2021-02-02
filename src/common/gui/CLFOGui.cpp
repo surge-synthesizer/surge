@@ -297,7 +297,7 @@ void CLFOGui::draw(CDrawContext *dc)
                 .translate(boxo.getTopLeft().x, boxo.getTopLeft().y)
                 .translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y);
 
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
         auto xdisp = maindisp;
         dc->getCurrentTransform().transform(xdisp);
         VSTGUI::CGraphicsTransform tfpath =
@@ -352,7 +352,7 @@ void CLFOGui::draw(CDrawContext *dc)
                 float xoff = (xd == 0 ? esize : 0);
                 auto er = CRect(dotPoint.x - esize + xoff, dotPoint.y - esize,
                                 dotPoint.x + esize + xoff, dotPoint.y + esize);
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
                 dc->drawPoint(dotPoint, pointColor);
 #else
                 dc->setFillColor(pointColor);
@@ -361,7 +361,7 @@ void CLFOGui::draw(CDrawContext *dc)
             }
         }
 
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
         dc->setLineWidth(0.7);
 #else
         dc->setLineWidth(1.0);
@@ -1047,7 +1047,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
     delete tlfo;
 
     auto q = boxo;
-#if LINUX
+#if LINUX && !TARGET_JUCE_UI
     dc->getCurrentTransform().transform(q);
 #endif
 
