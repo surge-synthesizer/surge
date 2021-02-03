@@ -479,6 +479,12 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 10;
         val_default.f = 0;
         break;
+    case ct_freq_ringmod:
+        valtype = vt_float;
+        val_min.f = 0;
+        val_max.f = 127;
+        val_default.f = 60;
+        break;
     case ct_bandwidth:
         valtype = vt_float;
         val_min.f = 0;
@@ -1020,9 +1026,10 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_reson_band3:
     case ct_freq_vocoder_low:
     case ct_freq_vocoder_high:
+    case ct_freq_ringmod:
         displayType = ATwoToTheBx;
         sprintf(displayInfo.unit, "Hz");
-        displayInfo.a = 440.0;
+        displayInfo.a = (ctrltype == ct_freq_ringmod) ? 8.175798 : 440.0;
         displayInfo.b = 1.0f / 12.0f;
         displayInfo.decimals = 2;
         displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
@@ -2195,9 +2202,10 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     case ct_freq_reson_band3:
     case ct_freq_vocoder_low:
     case ct_freq_vocoder_high:
+    case ct_freq_ringmod:
     {
         float f = val.f;
-        int i_value = round(f) + 69;
+        int i_value = round(f) + ((ctrltype != ct_freq_ringmod) ? 69 : 0);
         int oct_offset = 1;
         char notename[16];
 
@@ -3095,6 +3103,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_chow_ratio:
     case ct_comp_attack_ms:
     case ct_comp_release_ms:
+    case ct_freq_ringmod:
     {
         return true;
         break;

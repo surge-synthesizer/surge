@@ -88,12 +88,22 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
 #endif
     for (int u = 0; u < uni; ++u)
     {
-        // need to calc this every time since carier freq could change
-        dphase[u] =
-            storage->note_to_pitch(*f[rm_carrier_freq] +
-                                   fxdata->p[rm_unison_detune].get_extended(
-                                       fxdata->p[rm_unison_detune].val.f * detune_offset[u])) *
-            Tunings::MIDI_0_FREQ * sri;
+        // need to calc this every time since carrier freq could change
+        if (fxdata->p[rm_unison_detune].absolute)
+        {
+            dphase[u] =
+                (storage->note_to_pitch(*f[rm_carrier_freq]) * Tunings::MIDI_0_FREQ +
+                                         fxdata->p[rm_unison_detune].get_extended(
+                                         fxdata->p[rm_unison_detune].val.f * detune_offset[u])) * sri;
+        }
+        else
+        {
+            dphase[u] =
+                storage->note_to_pitch(*f[rm_carrier_freq] +
+                                       fxdata->p[rm_unison_detune].get_extended(
+                                       fxdata->p[rm_unison_detune].val.f * detune_offset[u])
+                                       ) * Tunings::MIDI_0_FREQ * sri;
+        }
     }
 
     int ub = BLOCK_SIZE;
@@ -197,8 +207,8 @@ void RingModulatorEffect::init_ctrltypes()
 
     fxdata->p[rm_carrier_shape].set_name("Shape");
     fxdata->p[rm_carrier_shape].set_type(ct_sineoscmode);
-    fxdata->p[rm_carrier_freq].set_name("Pitch");
-    fxdata->p[rm_carrier_freq].set_type(ct_flangerpitch);
+    fxdata->p[rm_carrier_freq].set_name("Frequency");
+    fxdata->p[rm_carrier_freq].set_type(ct_freq_ringmod);
     fxdata->p[rm_unison_detune].set_name("Unison Detune");
     fxdata->p[rm_unison_detune].set_type(ct_oscspread);
     fxdata->p[rm_unison_voices].set_name("Unison Voices");
