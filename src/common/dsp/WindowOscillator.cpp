@@ -42,8 +42,11 @@ void WindowOscillator::init(float pitch, bool is_display)
     memset(&Window, 0, sizeof(Window));
 
     NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
+    
     if (is_display)
+    {
         NumUnison = 1;
+    }
 
     float out_attenuation_inv = sqrt((float)NumUnison);
     OutAttenuation = 1.0f / (out_attenuation_inv * 16777216.f);
@@ -55,7 +58,18 @@ void WindowOscillator::init(float pitch, bool is_display)
 
         Window.Gain[0][0] = 128;
         Window.Gain[0][1] = 128; // unity gain
-        Window.Pos[0] = (storage->WindowWT.size << 16);
+
+        if (oscdata->retrigger.val.b || is_display)
+        {
+            Window.Pos[0] = (storage->WindowWT.size + storage->WindowWT.size) << 16;
+        }
+        else
+        {
+            Window.Pos[0] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
+                            << 16;
+        }
+
+        Window.DriftLFO[0][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
     else
     {
