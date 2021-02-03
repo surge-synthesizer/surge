@@ -438,8 +438,8 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_reson_band1:
         valtype = vt_float;
-        val_min.f = -34.4936f;   // 60 Hz
-        val_max.f = -6.6305f;    // 300 Hz
+        val_min.f = -34.4936f;     // 60 Hz
+        val_max.f = -6.6305f;      // 300 Hz
         val_default.f = -18.6305f; // 150 Hz
         break;
     case ct_freq_reson_band2:

@@ -70,7 +70,7 @@ void WindowOscillator::init(float pitch, bool is_display)
         mid = NumUnison * 0.5 - 0.5;
         half = NumUnison >> 1;
     }
-    
+
     if (!is_display)
     {
         for (int i = 0; i < NumUnison; i++)

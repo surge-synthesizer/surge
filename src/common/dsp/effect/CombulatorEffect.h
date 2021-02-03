@@ -67,10 +67,13 @@ class CombulatorEffect : public Effect
     HalfRateFilter halfbandOUT, halfbandIN;
     FilterCoefficientMaker coeff[3][2];
     BiquadFilter lp;
-    lag<float, true> cutoff[3], resonance, bandGain[3];
+    lag<float, true> cutoff[3], resonance, bandGain[3], widthval;
     float filterDelay[3][2][MAX_FB_COMB_EXTENDED + FIRipol_N];
     float WP[3][2];
     float Reg[3][2][n_filter_registers];
+
+    static constexpr int PANLAW_SIZE = 4096; // power of 2 please
+    float panL[PANLAW_SIZE], panR[PANLAW_SIZE];
 
   private:
     int bi; // block increment (to keep track of events not occurring every n blocks)

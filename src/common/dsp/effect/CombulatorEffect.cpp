@@ -16,6 +16,9 @@
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 
+#define MIDSIDE_WIDTH 0
+#define PANLAW_WIDTH 1
+
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage)
 {
@@ -36,6 +39,15 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
         }
     }
     memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
+
+    // http://www.cs.cmu.edu/~music/icm-online/readings/panlaws/
+    for (int i = 0; i < PANLAW_SIZE; ++i)
+    {
+        auto piby2 = M_PI / 2.0;
+        double panAngle = 1.0 * i / (PANLAW_SIZE - 1) * piby2;
+        panL[i] = sqrt((piby2 - panAngle) / piby2 * cos(panAngle));
+        panR[i] = sqrt(panAngle * sin(panAngle) / piby2);
+    }
 }
 
 CombulatorEffect::~CombulatorEffect() { _aligned_free(qfus); }
@@ -58,6 +70,7 @@ void CombulatorEffect::setvars(bool init)
             bandGain[i].instantize();
         }
         resonance.instantize();
+        widthval.instantize();
 
         mix.set_target(1.f);
 
@@ -78,6 +91,7 @@ void CombulatorEffect::setvars(bool init)
             bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
         resonance.newValue(*f[combulator_feedback]);
+        widthval.newValue(*f[combulator_width]);
 
         lp.coeff_LP2B(lp.calc_omega((*f[combulator_lowpass] / 12.0) - 2.f), 0.707);
 
@@ -143,12 +157,16 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-
     /* Run the filters */
+
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         auto l128 = _mm_setzero_ps();
         auto r128 = _mm_setzero_ps();
+
+        // FIXME - we want to interpolate the non-integral part if we like this
+        int panIndex =
+            (int)((limit_range(widthval.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
 
         if (filtptr)
         {
@@ -169,15 +187,31 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < 3; ++i)
         {
+#if MIDSIDE_WIDTH
             if (i < 2)
             {
                 mixl += tl[i] * bandGain[i].v;
             }
-            
             if (i % 2 == 0)
             {
                 mixr += tr[i] * bandGain[i].v;
             }
+#else
+            float panl = 0.59, panr = 0.59;
+            if (i == 1)
+            {
+                panl = panL[panIndex];
+                panr = panR[panIndex];
+            }
+            else if (i == 2)
+            {
+                // The other way!
+                panl = panR[panIndex];
+                panr = panL[panIndex];
+            }
+            mixl += tl[i] * bandGain[i].v * panl / 0.59;
+            mixr += tr[i] * bandGain[i].v * panr / 0.59;
+#endif
         }
 
         // soft-clip output for good measure
@@ -187,7 +221,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;
 
-        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
+        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other
+        // sample
         if (s % 2 == 0)
         {
             for (auto i = 0; i < 3; ++i)
@@ -198,6 +233,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                 if (i == 0)
                 {
                     resonance.process();
+                    widthval.process();
                 }
             }
         }
@@ -237,11 +273,13 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     lp.process_block(L, R);
 
+#if MIDSIDE_WIDTH
     // Add width and mix
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
+#endif
 
     mix.set_target_smoothed(limit_range(*f[combulator_mix], -1.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
