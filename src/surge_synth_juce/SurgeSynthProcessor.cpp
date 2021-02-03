@@ -119,6 +119,10 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 
 void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 {
+    // FIXME obvioulsy
+    surge->time_data.tempo = 120;
+    surge->resetStateFromTimeData();
+
     for (const MidiMessageMetadata it : midiMessages)
     {
         MidiMessage m = it.getMessage();

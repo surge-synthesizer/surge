@@ -1496,6 +1496,8 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             TARGET_JUCE_SYNTH=1
             TARGET_HEADLESS=1
             TARGET_JUCE_UI=1
+
+            $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
             )
 
     # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link

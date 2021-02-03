@@ -1846,7 +1846,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     lb->setTransparency(false);
     lb->setBackColor(kRedCColor);
     lb->setFontColor(kWhiteCColor);
-    lb->setFont(patchNameFont);
+    lb->setFont(displayFont);
     lb->setHoriAlign(VSTGUI::kCenterText);
     lb->setAntialias(true);
     frame->addView(lb);
@@ -7155,6 +7155,8 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 
             editorOverlayOnClose.erase(el.second);
             editorOverlayContentsWeakReference.erase(el.second);
+
+            removeFromFrame.push_back(el.second);
         }
         else
         {
@@ -7271,6 +7273,7 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         b->setFrameColorHighlighted(pressbtnborder);
         b->setTextColorHighlighted(pressbtntext);
         b->setRoundRadius(CCoord(3.f));
+
         innerc->addView(b);
     }
 

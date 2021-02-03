@@ -29,10 +29,41 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
         bool isSet = false;
     };
 
+    template <typename T> struct OptionalForget
+    {
+        ~OptionalForget()
+        {
+#if TARGET_JUCE_UI
+            if (isSet && item)
+            {
+                // item->forget();
+                item = nullptr;
+            }
+#endif
+        }
+        T item = T();
+        bool isSet = false;
+    };
+
     CTextButtonWithHover(const VSTGUI::CRect &r, VSTGUI::IControlListener *l, int32_t tag,
                          VSTGUI::UTF8String lab)
         : CTextButton(r, l, tag, lab)
     {
+    }
+    ~CTextButtonWithHover()
+    {
+#if TARGET_JUCE_UI
+        if (getGradient())
+        {
+            // getGradient()->forget();
+            setGradient(nullptr);
+        }
+        if (getGradientHighlighted())
+        {
+            // getGradientHighlighted()->forget();
+            setGradientHighlighted(nullptr);
+        }
+#endif
     }
     VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
                                              const VSTGUI::CButtonState &buttons) override;
@@ -44,7 +75,7 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
      * Macros are still the answer sometimes.
      */
 #define ADD_HOVER(m, T)                                                                            \
-    Optional<T> hc_##m;                                                                            \
+    OptionalForget<T> hc_##m;                                                                      \
     void setHover##m(T c)                                                                          \
     {                                                                                              \
         hc_##m.item = c;                                                                           \
