@@ -15,9 +15,11 @@
 
 #pragma once
 #include "Effect.h"
+#include "BiquadFilter.h"
 #include "DspUtilities.h"
-#include <vt_dsp/lipol.h>
 #include "QuadFilterUnit.h"
+
+#include <vt_dsp/lipol.h>
 
 class CombulatorEffect : public Effect
 {
@@ -64,6 +66,7 @@ class CombulatorEffect : public Effect
     QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
     FilterCoefficientMaker coeff[3][2];
+    BiquadFilter lp;
     lag<float, true> cutoff[3], resonance, bandGain[3];
     float filterDelay[3][2][MAX_FB_COMB_EXTENDED + FIRipol_N];
     float WP[3][2];

@@ -17,8 +17,9 @@
 #include "DebugHelpers.h"
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true)
+    : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage)
 {
+    lp.setBlockSize(BLOCK_SIZE);
     width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
@@ -43,6 +44,7 @@ void CombulatorEffect::init()
 {
     setvars(true);
     bi = 0;
+    lp.suspend();
 }
 
 void CombulatorEffect::setvars(bool init)
@@ -76,9 +78,13 @@ void CombulatorEffect::setvars(bool init)
             bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
         resonance.newValue(*f[combulator_feedback]);
+
+        lp.coeff_LP2B(lp.calc_omega((*f[combulator_lowpass] / 12.0) - 2.f), 0.707);
+
+        lp.coeff_instantize();
     }
 
-    width.set_target_smoothed(db_to_linear(*f[combulator_width]));
+    width.set_target_smoothed(clamp1bp(*f[combulator_width]));
 }
 
 inline void set1f(__m128 &m, int i, float f)
@@ -95,11 +101,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    /*
-     * Strategy: Upsample, Set the coefficients, run the filter, Downsample
-     */
-
-    // Upsample phase. This wqorks and needs no more attention.
+    // Upsample phase. This works and needs no more attention.
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
 
@@ -142,7 +144,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     }
 
 
-    /* Run the filters. You need to grab a smoothed gain here rather than the hardcoded 0.3 */
+    /* Run the filters */
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         auto l128 = _mm_setzero_ps();
@@ -167,15 +169,25 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < 3; ++i)
         {
-            mixl += tl[i] * bandGain[i].v;
-            mixr += tr[i] * bandGain[i].v;
+            if (i < 2)
+            {
+                mixl += tl[i] * bandGain[i].v;
+            }
+            
+            if (i % 2 == 0)
+            {
+                mixr += tr[i] * bandGain[i].v;
+            }
         }
+
+        // soft-clip output for good measure
+        mixl = lookup_waveshape(wst_soft, mixl);
+        mixr = lookup_waveshape(wst_soft, mixr);
 
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;
 
-        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other
-        // sample
+        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
         if (s % 2 == 0)
         {
             for (auto i = 0; i < 3; ++i)
@@ -222,6 +234,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
+
+    lp.process_block(L, R);
 
     // Add width and mix
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
@@ -277,13 +291,13 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_noise_mix].set_type(ct_percent);
     fxdata->p[combulator_noise_mix].posy_offset = 1;
 
-    fxdata->p[combulator_freq1].set_name("Frequency 1");
+    fxdata->p[combulator_freq1].set_name("Center");
     fxdata->p[combulator_freq1].set_type(ct_freq_audible_with_very_low_lowerbound);
     fxdata->p[combulator_freq1].posy_offset = 3;
-    fxdata->p[combulator_freq2].set_name("Frequency 2 Offset");
+    fxdata->p[combulator_freq2].set_name("Offset 1");
     fxdata->p[combulator_freq2].set_type(ct_pitch);
     fxdata->p[combulator_freq2].posy_offset = 3;
-    fxdata->p[combulator_freq3].set_name("Frequency 3 Offset");
+    fxdata->p[combulator_freq3].set_name("Offset 2");
     fxdata->p[combulator_freq3].set_type(ct_pitch);
     fxdata->p[combulator_freq3].posy_offset = 3;
     fxdata->p[combulator_feedback].set_name("Feedback");
@@ -304,7 +318,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_lowpass].posy_offset = 5;
 
     fxdata->p[combulator_width].set_name("Width");
-    fxdata->p[combulator_width].set_type(ct_decibel_narrow);
+    fxdata->p[combulator_width].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_width].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
     fxdata->p[combulator_mix].set_type(ct_percent_bidirectional);
@@ -318,4 +332,9 @@ void CombulatorEffect::init_default_values()
         fxdata->p[i].val.f = 0.0f;
     }
 
+    fxdata->p[combulator_freq1].val.f = 3.0f;
+    fxdata->p[combulator_gain1].val.f = 1.0f;
+    fxdata->p[combulator_feedback].val.f = 0.75f;
+    fxdata->p[combulator_lowpass].val.f = fxdata->p[combulator_lowpass].val_max.f;
+    fxdata->p[combulator_mix].val.f = 1.0f;
 }

@@ -186,16 +186,12 @@ void ResonatorEffect::process(float *dataL, float *dataR)
                 set1f(qfus[c].R[i], e, Reg[e][c][i]);
             }
 
-            //qfus[c].DB[e] = filterDelay[e][c];
-            //qfus[c].WP[e] = WP[e][c];
-            //qfus[c].WP[0] = subtype;
-
             qfus[c].active[e] = 0xFFFFFFFF;
             qfus[c].active[3] = 0;
         }
     }
 
-    /* Run the filters. You need to grab a smoothed gain here rather than the hardcoded 0.3 */
+    /* Run the filters */
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         // preprocess audio in through asymmetric waveshaper
