@@ -173,7 +173,8 @@ class SurgeLookAndFeel : public LookAndFeel_V4
 
         g.setColour(findColour(SurgeColourIds::blue));
         g.setFont(28);
-        g.drawSingleLineText("SurgeEffectsBank", orangeHeight, h - 12, juce::Justification::left);
+        // g.drawSingleLineText("SurgeEffectsBank", orangeHeight, h - 12,
+        // juce::Justification::left);
 
         g.drawLine(0, h - orangeHeight, w, h - orangeHeight);
         // text
