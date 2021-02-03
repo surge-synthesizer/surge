@@ -54,6 +54,7 @@ class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
     void resetLabels();
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
+    std::unique_ptr<juce::Label> fxNameLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessorEditor)
 };

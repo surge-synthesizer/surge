@@ -40,6 +40,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setSize(540, 55 * 6 + 80 + 50 * fxt.size());
     setResizable(false, false); // For now
 
+    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge FX");
+    fxNameLabel->setFont(28);
+    fxNameLabel->setColour(juce::Label::textColourId,
+                           surgeLookFeel->findColour(SurgeLookAndFeel::blue));
+    fxNameLabel->setBounds(40, getHeight() - 40, 300, 38);
+    fxNameLabel->setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(fxNameLabel.get());
+
     int ypos0 = 50 * fxt.size() - 10;
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -185,6 +193,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       NotificationType::dontSendNotification);
     }
+    fxNameLabel->setText(juce::String("SurgeFX : ") + fx_type_names[processor.getEffectType()],
+                         juce::dontSendNotification);
 }
 
 void SurgefxAudioProcessorEditor::setEffectType(int i)
