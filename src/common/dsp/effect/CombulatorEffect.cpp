@@ -16,14 +16,11 @@
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 
-#define MIDSIDE_WIDTH 0
-#define PANLAW_WIDTH 1
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage)
 {
     lp.setBlockSize(BLOCK_SIZE);
-    width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
     qfus = (QuadFilterUnitState *)_aligned_malloc(2 * sizeof(QuadFilterUnitState), 16);
@@ -63,19 +60,21 @@ void CombulatorEffect::setvars(bool init)
 {
     if (init)
     {
-
         for (int i = 0; i < 3; ++i)
         {
-            cutoff[i].instantize();
-            bandGain[i].instantize();
+            freq[i].instantize();
+            gain[i].instantize();
         }
-        resonance.instantize();
-        widthval.instantize();
+
+        feedback.instantize();
+
+        pan2.instantize();
+        pan3.instantize();
 
         mix.set_target(1.f);
 
-        width.instantize();
         mix.instantize();
+        lp.coeff_instantize();
 
         halfbandOUT.reset();
         halfbandIN.reset();
@@ -85,20 +84,22 @@ void CombulatorEffect::setvars(bool init)
         for (int i = 0; i < 3; ++i)
         {
             if (i == 0)
-                cutoff[i].newValue(*f[combulator_freq1]);
+                freq[i].newValue(*f[combulator_freq1]);
             else
-                cutoff[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
-            bandGain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
+                freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+            gain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
-        resonance.newValue(*f[combulator_feedback]);
-        widthval.newValue(*f[combulator_width]);
+        
+        feedback.newValue(*f[combulator_feedback]);
 
-        lp.coeff_LP2B(lp.calc_omega((*f[combulator_lowpass] / 12.0) - 2.f), 0.707);
+        auto cutoff = limit_range(*f[combulator_tone],
+                                  fxdata->p[combulator_tone].val_min.f,
+                                  fxdata->p[combulator_tone].val_max.f);
+        lp.coeff_LP(lp.calc_omega((cutoff / 12.0) - 2.f), 0.707);
 
-        lp.coeff_instantize();
+        pan2.newValue(clamp1bp(*f[combulator_pan2]));
+        pan3.newValue(clamp1bp(*f[combulator_pan3]));
     }
-
-    width.set_target_smoothed(clamp1bp(*f[combulator_width]));
 }
 
 inline void set1f(__m128 &m, int i, float f)
@@ -121,12 +122,14 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     /*
      * Select the coefficients. Here you have to base yourself on the mode switch and
-     * call CoeffMaker with one fo the known models and subtypes, along with the resonance
+     * call CoeffMaker with one fo the known models and subtypes, along with the feedback
      * and the frequency of the particular band.
      */
     int type = fut_comb_pos, subtype = 1;
 
     FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype | QFUSubtypeMasks::EXTENDED_COMB);
+
+    auto fbscaled = (feedback.v < 0.f ? -1.f : 1.f) * sqrt(abs(feedback.v));
 
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
@@ -135,7 +138,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance.v, type,
+            coeff[e][c].MakeCoeffs(freq[e].v, fbscaled, type,
                                    subtype | QFUSubtypeMasks::EXTENDED_COMB, storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
@@ -158,15 +161,16 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     }
 
     /* Run the filters */
-
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         auto l128 = _mm_setzero_ps();
         auto r128 = _mm_setzero_ps();
 
         // FIXME - we want to interpolate the non-integral part if we like this
-        int panIndex =
-            (int)((limit_range(widthval.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
+        int panIndex2 =
+            (int)((limit_range(pan2.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
+        int panIndex3 =
+            (int)((limit_range(pan3.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
 
         if (filtptr)
         {
@@ -187,31 +191,22 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < 3; ++i)
         {
-#if MIDSIDE_WIDTH
-            if (i < 2)
-            {
-                mixl += tl[i] * bandGain[i].v;
-            }
-            if (i % 2 == 0)
-            {
-                mixr += tr[i] * bandGain[i].v;
-            }
-#else
             float panl = 0.59, panr = 0.59;
+
             if (i == 1)
             {
-                panl = panL[panIndex];
-                panr = panR[panIndex];
+                panl = panL[panIndex2];
+                panr = panR[panIndex2];
             }
             else if (i == 2)
             {
                 // The other way!
-                panl = panR[panIndex];
-                panr = panL[panIndex];
+                panl = panL[panIndex3];
+                panr = panR[panIndex3];
             }
-            mixl += tl[i] * bandGain[i].v * panl / 0.59;
-            mixr += tr[i] * bandGain[i].v * panr / 0.59;
-#endif
+
+            mixl += tl[i] * gain[i].v * panl / 0.59;
+            mixr += tr[i] * gain[i].v * panr / 0.59;
         }
 
         // soft-clip output for good measure
@@ -227,13 +222,14 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         {
             for (auto i = 0; i < 3; ++i)
             {
-                cutoff[i].process();
-                bandGain[i].process();
+                freq[i].process();
+                gain[i].process();
 
                 if (i == 0)
                 {
-                    resonance.process();
-                    widthval.process();
+                    feedback.process();
+                    pan2.process();
+                    pan3.process();
                 }
             }
         }
@@ -273,15 +269,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     lp.process_block(L, R);
 
-#if MIDSIDE_WIDTH
-    // Add width and mix
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
-#endif
-
-    mix.set_target_smoothed(limit_range(*f[combulator_mix], -1.f, 1.f));
+    mix.set_target_smoothed(limit_range(*f[combulator_mix], 0.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
@@ -309,11 +297,11 @@ int CombulatorEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 7;
+        return 5;
     case 2:
         return 17;
     case 3:
-        return 27;
+        return 25;
     }
     return 0;
 }
@@ -322,9 +310,6 @@ void CombulatorEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[combulator_input_gain].set_name("Gain");
-    fxdata->p[combulator_input_gain].set_type(ct_decibel_narrow);
-    fxdata->p[combulator_input_gain].posy_offset = 1;
     fxdata->p[combulator_noise_mix].set_name("Noise Mix");
     fxdata->p[combulator_noise_mix].set_type(ct_percent);
     fxdata->p[combulator_noise_mix].posy_offset = 1;
@@ -341,6 +326,11 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_feedback].set_name("Feedback");
     fxdata->p[combulator_feedback].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_feedback].posy_offset = 3;
+    fxdata->p[combulator_tone].set_name("Tone");
+    fxdata->p[combulator_tone].set_type(ct_freq_audible);
+    fxdata->p[combulator_tone].posy_offset = 3;
+    fxdata->p[combulator_tone].val_min.f = -38.f;
+    fxdata->p[combulator_tone].val_default.f = fxdata->p[combulator_tone].val_max.f;
 
     fxdata->p[combulator_gain1].set_name("Comb 1");
     fxdata->p[combulator_gain1].set_type(ct_amplitude);
@@ -351,28 +341,33 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_gain3].set_name("Comb 3");
     fxdata->p[combulator_gain3].set_type(ct_amplitude);
     fxdata->p[combulator_gain3].posy_offset = 5;
-    fxdata->p[combulator_lowpass].set_name("High Cut");
-    fxdata->p[combulator_lowpass].set_type(ct_freq_audible);
-    fxdata->p[combulator_lowpass].posy_offset = 5;
 
-    fxdata->p[combulator_width].set_name("Width");
-    fxdata->p[combulator_width].set_type(ct_percent_bidirectional);
-    fxdata->p[combulator_width].posy_offset = 7;
+    fxdata->p[combulator_pan2].set_name("Pan 2");
+    fxdata->p[combulator_pan2].set_type(ct_percent_bidirectional_stereo);
+    fxdata->p[combulator_pan2].posy_offset = 7;
+    fxdata->p[combulator_pan3].set_name("Pan 3");
+    fxdata->p[combulator_pan3].set_type(ct_percent_bidirectional_stereo);
+    fxdata->p[combulator_pan3].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
-    fxdata->p[combulator_mix].set_type(ct_percent_bidirectional);
+    fxdata->p[combulator_mix].set_type(ct_percent);
     fxdata->p[combulator_mix].posy_offset = 7;
 }
 
 void CombulatorEffect::init_default_values()
 {
-    for (int i = 0; i < combulator_num_ctrls; i++)
-    {
-        fxdata->p[i].val.f = 0.0f;
-    }
+    fxdata->p[combulator_noise_mix].val.f = 0.0f;
 
-    fxdata->p[combulator_freq1].val.f = 3.0f;
-    fxdata->p[combulator_gain1].val.f = 1.0f;
+    fxdata->p[combulator_freq1].val.f = -9.0f;
+    fxdata->p[combulator_freq2].val.f = 0.25f;
+    fxdata->p[combulator_freq3].val.f = -0.25f;
     fxdata->p[combulator_feedback].val.f = 0.75f;
-    fxdata->p[combulator_lowpass].val.f = fxdata->p[combulator_lowpass].val_max.f;
+    fxdata->p[combulator_tone].val.f = fxdata->p[combulator_tone].val_max.f;
+
+    fxdata->p[combulator_gain1].val.f = 0.7937005f; // -6 dB on the dot
+    fxdata->p[combulator_gain2].val.f = 0.7937005f;
+    fxdata->p[combulator_gain3].val.f = 0.7937005f;
+
+    fxdata->p[combulator_pan2].val.f = 0.25f;
+    fxdata->p[combulator_pan3].val.f = -0.25f;
     fxdata->p[combulator_mix].val.f = 1.0f;
 }
