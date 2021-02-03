@@ -48,11 +48,7 @@ void WindowOscillator::init(float pitch, bool is_display)
     float out_attenuation_inv = sqrt((float)NumUnison);
     OutAttenuation = 1.0f / (out_attenuation_inv * 16777216.f);
 
-    bool odd;
-    float mid;
-    int half;
-
-    if (NumUnison == 1 || is_display)
+    if (NumUnison == 1)
     {
         DetuneBias = 1;
         DetuneOffset = 0;
@@ -66,13 +62,10 @@ void WindowOscillator::init(float pitch, bool is_display)
         DetuneBias = (float)2.f / ((float)NumUnison - 1.f);
         DetuneOffset = -1.f;
 
-        odd = NumUnison & 1;
-        mid = NumUnison * 0.5 - 0.5;
-        half = NumUnison >> 1;
-    }
-    
-    if (!is_display)
-    {
+        bool odd = NumUnison & 1;
+        float mid = NumUnison * 0.5 - 0.5;
+        int half = NumUnison >> 1;
+
         for (int i = 0; i < NumUnison; i++)
         {
             float d = fabs((float)i - mid) / mid;
