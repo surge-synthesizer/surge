@@ -426,7 +426,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_audible_with_very_low_lowerbound:
         valtype = vt_float;
-        val_min.f = -116; // half a hz
+        val_min.f = -117.3763;    // 0.5 Hz
         val_max.f = 70;
         val_default.f = 3;
         break;
@@ -438,8 +438,8 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_reson_band1:
         valtype = vt_float;
-        val_min.f = -34.4936f;   // 60 Hz
-        val_max.f = -6.6305f;    // 300 Hz
+        val_min.f = -34.4936f;     // 60 Hz
+        val_max.f = -6.6305f;      // 300 Hz
         val_default.f = -18.6305f; // 150 Hz
         break;
     case ct_freq_reson_band2:
@@ -2198,13 +2198,14 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     {
         float f = val.f;
         int i_value = round(f) + 69;
-        if (i_value < 0)
-            i_value = 0;
-
         int oct_offset = 1;
-        if (storage)
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         char notename[16];
+
+        if (storage)
+        {
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+        }
+
         sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
@@ -2213,13 +2214,14 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     {
         float f = val.f;
         int i_value = (int)(f);
-        if (i_value < 0)
-            i_value = 0;
-
         int oct_offset = 1;
-        if (storage)
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         char notename[16];
+
+        if (storage)
+        {
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+        }
+
         sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
@@ -2466,10 +2468,15 @@ void Parameter::get_display(char *txt, bool external, float ef)
         case ct_midikey:
         {
             int oct_offset = 1;
-            if (storage)
-                oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
             char notename[16];
+            
+            if (storage)
+            {
+                oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+            }
+
             sprintf(txt, "%s", get_notename(notename, val.i, oct_offset));
+
             break;
         }
         case ct_osctype:
