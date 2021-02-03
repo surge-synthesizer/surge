@@ -419,8 +419,10 @@ void Vst2PluginInstance::processT(float **inputs, float **outputs, VstInt32 samp
         checkNamesEvery = 0;
         if (std::atomic_exchange(&parameterNameUpdated, false))
         {
-            if (!isFruity)
+            /*
+             * if (!isFruity)
                 updateDisplay();
+                */
         }
     }
 

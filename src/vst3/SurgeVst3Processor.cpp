@@ -1071,7 +1071,7 @@ void SurgeVst3Processor::uithreadIdleActivity()
             auto comph = getComponentHandler();
             if (comph)
             {
-                comph->restartComponent(kParamTitlesChanged | kParamValuesChanged);
+                // comph->restartComponent(kParamTitlesChanged | kParamValuesChanged );
             }
         }
     }

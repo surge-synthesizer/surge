@@ -53,6 +53,7 @@
 #include <unordered_map>
 #include <codecvt>
 #include "MSEGEditor.h"
+#include "version.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -1840,7 +1841,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
      *
      * UPDATE: Might as well keep a reference to the object though so we can touch it in idle
      */
-    auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), "DEBUG BUILD");
+    auto dl = std::string("D ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
+    auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), dl.c_str());
     lb->setTransparency(false);
     lb->setBackColor(kRedCColor);
     lb->setFontColor(kWhiteCColor);
