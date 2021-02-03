@@ -363,11 +363,18 @@ struct CColor
 
 struct CGradient : public Internal::FakeRefcount
 {
+    std::unique_ptr<juce::ColourGradient> grad;
+    CGradient() { grad = std::make_unique<juce::ColourGradient>(); }
     struct ColorStopMap
     {
     };
-    static CGradient *create(const ColorStopMap &m) { return nullptr; };
-    void addColorStop(float pos, const CColor &c) { UNIMPL; }
+    static CGradient *create(const ColorStopMap &m)
+    {
+        auto res = new CGradient();
+        res->remember();
+        return res;
+    };
+    void addColorStop(float pos, const CColor &c) { grad->addColour(pos, c.asJuceColour()); }
 };
 
 constexpr const CColor kBlueCColor = CColor(0, 0, 255);
@@ -603,10 +610,11 @@ struct CDrawContext
         return CDrawMode();
     }
     float getStringWidth(const std::string &s) { return font->font.getStringWidth(s); }
-    void fillLinearGradient(CGraphicsPath *p, const CGradient &, const CPoint &, const CPoint &,
+    void fillLinearGradient(CGraphicsPath *p, const CGradient &cg, const CPoint &, const CPoint &,
                             bool, CGraphicsTransform *tf)
     {
-        UNIMPL;
+        g.setGradientFill(*(cg.grad));
+        g.fillPath(p->path, tf->juceT);
     }
 
     struct Transform
@@ -734,7 +742,7 @@ struct CDrawContext
         OKUNIMPL;
         auto w = font->font.getStringWidth(juce::CharPointer_UTF8(c));
         auto h = font->font.getHeight();
-        auto r = CRect(p, CPoint(w, h));
+        auto r = CRect(CPoint(p.x, p.y - h), CPoint(w, h));
         drawString(c, r);
     }
     void drawEllipse(const CRect &r, const CDrawStyle &s)
@@ -857,7 +865,7 @@ struct CViewBase : public Internal::FakeRefcount
     };
     virtual juce::Component *juceComponent() = 0;
 
-    virtual void draw(CDrawContext *dc) { UNIMPL; };
+    virtual void draw(CDrawContext *dc){};
     CRect getViewSize()
     {
         // FIXME - this should reajju just use the cast-operator
@@ -936,11 +944,16 @@ struct CViewBase : public Internal::FakeRefcount
         OKUNIMPL;
         return true;
     }
-    void setVisible(bool b) { UNIMPL; }
+    void setVisible(bool b)
+    {
+        if (juceComponent())
+            juceComponent()->setVisible(b);
+    }
     bool isVisible()
     {
-        UNIMPL;
-        return true;
+        if (juceComponent())
+            return juceComponent()->isVisible();
+        return false;
     }
     void setSize(const CRect &s) { UNIMPL; }
     void setSize(float w, float h) { juceComponent()->setBounds(0, 0, w, h); }
@@ -1035,7 +1048,7 @@ struct CViewContainer : public CView
         return nullptr;
     }
 
-    void onAdded() override { std::cout << "CVC Added" << std::endl; }
+    void onAdded() override {}
     void addView(CView *v)
     {
         if (!v)
@@ -1145,7 +1158,6 @@ struct CViewContainer : public CView
 
     CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
     {
-        std::cout << "CViewContainer::onMouseDown" << std::endl;
         return kMouseEventNotHandled;
     }
     void efvg_resolveDeferredAdds() override
@@ -1175,7 +1187,11 @@ struct CFrame : public CViewContainer
     }
     ~CFrame() = default;
 
-    void setCursor(CCursorType c) { UNIMPL; }
+    void setCursor(CCursorType c)
+    {
+        // map to juce::MouseCursor
+        OKUNIMPL;
+    }
     void invalid()
     {
         for (auto v : views)
@@ -1187,14 +1203,14 @@ struct CFrame : public CViewContainer
     }
     void setDirty(bool b = true) { invalid(); }
 
-    void open(void *parent, int) { UNIMPL; }
+    void open(void *parent, int) { OKUNIMPL; }
     void close() { removeAll(); }
 
     COLPAIR(FocusColor);
 
     void localToFrame(CRect &r) { UNIMPL; }
     void localToFrame(CPoint &p) { UNIMPL; };
-    void setZoom(float z) { UNIMPL; }
+    void setZoom(float z) { OKUNIMPL; }
     CGraphicsTransform getTransform() { return CGraphicsTransform(); }
     void getPosition(float &x, float &y) { UNIMPL; }
     void getCurrentMouseLocation(CPoint &w) { UNIMPL; }
@@ -1241,7 +1257,11 @@ struct CControl : public CView
     virtual float getValue() { return value; }
     virtual void setValue(float v) { value = v; }
     virtual void setDefaultValue(float v) { vdef = v; }
-    virtual void setVisible(bool b) { UNIMPL; }
+    virtual void setVisible(bool b)
+    {
+        if (juceComponent())
+            juceComponent()->setVisible(b);
+    }
     virtual void setMouseEnabled(bool) { UNIMPL; }
     virtual bool getMouseEnabled()
     {
@@ -1290,42 +1310,12 @@ struct CControl : public CView
     COLPAIR(TextColorHighlighted);
     COLPAIR(FrameColorHighlighted);
 
-    void setGradient(CGradient *g) { UNIMPL; }
+    GSPAIR(Gradient, CGradient *, CGradient *, nullptr);
+    GSPAIR(GradientHighlighted, CGradient *, CGradient *, nullptr);
 
-    void setGradientHighlighted(CGradient *g) { UNIMPL; }
-    CGradient *getGradientHighlighted()
-    {
-        UNIMPL;
-        return nullptr;
-    }
-    void setTextColor(const CColor &c) { UNIMPL; }
-    void setBackgroundColor(const CColor &c) { UNIMPL; }
-    CColor getTextColor()
-    {
-        UNIMPL;
-        return CColor();
-    }
-    void setTextAlignment(CHoriTxtAlign c) { UNIMPL; }
-    CGradient *getGradient()
-    {
-        UNIMPL;
-        return nullptr;
-    }
-    CGradient *getGradientHover()
-    {
-        UNIMPL;
-        return nullptr;
-    }
-    CColor getFrameColor()
-    {
-        UNIMPL;
-        return CColor();
-    }
-    CColor getFillColor()
-    {
-        UNIMPL;
-        return CColor();
-    }
+    COLPAIR(FillColor);
+    COLPAIR(TextColor);
+    COLPAIR(BackgroundColor);
 
     float value = 0.f;
     float vmax = 1.f;
@@ -1367,6 +1357,32 @@ struct CTextLabel : public CControl
         }
     }
 
+    void setBackColor(const CColor &v) override
+    {
+        CControl::setBackColor(v);
+        if (lab)
+            lab->setColour(juce::Label::backgroundColourId, v.asJuceColour());
+    }
+
+    void setHoriAlign(CHoriTxtAlign v) override
+    {
+        CControl::setHoriAlign(v);
+        if (lab)
+        {
+            switch (v)
+            {
+            case kRightText:
+                lab->setJustificationType(juce::Justification::centredRight);
+                break;
+            case kLeftText:
+                lab->setJustificationType(juce::Justification::centredLeft);
+                break;
+            case kCenterText:
+                lab->setJustificationType(juce::Justification::centred);
+                break;
+            }
+        }
+    }
     void setFont(CFontRef v) override
     {
         if (lab)
@@ -1396,6 +1412,7 @@ struct CTextLabel : public CControl
         }
     }
 
+    void setAntialias(bool b) { OKUNIMPL; }
     GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
     std::unique_ptr<juceCViewConnector<juce::Label>> lab;
     std::unique_ptr<juceCViewConnector<juce::Component>> img;
@@ -1449,17 +1466,32 @@ struct CCheckBox : public CControl
     COLPAIR(BoxFrameColor);
     COLPAIR(BoxFillColor);
     COLPAIR(CheckMarkColor);
-    void sizeToFit() { UNIMPL; }
+    void sizeToFit() { OKUNIMPL; }
 };
 
-struct CTextButton : public CControl
+struct CTextButton : public CControl, juce::Button::Listener
 {
     CTextButton(const CRect &r, IControlListener *l, int32_t tag, std::string lab)
         : CControl(r, l, tag)
     {
-        UNIMPL;
+        textb = std::make_unique<juceCViewConnector<juce::TextButton>>();
+        textb->setButtonText(juce::CharPointer_UTF8(lab.c_str()));
+        textb->setBounds(r.asJuceIntRect());
+        textb->setViewCompanion(this);
+        textb->addListener(this);
     }
-    void setRoundRadius(float f) { UNIMPL; }
+    ~CTextButton() {}
+    void setRoundRadius(float f) { OKUNIMPL; }
+
+    void buttonClicked(juce::Button *button) override
+    {
+        if (listener)
+            listener->valueChanged(this);
+    }
+
+    GSPAIR(TextAlignment, CHoriTxtAlign, CHoriTxtAlign, CHoriTxtAlign::kCenterText);
+    std::unique_ptr<juceCViewConnector<juce::TextButton>> textb;
+    juce::Component *juceComponent() override { return textb.get(); }
 };
 
 struct CHorizontalSwitch : public CControl

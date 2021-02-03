@@ -1240,18 +1240,16 @@ struct MSEGCanvas : public CControl,
         addP(fillpath, uniLimit, pathFirstY);
 
         // Make sure to restore this
-#if LINIX
+#if LINUX && !TARGET_JUCE_UI
         Surge::UI::NonIntegralAntiAliasGuard naig(dc);
 #endif
 
-#if TARGET_JUCE_UI
-        std::cout << "FIX GRADIENT" << std::endl;
-#else
         dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
-#endif
         fillpath->forget();
         if (cg)
+        {
             cg->forget();
+        }
 
         dc->setLineWidth(1);
 

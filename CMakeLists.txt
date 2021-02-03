@@ -225,6 +225,8 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.h
   src/common/dsp/effect/chowdsp/Chow.cpp
+  src/common/dsp/effect/chowdsp/exciter/Exciter.cpp
+  src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
   src/common/dsp/effect/chowdsp/Neuron.cpp
   src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
   src/common/dsp/filters/VintageLadders.cpp
@@ -1494,6 +1496,8 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             TARGET_JUCE_SYNTH=1
             TARGET_HEADLESS=1
             TARGET_JUCE_UI=1
+
+            $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
             )
 
     # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link

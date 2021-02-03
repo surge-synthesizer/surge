@@ -39,7 +39,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         fxBaseParams[i] = fxParams[i];
     }
     addParameter(
-        fxType = new AudioParameterInt("fxtype", "FX Type", fxt_delay, fxt_airwindows, effectNum));
+        fxType = new AudioParameterInt("fxtype", "FX Type", fxt_delay, n_fx_types - 1, effectNum));
     fxBaseParams[n_fx_params] = fxType;
 
     for (int i = 0; i < n_fx_params; ++i)
@@ -128,7 +128,7 @@ bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) c
 
 void SurgefxAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 {
-    if (resettingFx)
+    if (resettingFx || !surge_effect)
         return;
 
     ScopedNoDenormals noDenormals;
@@ -339,9 +339,12 @@ void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
 
     surge_effect.reset(spawn_effect(effectNum, storage.get(), &(storage->getPatch().fx[0]),
                                     storage->getPatch().globaldata));
-    surge_effect->init();
-    surge_effect->init_ctrltypes();
-    surge_effect->init_default_values();
+    if (surge_effect)
+    {
+        surge_effect->init();
+        surge_effect->init_ctrltypes();
+        surge_effect->init_default_values();
+    }
     resetFxParams(updateJuceParams);
 }
 

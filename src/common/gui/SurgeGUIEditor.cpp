@@ -53,6 +53,7 @@
 #include <unordered_map>
 #include <codecvt>
 #include "MSEGEditor.h"
+#include "version.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -1840,11 +1841,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
      *
      * UPDATE: Might as well keep a reference to the object though so we can touch it in idle
      */
-    auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), "DEBUG BUILD");
+    auto dl = std::string("D ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
+    auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), dl.c_str());
     lb->setTransparency(false);
     lb->setBackColor(kRedCColor);
     lb->setFontColor(kWhiteCColor);
-    lb->setFont(patchNameFont);
+    lb->setFont(displayFont);
     lb->setHoriAlign(VSTGUI::kCenterText);
     lb->setAntialias(true);
     frame->addView(lb);
@@ -7153,6 +7155,8 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 
             editorOverlayOnClose.erase(el.second);
             editorOverlayContentsWeakReference.erase(el.second);
+
+            removeFromFrame.push_back(el.second);
         }
         else
         {
@@ -7269,6 +7273,7 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         b->setFrameColorHighlighted(pressbtnborder);
         b->setTextColorHighlighted(pressbtntext);
         b->setRoundRadius(CCoord(3.f));
+
         innerc->addView(b);
     }
 

@@ -38,9 +38,13 @@ inline float seconds_to_envtime(float in) // ff rev2
 
 inline char *get_notename(char *s, int i_value, int i_offset)
 {
-    int octave = (i_value / 12) - i_offset;
-    char notenames[12][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
-    sprintf(s, "%s%i", notenames[i_value % 12], octave);
+    int ival = i_value < 0 ? i_value - 11 : i_value;
+    int octave = (ival / 12) - i_offset;
+    char notenames[13][3] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C"};
+    // make sure to read the notenames array in reverse for negative i_values
+    int note = (i_value < 0) ? (12 - abs(i_value % 12)) : (i_value % 12);
+
+    sprintf(s, "%s%i", notenames[note], octave);
     return s;
 }
 

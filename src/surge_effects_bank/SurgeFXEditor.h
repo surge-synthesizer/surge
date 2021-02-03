@@ -46,14 +46,15 @@ class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
 
-    constexpr static int n_fx = 14;
-    TextButton selectType[n_fx]; // this had better match the list of fxnames in the constructor
-    Slider fxTypeSlider;
+    TextButton
+        selectType[n_fx_types]; // this had better match the list of fxnames in the constructor
+    int typeByButtonIndex[n_fx_types];
 
     void blastToggleState(int i);
     void resetLabels();
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
+    std::unique_ptr<juce::Label> fxNameLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessorEditor)
 };

@@ -426,7 +426,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_audible_with_very_low_lowerbound:
         valtype = vt_float;
-        val_min.f = -116; // half a hz
+        val_min.f = -117.3763;    // 0.5 Hz
         val_max.f = 70;
         val_default.f = 3;
         break;
@@ -478,6 +478,12 @@ void Parameter::set_type(int ctrltype)
         val_min.f = -10;
         val_max.f = 10;
         val_default.f = 0;
+        break;
+    case ct_freq_ringmod:
+        valtype = vt_float;
+        val_min.f = 0;
+        val_max.f = 127;
+        val_default.f = 60;
         break;
     case ct_bandwidth:
         valtype = vt_float;
@@ -937,6 +943,14 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
 
+    case ct_comp_attack_ms:
+    case ct_comp_release_ms:
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 1.f;
+        val_default.f = 0.5f;
+        break;
+
     case ct_none:
     default:
         sprintf(dispname, "-");
@@ -1012,9 +1026,10 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_reson_band3:
     case ct_freq_vocoder_low:
     case ct_freq_vocoder_high:
+    case ct_freq_ringmod:
         displayType = ATwoToTheBx;
         sprintf(displayInfo.unit, "Hz");
-        displayInfo.a = 440.0;
+        displayInfo.a = (ctrltype == ct_freq_ringmod) ? 8.175798 : 440.0;
         displayInfo.b = 1.0f / 12.0f;
         displayInfo.decimals = 2;
         displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
@@ -1134,6 +1149,20 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 1.0;
         displayInfo.unit[0] = 0;
         displayInfo.decimals = 3;
+        break;
+
+    case ct_comp_attack_ms:
+        displayType = ATwoToTheBx;
+        displayInfo.a = 1.0f;
+        displayInfo.b = std::log2(100.0f / 1.0f);
+        sprintf(displayInfo.unit, "ms");
+        break;
+    
+    case ct_comp_release_ms:
+        displayType = ATwoToTheBx;
+        displayInfo.a = 10.0f;
+        displayInfo.b = std::log2(1000.0f / 10.0f);
+        sprintf(displayInfo.unit, "ms");
         break;
     }
 }
@@ -2173,16 +2202,18 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     case ct_freq_reson_band3:
     case ct_freq_vocoder_low:
     case ct_freq_vocoder_high:
+    case ct_freq_ringmod:
     {
         float f = val.f;
-        int i_value = round(f) + 69;
-        if (i_value < 0)
-            i_value = 0;
-
+        int i_value = round(f) + ((ctrltype != ct_freq_ringmod) ? 69 : 0);
         int oct_offset = 1;
-        if (storage)
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         char notename[16];
+
+        if (storage)
+        {
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+        }
+
         sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
@@ -2191,13 +2222,14 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     {
         float f = val.f;
         int i_value = (int)(f);
-        if (i_value < 0)
-            i_value = 0;
-
         int oct_offset = 1;
-        if (storage)
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         char notename[16];
+
+        if (storage)
+        {
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+        }
+
         sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
@@ -2444,10 +2476,15 @@ void Parameter::get_display(char *txt, bool external, float ef)
         case ct_midikey:
         {
             int oct_offset = 1;
-            if (storage)
-                oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
             char notename[16];
+            
+            if (storage)
+            {
+                oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+            }
+
             sprintf(txt, "%s", get_notename(notename, val.i, oct_offset));
+
             break;
         }
         case ct_osctype:
@@ -3064,6 +3101,9 @@ bool Parameter::can_setvalue_from_string()
     case ct_airwindows_param_bipolar:
     case ct_reson_res_extendable:
     case ct_chow_ratio:
+    case ct_comp_attack_ms:
+    case ct_comp_release_ms:
+    case ct_freq_ringmod:
     {
         return true;
         break;

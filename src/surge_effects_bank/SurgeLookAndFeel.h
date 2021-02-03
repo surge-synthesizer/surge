@@ -31,7 +31,13 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         paramEnabledEdge,
         paramDisabledBg,
         paramDisabledEdge,
-        paramDisplay
+        paramDisplay,
+
+        fxButtonFill,
+        fxButtonEdge,
+        fxButtonHighlighted,
+        fxButtonDown,
+        fxButonToggled
     };
 
     SurgeLookAndFeel()
@@ -121,17 +127,24 @@ class SurgeLookAndFeel : public LookAndFeel_V4
                                       bool shouldDrawButtonAsDown) override
     {
         auto bounds = button.getLocalBounds().toFloat().reduced(2.f, 2.f);
-        auto col = findColour(SurgeColourIds::orangeDark);
-        auto edge = findColour(SurgeColourIds::blue);
+
+        auto isBlack = [](auto const &col) {
+            return !(col.getRed() + col.getGreen() + col.getBlue());
+        };
+
+        auto col = button.findColour(SurgeColourIds::fxButtonFill);
+        if (isBlack(col))
+            col = findColour(SurgeColourIds::orangeDark);
+        auto edge = button.findColour(SurgeColourIds::blue);
 
         if (shouldDrawButtonAsHighlighted)
-            col = Colour(18 * 1.4, 52 * 1.4, 99 * 1.4);
+            edge = juce::Colour(200, 200, 255);
 
         if (shouldDrawButtonAsDown)
-            col = Colour(18 * 1.2, 52 * 1.2, 99 * 1.2);
+            edge = edge.darker(0.4);
 
         if (button.getToggleState())
-            col = findColour(SurgeColourIds::orange);
+            col = col.brighter(0.5);
 
         g.setColour(col);
         g.fillRoundedRectangle(bounds, 3);
@@ -141,7 +154,7 @@ class SurgeLookAndFeel : public LookAndFeel_V4
 
     void paintComponentBackground(Graphics &g, int w, int h)
     {
-        int orangeHeight = 20;
+        int orangeHeight = 40;
 
         g.fillAll(findColour(SurgeColourIds::componentBgStart));
 
@@ -153,16 +166,21 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         g.setColour(findColour(SurgeColourIds::orange));
         g.fillRect(0, h - orangeHeight, w, orangeHeight);
 
-        juce::Rectangle<float> logoBound{w / 2.f - 30, h - orangeHeight + 2.f, 60,
-                                         orangeHeight - 4.f};
+        juce::Rectangle<float> logoBound{3, h - orangeHeight + 4.f, orangeHeight - 8.f,
+                                         orangeHeight - 8.f};
         surgeLogo->drawWithin(g, logoBound,
                               juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.0);
 
         g.setColour(findColour(SurgeColourIds::blue));
+        g.setFont(28);
+        // g.drawSingleLineText("SurgeEffectsBank", orangeHeight, h - 12,
+        // juce::Justification::left);
+
         g.drawLine(0, h - orangeHeight, w, h - orangeHeight);
         // text
         g.setFont(12);
-        g.drawSingleLineText(Surge::Build::FullVersionStr, 3, h - 6.f, juce::Justification::left);
+        g.drawSingleLineText(Surge::Build::FullVersionStr, w - 3, h - 26.f,
+                             juce::Justification::right);
         g.drawSingleLineText(Surge::Build::BuildDate, w - 3, h - 6.f, juce::Justification::right);
     }
 };
