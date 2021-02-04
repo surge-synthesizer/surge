@@ -3112,7 +3112,9 @@ bool Parameter::can_setvalue_from_string()
     return false;
 }
 
-bool Parameter::set_value_from_string(std::string s)
+bool Parameter::set_value_from_string(std::string s) { return set_value_from_string_onto(s, val); }
+
+bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
 {
     const char *c = s.c_str();
 
@@ -3224,7 +3226,7 @@ bool Parameter::set_value_from_string(std::string s)
 
         if (ni >= val_min.i && ni <= val_max.i)
         {
-            val.i = ni;
+            onto.i = ni;
             return true;
         }
 
@@ -3246,7 +3248,7 @@ bool Parameter::set_value_from_string(std::string s)
             float f;
             if (ef->stringToValue(c, f))
             {
-                val.f = limit_range(f, val_min.f, val_max.f);
+                onto.f = limit_range(f, val_min.f, val_max.f);
                 return true;
             }
         }
@@ -3262,7 +3264,7 @@ bool Parameter::set_value_from_string(std::string s)
         {
             return false;
         }
-        val.f = res;
+        onto.f = res;
         return true;
 
         break;
@@ -3280,7 +3282,7 @@ bool Parameter::set_value_from_string(std::string s)
         {
             return false;
         }
-        val.f = res;
+        onto.f = res;
         return true;
         break;
     }
@@ -3304,7 +3306,7 @@ bool Parameter::set_value_from_string(std::string s)
             return false;
         }
 
-        val.f = nv;
+        onto.f = nv;
         return true;
     }
     break;
@@ -3318,7 +3320,7 @@ bool Parameter::set_value_from_string(std::string s)
         {
             return false;
         }
-        val.f = nv;
+        onto.f = nv;
         return true;
     }
     break;
@@ -3329,7 +3331,7 @@ bool Parameter::set_value_from_string(std::string s)
             float uv = std::atof(c) / 440.f;
             float n = log2(uv) * 12 + 69;
             float bpv = (n - 69) / 69.f;
-            val.f = bpv * 16 + 16;
+            onto.f = bpv * 16 + 16;
         }
         else
         {
@@ -3371,7 +3373,7 @@ bool Parameter::set_value_from_string(std::string s)
                     nv = (nv - 1) * 16.f / 31.f + 16;
                 }
             }
-            val.f = nv;
+            onto.f = nv;
         }
     }
     break;

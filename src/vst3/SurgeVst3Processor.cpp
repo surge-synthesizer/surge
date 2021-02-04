@@ -844,15 +844,30 @@ tresult PLUGIN_API SurgeVst3Processor::getParamStringByValue(ParamID tag,
     return kResultOk;
 }
 
-tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag, TChar *string,
+tresult PLUGIN_API SurgeVst3Processor::getParamValueByString(ParamID tag, TChar *inp,
                                                              ParamValue &valueNormalized)
 {
-    // std::cout << __LINE__ << " " << __func__ << " " << tag << std::endl;
     CHECK_INITIALIZED;
+
+    std::wstring_convert<std::codecvt_utf8<TChar>, TChar> cv;
+    std::string inpn = cv.to_bytes(inp);
 
     if (tag >= getParameterCount())
     {
         return kInvalidArgument;
+    }
+
+    SurgeSynthesizer::ID did;
+    if (surgeInstance->fromDAWSideId(tag, did))
+    {
+        float outv;
+
+        bool gotIt = surgeInstance->stringToNormalizedValue(did, inpn, outv);
+        if (gotIt)
+        {
+            valueNormalized = outv;
+            return kResultTrue;
+        }
     }
 
     return kResultFalse;
