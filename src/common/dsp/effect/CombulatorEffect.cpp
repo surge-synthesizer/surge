@@ -16,11 +16,12 @@
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 
-
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage)
+    : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage),
+      hp(storage)
 {
     lp.setBlockSize(BLOCK_SIZE);
+    hp.setBlockSize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
     qfus = (QuadFilterUnitState *)_aligned_malloc(2 * sizeof(QuadFilterUnitState), 16);
@@ -45,6 +46,17 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
         panL[i] = sqrt((piby2 - panAngle) / piby2 * cos(panAngle));
         panR[i] = sqrt(panAngle * sin(panAngle) / piby2);
     }
+
+    // A very simple envelope follower
+    envA = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+    envR = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+    envV[0] = 0.f;
+    envV[1] = 0.f;
+
+    noiseGen[0][0] = 0.f;
+    noiseGen[1][0] = 0.f;
+    noiseGen[0][1] = 0.f;
+    noiseGen[1][1] = 0.f;
 }
 
 CombulatorEffect::~CombulatorEffect() { _aligned_free(qfus); }
@@ -70,11 +82,14 @@ void CombulatorEffect::setvars(bool init)
 
         pan2.instantize();
         pan3.instantize();
+        tone.instantize();
+        noisemix.instantize();
 
         mix.set_target(1.f);
 
         mix.instantize();
         lp.coeff_instantize();
+        hp.coeff_instantize();
 
         halfbandOUT.reset();
         halfbandIN.reset();
@@ -89,13 +104,30 @@ void CombulatorEffect::setvars(bool init)
                 freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
             gain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
         }
-        
+
+        tone.newValue(limit_range(*f[combulator_tone], -1.f, 1.f));
+        noisemix.newValue(limit_range(*f[combulator_noise_mix], 0.f, 1.f));
         feedback.newValue(*f[combulator_feedback]);
 
-        auto cutoff = limit_range(*f[combulator_tone],
-                                  fxdata->p[combulator_tone].val_min.f,
-                                  fxdata->p[combulator_tone].val_max.f);
-        lp.coeff_LP(lp.calc_omega((cutoff / 12.0) - 2.f), 0.707);
+        // So freq-audible is -60 to 70 on the hp side and -20 to 70 on the lp side;
+        float clo = -60, chi = 70, clolo = -20;
+        float hpCutoff = clo;
+        float lpCutoff = chi;
+
+        if (tone.v < 0)
+        {
+            // OK so cool scale the hp cutoff
+            auto tv = -tone.v;
+            hpCutoff = tv * (chi - clo) + clo;
+        }
+        else
+        {
+            auto tv = tone.v;
+            lpCutoff = tv * (clolo - chi) + chi;
+        }
+
+        lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f), 0.707);
+        hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f), 0.707);
 
         pan2.newValue(clamp1bp(*f[combulator_pan2]));
         pan3.newValue(clamp1bp(*f[combulator_pan3]));
@@ -161,8 +193,23 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     }
 
     /* Run the filters */
+    float noise[2];
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
+        // Envelope Follower Update
+        for (int c = 0; c < 2; ++c)
+        {
+            auto v = dataOS[c][s];
+            auto e = envV[c];
+            if (v > e)
+                e = envA * (e - v) + v;
+            else
+                e = envR * (e - v) + v;
+            envV[c] = e;
+            noise[c] =
+                noisemix.v * correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0) * envV[c];
+        }
+
         auto l128 = _mm_setzero_ps();
         auto r128 = _mm_setzero_ps();
 
@@ -174,8 +221,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
         if (filtptr)
         {
-            l128 = filtptr(&(qfus[0]), _mm_set1_ps(dataOS[0][s]));
-            r128 = filtptr(&(qfus[1]), _mm_set1_ps(dataOS[1][s]));
+            l128 = filtptr(&(qfus[0]), _mm_set1_ps(dataOS[0][s] + noise[0]));
+            r128 = filtptr(&(qfus[1]), _mm_set1_ps(dataOS[1][s] + noise[1]));
         }
         else
         {
@@ -230,6 +277,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                     feedback.process();
                     pan2.process();
                     pan3.process();
+                    tone.process();
+                    noisemix.process();
                 }
             }
         }
@@ -268,6 +317,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 
     lp.process_block(L, R);
+    hp.process_block(L, R);
 
     mix.set_target_smoothed(limit_range(*f[combulator_mix], 0.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
@@ -310,8 +360,9 @@ void CombulatorEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[combulator_noise_mix].set_name("Noise Mix");
+    fxdata->p[combulator_noise_mix].set_name("Extra Noise");
     fxdata->p[combulator_noise_mix].set_type(ct_percent);
+    fxdata->p[combulator_noise_mix].val_max.f = 3.f;
     fxdata->p[combulator_noise_mix].posy_offset = 1;
 
     fxdata->p[combulator_freq1].set_name("Center");
@@ -327,10 +378,8 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_feedback].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_feedback].posy_offset = 3;
     fxdata->p[combulator_tone].set_name("Tone");
-    fxdata->p[combulator_tone].set_type(ct_freq_audible);
+    fxdata->p[combulator_tone].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_tone].posy_offset = 3;
-    fxdata->p[combulator_tone].val_min.f = -38.f;
-    fxdata->p[combulator_tone].val_default.f = fxdata->p[combulator_tone].val_max.f;
 
     fxdata->p[combulator_gain1].set_name("Comb 1");
     fxdata->p[combulator_gain1].set_type(ct_amplitude);
@@ -369,5 +418,6 @@ void CombulatorEffect::init_default_values()
 
     fxdata->p[combulator_pan2].val.f = 0.25f;
     fxdata->p[combulator_pan3].val.f = -0.25f;
+    fxdata->p[combulator_tone].val.f = 0;
     fxdata->p[combulator_mix].val.f = 1.0f;
 }
