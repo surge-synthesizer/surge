@@ -3010,6 +3010,32 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
     return 0.f;
 }
 
+bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, float &outval)
+{
+    int id = index.getSynthSideId();
+    if (id < 0)
+        return false;
+    if (id >= metaparam_offset)
+        return false;
+    if (id >= storage.getPatch().param_ptr.size())
+        return false;
+
+    auto p = storage.getPatch().param_ptr[id];
+    if (p->valtype != vt_float)
+        return false;
+
+    pdata vt = p->val;
+    auto res = p->set_value_from_string_onto(s, vt);
+
+    if (res)
+    {
+        outval = (vt.f - p->val_min.f) / (p->val_max.f - p->val_min.f);
+        return true;
+    }
+
+    return false;
+}
+
 #if MAC || LINUX
 void *loadPatchInBackgroundThread(void *sy)
 {

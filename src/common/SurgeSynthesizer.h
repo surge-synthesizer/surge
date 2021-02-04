@@ -268,6 +268,8 @@ class alignas(16) SurgeSynthesizer
 
     bool getParameterIsBoolean(const ID &index);
 
+    bool stringToNormalizedValue(const ID &index, std::string s, float &outval);
+
     float normalizedToValue(const ID &index, float val)
     {
         return normalizedToValue(index.getSynthSideId(), val);

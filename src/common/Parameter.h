@@ -345,6 +345,7 @@ class Parameter
     float get_default_value_f01();
     void set_value_f01(float v, bool force_integer = false);
     bool set_value_from_string(std::string s);
+    bool set_value_from_string_onto(std::string s, pdata &ontoThis);
     float
     get_modulation_f01(float mod); // used by the gui to get the position of the modulated handle
     float set_modulation_f01(float v); // used by the gui to set the modulation to match the
