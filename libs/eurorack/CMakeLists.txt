@@ -9,6 +9,35 @@ add_library(${PROJECT_NAME}
         eurorack/clouds/dsp/pvoc/stft.cc
         eurorack/clouds/resources.cc
 
+        eurorack/plaits/dsp/voice.cc
+        eurorack/plaits/dsp/speech/lpc_speech_synth_phonemes.cc
+        eurorack/plaits/dsp/speech/lpc_speech_synth_controller.cc
+        eurorack/plaits/dsp/speech/lpc_speech_synth.cc
+        eurorack/plaits/dsp/speech/naive_speech_synth.cc
+        eurorack/plaits/dsp/speech/lpc_speech_synth_words.cc
+        eurorack/plaits/dsp/speech/sam_speech_synth.cc
+        eurorack/plaits/dsp/physical_modelling/string.cc
+        eurorack/plaits/dsp/physical_modelling/resonator.cc
+        eurorack/plaits/dsp/physical_modelling/string_voice.cc
+        eurorack/plaits/dsp/physical_modelling/modal_voice.cc
+        eurorack/plaits/dsp/engine/fm_engine.cc
+        eurorack/plaits/dsp/engine/swarm_engine.cc
+        eurorack/plaits/dsp/engine/wavetable_engine.cc
+        eurorack/plaits/dsp/engine/particle_engine.cc
+        eurorack/plaits/dsp/engine/noise_engine.cc
+        eurorack/plaits/dsp/engine/hi_hat_engine.cc
+        eurorack/plaits/dsp/engine/chord_engine.cc
+        eurorack/plaits/dsp/engine/waveshaping_engine.cc
+        eurorack/plaits/dsp/engine/string_engine.cc
+        eurorack/plaits/dsp/engine/modal_engine.cc
+        eurorack/plaits/dsp/engine/grain_engine.cc
+        eurorack/plaits/dsp/engine/bass_drum_engine.cc
+        eurorack/plaits/dsp/engine/speech_engine.cc
+        eurorack/plaits/dsp/engine/additive_engine.cc
+        eurorack/plaits/dsp/engine/virtual_analog_engine.cc
+        eurorack/plaits/dsp/engine/snare_drum_engine.cc
+        eurorack/plaits/resources.cc
+
         eurorack/stmlib/dsp/units.cc
         eurorack/stmlib/dsp/atan.cc
 

@@ -164,6 +164,7 @@ enum ctrltypes
     ct_percent_oscdrift,
     ct_waveguide_excitation_model,
     ct_bbd_lforate,
+    ct_eurotwist_engine,
     num_ctrltypes,
 };
 

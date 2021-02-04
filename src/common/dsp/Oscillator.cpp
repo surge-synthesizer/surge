@@ -28,6 +28,7 @@
 #include "WaveguideOscillator.h"
 #include "WindowOscillator.h"
 #include "DPWOscillator.h"
+#include "EuroTwist.h"
 
 using namespace std;
 
@@ -62,6 +63,8 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
         return new DPWOscillator(storage, oscdata, localcopy);
     case ot_waveguide:
         return new WaveguideOscillator(storage, oscdata, localcopy);
+    case ot_eurotwist:
+        return new EuroTwist(storage, oscdata, localcopy);
     case ot_sine:
     default:
         return new SineOscillator(storage, oscdata, localcopy);
