@@ -66,14 +66,17 @@ class CombulatorEffect : public Effect
     QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
     FilterCoefficientMaker coeff[3][2];
-    BiquadFilter lp;
-    lag<float, true> freq[3], feedback, gain[3], pan2, pan3;
+    BiquadFilter lp, hp;
+    lag<float, true> freq[3], feedback, gain[3], pan2, pan3, tone, noisemix;
     float filterDelay[3][2][MAX_FB_COMB_EXTENDED + FIRipol_N];
     float WP[3][2];
     float Reg[3][2][n_filter_registers];
 
     static constexpr int PANLAW_SIZE = 4096; // power of 2 please
     float panL[PANLAW_SIZE], panR[PANLAW_SIZE];
+
+    float envA, envR, envV[2];
+    float noiseGen[2][2];
 
   private:
     int bi; // block increment (to keep track of events not occurring every n blocks)
