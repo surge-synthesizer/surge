@@ -128,11 +128,36 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         MidiMessage m = it.getMessage();
         if (m.isNoteOn())
         {
-            surge->playNote(0, m.getNoteNumber(), m.getVelocity(), 0);
+            surge->playNote(m.getChannel(), m.getNoteNumber(), m.getVelocity(), 0);
         }
         else if (m.isNoteOff())
         {
-            surge->releaseNote(0, m.getNoteNumber(), m.getVelocity());
+            surge->releaseNote(m.getChannel(), m.getNoteNumber(), m.getVelocity());
+        }
+        else if (m.isChannelPressure())
+        {
+            surge->channelAftertouch(m.getChannel(), m.getChannelPressureValue());
+        }
+        else if (m.isAftertouch())
+        {
+            surge->polyAftertouch(m.getChannel(), m.getNoteNumber(), m.getAfterTouchValue());
+        }
+        else if (m.isPitchWheel())
+        {
+            surge->pitchBend(m.getChannel(), m.getPitchWheelValue() - 8192);
+        }
+        else if (m.isController())
+        {
+            surge->channelController(m.getChannel(), m.getControllerNumber(),
+                                     m.getControllerValue());
+        }
+        else if (m.isProgramChange())
+        {
+            // Implement program change in 1.9
+        }
+        else
+        {
+            // std::cout << "Ignoring message " << std::endl;
         }
     }
 
