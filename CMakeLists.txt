@@ -1575,15 +1575,15 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
     elseif( UNIX)
       set( SXTOS "linux" )
     else()
-      set( SXTOS "win" )
+      set( SXTOS "win64" )
     endif()
 
     add_custom_command(TARGET surge-xt-distribution
             POST_BUILD
             WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
             COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt .
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-distribution
-            COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-distribution/surge-xt-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
+            COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
             )
 
   endif()
