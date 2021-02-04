@@ -44,10 +44,50 @@ NimbusEffect::~NimbusEffect()
 
 void NimbusEffect::init() {}
 
-void NimbusEffect::setvars(bool init) {}
+void NimbusEffect::setvars(bool init)
+{
+    if (*pdata_ival[nmb_mode] != old_nmb_mode)
+    {
+        switch (*pdata_ival[nmb_mode])
+        {
+        case 0:
+            fxdata->p[nmb_density].set_name("Density");
+            fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
+
+            fxdata->p[nmb_texture].set_name("Texture");
+            fxdata->p[nmb_texture].set_type(ct_percent);
+            
+            break;
+        case 1:
+        case 2:
+            fxdata->p[nmb_density].set_name("Diffusion");
+            fxdata->p[nmb_density].set_type(ct_percent);
+
+            fxdata->p[nmb_texture].set_name("Filter");
+            fxdata->p[nmb_texture].set_type(ct_percent_bidirectional);
+            break;
+        case 3:
+            fxdata->p[nmb_density].set_name("Smear");
+            fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
+
+            fxdata->p[nmb_texture].set_name("Texture");
+            fxdata->p[nmb_texture].set_type(ct_percent_bidirectional);
+            break;
+        }
+        
+        fxdata->p[nmb_size].set_name((*pdata_ival[nmb_mode] == 3) ? "Warp" : "Size");
+
+        fxdata->p[nmb_density].posy_offset = 3;
+        fxdata->p[nmb_texture].posy_offset = 3;
+
+        old_nmb_mode = *pdata_ival[nmb_mode];
+        hasInvalidated = true;
+    }
+}
 
 void NimbusEffect::process(float *dataL, float *dataR)
 {
+    setvars(false);
 
     clouds::ShortFrame input[BLOCK_SIZE];
     clouds::ShortFrame output[BLOCK_SIZE];
@@ -61,22 +101,27 @@ void NimbusEffect::process(float *dataL, float *dataR)
     processor->set_playback_mode(
         (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
     processor->set_quality(*pdata_ival[nmb_quality]);
+
     auto parm = processor->mutable_parameters();
+    float den_val, tex_val;
 
-    parm->dry_wet = *f[nmb_mix];
-    parm->freeze = *f[nmb_freeze] > 0.5;
+    den_val = (fxdata->p[nmb_density].ctrltype == ct_percent) ? *f[nmb_density]
+                                                              : (*f[nmb_density] + 1.f) * 0.5;
 
+    tex_val = (fxdata->p[nmb_texture].ctrltype == ct_percent) ? *f[nmb_texture]
+                                                              : (*f[nmb_texture] + 1.f) * 0.5;
+
+    // nmb_in_gain,
     parm->position = limit_range(*f[nmb_position], 0.f, 1.f);
     parm->size = limit_range(*f[nmb_size], 0.f, 1.f);
-    parm->density = limit_range((float)((*f[nmb_density] + 1.f) * 0.5), 0.f, 1.f);
-    parm->texture = limit_range(*f[nmb_texture], 0.f, 1.f);
+    parm->density = limit_range(den_val, 0.f, 1.f);
+    parm->texture = limit_range(tex_val, 0.f, 1.f);
     parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
     parm->stereo_spread = limit_range(*f[nmb_spread], 0.f, 1.f);
     parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
+    parm->freeze = *f[nmb_freeze] > 0.5;
     parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
-
-    // nmb_in_gain,
-    //   nmb_mode,
+    parm->dry_wet = *f[nmb_mix];
 
     parm->trigger = true;
     parm->gate = true;
@@ -90,7 +135,10 @@ void NimbusEffect::process(float *dataL, float *dataR)
     }
 }
 
-void NimbusEffect::suspend() { init(); }
+void NimbusEffect::suspend()
+{
+    init();
+}
 
 const char *NimbusEffect::group_label(int id)
 {
