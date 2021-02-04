@@ -814,7 +814,7 @@ struct CBitmap : public Internal::FakeRefcount
 
         auto t = juce::AffineTransform().translated(tl.x, tl.y).translated(-off.x, -off.y);
         dc->g.reduceClipRegion(r.asJuceIntRect());
-        drawable->draw(dc->g, 1.0, t);
+        drawable->draw(dc->g, alpha, t);
     }
     CResourceDescription desc;
     std::unique_ptr<juce::Drawable> drawable;
@@ -859,7 +859,7 @@ class CView;
 // Clena this up obviously
 struct CViewBase : public Internal::FakeRefcount
 {
-    CViewBase(const CRect &size) : size(size) {}
+    CViewBase(const CRect &size) : size(size), ma(size) {}
     virtual ~CViewBase(){
         // Here we probably have to make sure that the juce component is removed
     };
@@ -1104,14 +1104,15 @@ struct CViewContainer : public CView
         invalid();
     }
 
-    void addView(COptionMenu *)
+    /*void addView(COptionMenu *)
     {
         // JUCE menus work differently
     }
     void removeView(COptionMenu *, bool)
     {
         // Juce menus work differently
-    }
+    }*/
+
     CView *getViewAt(const CPoint &p)
     {
         UNIMPL;
@@ -1692,12 +1693,11 @@ struct COptionMenu : public CControl
     juce::PopupMenu menu;
 
     COptionMenu(const CRect &r, IControlListener *l, int32_t tag, int, int = 0, int = 0)
-        : CControl(r, l), menu()
+        : CControl(r, l, tag), menu()
     {
         // Obviously fix this
         alwaysLeak = true;
         doDebug = false;
-        OKUNIMPL;
     }
     void setNbItemsPerColumn(int c) { UNIMPL; }
     void setEnabled(bool) { UNIMPL; }
@@ -1739,6 +1739,12 @@ struct COptionMenu : public CControl
     inline void setHeight(float h) { UNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }
     int getNbEntries() { return 0; }
+
+    CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
+    {
+        popup();
+        return kMouseEventHandled;
+    }
 };
 
 enum DragOperation
