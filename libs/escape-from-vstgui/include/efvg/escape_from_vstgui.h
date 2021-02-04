@@ -814,7 +814,7 @@ struct CBitmap : public Internal::FakeRefcount
 
         auto t = juce::AffineTransform().translated(tl.x, tl.y).translated(-off.x, -off.y);
         dc->g.reduceClipRegion(r.asJuceIntRect());
-        drawable->draw(dc->g, 1.0, t);
+        drawable->draw(dc->g, alpha, t);
     }
     CResourceDescription desc;
     std::unique_ptr<juce::Drawable> drawable;
@@ -859,7 +859,7 @@ class CView;
 // Clena this up obviously
 struct CViewBase : public Internal::FakeRefcount
 {
-    CViewBase(const CRect &size) : size(size) {}
+    CViewBase(const CRect &size) : size(size), ma(size) {}
     virtual ~CViewBase(){
         // Here we probably have to make sure that the juce component is removed
     };

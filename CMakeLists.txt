@@ -1555,7 +1555,37 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
     endif()
 
     add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
-   
+
+    add_custom_target(surge-xt-distribution)
+    add_dependencies(surge-xt-distribution surge-xt_All)
+    if( APPLE )
+      set( SXT_ZIP AU VST3 Standalone)
+    else()
+      set( SXT_ZIP VST3 Standalone)
+    endif()
+
+    if( DEFINED ENV{SURGE_VERSION} )
+      set( SXTVER $ENV{SURGE_VERSION})
+    else()
+      set( SXTVER "LOCAL")
+    endif()
+
+    if( APPLE )
+      set( SXTOS "macOS" )
+    elseif( UNIX)
+      set( SXTOS "linux" )
+    else()
+      set( SXTOS "win" )
+    endif()
+
+    add_custom_command(TARGET surge-xt-distribution
+            POST_BUILD
+            WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt .
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-distribution
+            COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-distribution/surge-xt-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
+            )
+
   endif()
 endif()
 
