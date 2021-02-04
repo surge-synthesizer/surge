@@ -101,11 +101,12 @@ void Neuron::process_internal(float *dataL, float *dataR, const int numSamples)
 void Neuron::set_params()
 {
     auto bf_clamped = limit_range(*f[neuron_bias_bf], 0.0f, 1.0f);
+    auto wh_clamped = limit_range(*f[neuron_drive_wh], 0.0f, 1.0f);
 
-    Wf.setTargetValue(*f[neuron_squash_wf] * 20.0f);
-    Wh.setTargetValue(db_to_linear(*f[neuron_drive_wh]));
-    Uf.setTargetValue(*f[neuron_stab_uf] * 5.0f);
-    Uh.setTargetValue(*f[neuron_asym_uh] * 0.9f);
+    Wf.setTargetValue(limit_range(*f[neuron_squash_wf], 0.f, 1.f) * 20.0f);
+    Wh.setTargetValue(db_to_linear(wh_clamped));
+    Uf.setTargetValue(limit_range(*f[neuron_stab_uf], 0.f, 1.f) * 5.0f);
+    Uh.setTargetValue(limit_range(*f[neuron_asym_uh], 0.f, 1.f) * 0.9f);
     bf.setTargetValue(bf_clamped * 6.0f - 1.0f);
 
     // tune delay length
@@ -132,7 +133,7 @@ void Neuron::set_params()
 
     auto bias_makeup = [](float bf) -> float { return 6.0f * std::pow(bf, 7.5f) + 0.9f; };
 
-    const auto makeupGain = drive_makeup(*f[neuron_drive_wh]) * bias_makeup(bf_clamped);
+    const auto makeupGain = drive_makeup(wh_clamped) * bias_makeup(bf_clamped);
 
     makeup.set_target_smoothed(makeupGain);
 

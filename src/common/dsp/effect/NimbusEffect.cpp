@@ -54,8 +54,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        input[i].l = (short)(limit_range(dataL[i], -1.f, 1.f) * 32767.0f);
-        input[i].r = (short)(limit_range(dataR[i], -1.f, 1.f) * 32767.0f);
+        input[i].l = (short)(clamp1bp(dataL[i]) * 32767.0f);
+        input[i].r = (short)(clamp1bp(dataR[i]) * 32767.0f);
     }
 
     processor->set_playback_mode(

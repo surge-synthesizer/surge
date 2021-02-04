@@ -79,13 +79,16 @@ void Chow::process(float *dataL, float *dataR)
 
 void Chow::set_params()
 {
-    const auto threshGain = db_to_linear(*f[chow_thresh]);
+    auto thresh_clamped = limit_range(*f[chow_thresh],
+                                      fxdata->p[chow_thresh].val_min.f,
+                                      fxdata->p[chow_thresh].val_max.f);
+    const auto threshGain = db_to_linear(thresh_clamped);
     
     // hand-tuned from several years ago...
     const auto ratio = limit_range(*f[chow_ratio],
                                    fxdata->p[chow_ratio].val_min.f,
                                    fxdata->p[chow_ratio].val_max.f);
-    auto makeup_gain = db_to_linear((*f[chow_thresh] / 12.f) * ((1.0f / ratio) - 1.0f) - 1.0f);
+    auto makeup_gain = db_to_linear((thresh_clamped / 12.f) * ((1.0f / ratio) - 1.0f) - 1.0f);
 
     makeup_gain *= cur_os ? 4.0f : 1.0f;
     makeup.set_target_smoothed(makeup_gain);

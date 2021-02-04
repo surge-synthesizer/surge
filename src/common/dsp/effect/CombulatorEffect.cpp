@@ -70,6 +70,26 @@ void CombulatorEffect::init()
 
 void CombulatorEffect::setvars(bool init)
 {
+    for (int i = 0; i < 3; ++i)
+    {
+        if (i == 0)
+        {
+            freq[i].newValue(*f[combulator_freq1]);
+        }
+        else
+        {
+            freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+        }
+
+        gain[i].newValue(amp_to_linear(limit_range(*f[combulator_gain1 + i], 0.f, 2.f)));
+    }
+
+    noisemix.newValue(limit_range(*f[combulator_noise_mix], 0.f, 1.f));
+    feedback.newValue(*f[combulator_feedback]);
+    tone.newValue(clamp1bp(*f[combulator_tone]));
+    pan2.newValue(clamp1bp(*f[combulator_pan2]));
+    pan3.newValue(clamp1bp(*f[combulator_pan3]));
+
     if (init)
     {
         for (int i = 0; i < 3; ++i)
@@ -96,41 +116,26 @@ void CombulatorEffect::setvars(bool init)
     }
     else
     {
-        for (int i = 0; i < 3; ++i)
-        {
-            if (i == 0)
-                freq[i].newValue(*f[combulator_freq1]);
-            else
-                freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
-            gain[i].newValue(amp_to_linear(*f[combulator_gain1 + i]));
-        }
+        // lowpass range is from MIDI note 136 down to 57 (~21.1 kHz down to 220 Hz)
+        // highpass range is from MIDI note 34 to 136(~61 Hz to ~21.1 kHz)
+        float clo = -12, cmid = 67, chi = -33;
+        float hpCutoff = chi;
+        float lpCutoff = cmid;
 
-        tone.newValue(limit_range(*f[combulator_tone], -1.f, 1.f));
-        noisemix.newValue(limit_range(*f[combulator_noise_mix], 0.f, 1.f));
-        feedback.newValue(*f[combulator_feedback]);
-
-        // So freq-audible is -60 to 70 on the hp side and -20 to 70 on the lp side;
-        float clo = -60, chi = 70, clolo = -20;
-        float hpCutoff = clo;
-        float lpCutoff = chi;
-
-        if (tone.v < 0)
+        if (tone.v > 0)
         {
             // OK so cool scale the hp cutoff
-            auto tv = -tone.v;
-            hpCutoff = tv * (chi - clo) + clo;
+            auto tv = tone.v;
+            hpCutoff = tv * (cmid - chi) + chi;
         }
         else
         {
-            auto tv = tone.v;
-            lpCutoff = tv * (clolo - chi) + chi;
+            auto tv = -tone.v;
+            lpCutoff = tv * (clo - cmid) + cmid;
         }
 
         lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f), 0.707);
         hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f), 0.707);
-
-        pan2.newValue(clamp1bp(*f[combulator_pan2]));
-        pan3.newValue(clamp1bp(*f[combulator_pan3]));
     }
 }
 
@@ -194,6 +199,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     /* Run the filters */
     float noise[2];
+
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         // Envelope Follower Update
@@ -206,8 +212,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
             else
                 e = envR * (e - v) + v;
             envV[c] = e;
-            noise[c] =
-                noisemix.v * correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0) * envV[c];
+            noise[c] = noisemix.v * 3.f * envV[c] *
+                correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0);
         }
 
         auto l128 = _mm_setzero_ps();
@@ -362,7 +368,6 @@ void CombulatorEffect::init_ctrltypes()
 
     fxdata->p[combulator_noise_mix].set_name("Extra Noise");
     fxdata->p[combulator_noise_mix].set_type(ct_percent);
-    fxdata->p[combulator_noise_mix].val_max.f = 3.f;
     fxdata->p[combulator_noise_mix].posy_offset = 1;
 
     fxdata->p[combulator_freq1].set_name("Center");
