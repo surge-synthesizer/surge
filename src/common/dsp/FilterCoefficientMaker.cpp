@@ -528,8 +528,8 @@ void FilterCoefficientMaker::Coeff_COMB(float freq, float reso, int isubtype)
     dtime = limit_range(dtime, (float)FIRipol_N, (float)comb_length - FIRipol_N);
     if (extended)
     {
-        // extended use is not from the filter bank so allow full feedback range
-        reso = limit_range(reso, -1.f, 1.f);
+        // extended use is not from the filter bank so allow greater feedback range
+        reso = limit_range(reso, -2.f, 2.f);
     }
     else
     {
