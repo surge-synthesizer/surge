@@ -138,6 +138,7 @@ struct Connector
         JOG_FX,
 
         STORE_PATCH,
+        STORE_PATCH_DIALOG,
 
         STATUS_MPE,
         STATUS_TUNE,
@@ -313,6 +314,8 @@ extern Surge::Skin::Connector vu_meter;
 extern Surge::Skin::Connector patch_browser;
 
 extern Surge::Skin::Connector mseg_editor;
+
+extern Surge::Skin::Connector store_patch_dialog;
 
 // In surge 1.8, the modulation panel is moveable en-masse but individual modulators
 // are not relocatable. This item gives you the location of the modulators
