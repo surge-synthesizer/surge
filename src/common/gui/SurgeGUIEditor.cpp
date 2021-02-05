@@ -1609,6 +1609,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
+        case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
@@ -7504,7 +7505,14 @@ void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMo
 
 void SurgeGUIEditor::makeStorePatchDialog()
 {
+    auto npc = Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG;
+    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+    // TODO: add skin connectors for all Store Patch dialog widgets
+    // let's have fixed dialog size for now, once TODO is done use the commented out line instead
     CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
+    //CRect dialogSize(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h));
 
     auto saveDialog = new CViewContainer(dialogSize);
     saveDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));
@@ -7658,8 +7666,8 @@ void SurgeGUIEditor::makeStorePatchDialog()
     saveDialog->addView(cb);
     saveDialog->addView(kb);
 
-    addEditorOverlay(saveDialog, "Store Patch", STORE_PATCH, CPoint(157, 57), false, false,
-                     [this]() {});
+    addEditorOverlay(saveDialog, "Store Patch", STORE_PATCH, CPoint(skinCtrl->x, skinCtrl->y),
+                     false, false, [this]() {});
 }
 
 VSTGUI::CControl *
