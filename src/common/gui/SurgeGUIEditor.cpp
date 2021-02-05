@@ -1609,6 +1609,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
+        case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
