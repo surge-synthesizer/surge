@@ -66,6 +66,7 @@ class NimbusEffect : public Effect
   private:
     uint8_t *block_mem, *block_ccm;
     clouds::GranularProcessor *processor;
+    int old_nmb_mode = 0;
 };
 
 #endif // SURGE_NIMBUSEFFECT_H
