@@ -927,7 +927,7 @@ struct CViewBase : public Internal::FakeRefcount
     CRect ma;
     CRect getMouseableArea() { return ma; }
     void setMouseableArea(const CRect &r) { ma = r; }
-
+    void setMouseEnabled(bool b) { OKUNIMPL; }
     CPoint localToFrame(CPoint &w)
     {
         UNIMPL;

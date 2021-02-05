@@ -63,6 +63,7 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 class CSurgeSlider;
 class CModulationSourceButton;
 class CAboutBox;
+class CMidiLearnOverlay;
 
 #if TARGET_VST3
 namespace Steinberg
@@ -463,6 +464,9 @@ class SurgeGUIEditor : public EditorType,
     void showAboutBox();
     void hideAboutBox();
 
+    void showMidiLearnOverlay(const VSTGUI::CRect &r);
+    void hideMidiLearnOverlay();
+
   private:
 #if TARGET_VST3
     Steinberg::Vst::IContextMenu *
@@ -491,6 +495,7 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
     VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
     CAboutBox *aboutbox = nullptr;
+    CMidiLearnOverlay *midiLearnOverlay = nullptr;
     VSTGUI::CTextEdit *patchName = nullptr;
     VSTGUI::CTextEdit *patchCategory = nullptr;
     VSTGUI::CTextEdit *patchCreator = nullptr;
@@ -513,7 +518,7 @@ class SurgeGUIEditor : public EditorType,
         Param,
         Control
     } typeinMode = Inactive;
-    std::vector<VSTGUI::CViewContainer *> removeFromFrame;
+    std::vector<VSTGUI::CView *> removeFromFrame;
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
 

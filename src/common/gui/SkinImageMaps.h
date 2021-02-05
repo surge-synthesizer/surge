@@ -55,6 +55,7 @@ inline std::unordered_map<std::string, int> createIdNameMap()
     res["MODSOURCE_SHOW_LFO"] = 179;
     res["ABOUT_LOGOS"] = 180;
     res["VUMETER_BARS"] = 181;
+    res["MIDI_LEARN"] = 182;
     res["MSEG_NODES"] = 301;
     res["MSEG_MOVEMENT_MODE"] = 302;
     res["MSEG_VERTICAL_SNAP"] = 303;
