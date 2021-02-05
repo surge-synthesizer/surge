@@ -106,6 +106,7 @@ void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame *f)
     addEntry(IDB_MENU_AS_SLIDER, f);
     addEntry(IDB_FILTER_MENU, f);
     addEntry(IDB_FILTER_ICONS, f);
+    addEntry(IDB_MIDI_LEARN, f);
 
     // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding
     // block

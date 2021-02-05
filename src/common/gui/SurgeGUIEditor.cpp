@@ -54,6 +54,7 @@
 #include <codecvt>
 #include "MSEGEditor.h"
 #include "version.h"
+#include "CMidiLearnOverlay.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -262,7 +263,8 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
     patchname = 0;
     blinktimer = 0.f;
     blinkstate = false;
-    aboutbox = 0;
+    aboutbox = nullptr;
+    midiLearnOverlay = nullptr;
     patchCountdown = -1;
 
     mod_editor = false;
@@ -478,6 +480,10 @@ void SurgeGUIEditor::idle()
             firstIdleCountdown--;
 
             frame->invalid();
+        }
+        if (synth->learn_param < 0 && synth->learn_custom < 0 && midiLearnOverlay != nullptr)
+        {
+            hideMidiLearnOverlay();
         }
         for (auto c : removeFromFrame)
         {
@@ -1305,6 +1311,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     minieditOverlay = nullptr;
     msegEditSwitch = nullptr;
     lfoNameLabel = nullptr;
+    midiLearnOverlay = nullptr;
 
     for (int i = 0; i < 16; ++i)
         vu[i] = nullptr;
@@ -1337,6 +1344,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
             {
+                // std::cout << synth->learn_custom << std::endl;
                 gui_modsrc[ms]->setlabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
                 gui_modsrc[ms]->set_ismeta(true);
@@ -1367,6 +1375,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
 
             frame->addView(gui_modsrc[ms]);
+            if (synth->learn_custom == ms - ms_ctrl1)
+            {
+                showMidiLearnOverlay(r);
+            }
         }
     }
 
@@ -1700,6 +1712,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 currentSkin->resolveBaseParentOffsets(skinCtrl);
                 layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
                                        style | conn.payload->controlStyleFlags);
+
+                if (p->id == synth->learn_param)
+                {
+                    showMidiLearnOverlay(param[p->id]->getViewSize());
+                }
             }
         }
         i++;
@@ -2754,11 +2771,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 std::string learnTag =
                     cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
                 addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag),
-                                [this, cancellearn, ccid] {
+                                [this, cancellearn, control, ccid] {
                                     if (cancellearn)
+                                    {
+                                        hideMidiLearnOverlay();
                                         synth->learn_custom = -1;
+                                    }
                                     else
+                                    {
+                                        showMidiLearnOverlay(control->getViewSize());
                                         synth->learn_custom = ccid;
+                                    }
                                 });
                 eid++;
 
@@ -3569,11 +3592,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 std::string learnTag =
                     cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
                 addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(learnTag),
-                                [this, cancellearn, p] {
+                                [this, cancellearn, control, p] {
                                     if (cancellearn)
+                                    {
+                                        hideMidiLearnOverlay();
                                         synth->learn_param = -1;
+                                    }
                                     else
+                                    {
+                                        showMidiLearnOverlay(control->getViewSize());
                                         synth->learn_param = p->id;
+                                    }
                                 });
                 eid++;
 
@@ -8245,6 +8274,26 @@ void SurgeGUIEditor::hideAboutBox()
         aboutbox->setVisible(false);
         removeFromFrame.push_back(aboutbox);
         aboutbox = nullptr;
+    }
+}
+
+void SurgeGUIEditor::showMidiLearnOverlay(const VSTGUI::CRect &r)
+{
+    if (midiLearnOverlay)
+        hideMidiLearnOverlay();
+
+    midiLearnOverlay = new CMidiLearnOverlay(r, bitmapStore);
+    midiLearnOverlay->setVisible(true);
+    getFrame()->addView(midiLearnOverlay);
+}
+
+void SurgeGUIEditor::hideMidiLearnOverlay()
+{
+    if (midiLearnOverlay)
+    {
+        midiLearnOverlay->setVisible(false);
+        removeFromFrame.push_back(midiLearnOverlay);
+        midiLearnOverlay = nullptr;
     }
 }
 
