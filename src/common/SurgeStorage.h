@@ -80,7 +80,8 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                            add ability to configure vocoder modulator mono/sterao/L/R
 //                            add comb filter tuning and compatibility block
 // 14 -> 15 (1.8.0 release) apply the great filter remap (GitHub issue #3006)
-// 15 -> 16 (1.8.2 release) implement oscillator retrigger consistently (GitHub issue #3171)
+// 15 -> 16 (1.9.0 release) implement oscillator retrigger consistently (GitHub issue #3171)
+//                          add tuningApplicationMode to patch
 
 const int ff_revision = 16;
 
@@ -932,6 +933,10 @@ class alignas(16) SurgeStorage
 
     bool remapToKeyboard(const Tunings::KeyboardMapping &k);
     bool remapToStandardKeyboard();
+
+    bool retuneAndRemapToScaleAndMapping(const Tunings::Scale &s,
+                                         const Tunings::KeyboardMapping &k);
+
     inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }
     inline float scaleConstantPitch() { return tuningPitch; }
     inline float scaleConstantPitchInv()
@@ -940,7 +945,16 @@ class alignas(16) SurgeStorage
     } // Obviously that's the inverse of the above
 
     Tunings::Scale currentScale;
+    Tunings::Tuning twelveToneStandardMapping;
+    Tunings::Tuning currentTuning;
+
     bool isStandardTuning;
+    enum TuningApplicationMode
+    {
+        RETUNE_ALL = 0, // These values are streamed so don't change them if you add
+        RETUNE_MIDI_ONLY = 1
+    } tuningApplicationMode = RETUNE_ALL;
+    void setTuningApplicationMode(const TuningApplicationMode m);
 
     Tunings::KeyboardMapping currentMapping;
     bool isStandardMapping = true;

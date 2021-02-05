@@ -1258,6 +1258,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     TiXmlElement *nonparamconfig = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nonparamconfig"));
+    // Set the default for TAM before 16
+    storage->tuningApplicationMode = SurgeStorage::RETUNE_ALL;
     if (nonparamconfig)
     {
         for (int sc = 0; sc < n_scenes; ++sc)
@@ -1274,6 +1276,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     storage->getPatch().scene[sc].monoVoicePriorityMode =
                         (MonoVoicePriorityMode)mvv;
                 }
+            }
+        }
+        auto *tam = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("tuningApplicationMode"));
+        if (tam)
+        {
+            int tv;
+            if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
+            {
+                storage->tuningApplicationMode = (SurgeStorage::TuningApplicationMode)(tv);
             }
         }
     }
@@ -1999,7 +2010,6 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     patch.InsertEndChild(parameters);
 
-    // TODO: Stream that priority mode here
     TiXmlElement nonparamconfig("nonparamconfig");
     for (int sc = 0; sc < n_scenes; ++sc)
     {
@@ -2007,6 +2017,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mvv(mvname.c_str());
         mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoicePriorityMode);
         nonparamconfig.InsertEndChild(mvv);
+
+        // Revision 16 adds the TAM
+        TiXmlElement tam("tuningApplicationMode");
+        tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
+        nonparamconfig.InsertEndChild(tam);
     }
     patch.InsertEndChild(nonparamconfig);
 
