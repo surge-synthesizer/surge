@@ -15,7 +15,7 @@
 
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
-#include <time.h>
+#include <ctime>
 #if MAC || LINUX
 #include <pthread.h>
 #else
@@ -25,7 +25,6 @@
 
 #if TARGET_AUDIOUNIT
 #include "aulayer.h"
-#include "vstgui/plugin-bindings/plugguieditor.h"
 #elif TARGET_VST3
 #include "SurgeVst3Processor.h"
 #include "vstgui/plugin-bindings/plugguieditor.h"
@@ -55,7 +54,6 @@
 #include "effect/Effect.h"
 
 #include <thread>
-#include <chrono>
 
 using namespace std;
 
@@ -2552,7 +2550,17 @@ void SurgeSynthesizer::prepareModsourceDoProcess(int scenemask)
         {
             for (int i = 0; i < n_modsources; i++)
             {
-                storage.getPatch().scene[scene].modsource_doprocess[i] = false;
+                bool setTo = false;
+                if (i >= ms_lfo1 && i <= ms_lfo6)
+                {
+                    auto lf = &(storage.getPatch().scene[scene].lfo[i - ms_lfo1]);
+                    if (lf->shape.val.i == lt_stepseq)
+                    {
+                        auto ss = &(storage.getPatch().stepsequences[scene][i - ms_lfo1]);
+                        setTo = (ss->trigmask != 0);
+                    }
+                }
+                storage.getPatch().scene[scene].modsource_doprocess[i] = setTo;
             }
 
             for (int j = 0; j < 3; j++)
