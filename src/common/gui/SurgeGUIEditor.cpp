@@ -2775,7 +2775,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 eid++;
 
-                if (synth->learn_custom > -1)
+                if (synth->learn_custom > -1 && synth->learn_custom == ccid)
                     cancellearn = true;
 
                 std::string learnTag =
@@ -3597,7 +3597,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 eid++;
 
-                if (synth->learn_param > -1)
+                if (synth->learn_param > -1 && synth->learn_param == p->id)
                     cancellearn = true;
 
                 std::string learnTag =
