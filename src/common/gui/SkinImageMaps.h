@@ -122,6 +122,7 @@ inline std::unordered_set<int> allowedImageIds()
     allowed.insert(179);
     allowed.insert(180);
     allowed.insert(181);
+    allowed.insert(182);
     allowed.insert(301);
     allowed.insert(302);
     allowed.insert(303);
