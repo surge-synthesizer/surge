@@ -1375,7 +1375,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
 
             frame->addView(gui_modsrc[ms]);
-            if (synth->learn_custom == ms - ms_ctrl1)
+            if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
             }
