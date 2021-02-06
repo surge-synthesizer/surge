@@ -3420,13 +3420,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
                     {
-                        std::string txt = p->ctrltype == ct_reson_res_extendable ? "Modulation Extends into Self-oscillation" : "Extend Range";
+                        std::string txt = p->ctrltype == ct_reson_res_extendable
+                                              ? "Modulation Extends into Self-oscillation"
+                                              : "Extend Range";
 
-                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
-                                        [this, p]() {
-                                            p->extend_range = !p->extend_range;
-                                            this->synth->refresh_editor = true;
-                                        });
+                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt), [this, p]() {
+                            p->extend_range = !p->extend_range;
+                            this->synth->refresh_editor = true;
+                        });
                         contextMenu->checkEntry(eid, p->extend_range);
                         eid++;
                     }
@@ -7541,7 +7542,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
     // TODO: add skin connectors for all Store Patch dialog widgets
     // let's have fixed dialog size for now, once TODO is done use the commented out line instead
     CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
-    //CRect dialogSize(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h));
+    // CRect dialogSize(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h));
 
     auto saveDialog = new CViewContainer(dialogSize);
     saveDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));

@@ -185,16 +185,47 @@ const char modsource_names_tag[n_modsources][32] = {
 };
 
 const int modsource_grid_xy[n_modsources][2] = {
-    {0, 0}, {0, 3}, {6, 7}, {2, 3}, {3, 3}, {4, 3}, {5, 3}, // Velocity, Keytrack, Poly AT, Channel
-                                                            // AT, Pitch Bend, Modwheel
-    {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, // Macro 1-8
-    {7, 5}, {6, 5},                                                 // AEG, FEG
-    {0, 5}, {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 5},                 // LFO 1-6
-    {0, 7}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7},                 // S-LFO 1-6
-    {9, 3}, {1, 3}, {8, 5}, {8, 5}, {9, 5}, {9, 5}, // Timbre, Release Velocity, Random Bi/Uni,
-                                                    // Alternate Bi/Uni
-    {6, 3}, {7, 3}, {8, 3}, {7, 7}, {8, 7}, {9, 7}, // Breath, Expression, Sustain,
-                                                    // Lowest/Highest/Latest Key
+    {0, 0}, // Velocity
+    {0, 3}, // Keytrack
+    {6, 7}, // Poly AT
+    {2, 3}, // Channel
+    {3, 3}, // AT
+    {4, 3}, // Pitch Bend
+    {5, 3}, // Modwheel
+    {0, 0}, // Macro 1
+    {1, 0}, // Macro 2
+    {2, 0}, // Macro 3
+    {3, 0}, // Macro 4
+    {4, 0}, // Macro 5
+    {5, 0}, // Macro 6
+    {6, 0}, // Macro 7
+    {7, 0}, // Macro 8
+    {7, 5}, // AEG
+    {6, 5}, // FEG
+    {0, 5}, // LFO 1
+    {1, 5}, // LFO 2
+    {2, 5}, // LFO 3
+    {3, 5}, // LFO 4
+    {4, 5}, // LFO 5
+    {5, 5}, // LFO 6
+    {0, 7}, // S-LFO 1
+    {1, 7}, // S-LFO 2
+    {2, 7}, // S-LFO 3
+    {3, 7}, // S-LFO 4
+    {4, 7}, // S-LFO 5
+    {5, 7}, // S-LFO 6
+    {9, 3}, // Timbre
+    {1, 3}, // Release Velocity
+    {8, 5}, // Random Bi
+    {8, 5}, // Random Uni
+    {9, 5}, // Alternate Bi
+    {9, 5}, // Alternate Uni
+    {6, 3}, // Breath
+    {7, 3}, // Expression
+    {8, 3}, // Sustain
+    {7, 7}, // Lowest Key
+    {8, 7}, // Highest Key
+    {9, 7}, // Latest Key
 };
 
 inline bool isScenelevel(modsources ms)

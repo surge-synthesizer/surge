@@ -1198,10 +1198,7 @@ struct CFrame : public CViewContainer
         for (auto v : views)
             v->invalid();
     }
-    void invalidRect(const CRect &r)
-    {
-        invalid();
-    }
+    void invalidRect(const CRect &r) { invalid(); }
     void setDirty(bool b = true) { invalid(); }
 
     void open(void *parent, int) { OKUNIMPL; }

@@ -70,7 +70,8 @@ void Exciter::process(float *dataL, float *dataR)
 void Exciter::set_params()
 {
     // "Tone" param
-    auto cutoff = low_freq * std::pow(high_freq / low_freq, limit_range(*f[exciter_tone], 0.f, 1.f));
+    auto cutoff =
+        low_freq * std::pow(high_freq / low_freq, limit_range(*f[exciter_tone], 0.f, 1.f));
     cutoff = limit_range(cutoff, 10.0, samplerate * 0.48);
     auto omega_factor = samplerate_inv * 2.0 * M_PI / (double)os.getOSRatio();
     toneFilter.coeff_HP(cutoff * omega_factor, q_val);
@@ -82,7 +83,8 @@ void Exciter::set_params()
 
     // attack/release params
     auto attack_ms = std::pow(2.0f, fxdata->p[exciter_att].displayInfo.b * *f[exciter_att]);
-    auto release_ms = 10.0f * std::pow(2.0f, fxdata->p[exciter_rel].displayInfo.b * *f[exciter_rel]);
+    auto release_ms =
+        10.0f * std::pow(2.0f, fxdata->p[exciter_rel].displayInfo.b * *f[exciter_rel]);
 
     attack_ms = limit_range(attack_ms, 2.5f, 40.0f);
     release_ms = limit_range(release_ms, 25.0f, 400.0f);

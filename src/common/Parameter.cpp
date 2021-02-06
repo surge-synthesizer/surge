@@ -426,7 +426,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_audible_with_very_low_lowerbound:
         valtype = vt_float;
-        val_min.f = -117.3763;    // 0.5 Hz
+        val_min.f = -117.3763; // 0.5 Hz
         val_max.f = 70;
         val_default.f = 3;
         break;
@@ -1157,7 +1157,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.b = std::log2(100.0f / 1.0f);
         sprintf(displayInfo.unit, "ms");
         break;
-    
+
     case ct_comp_release_ms:
         displayType = ATwoToTheBx;
         displayInfo.a = 10.0f;
@@ -1460,7 +1460,7 @@ float Parameter::get_extended(float f)
         {
         case ct_freq_reson_band1:
         {
-            val_max.f = -6.6305f;  // 300 Hz
+            val_max.f = -6.6305f; // 300 Hz
             return f;
         }
         case ct_freq_reson_band2:
@@ -2477,7 +2477,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
         {
             int oct_offset = 1;
             char notename[16];
-            
+
             if (storage)
             {
                 oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);

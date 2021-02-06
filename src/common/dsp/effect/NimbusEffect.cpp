@@ -56,7 +56,7 @@ void NimbusEffect::setvars(bool init)
 
             fxdata->p[nmb_texture].set_name("Texture");
             fxdata->p[nmb_texture].set_type(ct_percent);
-            
+
             break;
         case 1:
         case 2:
@@ -74,7 +74,7 @@ void NimbusEffect::setvars(bool init)
             fxdata->p[nmb_texture].set_type(ct_percent_bidirectional);
             break;
         }
-        
+
         fxdata->p[nmb_size].set_name((*pdata_ival[nmb_mode] == 3) ? "Warp" : "Size");
 
         fxdata->p[nmb_density].posy_offset = 3;
@@ -135,10 +135,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
     }
 }
 
-void NimbusEffect::suspend()
-{
-    init();
-}
+void NimbusEffect::suspend() { init(); }
 
 const char *NimbusEffect::group_label(int id)
 {

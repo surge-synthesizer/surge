@@ -22,7 +22,7 @@ namespace chowdsp
 
 class ModControl
 {
-public:
+  public:
     ModControl()
     {
         lfophase = 0.0f;
@@ -108,12 +108,9 @@ public:
         return y;
     }
 
-    inline void post_process()
-    {
-        depth.process();
-    }
+    inline void post_process() { depth.process(); }
 
-private:
+  private:
     lipol<float, true> lfoval;
     lipol<float, true> depth;
     float lfophase;

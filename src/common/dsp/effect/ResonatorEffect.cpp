@@ -78,15 +78,9 @@ void ResonatorEffect::setvars(bool init)
     }
 }
 
-inline void set1f(__m128 &m, int i, float f)
-{
-    *((float *)&m + i) = f;
-}
+inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
-inline float get1f(__m128 m, int i)
-{
-    return *((float *)&m + i);
-}
+inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
 void ResonatorEffect::process(float *dataL, float *dataR)
 {
@@ -139,7 +133,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     }
 
     FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
-    float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75};  // prevent self-oscillation
+    float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75}; // prevent self-oscillation
 
     for (int i = 0; i < 3; ++i)
     {
@@ -147,20 +141,20 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]),
             fxdata->p[resonator_freq1 + i * 3].val_min.f,
             fxdata->p[resonator_freq1 + i * 3].val_max.f);
-        
+
         float resval;
-        
+
         if (fxdata->p[resonator_res1 + i * 3].extend_range)
         {
             resval = *f[resonator_res1 + i * 3];
         }
         else
         {
-            resval = limit_range(*f[resonator_res1 + i * 3],
-                fxdata->p[resonator_res1 + i * 3].val_min.f,
-                fxdata->p[resonator_res1 + i * 3].val_max.f);
+            resval =
+                limit_range(*f[resonator_res1 + i * 3], fxdata->p[resonator_res1 + i * 3].val_min.f,
+                            fxdata->p[resonator_res1 + i * 3].val_max.f);
         }
-        
+
         cutoff[i].newValue(boundcutoff);
         resonance[i].newValue(resval);
         bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
@@ -173,7 +167,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype, storage);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype,
+                                   storage);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
@@ -236,7 +231,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             mixl = lookup_waveshape(wst_soft, mixl);
             mixr = lookup_waveshape(wst_soft, mixr);
 
-            // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other sample
+            // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every
+            // other sample
             if (s % 2 == 0)
             {
                 cutoff[i].process();
@@ -268,13 +264,13 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-/*    for (int e = 0; e < 3; ++e)
-    {
-        for (int c = 0; c < 2; ++c)
+    /*    for (int e = 0; e < 3; ++e)
         {
-            WP[e][c] = qfus[c].WP[e];
-        }
-    } */
+            for (int c = 0; c < 2; ++c)
+            {
+                WP[e][c] = qfus[c].WP[e];
+            }
+        } */
 
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
@@ -378,7 +374,7 @@ void ResonatorEffect::init_default_values()
 {
     fxdata->p[resonator_freq1].val.f = -18.6305f; // 150 Hz
     fxdata->p[resonator_res1].val.f = 0.75f;
-    fxdata->p[resonator_gain1].val.f = 0.7937005f;  // -6 dB on the dot
+    fxdata->p[resonator_gain1].val.f = 0.7937005f; // -6 dB on the dot
 
     fxdata->p[resonator_freq2].val.f = 8.038216f; // 700 Hz
     fxdata->p[resonator_res2].val.f = 0.75f;

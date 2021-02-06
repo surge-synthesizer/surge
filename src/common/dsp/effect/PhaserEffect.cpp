@@ -74,7 +74,7 @@ void PhaserEffect::process_only_control()
                  (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     lfophase += (float)slowrate * rate;
-    
+
     // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
     if (lfophase > 1)
     {
@@ -97,7 +97,7 @@ void PhaserEffect::setvars()
                   (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     lfophase += (float)slowrate * rate;
-    
+
     // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
     if (lfophase > 1)
     {
@@ -105,7 +105,7 @@ void PhaserEffect::setvars()
     }
 
     float lfophaseR = lfophase + 0.5 * *f[ph_stereo];
-    
+
     if (lfophaseR > 1)
     {
         lfophaseR = fmod(lfophaseR, 1.0);
@@ -136,7 +136,8 @@ void PhaserEffect::setvars()
             double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
                                                      2.0 / (i + 1) * lfoout * *f[ph_mod_depth]);
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center *
+            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] +
+                                                  *f[ph_spread] * center *
                                                       (2.0 / (i + 1) * lfooutR * *f[ph_mod_depth]));
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }

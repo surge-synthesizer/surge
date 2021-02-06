@@ -71,7 +71,7 @@ void SineOscillator::init(float pitch, bool is_display)
         n_unison = 1;
     }
 
-    prepare_unison(n_unison);   
+    prepare_unison(n_unison);
 
     for (int i = 0; i < n_unison; i++)
     {

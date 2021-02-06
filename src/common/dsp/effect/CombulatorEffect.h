@@ -37,11 +37,11 @@ class CombulatorEffect : public Effect
         combulator_freq3,
         combulator_feedback,
         combulator_tone,
-        
+
         combulator_gain1,
         combulator_gain2,
         combulator_gain3,
-        
+
         combulator_pan2,
         combulator_pan3,
 

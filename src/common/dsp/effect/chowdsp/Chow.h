@@ -35,7 +35,7 @@ class Chow : public Effect
         chow_thresh = 0,
         chow_ratio,
         chow_flip,
-        
+
         chow_mix,
 
         chow_num_ctrls,

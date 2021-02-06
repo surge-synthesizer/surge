@@ -259,7 +259,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display)
     l_sync.setRate(rate);
 
     n_unison = limit_range(oscdata->p[sso_unison_voices].val.i, 1, MAX_UNISON);
-    
+
     if (is_display)
     {
         n_unison = 1;
