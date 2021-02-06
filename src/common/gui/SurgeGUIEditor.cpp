@@ -1301,6 +1301,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     clear_infoview_peridle = -1;
 
+    std::unordered_map<std::string, std::string> uiidToSliderLabel;
+
     /*
     ** There are a collection of member states we need to reset
     */
@@ -1713,6 +1715,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
                                        style | conn.payload->controlStyleFlags);
 
+                uiidToSliderLabel[p->ui_identifier] = p->get_name();
                 if (p->id == synth->learn_param)
                 {
                     showMidiLearnOverlay(param[p->id]->getViewSize());
@@ -1786,6 +1789,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
     for (auto &l : labels)
     {
         auto mtext = currentSkin->propertyValue(l, "text");
+        auto ctext = currentSkin->propertyValue(l, "control_text");
+        if (ctext.isJust() && uiidToSliderLabel.find(ctext.fromJust()) != uiidToSliderLabel.end())
+        {
+
+            mtext = Surge::Maybe<std::string>(uiidToSliderLabel[ctext.fromJust()]);
+        }
 
         if (mtext.isJust())
         {
@@ -1827,15 +1836,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto coln = currentSkin->propertyValue(l, "color", "#FF0000");
             auto col = currentSkin->getColor(coln, kRedCColor);
 
+            auto dcol = VSTGUI::CColor(255, 255, 255, 0);
             auto bgcoln = currentSkin->propertyValue(l, "bg_color", "#FFFFFF00");
-            auto bgcol = currentSkin->getColor(bgcoln, kTransparentCColor);
+            auto bgcol = currentSkin->getColor(bgcoln, dcol);
 
             auto frcoln = currentSkin->propertyValue(l, "frame_color", "#FFFFFF00");
-            auto frcol = currentSkin->getColor(frcoln, kTransparentCColor);
+            auto frcol = currentSkin->getColor(frcoln, dcol);
 
             auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)),
                                      mtext.fromJust().c_str());
-            lb->setTransparency((bgcol == kTransparentCColor && frcol == kTransparentCColor));
+            lb->setTransparency((bgcol == dcol && frcol == dcol));
             lb->setHoriAlign(txtalign);
 
 #if !TARGET_JUCE_UI

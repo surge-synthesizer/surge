@@ -18,6 +18,32 @@ In Surge 1.9, we expect to expand the ability to reponsition modulation source c
     <!--[doc]
     Adding a label is simple, though. Simply add a label control at a position with text and properties. Here is a full example
     [doc]-->
-    <label x="10" y="30" w="150" h="30" font-size="24" font-style="bold" color="#004400" bg-color="#AAFFAA488" frame-color="#FFFFFF" text="I Am Green"/>
+
+    <label x="10" y="30" w="150" h="30"
+           font_size="24" font_style="bold" color="#004400"
+           bg_color="#AAFFAA488" frame_color="#FFFFFF"
+           text="I Am Green"/>
+
+    <!--[doc]
+    We can also set labels to have slider text values (as of Surge 1.9)
+    where if instead of "text" you set "control_text" you end up getting
+    the same label which is on the slider. Here we also disable the text on the
+    second slider as an example.
+    [doc]-->
+
+    <label x="10" y="80" w="150" h="30"
+           font_size="24" font_style="bold"
+           color="#00FF00" bg_color="#FF9000AA"
+           frame_color="#FFFFFF"
+           control_text="osc.param_1"/>
+    <label x="10" y="110" w="150" h="20"
+           font_size="15" font_style="bold"
+           color="#00FF00" bg_color="#FF9000AA"
+           frame_color="#FFFFFF"
+           control_text="osc.param_2"/>
+
+    <control ui_identifier="osc.param_2" hide_slider_label="true"/>
+
+
   </controls>
 </surge-skin>

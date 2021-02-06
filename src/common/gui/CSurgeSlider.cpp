@@ -157,6 +157,13 @@ void CSurgeSlider::draw(CDrawContext *dc)
 	dc->fillRect(size);
 #endif
 
+    bool drawLabel = true;
+
+    if (skin && skinControl && skin->propertyValue(skinControl, "hide_slider_label", "") == "true")
+    {
+        drawLabel = false;
+    }
+
     CRect size = getViewSize();
 
     if (style & CSlider::kHorizontal)
@@ -242,9 +249,12 @@ void CSurgeSlider::draw(CDrawContext *dc)
         //		int a = 'a' + (rand()&31);
         //		label[1] = a;
         // sprintf(label,"%i",drawcount_debug++);
-        dc->drawString(label, trect, kRightText, true);
-        if (leftlabel[0])
-            dc->drawString(leftlabel, trect, kLeftText, true);
+        if (drawLabel)
+        {
+            dc->drawString(label, trect, kRightText, true);
+            if (leftlabel[0])
+                dc->drawString(leftlabel, trect, kLeftText, true);
+        }
     }
 
     CRect hrect(headrect);
