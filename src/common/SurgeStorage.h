@@ -262,6 +262,7 @@ enum fx_type
     fxt_ensemble,
     fxt_combulator,
     fxt_nimbus,
+    fxt_tape,
 
     n_fx_types,
 };

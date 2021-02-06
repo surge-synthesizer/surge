@@ -79,6 +79,9 @@
     <type i="15" name="Neuron">
         <snapshot name="Init" />
     </type>
+    <type i="23" name="Tape">
+        <snapshot name="Init" />
+    </type>
     <separator />
     <type i="21" name="Combulator">
         <snapshot name="Init" />
