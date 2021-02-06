@@ -42,7 +42,7 @@ void WindowOscillator::init(float pitch, bool is_display)
     memset(&Window, 0, sizeof(Window));
 
     NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
-    
+
     if (is_display)
     {
         NumUnison = 1;
@@ -99,8 +99,8 @@ void WindowOscillator::init(float pitch, bool is_display)
             }
             else
             {
-                Window.Pos[i] =
-                    (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1))) << 16;
+                Window.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
+                                << 16;
             }
 
             Window.DriftLFO[i][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
@@ -409,7 +409,7 @@ void WindowOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[win_highcut].deactivated = true;
         oscdata->p[win_formant].set_type(ct_osc_feedback);
     }
-    
+
     if (streamingRevision <= 15)
     {
         if (oscdata->p[win_unison_voices].val.i == 1)

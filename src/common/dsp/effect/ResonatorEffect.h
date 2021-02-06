@@ -75,8 +75,8 @@ class ResonatorEffect : public Effect
     HalfRateFilter halfbandOUT, halfbandIN;
     FilterCoefficientMaker coeff[3][2];
     lag<float, true> cutoff[3], resonance[3], bandGain[3];
-    //float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
-    //float WP[3][2];
+    // float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
+    // float WP[3][2];
     float Reg[3][2][n_filter_registers];
 
   private:

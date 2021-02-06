@@ -5,8 +5,7 @@ namespace Colors
 namespace AboutPage
 {
 const Surge::Skin::Color Text("about.page.text", 255, 255, 255),
-    ColumnText("about.page.column.text", 255, 144, 0),
-    Link("about.page.link", 45, 134, 254),
+    ColumnText("about.page.column.text", 255, 144, 0), Link("about.page.link", 45, 134, 254),
     LinkHover("about.page.hover.link", 96, 196, 255);
 }
 

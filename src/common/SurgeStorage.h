@@ -266,10 +266,10 @@ enum fx_type
 };
 
 const char fx_type_names[n_fx_types][16] = {
-    "Off",     "Delay",      "Reverb 1",    "Phaser",      "Rotary",     "Distortion",
-    "EQ",      "Freq Shift", "Conditioner", "Chorus",      "Vocoder",    "Reverb 2",
-    "Flanger", "Ring Mod",   "Airwindows",  "Neuron",      "Graphic EQ", "Resonator",
-    "CHOW",    "Exciter",    "Ensemble",    "Combulator",  "Nimbus", 
+    "Off",     "Delay",      "Reverb 1",    "Phaser",     "Rotary",     "Distortion",
+    "EQ",      "Freq Shift", "Conditioner", "Chorus",     "Vocoder",    "Reverb 2",
+    "Flanger", "Ring Mod",   "Airwindows",  "Neuron",     "Graphic EQ", "Resonator",
+    "CHOW",    "Exciter",    "Ensemble",    "Combulator", "Nimbus",
 };
 
 enum fx_bypass

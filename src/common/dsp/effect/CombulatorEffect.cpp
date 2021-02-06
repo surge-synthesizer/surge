@@ -139,15 +139,9 @@ void CombulatorEffect::setvars(bool init)
     }
 }
 
-inline void set1f(__m128 &m, int i, float f)
-{
-    *((float *)&m + i) = f;
-}
+inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
-inline float get1f(__m128 m, int i)
-{
-    return *((float *)&m + i);
-}
+inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
 void CombulatorEffect::process(float *dataL, float *dataR)
 {
@@ -213,7 +207,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                 e = envR * (e - v) + v;
             envV[c] = e;
             noise[c] = noisemix.v * 3.f * envV[c] *
-                correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0);
+                       correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0);
         }
 
         auto l128 = _mm_setzero_ps();

@@ -85,10 +85,10 @@ void DualDelayEffect::setvars(bool init)
             samplerate * ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
                           storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_left])) +
             LFOval - FIRoffset);
-        timeR.newValue(
-            samplerate * ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
-                          storage->note_to_pitch_ignoring_tuning(12 * *f[isLinked])) -
-            LFOval - FIRoffset);
+        timeR.newValue(samplerate *
+                           ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
+                            storage->note_to_pitch_ignoring_tuning(12 * *f[isLinked])) -
+                       LFOval - FIRoffset);
     }
 
     const float db96 = powf(10.f, 0.05f * -96.f);

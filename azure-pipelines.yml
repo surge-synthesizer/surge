@@ -30,11 +30,6 @@ jobs:
         isMac: True
         cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "surge-juce-pipeline-targets"
-      macOS-codequality:
-        imageName: 'macos-10.15'
-        isMac: True
-        cmakeArguments: ""
-        cmakeTarget: "code-quality-pipeline-checks"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
@@ -56,6 +51,12 @@ jobs:
         isWindows: True
         cmakeArguments: "-A x64 -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "surge-juce-pipeline-targets"
+      linux-codequality:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        aptGetExtras: "clang"
+        cmakeArguments: "-GNinja"
+        cmakeTarget: "code-quality-pipeline-checks"
       linux-vst3:
         imageName: 'ubuntu-20.04'
         isLinux: True

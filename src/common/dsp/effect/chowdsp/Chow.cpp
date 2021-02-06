@@ -42,7 +42,7 @@ static inline float chowProcess(float x, const float threshGain, const float rat
 {
     float y = x;
 
-    if (! flip && x > threshGain)
+    if (!flip && x > threshGain)
     {
         y = threshGain;
         y += (x - threshGain) / ratio;
@@ -79,14 +79,12 @@ void Chow::process(float *dataL, float *dataR)
 
 void Chow::set_params()
 {
-    auto thresh_clamped = limit_range(*f[chow_thresh],
-                                      fxdata->p[chow_thresh].val_min.f,
+    auto thresh_clamped = limit_range(*f[chow_thresh], fxdata->p[chow_thresh].val_min.f,
                                       fxdata->p[chow_thresh].val_max.f);
     const auto threshGain = db_to_linear(thresh_clamped);
-    
+
     // hand-tuned from several years ago...
-    const auto ratio = limit_range(*f[chow_ratio],
-                                   fxdata->p[chow_ratio].val_min.f,
+    const auto ratio = limit_range(*f[chow_ratio], fxdata->p[chow_ratio].val_min.f,
                                    fxdata->p[chow_ratio].val_max.f);
     auto makeup_gain = db_to_linear((thresh_clamped / 12.f) * ((1.0f / ratio) - 1.0f) - 1.0f);
 
@@ -161,7 +159,7 @@ void Chow::init_default_values()
 {
     fxdata->p[chow_thresh].val.f = -24.f;
     fxdata->p[chow_ratio].val.f = 10.f;
-    
+
     fxdata->p[chow_mix].val.f = 1.f;
 }
 

@@ -91,18 +91,18 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
         // need to calc this every time since carrier freq could change
         if (fxdata->p[rm_unison_detune].absolute)
         {
-            dphase[u] =
-                (storage->note_to_pitch(*f[rm_carrier_freq]) * Tunings::MIDI_0_FREQ +
-                                         fxdata->p[rm_unison_detune].get_extended(
-                                         fxdata->p[rm_unison_detune].val.f * detune_offset[u])) * sri;
+            dphase[u] = (storage->note_to_pitch(*f[rm_carrier_freq]) * Tunings::MIDI_0_FREQ +
+                         fxdata->p[rm_unison_detune].get_extended(
+                             fxdata->p[rm_unison_detune].val.f * detune_offset[u])) *
+                        sri;
         }
         else
         {
             dphase[u] =
                 storage->note_to_pitch(*f[rm_carrier_freq] +
                                        fxdata->p[rm_unison_detune].get_extended(
-                                       fxdata->p[rm_unison_detune].val.f * detune_offset[u])
-                                       ) * Tunings::MIDI_0_FREQ * sri;
+                                           fxdata->p[rm_unison_detune].val.f * detune_offset[u])) *
+                Tunings::MIDI_0_FREQ * sri;
         }
     }
 

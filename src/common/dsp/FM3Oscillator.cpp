@@ -111,9 +111,8 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
         RM2.process();
         AM.process();
 
-        output[k] = phase + RelModDepth1.v * RM1.r +
-                            RelModDepth2.v * RM2.r +
-                            AbsModDepth.v * AM.r + lastoutput;
+        output[k] = phase + RelModDepth1.v * RM1.r + RelModDepth2.v * RM2.r + AbsModDepth.v * AM.r +
+                    lastoutput;
 
         if (FM)
         {
@@ -219,7 +218,7 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[fm3_m1ratio].absolute = false;
         oscdata->p[fm3_m2ratio].absolute = false;
     }
-    
+
     if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
