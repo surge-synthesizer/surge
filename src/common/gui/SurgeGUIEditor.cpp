@@ -6259,6 +6259,28 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     skinSubMenu->addSeparator(tid++);
 
+    if (useDevMenu)
+    {
+        int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage), "gridDebugRes", 16);
+        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Change Debug Grid Resolution"),
+                        [this, pxres]() {
+                            this->promptForMiniEdit(
+                                std::to_string(pxres),
+                                "Enter new debug resolution:", "Debug Resolution", CPoint(400, 400),
+                                [this](const std::string &s) {
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                           "gridDebugRes",
+                                                                           std::atoi(s.c_str()));
+                                });
+                        });
+
+        auto m = std::string("Show Resolution ") + std::to_string(pxres) + " Grid";
+        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu(m),
+                        [this, pxres]() { this->showAboutBox(pxres); });
+
+        skinSubMenu->addSeparator();
+    }
+
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
                     [this]() {
                         Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root +
@@ -8292,11 +8314,11 @@ void SurgeGUIEditor::repushAutomationFor(Parameter *p)
 #endif
 }
 
-void SurgeGUIEditor::showAboutBox()
+void SurgeGUIEditor::showAboutBox(int devModeGrid)
 {
     CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
-    aboutbox =
-        new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram, currentSkin, bitmapStore);
+    aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram, currentSkin,
+                             bitmapStore, devModeGrid);
     aboutbox->setVisible(true);
     getFrame()->addView(aboutbox);
 }

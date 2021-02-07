@@ -31,13 +31,71 @@ enum abouttags
     tag_copy = 70000
 };
 
+struct CGridOverlay : public VSTGUI::CView
+{
+    CGridOverlay(const CRect &r, int res) : CView(r), res(res) {}
+
+    void draw(CDrawContext *dc) override
+    {
+        auto vs = getViewSize();
+
+        dc->setFont(Surge::GUI::getLatoAtSize(9));
+        // Draw x lines with every 4th kinda bolder
+        for (int i = 1; i < vs.getHeight() / res; ++i)
+        {
+            dc->setLineWidth(1);
+            dc->setFrameColor(VSTGUI::CColor(180, 100, 100, 100));
+            int y = i * res;
+            if (i % 4 == 0)
+            {
+                dc->setFrameColor(VSTGUI::CColor(250, 30, 30, 140));
+                dc->setFontColor(kRedCColor);
+                dc->drawString(std::to_string(y).c_str(), CRect(CPoint(3, y + 1), CPoint(10, 10)));
+            }
+            dc->drawLine(CPoint(0, y), CPoint(vs.right, y));
+        }
+
+        // Draw x lines with every 4th kinda bolder
+        for (int i = 1; i < vs.getWidth() / res; ++i)
+        {
+            dc->setLineWidth(1);
+            dc->setFrameColor(VSTGUI::CColor(180, 100, 100, 100));
+            int x = i * res;
+            if (i % 4 == 0)
+            {
+                dc->setFrameColor(VSTGUI::CColor(250, 30, 30, 140));
+                dc->setFontColor(kRedCColor);
+                dc->drawString(std::to_string(x).c_str(), CRect(CPoint(x + 1, 3), CPoint(10, 10)));
+            }
+            dc->drawLine(CPoint(x, 0), CPoint(x, vs.bottom));
+        }
+    }
+    int res;
+};
+
 CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
                      const std::string &host, Surge::UI::Skin::ptr_t skin,
-                     std::shared_ptr<SurgeBitmaps> bitmapStore)
-    : CViewContainer(size)
+                     std::shared_ptr<SurgeBitmaps> bitmapStore, int devGrid)
+    : CViewContainer(size), devGridResolution(devGrid)
 {
     this->editor = editor;
     this->storage = storage;
+
+    if (devGridResolution > 0)
+    {
+#if !TARGET_JUCE_UI
+        setTransparency(true);
+        auto bg = new CGridOverlay(
+            CRect(CPoint(0, 0), CPoint(skin->getWindowSizeX(), skin->getWindowSizeY())),
+            devGridResolution);
+        bg->setTransparency(true);
+        bg->setMouseableArea(CRect()); // Make sure I don't get clicked on
+        addView(bg);
+#else
+        std::cout << "IMplemnt this in JUCE" << std::endl;
+#endif
+        return;
+    }
 
 #if TARGET_JUCE_UI
     setTransparency(false);

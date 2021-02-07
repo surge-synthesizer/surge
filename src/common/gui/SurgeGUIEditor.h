@@ -461,7 +461,7 @@ class SurgeGUIEditor : public EditorType,
                                       int percentageOfScreenAvailable, float baseW, float baseH);
 
   public:
-    void showAboutBox();
+    void showAboutBox(int devModeGrid = -1);
     void hideAboutBox();
 
     void showMidiLearnOverlay(const VSTGUI::CRect &r);
