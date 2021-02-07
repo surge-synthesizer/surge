@@ -25,7 +25,7 @@ class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
   public:
     CAboutBox(const VSTGUI::CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
               const std::string &host, Surge::UI::Skin::ptr_t skin,
-              std::shared_ptr<SurgeBitmaps> bitmapStore);
+              std::shared_ptr<SurgeBitmaps> bitmapStore, int devModeGrid);
     VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
                                         const VSTGUI::CButtonState &buttons) override;
     VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
@@ -35,4 +35,5 @@ class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
     SurgeGUIEditor *editor;
     SurgeStorage *storage;
     std::string infoStringForClipboard = "";
+    int devGridResolution = -1;
 };
