@@ -5711,6 +5711,29 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                               });
         });
 
+    auto mod = addCallbackMenu(
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tuning Applies To Modulation"), [this]() {
+            if (this->synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+            {
+                this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            }
+            else
+            {
+                this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL);
+            }
+        });
+    if (this->synth->storage.isStandardTuning)
+    {
+        mod->setEnabled(false);
+    }
+    if (this->synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+    {
+        mod->setChecked(true);
+    }
+    else
+    {
+        mod->setChecked(false);
+    }
     tuningSubMenu->addSeparator();
     tid++;
     auto *sct = addCallbackMenu(

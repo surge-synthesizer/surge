@@ -1652,7 +1652,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
         {
             u = "semitones";
-            if (storage && !storage->isStandardTuning)
+            if (storage && !storage->isStandardTuning &&
+                storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                 u = "keys";
         }
         if (can_extend_range())
@@ -1782,7 +1783,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
             {
                 u = "semitones";
-                if (storage && !storage->isStandardTuning)
+                if (storage && !storage->isStandardTuning &&
+                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                     u = "keys";
             }
 
@@ -2299,7 +2301,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
             if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
             {
                 u = "semitones";
-                if (storage && !storage->isStandardTuning)
+                if (storage && !storage->isStandardTuning &&
+                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                     u = "keys";
             }
 
@@ -2352,7 +2355,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
             if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
             {
                 u = "semitones";
-                if (storage && !storage->isStandardTuning)
+                if (storage && !storage->isStandardTuning &&
+                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                     u = "keys";
             }
 

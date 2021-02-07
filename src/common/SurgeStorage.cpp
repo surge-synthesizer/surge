@@ -484,6 +484,8 @@ bailOnPortable:
     // Tunings Library Support
     currentScale = Tunings::evenTemperament12NoteScale();
     currentMapping = Tunings::KeyboardMapping();
+    twelveToneStandardMapping =
+        Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::KeyboardMapping());
 
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
@@ -1635,7 +1637,16 @@ bool SurgeStorage::retuneToScale(const Tunings::Scale &s)
     currentScale = s;
     isStandardTuning = false;
 
-    Tunings::Tuning t(currentScale, currentMapping);
+    currentTuning = Tunings::Tuning(currentScale, currentMapping);
+
+    auto t = currentTuning;
+
+    if (tuningApplicationMode == RETUNE_MIDI_ONLY)
+    {
+        tuningPitch = 32.0;
+        tuningPitchInv = 1.0 / 32.0;
+        t = twelveToneStandardMapping;
+    }
 
     for (int i = 0; i < 512; ++i)
     {
@@ -1646,7 +1657,6 @@ bool SurgeStorage::retuneToScale(const Tunings::Scale &s)
         table_note_omega[1][i] =
             (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
     }
-
     return true;
 }
 
@@ -1666,6 +1676,25 @@ bool SurgeStorage::remapToStandardKeyboard()
         retuneToScale(currentScale);
     }
     return true;
+}
+
+bool SurgeStorage::retuneAndRemapToScaleAndMapping(const Tunings::Scale &s,
+                                                   const Tunings::KeyboardMapping &k)
+{
+    currentMapping = k;
+    currentScale = s;
+    isStandardMapping = false;
+
+    tuningPitch = k.tuningFrequency / Tunings::MIDI_0_FREQ;
+    tuningPitchInv = 1.0 / tuningPitch;
+    retuneToScale(currentScale);
+    return true;
+}
+
+void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
+{
+    tuningApplicationMode = m;
+    retuneAndRemapToScaleAndMapping(currentScale, currentMapping);
 }
 
 bool SurgeStorage::remapToKeyboard(const Tunings::KeyboardMapping &k)

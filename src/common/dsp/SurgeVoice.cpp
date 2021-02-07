@@ -37,14 +37,27 @@ inline void set1i(__m128 &m, int e, int i) { *((int *)&m + e) = i; }
 
 inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
-float SurgeVoiceState::getPitch()
+float SurgeVoiceState::getPitch(SurgeStorage *storage)
 {
     float mpeBend = mpePitchBend.output * mpePitchBendRange;
     /*
     ** For this commented out section, see the comment on MPE global pitch bend in
     *SurgeSynthesizer::pitchBend
     */
-    return key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
+    auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
+
+    if (!storage->isStandardTuning &&
+        storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+    {
+        // Then we tune here
+        auto idx = (int)floor(res);
+        // HACK FOR NOW
+        return storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+    }
+    else
+    {
+        return res;
+    }
 }
 
 SurgeVoice::SurgeVoice() {}
@@ -92,7 +105,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     if ((scene->polymode.val.i == pm_mono_st_fp) ||
         (scene->portamento.val.f == scene->portamento.val_min.f))
-        state.portasrc_key = state.getPitch();
+        state.portasrc_key = state.getPitch(storage);
     else
         state.portasrc_key = storage->last_key[scene_id];
     state.priorpkey = state.portasrc_key;
@@ -240,7 +253,7 @@ SurgeVoice::~SurgeVoice() {}
 void SurgeVoice::legato(int key, int velocity, char detune)
 {
     if (state.portaphase > 1)
-        state.portasrc_key = state.getPitch();
+        state.portasrc_key = state.getPitch(storage);
     else
     {
         // exponential or linear key traversal for the portamento
@@ -258,7 +271,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
             break;
         }
 
-        state.portasrc_key = ((1 - phase) * state.portasrc_key + phase * state.getPitch());
+        state.portasrc_key = ((1 - phase) * state.portasrc_key + phase * state.getPitch(storage));
 
         if (scene->portamento.porta_gliss) // quantize portamento to keys
             state.pkey = floor(state.pkey + 0.5);
@@ -438,7 +451,8 @@ void SurgeVoice::update_portamento()
     // length in case of microtuning)
     if (scene->portamento.porta_constrate)
         const_rate_factor =
-            (1.f / ((1.f / quantStep) * fabs(state.getPitch() - state.portasrc_key) + 0.00001));
+            (1.f /
+             ((1.f / quantStep) * fabs(state.getPitch(storage) - state.portasrc_key) + 0.00001));
 
     state.portaphase += envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
                         (scene->portamento.temposync ? storage->temposyncratio : 1.f) *
@@ -461,7 +475,7 @@ void SurgeVoice::update_portamento()
             break;
         }
 
-        state.pkey = (1.f - phase) * state.portasrc_key + (float)phase * state.getPitch();
+        state.pkey = (1.f - phase) * state.portasrc_key + (float)phase * state.getPitch(storage);
 
         if (scene->portamento.porta_gliss) // quantize portamento to keys
             state.pkey = floor(state.pkey + 0.5);
@@ -475,7 +489,7 @@ void SurgeVoice::update_portamento()
             }
     }
     else
-        state.pkey = state.getPitch();
+        state.pkey = state.getPitch(storage);
 }
 
 int SurgeVoice::routefilter(int r)
@@ -601,7 +615,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         pb *= (float)scene->pbrange_dn.val.i;
 
     octaveSize = 12.0f;
-    if (!storage->isStandardTuning)
+    if (!storage->isStandardTuning && storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
         octaveSize = storage->currentScale.count;
 
     state.scenepbpitch = pb + localcopy[pitch_id].f * (scene->pitch.extend_range ? 12.f : 1.f) +
