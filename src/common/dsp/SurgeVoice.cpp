@@ -51,8 +51,10 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     {
         // Then we tune here
         auto idx = (int)floor(res);
-        // HACK FOR NOW
-        return storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+        float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+        return (1.f - frac) * b0 + frac * b1;
     }
     else
     {
