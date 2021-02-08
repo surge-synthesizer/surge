@@ -227,13 +227,17 @@ void CModulationSourceButton::draw(CDrawContext *dc)
         mrect.top++;
         mrect.bottom--;
         mrect.right--;
+        
         dc->setFillColor(skin->getColor(Colors::ModSource::Used::Background));
         dc->drawRect(mrect, kDrawFilled);
+        
         CRect brect(mrect);
         brect.inset(1, 1);
+        
         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
         dc->drawRect(brect, kDrawFilled);
 
+        CRect notch(brect);
         int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
         int barx = brect.left + (value * (float)brect.getWidth());
 
@@ -256,6 +260,8 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             }
             bar.bound(brect);
             dc->drawRect(bar, kDrawFilled);
+            
+            notch.left = midx;
         }
         else
         {
@@ -263,9 +269,18 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             vr.right = barx + 1;
             vr.bound(brect);
             dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
+
             if (vr.right > vr.left)
+            {
                 dc->drawRect(vr, kDrawFilled);
+            }
+
+            notch.left = brect.left;
         }
+
+        notch.right = notch.left + 2;
+        dc->setFillColor(skin->getColor(Colors::ModSource::Macro::ZeroLine));
+        dc->drawRect(notch, kDrawFilled);
     }
 
     const int rh = 16;
