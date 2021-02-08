@@ -233,11 +233,11 @@ void CModulationSourceButton::draw(CDrawContext *dc)
         
         CRect brect(mrect);
         brect.inset(1, 1);
+        CRect notch(brect);
         
         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
         dc->drawRect(brect, kDrawFilled);
 
-        CRect notch(brect);
         int midx = brect.left + ((brect.getWidth() - 1) * 0.5);
         int barx = brect.left + (value * (float)brect.getWidth());
 
@@ -248,7 +248,7 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Fill));
             CRect bar(brect);
 
-            if (barx >= midx)
+            if (barx > midx)
             {
                 bar.left = midx;
                 bar.right = barx + 1;
@@ -260,8 +260,6 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             }
             bar.bound(brect);
             dc->drawRect(bar, kDrawFilled);
-            
-            notch.left = midx;
         }
         else
         {
@@ -274,12 +272,11 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             {
                 dc->drawRect(vr, kDrawFilled);
             }
-
-            notch.left = brect.left;
         }
 
-        notch.right = notch.left + 2;
-        dc->setFillColor(skin->getColor(Colors::ModSource::Macro::ZeroLine));
+        notch.left = (barx <= brect.right - 1) ? barx : barx - 1;
+        notch.right = notch.left + 1;
+        dc->setFillColor(skin->getColor(Colors::ModSource::Macro::CurrentValue));
         dc->drawRect(notch, kDrawFilled);
     }
 
