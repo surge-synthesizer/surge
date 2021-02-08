@@ -657,7 +657,7 @@ void SineOscillator::init_default_values()
     oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f; // low cut at the top
     oscdata->p[sine_highcut].deactivated = true;
 
-    oscdata->p[sine_unison_detune].val.f = 0.2;
+    oscdata->p[sine_unison_detune].val.f = 0.1;
     oscdata->p[sine_unison_voices].val.i = 1;
 }
 

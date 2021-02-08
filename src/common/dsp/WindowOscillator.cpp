@@ -149,7 +149,7 @@ void WindowOscillator::init_default_values()
     oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
     oscdata->p[win_highcut].deactivated = true;
 
-    oscdata->p[win_unison_detune].val.f = 0.2f;
+    oscdata->p[win_unison_detune].val.f = 0.1f;
     oscdata->p[win_unison_voices].val.i = 1;
 }
 

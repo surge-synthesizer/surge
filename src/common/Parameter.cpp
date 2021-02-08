@@ -748,7 +748,7 @@ void Parameter::set_type(int ctrltype)
         val_min.f = 0.f;
         val_max.f = 1.f;
         valtype = vt_float;
-        val_default.f = 0.2;
+        val_default.f = 0.1;
         break;
     case ct_detuning:
         val_min.f = 0;
