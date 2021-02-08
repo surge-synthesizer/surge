@@ -227,14 +227,14 @@ void CModulationSourceButton::draw(CDrawContext *dc)
         mrect.top++;
         mrect.bottom--;
         mrect.right--;
-        
+
         dc->setFillColor(skin->getColor(Colors::ModSource::Used::Background));
         dc->drawRect(mrect, kDrawFilled);
-        
+
         CRect brect(mrect);
         brect.inset(1, 1);
         CRect notch(brect);
-        
+
         dc->setFillColor(skin->getColor(Colors::ModSource::Macro::Background));
         dc->drawRect(brect, kDrawFilled);
 
