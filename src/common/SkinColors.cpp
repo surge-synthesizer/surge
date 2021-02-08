@@ -210,7 +210,8 @@ const Surge::Skin::Color Background("modbutton.armed.fill", 116, 172, 72),
 namespace Macro
 {
 const Surge::Skin::Color Background("modbutton.macro.slider.background", 32, 93, 176),
-    Fill("modbutton.macro.slider.fill", 46, 134, 254);
+    Fill("modbutton.macro.slider.fill", 46, 134, 254),
+    CurrentValue("modbutton.macro.slider.currentvalue", 144, 216, 255);
 
 }
 } // namespace ModSource
