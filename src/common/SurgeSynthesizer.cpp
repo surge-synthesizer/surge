@@ -205,7 +205,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     storage.getPatch().category = "Init";
     storage.getPatch().name = "Init";
     storage.getPatch().comment = "";
-    storage.getPatch().author = "";
+    storage.getPatch().author = "Surge Synth Team";
     midiprogramshavechanged = false;
 
     for (int i = 0; i < BLOCK_SIZE; i++)
