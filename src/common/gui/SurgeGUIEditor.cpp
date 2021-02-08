@@ -6213,6 +6213,28 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         valItem->setChecked(f5Value == 1);
 
         tid++;
+
+        int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage), "layoutGridResolution", 16);
+
+        auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
+        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu(m),
+                        [this, pxres]() { this->showAboutBox(pxres); });
+
+        tid++;
+
+        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Change Layout Grid Resolution..."),
+                        [this, pxres]() {
+                            this->promptForMiniEdit(
+                                std::to_string(pxres),
+                                "Enter new resolution:", "Layout Grid Resolution", CPoint(400, 400),
+                                [this](const std::string &s) {
+                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                           "layoutGridResolution",
+                                                                           std::atoi(s.c_str()));
+                                });
+                        });
+
+        skinSubMenu->addSeparator();
     }
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Reload Current Skin"), [this]() {
@@ -6258,28 +6280,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     tid++;
 
     skinSubMenu->addSeparator(tid++);
-
-    if (useDevMenu)
-    {
-        int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage), "gridDebugRes", 16);
-        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Change Debug Grid Resolution"),
-                        [this, pxres]() {
-                            this->promptForMiniEdit(
-                                std::to_string(pxres),
-                                "Enter new debug resolution:", "Debug Resolution", CPoint(400, 400),
-                                [this](const std::string &s) {
-                                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                                           "gridDebugRes",
-                                                                           std::atoi(s.c_str()));
-                                });
-                        });
-
-        auto m = std::string("Show Resolution ") + std::to_string(pxres) + " Grid";
-        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu(m),
-                        [this, pxres]() { this->showAboutBox(pxres); });
-
-        skinSubMenu->addSeparator();
-    }
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
                     [this]() {
