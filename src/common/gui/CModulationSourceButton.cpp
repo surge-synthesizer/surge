@@ -250,7 +250,7 @@ void CModulationSourceButton::draw(CDrawContext *dc)
 
             if (barx > midx)
             {
-                bar.left = midx;
+                bar.left = midx + 1;
                 bar.right = barx + 1;
             }
             else
