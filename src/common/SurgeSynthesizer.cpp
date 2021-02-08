@@ -154,7 +154,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
 
         for (int osc = 0; osc < n_oscs; osc++)
         {
-            scene.osc[osc].p[5].val.f = 0.1;    // 5 is unison detune
+            // p 5 is unison detune
+            scene.osc[osc].p[5].val.f = 0.1f;
         }
 
         for (int i = 0; i < n_filterunits_per_scene; i++)
