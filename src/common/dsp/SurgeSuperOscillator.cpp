@@ -330,7 +330,7 @@ void SurgeSuperOscillator::init_default_values()
     oscdata->p[sso_width2].val.f = 0.5f;
     oscdata->p[sso_mainsubmix].val.f = 0.f;
     oscdata->p[sso_sync].val.f = 0.f;
-    oscdata->p[sso_unison_detune].val.f = 0.2f;
+    oscdata->p[sso_unison_detune].val.f = 0.1f;
     oscdata->p[sso_unison_voices].val.i = 1;
 }
 

@@ -152,10 +152,18 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
         scene.modsources[ms_alternate_bipolar] = new AlternateModulationSource(true);
         scene.modsources[ms_alternate_unipolar] = new AlternateModulationSource(false);
 
+        for (int osc = 0; osc < n_oscs; osc++)
+        {
+            // p 5 is unison detune
+            scene.osc[osc].p[5].val.f = 0.1f;
+        }
+
         for (int i = 0; i < n_filterunits_per_scene; i++)
         {
             scene.filterunit[i].type.set_user_data(&patch.patchFilterSelectorMapper);
         }
+
+        scene.filterblock_configuration.val.i = fc_wide;
 
         for (int l = 0; l < n_lfos_scene; l++)
         {
@@ -197,7 +205,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     storage.getPatch().category = "Init";
     storage.getPatch().name = "Init";
     storage.getPatch().comment = "";
-    storage.getPatch().author = "";
+    storage.getPatch().author = "Surge Synth Team";
     midiprogramshavechanged = false;
 
     for (int i = 0; i < BLOCK_SIZE; i++)

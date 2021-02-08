@@ -136,7 +136,7 @@ void WavetableOscillator::init_default_values()
     oscdata->p[wt_saturate].val.f = 0.f;
     oscdata->p[wt_formant].val.f = 0.f;
     oscdata->p[wt_skewh].val.f = 0.f;
-    oscdata->p[wt_unison_detune].val.f = 0.2f;
+    oscdata->p[wt_unison_detune].val.f = 0.1f;
     oscdata->p[wt_unison_voices].val.i = 1;
 }
 

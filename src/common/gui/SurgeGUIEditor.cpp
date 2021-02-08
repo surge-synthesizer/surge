@@ -6214,9 +6214,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
         tid++;
 
-        int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage), "layoutGridResolution", 16);
+        int pxres =
+            Surge::Storage::getUserDefaultValue(&(synth->storage), "layoutGridResolution", 16);
 
         auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
+
         addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu(m),
                         [this, pxres]() { this->showAboutBox(pxres); });
 
