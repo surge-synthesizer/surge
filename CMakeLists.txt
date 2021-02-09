@@ -1445,6 +1445,8 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             PLUGIN_MANUFACTURER_CODE VmbA
             PLUGIN_CODE SgXT
 
+            ICON_BIG "resources/surge-xt/SurgeLogo.png"
+
             IS_SYNTH TRUE
             NEEDS_MIDI_INPUT TRUE
             NEEDS_MIDI_OUTPUT FALSE
@@ -1518,6 +1520,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
             juce::juce_audio_utils
             juce::juce_audio_processors
+            juce::juce_audio_plugin_client
 
             escape-from-vstgui
 
