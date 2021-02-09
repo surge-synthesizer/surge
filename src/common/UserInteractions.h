@@ -15,7 +15,6 @@
 #include <string>
 #include <atomic>
 #include <functional>
-#include "SurgeError.h"
 
 class SurgeGUIEditor;
 
@@ -28,9 +27,6 @@ namespace UserInteractions
 // Show the user an error dialog with an OK button; and wait for them to press it
 void promptError(const std::string &message, const std::string &title,
                  SurgeGUIEditor *guiEditor = nullptr);
-
-// And a convenience version which does the same from a Surge::Error
-void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor = nullptr);
 
 // Show the user an Info dialog with an OK button; and wait for them to press it
 void promptInfo(const std::string &message, const std::string &title,

@@ -1,5 +1,4 @@
 #include "UserInteractions.h"
-#include "SurgeError.h"
 
 #include <windows.h>
 #include <shlobj.h>
@@ -87,11 +86,6 @@ void promptError(const std::string &message, const std::string &title, SurgeGUIE
 {
     MessageBox(::GetActiveWindow(), utf8ToWide(message).c_str(), utf8ToWide(title).c_str(),
                MB_OK | MB_ICONERROR);
-}
-
-void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
-{
-    promptError(error.getMessage(), error.getTitle());
 }
 
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)

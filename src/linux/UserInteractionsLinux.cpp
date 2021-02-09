@@ -94,11 +94,6 @@ void promptError(const std::string &message, const std::string &title, SurgeGUIE
     std::cerr << "Surge Error\n" << title << "\n" << message << "\n" << std::flush;
 }
 
-void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
-{
-    promptError(error.getMessage(), error.getTitle());
-}
-
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
     if (isArdour)

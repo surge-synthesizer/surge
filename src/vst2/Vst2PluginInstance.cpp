@@ -17,8 +17,6 @@
 #include "Vst2PluginInstance.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeGUIEditor.h"
-#include "SurgeError.h"
-//#include "sub3_editor2.h"
 #include <float.h>
 #include "public.sdk/source/vst2.x/aeffeditor.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
@@ -691,15 +689,9 @@ bool Vst2PluginInstance::tryInit()
 
         editor = editorTmp.release();
     }
-    catch (std::bad_alloc err)
+    catch (std::exception &e)
     {
-        Surge::UserInteractions::promptError(err.what(), "Out of memory!");
-        state = DEAD;
-        return false;
-    }
-    catch (Surge::Error err)
-    {
-        Surge::UserInteractions::promptError(err);
+        Surge::UserInteractions::promptError(e.what(), "Surge failed to initialize");
         state = DEAD;
         return false;
     }

@@ -266,7 +266,6 @@ set(SURGE_SHARED_SOURCES
   # src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
   src/common/precompiled.cpp
-  src/common/SurgeError.cpp
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp

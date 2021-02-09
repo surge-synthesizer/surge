@@ -4,7 +4,6 @@
 
 #include "HeadlessUtils.h"
 #include "Player.h"
-#include "SurgeError.h"
 #include "HeadlessNonTestFunctions.h"
 #include "version.h"
 
@@ -22,37 +21,28 @@ int main(int argc, char **argv)
     if (argc > 2 && strcmp(argv[1], "--non-test") == 0)
     {
         std::cout << "# Running in non-test mode : " << argv[2] << std::endl;
-        try
+        if (strcmp(argv[2], "--stats-from-every-patch") == 0)
         {
-            if (strcmp(argv[2], "--stats-from-every-patch") == 0)
-            {
-                Surge::Headless::NonTest::statsFromPlayingEveryPatch();
-            }
-            if (strcmp(argv[2], "--restream-templates") == 0)
-            {
-                Surge::Headless::NonTest::restreamTemplatesWithModifications();
-            }
-            if (strcmp(argv[2], "--generate-nlf-norms") == 0)
-            {
-                Surge::Headless::NonTest::generateNLFeedbackNorms();
-            }
-            if (strcmp(argv[2], "--filter-analyzer") == 0)
-            {
-                if (argc < 4)
-                {
-                    std::cout << "Usage: --filter-analyzer type subtype\n";
-                    return 1;
-                }
-                Surge::Headless::NonTest::filterAnalyzer(std::atoi(argv[3]), std::atoi(argv[4]),
-                                                         std::cout);
-            }
+            Surge::Headless::NonTest::statsFromPlayingEveryPatch();
         }
-        catch (Surge::Error &e)
+        if (strcmp(argv[2], "--restream-templates") == 0)
         {
-            std::cout << "SurgeError: " << e.getTitle() << "\n" << e.getMessage() << "\n";
-            return 1;
+            Surge::Headless::NonTest::restreamTemplatesWithModifications();
         }
-
+        if (strcmp(argv[2], "--generate-nlf-norms") == 0)
+        {
+            Surge::Headless::NonTest::generateNLFeedbackNorms();
+        }
+        if (strcmp(argv[2], "--filter-analyzer") == 0)
+        {
+            if (argc < 4)
+            {
+                std::cout << "Usage: --filter-analyzer type subtype\n";
+                return 1;
+            }
+            Surge::Headless::NonTest::filterAnalyzer(std::atoi(argv[3]), std::atoi(argv[4]),
+                                                     std::cout);
+        }
         return 0;
     }
     else

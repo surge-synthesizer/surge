@@ -37,11 +37,6 @@ void promptError(const std::string &message, const std::string &title, SurgeGUIE
     CFRelease(cfM);
 }
 
-void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
-{
-    promptError(error.getMessage(), error.getTitle());
-}
-
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
     CFStringRef cfT =
