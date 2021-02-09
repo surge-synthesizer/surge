@@ -9,6 +9,7 @@
 #include <map>
 #include <atomic>
 #include <algorithm>
+#include <cctype>
 
 class CScalableBitmap;
 

@@ -303,8 +303,9 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     yp -= lblvs;
 
-#if TARGET_VST2 || TARGET_VST3
-    addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true, true);
+#if TARGET_VST2 || TARGET_VST3 || TARGET_JUCE_UI
+    if (host != "Unknown")
+        addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true, true);
 #endif
 
     addTwoColumnLabel("System:", system, false, "", 76, 500, true, true);

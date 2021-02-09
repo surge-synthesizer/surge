@@ -837,7 +837,7 @@ template <typename T> struct juceCViewConnector : public T, public OnRemovedHand
     CViewBase *viewCompanion = nullptr;
     void paint(juce::Graphics &g) override;
 
-    void traverseMouseParents(
+    CMouseEventResult traverseMouseParents(
         const juce::MouseEvent &e,
         std::function<CMouseEventResult(CViewBase *, const CPoint &, const CButtonState &)> vf,
         std::function<void(const juce::MouseEvent &)> jf);
@@ -852,6 +852,7 @@ template <typename T> struct juceCViewConnector : public T, public OnRemovedHand
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
     void mouseMagnify(const juce::MouseEvent &event, float scaleFactor) override;
+    bool supressMoveAndUp = false;
 };
 
 class CView;
@@ -1544,7 +1545,7 @@ template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g
 }
 
 template <typename T>
-inline void juceCViewConnector<T>::traverseMouseParents(
+inline CMouseEventResult juceCViewConnector<T>::traverseMouseParents(
     const juce::MouseEvent &e,
     std::function<CMouseEventResult(CViewBase *, const CPoint &, const CButtonState &)> vf,
     std::function<void(const juce::MouseEvent &)> jf)
@@ -1562,23 +1563,33 @@ inline void juceCViewConnector<T>::traverseMouseParents(
     {
         jf(e);
     }
+
+    return r;
 }
 
 template <typename T> inline void juceCViewConnector<T>::mouseDown(const juce::MouseEvent &e)
 {
-    traverseMouseParents(
+    supressMoveAndUp = false;
+    auto res = traverseMouseParents(
         e, [](auto *a, auto b, auto c) { return a->onMouseDown(b, c); },
         [this](auto e) { T::mouseDown(e); });
+    if (res == kMouseDownEventHandledButDontNeedMovedOrUpEvents)
+        supressMoveAndUp = true;
 }
 
 template <typename T> inline void juceCViewConnector<T>::mouseUp(const juce::MouseEvent &e)
 {
-    traverseMouseParents(
-        e, [](auto *a, auto b, auto c) { return a->onMouseUp(b, c); },
-        [this](auto e) { T::mouseUp(e); });
+    if (!supressMoveAndUp)
+    {
+        traverseMouseParents(
+            e, [](auto *a, auto b, auto c) { return a->onMouseUp(b, c); },
+            [this](auto e) { T::mouseUp(e); });
+    }
+    supressMoveAndUp = false;
 }
 template <typename T> inline void juceCViewConnector<T>::mouseMove(const juce::MouseEvent &e)
 {
+    // Don't supress check here because only DRAG will be called in the down
     traverseMouseParents(
         e, [](auto *a, auto b, auto c) { return a->onMouseMoved(b, c); },
         [this](auto e) { T::mouseMove(e); });
@@ -1586,6 +1597,8 @@ template <typename T> inline void juceCViewConnector<T>::mouseMove(const juce::M
 
 template <typename T> inline void juceCViewConnector<T>::mouseDrag(const juce::MouseEvent &e)
 {
+    if (supressMoveAndUp)
+        return;
     traverseMouseParents(
         e, [](auto *a, auto b, auto c) { return a->onMouseMoved(b, c); },
         [this](auto e) { T::mouseDrag(e); });

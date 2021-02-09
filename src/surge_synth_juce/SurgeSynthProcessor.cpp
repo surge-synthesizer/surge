@@ -49,6 +49,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
             }
         }
     }
+
+    surge->hostProgram = juce::PluginHostType().getHostDescription();
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor() {}
