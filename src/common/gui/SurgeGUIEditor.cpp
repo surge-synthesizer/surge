@@ -6127,16 +6127,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
     menuItem->setChecked(tabPosMem);
 
     // wrap around browsing patches within current category
-    auto patchJogWrap = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                         "patchJogWraparound", 1);
+    auto patchJogWrap =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "patchJogWraparound", 1);
 
-    menuItem =
-        addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Previous/Next Patch Constrained to Current Category"),
-                        [this, patchJogWrap]() {
-                            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                                   "patchJogWraparound",
-                                                                   patchJogWrap ? 0 : 1);
-                        });
+    menuItem = addCallbackMenu(
+        wfMenu, Surge::UI::toOSCaseForMenu("Previous/Next Patch Constrained to Current Category"),
+        [this, patchJogWrap]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "patchJogWraparound",
+                                                   patchJogWrap ? 0 : 1);
+        });
     menuItem->setChecked(patchJogWrap);
 
     uiOptionsMenu->addEntry(wfMenu, Surge::UI::toOSCaseForMenu("Workflow"));
