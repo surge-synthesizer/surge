@@ -32,11 +32,6 @@ void promptError(const std::string &message, const std::string &title, SurgeGUIE
     headlessStackDump();
 }
 
-void promptError(const Surge::Error &error, SurgeGUIEditor *guiEditor)
-{
-    promptError(error.getMessage(), error.getTitle());
-}
-
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
     std::cerr << "Surge Info\n" << title << "\n" << message << "\n" << std::flush;

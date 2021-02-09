@@ -14,7 +14,6 @@
 */
 
 #include "DspUtilities.h"
-#include "SurgeError.h"
 #include "SurgeStorage.h"
 #include "UserInteractions.h"
 #include <set>
@@ -204,8 +203,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 #if MAC || LINUX
     const char *homePath = getenv("HOME");
     if (!homePath)
-        throw Surge::Error("The environment variable HOME does not exist",
-                           "Surge failed to initialize");
+        throw std::runtime_error("The environment variable HOME does not exist");
 
     installedPath = getDLLPath();
 #endif
@@ -435,10 +433,9 @@ bailOnPortable:
 
     if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
     {
-        Surge::Error exc("Cannot find 'configuration.xml' in path '" + datapath +
-                             "'. Please reinstall surge.",
-                         "Surge is not properly installed.");
-        Surge::UserInteractions::promptError(exc);
+        Surge::UserInteractions::promptError("Cannot find 'configuration.xml' in path '" +
+                                                 datapath + "'. Please reinstall surge.",
+                                             "Surge is not properly installed.");
     }
 
     load_midi_controllers();

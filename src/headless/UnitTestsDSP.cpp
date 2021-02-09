@@ -5,7 +5,6 @@
 
 #include "HeadlessUtils.h"
 #include "Player.h"
-#include "SurgeError.h"
 
 #include "catch2/catch2.hpp"
 

@@ -47,7 +47,6 @@ void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel) {}
 #include "globals.h"
 #include "guihelpers.h"
 #include "CScalableBitmap.h"
-#include "SurgeError.h"
 #include "UserInteractions.h"
 #include "UIInstrumentation.h"
 #include <iomanip>
@@ -123,7 +122,7 @@ static const struct MemorySVG *findMemorySVG(const std::string &filename)
         if (!std::strncmp(filename.c_str(), svg->name, std::strlen(svg->name)))
             return svg;
 
-    throw Surge::Error(filename + " not found");
+    return nullptr;
 }
 #endif
 
@@ -228,18 +227,17 @@ CScalableBitmap::CScalableBitmap(CResourceDescription desc, VSTGUI::CFrame *f)
 #endif
 
 #if LINUX
-    try
+    if (const MemorySVG *const memSVG = findMemorySVG(filename.str()))
     {
-        const MemorySVG *memSVG = findMemorySVG(filename.str());
         char *svg = new char[memSVG->size + 1];
         svg[memSVG->size] = '\0';
         strncpy(svg, (const char *)(memorySVGListStart + memSVG->offset), memSVG->size);
         svgImage = nsvgParse(svg, "px", 96);
         delete[] svg;
     }
-    catch (Surge::Error err)
+    else
     {
-        std::cerr << err.getMessage() << std::endl;
+        std::cerr << filename.str() << " not found" << std::endl;
     }
 #endif
 
