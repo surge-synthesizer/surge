@@ -58,10 +58,13 @@ struct fxChunkSetCustom
 
 void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
 {
+    int c = storage.patch_category.size();
     int p = storage.patch_list.size();
 
-    if (!p)
+    if (!c || !p)
+    {
         return;
+    }
 
     /*
     ** Ideally we would never call this with an out
