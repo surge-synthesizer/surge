@@ -1,20 +1,21 @@
-#include "DualDelayEffect.h"
+#include "BBDEnsembleEffect.h"
 #include "ChorusEffectImpl.h"
 #include "CombulatorEffect.h"
-#include "Eq3BandEffect.h"
-#include "GEQ11Effect.h"
-#include "FreqshiftEffect.h"
-#include "PhaserEffect.h"
-#include "RotarySpeakerEffect.h"
-#include "DistortionEffect.h"
-#include "VocoderEffect.h"
 #include "ConditionerEffect.h"
+#include "DistortionEffect.h"
+#include "DualDelayEffect.h"
+#include "Eq3BandEffect.h"
+#include "FlangerEffect.h"
+#include "FreqshiftEffect.h"
+#include "GEQ11Effect.h"
+#include "NimbusEffect.h"
+#include "PhaserEffect.h"
+#include "ResonatorEffect.h"
 #include "Reverb1Effect.h"
 #include "Reverb2Effect.h"
-#include "FlangerEffect.h"
-#include "ResonatorEffect.h"
 #include "RingModulatorEffect.h"
-#include "NimbusEffect.h"
+#include "RotarySpeakerEffect.h"
+#include "VocoderEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/Neuron.h"
 #include "chowdsp/Chow.h"
@@ -72,7 +73,7 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_exciter:
         return new chowdsp::Exciter(storage, fxdata, pd);
     case fxt_ensemble:
-
+        return new BBDEnsembleEffect(storage, fxdata, pd);
     default:
         return 0;
     };

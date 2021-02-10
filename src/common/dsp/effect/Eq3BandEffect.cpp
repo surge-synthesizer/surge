@@ -163,6 +163,7 @@ void Eq3BandEffect::init_ctrltypes()
     for (int i = 0; i < eq3_num_ctrls; i++)
         fxdata->p[i].posy_offset = 1 + 2 * (i / 3);
 }
+
 void Eq3BandEffect::init_default_values()
 {
     fxdata->p[eq3_gain1].val.f = 0.f;
