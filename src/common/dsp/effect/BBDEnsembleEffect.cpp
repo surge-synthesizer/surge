@@ -72,10 +72,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
-void BBDEnsembleEffect::suspend()
-{
-    init();
-}
+void BBDEnsembleEffect::suspend() { init(); }
 
 const char *BBDEnsembleEffect::group_label(int id)
 {
@@ -101,7 +98,7 @@ int BBDEnsembleEffect::group_label_ypos(int id)
         return 1;
     case 1:
         return 5;
-    case 2: 
+    case 2:
         return 11;
     case 3:
         return 21;
@@ -153,7 +150,7 @@ void BBDEnsembleEffect::init_ctrltypes()
 void BBDEnsembleEffect::init_default_values()
 {
     fxdata->p[ens_input_gain].val.f = 0.f;
-    
+
     fxdata->p[ens_width].val.f = 1.f;
     fxdata->p[ens_gain].val.f = 0.f;
     fxdata->p[ens_mix].val.f = 1.f;
