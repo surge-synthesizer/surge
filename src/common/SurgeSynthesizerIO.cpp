@@ -58,10 +58,9 @@ struct fxChunkSetCustom
 
 void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
 {
-    int c = storage.patch_category.size();
     int p = storage.patch_list.size();
 
-    if (!c || !p)
+    if (!p)
     {
         return;
     }
@@ -117,13 +116,20 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
         }
         else
         {
-            if (currentPatchId < numPatches - 1 || currentPatchId > 0)
+            // if we're on the very first patch and we press previous patch
+            if (currentPatchId == 0 && !nextPrev)
             {
-                order = storage.patch_list[currentPatchId + np].order;
+                order = storage.patch_list[p - 1].order;
             }
+            // if we're on the very last patch and we press next patch
+            else if (currentPatchId == p - 1 && nextPrev)
+            {
+                order = storage.patch_list[0].order;
+            }
+            // otherwise keep changing patches as normal
             else
             {
-                incrementCategory(nextPrev);
+                order = storage.patch_list[currentPatchId + np].order;
             }
         }
 
