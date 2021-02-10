@@ -6,7 +6,8 @@ const int n_cm_coeffs = 8;
 class FilterCoefficientMaker
 {
   public:
-    void MakeCoeffs(float Freq, float Reso, int Type, int SubType, SurgeStorage *storage);
+    void MakeCoeffs(float Freq, float Reso, int Type, int SubType, SurgeStorage *storage,
+                    bool tuningAdjusted);
     void Reset();
     FilterCoefficientMaker();
     float C[n_cm_coeffs], dC[n_cm_coeffs], tC[n_cm_coeffs]; // K1,K2,Q1,Q2,V1,V2,V3,etc

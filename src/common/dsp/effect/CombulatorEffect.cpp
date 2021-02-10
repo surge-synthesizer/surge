@@ -165,12 +165,13 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     /*
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
      */
+    bool useTuning = fxdata->p[combulator_freq1].extend_range;
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
         {
             coeff[e][c].MakeCoeffs(freq[e].v, fbscaled, type,
-                                   subtype | QFUSubtypeMasks::EXTENDED_COMB, storage);
+                                   subtype | QFUSubtypeMasks::EXTENDED_COMB, storage, useTuning);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {

@@ -3430,9 +3430,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
                     {
-                        std::string txt = p->ctrltype == ct_reson_res_extendable
-                                              ? "Modulation Extends into Self-oscillation"
-                                              : "Extend Range";
+                        std::string txt = "Extend Range";
+                        switch (p->ctrltype)
+                        {
+                        case ct_reson_res_extendable:
+                            txt = "Modulation Extends into Self-oscillation";
+                            break;
+                        case ct_freq_audible_with_tunability:
+                        case ct_freq_audible_with_very_low_lowerbound:
+                            txt = "Filter Uses SCL/KBM Tuning";
+                            break;
+                        default:
+                            break;
+                        }
 
                         addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt), [this, p]() {
                             p->extend_range = !p->extend_range;
@@ -5044,7 +5054,7 @@ void SurgeGUIEditor::toggleTuning()
             mappingCacheForToggle = this->synth->storage.currentMapping.rawText;
         }
         this->synth->storage.remapToStandardKeyboard();
-        this->synth->storage.init_tables();
+        this->synth->storage.retuneToStandardTuning();
     }
 
     if (statusTune)

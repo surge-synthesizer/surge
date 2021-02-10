@@ -1032,10 +1032,12 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
             cutoffB += cutoffA;
 
         CM[0].MakeCoeffs(cutoffA, localcopy[id_resoa].f, scene->filterunit[0].type.val.i,
-                         scene->filterunit[0].subtype.val.i, storage);
+                         scene->filterunit[0].subtype.val.i, storage,
+                         scene->filterunit[0].cutoff.extend_range);
         CM[1].MakeCoeffs(
             cutoffB, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
-            scene->filterunit[1].type.val.i, scene->filterunit[1].subtype.val.i, storage);
+            scene->filterunit[1].type.val.i, scene->filterunit[1].subtype.val.i, storage,
+            scene->filterunit[1].cutoff.extend_range);
 
         for (int u = 0; u < n_filterunits_per_scene; u++)
         {

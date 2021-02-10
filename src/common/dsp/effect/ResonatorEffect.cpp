@@ -168,7 +168,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         for (int c = 0; c < 2; ++c)
         {
             coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype,
-                                   storage);
+                                   storage, false);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {

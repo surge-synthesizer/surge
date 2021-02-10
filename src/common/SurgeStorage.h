@@ -928,6 +928,7 @@ class alignas(16) SurgeStorage
     bool retuneToStandardTuning()
     {
         init_tables();
+        currentTuning = twelveToneStandardMapping;
         return true;
     }
 

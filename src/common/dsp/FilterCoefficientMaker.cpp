@@ -9,6 +9,8 @@
 #include "filters/NonlinearFeedback.h"
 #include "filters/NonlinearStates.h"
 
+#include "DebugHelpers.h"
+
 using namespace std;
 
 const float smooth = 0.2f;
@@ -16,9 +18,24 @@ const float smooth = 0.2f;
 FilterCoefficientMaker::FilterCoefficientMaker() { Reset(); }
 
 void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int SubType,
-                                        SurgeStorage *storageI)
+                                        SurgeStorage *storageI, bool tuningAdjusted)
 {
     storage = storageI;
+    if (tuningAdjusted && storage)
+    {
+        /*
+         * Alright frequency comes in in units of semitones from 440 / Midi Note 69.
+         */
+        auto idx = (int)floor(Freq + 69);
+        float frac = (Freq + 69) - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+
+        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+
+        auto q = (1.f - frac) * b0 + frac * b1;
+
+        Freq = q - 69;
+    }
 
     // Force compiler to error out if I miss one
     fu_type fType = (fu_type)Type;
