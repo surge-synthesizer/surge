@@ -330,7 +330,7 @@ class alignas(16) SurgeSynthesizer
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
     bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name);
-    void incrementPatch(bool nextPrev);
+    void incrementPatch(bool nextPrev, bool insideCategory = true);
     void incrementCategory(bool nextPrev);
 
     void swapMetaControllers(int ct1, int ct2);

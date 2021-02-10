@@ -20,6 +20,7 @@
 
 #include "filesystem/import.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include "UserInteractions.h"
@@ -55,11 +56,14 @@ struct fxChunkSetCustom
     // char chunk[8]; // variable
 };
 
-void SurgeSynthesizer::incrementPatch(bool nextPrev)
+void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
 {
-    int n = storage.patch_list.size();
-    if (!n)
+    int p = storage.patch_list.size();
+
+    if (!p)
+    {
         return;
+    }
 
     /*
     ** Ideally we would never call this with an out
@@ -68,12 +72,12 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev)
     ** false, as may some other cases. So add this
     ** defensive approach. See #319
     */
-    if (patchid < 0 || patchid > n - 1)
+    if (patchid < 0 || patchid > p - 1)
     {
         // Find patch 0 category 0 and select it
         int ccid = storage.patchCategoryOrdering[0];
 
-        int target = n + 1;
+        int target = p + 1;
         for (auto &patch : storage.patch_list)
         {
             if (patch.category == ccid && patch.order < target)
@@ -87,21 +91,48 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev)
     {
         int order = storage.patch_list[patchid].order;
         int category = storage.patch_list[patchid].category;
+        int currentPatchId;
+        vector<int> patchesInCategory;
 
-        if (nextPrev)
+        // get all patches belonging to current category
+        for (auto i : storage.patchOrdering)
         {
-            do
+            if (storage.patch_list[i].category == category)
             {
-                order = (order >= (n - 1)) ? 0 : order + 1;
-            } while (storage.patch_list[storage.patchOrdering[order]].category != category);
+                patchesInCategory.push_back(i);
+                if (storage.patch_list[i].order == order)
+                {
+                    currentPatchId = i;
+                }
+            }
+        }
+
+        int np = nextPrev == true ? 1 : -1;
+        int numPatches = patchesInCategory.size();
+
+        if (insideCategory)
+        {
+            order = storage.patch_list[(currentPatchId + numPatches + np) % numPatches].order;
         }
         else
         {
-            do
+            // if we're on the very first patch and we press previous patch
+            if (currentPatchId == 0 && !nextPrev)
             {
-                order = (order <= 0) ? n - 1 : order - 1;
-            } while (storage.patch_list[storage.patchOrdering[order]].category != category);
+                order = storage.patch_list[p - 1].order;
+            }
+            // if we're on the very last patch and we press next patch
+            else if (currentPatchId == p - 1 && nextPrev)
+            {
+                order = storage.patch_list[0].order;
+            }
+            // otherwise keep changing patches as normal
+            else
+            {
+                order = storage.patch_list[currentPatchId + np].order;
+            }
         }
+
         patchid_queue = storage.patchOrdering[order];
     }
     processThreadunsafeOperations();
@@ -110,12 +141,13 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev)
 
 void SurgeSynthesizer::incrementCategory(bool nextPrev)
 {
-    int n = storage.patch_category.size();
-    if (!n)
+    int c = storage.patch_category.size();
+
+    if (!c)
         return;
 
     // See comment above and #319
-    if (current_category_id < 0 || current_category_id > n - 1)
+    if (current_category_id < 0 || current_category_id > c - 1)
     {
         current_category_id = storage.patchCategoryOrdering[0];
     }
@@ -126,9 +158,9 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
         do
         {
             if (nextPrev)
-                order = (order >= (n - 1)) ? 0 : order + 1;
+                order = (order >= (c - 1)) ? 0 : order + 1;
             else
-                order = (order <= 0) ? n - 1 : order - 1;
+                order = (order <= 0) ? c - 1 : order - 1;
 
             current_category_id = storage.patchCategoryOrdering[order];
         } while (storage.patch_category[current_category_id].numberOfPatchesInCatgory == 0 &&
