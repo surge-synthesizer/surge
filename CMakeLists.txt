@@ -135,6 +135,7 @@ execute_process(
                            -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
                            -D WIN32=${WIN32}
+                           -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
@@ -143,6 +144,7 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
                            -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
                            -D WIN32=${WIN32}
+                           -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_dependencies( surge-shared git-info )
