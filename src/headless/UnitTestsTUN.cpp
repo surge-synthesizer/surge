@@ -919,3 +919,79 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
         }
     }
 }
+
+TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
+{
+    for (auto m = 0; m < 2; ++m)
+    {
+        auto mode = m ? SurgeStorage::RETUNE_MIDI_ONLY : SurgeStorage::RETUNE_ALL;
+        auto moden = m ? "Retune Midi ONly" : "Retune All";
+        DYNAMIC_SECTION("Modulation Tuning and KBM with " << moden)
+        {
+            auto surge = surgeOnSine();
+            REQUIRE(surge.get());
+            surge->storage.setTuningApplicationMode(mode);
+
+            auto scl = Tunings::readSCLFile("test-data/scl/ED2-15.scl");
+            surge->storage.retuneToScale(scl);
+
+            auto kbm = Tunings::readKBMFile("test-data/scl/60-262-60-c.kbm");
+            surge->storage.remapToKeyboard(kbm);
+            REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(60) ==
+                    Approx(60 / 12));
+
+            auto f60 = frequencyForNote(surge, 60);
+            REQUIRE(f60 == Approx(261.62).margin(1e-2));
+
+            kbm = Tunings::readKBMFile("test-data/scl/62-294-62-d.kbm");
+            surge->storage.remapToKeyboard(kbm);
+            REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(62) ==
+                    Approx(62.f / 12));
+
+            auto f62 = frequencyForNote(surge, 62);
+            REQUIRE(f62 == Approx(293.66).margin(1e-2));
+
+            kbm = Tunings::readKBMFile("test-data/scl/64-330-64-e.kbm");
+            surge->storage.remapToKeyboard(kbm);
+
+            auto f64 = frequencyForNote(surge, 64);
+            REQUIRE(f64 == Approx(329.62).margin(1e-2));
+            REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(64) ==
+                    Approx(64.f / 12));
+        }
+
+        DYNAMIC_SECTION("Pitch Bend Distance 12 in mode " << moden)
+        {
+            auto surge = surgeOnSine();
+            surge->mpeEnabled = false;
+            surge->storage.getPatch().scene[0].pbrange_up.val.i = 12;
+            surge->storage.getPatch().scene[0].pbrange_dn.val.i = 12;
+
+            REQUIRE(surge.get());
+            surge->storage.setTuningApplicationMode(mode);
+
+            auto scl = Tunings::readSCLFile("test-data/scl/ED2-06.scl");
+            surge->storage.retuneToScale(scl);
+
+            auto f60 = frequencyForNote(surge, 60);
+            REQUIRE(f60 == Approx(261.62).margin(1e-2));
+
+            surge->pitchBend(0, 8191);
+            auto f60Up = frequencyForNote(surge, 60);
+
+            surge->pitchBend(0, -8192);
+            auto f60Dn = frequencyForNote(surge, 60);
+
+            if (mode == SurgeStorage::RETUNE_MIDI_ONLY)
+            {
+                REQUIRE(f60Up == Approx(f60 * 2).margin(1));
+                REQUIRE(f60Dn == Approx(f60 / 2).margin(1));
+            }
+            else
+            {
+                REQUIRE(f60Up == Approx(f60 * 4).margin(5));
+                REQUIRE(f60Dn == Approx(f60 / 4).margin(2));
+            }
+        }
+    }
+}
