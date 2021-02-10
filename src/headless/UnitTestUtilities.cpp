@@ -173,11 +173,10 @@ void setupStorageRanges(Parameter *start, Parameter *endIncluding, int &storage_
 /*
 ** Create a surge pointer on init sine
 */
-std::shared_ptr<SurgeSynthesizer> surgeOnSine()
+std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &otp)
 {
     auto surge = Surge::Headless::createSurge(44100);
 
-    std::string otp = "Init Sine";
     bool foundInitSine = false;
     for (int i = 0; i < surge->storage.patch_list.size(); ++i)
     {
@@ -194,6 +193,9 @@ std::shared_ptr<SurgeSynthesizer> surgeOnSine()
     else
         return surge;
 }
+
+std::shared_ptr<SurgeSynthesizer> surgeOnSine() { return surgeOnPatch("Init Sine"); }
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw() { return surgeOnPatch("Init Saw"); }
 
 void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
                          int nC, int startSample, int endSample)

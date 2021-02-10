@@ -36,6 +36,8 @@ void setupStorageRanges(Parameter *start, Parameter *endIncluding, int &storage_
 void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
                          int nC, int startSample = -1, int endSample = -1);
 
+std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &patchName);
 std::shared_ptr<SurgeSynthesizer> surgeOnSine();
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw();
 } // namespace Test
 } // namespace Surge
