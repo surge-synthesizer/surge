@@ -937,7 +937,21 @@ class alignas(16) SurgeStorage
     bool retuneAndRemapToScaleAndMapping(const Tunings::Scale &s,
                                          const Tunings::KeyboardMapping &k);
 
-    inline int scaleConstantNote() { return currentMapping.tuningConstantNote; }
+    inline int scaleConstantNote()
+    {
+        if (tuningApplicationMode == RETUNE_ALL)
+        {
+            return currentMapping.tuningConstantNote;
+        }
+        else
+        {
+            /*
+             * In this case the mapping happens at the keyboard layer so
+             * don't double-retune it
+             */
+            return 60;
+        }
+    }
     inline float scaleConstantPitch() { return tuningPitch; }
     inline float scaleConstantPitchInv()
     {
