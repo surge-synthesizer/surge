@@ -312,7 +312,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 Surge::Skin::Connector::connectorByID("filter.subtype_" + std::to_string(f + 1)),
                 sc_id, cg_FILTER, f, false));
             a->push_back(scene[sc].filterunit[f].cutoff.assign(
-                p_id.next(), id_s++, "cutoff", "Cutoff", ct_freq_audible,
+                p_id.next(), id_s++, "cutoff", "Cutoff", ct_freq_audible_with_tunability,
                 Surge::Skin::Connector::connectorByID("filter.cutoff_" + std::to_string(f + 1)),
                 sc_id, cg_FILTER, f, true, sceasy));
             if (f == 1)

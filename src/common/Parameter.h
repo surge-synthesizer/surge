@@ -64,6 +64,7 @@ enum ctrltypes
     ct_decibel_deactivatable,
     ct_freq_audible,
     ct_freq_audible_deactivatable,
+    ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tunign'
     ct_freq_audible_with_very_low_lowerbound,
     ct_freq_mod,
     ct_freq_hpf,

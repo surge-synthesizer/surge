@@ -263,6 +263,8 @@ bool Parameter::can_extend_range()
     case ct_lfoamplitude:
     case ct_fmratio:
     case ct_reson_res_extendable:
+    case ct_freq_audible_with_tunability:
+    case ct_freq_audible_with_very_low_lowerbound:
         return true;
     }
     return false;
@@ -419,6 +421,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_with_tunability:
         valtype = vt_float;
         val_min.f = -60;
         val_max.f = 70;
@@ -1020,6 +1023,7 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
@@ -2198,6 +2202,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
@@ -3064,6 +3069,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_envtime_linkable_delay:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
