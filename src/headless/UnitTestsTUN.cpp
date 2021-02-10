@@ -941,7 +941,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(60 / 12));
 
             auto f60 = frequencyForNote(surge, 60);
-            REQUIRE(f60 == Approx(261.62).margin(1e-2));
+            REQUIRE(f60 == Approx(261.62).margin(1));
 
             kbm = Tunings::readKBMFile("test-data/scl/62-294-62-d.kbm");
             surge->storage.remapToKeyboard(kbm);
@@ -949,13 +949,13 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(62.f / 12));
 
             auto f62 = frequencyForNote(surge, 62);
-            REQUIRE(f62 == Approx(293.66).margin(1e-2));
+            REQUIRE(f62 == Approx(293.66).margin(1));
 
             kbm = Tunings::readKBMFile("test-data/scl/64-330-64-e.kbm");
             surge->storage.remapToKeyboard(kbm);
 
             auto f64 = frequencyForNote(surge, 64);
-            REQUIRE(f64 == Approx(329.62).margin(1e-2));
+            REQUIRE(f64 == Approx(329.62).margin(1));
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(64) ==
                     Approx(64.f / 12));
         }
@@ -975,7 +975,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(60 / 12));
 
             auto f60 = frequencyForNote(surge, 60);
-            REQUIRE(f60 == Approx(261.62).margin(1e-1));
+            REQUIRE(f60 == Approx(261.62).margin(1));
 
             kbm = Tunings::readKBMFile("test-data/scl/62-294-62-d.kbm");
             surge->storage.remapToKeyboard(kbm);
@@ -983,13 +983,13 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(62.f / 12));
 
             auto f62 = frequencyForNote(surge, 62);
-            REQUIRE(f62 == Approx(293.66).margin(1e-1));
+            REQUIRE(f62 == Approx(293.66).margin(1));
 
             kbm = Tunings::readKBMFile("test-data/scl/64-330-64-e.kbm");
             surge->storage.remapToKeyboard(kbm);
 
             auto f64 = frequencyForNote(surge, 64);
-            REQUIRE(f64 == Approx(329.62).margin(1e-1));
+            REQUIRE(f64 == Approx(329.62).margin(1));
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(64) ==
                     Approx(64.f / 12));
         }
@@ -1008,7 +1008,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             surge->storage.retuneToScale(scl);
 
             auto f60 = frequencyForNote(surge, 60);
-            REQUIRE(f60 == Approx(261.62).margin(1e-2));
+            REQUIRE(f60 == Approx(261.62).margin(1));
 
             surge->pitchBend(0, 8191);
             auto f60Up = frequencyForNote(surge, 60);
@@ -1018,13 +1018,13 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
 
             if (mode == SurgeStorage::RETUNE_MIDI_ONLY)
             {
-                REQUIRE(f60Up == Approx(f60 * 2).margin(1));
-                REQUIRE(f60Dn == Approx(f60 / 2).margin(1));
+                REQUIRE(f60Up == Approx(f60 * 2).margin(3));
+                REQUIRE(f60Dn == Approx(f60 / 2).margin(3));
             }
             else
             {
-                REQUIRE(f60Up == Approx(f60 * 4).margin(5));
-                REQUIRE(f60Dn == Approx(f60 / 4).margin(2));
+                REQUIRE(f60Up == Approx(f60 * 4).margin(6));
+                REQUIRE(f60Dn == Approx(f60 / 4).margin(6));
             }
         }
 
@@ -1042,7 +1042,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             surge->storage.retuneToScale(scl);
 
             auto f60 = frequencyForNote(surge, 60);
-            REQUIRE(f60 == Approx(261.62).margin(1e-2));
+            REQUIRE(f60 == Approx(261.62).margin(1));
 
             surge->pitchBend(0, 8191);
             auto f60Up = frequencyForNote(surge, 60);
@@ -1053,12 +1053,12 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             if (mode == SurgeStorage::RETUNE_MIDI_ONLY)
             {
                 REQUIRE(f60Up == Approx(f60 * 2).margin(5));
-                REQUIRE(f60Dn == Approx(f60 / 2).margin(3));
+                REQUIRE(f60Dn == Approx(f60 / 2).margin(5));
             }
             else
             {
-                REQUIRE(f60Up == Approx(f60 * 4).margin(5));
-                REQUIRE(f60Dn == Approx(f60 / 4).margin(3));
+                REQUIRE(f60Up == Approx(f60 * 4).margin(10));
+                REQUIRE(f60Dn == Approx(f60 / 4).margin(10));
             }
         }
     }
