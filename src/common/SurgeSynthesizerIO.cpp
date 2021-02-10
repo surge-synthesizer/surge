@@ -425,35 +425,42 @@ void SurgeSynthesizer::savePatch()
         storage.getPatch().category = "Default";
 
     fs::path savepath = string_to_path(getUserPatchDirectory());
-    savepath /= (string_to_path(storage.getPatch().category));
 
-    create_directories(savepath);
-
-    string legalname = storage.getPatch().name;
-    for (int i = 0; i < legalname.length(); i++)
+    try
     {
-        switch (legalname[i])
+        std::string tempCat = storage.getPatch().category;
+#if WINDOWS
+        if (tempCat[0] == '\\' || tempCat[0] == '/')
         {
-        case '<':
-            legalname[i] = '[';
-            break;
-        case '>':
-            legalname[i] = ']';
-            break;
-        case '*':
-        case '?':
-        case '"':
-        case '\\':
-        case '|':
-        case '/':
-        case ':':
-            legalname[i] = ' ';
-            break;
+            tempCat.erase(0, 1);
         }
+#endif
+
+        fs::path catPath = (string_to_path(tempCat));
+
+        if (!catPath.is_relative())
+        {
+            Surge::UserInteractions::promptError(
+                "Please use relative paths when saving patches. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Error");
+            return;
+        }
+
+        savepath /= catPath;
+        create_directories(savepath);
+    }
+    catch (...)
+    {
+        Surge::UserInteractions::promptError(
+            "Exception occured while creating category folder! Most likely, invalid characters "
+            "were used to name the category. Please remove suspicious characters and try again!",
+            "Error");
+        return;
     }
 
     fs::path filename = savepath;
-    filename /= string_to_path(legalname + ".fxp");
+    filename /= string_to_path(storage.getPatch().name + ".fxp");
 
     bool checkExists = true;
 #if LINUX
@@ -475,8 +482,14 @@ void SurgeSynthesizer::savePatch()
 void SurgeSynthesizer::savePatchToPath(fs::path filename)
 {
     std::ofstream f(filename, std::ios::out | std::ios::binary);
+
     if (!f)
+    {
+        Surge::UserInteractions::promptError(
+            "Unable to save the patch to the specified path! Maybe it contains invalid characters?",
+            "Error");
         return;
+    }
 
     fxChunkSetCustom fxp;
     fxp.chunkMagic = vt_write_int32BE('CcnK');

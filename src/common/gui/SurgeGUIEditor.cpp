@@ -4309,58 +4309,32 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         // FIXME: baconpaul will know a better and more correct way to fix this
         if (isAnyOverlayPresent(STORE_PATCH))
         {
-            /*
-            ** Don't allow a blank patch
-            */
-            std::string whatIsBlank = "";
-            bool haveBlanks = false;
+            synth->storage.getPatch().name = patchName->getText();
+            synth->storage.getPatch().author = patchCreator->getText();
+            synth->storage.getPatch().category = patchCategory->getText();
+            synth->storage.getPatch().comment = patchComment->getText();
 
-            if (!Surge::Storage::isValidName(patchName->getText().getString()))
+            synth->storage.getPatch().patchTuning.tuningStoredInPatch =
+                patchTuning->getValue() > 0.5;
+            if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
             {
-                whatIsBlank = "name";
-                haveBlanks = true;
-            }
-            if (!Surge::Storage::isValidName(patchCategory->getText().getString()))
-            {
-                whatIsBlank = whatIsBlank + (haveBlanks ? " and category" : "category");
-                haveBlanks = true;
-            }
-            if (haveBlanks)
-            {
-                Surge::UserInteractions::promptError(
-                    std::string("Unable to store a patch due to invalid ") + whatIsBlank +
-                        ". Please save again and provide a complete " + whatIsBlank + ".",
-                    "Patch Saving Error");
-            }
-            else
-            {
-                synth->storage.getPatch().name = patchName->getText();
-                synth->storage.getPatch().author = patchCreator->getText();
-                synth->storage.getPatch().category = patchCategory->getText();
-                synth->storage.getPatch().comment = patchComment->getText();
-
-                synth->storage.getPatch().patchTuning.tuningStoredInPatch =
-                    patchTuning->getValue() > 0.5;
-                if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
+                synth->storage.getPatch().patchTuning.tuningContents =
+                    synth->storage.currentScale.rawText;
+                if (synth->storage.isStandardMapping)
                 {
-                    synth->storage.getPatch().patchTuning.tuningContents =
-                        synth->storage.currentScale.rawText;
-                    if (synth->storage.isStandardMapping)
-                    {
-                        synth->storage.getPatch().patchTuning.mappingContents = "";
-                    }
-                    else
-                    {
-                        synth->storage.getPatch().patchTuning.mappingContents =
-                            synth->storage.currentMapping.rawText;
-                    }
+                    synth->storage.getPatch().patchTuning.mappingContents = "";
                 }
-
-                synth->storage.getPatch().dawExtraState.isPopulated =
-                    false; // Ignore whatever comes from the DAW
-
-                synth->savePatch();
+                else
+                {
+                    synth->storage.getPatch().patchTuning.mappingContents =
+                        synth->storage.currentMapping.rawText;
+                }
             }
+
+            // Ignore whatever comes from the DAW
+            synth->storage.getPatch().dawExtraState.isPopulated = false;
+
+            synth->savePatch();
 
             closeStorePatchDialog();
             frame->setDirty();
