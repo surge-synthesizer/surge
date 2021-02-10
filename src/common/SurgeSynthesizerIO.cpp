@@ -429,31 +429,8 @@ void SurgeSynthesizer::savePatch()
 
     create_directories(savepath);
 
-    string legalname = storage.getPatch().name;
-    for (int i = 0; i < legalname.length(); i++)
-    {
-        switch (legalname[i])
-        {
-        case '<':
-            legalname[i] = '[';
-            break;
-        case '>':
-            legalname[i] = ']';
-            break;
-        case '*':
-        case '?':
-        case '"':
-        case '\\':
-        case '|':
-        case '/':
-        case ':':
-            legalname[i] = ' ';
-            break;
-        }
-    }
-
     fs::path filename = savepath;
-    filename /= string_to_path(legalname + ".fxp");
+    filename /= string_to_path(storage.getPatch().name + ".fxp");
 
     bool checkExists = true;
 #if LINUX
@@ -475,8 +452,14 @@ void SurgeSynthesizer::savePatch()
 void SurgeSynthesizer::savePatchToPath(fs::path filename)
 {
     std::ofstream f(filename, std::ios::out | std::ios::binary);
+
     if (!f)
+    {
+        Surge::UserInteractions::promptError(
+            "Unable to save the patch to the specified path! Maybe it contains invalid characters?",
+            "Error");
         return;
+    }
 
     fxChunkSetCustom fxp;
     fxp.chunkMagic = vt_write_int32BE('CcnK');
