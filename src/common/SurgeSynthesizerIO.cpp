@@ -429,18 +429,14 @@ void SurgeSynthesizer::savePatch()
     try
     {
         std::string tempCat = storage.getPatch().category;
-        printf("before: [%s]\n", tempCat.c_str());
 #if WINDOWS
         if (tempCat[0] == '\\' || tempCat[0] == '/')
         {
             tempCat.erase(0, 1);
         }
 #endif
-        printf("after: [%s]\n", tempCat.c_str());
 
         fs::path catPath = (string_to_path(tempCat));
-
-        printf("path: [%s]\n", catPath.generic_string());
 
         if (!catPath.is_relative())
         {
@@ -450,10 +446,8 @@ void SurgeSynthesizer::savePatch()
                 "Error");
             return;
         }
+
         savepath /= catPath;
-
-        printf("savepath: [%s]\n", savepath.generic_string());
-
         create_directories(savepath);
     }
     catch (...)
