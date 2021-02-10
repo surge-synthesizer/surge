@@ -425,9 +425,45 @@ void SurgeSynthesizer::savePatch()
         storage.getPatch().category = "Default";
 
     fs::path savepath = string_to_path(getUserPatchDirectory());
-    savepath /= (string_to_path(storage.getPatch().category));
 
-    create_directories(savepath);
+    try
+    {
+        std::string tempCat = storage.getPatch().category;
+        printf("before: [%s]\n", tempCat.c_str());
+#if WINDOWS
+        if (tempCat[0] == '\\' || tempCat[0] == '/')
+        {
+            tempCat.erase(0, 1);
+        }
+#endif
+        printf("after: [%s]\n", tempCat.c_str());
+
+        fs::path catPath = (string_to_path(tempCat));
+
+        printf("path: [%s]\n", catPath.generic_string());
+
+        if (!catPath.is_relative())
+        {
+            Surge::UserInteractions::promptError(
+                "Please use relative paths when saving patches. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Error");
+            return;
+        }
+        savepath /= catPath;
+
+        printf("savepath: [%s]\n", savepath.generic_string());
+
+        create_directories(savepath);
+    }
+    catch (...)
+    {
+        Surge::UserInteractions::promptError(
+            "Exception occured while creating category folder! Most likely, invalid characters "
+            "were used to name the category. Please remove suspicious characters and try again!",
+            "Error");
+        return;
+    }
 
     fs::path filename = savepath;
     filename /= string_to_path(storage.getPatch().name + ".fxp");
