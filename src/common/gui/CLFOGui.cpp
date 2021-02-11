@@ -253,38 +253,36 @@ void CLFOGui::draw(CDrawContext *dc)
                                                            // added, remove it from this condition!
                     edpath->beginSubpath(xc, edval);
                 if (tFullWave)
+                {
                     deactPath->beginSubpath(xc, wval);
+                }
                 priorval = val;
             }
             else
             {
-                if (maxval - minval > 0.2)
+                minval = ((-minval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
+                maxval = ((-maxval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
+                // Windows is sensitive to out-of-order line draws in a way which causes spikes.
+                // Make sure we draw one closest to prior first. See #1438
+                float firstval = minval;
+                float secondval = maxval;
+                if (priorval - minval < maxval - priorval)
                 {
-                    minval = ((-minval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
-                    maxval = ((-maxval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
-                    // Windows is sensitive to out-of-order line draws in a way which causes spikes.
-                    // Make sure we draw one closest to prior first. See #1438
-                    float firstval = minval;
-                    float secondval = maxval;
-                    if (priorval - minval < maxval - priorval)
-                    {
-                        firstval = maxval;
-                        secondval = minval;
-                    }
-                    path->addLine(xc - 0.1 * valScale / totalSamples, firstval);
-                    path->addLine(xc + 0.1 * valScale / totalSamples, secondval);
+                    firstval = maxval;
+                    secondval = minval;
                 }
-                else
-                {
-                    path->addLine(xc, val);
-                }
+                path->addLine(xc - 0.1 * valScale / totalSamples, firstval);
+                path->addLine(xc + 0.1 * valScale / totalSamples, secondval);
+
                 priorval = val;
                 eupath->addLine(xc, euval);
                 edpath->addLine(xc, edval);
 
-                // We can skip the ordering thing since we know we ahve set rate here to a low rate
+                // We can skip the ordering thing since we know we have set rate here to a low rate
                 if (tFullWave)
+                {
                     deactPath->addLine(xc, wval);
+                }
             }
         }
         delete tlfo;
@@ -636,17 +634,6 @@ void CLFOGui::draw(CDrawContext *dc)
 
     setDirty(false);
 }
-
-enum
-{
-    cs_null = 0,
-    cs_shape,
-    cs_steps,
-    cs_trigtray_toggle,
-    cs_loopstart,
-    cs_loopend,
-    cs_linedrag,
-};
 
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
                           VSTGUI::CRect &leftpanel)
