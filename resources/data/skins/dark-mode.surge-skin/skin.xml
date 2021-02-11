@@ -33,6 +33,7 @@
     <color id="lfo.waveform.envelope" value="surgebluetrans"/>
     <color id="lfo.waveform.wave" value="modblue"/>
     <color id="lfo.waveform.wave.deactivated" value="#2E86FE90"/>
+    <color id="lfo.waveform.wave.amplitudeonewave" value="#2E86FE90"/>
 
     <color id="lfo.type.selected.background" value="surgeblue"/>
     <color id="lfo.type.selected.text" value="#E5E5E5"/>
