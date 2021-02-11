@@ -421,6 +421,8 @@ class Parameter
 
         float modulationCap = -1.f;
 
+        bool supportsNoteName = false;
+
         float extendFactor = 1.0,
               absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
     } displayInfo;

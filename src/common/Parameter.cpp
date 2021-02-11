@@ -1037,6 +1037,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.b = 1.0f / 12.0f;
         displayInfo.decimals = 2;
         displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
+        displayInfo.supportsNoteName = true;
         break;
 
     case ct_freq_shift:
@@ -3281,6 +3282,46 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
     }
     case ATwoToTheBx:
     {
+        if (displayInfo.supportsNoteName)
+        {
+            if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
+            {
+                int oct_offset = 0;
+                if (storage)
+                {
+                    oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+                }
+                int note = 0, sf = 0;
+                if (s[0] >= 'a' && s[0] <= 'g')
+                {
+                    note = s[0] - 'a';
+                }
+
+                if (s[0] >= 'A' && s[0] <= 'G')
+                {
+                    note = s[0] - 'A';
+                }
+
+                int octPos = 1;
+                while (s[octPos] == '#')
+                {
+                    sf++;
+                    octPos++;
+                }
+                while (s[octPos] == 'b')
+                {
+                    sf--;
+                    octPos++;
+                }
+
+                auto oct = std::atoi(s.c_str() + octPos) + oct_offset;
+
+                std::vector<int> df6 = {9, 11, 0, 2, 4, 5, 7};
+
+                auto mn = df6[note] + (oct)*12 + sf;
+                nv = 440.0 * pow(2.0, (mn - 69) / 12.0);
+            }
+        }
         /*
         ** v = a 2^bx
         ** log2(v/a) = bx
