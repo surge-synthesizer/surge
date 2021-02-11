@@ -29,6 +29,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_compile_options(
     -Wno-multichar
 
+    # Targetting Windows with GCC/Clang is experimental
+    $<$<NOT:$<BOOL:${WIN32}>>:-Werror>
+
     # PE/COFF doesn't support visibility
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
@@ -47,7 +50,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Any Clang
     add_compile_options(
-      -Werror
       -Wno-deprecated-declarations
       -Werror=inconsistent-missing-override
       -Werror=logical-op-parentheses
@@ -64,9 +66,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     endif()
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
-    add_compile_options(
-      -Werror
-    )
   endif()
 endif()
 
