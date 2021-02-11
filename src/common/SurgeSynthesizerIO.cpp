@@ -110,28 +110,27 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
         int np = nextPrev == true ? 1 : -1;
         int numPatches = patchesInCategory.size();
 
-        if (insideCategory)
+        do
         {
-            order = storage.patch_list[(currentPatchId + numPatches + np) % numPatches].order;
-        }
-        else
-        {
-            // if we're on the very first patch and we press previous patch
-            if (currentPatchId == 0 && !nextPrev)
+            if (nextPrev)
             {
-                order = storage.patch_list[p - 1].order;
+                if (!insideCategory && order >= p - 1)
+                {
+                    incrementCategory(nextPrev);
+                    category = current_category_id;
+                }
+                order = (order >= p - 1) ? 0 : order + 1;
             }
-            // if we're on the very last patch and we press next patch
-            else if (currentPatchId == p - 1 && nextPrev)
-            {
-                order = storage.patch_list[0].order;
-            }
-            // otherwise keep changing patches as normal
             else
             {
-                order = storage.patch_list[currentPatchId + np].order;
+                if (!insideCategory && order <= 0)
+                {
+                    incrementCategory(nextPrev);
+                    category = current_category_id;
+                }
+                order = (order <= 0) ? p - 1 : order - 1;
             }
-        }
+        } while (storage.patch_list[storage.patchOrdering[order]].category != category);
 
         patchid_queue = storage.patchOrdering[order];
     }
