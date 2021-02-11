@@ -90,6 +90,8 @@ void CombulatorEffect::setvars(bool init)
     pan2.newValue(clamp1bp(*f[combulator_pan2]));
     pan3.newValue(clamp1bp(*f[combulator_pan3]));
 
+    negone.set_target(-1.f);
+
     if (init)
     {
         for (int i = 0; i < 3; ++i)
@@ -106,8 +108,11 @@ void CombulatorEffect::setvars(bool init)
         noisemix.instantize();
 
         mix.set_target(1.f);
-
         mix.instantize();
+
+        negone.set_target(-1.f);
+        negone.instantize();
+
         lp.coeff_instantize();
         hp.coeff_instantize();
 
@@ -320,7 +325,14 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     lp.process_block(L, R);
     hp.process_block(L, R);
 
-    mix.set_target_smoothed(limit_range(*f[combulator_mix], 0.f, 1.f));
+    auto cm = limit_range(*f[combulator_mix], -1.f, 1.f);
+    if (cm < 0)
+    {
+        negone.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
+        cm = -cm;
+    }
+
+    mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
@@ -398,7 +410,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_pan3].set_type(ct_percent_bidirectional_stereo);
     fxdata->p[combulator_pan3].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
-    fxdata->p[combulator_mix].set_type(ct_percent);
+    fxdata->p[combulator_mix].set_type(ct_percent_bidirectional);
     fxdata->p[combulator_mix].posy_offset = 7;
 }
 
