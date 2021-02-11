@@ -1912,12 +1912,12 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valminus = isBipolar ? negval : "";
 
                 char dtxt[256];
-                sprintf(dtxt, "%.*f %s", dp,
+                sprintf(dtxt, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
                         limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalplus = dtxt;
 
-                sprintf(dtxt, "%.*f %s", dp,
+                sprintf(dtxt, "%s%.*f %s", (mn - v > 0 ? "+" : ""), dp,
                         limit_range(mn, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalminus = isBipolar ? dtxt : "";
@@ -2213,21 +2213,16 @@ float Parameter::quantize_modulation(float inputval)
     }
     case Decibel:
     {
-        // d(f) = amp_to_db(f) = 18 * log2(f)
-        // solving the problem: d(f + y) = d(f) + 1, solve for y
-        // y being modulation amount (-1 ... 1)
-        //
-        // 18 * log2(f) = d
-        // 18 * log2(f + y) = d + 1
-        //
-        // f = 2^(d / 18)
-        // f + y = 2^(d + 1) / 18
-        // y = 2^(d + 1) / 18 - 2^d / 18
+        float scaledval = val.f * (1.f / val_max.f);
+        float v = amp_to_db(scaledval);
+        float vmod = amp_to_db(scaledval + inputval);
+        float floorvmod = floor(vmod - v) + v;
 
-        float df = amp_to_db(val.f);
-        float y = powf(2.f, (df + 1.f) / 18.f) - powf(2.f, df / 18.f);
+        // so we want to find a new integer value which satisfies:
+        // 18 * log2(oldval + newval) = floorvmod, or
+        // 2^(floorvmod / 18) - oldval = newval
 
-        res = floor(inputval / y) * y;
+        res = powf(2.f, floorvmod / 18.f) - scaledval;
 
         break;
     }
@@ -3564,8 +3559,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         ** d / 18 + log2(v) = log2( m + v )
         ** 2^(d/18 + log2(v) ) - v = m;
         **
-        ** But ther'e a gotcha. The minum db is -192 so we have to set the val.f accordingly.
-        ** That is we have some amp2db we have used called av. So
+        ** But there's a gotcha. The minimum dB is -192 so we have to set the val.f accordingly.
+        ** That is we have some amp2db we have used, called av. So:
         **
         ** d = mv - av
         **   = 18 ( log2(m+v) ) - av
