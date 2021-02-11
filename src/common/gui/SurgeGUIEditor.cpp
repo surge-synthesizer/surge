@@ -1861,6 +1861,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             frame->addView(lb);
         }
+        else
+        {
+            auto image = currentSkin->propertyValue(l, "image");
+            if (image.isJust())
+            {
+                auto bmp = bitmapStore->getBitmapByStringID(image.fromJust());
+                if (bmp)
+                {
+                    auto lb =
+                        new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), nullptr, bmp);
+                    frame->addView(lb);
+                }
+            }
+        }
     }
 #if BUILD_IS_DEBUG
     /*
