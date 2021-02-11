@@ -95,7 +95,14 @@ class SkinDB;
 class Skin
 {
   public:
-    static constexpr int current_format_version = 1;
+    /*
+     * Skin Versions
+     * 1. The 1.7 and 1.8 skin engine
+     * 2. The 1.9 skin engine (adds notch, image labels, more)
+     */
+    static constexpr int current_format_version = 2;
+    int version;
+    inline int getVersion() const { return version; }
 
     typedef std::shared_ptr<Skin> ptr_t;
     typedef std::unordered_map<std::string, std::string> props_t;

@@ -274,10 +274,13 @@ void CModulationSourceButton::draw(CDrawContext *dc)
             }
         }
 
-        notch.left = (barx <= brect.right - 1) ? barx : barx - 1;
-        notch.right = notch.left + 1;
-        dc->setFillColor(skin->getColor(Colors::ModSource::Macro::CurrentValue));
-        dc->drawRect(notch, kDrawFilled);
+        if (skin->getVersion() >= 2)
+        {
+            notch.left = (barx <= brect.right - 1) ? barx : barx - 1;
+            notch.right = notch.left + 1;
+            dc->setFillColor(skin->getColor(Colors::ModSource::Macro::CurrentValue));
+            dc->drawRect(notch, kDrawFilled);
+        }
     }
 
     const int rh = 16;

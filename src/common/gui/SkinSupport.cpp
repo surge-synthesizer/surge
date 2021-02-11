@@ -279,7 +279,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
     if ((a = surgeskin->Attribute("category")))
         category = a;
 
-    int version = -1;
+    version = -1;
     if (!(surgeskin->QueryIntAttribute("version", &version) == TIXML_SUCCESS))
     {
         FIXMEERROR << "Skin file does not contain a 'version' attribute. You must contain a "
@@ -291,6 +291,11 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
     {
         FIXMEERROR << "Skin version '" << version << "' is greater than the max version '"
                    << Skin::current_format_version << "' supported by this binary" << std::endl;
+        return false;
+    }
+    if (version < 1)
+    {
+        FIXMEERROR << "Skin version '" << version << "' is lower than 1. Why?" << std::endl;
         return false;
     }
 
