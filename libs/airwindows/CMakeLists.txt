@@ -154,7 +154,7 @@ add_library(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   AudioEffectX=AirWinBaseClass
   VstPlugCategory=long
-  _USE_MATH_DEFINES
+  $<$<BOOL:${WIN32}>:_USE_MATH_DEFINES>
 )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

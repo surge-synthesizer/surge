@@ -16,12 +16,9 @@ add_library(${PROJECT_NAME}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-        TEST=1
-        )
-#  AudioEffectX=AirWinBaseClass
-#  VstPlugCategory=long
-#  _USE_MATH_DEFINES
-#)
+  TEST=1
+  $<$<BOOL:${WIN32}>:_USE_MATH_DEFINES>
+)
 
 if(MSVC)
   # MSVC and pretenders
