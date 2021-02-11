@@ -1912,12 +1912,12 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valminus = isBipolar ? negval : "";
 
                 char dtxt[256];
-                sprintf(dtxt, "%.*f %s", dp,
+                sprintf(dtxt, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
                         limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalplus = dtxt;
 
-                sprintf(dtxt, "%.*f %s", dp,
+                sprintf(dtxt, "%s%.*f %s", (mn - v > 0 ? "+" : ""), dp,
                         limit_range(mn, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalminus = isBipolar ? dtxt : "";
@@ -2183,14 +2183,59 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
 float Parameter::quantize_modulation(float inputval)
 {
+    float res;
+
     if (temposync)
     {
-        auto sv = inputval * (val_max.f - val_min.f); // this is now a 0->1 for 0 -> 100%
-        float res = (float)((int)(sv * 10.0) / 10.f);
+        auto sv = inputval * (val_max.f - val_min.f); // this is now a 0 -> 1 for 0 -> 100%
+        res = (float)((int)(sv * 10.0) / 10.f);
+
         return res / (val_max.f - val_min.f);
     }
 
-    float res = (float)((int)(inputval * 20) / 20.f); // sure why not
+    switch (displayType)
+    {
+    case Custom:
+        // handled below
+        break;
+    case DelegatedToFormatter:
+        // fall back
+    case LinearWithScale:
+    {
+        float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
+        float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
+        float factor = ext_mul * abs_mul;
+        float tempval = (val_max.f - val_min.f) * displayInfo.scale * factor;
+
+        res = (float)((int)(inputval * tempval) / tempval);
+
+        break;
+    }
+    case Decibel:
+    {
+        float scaledval = val.f * (1.f / val_max.f);
+        float v = amp_to_db(scaledval);
+        float vmod = amp_to_db(scaledval + inputval);
+        float floorvmod = floor(vmod - v) + v;
+
+        // so we want to find a new integer value which satisfies:
+        // 18 * log2(oldval + newval) = floorvmod, or
+        // 2^(floorvmod / 18) - oldval = newval
+
+        res = powf(2.f, floorvmod / 18.f) - scaledval;
+
+        break;
+    }
+    default:
+    {
+        float tempval = (val_max.f - val_min.f) * displayInfo.scale;
+
+        res = (float)((int)(inputval * tempval) / tempval);
+
+        break;
+    }
+    }
+
     return res;
 }
 
@@ -2299,7 +2344,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 ef->formatValue(f, txt, 64);
                 return;
             }
-            // We do not break on purpose here. DelegatedToFormatter falls back to LInear with Scale
+            // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale
         }
         case LinearWithScale:
         {
@@ -3514,8 +3559,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         ** d / 18 + log2(v) = log2( m + v )
         ** 2^(d/18 + log2(v) ) - v = m;
         **
-        ** But ther'e a gotcha. The minum db is -192 so we have to set the val.f accordingly.
-        ** That is we have some amp2db we have used called av. So
+        ** But there's a gotcha. The minimum dB is -192 so we have to set the val.f accordingly.
+        ** That is we have some amp2db we have used, called av. So:
         **
         ** d = mv - av
         **   = 18 ( log2(m+v) ) - av
