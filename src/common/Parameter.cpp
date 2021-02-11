@@ -2183,14 +2183,64 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
 float Parameter::quantize_modulation(float inputval)
 {
+    float res;
+
     if (temposync)
     {
-        auto sv = inputval * (val_max.f - val_min.f); // this is now a 0->1 for 0 -> 100%
-        float res = (float)((int)(sv * 10.0) / 10.f);
+        auto sv = inputval * (val_max.f - val_min.f); // this is now a 0 -> 1 for 0 -> 100%
+        res = (float)((int)(sv * 10.0) / 10.f);
+
         return res / (val_max.f - val_min.f);
     }
 
-    float res = (float)((int)(inputval * 20) / 20.f); // sure why not
+    switch (displayType)
+    {
+    case Custom:
+        // handled below
+        break;
+    case DelegatedToFormatter:
+        // fall back
+    case LinearWithScale:
+    {
+        float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
+        float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
+        float factor = ext_mul * abs_mul;
+        float tempval = (val_max.f - val_min.f) * displayInfo.scale * factor;
+
+        res = (float)((int)(inputval * tempval) / tempval);
+
+        break;
+    }
+    case Decibel:
+    {
+        // d(f) = amp_to_db(f) = 18 * log2(f)
+        // solving the problem: d(f + y) = d(f) + 1, solve for y
+        // y being modulation amount (-1 ... 1)
+        //
+        // 18 * log2(f) = d
+        // 18 * log2(f + y) = d + 1
+        //
+        // f = 2^(d / 18)
+        // f + y = 2^(d + 1) / 18
+        // y = 2^(d + 1) / 18 - 2^d / 18
+
+        float df = amp_to_db(val.f);
+        float y = powf(2.f, (df + 1.f) / 18.f) - powf(2.f, df / 18.f);
+
+        res = floor(inputval / y) * y;
+
+        break;
+    }
+    default:
+    {
+        float tempval = (val_max.f - val_min.f) * displayInfo.scale;
+
+        res = (float)((int)(inputval * tempval) / tempval);
+
+        break;
+    }
+    }
+
     return res;
 }
 
@@ -2299,7 +2349,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 ef->formatValue(f, txt, 64);
                 return;
             }
-            // We do not break on purpose here. DelegatedToFormatter falls back to LInear with Scale
+            // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale
         }
         case LinearWithScale:
         {
