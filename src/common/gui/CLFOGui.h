@@ -30,6 +30,17 @@ class CLFOGui : public VSTGUI::CControl,
                 public Surge::UI::SkinConsumingComponent,
                 public Surge::UI::CursorControlAdapter<CLFOGui>
 {
+    enum control_states
+    {
+        cs_null = 0,
+        cs_shape,
+        cs_steps,
+        cs_trigtray_toggle,
+        cs_loopstart,
+        cs_loopend,
+        cs_linedrag,
+    };
+
   public:
     const static int margin = 2;
     const static int margin2 = 7;
