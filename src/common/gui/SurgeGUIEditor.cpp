@@ -6054,6 +6054,19 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
         });
     menuItem->setChecked(modValues);
 
+    // lfoone. I think this is a display thing. But could be workflowalso?
+    auto lfoone =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "showAmplitudeOneLFOWave", 1);
+
+    menuItem =
+        addCallbackMenu(dispDefMenu, Surge::UI::toOSCaseForMenu("Always Show Amplitude 1 LFO Wave"),
+                        [this, lfoone]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), "showAmplitudeOneLFOWave", lfoone ? 0 : 1);
+                            this->frame->invalid();
+                        });
+    menuItem->setChecked(lfoone);
+
     // Middle C submenu
     COptionMenu *middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                   VSTGUI::COptionMenu::kNoDrawStyle |

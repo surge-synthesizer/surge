@@ -126,7 +126,8 @@ extern const Surge::Skin::Color Fill, FillDeactivated, FillOutside;
 } // namespace StepSeq
 namespace Waveform
 {
-extern const Surge::Skin::Color Background, Bounds, Center, Envelope, Wave, DeactivatedWave, Dots;
+extern const Surge::Skin::Color Background, Bounds, Center, Envelope, Wave, DeactivatedWave,
+    AmplitudeOneWave, Dots;
 
 namespace Ruler
 {

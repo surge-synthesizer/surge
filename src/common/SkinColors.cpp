@@ -138,6 +138,7 @@ const Surge::Skin::Color Background("lfo.waveform.background", 255, 144, 0),
     Bounds("lfo.waveform.bounds", 224, 128, 0), Center("lfo.waveform.center", 224, 128, 0),
     Dots("lfo.waveform.dots", 192, 112, 0), Envelope("lfo.waveform.envelope", 176, 96, 0),
     Wave("lfo.waveform.wave", 0, 0, 0),
+    AmplitudeOneWave("lfo.waveform.wave.amplitudeonewave", 50, 35, 0, 128),
     DeactivatedWave("lfo.waveform.wave.deactivated", 0, 0, 0, 144);
 
 namespace Ruler

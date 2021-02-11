@@ -144,8 +144,10 @@ void CLFOGui::draw(CDrawContext *dc)
         tlfo->attack();
 
         LFOStorage deactivateStorage;
+        bool hasFullWave = false, waveIsAmpWave = false;
         if (lfodata->rate.deactivated)
         {
+            hasFullWave = true;
             memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
             memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
 
@@ -163,6 +165,25 @@ void CLFOGui::draw(CDrawContext *dc)
             tFullWave = new LfoModulationSource();
             tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
             tFullWave->attack();
+        }
+        else if (lfodata->magnitude.val.f != lfodata->magnitude.val_max.f &&
+                 skin->getVersion() >= 2)
+        {
+            bool useAmpWave =
+                Surge::Storage::getUserDefaultValue(storage, "showAmplitudeOneLFOWave", 1);
+            if (useAmpWave)
+            {
+                hasFullWave = true;
+                waveIsAmpWave = true;
+                memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
+                memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
+
+                deactivateStorage.magnitude.val.f = 1.f;
+                tpd[lfodata->magnitude.param_id_in_scene].f = 1.f;
+                tFullWave = new LfoModulationSource();
+                tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
+                tFullWave->attack();
+            }
         }
         CRect boxo(maindisp);
         boxo.offset(-size.left - splitpoint, -size.top);
@@ -420,11 +441,26 @@ void CLFOGui::draw(CDrawContext *dc)
         dc->setLineWidth(1.3);
 #endif
 
-        if (lfodata->rate.deactivated)
+        if (hasFullWave)
         {
-            dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::DeactivatedWave));
-            dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
-                                 &tfpath);
+            dc->saveGlobalState();
+
+            if (waveIsAmpWave)
+            {
+                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::AmplitudeOneWave));
+#if !TARGET_JUCE_UI
+                dc->setLineStyle(VSTGUI::kLineOnOffDash);
+#endif
+                dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
+                                     &tfpath);
+            }
+            else
+            {
+                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::DeactivatedWave));
+                dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
+                                     &tfpath);
+            }
+            dc->restoreGlobalState();
         }
 
         // LFO waveform itself
