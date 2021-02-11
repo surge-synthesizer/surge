@@ -4,13 +4,17 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeGUIEditor.h"
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 
 // positions of FX slots   A IFX1   A IFX2     B IFX1    B IFX2    Send 1    Send 2   Global 1
 // Global 2
-const int blocks[8][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41},
-                          {18, 21}, {44, 21}, {89, 11}, {89, 31}};
+const int blocks[n_fx_slots][2] = {{18, 1},  {44, 1},  {18, 39}, {44, 39},
+                          {18, 20}, {44, 20}, {89, 11}, {89, 31}};
+
+const int scenelabelbox[n_scenes][2] = {{1,1}, {1,39}};
+const char* scenename[n_scenes] = {"A", "B"};
 
 // since graphics asset for FX icons (bmp00136) has frames ordered according to fxt enum
 // just return FX id
@@ -30,40 +34,71 @@ void CEffectSettings::draw(CDrawContext *dc)
 {
     CRect size = getViewSize();
 
-    if (bg)
+    if( skin->getVersion() >= 2 )
     {
-        bg->draw(dc, size, CPoint(0, 0), 0xff);
-        // source position in bitmap
-        // CPoint where (0, heightOfOneImage * (long)((value * (float)(rows*columns - 1) + 0.5f)));
-        // pBackground->draw(dc,size,where,0xff);
-    }
-    if (labels)
-    {
+        dc->saveGlobalState();
+        dc->setFont(Surge::GUI::getLatoAtSize(8));
+        dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+        for( int i=0; i<n_scenes; ++i )
+        {
+            CRect r(0, 0, 12, 10);
+            r.offset(size.left, size.top);
+            r.offset(scenelabelbox[i][0], scenelabelbox[i][1]);
+
+            dc->setFrameColor( kRedCColor );
+            dc->drawRect(r, kDrawStroked);
+
+            r.bottom -=1;
+            dc->drawString(scenename[i], r,  kCenterText, true );
+        }
         for (int i = 0; i < n_fx_slots; i++)
         {
-            CRect r(0, 0, 17, 9);
+            CRect r(0, 0, 17, 10);
             r.offset(size.left, size.top);
             r.offset(blocks[i][0], blocks[i][1]);
-            int stype = 0;
-            if (disabled & (1 << i))
-                stype = 4;
-            switch (bypass)
+
+            dc->setFrameColor( kRedCColor );
+            dc->drawRect(r, kDrawStroked);
+        }
+        dc->restoreGlobalState();
+    }
+    else
+    {
+        if (bg)
+        {
+            bg->draw(dc, size, CPoint(0, 0), 0xff);
+            // source position in bitmap
+            // CPoint where (0, heightOfOneImage * (long)((value * (float)(rows*columns - 1) + 0.5f))); pBackground->draw(dc,size,where,0xff);
+        }
+
+        if (labels)
+        {
+            for (int i = 0; i < n_fx_slots; i++)
             {
-            case fxb_no_fx:
-                stype = 2;
-                break;
-            case fxb_no_sends:
-                if ((i == 4) || (i == 5))
+                CRect r(0, 0, 17, 9);
+                r.offset(size.left, size.top);
+                r.offset(blocks[i][0], blocks[i][1]);
+                int stype = 0;
+                if (disabled & (1 << i))
+                    stype = 4;
+                switch (bypass)
+                {
+                case fxb_no_fx:
                     stype = 2;
-                break;
-            case fxb_scene_fx_only:
-                if (i > 3)
-                    stype = 2;
-                break;
+                    break;
+                case fxb_no_sends:
+                    if ((i == 4) || (i == 5))
+                        stype = 2;
+                    break;
+                case fxb_scene_fx_only:
+                    if (i > 3)
+                        stype = 2;
+                    break;
+                }
+                if (i == current)
+                    stype += 1;
+                labels->draw(dc, r, CPoint(17 * stype, 9 * get_fxtype(type[i])), 0xff);
             }
-            if (i == current)
-                stype += 1;
-            labels->draw(dc, r, CPoint(17 * stype, 9 * get_fxtype(type[i])), 0xff);
         }
     }
 
