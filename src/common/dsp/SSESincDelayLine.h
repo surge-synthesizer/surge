@@ -48,7 +48,7 @@ struct SSESincDelayLine
         // So basically we interpolate around FIRipol_N (the 12 sample sinc)
         // remembering that FIRoffset is the offset to center your table at
         // a point ( it is FIRipol_N >> 1)
-        int readPtr = (wp - iDelay) & (COMB_SIZE - 1);
+        int readPtr = (wp - iDelay - (FIRipol_N >> 1)) & (COMB_SIZE - 1);
 
         // And so now do what we do in COMBSSE2Quad
         __m128 a = _mm_loadu_ps(&buffer[readPtr]);
@@ -69,13 +69,15 @@ struct SSESincDelayLine
         return res;
     }
 
-    float readLinear(float delay)
+    inline float readLinear(float delay)
     {
         auto iDelay = (int)delay;
         auto frac = delay - iDelay;
         int RP = (wp - iDelay) & (COMB_SIZE - 1);
         return buffer[RP] * (1 - frac) + buffer[RP + 1] * frac;
     }
+
+    inline void clear() { memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float)); }
 };
 
 #endif // SURGE_SSESINCDELAYLINE_H

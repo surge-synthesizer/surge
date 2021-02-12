@@ -109,7 +109,8 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h)
+add_library(surge-shared)
+
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -263,6 +264,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/VectorizedSvfFilter.cpp
+  src/common/dsp/WaveguideOscillator.cpp
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp

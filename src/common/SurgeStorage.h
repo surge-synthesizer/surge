@@ -197,7 +197,7 @@ enum osc_type
     ot_FM2,
     ot_window,
     ot_dpw,
-    // ot_pluck,
+    ot_waveguide,
     // ot_macro,
     // ot_phasedist,
     // ot_chaos,
@@ -208,7 +208,7 @@ enum osc_type
 
 const char osc_type_names[n_osc_types][24] = {
     "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In",         "FM3",   "FM2",
-    "Window",  "Modern"/*, "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"*/};
+    "Window",  "Modern", "Waveguide" /*, "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"*/};
 
 const char window_names[9][16] = {
     "Triangle", "Cosine", "Blend 1", "Blend 2",   "Blend 3",

@@ -18,8 +18,6 @@
 #include "FastMath.h"
 #include <cmath>
 
-using namespace std;
-
 #include "AudioInputOscillator.h"
 #include "FM2Oscillator.h"
 #include "FM3Oscillator.h"
@@ -27,8 +25,11 @@ using namespace std;
 #include "SineOscillator.h"
 #include "SurgeSuperOscillator.h"
 #include "WavetableOscillator.h"
+#include "WaveguideOscillator.h"
 #include "WindowOscillator.h"
 #include "DPWOscillator.h"
+
+using namespace std;
 
 Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
                       pdata *localcopy)
@@ -59,6 +60,8 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
         return new FM2Oscillator(storage, oscdata, localcopy);
     case ot_dpw:
         return new DPWOscillator(storage, oscdata, localcopy);
+    case ot_waveguide:
+        return new WaveguideOscillator(storage, oscdata, localcopy);
     case ot_sine:
     default:
         return new SineOscillator(storage, oscdata, localcopy);
