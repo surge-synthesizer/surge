@@ -3465,6 +3465,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
                     {
+                        bool enable = true;
                         std::string txt = "Extend Range";
                         switch (p->ctrltype)
                         {
@@ -3474,16 +3475,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         case ct_freq_audible_with_tunability:
                         case ct_freq_audible_with_very_low_lowerbound:
                             txt = "Filter Uses SCL/KBM Tuning";
+                            enable =
+                                synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
                             break;
                         default:
                             break;
                         }
 
-                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt), [this, p]() {
-                            p->extend_range = !p->extend_range;
-                            this->synth->refresh_editor = true;
-                        });
+                        auto ee = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
+                                                  [this, p]() {
+                                                      p->extend_range = !p->extend_range;
+                                                      this->synth->refresh_editor = true;
+                                                  });
                         contextMenu->checkEntry(eid, p->extend_range);
+                        ee->setEnabled(enable);
                         eid++;
                     }
                 }
@@ -5756,29 +5761,20 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                               });
         });
 
+    tuningSubMenu->addSeparator();
     auto mod = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tuning Applies To Modulation"), [this]() {
-            if (this->synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-            {
-                this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
-            }
-            else
-            {
-                this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL);
-            }
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune After Modulation"),
+        [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
+    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
+    tid++;
+
+    mod = addCallbackMenu(
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune At Keyboard Before Modulation"), [this]() {
+            this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         });
-    if (this->synth->storage.isStandardTuning)
-    {
-        mod->setEnabled(false);
-    }
-    if (this->synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-    {
-        mod->setChecked(true);
-    }
-    else
-    {
-        mod->setChecked(false);
-    }
+    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY);
+    tid++;
+
     tuningSubMenu->addSeparator();
     tid++;
     auto *sct = addCallbackMenu(
