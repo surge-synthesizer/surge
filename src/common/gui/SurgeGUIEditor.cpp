@@ -3374,6 +3374,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         eid++;
                     }
                 }
+
+                switch (p->ctrltype)
+                {
+                case ct_freq_audible_with_tunability:
+                case ct_freq_audible_with_very_low_lowerbound:
+                    addCallbackMenu(contextMenu,
+                                    Surge::UI::toOSCaseForMenu("Set Cutoff To Ketrack Root"),
+                                    [this, p, control] {
+                                        auto kr = this->synth->storage.getPatch()
+                                                      .scene[current_scene]
+                                                      .keytrack_root.val.i;
+                                        p->set_value_f01(p->value_to_normalized(kr - 69));
+                                        control->setValue(p->get_value_f01());
+                                    });
+                    eid++;
+                    break;
+
+                default:
+                    break;
+                }
+
                 if (p->has_portaoptions())
                 {
                     contextMenu->addSeparator(eid++);
@@ -3823,13 +3844,35 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             }
             else
             {
-                /*
-                ** This code resets you to default if you double click on control
-                ** but on the lfoshape UI this is undesirable; it means if you accidentally
-                ** control click on step sequencer, say, you go back to sin and lose your
-                ** edits. So supress
-                */
-                if (p->ctrltype != ct_lfotype)
+                switch (p->ctrltype)
+                {
+                case ct_lfotype:
+                    /*
+                    ** This code resets you to default if you double click on control
+                    ** but on the lfoshape UI this is undesirable; it means if you accidentally
+                    ** control click on step sequencer, say, you go back to sin and lose your
+                    ** edits. So supress
+                    */
+                    break;
+                case ct_freq_audible_with_tunability:
+                case ct_freq_audible_with_very_low_lowerbound:
+                {
+                    if (p->extend_range || button & VSTGUI::CButton::kAlt)
+                    {
+                        auto kr = this->synth->storage.getPatch()
+                                      .scene[current_scene]
+                                      .keytrack_root.val.i;
+                        p->set_value_f01(p->value_to_normalized(kr - 69));
+                        control->setValue(p->get_value_f01());
+                    }
+                    else
+                    {
+                        p->set_value_f01(p->get_default_value_f01());
+                        control->setValue(p->get_value_f01());
+                    }
+                    return 0;
+                }
+                default:
                 {
                     p->set_value_f01(p->get_default_value_f01());
                     control->setValue(p->get_value_f01());
@@ -3839,6 +3882,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         lfodisplay->invalid();
                     control->invalid();
                     return 0;
+                }
                 }
             }
         }
