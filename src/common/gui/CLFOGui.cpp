@@ -214,14 +214,14 @@ void CLFOGui::draw(CDrawContext *dc)
         float valScale = 100.0;
         int susCountdown = -1;
 
-        float priorval = 0.f;
+        float priorval = 0.f, priorwval = 0.f;
         for (int i = 0; i < totalSamples; i += averagingWindow)
         {
             float val = 0;
             float wval = 0;
             float eval = 0;
-            float minval = 1000000;
-            float maxval = -1000000;
+            float minval = 1000000, minwval = 1000000;
+            float maxval = -1000000, maxwval = -1000000;
             float firstval;
             float lastval;
             for (int s = 0; s < averagingWindow; s++)
@@ -246,7 +246,12 @@ void CLFOGui::draw(CDrawContext *dc)
 
                 val += tlfo->output;
                 if (tFullWave)
-                    wval += tFullWave->output;
+                {
+                    auto v = tFullWave->output;
+                    minwval = std::min(v, minwval);
+                    maxwval = std::max(v, maxwval);
+                    wval += v;
+                }
                 if (s == 0)
                     firstval = tlfo->output;
                 if (s == averagingWindow - 1)
@@ -260,6 +265,8 @@ void CLFOGui::draw(CDrawContext *dc)
             eval = eval / averagingWindow;
             val = ((-val + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
             wval = ((-wval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
+            minwval = ((-minwval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
+            maxwval = ((-maxwval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
             float euval = ((-eval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
             float edval = ((eval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
 
@@ -278,6 +285,7 @@ void CLFOGui::draw(CDrawContext *dc)
                     deactPath->beginSubpath(xc, wval);
                 }
                 priorval = val;
+                priorwval = wval;
             }
             else
             {
@@ -302,7 +310,16 @@ void CLFOGui::draw(CDrawContext *dc)
                 // We can skip the ordering thing since we know we have set rate here to a low rate
                 if (tFullWave)
                 {
-                    deactPath->addLine(xc, wval);
+                    firstval = minwval;
+                    secondval = maxwval;
+                    if (priorwval - minwval < maxwval - priorwval)
+                    {
+                        firstval = maxwval;
+                        secondval = minwval;
+                    }
+                    deactPath->addLine(xc - 0.1 * valScale / totalSamples, firstval);
+                    deactPath->addLine(xc - 0.1 * valScale / totalSamples, secondval);
+                    priorwval = wval;
                 }
             }
         }
