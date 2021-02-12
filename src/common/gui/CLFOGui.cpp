@@ -170,7 +170,7 @@ void CLFOGui::draw(CDrawContext *dc)
                  skin->getVersion() >= 2)
         {
             bool useAmpWave =
-                Surge::Storage::getUserDefaultValue(storage, "showAmplitudeOneLFOWave", 1);
+                Surge::Storage::getUserDefaultValue(storage, "showGhostedLFOWaveReference", 1);
             if (useAmpWave)
             {
                 hasFullWave = true;
@@ -447,7 +447,7 @@ void CLFOGui::draw(CDrawContext *dc)
 
             if (waveIsAmpWave)
             {
-                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::AmplitudeOneWave));
+                dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::GhostedWave));
 #if !TARGET_JUCE_UI
                 dc->setLineStyle(VSTGUI::kLineOnOffDash);
 #endif
