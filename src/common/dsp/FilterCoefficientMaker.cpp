@@ -38,14 +38,6 @@ void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int Su
 
             Freq = q - 69;
         }
-        else if (!tuningAdjusted &&
-                 storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
-        {
-            /*
-             * Modulations are not remapped and we don't want retuned filters so we have to back it
-             * out.
-             */
-        }
     }
     // Force compiler to error out if I miss one
     fu_type fType = (fu_type)Type;
