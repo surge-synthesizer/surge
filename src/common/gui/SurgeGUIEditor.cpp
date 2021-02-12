@@ -3380,7 +3380,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 case ct_freq_audible_with_tunability:
                 case ct_freq_audible_with_very_low_lowerbound:
                     addCallbackMenu(contextMenu,
-                                    Surge::UI::toOSCaseForMenu("Set Cutoff To Ketrack Root"),
+                                    Surge::UI::toOSCaseForMenu("Set Cutoff To Keytrack Root"),
                                     [this, p, control] {
                                         auto kr = this->synth->storage.getPatch()
                                                       .scene[current_scene]

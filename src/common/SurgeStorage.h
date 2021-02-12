@@ -968,7 +968,7 @@ class alignas(16) SurgeStorage
     {
         RETUNE_ALL = 0, // These values are streamed so don't change them if you add
         RETUNE_MIDI_ONLY = 1
-    } tuningApplicationMode = RETUNE_ALL;
+    } tuningApplicationMode = RETUNE_MIDI_ONLY; // This is the default as of 1.9/sv16
     void setTuningApplicationMode(const TuningApplicationMode m);
 
     Tunings::KeyboardMapping currentMapping;

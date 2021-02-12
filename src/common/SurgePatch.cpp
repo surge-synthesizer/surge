@@ -1259,7 +1259,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     TiXmlElement *nonparamconfig = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nonparamconfig"));
     // Set the default for TAM before 16
-    storage->tuningApplicationMode = SurgeStorage::RETUNE_ALL;
+    if (revision <= 15)
+    {
+        storage->tuningApplicationMode = SurgeStorage::RETUNE_ALL;
+    }
+    else
+    {
+        // We shouldn't need this since all 16s will stream it, but just in case
+        storage->tuningApplicationMode = SurgeStorage::RETUNE_MIDI_ONLY;
+    }
     if (nonparamconfig)
     {
         for (int sc = 0; sc < n_scenes; ++sc)

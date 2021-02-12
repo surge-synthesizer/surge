@@ -16,6 +16,7 @@ using namespace Surge::Test;
 TEST_CASE("Retune Surge to .scl files", "[tun]")
 {
     auto surge = Surge::Headless::createSurge(44100);
+    surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
     auto n2f = [surge](int n) { return surge->storage.note_to_pitch(n); };
 
     // Tunings::Scale s = Tunings::readSCLFile("/Users/paul/dev/music/test_scl/Q4.scl" );
@@ -621,6 +622,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A bit below")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto k = Tunings::readKBMFile("test-data/scl/mapping-note54-to-259-6.kbm");
@@ -637,6 +639,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("Twelve below")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto k = Tunings::readKBMFile("test-data/scl/mapping-note48-to-100.kbm");
@@ -653,6 +656,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot below")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto k = Tunings::readKBMFile("test-data/scl/mapping-note42-to-100.kbm");
@@ -669,6 +673,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("Twelve above")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto k = Tunings::readKBMFile("test-data/scl/mapping-note72-to-500.kbm");
@@ -685,6 +690,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot above")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto k = Tunings::readKBMFile("test-data/scl/mapping-note80-to-1000.kbm");
@@ -701,6 +707,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A bit below with 6ns")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
@@ -720,6 +727,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot below witn 6ns")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
@@ -739,6 +747,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot above with 6ns")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
@@ -758,6 +767,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot below witn ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto s = Tunings::readSCLFile("test-data/scl/ED3-17.scl");
@@ -777,6 +787,7 @@ TEST_CASE("Mapping below and outside of count")
     SECTION("A lot above with ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
         auto s = Tunings::readSCLFile("test-data/scl/ED3-17.scl");
