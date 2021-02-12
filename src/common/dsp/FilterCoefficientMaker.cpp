@@ -21,22 +21,32 @@ void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int Su
                                         SurgeStorage *storageI, bool tuningAdjusted)
 {
     storage = storageI;
-    if (tuningAdjusted && storage)
+    if (storage)
     {
-        /*
-         * Alright frequency comes in in units of semitones from 440 / Midi Note 69.
-         */
-        auto idx = (int)floor(Freq + 69);
-        float frac = (Freq + 69) - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+        if (tuningAdjusted && storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+        {
+            /*
+             * Modulations are not remapped and tuning is in efffect; remap the note
+             */
+            auto idx = (int)floor(Freq + 69);
+            float frac = (Freq + 69) - idx; // frac is 0 means use idx; frac is 1 means use idx+1
 
-        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
-        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+            float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+            float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
 
-        auto q = (1.f - frac) * b0 + frac * b1;
+            auto q = (1.f - frac) * b0 + frac * b1;
 
-        Freq = q - 69;
+            Freq = q - 69;
+        }
+        else if (!tuningAdjusted &&
+                 storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+        {
+            /*
+             * Modulations are not remapped and we don't want retuned filters so we have to back it
+             * out.
+             */
+        }
     }
-
     // Force compiler to error out if I miss one
     fu_type fType = (fu_type)Type;
 
