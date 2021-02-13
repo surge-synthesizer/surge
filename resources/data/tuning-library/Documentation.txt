@@ -2,9 +2,6 @@ This is a library of 149 basic microtuning table files for developers, musicians
 
 Originally compiled as a learning device for newcomers to microtuning, it provides a useful overview of many basic musical instrument intonation types, such as equal-temperaments (included are equal divisions of harmonics 2, 3 and 4), just-intonation (harmonic and subharmonic series sections), as well as nonoctave systems by Wendy Carlos.
 
-Note that the TUN, MTS and KSP files have their 1/1 mapped to MIDI Note C.60 at 261.626 Hz (concert middle C).
-
-
 |
 12 Tone Equal Temperament | ED2-12 - Equal division of harmonic 2 into 12 parts
 |
