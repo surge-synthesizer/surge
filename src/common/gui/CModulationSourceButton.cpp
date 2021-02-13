@@ -2,6 +2,7 @@
 #include "CSurgeSlider.h"
 #include "MouseCursorControl.h"
 #include "globals.h"
+#include "guihelpers.h"
 #include "ModulationSource.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
@@ -312,8 +313,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint &where, const CBut
     hasMovedBar = false;
 
     if (storage)
-        this->hideCursor =
-            Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+        this->hideCursor = !Surge::UI::showCursor(storage);
 
     if (!getMouseEnabled())
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;

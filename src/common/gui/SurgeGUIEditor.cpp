@@ -6042,18 +6042,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
 
 #if SUPPORTS_TOUCH_MENU
     mouseSubMenu->addSeparator();
-    menuItem = addCallbackMenu(
-        mouseSubMenu, Surge::UI::toOSCaseForMenu("Touchscreen Mode"), [this, touchMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "touchMouseMode",
-                                                   !touchMode);
-            if (!touchMode)
-            {
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       "showCursorWhileEditing", true);
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       "sliderMoveRateState", CSurgeSlider::kExact);
-            }
-        });
+    menuItem = addCallbackMenu(mouseSubMenu, Surge::UI::toOSCaseForMenu("Touchscreen Mode"),
+                               [this, touchMode]() {
+                                   Surge::Storage::updateUserDefaultValue(
+                                       &(this->synth->storage), "touchMouseMode", !touchMode);
+                               });
     menuItem->setChecked(touchMode);
 #endif
 

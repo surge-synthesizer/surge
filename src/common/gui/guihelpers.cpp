@@ -2,7 +2,12 @@
 
 #include <cctype>
 
-std::string Surge::UI::toOSCaseForMenu(std::string menuName)
+namespace Surge
+{
+namespace UI
+{
+
+std::string toOSCaseForMenu(std::string menuName)
 {
 #if WINDOWS
     for (auto i = 1; i < menuName.length() - 1; ++i)
@@ -14,10 +19,18 @@ std::string Surge::UI::toOSCaseForMenu(std::string menuName)
     return menuName;
 }
 
+bool showCursor(SurgeStorage *storage)
+{
+    bool sc = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+    bool tm = Surge::Storage::getUserDefaultValue(storage, "touchMouseMode", false);
+
+    return sc || tm;
+};
+
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
 // intersect, the intersection point may be stored in the floats i_x and i_y.
-bool Surge::UI::get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x,
-                                      float p2_y, float p3_x, float p3_y, float *i_x, float *i_y)
+bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y,
+                           float p3_x, float p3_y, float *i_x, float *i_y)
 {
     float s1_x, s1_y, s2_x, s2_y;
     float s, t;
@@ -41,3 +54,6 @@ bool Surge::UI::get_line_intersection(float p0_x, float p0_y, float p1_x, float 
     }
     return false; // No collision
 }
+
+} // namespace UI
+} // namespace Surge

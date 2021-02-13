@@ -1358,8 +1358,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
         if (rect_steps.pointInside(where))
         {
             if (storage)
-                this->hideCursor =
-                    !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+                this->hideCursor = !Surge::UI::showCursor(storage);
 
             if (buttons.isRightButton())
             {

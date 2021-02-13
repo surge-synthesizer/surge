@@ -21,6 +21,7 @@
 #endif
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
+#include "guihelpers.h"
 
 namespace Surge
 {
@@ -81,7 +82,7 @@ struct CursorControlAdapter
     {
 #if !TARGET_JUCE_UI
         if (s)
-            hideCursor = !Surge::Storage::getUserDefaultValue(s, "showCursorWhileEditing", 0);
+            hideCursor = !Surge::UI::showCursor(s);
 #else
         hideCursor = false;
 #endif
