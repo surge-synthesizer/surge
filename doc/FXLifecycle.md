@@ -61,7 +61,7 @@ Spawn Effect  id=6
 ```
 
 * CSnapshotMenu::loadSnapshot
-    * Load an FX and call `init_ctryltypes` and `init_default_values`. This sets up the params on the control to defaults
+    * Load an FX and call `init_ctrltypes` and `init_default_values`. This sets up the params on the control to defaults
       in the storage bound to the FX
     * delete the FX
     * Parse the XML and set the fxbuffer parameter values as described in the FX. This leaves the storage configured with
@@ -74,7 +74,7 @@ Spawn Effect  id=6
     * In the next `process()` and call to `processControl` `load_fx_needed` will be true
     * so call `loadFx(false,false)` which will force FX where the type in the FX to be noticed as
       changed and will spawn an fx
-    * but since `initp` is false, dont call `init_default_values` and instead continue to use the values
+    * but since `initp` is false, don't call `init_default_values` and instead continue to use the values
       left lingering in the FX from the invocation in CSnapshotMenu.
     
 ## Loaded FX to Off, FX On
@@ -107,15 +107,15 @@ Question: is bypass from CEG different than global bypass?
 
 ## Swap an FX
 
-## An Airwondow is activated and changes type
+## An Airwindows FX is activated and changes type
 
-## An Airwindow is de-activated and changes type
+## An Airwindows FX is de-activated and changes type
 
-## A non-airwindow becomes an airwindow in activated state
+## A non-Airwindows FX becomes an Airwindows FX in activated state
 
-## A non-airwindow becomes an airwindow in deactivated state
+## A non-Airwindow FX becomes an Airwindows FX in deactivated state
 
-## The DAW AUtomation Path
+## The DAW Automation Path
 
-The DAW Automation Path comes in through `synth::setParameter01` and handles the `ct_fxtype` to do the spawn-and-replace.
+The DAW automation path comes in through `synth::setParameter01` and handles the `ct_fxtype` to do the spawn-and-replace.
 See the comments there for more.
