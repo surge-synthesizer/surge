@@ -15,6 +15,7 @@
 
 #include "SurgeGUIEditor.h"
 #include "CSurgeSlider.h"
+#include "guihelpers.h"
 #include "resource.h"
 #include "DspUtilities.h"
 #include "MouseCursorControl.h"
@@ -700,8 +701,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint &where, const CButtonState &b
         }
     }
     if (storage)
-        this->hideCursor =
-            !Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
+        this->hideCursor = !Surge::UI::showCursor(storage);
 
     hasBeenDraggedDuringMouseGesture = false;
     if (wheelInitiatedEdit)
