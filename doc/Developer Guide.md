@@ -58,8 +58,9 @@ better indents, more comments.
 change is the best change. So editing a function with a variable name you don't love is OK
 if that variable name is in 30 other places.
 * Use spaces, not tabs
-* The code is mostly formatted with 3 space tab width, which is odd. If you are in a 3-space
-section stick to 3 spaces. If you are writing new code we are OK with 3 or 4. But code should align
+* The code is formatted with 4 spaces tab width, and we use clang-format to automatically style things as you type.
+Any and all pull requests are verified against clang-format and if a PR doesn't fit clang-format,
+CI will fail (linux-codequality job). Make sure the diffs you submit for merging are compliant to our clang-format!
 
 ### Naming
 
@@ -70,7 +71,7 @@ section stick to 3 spaces. If you are writing new code we are OK with 3 or 4. Bu
 * Full namespaces are generally prefered over usings. We are trying to use
 `std::vector` over `vector` in the code. 
 * Don't `using namespace` in header files. Don't `using namespace std` in new code (but it is in some existing code).
-* Use namespaces not classes to group functions. Check out how we implemented `UserInteractions.h`
+* Use namespaces, not classes to group functions. Check out how we implemented `UserInteractions.h`
 * Long and descriptive names are good. `userMessageDeliveryPipe` is better than `umdp`. 
 
 ### Comments
