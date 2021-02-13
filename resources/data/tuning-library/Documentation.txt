@@ -1,3 +1,10 @@
+This is a library of 149 basic microtuning table files for developers, musicians, composers, researchers and intonation enthusiasts alike, in the popular Scala SCL format.
+
+Originally compiled as a learning device for newcomers to microtuning, it provides a useful overview of many basic musical instrument intonation types, such as equal-temperaments (included are equal divisions of harmonics 2, 3 and 4), just-intonation (harmonic and subharmonic series sections), as well as nonoctave systems by Wendy Carlos.
+
+Note that the TUN, MTS and KSP files have their 1/1 mapped to MIDI Note C.60 at 261.626 Hz (concert middle C).
+
+
 |
 12 Tone Equal Temperament | ED2-12 - Equal division of harmonic 2 into 12 parts
 |
@@ -14,6 +21,26 @@
  10:       1000.000 cents    1000.000000
  11:       1100.000 cents    1100.000000
  12:          2/1            1200.000000 octave
+|
+35.1 CET - Wendy Carlos - Gamma
+|
+  0:          1/1               0.000000 unison, perfect prime
+  1:         35.100 cents      35.100000
+|
+63.8 CET - Wendy Carlos - Beta
+|
+  0:          1/1               0.000000 unison, perfect prime
+  1:         35.100 cents      35.100000
+|
+78.0 CET - Wendy Carlos - Alpha
+|
+  0:          1/1               0.000000 unison, perfect prime
+  1:         35.100 cents      35.100000
+|
+88.0 CET - Gary Morrison
+|
+  0:          1/1               0.000000 unison, perfect prime
+  1:         35.100 cents      35.100000
 |
 Bohlen-Pierce: ED3-13 - Equal division of harmonic 3 into 13 parts
 |
@@ -3430,85 +3457,4 @@ SD4 64-16 - Subharmonic division of 4: Subharmonics 64-16
  46:         32/9            2196.089998 Pythagorean minor 14th
  47:         64/17           2295.044590 17th subharmonic +1 octave
  48:          4/1            2400.000000 2 octaves
-|
-Wendy Carlos - Alpha (78.0 Cents)
-|
-  0:          1/1               0.000000 unison, perfect prime
-  1:         78.000 cents      78.000000
-  2:        156.000 cents     156.000000
-  3:        234.000 cents     234.000000
-  4:        312.000 cents     312.000000
-  5:        390.000 cents     390.000000
-  6:        468.000 cents     468.000000
-  7:        546.000 cents     546.000000
-  8:        624.000 cents     624.000000
-  9:        702.000 cents     702.000000
- 10:        780.000 cents     780.000000
- 11:        858.000 cents     858.000000
- 12:        936.000 cents     936.000000
- 13:       1014.000 cents    1014.000000
- 14:       1092.000 cents    1092.000000
- 15:       1170.000 cents    1170.000000
- 16:       1248.000 cents    1248.000000
-|
-Wendy Carlos - Beta (63.8 Cents)
-|
-  0:          1/1               0.000000 unison, perfect prime
-  1:         63.800 cents      63.800000
-  2:        127.600 cents     127.600000
-  3:        191.400 cents     191.400000
-  4:        255.200 cents     255.200000
-  5:        319.000 cents     319.000000
-  6:        382.800 cents     382.800000
-  7:        446.600 cents     446.600000
-  8:        510.400 cents     510.400000
-  9:        574.200 cents     574.200000
- 10:        638.000 cents     638.000000
- 11:        701.800 cents     701.800000
- 12:        765.600 cents     765.600000
- 13:        829.400 cents     829.400000
- 14:        893.200 cents     893.200000
- 15:        957.000 cents     957.000000
- 16:       1020.800 cents    1020.800000
- 17:       1084.600 cents    1084.600000
- 18:       1148.400 cents    1148.400000
- 19:       1212.200 cents    1212.200000
-|
-Wendy Carlos - Gamma (35.1 Cents)
-|
-  0:          1/1               0.000000 unison, perfect prime
-  1:         35.100 cents      35.100000
-  2:         70.200 cents      70.200000
-  3:        105.300 cents     105.300000
-  4:        140.400 cents     140.400000
-  5:        175.500 cents     175.500000
-  6:        210.600 cents     210.600000
-  7:        245.700 cents     245.700000
-  8:        280.800 cents     280.800000
-  9:        315.900 cents     315.900000
- 10:        351.000 cents     351.000000
- 11:        386.100 cents     386.100000
- 12:        421.200 cents     421.200000
- 13:        456.300 cents     456.300000
- 14:        491.400 cents     491.400000
- 15:        526.500 cents     526.500000
- 16:        561.600 cents     561.600000
- 17:        596.700 cents     596.700000
- 18:        631.800 cents     631.800000
- 19:        666.900 cents     666.900000
- 20:        702.000 cents     702.000000
- 21:        737.100 cents     737.100000
- 22:        772.200 cents     772.200000
- 23:        807.300 cents     807.300000
- 24:        842.400 cents     842.400000
- 25:        877.500 cents     877.500000
- 26:        912.600 cents     912.600000
- 27:        947.700 cents     947.700000
- 28:        982.800 cents     982.800000
- 29:       1017.900 cents    1017.900000
- 30:       1053.000 cents    1053.000000
- 31:       1088.100 cents    1088.100000
- 32:       1123.200 cents    1123.200000
- 33:       1158.300 cents    1158.300000
- 34:       1193.400 cents    1193.400000
- 35:       1228.500 cents    1228.500000
+

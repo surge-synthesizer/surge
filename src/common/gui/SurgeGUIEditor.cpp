@@ -5635,6 +5635,43 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         tuningSubMenu->addSeparator();
     }
 
+    bool isTuningEnabled = !synth->storage.isStandardTuning;
+    bool isMappingEnabled = !synth->storage.isStandardMapping;
+
+    if (isTuningEnabled)
+    {
+        auto tuningLabel = Surge::UI::toOSCaseForMenu("Current Tuning: ");
+
+        if (synth->storage.currentScale.description.empty())
+        {
+            tuningLabel += path_to_string(fs::path(synth->storage.currentScale.name).stem());
+        }
+        else
+        {
+            tuningLabel += synth->storage.currentScale.description;
+        }
+        auto curTuning = new CCommandMenuItem(CCommandMenuItem::Desc(tuningLabel.c_str()));
+        curTuning->setEnabled(false);
+        tuningSubMenu->addEntry(curTuning);
+        tid++;
+    }
+
+    if (isMappingEnabled)
+    {
+        auto mappingLabel = Surge::UI::toOSCaseForMenu("Current Keyboard Mapping: ");
+        mappingLabel += path_to_string(fs::path(synth->storage.currentMapping.name).stem());
+        auto curMapping = new CCommandMenuItem(CCommandMenuItem::Desc(mappingLabel.c_str()));
+        curMapping->setEnabled(false);
+        tuningSubMenu->addEntry(curMapping);
+        tid++;
+    }
+
+    if (isTuningEnabled || isMappingEnabled)
+    {
+        tuningSubMenu->addSeparator();
+        tid++;
+    }
+
     auto *st = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Tuning"),
                                [this]() {
                                    this->synth->storage.init_tables();
@@ -5762,17 +5799,18 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         });
 
     tuningSubMenu->addSeparator();
-    auto mod = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune After Modulation"),
-        [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
-    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
-    tid++;
 
-    mod = addCallbackMenu(
+    auto mod = addCallbackMenu(
         tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune At Keyboard Before Modulation"), [this]() {
             this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         });
     mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY);
+    tid++;
+
+    mod = addCallbackMenu(
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune After Modulation"),
+        [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
+    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
     tid++;
 
     tuningSubMenu->addSeparator();
