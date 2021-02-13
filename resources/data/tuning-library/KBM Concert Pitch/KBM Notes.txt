@@ -1,6 +1,6 @@
-This archive contains a collection of basic linear keyboard mapping files (KBM) that may be used in virtual-instruments that support loading both the Scala SCL and KBM microtuning format files, such as Pianoteq, as well as for creating custom microtuning mappings within the Scala application itself for exporting to other popular formats, such as TUN, MTS and KSP.
+This archive contains a collection of basic linear keyboard mapping files (KBM) which may be used in virtual-instruments that support loading both the Scala SCL and KBM microtuning format files, such as Pianoteq and Surge, as well as for creating custom microtuning mappings within the Scala application itself for exporting to other popular formats, such as TUN, MTS and KSP.
 
-This small linear KBM collection may be used for mapping the starting 1/1 MIDI Note, as well as the Reference Frequency MIDI Note, to the standard concert-pitch chromatic notes.
+This small linear KBM collection may be used for mapping the starting 1/1 MIDI Note, as well as the Reference Frequency MIDI Note (diapason), to the standard concert-pitch chromatic notes.
 
 The file naming convention indicates:
 
