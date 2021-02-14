@@ -1,5 +1,6 @@
 #include "SurgeGUIEditor.h"
 #include "UserDefaults.h"
+#include <set>
 
 namespace Surge
 {
@@ -440,6 +441,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         <ul>
           <li><a href="#colors">Color Database</a>
           <li><a href="#imageid">Image IDs</a>
+          <li><a href="#classes">Built-in Classes and their Properties</a>
           <li><a href="#skinConnectors">Skin Component Connectors</a>
           <li><a href="#loadedImages">Runtime Loaded Images</a>
         </ul>
@@ -497,6 +499,41 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
   </body>
 </html>
       )HTML";
+
+    // CLasses
+    startSection("classes", "Built-in classes and their properties ");
+    {
+        auto clid = Surge::Skin::Component::allComponentIds();
+        for (auto cl : clid)
+        {
+            auto comp = Surge::Skin::Component::componentById(cl);
+            htmls << "<p><b>" << comp.payload->internalClassname << " / " << comp.payload->id
+                  << "</b></p>\n";
+            htmls << "<table><tr><th>Property</th><th>Skin Property XML</th><th>Doc</th></tr>";
+            std::set<Surge::Skin::Component::Properties> cheapSort;
+            for (auto const &pnp : comp.payload->propertyNamesMap)
+            {
+                cheapSort.insert(pnp.first);
+            }
+            for (auto id : cheapSort)
+            {
+                auto doc = comp.payload->propertyDocString[id];
+                auto vec = comp.payload->propertyNamesMap[id];
+                auto prp = Surge::Skin::Component::propertyEnumToString(id);
+
+                htmls << "<tr><td>" << prp << "</td><td>";
+                std::string pre = "";
+                for (auto const &sv : vec)
+                {
+                    htmls << pre << sv << " ";
+                    pre = "/ ";
+                }
+                htmls << "</td><td>" << doc << "</td></tr>";
+            }
+            htmls << "</table>";
+        }
+    }
+    endSection();
 
     // Skin Connectors
     startSection("skinConnectors", "Skin Component Connectors");

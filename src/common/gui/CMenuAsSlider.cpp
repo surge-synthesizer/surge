@@ -44,6 +44,7 @@ CMenuAsSlider::~CMenuAsSlider() {}
 void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
 {
     auto r = getViewSize();
+
 #if DEBUGLAYOUT
     if (isHover)
     {
@@ -63,7 +64,20 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
 
     if (hasDragRegion)
     {
-        d.left += dragRegion.getWidth();
+        switch (glyphLocation)
+        {
+        case LEFT:
+            d.left += dragRegion.getWidth();
+            break;
+        case RIGHT:
+            d.right -= dragRegion.getWidth();
+            break;
+        case ABOVE:
+            d.top += dragRegion.getHeight();
+            break;
+        case BELOW:
+            d.bottom -= dragRegion.getHeight();
+        }
     }
 
     if (pBackground)
@@ -167,11 +181,27 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
             }
 
             auto dbox = getViewSize();
-            dbox.right = dbox.left + dglyphsize;
-            float dw = (dbox.getHeight() - dglyphsize) / 2.0;
-            dbox.top += dw;
-            dbox.bottom -= dw;
-            VSTGUI::CPoint p(xv * dglyphsize, yv * dglyphsize);
+            VSTGUI::CPoint p(xv * glyphW, yv * glyphH);
+
+            if (!skin || skin->getVersion() == 1)
+            {
+                dbox.right = dbox.left + dglyphsize;
+                float dw = (dbox.getHeight() - dglyphsize) / 2.0;
+                dbox.top += dw;
+                dbox.bottom -= dw;
+            }
+            else
+            {
+                dbox = dragRegion;
+                if (glyphLocation == LEFT && dglyphsize == glyphH && dglyphsize == glyphW &&
+                    dglyphsize == 18)
+                {
+                    // We are in legacy code mode basically
+                    float dw = (dbox.getHeight() - dglyphsize) / 2.0;
+                    dbox.top += dw;
+                    dbox.bottom -= dw;
+                }
+            }
 
             if (pGlyph)
             {
@@ -270,12 +300,33 @@ void CMenuAsSlider::onSkinChanged()
 {
     if (associatedBitmapStore && skin)
     {
-        pBackground = associatedBitmapStore->getBitmap(bgid);
-        pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
-            skinControl, dynamic_cast<CScalableBitmap *>(pBackground), associatedBitmapStore,
-            Surge::UI::Skin::HoverType::HOVER);
+        if (bgrs != "" && associatedBitmapStore->getBitmapByStringID(bgrs))
+        {
+            pBackground = associatedBitmapStore->getBitmapByStringID(bgrs);
+            pBackgroundHover = nullptr;
+            if (skinControl)
+            {
+                auto hovim = skin->propertyValue(skinControl, Surge::Skin::Component::HOVER_IMAGE);
+                if (hovim.isJust())
+                    pBackgroundHover = associatedBitmapStore->getBitmapByStringID(hovim.fromJust());
+            }
+        }
+        else
+        {
+            pBackground = associatedBitmapStore->getBitmap(bgid);
 
-        if (dglphyid > 0)
+            pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
+                skinControl, dynamic_cast<CScalableBitmap *>(pBackground), associatedBitmapStore,
+                Surge::UI::Skin::HoverType::HOVER);
+        }
+
+        pGlyph = nullptr;
+        if (glyphImage != "")
+        {
+            pGlyph = associatedBitmapStore->getBitmapByStringID(glyphImage);
+            pGlyphHover = associatedBitmapStore->getBitmapByStringID(glyphImageHover);
+        }
+        if (pGlyph == nullptr && dglphyid > 0)
         {
             pGlyph = associatedBitmapStore->getBitmap(dglphyid);
             pGlyphHover = skin->hoverBitmapOverlayForBackgroundBitmap(
@@ -356,4 +407,59 @@ void CMenuAsSlider::setDragRegion(const VSTGUI::CRect &r)
 {
     hasDragRegion = true;
     dragRegion = r;
+}
+
+void CMenuAsSlider::setGlyphSettings(const std::string &img, const std::string &imghov,
+                                     const std::string &location, int w, int h)
+{
+    glyphImage = img;
+    glyphImageHover = imghov;
+
+    if (location == "right")
+        glyphLocation = RIGHT;
+    else if (location == "above")
+        glyphLocation = ABOVE;
+    else if (location == "below")
+        glyphLocation = BELOW;
+    else
+        glyphLocation = LEFT;
+
+    glyphW = w;
+    glyphH = h;
+
+    auto vs = getViewSize();
+    auto ch = vs.getHeight();
+    auto cw = vs.getWidth();
+    switch (glyphLocation)
+    {
+    case LEFT:
+        dragRegion = vs;
+        dragRegion.right = dragRegion.left + glyphW;
+        dragRegion.top = vs.top + (ch - glyphH) / 2;
+        dragRegion.bottom = dragRegion.top + glyphH;
+        break;
+    case RIGHT:
+        dragRegion = vs;
+        dragRegion.left = dragRegion.right - glyphW;
+        dragRegion.top = vs.top + (ch - glyphH) / 2;
+        dragRegion.bottom = dragRegion.top + glyphH;
+        break;
+    case ABOVE:
+        dragRegion = vs;
+        dragRegion.bottom = dragRegion.top + glyphH;
+        dragRegion.left = vs.left + (cw - glyphW) / 2;
+        dragRegion.right = dragRegion.left + glyphW;
+        break;
+    case BELOW:
+        dragRegion = vs;
+        dragRegion.top = dragRegion.bottom - glyphH;
+        dragRegion.left = vs.left + (cw - glyphW) / 2;
+        dragRegion.right = dragRegion.left + glyphW;
+        break;
+    }
+
+    hasDragRegion = true;
+
+    invalid();
+    onSkinChanged();
 }

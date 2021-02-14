@@ -87,6 +87,13 @@ class CMenuAsSlider : public VSTGUI::CControl,
         onSkinChanged();
     }
 
+    std::string bgrs = "";
+    void setBackgroundBitmapResource(const std::string &b)
+    {
+        bgrs = b;
+        onSkinChanged();
+    }
+
     bool filtermode = false;
     void setFilterMode(bool b)
     {
@@ -94,6 +101,17 @@ class CMenuAsSlider : public VSTGUI::CControl,
         invalid();
     }
 
+    enum
+    {
+        ABOVE,
+        BELOW,
+        LEFT,
+        RIGHT
+    } glyphLocation = LEFT;
+    std::string glyphImage = "", glyphImageHover = "";
+    int glyphW = 18, glyphH = 18;
+    void setGlyphSettings(const std::string &img, const std::string &imghov,
+                          const std::string &location, int w, int h);
     virtual void onSkinChanged() override;
 
     VSTGUI::CRect dragRegion;
@@ -105,6 +123,8 @@ class CMenuAsSlider : public VSTGUI::CControl,
     void setDragGlyph(int id, int size = 18)
     {
         dglphyid = id;
+        glyphW = size;
+        glyphH = size;
         dglyphsize = size;
         onSkinChanged();
     }

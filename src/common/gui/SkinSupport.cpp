@@ -642,23 +642,49 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             }
         }
 
-        /*
-         * This is a super-late-in-1.8 semi-hack I need to unwind in 1.9
-         */
-        if (c->ultimateparentclassname == "CHSwitch2" &&
-            c->allprops.find("image") != c->allprops.end() &&
-            c->allprops.find("bg_resource") == c->allprops.end())
+        if (getVersion() >= 2)
         {
-            c->allprops["bg_resource"] = c->allprops["image"];
-        }
+            /*
+             * OK so we need to resolve the image names. There's a hierarchy of
+             * 'image/resource/bg_id' in that order and we want to choose the 'lowest' constant one.
+             * So if image != resource, set resource to image, bit if all three are the same, erase
+             * image and resource
+             */
+            if (c->defaultComponent.hasProperty(Surge::Skin::Component::Properties::BACKGROUND))
+            {
+                auto hasImage = c->allprops.find("image") != c->allprops.end();
+                auto hasResource = c->allprops.find("bg_resource") != c->allprops.end();
+                auto hasId = c->allprops.find("bg_id") != c->allprops.end();
 
-        /*
-         * Also handle the bg_id / bg_resource special case here
-         */
-        if (c->allprops.find("bg_resource") != c->allprops.end() &&
-            c->allprops.find("bg_id") != c->allprops.end())
+                if (hasImage && hasResource)
+                    c->allprops["bg_resource"] = c->allprops["image"];
+                if (hasResource && hasId && c->allprops["bg_resource"] == c->allprops["bg_id"])
+                {
+                    c->allprops.erase("bg_resource");
+                    c->allprops.erase("image");
+                }
+            }
+        }
+        else
         {
-            c->allprops.erase("bg_id");
+            /*
+             * This is a super-late-in-1.8 semi-hack I need to unwind in 1.9. It is unwound above
+             */
+            if (c->ultimateparentclassname == "CHSwitch2" &&
+                c->allprops.find("image") != c->allprops.end() &&
+                c->allprops.find("bg_resource") == c->allprops.end())
+            {
+                c->allprops["bg_resource"] = c->allprops["image"];
+            }
+
+            /*
+             * Also handle the bg_id / bg_resource special case here
+             */
+            if (c->allprops.find("bg_resource") != c->allprops.end() &&
+                c->allprops.find("bg_id") != c->allprops.end())
+            {
+                c->allprops.erase("bg_id");
+            }
         }
     }
     return true;
@@ -725,9 +751,15 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
         {
             auto control = std::make_shared<Skin::Control>();
 
+            /*
+             * This is a bit of a mess; v 1.0 had label as special and 2 and higher introduced
+             * components so we could have this be cleaner by making uiid and label symmetric. Later
+             * later...
+             */
             if (std::string(lkid->Value()) == "label")
             {
                 control->type = Control::Type::LABEL;
+                control->defaultComponent = Surge::Skin::Components::Label;
             }
             else
             {
@@ -738,14 +770,15 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
 
                 auto uid = str;
                 auto conn = Surge::Skin::Connector::connectorByID(uid);
-                if (!conn.payload || conn.payload->defaultComponent == Surge::Skin::Connector::NONE)
+                if (!conn.payload ||
+                    conn.payload->defaultComponent == Surge::Skin::Components::None)
                 {
                     FIXMEERROR << "Got a default component of NONE for uiid '" << uid << "'"
                                << std::endl;
                 }
                 else
                 {
-                    control->copyFromConnector(conn);
+                    control->copyFromConnector(conn, getVersion());
                     control->type = Control::Type::UIID;
                     control->ui_id = uid;
                 }
@@ -765,13 +798,16 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
             std::vector<std::string> removeThese;
             for (auto a = lkid->FirstAttribute(); a; a = a->Next())
             {
-                /*
-                 * A special case: bg_id and bg_resource are paired and in your skin
-                 * you only say one, but if you say bg_resource you may have picked up
-                 * a bg_id from the default. So queue up some removals.
-                 */
-                if (std::string(a->Name()) == "bg_resource")
-                    removeThese.push_back("bg_id");
+                if (getVersion() == 1)
+                {
+                    /*
+                     * A special case: bg_id and bg_resource are paired and in your skin
+                     * you only say one, but if you say bg_resource you may have picked up
+                     * a bg_id from the default. So queue up some removals.
+                     */
+                    if (std::string(a->Name()) == "bg_resource")
+                        removeThese.push_back("bg_id");
+                }
                 control->allprops[a->Name()] = a->Value();
             }
             for (auto &c : removeThese)
@@ -796,7 +832,8 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
      * while resolving.
      */
     std::set<std::string> baseParents;
-    for (auto &c : Surge::Skin::Connector::connectorsByComponentType(Surge::Skin::Connector::GROUP))
+    for (auto &c :
+         Surge::Skin::Connector::connectorsByComponentType(Surge::Skin::Components::Group))
         baseParents.insert(c.payload->id);
     do
     {
@@ -906,20 +943,21 @@ CScalableBitmap *Skin::backgroundBitmapForControl(Skin::Control::ptr_t c,
                                                   std::shared_ptr<SurgeBitmaps> bitmapStore)
 {
     CScalableBitmap *bmp = nullptr;
-    auto ms = propertyValue(c, "bg_id");
+
+    auto ms = propertyValue(c, Surge::Skin::Component::Properties::BACKGROUND);
     if (ms.isJust())
     {
-        bmp = bitmapStore->getBitmap(std::atoi(ms.fromJust().c_str()));
-    }
-    else
-    {
-        auto mr = propertyValue(c, "bg_resource");
-        if (mr.isJust())
+        auto msAsInt = std::atoi(ms.fromJust().c_str());
+        if (imageAllowedIds.find(msAsInt) != imageAllowedIds.end())
         {
-            bmp = bitmapStore->getBitmapByStringID(mr.fromJust());
+            bmp = bitmapStore->getBitmap(std::atoi(ms.fromJust().c_str()));
+        }
+        else
+        {
+            bmp = bitmapStore->getBitmapByStringID(ms.fromJust());
             if (!bmp)
-                bmp = bitmapStore->loadBitmapByPathForStringID(resourceName(mr.fromJust()),
-                                                               mr.fromJust());
+                bmp = bitmapStore->loadBitmapByPathForStringID(resourceName(ms.fromJust()),
+                                                               ms.fromJust());
         }
     }
     return bmp;
@@ -988,7 +1026,7 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBit
     return nullptr;
 }
 
-void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c)
+void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c, int version)
 {
     x = c.payload->posx;
     y = c.payload->posy;
@@ -996,8 +1034,10 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c
     h = c.payload->h;
     ui_id = c.payload->id;
     type = Control::UIID;
+    defaultComponent = c.payload->defaultComponent;
 
-    auto transferPropertyIf = [this, c](Surge::Skin::Connector::Properties p, std::string target) {
+    auto transferPropertyIf = [this, c](Surge::Skin::Component::Properties p,
+                                        const std::string &target) {
         if (c.payload->properties.find(p) != c.payload->properties.end())
         {
             this->allprops[target] = c.payload->properties[p];
@@ -1009,97 +1049,98 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c
         this->allprops["base_parent"] = c.payload->parentId; // bit of a hack
     }
 
-    switch (c.payload->defaultComponent)
-    {
-        // remember to do this null case and the non-null case above also
-    case Surge::Skin::Connector::SLIDER:
-    {
-        classname = "CSurgeSlider";
-        ultimateparentclassname = "CSurgeSlider";
-        break;
-    }
-    case Surge::Skin::Connector::HSWITCH2:
-    {
-        classname = "CHSwitch2";
-        ultimateparentclassname = "CHSwitch2";
-        transferPropertyIf(Surge::Skin::Connector::BACKGROUND, "bg_id");
-        transferPropertyIf(Surge::Skin::Connector::ROWS, "rows");
-        transferPropertyIf(Surge::Skin::Connector::COLUMNS, "columns");
-        transferPropertyIf(Surge::Skin::Connector::FRAMES, "frames");
-        transferPropertyIf(Surge::Skin::Connector::FRAME_OFFSET, "frame_offset");
-        transferPropertyIf(Surge::Skin::Connector::DRAGGABLE_HSWITCH, "draggable");
-        break;
-    }
-    case Surge::Skin::Connector::SWITCH:
-    {
-        classname = "CSwitchControl";
-        ultimateparentclassname = "CSwitchControl";
-        transferPropertyIf(Surge::Skin::Connector::BACKGROUND, "bg_id");
-        break;
-    }
-    case Surge::Skin::Connector::LFO:
-    {
-        classname = "CLFOGui";
-        ultimateparentclassname = "CLFOGui";
-        break;
-    }
-    case Surge::Skin::Connector::OSCMENU:
-    {
-        classname = "COSCMenu";
-        ultimateparentclassname = "COSCMenu";
-        break;
-    }
-    case Surge::Skin::Connector::FXMENU:
-    {
-        classname = "CFXMenu";
-        ultimateparentclassname = "CFXMenu";
-        break;
-    }
-    case Surge::Skin::Connector::NUMBERFIELD:
-    {
-        classname = "CNumberField";
-        ultimateparentclassname = "CNumberField";
-        transferPropertyIf(Surge::Skin::Connector::NUMBERFIELD_CONTROLMODE,
-                           "numberfield_controlmode");
-        transferPropertyIf(Surge::Skin::Connector::BACKGROUND, "bg_id");
-        transferPropertyIf(Surge::Skin::Connector::TEXT_COLOR, "text_color");
-        transferPropertyIf(Surge::Skin::Connector::TEXT_HOVER_COLOR, "text_color.hover");
-        break;
-    }
-    case Surge::Skin::Connector::VU_METER:
-    {
-        classname = "CVUMeter";
-        ultimateparentclassname = "CVUMeter";
-        break;
-    }
-    case Surge::Skin::Connector::GROUP:
-    {
-        classname = "--GROUP--";
-        ultimateparentclassname = "--GROUP--";
-        break;
-    }
+    auto dc = c.payload->defaultComponent;
 
-    case Surge::Skin::Connector::CUSTOM:
+    if (version == 1)
     {
-        classname = "--CUSTOM--";
-        ultimateparentclassname = "--CUSTOM--";
-        break;
-    }
+        if (dc == Surge::Skin::Components::Slider)
+        {
+            classname = "CSurgeSlider";
+            ultimateparentclassname = "CSurgeSlider";
+        }
+        else if (dc == Surge::Skin::Components::HSwitch2)
+        {
+            classname = "CHSwitch2";
+            ultimateparentclassname = "CHSwitch2";
+            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
+            transferPropertyIf(Surge::Skin::Component::ROWS, "rows");
+            transferPropertyIf(Surge::Skin::Component::COLUMNS, "columns");
+            transferPropertyIf(Surge::Skin::Component::FRAMES, "frames");
+            transferPropertyIf(Surge::Skin::Component::FRAME_OFFSET, "frame_offset");
+            transferPropertyIf(Surge::Skin::Component::DRAGGABLE_HSWITCH, "draggable");
+        }
+        else if (dc == Surge::Skin::Components::Switch)
+        {
+            classname = "CSwitchControl";
+            ultimateparentclassname = "CSwitchControl";
+            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
+        }
+        else if (dc == Surge::Skin::Components::NumberField)
+        {
+            classname = "CNumberField";
+            ultimateparentclassname = "CNumberField";
+            transferPropertyIf(Surge::Skin::Component::NUMBERFIELD_CONTROLMODE,
+                               "numberfield_controlmode");
+            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
+            transferPropertyIf(Surge::Skin::Component::TEXT_COLOR, "text_color");
+            transferPropertyIf(Surge::Skin::Component::TEXT_HOVER_COLOR, "text_color.hover");
+        }
 
-    case Surge::Skin::Connector::FILTERSELECTOR:
-    {
-        classname = "FilterSelector";
-        ultimateparentclassname = "FilterSelector";
-        break;
+        else if (dc == Surge::Skin::Components::Slider)
+        {
+            classname = "CSurgeSlider";
+            ultimateparentclassname = "CSurgeSlider";
+        }
+        else if (dc == Surge::Skin::Components::LFODisplay)
+        {
+            classname = "CLFOGui";
+            ultimateparentclassname = "CLFOGui";
+        }
+        else if (dc == Surge::Skin::Components::OscMenu)
+        {
+            classname = "COSCMenu";
+            ultimateparentclassname = "COSCMenu";
+        }
+        else if (dc == Surge::Skin::Components::FxMenu)
+        {
+            classname = "CFXMenu";
+            ultimateparentclassname = "CFXMenu";
+        }
+        else if (dc == Surge::Skin::Components::VuMeter)
+        {
+            classname = "CVUMeter";
+            ultimateparentclassname = "CVUMeter";
+        }
+        else if (dc == Surge::Skin::Components::Group)
+        {
+            classname = "--GROUP--";
+            ultimateparentclassname = "--GROUP--";
+        }
+        else if (dc == Surge::Skin::Components::Custom)
+        {
+            classname = "--CUSTOM--";
+            ultimateparentclassname = "--CUSTOM--";
+        }
+        else if (dc == Surge::Skin::Components::FilterSelector)
+        {
+            classname = "FilterSelector";
+            ultimateparentclassname = "FilterSelector";
+        }
     }
-    default:
+    else
     {
-        classname = "UNKNOWN";
-        ultimateparentclassname = "UNKNOWN";
-        // std::cout << "SOFTWARE ERROR " << __LINE__ << " " << __FILE__ << " '" << ui_id << "' " <<
-        // c.payload->defaultComponent << std::endl;
-        break;
-    }
+        classname = dc.payload->internalClassname;
+        ultimateparentclassname = dc.payload->internalClassname;
+        for (auto const &propNamePair : dc.payload->propertyNamesMap)
+        {
+            if (c.payload->properties.find(propNamePair.first) != c.payload->properties.end())
+            {
+                for (auto const &tt : propNamePair.second)
+                {
+                    this->allprops[tt] = c.payload->properties[propNamePair.first];
+                }
+            }
+        }
     }
 }
 

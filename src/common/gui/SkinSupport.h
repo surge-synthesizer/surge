@@ -143,6 +143,8 @@ class Skin
         typedef std::shared_ptr<Control> ptr_t;
         int x, y, w, h;
 
+        Surge::Skin::Component defaultComponent;
+
         std::string ui_id;
         typedef enum
         {
@@ -177,7 +179,7 @@ class Skin
         {
             return VSTGUI::CRect(VSTGUI::CPoint(x, y), VSTGUI::CPoint(w, h));
         }
-        void copyFromConnector(const Surge::Skin::Connector &c);
+        void copyFromConnector(const Surge::Skin::Connector &c, int skinVersion);
     };
 
     struct ControlGroup
@@ -251,7 +253,7 @@ class Skin
         if (!res)
         {
             res = std::make_shared<Surge::UI::Skin::Control>();
-            res->copyFromConnector(c);
+            res->copyFromConnector(c, getVersion());
             // resolveBaseParentOffsets( res );
             controls.push_back(res);
         }
@@ -262,22 +264,31 @@ class Skin
 
     void addControl(Skin::Control::ptr_t c) { controls.push_back(c); }
 
-    Maybe<std::string> propertyValue(Skin::Control::ptr_t c, const std::string &key)
+    Maybe<std::string> propertyValue(Skin::Control::ptr_t c,
+                                     Surge::Skin::Component::Properties pkey)
     {
+        if (!c->defaultComponent.hasProperty(pkey))
+            return Maybe<std::string>();
+
+        auto stringNames = c->defaultComponent.payload->propertyNamesMap[pkey];
+
         /*
         ** Traverse class heirarchy looking for value
         */
-        if (c->allprops.find(key) != c->allprops.end())
-            return Maybe<std::string>(c->allprops[key]);
-        auto cl = componentClasses[c->classname];
 
-        if (!cl.get())
+        for (auto const &key : stringNames)
+            if (c->allprops.find(key) != c->allprops.end())
+                return Maybe<std::string>(c->allprops[key]);
+
+        auto cl = componentClasses[c->classname];
+        if (!cl)
             return Maybe<std::string>();
 
         do
         {
-            if (cl->allprops.find(key) != cl->allprops.end())
-                return Maybe<std::string>(cl->allprops[key]);
+            for (auto const &key : stringNames)
+                if (cl->allprops.find(key) != cl->allprops.end())
+                    return Maybe<std::string>(cl->allprops[key]);
 
             if (cl->allprops.find("parent") != cl->allprops.end() &&
                 componentClasses.find(cl->allprops["parent"]) != componentClasses.end())
@@ -291,7 +302,7 @@ class Skin
         return Maybe<std::string>();
     }
 
-    std::string propertyValue(Skin::Control::ptr_t c, const std::string &key,
+    std::string propertyValue(Skin::Control::ptr_t c, Surge::Skin::Component::Properties key,
                               const std::string &defaultValue)
     {
         auto pv = propertyValue(c, key);

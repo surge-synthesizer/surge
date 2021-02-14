@@ -38,6 +38,7 @@ namespace Skin
 std::unordered_map<std::string, std::shared_ptr<Connector::Payload>> *idmap;
 std::unordered_map<Connector::NonParameterConnection, std::shared_ptr<Connector::Payload>> *npcMap;
 std::unordered_map<std::string, Surge::Skin::Color> *colMap;
+std::unordered_map<int, std::shared_ptr<Component::Payload>> *registeredComponents;
 
 void guaranteeMap()
 {
@@ -48,6 +49,7 @@ void guaranteeMap()
         npcMap = new std::unordered_map<Connector::NonParameterConnection,
                                         std::shared_ptr<Connector::Payload>>();
         colMap = new std::unordered_map<std::string, Surge::Skin::Color>();
+        registeredComponents = new std::unordered_map<int, std::shared_ptr<Component::Payload>>();
         firstTime = false;
     }
 }
@@ -60,13 +62,106 @@ struct HarvestMaps
         delete idmap;
         delete npcMap;
         delete colMap;
+        delete registeredComponents;
     }
 };
 
 HarvestMaps hmDeleter;
 
+int componentidbase = 100000;
+Component::Component() noexcept { payload = std::make_shared<Payload>(); }
+
+Component::Component(const std::string &internalClassname) noexcept
+{
+    payload = std::make_shared<Payload>();
+    payload->id = componentidbase++;
+    payload->internalClassname = internalClassname;
+    guaranteeMap();
+    registeredComponents->insert(std::make_pair(payload->id, payload));
+    withProperty(Properties::X, {"x"}, "X Position");
+    withProperty(Properties::Y, {"y"}, "Y Position");
+    withProperty(Properties::W, {"w"}, "Width");
+    withProperty(Properties::H, {"h"}, "Height");
+}
+
+Component::~Component() {}
+
+std::vector<int> Component::allComponentIds()
+{
+    guaranteeMap();
+    std::vector<int> res;
+    for (auto const &p : *registeredComponents)
+        res.push_back(p.first);
+    std::sort(res.begin(), res.end());
+    return res;
+}
+
+Component Component::componentById(int i)
+{
+    guaranteeMap();
+    if (registeredComponents->find(i) != registeredComponents->end())
+    {
+        auto res = Component();
+        res.payload = registeredComponents->at(i);
+        return res;
+    }
+    return Surge::Skin::Components::None;
+}
+
+std::string Component::propertyEnumToString(Properties p)
+{
+#define PN(x)                                                                                      \
+    case x:                                                                                        \
+        return #x;
+    switch (p)
+    {
+        PN(X)
+        PN(Y)
+        PN(W)
+        PN(H)
+        PN(BACKGROUND)
+        PN(HOVER_IMAGE)
+        PN(HOVER_ON_IMAGE)
+        PN(IMAGE)
+        PN(ROWS)
+        PN(COLUMNS)
+        PN(FRAMES)
+        PN(FRAME_OFFSET)
+        PN(NUMBERFIELD_CONTROLMODE)
+        PN(DRAGGABLE_HSWITCH)
+        PN(TEXT_COLOR)
+        PN(TEXT_HOVER_COLOR)
+        PN(BACKGROUND_COLOR)
+        PN(FRAME_COLOR)
+
+        PN(SLIDER_TRAY)
+        PN(HANDLE_IMAGE)
+        PN(HANDLE_HOVER_IMAGE)
+        PN(HANDLE_TEMPOSYNC_IMAGE)
+        PN(HANDLE_TEMPOSYNC_HOVER_IMAGE)
+        PN(HIDE_SLIDER_LABEL)
+
+        PN(TEXT)
+        PN(CONTROL_TEXT)
+        PN(TEXT_ALIGN)
+        PN(FONT_SIZE)
+        PN(FONT_STYLE)
+
+        PN(GLYPH_PLACEMENT)
+        PN(GLYPH_W)
+        PN(GLYPH_H)
+        PN(GLPYH_ACTIVE)
+        PN(GLYPH_IMAGE)
+        PN(GLYPH_HOVER_IMAGE)
+    }
+#undef PN
+    // This will never happen since the switch is exhaustive or the code wouldn't compile,
+    // and is just here to silence a gcc warning which is incorrect
+    return std::string("error") + std::to_string((int)p);
+}
+
 std::shared_ptr<Connector::Payload>
-makePayload(const std::string &id, float x, float y, float w, float h, Connector::Component c,
+makePayload(const std::string &id, float x, float y, float w, float h, const Component &c,
             Connector::NonParameterConnection n = Connector::PARAMETER_CONNECTED)
 {
     guaranteeMap();
@@ -92,21 +187,21 @@ Connector::Connector() noexcept
 
 Connector::Connector(const std::string &id, float x, float y) noexcept
 {
-    payload = makePayload(id, x, y, -1, -1, SLIDER);
+    payload = makePayload(id, x, y, -1, -1, Components::Slider);
 }
 
-Connector::Connector(const std::string &id, float x, float y, Component c) noexcept
+Connector::Connector(const std::string &id, float x, float y, const Component &c) noexcept
 {
     payload = makePayload(id, x, y, -1, -1, c);
 }
 
 Connector::Connector(const std::string &id, float x, float y, float w, float h,
-                     Component c) noexcept
+                     const Component &c) noexcept
 {
     payload = makePayload(id, x, y, w, h, c);
 }
 
-Connector::Connector(const std::string &id, float x, float y, float w, float h, Component c,
+Connector::Connector(const std::string &id, float x, float y, float w, float h, const Component &c,
                      NonParameterConnection n) noexcept
 {
     payload = makePayload(id, x, y, w, h, c, n);
@@ -114,26 +209,26 @@ Connector::Connector(const std::string &id, float x, float y, float w, float h, 
 
 Connector::Connector(const std::string &id, float x, float y, NonParameterConnection n) noexcept
 {
-    payload = makePayload(id, x, y, -1, -1, NONE, n);
+    payload = makePayload(id, x, y, -1, -1, Components::None, n);
 }
 
 Connector &Connector::asMixerSolo() noexcept
 {
-    payload->defaultComponent = Connector::SWITCH;
+    payload->defaultComponent = Components::Switch;
     payload->w = 22;
     payload->h = 15;
     return withBackground(IDB_MIXER_SOLO);
 }
 Connector &Connector::asMixerMute() noexcept
 {
-    payload->defaultComponent = Connector::SWITCH;
+    payload->defaultComponent = Components::Switch;
     payload->w = 22;
     payload->h = 15;
     return withBackground(IDB_MIXER_MUTE);
 }
 Connector &Connector::asMixerRoute() noexcept
 {
-    payload->defaultComponent = Connector::HSWITCH2;
+    payload->defaultComponent = Components::HSwitch2;
     payload->w = 22;
     payload->h = 15;
     return withHSwitch2Properties(IDB_MIXER_OSC_ROUTING, 3, 1, 3);
@@ -141,7 +236,7 @@ Connector &Connector::asMixerRoute() noexcept
 
 Connector &Connector::asJogPlusMinus() noexcept
 {
-    payload->defaultComponent = Connector::HSWITCH2;
+    payload->defaultComponent = Components::HSwitch2;
     payload->w = 32;
     payload->h = 12;
     return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2);
@@ -164,7 +259,7 @@ Connector Connector::connectorByNonParameterConnection(NonParameterConnection n)
     return c;
 }
 
-std::vector<Connector> Connector::connectorsByComponentType(Connector::Component c)
+std::vector<Connector> Connector::connectorsByComponentType(const Component &c)
 {
     auto res = std::vector<Connector>();
     guaranteeMap();
