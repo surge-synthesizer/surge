@@ -195,16 +195,16 @@ void SurgeSynthesizer::loadPatch(int id)
 
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName)
 {
-    FILE *f = fopen(fxpPath, "rb");
-    if (!f)
+    std::filebuf f;
+    if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
         return false;
     fxChunkSetCustom fxp;
-    auto read = fread(&fxp, sizeof(fxChunkSetCustom), 1, f);
+    auto read = f.sgetn(reinterpret_cast<char *>(&fxp), sizeof(fxp));
     // FIXME - error if read != chunk size
     if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
         (vt_read_int32BE(fxp.fxID) != 'cjs3'))
     {
-        fclose(f);
+        f.close();
         auto cm = vt_read_int32BE(fxp.chunkMagic);
         auto fm = vt_read_int32BE(fxp.fxMagic);
         auto id = vt_read_int32BE(fxp.fxID);
@@ -236,13 +236,10 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     }
 
     int cs = vt_read_int32BE(fxp.chunkSize);
-    void *data = malloc(cs);
-    assert(data);
-    size_t actual_cs = fread(data, 1, cs, f);
-    int error = ferror(f);
-    if (error)
+    std::unique_ptr<char[]> data{new char[cs]};
+    if (f.sgetn(data.get(), cs) != cs)
         perror("Error while loading patch!");
-    fclose(f);
+    f.close();
 
     storage.getPatch().comment = "";
     storage.getPatch().author = "";
@@ -257,8 +254,8 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     current_category_id = categoryId;
     storage.getPatch().name = patchName;
 
-    loadRaw(data, cs, true);
-    free(data);
+    loadRaw(data.get(), cs, true);
+    data.reset();
 
     /*
     ** OK so at this point we may have loaded a patch with a tuning override

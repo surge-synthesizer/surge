@@ -1,5 +1,6 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
+#include "filesystem/import.h"
 #include <iostream>
 #include <sstream>
 
@@ -99,14 +100,11 @@ void playSomeBach()
     std::string tmpdir = "/tmp";
     std::string fname = tmpdir + "/988-v05.mid";
 
-    FILE *tf = fopen(fname.c_str(), "r");
-    if (!tf)
+    if (!fs::exists(fs::path{fname}))
     {
         std::string cmd = "curl -o " + fname + " http://www.jsbach.net/midi/bwv988/988-v05.mid";
         auto res = system(cmd.c_str());
     }
-    else
-        fclose(tf);
 
     std::string otp = "DX EP 1";
     for (int i = 0; i < surge->storage.patch_list.size(); ++i)

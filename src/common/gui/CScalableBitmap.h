@@ -7,10 +7,8 @@
 
 #if ESCAPE_FROM_VSTGUI
 #include "efvg/escape_from_vstgui.h"
-typedef int NSVGimage;
 #else
 #include "vstgui/vstgui.h"
-#include "nanosvg.h"
 #endif
 
 #include <vector>
@@ -89,7 +87,7 @@ class CScalableBitmap : public VSTGUI::CBitmap
 
     VSTGUI::CFrame *frame;
 
-    NSVGimage *svgImage;
+    struct NSVGimage *svgImage;
     void drawSVG(VSTGUI::CDrawContext *context, const VSTGUI::CRect &rect,
                  const VSTGUI::CPoint &offset, float alpha);
     VSTGUI::CColor svgColorToCColor(int svgColor, float opacity = 1.0);

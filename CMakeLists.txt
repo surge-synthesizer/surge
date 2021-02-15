@@ -578,10 +578,6 @@ elseif( UNIX AND NOT APPLE )
 
 elseif( WIN32 )
 
-  set(SURGE_OS_SOURCES
-    src/windows/surge_win_fopen_utf8.cpp
-    )
-
   set(SURGE_OS_GUI_SOURCES
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp

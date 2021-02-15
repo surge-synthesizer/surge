@@ -984,37 +984,34 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
 
 bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 {
-    FILE *f = fopen(filename.c_str(), "rb");
-    if (!f)
+    std::filebuf f;
+    if (!f.open(string_to_path(filename), std::ios::binary | std::ios::in))
         return false;
     wt_header wh;
     memset(&wh, 0, sizeof(wt_header));
 
-    size_t read = fread(&wh, sizeof(wt_header), 1, f);
+    size_t read = f.sgetn(reinterpret_cast<char *>(&wh), sizeof(wh));
     // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
     // if (wh.tag != vt_read_int32BE('vawt'))
     if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
     {
         // SOME sort of error reporting is appropriate
-        fclose(f);
         return false;
     }
 
-    void *data;
     size_t ds;
     if (vt_read_int16LE(wh.flags) & wtf_int16)
         ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
     else
         ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
 
-    data = malloc(ds);
-    read = fread(data, 1, ds, f);
+    const std::unique_ptr<char[]> data{new char[ds]};
+    read = f.sgetn(data.get(), ds);
     // FIXME - error if read != ds
 
     waveTableDataMutex.lock();
-    bool wasBuilt = wt->BuildWT(data, wh, false);
+    bool wasBuilt = wt->BuildWT(data.get(), wh, false);
     waveTableDataMutex.unlock();
-    free(data);
 
     if (!wasBuilt)
     {
@@ -1031,11 +1028,8 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
                "GitHub issue at "
             << " https://github.com/surge-synthesizer/surge/";
         Surge::UserInteractions::promptError(oss.str(), "Wavetable Loading Error");
-        fclose(f);
-        return false;
     }
-    fclose(f);
-    return true;
+    return wasBuilt;
 }
 int SurgeStorage::get_clipboard_type() { return clipboard_type; }
 

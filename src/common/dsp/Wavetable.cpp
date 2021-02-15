@@ -271,10 +271,6 @@ void Wavetable::MipMapWT()
     const int filter_size = 63;
     const int filter_id_of = (filter_size - 1) >> 1;
 
-    /*FILE *F;
-    F = fopen("d:\\sdump.lala","wb");*/
-
-    // fwrite(this->TableI16WeakPointers[0][0],size*sizeof(short),1,F);
     for (int l = 1; l < levels; l++)
     {
         int psize = size >> (l - 1);
