@@ -5956,6 +5956,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
         zid++;
     }
 
+#if TARGET_VST3
+    zoomSubMenu->addSeparator(zid++);
+
+    auto dragResize =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", 1);
+
+    auto menuItem = addCallbackMenu(
+        zoomSubMenu, Surge::UI::toOSCaseForMenu("Resize by Dragging the Bottom Right Corner"),
+        [this, dragResize]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "dragResizeVST3",
+                                                   1 - dragResize);
+        });
+    menuItem->setChecked(dragResize);
+
+    zid++;
+#endif
+
     return zoomSubMenu;
 }
 
@@ -6770,8 +6787,10 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSiz
         auto zfdx = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeX()) / 100.0;
         auto zfdy = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeY()) / 100.0;
         bool windowDragResize = std::max(zfdx, zfdy) > 1;
+        bool allowDragResize =
+            Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", 1);
 
-        if (windowDragResize)
+        if (allowDragResize && windowDragResize)
         {
             setZoomFactor(currentZoomFactor);
         }
@@ -6779,6 +6798,7 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSiz
 
     return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
 }
+
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect *newSize)
 {
     // we want cratio == tration by adjusting height so
