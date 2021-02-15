@@ -6045,8 +6045,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
 
     mouseSubMenu->addSeparator(mid++);
 
-    bool tsMode =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", true);
+    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      "showCursorWhileEditing", true);
 
     menuItem = addCallbackMenu(
         mouseSubMenu, Surge::UI::toOSCaseForMenu("Show Cursor While Editing"), [this, tsMode]() {
