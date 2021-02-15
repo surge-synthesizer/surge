@@ -1712,11 +1712,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             int ival;
             TiXmlElement *p;
 
-            // This has a lecacy name since it was from before we moved into the editor object
-            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("instanceZoomFactor"));
-            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
-                dawExtraState.editor.instanceZoomFactor = ival;
-
             // This is the non-legacy way to save editor state
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("editor"));
             if (p)

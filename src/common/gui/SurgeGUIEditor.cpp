@@ -5833,8 +5833,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
 VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
-    COptionMenu *zoomSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
+                                               VSTGUI::COptionMenu::kNoDrawStyle |
+                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     int zid = 0;
 
@@ -5927,10 +5928,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
         zid++;
     }
 
-    std::ostringstream zss;
-    zss << "Set " << zoomFactor << "% as Default";
-    CCommandMenuItem *defaultZ =
-        new CCommandMenuItem(CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(zss.str().c_str())));
+    CCommandMenuItem *defaultZ = new CCommandMenuItem(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Set Current Zoom Level as Default")));
     defaultZ->setActions([this](CCommandMenuItem *m) {
         Surge::Storage::updateUserDefaultValue(&(synth->storage), "defaultZoom", zoomFactor);
     });
@@ -5955,6 +5954,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
                         });
         zid++;
     }
+
+#if TARGET_VST3
+    zoomSubMenu->addSeparator(zid++);
+
+    bool dragResize =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
+
+    auto menuItem = addCallbackMenu(
+        zoomSubMenu, Surge::UI::toOSCaseForMenu("Resize by Dragging the Bottom Right Corner"),
+        [this, dragResize]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "dragResizeVST3",
+                                                   !dragResize);
+        });
+    menuItem->setChecked(dragResize);
+
+    zid++;
+#endif
 
     return zoomSubMenu;
 }
@@ -6029,13 +6045,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
 
     mouseSubMenu->addSeparator(mid++);
 
-    auto tsMode =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "showCursorWhileEditing", 0);
+    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      "showCursorWhileEditing", true);
 
     menuItem = addCallbackMenu(
         mouseSubMenu, Surge::UI::toOSCaseForMenu("Show Cursor While Editing"), [this, tsMode]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   "showCursorWhileEditing", 1 - tsMode);
+                                                   "showCursorWhileEditing", !tsMode);
         });
     menuItem->setChecked(tsMode);
     menuItem->setEnabled(!touchMode);
@@ -6102,38 +6118,38 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
                                             VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     // high precision value readouts
-    auto precReadout =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts", 0);
+    bool precReadout = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                           "highPrecisionReadouts", false);
 
-    menuItem = addCallbackMenu(
-        dispDefMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
-        [this, precReadout]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "highPrecisionReadouts",
-                                                   precReadout ? 0 : 1);
-        });
+    menuItem =
+        addCallbackMenu(dispDefMenu, Surge::UI::toOSCaseForMenu("High Precision Value Readouts"),
+                        [this, precReadout]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), "highPrecisionReadouts", !precReadout);
+                        });
     menuItem->setChecked(precReadout);
 
     // modulation value readout shows bounds
-    auto modValues =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", 0);
+    bool modValues =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "modWindowShowsValues", false);
 
-    menuItem = addCallbackMenu(
-        dispDefMenu, Surge::UI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
-        [this, modValues]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "modWindowShowsValues",
-                                                   modValues ? 0 : 1);
-        });
+    menuItem = addCallbackMenu(dispDefMenu,
+                               Surge::UI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
+                               [this, modValues]() {
+                                   Surge::Storage::updateUserDefaultValue(
+                                       &(this->synth->storage), "modWindowShowsValues", !modValues);
+                               });
     menuItem->setChecked(modValues);
 
     // lfoone. I think this is a display thing. But could be workflowalso?
-    auto lfoone = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      "showGhostedLFOWaveReference", 1);
+    bool lfoone = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      "showGhostedLFOWaveReference", true);
 
     menuItem = addCallbackMenu(
         dispDefMenu, Surge::UI::toOSCaseForMenu("Show Ghosted LFO Waveform Reference"),
         [this, lfoone]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   "showGhostedLFOWaveReference", lfoone ? 0 : 1);
+                                                   "showGhostedLFOWaveReference", !lfoone);
             this->frame->invalid();
         });
     menuItem->setChecked(lfoone);
@@ -6184,39 +6200,38 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
         });
     menuItem->setChecked(synth->activateExtraOutputs);
 
-    auto msegSnapMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+    bool msegSnapMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                            "restoreMSEGSnapFromPatch", true);
 
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::UI::toOSCaseForMenu("Load MSEG Snap State from Patch"),
-        [this, msegSnapMem]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   "restoreMSEGSnapFromPatch", msegSnapMem ? 0 : 1);
-        });
+    menuItem =
+        addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Load MSEG Snap State from Patch"),
+                        [this, msegSnapMem]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), "restoreMSEGSnapFromPatch", !msegSnapMem);
+                        });
     menuItem->setChecked(msegSnapMem);
 
     // remember tab positions per scene
-    auto tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                         "rememberTabPositionsPerScene", 0);
+    bool tabPosMem = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                         "rememberTabPositionsPerScene", false);
 
-    menuItem =
-        addCallbackMenu(wfMenu, Surge::UI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
-                        [this, tabPosMem]() {
-                            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                                   "rememberTabPositionsPerScene",
-                                                                   tabPosMem ? 0 : 1);
-                        });
+    menuItem = addCallbackMenu(
+        wfMenu, Surge::UI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
+        [this, tabPosMem]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   "rememberTabPositionsPerScene", !tabPosMem);
+        });
     menuItem->setChecked(tabPosMem);
 
     // wrap around browsing patches within current category
-    auto patchJogWrap =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "patchJogWraparound", 1);
+    bool patchJogWrap =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "patchJogWraparound", true);
 
     menuItem = addCallbackMenu(
         wfMenu, Surge::UI::toOSCaseForMenu("Previous/Next Patch Constrained to Current Category"),
         [this, patchJogWrap]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "patchJogWraparound",
-                                                   patchJogWrap ? 0 : 1);
+                                                   !patchJogWrap);
         });
     menuItem->setChecked(patchJogWrap);
 
@@ -6770,8 +6785,10 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSiz
         auto zfdx = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeX()) / 100.0;
         auto zfdy = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeY()) / 100.0;
         bool windowDragResize = std::max(zfdx, zfdy) > 1;
+        bool allowDragResize =
+            Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
 
-        if (windowDragResize)
+        if (allowDragResize && windowDragResize)
         {
             setZoomFactor(currentZoomFactor);
         }
@@ -6779,6 +6796,7 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSiz
 
     return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
 }
+
 Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect *newSize)
 {
     // we want cratio == tration by adjusting height so
