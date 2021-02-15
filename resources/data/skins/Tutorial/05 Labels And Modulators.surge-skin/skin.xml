@@ -9,7 +9,7 @@ You can adjust the x and y position of the entire panel, or the color of an indi
 using the mechanism described in Tutorial 02 and 03 and the labels from the skin inspector.
 In Surge 1.9, we expect to expand the ability to reponsition modulation source controls.
 [doc]-->
-<surge-skin name="05 Labels And Modulators" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="05 Labels And Modulators" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <image id="ramen" resource="SVG/ramen.svg"/>
   </globals>

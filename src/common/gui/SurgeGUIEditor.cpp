@@ -1691,8 +1691,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         };
 
-        if (p->hasSkinConnector && conn.payload->defaultComponent != Surge::Skin::Connector::NONE &&
-            paramIsVisible)
+        if (p->hasSkinConnector &&
+            conn.payload->defaultComponent != Surge::Skin::Components::None && paramIsVisible)
         {
             /*
              * Some special cases where we don't add a control
@@ -1788,8 +1788,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     for (auto &l : labels)
     {
-        auto mtext = currentSkin->propertyValue(l, "text");
-        auto ctext = currentSkin->propertyValue(l, "control_text");
+        auto mtext = currentSkin->propertyValue(l, Surge::Skin::Component::TEXT);
+        auto ctext = currentSkin->propertyValue(l, Surge::Skin::Component::CONTROL_TEXT);
         if (ctext.isJust() && uiidToSliderLabel.find(ctext.fromJust()) != uiidToSliderLabel.end())
         {
 
@@ -1798,7 +1798,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         if (mtext.isJust())
         {
-            auto ta = currentSkin->propertyValue(l, "text_align", "left");
+            auto ta = currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_ALIGN, "left");
             // make text align value not case sensitive
             std::transform(ta.begin(), ta.end(), ta.begin(),
                            [](unsigned char c) { return std::tolower(c); });
@@ -1812,10 +1812,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             else if (ta == "right")
                 txtalign = kRightText;
 
-            auto fs = currentSkin->propertyValue(l, "font_size", "12");
+            auto fs = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_SIZE, "12");
             auto fsize = std::atof(fs.c_str());
 
-            auto fst = currentSkin->propertyValue(l, "font_style", "normal");
+            auto fst = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_STYLE, "normal");
             // make font style value not case sensitive
             std::transform(fst.begin(), fst.end(), fst.begin(),
                            [](unsigned char c) { return std::tolower(c); });
@@ -1833,14 +1833,17 @@ void SurgeGUIEditor::openOrRecreateEditor()
             else if (fst == "strikethrough")
                 fstyle = kStrikethroughFace;
 
-            auto coln = currentSkin->propertyValue(l, "color", "#FF0000");
+            auto coln =
+                currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_COLOR, "#FF0000");
             auto col = currentSkin->getColor(coln, kRedCColor);
 
             auto dcol = VSTGUI::CColor(255, 255, 255, 0);
-            auto bgcoln = currentSkin->propertyValue(l, "bg_color", "#FFFFFF00");
+            auto bgcoln = currentSkin->propertyValue(l, Surge::Skin::Component::BACKGROUND_COLOR,
+                                                     "#FFFFFF00");
             auto bgcol = currentSkin->getColor(bgcoln, dcol);
 
-            auto frcoln = currentSkin->propertyValue(l, "frame_color", "#FFFFFF00");
+            auto frcoln =
+                currentSkin->propertyValue(l, Surge::Skin::Component::FRAME_COLOR, "#FFFFFF00");
             auto frcol = currentSkin->getColor(frcoln, dcol);
 
             auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)),
@@ -1863,7 +1866,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         else
         {
-            auto image = currentSkin->propertyValue(l, "image");
+            auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
             if (image.isJust())
             {
                 auto bmp = bitmapStore->getBitmapByStringID(image.fromJust());
@@ -7944,7 +7947,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         else
             hs->deactivated = false;
 
-#if !TARGET_JUCE_UI
+#if !TARGET_JUCE_UI && 0
         auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "");
         if (ff.size() > 0)
         {
@@ -7994,11 +7997,13 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             if (p && p->ctrltype == ct_scenesel)
                 tag = tag_scene_select;
 
-            auto frames = currentSkin->propertyValue(skinCtrl, "frames", "1");
-            auto rows = currentSkin->propertyValue(skinCtrl, "rows", "1");
-            auto cols = currentSkin->propertyValue(skinCtrl, "columns", "1");
-            auto frameoffset = currentSkin->propertyValue(skinCtrl, "frame_offset", "0");
-            auto drgb = currentSkin->propertyValue(skinCtrl, "draggable", "1");
+            auto frames = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAMES, "1");
+            auto rows = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::ROWS, "1");
+            auto cols = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::COLUMNS, "1");
+            auto frameoffset =
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAME_OFFSET, "0");
+            auto drgb = currentSkin->propertyValue(skinCtrl,
+                                                   Surge::Skin::Component::DRAGGABLE_HSWITCH, "1");
             auto hsw = new CHSwitch2(rect, this, tag, std::atoi(frames.c_str()), skinCtrl->h,
                                      std::atoi(rows.c_str()), std::atoi(cols.c_str()), bmp,
                                      CPoint(0, 0), std::atoi(drgb.c_str()));
@@ -8033,6 +8038,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
                 nonmod_param[paramIndex] = hsw;
 
             return hsw;
+        }
+        else
+        {
+            std::cout << "Can't get a CHSwitch2 BG" << std::endl;
         }
     }
     if (skinCtrl->ultimateparentclassname == "CSwitchControl")
@@ -8151,8 +8160,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         pbd->setMouseableArea(rect);
 
         // TODO extra from properties
-        auto nfcm = currentSkin->propertyValue(skinCtrl, "numberfield_controlmode",
-                                               std::to_string(cm_none));
+        auto nfcm = currentSkin->propertyValue(
+            skinCtrl, Surge::Skin::Component::NUMBERFIELD_CONTROLMODE, std::to_string(cm_none));
         pbd->setControlMode(std::atoi(nfcm.c_str()));
 
         pbd->setValue(p->get_value_f01());
@@ -8199,7 +8208,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             return nullptr;
 
         auto rect = skinCtrl->getRect();
-        auto hsw = new CMenuAsSlider(rect.getTopLeft(), CPoint(124, 21), this,
+        auto hsw = new CMenuAsSlider(rect.getTopLeft(), rect.getSize(), this,
                                      p->id + start_paramtags, bitmapStore, &(synth->storage));
 
         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
@@ -8211,19 +8220,74 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         hsw->setLabel(p->get_name());
         hsw->setDeactivated(false);
         hsw->setBackgroundID(IDB_FILTER_MENU);
+
+        bool activeGlyph = true;
+        if (currentSkin->getVersion() >= 2)
+        {
+            auto pv =
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLPYH_ACTIVE, "true");
+            if (pv == "false")
+                activeGlyph = false;
+        }
+
         hsw->setFilterMode(true);
-        for (int i = 0; i < n_fu_types; i++)
-            hsw->glyphIndexMap.push_back(
-                std::make_pair(fut_glyph_index[i][0], fut_glyph_index[i][1]));
+
+        if (activeGlyph)
+        {
+            for (int i = 0; i < n_fu_types; i++)
+                hsw->glyphIndexMap.push_back(
+                    std::make_pair(fut_glyph_index[i][0], fut_glyph_index[i][1]));
+            if (currentSkin->getVersion() == 1)
+            {
+                auto drr = rect;
+                drr.right = drr.left + 18;
+                hsw->setDragRegion(drr);
+                hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
+            }
+        }
+
         p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
-        auto drr = rect;
-        drr.right = drr.left + 18;
-        hsw->setDragRegion(drr);
-        hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
-
         hsw->setValue(p->get_value_f01());
-        hsw->setSkin(currentSkin, bitmapStore);
+        hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+
+        if (currentSkin->getVersion() > 1)
+        {
+            if (activeGlyph)
+            {
+                auto glpc = currentSkin->propertyValue(
+                    skinCtrl, Surge::Skin::Component::GLYPH_PLACEMENT, "left");
+                auto glw = std::atoi(
+                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_W, "18")
+                        .c_str());
+                auto glh = std::atoi(
+                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_H, "18")
+                        .c_str());
+                auto gli =
+                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_IMAGE, "");
+                auto glih = currentSkin->propertyValue(
+                    skinCtrl, Surge::Skin::Component::GLYPH_HOVER_IMAGE, "");
+
+                // These are the V1 hardcoded defaults
+                if (glw == 18 && glh == 18 && glpc == "left" && gli == "")
+                {
+                    auto drr = rect;
+                    drr.right = drr.left + 18;
+                    hsw->setDragRegion(drr);
+                    hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
+                }
+                else
+                {
+                    hsw->setGlyphSettings(gli, glih, glpc, glw, glh);
+                }
+            }
+
+            auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
+            if (pv.isJust())
+            {
+                hsw->setBackgroundBitmapResource(pv.fromJust());
+            }
+        }
 
         frame->addView(hsw);
         nonmod_param[paramIndex] = hsw;

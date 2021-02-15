@@ -17,6 +17,7 @@
 #include <string>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include "SurgeParamConfig.h"
 #include "SkinColors.h"
@@ -90,38 +91,107 @@ namespace Surge
 namespace Skin
 {
 
-struct Connector
+struct Component
 {
-    enum Component
-    {
-        NONE,
-        SLIDER,
-        HSWITCH2,
-        SWITCH,
-        FILTERSELECTOR, // For now make this its own type even though internally it is a menuas
-        LFO,
-        OSCMENU, // For now these are distinct compoennts. Later they will be menusliders
-        FXMENU,
-        NUMBERFIELD,
-        VU_METER,
-
-        CUSTOM, // A special case which is handled by an if in C++ in SGE for now
-        GROUP
-    };
-
+    /*
+     * We could have done something much clevere with templates and per-class enums
+     * but decided not to. Instead here is an enum which is the union of all possible
+     * properites that an item can have.
+     */
     enum Properties
     {
-        BACKGROUND = 1001,
+        X = 1001,
+        Y,
+        W,
+        H,
+
+        BACKGROUND,
+        HOVER_IMAGE,
+        HOVER_ON_IMAGE,
+        IMAGE, // Note for most components "image" binds to "background" but some have it seprate
+
         ROWS,
         COLUMNS,
         FRAMES,
         FRAME_OFFSET,
-        NUMBERFIELD_CONTROLMODE,
         DRAGGABLE_HSWITCH,
+
+        NUMBERFIELD_CONTROLMODE,
+
         TEXT_COLOR,
-        TEXT_HOVER_COLOR
+        TEXT_HOVER_COLOR,
+        BACKGROUND_COLOR,
+        FRAME_COLOR,
+
+        SLIDER_TRAY,
+        HANDLE_IMAGE,
+        HANDLE_HOVER_IMAGE,
+        HANDLE_TEMPOSYNC_IMAGE,
+        HANDLE_TEMPOSYNC_HOVER_IMAGE,
+        HIDE_SLIDER_LABEL,
+
+        TEXT,
+        CONTROL_TEXT,
+        TEXT_ALIGN,
+        FONT_SIZE,
+        FONT_STYLE,
+
+        GLYPH_PLACEMENT,
+        GLYPH_W,
+        GLYPH_H,
+        GLPYH_ACTIVE,
+        GLYPH_IMAGE,
+        GLYPH_HOVER_IMAGE
     };
 
+    Component() noexcept;
+    explicit Component(const std::string &internalClassname) noexcept;
+    ~Component();
+
+    struct Payload
+    {
+        unsigned int id = -1;
+        std::unordered_map<Properties, std::vector<std::string>> propertyNamesMap;
+        std::unordered_map<Properties, std::string> propertyDocString;
+        std::unordered_set<Properties> hasPropertySet;
+        std::string internalClassname;
+    };
+    std::shared_ptr<Payload> payload;
+
+    /*
+     * To allow aliasing and backwards compatability, a property binds to the skin engine
+     * with multiple names for a given class.
+     */
+    Component &withProperty(Properties p, const std::initializer_list<std::string> &names,
+                            const std::string &s = "add doc")
+    {
+        payload->propertyNamesMap[p] = names;
+        payload->propertyDocString[p] = s;
+        payload->hasPropertySet.insert(p);
+        return *this;
+    }
+
+    bool hasProperty(Properties p)
+    {
+        return payload->hasPropertySet.find(p) != payload->hasPropertySet.end();
+    }
+
+    bool operator==(const Component &that) const { return payload->id == that.payload->id; }
+    bool operator!=(const Component &that) const { return payload->id != that.payload->id; }
+
+    static std::vector<int> allComponentIds();
+    static Component componentById(int);
+    static std::string propertyEnumToString(Properties p);
+};
+
+namespace Components
+{
+extern Component None, Slider, HSwitch2, Switch, FilterSelector, LFODisplay, OscMenu, FxMenu,
+    NumberField, VuMeter, Custom, Group, Label;
+}
+
+struct Connector
+{
     /*
      * Some UI elements do not bind to a parameter. These special functions
      * have to identify themselves here so they can be appropriately bound
@@ -164,15 +234,16 @@ struct Connector
     ~Connector() = default;
 
     Connector(const std::string &id, float x, float y) noexcept;
-    Connector(const std::string &id, float x, float y, Component c) noexcept;
-    Connector(const std::string &id, float x, float y, float w, float h, Component c) noexcept;
-    Connector(const std::string &id, float x, float y, float w, float h, Component c,
+    Connector(const std::string &id, float x, float y, const Component &c) noexcept;
+    Connector(const std::string &id, float x, float y, float w, float h,
+              const Component &c) noexcept;
+    Connector(const std::string &id, float x, float y, float w, float h, const Component &c,
               NonParameterConnection n) noexcept;
     Connector(const std::string &id, float x, float y, NonParameterConnection n) noexcept;
 
     static Connector connectorByID(const std::string &id);
     static Connector connectorByNonParameterConnection(NonParameterConnection n);
-    static std::vector<Connector> connectorsByComponentType(Component c);
+    static std::vector<Connector> connectorsByComponentType(const Component &c);
 
     static std::vector<std::string> allConnectorIDs();
 
@@ -192,23 +263,26 @@ struct Connector
 
     Connector &asJogPlusMinus() noexcept;
 
-    Connector &withProperty(Properties p, std::string v)
+    Connector &withProperty(Component::Properties p, std::string v)
     {
         payload->properties[p] = v;
         return *this;
     }
 
-    Connector &withProperty(Properties p, int v) { return withProperty(p, std::to_string(v)); }
+    Connector &withProperty(Component::Properties p, int v)
+    {
+        return withProperty(p, std::to_string(v));
+    }
 
     Connector &withHSwitch2Properties(int bgid, int frames, int rows, int cols)
     {
-        return withProperty(Connector::BACKGROUND, bgid)
-            .withProperty(Connector::FRAMES, frames)
-            .withProperty(Connector::ROWS, rows)
-            .withProperty(Connector::COLUMNS, cols);
+        return withProperty(Component::BACKGROUND, bgid)
+            .withProperty(Component::FRAMES, frames)
+            .withProperty(Component::ROWS, rows)
+            .withProperty(Component::COLUMNS, cols);
     }
 
-    Connector &withBackground(int v) { return withProperty(Connector::BACKGROUND, v); }
+    Connector &withBackground(int v) { return withProperty(Component::BACKGROUND, v); }
 
     Connector &inParent(std::string g)
     {
@@ -216,7 +290,7 @@ struct Connector
         return *this;
     }
 
-    std::string getProperty(Properties p)
+    std::string getProperty(Component::Properties p)
     {
         if (payload->properties.find(p) != payload->properties.end())
             return payload->properties[p];
@@ -229,10 +303,10 @@ struct Connector
         float posx = -1, posy = -1;
         float w = -1, h = -1;
         int controlStyleFlags = 0;
-        Component defaultComponent = NONE;
+        Component defaultComponent = Surge::Skin::Components::None;
         NonParameterConnection nonParamConnection = PARAMETER_CONNECTED;
         std::string parentId = "";
-        std::unordered_map<Properties, std::string>
+        std::unordered_map<Component::Properties, std::string>
             properties; // since we are base for XML where it's all strings
     };
     std::shared_ptr<Payload> payload;
