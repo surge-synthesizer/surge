@@ -43,19 +43,6 @@ bool four_chars(char *v, char a, char b, char c, char d)
     return v[0] == a && v[1] == b && v[2] == c && v[3] == d;
 }
 
-struct FcloseGuard
-{
-    FILE *fp = nullptr;
-    FcloseGuard(FILE *f) { fp = f; }
-    ~FcloseGuard()
-    {
-        if (fp)
-        {
-            fclose(fp);
-        }
-    }
-};
-
 bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 {
     std::string uitag = "Wavetable Import Error";
@@ -64,20 +51,19 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     std::cout << "  fn='" << fn << "'" << std::endl;
 #endif
 
-    FILE *fp = fopen(fn.c_str(), "rb");
-    if (!fp)
+    std::filebuf fp;
+    if (!fp.open(string_to_path(fn), std::ios::binary | std::ios::in))
     {
         std::ostringstream oss;
         oss << "Unable to open file '" << fn << "'!";
         Surge::UserInteractions::promptError(oss.str(), uitag);
         return false;
     }
-    FcloseGuard closeOnReturn(fp);
 
     char riff[4], szd[4], wav[4];
-    auto hds = fread(riff, 1, 4, fp);
-    hds += fread(szd, 1, 4, fp);
-    hds += fread(wav, 1, 4, fp);
+    auto hds = fp.sgetn(riff, sizeof(riff));
+    hds += fp.sgetn(szd, sizeof(szd));
+    hds += fp.sgetn(wav, sizeof(wav));
     if (hds != 12)
     {
         std::ostringstream oss;
@@ -120,11 +106,11 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     {
         char chunkType[4], chunkSzD[4];
         int br;
-        if (!((br = fread(chunkType, 1, 4, fp)) == 4))
+        if (fp.sgetn(chunkType, sizeof(chunkType)) != sizeof(chunkType))
         {
             break;
         }
-        br = fread(chunkSzD, 1, 4, fp);
+        br = fp.sgetn(chunkSzD, sizeof(chunkSzD));
         // FIXME - deal with br
         int cs = pl_int(chunkSzD);
 
@@ -137,7 +123,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         tbr += 8 + cs;
 
         char *data = (char *)malloc(cs);
-        br = fread(data, 1, cs, fp);
+        br = fp.sgetn(data, cs);
         if (br != cs)
         {
             free(data);
@@ -498,55 +484,45 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
         fnum++;
     }
 
-    struct FG
-    {
-        FILE *f = nullptr;
-        ~FG()
-        {
-            if (f)
-                fclose(f);
-        }
-    };
     std::string errorMessage = "Unknown error!";
-    FG fguard;
 
     {
-        FILE *wfp = fopen(fname.c_str(), "wb");
-        if (!wfp)
+        std::filebuf wfp;
+        if (!wfp.open(string_to_path(fname), std::ios::binary | std::ios::out))
         {
             errorMessage = "Unable to open file " + fname + "!";
             errorMessage += std::strerror(errno);
 
-            goto error;
+            Surge::UserInteractions::promptError(errorMessage, "Wavetable Export");
+            return;
         }
-        fguard.f = wfp;
 
         auto audioFormat = 3;
         auto bitsPerSample = 32;
         auto sampleRate = 44100;
         auto nChannels = 1;
 
-        auto w4i = [wfp](unsigned int v) {
+        auto w4i = [&wfp](unsigned int v) {
             unsigned char fi[4];
             for (int i = 0; i < 4; ++i)
             {
                 fi[i] = (unsigned char)(v & 255);
                 v = v / 256;
             }
-            fwrite(fi, 1, 4, wfp);
+            wfp.sputn(reinterpret_cast<char *>(fi), sizeof(fi));
         };
 
-        auto w2i = [wfp](unsigned int v) {
+        auto w2i = [&wfp](unsigned int v) {
             unsigned char fi[2];
             for (int i = 0; i < 2; ++i)
             {
                 fi[i] = (unsigned char)(v & 255);
                 v = v / 256;
             }
-            fwrite(fi, 1, 2, wfp);
+            wfp.sputn(reinterpret_cast<char *>(fi), sizeof(fi));
         };
 
-        fwrite("RIFF", 1, 4, wfp);
+        wfp.sputn("RIFF", 4);
 
         bool isSample = false;
         if (wt->flags & wtf_is_sample)
@@ -562,10 +538,10 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
             dataSize += 4 + 4 + 8; // srge chunk
 
         w4i(dataSize);
-        fwrite("WAVE", 1, 4, wfp);
+        wfp.sputn("WAVE", 4);
 
         // OK so format chunk
-        fwrite("fmt ", 1, 4, wfp);
+        wfp.sputn("fmt ", 4);
         w4i(16);
         w2i(audioFormat);
         w2i(nChannels);
@@ -576,39 +552,32 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 
         if (!isSample)
         {
-            fwrite("srge", 1, 4, wfp);
+            wfp.sputn("srge", 4);
             w4i(8);
             w4i(1);
             w4i(wt->size);
         }
         else
         {
-            fwrite("srgo", 1, 4, wfp); // o for oneshot
+            wfp.sputn("srgo", 4); // o for oneshot
             w4i(8);
             w4i(1);
             w4i(wt->size);
         }
 
-        fwrite("data", 1, 4, wfp);
+        wfp.sputn("data", 4);
         w4i(tableSize);
         for (int i = 0; i < wt->n_tables; ++i)
         {
-            fwrite(wt->TableF32WeakPointers[0][i], wt->size, bitsPerSample / 8, wfp);
+            wfp.sputn(reinterpret_cast<char *>(wt->TableF32WeakPointers[0][i]),
+                      wt->size * bitsPerSample / 8);
         }
-
-        fclose(wfp);
-        fguard.f = nullptr;
-        refresh_wtlist();
-
-        Surge::UserInteractions::promptInfo(
-            "Exported to " + Surge::Storage::appendDirectory("Documents", "Surge",
-                                                             "Exported Wavetables", fnamePre),
-            "Export Succeeded!");
-
-        return;
     }
 
-error:
-    Surge::UserInteractions::promptError(errorMessage, "Wavetable Export");
-    return;
+    refresh_wtlist();
+
+    Surge::UserInteractions::promptInfo(
+        "Exported to " +
+            Surge::Storage::appendDirectory("Documents", "Surge", "Exported Wavetables", fnamePre),
+        "Export Succeeded!");
 }

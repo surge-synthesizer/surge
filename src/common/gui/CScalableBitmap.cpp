@@ -52,7 +52,8 @@ void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel) {}
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-
+#include <fstream>
+#include "filesystem/import.h"
 #if MAC
 #include "vstgui/lib/platform/mac/macglobals.h"
 #endif
@@ -83,6 +84,29 @@ void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel) {}
 
 using namespace VSTGUI;
 std::atomic<int> CScalableBitmap::instances(0);
+
+namespace
+{
+NSVGimage *svgParseFromPath(const fs::path &filename, const char *units, float dpi)
+{
+    std::error_code ec;
+    const auto length = fs::file_size(filename, ec);
+    if (ec || length == 0)
+        return nullptr;
+
+    std::unique_ptr<char[]> data;
+    {
+        std::filebuf file;
+        if (!file.open(filename, std::ios::binary | std::ios::in))
+            return nullptr;
+        data.reset(new char[length + 1]);
+        if (file.sgetn(data.get(), length) != length)
+            return nullptr;
+    }
+    data[length] = '\0';
+    return nsvgParse(data.get(), units, dpi);
+}
+} // anonymous namespace
 
 #if MAC
 static const std::string svgFullFileNameFromBundle(const std::string &filename)
@@ -269,7 +293,7 @@ CScalableBitmap::CScalableBitmap(std::string ifname, VSTGUI::CFrame *f)
 
     if (_stricmp(extension.c_str(), "svg") == 0)
     {
-        svgImage = nsvgParseFromFile(fname.c_str(), "px", 96);
+        svgImage = svgParseFromPath(string_to_path(fname), "px", 96);
 
         if (!svgImage)
         {
