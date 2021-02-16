@@ -576,8 +576,5 @@ void SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 
     refresh_wtlist();
 
-    Surge::UserInteractions::promptInfo(
-        "Exported to " +
-            Surge::Storage::appendDirectory("Documents", "Surge", "Exported Wavetables", fnamePre),
-        "Export Succeeded!");
+    Surge::UserInteractions::promptInfo("Exported to " + fname, "Export Succeeded!");
 }
