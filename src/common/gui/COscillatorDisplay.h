@@ -124,7 +124,13 @@ class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsum
 #endif
 
     bool doingDrag = false;
-    bool isWTHover = false;
+    enum
+    {
+        NONE,
+        PREV,
+        MENU,
+        NEXT
+    } isWTHover = NONE;
 
 #if OSC_MOD_ANIMATION
     bool is_mod = false;
