@@ -690,8 +690,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
     return true;
 }
 
-bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *controlsxml,
-                               std::string pfx)
+bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *controlsxml, bool toplevel)
 {
     // I know I am gross for copying these
     auto attrint = [](TiXmlElement *e, const char *a) {
@@ -741,7 +740,7 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
             g->h = attrint(lkid, "h");
 
             parent->childGroups.push_back(g);
-            if (!recursiveGroupParse(g, lkid, pfx + "|--"))
+            if (!recursiveGroupParse(g, lkid, false))
             {
                 return false;
             }
@@ -825,42 +824,45 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
         }
     }
 
-    /*
-     * We now need to create all the base parent objects before we go
-     * and resolve them, since that resolutino can be recursive when
-     * looping over controls, and we don't want to actually modify controls
-     * while resolving.
-     */
-    std::set<std::string> baseParents;
-    for (auto &c :
-         Surge::Skin::Connector::connectorsByComponentType(Surge::Skin::Components::Group))
-        baseParents.insert(c.payload->id);
-    do
+    if (toplevel)
     {
-        for (auto &bp : baseParents)
+        /*
+         * We now need to create all the base parent objects before we go
+         * and resolve them, since that resolutino can be recursive when
+         * looping over controls, and we don't want to actually modify controls
+         * while resolving.
+         */
+        std::set<std::string> baseParents;
+        for (auto &c :
+             Surge::Skin::Connector::connectorsByComponentType(Surge::Skin::Components::Group))
+            baseParents.insert(c.payload->id);
+        do
         {
-            getOrCreateControlForConnector(bp);
-        }
-        baseParents.clear();
-        for (auto c : controls)
-        {
-            if (c->allprops.find("base_parent") != c->allprops.end())
+            for (auto &bp : baseParents)
             {
-                auto bp = c->allprops["base_parent"];
-                auto pc = controlForUIID(bp);
-
-                if (!pc)
+                getOrCreateControlForConnector(bp);
+            }
+            baseParents.clear();
+            for (auto c : controls)
+            {
+                if (c->allprops.find("base_parent") != c->allprops.end())
                 {
-                    baseParents.insert(bp);
+                    auto bp = c->allprops["base_parent"];
+                    auto pc = controlForUIID(bp);
+
+                    if (!pc)
+                    {
+                        baseParents.insert(bp);
+                    }
                 }
             }
-        }
-    } while (!baseParents.empty());
+        } while (!baseParents.empty());
 
-    controls.shrink_to_fit();
-    for (auto &c : controls)
-    {
-        resolveBaseParentOffsets(c);
+        controls.shrink_to_fit();
+        for (auto &c : controls)
+        {
+            resolveBaseParentOffsets(c);
+        }
     }
     return true;
 }
