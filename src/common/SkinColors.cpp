@@ -109,8 +109,7 @@ namespace Button
 {
 const Surge::Skin::Color Background("lfo.stepseq.button.background", 227, 227, 227),
     Border("lfo.stepseq.button.border", 151, 151, 151),
-    Hover("lfo.stepseq.button.hover", 241, 187, 114),
-    Arrow("lfo.stepseq.button.arrow", 0, 0, 0),
+    Hover("lfo.stepseq.button.hover", 241, 187, 114), Arrow("lfo.stepseq.button.arrow", 0, 0, 0),
     ArrowHover("lfo.stepseq.button.arrow.hover", 0, 0, 0);
 }
 namespace InfoWindow
