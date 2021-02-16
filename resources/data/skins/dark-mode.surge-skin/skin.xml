@@ -66,6 +66,9 @@
 
     <color id="overlay.background" value="#000000C0"/>
 
+    <color id="osc.wavename.background.hover.frame" value="white"/>
+    <color id="osc.wavename.text.hover" value="black"/>
+
     <color id="msegeditor.background" value="#202020"/>
     <color id="msegeditor.curve" value="modblue"/>
     <color id="msegeditor.curve.deformed" value="#2E86FE80"/>

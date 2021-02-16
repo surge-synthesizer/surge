@@ -95,7 +95,10 @@ class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsum
                                                 const VSTGUI::CButtonState &buttons) override;
     virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
                                                    const VSTGUI::CButtonState &buttons) override;
-
+    VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                            const VSTGUI::CButtonState &buttons) override;
+    VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                             const VSTGUI::CButtonState &buttons) override;
     void invalidateIfIdIsInRange(int id);
 
 #if OSC_MOD_ANIMATION
@@ -121,6 +124,7 @@ class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsum
 #endif
 
     bool doingDrag = false;
+    bool isWTHover = false;
 
 #if OSC_MOD_ANIMATION
     bool is_mod = false;
