@@ -13,20 +13,20 @@ namespace chowdsp
 **   - Tape Speed (affects HF loss and head bump)
 **   - Spacing between tape and head (affects HF loss)
 **   - Gap in playhead (affects HF loss and head bump)
-**   - Tape Thickness (affects HF loss) 
+**   - Tape Thickness (affects HF loss)
 */
 class LossFilter
 {
-public:
-    LossFilter (SurgeStorage *storage, size_t order = 64);
+  public:
+    LossFilter(SurgeStorage *storage, size_t order = 64);
 
-    void prepare (float sampleRate, int blockSize);
+    void prepare(float sampleRate, int blockSize);
     void process(float *dataL, float *dataR);
-    void set_params (float speed01, float spacing01, float gap01, float thick01);
+    void set_params(float speed01, float spacing01, float gap01, float thick01);
 
-private:
+  private:
     void calcCoefs();
-    static void calcHeadBumpFilter (float speedIps, float gapMeters, float fs, BiquadFilter& filter);
+    static void calcHeadBumpFilter(float speedIps, float gapMeters, float fs, BiquadFilter &filter);
 
     std::unique_ptr<FIRFilter> filters[2];
     BiquadFilter bumpFilter;

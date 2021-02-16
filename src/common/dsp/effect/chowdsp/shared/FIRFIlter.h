@@ -12,8 +12,8 @@ namespace chowdsp
 */
 class FIRFilter
 {
-public:
-    FIRFilter (int order) : order (order)
+  public:
+    FIRFilter(int order) : order(order)
     {
         h = new float[order];
         z[0] = new float[2 * order];
@@ -30,16 +30,13 @@ public:
     void reset()
     {
         zPtr = 0;
-        std::fill (z[0], &z[0][2 * order], 0.0f);
-        std::fill (z[1], &z[1][2 * order], 0.0f);
+        std::fill(z[0], &z[0][2 * order], 0.0f);
+        std::fill(z[1], &z[1][2 * order], 0.0f);
     }
 
-    void setCoefs (float* coefs)
-    {
-        std::copy (coefs, &coefs[order], h);
-    }
+    void setCoefs(float *coefs) { std::copy(coefs, &coefs[order], h); }
 
-    inline void process (float* dataL, float* dataR, const int numSamples)
+    inline void process(float *dataL, float *dataR, const int numSamples)
     {
         for (int n = 0; n < numSamples; ++n)
         {
@@ -50,14 +47,14 @@ public:
             z[1][zPtr + order] = dataR[n];
 
             // compute inner products
-            dataL[n] = std::inner_product (z[0] + zPtr, z[0] + zPtr + order, h, 0.0f);
-            dataR[n] = std::inner_product (z[1] + zPtr, z[1] + zPtr + order, h, 0.0f);
+            dataL[n] = std::inner_product(z[0] + zPtr, z[0] + zPtr + order, h, 0.0f);
+            dataR[n] = std::inner_product(z[1] + zPtr, z[1] + zPtr + order, h, 0.0f);
 
             zPtr = (zPtr == 0 ? order - 1 : zPtr - 1); // iterate state pointer in reverse
         }
     }
 
-    inline void processBypassed (float* dataL, float* dataR, const int numSamples)
+    inline void processBypassed(float *dataL, float *dataR, const int numSamples)
     {
         for (int n = 0; n < numSamples; ++n)
         {
@@ -71,12 +68,12 @@ public:
         }
     }
 
-protected:
-    float* h;
+  protected:
+    float *h;
     const int order;
 
-private:
-    float* z[2];
+  private:
+    float *z[2];
     int zPtr = 0;
 };
 

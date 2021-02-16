@@ -18,8 +18,8 @@
 namespace chowdsp
 {
 
-Tape::Tape(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd),
-    lossFilter (storage, 48)
+Tape::Tape(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+    : Effect(storage, fxdata, pd), lossFilter(storage, 48)
 {
 }
 

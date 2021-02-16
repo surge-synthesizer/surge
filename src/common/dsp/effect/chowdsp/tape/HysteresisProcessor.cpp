@@ -5,10 +5,10 @@ namespace chowdsp
 
 void HysteresisProcessor::reset(double sample_rate)
 {
-    drive.reset (numSteps);
-    width.reset (numSteps);
-    sat.reset (numSteps);
-    makeup.reset (numSteps);
+    drive.reset(numSteps);
+    width.reset(numSteps);
+    sat.reset(numSteps);
+    makeup.reset(numSteps);
 
     os.reset();
     dc_blocker.setBlockSize(BLOCK_SIZE);
@@ -16,7 +16,7 @@ void HysteresisProcessor::reset(double sample_rate)
     dc_blocker.coeff_HP(35.0f / sample_rate, 0.707);
     dc_blocker.coeff_instantize();
 
-    for(size_t ch = 0; ch < 2; ++ch)
+    for (size_t ch = 0; ch < 2; ++ch)
     {
         hProcs[ch].setSampleRate(sample_rate);
         hProcs[ch].reset();
@@ -39,12 +39,12 @@ void HysteresisProcessor::set_params(float driveVal, float satVal, float biasVal
     makeup.setTargetValue(makeupVal);
 }
 
-void HysteresisProcessor::process_block(float* dataL, float* dataR)
+void HysteresisProcessor::process_block(float *dataL, float *dataR)
 {
     bool needsSmoothing = drive.isSmoothing() || width.isSmoothing() || sat.isSmoothing();
 
     os.upsample(dataL, dataR);
-    
+
     if (needsSmoothing)
         process_internal_smooth(os.leftUp, os.rightUp, os.getUpBlockSize());
     else
@@ -55,17 +55,17 @@ void HysteresisProcessor::process_block(float* dataL, float* dataR)
     dc_blocker.process_block(dataL, dataR);
 }
 
-void HysteresisProcessor::process_internal(float* dataL, float* dataR, const int numSamples)
+void HysteresisProcessor::process_internal(float *dataL, float *dataR, const int numSamples)
 {
     for (int samp = 0; samp < numSamples; samp++)
     {
         auto curMakeup = makeup.getNextValue();
-        dataL[samp] = (float) hProcs[0].process ((double) dataL[samp]) * curMakeup;
-        dataR[samp] = (float) hProcs[1].process ((double) dataR[samp]) * curMakeup;
+        dataL[samp] = (float)hProcs[0].process((double)dataL[samp]) * curMakeup;
+        dataR[samp] = (float)hProcs[1].process((double)dataR[samp]) * curMakeup;
     }
 }
 
-void HysteresisProcessor::process_internal_smooth(float* dataL, float* dataR, const int numSamples)
+void HysteresisProcessor::process_internal_smooth(float *dataL, float *dataR, const int numSamples)
 {
     for (int samp = 0; samp < numSamples; samp++)
     {
@@ -77,8 +77,8 @@ void HysteresisProcessor::process_internal_smooth(float* dataL, float* dataR, co
         hProcs[0].cook(curDrive, curWidth, curSat);
         hProcs[1].cook(curDrive, curWidth, curSat);
 
-        dataL[samp] = (float) hProcs[0].process ((double) dataL[samp]) * curMakeup;
-        dataR[samp] = (float) hProcs[1].process ((double) dataR[samp]) * curMakeup;
+        dataL[samp] = (float)hProcs[0].process((double)dataL[samp]) * curMakeup;
+        dataR[samp] = (float)hProcs[1].process((double)dataR[samp]) * curMakeup;
     }
 }
 

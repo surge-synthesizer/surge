@@ -10,22 +10,22 @@ namespace chowdsp
 
 class HysteresisProcessor
 {
-public:
+  public:
     HysteresisProcessor() = default;
 
     void reset(double sample_rate);
 
     void set_params(float drive, float sat, float bias);
-    void process_block(float* dataL, float* dataR);
+    void process_block(float *dataL, float *dataR);
 
-private:
+  private:
     enum
     {
         numSteps = 500,
     };
 
-    void process_internal(float* dataL, float* dataR, const int numSamples);
-    void process_internal_smooth(float* dataL, float* dataR, const int numSamples);
+    void process_internal(float *dataL, float *dataR, const int numSamples);
+    void process_internal_smooth(float *dataL, float *dataR, const int numSamples);
 
     SmoothedValue<float, ValueSmoothingTypes::Linear> drive;
     SmoothedValue<float, ValueSmoothingTypes::Linear> width;

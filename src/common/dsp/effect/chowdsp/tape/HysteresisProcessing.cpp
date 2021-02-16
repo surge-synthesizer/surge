@@ -4,9 +4,7 @@
 namespace chowdsp
 {
 
-HysteresisProcessing::HysteresisProcessing()
-{
-}
+HysteresisProcessing::HysteresisProcessing() {}
 
 void HysteresisProcessing::reset()
 {
@@ -18,18 +16,18 @@ void HysteresisProcessing::reset()
     nearZero = false;
 }
 
-void HysteresisProcessing::setSampleRate (double newSR)
-{ 
+void HysteresisProcessing::setSampleRate(double newSR)
+{
     fs = newSR;
     T = 1.0 / fs;
     Talpha = T / 1.9;
 }
 
-void HysteresisProcessing::cook (float drive, float width, float sat)
+void HysteresisProcessing::cook(float drive, float width, float sat)
 {
-    M_s = 0.5 + 1.5 * (1.0 - (double) sat);
-    a = M_s / (0.01 + 6.0 * (double) drive);
-    c = std::sqrt (1.0f - (double) width) - 0.01;
+    M_s = 0.5 + 1.5 * (1.0 - (double)sat);
+    a = M_s / (0.01 + 6.0 * (double)drive);
+    c = std::sqrt(1.0f - (double)width) - 0.01;
     k = 0.47875;
     upperLim = 20.0;
 
