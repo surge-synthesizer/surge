@@ -1963,19 +1963,6 @@ string findReplaceSubstring(string &source, const string &from, const string &to
     return newString;
 }
 
-string makeStringVertical(string &source)
-{
-    std::ostringstream oss;
-    std::string pre = "";
-
-    for (auto c : source)
-    {
-        oss << pre << c;
-        pre = "\n";
-    }
-    return oss.str();
-}
-
 std::string appendDirectory(const std::string &root, const std::string &path1)
 {
     if (root[root.size() - 1] == PATH_SEPARATOR)
@@ -1987,11 +1974,6 @@ std::string appendDirectory(const std::string &root, const std::string &path1,
                             const std::string &path2)
 {
     return appendDirectory(appendDirectory(root, path1), path2);
-}
-std::string appendDirectory(const std::string &root, const std::string &path1,
-                            const std::string &path2, const std::string &path3)
-{
-    return appendDirectory(appendDirectory(root, path1, path2), path3);
 }
 
 } // namespace Storage

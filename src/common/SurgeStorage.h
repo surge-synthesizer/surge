@@ -1027,13 +1027,10 @@ bool isValidUTF8(const std::string &testThis);
 
 std::string findReplaceSubstring(std::string &source, const std::string &from,
                                  const std::string &to);
-std::string makeStringVertical(std::string &source);
 
 std::string appendDirectory(const std::string &root, const std::string &path1);
 std::string appendDirectory(const std::string &root, const std::string &path1,
                             const std::string &path2);
-std::string appendDirectory(const std::string &root, const std::string &path1,
-                            const std::string &path2, const std::string &path3);
 } // namespace Storage
 } // namespace Surge
 
