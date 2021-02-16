@@ -34,6 +34,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
             {
                 Reg[e][c][q] = 0;
             }
+            WP[e][c] = 0;
         }
     }
     memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
@@ -325,13 +326,15 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     lp.process_block(L, R);
     hp.process_block(L, R);
 
+    /*
     auto cm = limit_range(*f[combulator_mix], -1.f, 1.f);
     if (cm < 0)
     {
         negone.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
         cm = -cm;
     }
-
+    */
+    auto cm = limit_range(*f[combulator_mix], 0.f, 1.f);
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
@@ -410,7 +413,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_pan3].set_type(ct_percent_bidirectional_stereo);
     fxdata->p[combulator_pan3].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
-    fxdata->p[combulator_mix].set_type(ct_percent_bidirectional);
+    fxdata->p[combulator_mix].set_type(ct_percent);
     fxdata->p[combulator_mix].posy_offset = 7;
 }
 
