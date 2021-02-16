@@ -210,7 +210,7 @@ extern const Surge::Skin::Color Bounds, Center, AnimatedWave, Wave, Dots;
 }
 namespace Filename
 {
-extern const Surge::Skin::Color Background, BackgroundHover, BackgroundHoverFrame, Text, TextHover;
+extern const Surge::Skin::Color Background, BackgroundHover, Frame, FrameHover, Text, TextHover;
 }
 } // namespace Osc
 

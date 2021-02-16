@@ -274,7 +274,7 @@ namespace Filename
 {
 const Surge::Skin::Color Background("osc.wavename.background", 255, 160, 16),
     BackgroundHover("osc.wavename.background.hover", 255, 160, 16),
-    BackgroundHoverFrame("osc.wavename.background.hover.frame", 255, 160, 16),
+    Frame("osc.wavename.frame", 255, 160, 16), FrameHover("osc.wavename.frame.hover", 255, 160, 16),
     Text("osc.wavename.text", 0, 0, 0), TextHover("osc.wavename.text.hover", 255, 255, 255);
 }
 } // namespace Osc
