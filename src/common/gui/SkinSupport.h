@@ -385,7 +385,7 @@ class Skin
     std::unordered_map<std::string, ComponentClass::ptr_t> componentClasses;
     std::vector<int> zooms;
     bool recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *groupList,
-                             std::string pfx = "");
+                             bool topLevel = true);
 };
 
 class SkinDB
