@@ -108,7 +108,7 @@ extern const Surge::Skin::Color Background, ColumnShadow, DragLine, Envelope, Tr
 
 namespace Button
 {
-extern const Surge::Skin::Color Background, Border, Hover, Arrow;
+extern const Surge::Skin::Color Background, Border, Hover, Arrow, ArrowHover;
 }
 namespace InfoWindow
 {

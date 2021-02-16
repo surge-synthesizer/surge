@@ -82,6 +82,7 @@ buildlin/
 buildlin-*/
 buildmac/
 buildwin/
+buildxt/
 build-arm/
 buildiwyu/
 cmake-build-*/
