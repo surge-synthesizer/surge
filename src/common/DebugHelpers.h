@@ -14,6 +14,9 @@
 #define _DUMPR(r)                                                                                  \
     " " << (#r) << "=(L/X=" << r.left << ",T/Y=" << r.top << ")+(W=" << r.getWidth()               \
         << ",H=" << r.getHeight() << ")+(R=" << r.right << ",B=" << r.bottom << ")"
+#define _DUMPCOL(c)                                                                                \
+    " " << (#c) << "r=" << (int)c.red << " g=" << (int)c.green << " b=" << (int)c.blue             \
+        << " a=" << (int)c.alpha
 
 namespace Surge
 {
