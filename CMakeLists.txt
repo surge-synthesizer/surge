@@ -265,7 +265,6 @@ set(SURGE_SHARED_SOURCES
   src/common/DebugHelpers.cpp
   # src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
-  src/common/precompiled.cpp
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
@@ -1539,10 +1538,6 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             TARGET_HEADLESS=1
             TARGET_JUCE_UI=1)
 
-    if( WIN32 )
-      target_compile_options(surge-xt PRIVATE /FIprecompiled.h)
-    endif()
-
     add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
 
     add_custom_target(surge-xt-distribution)
@@ -1634,22 +1629,6 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
 else()
   message( STATUS "Python bindings disabled" )
 endif()
-
-
-
-# Hack: For now, native Windows binaries need implicit globals.h.
-# This can't go into the global compile options, so tack it on here.
-if(MSVC)
-  get_property(targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
-  foreach(target ${targets})
-    get_target_property(target_type ${target} TYPE)
-    if (target_type MATCHES "EXECUTABLE|SHARED_LIBRARY")
-      target_compile_options(${target} PRIVATE /FIprecompiled.h)
-    endif()
-  endforeach()
-  target_compile_options( surge-shared PRIVATE /FIprecompiled.h )
-endif()
-
 
 # We have a special target here which the PR pipeline uses to make sure things
 # are of the appropriate code quality. This allows us to write CMAKE rules which

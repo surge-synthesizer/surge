@@ -30,15 +30,12 @@
 
 #endif
 
-#if ARM_NEON
+#if defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
+    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#include <emmintrin.h>
+#else
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #include "simde/x86/sse2.h"
-#else
-#include <xmmintrin.h>
-
-#if LINUX
-#include <immintrin.h>
-#endif
 #endif
 
 #if MAC || LINUX
