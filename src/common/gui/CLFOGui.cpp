@@ -49,7 +49,13 @@ void CLFOGui::drawtri(CRect r, CDrawContext *dc, int orientation)
     pl.push_back(CPoint(startx, starty));
     pl.push_back(CPoint(endx, midy));
     pl.push_back(CPoint(startx, endy));
+
     dc->setFillColor(skin->getColor(Colors::LFO::StepSeq::Button::Arrow));
+    if (((ss_shift_hover == 1 && orientation < 0) || (ss_shift_hover == 2 && orientation >= 0)) &&
+        skin->getVersion() >= 2)
+    {
+        dc->setFillColor(skin->getColor(Colors::LFO::StepSeq::Button::ArrowHover));
+    }
     dc->drawPolygon(pl, kDrawFilled);
 }
 

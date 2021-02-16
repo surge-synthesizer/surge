@@ -107,10 +107,11 @@ const Surge::Skin::Color Background("lfo.stepseq.background", 255, 144, 0),
 
 namespace Button
 {
-const Surge::Skin::Color Background("lfo.stepseq.button.background", 151, 152, 154),
-    Border("lfo.stepseq.button.border", 93, 93, 93),
-    Hover("lfo.stepseq.button.hover", 174, 175, 190),
-    Arrow("lfo.stepseq.button.arrow", 255, 255, 255);
+const Surge::Skin::Color Background("lfo.stepseq.button.background", 227, 227, 227),
+    Border("lfo.stepseq.button.border", 151, 151, 151),
+    Hover("lfo.stepseq.button.hover", 241, 187, 114),
+    Arrow("lfo.stepseq.button.arrow", 0, 0, 0),
+    ArrowHover("lfo.stepseq.button.arrow.hover", 0, 0, 0);
 }
 namespace InfoWindow
 {
