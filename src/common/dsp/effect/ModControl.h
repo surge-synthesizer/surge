@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include <vt_dsp/lipol.h>
+#include "lipol.h"
 
-namespace chowdsp
+namespace Surge
 {
 
 class ModControl
@@ -111,14 +111,13 @@ class ModControl
     inline void post_process() { depth.process(); }
 
   private:
-    lipol<float, true> lfoval;
-    lipol<float, true> depth;
+    lipol<float, true> lfoval{};
+    lipol<float, true> depth{};
     float lfophase;
     float lfosandhtarget;
 
     static constexpr int LFO_TABLE_SIZE = 8192;
     static constexpr int LFO_TABLE_MASK = LFO_TABLE_SIZE - 1;
-    float sin_lfo_table[LFO_TABLE_SIZE];
+    float sin_lfo_table[LFO_TABLE_SIZE]{};
 };
-
-} // namespace chowdsp
+} // namespace Surge
