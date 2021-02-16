@@ -393,11 +393,11 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         if (r)
             *r = 0;
         auto fgcol = skin->getColor(Colors::Osc::Filename::Background);
-        auto fgframe = fgcol;
+        auto fgframe = skin->getColor(Colors::Osc::Filename::Frame);
         auto fgtext = skin->getColor(Colors::Osc::Filename::Text);
 
         auto fgcolHov = skin->getColor(Colors::Osc::Filename::BackgroundHover);
-        auto fgframeHov = skin->getColor(Colors::Osc::Filename::BackgroundHoverFrame);
+        auto fgframeHov = skin->getColor(Colors::Osc::Filename::FrameHover);
         auto fgtextHov = skin->getColor(Colors::Osc::Filename::TextHover);
 
         dc->setFillColor(fgcol);
