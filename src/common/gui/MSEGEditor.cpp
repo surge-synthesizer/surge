@@ -1123,7 +1123,7 @@ struct MSEGCanvas : public CControl,
             false; // this slightly odd construct means we always draw beyond the last point
         int priorEval = 0;
 
-        for (int q = 0; q < drawArea.getWidth(); ++q)
+        for (int q = 0; q <= drawArea.getWidth(); ++q)
         {
             float up = pxt(q + drawArea.left);
             int i = q;
@@ -2859,6 +2859,7 @@ void MSEGControlRegion::rebuild()
          */
         auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
         auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
+        cnfSkinCtrl->defaultComponent = Surge::Skin::Components::NumberField;
         cnfSkinCtrl->allprops["bg_id"] = std::to_string(IDB_MSEG_SNAPVALUE_NUMFIELD);
         cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
         cnfSkinCtrl->allprops["text_color.hover"] = Colors::MSEGEditor::NumberField::TextHover.name;
