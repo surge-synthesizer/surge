@@ -16,12 +16,16 @@
 #pragma once
 #include <dsp/effect/Effect.h>
 #include "HysteresisProcessor.h"
+#include "LossFilter.h"
 
 namespace chowdsp
 {
 
 /*
-** Tape emulation effect
+** Tape emulation effect, a port of the
+** CHOW Tape Model plugin. For more information,
+** see https://github.com/jatinchowdhury18/AnalogTapeModel
+** and http://dafx2019.bcu.ac.uk/papers/DAFx2019_paper_3.pdf
 */
 class Tape : public Effect
 {
@@ -31,6 +35,10 @@ class Tape : public Effect
         tape_drive = 0,
         tape_saturation,
         tape_bias,
+        tape_speed,
+        tape_gap,
+        tape_spacing,
+        tape_thick,
 
         tape_num_ctrls,
     };
@@ -51,6 +59,7 @@ class Tape : public Effect
 
   private:
     HysteresisProcessor hysteresis;
+    LossFilter lossFilter;
 };
 
 } // namespace chowdsp
