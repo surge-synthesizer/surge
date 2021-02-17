@@ -22,6 +22,7 @@ void DPWOscillator::init(float pitch, bool is_display)
     // unstable under super big pitch changes
     pitchlag.setRate(0.5);
     pitchlag.startValue(pitch);
+    pwidth.setRate(0.001); // 4x slower
 
     n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
     double oosun = 1.0 / sqrt(n_unison);
@@ -81,7 +82,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 {
     float ud = oscdata->p[dpw_unison_detune].get_extended(
         localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f);
-    pitchlag.newValue(pitch);
+    pitchlag.startValue(pitch);
     for (int u = 0; u < n_unison; ++u)
     {
         dpbase[u].newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + ud * unisonOffsets[u])));
@@ -101,43 +102,37 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         {
             auto dp = dpbase[u].v;
 
-            for (int qx = sigbuf_len - 1; qx > 0; --qx)
+            /*
+             * So rather than lagging, back compute with the current dPhase
+             * which makes us way more stable under phase changes
+             */
+            double sBuff[3], sOffBuff[3], triBuff[3];
+            for (int s = 0; s < 3; ++s)
             {
-                sawBuffer[u][qx] = sawBuffer[u][qx - 1];
-                triBuffer[u][qx] = triBuffer[u][qx - 1];
-                sawOffBuffer[u][qx] = sawOffBuffer[u][qx - 1];
+                // Saw Component (p^3-p)/6
+                double p = (phase[u] - 0.5 - s * dp) * 2;
+                double p3 = p * p * p;
+                double sawcub = (p3 - p) / 6.0;
+                sBuff[s] = sawcub;
+
+                double tp = p + 0.5 - s * dp;
+                if (tp > 1.0)
+                    tp -= 2;
+                double Q = tp < 0 ? -1 : 1;
+                double tricub = (2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
+                triBuff[s] = tricub;
+
+                double pwp = (phase[u] - 0.5 + pwidth.v - s * dp) * 2;
+                if (pwp > 1)
+                    pwp -= 2;
+                sOffBuff[s] = (pwp * pwp * pwp - pwp) / 6.0;
             }
 
-            // Saw Component (p^3-p)/6
-            double p = (phase[u] - 0.5) * 2;
-            double p3 = p * p * p;
-            double sawcub = (p3 - p) / 6.0;
-            sawBuffer[u][0] = sawcub;
-            double saw =
-                (sawBuffer[u][0] + sawBuffer[u][2] - 2.0 * sawBuffer[u][1]) / (4.0 * dp * dp);
-
-            double tp = p + 0.5;
-            if (tp > 1.0)
-                tp -= 2;
-            double Q = tp < 0 ? -1 : 1;
-            double tricub = (2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
-            triBuffer[u][0] = tricub;
-            double tri =
-                (triBuffer[u][0] + triBuffer[u][2] - 2.0 * triBuffer[u][1]) / (4.0 * dp * dp);
-
-            double pwp = (phase[u] - 0.5 + pwidth.v) * 2;
-            if (pwp > 1)
-                pwp -= 2;
-            sawcub = (pwp * pwp * pwp - pwp) / 6.0;
-            sawOffBuffer[u][0] = sawcub;
-            double sawoff = (sawOffBuffer[u][0] + sawOffBuffer[u][2] - 2.0 * sawOffBuffer[u][1]) /
-                            (4.0 * dp * dp);
+            double denom = 0.25 / (dp * dp);
+            double saw = (sBuff[0] + sBuff[2] - 2.0 * sBuff[1]) * denom;
+            double tri = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]) * denom;
+            double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]) * denom;
             double sqr = sawoff - saw;
-            // double sqr = sawoff - saw + (1 - pwidth.v * 2);
-            // sawBuffer[u][0] = sawmix.v * sawcub + trimix.v * tricub;
-
-            // double res = (sawBuffer[u][0] + sawBuffer[u][2] - 2.0 * sawBuffer[u][1]) /
-            //             (4.0 * dp * dp);
 
             // Super important - you have to mix after differentiating to avoid
             // zipper noise
@@ -168,25 +163,17 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         pwidth.process();
     }
 
-    if (starting)
-    {
-        for (int i = 0; i < 2; ++i)
-        {
-            output[i] = output[2];
-            outputR[i] = outputR[2];
-        }
-
-        priorY_L = output[0];
-        priorX_L = output[0];
-
-        priorY_R = outputR[0];
-        priorX_R = outputR[0];
-
-        starting = false;
-    }
-
     if (dofilter)
     {
+        if (starting)
+        {
+            priorY_L = output[0];
+            priorX_L = output[0];
+
+            priorY_R = outputR[0];
+            priorX_R = outputR[0];
+        }
+
         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
         {
             auto pfL = charfiltA1 * priorY_L + charfiltB0 * output[i] + charfiltB1 * priorX_L;
@@ -203,6 +190,8 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             }
         }
     }
+
+    starting = false;
 }
 
 void DPWOscillator::init_ctrltypes()

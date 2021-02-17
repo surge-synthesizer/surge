@@ -33,18 +33,12 @@ class DPWOscillator : public Oscillator
         dpw_unison_voices,
     };
 
-    static constexpr int sigbuf_len = 3;
+    static constexpr int sigbuf_len = 6;
     DPWOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
     {
         for (auto u = 0; u < MAX_UNISON; ++u)
         {
             phase[u] = 0;
-            for (int p = 0; p < sigbuf_len; ++p)
-            {
-                sawBuffer[u][p] = 0.f;
-                triBuffer[u][p] = 0.f;
-                sawOffBuffer[u][p] = 0.f;
-            }
             mixL[u] = 1.f;
             mixR[u] = 1.f;
         }
@@ -69,9 +63,5 @@ class DPWOscillator : public Oscillator
     double phase[MAX_UNISON];
     double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
-
-    double sawBuffer[MAX_UNISON][sigbuf_len];
-    double triBuffer[MAX_UNISON][sigbuf_len];
-    double sawOffBuffer[MAX_UNISON][sigbuf_len];
 };
 #endif // SURGE_DPWOSCILLATOR_H
