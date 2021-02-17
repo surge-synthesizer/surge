@@ -2628,8 +2628,11 @@ void Parameter::get_display(char *txt, bool external, float ef)
                                 // count.
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // saturator.
-                                snprintf(txt, 32, "%s %s", fut_nlf_subtypes[i & 3],
+                                char ltext[64];
+                                snprintf(ltext, 64, "%s %s", fut_nlf_subtypes[i & 3],
                                          fut_nlf_saturators[(i >> 2) & 3]);
+                                strncpy(txt, ltext, 32);
+                                txt[31] = 0;
                                 break;
                             // don't default any more so compiler catches new ones we add
                             case fut_none:
