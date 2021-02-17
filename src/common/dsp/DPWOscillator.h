@@ -42,7 +42,7 @@ class DPWOscillator : public Oscillator
         dpmw_sub2,
 
         dpmw_num_multi
-    } DPWOscillator::multitype = (DPWOscillator::dpw_multitypes)oscdata->p[dpw_tri_mix].deform_type;
+    } multitype = (DPWOscillator::dpw_multitypes)oscdata->p[dpw_tri_mix].deform_type;
 
     static constexpr int sigbuf_len = 6;
     DPWOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
