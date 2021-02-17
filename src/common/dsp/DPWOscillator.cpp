@@ -16,6 +16,32 @@
 #include "DPWOscillator.h"
 #include "DebugHelpers.h"
 
+void DPWOscillator::init(float pitch, bool is_display)
+{
+    // We need a tiny little portamento since the derivative is pretty
+    // unstable under super big pitch changes
+    pitchlag.setRate(0.5);
+    pitchlag.startValue(pitch);
+
+    n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
+
+    for (int u = 0; u < n_unison; ++u)
+    {
+        if (n_unison > 1)
+        {
+            float mx = 1.f * u / (n_unison - 1); // between 0 and 1
+            unisonOffsets[u] = (mx - 0.5);
+            mixL[u] = 1.0 - mx;
+            mixR[u] = mx;
+        }
+        else
+        {
+            unisonOffsets[0] = 0;
+        }
+        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : ((float)rand() / (float)RAND_MAX);
+    }
+}
+
 void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
     float ud = localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f;
@@ -24,9 +50,9 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     {
         dpbase[u].newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + ud * unisonOffsets[u])));
     }
-    sawmix.newValue(localcopy[oscdata->p[dpw_sawmix].param_id_in_scene].f);
-    trimix.newValue(localcopy[oscdata->p[dpw_trimix].param_id_in_scene].f);
-    sqrmix.newValue(localcopy[oscdata->p[dpw_sqrmix].param_id_in_scene].f);
+    sawmix.newValue(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f);
+    trimix.newValue(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f);
+    sqrmix.newValue(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f);
     pwidth.newValue(limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
                                 0.01f, 0.99f));
 
@@ -97,6 +123,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         sqrmix.process();
         pwidth.process();
     }
+
     if (starting)
     {
         for (int i = 0; i < 2; ++i)
@@ -110,17 +137,21 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
 void DPWOscillator::init_ctrltypes()
 {
-    oscdata->p[dpw_sawmix].set_name("Saw Mix");
-    oscdata->p[dpw_sawmix].set_type(ct_percent);
+    oscdata->p[dpw_saw_mix].set_name("Saw Mix");
+    oscdata->p[dpw_saw_mix].set_type(ct_percent);
+    oscdata->p[dpw_saw_mix].val_default.f = 0.75;
 
-    oscdata->p[dpw_trimix].set_name("Tri Mix");
-    oscdata->p[dpw_trimix].set_type(ct_percent);
+    oscdata->p[dpw_pulse_mix].set_name("Pulse Mix");
+    oscdata->p[dpw_pulse_mix].set_type(ct_percent);
+    oscdata->p[dpw_pulse_mix].val_default.f = 0.75;
 
-    oscdata->p[dpw_sqrmix].set_name("Square Mix");
-    oscdata->p[dpw_sqrmix].set_type(ct_percent);
+    oscdata->p[dpw_tri_mix].set_name("Triangle Mix");
+    oscdata->p[dpw_tri_mix].set_type(ct_percent);
+    oscdata->p[dpw_tri_mix].val_default.f = 0.75;
 
     oscdata->p[dpw_pulse_width].set_name("Pulse Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
+    oscdata->p[dpw_pulse_width].val_default.f = 0.5;
 
     oscdata->p[dpw_sync].set_name("Currently Unimplemented");
     oscdata->p[dpw_sync].set_type(ct_syncpitch);
@@ -133,34 +164,11 @@ void DPWOscillator::init_ctrltypes()
 
 void DPWOscillator::init_default_values()
 {
-    oscdata->p[dpw_sawmix].val.f = 0.7;
-    oscdata->p[dpw_trimix].val.f = 0.0;
-    oscdata->p[dpw_sqrmix].val.f = 0.0;
+    oscdata->p[dpw_saw_mix].val.f = 0.75;
+    oscdata->p[dpw_tri_mix].val.f = 0.0;
+    oscdata->p[dpw_pulse_mix].val.f = 0.0;
     oscdata->p[dpw_pulse_width].val.f = 0.5;
     oscdata->p[dpw_sync].val.f = 0.0;
     oscdata->p[dpw_unison_detune].val.f = 0.2;
     oscdata->p[dpw_unison_voices].val.i = 1;
-}
-void DPWOscillator::init(float pitch, bool is_display)
-{
-    // We need a tiny little portamento since the derivative is pretty
-    // unstable under super big pitch changes
-    pitchlag.setRate(0.5);
-    pitchlag.startValue(pitch);
-
-    n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
-    if (n_unison > 1)
-    {
-        for (int u = 0; u < n_unison; ++u)
-        {
-            float mx = 1.f * u / (n_unison - 1); // between 0 and 1
-            unisonOffsets[u] = (mx - 0.5);
-            mixL[u] = 1.0 - mx;
-            mixR[u] = mx;
-        }
-    }
-    else
-    {
-        unisonOffsets[0] = 0;
-    }
 }
