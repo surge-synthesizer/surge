@@ -78,7 +78,7 @@ void DPWOscillator::init(float pitch, bool is_display)
     }
 }
 
-void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
+void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
 {
     if (oscdata->p[dpw_tri_mix].deform_type != (int)multitype)
     {
@@ -104,9 +104,15 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     pitchlag.process();
 
+    double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
+    fmdepth.newValue(fv);
+
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         double vL = 0.0, vR = 0.0;
+        double fmPhaseShift = 0.0;
+        if (FM)
+            fmPhaseShift = fmdepth.v * master_osc[i];
         for (int u = 0; u < n_unison; ++u)
         {
             auto dp = dpbase[u].v;
@@ -119,8 +125,10 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             for (int s = 0; s < 3; ++s)
             {
                 // Saw Component (p^3-p)/6
-                double p = (phase[u] - 0.5 - s * dp) * 2;
-                if (p < -1)
+                double p = (phase[u] + fmPhaseShift - 0.5 - s * dp) * 2;
+                while (p > 1)
+                    p -= 2;
+                while (p < -1)
                     p += 2;
 
                 double p3 = p * p * p;
@@ -138,8 +146,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 case dpwm_sin:
                 {
                     double pos = p < 0 ? 0 : 1;
-                    double p2 = p * p;
-                    double p3 = p2 * p;
                     double p4 = p3 * p;
 
                     triBuff[s] = -(pos * (-p4 / 3.0 + 2 * p3 / 3.0 - p / 3.0) +
@@ -148,14 +154,14 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 break;
                 case dpwm_tri:
                 {
-                    double tp = p + 0.5 - s * dp;
+                    double tp = p + 0.5;
                     if (tp > 1.0)
                         tp -= 2;
                     if (tp < -1.0)
                         tp += 2;
                     double Q = tp < 0 ? -1 : 1;
                     double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
-                    triBuff[s] = 0.5 * tricub;
+                    triBuff[s] = tricub;
                 }
                 break;
 
@@ -170,7 +176,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     break;
                 }
 
-                double pwp = (phase[u] - 0.5 + pwidth.v - s * dp) * 2;
+                double pwp = p + pwidth.v * 2;
                 if (pwp > 1)
                     pwp -= 2;
                 if (pwp < -1)
@@ -211,6 +217,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         trimix.process();
         sqrmix.process();
         pwidth.process();
+        fmdepth.process();
     }
 
     if (dofilter)
