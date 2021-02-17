@@ -2321,18 +2321,32 @@ bool SurgeSynthesizer::loadOscalgos()
                     double d;
                     int j;
                     char lbl[256];
+
                     sprintf(lbl, "p%i", k);
+
                     if (storage.getPatch().scene[s].osc[i].p[k].valtype == vt_float)
                     {
                         if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                        {
                             storage.getPatch().scene[s].osc[i].p[k].val.f = (float)d;
+                        }
                     }
                     else
                     {
                         if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                        {
                             storage.getPatch().scene[s].osc[i].p[k].val.i = j;
+                        }
+                    }
+
+                    sprintf(lbl, "p%i_deform_type", k);
+
+                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    {
+                        storage.getPatch().scene[s].osc[i].p[k].deform_type = j;
                     }
                 }
+
                 int rt;
                 if (e->QueryIntAttribute("retrigger", &rt) == TIXML_SUCCESS)
                 {
