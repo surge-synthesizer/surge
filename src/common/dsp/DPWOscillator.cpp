@@ -24,6 +24,7 @@ void DPWOscillator::init(float pitch, bool is_display)
     pitchlag.startValue(pitch);
 
     n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
+    double oosun = 1.0 / sqrt(n_unison);
 
     for (int u = 0; u < n_unison; ++u)
     {
@@ -31,20 +32,55 @@ void DPWOscillator::init(float pitch, bool is_display)
         {
             float mx = 1.f * u / (n_unison - 1); // between 0 and 1
             unisonOffsets[u] = (mx - 0.5);
-            mixL[u] = 1.0 - mx;
-            mixR[u] = mx;
+            mixL[u] = (1.0 - mx) * oosun;
+            mixR[u] = mx * oosun;
         }
         else
         {
             unisonOffsets[0] = 0;
+            mixL[0] = 1;
+            mixR[0] = 1;
         }
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : ((float)rand() / (float)RAND_MAX);
+    }
+
+    // This is the same implementation as SurgeSuperOscillator just as doubles
+    switch (storage->getPatch().character.val.i)
+    {
+    case 0:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        charfiltB0 = 1.f - filt;
+        charfiltB1 = 0.f;
+        charfiltA1 = filt;
+        dofilter = true;
+    }
+    break;
+    case 1:
+        charfiltB0 = 1.f;
+        charfiltB1 = 0.f;
+        charfiltA1 = 0.f;
+        dofilter = false; // since that is just output = output
+        break;
+    case 2:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        auto A0 = 1.0 / (1.0 - filt);
+        charfiltB0 = 1.f * A0;
+        charfiltB1 = -filt * A0;
+        charfiltA1 = 0.f;
+        dofilter = true;
+    }
+    break;
     }
 }
 
 void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
-    float ud = localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f;
+    float ud = oscdata->p[dpw_unison_detune].get_extended(
+        localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f);
     pitchlag.newValue(pitch);
     for (int u = 0; u < n_unison; ++u)
     {
@@ -106,6 +142,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             // Super important - you have to mix after differentiating to avoid
             // zipper noise
             double res = sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr;
+
             vL += res * mixL[u];
             vR += res * mixR[u];
             phase[u] += dp;
@@ -116,9 +153,15 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             dpbase[u].process();
         }
 
-        output[i] = vL;
-        outputR[i] = vR;
-
+        if (stereo)
+        {
+            output[i] = vL;
+            outputR[i] = vR;
+        }
+        else
+        {
+            output[i] = (vL + vR) / 2;
+        }
         sawmix.process();
         trimix.process();
         sqrmix.process();
@@ -132,7 +175,33 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             output[i] = output[2];
             outputR[i] = outputR[2];
         }
+
+        priorY_L = output[0];
+        priorX_L = output[0];
+
+        priorY_R = outputR[0];
+        priorX_R = outputR[0];
+
         starting = false;
+    }
+
+    if (dofilter)
+    {
+        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        {
+            auto pfL = charfiltA1 * priorY_L + charfiltB0 * output[i] + charfiltB1 * priorX_L;
+            priorY_L = pfL;
+            priorX_L = output[i];
+            output[i] = pfL;
+
+            if (stereo)
+            {
+                auto pfR = charfiltA1 * priorY_R + charfiltB0 * outputR[i] + charfiltB1 * priorX_R;
+                priorY_R = pfR;
+                priorX_R = outputR[i];
+                outputR[i] = pfR;
+            }
+        }
     }
 }
 
@@ -154,7 +223,7 @@ void DPWOscillator::init_ctrltypes()
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
     oscdata->p[dpw_pulse_width].val_default.f = 0.5;
 
-    oscdata->p[dpw_sync].set_name("Sync");
+    oscdata->p[dpw_sync].set_name("Sync (Unimplemented)");
     oscdata->p[dpw_sync].set_type(ct_syncpitch);
 
     oscdata->p[dpw_unison_detune].set_name("Unison Detune");
