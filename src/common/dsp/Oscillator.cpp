@@ -28,6 +28,7 @@ using namespace std;
 #include "SurgeSuperOscillator.h"
 #include "WavetableOscillator.h"
 #include "WindowOscillator.h"
+#include "DPWOscillator.h"
 
 Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
                       pdata *localcopy)
@@ -56,6 +57,8 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
         return new FM3Oscillator(storage, oscdata, localcopy);
     case ot_FM2:
         return new FM2Oscillator(storage, oscdata, localcopy);
+    case ot_dpw:
+        return new DPWOscillator(storage, oscdata, localcopy);
     case ot_sine:
     default:
         return new SineOscillator(storage, oscdata, localcopy);

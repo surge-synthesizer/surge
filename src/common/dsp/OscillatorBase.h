@@ -41,8 +41,12 @@ class alignas(16) Oscillator
     inline float pitch_to_omega(float x)
     {
         // Wondering about that constant 16.35? It is the twice the frequency of C0 (since we have a
-        // 2 pi here)
+        // 2 pi here). Could also do 2PI * pitch_to_dphase
         return (float)(M_PI * (16.35159783) * storage->note_to_pitch(x) * dsamplerate_os_inv);
+    }
+    inline double pitch_to_dphase(float x)
+    {
+        return (double)(Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
     }
 
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)

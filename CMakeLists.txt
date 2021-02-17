@@ -109,7 +109,7 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp)
+add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp src/common/dsp/DPWOscillator.cpp src/common/dsp/DPWOscillator.h)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
