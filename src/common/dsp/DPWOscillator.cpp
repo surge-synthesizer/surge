@@ -96,7 +96,8 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             sawOffBuffer[u][0] = sawcub;
             double sawoff = (sawOffBuffer[u][0] + sawOffBuffer[u][2] - 2.0 * sawOffBuffer[u][1]) /
                             (4.0 * dp * dp);
-            double sqr = sawoff - saw + (1 - pwidth.v * 2);
+            double sqr = sawoff - saw;
+            // double sqr = sawoff - saw + (1 - pwidth.v * 2);
             // sawBuffer[u][0] = sawmix.v * sawcub + trimix.v * tricub;
 
             // double res = (sawBuffer[u][0] + sawBuffer[u][2] - 2.0 * sawBuffer[u][1]) /
@@ -137,23 +138,23 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
 void DPWOscillator::init_ctrltypes()
 {
-    oscdata->p[dpw_saw_mix].set_name("Saw Mix");
+    oscdata->p[dpw_saw_mix].set_name("Sawtooth");
     oscdata->p[dpw_saw_mix].set_type(ct_percent);
     oscdata->p[dpw_saw_mix].val_default.f = 0.5;
 
-    oscdata->p[dpw_pulse_mix].set_name("Pulse Mix");
+    oscdata->p[dpw_pulse_mix].set_name("Pulse");
     oscdata->p[dpw_pulse_mix].set_type(ct_percent);
     oscdata->p[dpw_pulse_mix].val_default.f = 0.5;
 
-    oscdata->p[dpw_tri_mix].set_name("Triangle Mix");
+    oscdata->p[dpw_tri_mix].set_name("Triangle");
     oscdata->p[dpw_tri_mix].set_type(ct_percent);
     oscdata->p[dpw_tri_mix].val_default.f = 0.5;
 
-    oscdata->p[dpw_pulse_width].set_name("Pulse Width");
+    oscdata->p[dpw_pulse_width].set_name("Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
     oscdata->p[dpw_pulse_width].val_default.f = 0.5;
 
-    oscdata->p[dpw_sync].set_name("Currently Unimplemented");
+    oscdata->p[dpw_sync].set_name("Sync");
     oscdata->p[dpw_sync].set_type(ct_syncpitch);
 
     oscdata->p[dpw_unison_detune].set_name("Unison Detune");
