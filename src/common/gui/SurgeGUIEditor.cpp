@@ -55,6 +55,7 @@
 #include "MSEGEditor.h"
 #include "version.h"
 #include "CMidiLearnOverlay.h"
+#include "DPWOscillator.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -1674,6 +1675,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case ct_airwindows_param_bipolar:
         case ct_pitch:
         case ct_pitch4oct:
+        case ct_dpw_trimix:
             style |= kBipolar;
             break;
         case ct_lfoamplitude:
@@ -3438,29 +3440,55 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 if (p->has_deformoptions())
                 {
-
-                    auto q = modsource_editor[current_scene];
-                    auto *lfodata =
-                        &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
-
-                    if (lt_num_deforms[lfodata->shape.val.i] > 1)
+                    switch (p->ctrltype)
                     {
-                        contextMenu->addSeparator(eid++);
 
-                        for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
+                    case ct_lfodeform:
+                    {
+                        auto q = modsource_editor[current_scene];
+                        auto *lfodata =
+                            &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
+
+                        if (lt_num_deforms[lfodata->shape.val.i] > 1)
                         {
-                            char title[32];
-                            sprintf(title, "Deform Type %d", (i + 1));
+                            contextMenu->addSeparator(eid++);
 
-                            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(title),
-                                            [this, p, i]() {
-                                                p->deform_type = i;
-                                                if (frame)
-                                                    frame->invalid();
-                                            });
-                            contextMenu->checkEntry(eid, (p->deform_type == i));
+                            for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
+                            {
+                                char title[32];
+                                sprintf(title, "Deform Type %d", (i + 1));
+
+                                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(title),
+                                                [this, p, i]() {
+                                                    p->deform_type = i;
+                                                    if (frame)
+                                                        frame->invalid();
+                                                });
+                                contextMenu->checkEntry(eid, (p->deform_type == i));
+                                eid++;
+                            }
+                        }
+                    }
+                    case ct_dpw_trimix:
+                    {
+                        contextMenu->addSeparator();
+                        eid++;
+                        for (int m = 0; m < DPWOscillator::dpw_multitypes::dpmw_num_multi; ++m)
+                        {
+                            auto mtm = addCallbackMenu(
+                                contextMenu, dpw_multitype_names[m], [p, m, this]() {
+                                    p->deform_type = m;
+                                    std::string nm =
+                                        std::string("Multi - ") + dpw_multitype_names[m];
+                                    p->set_name(nm.c_str());
+                                    synth->refresh_editor = true;
+                                });
+                            mtm->setChecked(p->deform_type == m);
                             eid++;
                         }
+                    }
+                    default:
+                        break;
                     }
                 }
 

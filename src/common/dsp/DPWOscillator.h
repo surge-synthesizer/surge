@@ -33,6 +33,17 @@ class DPWOscillator : public Oscillator
         dpw_unison_voices,
     };
 
+    enum dpw_multitypes
+    {
+        dpwm_tri,
+        dpwm_sqr,
+        dpwm_sin,
+        dpmw_sub1,
+        dpmw_sub2,
+
+        dpmw_num_multi
+    } multitype = dpwm_tri;
+
     static constexpr int sigbuf_len = 6;
     DPWOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
     {
@@ -64,4 +75,8 @@ class DPWOscillator : public Oscillator
     double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
 };
+
+const char dpw_multitype_names[DPWOscillator::dpw_multitypes::dpmw_num_multi][16] = {
+    "Triangle", "Square", "Sin", "Sub -1", "Sub -2"};
+
 #endif // SURGE_DPWOSCILLATOR_H
