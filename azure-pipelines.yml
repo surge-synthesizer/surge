@@ -18,86 +18,101 @@ jobs:
         isMacUnitTest: True
         cmakeArguments: "-GXcode"
         cmakeTarget: "all-components"
+        cmakeConfig: "Release"
       macOS-fat:
         imageName: 'macos-10.15'
         isMac: True
         isMacFat: True
-        cmakeArguments: "-GXcode -D\"CMAKE_OSX_ARCHITECTURES=arm64;x86_64\""
+        cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64;x86_64\""
         cmakeTarget: "Surge-AU-Packaged"
+        cmakeConfig: "Debug"
         xcodePath: "/Applications/Xcode_12.2.app"
       macOS-juce-targets:
         imageName: 'macos-10.15'
         isMac: True
-        cmakeArguments: "-GXcode -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_JUCE_PLUGINS=True"
         cmakeTarget: "surge-juce-pipeline-targets"
+        cmakeConfig: "Debug"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
-        cmakeArguments: "-A x64"
+        cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
+        cmakeConfig: "Debug"
         cmakeTarget: "Surge-VST3-Packaged"
       windows-x86-vs2017:
         imageName: 'vs2017-win2016'
         isWindows: True
-        cmakeArguments: "-A Win32"
+        cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
+        cmakeConfig: "Debug"
         cmakeTarget: "Surge-VST3-Packaged"
       windows-unittest:
         imageName: 'vs2017-win2016'
         isWindows: True
         isWindowsUnitTest: True
-        cmakeArguments: "-A x64"
+        cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
+        cmakeConfig: "Release"
         cmakeTarget: "surge-headless"
       windows-juce-targets:
         imageName: 'windows-2019'
         isWindows: True
-        cmakeArguments: "-A x64 -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeArguments: "-A x64 -DBUILD_SURGE_JUCE_PLUGINS=True -DCMAKE_BUILD_TYPE=Debug"
+        cmakeConfig: "Debug"
         cmakeTarget: "surge-juce-pipeline-targets"
       linux-codequality:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: "clang"
-        cmakeArguments: "-GNinja"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "code-quality-pipeline-checks"
+        cmakeConfig: "Debug"
       linux-vst3:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: ""
-        cmakeArguments: "-GNinja"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "Surge-VST3-Packaged"
+        cmakeConfig: "Debug"
       linux-pythonapi:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: ""
-        cmakeArguments: "-GNinja -DBUILD_SURGE_PYTHON_BINDINGS=True"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_PYTHON_BINDINGS=True"
         cmakeTarget: "surgepy"
+        cmakeConfig: "Debug"
       linux-lv2-ubuntu18:
         imageName: 'ubuntu-18.04'
         isLinux: True
         aptGetExtras: ""
-        cmakeArguments: "-GNinja"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "Surge-LV2-Packaged"
+        cmakeConfig: "Debug"
       linux-juce-targets:
         imageName: 'ubuntu-20.04'
         isLinux: True
-        cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True"
+        cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "surge-juce-pipeline-targets"
+        cmakeConfig: "Debug"
       linux-clang:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: "clang"
-        cmakeArguments: "-GNinja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
         cmakeTarget: "Surge-LV2-Packaged"
+        cmakeConfig: "Debug"
       linux-arm-cross:
         imageName: 'ubuntu-20.04'
         isLinux: True
         isLinuxARM: True
         aptGetExtras: "libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf"
-        cmakeArguments: "-GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/linux-arm-ubuntu-crosscompile-toolchain.cmake"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-arm-ubuntu-crosscompile-toolchain.cmake"
         cmakeTarget: "surge-headless"
+        cmakeConfig: "Debug"
       linux-unittest:
         imageName: 'ubuntu-20.04'
         isLinux: True
         isLinuxUnitTest: True
-        cmakeArguments: ""
+        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
+        cmakeConfig: "Release"
         cmakeTarget: "surge-headless"
 
   pool:
@@ -112,6 +127,7 @@ jobs:
      echo "BUILD REASON   = " $BUILD_REASON
      echo "cmakeArguments = " $(cmakeArguments)
      echo "cmakeTarget    = " $(cmakeTarget)
+     echo "cmakeConfig    = " $(cmakeConfig)
      echo "aptGetExtras   = " $(aptGetExtras)
     displayName: all - details on build
     
@@ -185,7 +201,7 @@ jobs:
 
   - bash: |
       set -e
-      cmake --build build --config Release --target $(cmakeTarget) --parallel 4
+      cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
     displayName: all - build with cmake 
 
   - bash: |
