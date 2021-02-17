@@ -20,6 +20,7 @@
 #include "chowdsp/Neuron.h"
 #include "chowdsp/Chow.h"
 #include "chowdsp/exciter/Exciter.h"
+#include "chowdsp/tape/Tape.h"
 #include "DebugHelpers.h"
 
 using namespace std;
@@ -72,6 +73,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new NimbusEffect(storage, fxdata, pd);
     case fxt_exciter:
         return new chowdsp::Exciter(storage, fxdata, pd);
+    case fxt_tape:
+        return new chowdsp::Tape(storage, fxdata, pd);
     case fxt_ensemble:
         return new BBDEnsembleEffect(storage, fxdata, pd);
     default:
