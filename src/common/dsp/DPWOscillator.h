@@ -62,7 +62,7 @@ class DPWOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    lag<double, true> sawmix, trimix, sqrmix, pwidth, dpbase[MAX_UNISON], detune, pitchlag;
+    lag<double, true> sawmix, trimix, sqrmix, pwidth, dpbase[MAX_UNISON], detune, pitchlag, fmdepth;
 
     // character filter
     bool dofilter = true;
