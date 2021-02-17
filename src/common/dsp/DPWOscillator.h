@@ -66,8 +66,8 @@ class DPWOscillator : public Oscillator
 
     // character filter
     bool dofilter = true;
-    double charfiltB0 = 0.f, charfiltB1 = 0.f, charfiltA1 = 0.f;
-    double priorY_L = 0.f, priorY_R = 0.f, priorX_L = 0.f, priorX_R = 0.f;
+    double charfiltB0 = 0.0, charfiltB1 = 0.0, charfiltA1 = 0.0;
+    double priorY_L = 0.0, priorY_R = 0.0, priorX_L = 0.0, priorX_R = 0.0;
 
     int n_unison = 1;
     bool starting = true;

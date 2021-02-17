@@ -115,7 +115,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
              * So rather than lagging, back compute with the current dPhase
              * which makes us way more stable under phase changes
              */
-            double sBuff[3]{}, sOffBuff[3]{}, triBuff[3]{};
+            double sBuff[3], sOffBuff[3], triBuff[3];
             for (int s = 0; s < 3; ++s)
             {
                 // Saw Component (p^3-p)/6
