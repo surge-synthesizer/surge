@@ -24,10 +24,10 @@ class DPWOscillator : public Oscillator
   public:
     enum dpw_params
     {
-        dpw_sawmix = 0,
-        dpw_sqrmix,
+        dpw_saw_mix = 0,
+        dpw_pulse_mix,
+        dpw_tri_mix,
         dpw_pulse_width,
-        dpw_trimix,
         dpw_sync,
         dpw_unison_detune,
         dpw_unison_voices,
