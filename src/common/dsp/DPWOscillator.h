@@ -58,6 +58,12 @@ class DPWOscillator : public Oscillator
                                float FMdepth = 0.f);
 
     lag<double, true> sawmix, trimix, sqrmix, pwidth, dpbase[MAX_UNISON], detune, pitchlag;
+
+    // character filter
+    bool dofilter = true;
+    double charfiltB0, charfiltB1, charfiltA1;
+    double priorY_L, priorY_R, priorX_L, priorX_R;
+
     int n_unison = 1;
     bool starting = true;
     double phase[MAX_UNISON];
