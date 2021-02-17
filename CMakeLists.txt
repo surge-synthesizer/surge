@@ -109,7 +109,7 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h src/common/dsp/effect/NimbusEffect.cpp src/common/dsp/DPWOscillator.cpp src/common/dsp/DPWOscillator.h)
+add_library(surge-shared src/common/FilterConfiguration.h)
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -217,6 +217,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/FreqshiftEffect.cpp
   src/common/dsp/effect/FlangerEffect.cpp
   src/common/dsp/effect/GEQ11Effect.cpp
+  src/common/dsp/effect/NimbusEffect.cpp
   src/common/dsp/effect/PhaserEffect.cpp
   src/common/dsp/effect/ResonatorEffect.cpp
   src/common/dsp/effect/Reverb1Effect.cpp
@@ -240,6 +241,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/AudioInputOscillator.cpp
   src/common/dsp/BiquadFilter.cpp
   src/common/dsp/BiquadFilterSSE2.cpp
+  src/common/dsp/DPWOscillator.cpp
   src/common/dsp/DspUtilities.cpp
   src/common/dsp/FilterCoefficientMaker.cpp
   src/common/dsp/FM2Oscillator.cpp
