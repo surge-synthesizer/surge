@@ -32,9 +32,9 @@ void DPWOscillator::init(float pitch, bool is_display)
         if (n_unison > 1)
         {
             float mx = 1.f * u / (n_unison - 1); // between 0 and 1
-            unisonOffsets[u] = (mx - 0.5);
-            mixL[u] = (1.0 - mx) * oosun;
-            mixR[u] = mx * oosun;
+            unisonOffsets[u] = (mx - 0.5) * 2;
+            mixL[u] = (1.0 - mx) * oosun * 2;
+            mixR[u] = mx * oosun * 2;
         }
         else
         {
@@ -115,7 +115,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
              * So rather than lagging, back compute with the current dPhase
              * which makes us way more stable under phase changes
              */
-            double sBuff[3], sOffBuff[3], triBuff[3];
+            double sBuff[3]{}, sOffBuff[3]{}, triBuff[3]{};
             for (int s = 0; s < 3; ++s)
             {
                 // Saw Component (p^3-p)/6
@@ -129,13 +129,13 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
                 switch (multitype)
                 {
-                case dpwm_sqr:
+                case dpwm_square:
                 {
                     double Q = p < 0 ? 1 : -1;
                     triBuff[s] = Q * p * p / 2 + p / 2;
                 }
                 break;
-                case dpwm_sin:
+                case dpwm_sine:
                 {
                     double pos = p < 0 ? 0 : 1;
                     double p2 = p * p;
@@ -146,7 +146,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                                    (pos - 1) * (-p4 / 3.0 - 2 * p3 / 3.0 + p / 3.0));
                 }
                 break;
-                case dpwm_tri:
+                case dpwm_triangle:
                 {
                     double tp = p + 0.5 - s * dp;
                     if (tp > 1.0)
@@ -184,8 +184,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]) * denom;
             double sqr = sawoff - saw;
 
-            // Super important - you have to mix after differentiating to avoid
-            // zipper noise
+            // Super important - you have to mix after differentiating to avoid zipper noise
             double res = sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr;
 
             vL += res * mixL[u];
@@ -248,17 +247,14 @@ void DPWOscillator::init_ctrltypes()
 {
     oscdata->p[dpw_saw_mix].set_name("Sawtooth");
     oscdata->p[dpw_saw_mix].set_type(ct_percent_bidirectional);
-    oscdata->p[dpw_saw_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_mix].set_name("Pulse");
     oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
-    oscdata->p[dpw_pulse_mix].val_default.f = 0.5;
 
-    std::string nm = std::string("Multi - ") + dpw_multitype_names[0];
+    std::string nm = std::string("Multi - ") + dpw_multitype_names[(int)multitype];
     oscdata->p[dpw_tri_mix].set_name(nm.c_str());
 
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
-    oscdata->p[dpw_tri_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_width].set_name("Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
