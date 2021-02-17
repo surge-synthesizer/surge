@@ -139,15 +139,15 @@ void DPWOscillator::init_ctrltypes()
 {
     oscdata->p[dpw_saw_mix].set_name("Saw Mix");
     oscdata->p[dpw_saw_mix].set_type(ct_percent);
-    oscdata->p[dpw_saw_mix].val_default.f = 0.75;
+    oscdata->p[dpw_saw_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_mix].set_name("Pulse Mix");
     oscdata->p[dpw_pulse_mix].set_type(ct_percent);
-    oscdata->p[dpw_pulse_mix].val_default.f = 0.75;
+    oscdata->p[dpw_pulse_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_tri_mix].set_name("Triangle Mix");
     oscdata->p[dpw_tri_mix].set_type(ct_percent);
-    oscdata->p[dpw_tri_mix].val_default.f = 0.75;
+    oscdata->p[dpw_tri_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_width].set_name("Pulse Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
@@ -164,7 +164,7 @@ void DPWOscillator::init_ctrltypes()
 
 void DPWOscillator::init_default_values()
 {
-    oscdata->p[dpw_saw_mix].val.f = 0.75;
+    oscdata->p[dpw_saw_mix].val.f = 0.5;
     oscdata->p[dpw_tri_mix].val.f = 0.0;
     oscdata->p[dpw_pulse_mix].val.f = 0.0;
     oscdata->p[dpw_pulse_width].val.f = 0.5;
