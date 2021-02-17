@@ -38,11 +38,12 @@ class DPWOscillator : public Oscillator
         dpwm_triangle,
         dpwm_square,
         dpwm_sine,
-        dpmw_sub1,
-        dpmw_sub2,
-
-        dpmw_num_multi
     } multitype = (DPWOscillator::dpw_multitypes)oscdata->p[dpw_tri_mix].deform_type;
+
+    enum dpw_submask
+    {
+        dpw_subone = 1U << 10,
+    };
 
     static constexpr int sigbuf_len = 6;
     DPWOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
@@ -50,6 +51,8 @@ class DPWOscillator : public Oscillator
         for (auto u = 0; u < MAX_UNISON; ++u)
         {
             phase[u] = 0;
+            sphase[u] = 0;
+            sReset[u] = false;
             mixL[u] = 1.f;
             mixR[u] = 1.f;
         }
@@ -62,7 +65,8 @@ class DPWOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    lag<double, true> sawmix, trimix, sqrmix, pwidth, dpbase[MAX_UNISON], detune, pitchlag, fmdepth;
+    lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
+        subdpbase, subdpsbase, detune, pitchlag, fmdepth;
 
     // character filter
     bool dofilter = true;
@@ -71,12 +75,12 @@ class DPWOscillator : public Oscillator
 
     int n_unison = 1;
     bool starting = true;
-    double phase[MAX_UNISON];
-    double unisonOffsets[MAX_UNISON]{};
+    double phase[MAX_UNISON], sphase[MAX_UNISON], subphase, subsphase;
+    bool sReset[MAX_UNISON], subReset;
+    double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
 };
 
-const char dpw_multitype_names[DPWOscillator::dpw_multitypes::dpmw_num_multi][16] = {
-    "Triangle", "Square", "Sine", "Sub -1 Oct", "Sub -2 Oct"};
+const char dpw_multitype_names[3][16] = {"Triangle", "Square", "Sine"};
 
 #endif // SURGE_DPWOSCILLATOR_H
