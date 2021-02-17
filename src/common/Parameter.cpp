@@ -310,10 +310,16 @@ bool Parameter::has_portaoptions()
 
 bool Parameter::has_deformoptions()
 {
-    if (ctrltype == ct_lfodeform)
+    switch (ctrltype)
+    {
+    case ct_lfodeform:
+    case ct_dpw_trimix:
         return true;
-    else
-        return false;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 void Parameter::set_user_data(ParamUserData *ud)
@@ -773,6 +779,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_default.f = 1;
         break;
+    case ct_dpw_trimix:
     case ct_percent_bidirectional:
     case ct_percent_bidirectional_stereo:
         val_min.f = -1;
@@ -986,6 +993,7 @@ void Parameter::set_type(int ctrltype)
     case ct_countedset_percent:
     case ct_lfoamplitude:
     case ct_reson_res_extendable:
+    case ct_dpw_trimix:
         displayType = LinearWithScale;
         sprintf(displayInfo.unit, "%%");
         displayInfo.scale = 100;
@@ -1217,6 +1225,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_airwindows_param_bipolar:
         case ct_lfodeform:
         case ct_reson_res_extendable:
+        case ct_dpw_trimix:
         {
             val.f = floor(val.f * 100) / 100.0;
             break;
@@ -3163,6 +3172,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_comp_attack_ms:
     case ct_comp_release_ms:
     case ct_freq_ringmod:
+    case ct_dpw_trimix:
     {
         return true;
         break;

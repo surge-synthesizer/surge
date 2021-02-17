@@ -80,6 +80,15 @@ void DPWOscillator::init(float pitch, bool is_display)
 
 void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
+    if (oscdata->p[dpw_tri_mix].deform_type != (int)multitype)
+    {
+        multitype = (DPWOscillator::dpw_multitypes)(oscdata->p[dpw_tri_mix].deform_type);
+
+        // FIXME - this is not the right place for this and it has bugs
+        std::string nm = std::string("Multi - ") + dpw_multitype_names[(int)multitype];
+        oscdata->p[dpw_tri_mix].set_name(nm.c_str());
+    }
+
     float ud = oscdata->p[dpw_unison_detune].get_extended(
         localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f);
     pitchlag.startValue(pitch);
@@ -111,20 +120,61 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             {
                 // Saw Component (p^3-p)/6
                 double p = (phase[u] - 0.5 - s * dp) * 2;
+                if (p < -1)
+                    p += 2;
+
                 double p3 = p * p * p;
                 double sawcub = (p3 - p) / 6.0;
                 sBuff[s] = sawcub;
 
-                double tp = p + 0.5 - s * dp;
-                if (tp > 1.0)
-                    tp -= 2;
-                double Q = tp < 0 ? -1 : 1;
-                double tricub = (2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
-                triBuff[s] = tricub;
+                switch (multitype)
+                {
+                case dpwm_sqr:
+                {
+                    double Q = p < 0 ? 1 : -1;
+                    triBuff[s] = Q * p * p / 2 + p / 2;
+                }
+                break;
+                case dpwm_sin:
+                {
+                    double pos = p < 0 ? 0 : 1;
+                    double p2 = p * p;
+                    double p3 = p2 * p;
+                    double p4 = p3 * p;
+
+                    triBuff[s] = -(pos * (-p4 / 3.0 + 2 * p3 / 3.0 - p / 3.0) +
+                                   (pos - 1) * (-p4 / 3.0 - 2 * p3 / 3.0 + p / 3.0));
+                }
+                break;
+                case dpwm_tri:
+                {
+                    double tp = p + 0.5 - s * dp;
+                    if (tp > 1.0)
+                        tp -= 2;
+                    if (tp < -1.0)
+                        tp += 2;
+                    double Q = tp < 0 ? -1 : 1;
+                    double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
+                    triBuff[s] = 0.5 * tricub;
+                }
+                break;
+
+                case dpmw_sub1:
+                case dpmw_sub2:
+                    // These happen as single center voice outside unison
+                    triBuff[s] = 0.0;
+                    break;
+
+                default:
+                    triBuff[s] = 0.0;
+                    break;
+                }
 
                 double pwp = (phase[u] - 0.5 + pwidth.v - s * dp) * 2;
                 if (pwp > 1)
                     pwp -= 2;
+                if (pwp < -1)
+                    pwp += 2;
                 sOffBuff[s] = (pwp * pwp * pwp - pwp) / 6.0;
             }
 
@@ -197,15 +247,17 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 void DPWOscillator::init_ctrltypes()
 {
     oscdata->p[dpw_saw_mix].set_name("Sawtooth");
-    oscdata->p[dpw_saw_mix].set_type(ct_percent);
+    oscdata->p[dpw_saw_mix].set_type(ct_percent_bidirectional);
     oscdata->p[dpw_saw_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_mix].set_name("Pulse");
-    oscdata->p[dpw_pulse_mix].set_type(ct_percent);
+    oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
     oscdata->p[dpw_pulse_mix].val_default.f = 0.5;
 
-    oscdata->p[dpw_tri_mix].set_name("Triangle");
-    oscdata->p[dpw_tri_mix].set_type(ct_percent);
+    std::string nm = std::string("Multi - ") + dpw_multitype_names[0];
+    oscdata->p[dpw_tri_mix].set_name(nm.c_str());
+
+    oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
     oscdata->p[dpw_tri_mix].val_default.f = 0.5;
 
     oscdata->p[dpw_pulse_width].set_name("Width");
@@ -225,6 +277,7 @@ void DPWOscillator::init_default_values()
 {
     oscdata->p[dpw_saw_mix].val.f = 0.5;
     oscdata->p[dpw_tri_mix].val.f = 0.0;
+    oscdata->p[dpw_tri_mix].deform_type = 0;
     oscdata->p[dpw_pulse_mix].val.f = 0.0;
     oscdata->p[dpw_pulse_width].val.f = 0.5;
     oscdata->p[dpw_sync].val.f = 0.0;

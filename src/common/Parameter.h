@@ -158,6 +158,7 @@ enum ctrltypes
     ct_comp_attack_ms,
     ct_comp_release_ms,
     ct_freq_ringmod,
+    ct_dpw_trimix,
     num_ctrltypes,
 };
 
