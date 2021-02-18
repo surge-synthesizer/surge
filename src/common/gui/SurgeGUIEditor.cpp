@@ -3480,7 +3480,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                     // p->deform_type = m;
                                     p->deform_type = (p->deform_type & 0xFFF0) | m;
                                     std::string nm =
-                                        std::string("Multi - ") + dpw_multitype_names[m];
+                                        DPWOscillator::multitypeNameForIntValue(p->deform_type);
                                     p->set_name(nm.c_str());
                                     synth->refresh_editor = true;
                                 });
@@ -3499,6 +3499,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             if (p->deform_type & val)
                                 uval = 0;
                             p->deform_type = (p->deform_type & 0xF) | uval;
+                            std::string nm =
+                                DPWOscillator::multitypeNameForIntValue(p->deform_type);
+                            p->set_name(nm.c_str());
 
                             synth->refresh_editor = true;
                         });

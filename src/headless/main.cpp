@@ -43,6 +43,10 @@ int main(int argc, char **argv)
             Surge::Headless::NonTest::filterAnalyzer(std::atoi(argv[3]), std::atoi(argv[4]),
                                                      std::cout);
         }
+        if (strcmp(argv[2], "--performance") == 0)
+        {
+            Surge::Headless::NonTest::performancePlay(argv[3], std::atoi(argv[4]));
+        }
         return 0;
     }
     else
