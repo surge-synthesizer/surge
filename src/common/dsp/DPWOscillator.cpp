@@ -123,9 +123,13 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
     subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
     sync.process();
-    sawmix.newValue(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f);
-    trimix.newValue(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f);
-    sqrmix.newValue(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f);
+    // Let people modulate outside the sliders a bit. but not catastrophically
+    sawmix.newValue(0.5 *
+                    limit_range(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f, -2.f, 2.f));
+    trimix.newValue(0.5 *
+                    limit_range(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f, -2.f, 2.f));
+    sqrmix.newValue(
+        0.5 * limit_range(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
     // Since we always use this multiplied by 2, put the mul here to save it later
     pwidth.newValue(2 *
                     limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
@@ -156,7 +160,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             if (pfm > 1)
                 pfm -= floor(pfm);
             if (pfm < 0)
-                pfm += ceil(pfm) + 1;
+                pfm += -ceil(pfm) + 1;
 
             for (int s = 0; s < 3; ++s)
             {
