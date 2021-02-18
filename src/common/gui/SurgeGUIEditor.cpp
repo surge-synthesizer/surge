@@ -3473,19 +3473,37 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     {
                         contextMenu->addSeparator();
                         eid++;
-                        for (int m = 0; m < DPWOscillator::dpw_multitypes::dpmw_num_multi; ++m)
+                        for (int m = 0; m < 3; ++m)
                         {
                             auto mtm = addCallbackMenu(
                                 contextMenu, dpw_multitype_names[m], [p, m, this]() {
-                                    p->deform_type = m;
+                                    // p->deform_type = m;
+                                    p->deform_type = (p->deform_type & 0xFFF0) | m;
                                     std::string nm =
                                         std::string("Multi - ") + dpw_multitype_names[m];
                                     p->set_name(nm.c_str());
                                     synth->refresh_editor = true;
                                 });
-                            mtm->setChecked(p->deform_type == m);
+                            mtm->setChecked((p->deform_type & 0x0F) == m);
                             eid++;
                         }
+
+                        contextMenu->addSeparator();
+                        eid++;
+
+                        int val = DPWOscillator::dpw_submask::dpw_subone;
+
+                        auto mtm = addCallbackMenu(contextMenu, "Sub Oscillator", [p, val, this]() {
+                            // p->deform_type = m;
+                            auto uval = val;
+                            if (p->deform_type & val)
+                                uval = 0;
+                            p->deform_type = (p->deform_type & 0xF) | uval;
+
+                            synth->refresh_editor = true;
+                        });
+                        mtm->setChecked((p->deform_type & val));
+                        eid++;
                     }
                     default:
                         break;
