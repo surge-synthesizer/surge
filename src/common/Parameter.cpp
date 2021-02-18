@@ -2899,19 +2899,25 @@ void Parameter::get_display(char *txt, bool external, float ef)
         break;
         case ct_nimbusquality:
         {
+            // https://github.com/pichenettes/eurorack/blob/84f4f67aaa25bf696093b224e2a51a5c18143e4f/clouds/dsp/granular_processor.h#L125-L128
+            // [input value] [channels] [low fidelity]
+            //     0b00          2          false
+            //     0b01          1          false
+            //     0b10          2          true
+            //     0b11          1          true
             switch (i)
             {
-            case 0:
-                sprintf(txt, "16k 8-bit Mono");
+            case 0: // binary 00
+                sprintf(txt, "32k 16-bit Stereo");
                 break;
-            case 1:
-                sprintf(txt, "16k 8-bit Stereo");
-                break;
-            case 2:
+            case 1: // 0b01
                 sprintf(txt, "32k 16-bit Mono");
                 break;
-            case 3:
-                sprintf(txt, "32k 16-bit Stereo");
+            case 2: // 0b10
+                sprintf(txt, "16k 8-bit Stereo");
+                break;
+            default: // 0b11
+                sprintf(txt, "16k 8-bit Mono");
                 break;
             }
         }
