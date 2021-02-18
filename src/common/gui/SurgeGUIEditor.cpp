@@ -3527,8 +3527,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             enable =
                                 synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
                             break;
-                        case ct_percent_for_drift:
-                            txt = "Drift Starts With Non Zero Value";
+                        case ct_percent_oscdrift:
+                            txt = "Randomize Initial Drift Phase";
                             break;
                         default:
                             break;

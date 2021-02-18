@@ -163,7 +163,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                                sc_id, cg_GLOBAL, 0, true, sceasy));
 
         a->push_back(scene[sc].drift.assign(p_id.next(), id_s++, "drift", "Osc Drift",
-                                            ct_percent_for_drift, Surge::Skin::Scene::drift, sc_id,
+                                            ct_percent_oscdrift, Surge::Skin::Scene::drift, sc_id,
                                             cg_GLOBAL, 0, true));
 
         a->push_back(scene[sc].noise_colour.assign(
@@ -1204,7 +1204,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             else
             {
                 param_ptr[i]->extend_range = false;
-                if (revision >= 16 && param_ptr[i]->ctrltype == ct_percent_for_drift)
+                if (revision >= 16 && param_ptr[i]->ctrltype == ct_percent_oscdrift)
                     param_ptr[i]->extend_range = true;
             }
 
