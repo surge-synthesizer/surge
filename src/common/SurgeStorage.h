@@ -193,16 +193,22 @@ enum osc_type
     ot_wavetable,
     ot_shnoise,
     ot_audioinput,
-    ot_FM3, // it used to be just FM, then the UI called it FM3, so name it like this, but the order
-            // of enums has to stick
+    ot_FM3, // used to be just FM (FM3 on GUI), so name it like this, but enum order has to stick
     ot_FM2,
     ot_window,
-
     ot_dpw,
+    ot_pluck,
+    ot_macro,
+    ot_phasedist,
+    ot_chaos,
+    ot_FM4,
+
     n_osc_types,
 };
-const char osc_type_names[n_osc_types][16] = {
-    "Classic", "Sine", "Wavetable", "S&H Noise", "Audio In", "FM3", "FM2", "Window", "DPW"};
+
+const char osc_type_names[n_osc_types][24] = {
+    "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In",         "FM3",   "FM2",
+    "Window",  "Modern", "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"};
 
 const char window_names[9][16] = {
     "Triangle", "Cosine", "Blend 1", "Blend 2",   "Blend 3",
