@@ -38,7 +38,7 @@ class DPWOscillator : public Oscillator
         dpwm_triangle,
         dpwm_square,
         dpwm_sine,
-    } multitype = (DPWOscillator::dpw_multitypes)oscdata->p[dpw_tri_mix].deform_type;
+    } multitype = dpwm_triangle;
 
     enum dpw_submask
     {
@@ -81,6 +81,9 @@ class DPWOscillator : public Oscillator
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
 
     float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
+
+    int cachedDeform = -1;
+    static std::string multitypeNameForIntValue(int flag);
 };
 
 const char dpw_multitype_names[3][16] = {"Triangle", "Square", "Sine"};

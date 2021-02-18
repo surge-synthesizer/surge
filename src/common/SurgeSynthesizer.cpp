@@ -2353,6 +2353,13 @@ bool SurgeSynthesizer::loadOscalgos()
                     storage.getPatch().scene[s].osc[i].retrigger.val.b = rt;
                 }
 
+                /*
+                 * Some oscillator types can change display when you change values
+                 */
+                if (storage.getPatch().scene[s].osc[i].type.val.i == ot_dpw)
+                {
+                    refresh_editor = true;
+                }
                 storage.getPatch().scene[s].osc[i].queue_xmldata = 0;
             }
             if (resend)

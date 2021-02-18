@@ -89,17 +89,17 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 
 void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
 {
-    if ((oscdata->p[dpw_tri_mix].deform_type & 0xF) != (int)multitype)
+    if (oscdata->p[dpw_tri_mix].deform_type != cachedDeform)
     {
-        multitype = ((DPWOscillator::dpw_multitypes)(oscdata->p[dpw_tri_mix].deform_type & 0xF));
+        cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
+        multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
 
-        // FIXME - this is not the right place for this and it has bugs
-        std::string nm = std::string("Multi - ") + dpw_multitype_names[(int)multitype];
+        std::string nm = DPWOscillator::multitypeNameForIntValue(cachedDeform);
         oscdata->p[dpw_tri_mix].set_name(nm.c_str());
     }
     int subOctave = 0;
     float submul = 1;
-    if (oscdata->p[dpw_tri_mix].deform_type & dpw_subone)
+    if (cachedDeform & dpw_subone)
     {
         subOctave = -1;
         submul = 0.5;
@@ -126,13 +126,20 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     sawmix.newValue(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f);
     trimix.newValue(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f);
     sqrmix.newValue(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f);
-    pwidth.newValue(limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
+    // Since we always use this multiplied by 2, put the mul here to save it later
+    pwidth.newValue(2 *
+                    limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
                                 0.01f, 0.99f));
 
     pitchlag.process();
 
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
     fmdepth.newValue(fv);
+
+    const double oneOverSix = 1.0 / 6.0;
+    // We only use 3 of these
+    double sBuff alignas(16)[4] = {0, 0, 0, 0}, sOffBuff alignas(16)[4] = {0, 0, 0, 0},
+                 triBuff alignas(16)[4] = {0, 0, 0, 0}, phases alignas(16)[4] = {0, 0, 0, 0};
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
@@ -145,27 +152,32 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             auto dp = dpbase[u].v;
             auto dsp = dspbase[u].v;
 
-            /*
-             * So rather than lagging, back compute with the current dPhase
-             * which makes us way more stable under phase changes
-             */
-            double sBuff[3], sOffBuff[3], triBuff[3];
+            double pfm = sphase[u] + fmPhaseShift;
+            if (pfm > 1)
+                pfm -= floor(pfm);
+            if (pfm < 0)
+                pfm += ceil(pfm) + 1;
+
+            for (int s = 0; s < 3; ++s)
+            {
+                phases[s] = pfm - s * dsp;
+            }
+
+            if (pfm < 2 * dsp)
+            {
+                for (int s = 0; s < 3; ++s)
+                    if (phases[s] < 0)
+                        phases[s] += 1;
+            }
+
             for (int s = 0; s < 3; ++s)
             {
                 // Saw Component (p^3-p)/6
-                double p01 = sphase[u] + fmPhaseShift - s * dsp;
-                if (p01 > 1)
-                {
-                    p01 -= floor(p01);
-                }
-                if (p01 < 0)
-                {
-                    p01 += -ceil(p01) + 1;
-                }
+                double p01 = phases[s];
                 double p = (p01 - 0.5) * 2;
 
                 double p3 = p * p * p;
-                double sawcub = (p3 - p) / 6.0;
+                double sawcub = (p3 - p) * oneOverSix;
                 sBuff[s] = sawcub;
 
                 if (subOctave != 0)
@@ -178,17 +190,42 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     {
                     case dpwm_square:
                     {
-                        double Q = p < 0 ? 1 : -1;
-                        triBuff[s] = Q * p * p / 2 + p / 2;
+                        // double Q = p < 0 ? 1 : -1;
+                        double Q = std::signbit(p) * 2 - 1;
+                        triBuff[s] = p * (Q * p + 1) * 0.5;
                     }
                     break;
                     case dpwm_sine:
                     {
-                        double pos = p < 0 ? 0 : 1;
+                        // double pos = 1.0 - std::signbit(p);
+                        double modpos = 2.0 * std::signbit(p) - 1.0;
                         double p4 = p3 * p;
+                        constexpr double oo3 = 1.0 / 3.0;
 
-                        triBuff[s] = -(pos * (-p4 / 3.0 + 2 * p3 / 3.0 - p / 3.0) +
-                                       (pos - 1) * (-p4 / 3.0 - 2 * p3 / 3.0 + p / 3.0));
+                        /*
+                         * So... -(pos * (-p4  + 2 * p3  - p ) +
+                         *                                      (pos - 1) * (-p4  - 2 * p3 + p )) *
+                         * oo3
+                         *
+                         * Alright so p4 is (pos * -p4 + (pos-1) * -p4) == ( 1 - 2 * pos )* p4
+                         * p3 is pos * 2 * p3 + ( pos-1) * -2 * p3
+                         *       pos * 2 * p3 - pos * 2 + p3 + 2 * p3
+                         *       2 * p3
+                         * p is pos * -p + ( pos - 1 ) + p
+                         *      -pos * p + pos * p - p
+                         *      or -p
+                         *
+                         * so our term is actually
+                         * - (( 1 - 2 * pos ) * p4 + 2 * p3 - p) * oo3
+                         *
+                         * Moreover, pos is 1-signbit so (1-2*pos) == ( 1 - 2 + 2 * signbit)
+                         * or 2 * signbit - 1
+                         */
+                        /*
+                        triBuff[s] = -(pos * (-p4  + 2 * p3  - p ) +
+                                       (pos - 1) * (-p4  - 2 * p3 + p )) * oo3;
+                                       */
+                        triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                     }
                     break;
                     case dpwm_triangle:
@@ -196,35 +233,41 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                         double tp = p + 0.5;
                         if (tp > 1.0)
                             tp -= 2;
-                        if (tp < -1.0)
-                            tp += 2;
-                        double Q = tp < 0 ? -1 : 1;
-                        double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
+
+                        // double Q = tp < 0 ? -1 : 1;
+                        double Q = 1 - std::signbit(tp) * 2;
+                        // double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) *
+                        // oneOverSix;
+                        double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
                         triBuff[s] = tricub;
                     }
                     break;
                     }
                 }
 
-                double pwp = p + pwidth.v * 2;
+                double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
                 if (pwp > 1)
                     pwp -= 2;
                 if (pwp < -1)
                     pwp += 2;
-                sOffBuff[s] = (pwp * pwp * pwp - pwp) / 6.0;
+                sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
             }
 
             double denom = 0.25 / (dsp * dsp);
-            double saw = (sBuff[0] + sBuff[2] - 2.0 * sBuff[1]) * denom;
-            double tri = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]) * denom;
-            double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]) * denom;
+
+            double saw = (sBuff[0] + sBuff[2] - 2.0 * sBuff[1]);
+            double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]);
+            double tri = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]);
+
             double sqr = sawoff - saw;
 
             // Super important - you have to mix after differentiating to avoid zipper noise
-            double res = sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr;
+            // but I can save a multiply by putting it here
+            double res = (sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr) * denom;
 
             vL += res * mixL[u];
             vR += res * mixR[u];
+
             phase[u] += dp;
             sphase[u] += dsp;
 
@@ -247,7 +290,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         {
             auto dp = subdpbase.v;
             auto dsp = subdpsbase.v;
-            double triBuff[3];
 
             for (int s = 0; s < 3; ++s)
             {
@@ -267,17 +309,17 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 {
                 case dpwm_square:
                 {
-                    double Q = p < 0 ? 1 : -1;
-                    triBuff[s] = Q * p * p / 2 + p / 2;
+                    double Q = std::signbit(p) * 2 - 1;
+                    triBuff[s] = p * (Q * p + 1) * 0.5;
                 }
                 break;
                 case dpwm_sine:
                 {
-                    double pos = p < 0 ? 0 : 1;
+                    double modpos = 2.0 * std::signbit(p) - 1.0;
                     double p4 = p3 * p;
+                    constexpr double oo3 = 1.0 / 3.0;
 
-                    triBuff[s] = -(pos * (-p4 / 3.0 + 2 * p3 / 3.0 - p / 3.0) +
-                                   (pos - 1) * (-p4 / 3.0 - 2 * p3 / 3.0 + p / 3.0));
+                    triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                 }
                 break;
                 case dpwm_triangle:
@@ -285,10 +327,11 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     double tp = p + 0.5;
                     if (tp > 1.0)
                         tp -= 2;
-                    if (tp < -1.0)
-                        tp += 2;
-                    double Q = tp < 0 ? -1 : 1;
-                    double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) / 6.0;
+
+                    // double Q = tp < 0 ? -1 : 1;
+                    double Q = 1 - std::signbit(tp) * 2;
+                    // double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) * oneOverSix;
+                    double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
                     triBuff[s] = tricub;
                 }
                 break;
@@ -370,7 +413,9 @@ void DPWOscillator::init_ctrltypes()
     oscdata->p[dpw_pulse_mix].set_name("Pulse");
     oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
 
-    std::string nm = std::string("Multi - ") + dpw_multitype_names[(int)multitype];
+    oscdata->p[dpw_tri_mix].deform_type = 0;
+    cachedDeform = 0;
+    std::string nm = multitypeNameForIntValue(oscdata->p[dpw_tri_mix].deform_type);
     oscdata->p[dpw_tri_mix].set_name(nm.c_str());
 
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
@@ -398,4 +443,15 @@ void DPWOscillator::init_default_values()
     oscdata->p[dpw_sync].val.f = 0.0;
     oscdata->p[dpw_unison_detune].val.f = 0.2;
     oscdata->p[dpw_unison_voices].val.i = 1;
+}
+
+std::string DPWOscillator::multitypeNameForIntValue(int flag)
+{
+    int mt = flag & 0xF;
+    bool sub = flag & dpw_submask::dpw_subone;
+    std::string subs = sub ? "Sub-" : "";
+
+    std::string nm = std::string("Multi - ") + subs + dpw_multitype_names[mt];
+
+    return nm;
 }

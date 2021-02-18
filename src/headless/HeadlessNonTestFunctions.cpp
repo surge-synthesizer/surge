@@ -3,6 +3,7 @@
 #include "filesystem/import.h"
 #include <iostream>
 #include <sstream>
+#include <chrono>
 
 namespace Surge
 {
@@ -506,6 +507,47 @@ void filterAnalyzer(int ft, int sft, std::ostream &os)
     standardCutoffCurve(ft, sft, os);
     middleCSawIntoFilterVsCutoff(ft, sft, os);
     middleCSawIntoFilterVsReso(ft, sft, os);
+}
+
+void performancePlay(const std::string &patchName, int mode)
+{
+    auto surge = Surge::Headless::createSurge(48000);
+    std::cout << "Performance Mode with surge at 48k\n"
+              << "-- Ctrl-C to exit\n"
+              << "-- patchName = " << patchName << "\n"
+              << "-- mode = " << mode << std::endl;
+
+    surge->loadPatchByPath(patchName.c_str(), -1, "RUNTIME");
+    for (int i = 0; i < 10; ++i)
+        surge->process();
+
+    surge->playNote(0, 60, 127, 0);
+
+    int ct = 0;
+    int target = 48000 / BLOCK_SIZE;
+    auto cpt = std::chrono::high_resolution_clock::now();
+    std::chrono::seconds oneSec(1);
+    auto msOne = std::chrono::duration_cast<std::chrono::microseconds>(oneSec).count();
+    while (true)
+    {
+        surge->process();
+        if (ct++ == target)
+        {
+            auto et = std::chrono::high_resolution_clock::now();
+            auto diff = et - cpt;
+            auto ms = std::chrono::duration_cast<std::chrono::microseconds>(diff).count();
+            double pct = 1.0 * ms / msOne * 100.0;
+
+            float sum = 0;
+            for (int i = 0; i < BLOCK_SIZE; ++i)
+                sum += surge->output[0][i] * surge->output[0][i];
+
+            std::cout << "Resetting timers " << ms << "ms / " << pct << "% L2N=" << sum
+                      << std::endl;
+            ct = 0;
+            cpt = et;
+        }
+    }
 }
 
 void generateNLFeedbackNorms()
