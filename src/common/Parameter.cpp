@@ -1415,7 +1415,20 @@ void Parameter::bound_value(bool force_integer)
     };
 }
 
-const char *Parameter::get_name() { return dispname; }
+const char *Parameter::get_name()
+{
+    // We only even want to try this for specific types we know support it
+    switch (ctrltype)
+    {
+    case ct_dpw_trimix:
+        if (dynamicName)
+            return dynamicName->getName(this);
+        break;
+    default:
+        break;
+    }
+    return dispname;
+}
 
 const char *Parameter::get_full_name() { return fullname; }
 

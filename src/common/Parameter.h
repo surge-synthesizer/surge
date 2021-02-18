@@ -208,6 +208,12 @@ struct ParameterDiscreteIndexRemapper : public ParamUserData
     virtual const std::vector<int> totalIndexOrdering() { return std::vector<int>(); }
 };
 
+class Parameter;
+struct ParameterDynamicNameFunction
+{
+    virtual const char *getName(Parameter *p) = 0;
+};
+
 /*
 ** It used to be parameters were assigned IDs in SurgePatch using an int which we ++ed along the
 ** way. If we want to 'add at the end' but 'cluster together' we need a different data strcture
@@ -432,6 +438,8 @@ class Parameter
     ParamUserData *user_data = nullptr;    // I know this is a bit gross but we have a runtime type
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
                                            // assume i am referencable
+
+    ParameterDynamicNameFunction *dynamicName = nullptr;
 
     bool hasSkinConnector = false;
 
