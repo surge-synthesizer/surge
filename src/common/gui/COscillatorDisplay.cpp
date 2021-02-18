@@ -185,7 +185,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
                 use_display = false;
 
             if (use_display)
-                osc->init(disp_pitch_rs, true);
+                osc->init(disp_pitch_rs, true, true);
 
             int block_pos = BLOCK_SIZE_OS;
             for (int i = 0; i < totalSamples; i += averagingWindow)

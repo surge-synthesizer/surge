@@ -33,7 +33,7 @@ AudioInputOscillator::AudioInputOscillator(SurgeStorage *storage, OscillatorStor
     }
 }
 
-void AudioInputOscillator::init(float pitch, bool is_display)
+void AudioInputOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     hp.coeff_instantize();
     lp.coeff_instantize();

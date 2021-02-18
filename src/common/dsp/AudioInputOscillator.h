@@ -39,7 +39,8 @@ class AudioInputOscillator : public Oscillator
     */
 
     AudioInputOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
-    virtual void init(float pitch, bool is_display = false) override;
+    virtual void init(float pitch, bool is_display = false,
+                      bool nonzero_init_drift = true) override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f) override;
     virtual ~AudioInputOscillator();

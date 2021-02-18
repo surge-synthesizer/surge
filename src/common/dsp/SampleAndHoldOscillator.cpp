@@ -37,7 +37,7 @@ SampleAndHoldOscillator::SampleAndHoldOscillator(SurgeStorage *storage, Oscillat
 
 SampleAndHoldOscillator::~SampleAndHoldOscillator() {}
 
-void SampleAndHoldOscillator::init(float pitch, bool is_display)
+void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     assert(storage);
     first_run = true;
@@ -111,7 +111,9 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display)
         last_level[i] = 0.0;
         pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
         driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftlfo2[i] = 0.f;
+        if (nonzero_init_drift)
+            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 
     hp.coeff_instantize();

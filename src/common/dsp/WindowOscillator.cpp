@@ -37,7 +37,7 @@ WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *osc
 {
 }
 
-void WindowOscillator::init(float pitch, bool is_display)
+void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     memset(&Window, 0, sizeof(Window));
 
@@ -69,7 +69,9 @@ void WindowOscillator::init(float pitch, bool is_display)
                             << 16;
         }
 
-        Window.DriftLFO[0][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        Window.DriftLFO[0][1] = 0;
+        if (nonzero_init_drift)
+            Window.DriftLFO[0][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
     else
     {

@@ -162,8 +162,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                                ct_decibel_fmdepth, Surge::Skin::Scene::fmdepth,
                                                sc_id, cg_GLOBAL, 0, true, sceasy));
 
-        a->push_back(scene[sc].drift.assign(p_id.next(), id_s++, "drift", "Osc Drift", ct_percent,
-                                            Surge::Skin::Scene::drift, sc_id, cg_GLOBAL, 0, true));
+        a->push_back(scene[sc].drift.assign(p_id.next(), id_s++, "drift", "Osc Drift",
+                                            ct_percent_for_drift, Surge::Skin::Scene::drift, sc_id,
+                                            cg_GLOBAL, 0, true));
+
         a->push_back(scene[sc].noise_colour.assign(
             p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bidirectional,
             Surge::Skin::Scene::noise_color, sc_id, cg_GLOBAL, 0, true, sceasy));
@@ -478,6 +480,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         if (param_ptr[i]->ctrlstyle & kEasy)
             easy_params_id.push_back(i);
     }
+
 #if 0
    // DEBUG CODE WHICH WILL DIE
    std::map<std::string, int> idToParam;
@@ -1191,10 +1194,19 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 }
             }
 
-            if ((p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS) && (j == 1))
-                param_ptr[i]->extend_range = true;
+            if (p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS)
+            {
+                if (j == 1)
+                    param_ptr[i]->extend_range = true;
+                else
+                    param_ptr[i]->extend_range = false;
+            }
             else
+            {
                 param_ptr[i]->extend_range = false;
+                if (revision >= 16 && param_ptr[i]->ctrltype == ct_percent_for_drift)
+                    param_ptr[i]->extend_range = true;
+            }
 
             if ((p->QueryIntAttribute("absolute", &j) == TIXML_SUCCESS) && (j == 1))
                 param_ptr[i]->absolute = true;
@@ -1991,8 +2003,12 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
             if (param_ptr[i]->temposync)
                 p.SetAttribute("temposync", "1");
+
             if (param_ptr[i]->extend_range)
                 p.SetAttribute("extend_range", "1");
+            else if (param_ptr[i]->can_extend_range())
+                p.SetAttribute("extend_range", "0");
+
             if (param_ptr[i]->absolute)
                 p.SetAttribute("absolute", "1");
             if (param_ptr[i]->can_deactivate())

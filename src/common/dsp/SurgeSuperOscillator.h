@@ -35,7 +35,8 @@ class SurgeSuperOscillator : public AbstractBlitOscillator
     };
 
     SurgeSuperOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
-    virtual void init(float pitch, bool is_display = false) override;
+    virtual void init(float pitch, bool is_display = false,
+                      bool nonzero_init_drift = true) override;
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,

@@ -28,7 +28,7 @@ WavetableOscillator::WavetableOscillator(SurgeStorage *storage, OscillatorStorag
 
 WavetableOscillator::~WavetableOscillator() {}
 
-void WavetableOscillator::init(float pitch, bool is_display)
+void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     assert(storage);
     first_run = true;
@@ -106,7 +106,9 @@ void WavetableOscillator::init(float pitch, bool is_display)
         mipmap[i] = 0;
         mipmap_ofs[i] = 0;
         driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftlfo2[i] = 0.f;
+        if (nonzero_init_drift)
+            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 }
 

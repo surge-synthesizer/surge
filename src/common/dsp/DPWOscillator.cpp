@@ -16,7 +16,7 @@
 #include "DPWOscillator.h"
 #include "DebugHelpers.h"
 
-void DPWOscillator::init(float pitch, bool is_display)
+void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     // We need a tiny little portamento since the derivative is pretty
     // unstable under super big pitch changes
@@ -47,6 +47,11 @@ void DPWOscillator::init(float pitch, bool is_display)
         sphase[u] = phase[u];
         subphase = 0;
         subsphase = 0;
+
+        driftlfo[u] = 0.f;
+        driftlfo2[u] = 0.f;
+        if (nonzero_init_drift)
+            driftlfo2[u] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 
     // This is the same implementation as SurgeSuperOscillator just as doubles
@@ -92,7 +97,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         std::string nm = std::string("Multi - ") + dpw_multitype_names[(int)multitype];
         oscdata->p[dpw_tri_mix].set_name(nm.c_str());
     }
-
     int subOctave = 0;
     float submul = 1;
     if (oscdata->p[dpw_tri_mix].deform_type & dpw_subone)
@@ -107,12 +111,17 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     sync.newValue(localcopy[oscdata->p[dpw_sync].param_id_in_scene].f);
     for (int u = 0; u < n_unison; ++u)
     {
-        dpbase[u].newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + ud * unisonOffsets[u])));
-        dspbase[u].newValue(
-            std::min(0.5, pitch_to_dphase(pitchlag.v + sync.v + ud * unisonOffsets[u])));
+        driftlfo[u] = drift_noise(driftlfo2[u]);
+        auto lfodetune = drift * driftlfo[u];
+
+        dpbase[u].newValue(
+            std::min(0.5, pitch_to_dphase(pitchlag.v + lfodetune + ud * unisonOffsets[u])));
+        dspbase[u].newValue(std::min(
+            0.5, pitch_to_dphase(pitchlag.v + lfodetune + sync.v + ud * unisonOffsets[u])));
     }
-    subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v) * submul));
-    subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + sync.v) * submul));
+    auto subdt = drift * driftlfo[0];
+    subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
+    subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
     sync.process();
     sawmix.newValue(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f);
     trimix.newValue(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f);

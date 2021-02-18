@@ -333,10 +333,11 @@ void SurgeVoice::switch_toggled()
     {
         if (osctype[i] != scene->osc[i].type.val.i)
         {
+            bool nzid = scene->drift.extend_range;
             osc[i].reset(spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy));
             if (osc[i])
             {
-                osc[i]->init(state.pitch);
+                osc[i]->init(state.pitch, false, nzid);
             }
             osctype[i] = scene->osc[i].type.val.i;
         }

@@ -24,13 +24,15 @@ FM3Oscillator::FM3Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, 
 {
 }
 
-void FM3Oscillator::init(float pitch, bool is_display)
+void FM3Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     phase =
         (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
     lastoutput = 0.f;
     driftlfo = 0.f;
-    driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+    driftlfo2 = 0;
+    if (nonzero_init_drift)
+        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     fb_val = 0.f;
     AM.set_phase(phase);
     RM1.set_phase(phase);

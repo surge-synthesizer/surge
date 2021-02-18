@@ -26,13 +26,15 @@ FM2Oscillator::FM2Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, 
 
 double calcmd(double x) { return x * x * x * 8.0 * M_PI; }
 
-void FM2Oscillator::init(float pitch, bool is_display)
+void FM2Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     phase =
         (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
     lastoutput = 0.0;
     driftlfo = 0;
-    driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+    driftlfo2 = 0;
+    if (nonzero_init_drift)
+        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     fb_val = 0.0;
     double ph = (localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f + phase) * 2.0 * M_PI;
     RM1.set_phase(ph);
