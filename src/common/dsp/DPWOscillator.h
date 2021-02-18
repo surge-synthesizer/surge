@@ -58,7 +58,7 @@ class DPWOscillator : public Oscillator
         }
     }
 
-    virtual void init(float pitch, bool is_display = false);
+    virtual void init(float pitch, bool is_display = false, bool nonzero_init_drift = true);
     virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
     virtual void init_ctrltypes();
     virtual void init_default_values();
@@ -79,6 +79,8 @@ class DPWOscillator : public Oscillator
     bool sReset[MAX_UNISON], subReset;
     double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
+
+    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
 };
 
 const char dpw_multitype_names[3][16] = {"Triangle", "Square", "Sine"};

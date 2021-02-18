@@ -576,6 +576,11 @@ bailOnPortable:
 
     monoPedalMode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(
         this, "monoPedalMode", MonoPedalMode::HOLD_ALL_NOTES);
+
+    for (int s = 0; s < n_scenes; ++s)
+    {
+        getPatch().scene[s].drift.extend_range = true;
+    }
 }
 
 SurgePatch &SurgeStorage::getPatch() { return *_patch.get(); }
