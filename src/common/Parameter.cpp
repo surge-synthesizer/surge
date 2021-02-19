@@ -572,7 +572,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_reverbpredelaytime:
         valtype = vt_float;
-        val_min.f = -4;
+        val_min.f = -8;
         val_max.f = 1;
         val_default.f = -2;
         break;
