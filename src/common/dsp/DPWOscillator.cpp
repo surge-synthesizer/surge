@@ -25,33 +25,32 @@
  * but with some caveats.
  *
  * So the whole idea of that paper is as follows. Imagine phase runs from -1 to 1
- * then you can implement a sawtooth as simply "saw = phase". Cool .But if you do
+ * then you can implement a sawtooth as simply "saw = phase". Cool. But if you do
  * that when the saw turns over you get either the prior or the next cycle but
  * you don't get the blend of them. That creates aliasing. That aliasing is unpleasant.
- * There's a lot of ways to overcome that (BLITS, BLEPS, etc...) but DPW works as follows
+ * There's a lot of ways to overcome that (BLIT, BLEP, etc...) but DPW works as follows:
  *
- * Create a polynomial which is the nth integral of the desired function
+ * Create a polynomial which is the n-th integral of the desired function
  * Differentiate it n times
- * Output that.
+ * Output that
  *
- * Basically the numerical derivatove operator acts as very specific sort of
+ * Basically the numerical derivative operator acts as very specific sort of
  * filter that averages you over the discontinuities to greatly reduce aliasing.
- * The paper above goes up to n=5 or 6 or so but leaves "some items as exercises
+ * The paper above goes up to n=5 or 6 or so, but leaves "some items as exercises
  * to the reader" as they say.
  *
  * The trick, of course, is that the function you differentiate needs to be
- * continuous and so forth otherwise you get bad numerical derivatives at the
+ * continuous and so forth, otherwise you get bad numerical derivatives at the
  * edges.
  *
  * For this implementation we use the 'cubic' representation (the second
- * anti-derivative) and take the numerical second derivative. More on that
- * later.
+ * anti-derivative) and take the numerical second derivative. More on that later.
  *
- * So first lets talk about the waveforms. This entire document is written assuming
- * normalizatino that phase = -1,1.
+ * So first let's talk about the waveforms. This entire document is written assuming
+ * that phase is normalized between -1 and 1.
  *
  * Sawtooth: output = p
- * 2nd anti derivative g = p^3 / 6 + a p^2 + b p + c
+ * 2nd anti-derivative g = p^3 / 6 + a * p^2 + b * p + c
  *
  * so now we need to solve for a and b. We know that g(-1) = g(1).
  *
@@ -60,57 +59,56 @@
  *
  * g(-1) = g(-1) -> -1/6 + a - b + c = 1/6 + a + b + c
  *
- * a solution to this is a=0; b=-1/6; c=0.
+ * Solution to this is a = 0; b = -1/6; c = 0.
  *
- * So if we take p^3/6 - p/6 its second derivative on -1,1 cycleed pulse will be
- * a saw with the edges anti-aliasing nicely. Cool
+ * So if we take p^3 / 6 - p / 6, its second derivative on -1, 1 cycled pulse will be
+ * a saw with the edges anti-aliasing nicely. Cool!
  *
- * Square: we want p<0=1; p>0=-1. So clearly our functional form has to be
+ * Square: we want p < 0 = 1; p > 0 = -1. So clearly our functional form has to be
  * at most quadratic.
  *
- * g = a x^2 + b x + c
+ * g = a * x^2 + b * x + c
  *
- * so if we want this to have
+ * so if we want this to have:
  *
  * g'' = p < 0 ? -1 : 1 = Q
- * g'' = 2 a
+ * g'' = 2 * a
  * a = Q / 2
  *
- * and great now do continuity at -1/1 for the generator subbing in Q on either side
+ * and great now do continuity at -1 / 1 for the generator subbing in Q on either side:
  *
  * 1/2 * 1 (-1)^2 + b * -1 + v = 1/2 * -1 * (1)^2 + b + 1 + c
  * 1/2 - b = -1/2 + b
  * b = 1/2
  *
- * so g = ( Q p^2 + p ) / 2
+ * so g = (Q * p^2 + p) / 2
  *
  * Pulse wave is done a bit differently. For that we use the fact
- * that two sawtooths pahse shifted by a pulse width and subtracted
- * gives you a pulse.
+ * that two sawtooths phase shifted by pulse width factor and subtracted gives you a pulse.
  *
- * Finally the "sine" wave. The sine wave we use here is not actually
- * a sine wave but is a normalized parabola pair. That is the sine wave is
- * a 0/1 parabaloa centered at 0.5 and the opposite centered at -0.5.
+ * Finally, the "sine" wave. The sine wave we use here is not actually
+ * a sine wave, but is a normalized parabola pair. That is, the sine wave is
+ * a 0/1 parabola centered at 0.5 and the opposite centered at -0.5.
  * The math for that is worked out in the comment below.
  *
- * So now we ahve our generators how do we actually define the signal?
- * Well in the paper above, or any implmeentation with constant pitch, you
- * could simply record the generators at a series of ponts, roll your pointer,
- * differentiate, etc... But surge can radically modulate pitch so that gives
+ * So now we have our generators. How do we actually define the signal?
+ * Well, in the paper above, or any implmeentation with constant pitch, you
+ * could simply record the generators at a series of points, roll your pointer,
+ * differentiate, etc... But Surge can radically modulate pitch, so that gives
  * us a very 'non-constant' grid between frequency and sample inside the engine.
  *
- * So rather than that approach what we do is, at every sample, figure out the
+ * So rather than that approach, what we do is: at every sample, figure out the
  * frequency desired *at that sample*. We then figure out the 3 generators
- * for that frequency at that sample (prior, prior -1, and prior-2) and differentiate
- * using a numercial second derivative. This is more CPU intensive but it is rock
+ * for that frequency at that sample (prior, prior - 1, and prior - 2) and differentiate
+ * using a numercial second derivative. This is more CPU intensive, but it is rock
  * solid under all sorts of frequency modulation, including FM, pitch shifts, and sync.
  *
- * Finally that numerical integration. I use the standard second derivative form
- * (u_i - 2 u_i-1 + u i-2 ) / dt^2. *but* since i am calculating at i we can either
- * think that that is second-ord-eraccurate-in-dt and lagged by one sample or
- * first order accurate-in-dt and not. It doesn't really matter. I also considered
+ * Finally, that numerical integration. I use the standard second derivative form
+ * (u_i - 2 u_i-1 + u i-2 ) / dt^2. *But*, since i am calculating at i, we can either
+ * think that that is second-order-accurate-in-dt and lagged by one sample or
+ * first order accurate-in-dt and not lagged. It doesn't really matter. I also considered
  * having the candidate phases be +1/0/-1 rather tha 0/-1/-2 but that somehow felt
- * a wee bit like cheating. Anyway the difference is negligble.
+ * a wee bit like cheating. Anyway, the difference is negligble.
  *
  * Other than that, FM is obivous, sync runs two clocks and resets obviously,
  * and the rest is just mixing and lagging. All pretty obvious.
@@ -118,7 +116,7 @@
 
 void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
-    // We need a tiny little portamento since the derivative is pretty
+    // we need a tiny little portamento since the derivative is pretty
     // unstable under super big pitch changes
     pitchlag.setRate(0.5);
     pitchlag.startValue(pitch);
@@ -143,6 +141,7 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
             mixL[0] = 1;
             mixR[0] = 1;
         }
+
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : ((float)rand() / (float)RAND_MAX);
         sphase[u] = phase[u];
         subphase = 0;
@@ -150,11 +149,14 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 
         driftlfo[u] = 0.f;
         driftlfo2[u] = 0.f;
+
         if (nonzero_init_drift)
+        {
             driftlfo2[u] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        }
     }
 
-    // This is the same implementation as SurgeSuperOscillator just as doubles
+    // This is the same implementation as SurgeSuperOscillator, just as doubles
     switch (storage->getPatch().character.val.i)
     {
     case 0:
@@ -194,8 +196,10 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
         multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
     }
+
     int subOctave = 0;
     float submul = 1;
+
     if (cachedDeform & dpw_subone)
     {
         subOctave = -1;
@@ -205,7 +209,8 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     float ud = oscdata->p[dpw_unison_detune].get_extended(
         localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f);
     pitchlag.startValue(pitch);
-    sync.newValue(localcopy[oscdata->p[dpw_sync].param_id_in_scene].f);
+    sync.newValue(std::max(0.f, localcopy[oscdata->p[dpw_sync].param_id_in_scene].f));
+
     for (int u = 0; u < n_unison; ++u)
     {
         driftlfo[u] = drift_noise(driftlfo2[u]);
@@ -216,22 +221,25 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         dspbase[u].newValue(std::min(
             0.5, pitch_to_dphase(pitchlag.v + lfodetune + sync.v + ud * unisonOffsets[u])));
     }
+
     auto subdt = drift * driftlfo[0];
+
     subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
     subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
     sync.process();
+
     // Let people modulate outside the sliders a bit. but not catastrophically
     sawmix.newValue(0.5 *
                     limit_range(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f, -2.f, 2.f));
-    trimix.newValue(0.5 *
-                    limit_range(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f, -2.f, 2.f));
     sqrmix.newValue(
         0.5 * limit_range(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
+    trimix.newValue(0.5 *
+                    limit_range(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f, -2.f, 2.f));
+
     // Since we always use this multiplied by 2, put the mul here to save it later
     pwidth.newValue(2 *
                     limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
                                 0.01f, 0.99f));
-
     pitchlag.process();
 
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
@@ -246,18 +254,26 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     {
         double vL = 0.0, vR = 0.0;
         double fmPhaseShift = 0.0;
+
         if (FM)
+        {
             fmPhaseShift = fmdepth.v * master_osc[i];
+        }
+
         for (int u = 0; u < n_unison; ++u)
         {
             auto dp = dpbase[u].v;
             auto dsp = dspbase[u].v;
-
             double pfm = sphase[u] + fmPhaseShift;
+
             if (pfm > 1)
+            {
                 pfm -= floor(pfm);
+            }
             if (pfm < 0)
+            {
                 pfm += -ceil(pfm) + 1;
+            }
 
             for (int s = 0; s < 3; ++s)
             {
@@ -267,18 +283,22 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             if (pfm < 2 * dsp)
             {
                 for (int s = 0; s < 3; ++s)
+                {
                     if (phases[s] < 0)
+                    {
                         phases[s] += 1;
+                    }
+                }
             }
 
             for (int s = 0; s < 3; ++s)
             {
-                // Saw Component (p^3-p)/6
+                // Saw Component (p^3 - p) / 6
                 double p01 = phases[s];
                 double p = (p01 - 0.5) * 2;
-
                 double p3 = p * p * p;
                 double sawcub = (p3 - p) * oneOverSix;
+
                 sBuff[s] = sawcub;
 
                 if (subOctave != 0)
@@ -291,7 +311,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     {
                     case dpwm_square:
                     {
-                        // double Q = p < 0 ? 1 : -1;
                         double Q = std::signbit(p) * 2 - 1;
                         triBuff[s] = p * (Q * p + 1) * 0.5;
                     }
@@ -304,28 +323,33 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                         constexpr double oo3 = 1.0 / 3.0;
 
                         /*
-                         * So... -(pos * (-p4  + 2 * p3  - p ) +
-                         *                                      (pos - 1) * (-p4  - 2 * p3 + p )) *
-                         * oo3
+                         * So...
                          *
-                         * Alright so p4 is (pos * -p4 + (pos-1) * -p4) == ( 1 - 2 * pos )* p4
-                         * p3 is pos * 2 * p3 + ( pos-1) * -2 * p3
-                         *       pos * 2 * p3 - pos * 2 + p3 + 2 * p3
+                         * -(pos * (-p4 + 2 * p3 - p) + (pos - 1) * (-p4 - 2 * p3 + p)) * oo3
+                         *
+                         * Alright so p4 is:
+                         *
+                         * (pos * -p4 + (pos - 1) * -p4) == ( 1 - 2 * pos ) * p4
+                         *
+                         * p3 is:
+                         *
+                         * pos * 2 * p3 + (pos - 1) * -2 * p3
+                         * pos * 2 * p3 - pos * 2 + p3 + 2 * p3
                          *       2 * p3
-                         * p is pos * -p + ( pos - 1 ) + p
-                         *      -pos * p + pos * p - p
-                         *      or -p
                          *
-                         * so our term is actually
-                         * - (( 1 - 2 * pos ) * p4 + 2 * p3 - p) * oo3
+                         * p is:
                          *
-                         * Moreover, pos is 1-signbit so (1-2*pos) == ( 1 - 2 + 2 * signbit)
+                         * pos * -p + (pos - 1) + p
+                         * -pos * p + pos * p - p
+                         * or -p
+                         *
+                         * so our term is actually:
+                         *
+                         * -((1 - 2 * pos) * p4 + 2 * p3 - p) * oo3
+                         *
+                         * Moreover, pos is 1-signbit so (1 - 2 * pos) == (1 - 2 + 2 * signbit)
                          * or 2 * signbit - 1
                          */
-                        /*
-                        triBuff[s] = -(pos * (-p4  + 2 * p3  - p ) +
-                                       (pos - 1) * (-p4  - 2 * p3 + p )) * oo3;
-                                       */
                         triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                     }
                     break;
@@ -333,12 +357,11 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     {
                         double tp = p + 0.5;
                         if (tp > 1.0)
+                        {
                             tp -= 2;
+                        }
 
-                        // double Q = tp < 0 ? -1 : 1;
                         double Q = 1 - std::signbit(tp) * 2;
-                        // double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) *
-                        // oneOverSix;
                         double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
                         triBuff[s] = tricub;
                     }
@@ -347,22 +370,25 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 }
 
                 double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
+
                 if (pwp > 1)
+                {
                     pwp -= 2;
+                }
                 if (pwp < -1)
+                {
                     pwp += 2;
+                }
                 sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
             }
 
             double denom = 0.25 / (dsp * dsp);
-
             double saw = (sBuff[0] + sBuff[2] - 2.0 * sBuff[1]);
             double sawoff = (sOffBuff[0] + sOffBuff[2] - 2.0 * sOffBuff[1]);
             double tri = (triBuff[0] + triBuff[2] - 2.0 * triBuff[1]);
-
             double sqr = sawoff - saw;
 
-            // Super important - you have to mix after differentiating to avoid zipper noise
+            // super important - you have to mix after differentiating to avoid zipper noise
             // but I can save a multiply by putting it here
             double res = (sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr) * denom;
 
@@ -375,13 +401,19 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             if (phase[u] > 1)
             {
                 phase[u] -= floor(phase[u]);
+
                 if (sReset[u])
+                {
                     sphase[u] = phase[u] * dsp / dp;
+                }
+
                 sReset[u] = !sReset[u];
             }
 
             if (sphase[u] > 1)
+            {
                 sphase[u] -= floor(sphase[u]);
+            }
 
             dpbase[u].process();
             dspbase[u].process();
@@ -395,6 +427,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             for (int s = 0; s < 3; ++s)
             {
                 double p01 = subsphase + fmPhaseShift - s * dsp;
+
                 if (p01 > 1)
                 {
                     p01 -= floor(p01);
@@ -403,6 +436,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 {
                     p01 += -ceil(p01) + 1;
                 }
+
                 double p = (p01 - 0.5) * 2;
                 double p3 = p * p * p;
 
@@ -426,13 +460,15 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 case dpwm_triangle:
                 {
                     double tp = p + 0.5;
-                    if (tp > 1.0)
-                        tp -= 2;
 
-                    // double Q = tp < 0 ? -1 : 1;
+                    if (tp > 1.0)
+                    {
+                        tp -= 2;
+                    }
+
                     double Q = 1 - std::signbit(tp) * 2;
-                    // double tricub = -(2.0 * Q * tp * tp * tp - 3.0 * tp * tp - 2.0) * oneOverSix;
                     double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
+
                     triBuff[s] = tricub;
                 }
                 break;
@@ -466,6 +502,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         {
             output[i] = (vL + vR) / 2;
         }
+
         sawmix.process();
         trimix.process();
         sqrmix.process();
@@ -481,7 +518,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         {
             priorY_L = output[0];
             priorX_L = output[0];
-
             priorY_R = outputR[0];
             priorX_R = outputR[0];
         }
@@ -513,11 +549,11 @@ static struct DPWTriName : public ParameterDynamicNameFunction
         auto flag = p->deform_type;
         int mt = flag & 0xF;
         bool sub = flag & DPWOscillator::dpw_submask::dpw_subone;
-        std::string subs = sub ? "Sub-" : "";
-
-        std::string res = std::string("Multi - ") + subs + dpw_multitype_names[mt];
-
         static char tx[1024];
+
+        std::string subs = sub ? " Sub" : "";
+        std::string res = std::string("Multi - ") + dpw_multitype_names[mt] + subs;
+
         strncpy(tx, res.c_str(), 1024);
         tx[1023] = 0;
         return tx;
@@ -533,9 +569,8 @@ void DPWOscillator::init_ctrltypes()
     oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
 
     oscdata->p[dpw_tri_mix].set_name("--DYNAMIC-NAME--");
-    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
-
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
+    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
 
     oscdata->p[dpw_pulse_width].set_name("Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
