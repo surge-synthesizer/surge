@@ -439,6 +439,7 @@ class Parameter
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
                                            // assume i am referencable
 
+    bool supportsDynamicName();
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
     bool hasSkinConnector = false;
