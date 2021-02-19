@@ -3490,15 +3490,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         int val = DPWOscillator::dpw_submask::dpw_subone;
 
-                        auto mtm = addCallbackMenu(contextMenu, "Sub Oscillator", [p, val, this]() {
-                            // p->deform_type = m;
-                            auto uval = val;
-                            if (p->deform_type & val)
-                                uval = 0;
-                            p->deform_type = (p->deform_type & 0xF) | uval;
+                        auto mtm = addCallbackMenu(
+                            contextMenu, Surge::UI::toOSCaseForMenu("Sub-oscillator Mode"),
+                            [p, val, this]() {
+                                // p->deform_type = m;
+                                auto uval = val;
+                                if (p->deform_type & val)
+                                    uval = 0;
+                                p->deform_type = (p->deform_type & 0xF) | uval;
 
-                            synth->refresh_editor = true;
-                        });
+                                synth->refresh_editor = true;
+                            });
                         mtm->setChecked((p->deform_type & val));
                         eid++;
                     }

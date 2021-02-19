@@ -36,8 +36,8 @@ class DPWOscillator : public Oscillator
     enum dpw_multitypes
     {
         dpwm_triangle,
-        dpwm_square,
         dpwm_sine,
+        dpwm_square,
     } multitype = dpwm_triangle;
 
     enum dpw_submask
@@ -85,6 +85,6 @@ class DPWOscillator : public Oscillator
     int cachedDeform = -1;
 };
 
-const char dpw_multitype_names[3][16] = {"Triangle", "Square", "Sine"};
+const char dpw_multitype_names[3][16] = {"Triangle", "Sine", "Square"};
 
 #endif // SURGE_DPWOSCILLATOR_H
