@@ -16,6 +16,106 @@
 #include "DPWOscillator.h"
 #include "DebugHelpers.h"
 
+/*
+ * Alright so what the heck is this thing? Well this is the "Modern" oscillator
+ * based on differentiated polynomial waveforms, described in this paper:
+ *
+ * https://www.researchgate.net/publication/224557976_Alias-Suppressed_Oscillators_Based_on_Differentiated_Polynomial_Waveforms
+ *
+ * but with some caveats.
+ *
+ * So the whole idea of that paper is as follows. Imagine phase runs from -1 to 1
+ * then you can implement a sawtooth as simply "saw = phase". Cool .But if you do
+ * that when the saw turns over you get either the prior or the next cycle but
+ * you don't get the blend of them. That creates aliasing. That aliasing is unpleasant.
+ * There's a lot of ways to overcome that (BLITS, BLEPS, etc...) but DPW works as follows
+ *
+ * Create a polynomial which is the nth integral of the desired function
+ * Differentiate it n times
+ * Output that.
+ *
+ * Basically the numerical derivatove operator acts as very specific sort of
+ * filter that averages you over the discontinuities to greatly reduce aliasing.
+ * The paper above goes up to n=5 or 6 or so but leaves "some items as exercises
+ * to the reader" as they say.
+ *
+ * The trick, of course, is that the function you differentiate needs to be
+ * continuous and so forth otherwise you get bad numerical derivatives at the
+ * edges.
+ *
+ * For this implementation we use the 'cubic' representation (the second
+ * anti-derivative) and take the numerical second derivative. More on that
+ * later.
+ *
+ * So first lets talk about the waveforms. This entire document is written assuming
+ * normalizatino that phase = -1,1.
+ *
+ * Sawtooth: output = p
+ * 2nd anti derivative g = p^3 / 6 + a p^2 + b p + c
+ *
+ * so now we need to solve for a and b. We know that g(-1) = g(1).
+ *
+ * g(-1) = -1/6 + a - b + c
+ * g(1)  = 1/6 + a + b + c
+ *
+ * g(-1) = g(-1) -> -1/6 + a - b + c = 1/6 + a + b + c
+ *
+ * a solution to this is a=0; b=-1/6; c=0.
+ *
+ * So if we take p^3/6 - p/6 its second derivative on -1,1 cycleed pulse will be
+ * a saw with the edges anti-aliasing nicely. Cool
+ *
+ * Square: we want p<0=1; p>0=-1. So clearly our functional form has to be
+ * at most quadratic.
+ *
+ * g = a x^2 + b x + c
+ *
+ * so if we want this to have
+ *
+ * g'' = p < 0 ? -1 : 1 = Q
+ * g'' = 2 a
+ * a = Q / 2
+ *
+ * and great now do continuity at -1/1 for the generator subbing in Q on either side
+ *
+ * 1/2 * 1 (-1)^2 + b * -1 + v = 1/2 * -1 * (1)^2 + b + 1 + c
+ * 1/2 - b = -1/2 + b
+ * b = 1/2
+ *
+ * so g = ( Q p^2 + p ) / 2
+ *
+ * Pulse wave is done a bit differently. For that we use the fact
+ * that two sawtooths pahse shifted by a pulse width and subtracted
+ * gives you a pulse.
+ *
+ * Finally the "sine" wave. The sine wave we use here is not actually
+ * a sine wave but is a normalized parabola pair. That is the sine wave is
+ * a 0/1 parabaloa centered at 0.5 and the opposite centered at -0.5.
+ * The math for that is worked out in the comment below.
+ *
+ * So now we ahve our generators how do we actually define the signal?
+ * Well in the paper above, or any implmeentation with constant pitch, you
+ * could simply record the generators at a series of ponts, roll your pointer,
+ * differentiate, etc... But surge can radically modulate pitch so that gives
+ * us a very 'non-constant' grid between frequency and sample inside the engine.
+ *
+ * So rather than that approach what we do is, at every sample, figure out the
+ * frequency desired *at that sample*. We then figure out the 3 generators
+ * for that frequency at that sample (prior, prior -1, and prior-2) and differentiate
+ * using a numercial second derivative. This is more CPU intensive but it is rock
+ * solid under all sorts of frequency modulation, including FM, pitch shifts, and sync.
+ *
+ * Finally that numerical integration. I use the standard second derivative form
+ * (u_i - 2 u_i-1 + u i-2 ) / dt^2. *but* since i am calculating at i we can either
+ * think that that is second-ord-eraccurate-in-dt and lagged by one sample or
+ * first order accurate-in-dt and not. It doesn't really matter. I also considered
+ * having the candidate phases be +1/0/-1 rather tha 0/-1/-2 but that somehow felt
+ * a wee bit like cheating. Anyway the difference is negligble.
+ *
+ * Other than that, FM is obivous, sync runs two clocks and resets obviously,
+ * and the rest is just mixing and lagging. All pretty obvious.
+ */
+
 void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     // We need a tiny little portamento since the derivative is pretty
