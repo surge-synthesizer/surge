@@ -189,20 +189,12 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     }
 }
 
-void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+template <DPWOscillator::dpw_multitypes multitype, bool subOctave>
+void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
 {
-    if (oscdata->p[dpw_tri_mix].deform_type != cachedDeform)
-    {
-        cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
-        multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
-    }
-
-    int subOctave = 0;
     float submul = 1;
-
-    if (cachedDeform & dpw_subone)
+    if (subOctave)
     {
-        subOctave = -1;
         submul = 0.5;
     }
 
@@ -270,25 +262,15 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             {
                 pfm -= floor(pfm);
             }
-            if (pfm < 0)
+            else if (pfm < 0)
             {
                 pfm += -ceil(pfm) + 1;
             }
 
-            for (int s = 0; s < 3; ++s)
+            phases[0] = pfm;
+            for (int s = 1; s < 3; ++s)
             {
-                phases[s] = pfm - s * dsp;
-            }
-
-            if (pfm < 2 * dsp)
-            {
-                for (int s = 0; s < 3; ++s)
-                {
-                    if (phases[s] < 0)
-                    {
-                        phases[s] += 1;
-                    }
-                }
+                phases[s] = pfm - s * dsp + (pfm < s * dsp ? 1 : 0);
             }
 
             for (int s = 0; s < 3; ++s)
@@ -301,21 +283,22 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
                 sBuff[s] = sawcub;
 
-                if (subOctave != 0)
+                /*
+                 * Remember these ifs are now on tempalte params so won't
+                 * eject branches
+                 */
+                if (subOctave)
                 {
                     triBuff[s] = 0.0;
                 }
                 else
                 {
-                    switch (multitype)
-                    {
-                    case dpwm_square:
+                    if (multitype == dpwm_square)
                     {
                         double Q = std::signbit(p) * 2 - 1;
                         triBuff[s] = p * (Q * p + 1) * 0.5;
                     }
-                    break;
-                    case dpwm_sine:
+                    if (multitype == DPWOscillator::dpwm_sine)
                     {
                         // double pos = 1.0 - std::signbit(p);
                         double modpos = 2.0 * std::signbit(p) - 1.0;
@@ -352,33 +335,19 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                          */
                         triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                     }
-                    break;
-                    case dpwm_triangle:
+                    if (multitype == DPWOscillator::dpwm_triangle)
                     {
                         double tp = p + 0.5;
-                        if (tp > 1.0)
-                        {
-                            tp -= 2;
-                        }
+                        tp -= (tp > 1.0 ? 2 : 0);
 
                         double Q = 1 - std::signbit(tp) * 2;
-                        double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
-                        triBuff[s] = tricub;
-                    }
-                    break;
+                        triBuff[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
                     }
                 }
 
                 double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
 
-                if (pwp > 1)
-                {
-                    pwp -= 2;
-                }
-                if (pwp < -1)
-                {
-                    pwp += 2;
-                }
+                pwp += (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
                 sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
             }
 
@@ -419,7 +388,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
             dspbase[u].process();
         }
 
-        if (subOctave != 0)
+        if (subOctave)
         {
             auto dp = subdpbase.v;
             auto dsp = subdpsbase.v;
@@ -440,15 +409,12 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                 double p = (p01 - 0.5) * 2;
                 double p3 = p * p * p;
 
-                switch (multitype)
-                {
-                case dpwm_square:
+                if (multitype == dpwm_square)
                 {
                     double Q = std::signbit(p) * 2 - 1;
                     triBuff[s] = p * (Q * p + 1) * 0.5;
                 }
-                break;
-                case dpwm_sine:
+                if (multitype == dpwm_sine)
                 {
                     double modpos = 2.0 * std::signbit(p) - 1.0;
                     double p4 = p3 * p;
@@ -456,8 +422,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
                     triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                 }
-                break;
-                case dpwm_triangle:
+                if (multitype == dpwm_triangle)
                 {
                     double tp = p + 0.5;
 
@@ -470,8 +435,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
                     double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
 
                     triBuff[s] = tricub;
-                }
-                break;
                 }
             }
 
@@ -540,6 +503,37 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     }
 
     starting = false;
+}
+
+void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+{
+    if (oscdata->p[dpw_tri_mix].deform_type != cachedDeform)
+    {
+        cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
+        multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
+    }
+    bool subOct = false;
+    if (cachedDeform & dpw_subone)
+        subOct = true;
+
+    switch (multitype)
+    {
+    case dpwm_sine:
+        if (subOct)
+            return process_sblk<dpwm_sine, true>(pitch, drift, stereo, FM, fmdepthV);
+        else
+            return process_sblk<dpwm_sine, false>(pitch, drift, stereo, FM, fmdepthV);
+    case dpwm_square:
+        if (subOct)
+            return process_sblk<dpwm_square, true>(pitch, drift, stereo, FM, fmdepthV);
+        else
+            return process_sblk<dpwm_square, false>(pitch, drift, stereo, FM, fmdepthV);
+    case dpwm_triangle:
+        if (subOct)
+            return process_sblk<dpwm_triangle, true>(pitch, drift, stereo, FM, fmdepthV);
+        else
+            return process_sblk<dpwm_triangle, false>(pitch, drift, stereo, FM, fmdepthV);
+    }
 }
 
 static struct DPWTriName : public ParameterDynamicNameFunction
