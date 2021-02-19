@@ -40,17 +40,27 @@ class ModControl
         mod_snh,
     };
 
-    inline void pre_process(int mwave, float rate, float depth_val)
+    inline void pre_process(int mwave, float rate, float depth_val, float phase_offset)
     {
-        lfophase += rate;
         bool lforeset = false;
+
+        lfophase += rate;
+
         if (lfophase > 1)
         {
             lforeset = true;
-            lfophase -= 1;
+            lfophase = fmod(lfophase, 1.0);
         }
+
         float lfoout = lfoval.v;
-        float thisphase = lfophase;
+        float thisphase = lfophase + phase_offset;
+
+        if (thisphase > 1)
+        {
+            lforeset = true;
+            thisphase = fmod(thisphase, 1.0);
+        }
+
         switch (mwave)
         {
         case mod_sine:
@@ -93,7 +103,7 @@ class ModControl
             // FIXME - exponential creep up. We want to get there in a time related to our rate
             auto cv = lfoval.v;
             auto diff = (lfosandhtarget - cv) * rate * 2;
-            lfoval.newValue(cv + diff);
+            lfoval.newValue(lfosandhtarget);
         }
         break;
         }

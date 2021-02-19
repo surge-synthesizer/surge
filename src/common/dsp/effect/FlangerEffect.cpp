@@ -413,7 +413,7 @@ void FlangerEffect::init_ctrltypes()
     fxdata->p[fl_mode].set_type(ct_flangermode);
 
     fxdata->p[fl_wave].set_name("Waveform");
-    fxdata->p[fl_wave].set_type(ct_flangerwave);
+    fxdata->p[fl_wave].set_type(ct_fxlfowave);
 
     fxdata->p[fl_rate].set_name("Rate");
     fxdata->p[fl_rate].set_type(ct_lforate);

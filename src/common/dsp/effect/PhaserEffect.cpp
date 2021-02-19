@@ -32,7 +32,6 @@ void PhaserEffect::init()
     bi = 0;
     dL = 0;
     dR = 0;
-    lfophase = 0.25f;
 
     for (int i = 0; i < n_bq_units_initialised; i++)
     {
@@ -70,23 +69,8 @@ void PhaserEffect::process_only_control()
 {
     init_stages();
 
-    float rate = envelope_rate_linear(-*f[ph_mod_rate]) *
-                 (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
-
-    lfophase += (float)slowrate * rate;
-
-    // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
-    if (lfophase > 1)
-    {
-        lfophase = fmod(lfophase, 1.0);
-    }
-
-    float lfophaseR = lfophase + 0.5 * *f[ph_stereo];
-
-    if (lfophaseR > 1)
-    {
-        lfophaseR = fmod(lfophaseR, 1.0);
-    }
+    modLFOL.post_process();
+    modLFOR.post_process();
 }
 
 void PhaserEffect::setvars()
@@ -96,23 +80,12 @@ void PhaserEffect::setvars()
     double rate = envelope_rate_linear(-*f[ph_mod_rate]) *
                   (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
-    lfophase += (float)slowrate * rate;
+    rate *= (float)slowrate;
 
-    // lfophase could be > 2 also at very high modulation rates so -=1 doesn't work
-    if (lfophase > 1)
-    {
-        lfophase = fmod(lfophase, 1.0);
-    }
+    int mwave = *pdata_ival[ph_mod_wave];
 
-    float lfophaseR = lfophase + 0.5 * *f[ph_stereo];
-
-    if (lfophaseR > 1)
-    {
-        lfophaseR = fmod(lfophaseR, 1.0);
-    }
-
-    double lfoout = 1.f - fabs(2.0 - 4.0 * lfophase);
-    double lfooutR = 1.f - fabs(2.0 - 4.0 * lfophaseR);
+    modLFOL.pre_process(mwave, rate, *f[ph_mod_depth], 0.f);
+    modLFOR.pre_process(mwave, rate, *f[ph_mod_depth], 0.5 * *f[ph_stereo]);
 
     // if stages is set to 1 to indicate we are in legacy mode, use legacy freqs and spans
     if (n_stages < 2)
@@ -121,10 +94,10 @@ void PhaserEffect::setvars()
         for (int i = 0; i < 2; i++)
         {
             double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + legacy_freq[i] +
-                                                     legacy_span[i] * lfoout * *f[ph_mod_depth]);
+                                                     legacy_span[i] * modLFOL.value());
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
             omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + legacy_freq[i] +
-                                                  legacy_span[i] * lfooutR * *f[ph_mod_depth]);
+                                                  legacy_span[i] * modLFOR.value());
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }
     }
@@ -134,11 +107,10 @@ void PhaserEffect::setvars()
         {
             double center = powf(2, (i + 1.0) * 2 / n_stages);
             double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
-                                                     2.0 / (i + 1) * lfoout * *f[ph_mod_depth]);
+                                                     2.0 / (i + 1) * modLFOL.value());
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] +
-                                                  *f[ph_spread] * center *
-                                                      (2.0 / (i + 1) * lfooutR * *f[ph_mod_depth]));
+            omega = biquad[2 * i + 1]->calc_omega(
+                2 * *f[ph_center] + *f[ph_spread] * center * (2.0 / (i + 1) * modLFOR.value()));
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }
     }
@@ -208,7 +180,7 @@ int PhaserEffect::group_label_ypos(int id)
     case 1:
         return 13;
     case 2:
-        return 21;
+        return 23;
     }
     return 0;
 }
@@ -228,6 +200,8 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_feedback].set_name("Feedback");
     fxdata->p[ph_feedback].set_type(ct_percent_bidirectional);
 
+    fxdata->p[ph_mod_wave].set_name("Waveform");
+    fxdata->p[ph_mod_wave].set_type(ct_fxlfowave);
     fxdata->p[ph_mod_rate].set_name("Rate");
     fxdata->p[ph_mod_rate].set_type(ct_lforate);
     fxdata->p[ph_mod_depth].set_name("Depth");
@@ -246,12 +220,13 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_sharpness].posy_offset = 3;
     fxdata->p[ph_feedback].posy_offset = 7;
 
-    fxdata->p[ph_mod_rate].posy_offset = 7;
-    fxdata->p[ph_mod_depth].posy_offset = 7;
-    fxdata->p[ph_stereo].posy_offset = 7;
+    fxdata->p[ph_mod_wave].posy_offset = -7;
+    fxdata->p[ph_mod_rate].posy_offset = 9;
+    fxdata->p[ph_mod_depth].posy_offset = 9;
+    fxdata->p[ph_stereo].posy_offset = 9;
 
-    fxdata->p[ph_width].posy_offset = 7;
-    fxdata->p[ph_mix].posy_offset = 11;
+    fxdata->p[ph_width].posy_offset = 9;
+    fxdata->p[ph_mix].posy_offset = 13;
 }
 
 void PhaserEffect::init_default_values()
@@ -259,6 +234,7 @@ void PhaserEffect::init_default_values()
     fxdata->p[ph_stages].val.i = 4;
     fxdata->p[ph_width].val.f = 0.f;
     fxdata->p[ph_spread].val.f = 0.f;
+    fxdata->p[ph_mod_wave].val.i = 1;
 }
 
 void PhaserEffect::handleStreamingMismatches(int streamingRevision,
@@ -269,15 +245,19 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision,
         fxdata->p[ph_stages].val.i = 4;
         fxdata->p[ph_width].val.f = 0.f;
     }
+    if (streamingRevision < 16)
+    {
+        fxdata->p[ph_mod_wave].val.i = 1;
+    }
 }
 
 int PhaserEffect::get_ringout_decay()
 {
     auto fb = *f[ph_feedback];
 
-    // The ringout is longer at high feedbacks. This is just a heuristic based on
-    // testing with the patch in #2663. Note that at feedbacks above 1 (from
-    // modulation or control pushes) you can get infinite self modulation
+    // The ringout is longer at higher feedback. This is just a heuristic based on
+    // testing with the patch in #2663. Note that at feedback above 1 (from
+    // modulation or control pushes) you can get infinite self-oscillation
     // so run forever then
 
     if (fb > 1 || fb < -1)

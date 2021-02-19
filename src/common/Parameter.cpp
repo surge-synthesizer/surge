@@ -862,7 +862,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_default.i = 0;
         break;
-    case ct_flangerwave:
+    case ct_fxlfowave:
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = 3; // sin, tri, saw, s&h
@@ -2836,7 +2836,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             sprintf(txt, "%s", types.c_str());
         }
         break;
-        case ct_flangerwave:
+        case ct_fxlfowave:
         {
             switch (i)
             {
