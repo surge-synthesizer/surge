@@ -93,9 +93,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     {
         cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
         multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
-
-        std::string nm = DPWOscillator::multitypeNameForIntValue(cachedDeform);
-        oscdata->p[dpw_tri_mix].set_name(nm.c_str());
     }
     int subOctave = 0;
     float submul = 1;
@@ -409,6 +406,24 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     starting = false;
 }
 
+static struct DPWTriName : public ParameterDynamicNameFunction
+{
+    virtual const char *getName(Parameter *p)
+    {
+        auto flag = p->deform_type;
+        int mt = flag & 0xF;
+        bool sub = flag & DPWOscillator::dpw_submask::dpw_subone;
+        std::string subs = sub ? "Sub-" : "";
+
+        std::string res = std::string("Multi - ") + subs + dpw_multitype_names[mt];
+
+        static char tx[1024];
+        strncpy(tx, res.c_str(), 1024);
+        tx[1023] = 0;
+        return tx;
+    }
+} dpwTriName;
+
 void DPWOscillator::init_ctrltypes()
 {
     oscdata->p[dpw_saw_mix].set_name("Sawtooth");
@@ -417,10 +432,8 @@ void DPWOscillator::init_ctrltypes()
     oscdata->p[dpw_pulse_mix].set_name("Pulse");
     oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
 
-    oscdata->p[dpw_tri_mix].deform_type = 0;
-    cachedDeform = 0;
-    std::string nm = multitypeNameForIntValue(oscdata->p[dpw_tri_mix].deform_type);
-    oscdata->p[dpw_tri_mix].set_name(nm.c_str());
+    oscdata->p[dpw_tri_mix].set_name("--DYNAMIC-NAME--");
+    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
 
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
 
@@ -447,15 +460,4 @@ void DPWOscillator::init_default_values()
     oscdata->p[dpw_sync].val.f = 0.0;
     oscdata->p[dpw_unison_detune].val.f = 0.2;
     oscdata->p[dpw_unison_voices].val.i = 1;
-}
-
-std::string DPWOscillator::multitypeNameForIntValue(int flag)
-{
-    int mt = flag & 0xF;
-    bool sub = flag & dpw_submask::dpw_subone;
-    std::string subs = sub ? "Sub-" : "";
-
-    std::string nm = std::string("Multi - ") + subs + dpw_multitype_names[mt];
-
-    return nm;
 }
