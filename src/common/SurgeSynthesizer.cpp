@@ -2301,8 +2301,16 @@ bool SurgeSynthesizer::loadOscalgos()
         for (int i = 0; i < n_oscs; i++)
         {
             bool resend = false;
+
             if (storage.getPatch().scene[s].osc[i].queue_type > -1)
             {
+                // clear assigned modulation if we change osc type, see issue #2224
+                if (storage.getPatch().scene[s].osc[i].queue_type !=
+                    storage.getPatch().scene[s].osc[i].type.val.i)
+                {
+                    clear_osc_modulation(s, i);
+                }
+
                 storage.getPatch().scene[s].osc[i].type.val.i =
                     storage.getPatch().scene[s].osc[i].queue_type;
                 storage.getPatch().update_controls(false, &storage.getPatch().scene[s].osc[i]);
