@@ -149,7 +149,7 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 
         driftlfo[u] = 0.f;
         driftlfo2[u] = 0.f;
-        
+
         if (nonzero_init_drift)
         {
             driftlfo2[u] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
@@ -235,7 +235,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         0.5 * limit_range(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
     trimix.newValue(0.5 *
                     limit_range(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f, -2.f, 2.f));
-    
+
     // Since we always use this multiplied by 2, put the mul here to save it later
     pwidth.newValue(2 *
                     limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,

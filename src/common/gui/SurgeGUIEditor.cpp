@@ -3473,21 +3473,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     {
                         contextMenu->addSeparator();
                         eid++;
+
                         std::vector<int> waves = {DPWOscillator::dpw_multitypes::dpwm_triangle,
-                                        DPWOscillator::dpw_multitypes::dpwm_sine,
-                                        DPWOscillator::dpw_multitypes::dpwm_square};
+                                                  DPWOscillator::dpw_multitypes::dpwm_sine,
+                                                  DPWOscillator::dpw_multitypes::dpwm_square};
 
                         for (int m : waves)
-                            {
-                                auto mtm = addCallbackMenu(
-                                    contextMenu, dpw_multitype_names[m], [p, m, this]() {
-                                        // p->deform_type = m;
-                                        p->deform_type = (p->deform_type & 0xFFF0) | m;
-                                        synth->refresh_editor = true;
-                                    });
-                                mtm->setChecked((p->deform_type & 0x0F) == m);
-                                eid++;
-                            }
+                        {
+                            auto mtm = addCallbackMenu(
+                                contextMenu, dpw_multitype_names[m], [p, m, this]() {
+                                    // p->deform_type = m;
+                                    p->deform_type = (p->deform_type & 0xFFF0) | m;
+                                    synth->refresh_editor = true;
+                                });
+                            mtm->setChecked((p->deform_type & 0x0F) == m);
+                            eid++;
+                        }
 
                         contextMenu->addSeparator();
                         eid++;
