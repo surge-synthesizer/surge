@@ -224,7 +224,6 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     auto subdt = drift * driftlfo[0];
 
-    pitchlag.process();
     subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
     subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
     sync.process();
@@ -241,6 +240,7 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     pwidth.newValue(2 *
                     limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
                                 0.01f, 0.99f));
+    pitchlag.process();
 
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
     fmdepth.newValue(fv);
