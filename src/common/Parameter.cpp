@@ -375,6 +375,7 @@ void Parameter::set_type(int ctrltype)
 
     affect_other_parameters = false;
     user_data = nullptr;
+    dynamicName = nullptr;
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
     ** and, grouped below, we set display info
@@ -1415,22 +1416,38 @@ void Parameter::bound_value(bool force_integer)
     };
 }
 
-const char *Parameter::get_name()
+bool Parameter::supportsDynamicName()
 {
-    // We only even want to try this for specific types we know support it
     switch (ctrltype)
     {
     case ct_dpw_trimix:
-        if (dynamicName)
-            return dynamicName->getName(this);
-        break;
+        return true;
     default:
         break;
     }
+    return false;
+}
+const char *Parameter::get_name()
+{
+    // We only even want to try this for specific types we know support it
+    if (supportsDynamicName() && dynamicName)
+        return dynamicName->getName(this);
+
     return dispname;
 }
 
-const char *Parameter::get_full_name() { return fullname; }
+const char *Parameter::get_full_name()
+{
+    if (supportsDynamicName() && dynamicName)
+    {
+        auto nm = dynamicName->getName(this);
+        static char res[1024];
+        create_fullname(nm, res, ctrlgroup, ctrlgroup_entry);
+        return res;
+    }
+
+    return fullname;
+}
 
 const char *Parameter::get_internal_name() { return name; }
 

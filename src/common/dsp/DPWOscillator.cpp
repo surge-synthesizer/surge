@@ -533,9 +533,8 @@ void DPWOscillator::init_ctrltypes()
     oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
 
     oscdata->p[dpw_tri_mix].set_name("--DYNAMIC-NAME--");
-    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
-
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
+    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
 
     oscdata->p[dpw_pulse_width].set_name("Width");
     oscdata->p[dpw_pulse_width].set_type(ct_percent);
