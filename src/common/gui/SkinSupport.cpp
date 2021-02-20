@@ -727,7 +727,7 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
         if (std::string(lkid->Value()) == "group")
         {
             auto g = std::make_shared<Skin::ControlGroup>();
-
+            g->userGroup = true;
             g->x = attrint(lkid, "x");
             if (g->x < 0)
                 g->x = 0;
@@ -783,9 +783,28 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
                 }
             }
 
-            // Basically conditionalize each of these
+            /*
+             * Per long discussion Feb 20 on discord, the expetation inthe skin engine
+             * is that you are overriding defaults *except* parent groups in the XML wil lreset
+             * your default position to the origin. So if we *don't* specify an x/y and
+             * *are* in a user specified group, reset the control default before we apply
+             * the XML and offsets
+             */
+            if (parent->userGroup && getVersion() >= 2)
+            {
+                if (lkid->Attribute("x") == nullptr)
+                {
+                    control->x = 0;
+                }
+                if (lkid->Attribute("y") == nullptr)
+                {
+                    control->y = 0;
+                }
+            }
+
             attrintif(lkid, "x", control->x, parent->x);
             attrintif(lkid, "y", control->y, parent->y);
+
             attrintif(lkid, "w", control->w);
             attrintif(lkid, "h", control->h);
 
@@ -1156,6 +1175,7 @@ void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
         // std::cout << "Control Parent " << _D(c->x) << _D(c->y) << std::endl;
         auto bp = c->allprops["base_parent"];
         auto pc = controlForUIID(bp);
+
         while (pc)
         {
             /*
