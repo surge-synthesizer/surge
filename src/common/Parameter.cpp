@@ -862,10 +862,10 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_default.i = 0;
         break;
-    case ct_flangerwave:
+    case ct_fxlfowave:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // sin, tri, saw, s&h
+        val_max.i = 5; // sin, tri, saw, s&g, s&h, square
         val_default.i = 0;
         break;
     case ct_flangerspacing:
@@ -2836,7 +2836,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             sprintf(txt, "%s", types.c_str());
         }
         break;
-        case ct_flangerwave:
+        case ct_fxlfowave:
         {
             switch (i)
             {
@@ -2850,7 +2850,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 sprintf(txt, "Sawtooth");
                 break;
             case 3:
+                sprintf(txt, "Noise");
+                break;
+            case 4:
                 sprintf(txt, "Sample & Hold");
+                break;
+            case 5:
+                sprintf(txt, "Square");
                 break;
             }
         }

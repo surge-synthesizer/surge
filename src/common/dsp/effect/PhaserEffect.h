@@ -18,9 +18,9 @@
 #include "BiquadFilter.h"
 #include "DspUtilities.h"
 #include "AllpassFilter.h"
-
 #include "VectorizedSvfFilter.h"
 
+#include "dsp/effect/ModControl.h"
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 
@@ -58,6 +58,7 @@ class PhaserEffect : public Effect
         ph_width,
         ph_stages,
         ph_spread,
+        ph_mod_wave,
 
         ph_num_params,
     };
@@ -71,7 +72,6 @@ class PhaserEffect : public Effect
     int n_bq_units_initialised = 0;
     float dL, dR;
     BiquadFilter *biquad[max_stages * 2];
-    float lfophase;
     int bi; // block increment (to keep track of events not occurring every n blocks)
     void init_stages();
 
@@ -79,4 +79,6 @@ class PhaserEffect : public Effect
     // depth span
     float legacy_freq[4] = {1.5 / 12, 19.5 / 12, 35 / 12, 50 / 12};
     float legacy_span[4] = {2.0, 1.5, 1.0, 0.5};
+
+    Surge::ModControl modLFOL, modLFOR;
 };
