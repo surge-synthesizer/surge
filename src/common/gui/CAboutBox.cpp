@@ -211,7 +211,8 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     std::string buildinfo = "Built on " + (std::string)Surge::Build::BuildDate + " at " +
                             (std::string)Surge::Build::BuildTime + ", using " +
                             (std::string)Surge::Build::BuildLocation + " host '" +
-                            (std::string)Surge::Build::BuildHost + "'";
+                            (std::string)Surge::Build::BuildHost + "' with '" +
+                            (std::string)Surge::Build::BuildCompiler + "'";
 
 #if TARGET_AUDIOUNIT
     std::string flavor = "AU";

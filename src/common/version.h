@@ -22,6 +22,7 @@ struct Build
     static const char *FullVersionStr;
     static const char *BuildHost;
     static const char *BuildArch;
+    static const char *BuildCompiler;
 
     static const char *BuildLocation; // Local or Pipeline
 
