@@ -75,20 +75,25 @@ void FlangerEffect::process(float *dataL, float *dataR)
         for (int i = 0; i < COMBS_PER_CHANNEL; ++i)
         {
 
-            lfophase[c][i] += rate;
             bool lforeset = false;
+
+            lfophase[c][i] += rate;
+
             if (lfophase[c][i] > 1)
             {
                 lforeset = true;
                 lfophase[c][i] -= 1;
             }
+
             float lfoout = lfoval[c][i].v;
             float thisphase = lfophase[c][i];
+
             if (mode == flm_arp_mix || mode == flm_arp_solo)
             {
                 // arpeggio - everyone needs to use the same phase with the voice swap
                 thisphase = longphase[c] - (int)longphase[c];
             }
+
             switch (mwave)
             {
             case flw_sine:
@@ -97,33 +102,66 @@ void FlangerEffect::process(float *dataL, float *dataR)
                 int psi = (int)ps;
                 float psf = ps - psi;
                 int psn = (psi + 1) & LFO_TABLE_MASK;
+
                 lfoout = sin_lfo_table[psi] * (1.0 - psf) + psf * sin_lfo_table[psn];
+
                 lfoval[c][i].newValue(lfoout);
+
+                break;
             }
-            break;
             case flw_tri:
                 lfoout = (2.f * fabs(2.f * thisphase - 1.f) - 1.f);
                 lfoval[c][i].newValue(lfoout);
                 break;
-            case flw_saw: // but we gotta be gentler than a pure saw. So do more like a heavily
-                          // skewed triangle
+            case flw_saw: // Gentler than a pure saw, more like a heavily skewed triangle
             {
-                float cutSawAt = 0.95;
-                if (thisphase < cutSawAt)
+                float cutAt = 0.98;
+                float usephase;
+
+                if (thisphase < cutAt)
                 {
-                    auto usephase = thisphase / cutSawAt;
+                    usephase = thisphase / cutAt;
                     lfoout = usephase * 2.0f - 1.f;
                 }
                 else
                 {
-                    auto usephase = (thisphase - cutSawAt) / (1.0 - cutSawAt);
+                    usephase = (thisphase - cutAt) / (1.0 - cutAt);
                     lfoout = (1.0 - usephase) * 2.f - 1.f;
                 }
+
                 lfoval[c][i].newValue(lfoout);
+
                 break;
             }
-            case flw_sng: // S&G random noise. Needs smoothing over the jump like the triangle
-            case flw_snh: // S&H random noise. No smoothing
+            case flw_square:
+            {
+                auto cutOffset = 0.02f;
+                auto m = 2.f / cutOffset;
+                auto c2 = cutOffset / 2.f;
+
+                if (thisphase < 0.5f - c2)
+                {
+                    lfoout = 1.f;
+                }
+                else if ((thisphase >= 0.5 + c2) && (thisphase <= 1.f - cutOffset))
+                {
+                    lfoout = -1.f;
+                }
+                else if ((thisphase > 0.5 - c2) && (thisphase < 0.5 + c2))
+                {
+                    lfoout = -m * thisphase + (m / 2);
+                }
+                else
+                {
+                    lfoout = (m * thisphase) - (2 * m) + m + 1;
+                }
+
+                lfoval[c][i].newValue(lfoout);
+
+                break;
+            }
+            case flw_sng: // Sample & Hold random
+            case flw_snh: // Sample & Glide smoothed random
             {
                 if (lforeset)
                 {
@@ -132,7 +170,8 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
                 if (mwave == flw_sng)
                 {
-                    // FIXME - exponential creep up. We want to get there in a time related to our rate
+                    // FIXME - exponential creep up. We want to get there in a time related to our
+                    // rate
                     auto cv = lfoval[c][i].v;
                     auto diff = (lfosandhtarget[c][i] - cv) * rate * 2;
                     lfoval[c][i].newValue(cv + diff);

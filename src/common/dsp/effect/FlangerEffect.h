@@ -41,6 +41,7 @@ class FlangerEffect : public Effect
         flw_saw,
         flw_sng,
         flw_snh,
+        flw_square,
     };
 
     enum fl_params
