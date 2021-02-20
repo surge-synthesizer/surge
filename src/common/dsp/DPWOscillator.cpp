@@ -270,7 +270,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
             phases[0] = pfm;
             for (int s = 1; s < 3; ++s)
             {
-                phases[s] = pfm - s * dsp + (pfm < s * dsp ? 1 : 0);
+                phases[s] = pfm - s * dsp + (pfm < s * dsp);
             }
 
             for (int s = 0; s < 3; ++s)
@@ -295,13 +295,14 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
                 {
                     if (multitype == dpwm_square)
                     {
-                        double Q = std::signbit(p) * 2 - 1;
+                        // double Q = std::signbit(p) * 2 - 1;
+                        double Q = (p < 0) * 2 - 1;
                         triBuff[s] = p * (Q * p + 1) * 0.5;
                     }
                     if (multitype == DPWOscillator::dpwm_sine)
                     {
                         // double pos = 1.0 - std::signbit(p);
-                        double modpos = 2.0 * std::signbit(p) - 1.0;
+                        double modpos = 2.0 * (p < 0) - 1.0;
                         double p4 = p3 * p;
                         constexpr double oo3 = 1.0 / 3.0;
 
@@ -338,16 +339,16 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
                     if (multitype == DPWOscillator::dpwm_triangle)
                     {
                         double tp = p + 0.5;
-                        tp -= (tp > 1.0 ? 2 : 0);
+                        tp -= (tp > 1.0) * 2;
 
-                        double Q = 1 - std::signbit(tp) * 2;
+                        double Q = 1 - (tp < 0) * 2;
                         triBuff[s] = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
                     }
                 }
 
                 double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
 
-                pwp += (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
+                pwp += (pwp > 1) * -2; // (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
                 sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
             }
 
@@ -411,12 +412,12 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
 
                 if (multitype == dpwm_square)
                 {
-                    double Q = std::signbit(p) * 2 - 1;
+                    double Q = (p < 0) * 2 - 1;
                     triBuff[s] = p * (Q * p + 1) * 0.5;
                 }
                 if (multitype == dpwm_sine)
                 {
-                    double modpos = 2.0 * std::signbit(p) - 1.0;
+                    double modpos = 2.0 * (p < 0) - 1.0;
                     double p4 = p3 * p;
                     constexpr double oo3 = 1.0 / 3.0;
 
@@ -426,12 +427,9 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
                 {
                     double tp = p + 0.5;
 
-                    if (tp > 1.0)
-                    {
-                        tp -= 2;
-                    }
+                    tp -= (tp > 1.0) * 2;
 
-                    double Q = 1 - std::signbit(tp) * 2;
+                    double Q = 1 - (tp < 0) * 2;
                     double tricub = (2.0 + tp * tp * (3.0 - 2.0 * Q * tp)) * oneOverSix;
 
                     triBuff[s] = tricub;
