@@ -65,6 +65,10 @@ class DPWOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
+    template <dpw_multitypes multitype, bool subOctave>
+    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                      float FMdepth = 0.f);
+
     lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
         subdpbase, subdpsbase, detune, pitchlag, fmdepth;
 
