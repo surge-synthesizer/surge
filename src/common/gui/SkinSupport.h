@@ -190,6 +190,8 @@ class Skin
 
         int x = 0, y = 0, w = -1, h = -1;
 
+        bool userGroup = false;
+
         props_t allprops;
     };
 
