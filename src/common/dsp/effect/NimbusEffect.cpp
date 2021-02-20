@@ -13,11 +13,11 @@
 ** open source in September 2018.
 */
 
+#include "NimbusEffect.h"
+
 #ifdef _MSC_VER
 #define __attribute__(x)
 #endif
-
-#include "NimbusEffect.h"
 
 #define TEST // remember this is how you tell the eurorack code to use dsp not hardware
 #include "clouds/dsp/granular_processor.h"

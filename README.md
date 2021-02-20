@@ -118,6 +118,16 @@ cmake --build build32 --config Release --target Surge-VST3-Packaged
 If you want to build the installer, open the file `installer_win\surge.iss` with [Inno Setup](https://jrsoftware.org/isdl.php#stable).
 Inno Setup will make an installer and place it in `installer_win\Output\`
 
+### Building with Clang
+
+If you have clang installed with vs2019, you can do
+
+```
+cmake -Bbuildclang -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-clang.cmake 
+```
+
+and get a buildable set of ninja files. Our release pipeline may
+shift to this soon.
 
 ## macOS
 
