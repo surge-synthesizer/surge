@@ -37,12 +37,14 @@ class ModControl
         mod_sine = 0,
         mod_tri,
         mod_saw,
+        mod_sng,
         mod_snh,
     };
 
     inline void pre_process(int mwave, float rate, float depth_val, float phase_offset)
     {
         bool lforeset = false;
+        float phofs = fmod(fabs(phase_offset), 1.0);
 
         lfophase += rate;
 
@@ -53,11 +55,10 @@ class ModControl
         }
 
         float lfoout = lfoval.v;
-        float thisphase = lfophase + phase_offset;
+        float thisphase = lfophase + phofs;
 
         if (thisphase > 1)
         {
-            lforeset = true;
             thisphase = fmod(thisphase, 1.0);
         }
 
@@ -94,16 +95,25 @@ class ModControl
             lfoval.newValue(lfoout);
             break;
         }
-        case mod_snh: // S&H random noise. Needs smoothing over the jump like the triangle
+        case mod_sng: // S&G random noise. Needs smoothing over the jump like the triangle
+        case mod_snh: // S&H random noise. No smoothing
         {
             if (lforeset)
             {
                 lfosandhtarget = 1.f * rand() / (float)RAND_MAX - 1.f;
             }
-            // FIXME - exponential creep up. We want to get there in a time related to our rate
-            auto cv = lfoval.v;
-            auto diff = (lfosandhtarget - cv) * rate * 2;
-            lfoval.newValue(lfosandhtarget);
+
+            if (mwave == mod_sng)
+            {
+                // FIXME - exponential creep up. We want to get there in a time related to our rate
+                auto cv = lfoval.v;
+                auto diff = (lfosandhtarget - cv) * rate * 2;
+                lfoval.newValue(cv + diff);
+            }
+            else
+            {
+                lfoval.newValue(lfosandhtarget);
+            }
         }
         break;
         }
