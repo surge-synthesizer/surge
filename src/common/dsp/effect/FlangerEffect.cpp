@@ -122,16 +122,25 @@ void FlangerEffect::process(float *dataL, float *dataR)
                 lfoval[c][i].newValue(lfoout);
                 break;
             }
-            case flw_snh: // S&H random noise. Needs smoothing over the jump like the triangle
+            case flw_sng: // S&G random noise. Needs smoothing over the jump like the triangle
+            case flw_snh: // S&H random noise. No smoothing
             {
                 if (lforeset)
                 {
                     lfosandhtarget[c][i] = 1.f * rand() / (float)RAND_MAX - 1.f;
                 }
-                // FIXME - exponential creep up. We want to get there in a time related to our rate
-                auto cv = lfoval[c][i].v;
-                auto diff = (lfosandhtarget[c][i] - cv) * rate * 2;
-                lfoval[c][i].newValue(cv + diff);
+
+                if (mwave == flw_sng)
+                {
+                    // FIXME - exponential creep up. We want to get there in a time related to our rate
+                    auto cv = lfoval[c][i].v;
+                    auto diff = (lfosandhtarget[c][i] - cv) * rate * 2;
+                    lfoval[c][i].newValue(cv + diff);
+                }
+                else
+                {
+                    lfoval[c][i].newValue(lfosandhtarget[c][i]);
+                }
             }
             break;
             }

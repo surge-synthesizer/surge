@@ -865,7 +865,7 @@ void Parameter::set_type(int ctrltype)
     case ct_fxlfowave:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // sin, tri, saw, s&h
+        val_max.i = 4; // sin, tri, saw, s&g, s&h
         val_default.i = 0;
         break;
     case ct_flangerspacing:
@@ -2850,6 +2850,9 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 sprintf(txt, "Sawtooth");
                 break;
             case 3:
+                sprintf(txt, "Sample & Glide");
+                break;
+            case 4:
                 sprintf(txt, "Sample & Hold");
                 break;
             }
