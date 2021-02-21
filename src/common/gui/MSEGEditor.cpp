@@ -619,8 +619,7 @@ struct MSEGCanvas : public CControl,
                     hotzone::SEGMENT_ENDPOINT,
                     [this, vscale, tscale, unipolarFactor](float dx, float dy,
                                                            const CPoint &where) {
-                        if (ms->endpointMode == MSEGStorage::EndpointMode::FREE &&
-                            ms->editMode != MSEGStorage::LFO)
+                        if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
                         {
                             float d = -2 * dy / vscale;
                             float snapResolution = ms->vSnap * unipolarFactor;
@@ -2360,9 +2359,7 @@ struct MSEGCanvas : public CControl,
                         modelChanged();
                     }
                 });
-            cm->setChecked(this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED ||
-                           this->ms->editMode == MSEGStorage::LFO);
-            cm->setEnabled(this->ms->editMode != MSEGStorage::LFO);
+            cm->setChecked(this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED);
 
             settingsMenu->addSeparator();
 

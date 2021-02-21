@@ -43,8 +43,7 @@ void rebuildCache(MSEGStorage *ms)
 
         if (nextseg >= ms->n_activeSegments)
         {
-            if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED ||
-                ms->editMode == MSEGStorage::LFO)
+            if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
                 ms->segments[i].nv1 = ms->segments[0].v0;
         }
         else
@@ -792,7 +791,7 @@ void extendTo(MSEGStorage *ms, float t, float nv)
     ms->segments[sn].cpv = 0;
     ms->segments[sn].nv1 = nv;
 
-    if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED || ms->editMode == MSEGStorage::LFO)
+    if (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
     {
         // The first point has to match where I just clicked. Adjust it and its control point
         float cpdratio = 0.5;
@@ -970,7 +969,7 @@ void scaleValues(MSEGStorage *ms, float factor)
     for (int i = 0; i < ms->n_activeSegments; i++)
         ms->segments[i].v0 *= factor;
 
-    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO)
+    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
         ms->segments[ms->n_activeSegments - 1].nv1 *= factor;
 
     Surge::MSEG::rebuildCache(ms);
@@ -1010,7 +1009,7 @@ void mirrorMSEG(MSEGStorage *ms)
         ms->segments[h].v0 = ms->segments[h].nv1;
 
     // special case end node in start/end unlinked mode
-    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE && ms->editMode != MSEGStorage::LFO)
+    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
         ms->segments[ms->n_activeSegments - 1].nv1 = v0;
 
     // adjust curvature to flip it the other way around for curve types that need this

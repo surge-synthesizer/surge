@@ -33,6 +33,7 @@ NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     memset(processor, 0, sizeof(*processor));
 
     processor->Init(block_mem, memLen, block_ccm, ccmLen);
+    mix.set_blocksize(BLOCK_SIZE);
 }
 
 NimbusEffect::~NimbusEffect()
@@ -42,7 +43,11 @@ NimbusEffect::~NimbusEffect()
     delete processor;
 }
 
-void NimbusEffect::init() {}
+void NimbusEffect::init()
+{
+    mix.set_target(1.f);
+    mix.instantize();
+}
 
 void NimbusEffect::setvars(bool init)
 {
@@ -121,18 +126,22 @@ void NimbusEffect::process(float *dataL, float *dataR)
     parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
     parm->freeze = *f[nmb_freeze] > 0.5;
     parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
-    parm->dry_wet = *f[nmb_mix];
+    parm->dry_wet = 1.f;
 
     parm->trigger = true;
     parm->gate = true;
 
     processor->Prepare();
     processor->Process(input, output, BLOCK_SIZE);
+
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        dataL[i] = output[i].l / 32767.0f;
-        dataR[i] = output[i].r / 32767.0f;
+        L[i] = output[i].l / 32767.0f;
+        R[i] = output[i].r / 32767.0f;
     }
+
+    mix.set_target_smoothed(limit_range(*f[nmb_mix], 0.f, 1.f));
+    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void NimbusEffect::suspend() { init(); }
