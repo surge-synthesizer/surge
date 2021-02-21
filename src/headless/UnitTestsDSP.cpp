@@ -11,6 +11,8 @@
 #include "UnitTestUtilities.h"
 #include "FastMath.h"
 
+#include "SSESincDelayLine.h"
+
 using namespace Surge::Test;
 
 TEST_CASE("Simple Single Oscillator is Constant", "[dsp]")
@@ -517,6 +519,67 @@ TEST_CASE("Check FastMath Functions", "[dsp]")
                 REQUIRE(U.a[0] == Approx(rn).epsilon(1e-3));
                 REQUIRE(rd == Approx(rn).epsilon(1e-3));
             }
+        }
+    }
+}
+
+TEST_CASE("Sinc Delay Line", "[dsp]")
+{
+    // This requires SurgeStorate to initialize its tables. Easiest way
+    // to do that is to just make a surge
+    auto surge = Surge::Headless::createSurge(44100);
+    SECTION("Test Constants")
+    {
+        float val = 1.324;
+        SSESincDelayLine<4096> dl4096;
+
+        for (int i = 0; i < 10000; ++i)
+        {
+            dl4096.write(val);
+        }
+        for (int i = 0; i < 20000; ++i)
+        {
+            INFO("Iteration " << i);
+            float a = dl4096.read(174.3);
+            float b = dl4096.read(1732.4);
+            float c = dl4096.read(3987.2);
+            float d = dl4096.read(256.0);
+
+            REQUIRE(a == Approx(val).margin(1e-3));
+            REQUIRE(b == Approx(val).margin(1e-3));
+            REQUIRE(c == Approx(val).margin(1e-3));
+            REQUIRE(d == Approx(val).margin(1e-3));
+
+            dl4096.write(val);
+        }
+    }
+
+    SECTION("Test Ramp")
+    {
+        float val = 0;
+        float dRamp = 0.01;
+        SSESincDelayLine<4096> dl4096;
+
+        for (int i = 0; i < 10000; ++i)
+        {
+            dl4096.write(val);
+            val += dRamp;
+        }
+        for (int i = 0; i < 20000; ++i)
+        {
+            INFO("Iteration " << i);
+            float a = dl4096.read(174.3);
+            float b = dl4096.read(1732.4);
+            float c = dl4096.read(3987.2);
+            float d = dl4096.read(256.0);
+
+            REQUIRE(a == Approx(val - 174.3 * dRamp).epsilon(1e-3));
+            REQUIRE(b == Approx(val - 1732.4 * dRamp).epsilon(1e-3));
+            REQUIRE(c == Approx(val - 3987.2 * dRamp).epsilon(1e-3));
+            REQUIRE(d == Approx(val - 256.0 * dRamp).epsilon(1e-3));
+
+            dl4096.write(val);
+            val += dRamp;
         }
     }
 }
