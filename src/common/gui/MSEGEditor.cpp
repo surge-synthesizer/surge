@@ -1130,6 +1130,7 @@ struct MSEGCanvas : public CControl,
             if (!drawnLast)
             {
                 float iup = (int)up;
+
                 float fup = up - iup;
                 float v = Surge::MSEG::valueAt(iup, fup, 0, ms, &es, true);
                 float vdef = Surge::MSEG::valueAt(iup, fup, lfodata->deform.val.f, ms, &esdf, true);
@@ -1143,7 +1144,7 @@ struct MSEGCanvas : public CControl,
                     vdef = v;
 
                 int compareWith = es.lastEval;
-                if (up > ms->totalDuration)
+                if (up >= ms->totalDuration)
                     compareWith = ms->n_activeSegments - 1;
 
                 if (compareWith != priorEval)
@@ -1168,6 +1169,9 @@ struct MSEGCanvas : public CControl,
                 if (es.lastEval == hoveredSegment)
                 {
                     bool skipThisAdd = false;
+                    // edge case when you go exactly up to 1 evenly. See #3940
+                    if (up < ms->segmentStart[es.lastEval] || up > ms->segmentEnd[es.lastEval])
+                        skipThisAdd = true;
                     if (!hlpathUsed)
                     {
                         // We always want to hit the start
