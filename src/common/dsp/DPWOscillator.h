@@ -65,9 +65,8 @@ class DPWOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    template <dpw_multitypes multitype, bool subOctave>
-    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
-                      float FMdepth = 0.f);
+    template <dpw_multitypes multitype, bool subOctave, bool FM>
+    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
 
     lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
         subdpbase, subdpsbase, detune, pitchlag, fmdepth;
@@ -80,7 +79,8 @@ class DPWOscillator : public Oscillator
     int n_unison = 1;
     bool starting = true;
     double phase[MAX_UNISON], sphase[MAX_UNISON], subphase, subsphase;
-    bool sReset[MAX_UNISON], subReset;
+    bool sReset[MAX_UNISON];
+    bool subReset;
     double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
 
