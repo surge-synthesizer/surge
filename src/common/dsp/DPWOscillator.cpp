@@ -258,22 +258,27 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
         {
             auto dp = dpbase[u].v;
             auto dsp = dspbase[u].v;
-            double pfm = sphase[u] + fmPhaseShift;
+            double pfm = sphase[u];
 
-            if (pfm > 1)
+            // Since this is a template param compiler should not eject branch
+            if (FM)
             {
-                pfm -= floor(pfm);
-            }
-            else if (pfm < 0)
-            {
-                pfm += -ceil(pfm) + 1;
+                pfm += fmPhaseShift;
+
+                // Have to use Floor/Ceil here because FM could be big
+                if (pfm > 1)
+                {
+                    pfm -= floor(pfm);
+                }
+                else if (pfm < 0)
+                {
+                    pfm += -ceil(pfm) + 1;
+                }
             }
 
             phases[0] = pfm;
-            for (int s = 1; s < 3; ++s)
-            {
-                phases[s] = pfm - s * dsp + (pfm < s * dsp);
-            }
+            phases[1] = pfm - dsp + (pfm < dsp);
+            phases[2] = pfm - 2 * dsp + (pfm < 2 * dsp);
 
             for (int s = 0; s < 3; ++s)
             {
@@ -349,8 +354,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
                 }
 
                 double pwp = p + pwidth.v; // that's actually pw * 2, but we lag the width * 2
-
-                pwp += (pwp > 1) * -2; // (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
+                pwp += (pwp > 1) * -2;     // (pwp > 1 ? -2 : (pwp < -1 ? 2 : 0));
                 sOffBuff[s] = (pwp * pwp * pwp - pwp) * oneOverSix;
             }
 
