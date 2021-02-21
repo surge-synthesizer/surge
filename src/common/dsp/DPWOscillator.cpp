@@ -150,6 +150,8 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
         driftlfo[u] = 0.f;
         driftlfo2[u] = 0.f;
 
+        sReset[u] = false;
+
         if (nonzero_init_drift)
         {
             driftlfo2[u] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
@@ -189,8 +191,8 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     }
 }
 
-template <DPWOscillator::dpw_multitypes multitype, bool subOctave>
-void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+template <DPWOscillator::dpw_multitypes multitype, bool subOctave, bool FM>
+void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
 {
     float submul = 1;
     if (subOctave)
@@ -249,7 +251,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
 
         if (FM)
         {
-            fmPhaseShift = fmdepth.v * master_osc[i];
+            fmPhaseShift = FM * fmdepth.v * master_osc[i];
         }
 
         for (int u = 0; u < n_unison; ++u)
@@ -365,25 +367,25 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
             vL += res * mixL[u];
             vR += res * mixR[u];
 
+            // we know phase is in 0,1 and dp is in 0,0.5
             phase[u] += dp;
             sphase[u] += dsp;
 
+            // If we try to unbranch this, we get the divide at every tick which is painful
             if (phase[u] > 1)
             {
-                phase[u] -= floor(phase[u]);
+                phase[u] -= 1;
 
                 if (sReset[u])
                 {
                     sphase[u] = phase[u] * dsp / dp;
+                    sphase[u] -= floor(sphase[u]); // just in case we have a very high sync
                 }
 
                 sReset[u] = !sReset[u];
             }
 
-            if (sphase[u] > 1)
-            {
-                sphase[u] -= floor(sphase[u]);
-            }
+            sphase[u] -= (sphase[u] > 1) * 1.0;
 
             dpbase[u].process();
             dspbase[u].process();
@@ -454,15 +456,8 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
                 subsphase -= floor(subsphase);
         }
 
-        if (stereo)
-        {
-            output[i] = vL;
-            outputR[i] = vR;
-        }
-        else
-        {
-            output[i] = (vL + vR) / 2;
-        }
+        output[i] = vL;
+        outputR[i] = vR;
 
         sawmix.process();
         trimix.process();
@@ -473,6 +468,13 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, bool FM,
         subdpsbase.process();
     }
 
+    if (!stereo)
+    {
+        for (int s = 0; s < BLOCK_SIZE_OS; ++s)
+        {
+            output[s] = 0.5 * (output[s] + outputR[s]);
+        }
+    }
     if (dofilter)
     {
         if (starting)
@@ -514,23 +516,47 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     if (cachedDeform & dpw_subone)
         subOct = true;
 
-    switch (multitype)
+    if (!FM)
     {
-    case dpwm_sine:
-        if (subOct)
-            return process_sblk<dpwm_sine, true>(pitch, drift, stereo, FM, fmdepthV);
-        else
-            return process_sblk<dpwm_sine, false>(pitch, drift, stereo, FM, fmdepthV);
-    case dpwm_square:
-        if (subOct)
-            return process_sblk<dpwm_square, true>(pitch, drift, stereo, FM, fmdepthV);
-        else
-            return process_sblk<dpwm_square, false>(pitch, drift, stereo, FM, fmdepthV);
-    case dpwm_triangle:
-        if (subOct)
-            return process_sblk<dpwm_triangle, true>(pitch, drift, stereo, FM, fmdepthV);
-        else
-            return process_sblk<dpwm_triangle, false>(pitch, drift, stereo, FM, fmdepthV);
+        switch (multitype)
+        {
+        case dpwm_sine:
+            if (subOct)
+                return process_sblk<dpwm_sine, true, false>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_sine, false, false>(pitch, drift, stereo, fmdepthV);
+        case dpwm_square:
+            if (subOct)
+                return process_sblk<dpwm_square, true, false>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_square, false, false>(pitch, drift, stereo, fmdepthV);
+        case dpwm_triangle:
+            if (subOct)
+                return process_sblk<dpwm_triangle, true, false>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_triangle, false, false>(pitch, drift, stereo, fmdepthV);
+        }
+    }
+    else
+    {
+        switch (multitype)
+        {
+        case dpwm_sine:
+            if (subOct)
+                return process_sblk<dpwm_sine, true, true>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_sine, false, true>(pitch, drift, stereo, fmdepthV);
+        case dpwm_square:
+            if (subOct)
+                return process_sblk<dpwm_square, true, true>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_square, false, true>(pitch, drift, stereo, fmdepthV);
+        case dpwm_triangle:
+            if (subOct)
+                return process_sblk<dpwm_triangle, true, true>(pitch, drift, stereo, fmdepthV);
+            else
+                return process_sblk<dpwm_triangle, false, true>(pitch, drift, stereo, fmdepthV);
+        }
     }
 }
 
