@@ -23,6 +23,8 @@
 
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
+#include "ModControl.h"
+#include "SSESincDelayLine.h"
 
 class BBDEnsembleEffect : public Effect
 {
@@ -62,5 +64,6 @@ class BBDEnsembleEffect : public Effect
     virtual int group_label_ypos(int id) override;
 
   private:
-    int bi; // block increment (to keep track of events not occurring every n blocks)
+    Surge::ModControl modlfos[2][3]; // 2 LFOs differening by 120 degree in phase at outputs
+    SSESincDelayLine<8192> delL, delR;
 };
