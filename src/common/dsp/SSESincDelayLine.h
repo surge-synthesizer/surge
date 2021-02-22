@@ -30,6 +30,8 @@ struct SSESincDelayLine
     float buffer alignas(16)[COMB_SIZE + FIRipol_N];
     int wp = 0;
 
+    SSESincDelayLine() { memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float)); }
+
     inline void write(float f)
     {
         buffer[wp] = f;
@@ -65,6 +67,14 @@ struct SSESincDelayLine
         _mm_store_ss(&res, sum_ps_to_ss(o));
 
         return res;
+    }
+
+    float readLinear(float delay)
+    {
+        auto iDelay = (int)delay;
+        auto frac = delay - iDelay;
+        int RP = (wp - iDelay) & (COMB_SIZE - 1);
+        return buffer[RP] * (1 - frac) + buffer[RP + 1] * frac;
     }
 };
 
