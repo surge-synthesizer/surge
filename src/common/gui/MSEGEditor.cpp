@@ -2359,7 +2359,7 @@ struct MSEGCanvas : public CControl,
                         modelChanged();
                     }
                 });
-            cm->setChecked(this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED);
+            cm->setChecked(ms->endpointMode == MSEGStorage::EndpointMode::LOCKED);
 
             settingsMenu->addSeparator();
 

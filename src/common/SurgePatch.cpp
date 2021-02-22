@@ -1540,20 +1540,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    if (revision < 16)
-    {
-        for (int sc = 0; sc < n_scenes; sc++)
-        {
-            for (int i = 0; i < n_lfos; i++)
-            {
-                if (msegs[sc][i].editMode == MSEGStorage::EditMode::LFO)
-                {
-                    msegs[sc][i].endpointMode = MSEGStorage::EndpointMode::LOCKED;
-                }
-            }
-        }
-    }
-
     // ensure that filtersubtype is a valid value
     for (auto &sc : scene)
     {
@@ -1668,6 +1654,21 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     // end restore msegs
+
+    // make sure rev 15 and older patches have the locked endpoints if they were in LFO edit mode
+    if (revision < 16)
+    {
+        for (int sc = 0; sc < n_scenes; sc++)
+        {
+            for (int i = 0; i < n_lfos; i++)
+            {
+                if (msegs[sc][i].editMode == MSEGStorage::EditMode::LFO)
+                {
+                    msegs[sc][i].endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                }
+            }
+        }
+    }
 
     for (int i = 0; i < n_customcontrollers; i++)
         scene[0].modsources[ms_ctrl1 + i]->reset();
