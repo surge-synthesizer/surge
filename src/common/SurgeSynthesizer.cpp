@@ -54,6 +54,7 @@
 #include "effect/Effect.h"
 
 #include <thread>
+#include "libMTSClient.h"
 
 using namespace std;
 
@@ -3309,6 +3310,20 @@ void SurgeSynthesizer::processControl()
     for (int i = 0; i < n_fx_slots; ++i)
         if (fx[i])
             refresh_editor |= fx[i]->checkHasInvalidatedUI();
+
+    if (storage.oddsound_mts_client)
+    {
+        storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
+        if (storage.oddsound_mts_on_check == 0)
+        {
+            bool prior = storage.oddsound_mts_active;
+            storage.oddsound_mts_active = MTS_HasMaster(storage.oddsound_mts_client);
+            if (prior != storage.oddsound_mts_active)
+            {
+                refresh_editor = true;
+            }
+        }
+    }
 }
 
 void SurgeSynthesizer::process()

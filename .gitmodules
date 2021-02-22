@@ -29,3 +29,6 @@
 [submodule "libs/filesystem/ghc-filesystem"]
 	path = libs/filesystem/ghc-filesystem
 	url = https://github.com/gulrak/filesystem.git
+[submodule "libs/oddsound-mts/MTS-ESP"]
+	path = libs/oddsound-mts/MTS-ESP
+	url = https://github.com/ODDSound/MTS-ESP

@@ -46,6 +46,7 @@
 #include "version.h"
 
 #include "strnatcmp.h"
+#include "libMTSClient.h"
 
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
@@ -580,6 +581,12 @@ bailOnPortable:
     for (int s = 0; s < n_scenes; ++s)
     {
         getPatch().scene[s].drift.extend_range = true;
+    }
+
+    oddsound_mts_client = MTS_RegisterClient();
+    if (oddsound_mts_client)
+    {
+        oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
     }
 }
 
@@ -1405,7 +1412,13 @@ void SurgeStorage::load_midi_controllers()
     }
 }
 
-SurgeStorage::~SurgeStorage() {}
+SurgeStorage::~SurgeStorage()
+{
+    if (oddsound_mts_client)
+    {
+        MTS_DeregisterClient(oddsound_mts_client);
+    }
+}
 
 double shafted_tanh(double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); }
 
