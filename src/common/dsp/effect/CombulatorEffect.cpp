@@ -37,6 +37,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
             WP[e][c] = 0;
         }
     }
+
     memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
 
     // http://www.cs.cmu.edu/~music/icm-online/readings/panlaws/
@@ -67,6 +68,15 @@ void CombulatorEffect::init()
     setvars(true);
     bi = 0;
     lp.suspend();
+
+    memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
+    envV[0] = 0.f;
+    envV[1] = 0.f;
+
+    noiseGen[0][0] = 0.f;
+    noiseGen[1][0] = 0.f;
+    noiseGen[0][1] = 0.f;
+    noiseGen[1][1] = 0.f;
 }
 
 void CombulatorEffect::setvars(bool init)
