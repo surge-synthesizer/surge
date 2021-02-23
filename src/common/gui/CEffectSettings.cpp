@@ -14,12 +14,6 @@ CEffectSettings::CEffectSettings(const CRect &size, IControlListener *listener, 
 {
     this->current = current;
     bg = bitmapStore->getBitmap(IDB_FX_GRID);
-
-    if (skin->getVersion() < 2)
-    {
-        labels = bitmapStore->getBitmap(IDB_FX_TYPE_ICONS);
-    }
-
     disabled = 0;
 }
 
@@ -68,6 +62,11 @@ void CEffectSettings::draw(CDrawContext *dc)
     }
     else
     {
+        if (skin && associatedBitmapStore && skin->getVersion() < 2 && !labels)
+        {
+            labels = associatedBitmapStore->getBitmap(IDB_FX_TYPE_ICONS);
+        }
+
         if (bg)
         {
             bg->draw(dc, size, CPoint(0, 0), 0xff);
