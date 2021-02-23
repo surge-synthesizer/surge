@@ -17,6 +17,7 @@
 #include "DspUtilities.h"
 #include "QuadFilterChain.h"
 #include <math.h>
+#include "libMTSClient.h"
 
 using namespace std;
 
@@ -46,8 +47,14 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     */
     auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 
-    if (!storage->isStandardTuning &&
-        storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+    if (storage->oddsound_mts_active)
+    {
+        auto rkey = MTS_RetuningInSemitones(storage->oddsound_mts_client, key, channel);
+
+        return res + rkey;
+    }
+    else if (!storage->isStandardTuning &&
+             storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
     {
         // Then we tune here
         auto idx = (int)floor(res);

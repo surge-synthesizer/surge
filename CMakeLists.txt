@@ -119,12 +119,14 @@ add_subdirectory(libs/eurorack)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
+add_subdirectory(libs/oddsound-mts)
 
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
   surge::eurorack
   surge::filesystem
   surge::tinyxml
+  surge::oddsound-mts
 )
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
