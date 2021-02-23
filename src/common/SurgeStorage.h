@@ -280,6 +280,11 @@ const char fx_type_names[n_fx_types][16] = {
     "CHOW",    "Exciter",    "Ensemble",    "Combulator", "Nimbus",
 };
 
+const char fx_type_shortnames[n_fx_types][8] = {
+    "-",  "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC", "RV2",
+    "FL", "RM",  "AW",  "NEU", "GEQ", "RES",  "CHW", "XCT", "ENS", "CMB", "NIM",
+};
+
 enum fx_bypass
 {
     fxb_all_fx = 0,

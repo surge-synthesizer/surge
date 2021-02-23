@@ -67,7 +67,48 @@ const Surge::Skin::Color Text("effect.menu.text", 0, 0, 0),
 namespace Grid
 {
 const Surge::Skin::Color Border("effect.grid.border", 0, 0, 0);
+
+namespace Scene
+{
+const Surge::Skin::Color Background("effect.grid.scene.background", 255, 255, 255),
+    Border("effect.grid.scene.border", 0, 0, 0), Text("effect.grid.scene.text", 0, 0, 0);
 }
+namespace Unselected
+{
+const Surge::Skin::Color Background("effect.grid.unselected.background", 151, 151, 151),
+    Border("effect.grid.unselected.border", 0, 0, 0),
+    Text("effect.grid.unselected.text", 255, 255, 255),
+    BackgroundHover("effect.grid.unselected.background.hover", 192, 192, 192),
+    BorderHover("effect.grid.unselected.border.hover", 0, 0, 0),
+    TextHover("effect.grid.unselected.text.hover", 255, 255, 255);
+}
+namespace Selected
+{
+const Surge::Skin::Color Background("effect.grid.selected.background", 255, 255, 255),
+    Border("effect.grid.selected.border", 0, 0, 0), Text("effect.grid.selected.text", 32, 32, 32),
+    BackgroundHover("effect.grid.selected.background.hover", 192, 192, 192),
+    BorderHover("effect.grid.selected.border.hover", 0, 0, 0),
+    TextHover("effect.grid.selected.text.hover", 32, 32, 32);
+}
+namespace Bypassed
+{
+const Surge::Skin::Color Background("effect.grid.bypassed.background", 57, 59, 69),
+    Border("effect.grid.bypassed.border", 0, 0, 0),
+    Text("effect.grid.bypassed.text", 151, 151, 151),
+    BackgroundHover("effect.grid.bypassed.background.hover", 96, 98, 108),
+    BorderHover("effect.grid.bypassed.border.hover", 0, 0, 0),
+    TextHover("effect.grid.bypassed.text.hover", 151, 151, 151);
+}
+namespace BypassedSelected
+{
+const Surge::Skin::Color Background("effect.grid.bypassed.selected.background", 57, 59, 69),
+    Border("effect.grid.bypassed.selected.border", 0, 0, 0),
+    Text("effect.grid.bypassed.selected.text", 255, 255, 255),
+    BackgroundHover("effect.grid.bypassed.selected.background.hover", 96, 98, 108),
+    BorderHover("effect.grid.bypassed.selected.border.hover", 0, 0, 0),
+    TextHover("effect.grid.bypassed.selected.text.hover", 151, 151, 151);
+}
+} // namespace Grid
 } // namespace Effect
 
 namespace InfoWindow

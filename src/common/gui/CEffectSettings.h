@@ -20,32 +20,67 @@
 
 class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
-  public:
-    CEffectSettings(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
-                    int current, std::shared_ptr<SurgeBitmaps> bitmapStore);
-    virtual void draw(VSTGUI::CDrawContext *dc) override;
-    virtual VSTGUI::CMouseEventResult onMouseDown(
-        VSTGUI::CPoint &where,
-        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse down event occurs
-    virtual VSTGUI::CMouseEventResult onMouseUp(
-        VSTGUI::CPoint &where,
-        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse up event occurs
-
-    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
-                                                   const VSTGUI::CButtonState &buttons) override;
-
     enum MouseActionMode
     {
         none,
         click,
         drag
     } mouseActionMode = none;
-    VSTGUI::CPoint dragStart, dragCurrent, dragCornerOff;
-    int dragSource = -1;
 
-    int current;
+    bool hovered = false;
+    int current, currentHover = -1, dragSource = -1;
+    int bypass, disabled, type[8];
+
     VSTGUI::CBitmap *bg, *labels;
-    int type[8], bypass, disabled;
+    VSTGUI::CPoint dragStart, dragCurrent, dragCornerOff;
+
+    // pixel offsets of all FX slots: A IFX1, A IFX2, B IFX1,   B IFX2,
+    //                                Send 1, Send 2, Global 1, Global 2
+    const int fxslotpos[n_fx_slots][2] = {{17, 0},  {43, 0},  {17, 40}, {43, 40},
+                                       {17, 20}, {43, 20}, {88, 10}, {88, 30}};
+
+    const int scenelabelbox[n_scenes][2] = {{0, 0}, {0, 40}};
+    const char *scenename[n_scenes] = {"A", "B"};
+
+    VSTGUI::CCoord scenelabelboxWidth = 11, scenelabelboxHeight = 11;
+    VSTGUI::CCoord fxslotWidth = 19, fxslotHeight = 11;
+
+public:
+    CEffectSettings(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
+                    int current, std::shared_ptr<SurgeBitmaps> bitmapStore);
+
+    virtual void draw(VSTGUI::CDrawContext *dc) override;
+
+    virtual VSTGUI::CMouseEventResult onMouseDown(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse down event occurs
+
+    virtual VSTGUI::CMouseEventResult onMouseUp(
+        VSTGUI::CPoint &where,
+        const VSTGUI::CButtonState &buttons) override; ///< called when a mouse up event occurs
+
+    virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                                     const VSTGUI::CButtonState &buttons) override
+    {
+        hovered = true;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
+
+    virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons) override
+    {
+        hovered = false;
+        invalid();
+        return VSTGUI::kMouseEventHandled;
+    }
+
+    virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
+                                                   const VSTGUI::CButtonState &buttons) override;
+
+    // since graphics asset for FX icons (bmp00136) has frames ordered according to fxt enum
+    // just return FX id
+    int get_fxtype(int id) { return id; }
 
     void set_type(int id, int t)
     {
@@ -64,6 +99,9 @@ class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsuming
     int get_disable() { return disabled; }
 
     int get_current() { return current; }
+
+  private:
+    void setColorsForFXSlot(VSTGUI::CDrawContext *dc, VSTGUI::CRect rect, int fxslot);
 
     CLASS_METHODS(CEffectSettings, VSTGUI::CControl)
 };
