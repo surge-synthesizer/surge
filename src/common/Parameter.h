@@ -160,6 +160,7 @@ enum ctrltypes
     ct_freq_ringmod,
     ct_dpw_trimix,
     ct_percent_oscdrift,
+    ct_waveguide_excitation_model,
     num_ctrltypes,
 };
 

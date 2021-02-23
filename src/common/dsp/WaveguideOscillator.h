@@ -45,9 +45,10 @@ class WaveguideOscillator : public Oscillator
 
     float phase = 0;
 
-    lag<float, true> tap[2], t2level, feedback[2], onepole;
+    lag<float, true> examp, tap[2], t2level, feedback[2], onepole;
 
     SSESincDelayLine<16384> delayLine[2];
     float priorSample[2];
 };
+
 #endif // SURGE_WAVEGUIDEOSCILLATOR_H
