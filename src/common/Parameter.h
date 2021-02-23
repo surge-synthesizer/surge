@@ -124,7 +124,7 @@ enum ctrltypes
     ct_distortion_waveshape,
     ct_flangerpitch,
     ct_flangermode,
-    ct_flangerwave,
+    ct_fxlfowave,
     ct_flangervoices,
     ct_flangerspacing,
     ct_osc_feedback,
@@ -206,6 +206,12 @@ struct ParameterDiscreteIndexRemapper : public ParamUserData
 
     virtual bool supportsTotalIndexOrdering() { return false; }
     virtual const std::vector<int> totalIndexOrdering() { return std::vector<int>(); }
+};
+
+class Parameter;
+struct ParameterDynamicNameFunction
+{
+    virtual const char *getName(Parameter *p) = 0;
 };
 
 /*
@@ -432,6 +438,9 @@ class Parameter
     ParamUserData *user_data = nullptr;    // I know this is a bit gross but we have a runtime type
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
                                            // assume i am referencable
+
+    bool supportsDynamicName();
+    ParameterDynamicNameFunction *dynamicName = nullptr;
 
     bool hasSkinConnector = false;
 

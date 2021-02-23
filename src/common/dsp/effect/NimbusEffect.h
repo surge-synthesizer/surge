@@ -19,6 +19,7 @@
 #include "Effect.h"
 
 #include <memory>
+#include <vt_dsp/lipol.h>
 
 namespace clouds
 {
@@ -46,6 +47,9 @@ class NimbusEffect : public Effect
 
         nmb_num_params,
     };
+
+    lipol_ps mix alignas(16);
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
   public:
     NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);

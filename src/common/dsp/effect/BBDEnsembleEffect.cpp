@@ -14,6 +14,7 @@
 */
 
 #include "BBDEnsembleEffect.h"
+#include "DebugHelpers.h"
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
@@ -25,11 +26,7 @@ BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, p
 
 BBDEnsembleEffect::~BBDEnsembleEffect() {}
 
-void BBDEnsembleEffect::init()
-{
-    setvars(true);
-    bi = 0;
-}
+void BBDEnsembleEffect::init() { setvars(true); }
 
 void BBDEnsembleEffect::setvars(bool init)
 {
@@ -50,12 +47,52 @@ void BBDEnsembleEffect::setvars(bool init)
 
 void BBDEnsembleEffect::process(float *dataL, float *dataR)
 {
-    if (bi == 0)
-        setvars(false);
-    bi = (bi + 1) & slowrate_m1;
+    setvars(false);
 
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    double rate1 = envelope_rate_linear(-*f[ens_lfo_freq1]) *
+                   (fxdata->p[ens_lfo_freq1].temposync ? storage->temposyncratio : 1.f);
+    double rate2 = envelope_rate_linear(-*f[ens_lfo_freq2]) *
+                   (fxdata->p[ens_lfo_freq2].temposync ? storage->temposyncratio : 1.f);
+    float roff = 0;
+    constexpr float onethird = 1.0 / 3.0;
+    for (int i = 0; i < 3; ++i)
+    {
+        modlfos[0][i].pre_process(Surge::ModControl::mod_sine, rate1, *f[ens_lfo_depth1], roff);
+        modlfos[1][i].pre_process(Surge::ModControl::mod_sine, rate2, *f[ens_lfo_depth2], roff);
+
+        roff += onethird;
+    }
+
+    float del1 = 0.6 * 0.001 * samplerate;
+    float del2 = 0.2 * 0.001 * samplerate;
+    float del0 = 5 * 0.001 * samplerate;
+
+    for (int s = 0; s < BLOCK_SIZE; ++s)
+    {
+        delL.write(dataL[s]);
+        delR.write(dataR[s]);
+
+        // OK so look at the diagram in 3743
+        float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
+        float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
+        float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
+
+        float ltap1 = t1;
+        float ltap2 = t2;
+        float rtap1 = t2;
+        float rtap2 = t3;
+
+        L[s] = delL.read(ltap1) + delL.read(ltap2);
+        R[s] = delR.read(rtap1) + delR.read(rtap2);
+
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 2; ++j)
+            {
+                modlfos[j][i].post_process();
+            }
+        }
+    }
 
     width.set_target_smoothed(clamp1bp(*f[ens_width]));
 
@@ -151,7 +188,18 @@ void BBDEnsembleEffect::init_default_values()
 {
     fxdata->p[ens_input_gain].val.f = 0.f;
 
-    fxdata->p[ens_width].val.f = 1.f;
+    fxdata->p[ens_width].val.f = 0.5f;
     fxdata->p[ens_gain].val.f = 0.f;
     fxdata->p[ens_mix].val.f = 1.f;
+
+    /*
+     * we want f1 at .18hz and f2 at 5.52hz
+     * these go as 2^x so...
+     */
+
+    fxdata->p[ens_lfo_freq1].val.f = log2(0.18);
+    fxdata->p[ens_lfo_freq2].val.f = log2(5.52);
+
+    fxdata->p[ens_lfo_depth1].val.f = 1.f;
+    fxdata->p[ens_lfo_depth2].val.f = 1.f;
 }

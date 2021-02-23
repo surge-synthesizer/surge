@@ -35,7 +35,7 @@ class LossFilter
     int activeFilter = 0;
     int fadeCount = 0;
     static constexpr int fadeLength = 1024;
-    float fadeBufferL[BLOCK_SIZE], fadeBufferR[BLOCK_SIZE];
+    float fadeBufferL alignas(16)[BLOCK_SIZE], fadeBufferR alignas(16)[BLOCK_SIZE];
 
     // parameter values
     float curSpeed, prevSpeed;

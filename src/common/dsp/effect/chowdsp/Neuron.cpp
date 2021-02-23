@@ -126,7 +126,7 @@ void Neuron::set_params()
                  (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
     int mwave = *pdata_ival[neuron_lfo_wave];
     float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
-    modLFO.pre_process(mwave, rate, depth_val);
+    modLFO.pre_process(mwave, rate, depth_val, 0.f);
 
     // calc makeup gain
     auto drive_makeup = [](float wh) -> float { return std::exp(-0.11898f * wh) + 1.0f; };
@@ -213,7 +213,7 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_comb_sep].posy_offset = 3;
 
     fxdata->p[neuron_lfo_wave].set_name("Waveform");
-    fxdata->p[neuron_lfo_wave].set_type(ct_flangerwave);
+    fxdata->p[neuron_lfo_wave].set_type(ct_fxlfowave);
     fxdata->p[neuron_lfo_wave].posy_offset = 5;
 
     fxdata->p[neuron_lfo_rate].set_name("Rate");

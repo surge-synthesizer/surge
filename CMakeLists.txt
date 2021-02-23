@@ -109,7 +109,8 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 include(cmake/stage-extra-content.cmake)
 
-add_library(surge-shared src/common/FilterConfiguration.h)
+add_library(surge-shared)
+
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -118,16 +119,19 @@ add_subdirectory(libs/eurorack)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
+add_subdirectory(libs/oddsound-mts)
 
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
   surge::eurorack
   surge::filesystem
   surge::tinyxml
+  surge::oddsound-mts
 )
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
+set(SURGE_COMPILER_INFO "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
 execute_process(
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}  -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
@@ -135,6 +139,7 @@ execute_process(
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
                            -D WIN32=${WIN32}
                            -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                           -D SURGE_COMPILER_INFO="${SURGE_COMPILER_INFO}"
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
@@ -144,6 +149,7 @@ add_custom_target( git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cp
                            -D AZURE_PIPELINE=${AZURE_PIPELINE}
                            -D WIN32=${WIN32}
                            -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                           -D SURGE_COMPILER_INFO="${SURGE_COMPILER_INFO}"
                            -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
                            )
 add_dependencies( surge-shared git-info )
@@ -260,6 +266,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/SurgeSuperOscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/VectorizedSvfFilter.cpp
+  src/common/dsp/WaveguideOscillator.cpp
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp

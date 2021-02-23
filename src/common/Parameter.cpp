@@ -375,6 +375,7 @@ void Parameter::set_type(int ctrltype)
 
     affect_other_parameters = false;
     user_data = nullptr;
+    dynamicName = nullptr;
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
     ** and, grouped below, we set display info
@@ -572,7 +573,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_reverbpredelaytime:
         valtype = vt_float;
-        val_min.f = -4;
+        val_min.f = -8;
         val_max.f = 1;
         val_default.f = -2;
         break;
@@ -861,10 +862,10 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_default.i = 0;
         break;
-    case ct_flangerwave:
+    case ct_fxlfowave:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // sin, tri, saw, s&h
+        val_max.i = 5; // sin, tri, saw, s&g, s&h, square
         val_default.i = 0;
         break;
     case ct_flangerspacing:
@@ -1415,9 +1416,38 @@ void Parameter::bound_value(bool force_integer)
     };
 }
 
-const char *Parameter::get_name() { return dispname; }
+bool Parameter::supportsDynamicName()
+{
+    switch (ctrltype)
+    {
+    case ct_dpw_trimix:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+const char *Parameter::get_name()
+{
+    // We only even want to try this for specific types we know support it
+    if (supportsDynamicName() && dynamicName)
+        return dynamicName->getName(this);
 
-const char *Parameter::get_full_name() { return fullname; }
+    return dispname;
+}
+
+const char *Parameter::get_full_name()
+{
+    if (supportsDynamicName() && dynamicName)
+    {
+        auto nm = dynamicName->getName(this);
+        static char res[1024];
+        create_fullname(nm, res, ctrlgroup, ctrlgroup_entry);
+        return res;
+    }
+
+    return fullname;
+}
 
 const char *Parameter::get_internal_name() { return name; }
 
@@ -2806,7 +2836,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             sprintf(txt, "%s", types.c_str());
         }
         break;
-        case ct_flangerwave:
+        case ct_fxlfowave:
         {
             switch (i)
             {
@@ -2820,7 +2850,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 sprintf(txt, "Sawtooth");
                 break;
             case 3:
+                sprintf(txt, "Noise");
+                break;
+            case 4:
                 sprintf(txt, "Sample & Hold");
+                break;
+            case 5:
+                sprintf(txt, "Square");
                 break;
             }
         }

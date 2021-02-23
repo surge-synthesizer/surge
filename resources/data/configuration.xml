@@ -6,16 +6,17 @@
         <snapshot name="Square" p0="-1.0" p1="0.5" p2="0.5" p3="0.0" p4="0.0" p5="0.1" p6="1" retrigger="0" />
     </type>
     <type i="8" name="Modern">
-        <snapshot name="Sawtooth" p0="0.5" p1="0.0" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
-        <snapshot name="Square" p0="0.0" p1="0.5" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
-        <snapshot name="Triangle" p0="0.0" p1="0.0" p2="0.5" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
-        <snapshot name="Sine" p0="0.0" p1="0.0" p2="0.5" p2_deform_type="2" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
+        <snapshot name="Sawtooth" p0="1.0" p1="0.0" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
+        <snapshot name="Square" p0="0.0" p1="1.0" p2="0.0" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
+        <snapshot name="Triangle" p0="0.0" p1="0.0" p2="1.0" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
+        <snapshot name="Sine" p0="0.0" p1="0.0" p2="1.0" p2_deform_type="2" p3="0.5" p4="0.0" p5="0.1" p6="1" retrigger="0" />
     </type>
     <type i="2" name="Wavetable" retrigger="0" />
     <type i="7" name="Window" retrigger="0" />
     <type i="1" name="Sine" retrigger="1" />
     <type i="6" name="FM2" retrigger="1" />
     <type i="5" name="FM3" retrigger="1" />
+    <type i="9" name="WaveGuide"/>
     <type i="3" name="S&amp;H Noise" />
     <type i="4" name="Audio Input">
         <snapshot name="Left" p0="-1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0" />

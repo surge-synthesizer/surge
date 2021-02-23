@@ -1021,13 +1021,13 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         std::ostringstream oss;
         oss << "The version of Surge you are running is older than the version with which this "
                "patch "
-            << "was created. Your version of surge (" << Surge::Build::FullVersionStr << ") has a "
+            << "was created. Your version of Surge (" << Surge::Build::FullVersionStr << ") has a "
             << "streaming revision of " << ff_revision << ", whereas the patch you are loading was "
-            << "created with " << revision
+            << "created with streaming revision " << revision
             << ". Features of the patch will not be available in your "
             << "session. You can always find the latest Surge at "
                "https://surge-synthesizer.github.io/";
-        Surge::UserInteractions::promptError(oss.str(), "Surge Version is Older than Patch");
+        Surge::UserInteractions::promptError(oss.str(), "Surge Patch Version Mismatch");
     }
 
     TiXmlElement *meta = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
@@ -1539,6 +1539,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
         }
     }
+
     // ensure that filtersubtype is a valid value
     for (auto &sc : scene)
     {
@@ -1653,6 +1654,21 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     // end restore msegs
+
+    // make sure rev 15 and older patches have the locked endpoints if they were in LFO edit mode
+    if (revision < 16)
+    {
+        for (int sc = 0; sc < n_scenes; sc++)
+        {
+            for (int i = 0; i < n_lfos; i++)
+            {
+                if (msegs[sc][i].editMode == MSEGStorage::EditMode::LFO)
+                {
+                    msegs[sc][i].endpointMode = MSEGStorage::EndpointMode::LOCKED;
+                }
+            }
+        }
+    }
 
     for (int i = 0; i < n_customcontrollers; i++)
         scene[0].modsources[ms_ctrl1 + i]->reset();

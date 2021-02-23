@@ -197,18 +197,18 @@ enum osc_type
     ot_FM2,
     ot_window,
     ot_dpw,
-    ot_pluck,
-    ot_macro,
-    ot_phasedist,
-    ot_chaos,
-    ot_FM4,
+    ot_waveguide,
+    // ot_macro,
+    // ot_phasedist,
+    // ot_chaos,
+    // ot_FM4,
 
     n_osc_types,
 };
 
 const char osc_type_names[n_osc_types][24] = {
     "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In",         "FM3",   "FM2",
-    "Window",  "Modern", "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"};
+    "Window",  "Modern", "Waveguide" /*, "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"*/};
 
 const char window_names[9][16] = {
     "Triangle", "Cosine", "Blend 1", "Blend 2",   "Blend 3",
@@ -822,6 +822,8 @@ enum surge_copysource
     n_copysources,
 };
 
+class MTSClient;
+
 /* storage layer */
 
 class alignas(16) SurgeStorage
@@ -986,6 +988,10 @@ class alignas(16) SurgeStorage
     Tunings::KeyboardMapping currentMapping;
     bool isStandardMapping = true;
     float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+
+    MTSClient *oddsound_mts_client = nullptr;
+    std::atomic<bool> oddsound_mts_active;
+    uint32_t oddsound_mts_on_check = 0;
 
     ControllerModulationSource::SmoothingMode smoothingMode =
         ControllerModulationSource::SmoothingMode::LEGACY;
