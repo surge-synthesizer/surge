@@ -34,10 +34,10 @@ class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsuming
     VSTGUI::CBitmap *bg, *labels;
     VSTGUI::CPoint dragStart, dragCurrent, dragCornerOff;
 
-    // pixel offsets of all FX slots: A IFX1, A IFX2, B IFX1,   B IFX2,
-    //                                Send 1, Send 2, Global 1, Global 2
+    // pixel offsets of all FX slots:     A IFX1, A IFX2, B IFX1,   B IFX2,
+    //                                    Send 1, Send 2, Global 1, Global 2
     const int fxslotpos[n_fx_slots][2] = {{17, 0},  {43, 0},  {17, 40}, {43, 40},
-                                       {17, 20}, {43, 20}, {88, 10}, {88, 30}};
+                                          {17, 20}, {43, 20}, {88, 10}, {88, 30}};
 
     const int scenelabelbox[n_scenes][2] = {{0, 0}, {0, 40}};
     const char *scenename[n_scenes] = {"A", "B"};
@@ -45,7 +45,7 @@ class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsuming
     VSTGUI::CCoord scenelabelboxWidth = 11, scenelabelboxHeight = 11;
     VSTGUI::CCoord fxslotWidth = 19, fxslotHeight = 11;
 
-public:
+  public:
     CEffectSettings(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
                     int current, std::shared_ptr<SurgeBitmaps> bitmapStore);
 
