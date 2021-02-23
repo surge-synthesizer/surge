@@ -41,6 +41,7 @@ struct SSESincDelayLine
 
     inline float read(float delay)
     {
+        delay = delay;
         auto iDelay = (int)delay;
         auto fracDelay = delay - iDelay;
         auto sincTableOffset = (int)(fracDelay * FIRipol_N) * (FIRipol_N << 1);

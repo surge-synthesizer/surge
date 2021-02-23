@@ -101,13 +101,12 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         limit_range(localcopy[oscdata->p[wg_inloop_onepole].param_id_in_scene].f, 0.f, 1.f));
 
     float val[2];
-    float sumv2[2] = {0, 0}, sumO = 0;
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         for (int t = 0; t < 2; ++t)
         {
             auto v = tap[t].v;
-            val[t] = delayLine[t].read(v);
+            val[t] = delayLine[t].read(v - 0.5);
 
             // precautionary hard clip
             auto fbv = limit_range(val[t], -1.f, 1.f);
@@ -116,11 +115,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             auto filtv = onepole.v * fbv + (1 - onepole.v) * priorSample[t];
             priorSample[t] = filtv;
             delayLine[t].write(filtv * feedback[t].v);
-            sumv2[t] += val[t] * val[t];
         }
 
         float out = (1.0 - t2level.v) * val[0] + t2level.v * val[1];
-        sumO += out * out;
         // softclip the ouptput
         out = 1.5 * out - 0.5 * out * out * out;
 
