@@ -868,6 +868,15 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 5; // sin, tri, saw, s&g, s&h, square
         val_default.i = 0;
         break;
+    case ct_waveguide_excitation_model:
+    {
+        extern int waveguide_excitations_count();
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = waveguide_excitations_count() - 1;
+        val_default.i = 0;
+        break;
+    }
     case ct_flangerspacing:
         val_min.f = 0;
         val_max.f = 12;
@@ -2859,6 +2868,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 sprintf(txt, "Square");
                 break;
             }
+        }
+        break;
+        case ct_waveguide_excitation_model:
+        {
+            extern std::string waveguide_excitation_name(int);
+            auto n = waveguide_excitation_name(i);
+            sprintf(txt, "%s", n.c_str());
         }
         break;
         case ct_reson_mode:
