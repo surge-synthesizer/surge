@@ -79,7 +79,31 @@ extern const Surge::Skin::Color Text, TextHover;
 namespace Grid
 {
 extern const Surge::Skin::Color Border;
+
+namespace Scene
+{
+extern const Surge::Skin::Color Background, Border, Text;
 }
+namespace Unselected
+{
+extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
+}
+
+namespace Selected
+{
+extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
+}
+
+namespace Bypassed
+{
+extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
+}
+
+namespace BypassedSelected
+{
+extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
+}
+} // namespace Grid
 } // namespace Effect
 
 namespace InfoWindow
