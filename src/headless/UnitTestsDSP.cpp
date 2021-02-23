@@ -573,10 +573,22 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
             float c = dl4096.read(3987.2);
             float d = dl4096.read(256.0);
 
-            REQUIRE(a == Approx(val - 174.3 * dRamp).epsilon(1e-3));
-            REQUIRE(b == Approx(val - 1732.4 * dRamp).epsilon(1e-3));
-            REQUIRE(c == Approx(val - 3987.2 * dRamp).epsilon(1e-3));
-            REQUIRE(d == Approx(val - 256.0 * dRamp).epsilon(1e-3));
+            auto cval = val - dRamp;
+
+            REQUIRE(a == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
+            REQUIRE(b == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
+            REQUIRE(c == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
+            REQUIRE(d == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
+
+            float aL = dl4096.readLinear(174.3);
+            float bL = dl4096.readLinear(1732.4);
+            float cL = dl4096.readLinear(3987.2);
+            float dL = dl4096.readLinear(256.0);
+
+            REQUIRE(aL == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
+            REQUIRE(bL == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
+            REQUIRE(cL == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
+            REQUIRE(dL == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
 
             dl4096.write(val);
             val += dRamp;

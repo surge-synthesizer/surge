@@ -721,6 +721,14 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     clear_block(output[0], BLOCK_SIZE_OS_QUAD);
     clear_block(output[1], BLOCK_SIZE_OS_QUAD);
 
+    for (int i = 0; i < n_oscs; ++i)
+    {
+        if (osc[i])
+        {
+            osc[i]->setGate(state.gate);
+        }
+    }
+
     if (osc3 || ring23 || ((osc1 || osc2 || ring12) && (FMmode == fm_3to2to1)) ||
         ((osc1 || ring12) && (FMmode == fm_2and3to1)))
     {

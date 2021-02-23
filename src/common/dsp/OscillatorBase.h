@@ -49,6 +49,8 @@ class alignas(16) Oscillator
         return (double)(Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
     }
 
+    virtual void setGate(bool g) { gate = g; }
+
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
     {
         // No-op here.
@@ -61,6 +63,7 @@ class alignas(16) Oscillator
     float *__restrict master_osc;
     float drift;
     int ticker;
+    bool gate = true;
 };
 
 class AbstractBlitOscillator : public Oscillator
