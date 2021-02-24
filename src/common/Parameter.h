@@ -99,6 +99,7 @@ enum ctrltypes
     ct_osccount,
     ct_osccountWT,
     ct_oscspread,
+    ct_oscspread_bipolar,
     ct_scenemode,
     ct_scenesel,
     ct_polymode,
