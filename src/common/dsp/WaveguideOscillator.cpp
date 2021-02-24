@@ -197,8 +197,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             break;
         }
     }
-    priorSample[0] = delayLine[0].buffer[prefill - 1];
-    priorSample[1] = delayLine[1].buffer[prefill - 1];
+    priorSample[0] = delayLine[0].buffer[(delayLine[0].wp - 1) & delayLine[0].comb_size];
+    priorSample[1] = delayLine[1].buffer[(delayLine[1].wp - 1) & delayLine[1].comb_size];
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
@@ -216,6 +216,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     auto pitchmult2_inv =
         std::max((FIRipol_N >> 1) + 1.0,
                  dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch2_t));
+
+    pitchmult_inv = std::min(pitchmult_inv, (delayLine[0].comb_size - 100) * 1.0);
+    pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0].comb_size - 100) * 1.0);
 
     tap[0].newValue(pitchmult_inv);
     tap[1].newValue(pitchmult2_inv);
