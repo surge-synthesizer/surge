@@ -1676,6 +1676,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case ct_pitch:
         case ct_pitch4oct:
         case ct_dpw_trimix:
+        case ct_oscspread_bipolar:
             style |= kBipolar;
             break;
         case ct_lfoamplitude:

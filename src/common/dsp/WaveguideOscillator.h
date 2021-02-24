@@ -43,9 +43,9 @@ class WaveguideOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    float phase = 0;
+    float phase1 = 0, phase2 = 0;
 
-    lag<float, true> examp, tap[2], t2level, feedback[2], onepole;
+    lag<float, true> examp, tap[2], t2level, feedback[2], onepole, fmdepth;
 
     SSESincDelayLine<16384> delayLine[2];
     float priorSample[2];

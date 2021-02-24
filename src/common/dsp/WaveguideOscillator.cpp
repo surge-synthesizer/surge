@@ -14,6 +14,8 @@
 */
 
 #include "DebugHelpers.h"
+#include "globals.h"
+#include "FastMath.h"
 
 /*
  * The waveguide oscillator is a self-oscillating delay with various filters and
@@ -95,12 +97,19 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     t2level.startValue(
         limit_range(localcopy[oscdata->p[wg_tap2_mix].param_id_in_scene].f, 0.f, 1.f));
 
-    auto prefill = (int)floor(3 * std::max(pitchmult_inv, pitchmult2_inv));
+    // we need a big prefill to supprot the delay line for FM
+    auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv));
     delayLine[0].clear();
     delayLine[1].clear();
 
     auto mode = (ExModes)oscdata->p[wg_ex_mode].val.i;
-    auto ph1 = 0.0, ph2 = 0.0;
+    phase1 = 0.0, phase2 = 0.0;
+
+    if (!oscdata->retrigger.val.b && !is_display)
+    {
+        phase1 = (float)rand() / (float)RAND_MAX;
+        phase2 = (float)rand() / (float)RAND_MAX;
+    }
     auto r1 = 1.0 / pitchmult_inv;
     auto r2 = 1.0 / pitchmult2_inv;
     auto d0 = limit_range(localcopy[oscdata->p[wg_ex_amp].param_id_in_scene].f, 0.f, 1.f);
@@ -110,61 +119,61 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         {
         case chirp_sine:
         {
-            delayLine[0].write(0.707 * std::sin(2.0 * M_PI * ph1));
-            delayLine[1].write(0.707 * std::sin(2.0 * M_PI * ph2));
-            ph1 += r1;
-            ph2 += r2;
+            delayLine[0].write(0.707 * std::sin(2.0 * M_PI * phase1));
+            delayLine[1].write(0.707 * std::sin(2.0 * M_PI * phase2));
+            phase1 += r1;
+            phase2 += r2;
         }
         break;
         case chirp_square:
         {
-            delayLine[0].write(0.707 * ((ph1 > 0.5) * 2 - 1));
-            delayLine[1].write(0.707 * ((ph2 > 0.5) * 2 - 1));
-            ph1 += r1;
-            ph2 += r2;
-            if (ph1 > 1)
-                ph1 -= 1;
-            if (ph2 > 1)
-                ph2 -= 1;
+            delayLine[0].write(0.707 * ((phase1 > 0.5) * 2 - 1));
+            delayLine[1].write(0.707 * ((phase2 > 0.5) * 2 - 1));
+            phase1 += r1;
+            phase2 += r2;
+            if (phase1 > 1)
+                phase1 -= 1;
+            if (phase2 > 1)
+                phase2 -= 1;
         }
         break;
         case chirp_ramp:
         {
-            delayLine[0].write(0.707 * (ph1 * 2 - 1));
-            delayLine[1].write(0.707 * (ph2 * 2 - 1));
-            ph1 += r1;
-            ph2 += r2;
-            if (ph1 > 1)
-                ph1 -= 1;
-            if (ph2 > 1)
-                ph2 -= 1;
+            delayLine[0].write(0.707 * (phase1 * 2 - 1));
+            delayLine[1].write(0.707 * (phase2 * 2 - 1));
+            phase1 += r1;
+            phase2 += r2;
+            if (phase1 > 1)
+                phase1 -= 1;
+            if (phase2 > 1)
+                phase2 -= 1;
         }
         break;
         case chirp_sine1over:
         {
-            if (ph1 == 0)
+            if (phase1 == 0)
             {
                 delayLine[0].write(0.707);
             }
             else
             {
-                delayLine[0].write(0.707 * std::sin(2.0 * M_PI / ph1));
+                delayLine[0].write(0.707 * std::sin(2.0 * M_PI / phase1));
             }
 
-            if (ph2 == 0)
+            if (phase2 == 0)
             {
                 delayLine[1].write(0.707);
             }
             else
             {
-                delayLine[1].write(0.707 * std::sin(2.0 * M_PI / ph2));
+                delayLine[1].write(0.707 * std::sin(2.0 * M_PI / phase2));
             }
-            ph1 += r1;
-            ph2 += r2;
-            if (ph1 > 1)
-                ph1 -= 1;
-            if (ph2 > 1)
-                ph2 -= 1;
+            phase1 += r1;
+            phase2 += r2;
+            if (phase1 > 1)
+                phase1 -= 1;
+            if (phase2 > 1)
+                phase2 -= 1;
         }
         break;
         case chirp_dust:
@@ -193,7 +202,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
-                                        float FMdepth)
+                                        float fmdepthV)
 {
     auto mode = (ExModes)oscdata->p[wg_ex_mode].val.i;
     auto pitch_t = std::min(148.f, pitch);
@@ -223,6 +232,10 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     fbp2 = sqrt(fbp2);
     feedback[1].newValue(fb1 * fbp2 + fb0 * (1 - fbp2));
 
+    // fmdepthV basically goes 0 -> 16 so lets push it 0,1 for now
+    double fv = fmdepthV / 16.0;
+    fmdepth.newValue(fv);
+
     onepole.newValue(
         limit_range(localcopy[oscdata->p[wg_inloop_onepole].param_id_in_scene].f, 0.f, 1.f));
 
@@ -232,6 +245,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         for (int t = 0; t < 2; ++t)
         {
             auto v = tap[t].v;
+            if (FM)
+                v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
+
             val[t] = delayLine[t].read(v - 0.5);
 
             // Add continuous excitation
@@ -281,6 +297,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         feedback[1].process();
         onepole.process();
         examp.process();
+        fmdepth.process();
     }
 }
 
@@ -299,7 +316,7 @@ void WaveguideOscillator::init_ctrltypes()
     oscdata->p[wg_feedback2].set_type(ct_percent);
 
     oscdata->p[wg_tap2_offset].set_name("Tap 2 Detune");
-    oscdata->p[wg_tap2_offset].set_type(ct_oscspread);
+    oscdata->p[wg_tap2_offset].set_type(ct_oscspread_bipolar);
 
     oscdata->p[wg_tap2_mix].set_name("Tap 2 Mix");
     oscdata->p[wg_tap2_mix].set_type(ct_percent);
