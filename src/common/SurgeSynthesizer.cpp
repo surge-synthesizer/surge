@@ -3345,6 +3345,7 @@ void SurgeSynthesizer::process()
         {
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
+            allNotesOff();
             halt_engine = true;
 
 #if MAC || LINUX
