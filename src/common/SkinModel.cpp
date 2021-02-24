@@ -33,78 +33,137 @@ namespace Skin
 namespace Components
 {
 Component None = Component("UNKNOWN");
-Component HSwitch2 = Component("CHSwitch2")
-                         .withProperty(Component::ROWS, {"rows"})
-                         .withProperty(Component::COLUMNS, {"cols", "columns"})
 
-                         .withProperty(Component::FRAMES, {"frames"})
-                         .withProperty(Component::FRAME_OFFSET, {"frame_offset"})
-
-                         .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"})
-                         .withProperty(Component::DRAGGABLE_HSWITCH, {"draggable"})
-                         .withProperty(Component::HOVER_IMAGE, {"hover_image"})
-                         .withProperty(Component::HOVER_ON_IMAGE, {"hover_on_image"});
+Component HSwitch2 =
+    Component("CHSwitch2")
+        .withProperty(Component::ROWS, {"rows"}, {"Number of rows in the switch"})
+        .withProperty(Component::COLUMNS, {"cols", "columns"}, {"Number of columns in the switch"})
+        .withProperty(
+            Component::FRAMES, {"frames"},
+            {"Number of frames in the graphical asset for the switch (based on rows and columns)"})
+        .withProperty(Component::FRAME_OFFSET, {"frame_offset"},
+                      {"Used in case when a graphical asset for the switch has multiple variations "
+                       "to reach to, valid values are from 0 to 'frames'"})
+        .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
+                      {"Base image of the switch"})
+        .withProperty(Component::DRAGGABLE_HSWITCH, {"draggable"},
+                      {"Is the switch draggable as a slider via mouse/touch or not. Valid values: "
+                       "true, false"})
+        .withProperty(Component::HOVER_IMAGE, {"hover_image"},
+                      {"Hover image of the switch - required if you "
+                       "set the base image and want feedback on mouse hover"})
+        .withProperty(Component::HOVER_ON_IMAGE, {"hover_on_image"},
+                      {"Hover image of the switch used when mouse hovers over the currently "
+                       "selected value on the switch"});
 
 Component Slider =
     Component("CSurgeSlider")
-        .withProperty(Component::SLIDER_TRAY, {"slider_tray", "handle_tray"})
-        .withProperty(Component::HANDLE_IMAGE, {"handle_image"})
-        .withProperty(Component::HANDLE_HOVER_IMAGE, {"handle_hover_image"})
-        .withProperty(Component::HANDLE_TEMPOSYNC_IMAGE, {"handle_temposync_image"})
-        .withProperty(Component::HANDLE_TEMPOSYNC_HOVER_IMAGE, {"handle_temposync_hover_image"})
-        .withProperty(Component::HIDE_SLIDER_LABEL, {"hide_slider_label"});
+        .withProperty(Component::SLIDER_TRAY, {"slider_tray", "handle_tray"},
+                      {"Background image of the slider, contains the slider tray/groove only"})
+        .withProperty(Component::HANDLE_IMAGE, {"handle_image"}, {"Slider handle image"})
+        .withProperty(
+            Component::HANDLE_HOVER_IMAGE, {"handle_hover_image"},
+            {"Hovered slider handle image - required if you want feedback on mouse hover"})
+        .withProperty(Component::HANDLE_TEMPOSYNC_IMAGE, {"handle_temposync_image"},
+                      {"Slider handle image when parameter is tempo-synced"})
+        .withProperty(Component::HANDLE_TEMPOSYNC_HOVER_IMAGE, {"handle_temposync_hover_image"},
+                      {"Hovered slider handle image when parameter is tempo-synced - required if "
+                       "you want feedback on mouse hover"})
+        .withProperty(Component::FONT_SIZE, {"font_size"}, {"Font size in points, integer only"})
+        .withProperty(Component::FONT_STYLE, {"font_style"},
+                      {"Valid values: normal, bold, italic, underline, strikethrough"})
+        .withProperty(Component::TEXT_ALIGN, {"text_align"}, {"Valid values: left, center, right"})
+        .withProperty(Component::TEXT_HOFFSET, {"text_hoffset"},
+                      {"Horizontal offset of parameter name label, integer only"})
+        .withProperty(Component::TEXT_VOFFSET, {"text_voffset"},
+                      {"Vertical offset of parameter name label, integer only"})
+        .withProperty(Component::HIDE_SLIDER_LABEL, {"hide_slider_label"},
+                      {"Hides the parameter name label"});
 
 Component Switch = Component("CSwitchControl")
-                       .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"});
+                       .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
+                                     {"Base image of the switch"});
 
 Component FilterSelector =
     Component("FilterSelector")
         .withProperty(Component::BACKGROUND, {"image"},
-                      "The background (menu holder) image; offset by glyph if active")
+                      {"Base image of the filter type menu itself; it is offset by the glyph if "
+                       "glyph is active"})
         .withProperty(Component::HOVER_IMAGE, {"hover_image"},
-                      "The background onHover image; required if you set the image and want hover.")
+                      {"Hover image of the filter type menu - required if you "
+                       "set the base image and want feedback on mouse hover"})
         .withProperty(Component::GLYPH_IMAGE, {"glyph_image"},
-                      "The resource name of the glyph image")
-        .withProperty(Component::GLYPH_HOVER_IMAGE, {"glyph_hover_image"},
-                      "The resource name of the glyph hover image")
+                      {"Resource name of the glyph (filter type icons) image"})
+        .withProperty(
+            Component::GLYPH_HOVER_IMAGE, {"glyph_hover_image"},
+            {"Resource name of the glyph (filter type icons) image that shows on mouse hover"})
         .withProperty(Component::GLPYH_ACTIVE, {"glyph_active"},
-                      "Set to 'false' to disable filter glyph")
-        .withProperty(Component::GLYPH_PLACEMENT, {"glyph_placement"}, "above, below, left, right")
-        .withProperty(Component::GLYPH_W, {"glyph_w"}, "Width of one glyph frame")
-        .withProperty(Component::GLYPH_H, {"glyph_h"}, "Height of one glyph frame");
+                      {"Show or hide the filter type icons glyph. Valid values: true, false"})
+        .withProperty(Component::GLYPH_PLACEMENT, {"glyph_placement"},
+                      {"Valid values: above, below, left, right"})
+        .withProperty(Component::GLYPH_W, {"glyph_w"}, {"Width of one glyph frame in pixels"})
+        .withProperty(Component::GLYPH_H, {"glyph_h"}, {"Height of one glyph frame in pixels"});
 
 Component LFODisplay = Component("CLFOGui");
-Component OscMenu = Component("COSCMenu")
-                        .withProperty(Component::FONT_SIZE, {"font_size"})
-                        .withProperty(Component::FONT_STYLE, {"font_style"})
-                        .withProperty(Component::TEXT_ALIGN, {"text_align"})
-                        .withProperty(Component::TEXT_ALL_CAPS, {"text_allcaps"})
-                        .withProperty(Component::TEXT_HOFFSET, {"text_hoffset"})
-                        .withProperty(Component::TEXT_VOFFSET, {"text_voffset"});
+
+Component OscMenu =
+    Component("COSCMenu")
+        .withProperty(Component::FONT_SIZE, {"font_size"}, {"Font size in points, integer only"})
+        .withProperty(Component::FONT_STYLE, {"font_style"},
+                      {"Valid values: normal, bold, italic, underline, strikethrough"})
+        .withProperty(Component::TEXT_ALIGN, {"text_align"}, {"Valid values: left, center, right"})
+        .withProperty(Component::TEXT_ALL_CAPS, {"text_allcaps"},
+                      {"Makes the oscillator menu text all caps. Valid values: true, false"})
+        .withProperty(Component::TEXT_HOFFSET, {"text_hoffset"},
+                      {"Horizontal offset of oscillator menu text label, integer only"})
+        .withProperty(Component::TEXT_VOFFSET, {"text_voffset"},
+                      {"Vertical offset of oscillator menu text label, integer only"});
+
 Component FxMenu = Component("CFXMenu");
+
 Component NumberField =
     Component("CNumberField")
-        .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"})
-        .withProperty(Component::NUMBERFIELD_CONTROLMODE, {"numberfield_controlmode"})
-        .withProperty(Component::TEXT_COLOR, {"text_color"})
-        .withProperty(Component::TEXT_HOVER_COLOR, {"text_color.hover"});
+        .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
+                      {"Base image of the numberfield"})
+        .withProperty(Component::NUMBERFIELD_CONTROLMODE, {"numberfield_controlmode"},
+                      {"Control mode of the numberfield. Refer to the list of ctrl_mode constants "
+                       "in SurgeParamConfig.h"})
+        .withProperty(Component::TEXT_COLOR, {"text_color"},
+                      {"Valid color formats are #RRGGBB, #RRGGBBAA, and named colors"})
+        .withProperty(Component::TEXT_HOVER_COLOR, {"text_color.hover"},
+                      {"Valid color formats are #RRGGBB, #RRGGBBAA, and named colors"});
+
 Component VuMeter = Component("CVuMeter");
+
 Component Custom = Component("--CUSTOM--");
+
 Component Group = Component("--GROUP--");
+
 /*
  * We could treat label like everything else but we didn't in S1.7/1.8 and Skin V1
  * so we are stuck with this slight special casing
  */
-Component Label = Component("Internal Label")
-                      .withProperty(Component::TEXT, {"text"})
-                      .withProperty(Component::CONTROL_TEXT, {"control_text"})
-                      .withProperty(Component::TEXT_ALIGN, {"text_align"})
-                      .withProperty(Component::FONT_SIZE, {"font_size"})
-                      .withProperty(Component::FONT_STYLE, {"font_style"})
-                      .withProperty(Component::TEXT_COLOR, {"color", "text_color"})
-                      .withProperty(Component::BACKGROUND_COLOR, {"bg_color"})
-                      .withProperty(Component::FRAME_COLOR, {"frame_color"})
-                      .withProperty(Component::IMAGE, {"image"});
+Component Label =
+    Component("Internal Label")
+        .withProperty(Component::TEXT, {"text"}, {"Arbitrary text to be displayed on the label."})
+        .withProperty(Component::CONTROL_TEXT, {"control_text"},
+                      {"Text tied to a particular Surge parameter. Use skin component connector "
+                       "name as a value. Overrules arbitrary text set with 'text' property"})
+        .withProperty(Component::TEXT_ALIGN, {"text_align"}, {"Valid values: left, center, right"})
+        .withProperty(Component::FONT_SIZE, {"font_size"}, {"Font size in points, integer only"})
+        .withProperty(Component::FONT_STYLE, {"font_style"},
+                      {"Valid values: normal, bold, italic, underline, strikethrough"})
+        .withProperty(Component::TEXT_COLOR, {"color", "text_color"},
+                      {"Valid color formats are #RRGGBB, #RRGGBBAA, and named colors"})
+        .withProperty(Component::BACKGROUND_COLOR, {"bg_color"},
+                      {"Background color of the label. Valid color formats are #RRGGBB, "
+                       "#RRGGBBAA, or named colors"})
+        .withProperty(Component::FRAME_COLOR, {"frame_color"},
+                      {"Color of the label frame/border. Valid color formats are #RRGGBB, "
+                       "#RRGGBBAA, and named colors"})
+        .withProperty(Component::IMAGE, {"image"},
+                      {"Resource name of the image to be displayed by the label. Overrides "
+                       "background and frame/border colors"});
 
 } // namespace Components
 

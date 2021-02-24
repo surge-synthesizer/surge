@@ -1800,40 +1800,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         if (mtext.isJust())
         {
-            auto ta = currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_ALIGN, "left");
-            // make text align value not case sensitive
-            std::transform(ta.begin(), ta.end(), ta.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
-
-            VSTGUI::CHoriTxtAlign txtalign;
-
-            if (ta == "left")
-                txtalign = kLeftText;
-            else if (ta == "center")
-                txtalign = kCenterText;
-            else if (ta == "right")
-                txtalign = kRightText;
+            VSTGUI::CHoriTxtAlign txtalign = Surge::UI::Skin::setTextAlignProperty(
+                currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_ALIGN, "left"));
 
             auto fs = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_SIZE, "12");
             auto fsize = std::atof(fs.c_str());
 
-            auto fst = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_STYLE, "normal");
-            // make font style value not case sensitive
-            std::transform(fst.begin(), fst.end(), fst.begin(),
-                           [](unsigned char c) { return std::tolower(c); });
-
-            VSTGUI::CTxtFace fstyle;
-
-            if (fst == "normal")
-                fstyle = kNormalFace;
-            else if (fst == "bold")
-                fstyle = kBoldFace;
-            else if (fst == "italic")
-                fstyle = kItalicFace;
-            else if (fst == "underline")
-                fstyle = kUnderlineFace;
-            else if (fst == "strikethrough")
-                fstyle = kStrikethroughFace;
+            VSTGUI::CTxtFace fstyle = Surge::UI::Skin::setFontStyleProperty(
+                currentSkin->propertyValue(l, Surge::Skin::Component::FONT_STYLE, "normal"));
 
             auto coln =
                 currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_COLOR, "#FF0000");
@@ -8002,6 +7976,24 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         hs->setLabel(p->get_name());
         hs->setModPresent(synth->isModDestUsed(p->id));
         hs->setDefaultValue(p->get_default_value_f01());
+        hs->font_style = Surge::UI::Skin::setFontStyleProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal"));
+
+        hs->text_align = Surge::UI::Skin::setTextAlignProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right"));
+
+        // CSurgeSlider is using labfont = displayFont, which is currently 9 pt in size
+        // TODO: Pull the default font size from some central location at a later date
+        hs->font_size = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());
+
+        hs->text_hoffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
+                .c_str());
+
+        hs->text_voffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
+                .c_str());
 
         if (p->can_deactivate())
             hs->deactivated = p->deactivated;
@@ -8184,57 +8176,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             rect, this, tag_osc_menu, &synth->storage,
             &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]],
             bitmapStore);
+
         hsw->setSkin(currentSkin, bitmapStore);
         hsw->setMouseableArea(rect);
 
-        auto tacval =
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALL_CAPS, "false");
-
-        if (tacval == "true")
-        {
-            hsw->text_allcaps = true;
-        }
-        if (tacval == "false")
-        {
-            hsw->text_allcaps = false;
-        }
-
-        auto fsval =
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal");
-
-        if (fsval == "normal")
-        {
-            hsw->font_style = kNormalFace;
-        }
-        if (fsval == "bold")
-        {
-            hsw->font_style = kBoldFace;
-        }
-        if (fsval == "italic")
-        {
-            hsw->font_style = kItalicFace;
-        }
-        if (fsval == "underline")
-        {
-            hsw->font_style = kUnderlineFace;
-        }
-
-        auto taval =
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "center");
-
-        if (taval == "left")
-        {
-            hsw->text_align = kLeftText;
-        }
-        if (taval == "center")
-        {
-            hsw->text_align = kCenterText;
-        }
-        if (taval == "right")
-        {
-            hsw->text_align = kRightText;
-        }
-
+        hsw->text_allcaps = Surge::UI::Skin::setAllCapsProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALL_CAPS, "false"));
+        hsw->font_style = Surge::UI::Skin::setFontStyleProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal"));
+        hsw->text_align = Surge::UI::Skin::setTextAlignProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "center"));
         hsw->font_size = std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "8").c_str());
         hsw->text_hoffset = std::atoi(

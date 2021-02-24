@@ -690,6 +690,70 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
     return true;
 }
 
+bool Skin::setAllCapsProperty(std::string propertyValue)
+{
+    // make the property value not case sensitive
+    std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (propertyValue == "true")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+VSTGUI::CTxtFace Skin::setFontStyleProperty(std::string propertyValue)
+{
+    // make the property value not case sensitive
+    std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (propertyValue == "bold")
+    {
+        return VSTGUI::kBoldFace;
+    }
+    else if (propertyValue == "italic")
+    {
+        return VSTGUI::kItalicFace;
+    }
+    else if (propertyValue == "underline")
+    {
+        return VSTGUI::kUnderlineFace;
+    }
+    else if (propertyValue == "strikethrough")
+    {
+        return VSTGUI::kStrikethroughFace;
+    }
+    else
+    {
+        return VSTGUI::kNormalFace;
+    }
+}
+
+VSTGUI::CHoriTxtAlign Skin::setTextAlignProperty(std::string propertyValue)
+{
+    // make the property value not case sensitive
+    std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (propertyValue == "center")
+    {
+        return VSTGUI::kCenterText;
+    }
+    else if (propertyValue == "right")
+    {
+        return VSTGUI::kRightText;
+    }
+    else
+    {
+        return VSTGUI::kLeftText;
+    }
+}
+
 bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *controlsxml, bool toplevel)
 {
     // I know I am gross for copying these
