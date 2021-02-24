@@ -1339,6 +1339,14 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
   add_library(surge-juce-userint src/surge_effects_bank/UserInteractionsJUCE.cpp )
   target_include_directories(surge-juce-userint PRIVATE ${SURGE_COMMON_INCLUDES})
 
+  set(JUCE_ASIO_SUPPORT FALSE)
+
+  if (DEFINED ENV{ASIOSDK_DIR})
+    file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
+    message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
+    set(JUCE_ASIO_SUPPORT TRUE)
+  endif()
+
   if( BUILD_SURGE_EFFECTS_BANK )
     juce_add_plugin(surge-fx
             PRODUCT_NAME "SurgeEffectsBank"
@@ -1386,6 +1394,12 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             TARGET_HEADLESS=1
             )
 
+    if (JUCE_ASIO_SUPPORT)
+      target_compile_definitions(surge-fx PUBLIC
+        JUCE_ASIO=1
+        )
+    endif()
+
     target_sources(surge-fx PRIVATE
             src/surge_effects_bank/SurgeFXEditor.cpp
             src/surge_effects_bank/SurgeFXProcessor.cpp
@@ -1411,6 +1425,12 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             ${SURGE_COMMON_INCLUDES}
             ${OS_INCLUDE_DIRECTORIES}
             )
+
+    if (JUCE_ASIO_SUPPORT)
+      target_include_directories(surge-fx PRIVATE
+        ${ASIOSDK_DIR}/common
+        )
+    endif()
 
     target_compile_definitions(surge-fx PRIVATE ${OS_COMPILE_DEFINITIONS} )
 
@@ -1500,6 +1520,12 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
             )
 
+    if (JUCE_ASIO_SUPPORT)
+      target_compile_definitions(surge-xt PUBLIC
+        JUCE_ASIO=1
+        )
+    endif()
+
     # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
     # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
     add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE.cpp )
@@ -1543,6 +1569,12 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             ${SURGE_GUI_INCLUDES}
             ${OS_INCLUDE_DIRECTORIES}
             )
+
+    if (JUCE_ASIO_SUPPORT)
+      target_include_directories(surge-xt PUBLIC
+        ${ASIOSDK_DIR}/common
+        )
+    endif()
 
     target_compile_definitions(surge-xt PUBLIC ${OS_COMPILE_DEFINITIONS} DONT_SET_USING_JUCE_NAMESPACE=1)
 
