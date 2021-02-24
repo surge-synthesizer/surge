@@ -226,7 +226,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     onepole.newValue(
         limit_range(localcopy[oscdata->p[wg_inloop_onepole].param_id_in_scene].f, 0.f, 1.f));
 
-    float val[2];
+    float val[2] = {0.f, 0.f};
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         for (int t = 0; t < 2; ++t)
@@ -234,36 +234,42 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             auto v = tap[t].v;
             val[t] = delayLine[t].read(v - 0.5);
 
-            // precautionary hard clip
-            auto fbv = limit_range(val[t], -1.f, 1.f);
-
-            // one pole filter the feedback value
-            auto filtv = onepole.v * fbv + (1 - onepole.v) * priorSample[t];
-            priorSample[t] = filtv;
-
+            // Add continuous excitation
             switch (mode)
             {
             case continuous_noise:
             {
-                filtv += examp.v * ((float)rand() / (float)RAND_MAX * 2 - 1);
+                val[t] += examp.v * ((float)rand() / (float)RAND_MAX * 2 - 1);
             }
             break;
             case continuous_dust:
             {
                 auto rn1 = (float)rand() / (float)RAND_MAX;
                 auto ds1 = examp.v * ((rn1 > 0.98) ? 1.0 : (rn1 < 0.02) ? -1.0 : 0);
-                filtv += ds1;
+                val[t] += ds1;
             }
             break;
             default:
                 break;
             }
+            // precautionary hard clip
+            auto fbv = limit_range(val[t], -1.f, 1.f);
+
+            // one pole filter the feedback value
+            // auto filtv = onepole.v * fbv + (1 - onepole.v) * priorSample[t];
+            auto filtv = priorSample[t] + onepole.v * (fbv - priorSample[t]);
+            priorSample[t] = filtv;
+
+            // This is basically the flush_denormals from the biquad
+            filtv = (filtv < 1e-30 && filtv > -1e-30) ? 0.0 : filtv;
+
             delayLine[t].write(filtv * feedback[t].v);
         }
 
-        float out = (1.0 - t2level.v) * val[0] + t2level.v * val[1];
+        // float out = (1.0 - t2level.v) * val[0] + t2level.v * val[1];
+        float out = val[0] + t2level.v * (val[1] - val[0]);
         // softclip the ouptput
-        out = 1.5 * out - 0.5 * out * out * out;
+        out = out * (1.5 - 0.5 * out * out);
 
         output[i] = out;
         outputR[i] = out;
