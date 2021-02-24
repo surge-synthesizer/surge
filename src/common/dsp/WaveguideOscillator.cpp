@@ -31,7 +31,7 @@
  * - run two delay lines seeded the same and take two taps, tap1 and tap2,
  *   and create an output which is (1-mix) * tap1 + mix * tap2
  * - create a feedback signal fb* tap + excitation in each line
- * - run that feedback signal through a onepole filter in each line
+ * - run that feedback signal through a tone filter in each line
  * - drive that feedback signal and run it through a soft clipper in each line
  * - write that feedback signal to the head of the delay line
  *
@@ -236,8 +236,26 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     double fv = fmdepthV / 16.0;
     fmdepth.newValue(fv);
 
-    onepole.newValue(
-        limit_range(localcopy[oscdata->p[wg_inloop_onepole].param_id_in_scene].f, 0.f, 1.f));
+    tone.newValue(
+        limit_range(localcopy[oscdata->p[wg_inloop_tone].param_id_in_scene].f, -1.f, 1.f));
+    float clo = -12, cmid = 100, chi = -33;
+    float hpCutoff = chi;
+    float lpCutoff = cmid;
+
+    if (tone.v > 0)
+    {
+        // OK so cool scale the hp cutoff
+        auto tv = tone.v;
+        hpCutoff = tv * (cmid - chi) + chi;
+    }
+    else
+    {
+        auto tv = -tone.v;
+        lpCutoff = tv * (clo - cmid) + cmid;
+    }
+
+    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    // hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 
     float val[2] = {0.f, 0.f};
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
@@ -272,10 +290,16 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             auto fbv = limit_range(val[t], -1.f, 1.f);
 
             // one pole filter the feedback value
-            // auto filtv = onepole.v * fbv + (1 - onepole.v) * priorSample[t];
-            auto filtv = priorSample[t] + onepole.v * (fbv - priorSample[t]);
-            priorSample[t] = filtv;
+            // auto filtv = tone.v * fbv + (1 - tone.v) * priorSample[t];
+            auto lpfiltv = lp.process_sample(fbv);
 
+            auto tv1 = std::max(tone.v * 1.6f, 0.f) * 0.62; // if this was 625 i would go to 1
+            float hptv = tv1 * tv1 * tv1;
+            auto ophpfiltv = (1 - hptv) * fbv - (hptv)*priorSample[t];
+            ophpfiltv = (ophpfiltv < 1e-30 && ophpfiltv > -1e-30) ? 0.0 : ophpfiltv;
+            priorSample[t] = ophpfiltv;
+
+            auto filtv = (tone.v > 0) ? ophpfiltv : lpfiltv;
             // This is basically the flush_denormals from the biquad
             filtv = (filtv < 1e-30 && filtv > -1e-30) ? 0.0 : filtv;
 
@@ -295,7 +319,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         t2level.process();
         feedback[0].process();
         feedback[1].process();
-        onepole.process();
+        tone.process();
         examp.process();
         fmdepth.process();
     }
@@ -321,8 +345,8 @@ void WaveguideOscillator::init_ctrltypes()
     oscdata->p[wg_tap2_mix].set_name("Tap 2 Mix");
     oscdata->p[wg_tap2_mix].set_type(ct_percent);
 
-    oscdata->p[wg_inloop_onepole].set_name("InLoop OnePole");
-    oscdata->p[wg_inloop_onepole].set_type(ct_percent);
+    oscdata->p[wg_inloop_tone].set_name("Stiffness");
+    oscdata->p[wg_inloop_tone].set_type(ct_percent_bidirectional);
 }
 
 void WaveguideOscillator::init_default_values()
@@ -337,5 +361,5 @@ void WaveguideOscillator::init_default_values()
     oscdata->p[wg_tap2_offset].extend_range = false;
     oscdata->p[wg_tap2_mix].val.f = 0.1;
 
-    oscdata->p[wg_inloop_onepole].val.f = 0.96;
+    oscdata->p[wg_inloop_tone].val.f = 0.0;
 }

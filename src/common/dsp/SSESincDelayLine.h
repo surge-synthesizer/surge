@@ -27,6 +27,8 @@
 template <int COMB_SIZE> // power of two
 struct SSESincDelayLine
 {
+    static constexpr int comb_size = COMB_SIZE;
+
     float buffer alignas(16)[COMB_SIZE + FIRipol_N];
     int wp = 0;
 
