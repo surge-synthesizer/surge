@@ -577,6 +577,8 @@ struct CFontInternal
     CFontInternal() {}
     CFontInternal(const juce::Font &f) : font(f) {}
     float getSize() { return font.getHeight(); }
+    void setStyle(int newStyle = kNormalFace) { OKUNIMPL; }
+    void setSize(int newSize = 12) { OKUNIMPL; }
     void remember() {}
     void forget() {}
 };
