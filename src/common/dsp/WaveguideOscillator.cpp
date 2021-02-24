@@ -296,12 +296,12 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             auto tv1 = std::max(tone.v * 1.6f, 0.f) * 0.62; // if this was 625 i would go to 1
             float hptv = tv1 * tv1 * tv1;
             auto ophpfiltv = (1 - hptv) * fbv - (hptv)*priorSample[t];
-            ophpfiltv = (ophpfiltv < 1e-30 && ophpfiltv > -1e-30) ? 0.0 : ophpfiltv;
+            ophpfiltv = (ophpfiltv < 1e-20 && ophpfiltv > -1e-20) ? 0.0 : ophpfiltv;
             priorSample[t] = ophpfiltv;
 
             auto filtv = (tone.v > 0) ? ophpfiltv : lpfiltv;
             // This is basically the flush_denormals from the biquad
-            filtv = (filtv < 1e-30 && filtv > -1e-30) ? 0.0 : filtv;
+            filtv = (filtv < 1e-20 && filtv > -1e-20) ? 0.0 : filtv;
 
             delayLine[t].write(filtv * feedback[t].v);
         }
@@ -323,6 +323,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         examp.process();
         fmdepth.process();
     }
+    lp.flush_sample_denormal();
 }
 
 void WaveguideOscillator::init_ctrltypes()
