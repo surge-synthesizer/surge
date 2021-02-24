@@ -20,6 +20,7 @@
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
 #include "SSESincDelayLine.h"
+#include "BiquadFilter.h"
 
 class WaveguideOscillator : public Oscillator
 {
@@ -32,9 +33,12 @@ class WaveguideOscillator : public Oscillator
         wg_feedback2,
         wg_tap2_offset,
         wg_tap2_mix,
-        wg_inloop_onepole,
+        wg_inloop_tone,
     };
-    WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p) {}
+    WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
+        : Oscillator(s, o, p), lp(s)
+    {
+    }
 
     virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true);
     virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
@@ -45,10 +49,12 @@ class WaveguideOscillator : public Oscillator
 
     float phase1 = 0, phase2 = 0;
 
-    lag<float, true> examp, tap[2], t2level, feedback[2], onepole, fmdepth;
+    lag<float, true> examp, tap[2], t2level, feedback[2], tone, fmdepth;
 
     SSESincDelayLine<16384> delayLine[2];
-    float priorSample[2];
+    float priorSample[2] = {0, 0};
+
+    BiquadFilter lp;
 };
 
 #endif // SURGE_WAVEGUIDEOSCILLATOR_H
