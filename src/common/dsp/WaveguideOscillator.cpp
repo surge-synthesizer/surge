@@ -266,7 +266,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             if (FM)
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
 
-            val[t] = delayLine[t].read(v - 0.5);
+            val[t] = delayLine[t].read(v);
 
             // Add continuous excitation
             switch (mode)

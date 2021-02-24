@@ -46,7 +46,7 @@ struct SSESincDelayLine
         delay = delay;
         auto iDelay = (int)delay;
         auto fracDelay = delay - iDelay;
-        auto sincTableOffset = (int)(fracDelay * FIRipol_N) * (FIRipol_N << 1);
+        auto sincTableOffset = (int)((1 - fracDelay) * FIRipol_M) * FIRipol_N * 2;
 
         // So basically we interpolate around FIRipol_N (the 12 sample sinc)
         // remembering that FIRoffset is the offset to center your table at
@@ -77,7 +77,8 @@ struct SSESincDelayLine
         auto iDelay = (int)delay;
         auto frac = delay - iDelay;
         int RP = (wp - iDelay) & (COMB_SIZE - 1);
-        return buffer[RP] * (1 - frac) + buffer[RP + 1] * frac;
+        int RPP = RP == 0 ? COMB_SIZE - 1 : RP - 1;
+        return buffer[RP] * (1 - frac) + buffer[RPP] * frac;
     }
 
     inline void clear() { memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float)); }
