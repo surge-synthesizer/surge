@@ -549,7 +549,19 @@ void SurgePatch::init_default_values()
             osc.queue_type = -1;
             osc.keytrack.val.b = true;
             osc.retrigger.val.b = false;
-            osc.wt.queue_id = 0;
+            /*
+             * init-default-values is called at load_raw. load_raw will
+             * replace any wavetables *but* if it doesn't have a wt osc that
+             * wavetable load is pointless. So unless there's no wavetable at
+             * all ever loaded, keep what's there.
+             *
+             * We need to do something if there's nothing otherwise swapping
+             * to the wavetable oscilltor will core you out
+             */
+            if (osc.wt.current_id == -1)
+                osc.wt.queue_id = 0;
+            else
+                osc.wt.queue_id = -1;
             osc.wt.queue_filename[0] = 0;
         }
         scene[sc].fm_depth.val.f = -24.f;
