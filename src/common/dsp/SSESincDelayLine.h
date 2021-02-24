@@ -55,15 +55,15 @@ struct SSESincDelayLine
 
         // And so now do what we do in COMBSSE2Quad
         __m128 a = _mm_loadu_ps(&buffer[readPtr]);
-        __m128 b = _mm_load_ps(&sinctable[sincTableOffset]);
+        __m128 b = _mm_loadu_ps(&sinctable[sincTableOffset]);
         __m128 o = _mm_mul_ps(a, b);
 
         a = _mm_loadu_ps(&buffer[readPtr + 4]);
-        b = _mm_load_ps(&sinctable[sincTableOffset + 4]);
+        b = _mm_loadu_ps(&sinctable[sincTableOffset + 4]);
         o = _mm_add_ps(o, _mm_mul_ps(a, b));
 
         a = _mm_loadu_ps(&buffer[readPtr + 8]);
-        b = _mm_load_ps(&sinctable[sincTableOffset + 8]);
+        b = _mm_loadu_ps(&sinctable[sincTableOffset + 8]);
         o = _mm_add_ps(o, _mm_mul_ps(a, b));
 
         float res;
