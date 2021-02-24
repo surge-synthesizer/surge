@@ -20,6 +20,8 @@
 #include "vstgui/lib/ccolor.h"
 #include "vstgui/lib/crect.h"
 #include "vstgui/lib/cpoint.h"
+#include "vstgui/lib/cdrawdefs.h"
+#include "vstgui/lib/cfont.h"
 #endif
 
 #include "SkinModel.h"
@@ -122,6 +124,10 @@ class Skin
         return root + name + "/" + relativeName;
 #endif
     }
+
+    static bool setAllCapsProperty(std::string propertyValue);
+    static VSTGUI::CTxtFace setFontStyleProperty(std::string propertyValue);
+    static VSTGUI::CHoriTxtAlign setTextAlignProperty(std::string propertyValue);
 
     std::string root;
     std::string name;

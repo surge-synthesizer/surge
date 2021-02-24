@@ -111,6 +111,10 @@ class CSurgeSlider : public VSTGUI::CControl,
     bool isStepped = false;
     int intRange = 0;
 
+    int font_size, text_hoffset, text_voffset;
+    VSTGUI::CHoriTxtAlign text_align;
+    VSTGUI::CTxtFace font_style;
+
     SurgeStorage *storage = nullptr;
 
     enum MoveRateState
@@ -136,7 +140,7 @@ class CSurgeSlider : public VSTGUI::CControl,
     int controlstate;
     long style;
     float modval, qdvalue;
-    char label[256], leftlabel[256];
+    char label[256];
     int modmode;
     float moverate;
     int typex, typey;
