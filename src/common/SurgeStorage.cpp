@@ -583,10 +583,19 @@ bailOnPortable:
         getPatch().scene[s].drift.extend_range = true;
     }
 
-    oddsound_mts_client = MTS_RegisterClient();
-    if (oddsound_mts_client)
+    bool mtsMode = Surge::Storage::getUserDefaultValue(this, "useODDMTS", false);
+    if (mtsMode)
     {
-        oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
+        oddsound_mts_client = MTS_RegisterClient();
+        if (oddsound_mts_client)
+        {
+            oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
+        }
+    }
+    else
+    {
+        oddsound_mts_client = nullptr;
+        oddsound_mts_active = false;
     }
 }
 

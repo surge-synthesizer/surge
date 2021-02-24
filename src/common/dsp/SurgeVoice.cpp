@@ -47,7 +47,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     */
     auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 
-    if (storage->oddsound_mts_active)
+    if (storage->oddsound_mts_client && storage->oddsound_mts_active)
     {
         auto rkey = MTS_RetuningInSemitones(storage->oddsound_mts_client, key, channel);
 

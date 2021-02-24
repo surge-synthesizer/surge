@@ -5869,6 +5869,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
     tid++;
 
+    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useODDMTS", false);
+    auto menuItem = addCallbackMenu(
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Use ODDSound MTS-ESP If Installed"),
+        [this, tsMode]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useODDMTS", !tsMode);
+        });
+    menuItem->setChecked(tsMode);
     tuningSubMenu->addSeparator();
     tid++;
     auto *sct = addCallbackMenu(
