@@ -5,9 +5,10 @@
 #include "effect/Effect.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
-#include "SurgeStorage.h" // for TINYXML macro
+#include "SurgeStorage.h"
 #include "filesystem/import.h"
 #include "SkinColors.h"
+#include "RuntimeFont.h"
 #include "guihelpers.h"
 
 #include <iostream>
@@ -256,11 +257,43 @@ void COscMenu::draw(CDrawContext *dc)
     int i = osc->type.val.i;
     int y = i * size.getHeight();
 
+    // we're using code generated text for this menu from skin version 2 onwards
+    // so there's no need to slice the graphics asset
+    if (skin->getVersion() >= 2)
+    {
+        y = 0;
+    }
+
     if (bmp)
         bmp->draw(dc, size, CPoint(0, y), 0xff);
 
     if (isHovered && hoverBmp)
         hoverBmp->draw(dc, size, CPoint(0, y), 0xff);
+
+    dc->saveGlobalState();
+
+    dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+    dc->setFont(Surge::GUI::getLatoAtSize(font_size, font_style));
+
+    if (isHovered)
+    {
+        dc->setFontColor(skin->getColor(Colors::Osc::Type::TextHover));
+    }
+    else
+    {
+        dc->setFontColor(skin->getColor(Colors::Osc::Type::Text));
+    }
+
+    std::string txt = osc_type_shortnames[i];
+
+    if (text_allcaps)
+    {
+        std::transform(txt.begin(), txt.end(), txt.begin(), ::toupper);
+    }
+
+    dc->drawString(txt.c_str(), size.offset(text_hoffset, text_voffset), text_align, true);
+
+    dc->restoreGlobalState();
 
     setDirty(false);
 }

@@ -97,6 +97,13 @@ class COscMenu : public CSnapshotMenu
     virtual bool onWheel(const VSTGUI::CPoint &where, const float &distance,
                          const VSTGUI::CButtonState &buttons) override;
 
+    bool text_allcaps = true;
+    int text_hoffset = 0;
+    int text_voffset = 0;
+    int font_size = 8;
+    VSTGUI::CTxtFace font_style;
+    VSTGUI::CHoriTxtAlign text_align;
+
   protected:
     OscillatorStorage *osc = nullptr;
     SurgeStorage *storage = nullptr;

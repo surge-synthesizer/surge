@@ -118,8 +118,6 @@ struct Component
 
         NUMBERFIELD_CONTROLMODE,
 
-        TEXT_COLOR,
-        TEXT_HOVER_COLOR,
         BACKGROUND_COLOR,
         FRAME_COLOR,
 
@@ -130,11 +128,16 @@ struct Component
         HANDLE_TEMPOSYNC_HOVER_IMAGE,
         HIDE_SLIDER_LABEL,
 
-        TEXT,
         CONTROL_TEXT,
-        TEXT_ALIGN,
         FONT_SIZE,
         FONT_STYLE,
+        TEXT,
+        TEXT_ALIGN,
+        TEXT_ALL_CAPS,
+        TEXT_COLOR,
+        TEXT_HOVER_COLOR,
+        TEXT_HOFFSET,
+        TEXT_VOFFSET,
 
         GLYPH_PLACEMENT,
         GLYPH_W,

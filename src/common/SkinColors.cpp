@@ -318,6 +318,12 @@ const Surge::Skin::Color Background("osc.wavename.background", 255, 160, 16),
     Frame("osc.wavename.frame", 255, 160, 16), FrameHover("osc.wavename.frame.hover", 255, 160, 16),
     Text("osc.wavename.text", 0, 0, 0), TextHover("osc.wavename.text.hover", 255, 255, 255);
 }
+namespace Type
+{
+// 158 should be 144 but VSTGUI for some reason makes text come off more reddish than it should be
+const Surge::Skin::Color Text("osc.type.text", 255, 158, 0),
+    TextHover("osc.type.text.hover", 255, 255, 255);
+} // namespace Type
 } // namespace Osc
 
 namespace Overlay
