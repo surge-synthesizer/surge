@@ -8178,6 +8178,64 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             bitmapStore);
         hsw->setSkin(currentSkin, bitmapStore);
         hsw->setMouseableArea(rect);
+
+        auto tacval =
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALL_CAPS, "false");
+
+        if (tacval == "true")
+        {
+            hsw->text_allcaps = true;
+        }
+        if (tacval == "false")
+        {
+            hsw->text_allcaps = false;
+        }
+
+        auto fsval =
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal");
+
+        if (fsval == "normal")
+        {
+            hsw->font_style = kNormalFace;
+        }
+        if (fsval == "bold")
+        {
+            hsw->font_style = kBoldFace;
+        }
+        if (fsval == "italic")
+        {
+            hsw->font_style = kItalicFace;
+        }
+        if (fsval == "underline")
+        {
+            hsw->font_style = kUnderlineFace;
+        }
+
+        auto taval =
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "center");
+
+        if (taval == "left")
+        {
+            hsw->text_align = kLeftText;
+        }
+        if (taval == "center")
+        {
+            hsw->text_align = kCenterText;
+        }
+        if (taval == "right")
+        {
+            hsw->text_align = kRightText;
+        }
+
+        hsw->font_size = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "8").c_str());
+        hsw->text_hoffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
+                .c_str());
+        hsw->text_voffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
+                .c_str());
+
         if (p)
             hsw->setValue(p->get_value_f01());
         // TODO: This was not on before skinnification. Why?

@@ -207,8 +207,12 @@ enum osc_type
 };
 
 const char osc_type_names[n_osc_types][24] = {
-    "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In",         "FM3",   "FM2",
-    "Window",  "Modern", "Waveguide" /*, "Pluck",     "Macro",     "Phase Distortion", "Chaos", "FM4"*/};
+    "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In", "FM3", "FM2",
+    "Window",  "Modern", "String" /*,     "Macro",     "Phase Distortion", "Chaos", "FM4"*/};
+
+const char osc_type_shortnames[n_osc_types][24] = {
+    "Classic", "Sine", "WT",     "S&H Noise", "Audio In",
+    "FM3",     "FM2",  "Window", "Modern",    "String" /*, "Macro", "PD", "Chaos", "FM4"*/};
 
 const char window_names[9][16] = {
     "Triangle", "Cosine", "Blend 1", "Blend 2",   "Blend 3",

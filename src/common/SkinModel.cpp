@@ -74,7 +74,13 @@ Component FilterSelector =
         .withProperty(Component::GLYPH_H, {"glyph_h"}, "Height of one glyph frame");
 
 Component LFODisplay = Component("CLFOGui");
-Component OscMenu = Component("COSCMenu");
+Component OscMenu = Component("COSCMenu")
+                        .withProperty(Component::FONT_SIZE, {"font_size"})
+                        .withProperty(Component::FONT_STYLE, {"font_style"})
+                        .withProperty(Component::TEXT_ALIGN, {"text_align"})
+                        .withProperty(Component::TEXT_ALL_CAPS, {"text_allcaps"})
+                        .withProperty(Component::TEXT_HOFFSET, {"text_hoffset"})
+                        .withProperty(Component::TEXT_VOFFSET, {"text_voffset"});
 Component FxMenu = Component("CFXMenu");
 Component NumberField =
     Component("CNumberField")
@@ -196,7 +202,13 @@ Connector retrigger = Connector("osc.retrigger", 51, 180, 45, 9, Components::Swi
 
 Connector octave = Connector("osc.octave", 0, 194, 96, 18, Components::HSwitch2)
                        .withHSwitch2Properties(IDB_OSC_OCTAVE, 7, 1, 7);
-Connector osc_type = Connector("osc.type", 96, 194, 49, 18, Components::OscMenu);
+Connector osc_type = Connector("osc.type", 96, 194, 49, 18, Components::OscMenu)
+                         .withProperty(Component::FONT_SIZE, 8)
+                         .withProperty(Component::FONT_STYLE, "bold")
+                         .withProperty(Component::TEXT_ALL_CAPS, "true")
+                         .withProperty(Component::TEXT_ALIGN, "center")
+                         .withProperty(Component::TEXT_HOFFSET, -2)
+                         .withProperty(Component::TEXT_VOFFSET, -1);
 
 Connector osc_param_panel = Connector("osc.param.panel", 6, 212, Components::Group);
 Connector pitch = Connector("osc.pitch", 0, 0).asHorizontal().inParent("osc.param.panel");

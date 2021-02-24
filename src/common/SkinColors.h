@@ -236,6 +236,10 @@ namespace Filename
 {
 extern const Surge::Skin::Color Background, BackgroundHover, Frame, FrameHover, Text, TextHover;
 }
+namespace Type
+{
+extern const Surge::Skin::Color Text, TextHover;
+}
 } // namespace Osc
 
 namespace Overlay
