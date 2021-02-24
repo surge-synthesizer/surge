@@ -594,6 +594,45 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
             val += dRamp;
         }
     }
+
+#if 0
+// This prints output I used for debugging
+    SECTION( "Generate Output" )
+    {
+        float dRamp = 0.01;
+        SSESincDelayLine<4096> dl4096;
+
+        float v = 0;
+        int nsamp = 500;
+        for( int i=0; i<nsamp; ++i )
+        {
+            dl4096.write(v);
+            v += dRamp;
+        }
+
+        for( int i=100; i<300; ++i )
+        {
+            auto bi = dl4096.buffer[i];
+            auto off = nsamp - i;
+            auto bsv = dl4096.read(off - 1);
+            auto bsl = dl4096.readLinear(off);
+
+            auto bsvh = dl4096.read(off - 1 - 0.5);
+            auto bslh = dl4096.readLinear(off - 0.0 );
+            std::cout << off << ", " << bi << ", " << bsv
+                      << ", " << bsl << ", " << bi -bsv << ", " << bi-bsl
+                      << ", " << bslh << ", " << bi - bslh << std::endl;
+
+            for( int q=0; q<111; ++q )
+            {
+                std::cout << " " << q << " "
+                          << ( dl4096.read(off - q * 0.1) - bi ) / dRamp
+                          << " " << ( dl4096.readLinear(off - q * 0.1) - bi ) / dRamp
+                          << std::endl;
+            }
+        }
+    }
+#endif
 }
 
 // When we return to #1514 this is a good starting point
