@@ -99,8 +99,15 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 
     // we need a big prefill to supprot the delay line for FM
     auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv));
-    delayLine[0].clear();
-    delayLine[1].clear();
+
+    for (int i = 0; i < 2; ++i)
+    {
+        delayLine[i].clear();
+        driftlfo[i] = 0.f;
+        driftlfo2[i] = 0.f;
+        if (nzi)
+            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+    }
 
     auto mode = (ExModes)oscdata->p[wg_ex_mode].val.i;
     phase1 = 0.0, phase2 = 0.0;
@@ -205,14 +212,19 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
                                         float fmdepthV)
 {
     auto mode = (ExModes)oscdata->p[wg_ex_mode].val.i;
-    auto pitch_t = std::min(148.f, pitch);
+    driftlfo[0] = drift_noise(driftlfo2[0]);
+    auto lfodetune = drift * driftlfo[0];
+
+    auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
 
     examp.newValue(limit_range(localcopy[oscdata->p[wg_ex_amp].param_id_in_scene].f, 0.f, 1.f));
     auto p2off = oscdata->p[wg_tap2_offset].get_extended(
         localcopy[oscdata->p[wg_tap2_offset].param_id_in_scene].f);
-    auto pitch2_t = std::min(148.f, pitch + p2off);
+    driftlfo[1] = drift_noise(driftlfo2[1]);
+    lfodetune = drift * driftlfo[1];
+    auto pitch2_t = std::min(148.f, pitch + p2off + lfodetune);
     auto pitchmult2_inv =
         std::max((FIRipol_N >> 1) + 1.0,
                  dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch2_t));
