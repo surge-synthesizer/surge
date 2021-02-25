@@ -32,3 +32,6 @@
 [submodule "libs/oddsound-mts/MTS-ESP"]
 	path = libs/oddsound-mts/MTS-ESP
 	url = https://github.com/ODDSound/MTS-ESP
+[submodule "libs/libsamplerate"]
+	path = libs/libsamplerate
+	url = https://github.com/libsndfile/libsamplerate.git
