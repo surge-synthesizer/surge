@@ -195,13 +195,13 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         }
         break;
         case burst_dust:
-            d0 = DUST_VOLADJUST;
+            d0 = 1.0;
         case constant_dust:
         {
             auto rn1 = (float)rand() / (float)RAND_MAX;
             auto rn2 = (float)rand() / (float)RAND_MAX;
-            auto ds1 = (rn1 > DUST_THRESHOLD) ? 1.0 : (rn1 < (1.f - DUST_THRESHOLD)) ? -1.0 : 0;
-            auto ds2 = (rn2 > DUST_THRESHOLD) ? 1.0 : (rn2 < (1.f - DUST_THRESHOLD)) ? -1.0 : 0;
+            auto ds1 = (rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0;
+            auto ds2 = (rn2 > dustpos) * 1.0 - (rn2 < dustneg) * 1.0;
 
             delayLine[0].write(d0 * ds1);
             delayLine[1].write(d0 * ds2);
@@ -306,7 +306,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             case constant_dust:
             {
                 auto rn1 = (float)rand() / (float)RAND_MAX;
-                auto ds1 = DUST_VOLADJUST * examp.v * ((rn1 > DUST_THRESHOLD) ? 1.0 : (rn1 < (1.f - DUST_THRESHOLD)) ? -1.0 : 0);
+                auto ds1 = examp.v * ((rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0);
                 val[t] += ds1;
             }
             break;

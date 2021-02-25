@@ -52,8 +52,7 @@ class WaveguideOscillator : public Oscillator
 
     float phase1 = 0, phase2 = 0;
 
-    static constexpr float DUST_THRESHOLD = 0.998;
-    static constexpr float DUST_VOLADJUST = 2.f;
+    static constexpr float dustpos = 0.998, dustneg = 1.0 - dustpos;
 
     lag<float, true> examp, tap[2], t2level, feedback[2], tone, fmdepth;
 
