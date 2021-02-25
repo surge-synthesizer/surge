@@ -306,7 +306,10 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             case constant_dust:
             {
                 auto rn1 = (float)rand() / (float)RAND_MAX;
-                auto ds1 = DUST_VOLADJUST * examp.v * ((rn1 > DUST_THRESHOLD) ? 1.0 : (rn1 < (1.f - DUST_THRESHOLD)) ? -1.0 : 0);
+                auto ds1 = DUST_VOLADJUST * examp.v *
+                           ((rn1 > DUST_THRESHOLD)           ? 1.0
+                            : (rn1 < (1.f - DUST_THRESHOLD)) ? -1.0
+                                                             : 0);
                 val[t] += ds1;
             }
             break;
