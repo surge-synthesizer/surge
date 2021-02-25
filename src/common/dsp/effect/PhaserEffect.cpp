@@ -192,13 +192,13 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_stages].set_name("Count");
     fxdata->p[ph_stages].set_type(ct_phaser_stages);
     fxdata->p[ph_center].set_name("Center");
-    fxdata->p[ph_center].set_type(ct_percent_bidirectional);
+    fxdata->p[ph_center].set_type(ct_percent_bipolar);
     fxdata->p[ph_spread].set_name("Spread");
     fxdata->p[ph_spread].set_type(ct_percent);
     fxdata->p[ph_sharpness].set_name("Sharpness");
-    fxdata->p[ph_sharpness].set_type(ct_percent_bidirectional);
+    fxdata->p[ph_sharpness].set_type(ct_percent_bipolar);
     fxdata->p[ph_feedback].set_name("Feedback");
-    fxdata->p[ph_feedback].set_type(ct_percent_bidirectional);
+    fxdata->p[ph_feedback].set_type(ct_percent_bipolar);
 
     fxdata->p[ph_mod_wave].set_name("Waveform");
     fxdata->p[ph_mod_wave].set_type(ct_fxlfowave);

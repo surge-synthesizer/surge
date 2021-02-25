@@ -167,7 +167,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                             cg_GLOBAL, 0, true));
 
         a->push_back(scene[sc].noise_colour.assign(
-            p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bidirectional,
+            p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bipolar,
             Surge::Skin::Scene::noise_color, sc_id, cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].keytrack_root.assign(
             p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key", ct_midikey,
@@ -179,10 +179,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                              ct_amplitude_clipper, Surge::Skin::Scene::volume,
                                              sc_id, cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan",
-                                          ct_percent_bidirectional, Surge::Skin::Scene::pan, sc_id,
+                                          ct_percent_bipolar, Surge::Skin::Scene::pan, sc_id,
                                           cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width",
-                                            ct_percent_bidirectional, Surge::Skin::Scene::width,
+                                            ct_percent_bipolar, Surge::Skin::Scene::width,
                                             sc_id, cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].send_level[0].assign(
             p_id.next(), id_s++, "send_fx_1", "Send FX 1 Level", ct_sendlevel,
@@ -282,14 +282,14 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             Surge::Skin::Scene::vel_sensitivity, sc_id, cg_GLOBAL, 0, false));
 
         a->push_back(scene[sc].feedback.assign(
-            p_id.next(), id_s++, "feedback", "Feedback", ct_percent_bidirectional,
+            p_id.next(), id_s++, "feedback", "Feedback", ct_percent_bipolar,
             Surge::Skin::Filter::feedback, sc_id, cg_GLOBAL, 0, true,
             Surge::ParamConfig::kHorizontal | kWhite | sceasy));
         a->push_back(scene[sc].filterblock_configuration.assign(
             p_id.next(), id_s++, "fb_config", "Filter Configuration", ct_fbconfig,
             Surge::Skin::Filter::config, sc_id, cg_GLOBAL, 0, false));
         a->push_back(scene[sc].filter_balance.assign(
-            p_id.next(), id_s++, "f_balance", "Filter Balance", ct_percent_bidirectional,
+            p_id.next(), id_s++, "f_balance", "Filter Balance", ct_percent_bipolar,
             Surge::Skin::Filter::balance, sc_id, cg_GLOBAL, 0, true, sceasy));
 
         a->push_back(scene[sc].lowcut.assign(p_id.next(), id_s++, "lowcut", "Highpass", ct_freq_hpf,
@@ -336,7 +336,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 Surge::Skin::Connector::connectorByID("filter.envmod_" + std::to_string(f + 1)),
                 sc_id, cg_FILTER, f, true, sceasy));
             a->push_back(scene[sc].filterunit[f].keytrack.assign(
-                p_id.next(), id_s++, "keytrack", "Keytrack", ct_percent_bidirectional,
+                p_id.next(), id_s++, "keytrack", "Keytrack", ct_percent_bipolar,
                 Surge::Skin::Connector::connectorByID("filter.keytrack_" + std::to_string(f + 1)),
                 sc_id, cg_FILTER, f, true));
         }

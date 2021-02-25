@@ -222,16 +222,16 @@ void ConditionerEffect::init_ctrltypes()
     fxdata->p[cond_treble].set_type(ct_decibel_extra_narrow);
 
     fxdata->p[cond_width].set_name("Width");
-    fxdata->p[cond_width].set_type(ct_percent_bidirectional);
+    fxdata->p[cond_width].set_type(ct_percent_bipolar);
     fxdata->p[cond_balance].set_name("Balance");
-    fxdata->p[cond_balance].set_type(ct_percent_bidirectional);
+    fxdata->p[cond_balance].set_type(ct_percent_bipolar);
 
     fxdata->p[cond_threshold].set_name("Threshold");
     fxdata->p[cond_threshold].set_type(ct_decibel_attenuation);
     fxdata->p[cond_attack].set_name("Attack Rate");
-    fxdata->p[cond_attack].set_type(ct_percent_bidirectional);
+    fxdata->p[cond_attack].set_type(ct_percent_bipolar);
     fxdata->p[cond_release].set_name("Release Rate");
-    fxdata->p[cond_release].set_type(ct_percent_bidirectional);
+    fxdata->p[cond_release].set_type(ct_percent_bipolar);
     fxdata->p[cond_gain].set_name("Gain");
     fxdata->p[cond_gain].set_type(ct_decibel_attenuation);
 

@@ -400,10 +400,10 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_freq3].set_type(ct_pitch);
     fxdata->p[combulator_freq3].posy_offset = 3;
     fxdata->p[combulator_feedback].set_name("Feedback");
-    fxdata->p[combulator_feedback].set_type(ct_percent_bidirectional);
+    fxdata->p[combulator_feedback].set_type(ct_percent_bipolar);
     fxdata->p[combulator_feedback].posy_offset = 3;
     fxdata->p[combulator_tone].set_name("Tone");
-    fxdata->p[combulator_tone].set_type(ct_percent_bidirectional);
+    fxdata->p[combulator_tone].set_type(ct_percent_bipolar);
     fxdata->p[combulator_tone].posy_offset = 3;
 
     fxdata->p[combulator_gain1].set_name("Comb 1");
@@ -417,10 +417,10 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_gain3].posy_offset = 5;
 
     fxdata->p[combulator_pan2].set_name("Pan 2");
-    fxdata->p[combulator_pan2].set_type(ct_percent_bidirectional_stereo);
+    fxdata->p[combulator_pan2].set_type(ct_percent_bipolar_stereo);
     fxdata->p[combulator_pan2].posy_offset = 7;
     fxdata->p[combulator_pan3].set_name("Pan 3");
-    fxdata->p[combulator_pan3].set_type(ct_percent_bidirectional_stereo);
+    fxdata->p[combulator_pan3].set_type(ct_percent_bipolar_stereo);
     fxdata->p[combulator_pan3].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
     fxdata->p[combulator_mix].set_type(ct_percent);

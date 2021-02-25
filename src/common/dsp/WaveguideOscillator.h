@@ -25,16 +25,19 @@
 class WaveguideOscillator : public Oscillator
 {
   public:
-    enum
+    enum wg_params
     {
-        wg_ex_mode,
-        wg_ex_amp,
-        wg_feedback,
-        wg_feedback2,
-        wg_tap2_offset,
-        wg_tap2_mix,
-        wg_inloop_tone,
+        wg_exciter_mode,
+        wg_exciter_level,
+
+        wg_str1_decay,
+        wg_str2_decay,
+        wg_str2_detune,
+        wg_str_balance,
+
+        wg_stiffness,
     };
+
     WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
         : Oscillator(s, o, p), lp(s)
     {
@@ -48,6 +51,9 @@ class WaveguideOscillator : public Oscillator
                                float FMdepth = 0.f);
 
     float phase1 = 0, phase2 = 0;
+
+    static constexpr float DUST_THRESHOLD = 0.998;
+    static constexpr float DUST_VOLADJUST = 2.f;
 
     lag<float, true> examp, tap[2], t2level, feedback[2], tone, fmdepth;
 

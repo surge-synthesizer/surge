@@ -126,7 +126,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
 void SampleAndHoldOscillator::init_ctrltypes()
 {
     oscdata->p[shn_correlation].set_name("Correlation");
-    oscdata->p[shn_correlation].set_type(ct_percent_bidirectional);
+    oscdata->p[shn_correlation].set_type(ct_percent_bipolar);
     oscdata->p[shn_width].set_name("Width");
     oscdata->p[shn_width].set_type(ct_percent);
     oscdata->p[shn_width].val_default.f = 0.5f;

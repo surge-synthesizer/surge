@@ -380,7 +380,7 @@ void VocoderEffect::init_ctrltypes()
     fxdata->p[voc_unvoiced_threshold].posy_offset = 3;*/
 
     fxdata->p[voc_q].set_name("Q");
-    fxdata->p[voc_q].set_type(ct_percent_bidirectional);
+    fxdata->p[voc_q].set_type(ct_percent_bipolar);
     fxdata->p[voc_q].posy_offset = 3;
 
     fxdata->p[voc_num_bands].set_name("Bands");
@@ -400,11 +400,11 @@ void VocoderEffect::init_ctrltypes()
     fxdata->p[voc_mod_input].posy_offset = 5;
 
     fxdata->p[voc_mod_range].set_name("Range");
-    fxdata->p[voc_mod_range].set_type(ct_percent_bidirectional);
+    fxdata->p[voc_mod_range].set_type(ct_percent_bipolar);
     fxdata->p[voc_mod_range].posy_offset = 5;
 
     fxdata->p[voc_mod_center].set_name("Center");
-    fxdata->p[voc_mod_center].set_type(ct_percent_bidirectional);
+    fxdata->p[voc_mod_center].set_type(ct_percent_bipolar);
     fxdata->p[voc_mod_center].posy_offset = 5;
 
     fxdata->p[voc_mix].set_name("Mix");

@@ -272,7 +272,7 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_mod_depth].set_name("Depth");
     fxdata->p[dly_mod_depth].set_type(ct_detuning);
     fxdata->p[dly_input_channel].set_name("Channel");
-    fxdata->p[dly_input_channel].set_type(ct_percent_bidirectional_stereo);
+    fxdata->p[dly_input_channel].set_type(ct_percent_bipolar_stereo);
 
     fxdata->p[dly_mix].set_name("Mix");
     fxdata->p[dly_mix].set_type(ct_percent);
