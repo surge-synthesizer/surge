@@ -791,8 +791,9 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 1;
         break;
     case ct_dpw_trimix:
-    case ct_percent_bidirectional:
-    case ct_percent_bidirectional_stereo:
+    case ct_percent_bipolar:
+    case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_stringbal:
         val_min.f = -1;
         val_max.f = 1;
         valtype = vt_float;
@@ -1008,7 +1009,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent:
     case ct_percent_oscdrift:
     case ct_percent200:
-    case ct_percent_bidirectional:
+    case ct_percent_bipolar:
     case ct_lfodeform:
     case ct_rotarydrive:
     case ct_countedset_percent:
@@ -1019,7 +1020,7 @@ void Parameter::set_type(int ctrltype)
         sprintf(displayInfo.unit, "%%");
         displayInfo.scale = 100;
         break;
-    case ct_percent_bidirectional_stereo:
+    case ct_percent_bipolar_stereo:
         displayType = LinearWithScale;
         displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
                                      ParamDisplayFeatures::kHasCustomMaxString |
@@ -1029,6 +1030,18 @@ void Parameter::set_type(int ctrltype)
         sprintf(displayInfo.minLabel, "-100.00 %% (Left)");
         sprintf(displayInfo.defLabel, "0.00 %% (Stereo)");
         sprintf(displayInfo.maxLabel, "100.00 %% (Right)");
+        displayInfo.scale = 100;
+        break;
+    case ct_percent_bipolar_stringbal:
+        displayType = LinearWithScale;
+        displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
+                                     ParamDisplayFeatures::kHasCustomMaxString |
+                                     ParamDisplayFeatures::kHasCustomDefaultString;
+
+        sprintf(displayInfo.unit, "%%");
+        sprintf(displayInfo.minLabel, "-100.00 %% (String 1)");
+        sprintf(displayInfo.defLabel, "0.00 %% (Strings 1+2)");
+        sprintf(displayInfo.maxLabel, "100.00 %% (String 2)");
         displayInfo.scale = 100;
         break;
 
@@ -1237,8 +1250,9 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent:
         case ct_percent_oscdrift:
         case ct_percent200:
-        case ct_percent_bidirectional:
-        case ct_percent_bidirectional_stereo:
+        case ct_percent_bipolar:
+        case ct_percent_bipolar_stereo:
+        case ct_percent_bipolar_stringbal:
         case ct_rotarydrive:
         case ct_osc_feedback:
         case ct_osc_feedback_negative:
@@ -3176,8 +3190,9 @@ bool Parameter::can_setvalue_from_string()
     case ct_percent:
     case ct_percent_oscdrift:
     case ct_percent200:
-    case ct_percent_bidirectional:
-    case ct_percent_bidirectional_stereo:
+    case ct_percent_bipolar:
+    case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_stringbal:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:

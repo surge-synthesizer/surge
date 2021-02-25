@@ -118,13 +118,13 @@ void WavetableOscillator::init_ctrltypes()
     oscdata->p[wt_morph].set_type(ct_countedset_percent);
     oscdata->p[wt_morph].set_user_data(oscdata);
     oscdata->p[wt_skewv].set_name("Skew Vertical");
-    oscdata->p[wt_skewv].set_type(ct_percent_bidirectional);
+    oscdata->p[wt_skewv].set_type(ct_percent_bipolar);
     oscdata->p[wt_saturate].set_name("Saturate");
     oscdata->p[wt_saturate].set_type(ct_percent);
     oscdata->p[wt_formant].set_name("Formant");
     oscdata->p[wt_formant].set_type(ct_syncpitch);
     oscdata->p[wt_skewh].set_name("Skew Horizontal");
-    oscdata->p[wt_skewh].set_type(ct_percent_bidirectional);
+    oscdata->p[wt_skewh].set_type(ct_percent_bipolar);
     oscdata->p[wt_unison_detune].set_name("Unison Detune");
     oscdata->p[wt_unison_detune].set_type(ct_oscspread);
     oscdata->p[wt_unison_voices].set_name("Unison Voices");

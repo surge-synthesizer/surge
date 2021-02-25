@@ -585,10 +585,10 @@ static struct DPWTriName : public ParameterDynamicNameFunction
 void DPWOscillator::init_ctrltypes()
 {
     oscdata->p[dpw_saw_mix].set_name("Sawtooth");
-    oscdata->p[dpw_saw_mix].set_type(ct_percent_bidirectional);
+    oscdata->p[dpw_saw_mix].set_type(ct_percent_bipolar);
 
     oscdata->p[dpw_pulse_mix].set_name("Pulse");
-    oscdata->p[dpw_pulse_mix].set_type(ct_percent_bidirectional);
+    oscdata->p[dpw_pulse_mix].set_type(ct_percent_bipolar);
 
     oscdata->p[dpw_tri_mix].set_name("--DYNAMIC-NAME--");
     oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);

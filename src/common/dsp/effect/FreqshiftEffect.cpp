@@ -189,7 +189,7 @@ void FreqshiftEffect::init_ctrltypes()
     fxdata->p[freq_shift].set_name("Left");
     fxdata->p[freq_shift].set_type(ct_freq_shift);
     fxdata->p[freq_rmult].set_name("Right");
-    fxdata->p[freq_rmult].set_type(ct_percent_bidirectional);
+    fxdata->p[freq_rmult].set_type(ct_percent_bipolar);
     fxdata->p[freq_delay].set_name("Time");
     fxdata->p[freq_delay].set_type(ct_envtime);
     fxdata->p[freq_feedback].set_name("Feedback");

@@ -488,7 +488,7 @@ void FlangerEffect::init_ctrltypes()
     fxdata->p[fl_width].set_type(ct_decibel_narrow);
 
     fxdata->p[fl_mix].set_name("Mix");
-    fxdata->p[fl_mix].set_type(ct_percent_bidirectional);
+    fxdata->p[fl_mix].set_type(ct_percent_bipolar);
 
     fxdata->p[fl_wave].posy_offset = -1;
     fxdata->p[fl_rate].posy_offset = -1;

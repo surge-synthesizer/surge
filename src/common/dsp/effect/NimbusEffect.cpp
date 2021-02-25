@@ -57,7 +57,7 @@ void NimbusEffect::setvars(bool init)
         {
         case 0:
             fxdata->p[nmb_density].set_name("Density");
-            fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
+            fxdata->p[nmb_density].set_type(ct_percent_bipolar);
 
             fxdata->p[nmb_texture].set_name("Texture");
             fxdata->p[nmb_texture].set_type(ct_percent);
@@ -69,14 +69,14 @@ void NimbusEffect::setvars(bool init)
             fxdata->p[nmb_density].set_type(ct_percent);
 
             fxdata->p[nmb_texture].set_name("Filter");
-            fxdata->p[nmb_texture].set_type(ct_percent_bidirectional);
+            fxdata->p[nmb_texture].set_type(ct_percent_bipolar);
             break;
         case 3:
             fxdata->p[nmb_density].set_name("Smear");
-            fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
+            fxdata->p[nmb_density].set_type(ct_percent_bipolar);
 
             fxdata->p[nmb_texture].set_name("Texture");
-            fxdata->p[nmb_texture].set_type(ct_percent_bidirectional);
+            fxdata->p[nmb_texture].set_type(ct_percent_bipolar);
             break;
         }
 
@@ -203,7 +203,7 @@ void NimbusEffect::init_ctrltypes()
     fxdata->p[nmb_pitch].set_type(ct_pitch4oct);
     fxdata->p[nmb_pitch].posy_offset = ypos;
     fxdata->p[nmb_density].set_name("Density");
-    fxdata->p[nmb_density].set_type(ct_percent_bidirectional);
+    fxdata->p[nmb_density].set_type(ct_percent_bipolar);
     fxdata->p[nmb_density].posy_offset = ypos;
     fxdata->p[nmb_texture].set_name("Texture");
     fxdata->p[nmb_texture].set_type(ct_percent);

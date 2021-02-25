@@ -172,7 +172,7 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_lfo_depth2].posy_offset = 5;
 
     fxdata->p[ens_width].set_name("Width");
-    fxdata->p[ens_width].set_type(ct_percent_bidirectional);
+    fxdata->p[ens_width].set_type(ct_percent_bipolar);
     fxdata->p[ens_width].val_default.f = 1.f;
     fxdata->p[ens_width].posy_offset = 7;
     fxdata->p[ens_gain].set_name("Gain");

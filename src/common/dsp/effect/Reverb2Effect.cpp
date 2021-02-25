@@ -283,7 +283,7 @@ void Reverb2Effect::init_ctrltypes()
     fxdata->p[rev2_predelay].set_type(ct_reverbpredelaytime);
 
     fxdata->p[rev2_room_size].set_name("Room Size");
-    fxdata->p[rev2_room_size].set_type(ct_percent_bidirectional);
+    fxdata->p[rev2_room_size].set_type(ct_percent_bipolar);
     fxdata->p[rev2_decay_time].set_name("Decay Time");
     fxdata->p[rev2_decay_time].set_type(ct_reverbtime);
     fxdata->p[rev2_diffusion].set_name("Diffusion");

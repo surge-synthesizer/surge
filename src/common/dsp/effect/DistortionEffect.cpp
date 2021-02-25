@@ -191,7 +191,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_drive].set_name("Drive");
     fxdata->p[dist_drive].set_type(ct_decibel_narrow_extendable);
     fxdata->p[dist_feedback].set_name("Feedback");
-    fxdata->p[dist_feedback].set_type(ct_percent_bidirectional);
+    fxdata->p[dist_feedback].set_type(ct_percent_bipolar);
     fxdata->p[dist_model].set_name("Model");
     fxdata->p[dist_model].set_type(ct_distortion_waveshape);
 

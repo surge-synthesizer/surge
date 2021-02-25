@@ -157,7 +157,7 @@ void Eq3BandEffect::init_ctrltypes()
     fxdata->p[eq3_gain].set_name("Gain");
     fxdata->p[eq3_gain].set_type(ct_decibel);
     fxdata->p[eq3_mix].set_name("Mix");
-    fxdata->p[eq3_mix].set_type(ct_percent_bidirectional);
+    fxdata->p[eq3_mix].set_type(ct_percent_bipolar);
     fxdata->p[eq3_mix].val_default.f = 1.f;
 
     for (int i = 0; i < eq3_num_ctrls; i++)

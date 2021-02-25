@@ -309,7 +309,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
 void SurgeSuperOscillator::init_ctrltypes()
 {
     oscdata->p[sso_shape].set_name("Shape");
-    oscdata->p[sso_shape].set_type(ct_percent_bidirectional);
+    oscdata->p[sso_shape].set_type(ct_percent_bipolar);
     oscdata->p[sso_width1].set_name("Width 1");
     oscdata->p[sso_width1].set_type(ct_percent);
     oscdata->p[sso_width1].val_default.f = 0.5f;
