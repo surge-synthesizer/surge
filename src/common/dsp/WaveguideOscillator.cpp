@@ -35,11 +35,8 @@
  * - drive that feedback signal and run it through a soft clipper in each line
  * - write that feedback signal to the head of the delay line
  *
- * Running TODO
- * - the softclip is dumb. Use that param differently. Perhaps per-tap feedback?
- * - The detune as a spread around 0 rather than an exact?
- *
  */
+
 #include "WaveguideOscillator.h"
 
 enum ExModes
