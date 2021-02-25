@@ -178,12 +178,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume",
                                              ct_amplitude_clipper, Surge::Skin::Scene::volume,
                                              sc_id, cg_GLOBAL, 0, true, sceasy));
-        a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan",
-                                          ct_percent_bipolar, Surge::Skin::Scene::pan, sc_id,
-                                          cg_GLOBAL, 0, true, sceasy));
+        a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bipolar,
+                                          Surge::Skin::Scene::pan, sc_id, cg_GLOBAL, 0, true,
+                                          sceasy));
         a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width",
-                                            ct_percent_bipolar, Surge::Skin::Scene::width,
-                                            sc_id, cg_GLOBAL, 0, true, sceasy));
+                                            ct_percent_bipolar, Surge::Skin::Scene::width, sc_id,
+                                            cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].send_level[0].assign(
             p_id.next(), id_s++, "send_fx_1", "Send FX 1 Level", ct_sendlevel,
             Surge::Skin::Scene::send_fx_1, sc_id, cg_GLOBAL, 0, true, sceasy));
@@ -281,10 +281,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             p_id.next(), id_s++, "vca_velsense", "Velocity > VCA Gain", ct_decibel_attenuation,
             Surge::Skin::Scene::vel_sensitivity, sc_id, cg_GLOBAL, 0, false));
 
-        a->push_back(scene[sc].feedback.assign(
-            p_id.next(), id_s++, "feedback", "Feedback", ct_percent_bipolar,
-            Surge::Skin::Filter::feedback, sc_id, cg_GLOBAL, 0, true,
-            Surge::ParamConfig::kHorizontal | kWhite | sceasy));
+        a->push_back(scene[sc].feedback.assign(p_id.next(), id_s++, "feedback", "Feedback",
+                                               ct_percent_bipolar, Surge::Skin::Filter::feedback,
+                                               sc_id, cg_GLOBAL, 0, true,
+                                               Surge::ParamConfig::kHorizontal | kWhite | sceasy));
         a->push_back(scene[sc].filterblock_configuration.assign(
             p_id.next(), id_s++, "fb_config", "Filter Configuration", ct_fbconfig,
             Surge::Skin::Filter::config, sc_id, cg_GLOBAL, 0, false));
