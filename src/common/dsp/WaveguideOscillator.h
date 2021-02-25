@@ -53,6 +53,7 @@ class WaveguideOscillator : public Oscillator
 
     SSESincDelayLine<16384> delayLine[2];
     float priorSample[2] = {0, 0};
+    float driftlfo[2] = {0, 0}, driftlfo2[2] = {0, 0};
 
     BiquadFilter lp;
 };
