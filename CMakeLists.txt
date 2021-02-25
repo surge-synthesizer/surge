@@ -15,6 +15,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
+if(NOT BUILD_TESTING)
+  set(BUILD_TESTING "False" CACHE STRING "" FORCE)
+endif()
+
 project(Surge VERSION 1.9.0.0 LANGUAGES CXX ASM)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -34,7 +38,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 
     # PE/COFF doesn't support visibility
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
-    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility-inlines-hidden>
+    # Inlines visibility is only relevant with C++
+    $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<COMPILE_LANGUAGE:CXX>>:-fvisibility-inlines-hidden>
   )
   # Enable SSE2 on x86-32 only. It's implied on x86-64 and N/A elsewhere.
   if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
@@ -120,6 +125,7 @@ add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
 add_subdirectory(libs/oddsound-mts)
+add_subdirectory(libs/libsamplerate)
 
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
@@ -127,6 +133,7 @@ target_link_libraries(surge-shared PUBLIC
   surge::filesystem
   surge::tinyxml
   surge::oddsound-mts
+  samplerate
 )
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
