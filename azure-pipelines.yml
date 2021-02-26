@@ -66,7 +66,7 @@ jobs:
         cmakeTarget: "code-quality-pipeline-checks"
         cmakeConfig: "Debug"
       linux-vst3:
-        imageName: 'ubuntu-20.04'
+        imageName: 'ubuntu-18.04'
         isLinux: True
         aptGetExtras: ""
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"

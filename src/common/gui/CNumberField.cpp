@@ -301,7 +301,7 @@ void CNumberField::draw(CDrawContext *pContext)
         pContext->drawRect(getViewSize(), kDrawFilledAndStroked);
     }
 
-#define THE_TEXT_SIZE 32
+#define THE_TEXT_SIZE TXT_SIZE
     char the_text[THE_TEXT_SIZE];
     switch (controlmode)
     {
@@ -431,7 +431,7 @@ void CNumberField::draw(CDrawContext *pContext)
         else
         {
             float t = powf(2, value);
-            char tmp_text[28];
+            char tmp_text[TXT_SIZE];
             unit_prefix(t, tmp_text, true, false);
             snprintf(the_text, THE_TEXT_SIZE, "%ss", tmp_text);
         }
@@ -474,7 +474,7 @@ void CNumberField::draw(CDrawContext *pContext)
     case cm_frequency1hz:
     {
         float freq = powf(2, value);
-        char tmp_text[28];
+        char tmp_text[TXT_SIZE];
         unit_prefix(freq, tmp_text, false, false);
         snprintf(the_text, THE_TEXT_SIZE, "%sHz", tmp_text);
         break;
@@ -482,7 +482,7 @@ void CNumberField::draw(CDrawContext *pContext)
     case cm_time1s:
     {
         float t = powf(2, value);
-        char tmp_text[28];
+        char tmp_text[TXT_SIZE];
         unit_prefix(t, tmp_text, true, false);
         snprintf(the_text, THE_TEXT_SIZE, "%ss", tmp_text);
         break;
