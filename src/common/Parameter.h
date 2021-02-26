@@ -428,7 +428,8 @@ class Parameter
 
         float tempoSyncNotationMultiplier = 1.f;
 
-        char minLabel[DISPLAYINFO_TXT_SIZE]{}, maxLabel[DISPLAYINFO_TXT_SIZE]{}, defLabel[DISPLAYINFO_TXT_SIZE]{};
+        char minLabel[DISPLAYINFO_TXT_SIZE]{}, maxLabel[DISPLAYINFO_TXT_SIZE]{},
+            defLabel[DISPLAYINFO_TXT_SIZE]{};
         float minLabelValue = 0.f, maxLabelValue = 0.f;
 
         float modulationCap = -1.f;

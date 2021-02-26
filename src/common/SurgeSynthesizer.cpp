@@ -2823,10 +2823,10 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text)
     else if (index >= metaparam_offset)
     {
         snprintf(text, TXT_SIZE, "%.2f %%",
-                100.f * storage.getPatch()
-                            .scene[0]
-                            .modsources[ms_ctrl1 + index - metaparam_offset]
-                            ->get_output());
+                 100.f * storage.getPatch()
+                             .scene[0]
+                             .modsources[ms_ctrl1 + index - metaparam_offset]
+                             ->get_output());
     }
     else
         snprintf(text, TXT_SIZE, "-");
@@ -2853,10 +2853,10 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x)
     else if (index >= metaparam_offset)
     {
         snprintf(text, TXT_SIZE, "%.2f %%",
-                100.f * storage.getPatch()
-                            .scene[0]
-                            .modsources[ms_ctrl1 + index - metaparam_offset]
-                            ->get_output());
+                 100.f * storage.getPatch()
+                             .scene[0]
+                             .modsources[ms_ctrl1 + index - metaparam_offset]
+                             ->get_output());
     }
     else
         snprintf(text, TXT_SIZE, "-");
@@ -2871,12 +2871,13 @@ void SurgeSynthesizer::getParameterName(long index, char *text)
         string sn[3] = {"", "A ", "B "};
 
         snprintf(text, TXT_SIZE, "%s%s", sn[scn].c_str(),
-                storage.getPatch().param_ptr[index]->get_full_name());
+                 storage.getPatch().param_ptr[index]->get_full_name());
     }
     else if (index >= metaparam_offset)
     {
         int c = index - metaparam_offset;
-        snprintf(text, TXT_SIZE, "Macro %i: %s", c + 1, storage.getPatch().CustomControllerLabel[c]);
+        snprintf(text, TXT_SIZE, "Macro %i: %s", c + 1,
+                 storage.getPatch().CustomControllerLabel[c]);
     }
     else
         snprintf(text, TXT_SIZE, "-");

@@ -1764,7 +1764,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             return;
         case Menu:
             if (isBipolar)
-                snprintf(txt, TXT_SIZE, "%s %.*f %s", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf), u.c_str());
+                snprintf(txt, TXT_SIZE, "%s %.*f %s", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf),
+                         u.c_str());
             else
                 snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, u.c_str());
             return;
@@ -1788,8 +1789,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf < 0 ? "+" : ""), dp, -mf);
                     iw->dvalminus = itxt;
                 }
-                snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, f - mf, lowersep, dp, f, uppersep, dp,
-                        f + mf, u.c_str());
+                snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, f - mf, lowersep, dp, f,
+                         uppersep, dp, f + mf, u.c_str());
             }
             else
             {
@@ -1827,7 +1828,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 break;
             case Menu:
                 snprintf(txt, TXT_SIZE, "%s%.*f %s", (modulationDepth > 0) ? "+" : "", dp,
-                        modulationDepth * 100, "%");
+                         modulationDepth * 100, "%");
                 break;
             case InfoWindow:
                 if (iw)
@@ -1886,7 +1887,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 // if( isBipolar )
                 //   snprintf( txt, TXT_SIZE, "%.*f / %.*f %s", dp, mn-v, dp, mp-v, u.c_str() );
                 // else
-                snprintf(txt, TXT_SIZE, "%s%.*f %s", (mp - v > 0) ? "+" : "", dp, mp - v, u.c_str());
+                snprintf(txt, TXT_SIZE, "%s%.*f %s", (mp - v > 0) ? "+" : "", dp, mp - v,
+                         u.c_str());
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString &&
                     mp > val_max.f)
                 {
@@ -1927,8 +1929,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         }
                     }
 
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, dp, v, uppersep, dp,
-                            mp, u.c_str());
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, dp, v,
+                             uppersep, dp, mp, u.c_str());
                 }
                 else
                 {
@@ -1985,8 +1987,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         case TypeIn:
         case Menu:
             snprintf(txt, TXT_SIZE, "%.*f %s", dp,
-                    limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
-                    displayInfo.unit);
+                     limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
+                     displayInfo.unit);
             break;
         case InfoWindow:
             if (iw)
@@ -1997,18 +1999,19 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
                 char dtxt[TXT_SIZE];
                 snprintf(dtxt, TXT_SIZE, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
-                        limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
-                        displayInfo.unit);
+                         limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
+                         displayInfo.unit);
                 iw->dvalplus = dtxt;
 
                 snprintf(dtxt, TXT_SIZE, "%s%.*f %s", (mn - v > 0 ? "+" : ""), dp,
-                        limit_range(mn, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
-                        displayInfo.unit);
+                         limit_range(mn, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
+                         displayInfo.unit);
                 iw->dvalminus = isBipolar ? dtxt : "";
             }
             if (isBipolar)
             {
-                snprintf(txt, TXT_SIZE, "%s %s %s %s %s dB", negval, lowersep, val, uppersep, posval);
+                snprintf(txt, TXT_SIZE, "%s %s %s %s %s dB", negval, lowersep, val, uppersep,
+                         posval);
             }
             else
             {
@@ -2059,7 +2062,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     put(iw->valminus, freqdn);
                     put(iw->dvalplus, frequp - freq);
                     put(iw->dvalminus, freq - freqdn);
-                    snprintf(txt, TXT_SIZE, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp, frequp);
+                    snprintf(txt, TXT_SIZE, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp,
+                             frequp);
                     break;
                 }
             }
@@ -2101,7 +2105,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (isBipolar)
                 {
-                    snprintf(txt, TXT_SIZE, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(qq * 32));
+                    snprintf(txt, TXT_SIZE, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp,
+                             fabs(qq * 32));
                 }
                 else
                 {
@@ -2217,8 +2222,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 std::string vs = tempoSyncNotationValue(val.f);
                 if (isBipolar)
                 {
-                    snprintf(txt, TXT_SIZE, "%.*f %s %s %s %.*f %c", dp, mn, lowersep, vs.c_str(), uppersep,
-                            dp, mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f %s %s %s %.*f %c", dp, mn, lowersep, vs.c_str(),
+                             uppersep, dp, mp, '%');
                 }
                 else
                 {
@@ -2251,8 +2256,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (isBipolar)
                 {
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v, uppersep, dp,
-                            mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v,
+                             uppersep, dp, mp, '%');
                 }
                 else
                     snprintf(txt, TXT_SIZE, "%.*f %s %.*f %c", dp, v, uppersep, dp, mp, '%');
@@ -2454,7 +2459,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 u = displayInfo.absoluteUnit;
             }
             snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals),
-                    displayInfo.scale * f, u.c_str());
+                     displayInfo.scale * f, u.c_str());
 
             if (f >= val_max.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString))
@@ -2522,7 +2527,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
                     dval = displayInfo.minLabelValue;
                 }
             }
-            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval, u.c_str());
+            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval,
+                     u.c_str());
             return;
             break;
         }
@@ -2557,7 +2563,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
 
                 if (extend_range && q < 0)
                 {
-                    snprintf(txt, TXT_SIZE, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+                    snprintf(txt, TXT_SIZE, "C : 1 / %.*f", (detailedMode ? 6 : 2),
+                             -get_extended(f));
                 }
                 else
                 {
@@ -2750,17 +2757,20 @@ void Parameter::get_display(char *txt, bool external, float ef)
             snprintf(txt, TXT_SIZE, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
             break;
         case ct_scenemode:
-            snprintf(txt, TXT_SIZE, "%s", scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
             break;
         case ct_polymode:
-            snprintf(txt, TXT_SIZE, "%s", play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
             break;
         case ct_lfotrigmode:
             snprintf(txt, TXT_SIZE, "%s",
-                    lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
+                     lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
             break;
         case ct_character:
-            snprintf(txt, TXT_SIZE, "%s", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
             break;
         case ct_fmratio_int:
             snprintf(txt, TXT_SIZE, "C : %d", i);

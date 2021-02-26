@@ -18,9 +18,10 @@
  * don't crash.
  *
  * the current implementation just uses snprintf.
-*/
+ */
 
-static inline void strxcpy(char *const dst, const char *const src, const size_t n){
+static inline void strxcpy(char *const dst, const char *const src, const size_t n)
+{
     snprintf(dst, n, "%s", src);
 }
 
@@ -30,7 +31,7 @@ static inline void strxcpy(char *const dst, const char *const src, const size_t 
  *
  * If something breaks - check the TXT_SIZE constants versus what they were in earlier revisions!
  *
- * In some cases, buffers that were not called txt but served a similar purpose and were also 256 bytes now
- * also use this constant.
-*/
+ * In some cases, buffers that were not called txt but served a similar purpose and were also 256
+ * bytes now also use this constant.
+ */
 #define TXT_SIZE 256

@@ -1245,8 +1245,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
         {
             labelR.bottom += 18;
 
-            snprintf(txt, TXT_SIZE, "%d/%d", (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)),
-                    keyModMult);
+            snprintf(txt, TXT_SIZE, "%d/%d",
+                     (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)), keyModMult);
             dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
         }
     }

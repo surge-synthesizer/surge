@@ -2521,13 +2521,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                                  pmd->ctrlgroup_entry,
                                                  modulatorName(pmd->ctrlgroup_entry, true).c_str());
                             snprintf(tmptxt, TXT_SIZE, "Edit %s -> %s: %s",
-                                    (char *)modulatorName(thisms, true).c_str(), pname, modtxt);
+                                     (char *)modulatorName(thisms, true).c_str(), pname, modtxt);
                         }
                         else
                         {
                             snprintf(tmptxt, TXT_SIZE, "Edit %s -> %s: %s",
-                                    (char *)modulatorName(thisms, true).c_str(),
-                                    pmd->get_full_name(), modtxt);
+                                     (char *)modulatorName(thisms, true).c_str(),
+                                     pmd->get_full_name(), modtxt);
                         }
 
                         auto clearOp = [this, parameter, control, thisms]() {
@@ -2563,13 +2563,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 parameter->ctrlgroup_entry,
                                 modulatorName(parameter->ctrlgroup_entry, true).c_str());
                             snprintf(tmptxt, TXT_SIZE, "Clear %s -> %s",
-                                    (char *)modulatorName(thisms, true).c_str(), pname);
+                                     (char *)modulatorName(thisms, true).c_str(), pname);
                         }
                         else
                         {
                             snprintf(tmptxt, TXT_SIZE, "Clear %s -> %s",
-                                    (char *)modulatorName(thisms, true).c_str(),
-                                    parameter->get_full_name());
+                                     (char *)modulatorName(thisms, true).c_str(),
+                                     parameter->get_full_name());
                         }
 
                         auto clearOp = [this, first_destination, md, n_total_md, thisms,
@@ -2687,8 +2687,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 contextMenu->addSeparator(eid++);
                 char vtxt[1024];
-                snprintf(vtxt, 1024, "%s: %.*f %%", Surge::UI::toOSCaseForMenu("Edit Value").c_str(),
-                        (detailedMode ? 6 : 2), 100 * cms->get_output());
+                snprintf(vtxt, 1024, "%s: %.*f %%",
+                         Surge::UI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2),
+                         100 * cms->get_output());
                 addCallbackMenu(contextMenu, vtxt, [this, control, modsource]() {
                     promptForUserValueEntry(nullptr, control, modsource);
                 });
@@ -2740,7 +2741,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         char name[128];
 
                         snprintf(name, 128, "CC %d (%s) %s", mc, midicc_names[mc],
-                                (disabled == 1 ? "- RESERVED" : ""));
+                                 (disabled == 1 ? "- RESERVED" : ""));
 
                         CCommandMenuItem *cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
 
