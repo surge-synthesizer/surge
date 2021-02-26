@@ -110,12 +110,7 @@ class alignas(16) AirWindowsEffect : public Effect
                     fx->airwin->getParameterLabel(idx, lab);
                     fx->airwin->getParameterDisplay(idx, dis, value, true);
                 }
-                // For some reason this snprintf throws a warning (which is treated as an error)
-                // about this truncating strings. Well, yeah, it will, but we don't care.
-                // As I'm not sure how to squelch this warning... for now we'll just use the
-                // original unsafe sprintf version.
-                // snprintf(txt, TXT_SIZE, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
-                sprintf(txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
+                snprintf(txt, TXT_SIZE, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
             }
             else
             {

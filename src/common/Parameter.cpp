@@ -41,8 +41,7 @@ Parameter::~Parameter() = default;
 
 void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
-// despite being 16 elsewhere, prefix was 19 bytes here. Oh well, make the others fit this too.
-#define PREFIX_SIZE 19
+#define PREFIX_SIZE 16
     char prefix[PREFIX_SIZE];
     switch (ctrlgroup)
     {
