@@ -471,7 +471,8 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     Parameter p[n_osc_params];
     Parameter keytrack, retrigger;
     Wavetable wt;
-    char wavetable_display_name[256];
+#define WAVETABLE_DISPLAY_NAME_SIZE 256
+    char wavetable_display_name[WAVETABLE_DISPLAY_NAME_SIZE];
     void *queue_xmldata;
     int queue_type;
 
@@ -776,7 +777,8 @@ class SurgePatch
     // metadata
     std::string name, category, author, comment;
     // metaparameters
-    char CustomControllerLabel[n_customcontrollers][16];
+#define CUSTOM_CONTROLLER_LABEL_SIZE 16
+    char CustomControllerLabel[n_customcontrollers][CUSTOM_CONTROLLER_LABEL_SIZE];
 
     int streamingRevision;
     int currentSynthStreamingRevision;

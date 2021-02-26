@@ -21,6 +21,7 @@
 #include "DebugHelpers.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
+#include "StringOps.h"
 #include <cstdint>
 
 using namespace VSTGUI;
@@ -519,8 +520,8 @@ void CLFOGui::draw(CDrawContext *dc)
                     dc->drawLine(sp, ep);
                     dc->setLineWidth(1.0);
 
-                    char s[256];
-                    sprintf(s, "%d", l + 1);
+                    char s[TXT_SIZE];
+                    snprintf(s, TXT_SIZE, "%d", l + 1);
 
                     CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
                     tf.transform(tp);
@@ -569,12 +570,12 @@ void CLFOGui::draw(CDrawContext *dc)
             tf.transform(tp);
             dc->setFontColor(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
             dc->setFont(lfoTypeFont);
-            char txt[256];
+            char txt[TXT_SIZE];
             float tv = delta * l;
             if (fabs(roundf(tv) - tv) < 0.05)
-                snprintf(txt, 256, "%d s", (int)round(delta * l));
+                snprintf(txt, TXT_SIZE, "%d s", (int)round(delta * l));
             else
-                snprintf(txt, 256, "%.1f s", delta * l);
+                snprintf(txt, TXT_SIZE, "%.1f s", delta * l);
             dc->drawString(txt, tp, VSTGUI::kLeftText, true);
 
             CPoint sp(xp, valScale * 0.95), ep(xp, valScale * 0.9);
@@ -1233,8 +1234,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
         labelR.left += 1;
         labelR.top -= (keyModMult > 0 ? 9 : 0);
 
-        char txt[256];
-        sprintf(txt, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
+        char txt[TXT_SIZE];
+        snprintf(txt, TXT_SIZE, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
         dc->setFontColor(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
         dc->setFont(lfoTypeFont);
@@ -1244,8 +1245,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
         {
             labelR.bottom += 18;
 
-            sprintf(txt, "%d/%d", (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)),
-                    keyModMult);
+            snprintf(txt, TXT_SIZE, "%d/%d",
+                     (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)), keyModMult);
             dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
         }
     }

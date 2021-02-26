@@ -10,6 +10,7 @@
 #include "SkinColors.h"
 #include "RuntimeFont.h"
 #include "guihelpers.h"
+#include "StringOps.h"
 
 #include <iostream>
 #include <iomanip>
@@ -358,8 +359,8 @@ bool COscMenu::onWheel(const VSTGUI::CPoint &where, const float &distance,
                 for(int i=0; i<n_osc_params; i++)
                 {
                         double d; int j;
-                        char lbl[256];
-                        sprintf(lbl,"p%i",i);
+                        char lbl[TXT_SIZE];
+                        snprintf(lbl, TXT_SIZE, "p%i",i);
                         if (osc->p[i].valtype == vt_float)
                         {
                                 if(e->QueryDoubleAttribute(lbl,&d) == TIXML_SUCCESS) osc->p[i].val.f
@@ -431,7 +432,7 @@ void CFxMenu::draw(CDrawContext *dc)
     dc->drawString(fxslot_names[slot], txtbox, kLeftText, true);
 
     char fxname[NAMECHARS];
-    sprintf(fxname, "%s", fx_type_names[fx->type.val.i]);
+    snprintf(fxname, NAMECHARS, "%s", fx_type_names[fx->type.val.i]);
     dc->drawString(fxname, txtbox, kRightText, true);
 
     setDirty(false);
@@ -460,8 +461,8 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
         {
             double d;
             int j;
-            char lbl[256], sublbl[256];
-            sprintf(lbl, "p%i", i);
+            char lbl[TXT_SIZE], sublbl[TXT_SIZE];
+            snprintf(lbl, TXT_SIZE, "p%i", i);
             if (fxbuffer->p[i].valtype == vt_float)
             {
                 if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
@@ -473,10 +474,10 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
                     fxbuffer->p[i].set_storage_value(j);
             }
 
-            sprintf(sublbl, "p%i_temposync", i);
+            snprintf(sublbl, TXT_SIZE, "p%i_temposync", i);
             fxbuffer->p[i].temposync =
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-            sprintf(sublbl, "p%i_extend_range", i);
+            snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
             fxbuffer->p[i].extend_range =
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
         }
@@ -517,20 +518,20 @@ void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
 
             for (int p = 0; p < n_fx_params; p++)
             {
-                char lbl[256], txt[256], sublbl[256];
-                sprintf(lbl, "p%i", p);
+                char lbl[TXT_SIZE], txt[TXT_SIZE], sublbl[TXT_SIZE];
+                snprintf(lbl, TXT_SIZE, "p%i", p);
                 if (fx->p[p].ctrltype != ct_none)
                 {
                     neu.SetAttribute(lbl, fx->p[p].get_storage_value(txt));
 
                     if (fx->p[p].temposync)
                     {
-                        sprintf(sublbl, "p%i_temposync", p);
+                        snprintf(sublbl, TXT_SIZE, "p%i_temposync", p);
                         neu.SetAttribute(sublbl, "1");
                     }
                     if (fx->p[p].extend_range)
                     {
-                        sprintf(sublbl, "p%i_extend_range", p);
+                        snprintf(sublbl, TXT_SIZE, "p%i_extend_range", p);
                         neu.SetAttribute(sublbl, "1");
                     }
                 }
@@ -797,9 +798,9 @@ void CFxMenu::saveFX()
 }
 void CFxMenu::saveFXIn(const std::string &s)
 {
-    char fxName[256];
+    char fxName[TXT_SIZE];
     fxName[0] = 0;
-    strncpy(fxName, s.c_str(), 256);
+    strxcpy(fxName, s.c_str(), TXT_SIZE);
 
     if (strlen(fxName) == 0)
     {

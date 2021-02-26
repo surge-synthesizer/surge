@@ -32,7 +32,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   # Any Clang or any GCC
   add_compile_options(
     -Wno-multichar
-
     # Targetting Windows with GCC/Clang is experimental
     $<$<NOT:$<BOOL:${WIN32}>>:-Werror>
 
@@ -71,6 +70,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     endif()
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
+    add_compile_options(
+        -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
+    )
   endif()
 endif()
 
