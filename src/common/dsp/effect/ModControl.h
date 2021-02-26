@@ -160,7 +160,7 @@ class ModControl
 
             break;
         }
-        case mod_snh: // Sample & Hold random
+        case mod_snh:   // Sample & Hold random
         case mod_noise: // noise (Sample & Glide smoothed random)
         {
             if (lforeset)

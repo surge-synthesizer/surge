@@ -126,7 +126,7 @@ void Neuron::set_params()
     float rate = envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
                  (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
     float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
-    
+
     if (fxdata->p[neuron_lfo_rate].deactivated)
     {
         auto rmin = fxdata->p[neuron_lfo_rate].val_min.f;

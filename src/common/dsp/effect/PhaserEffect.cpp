@@ -122,8 +122,8 @@ void PhaserEffect::setvars()
             double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
                                                      2.0 / (i + 1) * modLFOL.value());
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(
-                2 * *f[ph_center] + *f[ph_spread] * center + (2.0 / (i + 1) * modLFOR.value()));
+            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
+                                                  (2.0 / (i + 1) * modLFOR.value()));
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }
     }
