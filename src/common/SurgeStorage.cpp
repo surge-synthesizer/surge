@@ -586,11 +586,7 @@ bailOnPortable:
     bool mtsMode = Surge::Storage::getUserDefaultValue(this, "useODDMTS", false);
     if (mtsMode)
     {
-        oddsound_mts_client = MTS_RegisterClient();
-        if (oddsound_mts_client)
-        {
-            oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
-        }
+        initialize_oddsound();
     }
     else
     {
@@ -1421,13 +1417,7 @@ void SurgeStorage::load_midi_controllers()
     }
 }
 
-SurgeStorage::~SurgeStorage()
-{
-    if (oddsound_mts_client)
-    {
-        MTS_DeregisterClient(oddsound_mts_client);
-    }
-}
+SurgeStorage::~SurgeStorage() { deinitialize_oddsound(); }
 
 double shafted_tanh(double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); }
 
@@ -1860,6 +1850,29 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
         oss << "Unable to save MIDI settings to '" << fn << "'!";
         Surge::UserInteractions::promptError(oss.str(), "Error");
     }
+}
+
+void SurgeStorage::initialize_oddsound()
+{
+    if (oddsound_mts_client)
+    {
+        deinitialize_oddsound();
+    }
+    oddsound_mts_client = MTS_RegisterClient();
+    if (oddsound_mts_client)
+    {
+        oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
+    }
+}
+
+void SurgeStorage::deinitialize_oddsound()
+{
+    if (oddsound_mts_client)
+    {
+        MTS_DeregisterClient(oddsound_mts_client);
+    }
+    oddsound_mts_client = nullptr;
+    oddsound_mts_active = false;
 }
 
 namespace Surge
