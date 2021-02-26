@@ -64,6 +64,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
     int mode = *pdata_ival[fl_mode];
     int mwave = *pdata_ival[fl_wave];
+    float depth_val = limit_range(*f[fl_depth], 0.f, 2.f);
 
     float v0 = *f[fl_voice_basepitch];
     vzeropitch.newValue(v0);
@@ -190,7 +191,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
             // OK so biggest tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
             // Assume lfoval is [-1,1] and depth is known
-            float maxtap = nv * (1.0 + limit_range(*f[fl_depth], 0.f, 2.f)) + 1;
+            float maxtap = nv * (1.0 + depth_val) + 1;
             if (maxtap >= InterpDelay::DELAY_SIZE)
             {
                 nv = nv * 0.999 * InterpDelay::DELAY_SIZE / maxtap;
@@ -202,14 +203,14 @@ void FlangerEffect::process(float *dataL, float *dataR)
     averageDelayBase /= (2 * COMBS_PER_CHANNEL);
     vzeropitch.process();
 
-    float dApprox = rate * samplerate / BLOCK_SIZE * averageDelayBase * *f[fl_depth];
+    float dApprox = rate * samplerate / BLOCK_SIZE * averageDelayBase * depth_val;
 
-    depth.newValue(limit_range(*f[fl_depth], 0.f, 2.f));
+    depth.newValue(depth_val);
     mix.newValue(*f[fl_mix]);
     voices.newValue(limit_range(*f[fl_voices], 1.f, 4.f));
     float feedbackScale = 0.4 * sqrt((limit_range(dApprox, 2.f, 60.f) + 30) / 100.0);
 
-    // Feedbackadjust based on mode
+    // Feedback adjust based on mode
     switch (mode)
     {
     case flm_classic:

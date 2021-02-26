@@ -83,9 +83,22 @@ void PhaserEffect::setvars()
     rate *= (float)slowrate;
 
     int mwave = *pdata_ival[ph_mod_wave];
+    float depth = limit_range(*f[ph_mod_depth], 0.f, 2.f);
 
-    modLFOL.pre_process(mwave, rate, *f[ph_mod_depth], 0.f);
-    modLFOR.pre_process(mwave, rate, *f[ph_mod_depth], 0.5 * *f[ph_stereo]);
+    if (fxdata->p[ph_mod_rate].deactivated)
+    {
+        auto rmin = fxdata->p[ph_mod_rate].val_min.f;
+        auto rmax = fxdata->p[ph_mod_rate].val_max.f;
+        auto phase = limit_range((*f[ph_mod_rate] - rmin) / (rmax - rmin), 0.f, 1.f);
+
+        modLFOL.pre_process(mwave, 0.f, depth, phase);
+        modLFOR.pre_process(mwave, 0.f, depth, phase + 0.5 * *f[ph_stereo]);
+    }
+    else
+    {
+        modLFOL.pre_process(mwave, rate, depth, 0.f);
+        modLFOR.pre_process(mwave, rate, depth, 0.5 * *f[ph_stereo]);
+    }
 
     // if stages is set to 1 to indicate we are in legacy mode, use legacy freqs and spans
     if (n_stages < 2)
@@ -110,7 +123,7 @@ void PhaserEffect::setvars()
                                                      2.0 / (i + 1) * modLFOL.value());
             biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
             omega = biquad[2 * i + 1]->calc_omega(
-                2 * *f[ph_center] + *f[ph_spread] * center * (2.0 / (i + 1) * modLFOR.value()));
+                2 * *f[ph_center] + *f[ph_spread] * center + (2.0 / (i + 1) * modLFOR.value()));
             biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
         }
     }
@@ -203,7 +216,7 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_mod_wave].set_name("Waveform");
     fxdata->p[ph_mod_wave].set_type(ct_fxlfowave);
     fxdata->p[ph_mod_rate].set_name("Rate");
-    fxdata->p[ph_mod_rate].set_type(ct_lforate);
+    fxdata->p[ph_mod_rate].set_type(ct_lforate_deactivatable);
     fxdata->p[ph_mod_depth].set_name("Depth");
     fxdata->p[ph_mod_depth].set_type(ct_percent);
     fxdata->p[ph_stereo].set_name("Stereo");
@@ -231,6 +244,7 @@ void PhaserEffect::init_ctrltypes()
 
 void PhaserEffect::init_default_values()
 {
+    fxdata->p[ph_mod_rate].deactivated = false;
     fxdata->p[ph_stages].val.i = 4;
     fxdata->p[ph_width].val.f = 0.f;
     fxdata->p[ph_spread].val.f = 0.f;
@@ -245,9 +259,11 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision,
         fxdata->p[ph_stages].val.i = 4;
         fxdata->p[ph_width].val.f = 0.f;
     }
+
     if (streamingRevision < 16)
     {
         fxdata->p[ph_mod_wave].val.i = 1;
+        fxdata->p[ph_mod_rate].deactivated = false;
     }
 }
 

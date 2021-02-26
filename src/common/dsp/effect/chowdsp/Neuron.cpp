@@ -122,11 +122,23 @@ void Neuron::set_params()
     delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * samplerate * os.getOSRatio());
 
     // modulation settings
+    int mwave = *pdata_ival[neuron_lfo_wave];
     float rate = envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
                  (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
-    int mwave = *pdata_ival[neuron_lfo_wave];
     float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
-    modLFO.pre_process(mwave, rate, depth_val, 0.f);
+    
+    if (fxdata->p[neuron_lfo_rate].deactivated)
+    {
+        auto rmin = fxdata->p[neuron_lfo_rate].val_min.f;
+        auto rmax = fxdata->p[neuron_lfo_rate].val_max.f;
+        auto phase = limit_range((*f[neuron_lfo_rate] - rmin) / (rmax - rmin), 0.f, 1.f);
+
+        modLFO.pre_process(mwave, 0.f, depth_val, phase);
+    }
+    else
+    {
+        modLFO.pre_process(mwave, rate, depth_val, 0.f);
+    }
 
     // calc makeup gain
     auto drive_makeup = [](float wh) -> float { return std::exp(-0.11898f * wh) + 1.0f; };
@@ -217,7 +229,7 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_lfo_wave].posy_offset = 5;
 
     fxdata->p[neuron_lfo_rate].set_name("Rate");
-    fxdata->p[neuron_lfo_rate].set_type(ct_lforate);
+    fxdata->p[neuron_lfo_rate].set_type(ct_lforate_deactivatable);
     fxdata->p[neuron_lfo_rate].posy_offset = 5;
 
     fxdata->p[neuron_lfo_depth].set_name("Depth");
@@ -246,6 +258,7 @@ void Neuron::init_default_values()
 
     fxdata->p[neuron_lfo_wave].val.i = 0;
     fxdata->p[neuron_lfo_rate].val.f = -2.f;
+    fxdata->p[neuron_lfo_rate].deactivated = false;
     fxdata->p[neuron_lfo_depth].val.f = 0.f;
 
     fxdata->p[neuron_width].val.f = 0.0f;
