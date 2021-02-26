@@ -26,6 +26,7 @@
 #include <utility>
 #include <UserDefaults.h>
 #include "DebugHelpers.h"
+#include "StringOps.h"
 
 Parameter::Parameter()
 {
@@ -40,68 +41,70 @@ Parameter::~Parameter() = default;
 
 void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
-    char prefix[19];
+// despite being 16 elsewhere, prefix was 19 bytes here. Oh well, make the others fit this too.
+#define PREFIX_SIZE 19
+    char prefix[PREFIX_SIZE];
     switch (ctrlgroup)
     {
     case cg_OSC:
-        sprintf(prefix, "osc%i_", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "osc%i_", ctrlgroup_entry + 1);
         break;
     case cg_FILTER:
-        sprintf(prefix, "filter%i_", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "filter%i_", ctrlgroup_entry + 1);
         break;
     case cg_ENV:
-        sprintf(prefix, "env%i_", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "env%i_", ctrlgroup_entry + 1);
         break;
     /*case 6:
-            sprintf(prefix,"ms%i_",ctrlgroup_entry+1);
+            snprintf(prefix, PREFIX_SIZE, "ms%i_",ctrlgroup_entry+1);
             break;*/
     case cg_FX:
-        sprintf(prefix, "fx%i_", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "fx%i_", ctrlgroup_entry + 1);
         break;
     default:
         prefix[0] = '\0';
         break;
     };
     if (scene == 2)
-        sprintf(txt, "b_%s", prefix);
+        snprintf(txt, TXT_SIZE, "b_%s", prefix);
     else if (scene == 1)
-        sprintf(txt, "a_%s", prefix);
+        snprintf(txt, TXT_SIZE, "a_%s", prefix);
     else
-        sprintf(txt, "%s", prefix);
+        snprintf(txt, TXT_SIZE, "%s", prefix);
 }
 
 void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup,
                                 int ctrlgroup_entry, const char *lfoPrefixOverride)
 {
-    char prefix[32];
+    char prefix[PREFIX_SIZE];
     bool useprefix = true;
     switch (ctrlgroup)
     {
     case cg_OSC:
-        sprintf(prefix, "Osc %i", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "Osc %i", ctrlgroup_entry + 1);
         break;
     case cg_FILTER:
-        sprintf(prefix, "Filter %i", ctrlgroup_entry + 1);
+        snprintf(prefix, PREFIX_SIZE, "Filter %i", ctrlgroup_entry + 1);
         break;
     case cg_ENV:
         if (ctrlgroup_entry)
-            sprintf(prefix, "Filter EG");
+            snprintf(prefix, PREFIX_SIZE, "Filter EG");
         else
-            sprintf(prefix, "Amp EG");
+            snprintf(prefix, PREFIX_SIZE, "Amp EG");
         break;
     case cg_LFO:
     {
         int a = ctrlgroup_entry + 1 - ms_lfo1;
         if (lfoPrefixOverride)
         {
-            strcpy(prefix, lfoPrefixOverride);
+            strxcpy(prefix, lfoPrefixOverride, PREFIX_SIZE);
         }
         else
         {
             if (a > 6)
-                sprintf(prefix, "Scene LFO %i", a - 6);
+                snprintf(prefix, PREFIX_SIZE, "Scene LFO %i", a - 6);
             else
-                sprintf(prefix, "LFO %i", a);
+                snprintf(prefix, PREFIX_SIZE, "LFO %i", a);
         }
     }
     break;
@@ -109,31 +112,31 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
         switch (ctrlgroup_entry)
         {
         case 0:
-            sprintf(prefix, "FX A1");
+            snprintf(prefix, PREFIX_SIZE, "FX A1");
             break;
         case 1:
-            sprintf(prefix, "FX A2");
+            snprintf(prefix, PREFIX_SIZE, "FX A2");
             break;
         case 2:
-            sprintf(prefix, "FX B1");
+            snprintf(prefix, PREFIX_SIZE, "FX B1");
             break;
         case 3:
-            sprintf(prefix, "FX B2");
+            snprintf(prefix, PREFIX_SIZE, "FX B2");
             break;
         case 4:
-            sprintf(prefix, "FX S1");
+            snprintf(prefix, PREFIX_SIZE, "FX S1");
             break;
         case 5:
-            sprintf(prefix, "FX S2");
+            snprintf(prefix, PREFIX_SIZE, "FX S2");
             break;
         case 6:
-            sprintf(prefix, "FX M1");
+            snprintf(prefix, PREFIX_SIZE, "FX M1");
             break;
         case 7:
-            sprintf(prefix, "FX M2");
+            snprintf(prefix, PREFIX_SIZE, "FX M2");
             break;
         default:
-            sprintf(prefix, "FXERR");
+            snprintf(prefix, PREFIX_SIZE, "FXERR");
             break;
         }
         break;
@@ -143,18 +146,21 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
         break;
     };
 
-    char tfn[256];
+    // note for future devs: code here used to make a buffer of 256 bytes, write into it, then
+    // incorrectly truncate to NAMECHARS (which was 64 bytes) leading to unterminated strings.
+    // now tfn is also NAMECHARS and unterminated strings aren't possible. But if some behaviour
+    // changes -- this comment exists.
+    char tfn[NAMECHARS];
     if (useprefix)
-        sprintf(tfn, "%s %s", prefix, dn);
+        snprintf(tfn, NAMECHARS, "%s %s", prefix, dn);
     else
-        sprintf(tfn, "%s", dn);
-    memset(fn, 0, NAMECHARS * sizeof(char));
-    strncpy(fn, tfn, NAMECHARS - 1);
+        snprintf(tfn, NAMECHARS, "%s", dn);
+    strxcpy(fn, tfn, NAMECHARS);
 }
 
 void Parameter::set_name(const char *n)
 {
-    strncpy(dispname, n, NAMECHARS);
+    strxcpy(dispname, n, NAMECHARS);
     create_fullname(dispname, fullname, ctrlgroup, ctrlgroup_entry);
     parameterNameUpdated = true;
 }
@@ -192,13 +198,13 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     this->scene = scene;
     this->ctrlstyle = ctrlstyle;
     this->storage = nullptr;
-    strncpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS);
+    strxcpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS);
 
-    strncpy(this->name, name, NAMECHARS);
+    strxcpy(this->name, name, NAMECHARS);
     set_name(dispname);
-    char prefix[16];
+    char prefix[PREFIX_SIZE];
     get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
-    sprintf(name_storage, "%s%s", prefix, name);
+    snprintf(name_storage, NAMECHARS, "%s%s", prefix, name);
     posy_offset = 0;
     if (scene)
         per_voice_processing = true;
@@ -984,7 +990,7 @@ void Parameter::set_type(int ctrltype)
 
     case ct_none:
     default:
-        sprintf(dispname, "-");
+        snprintf(dispname, NAMECHARS, "-");
         valtype = vt_int;
 
         val_min.i = std::numeric_limits<int>::min();
@@ -1017,7 +1023,7 @@ void Parameter::set_type(int ctrltype)
     case ct_reson_res_extendable:
     case ct_dpw_trimix:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "%%");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
         break;
     case ct_percent_bipolar_stereo:
@@ -1026,10 +1032,10 @@ void Parameter::set_type(int ctrltype)
                                      ParamDisplayFeatures::kHasCustomMaxString |
                                      ParamDisplayFeatures::kHasCustomDefaultString;
 
-        sprintf(displayInfo.unit, "%%");
-        sprintf(displayInfo.minLabel, "-100.00 %% (Left)");
-        sprintf(displayInfo.defLabel, "0.00 %% (Stereo)");
-        sprintf(displayInfo.maxLabel, "100.00 %% (Right)");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
+        snprintf(displayInfo.minLabel, DISPLAYINFO_TXT_SIZE, "-100.00 %% (Left)");
+        snprintf(displayInfo.defLabel, DISPLAYINFO_TXT_SIZE, "0.00 %% (Stereo)");
+        snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "100.00 %% (Right)");
         displayInfo.scale = 100;
         break;
     case ct_percent_bipolar_stringbal:
@@ -1038,10 +1044,10 @@ void Parameter::set_type(int ctrltype)
                                      ParamDisplayFeatures::kHasCustomMaxString |
                                      ParamDisplayFeatures::kHasCustomDefaultString;
 
-        sprintf(displayInfo.unit, "%%");
-        sprintf(displayInfo.minLabel, "-100.00 %% (String 1)");
-        sprintf(displayInfo.defLabel, "0.00 %% (Strings 1+2)");
-        sprintf(displayInfo.maxLabel, "100.00 %% (String 2)");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
+        snprintf(displayInfo.minLabel, DISPLAYINFO_TXT_SIZE, "-100.00 %% (String 1)");
+        snprintf(displayInfo.defLabel, DISPLAYINFO_TXT_SIZE, "0.00 %% (Strings 1+2)");
+        snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "100.00 %% (String 2)");
         displayInfo.scale = 100;
         break;
 
@@ -1050,7 +1056,7 @@ void Parameter::set_type(int ctrltype)
          */
     case ct_pitch_semi7bp_absolutable:
         displayInfo.absoluteFactor = 10.0;
-        sprintf(displayInfo.absoluteUnit, "Hz");
+        snprintf(displayInfo.absoluteUnit, DISPLAYINFO_TXT_SIZE, "Hz");
     case ct_pitch_semi7bp:
     case ct_flangerspacing:
         displayInfo.extendFactor = 12.0;
@@ -1074,7 +1080,7 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_vocoder_high:
     case ct_freq_ringmod:
         displayType = ATwoToTheBx;
-        sprintf(displayInfo.unit, "Hz");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Hz");
         displayInfo.a = (ctrltype == ct_freq_ringmod) ? 8.175798 : 440.0;
         displayInfo.b = 1.0f / 12.0f;
         displayInfo.decimals = 2;
@@ -1084,12 +1090,12 @@ void Parameter::set_type(int ctrltype)
 
     case ct_freq_shift:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "Hz");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Hz");
         displayInfo.extendFactor = 100.0;
         break;
 
     case ct_envtime_lfodecay:
-        sprintf(displayInfo.maxLabel, "Forever");
+        snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "Forever");
         displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMaxString;
         // THERE IS NO BREAK HERE ON PURPOSE so we group to the others
     case ct_portatime:
@@ -1103,7 +1109,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.customFeatures |= ParamDisplayFeatures::kHasCustomMinValue;
         displayInfo.minLabelValue = 0.f;
         displayInfo.tempoSyncNotationMultiplier = 1.f;
-        sprintf(displayInfo.unit, "s");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
         displayInfo.decimals = 3;
         break;
 
@@ -1113,24 +1119,24 @@ void Parameter::set_type(int ctrltype)
         displayInfo.decimals = 3;
         displayInfo.tempoSyncNotationMultiplier = -1.0f;
         displayInfo.modulationCap = 512 * 8;
-        sprintf(displayInfo.unit, "Hz");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Hz");
         break;
 
     case ct_decibel_extendable:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "dB");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         displayInfo.extendFactor = 3;
         break;
 
     case ct_decibel_narrow_extendable:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "dB");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         displayInfo.extendFactor = 5;
         break;
 
     case ct_decibel_narrow_short_extendable:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "dB");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         displayInfo.extendFactor = 2;
         break;
 
@@ -1144,32 +1150,32 @@ void Parameter::set_type(int ctrltype)
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "dB");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         break;
 
     case ct_bandwidth:
         displayType = LinearWithScale;
-        sprintf(displayInfo.unit, "octaves");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "octaves");
         break;
 
     case ct_detuning:
         displayType = LinearWithScale;
         displayInfo.scale = 100.0;
-        sprintf(displayInfo.unit, "cents");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "cents");
         break;
 
     case ct_stereowidth:
         displayType = LinearWithScale;
         displayInfo.scale = 1.0;
-        sprintf(displayInfo.unit, "º");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "º");
         break;
 
     case ct_oscspread:
     case ct_oscspread_bipolar:
         displayType = LinearWithScale;
         displayInfo.scale = 100.0;
-        sprintf(displayInfo.unit, "cents");
-        sprintf(displayInfo.absoluteUnit, "Hz");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "cents");
+        snprintf(displayInfo.absoluteUnit, DISPLAYINFO_TXT_SIZE, "Hz");
         displayInfo.absoluteFactor =
             0.16; // absolute factor also takes scale into account hence the /100
         displayInfo.extendFactor = 12;
@@ -1179,7 +1185,7 @@ void Parameter::set_type(int ctrltype)
     case ct_osc_feedback_negative:
         displayType = LinearWithScale;
         displayInfo.scale = 100.0;
-        sprintf(displayInfo.unit, "%%");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.extendFactor = 4;
         break;
 
@@ -1187,7 +1193,7 @@ void Parameter::set_type(int ctrltype)
     case ct_amplitude_clipper:
     case ct_sendlevel:
         displayType = Decibel;
-        sprintf(displayInfo.unit, "dB");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         break;
 
     case ct_airwindows_param:
@@ -1203,14 +1209,14 @@ void Parameter::set_type(int ctrltype)
         displayType = ATwoToTheBx;
         displayInfo.a = 1.0f;
         displayInfo.b = std::log2(100.0f / 1.0f);
-        sprintf(displayInfo.unit, "ms");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ms");
         break;
 
     case ct_comp_release_ms:
         displayType = ATwoToTheBx;
         displayInfo.a = 10.0f;
         displayInfo.b = std::log2(1000.0f / 10.0f);
-        sprintf(displayInfo.unit, "ms");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ms");
         break;
     }
 }
@@ -1491,10 +1497,10 @@ char *Parameter::get_storage_value(char *str)
     switch (valtype)
     {
     case vt_int:
-        sprintf(str, "%i", val.i);
+        snprintf(str, TXT_SIZE, "%i", val.i);
         break;
     case vt_bool:
-        sprintf(str, "%i", val.b ? 1 : 0);
+        snprintf(str, TXT_SIZE, "%i", val.b ? 1 : 0);
         break;
     case vt_float:
         std::stringstream sst;
@@ -1503,7 +1509,7 @@ char *Parameter::get_storage_value(char *str)
         sst << std::showpoint;
         sst << std::setprecision(6);
         sst << val.f;
-        strncpy(str, sst.str().c_str(), 15);
+        strxcpy(str, sst.str().c_str(), TXT_SIZE);
         break;
     };
 
@@ -1754,13 +1760,13 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         switch (displaymode)
         {
         case TypeIn:
-            sprintf(txt, "%.*f %s", dp, mf, u.c_str());
+            snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, u.c_str());
             return;
         case Menu:
             if (isBipolar)
-                sprintf(txt, "%s %.*f %s", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf), u.c_str());
+                snprintf(txt, TXT_SIZE, "%s %.*f %s", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf), u.c_str());
             else
-                sprintf(txt, "%.*f %s", dp, mf, u.c_str());
+                snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, u.c_str());
             return;
             break;
         case InfoWindow:
@@ -1769,36 +1775,37 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (iw)
                 {
-                    char itxt[1024];
-                    sprintf(itxt, "%.*f %s", dp, f, u.c_str());
+#define ITXT_SIZE 1024
+                    char itxt[ITXT_SIZE];
+                    snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, f, u.c_str());
                     iw->val = itxt;
-                    sprintf(itxt, "%.*f", dp, f + mf);
+                    snprintf(itxt, ITXT_SIZE, "%.*f", dp, f + mf);
                     iw->valplus = itxt;
-                    sprintf(itxt, "%.*f", dp, f - mf);
+                    snprintf(itxt, ITXT_SIZE, "%.*f", dp, f - mf);
                     iw->valminus = itxt;
-                    sprintf(itxt, "%s%.*f", (mf > 0 ? "+" : ""), dp, +mf);
+                    snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf > 0 ? "+" : ""), dp, +mf);
                     iw->dvalplus = itxt;
-                    sprintf(itxt, "%s%.*f", (mf < 0 ? "+" : ""), dp, -mf);
+                    snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf < 0 ? "+" : ""), dp, -mf);
                     iw->dvalminus = itxt;
                 }
-                sprintf(txt, "%.*f %s %.*f %s %.*f %s", dp, f - mf, lowersep, dp, f, uppersep, dp,
+                snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, f - mf, lowersep, dp, f, uppersep, dp,
                         f + mf, u.c_str());
             }
             else
             {
                 if (iw)
                 {
-                    char itxt[1024];
-                    sprintf(itxt, "%.*f %s", dp, f, u.c_str());
+                    char itxt[ITXT_SIZE];
+                    snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, f, u.c_str());
                     iw->val = itxt;
-                    sprintf(itxt, "%.*f", dp, f + mf);
+                    snprintf(itxt, ITXT_SIZE, "%.*f", dp, f + mf);
                     iw->valplus = itxt;
                     iw->valminus = "";
-                    sprintf(itxt, "%s%.*f", (mf > 0 ? "+" : ""), dp, mf);
+                    snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf > 0 ? "+" : ""), dp, mf);
                     iw->dvalplus = itxt;
                     iw->dvalminus = "";
                 }
-                sprintf(txt, "%.*f %s %.*f %s", dp, f, uppersep, dp, f + mf, u.c_str());
+                snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", dp, f, uppersep, dp, f + mf, u.c_str());
             }
             return;
             break;
@@ -1816,10 +1823,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             switch (displaymode)
             {
             case TypeIn:
-                sprintf(txt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+                snprintf(txt, TXT_SIZE, "%.*f %c", dp, 100.f * modulationDepth, '%');
                 break;
             case Menu:
-                sprintf(txt, "%s%.*f %s", (modulationDepth > 0) ? "+" : "", dp,
+                snprintf(txt, TXT_SIZE, "%s%.*f %s", (modulationDepth > 0) ? "+" : "", dp,
                         modulationDepth * 100, "%");
                 break;
             case InfoWindow:
@@ -1827,10 +1834,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 {
                     iw->val = tempoSyncNotationValue(val.f);
 
-                    char ltxt[256];
-                    sprintf(ltxt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+                    char ltxt[TXT_SIZE];
+                    snprintf(ltxt, TXT_SIZE, "%.*f %c", dp, 100.f * modulationDepth, '%');
                     iw->dvalplus = ltxt;
-                    sprintf(ltxt, "%.*f %c", dp, -100.f * modulationDepth, '%');
+                    snprintf(ltxt, TXT_SIZE, "%.*f %c", dp, -100.f * modulationDepth, '%');
                     iw->dvalminus = ltxt;
                     iw->valplus = iw->dvalplus;
                     iw->valminus = iw->dvalminus;
@@ -1873,17 +1880,17 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             switch (displaymode)
             {
             case TypeIn:
-                sprintf(txt, "%.*f %s", dp, mp - v, u.c_str());
+                snprintf(txt, TXT_SIZE, "%.*f %s", dp, mp - v, u.c_str());
                 break;
             case Menu:
                 // if( isBipolar )
-                //   sprintf( txt, "%.*f / %.*f %s", dp, mn-v, dp, mp-v, u.c_str() );
+                //   snprintf( txt, TXT_SIZE, "%.*f / %.*f %s", dp, mn-v, dp, mp-v, u.c_str() );
                 // else
-                sprintf(txt, "%s%.*f %s", (mp - v > 0) ? "+" : "", dp, mp - v, u.c_str());
+                snprintf(txt, TXT_SIZE, "%s%.*f %s", (mp - v > 0) ? "+" : "", dp, mp - v, u.c_str());
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString &&
                     mp > val_max.f)
                 {
-                    sprintf(txt, "%s", displayInfo.maxLabel);
+                    snprintf(txt, TXT_SIZE, "%s", displayInfo.maxLabel);
                 }
 
                 break;
@@ -1893,16 +1900,16 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 {
                     if (iw)
                     {
-                        char itxt[1024];
-                        sprintf(itxt, "%.*f %s", dp, v, u.c_str());
+                        char itxt[ITXT_SIZE];
+                        snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, v, u.c_str());
                         iw->val = itxt;
-                        sprintf(itxt, "%.*f", dp, mp);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mp);
                         iw->valplus = itxt;
-                        sprintf(itxt, "%.*f", dp, mn);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mn);
                         iw->valminus = itxt;
-                        sprintf(itxt, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
                         iw->dvalplus = itxt;
-                        sprintf(itxt, "%s%.*f", (mn - v > 0 ? "+" : ""), dp, mn - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mn - v > 0 ? "+" : ""), dp, mn - v);
                         iw->dvalminus = itxt;
 
                         if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
@@ -1920,25 +1927,25 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         }
                     }
 
-                    sprintf(txt, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, dp, v, uppersep, dp,
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, dp, v, uppersep, dp,
                             mp, u.c_str());
                 }
                 else
                 {
                     if (iw)
                     {
-                        char itxt[1024];
-                        sprintf(itxt, "%.*f %s", dp, v, u.c_str());
+                        char itxt[ITXT_SIZE];
+                        snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, v, u.c_str());
                         iw->val = itxt;
-                        sprintf(itxt, "%.*f", dp, mn);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mn);
                         iw->valplus = itxt;
                         iw->valminus = "";
-                        sprintf(itxt, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
                         iw->dvalplus = itxt;
                         iw->dvalminus = "";
                     }
 
-                    sprintf(txt, "%.*f %s %.*f %s", dp, v, uppersep, dp, mp, u.c_str());
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", dp, v, uppersep, dp, mp, u.c_str());
                 }
                 break;
             }
@@ -1954,30 +1961,30 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         float mp = amp_to_db(val.f + modulationDepth);
         float mn = amp_to_db(val.f - modulationDepth);
 
-        char posval[256];
-        char negval[256];
-        char val[256];
+        char posval[TXT_SIZE];
+        char negval[TXT_SIZE];
+        char val[TXT_SIZE];
 
         if (mn <= -192.f)
-            sprintf(negval, "-inf %s", displayInfo.unit);
+            snprintf(negval, TXT_SIZE, "-inf %s", displayInfo.unit);
         else
-            sprintf(negval, "%.*f %s", dp, mn, displayInfo.unit);
+            snprintf(negval, TXT_SIZE, "%.*f %s", dp, mn, displayInfo.unit);
 
         if (mp <= -192.f)
-            sprintf(posval, "-inf %s", displayInfo.unit);
+            snprintf(posval, TXT_SIZE, "-inf %s", displayInfo.unit);
         else
-            sprintf(posval, "%.*f %s", dp, mp, displayInfo.unit);
+            snprintf(posval, TXT_SIZE, "%.*f %s", dp, mp, displayInfo.unit);
 
         if (v <= -192.f)
-            sprintf(val, "-inf %s", displayInfo.unit);
+            snprintf(val, TXT_SIZE, "-inf %s", displayInfo.unit);
         else
-            sprintf(val, "%.*f %s", dp, v, displayInfo.unit);
+            snprintf(val, TXT_SIZE, "%.*f %s", dp, v, displayInfo.unit);
 
         switch (displaymode)
         {
         case TypeIn:
         case Menu:
-            sprintf(txt, "%.*f %s", dp,
+            snprintf(txt, TXT_SIZE, "%.*f %s", dp,
                     limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                     displayInfo.unit);
             break;
@@ -1988,24 +1995,24 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valplus = posval;
                 iw->valminus = isBipolar ? negval : "";
 
-                char dtxt[256];
-                sprintf(dtxt, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
+                char dtxt[TXT_SIZE];
+                snprintf(dtxt, TXT_SIZE, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
                         limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalplus = dtxt;
 
-                sprintf(dtxt, "%s%.*f %s", (mn - v > 0 ? "+" : ""), dp,
+                snprintf(dtxt, TXT_SIZE, "%s%.*f %s", (mn - v > 0 ? "+" : ""), dp,
                         limit_range(mn, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                         displayInfo.unit);
                 iw->dvalminus = isBipolar ? dtxt : "";
             }
             if (isBipolar)
             {
-                sprintf(txt, "%s %s %s %s %s dB", negval, lowersep, val, uppersep, posval);
+                snprintf(txt, TXT_SIZE, "%s %s %s %s %s dB", negval, lowersep, val, uppersep, posval);
             }
             else
             {
-                sprintf(txt, "%s %s %s dB", val, uppersep, posval);
+                snprintf(txt, TXT_SIZE, "%s %s %s dB", val, uppersep, posval);
             }
             break;
         }
@@ -2037,14 +2044,14 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
             case TypeIn:
             case Menu:
-                sprintf(txt, "%.*f Hz", dp, frequp - freq);
+                snprintf(txt, TXT_SIZE, "%.*f Hz", dp, frequp - freq);
                 break;
             case InfoWindow:
                 if (iw)
                 {
                     auto put = [dp](std::string &tg, float val) {
-                        char txt[256];
-                        sprintf(txt, "%.*f Hz", dp, val);
+                        char txt[TXT_SIZE];
+                        snprintf(txt, TXT_SIZE, "%.*f Hz", dp, val);
                         tg = txt;
                     };
                     put(iw->val, freq);
@@ -2052,7 +2059,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     put(iw->valminus, freqdn);
                     put(iw->dvalplus, frequp - freq);
                     put(iw->dvalminus, freq - freqdn);
-                    sprintf(txt, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp, frequp);
+                    snprintf(txt, TXT_SIZE, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp, frequp);
                     break;
                 }
             }
@@ -2080,11 +2087,11 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         case TypeIn:
             if (extend_range)
             {
-                sprintf(txt, "C : %.*f", dp, qq * 32);
+                snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 32);
             }
             else
             {
-                sprintf(txt, "C : %.*f", dp, mf);
+                snprintf(txt, TXT_SIZE, "C : %.*f", dp, mf);
             }
             return;
             break;
@@ -2094,22 +2101,22 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (isBipolar)
                 {
-                    sprintf(txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(qq * 32));
+                    snprintf(txt, TXT_SIZE, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(qq * 32));
                 }
                 else
                 {
-                    sprintf(txt, "C : %.*f", dp, qq * 32);
+                    snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 32);
                 }
             }
             else
             {
                 if (isBipolar)
                 {
-                    sprintf(txt, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf));
+                    snprintf(txt, TXT_SIZE, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp, fabs(mf));
                 }
                 else
                 {
-                    sprintf(txt, "C : %.*f", dp, mf);
+                    snprintf(txt, TXT_SIZE, "C : %.*f", dp, mf);
                 }
             }
             return;
@@ -2120,15 +2127,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (extend_range)
                 {
-                    char dtxt[256];
+                    char dtxt[TXT_SIZE];
                     float ev = get_extended(val.f);
                     if (ev < 0)
                     {
-                        sprintf(dtxt, "C : 1 / %.*f", dp, -ev);
+                        snprintf(dtxt, TXT_SIZE, "C : 1 / %.*f", dp, -ev);
                     }
                     else
                     {
-                        sprintf(dtxt, "C : %.*f", dp, ev);
+                        snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, ev);
                     }
                     iw->val = dtxt;
 
@@ -2136,44 +2143,44 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     auto dnval = get_extended(val.f - (qq * 32));
 
                     if (upval < 0)
-                        sprintf(dtxt, "C : 1 / %.*f", dp, -upval);
+                        snprintf(dtxt, TXT_SIZE, "C : 1 / %.*f", dp, -upval);
                     else
-                        sprintf(dtxt, "C : %.*f", dp, upval);
+                        snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, upval);
                     iw->valplus = dtxt;
-                    sprintf(dtxt, "%.*f", dp, qq * 32);
+                    snprintf(dtxt, TXT_SIZE, "%.*f", dp, qq * 32);
                     iw->dvalplus = dtxt;
                     if (isBipolar)
                     {
                         if (dnval < 0)
-                            sprintf(dtxt, "C : 1/%.*f", dp, -dnval);
+                            snprintf(dtxt, TXT_SIZE, "C : 1/%.*f", dp, -dnval);
                         else
-                            sprintf(dtxt, "C : %.*f", dp, dnval);
+                            snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, dnval);
                         iw->valminus = dtxt;
 
-                        sprintf(dtxt, "%.*f", dp, -(qq * 32));
+                        snprintf(dtxt, TXT_SIZE, "%.*f", dp, -(qq * 32));
                         iw->dvalminus = dtxt;
                     }
                 }
                 else
                 {
-                    char dtxt[256];
-                    sprintf(dtxt, "C : %.*f", dp, val.f);
+                    char dtxt[TXT_SIZE];
+                    snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, val.f);
                     iw->val = dtxt;
-                    sprintf(dtxt, "%.*f", dp, val.f + mf);
+                    snprintf(dtxt, TXT_SIZE, "%.*f", dp, val.f + mf);
                     iw->valplus = dtxt;
-                    sprintf(dtxt, "%.*f", dp, mf);
+                    snprintf(dtxt, TXT_SIZE, "%.*f", dp, mf);
                     iw->dvalplus = dtxt;
                     if (isBipolar)
                     {
-                        sprintf(dtxt, "%.*f", dp, val.f - mf);
+                        snprintf(dtxt, TXT_SIZE, "%.*f", dp, val.f - mf);
                         iw->valminus = dtxt;
-                        sprintf(dtxt, "%.*f", dp, -mf);
+                        snprintf(dtxt, TXT_SIZE, "%.*f", dp, -mf);
                         iw->dvalminus = dtxt;
                     }
                 }
             }
             // not really used any more bot don't leave it uninit
-            sprintf(txt, "C: %.*f %s %.*f", 2, val.f, (mf >= 0 ? "+/-" : "-/+"), 2, mf);
+            snprintf(txt, TXT_SIZE, "C: %.*f %s %.*f", 2, val.f, (mf >= 0 ? "+/-" : "-/+"), 2, mf);
             return;
             break;
         }
@@ -2190,18 +2197,18 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
             case TypeIn:
             {
-                sprintf(txt, "%.*f %c", dp, 100.f * modulationDepth, '%');
+                snprintf(txt, TXT_SIZE, "%.*f %c", dp, 100.f * modulationDepth, '%');
                 break;
             }
             case Menu:
             {
                 if (isBipolar)
                 {
-                    sprintf(txt, "+/- %.*f %c", dp, 100.f * mp, '%');
+                    snprintf(txt, TXT_SIZE, "+/- %.*f %c", dp, 100.f * mp, '%');
                 }
                 else
                 {
-                    sprintf(txt, "%.*f %c", dp, 100.f * mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f %c", dp, 100.f * mp, '%');
                 }
                 break;
             }
@@ -2210,12 +2217,12 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 std::string vs = tempoSyncNotationValue(val.f);
                 if (isBipolar)
                 {
-                    sprintf(txt, "%.*f %s %s %s %.*f %c", dp, mn, lowersep, vs.c_str(), uppersep,
+                    snprintf(txt, TXT_SIZE, "%.*f %s %s %s %.*f %c", dp, mn, lowersep, vs.c_str(), uppersep,
                             dp, mp, '%');
                 }
                 else
                 {
-                    sprintf(txt, "%s %s %.*f %c", vs.c_str(), uppersep, dp, mp, '%');
+                    snprintf(txt, TXT_SIZE, "%s %s %.*f %c", vs.c_str(), uppersep, dp, mp, '%');
                 }
                 break;
             }
@@ -2230,25 +2237,25 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             switch (displaymode)
             {
             case TypeIn:
-                sprintf(txt, "%.*f", dp, mp - v);
+                snprintf(txt, TXT_SIZE, "%.*f", dp, mp - v);
                 break;
             case Menu:
                 if (isBipolar)
                 {
-                    sprintf(txt, "%.*f ... %.*f %c", dp, mn, dp, mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f ... %.*f %c", dp, mn, dp, mp, '%');
                 }
                 else
-                    sprintf(txt, "%.*f ... %.*f %c", dp, v, dp, mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f ... %.*f %c", dp, v, dp, mp, '%');
                 break;
             case InfoWindow:
             {
                 if (isBipolar)
                 {
-                    sprintf(txt, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v, uppersep, dp,
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %c", dp, mn, lowersep, dp, v, uppersep, dp,
                             mp, '%');
                 }
                 else
-                    sprintf(txt, "%.*f %s %.*f %c", dp, v, uppersep, dp, mp, '%');
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %c", dp, v, uppersep, dp, mp, '%');
                 break;
             }
             }
@@ -2344,7 +2351,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
             oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         }
 
-        sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
+        snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
     }
@@ -2360,7 +2367,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
             oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         }
 
-        sprintf(txt, "~%s", get_notename(notename, i_value, oct_offset));
+        snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
 
         break;
     }
@@ -2372,7 +2379,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
             auto tl = count * f;
-            sprintf(txt, "%.2f / %d", tl, count);
+            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, count);
         }
 
         break;
@@ -2383,7 +2390,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
 {
     if (ctrltype == ct_none)
     {
-        sprintf(txt, "-");
+        snprintf(txt, TXT_SIZE, "-");
         return;
     }
 
@@ -2418,7 +2425,9 @@ void Parameter::get_display(char *txt, bool external, float ef)
             auto ef = dynamic_cast<ParameterExternalFormatter *>(user_data);
             if (ef)
             {
-                ef->formatValue(f, txt, 64);
+                // parameter called 'len' not 'size', be on the safe side here, do - 1.
+                // It used to say just '64' anyway.
+                ef->formatValue(f, txt, TXT_SIZE - 1);
                 return;
             }
             // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale
@@ -2444,23 +2453,23 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 f = displayInfo.absoluteFactor * f;
                 u = displayInfo.absoluteUnit;
             }
-            sprintf(txt, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals),
+            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals),
                     displayInfo.scale * f, u.c_str());
 
             if (f >= val_max.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString))
             {
-                strcpy(txt, displayInfo.maxLabel);
+                strxcpy(txt, displayInfo.maxLabel, TXT_SIZE);
             }
             if (f <= val_min.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString))
             {
-                strcpy(txt, displayInfo.minLabel);
+                strxcpy(txt, displayInfo.minLabel, TXT_SIZE);
             }
             if (f == val_default.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomDefaultString))
             {
-                strcpy(txt, displayInfo.defLabel);
+                strxcpy(txt, displayInfo.defLabel, TXT_SIZE);
             }
             return;
             break;
@@ -2471,7 +2480,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             {
                 std::string res =
                     tempoSyncNotationValue(displayInfo.tempoSyncNotationMultiplier * f);
-                sprintf(txt, "%s", res.c_str());
+                snprintf(txt, TXT_SIZE, "%s", res.c_str());
                 return;
             }
             if (can_extend_range() && extend_range)
@@ -2493,7 +2502,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
                 {
-                    sprintf(txt, "%s", displayInfo.maxLabel);
+                    snprintf(txt, TXT_SIZE, "%s", displayInfo.maxLabel);
                     return;
                 }
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxValue)
@@ -2505,7 +2514,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString)
                 {
-                    sprintf(txt, "%s", displayInfo.minLabel);
+                    snprintf(txt, TXT_SIZE, "%s", displayInfo.minLabel);
                     return;
                 }
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinValue)
@@ -2513,16 +2522,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
                     dval = displayInfo.minLabelValue;
                 }
             }
-            sprintf(txt, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval, u.c_str());
+            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval, u.c_str());
             return;
             break;
         }
         case Decibel:
         {
             if (f == 0)
-                sprintf(txt, "-inf dB");
+                snprintf(txt, TXT_SIZE, "-inf dB");
             else
-                sprintf(txt, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(f));
+                snprintf(txt, TXT_SIZE, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(f));
             return;
             break;
         }
@@ -2540,7 +2549,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 float bpv = (f - 16.0) / 16.0;
                 auto note = 69 + 69 * bpv;
                 auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
-                sprintf(txt, "%.*f Hz", (detailedMode ? 6 : 2), freq);
+                snprintf(txt, TXT_SIZE, "%.*f Hz", (detailedMode ? 6 : 2), freq);
             }
             else
             {
@@ -2548,27 +2557,27 @@ void Parameter::get_display(char *txt, bool external, float ef)
 
                 if (extend_range && q < 0)
                 {
-                    sprintf(txt, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
+                    snprintf(txt, TXT_SIZE, "C : 1 / %.*f", (detailedMode ? 6 : 2), -get_extended(f));
                 }
                 else
                 {
-                    sprintf(txt, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+                    snprintf(txt, TXT_SIZE, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
                 }
             }
             break;
         }
         case ct_chow_ratio:
         {
-            sprintf(txt, "1 : %.*f", (detailedMode ? 6 : 2), f);
+            snprintf(txt, TXT_SIZE, "1 : %.*f", (detailedMode ? 6 : 2), f);
             break;
         }
         case ct_float_toggle:
         {
-            sprintf(txt, f > 0.5 ? "On" : "Off");
+            snprintf(txt, TXT_SIZE, f > 0.5 ? "On" : "Off");
             break;
         }
         default:
-            sprintf(txt, "%.*f", (detailedMode ? 6 : 2), f);
+            snprintf(txt, TXT_SIZE, "%.*f", (detailedMode ? 6 : 2), f);
             break;
         }
         break;
@@ -2583,13 +2592,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
         {
             float fv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
 
-            char vt[64];
+            char vt[TXT_SIZE];
 
             auto ef = dynamic_cast<ParameterExternalFormatter *>(user_data);
             if (ef)
             {
-                ef->formatValue(fv, vt, 64);
-                sprintf(txt, "%s", vt);
+                ef->formatValue(fv, vt, TXT_SIZE - 1);
+                snprintf(txt, TXT_SIZE, "%s", vt);
                 return;
             }
         }
@@ -2601,7 +2610,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
 
             if (sm == sm_chsplit)
             {
-                sprintf(txt, "Channel %d", (val.i / 8) + 1);
+                snprintf(txt, TXT_SIZE, "Channel %d", (val.i / 8) + 1);
                 break;
             }
         }
@@ -2615,31 +2624,31 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
             }
 
-            sprintf(txt, "%s", get_notename(notename, val.i, oct_offset));
+            snprintf(txt, TXT_SIZE, "%s", get_notename(notename, val.i, oct_offset));
 
             break;
         }
         case ct_osctype:
-            sprintf(txt, "%s", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
             break;
         case ct_wt2window:
-            sprintf(txt, "%s", window_names[limit_range(i, 0, 8)]);
+            snprintf(txt, TXT_SIZE, "%s", window_names[limit_range(i, 0, 8)]);
             break;
         case ct_osccount:
         case ct_osccountWT:
-            sprintf(txt, "%d voice%s", i, (i > 1 ? "s" : ""));
+            snprintf(txt, TXT_SIZE, "%d voice%s", i, (i > 1 ? "s" : ""));
             break;
         case ct_fxtype:
-            sprintf(txt, "%s", fx_type_names[limit_range(i, 0, (int)n_fx_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", fx_type_names[limit_range(i, 0, (int)n_fx_types - 1)]);
             break;
         case ct_reverbshape:
-            sprintf(txt, "Type %d", i + 1);
+            snprintf(txt, TXT_SIZE, "Type %d", i + 1);
             break;
         case ct_fxbypass:
-            sprintf(txt, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
             break;
         case ct_filtertype:
-            sprintf(txt, "%s", fut_names[limit_range(i, 0, (int)n_fu_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", fut_names[limit_range(i, 0, (int)n_fu_types - 1)]);
             break;
         case ct_filtersubtype:
         {
@@ -2653,43 +2662,43 @@ void Parameter::get_display(char *txt, bool external, float ef)
                         fu_type fType = (fu_type)type;
                         if (i >= fut_subcount[type])
                         {
-                            sprintf(txt, "None");
+                            snprintf(txt, TXT_SIZE, "None");
                         }
                         else
                             switch (fType)
                             {
                             case fut_lpmoog:
                             case fut_diode:
-                                sprintf(txt, "%s", fut_ldr_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_ldr_subtypes[i]);
                                 break;
                             case fut_bp12:
                             case fut_bp24:
-                                sprintf(txt, "%s", fut_bp_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_bp_subtypes[i]);
                                 break;
                             case fut_notch12:
                             case fut_notch24:
                             case fut_apf:
-                                sprintf(txt, "%s", fut_notch_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_notch_subtypes[i]);
                                 break;
                             case fut_comb_pos:
                             case fut_comb_neg:
-                                sprintf(txt, "%s", fut_comb_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_comb_subtypes[i]);
                                 break;
                             case fut_vintageladder:
-                                sprintf(txt, "%s", fut_vintageladder_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_vintageladder_subtypes[i]);
                                 break;
                             case fut_obxd_2pole_lp:
                             case fut_obxd_2pole_hp:
                             case fut_obxd_2pole_n:
                             case fut_obxd_2pole_bp:
-                                sprintf(txt, "%s", fut_obxd_2p_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_obxd_2p_subtypes[i]);
                                 break;
                             case fut_obxd_4pole:
-                                sprintf(txt, "%s", fut_obxd_4p_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_obxd_4p_subtypes[i]);
                                 break;
                             case fut_k35_lp:
                             case fut_k35_hp:
-                                sprintf(txt, "%s", fut_k35_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_k35_subtypes[i]);
                                 break;
                             case fut_cutoffwarp_lp:
                             case fut_cutoffwarp_hp:
@@ -2705,11 +2714,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
                                 // count.
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // saturator.
-                                char ltext[64];
-                                snprintf(ltext, 64, "%s %s", fut_nlf_subtypes[i & 3],
+                                snprintf(txt, TXT_SIZE, "%s %s", fut_nlf_subtypes[i & 3],
                                          fut_nlf_saturators[(i >> 2) & 3]);
-                                strncpy(txt, ltext, 32);
-                                txt[31] = 0;
                                 break;
                             // don't default any more so compiler catches new ones we add
                             case fut_none:
@@ -2718,55 +2724,55 @@ void Parameter::get_display(char *txt, bool external, float ef)
                             case fut_hp12:
                             case fut_hp24:
                             case fut_SNH:
-                                sprintf(txt, "%s", fut_def_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", fut_def_subtypes[i]);
                                 break;
 
                             case n_fu_types:
-                                sprintf(txt, "ERROR");
+                                snprintf(txt, TXT_SIZE, "ERROR");
                                 break;
                             }
                     }
             break;
         }
         case ct_wstype:
-            sprintf(txt, "%s", wst_names[limit_range(i, 0, (int)n_ws_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", wst_names[limit_range(i, 0, (int)n_ws_types - 1)]);
             break;
         case ct_envmode:
-            sprintf(txt, "%s", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
             break;
         case ct_fbconfig:
-            sprintf(txt, "%s", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
             break;
         case ct_fmconfig:
-            sprintf(txt, "%s", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
             break;
         case ct_lfotype:
-            sprintf(txt, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
             break;
         case ct_scenemode:
-            sprintf(txt, "%s", scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
             break;
         case ct_polymode:
-            sprintf(txt, "%s", play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
             break;
         case ct_lfotrigmode:
-            sprintf(txt, "%s",
+            snprintf(txt, TXT_SIZE, "%s",
                     lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
             break;
         case ct_character:
-            sprintf(txt, "%s", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
+            snprintf(txt, TXT_SIZE, "%s", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
             break;
         case ct_fmratio_int:
-            sprintf(txt, "C : %d", i);
+            snprintf(txt, TXT_SIZE, "C : %d", i);
             break;
         case ct_phaser_stages:
             if (i == 1)
             {
-                sprintf(txt, "Legacy (4 stages)");
+                snprintf(txt, TXT_SIZE, "Legacy (4 stages)");
             }
             else
             {
-                sprintf(txt, "%d", i);
+                snprintf(txt, TXT_SIZE, "%d", i);
             }
             break;
 
@@ -2774,16 +2780,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Linear");
+                snprintf(txt, TXT_SIZE, "Linear");
                 break;
             case 1:
-                sprintf(txt, "Quadratic");
+                snprintf(txt, TXT_SIZE, "Quadratic");
                 break;
             case 2:
-                sprintf(txt, "Cubic");
+                snprintf(txt, TXT_SIZE, "Cubic");
                 break;
             default:
-                sprintf(txt, "%d", i);
+                snprintf(txt, TXT_SIZE, "%d", i);
                 break;
             }
             break;
@@ -2791,16 +2797,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Convex");
+                snprintf(txt, TXT_SIZE, "Convex");
                 break;
             case 1:
-                sprintf(txt, "Linear");
+                snprintf(txt, TXT_SIZE, "Linear");
                 break;
             case 2:
-                sprintf(txt, "Concave");
+                snprintf(txt, TXT_SIZE, "Concave");
                 break;
             default:
-                sprintf(txt, "%d", i);
+                snprintf(txt, TXT_SIZE, "%d", i);
                 break;
             }
             break;
@@ -2815,35 +2821,35 @@ void Parameter::get_display(char *txt, bool external, float ef)
             case 5:
             case 6:
             case 7:
-                sprintf(txt, "Wave %d (TX %d)", i + 1, i + 1);
+                snprintf(txt, TXT_SIZE, "Wave %d (TX %d)", i + 1, i + 1);
                 break;
             default:
-                sprintf(txt, "Wave %d", i + 1);
+                snprintf(txt, TXT_SIZE, "Wave %d", i + 1);
             }
             break;
         case ct_sinefmlegacy:
             if (i == 0)
-                sprintf(txt, "Legacy (< v1.6.2)");
+                snprintf(txt, TXT_SIZE, "Legacy (< v1.6.2)");
             else
-                sprintf(txt, "Consistent with FM2/3");
+                snprintf(txt, TXT_SIZE, "Consistent with FM2/3");
             break;
         case ct_vocoder_bandcount:
-            sprintf(txt, "%d bands", i);
+            snprintf(txt, TXT_SIZE, "%d bands", i);
             break;
         case ct_distortion_waveshape:
-            sprintf(txt, "%s", wst_names[wst_soft + i]);
+            snprintf(txt, TXT_SIZE, "%s", wst_names[wst_soft + i]);
             break;
         case ct_oscroute:
             switch (i)
             {
             case 0:
-                sprintf(txt, "Filter 1");
+                snprintf(txt, TXT_SIZE, "Filter 1");
                 break;
             case 1:
-                sprintf(txt, "Both");
+                snprintf(txt, TXT_SIZE, "Both");
                 break;
             case 2:
-                sprintf(txt, "Filter 2");
+                snprintf(txt, TXT_SIZE, "Filter 2");
                 break;
             }
             break;
@@ -2867,7 +2873,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 types = "Arp Combs Only";
                 break;
             }
-            sprintf(txt, "%s", types.c_str());
+            snprintf(txt, TXT_SIZE, "%s", types.c_str());
         }
         break;
         case ct_fxlfowave:
@@ -2875,22 +2881,22 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Sine");
+                snprintf(txt, TXT_SIZE, "Sine");
                 break;
             case 1:
-                sprintf(txt, "Triangle");
+                snprintf(txt, TXT_SIZE, "Triangle");
                 break;
             case 2:
-                sprintf(txt, "Sawtooth");
+                snprintf(txt, TXT_SIZE, "Sawtooth");
                 break;
             case 3:
-                sprintf(txt, "Noise");
+                snprintf(txt, TXT_SIZE, "Noise");
                 break;
             case 4:
-                sprintf(txt, "Sample & Hold");
+                snprintf(txt, TXT_SIZE, "Sample & Hold");
                 break;
             case 5:
-                sprintf(txt, "Square");
+                snprintf(txt, TXT_SIZE, "Square");
                 break;
             }
         }
@@ -2899,23 +2905,23 @@ void Parameter::get_display(char *txt, bool external, float ef)
         {
             extern std::string waveguide_excitation_name(int);
             auto n = waveguide_excitation_name(i);
-            sprintf(txt, "%s", n.c_str());
+            snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
         break;
         case ct_reson_mode:
             switch (i)
             {
             case 0:
-                sprintf(txt, "Lowpass");
+                snprintf(txt, TXT_SIZE, "Lowpass");
                 break;
             case 1:
-                sprintf(txt, "Bandpass");
+                snprintf(txt, TXT_SIZE, "Bandpass");
                 break;
             case 2:
-                sprintf(txt, "Bandpass+Notch");
+                snprintf(txt, TXT_SIZE, "Bandpass+Notch");
                 break;
             case 3:
-                sprintf(txt, "Highpass");
+                snprintf(txt, TXT_SIZE, "Highpass");
                 break;
             }
             break;
@@ -2937,7 +2943,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
                 type = "Stereo";
                 break;
             }
-            sprintf(txt, "%s", type.c_str());
+            snprintf(txt, TXT_SIZE, "%s", type.c_str());
         }
         break;
 
@@ -2947,11 +2953,11 @@ void Parameter::get_display(char *txt, bool external, float ef)
             auto pd = dynamic_cast<ParameterDiscreteIndexRemapper *>(user_data);
             if (pd)
             {
-                sprintf(txt, "%s", pd->nameAtStreamedIndex(i).c_str());
+                snprintf(txt, TXT_SIZE, "%s", pd->nameAtStreamedIndex(i).c_str());
             }
             else
             {
-                sprintf(txt, "%i", i);
+                snprintf(txt, TXT_SIZE, "%i", i);
             }
             break;
         }
@@ -2960,16 +2966,16 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0:
-                sprintf(txt, "Granularizer");
+                snprintf(txt, TXT_SIZE, "Granularizer");
                 break;
             case 1:
-                sprintf(txt, "Pitch Shifter");
+                snprintf(txt, TXT_SIZE, "Pitch Shifter");
                 break;
             case 2:
-                sprintf(txt, "Looping Delay");
+                snprintf(txt, TXT_SIZE, "Looping Delay");
                 break;
             case 3:
-                sprintf(txt, "Spectral Madness");
+                snprintf(txt, TXT_SIZE, "Spectral Madness");
                 break;
             }
         }
@@ -2985,22 +2991,22 @@ void Parameter::get_display(char *txt, bool external, float ef)
             switch (i)
             {
             case 0: // binary 00
-                sprintf(txt, "32k 16-bit Stereo");
+                snprintf(txt, TXT_SIZE, "32k 16-bit Stereo");
                 break;
             case 1: // 0b01
-                sprintf(txt, "32k 16-bit Mono");
+                snprintf(txt, TXT_SIZE, "32k 16-bit Mono");
                 break;
             case 2: // 0b10
-                sprintf(txt, "16k 8-bit Stereo");
+                snprintf(txt, TXT_SIZE, "16k 8-bit Stereo");
                 break;
             default: // 0b11
-                sprintf(txt, "16k 8-bit Mono");
+                snprintf(txt, TXT_SIZE, "16k 8-bit Mono");
                 break;
             }
         }
         break;
         default:
-            sprintf(txt, "%i", i);
+            snprintf(txt, TXT_SIZE, "%i", i);
             break;
         };
         break;
@@ -3011,9 +3017,9 @@ void Parameter::get_display(char *txt, bool external, float ef)
         else
             b = val.b;
         if (b)
-            sprintf(txt, "On");
+            snprintf(txt, TXT_SIZE, "On");
         else
-            sprintf(txt, "Off");
+            snprintf(txt, TXT_SIZE, "Off");
         break;
     };
 }

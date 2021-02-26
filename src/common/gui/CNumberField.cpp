@@ -23,6 +23,7 @@
 #include "SkinColors.h"
 #include "CScalableBitmap.h"
 #include "Parameter.h"
+#include "StringOps.h"
 
 using namespace VSTGUI;
 
@@ -37,17 +38,17 @@ using namespace std;
 void dB2string(float value, char *text)
 {
     if (value <= 0)
-        strcpy(text, "-inf");
+        strxcpy(text, "-inf", TXT_SIZE);
     else
-        sprintf(text, "%.1fdB", (float)(20. * log10(value)));
+        snprintf(text, TXT_SIZE, "%.1fdB", (float)(20. * log10(value)));
 }
 
 void envelopetime(float value, char *text)
 {
     if ((value * value * value * 30000.f) > 999.9f)
-        sprintf(text, "%.2fs", (float)30 * value * value * value);
+        snprintf(text, TXT_SIZE, "%.2fs", (float)30 * value * value * value);
     else
-        sprintf(text, "%.0fms", (float)30000 * value * value * value);
+        snprintf(text, TXT_SIZE, "%.0fms", (float)30000 * value * value * value);
 }
 
 void unit_prefix(float value, char *text, bool allow_milli = true, bool allow_kilo = true)
@@ -65,11 +66,11 @@ void unit_prefix(float value, char *text, bool allow_milli = true, bool allow_ki
     }
 
     if (value >= 100.f)
-        sprintf(text, "%.1f %c", value, prefix);
+        snprintf(text, TXT_SIZE, "%.1f %c", value, prefix);
     else if (value >= 10.f)
-        sprintf(text, "%.2f %c", value, prefix);
+        snprintf(text, TXT_SIZE, "%.2f %c", value, prefix);
     else
-        sprintf(text, "%.3f %c", value, prefix);
+        snprintf(text, TXT_SIZE, "%.3f %c", value, prefix);
     return;
 }
 
@@ -300,31 +301,32 @@ void CNumberField::draw(CDrawContext *pContext)
         pContext->drawRect(getViewSize(), kDrawFilledAndStroked);
     }
 
-    char the_text[32];
+#define THE_TEXT_SIZE 32
+    char the_text[THE_TEXT_SIZE];
     switch (controlmode)
     {
     case cm_int_menu:
-        sprintf(the_text, "-");
+        snprintf(the_text, THE_TEXT_SIZE, "-");
         break;
     case cm_integer:
-        sprintf(the_text, "%i", i_value);
+        snprintf(the_text, THE_TEXT_SIZE, "%i", i_value);
         break;
     case cm_osccount:
-        sprintf(the_text, "%i", max(1, min(16, (int)value)));
+        snprintf(the_text, THE_TEXT_SIZE, "%i", max(1, min(16, (int)value)));
         break;
     case cm_pbdepth:
-        sprintf(the_text, "%i", i_value);
+        snprintf(the_text, THE_TEXT_SIZE, "%i", i_value);
         break;
     case cm_count4:
-        sprintf(the_text, "%i", max(1, min(4, (int)value)));
+        snprintf(the_text, THE_TEXT_SIZE, "%i", max(1, min(4, (int)value)));
         break;
     case cm_polyphony:
-        sprintf(the_text, "%i / %i", i_poly, i_value);
+        snprintf(the_text, THE_TEXT_SIZE, "%i / %i", i_poly, i_value);
         break;
     case cm_midichannel_from_127:
     {
         int mc = i_value / 8 + 1;
-        sprintf(the_text, "Ch %i", mc);
+        snprintf(the_text, THE_TEXT_SIZE, "Ch %i", mc);
     }
     break;
     case cm_notename:
@@ -333,54 +335,54 @@ void CNumberField::draw(CDrawContext *pContext)
         if (storage)
             oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
         char notename[16];
-        sprintf(the_text, "%s", get_notename(notename, i_value, oct_offset));
+        snprintf(the_text, THE_TEXT_SIZE, "%s", get_notename(notename, i_value, oct_offset));
     }
     break;
     case cm_envshape:
-        sprintf(the_text, "%.1f", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%.1f", value);
         break;
     case cm_float:
-        sprintf(the_text, "%.2f", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%.2f", value);
         break;
     case cm_percent:
-        sprintf(the_text, "%.1f%c", value * 100, '%');
+        snprintf(the_text, THE_TEXT_SIZE, "%.1f%c", value * 100, '%');
         break;
     case cm_mod_percent:
     case cm_percent_bipolar:
-        sprintf(the_text, "%+.1f%c", value * 100, '%');
+        snprintf(the_text, THE_TEXT_SIZE, "%+.1f%c", value * 100, '%');
         break;
     case cm_stereowidth:
     {
         if (value == 0)
-            sprintf(the_text, "mono");
+            snprintf(the_text, THE_TEXT_SIZE, "mono");
         else
-            sprintf(the_text, "%.1f%c", value * 100, '%');
+            snprintf(the_text, THE_TEXT_SIZE, "%.1f%c", value * 100, '%');
         break;
     }
     case cm_mod_time:
-        sprintf(the_text, "%+.1fto", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%+.1fto", value);
         break;
     case cm_decibel:
-        sprintf(the_text, "%.1fdB", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%.1fdB", value);
         break;
     case cm_mod_decibel:
-        sprintf(the_text, "%+.1fdB", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%+.1fdB", value);
         break;
     case cm_mod_pitch:
-        sprintf(the_text, "%+.1fst", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%+.1fst", value);
         break;
     case cm_mod_freq:
     case cm_eq_bandwidth:
-        sprintf(the_text, "%.2foct", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%.2foct", value);
         break;
     case cm_frequency_khz:
-        sprintf(the_text, "%.2f kHz", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%.2f kHz", value);
         break;
     case cm_frequency_hz_bi:
-        sprintf(the_text, "%+.2f Hz", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%+.2f Hz", value);
         break;
     case cm_frequency_khz_bi:
-        sprintf(the_text, "%+.2f kHz", value);
+        snprintf(the_text, THE_TEXT_SIZE, "%+.2f kHz", value);
         break;
     case cm_envelopetime:
         envelopetime(value, the_text);
@@ -391,7 +393,7 @@ void CNumberField::draw(CDrawContext *pContext)
     case cm_lforate:
     {
         float rate = lfo_phaseincrement(44100 / 32, value);
-        sprintf(the_text, "%.3f Hz", rate);
+        snprintf(the_text, THE_TEXT_SIZE, "%.3f Hz", rate);
     }
     break;
     case cm_frequency_audible:
@@ -399,82 +401,82 @@ void CNumberField::draw(CDrawContext *pContext)
     {
         float freq = 440.f * powf(2, value);
         if (freq > 1000)
-            sprintf(the_text, "%.2f kHz", freq * 0.001f);
+            snprintf(the_text, THE_TEXT_SIZE, "%.2f kHz", freq * 0.001f);
         else
-            sprintf(the_text, "%.1f Hz", freq);
+            snprintf(the_text, THE_TEXT_SIZE, "%.1f Hz", freq);
         break;
     }
     case cm_frequency20_20k:
     {
         float freq = 20 * powf(10, 3 * value);
         if (freq > 1000)
-            sprintf(the_text, "%.2f kHz", freq * 0.001f);
+            snprintf(the_text, THE_TEXT_SIZE, "%.2f kHz", freq * 0.001f);
         else
-            sprintf(the_text, "%.1f Hz", freq);
+            snprintf(the_text, THE_TEXT_SIZE, "%.1f Hz", freq);
         break;
     }
     case cm_frequency50_50k:
     {
         float freq = 50 * powf(10, 3 * value);
         if (freq > 1000)
-            sprintf(the_text, "%.2f kHz", freq * 0.001f);
+            snprintf(the_text, THE_TEXT_SIZE, "%.2f kHz", freq * 0.001f);
         else
-            sprintf(the_text, "%.1f Hz", freq);
+            snprintf(the_text, THE_TEXT_SIZE, "%.1f Hz", freq);
         break;
     }
     case cm_lag:
     {
         if (value == -10)
-            sprintf(the_text, "sum");
+            snprintf(the_text, THE_TEXT_SIZE, "sum");
         else
         {
             float t = powf(2, value);
             char tmp_text[28];
             unit_prefix(t, tmp_text, true, false);
-            sprintf(the_text, "%ss", tmp_text);
+            snprintf(the_text, THE_TEXT_SIZE, "%ss", tmp_text);
         }
         break;
     }
     case cm_bitdepth_16:
     {
-        sprintf(the_text, "%.1f bits", value * 16.f);
+        snprintf(the_text, THE_TEXT_SIZE, "%.1f bits", value * 16.f);
         break;
     }
     case cm_frequency0_2k:
     {
         float freq = 2000 * value;
         if (freq > 1000)
-            sprintf(the_text, "%.2f kHz", freq * 0.001f);
+            snprintf(the_text, THE_TEXT_SIZE, "%.2f kHz", freq * 0.001f);
         else
-            sprintf(the_text, "%.1f Hz", freq);
+            snprintf(the_text, THE_TEXT_SIZE, "%.1f Hz", freq);
         break;
     }
     case cm_octaves3:
-        sprintf(the_text, "%.1f oct", value * 3.f);
+        snprintf(the_text, THE_TEXT_SIZE, "%.1f oct", value * 3.f);
         break;
     case cm_decibelboost12:
-        sprintf(the_text, "+%.1f dB", value * 12.f);
+        snprintf(the_text, THE_TEXT_SIZE, "+%.1f dB", value * 12.f);
         break;
     case cm_midichannel:
         if (i_value < 16)
-            sprintf(the_text, "%i", i_value + 1);
+            snprintf(the_text, THE_TEXT_SIZE, "%i", i_value + 1);
         else if (i_value == 16)
-            sprintf(the_text, "omni");
+            snprintf(the_text, THE_TEXT_SIZE, "omni");
         else
-            sprintf(the_text, "-");
+            snprintf(the_text, THE_TEXT_SIZE, "-");
         break;
     case cm_mutegroup:
         if (i_value == 0)
-            sprintf(the_text, "off");
+            snprintf(the_text, THE_TEXT_SIZE, "off");
         else
-            sprintf(the_text, "%i", i_value);
+            snprintf(the_text, THE_TEXT_SIZE, "%i", i_value);
         break;
     case cm_frequency1hz:
     {
         float freq = powf(2, value);
         char tmp_text[28];
         unit_prefix(freq, tmp_text, false, false);
-        sprintf(the_text, "%sHz", tmp_text);
+        snprintf(the_text, THE_TEXT_SIZE, "%sHz", tmp_text);
         break;
     }
     case cm_time1s:
@@ -482,21 +484,21 @@ void CNumberField::draw(CDrawContext *pContext)
         float t = powf(2, value);
         char tmp_text[28];
         unit_prefix(t, tmp_text, true, false);
-        sprintf(the_text, "%ss", tmp_text);
+        snprintf(the_text, THE_TEXT_SIZE, "%ss", tmp_text);
         break;
     }
     case cm_noyes:
         if (i_value)
-            sprintf(the_text, "yes");
+            snprintf(the_text, THE_TEXT_SIZE, "yes");
         else
-            sprintf(the_text, "no");
+            snprintf(the_text, THE_TEXT_SIZE, "no");
         break;
     case cm_mseg_snap_h:
     case cm_mseg_snap_v:
-        sprintf(the_text, "%i", i_value);
+        snprintf(the_text, THE_TEXT_SIZE, "%i", i_value);
         break;
     case cm_none:
-        sprintf(the_text, "-");
+        snprintf(the_text, THE_TEXT_SIZE, "-");
         break;
     }
 
@@ -506,6 +508,7 @@ void CNumberField::draw(CDrawContext *pContext)
     pContext->drawString(the_text, getViewSize(), kCenterText, true);
 
     setDirty(false);
+#undef THE_TEXT_SIZE
 }
 
 //------------------------------------------------------------------------

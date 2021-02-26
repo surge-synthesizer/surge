@@ -43,6 +43,7 @@
 #include "UIInstrumentation.h"
 #include "guihelpers.h"
 #include "DebugHelpers.h"
+#include "StringOps.h"
 #include "ModulatorPresetManager.h"
 
 #include <iostream>
@@ -2162,13 +2163,13 @@ void decode_controllerid(char *txt, int id)
     switch (type)
     {
     case 1:
-        sprintf(txt, "NRPN %i", num);
+        snprintf(txt, TXT_SIZE, "NRPN %i", num);
         break;
     case 2:
-        sprintf(txt, "RPN %i", num);
+        snprintf(txt, TXT_SIZE, "RPN %i", num);
         break;
     default:
-        sprintf(txt, "CC %i", num);
+        snprintf(txt, TXT_SIZE, "CC %i", num);
         break;
     };
 }
@@ -2278,7 +2279,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             auto hu = helpURLForSpecial("osc-select");
             if (hu != "")
             {
-                sprintf(txt, "[?] Osc %i", a + 1);
+                snprintf(txt, TXT_SIZE, "[?] Osc %i", a + 1);
                 auto lurl = fullyResolvedHelpURL(hu);
                 addCallbackMenu(contextMenu, txt,
                                 [lurl]() { Surge::UserInteractions::openURL(lurl); });
@@ -2286,7 +2287,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             }
             else
             {
-                sprintf(txt, "Osc %i", a + 1);
+                snprintf(txt, TXT_SIZE, "Osc %i", a + 1);
                 contextMenu->addEntry(txt, eid++);
             }
 
@@ -2349,7 +2350,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             auto hu = helpURLForSpecial("scene-select");
             if (hu != "")
             {
-                sprintf(txt, "[?] Scene %c", 'A' + a);
+                snprintf(txt, TXT_SIZE, "[?] Scene %c", 'A' + a);
                 auto lurl = fullyResolvedHelpURL(hu);
                 addCallbackMenu(contextMenu, txt,
                                 [lurl]() { Surge::UserInteractions::openURL(lurl); });
@@ -2357,7 +2358,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             }
             else
             {
-                sprintf(txt, "Scene %c", 'A' + a);
+                snprintf(txt, TXT_SIZE, "Scene %c", 'A' + a);
                 contextMenu->addEntry(txt, eid++);
             }
 
@@ -2507,7 +2508,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                         synth->isActiveModulation(md, thisms))
                     {
-                        char modtxt[256];
+                        char modtxt[TXT_SIZE];
                         auto pmd = synth->storage.getPatch().param_ptr[md];
                         pmd->get_display_of_modulation_depth(modtxt, synth->getModDepth(md, thisms),
                                                              synth->isBipolarModulation(thisms),
@@ -2515,16 +2516,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         char tmptxt[1024]; // leave room for that ubuntu 20.0 error
                         if (pmd->ctrlgroup == cg_LFO)
                         {
-                            char pname[256];
+                            char pname[TXT_SIZE];
                             pmd->create_fullname(pmd->get_name(), pname, pmd->ctrlgroup,
                                                  pmd->ctrlgroup_entry,
                                                  modulatorName(pmd->ctrlgroup_entry, true).c_str());
-                            sprintf(tmptxt, "Edit %s -> %s: %s",
+                            snprintf(tmptxt, TXT_SIZE, "Edit %s -> %s: %s",
                                     (char *)modulatorName(thisms, true).c_str(), pname, modtxt);
                         }
                         else
                         {
-                            sprintf(tmptxt, "Edit %s -> %s: %s",
+                            snprintf(tmptxt, TXT_SIZE, "Edit %s -> %s: %s",
                                     (char *)modulatorName(thisms, true).c_str(),
                                     pmd->get_full_name(), modtxt);
                         }
@@ -2561,12 +2562,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 parameter->get_name(), pname, parameter->ctrlgroup,
                                 parameter->ctrlgroup_entry,
                                 modulatorName(parameter->ctrlgroup_entry, true).c_str());
-                            sprintf(tmptxt, "Clear %s -> %s",
+                            snprintf(tmptxt, TXT_SIZE, "Clear %s -> %s",
                                     (char *)modulatorName(thisms, true).c_str(), pname);
                         }
                         else
                         {
-                            sprintf(tmptxt, "Clear %s -> %s",
+                            snprintf(tmptxt, TXT_SIZE, "Clear %s -> %s",
                                     (char *)modulatorName(thisms, true).c_str(),
                                     parameter->get_full_name());
                         }
@@ -2610,7 +2611,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             if (resetName)
                             {
                                 // And this is where we apply the name refresh, of course.
-                                strncpy(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
                                         newName.c_str(), 15);
                                 synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
                                 ((CModulationSourceButton *)control)
@@ -2686,7 +2687,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 contextMenu->addSeparator(eid++);
                 char vtxt[1024];
-                sprintf(vtxt, "%s: %.*f %%", Surge::UI::toOSCaseForMenu("Edit Value").c_str(),
+                snprintf(vtxt, 1024, "%s: %.*f %%", Surge::UI::toOSCaseForMenu("Edit Value").c_str(),
                         (detailedMode ? 6 : 2), 100 * cms->get_output());
                 addCallbackMenu(contextMenu, vtxt, [this, control, modsource]() {
                     promptForUserValueEntry(nullptr, control, modsource);
@@ -2695,7 +2696,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 contextMenu->addSeparator(eid++);
 
-                char txt[256];
+                char txt[TXT_SIZE];
 
                 // Construct submenus for explicit controller mapping
                 COptionMenu *midiSub = new COptionMenu(
@@ -2716,7 +2717,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                     char name[16];
 
-                    sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
+                    snprintf(name, 16, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
 
                     auto added_to_menu = midiSub->addEntry(currentSub, name);
 
@@ -2738,7 +2739,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         char name[128];
 
-                        sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
+                        snprintf(name, 128, "CC %d (%s) %s", mc, midicc_names[mc],
                                 (disabled == 1 ? "- RESERVED" : ""));
 
                         CCommandMenuItem *cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
@@ -2793,7 +2794,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     char txt4[16];
                     decode_controllerid(txt4, synth->storage.controllers[ccid]);
-                    sprintf(txt, "Clear Learned MIDI (%s ", txt4);
+                    snprintf(txt, TXT_SIZE, "Clear Learned MIDI (%s ", txt4);
                     addCallbackMenu(contextMenu,
                                     Surge::UI::toOSCaseForMenu(txt) +
                                         midicc_names[synth->storage.controllers[ccid]] + ")",
@@ -2843,7 +2844,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 auto useS = s;
                                 if (useS == "")
                                     useS = "-";
-                                strncpy(synth->storage.getPatch().CustomControllerLabel[ccid],
+                                strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
                                         useS.c_str(), 16);
                                 synth->storage.getPatch().CustomControllerLabel[ccid][15] =
                                     0; // to be sure
@@ -2983,9 +2984,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 eid++;
             }
             contextMenu->addSeparator(eid++);
-            char txt[256], txt2[512];
+            char txt[TXT_SIZE], txt2[512];
             p->get_display(txt);
-            sprintf(txt2, "%s: %s", Surge::UI::toOSCaseForMenu("Edit Value").c_str(), txt);
+            snprintf(txt2, 512, "%s: %s", Surge::UI::toOSCaseForMenu("Edit Value").c_str(), txt);
             if (p->valtype == vt_float)
             {
                 if (p->can_temposync() && p->temposync)
@@ -3533,7 +3534,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         {
                             char txt[256], ntxt[256];
                             memset(txt, 0, 256);
-                            strncpy(txt, p->get_name(), 256);
+                            strxcpy(txt, p->get_name(), 256);
                             if (p->absolute)
                             {
                                 snprintf(ntxt, 256, "M%c Frequency", txt[1]);
@@ -4650,7 +4651,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
 
                     if ((lbl[0] == '-') && !lbl[1])
                     {
-                        strncpy(lbl, p->get_name(), 15);
+                        strxcpy(lbl, p->get_name(), 15);
                         synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
                         ((CModulationSourceButton *)gui_modsrc[modsource])->setlabel(lbl);
                         ((CModulationSourceButton *)gui_modsrc[modsource])->invalid();
@@ -6124,7 +6125,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
             char txt[256];
             txt[0] = 0;
             if (Surge::Storage::isValidUTF8(s))
-                strncpy(txt, s.c_str(), 256);
+                strxcpy(txt, s.c_str(), 256);
             promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
                               menuRect.getTopLeft(), [this](const std::string &s) {
                                   Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
@@ -6140,7 +6141,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
             char txt[256];
             txt[0] = 0;
             if (Surge::Storage::isValidUTF8(s))
-                strncpy(txt, s.c_str(), 256);
+                strxcpy(txt, s.c_str(), 256);
             promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
                               menuRect.getTopLeft(), [this](const std::string &s) {
                                   Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
@@ -8398,7 +8399,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                    [](unsigned char c) { return std::tolower(c); });
     if (fExt == ".wav" || fExt == ".wt")
     {
-        strncpy(synth->storage.getPatch()
+        strxcpy(synth->storage.getPatch()
                     .scene[current_scene]
                     .osc[current_osc[current_scene]]
                     .wt.queue_filename,

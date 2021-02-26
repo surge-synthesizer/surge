@@ -23,6 +23,7 @@
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h"
 #include "SkinColors.h"
+#include "StringOps.h"
 #include <UserDefaults.h>
 #include <iostream>
 

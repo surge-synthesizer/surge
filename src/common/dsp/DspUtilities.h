@@ -22,6 +22,7 @@
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/halfratefilter.h>
 #include <functional>
+#include "StringOps.h"
 
 #define setzero(x) memset(x, 0, sizeof(*x))
 
@@ -334,7 +335,7 @@ inline char *float_to_str(float value, char *str)
     if (!str)
         return 0;
     Surge::ScopedLocale localGuard;
-    sprintf(str, "%f", value);
+    snprintf(str, TXT_SIZE, "%f", value); // yeah str isn't necessarily TXT_SIZE but better than nothing. TODO fix.
     return str;
 }
 
@@ -343,9 +344,9 @@ inline char *yes_no(int value, char *str)
     if (!str)
         return 0;
     if (value)
-        sprintf(str, "yes");
+        snprintf(str, TXT_SIZE, "yes");
     else
-        sprintf(str, "no");
+        snprintf(str, TXT_SIZE, "no");
     return str;
 }
 

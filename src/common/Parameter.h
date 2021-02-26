@@ -417,9 +417,10 @@ class Parameter
         kUnitsAreSemitonesOrKeys = 1U << 5U
     };
 
+#define DISPLAYINFO_TXT_SIZE 128
     struct DisplayInfo
     {
-        char unit[128]{}, absoluteUnit[128]{};
+        char unit[DISPLAYINFO_TXT_SIZE]{}, absoluteUnit[DISPLAYINFO_TXT_SIZE]{};
         float scale = 1;
         float a = 1.0, b = 1.0;
         int decimals = 2;
@@ -427,7 +428,7 @@ class Parameter
 
         float tempoSyncNotationMultiplier = 1.f;
 
-        char minLabel[128]{}, maxLabel[128]{}, defLabel[128]{};
+        char minLabel[DISPLAYINFO_TXT_SIZE]{}, maxLabel[DISPLAYINFO_TXT_SIZE]{}, defLabel[DISPLAYINFO_TXT_SIZE]{};
         float minLabelValue = 0.f, maxLabelValue = 0.f;
 
         float modulationCap = -1.f;

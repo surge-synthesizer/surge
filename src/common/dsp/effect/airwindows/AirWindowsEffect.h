@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "UserDefaults.h"
+#include "StringOps.h"
 
 class alignas(16) AirWindowsEffect : public Effect
 {
@@ -109,11 +110,11 @@ class alignas(16) AirWindowsEffect : public Effect
                     fx->airwin->getParameterLabel(idx, lab);
                     fx->airwin->getParameterDisplay(idx, dis, value, true);
                 }
-                sprintf(txt, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
+                snprintf(txt, TXT_SIZE, "%s%s%s", dis, (lab[0] == 0 ? "" : " "), lab);
             }
             else
             {
-                sprintf(txt, "AWA.ERROR %lf", value);
+                snprintf(txt, TXT_SIZE, "AWA.ERROR %lf", value);
             }
         }
 
