@@ -57,6 +57,7 @@
 #include "version.h"
 #include "CMidiLearnOverlay.h"
 #include "DPWOscillator.h"
+#include "libMTSClient.h"
 
 #if TARGET_VST3
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -5668,6 +5669,30 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         tuningSubMenu->addSeparator();
     }
 
+    if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
+    {
+        // an 'mts is on' disabled menu
+        auto mm = addCallbackMenu(tuningSubMenu,
+                                  Surge::UI::toOSCaseForMenu("ODDSound MTS-ESP Active"), []() {});
+        mm->setEnabled(false);
+
+        // an 'mts scale name' disabled menu
+        std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
+        mm = addCallbackMenu(tuningSubMenu, mtsScale, []() {});
+        mm->setEnabled(false);
+        // a 'turn mts off' menu
+
+        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Disconnect from MTS-ESP"),
+                        [this]() {
+                            auto q = this->synth->storage.oddsound_mts_client;
+                            this->synth->storage.oddsound_mts_active = false;
+                            this->synth->storage.oddsound_mts_client = nullptr;
+                            MTS_DeregisterClient(q);
+                        });
+
+        return tuningSubMenu;
+    }
+
     bool isTuningEnabled = !synth->storage.isStandardTuning;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
 
@@ -5851,7 +5876,22 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         tuningSubMenu, Surge::UI::toOSCaseForMenu("Use ODDSound MTS-ESP If Installed"),
         [this, tsMode]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useODDMTS", !tsMode);
+            if (tsMode)
+            {
+                // We toggled to false
+                this->synth->storage.deinitialize_oddsound();
+            }
+            else
+            {
+                this->synth->storage.initialize_oddsound();
+            }
         });
+
+    if (tsMode && !this->synth->storage.oddsound_mts_client)
+    {
+        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Try To ReConnect To MTS-ESP"),
+                        [this]() { this->synth->storage.initialize_oddsound(); });
+    }
     menuItem->setChecked(tsMode);
     tuningSubMenu->addSeparator();
     tid++;

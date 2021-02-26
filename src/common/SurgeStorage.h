@@ -995,6 +995,8 @@ class alignas(16) SurgeStorage
     bool isStandardMapping = true;
     float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
+    void initialize_oddsound();
+    void deinitialize_oddsound();
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active;
     uint32_t oddsound_mts_on_check = 0;
