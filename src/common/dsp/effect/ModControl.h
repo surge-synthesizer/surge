@@ -37,7 +37,7 @@ class ModControl
         mod_sine = 0,
         mod_tri,
         mod_saw,
-        mod_sng,
+        mod_noise,
         mod_snh,
         mod_square,
     };
@@ -45,17 +45,38 @@ class ModControl
     inline void pre_process(int mwave, float rate, float depth_val, float phase_offset)
     {
         bool lforeset = false;
+        bool rndreset = false;
         float lfoout = lfoval.v;
         float phofs = fmod(fabs(phase_offset), 1.0);
+        float thisrate = std::max(0.f, rate);
+        float thisphase;
 
-        lfophase += rate;
-
-        if (lfophase > 1)
+        if (thisrate > 0)
         {
-            lfophase = fmod(lfophase, 1.0);
-        }
+            lfophase += thisrate;
 
-        float thisphase = lfophase + phofs;
+            if (lfophase > 1)
+            {
+                lfophase = fmod(lfophase, 1.0);
+            }
+
+            thisphase = lfophase + phofs;
+        }
+        else
+        {
+            thisphase = phofs;
+
+            if (mwave == mod_noise || mwave == mod_snh)
+            {
+                thisphase *= 16.f;
+
+                if ((int)thisphase != (int)lfophase)
+                {
+                    rndreset = true;
+                    lfophase = (float)((int)thisphase);
+                }
+            }
+        }
 
         if (thisphase > 1)
         {
@@ -64,7 +85,7 @@ class ModControl
 
         /* We want to catch the first time that thisphase trips over the threshold. There's a couple
          * of ways to do this (like have a state variable), but this should work just as well. */
-        if (thisphase - rate <= 0)
+        if ((thisrate > 0 && thisphase - thisrate <= 0) || (thisrate == 0 && rndreset))
         {
             lforeset = true;
         }
@@ -139,19 +160,22 @@ class ModControl
 
             break;
         }
-        case mod_snh: // Sample & Hold random
-        case mod_sng: // Sample & Glide smoothed random
+        case mod_snh:   // Sample & Hold random
+        case mod_noise: // noise (Sample & Glide smoothed random)
         {
             if (lforeset)
             {
                 lfosandhtarget = 1.f * rand() / (float)RAND_MAX - 1.f;
             }
 
-            if (mwave == mod_sng)
+            if (mwave == mod_noise)
             {
                 // FIXME - exponential creep up. We want to get there in a time related to our rate
                 auto cv = lfoval.v;
-                auto diff = (lfosandhtarget - cv) * rate * 2;
+                // thisphase * 0.98 prevents a glitch when LFO rate is disabled and phase offset is
+                // 1 which constantly retriggers S&G
+                thisrate = (rate == 0) ? thisphase * 0.98 : thisrate;
+                auto diff = (lfosandhtarget - cv) * thisrate * 2;
                 lfoval.newValue(cv + diff);
             }
             else
