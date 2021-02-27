@@ -364,6 +364,14 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     if (halt_engine)
         return;
 
+    if (storage.oddsound_mts_client && storage.oddsound_mts_active)
+    {
+        if (MTS_ShouldFilterNote(storage.oddsound_mts_client, key, channel))
+        {
+            return;
+        }
+    }
+
     // For split/dual
     // MIDI Channel 1 plays the split/dual
     // MIDI Channel 2 plays A
