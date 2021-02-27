@@ -654,7 +654,9 @@ void SurgeGUIEditor::idle()
             if ((v < 0.5 && !synth->storage.isStandardTuning) ||
                 (v > 0.5 && synth->storage.isStandardTuning))
             {
-                statusTune->setValue(!synth->storage.isStandardTuning);
+                bool hasmts =
+                    synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+                statusTune->setValue(!synth->storage.isStandardTuning || hasmts);
                 statusTune->invalid();
             }
         }
@@ -1519,7 +1521,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             // FIXME - drag and drop onto this?
             statusTune = layoutComponentForSkin(skinCtrl, tag_status_tune);
-            statusTune->setValue(synth->storage.isStandardTuning ? 0 : 1);
+            auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+            statusTune->setValue(synth->storage.isStandardTuning ? hasmts : 1);
 
             auto csc = dynamic_cast<CSwitchControl *>(statusTune);
             if (csc && synth->storage.isStandardTuning)
@@ -5155,7 +5158,10 @@ void SurgeGUIEditor::toggleTuning()
     }
 
     if (statusTune)
-        statusTune->setValue(this->synth->storage.isStandardTuning ? 0 : 1);
+    {
+        bool hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+        statusTune->setValue(this->synth->storage.isStandardTuning ? hasmts : 1);
+    }
 
     this->synth->refresh_editor = true;
 }
