@@ -96,7 +96,7 @@ void Exciter::set_params()
     wet_gain.set_target_smoothed(limit_range(*f[exciter_mix], 0.f, 1.f));
 }
 
-void Exciter::suspend() {}
+void Exciter::suspend() { init(); }
 
 void Exciter::init_ctrltypes()
 {

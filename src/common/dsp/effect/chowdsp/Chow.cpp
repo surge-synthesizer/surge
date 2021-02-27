@@ -131,7 +131,7 @@ void Chow::process_block_os(float *dataL, float *dataR)
     os.downsample(dataL, dataR);
 }
 
-void Chow::suspend() {}
+void Chow::suspend() { init(); }
 
 void Chow::init_ctrltypes()
 {

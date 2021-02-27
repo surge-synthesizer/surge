@@ -40,7 +40,7 @@ void Tape::process(float *dataL, float *dataR)
     lossFilter.process(dataL, dataR);
 }
 
-void Tape::suspend() {}
+void Tape::suspend() { init(); }
 
 void Tape::init_ctrltypes()
 {
