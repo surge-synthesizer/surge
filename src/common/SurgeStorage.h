@@ -848,6 +848,9 @@ class alignas(16) SurgeStorage
     float table_pitch_ignoring_tuning alignas(16)[512];
     float table_pitch_inv_ignoring_tuning alignas(16)[512];
     float table_note_omega_ignoring_tuning alignas(16)[2][512];
+    // 2^0 -> 2^+/-1/12th. See comment in note_to_pitch
+    float table_two_to_the alignas(16)[1001];
+    float table_two_to_the_minus alignas(16)[1001];
 
     ~SurgeStorage();
 
@@ -1000,6 +1003,20 @@ class alignas(16) SurgeStorage
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active;
     uint32_t oddsound_mts_on_check = 0;
+
+    /*
+     * If we tune at keyboard or with MTS, we don't reset the internal tuning table.
+     * Same if we are in standard tuning. So lets have that condition be done once
+     */
+    inline bool tuningTableIs12TET()
+    {
+        if ((isStandardTuning && isStandardMapping) ||      // nothing changed
+            (oddsound_mts_client && oddsound_mts_active) || // MTS in command
+            tuningApplicationMode == RETUNE_MIDI_ONLY       // tune the keyboard not the tables
+        )
+            return true;
+        return false;
+    }
 
     ControllerModulationSource::SmoothingMode smoothingMode =
         ControllerModulationSource::SmoothingMode::LEGACY;
