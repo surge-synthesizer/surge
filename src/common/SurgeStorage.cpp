@@ -1446,6 +1446,13 @@ void SurgeStorage::init_tables()
         table_glide_exp[511 - i] = 1.0 - table_glide_log[i];
     }
 
+    for (int i = 0; i < 1001; ++i)
+    {
+        double twelths = i * 1.0 / 12.0 / 1000.0;
+        table_two_to_the[i] = pow(2.0, twelths);
+        table_two_to_the_minus[i] = pow(2.0, -twelths);
+    }
+
     double mult = 1.0 / 32.0;
     for (int i = 0; i < 1024; i++)
     {
@@ -1481,7 +1488,21 @@ float SurgeStorage::note_to_pitch(float x)
     if (e > 0x1fe)
         e = 0x1fe;
 
-    return (1 - a) * table_pitch[e & 0x1ff] + a * table_pitch[(e + 1) & 0x1ff];
+    if (tuningTableIs12TET())
+    {
+        /*
+         * OK we know table_pitch is basically 2^(x/12).
+         * We want 2^((x+a)/12) = 2^x/12 * 2^(a/12)
+         */
+        float pow2pos = a * 1000.0;
+        int pow2idx = (int)pow2pos;
+        float pow2frac = pow2pos - pow2idx;
+        float pow2v =
+            (1 - pow2frac) * table_two_to_the[pow2idx] + pow2frac * table_two_to_the[pow2idx + 1];
+        return table_pitch[e & 0x1ff] * pow2v;
+    }
+    else
+        return (1 - a) * table_pitch[e & 0x1ff] + a * table_pitch[(e + 1) & 0x1ff];
 }
 
 float SurgeStorage::note_to_pitch_inv(float x)
@@ -1493,7 +1514,21 @@ float SurgeStorage::note_to_pitch_inv(float x)
     if (e > 0x1fe)
         e = 0x1fe;
 
-    return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
+    if (tuningTableIs12TET())
+    {
+        /*
+         * OK we know table_pitch is basically 2^(-x/12).
+         * We want 2^(-(x+a)/12) = 2^-x/12 * 2^(-a/12)
+         */
+        float pow2pos = a * 1000.0;
+        int pow2idx = (int)pow2pos;
+        float pow2frac = pow2pos - pow2idx;
+        float pow2v = (1 - pow2frac) * table_two_to_the_minus[pow2idx] +
+                      pow2frac * table_two_to_the_minus[pow2idx + 1];
+        return table_pitch_inv[e & 0x1ff] * pow2v;
+    }
+    else
+        return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
 }
 
 float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
@@ -1505,8 +1540,12 @@ float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
     if (e > 0x1fe)
         e = 0x1fe;
 
-    return (1 - a) * table_pitch_ignoring_tuning[e & 0x1ff] +
-           a * table_pitch_ignoring_tuning[(e + 1) & 0x1ff];
+    float pow2pos = a * 1000.0;
+    int pow2idx = (int)pow2pos;
+    float pow2frac = pow2pos - pow2idx;
+    float pow2v =
+        (1 - pow2frac) * table_two_to_the[pow2idx] + pow2frac * table_two_to_the[pow2idx + 1];
+    return table_pitch_ignoring_tuning[e & 0x1ff] * pow2v;
 }
 
 float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
@@ -1518,8 +1557,12 @@ float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
     if (e > 0x1fe)
         e = 0x1fe;
 
-    return (1 - a) * table_pitch_inv_ignoring_tuning[e & 0x1ff] +
-           a * table_pitch_inv_ignoring_tuning[(e + 1) & 0x1ff];
+    float pow2pos = a * 1000.0;
+    int pow2idx = (int)pow2pos;
+    float pow2frac = pow2pos - pow2idx;
+    float pow2v = (1 - pow2frac) * table_two_to_the_minus[pow2idx] +
+                  pow2frac * table_two_to_the_minus[pow2idx + 1];
+    return table_pitch_inv_ignoring_tuning[e & 0x1ff] * pow2v;
 }
 
 void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
