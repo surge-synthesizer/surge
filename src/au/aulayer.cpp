@@ -122,6 +122,7 @@ void aulayer::InitializePlugin()
                 if (s->storage.patch_list[p].category == c)
                 {
                     presetOrderToPatchList.push_back(p);
+                    surgePatchToAUPatch[p] = presetOrderToPatchList.size() - 1;
                 }
             }
         }

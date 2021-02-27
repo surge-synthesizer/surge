@@ -381,7 +381,7 @@ void CPatchBrowser::loadPatch(int id)
 {
     if (listener && (id >= 0))
     {
-        sel_id = id;
+        enqueue_sel_id = id;
         listener->valueChanged(this);
     }
 }

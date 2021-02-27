@@ -148,6 +148,7 @@ class aulayer : public AUInstrumentBase
     CFStringRef parameterIDlist_CFString[n_total_params + num_metaparameters];
     float sampleRateCache;
     std::vector<int> presetOrderToPatchList;
+    std::unordered_map<int, int> surgePatchToAUPatch;
 
     int checkNamesEvery = 0;
 };

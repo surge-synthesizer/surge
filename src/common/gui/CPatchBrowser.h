@@ -29,6 +29,7 @@ class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingCo
         setCategory("Init");
         this->storage = storage;
         sel_id = -1;
+        enqueue_sel_id = -1;
         current_patch = -1;
         current_category = -1;
     }
@@ -77,7 +78,7 @@ class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingCo
     VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
                                           const VSTGUI::CButtonState &button) override;
     void loadPatch(int id);
-    int sel_id = 0;
+    int sel_id = 0, enqueue_sel_id = 0;
 
   protected:
     std::string pname;

@@ -4187,7 +4187,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
     break;
     case tag_patchname:
     {
-        int id = ((CPatchBrowser *)control)->sel_id;
+        int id = ((CPatchBrowser *)control)->enqueue_sel_id;
         // synth->load_patch(id);
         enqueuePatchId = id;
 
