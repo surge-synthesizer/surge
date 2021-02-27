@@ -375,8 +375,13 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
 
 void aulayer::setPresetByID(int pid)
 {
+    if (surgePatchToAUPatch.find(pid) == surgePatchToAUPatch.end())
+    {
+        return;
+    }
+
     AUPreset preset;
-    preset.presetNumber = pid;
+    preset.presetNumber = surgePatchToAUPatch[pid];
     preset.presetName = CFStringCreateWithCString(
         NULL, plugin_instance->storage.patch_list[pid].name.c_str(), kCFStringEncodingUTF8);
     SetAFactoryPresetAsCurrent(preset);
