@@ -28,4 +28,16 @@ if( ${Git_FOUND} )
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/surge-extra-content/Skins/ resources/data/skins
             )
+else()
+    message(STATUS "Absent git, making extra content commands no-ops")
+    add_custom_target(download-extra-content)
+    add_custom_command(TARGET download-extra-content
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND cmake -E echo Skipping Extra Content)
+    add_custom_target(stage-extra-content)
+    add_custom_command(TARGET stage-extra-content
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND cmake -E echo Skipping Extra Content)
 endif()
