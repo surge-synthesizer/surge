@@ -617,6 +617,50 @@ float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
             pvalue = 0;
         }
         break;
+    case 24:
+        if (quadrant == 2 || quadrant == 1)
+        {
+            pvalue = 1 - sinx;
+        }
+        break;
+    case 25:
+        switch (quadrant)
+        {
+        case 1:
+            pvalue = sin2x / quadrant;
+            break;
+        case 2:
+        case 3:
+            pvalue = 1;
+            break;
+        }
+
+        if (wfMode == 2)
+            pvalue = abs(pvalue);
+
+        if (quadrant > 2)
+            pvalue = 0;
+
+        break;
+    case 26:
+        if (quadrant == 2 || quadrant == -1)
+        {
+            pvalue = sin2x;
+            if (quadrant == 3 || quadrant == 2)
+                pvalue = 0;
+        }
+        break;
+    case 27:
+        if (quadrant == 2 || quadrant == -1)
+        {
+                pvalue = 2;
+        }
+
+            if (wfMode == 1)
+            pvalue = abs(quadrant);
+            pvalue = sin2x / quadrant;
+
+        break;
 
     default:
         break;
