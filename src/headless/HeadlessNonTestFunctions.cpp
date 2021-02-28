@@ -518,6 +518,16 @@ void performancePlay(const std::string &patchName, int mode)
               << "-- mode = " << mode << std::endl;
 
     surge->loadPatchByPath(patchName.c_str(), -1, "RUNTIME");
+
+#if SINE_STRESS_TEST
+    /*
+     * This was for my sine stress testing
+     */
+    for (int s = 0; s < n_scenes; ++s)
+        for (int o = 0; o < n_oscs; ++o)
+            surge->storage.getPatch().scene[s].osc[o].p[0].val.i = mode;
+#endif
+
     for (int i = 0; i < 10; ++i)
         surge->process();
 
