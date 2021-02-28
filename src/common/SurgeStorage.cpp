@@ -1481,54 +1481,41 @@ void SurgeStorage::init_tables()
 
 float SurgeStorage::note_to_pitch(float x)
 {
-    x += 256;
-    int e = (int)x;
-    float a = x - (float)e;
-
-    if (e > 0x1fe)
-        e = 0x1fe;
 
     if (tuningTableIs12TET())
     {
-        /*
-         * OK we know table_pitch is basically 2^(x/12).
-         * We want 2^((x+a)/12) = 2^x/12 * 2^(a/12)
-         */
-        float pow2pos = a * 1000.0;
-        int pow2idx = (int)pow2pos;
-        float pow2frac = pow2pos - pow2idx;
-        float pow2v =
-            (1 - pow2frac) * table_two_to_the[pow2idx] + pow2frac * table_two_to_the[pow2idx + 1];
-        return table_pitch[e & 0x1ff] * pow2v;
+        return note_to_pitch_ignoring_tuning(x);
     }
     else
+    {
+        x += 256;
+        int e = (int)x;
+        float a = x - (float)e;
+
+        if (e > 0x1fe)
+            e = 0x1fe;
+
         return (1 - a) * table_pitch[e & 0x1ff] + a * table_pitch[(e + 1) & 0x1ff];
+    }
 }
 
 float SurgeStorage::note_to_pitch_inv(float x)
 {
-    x += 256;
-    int e = (int)x;
-    float a = x - (float)e;
-
-    if (e > 0x1fe)
-        e = 0x1fe;
-
     if (tuningTableIs12TET())
     {
-        /*
-         * OK we know table_pitch is basically 2^(-x/12).
-         * We want 2^(-(x+a)/12) = 2^-x/12 * 2^(-a/12)
-         */
-        float pow2pos = a * 1000.0;
-        int pow2idx = (int)pow2pos;
-        float pow2frac = pow2pos - pow2idx;
-        float pow2v = (1 - pow2frac) * table_two_to_the_minus[pow2idx] +
-                      pow2frac * table_two_to_the_minus[pow2idx + 1];
-        return table_pitch_inv[e & 0x1ff] * pow2v;
+        return note_to_pitch_inv_ignoring_tuning(x);
     }
     else
+    {
+        x += 256;
+        int e = (int)x;
+        float a = x - (float)e;
+
+        if (e > 0x1fe)
+            e = 0x1fe;
+
         return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
+    }
 }
 
 float SurgeStorage::note_to_pitch_ignoring_tuning(float x)

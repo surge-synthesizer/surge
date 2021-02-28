@@ -60,7 +60,7 @@ Package: ${PACKAGE_NAME}
 Version: $DEB_VERSION
 Architecture: amd64
 Maintainer: surgeteam <noreply@github.com>
-Depends: libc6 (>=2.28), libcairo2, libfontconfig1, libfreetype6, libx11-6, libxcb-cursor0, libxcb-util1, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0, fonts-lato, xdg-utils, zenity, xclip
+Depends: libc6 (>=2.27), libcairo2, libfontconfig1, libfreetype6, libx11-6, libxcb-cursor0, libxcb-util1, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0, fonts-lato, xdg-utils, zenity, xclip
 Provides: vst-plugin
 Section: sound
 Priority: optional
