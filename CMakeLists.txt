@@ -245,10 +245,10 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/chowdsp/Chow.cpp
   src/common/dsp/effect/chowdsp/exciter/Exciter.cpp
   src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
-  # src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
-  # src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
-  # src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
-  # src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
+  src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
+  src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
+  src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
+  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
   src/common/dsp/effect/chowdsp/tape/Tape.cpp
   src/common/dsp/effect/chowdsp/Neuron.cpp
   src/common/dsp/filters/VintageLadders.cpp
