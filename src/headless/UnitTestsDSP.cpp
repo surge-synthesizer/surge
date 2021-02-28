@@ -707,6 +707,40 @@ TEST_CASE("libsamplerate basics", "[dsp]")
     }
 }
 
+TEST_CASE("Every Oscillator Plays", "[dsp]")
+{
+    for (int i = 0; i < n_osc_types; ++i)
+    {
+        DYNAMIC_SECTION("Oscillator type " << osc_type_names[i])
+        {
+            auto surge = Surge::Headless::createSurge(44100);
+
+            for (int q = 0; q < BLOCK_SIZE; q++)
+            {
+                surge->input[0][q] = 0.f;
+                surge->input[1][q] = 0.f;
+            }
+
+            surge->storage.getPatch().scene[0].osc[0].type.val.i = i;
+
+            for (int q = 0; q < 10; ++q)
+                surge->process();
+            float sumAbsOut = 0;
+            surge->playNote(0, 60, 127, 0);
+            for (int q = 0; q < 100; ++q)
+            {
+                surge->process();
+                for (int s = 0; s < BLOCK_SIZE; ++s)
+                    sumAbsOut += fabs(surge->output[0][s]);
+            }
+            if (i == ot_audioinput)
+                REQUIRE(sumAbsOut < 1e-4);
+            else
+                REQUIRE(sumAbsOut > 1);
+        }
+    }
+}
+
 // When we return to #1514 this is a good starting point
 #if 0
 TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
