@@ -741,6 +741,20 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
     }
 }
 
+TEST_CASE("Untuned is 2^x", "[dsp]")
+{
+    auto surge = Surge::Headless::createSurge(44100);
+    for (int i = 0; i < 6000; ++i)
+    {
+        float n = i * 1.0 / 6000.0 * 200;
+        INFO("Note is " << n);
+        float p = surge->storage.note_to_pitch(n);
+        float pinv = surge->storage.note_to_pitch_inv(n);
+        REQUIRE(fabs(p - (float)pow(2.0, n / 12.0)) < p * 1e-5);
+        REQUIRE(fabs(pinv - (float)pow(2.0, -n / 12.0)) < p * 1e-5);
+    }
+}
+
 // When we return to #1514 this is a good starting point
 #if 0
 TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
