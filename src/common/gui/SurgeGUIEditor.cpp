@@ -3133,8 +3133,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         parname = "Retrigger";
                     }
 
-                    auto txt3 =
-                        Surge::UI::toOSCaseForMenu(tgltxt[ktsw] + " " + parname + " for All Oscillators");
+                    auto txt3 = Surge::UI::toOSCaseForMenu(tgltxt[ktsw] + " " + parname +
+                                                           " for All Oscillators");
 
                     auto b = addCallbackMenu(
                         contextMenu, txt3.c_str(), [this, p, control, ktsw, pids]() {
