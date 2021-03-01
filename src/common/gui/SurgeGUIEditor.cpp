@@ -3097,11 +3097,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 if (p->ctrltype == ct_bool_keytrack || p->ctrltype == ct_bool_retrigger)
                 {
-                    std::vector<bool> states;
-                    std::vector<int> pids;
+                    std::vector<Parameter *> impactedParms;
                     std::vector<std::string> tgltxt = {"Enable", "Disable"};
                     std::string parname = "Keytrack";
+                    if (p->ctrltype == ct_bool_retrigger)
+                    {
+                        parname = "Retrigger";
+                    }
 
+                    int currvals = 0;
                     // There is surely a more efficient way but this is fine
                     for (auto iter = this->synth->storage.getPatch().param_ptr.begin();
                          iter != this->synth->storage.getPatch().param_ptr.end(); iter++)
@@ -3109,40 +3113,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         Parameter *pl = *iter;
                         if (pl->ctrltype == p->ctrltype && pl->scene == p->scene)
                         {
-                            states.push_back(pl->val.b);
-                            pids.push_back(pl->id);
+                            currvals += pl->val.b;
+                            impactedParms.push_back(pl);
                         }
                     }
 
-                    int curvals = 0, ktsw = false;
-
-                    // get current state values sum
-                    for (int v : states)
-                    {
-                        curvals += v;
-                    }
-
-                    // if sum of current values equals n_oscs, they all have keytrack enabled
-                    if (curvals == n_oscs)
-                    {
-                        ktsw = 1;
-                    }
-
-                    if (p->ctrltype == ct_bool_retrigger)
-                    {
-                        parname = "Retrigger";
-                    }
+                    int ktsw = (currvals == n_oscs);
 
                     auto txt3 = Surge::UI::toOSCaseForMenu(tgltxt[ktsw] + " " + parname +
                                                            " for All Oscillators");
 
-                    auto b = addCallbackMenu(
-                        contextMenu, txt3.c_str(), [this, p, control, ktsw, pids]() {
-                            for (int val : pids)
+                    auto b =
+                        addCallbackMenu(contextMenu, txt3.c_str(), [this, ktsw, impactedParms]() {
+                            for (auto *p : impactedParms)
                             {
                                 SurgeSynthesizer::ID pid;
 
-                                if (synth->fromSynthSideId(val, pid))
+                                if (synth->fromSynthSideId(p->id, pid))
                                 {
                                     synth->setParameter01(pid, 1 - ktsw, false, false);
                                     repushAutomationFor(p);
