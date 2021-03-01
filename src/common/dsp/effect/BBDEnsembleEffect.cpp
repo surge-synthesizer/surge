@@ -71,7 +71,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     float del0 = 5 * 0.001 * samplerate;
 
     // input gain
-    input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));  
+    input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));
     input.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
     for (int s = 0; s < BLOCK_SIZE; ++s)
@@ -107,7 +107,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[ens_width]));
-    
+
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
     width.multiply_block(S, BLOCK_SIZE_QUAD);
