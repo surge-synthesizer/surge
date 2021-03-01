@@ -271,30 +271,33 @@ void COscMenu::draw(CDrawContext *dc)
     if (isHovered && hoverBmp)
         hoverBmp->draw(dc, size, CPoint(0, y), 0xff);
 
-    dc->saveGlobalState();
-
-    dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
-    dc->setFont(Surge::GUI::getLatoAtSize(font_size, font_style));
-
-    if (isHovered)
+    if (skin->getVersion() >= 2)
     {
-        dc->setFontColor(skin->getColor(Colors::Osc::Type::TextHover));
+        dc->saveGlobalState();
+
+        dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+        dc->setFont(Surge::GUI::getLatoAtSize(font_size, font_style));
+
+        if (isHovered)
+        {
+            dc->setFontColor(skin->getColor(Colors::Osc::Type::TextHover));
+        }
+        else
+        {
+            dc->setFontColor(skin->getColor(Colors::Osc::Type::Text));
+        }
+
+        std::string txt = osc_type_shortnames[i];
+
+        if (text_allcaps)
+        {
+            std::transform(txt.begin(), txt.end(), txt.begin(), ::toupper);
+        }
+
+        dc->drawString(txt.c_str(), size.offset(text_hoffset, text_voffset), text_align, true);
+
+        dc->restoreGlobalState();
     }
-    else
-    {
-        dc->setFontColor(skin->getColor(Colors::Osc::Type::Text));
-    }
-
-    std::string txt = osc_type_shortnames[i];
-
-    if (text_allcaps)
-    {
-        std::transform(txt.begin(), txt.end(), txt.begin(), ::toupper);
-    }
-
-    dc->drawString(txt.c_str(), size.offset(text_hoffset, text_voffset), text_align, true);
-
-    dc->restoreGlobalState();
 
     setDirty(false);
 }
