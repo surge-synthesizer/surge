@@ -163,6 +163,7 @@ enum ctrltypes
     ct_dpw_trimix,
     ct_percent_oscdrift,
     ct_waveguide_excitation_model,
+    ct_bbd_lforate,
     num_ctrltypes,
 };
 
