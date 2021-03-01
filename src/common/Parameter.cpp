@@ -592,6 +592,13 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0;
         moverate = 0.33f;
         break;
+    case ct_bbd_lforate:
+        valtype = vt_float;
+        val_min.f = log2(0.01f);
+        val_max.f = log2(20.f);
+        val_default.f = 0;
+        moverate = 0.33f;
+        break;
     case ct_lfotrigmode:
         valtype = vt_int;
         val_min.i = 0;
@@ -1114,6 +1121,7 @@ void Parameter::set_type(int ctrltype)
 
     case ct_lforate:
     case ct_lforate_deactivatable:
+    case ct_bbd_lforate:
         displayType = ATwoToTheBx;
         displayInfo.decimals = 3;
         displayInfo.tempoSyncNotationMultiplier = -1.0f;
@@ -1380,6 +1388,7 @@ void Parameter::bound_value(bool force_integer)
                 val.f = log2(round(powf(2.0f, val.f) * 10) / 10.f);
             }
             break;
+        case ct_bbd_lforate:
         case ct_lforate:
         case ct_lforate_deactivatable:
         {
@@ -3247,6 +3256,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_reverbtime:
     case ct_reverbpredelaytime:
     case ct_portatime:
+    case ct_bbd_lforate:
     case ct_lforate:
     case ct_lforate_deactivatable:
     case ct_lfoamplitude:
