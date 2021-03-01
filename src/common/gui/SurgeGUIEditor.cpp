@@ -2919,6 +2919,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
         return 0;
 
     int ptag = tag - start_paramtags;
+
     if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
     {
         Parameter *p = synth->storage.getPatch().param_ptr[ptag];
@@ -2976,6 +2977,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             // "skins/shared/help-14.png" ).c_str() ); auto helpbmp = new CBitmap( pp );
 
             std::string helpurl = helpURLFor(p);
+
             if (helpurl == "")
             {
                 contextMenu->addEntry((char *)p->get_full_name(), eid++);
@@ -2988,10 +2990,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 [lurl]() { Surge::UserInteractions::openURL(lurl); });
                 eid++;
             }
+
             contextMenu->addSeparator(eid++);
+
             char txt[TXT_SIZE], txt2[512];
             p->get_display(txt);
             snprintf(txt2, 512, "%s: %s", Surge::UI::toOSCaseForMenu("Edit Value").c_str(), txt);
+
             if (p->valtype == vt_float)
             {
                 if (p->can_temposync() && p->temposync)
@@ -3082,9 +3087,73 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         synth->refresh_editor = true;
                     }
                 });
+
                 eid++;
+
                 if (p->val.b)
+                {
                     b->setChecked(true);
+                }
+
+                if (p->ctrltype == ct_bool_keytrack || p->ctrltype == ct_bool_retrigger)
+                {
+                    std::vector<bool> states;
+                    std::vector<int> pids;
+                    std::vector<std::string> tgltxt = {"Enable", "Disable"};
+                    std::string parname = "Keytrack";
+
+                    // There is surely a more efficient way but this is fine
+                    for (auto iter = this->synth->storage.getPatch().param_ptr.begin();
+                         iter != this->synth->storage.getPatch().param_ptr.end(); iter++)
+                    {
+                        Parameter *pl = *iter;
+                        if (pl->ctrltype == p->ctrltype && pl->scene == p->scene)
+                        {
+                            states.push_back(pl->val.b);
+                            pids.push_back(pl->id);
+                        }
+                    }
+
+                    int curvals = 0, ktsw = false;
+
+                    // get current state values sum
+                    for (int v : states)
+                    {
+                        curvals += v;
+                    }
+
+                    // if sum of current values equals n_oscs, they all have keytrack enabled
+                    if (curvals == n_oscs)
+                    {
+                        ktsw = 1;
+                    }
+
+                    if (p->ctrltype == ct_bool_retrigger)
+                    {
+                        parname = "Retrigger";
+                    }
+
+                    auto txt3 =
+                        Surge::UI::toOSCaseForMenu(tgltxt[ktsw] + " " + parname + " for All Oscillators");
+
+                    auto b = addCallbackMenu(
+                        contextMenu, txt3.c_str(), [this, p, control, ktsw, pids]() {
+                            for (int val : pids)
+                            {
+                                SurgeSynthesizer::ID pid;
+
+                                if (synth->fromSynthSideId(val, pid))
+                                {
+                                    synth->setParameter01(pid, 1 - ktsw, false, false);
+                                    repushAutomationFor(p);
+                                }
+                            }
+
+                            synth->refresh_editor = true;
+                        });
+
+                    eid++;
+                }
             }
             else if (p->valtype == vt_int)
             {
@@ -3266,7 +3335,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             }
             bool cancellearn = false;
 
-            // Modulation and Learn semantics only apply to vt_float types in surge right now
+            // Modulation and Learn semantics only apply to vt_float types in Surge right now
             if (p->valtype == vt_float)
             {
                 // if(p->can_temposync() || p->can_extend_range()) contextMenu->addSeparator(eid++);
