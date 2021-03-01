@@ -10,7 +10,7 @@ using namespace VSTGUI;
 
 CEffectSettings::CEffectSettings(const CRect &size, IControlListener *listener, long tag,
                                  int current, std::shared_ptr<SurgeBitmaps> bitmapStore)
-    : CControl(size, listener, tag, 0)
+    : CControl(size, listener, tag, 0), labels(nullptr)
 {
     this->current = current;
     bg = bitmapStore->getBitmap(IDB_FX_GRID);
@@ -62,7 +62,7 @@ void CEffectSettings::draw(CDrawContext *dc)
     }
     else
     {
-        if (skin && associatedBitmapStore && skin->getVersion() < 2 && !labels)
+        if (skin && associatedBitmapStore && !labels)
         {
             labels = associatedBitmapStore->getBitmap(IDB_FX_TYPE_ICONS);
         }
