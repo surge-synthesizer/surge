@@ -574,7 +574,7 @@ static struct DPWTriName : public ParameterDynamicNameFunction
         static char tx[1024];
 
         std::string subs = sub ? " Sub" : "";
-        std::string res = std::string("Multi - ") + dpw_multitype_names[mt] + subs;
+        std::string res = dpw_multitype_names[mt] + subs;
 
         strncpy(tx, res.c_str(), 1024);
         tx[1023] = 0;
