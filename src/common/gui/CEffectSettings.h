@@ -34,6 +34,11 @@ class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsuming
     VSTGUI::CBitmap *bg, *labels;
     VSTGUI::CPoint dragStart, dragCurrent, dragCornerOff;
 
+    // skin version 1 FX slot positions
+    const int blocks[n_fx_slots][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41},
+                                       {18, 21}, {44, 21}, {89, 11}, {89, 31}};
+
+    // skin version 2 FX slot positions
     // pixel offsets of all FX slots:     A IFX1, A IFX2, B IFX1,   B IFX2,
     //                                    Send 1, Send 2, Global 1, Global 2
     const int fxslotpos[n_fx_slots][2] = {{17, 0},  {43, 0},  {17, 40}, {43, 40},
