@@ -2931,6 +2931,12 @@ void Parameter::get_display(char *txt, bool external, float ef)
             auto n = waveguide_excitation_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
+        case ct_eurotwist_engine:
+        {
+            extern std::string eurotwist_engine_name(int);
+            auto n = eurotwist_engine_name(i);
+            snprintf(txt, TXT_SIZE, "%s", n.c_str());
+        }
         break;
         case ct_reson_mode:
             switch (i)
