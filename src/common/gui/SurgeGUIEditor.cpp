@@ -1009,11 +1009,36 @@ void SurgeGUIEditor::idle()
 
 void SurgeGUIEditor::toggle_mod_editing()
 {
-    mod_editor = !mod_editor;
-    refresh_mod();
-    auto iw = dynamic_cast<CParameterTooltip *>(infowindow);
-    if (iw && iw->isVisible())
-        iw->Hide();
+    bool doModEditing = true;
+
+    if (currentSkin->getVersion() >= 2)
+    {
+        auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
+
+        if (!skinCtrl)
+        {
+            skinCtrl = currentSkin->getOrCreateControlForConnector(
+                Surge::Skin::Connector::connectorByID("controls.modulation.panel"));
+        }
+
+        if (skinCtrl->classname == Surge::UI::NoneClassName)
+        {
+            doModEditing = false;
+        }
+    }
+
+    if (doModEditing)
+    {
+        mod_editor = !mod_editor;
+        refresh_mod();
+
+        auto iw = dynamic_cast<CParameterTooltip *>(infowindow);
+
+        if (iw && iw->isVisible())
+        {
+            iw->Hide();
+        }
+    }
 }
 
 void SurgeGUIEditor::refresh_mod()
@@ -1195,11 +1220,18 @@ CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
         width += 2;
 
     auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
+
     if (!skinCtrl)
     {
         skinCtrl = currentSkin->getOrCreateControlForConnector(
             Surge::Skin::Connector::connectorByID("controls.modulation.panel"));
     }
+
+    if (skinCtrl->classname == Surge::UI::NoneClassName && currentSkin->getVersion() >= 2)
+    {
+        return CRect();
+    }
+
     CRect r(CPoint(skinCtrl->x, skinCtrl->y), CPoint(width - 1, 14));
 
     if (isMacro)
@@ -1338,6 +1370,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             CRect r = positionForModulationGrid(ms);
 
             int state = 0;
+
             if (ms == modsource)
                 state = mod_editor ? 2 : 1;
             if (ms == modsource_editor[current_scene])

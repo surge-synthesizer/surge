@@ -34,7 +34,7 @@ std::string eurotwist_engine_name(int i)
     case 1:
         return "Waveshaper";
     case 2:
-        return "2-OP FM";
+        return "2-Operator FM";
     case 3:
         return "Formant/PD";
     case 4:
@@ -44,7 +44,7 @@ std::string eurotwist_engine_name(int i)
     case 6:
         return "Chords";
     case 7:
-        return "Spech";
+        return "Vowels/Speech";
     case 8:
         return "Granular Cloud";
     case 9:
