@@ -889,6 +889,12 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 5; // sin, tri, saw, s&g, s&h, square
         val_default.i = 0;
         break;
+    case ct_eurotwist_engine:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 15;
+        val_default.i = 0;
+        break;
     case ct_waveguide_excitation_model:
     {
         extern int waveguide_excitations_count();

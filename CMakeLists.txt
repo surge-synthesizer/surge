@@ -117,7 +117,6 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 include(cmake/stage-extra-content.cmake)
 
 add_library(surge-shared)
-
 add_library(surge-tests INTERFACE)
 
 add_subdirectory(libs/airwindows)
@@ -262,6 +261,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/BiquadFilterSSE2.cpp
   src/common/dsp/DPWOscillator.cpp
   src/common/dsp/DspUtilities.cpp
+  src/common/dsp/EuroTwist.cpp
   src/common/dsp/FilterCoefficientMaker.cpp
   src/common/dsp/FM2Oscillator.cpp
   src/common/dsp/FM3Oscillator.cpp
