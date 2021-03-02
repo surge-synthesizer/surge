@@ -20,6 +20,7 @@
 #include <memory>
 #include <memory>
 #include "basic_dsp.h"
+#include "DspUtilities.h"
 
 namespace plaits
 {
@@ -69,8 +70,10 @@ class EuroTwist : public Oscillator
     std::unique_ptr<stmlib::BufferAllocator> alloc;
     char shared_buffer[16834];
     SRC_STATE_tag *srcstate;
-    float carryover[BLOCK_SIZE_OS];
+    float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
+
+    lag<float, true> harm, timb, morph;
 };
 
 #endif // SURGE_EUROTWIST_H

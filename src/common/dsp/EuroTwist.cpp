@@ -25,6 +25,46 @@
 #include "plaits/dsp/voice.h"
 #include "samplerate.h"
 
+std::string eurotwist_engine_name(int i)
+{
+    switch (i)
+    {
+    case 0:
+        return "Waveforms";
+    case 1:
+        return "Waveshaper";
+    case 2:
+        return "2-OP FM";
+    case 3:
+        return "Formant/PD";
+    case 4:
+        return "Harmonic";
+    case 5:
+        return "Wavetable";
+    case 6:
+        return "Chords";
+    case 7:
+        return "Spech";
+    case 8:
+        return "Granular Cloud";
+    case 9:
+        return "Filtered Noise";
+    case 10:
+        return "Particle Noise";
+    case 11:
+        return "Inharmonic String";
+    case 12:
+        return "Modal Resonator";
+    case 13:
+        return "Analog Kick";
+    case 14:
+        return "Analog Snare";
+    case 15:
+        return "Analog Hi-Hat";
+    }
+    return "Error " + std::to_string(i);
+}
+
 EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
@@ -33,7 +73,7 @@ EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *l
     voice->Init(alloc.get());
     patch = std::make_unique<plaits::Patch>();
     int error;
-    srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 1, &error);
+    srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
     if (error != 0)
     {
         srcstate = nullptr;
@@ -56,25 +96,27 @@ void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, fl
 
     patch->note = pitch; // fixme - alternate tuning goes here
     patch->engine = oscdata->p[et_engine].val.i;
-    patch->harmonics = fvbp(et_harmonics);
-    patch->timbre = fvbp(et_timbre);
-    patch->morph = fvbp(et_morph);
+
+    harm.newValue(fvbp(et_harmonics));
+    timb.newValue(fvbp(et_timbre));
+    morph.newValue(fvbp(et_morph));
 
     plaits::Modulations mod = {};
     // for now
     memset((void *)&mod, 0, sizeof(plaits::Modulations));
 
     constexpr int subblock = 4;
-    float src_in[subblock];
-    float src_out[BLOCK_SIZE_OS];
+    float src_in[subblock][2];
+    float src_out[BLOCK_SIZE_OS][2];
+
     SRC_DATA sdata;
     sdata.end_of_input = 0;
     sdata.src_ratio = dsamplerate_os / 48000.0;
 
     for (int i = 0; i < carrover_size; ++i)
     {
-        output[i] = carryover[i];
-        outputR[i] = carryover[i];
+        output[i] = carryover[i][0];
+        outputR[i] = carryover[i][0];
     }
 
     int total_generated = carrover_size;
@@ -82,13 +124,22 @@ void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, fl
     while (total_generated < BLOCK_SIZE_OS)
     {
         plaits::Voice::Frame poutput[subblock];
+        patch->harmonics = harm.v;
+        patch->timbre = timb.v;
+        patch->morph = morph.v;
+
+        harm.process();
+        timb.process();
+        morph.process();
+
         voice->Render(*patch, mod, poutput, subblock);
         for (int i = 0; i < subblock; ++i)
         {
-            src_in[i] = poutput[i].out / 32768.f;
+            src_in[i][0] = poutput[i].out / 32768.f;
+            src_in[i][1] = poutput[i].aux / 32768.f;
         }
-        sdata.data_in = &(src_in[0]);
-        sdata.data_out = src_out;
+        sdata.data_in = &(src_in[0][0]);
+        sdata.data_out = &(src_out[0][0]);
         sdata.input_frames = subblock;
         sdata.output_frames = BLOCK_SIZE_OS;
         auto res = src_process(srcstate, &sdata);
@@ -96,12 +147,14 @@ void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, fl
         {
             if (i + total_generated >= BLOCK_SIZE_OS)
             {
-                carryover[carrover_size++] = src_out[i];
+                carryover[carrover_size][0] = src_out[i][0];
+                carryover[carrover_size][1] = src_out[i][1];
+                carrover_size++;
             }
             else
             {
-                output[total_generated + i] = src_out[i];
-                outputR[total_generated + i] = src_out[i];
+                output[total_generated + i] = src_out[i][0];
+                outputR[total_generated + i] = src_out[i][0];
             }
         }
         total_generated += sdata.output_frames_gen;
