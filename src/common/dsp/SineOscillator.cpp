@@ -17,6 +17,55 @@
 #include "FastMath.h"
 #include <algorithm>
 
+/*
+ * Sine Oscilator Optimization Strategy
+ *
+ * With Surge 1.9, we undertook a bunch of work to optimize the sine oscillator runtime at high
+ * unison count with odd shapes. Basicaly at high unison we were doing large numbers of loops,
+ * branches and so forth, and not using any of the advantage you could get by realizing the paralle
+ * structure of unison. So we fixed that.
+ *
+ * There's two core fixes.
+ *
+ * First, and you shouldn't need to touch this, the inner unison loop of ::process is now SSEified
+ * over unison. This means that we use parallel approximations of sine, we use parallel clamps and
+ * feedback application, the whole nine yards. You can see it in process_block_internal.
+ *
+ * But that's not all. The other key trick is that the shape modes added a massive amount of
+ * switching to the execution path. So we eliminated that completely. We did that with two tricks
+ *
+ * 1: Mode is a template applied at block level so there's no ifs inside the block
+ * 2: When possible, shape generation is coded as an SSE instruction.
+ *
+ * So #1 just means that process_block_internal has a <mode> template as do many other operators
+ * and we use template specialization. We are specializing the function
+ *
+ *   __m128 valueFromSineAndCosForMode<mode>(__m128 s, __m128 c, int maxc  )
+ *
+ * The default impleementation of this function calls
+ *
+ *    float valueForSineAndCosForModeAsScalar<mode>(s, c)
+ *
+ * on each SSE point in an unrolled SSE loop. But we also specialize it for many of the modes.
+ *
+ * The the original api point SineOscillator::valueFromSineAndCos (which is now only called by
+ * external APIs) calls into the appropriately templated function. Since our loop doesn't use that
+ * though we end up with our switch compile time inlined.
+ *
+ * So if you want to add a mode what does this mean? Well go update Parameter.cpp to extend the
+ * max of mode of course. But then you come back here and do the following
+ *
+ * 1. Assume that you know how to write your new mode as a scalar function. After the
+ * declaration of valueFromSineAndCosForMode as a template, specialize and put your scalar
+ * implementation in there. Add your mode to th switch statement in valueFromSinAndCos
+ * and into the DOCASE switch statement in process_block. Compile, run, test.
+ *
+ * 2. Then if that works, and you can code up your mode as an SSE function, remove that
+ * specialization and instead specialize the mode in teh SSE-named function.
+ *
+ * Should all be pretty clear.
+ */
+
 SineOscillator::SineOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
 {
@@ -85,6 +134,8 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
         sine[i].set_phase(phase[i]);
     }
 
+    firstblock = (oscdata->retrigger.val.b || is_display);
+
     fb_val = 0.f;
 
     id_mode = oscdata->p[sine_shape].param_id_in_scene;
@@ -101,17 +152,452 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 
 SineOscillator::~SineOscillator() {}
 
-void SineOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
+inline int calcquadrant(float sinx, float cosx)
 {
-    if (localcopy[id_fmlegacy].i == 0)
+    int sxl0 = (sinx <= 0);
+    int cxl0 = (cosx <= 0);
+
+    // quadrant
+    // 1: sin > cos > so this is 0 + 0 - 0 + 1 = 1
+    // 2: sin > cos < so this is 0 + 1 - 0 + 1 = 2
+    // 3: sin < cos < so this is 3 + 1 - 2 + 1 = 3
+    // 4: sin < cos > so this is 3 + 0 - 0 + 1 = 4
+    int quadrant = 3 * sxl0 + cxl0 - 2 * sxl0 * cxl0 + 1;
+    return quadrant;
+}
+
+inline int calcquadrant0(float sinx, float cosx)
+{
+    int sxl0 = (sinx <= 0);
+    int cxl0 = (cosx <= 0);
+
+    // quadrant
+    // 1: sin > cos > so this is 0 + 0 - 0 = 0
+    // 2: sin > cos < so this is 0 + 1 - 0 = 1
+    // 3: sin < cos < so this is 3 + 1 - 2 = 2
+    // 4: sin < cos > so this is 3 + 0 - 0 = 3
+    int quadrant = 3 * sxl0 + cxl0 - 2 * sxl0 * cxl0;
+    return quadrant;
+}
+
+inline __m128 calcquadrantSSE(__m128 sinx, __m128 cosx)
+{
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1), m2 = _mm_set1_ps(2), m3 = _mm_set1_ps(3);
+    auto slt = _mm_and_ps(_mm_cmple_ps(sinx, mz), m1);
+    auto clt = _mm_and_ps(_mm_cmple_ps(cosx, mz), m1);
+
+    // quadrant
+    // 1: sin > cos > so this is 0 + 0 - 0 + 1 = 1
+    // 2: sin > cos < so this is 0 + 1 - 0 + 1 = 2
+    // 3: sin < cos < so this is 3 + 1 - 2 + 1 = 3
+    // 4: sin < cos > so this is 3 + 0 - 0 + 1 = 4
+    // int quadrant = 3 * sxl0 + cxl0 - 2 * sxl0 * cxl0 + 1;
+    auto thsx = _mm_mul_ps(m3, slt);
+    auto twsc = _mm_mul_ps(m2, _mm_mul_ps(slt, clt));
+    auto r = _mm_add_ps(_mm_add_ps(thsx, clt), _mm_sub_ps(m1, twsc));
+    return r;
+}
+/*
+ * If you have a model you can't write as SSE and only as scalar, you can
+ * specialize this
+ */
+template <int mode> inline float valueFromSinAndCosForModeAsScalar(float s, float c) { return 0; }
+
+/*
+ * Otherwise, specialize this as an SSE operation. We have specialized the
+ * SSE version for every case to date.
+ */
+template <int mode>
+inline __m128 valueFromSinAndCosForMode(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    float res alignas(16)[4];
+    float sv alignas(16)[4], cv alignas(16)[4];
+    _mm_store_ps(sv, svaluesse);
+    _mm_store_ps(cv, cvaluesse);
+    for (int i = 0; i < maxc; ++i)
+        res[i] = valueFromSinAndCosForModeAsScalar<mode>(sv[i], cv[i]);
+    return _mm_load_ps(res);
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<0>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // mode zero is just sine obviously
+    return svaluesse;
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<1>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    /*
+    switch (quadrant)
     {
-        process_block_legacy(pitch, drift, stereo, FM, fmdepth);
-        applyFilter();
-        return;
+    case 1:  pvalue = 1 - cosx;
+    case 2: pvalue = 1 + cosx;
+    case 3: pvalue = -1 - cosx;
+     case 4: pvalue = -1 + cosx;
     }
+     */
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto mm1 = _mm_set1_ps(-1);
 
-    fb_val = oscdata->p[sine_feedback].get_extended(localcopy[id_fb].f);
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto sw = _mm_sub_ps(_mm_and_ps(h1, m1), _mm_andnot_ps(h1, m1)); // this is now 1 1 -1 -1
 
+    auto q24 = _mm_cmplt_ps(_mm_mul_ps(svaluesse, cvaluesse), mz);
+    auto pm = _mm_sub_ps(_mm_and_ps(q24, m1), _mm_andnot_ps(q24, m1)); // this is -1 1 -1 1
+    return _mm_add_ps(sw, _mm_mul_ps(pm, cvaluesse));
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<2>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // First half of sine.
+    const auto mz = _mm_setzero_ps();
+    return _mm_and_ps(svaluesse, _mm_cmpge_ps(svaluesse, mz));
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<3>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // 1 -/+ cosx in first half only
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto mm1 = _mm_set1_ps(-1);
+    const auto m2 = _mm_set1_ps(2);
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto q2 = _mm_and_ps(h1, _mm_cmple_ps(cvaluesse, mz));
+
+    auto fh = _mm_and_ps(h1, m1);
+    auto cx =
+        _mm_mul_ps(fh, _mm_mul_ps(cvaluesse, _mm_add_ps(mm1, _mm_mul_ps(m2, _mm_and_ps(q2, m1)))));
+
+    // return _mm_and_ps(svaluesse, _mm_cmpge_ps(svaluesse, mz));
+    return _mm_add_ps(fh, cx);
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<4>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Sine 2x in first half
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    return _mm_and_ps(s2x, _mm_cmpge_ps(svaluesse, mz));
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<5>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // This is basically a double frequency shape 0 in the first half only
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto c2x = _mm_sub_ps(m1, _mm_mul_ps(m2, _mm_mul_ps(svaluesse, svaluesse)));
+
+    auto v1 = valueFromSinAndCosForMode<1>(s2x, c2x, maxc);
+    return _mm_and_ps(_mm_cmpge_ps(svaluesse, mz), v1);
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<6>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // abs(Sine 2x in first half
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto s2fh = _mm_and_ps(s2x, _mm_cmpge_ps(svaluesse, mz));
+    return abs_ps(s2fh);
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<7>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    return abs_ps(valueFromSinAndCosForMode<5>(svaluesse, cvaluesse, maxc));
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<8>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // 2 * First half of sin - 1
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    auto fhs = _mm_and_ps(svaluesse, _mm_cmpge_ps(svaluesse, mz));
+    return _mm_sub_ps(_mm_mul_ps(m2, fhs), m1);
+}
+
+template <> inline __m128 valueFromSinAndCosForMode<9>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // zero out quadrant 1 and 3 which are quadrants where C and S have the same sign
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    auto css = _mm_mul_ps(svaluesse, cvaluesse);
+    return _mm_and_ps(svaluesse, _mm_cmple_ps(css, mz));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<10>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // zero out quadrant 2 and 3 which are quadrants where C and S have the different sign
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    auto css = _mm_mul_ps(svaluesse, cvaluesse);
+    return _mm_and_ps(svaluesse, _mm_cmpge_ps(css, mz));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<11>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    auto q = valueFromSinAndCosForMode<3>(svaluesse, cvaluesse, maxc);
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    return _mm_sub_ps(_mm_mul_ps(m2, q), m1);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<12>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Flip sign of sin2x in quadrant 2 or 3 (when cosine is negative)
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    const auto mm1 = _mm_set1_ps(-1);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+
+    auto q23 = _mm_cmpge_ps(cvaluesse, mz);
+    auto mul = _mm_add_ps(_mm_and_ps(q23, m1), _mm_andnot_ps(q23, mm1));
+    return _mm_mul_ps(s2x, mul);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<13>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Flip sign of sin2x in quadrant 3  (when sine is negative)
+    // and zero it in quadrant 2 and 4 (when sine and cos have different signs or s2x is negative)
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+    const auto m1 = _mm_set1_ps(1);
+    const auto mm1 = _mm_set1_ps(-1);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+
+    auto q13 = _mm_cmpge_ps(s2x, mz);
+    auto q2 = _mm_cmple_ps(svaluesse, mz);
+    auto signflip = _mm_sub_ps(m1, _mm_and_ps(q2, m2));
+
+    return _mm_and_ps(q13, _mm_mul_ps(signflip, s2x));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<14>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // abs of cos2x in the first half
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto m2 = _mm_set1_ps(2);
+
+    auto c2x = _mm_sub_ps(m1, _mm_mul_ps(m2, _mm_mul_ps(svaluesse, svaluesse)));
+    auto q23 = _mm_cmpge_ps(svaluesse, mz);
+    return _mm_and_ps(q23, abs_ps(c2x));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<15>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // 1 - sinx in quadrant 1, -1-sinx in quadrant 4, zero otherwise
+
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto mm1 = _mm_set1_ps(-1);
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto sig = _mm_add_ps(_mm_and_ps(h1, _mm_sub_ps(m1, svaluesse)),
+                          _mm_andnot_ps(h1, _mm_sub_ps(mm1, svaluesse)));
+
+    auto q14 = _mm_cmpge_ps(cvaluesse, mz);
+    return _mm_and_ps(q14, sig);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<16>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // 1 - sinx in quadrant 1, cosx - 1 in quadrant 4, zero otherwise
+
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto sig = _mm_add_ps(_mm_and_ps(h1, _mm_sub_ps(m1, svaluesse)),
+                          _mm_andnot_ps(h1, _mm_sub_ps(cvaluesse, m1)));
+
+    auto q14 = _mm_cmpge_ps(cvaluesse, mz);
+    return _mm_and_ps(q14, sig);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<17>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // 1-sinx in 1,2; -1-sinx in 3,4
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto sw = _mm_sub_ps(_mm_and_ps(h1, m1), _mm_andnot_ps(h1, m1)); // this is now 1 1 -1 -1
+    return _mm_sub_ps(sw, svaluesse);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<18>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // sin2x in 1, cosx in 23, -sin2x in 4
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto m2 = _mm_set1_ps(2);
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto sw = _mm_sub_ps(_mm_and_ps(h1, m1), _mm_andnot_ps(h1, m1)); // this is now 1 1 -1 -1
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto q23 = _mm_cmple_ps(cvaluesse, mz);
+
+    return _mm_add_ps(_mm_and_ps(q23, cvaluesse), _mm_andnot_ps(q23, _mm_mul_ps(sw, s2x)));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<19>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // This is basically a double frequency shape 0 in the first half only
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto c2x = _mm_sub_ps(m1, _mm_mul_ps(m2, _mm_mul_ps(svaluesse, svaluesse)));
+    auto s4x = _mm_mul_ps(m2, _mm_mul_ps(s2x, c2x));
+
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    auto q23 = _mm_cmpge_ps(cvaluesse, mz);
+    auto fh = _mm_sub_ps(_mm_and_ps(q23, s2x), _mm_andnot_ps(q23, s4x));
+    auto res = _mm_add_ps(_mm_and_ps(h1, fh), _mm_andnot_ps(h1, svaluesse));
+
+    return res;
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<20>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Sine in quadrants 2 and 4; +/-1 in quadrants 1 and 3.
+    // quadrants 1 and 3 are when cos and sin have the same sign
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto sbc = _mm_mul_ps(svaluesse, cvaluesse);
+    auto q13 = _mm_cmpge_ps(sbc, mz);
+    auto h12 = _mm_cmpge_ps(svaluesse, mz);
+    auto mv = _mm_sub_ps(_mm_and_ps(h12, m1), _mm_andnot_ps(h12, m1));
+    return _mm_add_ps(_mm_andnot_ps(q13, mv), _mm_and_ps(q13, svaluesse));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<21>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Sine in quadrants 2 and 4; +/-1 in quadrants 1 and 3.
+    // quadrants 1 and 3 are when cos and sin have the same sign
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto sbc = _mm_mul_ps(svaluesse, cvaluesse);
+    auto q13 = _mm_cmpge_ps(sbc, mz);
+    auto h12 = _mm_cmpge_ps(svaluesse, mz);
+    auto mv = _mm_sub_ps(_mm_and_ps(h12, m1), _mm_andnot_ps(h12, m1));
+    return _mm_add_ps(_mm_and_ps(q13, mv), _mm_andnot_ps(q13, svaluesse));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<22>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // first 2 quadrants are 1-sin
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto sp = _mm_cmpge_ps(cvaluesse, mz);
+    return _mm_and_ps(sp, svaluesse);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<23>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // first 2 quadrants are 1-sin
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto sp = _mm_cmple_ps(cvaluesse, mz);
+    return _mm_and_ps(sp, svaluesse);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<24>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // first 2 quadrants are 1-sin
+    const auto mz = _mm_setzero_ps();
+    const auto m1 = _mm_set1_ps(1);
+
+    auto onems = _mm_sub_ps(m1, svaluesse);
+    auto sp = _mm_cmpge_ps(svaluesse, mz);
+    return _mm_add_ps(_mm_and_ps(sp, onems), _mm_andnot_ps(sp, svaluesse));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<26>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Zero out sine in quadrant 3 (which is cos and sin are both negative)
+    const auto mz = _mm_setzero_ps();
+    auto sl0 = _mm_cmple_ps(svaluesse, mz);
+    auto cl0 = _mm_cmple_ps(cvaluesse, mz);
+    return _mm_andnot_ps(_mm_and_ps(sl0, cl0), svaluesse);
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<25>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Sine 2x in first half
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto qv = calcquadrantSSE(svaluesse, cvaluesse);
+    auto h1 = _mm_cmpge_ps(svaluesse, mz);
+    return _mm_and_ps(h1, _mm_div_ps(s2x, qv));
+}
+
+template <>
+inline __m128 valueFromSinAndCosForMode<27>(__m128 svaluesse, __m128 cvaluesse, int maxc)
+{
+    // Sine 2x in first half
+    const auto mz = _mm_setzero_ps();
+    const auto m2 = _mm_set1_ps(2);
+
+    auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
+    auto qv = calcquadrantSSE(svaluesse, cvaluesse);
+    return _mm_div_ps(s2x, qv);
+}
+
+// This is used by the legacy apis
+template <int mode> inline float singleValueFromSinAndCos(float sinx, float cosx)
+{
+    auto s = _mm_set1_ps(sinx);
+    auto c = _mm_set1_ps(cosx);
+    auto r = valueFromSinAndCosForMode<mode>(s, c, 1);
+    float v;
+    _mm_store_ss(&v, r);
+    return v;
+}
+
+template <int mode, bool stereo, bool FM>
+void SineOscillator::process_block_internal(float pitch, float drift, float fmdepth)
+{
     double detune;
     double omega[MAX_UNISON];
 
@@ -136,7 +622,7 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
             }
         }
 
-        omega[l] = std::min(M_PI, (double)pitch_to_omega(pitch + detune));
+        omega[l] = std::min(M_PI, pitch_to_omega(pitch + detune));
     }
 
     float fv = 32.0 * M_PI * fmdepth * fmdepth * fmdepth;
@@ -151,39 +637,94 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
     FMdepth.newValue(fv);
     FB.newValue(abs(fb_val));
 
+    float p alignas(16)[MAX_UNISON];
+    float sx alignas(16)[MAX_UNISON];
+    float cx alignas(16)[MAX_UNISON];
+    float olv alignas(16)[MAX_UNISON];
+    float orv alignas(16)[MAX_UNISON];
+
+    for (int i = 0; i < MAX_UNISON; ++i)
+        p[i] = 0.0;
+
+    auto outattensse = _mm_set1_ps(out_attenuation);
+    auto fbnegmask = _mm_cmplt_ps(_mm_set1_ps(fb_val), _mm_setzero_ps());
+    __m128 playramp[4], dramp[4];
+    if (firstblock)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            playramp[i] = _mm_set1_ps(0.0);
+            dramp[i] = _mm_set1_ps(BLOCK_SIZE_OS_INV);
+        }
+        float tv alignas(16)[4];
+        _mm_store_ps(tv, playramp[0]);
+        tv[0] = 1.0;
+        playramp[0] = _mm_load_ps(tv);
+
+        _mm_store_ps(tv, dramp[0]);
+        tv[0] = 0.0;
+        dramp[0] = _mm_load_ps(tv);
+    }
+    else
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            playramp[i] = _mm_set1_ps(1.0);
+            dramp[i] = _mm_setzero_ps();
+        }
+    }
+    firstblock = false;
     for (int k = 0; k < BLOCK_SIZE_OS; k++)
     {
         float outL = 0.f, outR = 0.f;
 
-        for (int u = 0; u < n_unison; u++)
+        float fmpd = FM ? FMdepth.v * master_osc[k] : 0.f;
+        auto fmpds = _mm_set1_ps(fmpd);
+        auto fbv = _mm_set1_ps(FB.v);
+
+        for (int u = 0; u < n_unison; u += 4)
         {
-            // Replicate FM2 exactly
-            float p = phase[u] + lastvalue[u];
+            float fph alignas(16)[4] = {(float)phase[u], (float)phase[u + 1], (float)phase[u + 2],
+                                        (float)phase[u + 3]};
+            auto ph = _mm_load_ps(&fph[0]);
+            auto lv = _mm_load_ps(&lastvalue[u]);
+            auto x = _mm_add_ps(_mm_add_ps(ph, lv), fmpds);
 
-            if (FM)
-                p += FMdepth.v * master_osc[k];
+            x = Surge::DSP::clampToPiRangeSSE(x);
 
-            // Unlike ::sin and ::cos we are limited in accurate range
-            p = Surge::DSP::clampToPiRange(p);
+            auto sxl = Surge::DSP::fastsinSSE(x);
+            auto cxl = Surge::DSP::fastcosSSE(x);
 
-            float out_local = valueFromSinAndCos(Surge::DSP::fastsin(p), Surge::DSP::fastcos(p));
+            auto out_local = valueFromSinAndCosForMode<mode>(sxl, cxl, std::min(n_unison - u, 4));
 
-            outL += (panL[u] * out_local) * playingramp[u] * out_attenuation;
-            outR += (panR[u] * out_local) * playingramp[u] * out_attenuation;
+            auto pl = _mm_load_ps(&panL[u]);
+            auto pr = _mm_load_ps(&panR[u]);
 
-            if (playingramp[u] < 1)
-                playingramp[u] += dplaying;
-            if (playingramp[u] > 1)
-                playingramp[u] = 1;
+            auto ui = u >> 2;
+            auto ramp = playramp[ui];
+            auto olpr = _mm_mul_ps(out_local, ramp);
+            playramp[ui] = _mm_add_ps(playramp[ui], dramp[ui]);
 
+            auto l = _mm_mul_ps(_mm_mul_ps(pl, olpr), outattensse);
+            auto r = _mm_mul_ps(_mm_mul_ps(pr, olpr), outattensse);
+            _mm_store_ps(&olv[u], l);
+            _mm_store_ps(&orv[u], r);
+
+            auto lastv =
+                _mm_mul_ps(_mm_add_ps(_mm_and_ps(fbnegmask, _mm_mul_ps(out_local, out_local)),
+                                      _mm_andnot_ps(fbnegmask, out_local)),
+                           fbv);
+            _mm_store_ps(&lastvalue[u], lastv);
+        }
+
+        for (int u = 0; u < n_unison; ++u)
+        {
+            outL += olv[u];
+            outR += orv[u];
+
+            // These are doubles and need to be so keep it unrolled
             phase[u] += omega[u];
-            // phase in range -PI to PI
-            while (phase[u] > M_PI)
-            {
-                phase[u] -= 2.0 * M_PI;
-            }
-
-            lastvalue[u] = (fb_val < 0) ? out_local * out_local * FB.v : out_local * FB.v;
+            phase[u] -= (phase[u] > M_PI) * 2.0 * M_PI;
         }
 
         FMdepth.process();
@@ -225,6 +766,7 @@ void SineOscillator::applyFilter()
     }
 }
 
+template <int mode>
 void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo, bool FM,
                                           float fmdepth)
 {
@@ -265,8 +807,8 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
 
             for (int u = 0; u < n_unison; u++)
             {
-                float out_local = valueFromSinAndCos(Surge::DSP::fastsin(phase[u]),
-                                                     Surge::DSP::fastcos(phase[u]));
+                float out_local = singleValueFromSinAndCos<mode>(Surge::DSP::fastsin(phase[u]),
+                                                                 Surge::DSP::fastcos(phase[u]));
 
                 outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
                 outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
@@ -318,7 +860,7 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
                 float sinx = sine[u].r;
                 float cosx = sine[u].i;
 
-                float out_local = valueFromSinAndCos(sinx, cosx);
+                float out_local = singleValueFromSinAndCos<mode>(sinx, cosx);
 
                 outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
                 outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
@@ -340,315 +882,102 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
     }
 }
 
-float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
+void SineOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-    float pvalue = sinx;
+    auto mode = localcopy[id_mode].i;
 
-    float sin2x = 2 * sinx * cosx;
-    float cos2x = 1 - (2 * sinx * sinx);
-
-    int quadrant;
-    int octant;
-
-    if (sinx > 0)
-        if (cosx > 0)
-            quadrant = 1;
-        else
-            quadrant = 2;
-    else if (cosx < 0)
-        quadrant = 3;
-    else
-        quadrant = 4;
-
-    switch (wfMode)
+    if (localcopy[id_fmlegacy].i == 0)
     {
-    case 1:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - cosx;
-            break;
-        case 2:
-            pvalue = 1 + cosx;
-            break;
-        case 3:
-            pvalue = -1 - cosx;
-            break;
-        case 4:
-            pvalue = -1 + cosx;
-            break;
-        }
+#define DOCASE(x)                                                                                  \
+    case x:                                                                                        \
+        process_block_legacy<x>(pitch, drift, stereo, FM, fmdepth);                                \
         break;
-    case 2:
-        if (quadrant > 2)
-            pvalue = 0;
-        break;
-    case 3:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - cosx;
-            break;
-        case 2:
-            pvalue = 1 + cosx;
-            break;
-        default:
-            pvalue = 0;
-            break;
-        }
-        break;
-    case 4:
-        if (quadrant <= 2)
-            pvalue = sin2x;
-        else
-            pvalue = 0;
-        break;
-    case 5:
-    case 7:
-        if (sin2x > 0)
-            if (cos2x > 0)
-                octant = 1;
-            else
-                octant = 2;
-        else if (cos2x < 0)
-            octant = 3;
-        else
-            octant = 4;
 
-        if (quadrant > 2)
-            octant += 4;
+        switch (mode)
+        {
+            DOCASE(0)
+            DOCASE(1)
+            DOCASE(2)
+            DOCASE(3)
+            DOCASE(4)
+            DOCASE(5)
+            DOCASE(6)
+            DOCASE(7)
+            DOCASE(8)
+            DOCASE(9)
+            DOCASE(10)
 
-        switch (octant)
-        {
-        case 1:
-        case 5:
-            pvalue = 1 - cos2x;
-            break;
-        case 2:
-        case 6:
-            pvalue = 1 + cos2x;
-            break;
-        case 3:
-        case 7:
-            pvalue = -1 - cos2x;
-            break;
-        case 4:
-        case 8:
-            pvalue = -1 + cos2x;
-            break;
+            DOCASE(11)
+            DOCASE(12)
+            DOCASE(13)
+            DOCASE(14)
+            DOCASE(15)
+            DOCASE(16)
+            DOCASE(17)
+            DOCASE(18)
+            DOCASE(19)
+            DOCASE(20)
+            DOCASE(21)
+            DOCASE(22)
+            DOCASE(23)
+            DOCASE(24)
+            DOCASE(25)
+            DOCASE(26)
+            DOCASE(27)
         }
+#undef DOCASE
+        applyFilter();
+        return;
+    }
 
-        if (wfMode == 7)
-            pvalue = abs(pvalue);
+    fb_val = oscdata->p[sine_feedback].get_extended(localcopy[id_fb].f);
 
-        if (quadrant > 2)
-            pvalue = 0;
+#define DOCASE(x)                                                                                  \
+    case x:                                                                                        \
+        if (stereo)                                                                                \
+            if (FM)                                                                                \
+                process_block_internal<x, true, true>(pitch, drift, fmdepth);                      \
+            else                                                                                   \
+                process_block_internal<x, true, false>(pitch, drift, fmdepth);                     \
+        else if (FM)                                                                               \
+            process_block_internal<x, false, true>(pitch, drift, fmdepth);                         \
+        else                                                                                       \
+            process_block_internal<x, false, false>(pitch, drift, fmdepth);                        \
+        break;
 
-        break;
-    case 6:
-        pvalue = abs(sin2x);
-        if (quadrant > 2)
-            pvalue = 0;
-        break;
-    case 8:
-        if (quadrant > 2)
-            pvalue = 0;
-        pvalue = 2 * pvalue - 1;
-        break;
-    case 9:
-        if (quadrant == 1 || quadrant == 3)
-            pvalue = 0;
-        break;
-    case 10:
-        if (quadrant == 2 || quadrant == 4)
-            pvalue = 0;
-        break;
-    case 11:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - cosx;
-            break;
-        case 2:
-            pvalue = 1 + cosx;
-            break;
-        default:
-            pvalue = 0;
-            break;
-        }
-        pvalue = 2 * pvalue - 1;
-        break;
-    case 12:
-        pvalue = sin2x;
-        if (quadrant == 2 || quadrant == 3)
-            pvalue = -pvalue;
-        break;
-    case 13:
-        pvalue = sin2x;
-        if (quadrant == 2 || quadrant == 4)
-            pvalue = 0;
-        if (quadrant == 3)
-            pvalue = -pvalue;
-        break;
-    case 14:
-        pvalue = abs(cos2x);
-        if (quadrant > 2)
-            pvalue = 0;
-        break;
-    case 15:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - sinx;
-            break;
-        case 4:
-            pvalue = -1 - sinx;
-            break;
-        default:
-            pvalue = 0;
-            break;
-        }
-        break;
-    case 16:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - sinx;
-            break;
-        case 4:
-            pvalue = -1 + cosx;
-            break;
-        default:
-            pvalue = 0;
-            break;
-        }
-        break;
-    case 17:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = 1 - sinx;
-            break;
-        case 2:
-            pvalue = abs(-1 + sinx);
-            break;
-        case 3:
-            pvalue = -1 - sinx;
-            break;
-        case 4:
-            pvalue = -1 * abs(1 + sinx);
-            break;
-        }
-        pvalue *= 0.85;
-        break;
-    case 18:
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = sin2x;
-            break;
-        case 2:
-        case 3:
-            pvalue = cosx;
-            break;
-        case 4:
-            pvalue = -sin2x;
-            break;
-        }
-        break;
-    case 19:
+    switch (mode)
     {
-        float sin4x = 2 * sin2x * cos2x;
+        DOCASE(0)
+        DOCASE(1)
+        DOCASE(2)
+        DOCASE(3)
+        DOCASE(4)
+        DOCASE(5)
+        DOCASE(6)
+        DOCASE(7)
+        DOCASE(8)
+        DOCASE(9)
+        DOCASE(10)
 
-        switch (quadrant)
-        {
-        case 1:
-            pvalue = sin4x;
-            break;
-        case 2:
-            pvalue = -sin2x;
-            break;
-        default:
-            pvalue = sinx;
-            break;
-        }
-
-        break;
+        DOCASE(11)
+        DOCASE(12)
+        DOCASE(13)
+        DOCASE(14)
+        DOCASE(15)
+        DOCASE(16)
+        DOCASE(17)
+        DOCASE(18)
+        DOCASE(19)
+        DOCASE(20)
+        DOCASE(21)
+        DOCASE(22)
+        DOCASE(23)
+        DOCASE(24)
+        DOCASE(25)
+        DOCASE(26)
+        DOCASE(27)
     }
-    case 20:
-        switch (quadrant)
-        {
-        case 1:
-        case 3:
-            pvalue = sinx;
-            break;
-        case 2:
-            pvalue = 1;
-            break;
-        case 4:
-            pvalue = -1;
-            break;
-        }
-        break;
-    case 21:
-        switch (quadrant)
-        {
-        case 2:
-        case 4:
-            pvalue = sinx;
-            break;
-        case 1:
-            pvalue = 1;
-            break;
-        case 3:
-            pvalue = -1;
-            break;
-        }
-        break;
-    case 22:
-        if (quadrant == 2 || quadrant == 3)
-        {
-            pvalue = 0;
-        }
-        break;
-    case 23:
-        if (quadrant == 1 || quadrant == 4)
-        {
-            pvalue = 0;
-        }
-        break;
-    case 24:
-        if (quadrant == 2 || quadrant == 1)
-        {
-            pvalue = 1 - sinx;
-        }
-        break;
-    case 25:
-        switch (quadrant)
-        {
-        case 1:
-        case 2:
-            pvalue = sin2x / quadrant;
-            break;
-        case 3:
-        case 4:
-            pvalue = 0;
-            break;
-        }
-
-        break;
-    case 26:
-        pvalue *= (quadrant != 3);
-        break;
-    case 27:
-        pvalue = sin2x / quadrant;
-
-        break;
-
-    default:
-        break;
-    }
-    return pvalue;
+#undef DOCASE
 }
 
 void SineOscillator::init_ctrltypes()
@@ -729,4 +1058,70 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
     {
         oscdata->retrigger.val.b = true;
     }
+}
+
+float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
+{
+    // As you port to SSE, put them here
+    switch (wfMode)
+    {
+    case 0:
+        return sinx;
+    case 1:
+        return singleValueFromSinAndCos<1>(sinx, cosx);
+    case 2:
+        return singleValueFromSinAndCos<2>(sinx, cosx);
+    case 3:
+        return singleValueFromSinAndCos<3>(sinx, cosx);
+    case 4:
+        return singleValueFromSinAndCos<4>(sinx, cosx);
+    case 5:
+        return singleValueFromSinAndCos<5>(sinx, cosx);
+    case 6:
+        return singleValueFromSinAndCos<6>(sinx, cosx);
+    case 7:
+        return singleValueFromSinAndCos<7>(sinx, cosx);
+    case 8:
+        return singleValueFromSinAndCos<8>(sinx, cosx);
+    case 9:
+        return singleValueFromSinAndCos<9>(sinx, cosx);
+    case 10:
+        return singleValueFromSinAndCos<10>(sinx, cosx);
+    case 11:
+        return singleValueFromSinAndCos<11>(sinx, cosx);
+    case 12:
+        return singleValueFromSinAndCos<12>(sinx, cosx);
+    case 13:
+        return singleValueFromSinAndCos<13>(sinx, cosx);
+    case 14:
+        return singleValueFromSinAndCos<14>(sinx, cosx);
+    case 15:
+        return singleValueFromSinAndCos<15>(sinx, cosx);
+    case 16:
+        return singleValueFromSinAndCos<16>(sinx, cosx);
+    case 17:
+        return singleValueFromSinAndCos<17>(sinx, cosx);
+    case 18:
+        return singleValueFromSinAndCos<18>(sinx, cosx);
+    case 19:
+        return singleValueFromSinAndCos<19>(sinx, cosx);
+    case 20:
+        return singleValueFromSinAndCos<20>(sinx, cosx);
+    case 21:
+        return singleValueFromSinAndCos<21>(sinx, cosx);
+    case 22:
+        return singleValueFromSinAndCos<22>(sinx, cosx);
+    case 23:
+        return singleValueFromSinAndCos<23>(sinx, cosx);
+    case 24:
+        return singleValueFromSinAndCos<24>(sinx, cosx);
+    case 25:
+        return singleValueFromSinAndCos<25>(sinx, cosx);
+    case 26:
+        return singleValueFromSinAndCos<26>(sinx, cosx);
+    case 27:
+        return singleValueFromSinAndCos<27>(sinx, cosx);
+    }
+
+    return 0;
 }

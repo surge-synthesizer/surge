@@ -38,10 +38,9 @@ class alignas(16) Oscillator
     }
     virtual void assign_fm(float *master_osc) { this->master_osc = master_osc; }
     virtual bool allow_display() { return true; }
-    inline float pitch_to_omega(float x)
+    inline double pitch_to_omega(float x)
     {
-        return (float)(2.0 * M_PI * Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) *
-                       dsamplerate_os_inv);
+        return (2.0 * M_PI * Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
     }
     inline double pitch_to_dphase(float x)
     {

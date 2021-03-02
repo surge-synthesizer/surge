@@ -39,8 +39,12 @@ class SineOscillator : public Oscillator
                       bool nonzero_init_drift = true) override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f) override;
-    virtual void process_block_legacy(float pitch, float drift = 0.f, bool stereo = false,
-                                      bool FM = false, float FMdepth = 0.f);
+    template <int mode, bool stereo, bool FM>
+    void process_block_internal(float pitch, float drift, float FMdepth);
+
+    template <int mode>
+    void process_block_legacy(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
+                              float FMdepth = 0.f);
     virtual ~SineOscillator();
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
@@ -55,10 +59,11 @@ class SineOscillator : public Oscillator
     void prepare_unison(int voices);
     int n_unison;
     float out_attenuation, out_attenuation_inv, detune_bias, detune_offset;
-    float panL[MAX_UNISON], panR[MAX_UNISON];
+    float panL alignas(16)[MAX_UNISON], panR alignas(16)[MAX_UNISON];
 
     int id_mode, id_fb, id_fmlegacy, id_detune;
-    float lastvalue[MAX_UNISON];
+    float lastvalue alignas(16)[MAX_UNISON];
+    bool firstblock = true;
 
     BiquadFilter lp, hp;
     void applyFilter();
@@ -68,6 +73,7 @@ class SineOscillator : public Oscillator
         return valueFromSinAndCos(svalue, cvalue, localcopy[id_mode].i);
     }
     static float valueFromSinAndCos(float svalue, float cvalue, int mode);
+
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;
 };
