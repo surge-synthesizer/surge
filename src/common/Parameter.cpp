@@ -294,6 +294,7 @@ bool Parameter::can_deactivate()
 {
     switch (ctrltype)
     {
+    case ct_percent_deactivatable:
     case ct_freq_hpf:
     case ct_freq_audible_deactivatable:
     case ct_lforate_deactivatable:
@@ -764,6 +765,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_percent:
+    case ct_percent_deactivatable:
     case ct_percent_oscdrift:
         val_min.f = 0;
         val_max.f = 1;
@@ -1025,6 +1027,7 @@ void Parameter::set_type(int ctrltype)
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_deactivatable:
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
@@ -1267,6 +1270,7 @@ void Parameter::bound_value(bool force_integer)
         switch (ctrltype)
         {
         case ct_percent:
+        case ct_percent_deactivatable:
         case ct_percent_oscdrift:
         case ct_percent200:
         case ct_percent_bipolar:
@@ -3224,6 +3228,7 @@ bool Parameter::can_setvalue_from_string()
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_deactivatable:
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
