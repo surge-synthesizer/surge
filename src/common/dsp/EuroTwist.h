@@ -53,10 +53,15 @@ class EuroTwist : public Oscillator
 
     void process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth) override;
 
+    template <bool FM, bool throwaway = false>
+    void process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
+                                int throwawayBlocks = -1);
+
     virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true) override;
     virtual void init_ctrltypes(int scene, int oscnum) override { init_ctrltypes(); };
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
+    float tuningAwarePitch(float pitch);
 
     // The value of the localcopy
     inline float fv(ParamSlots ps) { return localcopy[oscdata->p[ps].param_id_in_scene].f; }
@@ -73,7 +78,9 @@ class EuroTwist : public Oscillator
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
 
-    lag<float, true> harm, timb, morph;
+    lag<float, true> harm, timb, morph, lpgcol, lpgdec;
+
+    float driftlfo, driftlfo2;
 };
 
 #endif // SURGE_EUROTWIST_H
