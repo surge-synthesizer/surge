@@ -2935,6 +2935,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             auto n = waveguide_excitation_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
+        break;
         case ct_eurotwist_engine:
         {
             extern std::string eurotwist_engine_name(int);
