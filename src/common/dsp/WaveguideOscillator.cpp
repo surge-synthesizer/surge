@@ -216,8 +216,41 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             break;
         }
     }
+
     priorSample[0] = delayLine[0].buffer[(delayLine[0].wp - 1) & delayLine[0].comb_size];
     priorSample[1] = delayLine[1].buffer[(delayLine[1].wp - 1) & delayLine[1].comb_size];
+
+    // This is the same implementation as SurgeSuperOscillator, just as doubles
+    switch (storage->getPatch().character.val.i)
+    {
+    case 0:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        charfiltB0 = 1.f - filt;
+        charfiltB1 = 0.f;
+        charfiltA1 = filt;
+        dofilter = true;
+    }
+    break;
+    case 1:
+        charfiltB0 = 1.f;
+        charfiltB1 = 0.f;
+        charfiltA1 = 0.f;
+        dofilter = false; // since that is just output = output
+        break;
+    case 2:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        auto A0 = 1.0 / (1.0 - filt);
+        charfiltB0 = 1.f * A0;
+        charfiltB1 = -filt * A0;
+        charfiltA1 = 0.f;
+        dofilter = true;
+    }
+    break;
+    }
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
@@ -351,7 +384,37 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         examp.process();
         fmdepth.process();
     }
+
     lp.flush_sample_denormal();
+
+    if (dofilter)
+    {
+        if (starting)
+        {
+            priorY_L = output[0];
+            priorX_L = output[0];
+            priorY_R = outputR[0];
+            priorX_R = outputR[0];
+        }
+
+        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        {
+            auto pfL = charfiltA1 * priorY_L + charfiltB0 * output[i] + charfiltB1 * priorX_L;
+            priorY_L = pfL;
+            priorX_L = output[i];
+            output[i] = pfL;
+
+            if (stereo)
+            {
+                auto pfR = charfiltA1 * priorY_R + charfiltB0 * outputR[i] + charfiltB1 * priorX_R;
+                priorY_R = pfR;
+                priorX_R = outputR[i];
+                outputR[i] = pfR;
+            }
+        }
+    }
+
+    starting = false;
 }
 
 void WaveguideOscillator::init_ctrltypes()

@@ -78,6 +78,11 @@ class EuroTwist : public Oscillator
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
 
+    // character filter
+    bool dofilter = true, starting = true;
+    double charfiltB0 = 0.0, charfiltB1 = 0.0, charfiltA1 = 0.0;
+    double priorY_L = 0.0, priorY_R = 0.0, priorX_L = 0.0, priorX_R = 0.0;
+
     lag<float, true> harm, timb, morph, lpgcol, lpgdec, auxmix;
 
     float driftlfo, driftlfo2;

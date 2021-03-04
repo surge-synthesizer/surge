@@ -17,8 +17,8 @@
     <type i="6" name="FM2" retrigger="1" />
     <type i="5" name="FM3" retrigger="1" />
     <type i="9" name="String"/>
-    <type i="10" name="Twist" retrigger="1"/>
     <type i="3" name="S&amp;H Noise" />
+    <type i="10" name="Twist"/>
     <type i="4" name="Audio Input">
         <snapshot name="Left" p0="-1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0" />
         <snapshot name="Right" p0="1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0" />

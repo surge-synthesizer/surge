@@ -25,6 +25,257 @@
 #include "plaits/dsp/voice.h"
 #include "samplerate.h"
 
+EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
+    : Oscillator(storage, oscdata, localcopy)
+{
+    voice = std::make_unique<plaits::Voice>();
+    alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, sizeof(shared_buffer));
+    voice->Init(alloc.get());
+    patch = std::make_unique<plaits::Patch>();
+    int error;
+    srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    if (error != 0)
+    {
+        srcstate = nullptr;
+    }
+}
+
+float EuroTwist::tuningAwarePitch(float pitch)
+{
+    if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL &&
+        !(storage->oddsound_mts_client && storage->oddsound_mts_active) &&
+        !(storage->isStandardTuning))
+    {
+        auto idx = (int)floor(pitch);
+        float frac = pitch - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+        return (1.f - frac) * b0 + frac * b1;
+    }
+    return pitch;
+}
+
+void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
+{
+    float tpitch = tuningAwarePitch(pitch);
+    memset((void *)patch.get(), 0, sizeof(plaits::Patch));
+
+    driftlfo = 0;
+    driftlfo2 = 0;
+
+    if (nonzero_drift)
+    {
+        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+    }
+
+    // This is the same implementation as SurgeSuperOscillator, just as doubles
+    switch (storage->getPatch().character.val.i)
+    {
+    case 0:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        charfiltB0 = 1.f - filt;
+        charfiltB1 = 0.f;
+        charfiltA1 = filt;
+        dofilter = true;
+    }
+    break;
+    case 1:
+        charfiltB0 = 1.f;
+        charfiltB1 = 0.f;
+        charfiltA1 = 0.f;
+        dofilter = false; // since that is just output = output
+        break;
+    case 2:
+    {
+        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
+        filt *= filt;
+        auto A0 = 1.0 / (1.0 - filt);
+        charfiltB0 = 1.f * A0;
+        charfiltB1 = -filt * A0;
+        charfiltA1 = 0.f;
+        dofilter = true;
+    }
+    break;
+    }
+
+    // Lets run forward a cycle
+    int throwaway = 0;
+    double cycleInSamples = std::max(1.0, 1.0 / pitch_to_dphase(tpitch));
+
+    while (cycleInSamples < 10)
+    {
+        cycleInSamples *= 2;
+    }
+
+    if (!(oscdata->retrigger.val.b || is_display))
+    {
+        cycleInSamples *= (1.0 + (float)rand() / (float)RAND_MAX);
+    }
+
+    process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
+}
+EuroTwist::~EuroTwist()
+{
+    if (srcstate)
+    {
+        srcstate = src_delete(srcstate);
+    }
+}
+
+template <bool FM, bool throwaway>
+void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
+                                       int throwawayBlocks)
+{
+    if (!srcstate)
+    {
+        return;
+    }
+
+    pitch = tuningAwarePitch(pitch);
+
+    driftlfo = drift_noise(driftlfo2);
+
+    patch->note = pitch + drift * driftlfo; // fixme - alternate tuning goes here
+    patch->engine = oscdata->p[et_engine].val.i;
+
+    harm.newValue(fvbp(et_harmonics));
+    timb.newValue(fvbp(et_timbre));
+    morph.newValue(fvbp(et_morph));
+    lpgcol.newValue(fv(et_lpg_response));
+    lpgdec.newValue(fv(et_lpg_decay));
+    auxmix.newValue(limit_range(fv(et_aux_mix), 0.f, 1.f));
+
+    plaits::Modulations mod = {};
+    // for now
+    memset((void *)&mod, 0, sizeof(plaits::Modulations));
+
+    constexpr int subblock = 4;
+    float src_in[subblock][2];
+    float src_out[BLOCK_SIZE_OS][2];
+
+    SRC_DATA sdata;
+    sdata.end_of_input = 0;
+    sdata.src_ratio = dsamplerate_os / 48000.0;
+
+    for (int i = 0; i < carrover_size; ++i)
+    {
+        output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
+        outputR[i] = output[i];
+    }
+
+    int total_generated = carrover_size;
+    carrover_size = 0;
+    int required_blocks = throwaway ? throwawayBlocks : BLOCK_SIZE_OS;
+
+    bool lpgIsOn = !oscdata->p[et_lpg_response].deactivated;
+
+    while (total_generated < required_blocks)
+    {
+        plaits::Voice::Frame poutput[subblock];
+
+        patch->harmonics = harm.v;
+        patch->timbre = timb.v;
+        patch->morph = morph.v;
+        patch->decay = lpgdec.v;
+        patch->lpg_colour = lpgcol.v;
+
+        harm.process();
+        timb.process();
+        morph.process();
+        lpgdec.process();
+        lpgcol.process();
+        auxmix.process();
+
+        if (lpgIsOn)
+        {
+            mod.trigger = gate ? 1.0 : 0.0;
+            mod.trigger_patched = true;
+        }
+
+        voice->Render(*patch, mod, poutput, subblock);
+
+        for (int i = 0; i < subblock; ++i)
+        {
+            src_in[i][0] = poutput[i].out / 32768.f;
+            src_in[i][1] = poutput[i].aux / 32768.f;
+        }
+
+        sdata.data_in = &(src_in[0][0]);
+        sdata.data_out = &(src_out[0][0]);
+        sdata.input_frames = subblock;
+        sdata.output_frames = BLOCK_SIZE_OS;
+
+        auto res = src_process(srcstate, &sdata);
+        // FIXME - check res
+
+        for (int i = 0; i < sdata.output_frames_gen; ++i)
+        {
+            if (i + total_generated >= required_blocks)
+            {
+                carryover[carrover_size][0] = src_out[i][0];
+                carryover[carrover_size][1] = src_out[i][1];
+                carrover_size++;
+            }
+            else if (!throwaway)
+            {
+                output[total_generated + i] =
+                    auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
+                outputR[total_generated + i] = output[total_generated + i];
+            }
+        }
+
+        total_generated += sdata.output_frames_gen;
+        if (sdata.input_frames_used != subblock)
+        {
+            // FIXME
+            // std::cout << "DEAL " << std::endl;
+        }
+    }
+}
+
+void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
+{
+    if (FM)
+    {
+        EuroTwist::process_block_internal<true>(pitch, drift, stereo, FMdepth);
+    }
+    else
+    {
+        EuroTwist::process_block_internal<false>(pitch, drift, stereo, FMdepth);
+    }
+
+    if (dofilter)
+    {
+        if (starting)
+        {
+            priorY_L = output[0];
+            priorX_L = output[0];
+            priorY_R = outputR[0];
+            priorX_R = outputR[0];
+        }
+
+        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        {
+            auto pfL = charfiltA1 * priorY_L + charfiltB0 * output[i] + charfiltB1 * priorX_L;
+            priorY_L = pfL;
+            priorX_L = output[i];
+            output[i] = pfL;
+
+            if (stereo)
+            {
+                auto pfR = charfiltA1 * priorY_R + charfiltB0 * outputR[i] + charfiltB1 * priorX_R;
+                priorY_R = pfR;
+                priorX_R = outputR[i];
+                outputR[i] = pfR;
+            }
+        }
+    }
+
+    starting = false;
+}
+
 std::string eurotwist_engine_name(int i)
 {
     switch (i)
@@ -89,8 +340,11 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation Mix"});
         engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation Mix"});
         engineLabels.push_back({"Tone", "Low Cut", "Decay Time", "Variation MIx"});
+
         while (engineLabels.size() < 16)
+        {
             engineLabels.push_back(defaultLabels);
+        }
     }
 
     const char *getName(Parameter *p) override
@@ -108,178 +362,6 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         return result;
     }
 } etDynamicName;
-
-EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
-    : Oscillator(storage, oscdata, localcopy)
-{
-    voice = std::make_unique<plaits::Voice>();
-    alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, sizeof(shared_buffer));
-    voice->Init(alloc.get());
-    patch = std::make_unique<plaits::Patch>();
-    int error;
-    srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
-    if (error != 0)
-    {
-        srcstate = nullptr;
-    }
-}
-
-float EuroTwist::tuningAwarePitch(float pitch)
-{
-    if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL &&
-        !(storage->oddsound_mts_client && storage->oddsound_mts_active) &&
-        !(storage->isStandardTuning))
-    {
-        auto idx = (int)floor(pitch);
-        float frac = pitch - idx; // frac is 0 means use idx; frac is 1 means use idx+1
-        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
-        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
-        return (1.f - frac) * b0 + frac * b1;
-    }
-    return pitch;
-}
-
-void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
-{
-    float tpitch = tuningAwarePitch(pitch);
-    memset((void *)patch.get(), 0, sizeof(plaits::Patch));
-    driftlfo = 0;
-    driftlfo2 = 0;
-    if (nonzero_drift)
-    {
-        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
-    }
-
-    // Lets run forward a cycle
-    int throwaway = 0;
-    double cycleInSamples = std::max(1.0, 1.0 / pitch_to_dphase(tpitch));
-
-    while (cycleInSamples < 10)
-        cycleInSamples *= 2;
-
-    if (!(oscdata->retrigger.val.b || is_display))
-    {
-        cycleInSamples *= (1.0 + (float)rand() / (float)RAND_MAX);
-    }
-
-    process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
-}
-EuroTwist::~EuroTwist()
-{
-    if (srcstate)
-        srcstate = src_delete(srcstate);
-}
-
-template <bool FM, bool throwaway>
-void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
-                                       int throwawayBlocks)
-{
-    if (!srcstate)
-        return;
-
-    pitch = tuningAwarePitch(pitch);
-
-    driftlfo = drift_noise(driftlfo2);
-
-    patch->note = pitch + drift * driftlfo; // fixme - alternate tuning goes here
-    patch->engine = oscdata->p[et_engine].val.i;
-
-    harm.newValue(fvbp(et_harmonics));
-    timb.newValue(fvbp(et_timbre));
-    morph.newValue(fvbp(et_morph));
-    lpgcol.newValue(fv(et_lpg_response));
-    lpgdec.newValue(fv(et_lpg_decay));
-    auxmix.newValue(limit_range(fv(et_aux_mix), 0.f, 1.f));
-
-    plaits::Modulations mod = {};
-    // for now
-    memset((void *)&mod, 0, sizeof(plaits::Modulations));
-
-    constexpr int subblock = 4;
-    float src_in[subblock][2];
-    float src_out[BLOCK_SIZE_OS][2];
-
-    SRC_DATA sdata;
-    sdata.end_of_input = 0;
-    sdata.src_ratio = dsamplerate_os / 48000.0;
-
-    for (int i = 0; i < carrover_size; ++i)
-    {
-        output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
-        outputR[i] = output[i];
-    }
-
-    int total_generated = carrover_size;
-    carrover_size = 0;
-    int required_blocks = throwaway ? throwawayBlocks : BLOCK_SIZE_OS;
-
-    bool lpgIsOn = !oscdata->p[et_lpg_response].deactivated;
-
-    while (total_generated < required_blocks)
-    {
-        plaits::Voice::Frame poutput[subblock];
-        patch->harmonics = harm.v;
-        patch->timbre = timb.v;
-        patch->morph = morph.v;
-        patch->decay = lpgdec.v;
-        patch->lpg_colour = lpgcol.v;
-
-        harm.process();
-        timb.process();
-        morph.process();
-        lpgdec.process();
-        lpgcol.process();
-        auxmix.process();
-        if (lpgIsOn)
-        {
-            mod.trigger = gate ? 1.0 : 0.0;
-            mod.trigger_patched = true;
-        }
-
-        voice->Render(*patch, mod, poutput, subblock);
-        for (int i = 0; i < subblock; ++i)
-        {
-            src_in[i][0] = poutput[i].out / 32768.f;
-            src_in[i][1] = poutput[i].aux / 32768.f;
-        }
-        sdata.data_in = &(src_in[0][0]);
-        sdata.data_out = &(src_out[0][0]);
-        sdata.input_frames = subblock;
-        sdata.output_frames = BLOCK_SIZE_OS;
-        auto res = src_process(srcstate, &sdata);
-        // FIXME - check res
-
-        for (int i = 0; i < sdata.output_frames_gen; ++i)
-        {
-            if (i + total_generated >= required_blocks)
-            {
-                carryover[carrover_size][0] = src_out[i][0];
-                carryover[carrover_size][1] = src_out[i][1];
-                carrover_size++;
-            }
-            else if (!throwaway)
-            {
-                output[total_generated + i] =
-                    auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
-                outputR[total_generated + i] = output[total_generated + i];
-            }
-        }
-        total_generated += sdata.output_frames_gen;
-        if (sdata.input_frames_used != subblock)
-        {
-            // FIXME
-            // std::cout << "DEAL " << std::endl;
-        }
-    }
-}
-
-void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
-{
-    if (FM)
-        EuroTwist::process_block_internal<true>(pitch, drift, stereo, FMdepth);
-    else
-        EuroTwist::process_block_internal<false>(pitch, drift, stereo, FMdepth);
-}
 
 void EuroTwist::init_ctrltypes()
 {

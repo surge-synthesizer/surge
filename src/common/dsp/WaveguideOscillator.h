@@ -54,6 +54,11 @@ class WaveguideOscillator : public Oscillator
 
     static constexpr float dustpos = 0.998, dustneg = 1.0 - dustpos;
 
+    // character filter
+    bool dofilter = true, starting = true;
+    double charfiltB0 = 0.0, charfiltB1 = 0.0, charfiltA1 = 0.0;
+    double priorY_L = 0.0, priorY_R = 0.0, priorX_L = 0.0, priorX_R = 0.0;
+
     lag<float, true> examp, tap[2], t2level, feedback[2], tone, fmdepth;
 
     SSESincDelayLine<16384> delayLine[2];
