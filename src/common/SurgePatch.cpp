@@ -483,6 +483,43 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             easy_params_id.push_back(i);
     }
 
+    // Assign the dynamic name handlers
+    static struct : public ParameterDynamicNameFunction
+    {
+        const char *getName(Parameter *p)
+        {
+            static char res[TXT_SIZE];
+            if (p && p->storage)
+            {
+                auto cge = p->ctrlgroup_entry - ms_lfo1;
+                auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+                auto tp = lf->shape.val.i;
+                switch (tp)
+                {
+                case lt_stepseq:
+                    snprintf(res, TXT_SIZE, "Shuffle");
+                    break;
+                default:
+                    snprintf(res, TXT_SIZE, "Phase");
+                    break;
+                }
+            }
+            else
+            {
+                snprintf(res, TXT_SIZE, "Phase/Shuffle");
+            }
+            return res;
+        }
+    } lfoPhaseName;
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        for (int lf = 0; lf < n_lfos; ++lf)
+        {
+            scene[sc].lfo[lf].start_phase.dynamicName = &lfoPhaseName;
+        }
+    }
+
 #if 0
    // DEBUG CODE WHICH WILL DIE
    std::map<std::string, int> idToParam;
