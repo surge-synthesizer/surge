@@ -15,6 +15,7 @@
 #include "Reverb2Effect.h"
 #include "RingModulatorEffect.h"
 #include "RotarySpeakerEffect.h"
+#include "TreemonsterEffect.h"
 #include "VocoderEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/Neuron.h"
@@ -77,6 +78,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new chowdsp::Tape(storage, fxdata, pd);
     case fxt_ensemble:
         return new BBDEnsembleEffect(storage, fxdata, pd);
+    case fxt_treemonster:
+        return new TreemonsterEffect(storage, fxdata, pd);
     default:
         return 0;
     };
