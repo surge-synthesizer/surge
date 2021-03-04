@@ -8608,6 +8608,9 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     std::string modname = modulatorName(modsource_editor[current_scene], true);
     lfoNameLabel->setText(modname.c_str());
     lfoNameLabel->invalid();
+
+    // And now we have dynamic labels really anything
+    frame->invalid();
 }
 
 void SurgeGUIEditor::closeStorePatchDialog()
