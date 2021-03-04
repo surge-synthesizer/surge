@@ -4679,6 +4679,8 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
         {
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+            if (p->ctrltype == ct_eurotwist_engine)
+                frame->invalid();
 
             char pname[256], pdisp[128], txt[128];
             bool modulate = false;
@@ -8111,7 +8113,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         if (p->can_temposync())
             hs->setTempoSync(p->temposync);
         hs->setValue(p->get_value_f01());
-        hs->setLabel(p->get_name());
+
+        if (p->supportsDynamicName() && p->dynamicName)
+        {
+            hs->setDynamicLabel([p]() { return std::string(p->get_name()); });
+        }
+        else
+        {
+            hs->setLabel(p->get_name());
+        }
+
         hs->setModPresent(synth->isModDestUsed(p->id));
         hs->setDefaultValue(p->get_default_value_f01());
         hs->font_style = Surge::UI::Skin::setFontStyleProperty(

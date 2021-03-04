@@ -65,6 +65,50 @@ std::string eurotwist_engine_name(int i)
     return "Error " + std::to_string(i);
 }
 
+static struct EngineDynamicName : public ParameterDynamicNameFunction
+{
+    std::vector<std::vector<std::string>> engineLabels;
+    std::vector<std::string> defaultLabels = {"Harmonics", "Timbre", "Morph", "Aux Mix"};
+
+    EngineDynamicName()
+    {
+        engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync Mix"});
+        engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation Mix"});
+        engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub Mix"});
+        engineLabels.push_back({"Ratio/Type", "Formant/Cutoff", "Shape", "PD Mix"});
+        engineLabels.push_back({"Bump", "Peak", "Shape", "Organ Mix"});
+        engineLabels.push_back({"Bank", "Morph Row", "Morph Column", "Lo-Fi Mix"});
+        engineLabels.push_back({"Chord Type", "Chord Inversion", "Shape", "Root Mix"});
+        engineLabels.push_back({"Speak", "Species", "Segment", "Raw Mix"});
+        engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine Mix"});
+        engineLabels.push_back(
+            {"Type/Separation", "Clock Frequency", "Resonance", "Dual Peak Mix"});
+        engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw Mix"});
+        engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter Mix"});
+        engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter Mix"});
+        engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Tone", "Low Cut", "Decay Time", "Variation MIx"});
+        while (engineLabels.size() < 16)
+            engineLabels.push_back(defaultLabels);
+    }
+
+    const char *getName(Parameter *p) override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+
+        auto engp = &(oscs->p[EuroTwist::et_engine]);
+        auto eng = engp->val.i;
+        auto idx = (p - engp);
+
+        auto lab = engineLabels[eng][idx - 1];
+
+        static char result[TXT_SIZE];
+        snprintf(result, TXT_SIZE, "%s", lab.c_str());
+        return result;
+    }
+} etDynamicName;
+
 EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
@@ -145,6 +189,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
     morph.newValue(fvbp(et_morph));
     lpgcol.newValue(fv(et_lpg_response));
     lpgdec.newValue(fv(et_lpg_decay));
+    auxmix.newValue(limit_range(fv(et_aux_mix), 0.f, 1.f));
 
     plaits::Modulations mod = {};
     // for now
@@ -160,8 +205,8 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 
     for (int i = 0; i < carrover_size; ++i)
     {
-        output[i] = carryover[i][0];
-        outputR[i] = carryover[i][0];
+        output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
+        outputR[i] = output[i];
     }
 
     int total_generated = carrover_size;
@@ -184,6 +229,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
         morph.process();
         lpgdec.process();
         lpgcol.process();
+        auxmix.process();
         if (lpgIsOn)
         {
             mod.trigger = gate ? 1.0 : 0.0;
@@ -213,8 +259,9 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
             }
             else if (!throwaway)
             {
-                output[total_generated + i] = src_out[i][0];
-                outputR[total_generated + i] = src_out[i][0];
+                output[total_generated + i] =
+                    auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
+                outputR[total_generated + i] = output[total_generated + i];
             }
         }
         total_generated += sdata.output_frames_gen;
@@ -241,21 +288,25 @@ void EuroTwist::init_ctrltypes()
 
     oscdata->p[et_harmonics].set_name("Harmonics");
     oscdata->p[et_harmonics].set_type(ct_percent_bipolar);
+    oscdata->p[et_harmonics].dynamicName = &etDynamicName;
 
     oscdata->p[et_timbre].set_name("Timbre");
     oscdata->p[et_timbre].set_type(ct_percent_bipolar);
+    oscdata->p[et_timbre].dynamicName = &etDynamicName;
 
     oscdata->p[et_morph].set_name("Morph");
     oscdata->p[et_morph].set_type(ct_percent_bipolar);
+    oscdata->p[et_morph].dynamicName = &etDynamicName;
 
     oscdata->p[et_aux_mix].set_name("Aux Mix");
     oscdata->p[et_aux_mix].set_type(ct_percent);
+    oscdata->p[et_aux_mix].dynamicName = &etDynamicName;
 
     oscdata->p[et_lpg_response].set_name("LPG Response");
     oscdata->p[et_lpg_response].set_type(ct_percent_deactivatable);
 
     oscdata->p[et_lpg_decay].set_name("LPG Decay");
-    oscdata->p[et_lpg_decay].set_type(ct_percent); // FIXME ct_percent_deactivatable
+    oscdata->p[et_lpg_decay].set_type(ct_percent);
 }
 
 void EuroTwist::init_default_values()

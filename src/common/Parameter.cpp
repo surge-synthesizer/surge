@@ -1478,6 +1478,9 @@ bool Parameter::supportsDynamicName()
     switch (ctrltype)
     {
     case ct_dpw_trimix:
+    case ct_percent:
+    case ct_percent_bipolar:
+    case ct_percent_deactivatable:
         return true;
     default:
         break;

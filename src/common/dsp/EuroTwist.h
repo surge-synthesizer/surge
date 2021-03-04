@@ -78,7 +78,7 @@ class EuroTwist : public Oscillator
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
 
-    lag<float, true> harm, timb, morph, lpgcol, lpgdec;
+    lag<float, true> harm, timb, morph, lpgcol, lpgdec, auxmix;
 
     float driftlfo, driftlfo2;
 };

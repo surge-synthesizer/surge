@@ -228,7 +228,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
     else
         headrect = CRect(0, 0, 24, 28);
 
-    if (label[0] && (style & CSlider::kHorizontal))
+    if ((hasLabFn || label[0]) && (style & CSlider::kHorizontal))
     {
         if (drawLabel)
         {
@@ -251,7 +251,15 @@ void CSurgeSlider::draw(CDrawContext *dc)
 
             // final x, y offset set from the skin
             trect.offset(text_hoffset, text_voffset);
-            dc->drawString(label, trect, text_align, true);
+            if (hasLabFn)
+            {
+                auto tl = labfn();
+                dc->drawString(tl.c_str(), trect, text_align, true);
+            }
+            else
+            {
+                dc->drawString(label, trect, text_align, true);
+            }
         }
     }
 

@@ -61,6 +61,14 @@ class CSurgeSlider : public VSTGUI::CControl,
                                   double dx, double dy);
 
     virtual void setLabel(const char *txt);
+    virtual void setDynamicLabel(std::function<std::string()> lf)
+    {
+        hasLabFn = true;
+        labfn = lf;
+    }
+    bool hasLabFn = false;
+    std::function<std::string()> labfn;
+
     virtual void setModValue(float val);
     virtual float getModValue() { return modval; }
     virtual void setModMode(int mode)
