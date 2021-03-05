@@ -65,5 +65,6 @@ class TreemonsterEffect : public Effect
     float length[2], lastval[2];
     BiquadFilter lp, hp;
 
-    float envA, envR, envV[2];
+    double envA, envR;
+    float envV[2];
 };

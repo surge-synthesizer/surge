@@ -55,8 +55,9 @@ void TreemonsterEffect::setvars(bool init)
         width.instantize();
         mix.instantize();
 
-        envA = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
-        envR = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+        // envelope follower times: 5 ms attack, 500 ms release
+        envA = pow(0.01, 1.0 / (5 * dsamplerate * 0.001));
+        envR = pow(0.01, 1.0 / (500 * dsamplerate * 0.001));
         envV[0] = 0.f;
         envV[1] = 0.f;
     }
@@ -74,65 +75,88 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     copy_block(dataL, L, BLOCK_SIZE_QUAD);
     copy_block(dataR, R, BLOCK_SIZE_QUAD);
 
-    // apply filters to input
-    hp.coeff_HP(hp.calc_omega(*f[tm_hp] / 12.0), 0.707);
-    lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
+    // copy it to pitch detection buffer (tbuf) as well
+    // in case filters are not activated
+    copy_block(dataL, tbuf[0], BLOCK_SIZE_QUAD);
+    copy_block(dataR, tbuf[1], BLOCK_SIZE_QUAD);
 
-    hp.process_block_to(dataL, dataR, tbuf[0], tbuf[1]);
-    lp.process_block(tbuf[0], tbuf[1]);
+    // apply filters to the pitch detection buffer
+    if (!fxdata->p[tm_hp].deactivated)
+    {
+        hp.coeff_HP(hp.calc_omega(*f[tm_hp] / 12.0), 0.707);
+        hp.process_block(tbuf[0], tbuf[1]);
+    }
+
+    if (!fxdata->p[tm_lp].deactivated)
+    {
+        lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
+        lp.process_block(tbuf[0], tbuf[1]);
+    }
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
+        // envelope detection
         for (int c = 0; c < 2; ++c)
         {
             auto v = (c == 0 ? dataL[k] : dataR[k]);
             auto e = envV[c];
+
             if (v > e)
+            {
                 e = envA * (e - v) + v;
+            }
             else
+            {
                 e = envR * (e - v) + v;
+            }
+
             envV[c] = e;
         }
 
+        // pitch detection
         if ((lastval[0] < 0.f) && (tbuf[0][k] >= 0.f))
         {
             if (tbuf[0][k] > thres)
+            {
                 oscL.set_rate((2.0 * M_PI / std::max(2.f, length[0])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
-            length[0] = 0.f;
+                length[0] = 0.f;
+            }
         }
 
         if ((lastval[1] < 0.f) && (tbuf[1][k] >= 0.f))
         {
             if (tbuf[1][k] > thres)
+            {
                 oscR.set_rate((2.0 * M_PI / std::max(2.f, length[1])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
-            length[1] = 0.f;
+                length[1] = 0.f;
+            }
         }
 
         oscL.process();
         oscR.process();
 
-        L[k] = oscL.r;
-        R[k] = oscR.r;
+        // apply followed envelope to sine oscillator
+        L[k] = envV[0] * oscL.r;
+        R[k] = envV[1] * oscR.r;
 
+        // track positive zero crossings
         length[0] += 1.0f;
         length[1] += 1.0f;
+
         lastval[0] = tbuf[0][k];
         lastval[1] = tbuf[1][k];
-
-        envscaledSineWave[0][k] = envV[0] * oscL.r;
-        envscaledSineWave[1][k] = envV[1] * oscR.r;
     }
 
-    // do ringmod
+    // do dry signal * pitch tracked signal ringmod
+    // store to pitch detection buffer
     mul_block(L, dataL, tbuf[0], BLOCK_SIZE_QUAD);
     mul_block(R, dataR, tbuf[1], BLOCK_SIZE_QUAD);
 
-    // mix ringmod with pure pitch tracked sine
+    // mix pure pitch tracked sine with ring modulated signal
     rm.set_target_smoothed(limit_range(*f[tm_ring_mix], 0.f, 1.f));
-    rm.fade_2_blocks_to(envscaledSineWave[0], tbuf[0], envscaledSineWave[1], tbuf[1], L, R,
-                        BLOCK_SIZE_QUAD);
+    rm.fade_2_blocks_to(L, tbuf[0], R, tbuf[1], L, R, BLOCK_SIZE_QUAD);
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[tm_width]));
@@ -186,14 +210,14 @@ void TreemonsterEffect::init_ctrltypes()
     fxdata->p[tm_speed].set_type(ct_percent);
     fxdata->p[tm_speed].posy_offset = 1;
     fxdata->p[tm_hp].set_name("Low Cut");
-    fxdata->p[tm_hp].set_type(ct_freq_audible);
+    fxdata->p[tm_hp].set_type(ct_freq_audible_deactivatable);
     fxdata->p[tm_hp].posy_offset = 1;
     fxdata->p[tm_lp].set_name("High Cut");
-    fxdata->p[tm_lp].set_type(ct_freq_audible);
+    fxdata->p[tm_lp].set_type(ct_freq_audible_deactivatable);
     fxdata->p[tm_lp].posy_offset = 1;
 
     fxdata->p[tm_pitch].set_name("Pitch");
-    fxdata->p[tm_pitch].set_type(ct_pitch4oct);
+    fxdata->p[tm_pitch].set_type(ct_pitch);
     fxdata->p[tm_pitch].posy_offset = 3;
     fxdata->p[tm_ring_mix].set_name("Ring Modulation");
     fxdata->p[tm_ring_mix].set_type(ct_percent);
@@ -203,22 +227,24 @@ void TreemonsterEffect::init_ctrltypes()
     fxdata->p[tm_width].set_type(ct_percent_bipolar);
     fxdata->p[tm_width].posy_offset = 5;
     fxdata->p[tm_mix].set_name("Mix");
-    fxdata->p[tm_mix].set_type(ct_percent_bipolar);
+    fxdata->p[tm_mix].set_type(ct_percent);
     fxdata->p[tm_mix].posy_offset = 5;
     fxdata->p[tm_mix].val_default.f = 1.f;
 }
 
 void TreemonsterEffect::init_default_values()
 {
-    fxdata->p[tm_threshold].val.f = -48;
-    fxdata->p[tm_speed].val.f = 0;
+    fxdata->p[tm_threshold].val.f = -24.f;
+    fxdata->p[tm_speed].val.f = 0.f;
 
     fxdata->p[tm_hp].val.f = fxdata->p[tm_hp].val_min.f;
+    fxdata->p[tm_hp].deactivated = false;
     fxdata->p[tm_lp].val.f = fxdata->p[tm_lp].val_max.f;
+    fxdata->p[tm_lp].deactivated = false;
 
     fxdata->p[tm_pitch].val.f = 0;
-    fxdata->p[tm_width].val.f = 0;
-
     fxdata->p[tm_ring_mix].val.f = 1.f;
+
+    fxdata->p[tm_width].val.f = 1.f;
     fxdata->p[tm_mix].val.f = 1.f;
 }
