@@ -44,6 +44,9 @@ void TreemonsterEffect::setvars(bool init)
         lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
         lp.coeff_instantize();
 
+        oscL.set_rate(0.f);
+        oscR.set_rate(0.f);
+
         rm.set_target(1.f);
         width.set_target(0.f);
         mix.set_target(1.f);
@@ -58,6 +61,9 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 {
     float tbuf[2][BLOCK_SIZE] alignas(16);
 
+    auto thres = db_to_linear(limit_range(*f[tm_threshold], fxdata->p[tm_threshold].val_min.f,
+                                          fxdata->p[tm_threshold].val_max.f));
+
     // copy dry signal (dataL, dataR) to wet signal (L, R)
     copy_block(dataL, L, BLOCK_SIZE_QUAD);
     copy_block(dataR, R, BLOCK_SIZE_QUAD);
@@ -67,13 +73,13 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
 
     hp.process_block_to(dataL, dataR, tbuf[0], tbuf[1]);
-    lp.process_block_to(dataL, dataR, tbuf[0], tbuf[1]);
+    lp.process_block(tbuf[0], tbuf[1]);
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
         if ((lastval[0] < 0.f) && (tbuf[0][k] >= 0.f))
         {
-            if (tbuf[0][k] > db_to_linear(*f[tm_threshold]))
+            if (tbuf[0][k] > thres)
                 oscL.set_rate((M_PI / std::max(2.f, length[0])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
             length[0] = 0.f;
@@ -81,7 +87,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
         if ((lastval[1] < 0.f) && (tbuf[1][k] >= 0.f))
         {
-            if (tbuf[1][k] > db_to_linear(*f[tm_threshold]))
+            if (tbuf[1][k] > thres)
                 oscR.set_rate((M_PI / std::max(2.f, length[1])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
             length[1] = 0.f;
@@ -105,7 +111,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // mix ringmod with pure pitch tracked sine
     rm.set_target_smoothed(limit_range(*f[tm_ring_mix], 0.f, 1.f));
-    rm.fade_2_blocks_to(tbuf[0], L, tbuf[1], R, L, R, BLOCK_SIZE_QUAD);
+    rm.fade_2_blocks_to(L, tbuf[0], R, tbuf[1], L, R, BLOCK_SIZE_QUAD);
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[tm_width]));
