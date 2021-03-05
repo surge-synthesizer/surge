@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -14,6 +14,7 @@
 */
 
 #include "TreemonsterEffect.h"
+#include "DebugHelpers.h"
 
 TreemonsterEffect::TreemonsterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), lp(storage), hp(storage)
@@ -60,6 +61,17 @@ void TreemonsterEffect::setvars(bool init)
         envR = pow(0.01, 1.0 / (500 * dsamplerate * 0.001));
         envV[0] = 0.f;
         envV[1] = 0.f;
+
+        length[0] = 100;
+        length[1] = 100;
+        length_target[0] = 100;
+        length_target[1] = 100;
+        length_smooth[0] = 100;
+        length_smooth[1] = 100;
+        first_thresh[0] = true;
+        first_thresh[1] = true;
+        oscL.set_phase(0);
+        oscR.set_phase(M_PI / 2.0);
     }
 }
 
@@ -93,6 +105,18 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         lp.process_block(tbuf[0], tbuf[1]);
     }
 
+    float qs = limit_range(*f[tm_speed], 0.f, 1.f);
+    qs = qs * qs;
+    qs = qs * qs;
+    float speed = 0.998 - qs * 0.028;
+    length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];
+    length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
+
+    oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) *
+                  powf(2.0, *f[tm_pitch] * (1 / 12.f)));
+    oscR.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[1])) *
+                  powf(2.0, *f[tm_pitch] * (1 / 12.f)));
+
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
         // envelope detection
@@ -118,28 +142,40 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         {
             if (tbuf[0][k] > thres)
             {
-                oscL.set_rate((2.0 * M_PI / std::max(2.f, length[0])) *
-                              powf(2.0, *f[tm_pitch] * (1 / 12.f)));
-                length[0] = 0.f;
+                length_target[0] =
+                    (length[0] > length_smooth[0] * 10 ? length_smooth[0] : length[0]);
+                if (first_thresh[0])
+                    length_smooth[0] = length[0];
+                first_thresh[0] = false;
             }
+
+            length[0] = 0.0; // (0.0-lastval[0]) / ( tbuf[0][k] - lastval[0]);
         }
 
         if ((lastval[1] < 0.f) && (tbuf[1][k] >= 0.f))
         {
             if (tbuf[1][k] > thres)
             {
-                oscR.set_rate((2.0 * M_PI / std::max(2.f, length[1])) *
-                              powf(2.0, *f[tm_pitch] * (1 / 12.f)));
-                length[1] = 0.f;
+                length_target[1] =
+                    (length[1] > length_smooth[1] * 10 ? length_smooth[1] : length[1]);
+                if (first_thresh[1])
+                    length_smooth[1] = length[1];
+                first_thresh[1] = false;
             }
+
+            length[1] = 0.0; // (0.0-lastval[1]) / ( tbuf[1][k] - lastval[1]);
         }
 
         oscL.process();
         oscR.process();
 
-        // apply followed envelope to sine oscillator
-        L[k] = envV[0] * oscL.r;
-        R[k] = envV[1] * oscR.r;
+        // do not apply followed envelope to sine oscillator - we need full freight sine for RM
+        L[k] = oscL.r;
+        R[k] = oscR.r;
+
+        // but we need to store the scaled for mix
+        envscaledSineWave[0][k] = oscL.r * envV[0];
+        envscaledSineWave[1][k] = oscR.r * envV[0];
 
         // track positive zero crossings
         length[0] += 1.0f;
@@ -156,7 +192,8 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // mix pure pitch tracked sine with ring modulated signal
     rm.set_target_smoothed(limit_range(*f[tm_ring_mix], 0.f, 1.f));
-    rm.fade_2_blocks_to(L, tbuf[0], R, tbuf[1], L, R, BLOCK_SIZE_QUAD);
+    rm.fade_2_blocks_to(envscaledSineWave[0], tbuf[0], envscaledSineWave[1], tbuf[1], L, R,
+                        BLOCK_SIZE_QUAD);
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[tm_width]));
