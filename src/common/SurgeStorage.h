@@ -274,20 +274,21 @@ enum fx_type
     fxt_combulator,
     fxt_nimbus,
     fxt_tape,
+    fxt_treemonster,
 
     n_fx_types,
 };
 
 const char fx_type_names[n_fx_types][16] = {
-    "Off",     "Delay",      "Reverb 1",    "Phaser",     "Rotary",     "Distortion",
-    "EQ",      "Freq Shift", "Conditioner", "Chorus",     "Vocoder",    "Reverb 2",
-    "Flanger", "Ring Mod",   "Airwindows",  "Neuron",     "Graphic EQ", "Resonator",
-    "CHOW",    "Exciter",    "Ensemble",    "Combulator", "Nimbus",     "Tape",
+    "Off",        "Delay",       "Reverb 1",   "Phaser",      "Rotary",   "Distortion", "EQ",
+    "Freq Shift", "Conditioner", "Chorus",     "Vocoder",     "Reverb 2", "Flanger",    "Ring Mod",
+    "Airwindows", "Neuron",      "Graphic EQ", "Resonator",   "CHOW",     "Exciter",    "Ensemble",
+    "Combulator", "Nimbus",      "Tape",       "Treemonster",
 };
 
 const char fx_type_shortnames[n_fx_types][8] = {
-    "-",  "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC", "RV2",
-    "FL", "RM",  "AW",  "NEU", "GEQ", "RES",  "CHW", "XCT", "ENS", "CMB", "NIM", "TAPE",
+    "-",  "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",  "RV2", "FL",
+    "RM", "AW",  "NEU", "GEQ", "RES", "CHW",  "XCT", "ENS", "CMB", "NIM", "TAPE", "TM",
 };
 
 enum fx_bypass

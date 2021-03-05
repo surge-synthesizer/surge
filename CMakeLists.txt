@@ -238,6 +238,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/Reverb2Effect.cpp
   src/common/dsp/effect/RingModulatorEffect.cpp
   src/common/dsp/effect/RotarySpeakerEffect.cpp
+  src/common/dsp/effect/TreemonsterEffect.cpp
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.h
