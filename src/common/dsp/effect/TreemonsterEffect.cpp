@@ -54,12 +54,18 @@ void TreemonsterEffect::setvars(bool init)
         rm.instantize();
         width.instantize();
         mix.instantize();
+
+        envA = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+        envR = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+        envV[0] = 0.f;
+        envV[1] = 0.f;
     }
 }
 
 void TreemonsterEffect::process(float *dataL, float *dataR)
 {
-    float tbuf[2][BLOCK_SIZE] alignas(16);
+    float tbuf alignas(16)[2][BLOCK_SIZE];
+    float envscaledSineWave alignas(16)[2][BLOCK_SIZE];
 
     auto thres = db_to_linear(limit_range(*f[tm_threshold], fxdata->p[tm_threshold].val_min.f,
                                           fxdata->p[tm_threshold].val_max.f));
@@ -77,10 +83,21 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
+        for (int c = 0; c < 2; ++c)
+        {
+            auto v = (c == 0 ? dataL[k] : dataR[k]);
+            auto e = envV[c];
+            if (v > e)
+                e = envA * (e - v) + v;
+            else
+                e = envR * (e - v) + v;
+            envV[c] = e;
+        }
+
         if ((lastval[0] < 0.f) && (tbuf[0][k] >= 0.f))
         {
             if (tbuf[0][k] > thres)
-                oscL.set_rate((M_PI / std::max(2.f, length[0])) *
+                oscL.set_rate((2.0 * M_PI / std::max(2.f, length[0])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
             length[0] = 0.f;
         }
@@ -88,7 +105,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         if ((lastval[1] < 0.f) && (tbuf[1][k] >= 0.f))
         {
             if (tbuf[1][k] > thres)
-                oscR.set_rate((M_PI / std::max(2.f, length[1])) *
+                oscR.set_rate((2.0 * M_PI / std::max(2.f, length[1])) *
                               powf(2.0, *f[tm_pitch] * (1 / 12.f)));
             length[1] = 0.f;
         }
@@ -103,6 +120,9 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         length[1] += 1.0f;
         lastval[0] = tbuf[0][k];
         lastval[1] = tbuf[1][k];
+
+        envscaledSineWave[0][k] = envV[0] * oscL.r;
+        envscaledSineWave[1][k] = envV[1] * oscR.r;
     }
 
     // do ringmod
@@ -111,7 +131,8 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // mix ringmod with pure pitch tracked sine
     rm.set_target_smoothed(limit_range(*f[tm_ring_mix], 0.f, 1.f));
-    rm.fade_2_blocks_to(L, tbuf[0], R, tbuf[1], L, R, BLOCK_SIZE_QUAD);
+    rm.fade_2_blocks_to(envscaledSineWave[0], tbuf[0], envscaledSineWave[1], tbuf[1], L, R,
+                        BLOCK_SIZE_QUAD);
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[tm_width]));
@@ -189,8 +210,15 @@ void TreemonsterEffect::init_ctrltypes()
 
 void TreemonsterEffect::init_default_values()
 {
+    fxdata->p[tm_threshold].val.f = -48;
+    fxdata->p[tm_speed].val.f = 0;
+
     fxdata->p[tm_hp].val.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_lp].val.f = fxdata->p[tm_lp].val_max.f;
+
+    fxdata->p[tm_pitch].val.f = 0;
+    fxdata->p[tm_width].val.f = 0;
+
     fxdata->p[tm_ring_mix].val.f = 1.f;
     fxdata->p[tm_mix].val.f = 1.f;
 }

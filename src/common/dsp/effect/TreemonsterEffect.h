@@ -64,4 +64,6 @@ class TreemonsterEffect : public Effect
     int bi; // block increment (to keep track of events not occurring every n blocks)
     float length[2], lastval[2];
     BiquadFilter lp, hp;
+
+    float envA, envR, envV[2];
 };
