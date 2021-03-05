@@ -110,10 +110,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
         state[i] = 0;
         last_level[i] = 0.0;
         pwidth[i] = limit_range(l_pw.v, 0.001, 0.999);
-        driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
-        if (nonzero_init_drift)
-            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftLFO[i].init(nonzero_init_drift);
     }
 
     hp.coeff_instantize();
@@ -156,7 +153,7 @@ void SampleAndHoldOscillator::init_default_values()
 
 void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
 {
-    float detune = drift * driftlfo[voice];
+    float detune = drift * driftLFO[voice].val();
     if (n_unison > 1)
         detune += oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
                   (detune_bias * float(voice) + detune_offset);
@@ -376,7 +373,7 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     {
         for (l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+            driftLFO[l].next();
         }
 
         for (int s = 0; s < BLOCK_SIZE_OS; s++)
@@ -406,7 +403,7 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
 
         for (l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+            driftLFO[l].next();
 
             while ((syncstate[l] < a) || (oscstate[l] < a))
             {

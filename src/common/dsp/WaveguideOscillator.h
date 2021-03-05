@@ -21,6 +21,7 @@
 #include "DspUtilities.h"
 #include "SSESincDelayLine.h"
 #include "BiquadFilter.h"
+#include "OscillatorCommonFunctions.h"
 
 class WaveguideOscillator : public Oscillator
 {
@@ -58,7 +59,8 @@ class WaveguideOscillator : public Oscillator
 
     SSESincDelayLine<16384> delayLine[2];
     float priorSample[2] = {0, 0};
-    float driftlfo[2] = {0, 0}, driftlfo2[2] = {0, 0};
+    Surge::Oscillator::DriftLFO driftLFO[2];
+    Surge::Oscillator::CharacterFilter<float> charFilt;
 
     BiquadFilter lp;
 };

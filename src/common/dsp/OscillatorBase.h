@@ -16,6 +16,7 @@
 #pragma once
 
 #include "SurgeStorage.h"
+#include "OscillatorCommonFunctions.h"
 
 class alignas(16) Oscillator
 {
@@ -81,7 +82,7 @@ class AbstractBlitOscillator : public Oscillator
     int n_unison;
     float out_attenuation, out_attenuation_inv, detune_bias, detune_offset;
     float oscstate[MAX_UNISON], syncstate[MAX_UNISON], rate[MAX_UNISON];
-    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
+    Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
     float panL[MAX_UNISON], panR[MAX_UNISON];
     int state[MAX_UNISON];
 };

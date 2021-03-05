@@ -56,5 +56,5 @@ class SurgeSuperOscillator : public AbstractBlitOscillator
     int FMdelay;
     float FMmul_inv;
     float FMphase alignas(16)[BLOCK_SIZE_OS + 4];
-    float CoefB0, CoefB1, CoefA1;
+    Surge::Oscillator::CharacterFilter<float> charFilt;
 };

@@ -31,10 +31,7 @@ void FM2Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     phase =
         (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
     lastoutput = 0.0;
-    driftlfo = 0;
-    driftlfo2 = 0;
-    if (nonzero_init_drift)
-        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+    driftLFO.init(nonzero_init_drift);
     fb_val = 0.0;
     double ph = (localcopy[oscdata->p[fm2_m12phase].param_id_in_scene].f + phase) * 2.0 * M_PI;
     RM1.set_phase(ph);
@@ -48,7 +45,7 @@ FM2Oscillator::~FM2Oscillator() {}
 
 void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
-    driftlfo = drift_noise(driftlfo2) * drift;
+    auto driftlfo = driftLFO.next() * drift;
     fb_val = oscdata->p[fm2_feedback].get_extended(
         localcopy[oscdata->p[fm2_feedback].param_id_in_scene].f);
 

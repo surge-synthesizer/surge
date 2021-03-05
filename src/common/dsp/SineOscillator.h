@@ -19,6 +19,7 @@
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
+#include "OscillatorCommonFunctions.h"
 
 class SineOscillator : public Oscillator
 {
@@ -51,7 +52,8 @@ class SineOscillator : public Oscillator
 
     quadr_osc sine[MAX_UNISON];
     double phase[MAX_UNISON];
-    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
+    Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
+    Surge::Oscillator::CharacterFilter<float> charFilt;
     float fb_val;
     float playingramp[MAX_UNISON], dplaying;
     lag<double> FMdepth;

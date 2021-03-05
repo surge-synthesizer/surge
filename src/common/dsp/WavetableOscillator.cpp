@@ -105,10 +105,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
         last_level[i] = 0.0;
         mipmap[i] = 0;
         mipmap_ofs[i] = 0;
-        driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
-        if (nonzero_init_drift)
-            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftLFO[i].init(nonzero_init_drift);
     }
 }
 
@@ -158,7 +155,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 {
     float block_pos = oscstate[voice] * BLOCK_SIZE_OS_INV * pitchmult_inv;
 
-    double detune = drift * driftlfo[voice];
+    double detune = drift * driftLFO[voice].val();
     if (n_unison > 1)
         detune += oscdata->p[wt_unison_detune].get_extended(localcopy[id_detune].f) *
                   (detune_bias * float(voice) + detune_offset);
@@ -442,7 +439,9 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
     if (FM)
     {
         for (int l = 0; l < n_unison; l++)
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+        {
+            driftLFO[l].next();
+        }
 
         for (int s = 0; s < BLOCK_SIZE_OS; s++)
         {
@@ -467,7 +466,7 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         float a = (float)BLOCK_SIZE_OS * pitchmult;
         for (int l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+            driftLFO[l].next();
             while (oscstate[l] < a)
                 convolute(l, false, stereo);
             oscstate[l] -= a;

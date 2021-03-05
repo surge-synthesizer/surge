@@ -19,6 +19,7 @@
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
+#include "OscillatorCommonFunctions.h"
 
 class FM2Oscillator : public Oscillator
 {
@@ -44,7 +45,7 @@ class FM2Oscillator : public Oscillator
     virtual void init_default_values() override;
     double phase, lastoutput;
     quadr_osc RM1, RM2;
-    float driftlfo, driftlfo2;
+    Surge::Oscillator::DriftLFO driftLFO;
     float fb_val;
     lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
     virtual void handleStreamingMismatches(int streamingRevision,

@@ -105,10 +105,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     for (int i = 0; i < 2; ++i)
     {
         delayLine[i].clear();
-        driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
-        if (nzi)
-            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftLFO[i].init(nzi);
     }
 
     auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
@@ -218,14 +215,16 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     }
     priorSample[0] = delayLine[0].buffer[(delayLine[0].wp - 1) & delayLine[0].comb_size];
     priorSample[1] = delayLine[1].buffer[(delayLine[1].wp - 1) & delayLine[1].comb_size];
+
+    charFilt.init(storage->getPatch().character.val.i);
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
                                         float fmdepthV)
 {
     auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
-    driftlfo[0] = drift_noise(driftlfo2[0]);
-    auto lfodetune = drift * driftlfo[0];
+
+    auto lfodetune = drift * driftLFO[0].next();
     auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
@@ -233,8 +232,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     examp.newValue(d0 * d0 * d0);
     auto p2off = oscdata->p[wg_str2_detune].get_extended(
         localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
-    driftlfo[1] = drift_noise(driftlfo2[1]);
-    lfodetune = drift * driftlfo[1];
+    lfodetune = drift * driftLFO[1].next();
     auto pitch2_t = std::min(148.f, pitch + p2off + lfodetune);
     auto pitchmult2_inv =
         std::max((FIRipol_N >> 1) + 1.0,
@@ -352,6 +350,18 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         fmdepth.process();
     }
     lp.flush_sample_denormal();
+
+    if (charFilt.doFilter)
+    {
+        if (stereo)
+        {
+            charFilt.process_block_stereo(output, outputR, BLOCK_SIZE_OS);
+        }
+        else
+        {
+            charFilt.process_block(output, BLOCK_SIZE_OS);
+        }
+    }
 }
 
 void WaveguideOscillator::init_ctrltypes()
