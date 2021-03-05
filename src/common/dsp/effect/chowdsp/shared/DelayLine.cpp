@@ -33,14 +33,18 @@ namespace chowdsp
 
 //==============================================================================
 template <typename SampleType, typename InterpolationType>
-DelayLine<SampleType, InterpolationType>::DelayLine() : DelayLine(0)
+DelayLine<SampleType, InterpolationType>::DelayLine() : DelayLine(0, 1)
 {
 }
 
 template <typename SampleType, typename InterpolationType>
-DelayLine<SampleType, InterpolationType>::DelayLine(size_t maximumDelayInSamples)
+DelayLine<SampleType, InterpolationType>::DelayLine(size_t maximumDelayInSamples, size_t nChannels)
 {
     totalSize = std::max((size_t)4, maximumDelayInSamples + 1);
+
+    this->bufferData.resize(nChannels);
+    for (size_t ch = 0; ch < nChannels; ++ch)
+        this->bufferData[ch] = std::vector<SampleType>(totalSize);
 }
 
 //==============================================================================
@@ -64,12 +68,9 @@ SampleType DelayLine<SampleType, InterpolationType>::getDelay() const
 
 //==============================================================================
 template <typename SampleType, typename InterpolationType>
-void DelayLine<SampleType, InterpolationType>::prepare(double sampleRate, size_t blockSize,
-                                                       size_t numChannels)
+void DelayLine<SampleType, InterpolationType>::prepare(double sampleRate, size_t blockSize)
 {
-    this->bufferData.clear();
-    for (size_t ch = 0; ch < numChannels; ++ch)
-        this->bufferData.push_back(std::vector<SampleType>(totalSize, (SampleType)0));
+    const auto numChannels = this->bufferData.size();
 
     this->writePos.resize(numChannels);
     this->readPos.resize(numChannels);

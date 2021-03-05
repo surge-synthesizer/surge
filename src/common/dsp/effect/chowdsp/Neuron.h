@@ -104,8 +104,8 @@ class Neuron : public Effect
 
     BiquadFilter dc_blocker;
     lipol_ps makeup alignas(16), width alignas(16), outgain alignas(16);
-    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay1{1 << 18};
-    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay2{1 << 18};
+    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay1{1 << 18, 2};
+    chowdsp::DelayLine<float, chowdsp::DelayLineInterpolationTypes::Linear> delay2{1 << 18, 2};
     Oversampling<2, BLOCK_SIZE> os;
 
     Surge::ModControl modLFO;
