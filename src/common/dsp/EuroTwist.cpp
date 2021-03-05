@@ -141,14 +141,11 @@ float EuroTwist::tuningAwarePitch(float pitch)
 
 void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
 {
+    charFilt.init(storage->getPatch().character.val.i);
+
     float tpitch = tuningAwarePitch(pitch);
     memset((void *)patch.get(), 0, sizeof(plaits::Patch));
-    driftlfo = 0;
-    driftlfo2 = 0;
-    if (nonzero_drift)
-    {
-        driftlfo2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
-    }
+    driftLFO.init(nonzero_drift);
 
     // Lets run forward a cycle
     int throwaway = 0;
@@ -179,9 +176,8 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 
     pitch = tuningAwarePitch(pitch);
 
-    driftlfo = drift_noise(driftlfo2);
-
-    patch->note = pitch + drift * driftlfo; // fixme - alternate tuning goes here
+    auto driftv = driftLFO.next();
+    patch->note = pitch + drift * driftv;
     patch->engine = oscdata->p[et_engine].val.i;
 
     harm.newValue(fvbp(et_harmonics));
@@ -269,6 +265,21 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
         {
             // FIXME
             // std::cout << "DEAL " << std::endl;
+        }
+    }
+
+    if (!throwaway && charFilt.doFilter)
+    {
+        if (charFilt.doFilter)
+        {
+            if (stereo)
+            {
+                charFilt.process_block_stereo(output, outputR, BLOCK_SIZE_OS);
+            }
+            else
+            {
+                charFilt.process_block(output, BLOCK_SIZE_OS);
+            }
         }
     }
 }

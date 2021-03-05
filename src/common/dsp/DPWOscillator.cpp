@@ -124,71 +124,29 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     sync.setRate(0.001 * BLOCK_SIZE_OS);
 
     n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
-    double oosun = 1.0 / sqrt(n_unison);
+
+    auto us = Surge::Oscillator::UnisonSetup<double>(n_unison);
+
+    double atten = us.attenuation();
 
     for (int u = 0; u < n_unison; ++u)
     {
-        if (n_unison > 1)
-        {
-            float mx = 1.f * u / (n_unison - 1); // between 0 and 1
-            unisonOffsets[u] = (mx - 0.5) * 2;
-            mixL[u] = (1.0 - mx) * oosun * 2;
-            mixR[u] = mx * oosun * 2;
-        }
-        else
-        {
-            unisonOffsets[0] = 0;
-            mixL[0] = 1;
-            mixR[0] = 1;
-        }
+        unisonOffsets[u] = us.detune(u);
+        us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : ((float)rand() / (float)RAND_MAX);
         sphase[u] = phase[u];
-        subphase = 0;
-        subsphase = 0;
 
-        driftlfo[u] = 0.f;
-        driftlfo2[u] = 0.f;
+        driftLFO[u].init(nonzero_init_drift);
 
         sReset[u] = false;
-
-        if (nonzero_init_drift)
-        {
-            driftlfo2[u] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
-        }
     }
+
+    subphase = 0;
+    subsphase = 0;
 
     // This is the same implementation as SurgeSuperOscillator, just as doubles
-    switch (storage->getPatch().character.val.i)
-    {
-    case 0:
-    {
-        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
-        filt *= filt;
-        charfiltB0 = 1.f - filt;
-        charfiltB1 = 0.f;
-        charfiltA1 = filt;
-        dofilter = true;
-    }
-    break;
-    case 1:
-        charfiltB0 = 1.f;
-        charfiltB1 = 0.f;
-        charfiltA1 = 0.f;
-        dofilter = false; // since that is just output = output
-        break;
-    case 2:
-    {
-        double filt = 1.0 - 2.0 * 5000.0 * samplerate_inv;
-        filt *= filt;
-        auto A0 = 1.0 / (1.0 - filt);
-        charfiltB0 = 1.f * A0;
-        charfiltB1 = -filt * A0;
-        charfiltA1 = 0.f;
-        dofilter = true;
-    }
-    break;
-    }
+    charFilt.init(storage->getPatch().character.val.i);
 }
 
 template <DPWOscillator::dpw_multitypes multitype, bool subOctave, bool FM>
@@ -207,8 +165,8 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
 
     for (int u = 0; u < n_unison; ++u)
     {
-        driftlfo[u] = drift_noise(driftlfo2[u]);
-        auto lfodetune = drift * driftlfo[u];
+        auto dval = driftLFO[u].next();
+        auto lfodetune = drift * dval;
 
         dpbase[u].newValue(
             std::min(0.5, pitch_to_dphase(pitchlag.v + lfodetune + ud * unisonOffsets[u])));
@@ -216,7 +174,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
             0.5, pitch_to_dphase(pitchlag.v + lfodetune + sync.v + ud * unisonOffsets[u])));
     }
 
-    auto subdt = drift * driftlfo[0];
+    auto subdt = drift * driftLFO[0].val();
 
     subdpbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt) * submul));
     subdpsbase.newValue(std::min(0.5, pitch_to_dphase(pitchlag.v + subdt + sync.v) * submul));
@@ -479,30 +437,15 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
             output[s] = 0.5 * (output[s] + outputR[s]);
         }
     }
-    if (dofilter)
+    if (charFilt.doFilter)
     {
-        if (starting)
+        if (stereo)
         {
-            priorY_L = output[0];
-            priorX_L = output[0];
-            priorY_R = outputR[0];
-            priorX_R = outputR[0];
+            charFilt.process_block_stereo(output, outputR, BLOCK_SIZE_OS);
         }
-
-        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        else
         {
-            auto pfL = charfiltA1 * priorY_L + charfiltB0 * output[i] + charfiltB1 * priorX_L;
-            priorY_L = pfL;
-            priorX_L = output[i];
-            output[i] = pfL;
-
-            if (stereo)
-            {
-                auto pfR = charfiltA1 * priorY_R + charfiltB0 * outputR[i] + charfiltB1 * priorX_R;
-                priorY_R = pfR;
-                priorX_R = outputR[i];
-                outputR[i] = pfR;
-            }
+            charFilt.process_block(output, BLOCK_SIZE_OS);
         }
     }
 

@@ -18,6 +18,7 @@
 
 #include "OscillatorBase.h"
 #include "DspUtilities.h"
+#include "OscillatorCommonFunctions.h"
 
 class DPWOscillator : public Oscillator
 {
@@ -72,8 +73,8 @@ class DPWOscillator : public Oscillator
         subdpbase, subdpsbase, detune, pitchlag, fmdepth;
 
     // character filter
-    bool dofilter = true;
-    double charfiltB0 = 0.0, charfiltB1 = 0.0, charfiltA1 = 0.0;
+    Surge::Oscillator::CharacterFilter<double> charFilt;
+    // double charfiltB0 = 0.0, charfiltB1 = 0.0, charfiltA1 = 0.0;
     double priorY_L = 0.0, priorY_R = 0.0, priorX_L = 0.0, priorX_R = 0.0;
 
     int n_unison = 1;
@@ -84,7 +85,7 @@ class DPWOscillator : public Oscillator
     double unisonOffsets[MAX_UNISON];
     double mixL[MAX_UNISON], mixR[MAX_UNISON];
 
-    float driftlfo[MAX_UNISON], driftlfo2[MAX_UNISON];
+    Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 
     int cachedDeform = -1;
 };

@@ -19,6 +19,7 @@
 #include "DspUtilities.h"
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
+#include "OscillatorCommonFunctions.h"
 
 class WindowOscillator : public Oscillator
 {
@@ -58,7 +59,7 @@ class WindowOscillator : public Oscillator
         unsigned int DispatchDelay[MAX_UNISON]; // samples until playback should start (for
                                                 // per-sample scheduling)
         unsigned char Gain[MAX_UNISON][2];
-        float DriftLFO[MAX_UNISON][2];
+        Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 
         int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
     } Window alignas(16);

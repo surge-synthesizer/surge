@@ -21,6 +21,7 @@
 #include <memory>
 #include "basic_dsp.h"
 #include "DspUtilities.h"
+#include "OscillatorCommonFunctions.h"
 
 namespace plaits
 {
@@ -80,7 +81,8 @@ class EuroTwist : public Oscillator
 
     lag<float, true> harm, timb, morph, lpgcol, lpgdec, auxmix;
 
-    float driftlfo, driftlfo2;
+    Surge::Oscillator::DriftLFO driftLFO;
+    Surge::Oscillator::CharacterFilter<float> charFilt;
 };
 
 #endif // SURGE_EUROTWIST_H

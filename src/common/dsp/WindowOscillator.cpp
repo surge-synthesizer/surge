@@ -69,9 +69,7 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
                             << 16;
         }
 
-        Window.DriftLFO[0][1] = 0;
-        if (nonzero_init_drift)
-            Window.DriftLFO[0][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        Window.driftLFO[0].init(nonzero_init_drift);
     }
     else
     {
@@ -105,7 +103,7 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
                                 << 16;
             }
 
-            Window.DriftLFO[i][1] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+            Window.driftLFO[i].init(true); // Window has always started uni voices with non zero
         }
     }
 
@@ -315,12 +313,12 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 
     for (int l = 0; l < NumUnison; l++)
     {
-        Window.DriftLFO[l][0] = drift_noise(Window.DriftLFO[l][1]);
+        Window.driftLFO[l].next();
         /*
         ** This original code uses note 57 as a center point with a frequency of 220.
         */
 
-        float f = storage->note_to_pitch(pitch + drift * Window.DriftLFO[l][0] +
+        float f = storage->note_to_pitch(pitch + drift * Window.driftLFO[l].val() +
                                          Detune * (DetuneOffset + DetuneBias * (float)l));
         int Ratio = Float2Int(8.175798915f * 32768.f * f * (float)(storage->WindowWT.size) *
                               samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
@@ -334,7 +332,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
             for (int i = 0; i < BLOCK_SIZE_OS; ++i)
             {
                 float fmadj = (1.0 + FMdepth[l].v * master_osc[i]);
-                float f = storage->note_to_pitch(pitch + drift * Window.DriftLFO[l][0] +
+                float f = storage->note_to_pitch(pitch + drift * Window.driftLFO[l].val() +
                                                  Detune * (DetuneOffset + DetuneBias * (float)l));
                 int Ratio =
                     Float2Int(8.175798915f * 32768.f * f * fmadj * (float)(storage->WindowWT.size) *

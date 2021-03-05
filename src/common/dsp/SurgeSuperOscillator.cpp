@@ -163,35 +163,17 @@ AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage *storage, Oscillator
 
 void AbstractBlitOscillator::prepare_unison(int voices)
 {
-    out_attenuation_inv = sqrt((float)n_unison);
+    auto us = Surge::Oscillator::UnisonSetup<float>(voices);
+
+    out_attenuation_inv = us.attenuation_inv();
+    ;
     out_attenuation = 1.0f / out_attenuation_inv;
 
-    if (voices == 1)
+    detune_bias = us.detuneBias();
+    detune_offset = us.detuneOffset();
+    for (int v = 0; v < voices; ++v)
     {
-        detune_bias = 1;
-        detune_offset = 0;
-        panL[0] = 1.f;
-        panR[0] = 1.f;
-    }
-    else
-    {
-        detune_bias = (float)2.f / (n_unison - 1.f);
-        detune_offset = -1.f;
-
-        bool odd = voices & 1;
-        float mid = voices * 0.5 - 0.5;
-        int half = voices >> 1;
-        for (int i = 0; i < voices; i++)
-        {
-            float d = fabs((float)i - mid) / mid;
-            if (odd && (i >= half))
-                d = -d;
-            if (i & 1)
-                d = -d;
-
-            panL[i] = (1.f - d);
-            panR[i] = (1.f + d);
-        }
+        us.panLaw(v, panL[v], panR[v]);
     }
 }
 
@@ -207,34 +189,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
 {
     assert(storage);
     first_run = true;
-
-    switch (storage->getPatch().character.val.i)
-    {
-    case 0:
-    {
-        float filt = 1.f - 2.f * 5000.f * samplerate_inv;
-        filt *= filt;
-        CoefB0 = 1.f - filt;
-        CoefB1 = 0.f;
-        CoefA1 = filt;
-    }
-    break;
-    case 1:
-        CoefB0 = 1.f;
-        CoefB1 = 0.f;
-        CoefA1 = 0.f;
-        break;
-    case 2:
-    {
-        float filt = 1.f - 2.f * 5000.f * samplerate_inv;
-        filt *= filt;
-        float A0 = 1.f / (1.f - filt);
-        CoefB0 = 1.f * A0;
-        CoefB1 = -filt * A0;
-        CoefA1 = 0.f;
-    }
-    break;
-    }
+    charFilt.init(storage->getPatch().character.val.i);
 
     osc_out = _mm_set1_ps(0.f);
     osc_out2 = _mm_set1_ps(0.f);
@@ -299,10 +254,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
         dc_uni[i] = 0.f;
         state[i] = 0.f;
         pwidth[i] = limit_range(l_pw.v, 0.001f, 0.999f);
-        driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
-        if (nonzero_init_drift)
-            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftLFO[i].init(nonzero_init_drift);
     }
 }
 
@@ -349,7 +301,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     /*
     ** Detune by a combination of the LFO drift and the unison voice spread.
     */
-    float detune = drift * driftlfo[voice];
+    float detune = drift * driftLFO[voice].val();
     if (n_unison > 1)
         detune += oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) *
                   (detune_bias * (float)voice + detune_offset);
@@ -651,7 +603,7 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
         */
         for (l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+            driftLFO[l].next();
         }
 
         for (int s = 0; s < BLOCK_SIZE_OS; s++)
@@ -689,7 +641,7 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
 
         for (l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
+            driftLFO[l].next();
 
             /*
             ** Either while sync is active and we need to fill syncstate traversal,
@@ -739,9 +691,9 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
     ** The Coefs here are from the character filter, and are set in ::init
     */
     const __m128 mmone = _mm_set_ss(1.0f);
-    __m128 char_b0 = _mm_load_ss(&CoefB0);
-    __m128 char_b1 = _mm_load_ss(&CoefB1);
-    __m128 char_a1 = _mm_load_ss(&CoefA1);
+    __m128 char_b0 = _mm_load_ss(&(charFilt.CoefB0));
+    __m128 char_b1 = _mm_load_ss(&(charFilt.CoefB1));
+    __m128 char_a1 = _mm_load_ss(&(charFilt.CoefA1));
 
     for (k = 0; k < BLOCK_SIZE_OS; k++)
     {

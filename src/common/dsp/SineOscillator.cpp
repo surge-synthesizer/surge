@@ -73,42 +73,24 @@ SineOscillator::SineOscillator(SurgeStorage *storage, OscillatorStorage *oscdata
 
 void SineOscillator::prepare_unison(int voices)
 {
-    out_attenuation_inv = sqrt((float)voices);
-    out_attenuation = 0.8 / out_attenuation_inv + 0.2 / voices;
+    auto us = Surge::Oscillator::UnisonSetup<float>(voices);
+
+    out_attenuation_inv = us.attenuation_inv();
+    ;
+    out_attenuation = 1.0f / out_attenuation_inv;
+
+    detune_bias = us.detuneBias();
+    detune_offset = us.detuneOffset();
+    for (int v = 0; v < voices; ++v)
+    {
+        us.panLaw(v, panL[v], panR[v]);
+    }
+
     // normalize to be sample rate independent amount of time for 50 44.1k samples
     dplaying = 1.0 / 50.0 * 44100 / samplerate;
-
-    if (voices == 1)
-    {
-        detune_bias = 1;
-        detune_offset = 0;
-        panL[0] = 1.f;
-        panR[0] = 1.f;
-        playingramp[0] = 1;
-    }
-    else
-    {
-        detune_bias = (float)2.f / (n_unison - 1.f);
-        detune_offset = -1.f;
-
-        bool odd = voices & 1;
-        float mid = voices * 0.5 - 0.5;
-        int half = voices >> 1;
-        for (int i = 0; i < voices; i++)
-        {
-            float d = fabs((float)i - mid) / mid;
-            if (odd && (i >= half))
-                d = -d;
-            if (i & 1)
-                d = -d;
-
-            panL[i] = (1.f - d);
-            panR[i] = (1.f + d);
-
-            playingramp[i] = 0;
-        }
-        playingramp[0] = 1;
-    }
+    playingramp[0] = 1;
+    for (int i = 1; i < voices; ++i)
+        playingramp[i] = 0;
 }
 
 void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
@@ -127,10 +109,7 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
         phase[i] = // phase in range -PI to PI
             (oscdata->retrigger.val.b || is_display) ? 0.f : 2.0 * M_PI * rand() / RAND_MAX - M_PI;
         lastvalue[i] = 0.f;
-        driftlfo[i] = 0.f;
-        driftlfo2[i] = 0.f;
-        if (nonzero_init_drift)
-            driftlfo2[i] = 0.0005 * ((float)rand() / (float)(RAND_MAX));
+        driftLFO[i].init(nonzero_init_drift);
         sine[i].set_phase(phase[i]);
     }
 
@@ -148,6 +127,12 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 
     hp.coeff_HP(hp.calc_omega(oscdata->p[sine_lowcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
     lp.coeff_LP2B(lp.calc_omega(oscdata->p[sine_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
+
+    charFilt.init(storage->getPatch().character.val.i);
+    if (storage->getPatch().streamingRevision <= 15)
+    {
+        charFilt.doFilter = false;
+    }
 }
 
 SineOscillator::~SineOscillator() {}
@@ -603,8 +588,7 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
 
     for (int l = 0; l < n_unison; l++)
     {
-        driftlfo[l] = drift_noise(driftlfo2[l]);
-        detune = drift * driftlfo[l];
+        detune = drift * driftLFO[l].next();
 
         if (n_unison > 1)
         {
@@ -777,8 +761,7 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
     {
         for (int l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
-            detune = drift * driftlfo[l];
+            detune = drift * driftLFO[l].next();
 
             if (n_unison > 1)
             {
@@ -837,9 +820,7 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
     {
         for (int l = 0; l < n_unison; l++)
         {
-            driftlfo[l] = drift_noise(driftlfo2[l]);
-
-            detune = drift * driftlfo[l];
+            detune = drift * driftLFO[l].next();
 
             if (n_unison > 1)
                 detune += oscdata->p[sine_unison_detune].get_extended(localcopy[id_detune].f) *
@@ -927,6 +908,19 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
         }
 #undef DOCASE
         applyFilter();
+
+        if (charFilt.doFilter)
+        {
+            if (stereo)
+            {
+                charFilt.process_block_stereo(output, outputR, BLOCK_SIZE_OS);
+            }
+            else
+            {
+                charFilt.process_block(output, BLOCK_SIZE_OS);
+            }
+        }
+
         return;
     }
 
@@ -978,6 +972,18 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
         DOCASE(27)
     }
 #undef DOCASE
+
+    if (charFilt.doFilter)
+    {
+        if (stereo)
+        {
+            charFilt.process_block_stereo(output, outputR, BLOCK_SIZE_OS);
+        }
+        else
+        {
+            charFilt.process_block(output, BLOCK_SIZE_OS);
+        }
+    }
 }
 
 void SineOscillator::init_ctrltypes()
