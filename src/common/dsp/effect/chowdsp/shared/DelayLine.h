@@ -40,7 +40,7 @@ template <typename SampleType> class DelayLineBase
     virtual void setDelay(SampleType /* newDelayInSamples */) = 0;
     virtual SampleType getDelay() const = 0;
 
-    virtual void prepare(double sampleRate, size_t blockSize, size_t nChannels) = 0;
+    virtual void prepare(double sampleRate, size_t blockSize) = 0;
     virtual void reset() = 0;
 
     virtual void pushSample(size_t /* channel */, SampleType /* sample */) = 0;
@@ -88,7 +88,7 @@ class DelayLine : public DelayLineBase<SampleType>
     DelayLine();
 
     /** Constructor. */
-    explicit DelayLine(size_t maximumDelayInSamples);
+    explicit DelayLine(size_t maximumDelayInSamples, size_t nChannels);
 
     //==============================================================================
     /** Sets the delay in samples. */
@@ -99,7 +99,7 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     /** Initialises the processor. */
-    void prepare(double sampleRate, size_t blockSize, size_t nChannels) override;
+    void prepare(double sampleRate, size_t blockSize) override;
 
     /** Resets the internal state variables of the processor. */
     void reset() override;
