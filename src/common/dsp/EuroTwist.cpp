@@ -14,6 +14,7 @@
 */
 
 #include "EuroTwist.h"
+#include "DebugHelpers.h"
 
 #define TEST
 #ifndef _MSC_VER
@@ -70,7 +71,7 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     std::vector<std::vector<std::string>> engineLabels;
     std::vector<std::string> defaultLabels = {"Harmonics", "Timbre", "Morph", "Aux Mix"};
 
-    EngineDynamicName()
+    EngineDynamicName() noexcept
     {
         engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync Mix"});
         engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation Mix"});
@@ -97,6 +98,9 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
+        if (oscs->type.val.i != ot_eurotwist)
+            return "ERROR";
+
         auto engp = &(oscs->p[EuroTwist::et_engine]);
         auto eng = engp->val.i;
         auto idx = (p - engp);
@@ -118,9 +122,17 @@ EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *l
     patch = std::make_unique<plaits::Patch>();
     int error;
     srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+
     if (error != 0)
     {
         srcstate = nullptr;
+    }
+
+    // FM downsampling with a linear interpolator is absolutely fine
+    fmdownsamplestate = src_new(SRC_LINEAR, 1, &error);
+    if (error != 0)
+    {
+        fmdownsamplestate = nullptr;
     }
 }
 
@@ -159,19 +171,33 @@ void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
         cycleInSamples *= (1.0 + (float)rand() / (float)RAND_MAX);
     }
 
+    memset(fmlagbuffer, 0, (BLOCK_SIZE_OS << 1) * sizeof(float));
+    fmrp = 0;
+    fmwp = (int)(BLOCK_SIZE_OS * 48000 * dsamplerate_os_inv);
+
     process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
 }
 EuroTwist::~EuroTwist()
 {
     if (srcstate)
         srcstate = src_delete(srcstate);
+
+    if (fmdownsamplestate)
+        fmdownsamplestate = src_delete(fmdownsamplestate);
 }
+
+template <bool FM> inline constexpr int getBlockSize() { return 4; }
+
+template <> inline constexpr int getBlockSize<true>() { return 1; }
 
 template <bool FM, bool throwaway>
 void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
                                        int throwawayBlocks)
 {
     if (!srcstate)
+        return;
+
+    if (FM && !fmdownsamplestate)
         return;
 
     pitch = tuningAwarePitch(pitch);
@@ -191,13 +217,40 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
     // for now
     memset((void *)&mod, 0, sizeof(plaits::Modulations));
 
-    constexpr int subblock = 4;
+    constexpr int subblock = getBlockSize<FM>();
     float src_in[subblock][2];
     float src_out[BLOCK_SIZE_OS][2];
 
     SRC_DATA sdata;
     sdata.end_of_input = 0;
     sdata.src_ratio = dsamplerate_os / 48000.0;
+
+    float normFMdepth = 0;
+
+    if (FM)
+    {
+        float dsmaster[BLOCK_SIZE_OS << 2];
+        SRC_DATA fmdata;
+        fmdata.end_of_input = 0;
+        fmdata.src_ratio = 48000.0 / dsamplerate_os; // going INTO the plaits rate
+        fmdata.data_in = master_osc;
+        fmdata.data_out = &(dsmaster[0]);
+        fmdata.input_frames = BLOCK_SIZE_OS;
+        fmdata.output_frames = BLOCK_SIZE_OS << 2;
+        src_process(fmdownsamplestate, &fmdata);
+
+        const float bl = -143.5, bhi = 71.7, oos = 1.0 / (bhi - bl);
+        float adb = limit_range(amp_to_db(FMdepth), bl, bhi);
+        float nfm = (adb - bl) * oos;
+
+        normFMdepth = limit_range(nfm, 0.f, 1.f);
+
+        for (int i = 0; i < fmdata.output_frames_gen; ++i)
+        {
+            fmlagbuffer[fmwp] = dsmaster[i];
+            fmwp = (fmwp + 1) & ((BLOCK_SIZE_OS << 1) - 1);
+        }
+    }
 
     for (int i = 0; i < carrover_size; ++i)
     {
@@ -232,6 +285,18 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
             mod.trigger_patched = true;
         }
 
+        if (FM)
+        {
+            mod.frequency_patched = true;
+            mod.frequency = 45 * fmlagbuffer[fmrp]; // this is in 'notes'
+            fmrp = (fmrp + 1) & ((BLOCK_SIZE_OS << 1) - 1);
+            patch->frequency_modulation_amount = normFMdepth;
+        }
+        else
+        {
+            patch->frequency_modulation_amount = 0;
+        }
+
         voice->Render(*patch, mod, poutput, subblock);
         for (int i = 0; i < subblock; ++i)
         {
@@ -264,7 +329,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
         if (sdata.input_frames_used != subblock)
         {
             // FIXME
-            // std::cout << "DEAL " << std::endl;
+            std::cout << "DEAL " << std::endl;
         }
     }
 
