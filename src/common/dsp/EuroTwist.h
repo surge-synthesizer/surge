@@ -75,7 +75,10 @@ class EuroTwist : public Oscillator
     std::unique_ptr<plaits::Patch> patch;
     std::unique_ptr<stmlib::BufferAllocator> alloc;
     char shared_buffer[16834];
-    SRC_STATE_tag *srcstate;
+    SRC_STATE_tag *srcstate, *fmdownsamplestate;
+    float fmlagbuffer[BLOCK_SIZE_OS << 1];
+    int fmwp, fmrp;
+
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
 
