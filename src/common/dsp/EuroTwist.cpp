@@ -288,7 +288,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
         if (FM)
         {
             mod.frequency_patched = true;
-            mod.frequency = 45 * fmlagbuffer[fmrp]; // this is in 'notes'
+            mod.frequency = 137 * fmlagbuffer[fmrp]; // this is in 'notes'
             fmrp = (fmrp + 1) & ((BLOCK_SIZE_OS << 1) - 1);
             patch->frequency_modulation_amount = normFMdepth;
         }
