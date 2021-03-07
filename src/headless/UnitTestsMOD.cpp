@@ -9,6 +9,7 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
+#include "effect/ModControl.h"
 
 using namespace Surge::Test;
 
@@ -1300,4 +1301,29 @@ TEST_CASE("High Low Latest with splits", "[mod]")
                     compval(surge, 1, 70, 90, 70);
                 }
             }
+}
+
+TEST_CASE("ModLFO is well behaved", "[mod]")
+{
+    for (int m = Surge::ModControl::mod_sine; m <= Surge::ModControl::mod_square; ++m)
+    {
+        DYNAMIC_SECTION("Mod Control Boundsd for type " << m)
+        {
+            for (int tries = 0; tries < 10; ++tries)
+            {
+                float rate = (float)rand() / (float)RAND_MAX * 10;
+                float phase_offset = 0.1 * tries;
+                float depth = 1.0;
+
+                INFO("200 Samples at " << rate << " with po " << phase_offset);
+                Surge::ModControl mc;
+                for (int s = 0; s < 200; ++s)
+                {
+                    mc.pre_process(m, rate, depth, phase_offset);
+                    REQUIRE(mc.value() <= 1.0);
+                    REQUIRE(mc.value() >= -1.0);
+                }
+            }
+        }
+    }
 }
