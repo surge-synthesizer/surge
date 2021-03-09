@@ -301,6 +301,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/FastMath.h
   src/common/dsp/AdsrEnvelope.h
   src/common/dsp/OscillatorBase.h
+  src/common/dsp/OscillatorCommonFunctions.h
   src/common/dsp/SurgeVoiceState.h
   )
 

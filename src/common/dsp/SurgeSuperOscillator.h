@@ -50,7 +50,7 @@ class SurgeSuperOscillator : public AbstractBlitOscillator
         pwidth[MAX_UNISON], pwidth2[MAX_UNISON];
     template <bool is_init> void update_lagvals();
     float pitch;
-    lipol_ps li_hpf, li_DC, li_integratormult;
+    lipol_ps li_hpf, li_DC;
     lag<float> FMdepth, integrator_mult, l_pw, l_pw2, l_shape, l_sub, l_sync;
     int id_pw, id_pw2, id_shape, id_smooth, id_sub, id_sync, id_detune;
     int FMdelay;
