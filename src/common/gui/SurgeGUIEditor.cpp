@@ -3930,11 +3930,32 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
             if (p->ctrltype == ct_amplitude_clipper)
             {
+                std::string sc = std::string("Scene ") + (char)('A' + current_scene);
                 contextMenu->addSeparator(eid++);
-                addCallbackMenu(contextMenu,
-                                Surge::UI::toOSCaseForMenu("Hard Clip Signals Over 0 dBFS"),
-                                [this]() { synth->hardclipEnabled = !synth->hardclipEnabled; });
-                contextMenu->checkEntry(eid, synth->hardclipEnabled);
+                // FIXME - add unified menu here
+                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(sc + " +/- 8 Hard Clip"),
+                                [this]() {
+                                    synth->storage.sceneHardclipMode[current_scene] =
+                                        SurgeStorage::HARDCLIP_TO_EIGHT;
+                                });
+                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
+                                                 SurgeStorage::HARDCLIP_TO_EIGHT);
+                eid++;
+                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(sc + " +/- 1 Hard Clip"),
+                                [this]() {
+                                    synth->storage.sceneHardclipMode[current_scene] =
+                                        SurgeStorage::HARDCLIP_TO_ONE;
+                                });
+                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
+                                                 SurgeStorage::HARDCLIP_TO_ONE);
+                eid++;
+                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(sc + " Bypass Hard Clip"),
+                                [this]() {
+                                    synth->storage.sceneHardclipMode[current_scene] =
+                                        SurgeStorage::BYPASS_HARDCLIP;
+                                });
+                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
+                                                 SurgeStorage::BYPASS_HARDCLIP);
                 eid++;
             }
 
@@ -4063,6 +4084,50 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
         }
     }
     return 0;
+}
+
+void SurgeGUIEditor::effectSettingsBackgroundClick(const CPoint &where)
+{
+    auto effmen = new COptionMenu(CRect(where, CPoint(0, 0)), 0, 0, 0, 0,
+                                  VSTGUI::COptionMenu::kNoDrawStyle |
+                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+    auto msurl = SurgeGUIEditor::helpURLForSpecial("fx-selector");
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+    addCallbackMenu(effmen, "[?] Effect Settings",
+                    [hurl]() { Surge::UserInteractions::openURL(hurl); });
+    effmen->addSeparator();
+    auto hcmen = addCallbackMenu(effmen, "Global +/- 8 Hard Clip", [this]() {
+        this->synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_EIGHT;
+    });
+    hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_EIGHT ||
+                      synth->storage.hardclipMode == SurgeStorage::BYPASS_HARDCLIP);
+    hcmen = addCallbackMenu(effmen, "Global  +/- 1 Hardclip", [this]() {
+        this->synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_ONE;
+    });
+    hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_ONE);
+    for (int i = 0; i < n_scenes; ++i)
+    {
+        std::string sc = std::string("Scene ") + (char)('A' + i);
+        effmen->addSeparator();
+        hcmen = addCallbackMenu(effmen, sc + " +/- 8 Hard Clip", [this, i]() {
+            this->synth->storage.sceneHardclipMode[i] = SurgeStorage::HARDCLIP_TO_EIGHT;
+        });
+        hcmen->setChecked(synth->storage.sceneHardclipMode[i] == SurgeStorage::HARDCLIP_TO_EIGHT);
+        hcmen = addCallbackMenu(effmen, sc + " +/- 1 Hard Clip", [this, i]() {
+            this->synth->storage.sceneHardclipMode[i] = SurgeStorage::HARDCLIP_TO_ONE;
+        });
+        hcmen->setChecked(synth->storage.sceneHardclipMode[i] == SurgeStorage::HARDCLIP_TO_ONE);
+        hcmen = addCallbackMenu(effmen, sc + " Bypass Hard Clip", [this, i]() {
+            this->synth->storage.sceneHardclipMode[i] = SurgeStorage::BYPASS_HARDCLIP;
+        });
+        hcmen->setChecked(synth->storage.sceneHardclipMode[i] == SurgeStorage::BYPASS_HARDCLIP);
+    }
+
+    frame->addView(effmen);
+    effmen->popup();
+    frame->removeView(effmen, true);
 }
 
 void SurgeGUIEditor::valueChanged(CControl *control)

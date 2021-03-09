@@ -1331,6 +1331,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         // We shouldn't need this since all 16s will stream it, but just in case
         storage->tuningApplicationMode = SurgeStorage::RETUNE_MIDI_ONLY;
     }
+
+    // Default to HC28
+    storage->hardclipMode = SurgeStorage::HARDCLIP_TO_EIGHT;
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        storage->sceneHardclipMode[sc] = SurgeStorage::HARDCLIP_TO_EIGHT;
+    }
+
     if (nonparamconfig)
     {
         for (int sc = 0; sc < n_scenes; ++sc)
@@ -1356,6 +1364,23 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
             {
                 storage->tuningApplicationMode = (SurgeStorage::TuningApplicationMode)(tv);
+            }
+        }
+        auto *hcs = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("hardclipmodes"));
+        if (hcs)
+        {
+            int tv;
+            if (hcs->QueryIntAttribute("global", &tv) == TIXML_SUCCESS)
+            {
+                storage->hardclipMode = (SurgeStorage::HardClipMode)tv;
+            }
+            for (int sc = 0; sc < n_scenes; ++sc)
+            {
+                auto an = std::string("sc") + std::to_string(sc);
+                if (hcs->QueryIntAttribute(an.c_str(), &tv) == TIXML_SUCCESS)
+                {
+                    storage->sceneHardclipMode[sc] = (SurgeStorage::HardClipMode)tv;
+                }
             }
         }
     }
@@ -2108,12 +2133,22 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mvv(mvname.c_str());
         mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoicePriorityMode);
         nonparamconfig.InsertEndChild(mvv);
-
-        // Revision 16 adds the TAM
-        TiXmlElement tam("tuningApplicationMode");
-        tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
-        nonparamconfig.InsertEndChild(tam);
     }
+
+    TiXmlElement hcs("hardclipmodes");
+    hcs.SetAttribute("global", (int)(storage->hardclipMode));
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        auto an = std::string("sc") + std::to_string(sc);
+        hcs.SetAttribute(an.c_str(), (int)(storage->sceneHardclipMode[sc]));
+    }
+    nonparamconfig.InsertEndChild(hcs);
+
+    // Revision 16 adds the TAM
+    TiXmlElement tam("tuningApplicationMode");
+    tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
+    nonparamconfig.InsertEndChild(tam);
+
     patch.InsertEndChild(nonparamconfig);
 
     TiXmlElement eod("extraoscdata");

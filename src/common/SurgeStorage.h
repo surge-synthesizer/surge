@@ -934,6 +934,15 @@ class alignas(16) SurgeStorage
     std::recursive_mutex modRoutingMutex;
     Wavetable WindowWT;
 
+    // hardclip
+    enum HardClipMode
+    {
+        HARDCLIP_TO_EIGHT = 1,
+        HARDCLIP_TO_ONE,
+        BYPASS_HARDCLIP // scene only
+    } hardclipMode = HARDCLIP_TO_EIGHT,
+      sceneHardclipMode[n_scenes] = {HARDCLIP_TO_EIGHT, HARDCLIP_TO_EIGHT};
+
     float note_to_pitch(float x);
     float note_to_pitch_inv(float x);
     float note_to_pitch_ignoring_tuning(float x);

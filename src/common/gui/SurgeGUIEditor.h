@@ -183,6 +183,8 @@ class SurgeGUIEditor : public EditorType,
     void refresh_mod();
     void forceautomationchangefor(Parameter *p);
 
+    void effectSettingsBackgroundClick(const VSTGUI::CPoint &where);
+
 #if TARGET_VST3
   public:
     /**
