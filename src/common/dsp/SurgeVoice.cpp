@@ -49,7 +49,13 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
 
     if (storage->oddsound_mts_client && storage->oddsound_mts_active)
     {
-        auto rkey = MTS_RetuningInSemitones(storage->oddsound_mts_client, key, channel);
+        if (storage->oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT ||
+            key != keyRetuningForKey)
+        {
+            keyRetuningForKey = key;
+            keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key, channel);
+        }
+        auto rkey = keyRetuning;
 
         return res + rkey;
     }
@@ -93,6 +99,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     age = 0;
     age_release = 0;
     state.key = key;
+    state.keyRetuningForKey = -1000;
     state.channel = channel;
 
     state.velocity = velocity;

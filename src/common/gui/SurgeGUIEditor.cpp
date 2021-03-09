@@ -5777,8 +5777,24 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
         mm = addCallbackMenu(tuningSubMenu, mtsScale, []() {});
         mm->setEnabled(false);
-        // a 'turn mts off' menu
 
+        // an MTS tuning tyode tygle
+        mm = addCallbackMenu(
+            tuningSubMenu, Surge::UI::toOSCaseForMenu("Query Tuning Only At Note On"), [this]() {
+                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                }
+                else
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                }
+            });
+        mm->setEnabled(true);
+        mm->setChecked(this->synth->storage.oddsoundRetuneMode ==
+                       SurgeStorage::RETUNE_NOTE_ON_ONLY);
+
+        // a 'turn mts off' menu
         addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Disconnect from MTS-ESP"),
                         [this]() {
                             auto q = this->synth->storage.oddsound_mts_client;

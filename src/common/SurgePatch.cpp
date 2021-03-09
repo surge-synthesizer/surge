@@ -1873,6 +1873,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
                 dawExtraState.monoPedalMode = ival;
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oddsoundRetuneMode"));
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+                dawExtraState.oddsoundRetuneMode = ival;
+            else
+                dawExtraState.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("hasTuning"));
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
             {
@@ -2280,6 +2286,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mpm("monoPedalMode");
         mpm.SetAttribute("v", dawExtraState.monoPedalMode);
         dawExtraXML.InsertEndChild(mpm);
+
+        TiXmlElement osd("oddsoundRetuneMode");
+        osd.SetAttribute("v", dawExtraState.oddsoundRetuneMode);
+        dawExtraXML.InsertEndChild(osd);
 
         TiXmlElement tun("hasTuning");
         tun.SetAttribute("v", dawExtraState.hasTuning ? 1 : 0);
