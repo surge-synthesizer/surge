@@ -49,24 +49,23 @@
 **   phase space coverage, so at higher frequency we need to convolute more
 **   often (cover more phase space at constant sample space).
 ** - in our process loop, we extract those samples from the buffer to the output.
-**   At any given convolution moment, we store into the buffer at the state variable
-**   bufpos.
+**   At any given convolution moment, we store into the buffer at the state variable bufpos.
 ** - If we have extracted our set of samples, we re-generate the next chunk by convoluting.
 **
 ** So basically we have a couple of arrows pointing around. oscstate, which shows us
 ** how much phase space is covered up to bufpos of buffer and the simple
-** march of time that comes from calling process_block. When we are out of state
+** march of time that comes from calling ::process_block. When we are out of state
 ** space (namely, oscstate < BLOCK_SIZE * wavelength) we need to reconvolve and
-** fill our buffer and increase our oscstate pointer. So in the process block it
-** looks like oscstate counts down and convolute pushes it up, but what really
-** is happening is oscstate counts down because bufpos moves forwards, and
+** fill our buffer and increase our oscstate pointer. So in ::process_block it
+** looks like oscstate counts down and convolute pushes it up, but what is really
+** happening is: oscstate counts down because bufpos moves forwards, and
 ** convolute gives us more valid buffer ahead of us. When we're beyond the end of the
 ** oscillator buffer we need to wrap our pointer.
 **
 ** The storage buffer is sized so there is enough room to run a FIR model of the DAC
 ** forward in time from the point of the current buffer. This means when we wrap
 ** the buffer position we need to copy the back-end FIR buffer into the front of the new
-** buffer. Other than that subtletly the buffer is just a ring.
+** buffer. Other than that subtletly, the buffer is just a ring.
 **
 ** There's lots more details but that's the basic operating model you will see in
 ** ::process_block once you know that ::convolute generates the next blast
@@ -91,9 +90,9 @@
 ** rather than just taking that signal, increase the signal by the sinc-smeared energy
 ** of the change in signal.
 **
-** Or: Rather than "output = zero-order samples of underlyer" do "output += (change in underlyer) x
-*(sinc)"
-** where x is a convolution operator. Since sinc has infinite support, though, we can't use that
+** Or: Rather than "output = zero-order samples of underlyer", do:
+**     output += (change in underlyer) x (sinc)
+** where x is the convolution operator. Since sinc has infinite support, though, we can't use that
 ** really, so have to use windowed sinc.
 **
 ** Once we have committed to convolving an exact but differently aligned impulse stream into
@@ -103,55 +102,40 @@
 ** So the convolution has to manage a couple of dimensions of time. When we call ::convolute,
 ** remember, it is because we don't have enough buffer phase space computed for our current block.
 ** So ::convolute is filling a block in the "future" of our current pointer. That means we can
-** actually use a slightly non-causal filter into the oscstate future. So mechanically we end
-** up implementing "oscbuffer [i + futurelook] = sum(impulse chage) * impulse[i]"
+** actually use a slightly non-causal filter into the oscstate future. So, mechanically,
+** we end up implementing:
+**     oscbuffer [i + futurelook] = sum(impulse chage) * impulse[i]
 **
 ** Surge adds one last wrinkle, which is that impulse function depends on how far between a sample
-** you are. The peak of the function should happen exactly at the point intra-sample. To do that
-** it makes two tables. The first is a table of the windowed sinc at 256 steps between 0 and 1
-*sample.
+** you are. The peak of the function should happen exactly at the point intra-sample. To do that it
+** makes two tables. The first is a table of the windowed sinc at 256 steps between 0 and 1 sample.
 ** The second is the derivative of that windowed function with respect to position which allows us
-** to make a first order Taylor correction to the window. Somewhat confusingly, but very
-*efficiently,
+** to make a first order Taylor correction to the window. Somewhat confusingly, but very efficiently
 ** these two tables are stored in one data structure "sinctable", with an indexing structure that
-*gives
-** a window, a window derivative, the next window, the next window derivative, etc...
+** gives a window, a window derivative, the next window, the next window derivative, etc...
 **
 ** But the end result is we do a calculation which amounts to:
 **
-** while ( our remaining osc state doesn't cover enough phase space ) <<- this is in process block
+** while (our remaining oscstate doesn't cover enough phase space) <<- this is in ::process_block
 **    convolute <<- do this call
-**      Figure out our next impulse and change in impulse. Call that change g.
-**      Figure out how far in the future that impulse spans. Call that delay.
-**      Fill in the oscbuffer in that future with the windowed impulse
-**          oscbuffer[pos + i] = oscbuffer[pos + i] + g * ( sincwindow[i] + dt * dsincwindow[i] )
-**      advance oscstate by the amount of phase space we have covered
+**    Figure out our next impulse and change in impulse. Call that change g.
+**    Figure out how far in the future that impulse spans. Call that delay.
+**    Fill in the oscbuffer in that future with the windowed impulse
+**        oscbuffer[pos + i] = oscbuffer[pos + i] + g * (sincwindow[i] + dt * dsincwindow[i])
+**    advance oscstate by the amount of phase space we have covered
 **
-** Unfortunately, to do this efficiently the code is a bit inscrutable, hence this comment. Also
+** Unfortunately, to do this efficiently, the code is a bit inscrutable, hence this comment. Also
 ** some of the variable names (lipol128 is not an obvious name for the 'dt' above) makes the code
-*hard
-** to follow. As such, in this implementation I've added quite a lot of comments to the ::convolute
-*method.
+** hard to follow. As such, in this implementation I've added quite a lot of comments to the
+** ::convolute method.
 **
 ** At the final stage, the system layers on a simple 3-coefficient one delay biquad filter
 ** into the stream based on Character parameter, copies the buffer to the output, and then manages
-*pointer
-** wraparounds and stuff. That's all pretty mechanical.
+** pointer wraparounds and stuff. That's all pretty mechanical.
 **
 */
 
 using namespace std;
-
-// const float integrator_hpf = 0.99999999f;
-// const float integrator_hpf = 0.9992144f;		// 44.1 kHz
-// const float integrator_hpf = 0.9964f;		// 44.1 kHz
-// const float integrator_hpf = 0.9982f;		// 44.1 kHz	 Magical Moog frequency
-
-// 290 samples to fall by 50% (British)  (Is probably a 2-pole HPF)
-// 202 samples (American)
-// const float integrator_hpf = 0.999f;
-// pow(ln(0.5)/(samplerate/50hz)
-const float hpf_cycle_loss = 0.995f;
 
 AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                                pdata *localcopy)
@@ -293,8 +277,8 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     /*
     ** I've carefully documented the non-FM non-sync case here. The other cases are
     ** similar. See the comment above. Remember, this function exists to calculate
-    ** the next impulse in our digital sequence, which occurs at time 'oscstate'
-    ** convolve it into our output stream, and advance out phase state space by
+    ** the next impulse in our digital sequence, which occurs at time 'oscstate',
+    ** convolve it into our output stream, and advance our phase state space by
     ** the amount just covered.
     */
 
@@ -303,8 +287,10 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     */
     float detune = drift * driftLFO[voice].val();
     if (n_unison > 1)
+    {
         detune += oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) *
                   (detune_bias * (float)voice + detune_offset);
+    }
 
     float wf = l_shape.v;
     float sub = l_sub.v;
@@ -319,20 +305,28 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     if ((l_sync.v > 0) && syncstate[voice] < oscstate[voice])
     {
         if (FM)
+        {
             ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv * FMmul_inv));
+        }
         else
+        {
             ipos = (unsigned int)(p24 * (syncstate[voice] * pitchmult_inv));
+        }
 
         float t;
 
         // See the extensive comment below
         if (!oscdata->p[sso_unison_detune].absolute)
+        {
             t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
+        }
         else
-            // Copy the mysterious *2 and drop the +sync
+        {
+            // Copy the mysterious * 2 and drop the +sync
             t = storage->note_to_pitch_inv_ignoring_tuning(
                     detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443) *
                 2;
+        }
 
         state[voice] = 0;
         last_level[voice] += dc_uni[voice] * (oscstate[voice] - syncstate[voice]);
@@ -344,9 +338,13 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     else
     {
         if (FM)
+        {
             ipos = (unsigned int)(p24 * (oscstate[voice] * pitchmult_inv * FMmul_inv));
+        }
         else
+        {
             ipos = (unsigned int)(p24 * (oscstate[voice] * pitchmult_inv));
+        }
     }
 
     /*
@@ -356,9 +354,13 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     unsigned int delay;
 
     if (FM)
+    {
         delay = FMdelay;
+    }
     else
+    {
         delay = ((ipos >> 24) & 0x3f);
+    }
 
     /*
     ** m and lipol128 are the integer and fractional part of the number of 256ths
@@ -379,6 +381,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     const float s = 0.99952f;
     float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
     float t;
+
     if (oscdata->p[sso_unison_detune].absolute)
     {
         /*
@@ -419,10 +422,14 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
         // With extended range and low frequencies we can have an implied negative frequency; cut
         // that off by setting a lower bound here.
         if (t < 0.01)
+        {
             t = 0.01;
+        }
     }
     else
+    {
         t = storage->note_to_pitch_inv_tuningctr(detune + sync);
+    }
 
     float t_inv = rcp(t);
     float g = 0.0, gR = 0.0;
@@ -468,6 +475,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     };
 
     g *= out_attenuation;
+
     if (stereo)
     {
         gR = g * panR[voice];
@@ -525,19 +533,33 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     dcbuffer[(bufpos + FIRoffset + delay)] += (dc_uni[voice] - olddc);
 
     if (state[voice] & 1)
+    {
         rate[voice] = t * (1.0 - pwidth[voice]);
+    }
     else
+    {
         rate[voice] = t * pwidth[voice];
+    }
 
     if ((state[voice] + 1) & 2)
+    {
         rate[voice] *= (2.0f - pwidth2[voice]);
+    }
     else
+    {
         rate[voice] *= pwidth2[voice];
+    }
 
     oscstate[voice] += rate[voice];
     oscstate[voice] = max(0.f, oscstate[voice]);
     state[voice] = (state[voice] + 1) & 3;
 }
+
+// 290 samples to fall by 50% (British)  (Is probably a 2-pole HPF)
+// 202 samples (American)
+// const float integrator_hpf = 0.999f;
+// pow(ln(0.5)/(samplerate/50hz)
+const float hpf_cycle_loss = 0.995f;
 
 template <bool is_init> void SurgeSuperOscillator::update_lagvals()
 {
@@ -547,13 +569,13 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
     l_shape.newValue(limit_range(localcopy[id_shape].f, -1.f, 1.f));
     l_sub.newValue(limit_range(localcopy[id_sub].f, 0.f, 1.f));
 
+    // keytracked highpass filter that deforms the mathematically perfect BLIT waveforms
     auto pp = storage->note_to_pitch_tuningctr(pitch + l_sync.v);
     float invt = 4.f * min(1.0, (8.175798915 * pp * dsamplerate_os_inv));
-    float hpf2 = min(integrator_hpf,
-                     powf(hpf_cycle_loss, invt)); // TODO ACHTUNG/WARNING! Make a lookup table
+    // TODO: Make a lookup table
+    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt));
 
     li_hpf.set_target(hpf2);
-    // li_integratormult.set_target(invt);
 
     if (is_init)
     {
@@ -565,7 +587,6 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
         li_DC.instantize();
 
         li_hpf.instantize();
-        li_integratormult.instantize();
     }
 }
 
@@ -580,9 +601,8 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
     this->drift = drift;
     pitchmult_inv =
         Max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
-
-    pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal approximation is
-                                     // not precise enough
+    // This must be a real division, reciprocal approximation is not precise enough
+    pitchmult = 1.f / pitchmult_inv;
 
     int k, l;
 
@@ -625,6 +645,7 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
                 }
 
                 oscstate[l] -= a;
+
                 if (l_sync.v > 0)
                 {
                     syncstate[l] -= a;
@@ -660,6 +681,7 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
             ** oscillator and sync state
             */
             oscstate[l] -= a;
+
             if (l_sync.v > 0)
             {
                 syncstate[l] -= a;
@@ -771,8 +793,12 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
     ** And clean up and advance our buffer pointer
     */
     clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+
     if (stereo)
+    {
         clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
+    }
+
     clear_block(&dcbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
 
     bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
@@ -785,6 +811,7 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
     {
         __m128 overlap[FIRipol_N >> 2], dcoverlap[FIRipol_N >> 2], overlapR[FIRipol_N >> 2];
         const __m128 zero = _mm_setzero_ps();
+
         for (k = 0; k < (FIRipol_N); k += 4)
         {
             overlap[k >> 2] = _mm_load_ps(&oscbuffer[OB_LENGTH + k]);
@@ -803,5 +830,6 @@ void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo,
             }
         }
     }
+
     first_run = false;
 }

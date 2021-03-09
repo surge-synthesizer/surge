@@ -49,6 +49,7 @@ class WindowOscillator : public Oscillator
   private:
     int IOutputL alignas(16)[BLOCK_SIZE_OS];
     int IOutputR alignas(16)[BLOCK_SIZE_OS];
+
     struct
     {
         unsigned int Pos[MAX_UNISON];
@@ -56,9 +57,9 @@ class WindowOscillator : public Oscillator
         unsigned int Ratio[MAX_UNISON];
         unsigned int Table[MAX_UNISON];
         unsigned int FormantMul[MAX_UNISON];
-        unsigned int DispatchDelay[MAX_UNISON]; // samples until playback should start (for
-                                                // per-sample scheduling)
         unsigned char Gain[MAX_UNISON][2];
+        // samples until playback should start (for per-sample scheduling)
+        unsigned int DispatchDelay[MAX_UNISON];
         Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 
         int FMRatio[MAX_UNISON][BLOCK_SIZE_OS];
