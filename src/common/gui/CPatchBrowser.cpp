@@ -123,6 +123,11 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
     else
     {
+        // 40 is based on current count of factory+3rd party folders, plus headers
+        // this makes user patches end up in the second column
+        // tweak this number if we add more 3rd party banks!
+        contextMenu->setNbItemsPerColumn(40);
+
         auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
         factory_add->setEnabled(0);
 
