@@ -29,6 +29,10 @@ struct SurgeVoiceState
     float portasrc_key, portaphase;
     bool porta_doretrigger;
 
+    // These items support the tuning-snap mode in MTS mode
+    float keyRetuning;
+    int keyRetuningForKey = -1000;
+
     // note that this does not replace the regular pitch bend modulator, only used to smooth MPE
     // pitch
     ControllerModulationSource mpePitchBend;

@@ -710,6 +710,7 @@ struct DAWExtraStateStorage
     std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
 
     int monoPedalMode = 0;
+    int oddsoundRetuneMode = 0;
 };
 
 struct PatchTuningStorage
@@ -1005,6 +1006,11 @@ class alignas(16) SurgeStorage
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active;
     uint32_t oddsound_mts_on_check = 0;
+    enum OddsoundRetuneMode
+    {
+        RETUNE_CONSTANT = 0,
+        RETUNE_NOTE_ON_ONLY = 1
+    } oddsoundRetuneMode = RETUNE_CONSTANT;
 
     /*
      * If we tune at keyboard or with MTS, we don't reset the internal tuning table.

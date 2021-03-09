@@ -3720,6 +3720,7 @@ void SurgeSynthesizer::populateDawExtraState()
     }
 
     storage.getPatch().dawExtraState.monoPedalMode = storage.monoPedalMode;
+    storage.getPatch().dawExtraState.oddsoundRetuneMode = storage.oddsoundRetuneMode;
 }
 
 void SurgeSynthesizer::loadFromDawExtraState()
@@ -3731,6 +3732,8 @@ void SurgeSynthesizer::loadFromDawExtraState()
         storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
 
     storage.monoPedalMode = (MonoPedalMode)storage.getPatch().dawExtraState.monoPedalMode;
+    storage.oddsoundRetuneMode =
+        (SurgeStorage::OddsoundRetuneMode)storage.getPatch().dawExtraState.oddsoundRetuneMode;
 
     if (storage.getPatch().dawExtraState.hasTuning)
     {
