@@ -3548,20 +3548,36 @@ void SurgeSynthesizer::process()
     // TODO: FIX SCENE ASSUMPTION
     if (play_scene[0])
     {
-        if (hardclipEnabled)
+        switch (storage.sceneHardclipMode[0])
         {
+        case SurgeStorage::HARDCLIP_TO_EIGHT:
             hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+            break;
+        case SurgeStorage::HARDCLIP_TO_ONE:
+            hardclip_block(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+            hardclip_block(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+            break;
+        case SurgeStorage::BYPASS_HARDCLIP:
+            break;
         }
         halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
     }
 
     if (play_scene[1])
     {
-        if (hardclipEnabled)
+        switch (storage.sceneHardclipMode[1])
         {
+        case SurgeStorage::HARDCLIP_TO_EIGHT:
             hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+            break;
+        case SurgeStorage::HARDCLIP_TO_ONE:
+            hardclip_block(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+            hardclip_block(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+            break;
+        case SurgeStorage::BYPASS_HARDCLIP:
+            break;
         }
         halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
     }
@@ -3666,16 +3682,37 @@ void SurgeSynthesizer::process()
     vu_peak[0] = max(vu_peak[0], get_absmax(output[0], BLOCK_SIZE_QUAD));
     vu_peak[1] = max(vu_peak[1], get_absmax(output[1], BLOCK_SIZE_QUAD));
 
-    hardclip_block8(output[0], BLOCK_SIZE_QUAD);
-    hardclip_block8(output[1], BLOCK_SIZE_QUAD);
+    switch (storage.hardclipMode)
+    {
+    case SurgeStorage::HARDCLIP_TO_EIGHT:
+    case SurgeStorage::BYPASS_HARDCLIP: // bypass is not valid for main hardclip
+        hardclip_block8(output[0], BLOCK_SIZE_QUAD);
+        hardclip_block8(output[1], BLOCK_SIZE_QUAD);
+        break;
 
+    case SurgeStorage::HARDCLIP_TO_ONE:
+        hardclip_block(output[0], BLOCK_SIZE_QUAD);
+        hardclip_block(output[1], BLOCK_SIZE_QUAD);
+        break;
+    }
     // since the sceneout is now routable we also need to mute and clip it
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         amp.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
         amp_mute.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
-        hardclip_block8(sceneout[sc][0], BLOCK_SIZE_QUAD);
-        hardclip_block8(sceneout[sc][1], BLOCK_SIZE_QUAD);
+
+        switch (storage.hardclipMode)
+        {
+        case SurgeStorage::HARDCLIP_TO_EIGHT:
+        case SurgeStorage::BYPASS_HARDCLIP:
+            hardclip_block8(sceneout[sc][0], BLOCK_SIZE_QUAD);
+            hardclip_block8(sceneout[sc][1], BLOCK_SIZE_QUAD);
+            break;
+        case SurgeStorage::HARDCLIP_TO_ONE:
+            hardclip_block(sceneout[sc][0], BLOCK_SIZE_QUAD);
+            hardclip_block(sceneout[sc][1], BLOCK_SIZE_QUAD);
+            break;
+        }
     }
 }
 

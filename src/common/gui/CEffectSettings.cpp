@@ -340,6 +340,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint &where, const CButtonState &
             return kMouseEventHandled;
         }
 
+        bool foundPoint = false;
         for (int i = 0; i < n_fx_slots; i++)
         {
             CRect size = getViewSize();
@@ -358,12 +359,24 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint &where, const CButtonState &
                     current = i;
                 }
 
+                foundPoint = true;
                 invalid();
             }
         }
 
-        if (listener)
-            listener->valueChanged(this);
+        if (foundPoint)
+        {
+            if (listener)
+                listener->valueChanged(this);
+        }
+        else
+        {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            if (sge)
+            {
+                sge->effectSettingsBackgroundClick(where);
+            }
+        }
     }
 
     return kMouseEventHandled;

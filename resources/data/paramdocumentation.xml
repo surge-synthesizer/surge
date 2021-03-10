@@ -21,6 +21,7 @@
   <special id="internalmod-modbutton" help_url="#internal-modulators"/>
   <special id="other-modbutton" help_url="#voice-and-note-properties"/>
   <special id="lfo-presets" help_url="#lfo-presets"/>
+  <special id="fx-selector" help_url="#fx-section"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>
