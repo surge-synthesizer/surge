@@ -46,7 +46,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                                       0, true, Surge::ParamConfig::kHorizontal));
         // TODO don't store in the patch ?
         param_ptr.push_back(volume.assign(p_id.next(), 0, "volume", "Global Volume",
-                                          ct_decibel_attenuation,
+                                          ct_decibel_attenuation_clipper,
                                           Surge::Skin::Global::master_volume, 0, cg_GLOBAL, 0, true,
                                           Surge::ParamConfig::kHorizontal | kEasy));
     }

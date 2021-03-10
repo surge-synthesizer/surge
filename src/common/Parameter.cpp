@@ -519,6 +519,7 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0;
         break;
     case ct_decibel_attenuation:
+    case ct_decibel_attenuation_clipper:
         valtype = vt_float;
         val_min.f = -48;
         val_max.f = 0;
@@ -1158,6 +1159,7 @@ void Parameter::set_type(int ctrltype)
 
     case ct_decibel:
     case ct_decibel_attenuation:
+    case ct_decibel_attenuation_clipper:
     case ct_decibel_attenuation_large:
     case ct_decibel_fmdepth:
     case ct_decibel_narrow:
@@ -1366,6 +1368,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_decibel_narrow_short_extendable:
         case ct_decibel_extra_narrow:
         case ct_decibel_attenuation:
+        case ct_decibel_attenuation_clipper:
         case ct_decibel_attenuation_large:
         case ct_decibel_fmdepth:
         case ct_decibel_extendable:
@@ -3254,6 +3257,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_decibel_extra_narrow:
     case ct_decibel_extra_narrow_deactivatable:
     case ct_decibel_attenuation:
+    case ct_decibel_attenuation_clipper:
     case ct_decibel_attenuation_large:
     case ct_decibel_fmdepth:
     case ct_decibel_extendable:
