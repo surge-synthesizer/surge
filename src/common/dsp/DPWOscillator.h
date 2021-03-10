@@ -44,6 +44,7 @@ class DPWOscillator : public Oscillator
     enum dpw_submask
     {
         dpw_subone = 1U << 10,
+        dpw_subskipsync = 1U << 11,
     };
 
     static constexpr int sigbuf_len = 6;

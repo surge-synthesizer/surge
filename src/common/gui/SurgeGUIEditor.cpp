@@ -3556,6 +3556,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                     p->deform_type = (p->deform_type & 0xFFF0) | m;
                                     synth->refresh_editor = true;
                                 });
+
                             mtm->setChecked((p->deform_type & 0x0F) == m);
                             eid++;
                         }
@@ -3563,20 +3564,49 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         contextMenu->addSeparator();
                         eid++;
 
-                        int val = DPWOscillator::dpw_submask::dpw_subone;
+                        int subosc = DPWOscillator::dpw_submask::dpw_subone;
 
                         auto mtm = addCallbackMenu(
                             contextMenu, Surge::UI::toOSCaseForMenu("Sub-oscillator Mode"),
-                            [p, val, this]() {
-                                // p->deform_type = m;
-                                auto uval = val;
-                                if (p->deform_type & val)
-                                    uval = 0;
-                                p->deform_type = (p->deform_type & 0xF) | uval;
+                            [p, subosc, this]() {
+                                auto usubosc = subosc;
+                                int usubskipsync =
+                                    p->deform_type & DPWOscillator::dpw_submask::dpw_subskipsync;
+
+                                if (p->deform_type & subosc)
+                                {
+                                    usubosc = 0;
+                                }
+
+                                p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
 
                                 synth->refresh_editor = true;
                             });
-                        mtm->setChecked((p->deform_type & val));
+
+                        mtm->setChecked((p->deform_type & subosc));
+                        eid++;
+
+                        int subskipsync = DPWOscillator::dpw_submask::dpw_subskipsync;
+
+                        auto skp = addCallbackMenu(
+                            contextMenu,
+                            Surge::UI::toOSCaseForMenu("Disable Hardsync in Sub-oscillator Mode"),
+                            [p, subskipsync, this]() {
+                                auto usubskipsync = subskipsync;
+                                int usubosc =
+                                    p->deform_type & DPWOscillator::dpw_submask::dpw_subone;
+
+                                if (p->deform_type & subskipsync)
+                                {
+                                    usubskipsync = 0;
+                                }
+
+                                p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
+
+                                synth->refresh_editor = true;
+                            });
+
+                        skp->setChecked((p->deform_type & subskipsync));
                         eid++;
                     }
                     default:
