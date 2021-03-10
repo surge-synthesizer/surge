@@ -202,6 +202,9 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
     double sBuff alignas(16)[4] = {0, 0, 0, 0}, sOffBuff alignas(16)[4] = {0, 0, 0, 0},
                  triBuff alignas(16)[4] = {0, 0, 0, 0}, phases alignas(16)[4] = {0, 0, 0, 0};
 
+    bool subsyncskip =
+        oscdata->p[dpw_tri_mix].deform_type & DPWOscillator::dpw_submask::dpw_subskipsync;
+
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         double vL = 0.0, vR = 0.0;
@@ -223,7 +226,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
             {
                 pfm += fmPhaseShift;
 
-                // Have to use Floor/Ceil here because FM could be big
+                // Have to use floor/ceil here because FM could be big
                 if (pfm > 1)
                 {
                     pfm -= floor(pfm);
@@ -240,7 +243,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
 
             for (int s = 0; s < 3; ++s)
             {
-                // Saw Component (p^3 - p) / 6
+                // Saw component (p^3 - p) / 6
                 double p01 = phases[s];
                 double p = (p01 - 0.5) * 2;
                 double p3 = p * p * p;
@@ -356,7 +359,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
         if (subOctave)
         {
             auto dp = subdpbase.v;
-            auto dsp = subdpsbase.v;
+            auto dsp = ((1 - subsyncskip) * subdpsbase.v) + (subsyncskip * dp);
 
             for (int s = 0; s < 3; ++s)
             {
@@ -459,9 +462,13 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
         cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
         multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
     }
+
     bool subOct = false;
+
     if (cachedDeform & dpw_subone)
+    {
         subOct = true;
+    }
 
     if (!FM)
     {
