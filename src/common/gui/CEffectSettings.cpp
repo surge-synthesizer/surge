@@ -374,7 +374,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint &where, const CButtonState &
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
             if (sge)
             {
-                sge->effectSettingsBackgroundClick(where);
+                sge->effectSettingsBackgroundClick();
             }
         }
     }

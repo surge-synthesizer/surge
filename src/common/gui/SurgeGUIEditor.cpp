@@ -3951,14 +3951,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                                  SurgeStorage::HARDCLIP_TO_ONE);
                 eid++;
 
-                addCallbackMenu(contextMenu,
-                                Surge::UI::toOSCaseForMenu(sc + " +18 dBFS Hard Clip (Legacy)"),
+                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(sc + " +18 dBFS Hard Clip"),
                                 [this]() {
                                     synth->storage.sceneHardclipMode[current_scene] =
                                         SurgeStorage::HARDCLIP_TO_EIGHT;
                                 });
                 contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
                                                  SurgeStorage::HARDCLIP_TO_EIGHT);
+                eid++;
+            }
+
+            if (p->ctrltype == ct_decibel_attenuation_clipper)
+            {
+                contextMenu->addSeparator(eid++);
+                // FIXME - add unified menu here
+
+                addCallbackMenu(
+                    contextMenu, Surge::UI::toOSCaseForMenu("Global 0 dBFS Hard Clip"),
+                    [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_ONE; });
+                contextMenu->checkEntry(eid, synth->storage.hardclipMode ==
+                                                 SurgeStorage::HARDCLIP_TO_ONE);
+                eid++;
+
+                addCallbackMenu(
+                    contextMenu, Surge::UI::toOSCaseForMenu("Global +18 dBFS Hard Clip"),
+                    [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_EIGHT; });
+                contextMenu->checkEntry(eid, synth->storage.hardclipMode !=
+                                                 SurgeStorage::HARDCLIP_TO_ONE);
                 eid++;
             }
 
@@ -4089,9 +4108,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
     return 0;
 }
 
-void SurgeGUIEditor::effectSettingsBackgroundClick(const CPoint &where)
+void SurgeGUIEditor::effectSettingsBackgroundClick()
 {
-    auto effmen = new COptionMenu(CRect(where, CPoint(0, 0)), 0, 0, 0, 0,
+    CPoint where;
+    CRect menuRect;
+    frame->getCurrentMouseLocation(where);
+    frame->localToFrame(where);
+
+    menuRect.offset(where.x, where.y);
+
+    auto effmen = new COptionMenu(menuRect, 0, 0, 0, 0,
                                   VSTGUI::COptionMenu::kNoDrawStyle |
                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
 
@@ -4109,7 +4135,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(const CPoint &where)
     });
     hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_ONE);
 
-    txt = Surge::UI::toOSCaseForMenu("Global +18 dBFS Hard Clip (Legacy)");
+    txt = Surge::UI::toOSCaseForMenu("Global +18 dBFS Hard Clip");
     hcmen = addCallbackMenu(effmen, txt.c_str(), [this]() {
         this->synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_EIGHT;
     });
@@ -4134,7 +4160,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(const CPoint &where)
         });
         hcmen->setChecked(synth->storage.sceneHardclipMode[i] == SurgeStorage::HARDCLIP_TO_ONE);
 
-        txt = sc + Surge::UI::toOSCaseForMenu(" +18 dBFS Hard Clip (Legacy)");
+        txt = sc + Surge::UI::toOSCaseForMenu(" +18 dBFS Hard Clip");
         hcmen = addCallbackMenu(effmen, txt.c_str(), [this, i]() {
             this->synth->storage.sceneHardclipMode[i] = SurgeStorage::HARDCLIP_TO_EIGHT;
         });
