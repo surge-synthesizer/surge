@@ -383,10 +383,9 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     yp = margin;
 
     addLabel(std::string("Copyright 2005-") + Surge::Build::BuildYear +
-                 " by Vember Audio and individual contributors in the Surge Synth Team",
+                 " by Vember Audio and individual contributors in the Surge Synth Team, released "
+                 "under the GNU GPL v3 license",
              600);
-    yp += lblvs;
-    addLabel("Released under the GNU General Public License, v3", 600);
     yp += lblvs;
     addLabel("VST is a trademark of Steinberg Media Technologies GmbH", 600);
     yp += lblvs;
@@ -400,13 +399,18 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
              "licensed under GNU GPL v3 license",
              600);
     yp += lblvs;
-    addLabel("Cutoff Warp and Resonance Warp filters by Jatin Chowdhury, licensed under GNU GPL v3 "
-             "license",
+    addLabel("Cutoff Warp and Resonance Warp filters; CHOW, Neuron and Tape effects by Jatin "
+             "Chowdhury, licensed under GNU GPL v3 license",
+             600);
+    yp += lblvs;
+    addLabel("Exciter effect and BBD delay line emulation by Jatin Chowdhury, licensed under BSD "
+             "3-clause license",
              600);
     yp += lblvs;
     addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 600);
     yp += lblvs;
-    addLabel("Nimbus effect based on eurorack software by émilie Gillet, licensed under GNU GPL v3",
+    addLabel("Nimbus effect and Twist oscillator based on firmware for Eurorack hardware modules "
+             "by Émilie Gillet, licensed under MIT license",
              600);
 }
 
