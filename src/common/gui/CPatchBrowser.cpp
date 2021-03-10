@@ -123,11 +123,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
     else
     {
-        // 40 is based on current count of factory+3rd party folders, plus headers
-        // this makes user patches end up in the second column
-        // tweak this number if we add more 3rd party banks!
-        contextMenu->setNbItemsPerColumn(40);
-
+        int root_count = 0, usercat_pos = 0;
         auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
         factory_add->setEnabled(0);
 
@@ -152,9 +148,23 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 // Remap index to the corresponding category in alphabetical order.
                 int c = storage->patchCategoryOrdering[i];
 
+                // find at which position the first user category root folder shows up
+                if (storage->patch_category[i].isRoot)
+                {
+                    root_count++;
+
+                    if (i == storage->firstUserCategory)
+                    {
+                        usercat_pos = root_count;
+                    }
+                }
+
                 populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
             }
         }
+
+        // make sure user category always ends up in second column
+        contextMenu->setNbItemsPerColumn(usercat_pos - 1 + 2);
     }
 
     contextMenu->addSeparator();
