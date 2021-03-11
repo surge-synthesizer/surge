@@ -47,14 +47,20 @@ enum ExModes
     burst_noise,
     burst_dust,
     burst_sine,
+    burst_tri,
     burst_ramp,
     burst_square,
     burst_sweep,
     constant_noise,
     constant_dust,
+    constant_sine,
+    constant_tri,
+    constant_ramp,
+    constant_square,
+    constant_sweep,
 };
 
-int waveguide_excitations_count() { return 8; }
+int waveguide_excitations_count() { return 14; }
 
 std::string waveguide_excitation_name(int i)
 {
@@ -70,6 +76,8 @@ std::string waveguide_excitation_name(int i)
         return "Burst Sine";
     case burst_ramp:
         return "Burst Ramp";
+    case burst_tri:
+        return "Burst Triangle";
     case burst_square:
         return "Burst Square";
     case burst_sweep:
@@ -78,12 +86,32 @@ std::string waveguide_excitation_name(int i)
         return "Constant Noise";
     case constant_dust:
         return "Constant Dust";
+    case constant_sine:
+        return "Constant Sine";
+    case constant_tri:
+        return "Constant Triangle";
+    case constant_ramp:
+        return "Constant Ramp";
+    case constant_square:
+        return "Constant Square";
+    case constant_sweep:
+        return "Constant Sweep";
     }
     return "Unknown";
 }
 
 void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 {
+    if (is_display)
+    {
+        gen = std::minstd_rand(8675309);
+    }
+    else
+    {
+        std::random_device rd;
+        gen = std::minstd_rand(rd());
+    }
+    urd = std::uniform_real_distribution<float>(0.0, 1.0);
     auto pitch_t = std::min(148.f, pitch);
     auto pitchmult_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
@@ -113,8 +141,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 
     if (!oscdata->retrigger.val.b && !is_display)
     {
-        phase1 = (float)rand() / (float)RAND_MAX;
-        phase2 = (float)rand() / (float)RAND_MAX;
+        phase1 = urd(gen);
+        phase2 = urd(gen);
     }
 
     auto r1 = 1.0 / pitchmult_inv;
@@ -127,17 +155,39 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         switch (mode)
         {
         case burst_sine:
+            d0 = 1;
+        case constant_sine:
         {
-            delayLine[0].write(0.707 * std::sin(2.0 * M_PI * phase1));
-            delayLine[1].write(0.707 * std::sin(2.0 * M_PI * phase2));
+            delayLine[0].write(0.707 * d0 * std::sin(2.0 * M_PI * phase1));
+            delayLine[1].write(0.707 * d0 * std::sin(2.0 * M_PI * phase2));
             phase1 += r1;
             phase2 += r2;
         }
         break;
-        case burst_square:
+        case burst_tri:
+            d0 = 1;
+        case constant_tri:
         {
-            delayLine[0].write(0.707 * ((phase1 > 0.5) * 2 - 1));
-            delayLine[1].write(0.707 * ((phase2 > 0.5) * 2 - 1));
+            // phase is 0,1 so tri is
+            auto t1 = (phase1 < 0.5) ? (phase1 * 4 - 1) : ((1 - phase1)) * 4 - 1;
+            delayLine[0].write(0.707 * d0 * t1);
+            auto t2 = (phase2 < 0.5) ? (phase2 * 4 - 1) : ((1 - phase2)) * 4 - 1;
+            delayLine[1].write(0.707 * d0 * t2);
+            phase1 += r1;
+            phase2 += r2;
+
+            if (phase1 > 1)
+                phase1 -= 1;
+            if (phase2 > 1)
+                phase2 -= 1;
+        }
+        break;
+        case burst_square:
+            d0 = 1;
+        case constant_square:
+        {
+            delayLine[0].write(0.707 * d0 * ((phase1 > 0.5) * 2 - 1));
+            delayLine[1].write(0.707 * d0 * ((phase2 > 0.5) * 2 - 1));
 
             phase1 += r1;
             phase2 += r2;
@@ -149,9 +199,11 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         }
         break;
         case burst_ramp:
+            d0 = 1;
+        case constant_ramp:
         {
-            delayLine[0].write(0.707 * (phase1 * 2 - 1));
-            delayLine[1].write(0.707 * (phase2 * 2 - 1));
+            delayLine[0].write(0.707 * d0 * (phase1 * 2 - 1));
+            delayLine[1].write(0.707 * d0 * (phase2 * 2 - 1));
 
             phase1 += r1;
             phase2 += r2;
@@ -163,23 +215,25 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         }
         break;
         case burst_sweep:
+            d0 = 1;
+        case constant_sweep:
         {
             if (phase1 == 0)
             {
-                delayLine[0].write(0.707);
+                delayLine[0].write(0.707 * d0);
             }
             else
             {
-                delayLine[0].write(0.707 * std::sin(2.0 * M_PI / phase1));
+                delayLine[0].write(0.707 * d0 * std::sin(2.0 * M_PI / phase1));
             }
 
             if (phase2 == 0)
             {
-                delayLine[1].write(0.707);
+                delayLine[1].write(0.707 * d0);
             }
             else
             {
-                delayLine[1].write(0.707 * std::sin(2.0 * M_PI / phase2));
+                delayLine[1].write(0.707 * d0 * std::sin(2.0 * M_PI / phase2));
             }
 
             phase1 += r1;
@@ -195,8 +249,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1.0;
         case constant_dust:
         {
-            auto rn1 = (float)rand() / (float)RAND_MAX;
-            auto rn2 = (float)rand() / (float)RAND_MAX;
+            auto rn1 = urd(gen);
+            auto rn2 = urd(gen);
             auto ds1 = (rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0;
             auto ds2 = (rn2 > dustpos) * 1.0 - (rn2 < dustneg) * 1.0;
 
@@ -208,8 +262,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1;
         case constant_noise:
         default:
-            delayLine[0].write(d0 * (((float)rand() / (float)RAND_MAX) * 2 - 1));
-            delayLine[1].write(d0 * (((float)rand() / (float)RAND_MAX) * 2 - 1));
+            delayLine[0].write(d0 * (urd(gen) * 2 - 1));
+            delayLine[1].write(d0 * (urd(gen) * 2 - 1));
             break;
         }
     }
@@ -240,6 +294,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
     pitchmult_inv = std::min(pitchmult_inv, (delayLine[0].comb_size - 100) * 1.0);
     pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0].comb_size - 100) * 1.0);
+
+    auto dp1 = pitch_to_dphase(pitch_t);
+    auto dp2 = pitch_to_dphase(pitch2_t);
 
     tap[0].newValue(pitchmult_inv);
     tap[1].newValue(pitchmult2_inv);
@@ -288,6 +345,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         for (int t = 0; t < 2; ++t)
         {
             auto v = tap[t].v;
+            float *phs = (t == 0) ? &phase1 : &phase2;
+            float dp = (t == 0) ? dp1 : dp2;
             if (FM)
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
 
@@ -298,14 +357,67 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             {
             case constant_noise:
             {
-                val[t] += examp.v * ((float)rand() / (float)RAND_MAX * 2 - 1);
+                val[t] += examp.v * (urd(gen) * 2 - 1);
             }
             break;
             case constant_dust:
             {
-                auto rn1 = (float)rand() / (float)RAND_MAX;
+                auto rn1 = urd(gen);
                 auto ds1 = examp.v * ((rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0);
                 val[t] += ds1;
+            }
+            break;
+            case constant_ramp:
+            {
+                auto rn = 0.707 * (*phs * 2 - 1);
+                val[t] += examp.v * rn;
+                *phs += dp;
+                if (*phs > 1)
+                    *phs -= 1;
+            }
+            break;
+            case constant_tri:
+            {
+                auto rn = 0.707 * ((*phs < 0.5) ? (*phs * 4 - 1) : ((1 - *phs) * 4 - 1));
+                val[t] += examp.v * rn;
+                *phs += dp;
+                if (*phs > 1)
+                    *phs -= 1;
+            }
+            break;
+            case constant_sweep:
+            {
+                float sv = 0;
+                if (*phs == 0)
+                {
+                    sv = 1.0;
+                }
+                else
+                {
+                    sv = std::sin(2.0 * M_PI / *phs);
+                }
+                val[t] += examp.v * 0.707 * sv;
+                *phs += dp;
+                if (*phs > 1)
+                    *phs -= 1;
+            }
+            break;
+            case constant_sine:
+            {
+                float sv = std::sin(2.0 * M_PI * *phs);
+                val[t] += examp.v * 0.707 * sv;
+                *phs += dp;
+                if (*phs > 1)
+                    *phs -= 1;
+            }
+            break;
+            case constant_square:
+            {
+                auto rn = 0.707 * ((*phs > 0.5) ? 1 : -1);
+                val[t] += examp.v * rn;
+                *phs += dp;
+                if (*phs > 1)
+                    *phs -= 1;
             }
             break;
             default:

@@ -22,6 +22,7 @@
 #include "SSESincDelayLine.h"
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"
+#include <random>
 
 class WaveguideOscillator : public Oscillator
 {
@@ -61,6 +62,9 @@ class WaveguideOscillator : public Oscillator
     float priorSample[2] = {0, 0};
     Surge::Oscillator::DriftLFO driftLFO[2];
     Surge::Oscillator::CharacterFilter<float> charFilt;
+
+    std::minstd_rand gen;
+    std::uniform_real_distribution<float> urd;
 
     BiquadFilter lp;
 };
