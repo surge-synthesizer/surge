@@ -2370,8 +2370,16 @@ float Parameter::quantize_modulation(float inputval)
         auto stepsize = abs(ceil(0.05 * center * scaleFactor) / scaleFactor);
         moddist = round(moddist / stepsize) * stepsize;
         auto modresult = center + moddist;
-        auto modresult_exponent = log2(modresult / displayInfo.a) / displayInfo.b; // = val + d
-        res = (modresult_exponent - val.f) / (val_max.f - val_min.f);
+        if (modresult <= 0)
+        {
+            res = -1.f;
+        }
+        else
+        {
+            auto modresult_exponent = log2(modresult / displayInfo.a) / displayInfo.b; // = val + d
+            res = limit_range((float)(modresult_exponent - val.f) / (val_max.f - val_min.f), -1.f,
+                              1.f);
+        }
 
         break;
     }
