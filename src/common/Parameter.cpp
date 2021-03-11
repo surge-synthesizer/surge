@@ -2309,7 +2309,8 @@ float Parameter::quantize_modulation(float inputval)
     switch (displayType)
     {
     case Custom:
-        // handled below
+        // handled below but lets set up a good default
+        res = (float)(round(inputval * 100) / 100);
         break;
     case DelegatedToFormatter:
         // fall back
@@ -2336,6 +2337,41 @@ float Parameter::quantize_modulation(float inputval)
         // 2^(floorvmod / 18) - oldval = newval
 
         res = powf(2.f, floorvmod / 18.f) - scaledval;
+
+        break;
+    }
+    case ATwoToTheBx:
+    {
+        /*
+         * OK so the display value is A e^val and we want to quantize in that space and then
+         * find the res. So first of all lets find the endpoint. Remember this calculation
+         * is basically a 2^bx
+         */
+        auto mdepth = inputval * (val_max.f - val_min.f);
+        auto center = displayInfo.a * pow(2.0, displayInfo.b * val.f);
+        auto modpoint = displayInfo.a * pow(2.0, displayInfo.b * (val.f + mdepth));
+        auto moddist = modpoint - center;
+
+        /*
+         * OK so now we want the moddistance to be quantized but quantized in units of
+         * what? Well lets use a simple heuristic that we are roughly 5% of our center
+         * as a tick but, you know, nice and integral. This method has the problem that
+         * the tick size gets 'smaller' as you move up. You also need to scale the integrality
+         * depending on starting point.
+         */
+        float scaleFactor = 1;
+        if (center > 100)
+            scaleFactor = 0.1;
+        if (center < 10)
+            scaleFactor = 10;
+        if (center < 1)
+            scaleFactor = 100;
+
+        auto stepsize = abs(ceil(0.05 * center * scaleFactor) / scaleFactor);
+        moddist = round(moddist / stepsize) * stepsize;
+        auto modresult = center + moddist;
+        auto modresult_exponent = log2(modresult / displayInfo.a) / displayInfo.b; // = val + d
+        res = (modresult_exponent - val.f) / (val_max.f - val_min.f);
 
         break;
     }
