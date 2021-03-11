@@ -2362,6 +2362,13 @@ bool SurgeSynthesizer::loadOscalgos()
                     {
                         storage.getPatch().scene[s].osc[i].p[k].deform_type = j;
                     }
+
+                    snprintf(lbl, TXT_SIZE, "p%i_extend_range", k);
+
+                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    {
+                        storage.getPatch().scene[s].osc[i].p[k].extend_range = j;
+                    }
                 }
 
                 int rt;

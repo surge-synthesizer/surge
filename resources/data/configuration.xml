@@ -13,12 +13,12 @@
     </type>
     <type i="2" name="Wavetable" retrigger="0" />
     <type i="7" name="Window" retrigger="0" />
-    <type i="1" name="Sine" retrigger="1" />
-    <type i="6" name="FM2" retrigger="1" />
-    <type i="5" name="FM3" retrigger="1" />
+    <type i="1" name="Sine" retrigger="1" p1_extend_range="1" />
+    <type i="6" name="FM2" retrigger="1" p6_extend_range="1" />
+    <type i="5" name="FM3" retrigger="1" p6_extend_range="1" />
     <type i="9" name="String"/>
-    <type i="10" name="Twist" retrigger="1"/>
     <type i="3" name="S&amp;H Noise" />
+    <type i="10" name="Twist"/>
     <type i="4" name="Audio Input">
         <snapshot name="Left" p0="-1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0" />
         <snapshot name="Right" p0="1.0" p1="0.0" p2="0.0" p3="0.0" p4="0.0" retrigger="0" />
@@ -104,7 +104,7 @@
         <snapshot name="Init" />
         <snapshot name="Crusher" p0="11" p1="60" p2="0.0714279" p3="2" p4="0.205357" p5="0.767857" p6="-60" p7="38.2131" p8="0.776786" />
     </type>
-    <type i="24" name="TreeMonster">
+    <type i="24" name="Treemonster">
         <snapshot name="Init" />
     </type>
     <type i="10" name="Vocoder">
