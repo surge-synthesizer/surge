@@ -8257,6 +8257,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             param[paramIndex] = hs;
             return hs;
         }
+        else
+        {
+            p->ctrlstyle = p->ctrlstyle & ~kNoPopup;
+        }
         bool is_mod = p && synth->isValidModulation(p->id, modsource);
 
         auto hs = new CSurgeSlider(loc, style, this, tag, is_mod, bitmapStore, &(synth->storage));
