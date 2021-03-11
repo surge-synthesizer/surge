@@ -367,6 +367,12 @@ ComponentResult aulayer::GetProperty(AudioUnitPropertyID iID, AudioUnitScope iSc
             *pThis = (void *)plugin_instance;
             return noErr;
         }
+        case kAudioUnitProperty_SupportsMPE:
+        {
+            uint32_t *o = (uint32_t *)outData;
+            *o = 1;
+            return noErr;
+        }
         }
     }
 

@@ -525,6 +525,11 @@ ComponentResult aulayer::GetPropertyInfo(AudioUnitPropertyID iID, AudioUnitScope
             iSize = sizeof(void *);
             return noErr;
             break;
+        case kAudioUnitProperty_SupportsMPE:
+            iSize = sizeof(uint32_t);
+            fWritable = false;
+            return noErr;
+            break;
         }
     }
 
