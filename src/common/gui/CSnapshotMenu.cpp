@@ -61,15 +61,24 @@ void CSnapshotMenu::populate()
             if (type->Value() && strcmp(type->Value(), "type") == 0)
             {
                 auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+
                 if (sm)
+                {
                     addToTopLevelTypeMenu(type, sm, idx);
+                }
             }
             else if (type->Value() && strcmp(type->Value(), "separator") == 0)
+            {
                 addSeparator();
+            }
+
             type = type->NextSiblingElement();
             main++;
+
             if (main >= max_main)
+            {
                 break;
+            }
         }
     }
     maxIdx = idx;
@@ -144,6 +153,7 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     type->Attribute("i", &type_id);
     sub = 0;
     COptionMenu *subMenu = new COptionMenu(getViewSize(), 0, main, 0, 0, kNoDrawStyle);
+    subMenu->setNbItemsPerColumn(20);
     TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
     while (snapshot)
     {
@@ -832,7 +842,9 @@ void CFxMenu::saveFXIn(const std::string &s)
         return;
     }
 
-    pfile << "<single-fx streaming_versio=\"" << ff_revision << "\">\n";
+    // this used to say streaming_versio before (was a typo)
+    // make sure both variants are checked when checking sv in the future on patch load
+    pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
 
     // take care of 5 special XML characters
     std::string fxNameSub(fxName);
