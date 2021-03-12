@@ -71,7 +71,7 @@ std::string waveguide_excitation_name(int i)
     case burst_noise:
         return "Burst Noise";
     case burst_dust:
-        return "Burst Dust";
+        return "Burst Dark Noise";
     case burst_sine:
         return "Burst Sine";
     case burst_ramp:
@@ -85,7 +85,7 @@ std::string waveguide_excitation_name(int i)
     case constant_noise:
         return "Constant Noise";
     case constant_dust:
-        return "Constant Dust";
+        return "Constant Dark Noise";
     case constant_sine:
         return "Constant Sine";
     case constant_tri:
@@ -102,6 +102,8 @@ std::string waveguide_excitation_name(int i)
 
 void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 {
+    memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
+
     if (is_display)
     {
         gen = std::minstd_rand(8675309);
@@ -112,6 +114,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         gen = std::minstd_rand(rd());
     }
     urd = std::uniform_real_distribution<float>(0.0, 1.0);
+
     auto pitch_t = std::min(148.f, pitch);
     auto pitchmult_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
@@ -121,6 +124,9 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     auto pitchmult2_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch2_t));
 
+    noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
+    for (int i = 0; i < 3; ++i)
+        fillDustBuffer(pitchmult_inv, pitchmult2_inv);
     tap[0].startValue(pitchmult_inv);
     tap[1].startValue(pitchmult2_inv);
     t2level.startValue(
@@ -150,6 +156,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     auto d0 = limit_range(localcopy[oscdata->p[wg_exciter_level].param_id_in_scene].f, 0.f, 1.f);
     d0 = powf(d0, 0.125);
 
+    int dustrp = BLOCK_SIZE_OS;
     for (int i = 0; i < prefill; ++i)
     {
         switch (mode)
@@ -249,13 +256,15 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1.0;
         case constant_dust:
         {
-            auto rn1 = urd(gen);
-            auto rn2 = urd(gen);
-            auto ds1 = (rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0;
-            auto ds2 = (rn2 > dustpos) * 1.0 - (rn2 < dustneg) * 1.0;
+            if (dustrp >= BLOCK_SIZE_OS)
+            {
+                dustrp = 0;
+                fillDustBuffer(pitchmult_inv, pitchmult2_inv);
+            }
 
-            delayLine[0].write(d0 * ds1);
-            delayLine[1].write(d0 * ds2);
+            delayLine[0].write(d0 * dustBuffer[0][dustrp]);
+            delayLine[1].write(d0 * dustBuffer[1][dustrp]);
+            dustrp++;
         }
         break;
         case burst_noise:
@@ -337,9 +346,14 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     }
 
     lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+
     // hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 
     float val[2] = {0.f, 0.f};
+    if (mode == constant_dust)
+    {
+        fillDustBuffer(pitchmult_inv, pitchmult2_inv);
+    }
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         for (int t = 0; t < 2; ++t)
@@ -362,8 +376,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             break;
             case constant_dust:
             {
-                auto rn1 = urd(gen);
-                auto ds1 = examp.v * ((rn1 > dustpos) * 1.0 - (rn1 < dustneg) * 1.0);
+
+                auto ds1 = examp.v * dustBuffer[t][i];
                 val[t] += ds1;
             }
             break;
@@ -516,4 +530,16 @@ void WaveguideOscillator::init_default_values()
     oscdata->p[wg_str_balance].val.f = 0.f;
 
     oscdata->p[wg_stiffness].val.f = 0.f;
+}
+
+void WaveguideOscillator::fillDustBuffer(float tap0, float tap1)
+{
+    for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+    {
+        auto v0 = urd(gen) * 2 - 1;
+        auto v1 = urd(gen) * 2 - 1;
+        noiseLp.process_sample_nolag(v0, v1);
+        dustBuffer[0][i] = v0 * 1.7;
+        dustBuffer[1][i] = v1 * 1.7;
+    }
 }
