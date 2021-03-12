@@ -51,6 +51,7 @@ enum ExModes
     burst_ramp,
     burst_square,
     burst_sweep,
+
     constant_noise,
     constant_dust,
     constant_sine,
@@ -58,9 +59,10 @@ enum ExModes
     constant_ramp,
     constant_square,
     constant_sweep,
+    constant_audioin,
 };
 
-int waveguide_excitations_count() { return 14; }
+int waveguide_excitations_count() { return 15; }
 
 std::string waveguide_excitation_name(int i)
 {
@@ -96,6 +98,8 @@ std::string waveguide_excitation_name(int i)
         return "Constant Square";
     case constant_sweep:
         return "Constant Sweep";
+    case constant_audioin:
+        return "Audio In";
     }
     return "Unknown";
 }
@@ -252,6 +256,12 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
                 phase2 -= 1;
         }
         break;
+
+        case constant_audioin:
+            delayLine[0].write(0);
+            delayLine[1].write(0);
+            break;
+
         case burst_dust:
             d0 = 1.0;
         case constant_dust:
@@ -291,11 +301,27 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
-    auto d0 = limit_range(localcopy[oscdata->p[wg_exciter_level].param_id_in_scene].f, 0.f, 1.f);
-    examp.newValue(d0 * d0 * d0);
+    double d0 = limit_range(localcopy[oscdata->p[wg_exciter_level].param_id_in_scene].f, 0.f, 1.f);
+
+    if (mode >= constant_noise)
+    {
+        examp.newValue(d0 * d0 * d0);
+    }
+    else
+    {
+        if (d0 < 0.1)
+        {
+            examp.newValue(d0 * 4.6415); // cbrt(0.1) * 10 to match it where cbrt(d0) starts below
+        }
+        else
+        {
+            examp.newValue(cbrt(d0));
+        }
+    }
+
+    lfodetune = drift * driftLFO[1].next();
     auto p2off = oscdata->p[wg_str2_detune].get_extended(
         localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
-    lfodetune = drift * driftLFO[1].next();
     auto pitch2_t = std::min(148.f, pitch + p2off + lfodetune);
     auto pitchmult2_inv =
         std::max((FIRipol_N >> 1) + 1.0,
@@ -316,13 +342,12 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
     auto fbp = limit_range(localcopy[oscdata->p[wg_str1_decay].param_id_in_scene].f, 0.f, 1.f);
     fbp = sqrt(fbp);
-    auto fb0 = 48000 * dsamplerate_inv * 0.95; // just picked by listening
-    auto fb1 = 1.0;
-    feedback[0].newValue(fb1 * fbp + fb0 * (1 - fbp));
+    auto fb0 = 0.85; // just picked by listening
+    feedback[0].newValue(fbp + fb0 * (1 - fbp));
 
     auto fbp2 = limit_range(localcopy[oscdata->p[wg_str2_decay].param_id_in_scene].f, 0.f, 1.f);
     fbp2 = sqrt(fbp2);
-    feedback[1].newValue(fb1 * fbp2 + fb0 * (1 - fbp2));
+    feedback[1].newValue(fbp2 + fb0 * (1 - fbp2));
 
     // fmdepthV basically goes 0 -> 16 so lets push it 0,1 for now
     double fv = fmdepthV / 16.0;
@@ -349,7 +374,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
     // hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 
-    float val[2] = {0.f, 0.f};
+    float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f};
     if (mode == constant_dust)
     {
         fillDustBuffer(pitchmult_inv, pitchmult2_inv);
@@ -365,6 +390,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
 
             val[t] = delayLine[t].read(v);
+            fbNoOutVal[t] = 0.f;
 
             // Add continuous excitation
             switch (mode)
@@ -434,12 +460,18 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
                     *phs -= 1;
             }
             break;
+            case constant_audioin:
+            {
+                fbNoOutVal[t] = examp.v * storage->audio_in[t][i];
+            }
+            break;
             default:
-                val[t] *= examp.v;
+                // We should do something else with amplitude here
+                // val[t] *= examp.v;
                 break;
             }
             // precautionary hard clip
-            auto fbv = limit_range(val[t], -1.f, 1.f);
+            auto fbv = limit_range(val[t] + fbNoOutVal[t], -1.f, 1.f);
 
             // one pole filter the feedback value
             // auto filtv = tone.v * fbv + (1 - tone.v) * priorSample[t];
