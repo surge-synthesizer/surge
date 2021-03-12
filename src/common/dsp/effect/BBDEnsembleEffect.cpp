@@ -166,7 +166,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));
     input.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-    auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+    auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
+                                  auto &delR2) {
         const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 *
                                storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})

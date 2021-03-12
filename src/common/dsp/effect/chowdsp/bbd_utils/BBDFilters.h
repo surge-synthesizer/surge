@@ -49,47 +49,49 @@ struct PowLUT
     PowLUT(float baseMin, float baseMax, float expMin, float expMax, int nTables, int nPoints)
     {
         tables.resize(nTables);
-        for(auto &table : tables)
+        for (auto &table : tables)
             table.resize(nPoints, 0.0f);
 
         baseOffset = baseMin;
-        baseScale = (float) nTables / (baseMax - baseMin);
+        baseScale = (float)nTables / (baseMax - baseMin);
         expOffset = expMin;
-        expScale = (float) nTables / (expMax - expMin);
+        expScale = (float)nTables / (expMax - expMin);
 
-        for(int i = 0; i < nTables; ++i)
+        for (int i = 0; i < nTables; ++i)
         {
-            for(int j = 0; j < nPoints; ++j)
+            for (int j = 0; j < nPoints; ++j)
             {
-                tables[i][j] = std::pow((float) i / baseScale + baseOffset, (float) j / expScale + expOffset);
+                tables[i][j] =
+                    std::pow((float)i / baseScale + baseOffset, (float)j / expScale + expOffset);
             }
         }
     }
 
     inline float operator()(float base, float exp) const noexcept
     {
-        auto baseIdx = size_t ((base - baseOffset) * baseScale);
-        auto expIdx = size_t ((base - expOffset) * expScale);
+        auto baseIdx = size_t((base - baseOffset) * baseScale);
+        auto expIdx = size_t((base - expOffset) * expScale);
         return tables[baseIdx][expIdx];
     }
 
-private:
+  private:
     std::vector<std::vector<float>> tables;
 
     float baseOffset, baseScale;
     float expOffset, expScale;
 };
 
-static PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
+static PowLUT powLut{-1.0f, 1.0f, -0.1f, 0.1f, 256, 128};
 
 inline std::complex<float> fast_complex_exp(float angle)
 {
     return std::complex<float>(Surge::DSP::fastcos(angle), Surge::DSP::fastsin(angle));
 }
 
-inline std::complex<float> fast_complex_pow(float mag, float angle, float b, const PowLUT& powLut)
+inline std::complex<float> fast_complex_pow(float mag, float angle, float b, const PowLUT &powLut)
 {
-    auto mag_pow = powLut(mag, b); // std::pow(mag, b); // @TODO: use a fast approximation, maybe a lookup table?
+    auto mag_pow = powLut(
+        mag, b); // std::pow(mag, b); // @TODO: use a fast approximation, maybe a lookup table?
     auto angle_pow = angle * b;
     return fast_complex_exp(angle_pow);
 }

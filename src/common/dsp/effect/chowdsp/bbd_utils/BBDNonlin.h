@@ -59,11 +59,11 @@ class BBDNonlin
             table.resize(nPoints, 0.0f);
 
             offset = min;
-            scale = (double) nPoints / (max - min);
+            scale = (double)nPoints / (max - min);
 
-            for(int i = 0; i < nPoints; ++i)
+            for (int i = 0; i < nPoints; ++i)
             {
-                auto x = (double) i / scale + offset;
+                auto x = (double)i / scale + offset;
                 table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33);
             }
         }
@@ -80,11 +80,11 @@ class BBDNonlin
 
         inline double operator()(double x) const noexcept
         {
-            auto idx = size_t ((x - offset) * scale);
+            auto idx = size_t((x - offset) * scale);
             return sgn(x) * table[idx];
         }
 
-    private:
+      private:
         std::vector<double> table;
         double offset, scale;
     };
@@ -105,7 +105,7 @@ class BBDNonlin
     std::unique_ptr<chowdsp::WDF::WDFSeries> S2;
     std::unique_ptr<chowdsp::WDF::PolarityInverter> I1;
 
-    static inline NonlinLUT lut { -5.0, 5.0, 8192 };
+    NonlinLUT lut{-5.0, 5.0, 8192}; // @TODO: can we make this static?
 
     double Vp = 0.0;
     float drive = 1.0f;
