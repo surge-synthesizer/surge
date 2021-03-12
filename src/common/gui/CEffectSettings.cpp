@@ -269,7 +269,7 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint &where, const CButtonState
     for (int i = 0; i < n_fx_slots; i++)
     {
         CRect size = getViewSize();
-        CRect r(0, 0, fxslotWidth - 2.f, fxslotHeight - 2.f);
+        CRect r(0, 0, fxslotWidth, fxslotHeight);
         r.offset(size.left, size.top);
         r.offset(fxslotpos[i][0], fxslotpos[i][1]);
 
@@ -277,6 +277,24 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint &where, const CButtonState
         {
             dragSource = i;
             dragCornerOff = where - r.getTopLeft();
+        }
+    }
+
+    for (int i = 0; i < n_scenes; i++)
+    {
+        CRect size = getViewSize();
+        CRect r(0, 0, scenelabelboxWidth, scenelabelboxHeight);
+        r.offset(size.left, size.top);
+        r.offset(scenelabelbox[i][0], scenelabelbox[i][1]);
+
+        if (r.pointInside(where) && (buttons & kRButton))
+        {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
+            if (sge)
+            {
+                sge->effectSettingsBackgroundClick();
+            }
         }
     }
 
@@ -292,7 +310,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint &where, const CButtonState &
         for (int i = 0; i < n_fx_slots; i++)
         {
             CRect size = getViewSize();
-            CRect r(0, 0, fxslotWidth - 2.f, fxslotHeight - 2.f);
+            CRect r(0, 0, fxslotWidth, fxslotHeight);
             r.offset(size.left, size.top);
             r.offset(fxslotpos[i][0], fxslotpos[i][1]);
 
@@ -343,7 +361,7 @@ CMouseEventResult CEffectSettings::onMouseUp(CPoint &where, const CButtonState &
         for (int i = 0; i < n_fx_slots; i++)
         {
             CRect size = getViewSize();
-            CRect r(0, 0, fxslotWidth - 2.f, fxslotHeight - 2.f);
+            CRect r(0, 0, fxslotWidth, fxslotHeight);
             r.offset(size.left, size.top);
             r.offset(fxslotpos[i][0], fxslotpos[i][1]);
 
