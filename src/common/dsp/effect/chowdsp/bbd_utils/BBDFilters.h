@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <complex>
+#include <vector>
 
 #include "basic_dsp.h"
 #include "FastMath.h"
@@ -43,12 +44,54 @@ constexpr std::complex<float> oFiltPole[] = {{-176261.0f, 0.0f},
                                              {-26276.0f, +59699.0f}};
 } // namespace FilterSpec
 
-inline std::complex<float> fast_complex_pow(float mag, float angle, float b)
+struct PowLUT
 {
-    auto mag_pow = std::pow(mag, b); // @TODO: use a fast approximation, maybe a lookup table?
+    PowLUT(float baseMin, float baseMax, float expMin, float expMax, int nTables, int nPoints)
+    {
+        tables.resize(nTables);
+        for(auto &table : tables)
+            table.resize(nPoints, 0.0f);
+
+        baseOffset = baseMin;
+        baseScale = (float) nTables / (baseMax - baseMin);
+        expOffset = expMin;
+        expScale = (float) nTables / (expMax - expMin);
+
+        for(int i = 0; i < nTables; ++i)
+        {
+            for(int j = 0; j < nPoints; ++j)
+            {
+                tables[i][j] = std::pow((float) i / baseScale + baseOffset, (float) j / expScale + expOffset);
+            }
+        }
+    }
+
+    inline float operator()(float base, float exp) const noexcept
+    {
+        auto baseIdx = size_t ((base - baseOffset) * baseScale);
+        auto expIdx = size_t ((base - expOffset) * expScale);
+        return tables[baseIdx][expIdx];
+    }
+
+private:
+    std::vector<std::vector<float>> tables;
+
+    float baseOffset, baseScale;
+    float expOffset, expScale;
+};
+
+static PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
+
+inline std::complex<float> fast_complex_exp(float angle)
+{
+    return std::complex<float>(Surge::DSP::fastcos(angle), Surge::DSP::fastsin(angle));
+}
+
+inline std::complex<float> fast_complex_pow(float mag, float angle, float b, const PowLUT& powLut)
+{
+    auto mag_pow = powLut(mag, b); // std::pow(mag, b); // @TODO: use a fast approximation, maybe a lookup table?
     auto angle_pow = angle * b;
-    return mag_pow *
-           std::complex<float>(Surge::DSP::fastcos(angle_pow), Surge::DSP::fastsin(angle_pow));
+    return fast_complex_exp(angle_pow);
 }
 
 struct InputFilter
@@ -61,6 +104,9 @@ struct InputFilter
         root_corr = root;
         pole_corr = std::exp(pole * Ts);
         *x = 0.0f;
+
+        // make sure the LUT gets initialised here...
+        powLut(0.5f, 0.01f);
     }
 
     inline std::complex<float> calcGUp() noexcept
@@ -83,14 +129,17 @@ struct InputFilter
         pole_corr_angle = std::arg(pole_corr);
 
         gCoef = Ts * root_corr;
-        Aminus = std::pow(pole_corr, -Ts);
+        Aminus = fast_complex_pow(pole_corr_mag, pole_corr_angle, -Ts, powLut);
     }
 
+    // since we use recursive and approximate calculations for the other
+    // A values, we need to use full precision here to realign everything
+    // so the numerical error doesn't get away from us.
     inline void set_time(float tn) { Arecurse = std::pow(pole_corr, tn); }
 
     inline void set_delta(float delta)
     {
-        Aplus = fast_complex_pow(pole_corr_mag, pole_corr_angle, delta);
+        Aplus = fast_complex_pow(pole_corr_mag, pole_corr_angle, delta, powLut);
     }
 
   private:
@@ -109,6 +158,8 @@ struct InputFilter
     std::complex<float> *const x;
     const float Ts;
     std::complex<float> gCoef;
+
+    // PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
 };
 
 struct OutputFilter
@@ -142,7 +193,7 @@ struct OutputFilter
         pole_corr_mag = std::abs(pole_corr);
         pole_corr_angle = std::arg(pole_corr);
 
-        Aminus = std::pow(pole_corr, Ts);
+        Aminus = fast_complex_pow(pole_corr_mag, pole_corr_angle, Ts, powLut);
         Amult = gCoef * pole_corr;
     }
 
@@ -150,7 +201,7 @@ struct OutputFilter
 
     inline void set_delta(float delta)
     {
-        Aplus = fast_complex_pow(pole_corr_mag, pole_corr_angle, -delta);
+        Aplus = fast_complex_pow(pole_corr_mag, pole_corr_angle, -delta, powLut);
     }
 
   private:
@@ -168,4 +219,6 @@ struct OutputFilter
 
     std::complex<float> *const x;
     const float Ts;
+
+    // PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
 };

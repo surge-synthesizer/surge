@@ -68,14 +68,10 @@ class BBDEnsembleEffect : public Effect
   private:
     void process_sinc_delays(float *dataL, float *dataR);
 
-    template <size_t STAGES> void process_bbd_delays(float *dataL, float *dataR);
-
-    template <size_t STAGES>
-    void setupDelayLines(BBDDelayLine<STAGES> *&delL1, BBDDelayLine<STAGES> *&delL2,
-                         BBDDelayLine<STAGES> *&delR1, BBDDelayLine<STAGES> *&delR2);
-
     Surge::ModControl modlfos[2][3]; // 2 LFOs differening by 120 degree in phase at outputs
     SSESincDelayLine<8192> delL, delR;
+    BBDDelayLine<128> del_128L1, del_128L2, del_128R1, del_128R2;
+    BBDDelayLine<256> del_256L1, del_256L2, del_256R1, del_256R2;
     BBDDelayLine<512> del_512L1, del_512L2, del_512R1, del_512R2;
     BBDDelayLine<1024> del_1024L1, del_1024L2, del_1024R1, del_1024R2;
     BBDDelayLine<2048> del_2048L1, del_2048L2, del_2048R1, del_2048R2;

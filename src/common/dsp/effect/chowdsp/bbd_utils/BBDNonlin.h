@@ -29,21 +29,12 @@ class BBDNonlin
         D1.connectToNode(S2.get());
 
         Vp = 0.0;
-    }
-
-    template <typename T> inline int sgn(T val) const noexcept
-    {
-        return (T(0) < val) - (val < T(0));
-    }
-
-    template <typename T> inline T pwrs(T x, T y) const noexcept
-    {
-        return sgn(x) * std::pow(std::abs(x), y);
+        lut(0.0);
     }
 
     inline double getCurrent(double _Vg, double _Vp) const noexcept
     {
-        return 2.0e-9 * pwrs(0.1 * _Vg - 0.01 * _Vp, 0.33);
+        return lut(0.1 * _Vg - 0.01 * _Vp);
     }
 
     void setDrive(float newDrive) { drive = newDrive; }
@@ -61,6 +52,43 @@ class BBDNonlin
     }
 
   private:
+    struct NonlinLUT
+    {
+        NonlinLUT(double min, double max, int nPoints)
+        {
+            table.resize(nPoints, 0.0f);
+
+            offset = min;
+            scale = (double) nPoints / (max - min);
+
+            for(int i = 0; i < nPoints; ++i)
+            {
+                auto x = (double) i / scale + offset;
+                table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33);
+            }
+        }
+
+        template <typename T> inline int sgn(T val) const noexcept
+        {
+            return (T(0) < val) - (val < T(0));
+        }
+
+        template <typename T> inline T pwrs(T x, T y) const noexcept
+        {
+            return std::pow(std::abs(x), y);
+        }
+
+        inline double operator()(double x) const noexcept
+        {
+            auto idx = size_t ((x - offset) * scale);
+            return sgn(x) * table[idx];
+        }
+
+    private:
+        std::vector<double> table;
+        double offset, scale;
+    };
+
     chowdsp::WDF::ResistiveCurrentSource Is;
     chowdsp::WDF::ResistiveVoltageSource Vin;
     chowdsp::WDF::Resistor Rgk{2.7e3};
@@ -76,6 +104,8 @@ class BBDNonlin
     std::unique_ptr<chowdsp::WDF::WDFParallel> P3;
     std::unique_ptr<chowdsp::WDF::WDFSeries> S2;
     std::unique_ptr<chowdsp::WDF::PolarityInverter> I1;
+
+    static inline NonlinLUT lut { -5.0, 5.0, 8192 };
 
     double Vp = 0.0;
     float drive = 1.0f;

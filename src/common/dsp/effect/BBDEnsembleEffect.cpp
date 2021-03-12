@@ -19,6 +19,8 @@
 enum EnsembleStages
 {
     ens_sinc = 0,
+    ens_128,
+    ens_256,
     ens_512,
     ens_1024,
     ens_2048
@@ -30,6 +32,10 @@ std::string ensemble_stage_name(int i)
     {
     case ens_sinc:
         return "Sinc (clean) Delay";
+    case ens_128:
+        return "128 Stage BBD";
+    case ens_256:
+        return "256 Stage BBD";
     case ens_512:
         return "512 Stage BBD";
     case ens_1024:
@@ -40,7 +46,7 @@ std::string ensemble_stage_name(int i)
     return "Error";
 }
 
-int ensemble_stage_count() { return 4; }
+int ensemble_stage_count() { return 6; }
 
 namespace
 {
@@ -74,6 +80,8 @@ void BBDEnsembleEffect::init()
         }
     };
 
+    init_bbds(del_128L1, del_128L2, del_128R1, del_128R2);
+    init_bbds(del_256L1, del_256L2, del_256R1, del_256R2);
     init_bbds(del_512L1, del_512L2, del_512R1, del_512R2);
     init_bbds(del_1024L1, del_1024L2, del_1024R1, del_1024R2);
     init_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
@@ -136,108 +144,6 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR)
     }
 }
 
-/*
- * We can't do constexpr ifs in c++14 so specialize a template
- */
-template <size_t STAGES>
-inline void
-BBDEnsembleEffect::setupDelayLines(BBDDelayLine<STAGES> *&delL1, BBDDelayLine<STAGES> *&delL2,
-                                   BBDDelayLine<STAGES> *&delR1, BBDDelayLine<STAGES> *&delR2)
-{
-    assert(false);
-    // This should always be specialied away
-    delL1 = nullptr;
-    delL2 = nullptr;
-    delR1 = nullptr;
-    delR2 = nullptr;
-}
-
-template <>
-inline void
-BBDEnsembleEffect::setupDelayLines<512>(BBDDelayLine<512> *&delL1, BBDDelayLine<512> *&delL2,
-                                        BBDDelayLine<512> *&delR1, BBDDelayLine<512> *&delR2)
-{
-    delL1 = &del_512L1;
-    delL2 = &del_512L2;
-    delR1 = &del_512R1;
-    delR2 = &del_512R2;
-}
-
-template <>
-inline void
-BBDEnsembleEffect::setupDelayLines<1024>(BBDDelayLine<1024> *&delL1, BBDDelayLine<1024> *&delL2,
-                                         BBDDelayLine<1024> *&delR1, BBDDelayLine<1024> *&delR2)
-{
-    delL1 = &del_1024L1;
-    delL2 = &del_1024L2;
-    delR1 = &del_1024R1;
-    delR2 = &del_1024R2;
-}
-
-template <>
-inline void
-BBDEnsembleEffect::setupDelayLines<2048>(BBDDelayLine<2048> *&delL1, BBDDelayLine<2048> *&delL2,
-                                         BBDDelayLine<2048> *&delR1, BBDDelayLine<2048> *&delR2)
-{
-    delL1 = &del_2048L1;
-    delL2 = &del_2048L2;
-    delR1 = &del_2048R1;
-    delR2 = &del_2048R2;
-}
-
-template <size_t STAGES> void BBDEnsembleEffect::process_bbd_delays(float *dataL, float *dataR)
-{
-    BBDDelayLine<STAGES> *delL1;
-    BBDDelayLine<STAGES> *delL2;
-    BBDDelayLine<STAGES> *delR1;
-    BBDDelayLine<STAGES> *delR2;
-
-    setupDelayLines<STAGES>(delL1, delL2, delR1, delR2);
-
-    const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 *
-                           storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
-    for (auto *del : {delL1, delL2, delR1, delR2})
-    {
-        del->setFilterFreq(aa_cutoff);
-        del->setWaveshapeParams(*f[ens_bbd_nonlin]);
-    }
-
-    float del1 = delay1Ms * 0.001;
-    float del2 = delay2Ms * 0.001;
-    float del0 = delay0Ms * 0.001;
-
-    for (int s = 0; s < BLOCK_SIZE; ++s)
-    {
-        // soft-clip input
-        dataL[s] = lookup_waveshape(wst_soft, dataL[s]);
-        dataR[s] = lookup_waveshape(wst_soft, dataR[s]);
-
-        // OK so look at the diagram in #3743
-        float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
-        float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
-        float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
-
-        delL1->setDelayTime(t1);
-        delL2->setDelayTime(t2);
-        delR1->setDelayTime(t2);
-        delR2->setDelayTime(t3);
-
-        L[s] = delL1->process(dataL[s]) + delL2->process(dataL[s]);
-        R[s] = delR1->process(dataR[s]) + delR2->process(dataR[s]);
-
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 2; ++j)
-            {
-                modlfos[j][i].post_process();
-            }
-        }
-    }
-
-    mul_block(L, db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
-    mul_block(R, db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
-}
-
 void BBDEnsembleEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
@@ -260,20 +166,71 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));
     input.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
+    auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+        const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 *
+                               storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
+        for (auto *del : {&delL1, &delL2, &delR1, &delR2})
+        {
+            del->setFilterFreq(aa_cutoff);
+            del->setWaveshapeParams(*f[ens_bbd_nonlin]);
+        }
+
+        float del1 = delay1Ms * 0.001;
+        float del2 = delay2Ms * 0.001;
+        float del0 = delay0Ms * 0.001;
+
+        for (int s = 0; s < BLOCK_SIZE; ++s)
+        {
+            // soft-clip input
+            dataL[s] = lookup_waveshape(wst_soft, dataL[s]);
+            dataR[s] = lookup_waveshape(wst_soft, dataR[s]);
+
+            // OK so look at the diagram in #3743
+            float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
+            float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
+            float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
+
+            delL1.setDelayTime(t1);
+            delL2.setDelayTime(t2);
+            delR1.setDelayTime(t2);
+            delR2.setDelayTime(t3);
+
+            L[s] = delL1.process(dataL[s]) + delL2.process(dataL[s]);
+            R[s] = delR1.process(dataR[s]) + delR2.process(dataR[s]);
+
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 2; ++j)
+                {
+                    modlfos[j][i].post_process();
+                }
+            }
+        }
+
+        mul_block(L, db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
+        mul_block(R, db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
+    };
+
     auto bbd_stages = (EnsembleStages)*pdata_ival[ens_bbd_stages];
     switch (bbd_stages)
     {
     case ens_sinc:
         process_sinc_delays(dataL, dataR);
         break;
+    case ens_128:
+        process_bbd_delays(dataL, dataR, del_128L1, del_128L2, del_128R1, del_128R2);
+        break;
+    case ens_256:
+        process_bbd_delays(dataL, dataR, del_256L1, del_256L2, del_256R1, del_256R2);
+        break;
     case ens_512:
-        process_bbd_delays<512>(dataL, dataR);
+        process_bbd_delays(dataL, dataR, del_512L1, del_512L2, del_512R1, del_512R2);
         break;
     case ens_1024:
-        process_bbd_delays<1024>(dataL, dataR);
+        process_bbd_delays(dataL, dataR, del_1024L1, del_1024L2, del_1024R1, del_1024R2);
         break;
     case ens_2048:
-        process_bbd_delays<2048>(dataL, dataR);
+        process_bbd_delays(dataL, dataR, del_2048L1, del_2048L2, del_2048R1, del_2048R2);
         break;
     }
 
@@ -339,9 +296,11 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_bbd_stages].posy_offset = 3;
     fxdata->p[ens_bbd_aa_cutoff].set_name("AA Cutoff");
     fxdata->p[ens_bbd_aa_cutoff].set_type(ct_freq_audible);
+    fxdata->p[ens_bbd_aa_cutoff].val_default.f = 3.65f * 12.f;
     fxdata->p[ens_bbd_aa_cutoff].posy_offset = 3;
     fxdata->p[ens_bbd_nonlin].set_name("Nonlinearity");
     fxdata->p[ens_bbd_nonlin].set_type(ct_percent);
+    fxdata->p[ens_bbd_nonlin].val_default.f = 0.5f;
     fxdata->p[ens_bbd_nonlin].posy_offset = 3;
 
     fxdata->p[ens_lfo_freq1].set_name("Frequency 1");

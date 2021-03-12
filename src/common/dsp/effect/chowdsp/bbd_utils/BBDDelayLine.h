@@ -28,10 +28,13 @@ template <size_t STAGES> class BBDDelayLine
             if (evenOn)
             {
                 std::array<std::complex<float>, FilterSpec::N_filt> gIn;
+                float sum = 0.0f;
                 for (size_t i = 0; i < FilterSpec::N_filt; ++i)
+                {
                     gIn[i] = inputFilters[i].calcGUp();
-                buffer[bufferPtr++] = std::real(
-                    std::inner_product(xIn.begin(), xIn.end(), gIn.begin(), std::complex<float>()));
+                    sum += xIn[i].real() * gIn[i].real() - xIn[i].imag() * gIn[i].imag();
+                }
+                buffer[bufferPtr++] = sum;
                 bufferPtr = (bufferPtr < STAGES) ? bufferPtr : 0;
             }
             else
@@ -48,20 +51,21 @@ template <size_t STAGES> class BBDDelayLine
         }
         tn -= Ts;
 
-        for (size_t i = 0; i < FilterSpec::N_filt; ++i)
+        for (auto &iFilt : inputFilters)
         {
-            inputFilters[i].calcGDown();
-            outputFilters[i].calcGDown();
+            iFilt.calcGDown();
+            iFilt.process(u);
         }
 
-        for (auto &iFilt : inputFilters)
-            iFilt.process(u);
-
+        float sum = 0.0f;
         for (size_t i = 0; i < FilterSpec::N_filt; ++i)
+        {
+            outputFilters[i].calcGDown();
             outputFilters[i].process(xOutAccum[i]);
+            sum += xOut[i].real();
+        }
 
-        float output = H0 * yBBD_old +
-                       std::real(std::accumulate(xOut.begin(), xOut.end(), std::complex<float>()));
+        float output = H0 * yBBD_old + sum;
 
         return waveshape2.processSample(output);
     }
