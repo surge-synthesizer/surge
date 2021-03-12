@@ -45,7 +45,7 @@
 enum ExModes
 {
     burst_noise,
-    burst_dust,
+    burst_pink_noise,
     burst_sine,
     burst_tri,
     burst_ramp,
@@ -53,7 +53,7 @@ enum ExModes
     burst_sweep,
 
     constant_noise,
-    constant_dust,
+    constant_pink_noise,
     constant_sine,
     constant_tri,
     constant_ramp,
@@ -72,8 +72,8 @@ std::string waveguide_excitation_name(int i)
     {
     case burst_noise:
         return "Burst Noise";
-    case burst_dust:
-        return "Burst Dark Noise";
+    case burst_pink_noise:
+        return "Burst Pink Noise";
     case burst_sine:
         return "Burst Sine";
     case burst_ramp:
@@ -86,8 +86,8 @@ std::string waveguide_excitation_name(int i)
         return "Burst Sweep";
     case constant_noise:
         return "Constant Noise";
-    case constant_dust:
-        return "Constant Dark Noise";
+    case constant_pink_noise:
+        return "Constant Pink Noise";
     case constant_sine:
         return "Constant Sine";
     case constant_tri:
@@ -262,9 +262,9 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             delayLine[1].write(0);
             break;
 
-        case burst_dust:
+        case burst_pink_noise:
             d0 = 1.0;
-        case constant_dust:
+        case constant_pink_noise:
         {
             if (dustrp >= BLOCK_SIZE_OS)
             {
@@ -341,19 +341,35 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         0.5);
 
     auto fbp = limit_range(localcopy[oscdata->p[wg_str1_decay].param_id_in_scene].f, 0.f, 1.f);
-    fbp = sqrt(fbp);
-    auto fb0 = 0.85; // just picked by listening
-    feedback[0].newValue(fbp + fb0 * (1 - fbp));
+
+    if (fbp < 0.2)
+    {
+        // go from 0.85 to 0.95
+        feedback[0].newValue(0.85f + (0.5f * fbp));
+    }
+    else
+    {
+        // go from 0.95 to 1.0
+        feedback[0].newValue(0.9375f + (0.0625f * fbp));
+    }
 
     auto fbp2 = limit_range(localcopy[oscdata->p[wg_str2_decay].param_id_in_scene].f, 0.f, 1.f);
-    fbp2 = sqrt(fbp2);
-    feedback[1].newValue(fbp2 + fb0 * (1 - fbp2));
+
+    if (fbp2 < 0.2)
+    {
+        feedback[1].newValue(0.85f + (0.5f * fbp2));
+    }
+    else
+    {
+        feedback[1].newValue(0.9375f + (0.0625f * fbp2));
+    }
 
     // fmdepthV basically goes 0 -> 16 so lets push it 0,1 for now
     double fv = fmdepthV / 16.0;
     fmdepth.newValue(fv);
 
     tone.newValue(limit_range(localcopy[oscdata->p[wg_stiffness].param_id_in_scene].f, -1.f, 1.f));
+
     float clo = -12, cmid = 100, chi = -33;
     float hpCutoff = chi;
     float lpCutoff = cmid;
@@ -375,10 +391,12 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     // hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 
     float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f};
-    if (mode == constant_dust)
+
+    if (mode == constant_pink_noise)
     {
         fillDustBuffer(pitchmult_inv, pitchmult2_inv);
     }
+
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
         for (int t = 0; t < 2; ++t)
@@ -386,8 +404,11 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             auto v = tap[t].v;
             float *phs = (t == 0) ? &phase1 : &phase2;
             float dp = (t == 0) ? dp1 : dp2;
+
             if (FM)
+            {
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
+            }
 
             val[t] = delayLine[t].read(v);
             fbNoOutVal[t] = 0.f;
@@ -400,9 +421,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
                 val[t] += examp.v * (urd(gen) * 2 - 1);
             }
             break;
-            case constant_dust:
+            case constant_pink_noise:
             {
-
                 auto ds1 = examp.v * dustBuffer[t][i];
                 val[t] += ds1;
             }
@@ -410,24 +430,33 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             case constant_ramp:
             {
                 auto rn = 0.707 * (*phs * 2 - 1);
+
                 val[t] += examp.v * rn;
                 *phs += dp;
+
                 if (*phs > 1)
+                {
                     *phs -= 1;
+                }
             }
             break;
             case constant_tri:
             {
                 auto rn = 0.707 * ((*phs < 0.5) ? (*phs * 4 - 1) : ((1 - *phs) * 4 - 1));
+
                 val[t] += examp.v * rn;
                 *phs += dp;
+
                 if (*phs > 1)
+                {
                     *phs -= 1;
+                }
             }
             break;
             case constant_sweep:
             {
                 float sv = 0;
+
                 if (*phs == 0)
                 {
                     sv = 1.0;
@@ -436,28 +465,40 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
                 {
                     sv = std::sin(2.0 * M_PI / *phs);
                 }
+
                 val[t] += examp.v * 0.707 * sv;
                 *phs += dp;
+
                 if (*phs > 1)
+                {
                     *phs -= 1;
+                }
             }
             break;
             case constant_sine:
             {
                 float sv = std::sin(2.0 * M_PI * *phs);
+
                 val[t] += examp.v * 0.707 * sv;
                 *phs += dp;
+
                 if (*phs > 1)
+                {
                     *phs -= 1;
+                }
             }
             break;
             case constant_square:
             {
                 auto rn = 0.707 * ((*phs > 0.5) ? 1 : -1);
+
                 val[t] += examp.v * rn;
                 *phs += dp;
+
                 if (*phs > 1)
+                {
                     *phs -= 1;
+                }
             }
             break;
             case constant_audioin:
@@ -467,17 +508,17 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             break;
             default:
                 // We should do something else with amplitude here
-                // val[t] *= examp.v;
+                val[t] *= examp.v;
                 break;
             }
+
             // precautionary hard clip
             auto fbv = limit_range(val[t] + fbNoOutVal[t], -1.f, 1.f);
 
             // one pole filter the feedback value
-            // auto filtv = tone.v * fbv + (1 - tone.v) * priorSample[t];
             auto lpfiltv = lp.process_sample(fbv);
 
-            auto tv1 = std::max(tone.v * 1.6f, 0.f) * 0.62; // if this was 625 i would go to 1
+            auto tv1 = std::max(tone.v * 1.6f, 0.f) * 0.62; // if this was 625 I would go to 1
             float hptv = tv1 * tv1 * tv1;
             auto ophpfiltv = (1 - hptv) * fbv - (hptv)*priorSample[t];
             ophpfiltv = (ophpfiltv < 1e-20 && ophpfiltv > -1e-20) ? 0.0 : ophpfiltv;
@@ -492,7 +533,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
         // float out = (1.0 - t2level.v) * val[0] + t2level.v * val[1];
         float out = val[0] + t2level.v * (val[1] - val[0]);
-        // softclip the ouptput
+
+        // softclip the output
         out = out * (1.5 - 0.5 * out * out);
 
         output[i] = out;
@@ -507,6 +549,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         examp.process();
         fmdepth.process();
     }
+
     lp.flush_sample_denormal();
 
     if (charFilt.doFilter)
