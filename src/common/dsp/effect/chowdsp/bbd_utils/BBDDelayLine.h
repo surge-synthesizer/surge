@@ -8,21 +8,20 @@
 #include "BBDFilters.h"
 #include "BBDNonlin.h"
 
-template<size_t STAGES>
-class BBDDelayLine
+template <size_t STAGES> class BBDDelayLine
 {
-public:
+  public:
     BBDDelayLine() = default;
 
-    void prepare (double sampleRate);
-    void setWaveshapeParams (float drive) { waveshape2.setDrive (drive); }
-    void setFilterFreq (float freqHz);
-    void setDelayTime (float delaySec);
+    void prepare(double sampleRate);
+    void setWaveshapeParams(float drive) { waveshape2.setDrive(drive); }
+    void setFilterFreq(float freqHz);
+    void setDelayTime(float delaySec);
 
-    inline float process (float u)
+    inline float process(float u)
     {
         std::array<std::complex<float>, FilterSpec::N_filt> xOutAccum;
-        std::fill (xOutAccum.begin(), xOutAccum.end(), std::complex<float>());
+        std::fill(xOutAccum.begin(), xOutAccum.end(), std::complex<float>());
 
         while (tn < Ts)
         {
@@ -31,7 +30,8 @@ public:
                 std::array<std::complex<float>, FilterSpec::N_filt> gIn;
                 for (size_t i = 0; i < FilterSpec::N_filt; ++i)
                     gIn[i] = inputFilters[i].calcGUp();
-                buffer[bufferPtr++] = std::real (std::inner_product (xIn.begin(), xIn.end(), gIn.begin(), std::complex<float>()));
+                buffer[bufferPtr++] = std::real(
+                    std::inner_product(xIn.begin(), xIn.end(), gIn.begin(), std::complex<float>()));
                 bufferPtr = (bufferPtr < STAGES) ? bufferPtr : 0;
             }
             else
@@ -43,7 +43,7 @@ public:
                     xOutAccum[i] += outputFilters[i].calcGUp() * delta;
             }
 
-            evenOn = ! evenOn;
+            evenOn = !evenOn;
             tn += Ts_bbd;
         }
         tn -= Ts;
@@ -54,18 +54,19 @@ public:
             outputFilters[i].calcGDown();
         }
 
-        for (auto& iFilt : inputFilters)
-            iFilt.process (u);
+        for (auto &iFilt : inputFilters)
+            iFilt.process(u);
 
         for (size_t i = 0; i < FilterSpec::N_filt; ++i)
-            outputFilters[i].process (xOutAccum[i]);
+            outputFilters[i].process(xOutAccum[i]);
 
-        float output = H0 * yBBD_old + std::real (std::accumulate (xOut.begin(), xOut.end(), std::complex<float>()));
+        float output = H0 * yBBD_old +
+                       std::real(std::accumulate(xOut.begin(), xOut.end(), std::complex<float>()));
 
-        return waveshape2.processSample (output);
+        return waveshape2.processSample(output);
     }
 
-private:
+  private:
     float FS = 48000.0f;
     float Ts = 1.0f / FS;
     float Ts_bbd = Ts;

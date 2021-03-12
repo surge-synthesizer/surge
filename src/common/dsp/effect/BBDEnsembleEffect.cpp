@@ -16,12 +16,38 @@
 #include "BBDEnsembleEffect.h"
 #include "DebugHelpers.h"
 
+enum EnsembleStages
+{
+    ens_sinc = 0,
+    ens_512,
+    ens_1024,
+    ens_2048
+};
+
+std::string ensemble_stage_name(int i)
+{
+    switch ((EnsembleStages)i)
+    {
+    case ens_sinc:
+        return "Sinc (clean) Delay";
+    case ens_512:
+        return "512 Stage BBD";
+    case ens_1024:
+        return "1024 State BBD";
+    case ens_2048:
+        return "2048 Stage BBD";
+    }
+    return "Error";
+}
+
+int ensemble_stage_count() { return 4; }
+
 namespace
 {
 constexpr float delay1Ms = 0.6f;
 constexpr float delay2Ms = 0.2f;
 constexpr float delay0Ms = 5.0f;
-}
+} // namespace
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
@@ -38,14 +64,13 @@ void BBDEnsembleEffect::init()
 {
     setvars(true);
 
-    auto init_bbds = [=] (auto& delL1, auto& delL2, auto& delR1, auto& delR2)
-    {
-        for (auto* del : { &delL1, &delL2, &delR1, &delR2 })
+    auto init_bbds = [=](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+        for (auto *del : {&delL1, &delL2, &delR1, &delR2})
         {
             del->prepare(samplerate);
             del->setWaveshapeParams(0.5f);
-            del->setFilterFreq (10000.0f);
-            del->setDelayTime (delay0Ms * 0.001f);
+            del->setFilterFreq(10000.0f);
+            del->setDelayTime(delay0Ms * 0.001f);
         }
     };
 
@@ -73,7 +98,7 @@ void BBDEnsembleEffect::setvars(bool init)
     }
 }
 
-void BBDEnsembleEffect::process_sinc_delays (float *dataL, float *dataR)
+void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR)
 {
     float del1 = delay1Ms * 0.001 * samplerate;
     float del2 = delay2Ms * 0.001 * samplerate;
@@ -111,38 +136,67 @@ void BBDEnsembleEffect::process_sinc_delays (float *dataL, float *dataR)
     }
 }
 
-template<size_t STAGES>
-void BBDEnsembleEffect::process_bbd_delays (float *dataL, float *dataR)
+/*
+ * We can't do constexpr ifs in c++14 so specialize a template
+ */
+template <size_t STAGES>
+inline void
+BBDEnsembleEffect::setupDelayLines(BBDDelayLine<STAGES> *&delL1, BBDDelayLine<STAGES> *&delL2,
+                                   BBDDelayLine<STAGES> *&delR1, BBDDelayLine<STAGES> *&delR2)
 {
-    BBDDelayLine<STAGES>* delL1;
-    BBDDelayLine<STAGES>* delL2;
-    BBDDelayLine<STAGES>* delR1;
-    BBDDelayLine<STAGES>* delR2;
+    assert(false);
+    // This should always be specialied away
+    delL1 = nullptr;
+    delL2 = nullptr;
+    delR1 = nullptr;
+    delR2 = nullptr;
+}
 
-    if constexpr (STAGES == 512)
-    {
-        delL1 = &del_512L1;
-        delL2 = &del_512L2;
-        delR1 = &del_512R1;
-        delR2 = &del_512R2;
-    }
-    else if constexpr (STAGES == 1024)
-    {
-        delL1 = &del_1024L1;
-        delL2 = &del_1024L2;
-        delR1 = &del_1024R1;
-        delR2 = &del_1024R2;
-    }
-    else if constexpr (STAGES == 2048)
-    {
-        delL1 = &del_2048L1;
-        delL2 = &del_2048L2;
-        delR1 = &del_2048R1;
-        delR2 = &del_2048R2;
-    }
+template <>
+inline void
+BBDEnsembleEffect::setupDelayLines<512>(BBDDelayLine<512> *&delL1, BBDDelayLine<512> *&delL2,
+                                        BBDDelayLine<512> *&delR1, BBDDelayLine<512> *&delR2)
+{
+    delL1 = &del_512L1;
+    delL2 = &del_512L2;
+    delR1 = &del_512R1;
+    delR2 = &del_512R2;
+}
 
-    const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 * storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
-    for (auto* del : { delL1, delL2, delR1, delR2 })
+template <>
+inline void
+BBDEnsembleEffect::setupDelayLines<1024>(BBDDelayLine<1024> *&delL1, BBDDelayLine<1024> *&delL2,
+                                         BBDDelayLine<1024> *&delR1, BBDDelayLine<1024> *&delR2)
+{
+    delL1 = &del_1024L1;
+    delL2 = &del_1024L2;
+    delR1 = &del_1024R1;
+    delR2 = &del_1024R2;
+}
+
+template <>
+inline void
+BBDEnsembleEffect::setupDelayLines<2048>(BBDDelayLine<2048> *&delL1, BBDDelayLine<2048> *&delL2,
+                                         BBDDelayLine<2048> *&delR1, BBDDelayLine<2048> *&delR2)
+{
+    delL1 = &del_2048L1;
+    delL2 = &del_2048L2;
+    delR1 = &del_2048R1;
+    delR2 = &del_2048R2;
+}
+
+template <size_t STAGES> void BBDEnsembleEffect::process_bbd_delays(float *dataL, float *dataR)
+{
+    BBDDelayLine<STAGES> *delL1;
+    BBDDelayLine<STAGES> *delL2;
+    BBDDelayLine<STAGES> *delR1;
+    BBDDelayLine<STAGES> *delR2;
+
+    setupDelayLines<STAGES>(delL1, delL2, delR1, delR2);
+
+    const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 *
+                           storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
+    for (auto *del : {delL1, delL2, delR1, delR2})
     {
         del->setFilterFreq(aa_cutoff);
         del->setWaveshapeParams(*f[ens_bbd_nonlin]);
@@ -206,16 +260,22 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));
     input.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-    // @TODO: figure out a better way to switch between sinc and BBD?
-    auto bbd_stages = *f[ens_bbd_stages];
-    if (bbd_stages < 0.25f) // sinc delay line
+    auto bbd_stages = (EnsembleStages)*pdata_ival[ens_bbd_stages];
+    switch (bbd_stages)
+    {
+    case ens_sinc:
         process_sinc_delays(dataL, dataR);
-    else if (bbd_stages < 0.5f) // 512-stage BBD
+        break;
+    case ens_512:
         process_bbd_delays<512>(dataL, dataR);
-    else if (bbd_stages < 0.75f) // 1024-stage BBD
+        break;
+    case ens_1024:
         process_bbd_delays<1024>(dataL, dataR);
-    else // 2048-stage BBD
+        break;
+    case ens_2048:
         process_bbd_delays<2048>(dataL, dataR);
+        break;
+    }
 
     // scale width
     width.set_target_smoothed(clamp1bp(*f[ens_width]));
@@ -275,7 +335,7 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_input_gain].posy_offset = 1;
 
     fxdata->p[ens_bbd_stages].set_name("Stages");
-    fxdata->p[ens_bbd_stages].set_type(ct_percent);
+    fxdata->p[ens_bbd_stages].set_type(ct_ensemble_stages);
     fxdata->p[ens_bbd_stages].posy_offset = 3;
     fxdata->p[ens_bbd_aa_cutoff].set_name("AA Cutoff");
     fxdata->p[ens_bbd_aa_cutoff].set_type(ct_freq_audible);
@@ -314,7 +374,7 @@ void BBDEnsembleEffect::init_default_values()
 {
     fxdata->p[ens_input_gain].val.f = 0.f;
 
-    fxdata->p[ens_bbd_stages].val.f = 0.0f;
+    fxdata->p[ens_bbd_stages].val.i = 2;
     fxdata->p[ens_bbd_aa_cutoff].val.f = 3.65f * 12.f;
     fxdata->p[ens_bbd_nonlin].val.f = 0.5f;
 

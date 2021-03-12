@@ -6,21 +6,21 @@
 
 class BBDDelay : public chowdsp::PluginBase<BBDDelay>
 {
-public:
+  public:
     BBDDelay();
 
-    static void addParameters (Parameters& params);
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    static void addParameters(Parameters &params);
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-    void processAudioBlock (AudioBuffer<float>& buffer) override;
+    void processAudioBlock(AudioBuffer<float> &buffer) override;
 
-private:
-    std::atomic<float>* delayMsParam = nullptr;
-    std::atomic<float>* nStagesParam = nullptr;
-    std::atomic<float>* reconstructParam = nullptr;
-    std::atomic<float>* driveParam = nullptr;
-    std::atomic<float>* freqParam = nullptr;
-    std::atomic<float>* compandParam = nullptr;
+  private:
+    std::atomic<float> *delayMsParam = nullptr;
+    std::atomic<float> *nStagesParam = nullptr;
+    std::atomic<float> *reconstructParam = nullptr;
+    std::atomic<float> *driveParam = nullptr;
+    std::atomic<float> *freqParam = nullptr;
+    std::atomic<float> *compandParam = nullptr;
 
     BBDDelayLine<512> del512[2];
     BBDDelayLine<1024> del1024[2];
@@ -35,5 +35,5 @@ private:
     SmoothedValue<float, ValueSmoothingTypes::Linear> delaySmooth[2];
     SmoothedValue<float, ValueSmoothingTypes::Linear> freqSmooth[2];
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BBDDelay)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BBDDelay)
 };

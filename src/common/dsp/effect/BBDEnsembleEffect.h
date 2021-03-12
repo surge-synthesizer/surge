@@ -66,10 +66,13 @@ class BBDEnsembleEffect : public Effect
     virtual int group_label_ypos(int id) override;
 
   private:
-    void process_sinc_delays (float *dataL, float *dataR);
+    void process_sinc_delays(float *dataL, float *dataR);
 
-    template<size_t STAGES>
-    void process_bbd_delays (float *dataL, float *dataR);
+    template <size_t STAGES> void process_bbd_delays(float *dataL, float *dataR);
+
+    template <size_t STAGES>
+    void setupDelayLines(BBDDelayLine<STAGES> *&delL1, BBDDelayLine<STAGES> *&delL2,
+                         BBDDelayLine<STAGES> *&delR1, BBDDelayLine<STAGES> *&delR2);
 
     Surge::ModControl modlfos[2][3]; // 2 LFOs differening by 120 degree in phase at outputs
     SSESincDelayLine<8192> delL, delR;
