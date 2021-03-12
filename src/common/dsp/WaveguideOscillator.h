@@ -41,7 +41,7 @@ class WaveguideOscillator : public Oscillator
     };
 
     WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), lp(s)
+        : Oscillator(s, o, p), lp(s), noiseLp(s)
     {
     }
 
@@ -66,7 +66,10 @@ class WaveguideOscillator : public Oscillator
     std::minstd_rand gen;
     std::uniform_real_distribution<float> urd;
 
-    BiquadFilter lp;
+    float dustBuffer[2][BLOCK_SIZE_OS];
+    void fillDustBuffer(float tap0, float tap1);
+
+    BiquadFilter lp, noiseLp;
 };
 
 #endif // SURGE_WAVEGUIDEOSCILLATOR_H
