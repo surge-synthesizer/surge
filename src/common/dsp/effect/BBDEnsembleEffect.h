@@ -25,6 +25,7 @@
 #include <vt_dsp/lipol.h>
 #include "ModControl.h"
 #include "SSESincDelayLine.h"
+#include "chowdsp/bbd_utils/BBDDelayLine.h"
 
 class BBDEnsembleEffect : public Effect
 {
@@ -38,6 +39,7 @@ class BBDEnsembleEffect : public Effect
 
         ens_bbd_stages,
         ens_bbd_aa_cutoff,
+        ens_bbd_nonlin,
 
         ens_lfo_freq1,
         ens_lfo_depth1,
@@ -64,6 +66,14 @@ class BBDEnsembleEffect : public Effect
     virtual int group_label_ypos(int id) override;
 
   private:
+    void process_sinc_delays (float *dataL, float *dataR);
+
+    template<size_t STAGES>
+    void process_bbd_delays (float *dataL, float *dataR);
+
     Surge::ModControl modlfos[2][3]; // 2 LFOs differening by 120 degree in phase at outputs
     SSESincDelayLine<8192> delL, delR;
+    BBDDelayLine<512> del_512L1, del_512L2, del_512R1, del_512R2;
+    BBDDelayLine<1024> del_1024L1, del_1024L2, del_1024R1, del_1024R2;
+    BBDDelayLine<2048> del_2048L1, del_2048L2, del_2048R1, del_2048R2;
 };
