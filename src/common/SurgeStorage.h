@@ -287,8 +287,8 @@ const char fx_type_names[n_fx_types][16] = {
 };
 
 const char fx_type_shortnames[n_fx_types][8] = {
-    u8"—",  "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",  "RV2", "FL",
-    "RM", "AW",  "NEU", "GEQ", "RES", "CHW",  "XCT", "ENS", "CMB", "NIM", "TAPE", "TM",
+    u8"â€”", "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",  "RV2", "FL",
+    "RM",  "AW",  "NEU", "GEQ", "RES", "CHW",  "XCT", "ENS", "CMB", "NIM", "TAPE", "TM",
 };
 
 enum fx_bypass
