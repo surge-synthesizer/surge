@@ -5894,6 +5894,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     auto hu = helpURLForSpecial("tun-menu");
+
     if (hu != "" && showhelp)
     {
         auto lurl = fullyResolvedHelpURL(hu);
@@ -5901,46 +5902,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                         [lurl]() { Surge::UserInteractions::openURL(lurl); });
         tid++;
         tuningSubMenu->addSeparator();
-    }
-
-    if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
-    {
-        // an 'mts is on' disabled menu
-        auto mm = addCallbackMenu(tuningSubMenu,
-                                  Surge::UI::toOSCaseForMenu("ODDSound MTS-ESP Active"), []() {});
-        mm->setEnabled(false);
-
-        // an 'mts scale name' disabled menu
-        std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
-        mm = addCallbackMenu(tuningSubMenu, mtsScale, []() {});
-        mm->setEnabled(false);
-
-        // an MTS tuning tyode tygle
-        mm = addCallbackMenu(
-            tuningSubMenu, Surge::UI::toOSCaseForMenu("Query Tuning Only At Note On"), [this]() {
-                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
-                }
-                else
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
-                }
-            });
-        mm->setEnabled(true);
-        mm->setChecked(this->synth->storage.oddsoundRetuneMode ==
-                       SurgeStorage::RETUNE_NOTE_ON_ONLY);
-
-        // a 'turn mts off' menu
-        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Disconnect from MTS-ESP"),
-                        [this]() {
-                            auto q = this->synth->storage.oddsound_mts_client;
-                            this->synth->storage.oddsound_mts_active = false;
-                            this->synth->storage.oddsound_mts_client = nullptr;
-                            MTS_DeregisterClient(q);
-                        });
-
-        return tuningSubMenu;
     }
 
     bool isTuningEnabled = !synth->storage.isStandardTuning;
@@ -6001,7 +5962,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     tuningSubMenu->addSeparator();
     tid++;
 
-    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Apply .scl Tuning..."), [this]() {
+    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .scl Tuning..."), [this]() {
         auto cb = [this](std::string sf) {
             std::string sfx = ".scl";
             if (sf.length() >= sfx.length())
@@ -6041,7 +6002,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     tid++;
 
     addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Apply .kbm Keyboard Mapping..."), [this]() {
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
             auto cb = [this](std::string sf) {
                 std::string sfx = ".kbm";
                 if (sf.length() >= sfx.length())
@@ -6086,7 +6047,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
     addCallbackMenu(
         tuningSubMenu,
-        Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI note 69) directly to..."),
+        Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) directly to..."),
         [this, middle_A, menuRect]() {
             char ma[256];
             sprintf(ma, "Remap %s Frequency", middle_A.c_str());
@@ -6109,41 +6070,85 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     tuningSubMenu->addSeparator();
 
     auto mod = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune At Keyboard Before Modulation"), [this]() {
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Apply Tuning at MIDI Input"), [this]() {
             this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         });
     mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY);
     tid++;
 
     mod = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Tune After Modulation"),
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Apply Tuning After Modulation"),
         [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
     mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
     tid++;
 
+    tuningSubMenu->addSeparator();
+
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "useODDMTS", false);
-    auto menuItem = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Use ODDSound MTS-ESP If Installed"),
-        [this, tsMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useODDMTS", !tsMode);
-            if (tsMode)
-            {
-                // We toggled to false
-                this->synth->storage.deinitialize_oddsound();
-            }
-            else
-            {
-                this->synth->storage.initialize_oddsound();
-            }
-        });
+    std::string txt = "Use ODDSound" + Surge::UI::toOSCaseForMenu(" MTS-ESP (if Loaded in DAW)");
+
+    auto menuItem = addCallbackMenu(tuningSubMenu, txt, [this, tsMode]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "useODDMTS", !tsMode);
+        if (tsMode)
+        {
+            // We toggled to false
+            this->synth->storage.deinitialize_oddsound();
+        }
+        else
+        {
+            this->synth->storage.initialize_oddsound();
+        }
+    });
 
     if (tsMode && !this->synth->storage.oddsound_mts_client)
     {
-        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Try To ReConnect To MTS-ESP"),
+        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Reconnect to MTS-ESP"),
                         [this]() { this->synth->storage.initialize_oddsound(); });
     }
     menuItem->setChecked(tsMode);
+
+    if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
+    {
+        // a 'turn MTS off' menu
+        addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Disconnect from MTS-ESP"),
+                        [this]() {
+                            auto q = this->synth->storage.oddsound_mts_client;
+                            this->synth->storage.oddsound_mts_active = false;
+                            this->synth->storage.oddsound_mts_client = nullptr;
+                            MTS_DeregisterClient(q);
+                        });
+
+        // an MTS tuning toggle
+        auto mm = addCallbackMenu(
+            tuningSubMenu, Surge::UI::toOSCaseForMenu("Query Tuning at Note On Only"), [this]() {
+                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                }
+                else
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                }
+            });
+        mm->setEnabled(true);
+        mm->setChecked(this->synth->storage.oddsoundRetuneMode ==
+                       SurgeStorage::RETUNE_NOTE_ON_ONLY);
+
+        // an 'MTS is on' disabled menu
+        mm = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("MTS-ESP is Active"),
+                             []() {});
+        mm->setEnabled(false);
+
+        // an 'MTS scale name' disabled menu
+        std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
+        mm = addCallbackMenu(tuningSubMenu, mtsScale, []() {});
+        mm->setEnabled(false);
+
+        return tuningSubMenu;
+    }
+
     tuningSubMenu->addSeparator();
+
     tid++;
     auto *sct = addCallbackMenu(
         tuningSubMenu, Surge::UI::toOSCaseForMenu("Show Current Tuning Information..."),
