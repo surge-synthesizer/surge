@@ -898,6 +898,15 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 15;
         val_default.i = 0;
         break;
+    case ct_ensemble_stages:
+    {
+        extern int ensemble_stage_count();
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = ensemble_stage_count() - 1;
+        val_default.i = 0;
+        break;
+    }
     case ct_waveguide_excitation_model:
     {
         extern int waveguide_excitations_count();
@@ -2990,6 +2999,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
         {
             extern std::string eurotwist_engine_name(int);
             auto n = eurotwist_engine_name(i);
+            snprintf(txt, TXT_SIZE, "%s", n.c_str());
+        }
+        break;
+        case ct_ensemble_stages:
+        {
+            extern std::string ensemble_stage_name(int);
+            auto n = ensemble_stage_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
         break;

@@ -167,6 +167,7 @@ enum ctrltypes
     ct_waveguide_excitation_model,
     ct_bbd_lforate,
     ct_eurotwist_engine,
+    ct_ensemble_stages,
     num_ctrltypes,
 };
 

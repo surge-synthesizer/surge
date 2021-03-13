@@ -243,6 +243,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.h
   src/common/dsp/effect/chowdsp/Chow.cpp
+  src/common/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
   src/common/dsp/effect/chowdsp/exciter/Exciter.cpp
   src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
