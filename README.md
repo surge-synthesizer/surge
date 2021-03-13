@@ -270,7 +270,7 @@ A build with CMake is also really simple:
 cd surge
 cmake . -Bbuild
 cd build
-make -j 2 Surge.vst3
+make -j 2 Surge-VST3-Packaged
 ```
 
 This will build the VST3 and deposit it in `surge/products` folder.
@@ -361,8 +361,8 @@ On Mac and Linux, the CMake file also provides installation targets:
 |--------|-------------|
 | install-everything-local | Install all components and resoures in the appropriate local location for your OS |
 | install-everything-global | Install all components and resources in the appropriate global location (driven by CMAKE_INSTALL_PREFIX on Linux) |
-| install-resources-(global|local) | Install just the resources locally or globally |
-| install-(vst2|vst3|au|lv2)-(global|local) | Install the plugin and associated resources locally and globally |
+| install-resources-(global/local) | Install just the resources locally or globally |
+| install-(vst2/vst3/au/lv2)-(global/local) | Install the plugin and associated resources locally or globally |
 
 A reasonable session, then, could be (say, on Linux):
 
