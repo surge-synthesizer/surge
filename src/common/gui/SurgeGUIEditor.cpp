@@ -6118,7 +6118,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                             MTS_DeregisterClient(q);
                         });
 
-        // an MTS tuning tyode tygle
+        // an MTS tuning toggle
         auto mm = addCallbackMenu(
             tuningSubMenu, Surge::UI::toOSCaseForMenu("Query Tuning at Note On Only"), [this]() {
                 if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
