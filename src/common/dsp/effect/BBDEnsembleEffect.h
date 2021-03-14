@@ -75,4 +75,6 @@ class BBDEnsembleEffect : public Effect
     BBDDelayLine<512> del_512L1, del_512L2, del_512R1, del_512R2;
     BBDDelayLine<1024> del_1024L1, del_1024L2, del_1024R1, del_1024R2;
     BBDDelayLine<2048> del_2048L1, del_2048L2, del_2048R1, del_2048R2;
+
+    size_t block_counter;
 };

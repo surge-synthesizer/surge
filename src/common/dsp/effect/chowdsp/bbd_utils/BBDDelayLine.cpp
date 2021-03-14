@@ -39,18 +39,6 @@ template <size_t STAGES> void BBDDelayLine<STAGES>::setFilterFreq(float freqHz)
     }
 }
 
-template <size_t STAGES> void BBDDelayLine<STAGES>::setDelayTime(float delaySec)
-{
-    auto clock_rate_hz = (2.0f * (float)STAGES) / delaySec;
-    Ts_bbd = 1.0f / clock_rate_hz;
-
-    for (auto &iFilt : inputFilters)
-        iFilt.set_delta(2 * Ts_bbd);
-
-    for (auto &oFilt : outputFilters)
-        oFilt.set_delta(2 * Ts_bbd);
-}
-
 template class BBDDelayLine<64>;
 template class BBDDelayLine<128>;
 template class BBDDelayLine<256>;
