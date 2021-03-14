@@ -3,6 +3,53 @@
 #include "../shared/wdf.h"
 #include <memory>
 
+/**
+ * Faster version of chowdsp::WDF::Diode.
+ * Basically making use of the fact that we know some other values
+ * in the WDF tree will not change on the fly.
+ */
+class FastDiode : public chowdsp::WDF::WDFNode
+{
+  public:
+    /** Creates a new WDF diode, with the given diode specifications.
+     * @param Is: reverse saturation current
+     * @param Vt: thermal voltage
+     */
+    FastDiode(double Is, double Vt)
+        : chowdsp::WDF::WDFNode("Diode"), Is(Is), Vt(Vt), oneOverVt(1.0 / Vt)
+    {
+    }
+
+    virtual ~FastDiode() {}
+
+    inline void precomputeValues()
+    {
+        nextR_Is = next->R * Is;
+        logVal = std::log(nextR_Is * oneOverVt);
+    }
+
+    inline void calcImpedance() override {}
+
+    /** Accepts an incident wave into a WDF diode. */
+    inline void incident(double x) noexcept override { a = x; }
+
+    /** Propogates a reflected wave from a WDF diode. */
+    inline double reflected() noexcept override
+    {
+        // See eqn (10) from reference paper
+        b = a + 2 * nextR_Is - 2 * Vt * chowdsp::Omega::omega2(logVal + (a + nextR_Is) * oneOverVt);
+        return b;
+    }
+
+  private:
+    const double Is;        // reverse saturation current
+    const double Vt;        // thermal voltage
+    const double oneOverVt; // thermal voltage
+
+    double logVal = 1.0f;
+    double nextR_Is = 0.0f;
+};
+
 class BBDNonlin
 {
   public:
@@ -27,6 +74,7 @@ class BBDNonlin
 
         S2 = std::make_unique<WDFSeries>(&Rgk, P3.get());
         D1.connectToNode(S2.get());
+        D1.precomputeValues();
 
         Vp = 0.0;
         lut(0.0);
@@ -39,7 +87,7 @@ class BBDNonlin
 
     void setDrive(float newDrive) { drive = newDrive; }
 
-    inline float processSample(float Vg)
+    inline float processSample(float Vg) noexcept
     {
         Vin.setVoltage(Vg);
         Is.setCurrent(getCurrent(Vg, Vp));
@@ -92,7 +140,7 @@ class BBDNonlin
     chowdsp::WDF::ResistiveCurrentSource Is;
     chowdsp::WDF::ResistiveVoltageSource Vin;
     chowdsp::WDF::Resistor Rgk{2.7e3};
-    chowdsp::WDF::Diode D1{1.0e-10, 0.02585};
+    FastDiode D1{1.0e-10, 0.02585};
 
     std::unique_ptr<chowdsp::WDF::Capacitor> Cpk;
     std::unique_ptr<chowdsp::WDF::Capacitor> Cgp;

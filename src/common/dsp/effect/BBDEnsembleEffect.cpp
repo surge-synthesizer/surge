@@ -69,6 +69,7 @@ BBDEnsembleEffect::~BBDEnsembleEffect() {}
 void BBDEnsembleEffect::init()
 {
     setvars(true);
+    block_counter = 0;
 
     auto init_bbds = [=](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})
@@ -168,12 +169,21 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
     auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
                                   auto &delR2) {
-        const auto aa_cutoff = 2 * 3.14159265358979323846 * 440 *
-                               storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]);
-        for (auto *del : {&delL1, &delL2, &delR1, &delR2})
+        // setting the filter frequency takes a while, so
+        // let's only do it every 4 times
+        if (block_counter++ == 3)
         {
-            del->setFilterFreq(aa_cutoff);
-            del->setWaveshapeParams(*f[ens_bbd_nonlin]);
+            const auto aa_cutoff =
+                std::min(2 * 3.14159265358979323846 * 440 *
+                             storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]),
+                         25000.0);
+            for (auto *del : {&delL1, &delL2, &delR1, &delR2})
+            {
+                del->setFilterFreq(aa_cutoff);
+                del->setWaveshapeParams(*f[ens_bbd_nonlin]);
+            }
+
+            block_counter = 0;
         }
 
         float del1 = delay1Ms * 0.001;
@@ -191,6 +201,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
             float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
 
+            // @TODO: can we optimise these?
             delL1.setDelayTime(t1);
             delL2.setDelayTime(t2);
             delR1.setDelayTime(t2);
@@ -200,12 +211,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             R[s] = delR1.process(dataR[s]) + delR2.process(dataR[s]);
 
             for (int i = 0; i < 3; ++i)
-            {
                 for (int j = 0; j < 2; ++j)
-                {
                     modlfos[j][i].post_process();
-                }
-            }
         }
 
         mul_block(L, db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);

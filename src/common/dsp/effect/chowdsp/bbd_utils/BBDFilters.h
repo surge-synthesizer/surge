@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "basic_dsp.h"
+#include "BBDPowLUT.h"
 #include "FastMath.h"
 
 /**
@@ -44,45 +45,6 @@ constexpr std::complex<float> oFiltPole[] = {{-176261.0f, 0.0f},
                                              {-26276.0f, +59699.0f}};
 } // namespace FilterSpec
 
-struct PowLUT
-{
-    PowLUT(float baseMin, float baseMax, float expMin, float expMax, int nTables, int nPoints)
-    {
-        tables.resize(nTables);
-        for (auto &table : tables)
-            table.resize(nPoints, 0.0f);
-
-        baseOffset = baseMin;
-        baseScale = (float)nTables / (baseMax - baseMin);
-        expOffset = expMin;
-        expScale = (float)nTables / (expMax - expMin);
-
-        for (int i = 0; i < nTables; ++i)
-        {
-            for (int j = 0; j < nPoints; ++j)
-            {
-                tables[i][j] =
-                    std::pow((float)i / baseScale + baseOffset, (float)j / expScale + expOffset);
-            }
-        }
-    }
-
-    inline float operator()(float base, float exp) const noexcept
-    {
-        auto baseIdx = size_t((base - baseOffset) * baseScale);
-        auto expIdx = size_t((base - expOffset) * expScale);
-        return tables[baseIdx][expIdx];
-    }
-
-  private:
-    std::vector<std::vector<float>> tables;
-
-    float baseOffset, baseScale;
-    float expOffset, expScale;
-};
-
-static PowLUT powLut{-1.0f, 1.0f, -0.1f, 0.1f, 256, 128};
-
 inline std::complex<float> fast_complex_exp(float angle)
 {
     return std::complex<float>(Surge::DSP::fastcos(angle), Surge::DSP::fastsin(angle));
@@ -107,17 +69,15 @@ struct InputFilter
         pole_corr = std::exp(pole * Ts);
         *x = 0.0f;
 
-        // make sure the LUT gets initialised here...
+        // make sure the static LUT gets initialised here...
         powLut(0.5f, 0.01f);
     }
 
     inline std::complex<float> calcGUp() noexcept
     {
         Arecurse *= Aplus;
-        return gCoef * Arecurse;
+        return Arecurse;
     }
-
-    inline void calcGDown() noexcept { Arecurse *= Aminus; }
 
     inline void process(float u) { *x = pole_corr * (*x) + u; }
 
@@ -131,13 +91,12 @@ struct InputFilter
         pole_corr_angle = std::arg(pole_corr);
 
         gCoef = Ts * root_corr;
-        Aminus = fast_complex_pow(pole_corr_mag, pole_corr_angle, -Ts, powLut);
     }
 
     // since we use recursive and approximate calculations for the other
     // A values, we need to use full precision here to realign everything
     // so the numerical error doesn't get away from us.
-    inline void set_time(float tn) { Arecurse = std::pow(pole_corr, tn); }
+    inline void set_time(float tn) { Arecurse = gCoef * std::pow(pole_corr, tn); }
 
     inline void set_delta(float delta)
     {
@@ -155,13 +114,10 @@ struct InputFilter
 
     std::complex<float> Arecurse{1.0f, 0.0f};
     std::complex<float> Aplus;
-    std::complex<float> Aminus;
 
     std::complex<float> *const x;
     const float Ts;
     std::complex<float> gCoef;
-
-    // PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
 };
 
 struct OutputFilter
@@ -178,10 +134,8 @@ struct OutputFilter
     inline std::complex<float> calcGUp() noexcept
     {
         Arecurse *= Aplus;
-        return Amult * Arecurse;
+        return Arecurse;
     }
-
-    inline void calcGDown() noexcept { Arecurse *= Aminus; }
 
     inline void process(std::complex<float> u) { *x = pole_corr * (*x) + u; }
 
@@ -195,11 +149,10 @@ struct OutputFilter
         pole_corr_mag = std::abs(pole_corr);
         pole_corr_angle = std::arg(pole_corr);
 
-        Aminus = fast_complex_pow(pole_corr_mag, pole_corr_angle, Ts, powLut);
         Amult = gCoef * pole_corr;
     }
 
-    inline void set_time(float tn) { Arecurse = std::pow(pole_corr, 1.0f - tn); }
+    inline void set_time(float tn) { Arecurse = Amult * std::pow(pole_corr, 1.0f - tn); }
 
     inline void set_delta(float delta)
     {
@@ -216,11 +169,8 @@ struct OutputFilter
 
     std::complex<float> Arecurse{1.0f, 0.0f};
     std::complex<float> Aplus;
-    std::complex<float> Aminus;
     std::complex<float> Amult;
 
     std::complex<float> *const x;
     const float Ts;
-
-    // PowLUT powLut { -1.0f, 1.0f, -0.1f, 0.1f, 256, 128 };
 };
