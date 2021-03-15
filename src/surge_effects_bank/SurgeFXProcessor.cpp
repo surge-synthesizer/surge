@@ -34,8 +34,9 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         snprintf(lb, 256, "fx_parm_%d", i);
         snprintf(nm, 256, "FX Parameter %d", i);
 
-        addParameter(fxParams[i] = new AudioParameterFloat(
-                         lb, nm, 0.f, 1.f, fxstorage->p[fx_param_remap[i]].get_value_f01()));
+        addParameter(fxParams[i] =
+                         new AudioParameterFloat(lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
+                                                 fxstorage->p[fx_param_remap[i]].get_value_f01()));
         fxBaseParams[i] = fxParams[i];
     }
     addParameter(

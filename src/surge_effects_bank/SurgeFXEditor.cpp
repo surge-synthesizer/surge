@@ -12,17 +12,17 @@
 #include "SurgeFXEditor.h"
 
 static std::vector<std::vector<std::string>> fxnm = {
-    {"Eq", "GEq", "Reson", "Exciter", "Chow", "Dist", "Neuron"},
+    {"Eq", "GEq", "Reson", "Exciter", "Chow", "Dist", "Neuron", "Tape"},
     {"Chorus", "Ens", "Flanger", "Phaser", "Rotary", "Delay", "Reverb1", "Reverb2"},
-    {"Combs", "Freq", "Nimbus", "Ring Mod", "Vocoder", "Airwin", "Cond"}};
+    {"Combs", "Freq", "Nimbus", "Ring Mod", "TreeMon", "Vocoder", "Airwin", "Cond"}};
 static std::vector<std::vector<int>> fxt = {
-    {fxt_eq, fxt_geq11, fxt_resonator, fxt_exciter, fxt_chow, fxt_distortion, fxt_neuron},
+    {fxt_eq, fxt_geq11, fxt_resonator, fxt_exciter, fxt_chow, fxt_distortion, fxt_neuron, fxt_tape},
     {fxt_chorus4, fxt_ensemble, fxt_flanger, fxt_phaser, fxt_rotaryspeaker, fxt_delay, fxt_reverb,
      fxt_reverb2},
-    {fxt_combulator, fxt_freqshift, fxt_nimbus, fxt_ringmod, fxt_vocoder, fxt_airwindows,
-     fxt_conditioner}};
+    {fxt_combulator, fxt_freqshift, fxt_nimbus, fxt_ringmod, fxt_treemonster, fxt_vocoder,
+     fxt_airwindows, fxt_conditioner}};
 static std::vector<std::vector<int>> fxgroup = {
-    {0, 0, 0, 0, 1, 1, 1}, {2, 2, 2, 2, 2, 3, 3, 3}, {4, 4, 4, 4, 4, 5, 5}};
+    {0, 0, 0, 0, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 3, 3, 3}, {4, 4, 4, 4, 4, 4, 5, 5}};
 
 // https://piccianeri.com/wp-content/uploads/2016/10/Complementary-palette-f27400.jpg
 static std::vector<juce::Colour> fxbuttoncolors = {
@@ -51,7 +51,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     int ypos0 = 50 * fxt.size() - 10;
     for (int i = 0; i < n_fx_params; ++i)
     {
-        fxParamSliders[i].setRange(0.0, 1.0, 0.001);
+        fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
         fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
                                    NotificationType::dontSendNotification);
         fxParamSliders[i].setSliderStyle(Slider::SliderStyle::RotaryHorizontalVerticalDrag);
