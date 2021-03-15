@@ -26,6 +26,7 @@
 #include "ModControl.h"
 #include "SSESincDelayLine.h"
 #include "chowdsp/bbd_utils/BBDDelayLine.h"
+#include "chowdsp/bbd_utils/BBDNonlin.h"
 
 class BBDEnsembleEffect : public Effect
 {
@@ -36,10 +37,11 @@ class BBDEnsembleEffect : public Effect
     enum ens_params
     {
         ens_input_gain = 0,
+        ens_input_cutoff,
 
-        ens_bbd_stages,
-        ens_bbd_aa_cutoff,
-        ens_bbd_nonlin,
+        ens_delay_type,
+        ens_delay_clockrate,
+        ens_delay_sat,
 
         ens_lfo_freq1,
         ens_lfo_depth1,
@@ -75,6 +77,9 @@ class BBDEnsembleEffect : public Effect
     BBDDelayLine<512> del_512L1, del_512L2, del_512R1, del_512R2;
     BBDDelayLine<1024> del_1024L1, del_1024L2, del_1024R1, del_1024R2;
     BBDDelayLine<2048> del_2048L1, del_2048L2, del_2048R1, del_2048R2;
+    BBDDelayLine<4096> del_4096L1, del_4096L2, del_4096R1, del_4096R2;
+
+    BBDNonlin bbd_saturation_sse;
 
     size_t block_counter;
 };

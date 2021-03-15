@@ -1,22 +1,28 @@
 #pragma once
 
-#include "../shared/wdf.h"
+// #include "../shared/wdf.h"
+#include "../shared/wdf_sse.h"
+#include "../shared/omega.h"
 #include <memory>
 
+// 2.7% w/ spikes up to 3.2%
+// After SSE: 1.8% +/- 0.2%
+
 /**
- * Faster version of chowdsp::WDF::Diode.
+ * Faster version of chowdsp::WDF_SSE::Diode.
  * Basically making use of the fact that we know some other values
  * in the WDF tree will not change on the fly.
  */
-class FastDiode : public chowdsp::WDF::WDFNode
+class FastDiode : public chowdsp::WDF_SSE::WDFNode
 {
   public:
     /** Creates a new WDF diode, with the given diode specifications.
      * @param Is: reverse saturation current
      * @param Vt: thermal voltage
      */
-    FastDiode(double Is, double Vt)
-        : chowdsp::WDF::WDFNode("Diode"), Is(Is), Vt(Vt), oneOverVt(1.0 / Vt)
+    FastDiode(float Is, float Vt)
+        : chowdsp::WDF_SSE::WDFNode("Diode"), Is(vLoad1(Is)), Vt(vLoad1(Vt)),
+          oneOverVt(vLoad1(1.0 / Vt))
     {
     }
 
@@ -24,31 +30,87 @@ class FastDiode : public chowdsp::WDF::WDFNode
 
     inline void precomputeValues()
     {
-        nextR_Is = next->R * Is;
-        logVal = std::log(nextR_Is * oneOverVt);
+        nextR_Is = vMul(next->R, Is);
+
+        logVal = vMul(nextR_Is, oneOverVt);
+        float f[4];
+        _mm_storeu_ps(f, logVal);
+        f[0] = std::log(f[0]);
+        f[1] = std::log(f[1]);
+        f[2] = std::log(f[2]);
+        f[3] = std::log(f[3]);
+        logVal = _mm_load_ps(f);
     }
 
     inline void calcImpedance() override {}
 
     /** Accepts an incident wave into a WDF diode. */
-    inline void incident(double x) noexcept override { a = x; }
+    inline void incident(__m128 x) noexcept override { a = x; }
 
     /** Propogates a reflected wave from a WDF diode. */
-    inline double reflected() noexcept override
+    inline __m128 reflected() noexcept override
     {
         // See eqn (10) from reference paper
-        b = a + 2 * nextR_Is - 2 * Vt * chowdsp::Omega::omega2(logVal + (a + nextR_Is) * oneOverVt);
+        b = vAdd(logVal, vMul(vAdd(a, nextR_Is), oneOverVt));
+        float f[4];
+        _mm_storeu_ps(f, b);
+        f[0] = chowdsp::Omega::omega2(f[0]);
+        f[1] = chowdsp::Omega::omega2(f[1]);
+        f[2] = chowdsp::Omega::omega2(f[2]);
+        f[3] = chowdsp::Omega::omega2(f[3]);
+        b = _mm_load_ps(f);
+
+        b = vAdd(a, vSub(vMul(vLoad1(2.0f), nextR_Is), vMul(vLoad1(2.0f), vMul(Vt, b))));
         return b;
     }
 
   private:
-    const double Is;        // reverse saturation current
-    const double Vt;        // thermal voltage
-    const double oneOverVt; // thermal voltage
+    const __m128 Is;        // reverse saturation current
+    const __m128 Vt;        // thermal voltage
+    const __m128 oneOverVt; // thermal voltage
 
-    double logVal = 1.0f;
-    double nextR_Is = 0.0f;
+    __m128 logVal;
+    __m128 nextR_Is;
 };
+
+struct NonlinLUT
+{
+    NonlinLUT(double min, double max, int nPoints)
+    {
+        table.resize(nPoints, 0.0f);
+
+        offset = min;
+        scale = (double)nPoints / (max - min);
+
+        for (int i = 0; i < nPoints; ++i)
+        {
+            auto x = (double)i / scale + offset;
+            table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33);
+        }
+    }
+
+    template <typename T> inline int sgn(T val) const noexcept
+    {
+        return (T(0) < val) - (val < T(0));
+    }
+
+    template <typename T> inline T pwrs(T x, T y) const noexcept
+    {
+        return std::pow(std::abs(x), y);
+    }
+
+    inline double operator()(double x) const noexcept
+    {
+        auto idx = size_t((x - offset) * scale);
+        return sgn(x) * table[idx];
+    }
+
+  private:
+    std::vector<double> table;
+    double offset, scale;
+};
+
+static NonlinLUT bbdNonlinLUT{-5.0, 5.0, 1 << 16};
 
 class BBDNonlin
 {
@@ -57,104 +119,89 @@ class BBDNonlin
 
     void reset(double sampleRate)
     {
-        using namespace chowdsp::WDF;
+        using namespace chowdsp::WDF_SSE;
         constexpr double alpha = 0.4;
 
-        Cpk = std::make_unique<Capacitor>(0.33e-12, sampleRate, alpha);
-        P1 = std::make_unique<WDFParallel>(Cpk.get(), &Is);
+        S2.port1 = std::make_unique<Resistor>(2.7e3f); // Rgk
 
-        Cgp = std::make_unique<Capacitor>(1.7e-12, sampleRate, alpha);
-        S1 = std::make_unique<WDFSeries>(Cgp.get(), P1.get());
+        auto &P3 = S2.port2;
+        auto &I1 = P3->port1;
+        I1->port1 = std::make_unique<ResistiveVoltageSource>(); // Vin
+        Vin = I1->port1.get();
 
-        Cgk = std::make_unique<Capacitor>(1.6e-12, sampleRate, alpha);
-        P2 = std::make_unique<WDFParallel>(Cgk.get(), S1.get());
+        auto &P2 = P3->port2;
+        P2->port1 = std::make_unique<Capacitor>(1.6e-12f, sampleRate, alpha); // Cgk
 
-        I1 = std::make_unique<PolarityInverter>(&Vin);
-        P3 = std::make_unique<WDFParallel>(I1.get(), P2.get());
+        auto &S1 = P2->port2;
+        S1->port1 = std::make_unique<Capacitor>(1.7e-12f, sampleRate, alpha); // Cgp
 
-        S2 = std::make_unique<WDFSeries>(&Rgk, P3.get());
-        D1.connectToNode(S2.get());
+        auto &P1 = S1->port2;
+        P1->port1 = std::make_unique<Capacitor>(0.33e-12f, sampleRate, alpha); // Cpk
+        Cpk = P1->port1.get();
+
+        P1->port2 = std::make_unique<ResistiveCurrentSource>(); // Is
+        Is = P1->port2.get();
+
+        P1->initialise();
+        S1->initialise();
+        P2->initialise();
+        I1->initialise();
+        P3->initialise();
+        S2.initialise();
+
+        D1.connectToNode(&S2);
         D1.precomputeValues();
 
-        Vp = 0.0;
-        lut(0.0);
+        Vp = vZero;
+        bbdNonlinLUT(0.0);
     }
 
-    inline double getCurrent(double _Vg, double _Vp) const noexcept
+    inline __m128 getCurrent(__m128 _Vg, __m128 _Vp) const noexcept
     {
-        return lut(0.1 * _Vg - 0.01 * _Vp);
+        auto input = vSub(vMul(vLoad1(0.1f), _Vg), vMul(vLoad1(0.001f), _Vp));
+
+        float f[4];
+        _mm_storeu_ps(f, input);
+        f[0] = bbdNonlinLUT(f[0]);
+        f[1] = bbdNonlinLUT(f[1]);
+        f[2] = bbdNonlinLUT(f[2]);
+        f[3] = bbdNonlinLUT(f[3]);
+        return _mm_load_ps(f);
     }
 
     void setDrive(float newDrive) { drive = newDrive; }
 
-    inline float processSample(float Vg) noexcept
+    inline __m128 processSample(__m128 Vg) noexcept
     {
-        Vin.setVoltage(Vg);
-        Is.setCurrent(getCurrent(Vg, Vp));
+        Vin->setVoltage(Vg);
+        Is->setCurrent(getCurrent(Vg, Vp));
 
-        D1.incident(S2->reflected());
-        S2->incident(D1.reflected());
+        D1.incident(S2.reflected());
+        S2.incident(D1.reflected());
         Vp = Cpk->voltage();
 
-        return (float)Vp * drive + (1.0f - drive) * Vg;
+        return vAdd(vMul(Vp, vLoad1(drive)), vMul(Vg, vLoad1(1.0f - drive)));
     }
 
   private:
-    struct NonlinLUT
-    {
-        NonlinLUT(double min, double max, int nPoints)
-        {
-            table.resize(nPoints, 0.0f);
-
-            offset = min;
-            scale = (double)nPoints / (max - min);
-
-            for (int i = 0; i < nPoints; ++i)
-            {
-                auto x = (double)i / scale + offset;
-                table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33);
-            }
-        }
-
-        template <typename T> inline int sgn(T val) const noexcept
-        {
-            return (T(0) < val) - (val < T(0));
-        }
-
-        template <typename T> inline T pwrs(T x, T y) const noexcept
-        {
-            return std::pow(std::abs(x), y);
-        }
-
-        inline double operator()(double x) const noexcept
-        {
-            auto idx = size_t((x - offset) * scale);
-            return sgn(x) * table[idx];
-        }
-
-      private:
-        std::vector<double> table;
-        double offset, scale;
-    };
-
-    chowdsp::WDF::ResistiveCurrentSource Is;
-    chowdsp::WDF::ResistiveVoltageSource Vin;
-    chowdsp::WDF::Resistor Rgk{2.7e3};
     FastDiode D1{1.0e-10, 0.02585};
 
-    std::unique_ptr<chowdsp::WDF::Capacitor> Cpk;
-    std::unique_ptr<chowdsp::WDF::Capacitor> Cgp;
-    std::unique_ptr<chowdsp::WDF::Capacitor> Cgk;
+    chowdsp::WDF_SSE::ResistiveVoltageSource *Vin;
+    chowdsp::WDF_SSE::ResistiveCurrentSource *Is;
+    chowdsp::WDF_SSE::Capacitor *Cpk;
 
-    std::unique_ptr<chowdsp::WDF::WDFParallel> P1;
-    std::unique_ptr<chowdsp::WDF::WDFSeries> S1;
-    std::unique_ptr<chowdsp::WDF::WDFParallel> P2;
-    std::unique_ptr<chowdsp::WDF::WDFParallel> P3;
-    std::unique_ptr<chowdsp::WDF::WDFSeries> S2;
-    std::unique_ptr<chowdsp::WDF::PolarityInverter> I1;
+    chowdsp::WDF_SSE::WDFSeriesT<
+        chowdsp::WDF_SSE::Resistor,
+        chowdsp::WDF_SSE::WDFParallelT<
+            chowdsp::WDF_SSE::PolarityInverterT<chowdsp::WDF_SSE::ResistiveVoltageSource>,
+            chowdsp::WDF_SSE::WDFParallelT<
+                chowdsp::WDF_SSE::Capacitor,
+                chowdsp::WDF_SSE::WDFSeriesT<
+                    chowdsp::WDF_SSE::Capacitor,
+                    chowdsp::WDF_SSE::WDFParallelT<chowdsp::WDF_SSE::Capacitor,
+                                                   chowdsp::WDF_SSE::ResistiveCurrentSource>>>>>
+        S2;
 
-    NonlinLUT lut{-5.0, 5.0, 8192}; // @TODO: can we make this static?
-
-    double Vp = 0.0;
+    __m128 Vp = vZero;
     float drive = 1.0f;
 };

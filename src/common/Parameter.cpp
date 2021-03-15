@@ -594,12 +594,18 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0;
         moverate = 0.33f;
         break;
-    case ct_bbd_lforate:
+    case ct_ensemble_lforate:
         valtype = vt_float;
         val_min.f = log2(0.01f);
         val_max.f = log2(20.f);
         val_default.f = 0;
         moverate = 0.33f;
+        break;
+    case ct_ensemble_clockrate:
+        valtype = vt_float;
+        val_min.f = 1.5f;
+        val_max.f = 100.f;
+        val_default.f = 40.f;
         break;
     case ct_lfotrigmode:
         valtype = vt_int;
@@ -1140,7 +1146,7 @@ void Parameter::set_type(int ctrltype)
 
     case ct_lforate:
     case ct_lforate_deactivatable:
-    case ct_bbd_lforate:
+    case ct_ensemble_lforate:
         displayType = ATwoToTheBx;
         displayInfo.decimals = 3;
         displayInfo.tempoSyncNotationMultiplier = -1.0f;
@@ -1244,6 +1250,13 @@ void Parameter::set_type(int ctrltype)
         displayInfo.a = 10.0f;
         displayInfo.b = std::log2(1000.0f / 10.0f);
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ms");
+        break;
+
+    case ct_ensemble_clockrate:
+        displayType = LinearWithScale;
+        displayInfo.scale = 1.f;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "kHz");
         break;
     }
 }
@@ -1410,7 +1423,7 @@ void Parameter::bound_value(bool force_integer)
                 val.f = log2(round(powf(2.0f, val.f) * 10) / 10.f);
             }
             break;
-        case ct_bbd_lforate:
+        case ct_ensemble_lforate:
         case ct_lforate:
         case ct_lforate_deactivatable:
         {
@@ -3349,7 +3362,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_reverbtime:
     case ct_reverbpredelaytime:
     case ct_portatime:
-    case ct_bbd_lforate:
+    case ct_ensemble_lforate:
     case ct_lforate:
     case ct_lforate_deactivatable:
     case ct_lfoamplitude:
@@ -3381,6 +3394,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_comp_release_ms:
     case ct_freq_ringmod:
     case ct_dpw_trimix:
+    case ct_ensemble_clockrate:
     {
         return true;
         break;

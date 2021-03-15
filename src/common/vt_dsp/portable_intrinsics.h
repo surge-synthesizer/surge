@@ -13,6 +13,7 @@
 #define vMul _mm_mul_ps
 #define vMAdd(a, b, c) _mm_add_ps(_mm_mul_ps(a, b), c)
 #define vNMSub(a, b, c) _mm_sub_ps(c, _mm_mul_ps(a, b))
+#define vNeg(a) vSub(vZero, a)
 
 #define vAnd _mm_and_ps
 #define vOr _mm_or_ps

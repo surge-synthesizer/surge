@@ -9,34 +9,21 @@ template <size_t STAGES> void BBDDelayLine<STAGES>::prepare(double sampleRate)
     bufferPtr = 0;
     std::fill(buffer.begin(), buffer.end(), 0.0f);
 
-    using namespace FilterSpec;
-    H0 = 0.0f;
-    for (size_t i = 0; i < N_filt; ++i)
-    {
-        inputFilters.push_back(InputFilter(iFiltRoot[i], iFiltPole[i], Ts, &xIn[i]));
-        outputFilters.push_back(OutputFilter(oFiltRoot[i], oFiltPole[i], Ts, &xOut[i]));
-        H0 -= std::real(outputFilters.back().getGCoef());
-    }
-
     tn = 0.0f;
     evenOn = true;
 
-    waveshape2.reset(sampleRate);
+    inputFilter = std::make_unique<InputFilterBank>(Ts);
+    outputFilter = std::make_unique<OutputFilterBank>(Ts);
+    H0 = outputFilter->calcH0();
 }
 
 template <size_t STAGES> void BBDDelayLine<STAGES>::setFilterFreq(float freqHz)
 {
-    for (auto &iFilt : inputFilters)
-    {
-        iFilt.set_freq(freqHz);
-        iFilt.set_time(tn);
-    }
+    inputFilter->set_freq(freqHz);
+    inputFilter->set_time(tn);
 
-    for (auto &oFilt : outputFilters)
-    {
-        oFilt.set_freq(freqHz);
-        oFilt.set_time(tn);
-    }
+    outputFilter->set_freq(freqHz);
+    outputFilter->set_time(tn);
 }
 
 template class BBDDelayLine<64>;
