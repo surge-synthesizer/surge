@@ -8236,14 +8236,15 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
         // This is still a bit of a special case
-        if (p->ctrltype == ct_airwindows_fx || p->ctrltype == ct_flangermode ||
+        if (p->ctrltype == ct_sinefmlegacy || p->ctrltype == ct_wt2window ||
+            p->ctrltype == ct_airwindows_fx || p->ctrltype == ct_flangermode ||
             p->ctrltype == ct_fxlfowave || p->ctrltype == ct_distortion_waveshape ||
             p->ctrltype == ct_reson_mode || p->ctrltype == ct_vocoder_bandcount ||
             p->ctrltype == ct_nimbusmode || p->ctrltype == ct_nimbusquality ||
             p->ctrltype == ct_waveguide_excitation_model || p->ctrltype == ct_eurotwist_engine ||
             p->ctrltype == ct_ensemble_stages)
         {
-            loc.offset(2, 2);
+            loc.offset(2, 4);
             auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,
                                         &(synth->storage));
 

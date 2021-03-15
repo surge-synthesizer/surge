@@ -2318,7 +2318,7 @@ float Parameter::quantize_modulation(float inputval)
     switch (displayType)
     {
     case Custom:
-        // handled below but lets set up a good default
+        // handled below but let's set up a good default
         res = (float)(round(inputval * 100) / 100);
         break;
     case DelegatedToFormatter:
@@ -2353,7 +2353,7 @@ float Parameter::quantize_modulation(float inputval)
     {
         /*
          * OK so the display value is A e^val and we want to quantize in that space and then
-         * find the res. So first of all lets find the endpoint. Remember this calculation
+         * find the res. So first of all let's find the endpoint. Remember this calculation
          * is basically a 2^bx
          */
         auto mdepth = inputval * (val_max.f - val_min.f);
@@ -2362,23 +2362,31 @@ float Parameter::quantize_modulation(float inputval)
         auto moddist = modpoint - center;
 
         /*
-         * OK so now we want the moddistance to be quantized but quantized in units of
-         * what? Well lets use a simple heuristic that we are roughly 5% of our center
+         * OK so now we want the mod distance to be quantized but quantized in units of
+         * what? Well let's use a simple heuristic that we are roughly 5% of our center
          * as a tick but, you know, nice and integral. This method has the problem that
          * the tick size gets 'smaller' as you move up. You also need to scale the integrality
          * depending on starting point.
          */
         float scaleFactor = 1;
+
         if (center > 100)
+        {
             scaleFactor = 0.1;
+        }
         if (center < 10)
+        {
             scaleFactor = 10;
+        }
         if (center < 1)
+        {
             scaleFactor = 100;
+        }
 
         auto stepsize = abs(ceil(0.05 * center * scaleFactor) / scaleFactor);
         moddist = round(moddist / stepsize) * stepsize;
         auto modresult = center + moddist;
+
         if (modresult <= 0)
         {
             res = -1.f;
@@ -2916,9 +2924,9 @@ void Parameter::get_display(char *txt, bool external, float ef)
             break;
         case ct_sinefmlegacy:
             if (i == 0)
-                snprintf(txt, TXT_SIZE, "Legacy (< v1.6.2)");
+                snprintf(txt, TXT_SIZE, "Legacy (<v1.6.2)");
             else
-                snprintf(txt, TXT_SIZE, "Consistent with FM2/3");
+                snprintf(txt, TXT_SIZE, "Same as FM2/3");
             break;
         case ct_vocoder_bandcount:
             snprintf(txt, TXT_SIZE, "%d bands", i);
