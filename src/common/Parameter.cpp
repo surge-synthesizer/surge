@@ -378,8 +378,8 @@ void Parameter::set_user_data(ParamUserData *ud)
 void Parameter::set_type(int ctrltype)
 {
     this->ctrltype = ctrltype;
-    this->posy_offset = 0;
-    this->moverate = 1.f;
+    posy_offset = 0;
+    moverate = 1.f;
 
     affect_other_parameters = false;
     user_data = nullptr;
@@ -413,7 +413,7 @@ void Parameter::set_type(int ctrltype)
         val_min.f = 0;
         val_max.f = 32;
         val_default.f = 1;
-        this->moverate = 0.25f;
+        moverate = 0.5f;
         break;
     case ct_fmratio_int:
         valtype = vt_int;
@@ -599,7 +599,7 @@ void Parameter::set_type(int ctrltype)
         val_min.f = log2(0.01f);
         val_max.f = log2(20.f);
         val_default.f = 0;
-        moverate = 0.33f;
+        moverate = 0.5f;
         break;
     case ct_lfotrigmode:
         valtype = vt_int;
@@ -2351,6 +2351,27 @@ float Parameter::quantize_modulation(float inputval)
     }
     case ATwoToTheBx:
     {
+        // for these control types only snap to semitones
+        switch (ctrltype)
+        {
+        case ct_freq_hpf:
+        case ct_freq_audible:
+        case ct_freq_audible_deactivatable:
+        case ct_freq_audible_with_tunability:
+        case ct_freq_audible_with_very_low_lowerbound:
+        case ct_freq_reson_band1:
+        case ct_freq_reson_band2:
+        case ct_freq_reson_band3:
+        case ct_freq_vocoder_low:
+        case ct_freq_vocoder_high:
+        case ct_freq_ringmod:
+        {
+            auto range = val_max.f - val_min.f;
+            return floor(inputval * range) / range;
+            break;
+        }
+        }
+
         /*
          * OK so the display value is A e^val and we want to quantize in that space and then
          * find the res. So first of all let's find the endpoint. Remember this calculation
