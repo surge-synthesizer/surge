@@ -73,3 +73,5 @@ const int MAX_VOICES = 64;
 const int MAX_UNISON = 16;
 const int N_OUTPUTS = 2;
 const int N_INPUTS = 2;
+
+const int DEFAULT_POLYLIMIT = 16;

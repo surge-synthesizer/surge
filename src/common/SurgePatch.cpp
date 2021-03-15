@@ -74,7 +74,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                          Surge::Skin::Global::fx_bypass, 0, cg_GLOBAL, 0, false,
                                          Surge::ParamConfig::kHorizontal | kNoPopup));
 
-    polylimit.val.i = 16;
+    polylimit.val.i = DEFAULT_POLYLIMIT;
     splitpoint.val.i = 60;
     volume.val.f = 0;
 
@@ -574,6 +574,11 @@ void SurgePatch::init_default_values()
         {
             param_ptr[i]->val.i = param_ptr[i]->val_default.i;
             param_ptr[i]->clear_flags();
+        }
+
+        if (i == polylimit.id)
+        {
+            param_ptr[i]->val.i = DEFAULT_POLYLIMIT;
         }
     }
 
@@ -1116,9 +1121,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("fx_bypass"));
         if (tp)
             parameters->RemoveChild(tp);
-        tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("polylimit"));
-        if (tp)
-            parameters->RemoveChild(tp);
+
+        /*
+         * As of Surge 1.9, store the polylimit
+         *
+         * tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("polylimit"));
+         * if (tp)
+         *   parameters->RemoveChild(tp);
+         */
     }
 
     TiXmlElement *p;
@@ -1614,6 +1624,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 }
             }
         }
+    }
+
+    if (revision <= 15 && polylimit.val.i == 8)
+    {
+        polylimit.val.i = DEFAULT_POLYLIMIT;
     }
 
     // ensure that filtersubtype is a valid value

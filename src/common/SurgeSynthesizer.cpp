@@ -123,7 +123,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
             &storage, "pitchSmoothingMode",
             (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
-    patch.polylimit.val.i = 16;
+    patch.polylimit.val.i = DEFAULT_POLYLIMIT;
 
     for (int sc = 0; sc < n_scenes; sc++)
     {
