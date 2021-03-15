@@ -251,7 +251,21 @@ void CEffectSettings::setColorsForFXSlot(CDrawContext *dc, CRect rect, int fxslo
     dc->setFontColor(txtcol);
 
     dc->drawRect(rect, kDrawFilledAndStroked);
-    dc->drawString(fx_type_shortnames[get_fxtype(type[fxslot])], rect, kCenterText, true);
+
+    // draw text string or a line if no effect loaded
+    auto selfx = fx_type_shortnames[get_fxtype(type[fxslot])];
+
+    if (strcmp(selfx, "OFF") == 0)
+    {
+        CPoint center = rect.getCenter();
+        auto line = CRect(CPoint(center.x - 2, center.y - 1), CPoint(4, 2));
+
+        dc->drawRect(line, kDrawStroked);
+    }
+    else
+    {
+        dc->drawString(selfx, rect, kCenterText, true);
+    }
 }
 
 CMouseEventResult CEffectSettings::onMouseDown(CPoint &where, const CButtonState &buttons)
