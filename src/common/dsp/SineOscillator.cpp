@@ -994,7 +994,7 @@ void SineOscillator::init_ctrltypes()
     oscdata->p[sine_feedback].set_name("Feedback");
     oscdata->p[sine_feedback].set_type(ct_osc_feedback_negative);
 
-    oscdata->p[sine_FMmode].set_name("FM Behaviour");
+    oscdata->p[sine_FMmode].set_name("Behavior");
     oscdata->p[sine_FMmode].set_type(ct_sinefmlegacy);
 
     oscdata->p[sine_lowcut].set_name("Low Cut");
