@@ -81,7 +81,7 @@ void CEffectSettings::draw(CDrawContext *dc)
             {
                 CRect r(0, 0, 17, 9);
                 r.offset(size.left, size.top);
-                r.offset(blocks[i][0], blocks[i][1]);
+                r.offset(fxslotpos[i][0], fxslotpos[i][1]);
                 int stype = 0;
                 if (disabled & (1 << i))
                     stype = 4;
