@@ -183,7 +183,7 @@ class SurgeGUIEditor : public EditorType,
     void refresh_mod();
     void forceautomationchangefor(Parameter *p);
 
-    void effectSettingsBackgroundClick();
+    void effectSettingsBackgroundClick(int whichScene);
 
 #if TARGET_VST3
   public:

@@ -258,8 +258,9 @@ void CEffectSettings::setColorsForFXSlot(CDrawContext *dc, CRect rect, int fxslo
     if (strcmp(selfx, "OFF") == 0)
     {
         CPoint center = rect.getCenter();
-        auto line = CRect(CPoint(center.x - 2, center.y - 1), CPoint(4, 2));
+        auto line = CRect(CPoint(center.x - 3, center.y - 1), CPoint(6, 2));
 
+        dc->setFrameColor(txtcol);
         dc->drawRect(line, kDrawStroked);
     }
     else
@@ -307,7 +308,7 @@ CMouseEventResult CEffectSettings::onMouseDown(CPoint &where, const CButtonState
 
             if (sge)
             {
-                sge->effectSettingsBackgroundClick();
+                sge->effectSettingsBackgroundClick(i);
             }
         }
     }

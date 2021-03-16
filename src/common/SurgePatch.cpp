@@ -36,14 +36,14 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     ParameterIDCounter p_id;
     {
-        param_ptr.push_back(fx[4].return_level.assign(p_id.next(), 0, "volume_FX1",
-                                                      "Send FX 1 Return", ct_amplitude,
-                                                      Surge::Skin::Global::fx1_return, 0, cg_GLOBAL,
-                                                      0, true, Surge::ParamConfig::kHorizontal));
-        param_ptr.push_back(fx[5].return_level.assign(p_id.next(), 0, "volume_FX2",
-                                                      "Send FX 2 Return", ct_amplitude,
-                                                      Surge::Skin::Global::fx2_return, 0, cg_GLOBAL,
-                                                      0, true, Surge::ParamConfig::kHorizontal));
+        param_ptr.push_back(fx[fxslot_send1].return_level.assign(
+            p_id.next(), 0, "volume_FX1", "Send FX 1 Return", ct_amplitude,
+            Surge::Skin::Global::fx1_return, 0, cg_GLOBAL, 0, true,
+            Surge::ParamConfig::kHorizontal));
+        param_ptr.push_back(fx[fxslot_send2].return_level.assign(
+            p_id.next(), 0, "volume_FX2", "Send FX 2 Return", ct_amplitude,
+            Surge::Skin::Global::fx2_return, 0, cg_GLOBAL, 0, true,
+            Surge::ParamConfig::kHorizontal));
         // TODO don't store in the patch ?
         param_ptr.push_back(volume.assign(p_id.next(), 0, "volume", "Global Volume",
                                           ct_decibel_attenuation_clipper,
@@ -1331,6 +1331,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     TiXmlElement *nonparamconfig = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nonparamconfig"));
+
     // Set the default for TAM before 16
     if (revision <= 15)
     {
@@ -1342,11 +1343,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         storage->tuningApplicationMode = SurgeStorage::RETUNE_MIDI_ONLY;
     }
 
-    // Default to HC28
-    storage->hardclipMode = SurgeStorage::HARDCLIP_TO_EIGHT;
+    // Default hardclip value
+    storage->hardclipMode = SurgeStorage::HARDCLIP_TO_18DBFS;
     for (int sc = 0; sc < n_scenes; ++sc)
     {
-        storage->sceneHardclipMode[sc] = SurgeStorage::HARDCLIP_TO_EIGHT;
+        storage->sceneHardclipMode[sc] = SurgeStorage::HARDCLIP_TO_18DBFS;
     }
 
     if (nonparamconfig)
