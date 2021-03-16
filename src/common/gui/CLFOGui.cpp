@@ -325,7 +325,7 @@ void CLFOGui::draw(CDrawContext *dc)
                         secondval = minwval;
                     }
                     deactPath->addLine(xc - 0.1 * valScale / totalSamples, firstval);
-                    deactPath->addLine(xc - 0.1 * valScale / totalSamples, secondval);
+                    deactPath->addLine(xc + 0.1 * valScale / totalSamples, secondval);
                     priorwval = wval;
                 }
             }
@@ -473,7 +473,11 @@ void CLFOGui::draw(CDrawContext *dc)
             {
                 dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::GhostedWave));
 #if !TARGET_JUCE_UI
-                dc->setLineStyle(VSTGUI::kLineOnOffDash);
+                // dc->setLineStyle(VSTGUI::kLineOnOffDash);
+                // kLineOnOffDash has the wrong join, causing alias overshoots
+                auto cl =
+                    VSTGUI::CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinBevel, 0, 2);
+                dc->setLineStyle(cl);
 #endif
                 dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
                                      &tfpath);
