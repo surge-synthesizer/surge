@@ -25,6 +25,9 @@ namespace clouds
 {
 class GranularProcessor;
 }
+
+struct SRC_STATE_tag;
+
 class NimbusEffect : public Effect
 {
     enum nmb_params
@@ -70,7 +73,17 @@ class NimbusEffect : public Effect
   private:
     uint8_t *block_mem, *block_ccm;
     clouds::GranularProcessor *processor;
+    static constexpr int processor_sr = 32000;
+    static constexpr float processor_sr_inv = 1.f / 32000;
     int old_nmb_mode = 0;
+
+    SRC_STATE_tag *surgeSR_to_euroSR, *euroSR_to_surgeSR;
+
+    static constexpr int raw_out_sz = BLOCK_SIZE_OS << 3; // power of 2 pls
+    float resampled_output[raw_out_sz][2];                // at sr
+    size_t resampReadPtr = 0, resampWritePtr = 1;         // see comment in init
+
+    int consumed = 0, created = 0;
 };
 
 #endif // SURGE_NIMBUSEFFECT_H

@@ -14,6 +14,8 @@
 */
 
 #include "NimbusEffect.h"
+#include "samplerate.h"
+#include "DebugHelpers.h"
 
 #ifdef _MSC_VER
 #define __attribute__(x)
@@ -34,6 +36,19 @@ NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
 
     processor->Init(block_mem, memLen, block_ccm, ccmLen);
     mix.set_blocksize(BLOCK_SIZE);
+
+    int error;
+    surgeSR_to_euroSR = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    if (error != 0)
+    {
+        surgeSR_to_euroSR = nullptr;
+    }
+
+    euroSR_to_surgeSR = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    if (error != 0)
+    {
+        euroSR_to_surgeSR = nullptr;
+    }
 }
 
 NimbusEffect::~NimbusEffect()
@@ -41,12 +56,24 @@ NimbusEffect::~NimbusEffect()
     delete[] block_mem;
     delete[] block_ccm;
     delete processor;
+
+    if (surgeSR_to_euroSR)
+        surgeSR_to_euroSR = src_delete(surgeSR_to_euroSR);
+    if (euroSR_to_surgeSR)
+        euroSR_to_surgeSR = src_delete(euroSR_to_surgeSR);
 }
 
 void NimbusEffect::init()
 {
     mix.set_target(1.f);
     mix.instantize();
+
+    memset(resampled_output, 0, raw_out_sz * 2 * sizeof(float));
+
+    consumed = 0;
+    created = 0;
+    resampReadPtr = 0;
+    resampWritePtr = 1; // why 1? well while we are stalling we want to output 0 so write 1 ahead
 }
 
 void NimbusEffect::setvars(bool init)
@@ -94,51 +121,107 @@ void NimbusEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    clouds::ShortFrame input[BLOCK_SIZE];
-    clouds::ShortFrame output[BLOCK_SIZE];
+    if (!surgeSR_to_euroSR || !euroSR_to_surgeSR)
+        return;
+
+    /* Resample Temp Buffers */
+    float resample_this[BLOCK_SIZE << 3][2];
+    float resample_into[BLOCK_SIZE << 3][2];
 
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        input[i].l = (short)(clamp1bp(dataL[i]) * 32767.0f);
-        input[i].r = (short)(clamp1bp(dataR[i]) * 32767.0f);
+        resample_this[i][0] = dataL[i];
+        resample_this[i][1] = dataR[i];
     }
 
-    processor->set_playback_mode(
-        (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
-    processor->set_quality(*pdata_ival[nmb_quality]);
+    SRC_DATA sdata;
+    sdata.end_of_input = 0;
+    sdata.src_ratio = processor_sr * samplerate_inv;
+    sdata.data_in = &(resample_this[0][0]);
+    sdata.data_out = &(resample_into[0][0]);
+    sdata.input_frames = BLOCK_SIZE;
+    sdata.output_frames = BLOCK_SIZE << 3;
+    auto res = src_process(surgeSR_to_euroSR, &sdata);
+    consumed += sdata.input_frames_used;
 
-    auto parm = processor->mutable_parameters();
-    float den_val, tex_val;
+    if (sdata.output_frames_gen)
+    {
+        clouds::ShortFrame input[BLOCK_SIZE << 3];
+        clouds::ShortFrame output[BLOCK_SIZE << 3];
 
-    den_val = (fxdata->p[nmb_density].ctrltype == ct_percent) ? *f[nmb_density]
-                                                              : (*f[nmb_density] + 1.f) * 0.5;
+        for (int i = 0; i < sdata.output_frames_gen; ++i)
+        {
+            input[i].l = (short)(clamp1bp(resample_into[i][0]) * 32767.0f);
+            input[i].r = (short)(clamp1bp(resample_into[i][1]) * 32767.0f);
+        }
 
-    tex_val = (fxdata->p[nmb_texture].ctrltype == ct_percent) ? *f[nmb_texture]
-                                                              : (*f[nmb_texture] + 1.f) * 0.5;
+        processor->set_playback_mode(
+            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
+        processor->set_quality(*pdata_ival[nmb_quality]);
 
-    // nmb_in_gain,
-    parm->position = limit_range(*f[nmb_position], 0.f, 1.f);
-    parm->size = limit_range(*f[nmb_size], 0.f, 1.f);
-    parm->density = limit_range(den_val, 0.f, 1.f);
-    parm->texture = limit_range(tex_val, 0.f, 1.f);
-    parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
-    parm->stereo_spread = limit_range(*f[nmb_spread], 0.f, 1.f);
-    parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
-    parm->freeze = *f[nmb_freeze] > 0.5;
-    parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
-    parm->dry_wet = 1.f;
+        auto parm = processor->mutable_parameters();
+        float den_val, tex_val;
 
-    parm->trigger = true;
-    parm->gate = true;
+        den_val = (fxdata->p[nmb_density].ctrltype == ct_percent) ? *f[nmb_density]
+                                                                  : (*f[nmb_density] + 1.f) * 0.5;
 
-    processor->Prepare();
-    processor->Process(input, output, BLOCK_SIZE);
+        tex_val = (fxdata->p[nmb_texture].ctrltype == ct_percent) ? *f[nmb_texture]
+                                                                  : (*f[nmb_texture] + 1.f) * 0.5;
 
+        // nmb_in_gain,
+        parm->position = limit_range(*f[nmb_position], 0.f, 1.f);
+        parm->size = limit_range(*f[nmb_size], 0.f, 1.f);
+        parm->density = limit_range(den_val, 0.f, 1.f);
+        parm->texture = limit_range(tex_val, 0.f, 1.f);
+        parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
+        parm->stereo_spread = limit_range(*f[nmb_spread], 0.f, 1.f);
+        parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
+        parm->freeze = *f[nmb_freeze] > 0.5;
+        parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
+        parm->dry_wet = 1.f;
+
+        parm->trigger = false;     // this is an external granulating source. Skip it
+        parm->gate = parm->freeze; // This is the CV for the freeze button
+
+        processor->Prepare();
+        processor->Process(input, output, sdata.output_frames_gen);
+
+        for (int i = 0; i < sdata.output_frames_gen; ++i)
+        {
+            resample_this[i][0] = output[i].l / 32767.0f;
+            resample_this[i][1] = output[i].r / 32767.0f;
+        }
+
+        SRC_DATA odata;
+        odata.end_of_input = 0;
+        odata.src_ratio = processor_sr_inv * samplerate;
+        odata.data_in = &(resample_this[0][0]);
+        odata.data_out = &(resample_into[0][0]);
+        odata.input_frames = sdata.output_frames_gen;
+        odata.output_frames = BLOCK_SIZE << 3;
+        auto reso = src_process(euroSR_to_surgeSR, &odata);
+        created += odata.output_frames_gen;
+
+        size_t w = resampWritePtr;
+        for (int i = 0; i < odata.output_frames_gen; ++i)
+        {
+            resampled_output[w][0] = resample_into[i][0];
+            resampled_output[w][1] = resample_into[i][1];
+            w = (w + 1U) & (raw_out_sz - 1U);
+        }
+        resampWritePtr = w;
+    }
+
+    bool rpi = (created) > (BLOCK_SIZE + 8); // leave some buffer
+
+    size_t rp = resampReadPtr;
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        L[i] = output[i].l / 32767.0f;
-        R[i] = output[i].r / 32767.0f;
+        L[i] = resampled_output[rp][0];
+        R[i] = resampled_output[rp][1];
+        rp = (rp + rpi) & (raw_out_sz - 1);
     }
+    resampReadPtr = rp;
 
     mix.set_target_smoothed(limit_range(*f[nmb_mix], 0.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
