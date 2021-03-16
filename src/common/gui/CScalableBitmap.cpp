@@ -321,7 +321,9 @@ CScalableBitmap::~CScalableBitmap()
     {
         auto val = pair.second;
         if (val)
+        {
             val->forget();
+        }
     }
     offscreenCache.clear();
 
@@ -438,7 +440,14 @@ void CScalableBitmap::draw(CDrawContext *context, const CRect &rect, const CPoin
                 if (tmp)
                 {
                     offscreenCache[offset] = tmp;
+#if !LINUX
+                    /*
+                     * See #4081. Basically on linux the bitmap is reference toggled up with our
+                     * version of vstgui. Why? Who knows. But we are gonna kill vstgui RSN so
+                     * for now just don't do the extra remember on LINUX
+                     */
                     tmp->remember();
+#endif
                 }
             }
         }
