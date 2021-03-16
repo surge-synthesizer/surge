@@ -937,11 +937,11 @@ class alignas(16) SurgeStorage
     // hardclip
     enum HardClipMode
     {
-        HARDCLIP_TO_EIGHT = 1,
-        HARDCLIP_TO_ONE,
+        HARDCLIP_TO_18DBFS = 1,
+        HARDCLIP_TO_0DBFS,
         BYPASS_HARDCLIP // scene only
-    } hardclipMode = HARDCLIP_TO_EIGHT,
-      sceneHardclipMode[n_scenes] = {HARDCLIP_TO_EIGHT, HARDCLIP_TO_EIGHT};
+    } hardclipMode = HARDCLIP_TO_18DBFS,
+      sceneHardclipMode[n_scenes] = {HARDCLIP_TO_18DBFS, HARDCLIP_TO_18DBFS};
 
     float note_to_pitch(float x);
     float note_to_pitch_inv(float x);

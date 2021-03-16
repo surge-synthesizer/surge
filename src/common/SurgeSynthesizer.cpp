@@ -3444,10 +3444,12 @@ void SurgeSynthesizer::process()
 
     if (fx_bypass == fxb_all_fx)
     {
-        if (fx[4]) // send FX 1?
+        if (fx[fxslot_send1])
         {
-            FX1.set_target_smoothed(amp_to_linear(
-                storage.getPatch().globaldata[storage.getPatch().fx[4].return_level.id].f));
+            FX1.set_target_smoothed(
+                amp_to_linear(storage.getPatch()
+                                  .globaldata[storage.getPatch().fx[fxslot_send1].return_level.id]
+                                  .f));
             send[0][0].set_target_smoothed(amp_to_linear(
                 storage.getPatch()
                     .scenedata[0][storage.getPatch().scene[0].send_level[0].param_id_in_scene]
@@ -3457,10 +3459,12 @@ void SurgeSynthesizer::process()
                     .scenedata[1][storage.getPatch().scene[1].send_level[0].param_id_in_scene]
                     .f));
         }
-        if (fx[5]) // send FX 2?
+        if (fx[fxslot_send2])
         {
-            FX2.set_target_smoothed(amp_to_linear(
-                storage.getPatch().globaldata[storage.getPatch().fx[5].return_level.id].f));
+            FX2.set_target_smoothed(
+                amp_to_linear(storage.getPatch()
+                                  .globaldata[storage.getPatch().fx[fxslot_send2].return_level.id]
+                                  .f));
             send[1][0].set_target_smoothed(amp_to_linear(
                 storage.getPatch()
                     .scenedata[0][storage.getPatch().scene[0].send_level[1].param_id_in_scene]
@@ -3557,17 +3561,18 @@ void SurgeSynthesizer::process()
     {
         switch (storage.sceneHardclipMode[0])
         {
-        case SurgeStorage::HARDCLIP_TO_EIGHT:
+        case SurgeStorage::HARDCLIP_TO_18DBFS:
             hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
             break;
-        case SurgeStorage::HARDCLIP_TO_ONE:
+        case SurgeStorage::HARDCLIP_TO_0DBFS:
             hardclip_block(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
             break;
         case SurgeStorage::BYPASS_HARDCLIP:
             break;
         }
+
         halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
     }
 
@@ -3575,39 +3580,37 @@ void SurgeSynthesizer::process()
     {
         switch (storage.sceneHardclipMode[1])
         {
-        case SurgeStorage::HARDCLIP_TO_EIGHT:
+        case SurgeStorage::HARDCLIP_TO_18DBFS:
             hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
             break;
-        case SurgeStorage::HARDCLIP_TO_ONE:
+        case SurgeStorage::HARDCLIP_TO_0DBFS:
             hardclip_block(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
             hardclip_block(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
             break;
         case SurgeStorage::BYPASS_HARDCLIP:
             break;
         }
+
         halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
     }
 
     // TODO: FIX SCENE ASSUMPTION
     if (storage.getPatch().scene[0].lowcut.deactivated == false)
     {
-        hpA.coeff_HP(
-            hpA.calc_omega(storage.getPatch()
-                               .scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene]
-                               .f /
-                           12.0),
-            0.4);                                          // var 0.707
+        auto freq =
+            storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f;
+
+        hpA.coeff_HP(hpA.calc_omega(freq / 12.0), 0.4);    // var 0.707
         hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
     }
+
     if (storage.getPatch().scene[1].lowcut.deactivated == false)
     {
-        hpB.coeff_HP(
-            hpB.calc_omega(storage.getPatch()
-                               .scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene]
-                               .f /
-                           12.0),
-            0.4);
+        auto freq =
+            storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f;
+
+        hpB.coeff_HP(hpB.calc_omega(freq / 12.0), 0.4);
         hpB.process_block(sceneout[1][0], sceneout[1][1]);
     }
 
@@ -3622,14 +3625,29 @@ void SurgeSynthesizer::process()
     // apply insert effects
     if (fx_bypass != fxb_no_fx)
     {
-        if (fx[0] && !(storage.getPatch().fx_disable.val.i & (1 << 0)))
-            sc_state[0] = fx[0]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
-        if (fx[1] && !(storage.getPatch().fx_disable.val.i & (1 << 1)))
-            sc_state[0] = fx[1]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
-        if (fx[2] && !(storage.getPatch().fx_disable.val.i & (1 << 2)))
-            sc_state[1] = fx[2]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
-        if (fx[3] && !(storage.getPatch().fx_disable.val.i & (1 << 3)))
-            sc_state[1] = fx[3]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
+        if (fx[fxslot_ains1] && !(storage.getPatch().fx_disable.val.i & (1 << 0)))
+        {
+            sc_state[0] =
+                fx[fxslot_ains1]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
+        }
+
+        if (fx[fxslot_ains2] && !(storage.getPatch().fx_disable.val.i & (1 << 1)))
+        {
+            sc_state[0] =
+                fx[fxslot_ains2]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
+        }
+
+        if (fx[fxslot_bins1] && !(storage.getPatch().fx_disable.val.i & (1 << 2)))
+        {
+            sc_state[1] =
+                fx[fxslot_bins1]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
+        }
+
+        if (fx[fxslot_bins2] && !(storage.getPatch().fx_disable.val.i & (1 << 3)))
+        {
+            sc_state[1] =
+                fx[fxslot_bins2]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
+        }
     }
 
     // sum scenes
@@ -3644,25 +3662,25 @@ void SurgeSynthesizer::process()
     // TODO: FIX SCENE ASSUMPTION
     if (fx_bypass == fxb_all_fx)
     {
-        if (fx[4] && !(storage.getPatch().fx_disable.val.i & (1 << 4)))
+        if (fx[fxslot_send1] && !(storage.getPatch().fx_disable.val.i & (1 << 4)))
         {
             send[0][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[0][0],
                                        fxsendout[0][1], BLOCK_SIZE_QUAD);
             send[0][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[0][0],
                                        fxsendout[0][1], BLOCK_SIZE_QUAD);
-            send1 = fx[4]->process_ringout(fxsendout[0][0], fxsendout[0][1],
-                                           sc_state[0] || sc_state[1]);
+            send1 = fx[fxslot_send1]->process_ringout(fxsendout[0][0], fxsendout[0][1],
+                                                      sc_state[0] || sc_state[1]);
             FX1.MAC_2_blocks_to(fxsendout[0][0], fxsendout[0][1], output[0], output[1],
                                 BLOCK_SIZE_QUAD);
         }
-        if (fx[5] && !(storage.getPatch().fx_disable.val.i & (1 << 5)))
+        if (fx[fxslot_send2] && !(storage.getPatch().fx_disable.val.i & (1 << 5)))
         {
             send[1][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[1][0],
                                        fxsendout[1][1], BLOCK_SIZE_QUAD);
             send[1][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[1][0],
                                        fxsendout[1][1], BLOCK_SIZE_QUAD);
-            send2 = fx[5]->process_ringout(fxsendout[1][0], fxsendout[1][1],
-                                           sc_state[0] || sc_state[1]);
+            send2 = fx[fxslot_send2]->process_ringout(fxsendout[1][0], fxsendout[1][1],
+                                                      sc_state[0] || sc_state[1]);
             FX2.MAC_2_blocks_to(fxsendout[1][0], fxsendout[1][1], output[0], output[1],
                                 BLOCK_SIZE_QUAD);
         }
@@ -3672,10 +3690,16 @@ void SurgeSynthesizer::process()
     if ((fx_bypass == fxb_all_fx) || (fx_bypass == fxb_no_sends))
     {
         bool glob = sc_state[0] || sc_state[1] || send1 || send2;
-        if (fx[6] && !(storage.getPatch().fx_disable.val.i & (1 << 6)))
-            glob = fx[6]->process_ringout(output[0], output[1], glob);
-        if (fx[7] && !(storage.getPatch().fx_disable.val.i & (1 << 7)))
-            glob = fx[7]->process_ringout(output[0], output[1], glob);
+
+        if (fx[fxslot_global1] && !(storage.getPatch().fx_disable.val.i & (1 << 6)))
+        {
+            glob = fx[fxslot_global1]->process_ringout(output[0], output[1], glob);
+        }
+
+        if (fx[fxslot_global2] && !(storage.getPatch().fx_disable.val.i & (1 << 7)))
+        {
+            glob = fx[fxslot_global2]->process_ringout(output[0], output[1], glob);
+        }
     }
 
     amp.multiply_2_blocks(output[0], output[1], BLOCK_SIZE_QUAD);
@@ -3691,17 +3715,19 @@ void SurgeSynthesizer::process()
 
     switch (storage.hardclipMode)
     {
-    case SurgeStorage::HARDCLIP_TO_EIGHT:
-    case SurgeStorage::BYPASS_HARDCLIP: // bypass is not valid for main hardclip
+    case SurgeStorage::HARDCLIP_TO_18DBFS:
         hardclip_block8(output[0], BLOCK_SIZE_QUAD);
         hardclip_block8(output[1], BLOCK_SIZE_QUAD);
         break;
 
-    case SurgeStorage::HARDCLIP_TO_ONE:
+    case SurgeStorage::HARDCLIP_TO_0DBFS:
         hardclip_block(output[0], BLOCK_SIZE_QUAD);
         hardclip_block(output[1], BLOCK_SIZE_QUAD);
         break;
+    case SurgeStorage::BYPASS_HARDCLIP:
+        break;
     }
+
     // since the sceneout is now routable we also need to mute and clip it
     for (int sc = 0; sc < n_scenes; ++sc)
     {
@@ -3710,14 +3736,15 @@ void SurgeSynthesizer::process()
 
         switch (storage.hardclipMode)
         {
-        case SurgeStorage::HARDCLIP_TO_EIGHT:
-        case SurgeStorage::BYPASS_HARDCLIP:
+        case SurgeStorage::HARDCLIP_TO_18DBFS:
             hardclip_block8(sceneout[sc][0], BLOCK_SIZE_QUAD);
             hardclip_block8(sceneout[sc][1], BLOCK_SIZE_QUAD);
             break;
-        case SurgeStorage::HARDCLIP_TO_ONE:
+        case SurgeStorage::HARDCLIP_TO_0DBFS:
             hardclip_block(sceneout[sc][0], BLOCK_SIZE_QUAD);
             hardclip_block(sceneout[sc][1], BLOCK_SIZE_QUAD);
+            break;
+        case SurgeStorage::BYPASS_HARDCLIP:
             break;
         }
     }
