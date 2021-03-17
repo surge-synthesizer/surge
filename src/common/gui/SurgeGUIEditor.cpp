@@ -1693,44 +1693,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
         std::string uiid = p->ui_identifier;
 
         long style = p->ctrlstyle;
-        switch (p->ctrltype)
-        {
-        case ct_decibel:
-        case ct_decibel_deactivatable:
-        case ct_decibel_narrow:
-        case ct_decibel_narrow_deactivatable:
-        case ct_decibel_narrow_extendable:
-        case ct_decibel_extra_narrow_deactivatable:
-        case ct_decibel_narrow_short_extendable:
-        case ct_decibel_extra_narrow:
-        case ct_decibel_extendable:
-        case ct_freq_mod:
-        case ct_percent_bipolar:
-        case ct_percent_bipolar_stereo:
-        case ct_freq_shift:
-        case ct_osc_feedback_negative:
-        case ct_lfodeform:
-        case ct_airwindows_param_bipolar:
-        case ct_pitch:
-        case ct_pitch4oct:
-        case ct_dpw_trimix:
-        case ct_oscspread_bipolar:
+        if (p->is_bipolar())
             style |= kBipolar;
-            break;
-        case ct_lfoamplitude:
-            if (p->extend_range)
-                style |= kBipolar;
-            break;
-        case ct_fmratio:
-            if (p->extend_range && !p->absolute)
-                style |= kBipolar;
+
+        if (p->ctrltype == ct_fmratio)
+        {
             if (p->extend_range || p->absolute)
                 p->val_default.f = 16.f;
             else
                 p->val_default.f = 1.f;
-
-            break;
-        };
+        }
 
         if (p->hasSkinConnector &&
             conn.payload->defaultComponent != Surge::Skin::Components::None && paramIsVisible)
@@ -8229,14 +8201,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
 
         CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
-        // This is still a bit of a special case
-        if (p->ctrltype == ct_sinefmlegacy || p->ctrltype == ct_wt2window ||
-            p->ctrltype == ct_airwindows_fx || p->ctrltype == ct_flangermode ||
-            p->ctrltype == ct_fxlfowave || p->ctrltype == ct_distortion_waveshape ||
-            p->ctrltype == ct_reson_mode || p->ctrltype == ct_vocoder_bandcount ||
-            p->ctrltype == ct_nimbusmode || p->ctrltype == ct_nimbusquality ||
-            p->ctrltype == ct_waveguide_excitation_model || p->ctrltype == ct_eurotwist_engine ||
-            p->ctrltype == ct_ensemble_stages)
+        if (p->is_discrete_selection())
         {
             loc.offset(2, 4);
             auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,

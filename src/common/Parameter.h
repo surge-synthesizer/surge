@@ -331,6 +331,9 @@ class Parameter
     void clear_flags();
     bool has_portaoptions();
     bool has_deformoptions();
+    bool is_bipolar();
+    bool is_discrete_selection(); // basically a hint to use a dropdown not a slider
+
     void set_type(int ctrltype);
     void morph(Parameter *a, Parameter *b, float x);
     //	void morph(parameter *b, float x);
