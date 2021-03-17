@@ -333,6 +333,12 @@ bool Parameter::has_deformoptions()
 
 bool Parameter::is_bipolar()
 {
+    if (dynamicBipolar != nullptr)
+    {
+        auto res = dynamicBipolar->getValue(this);
+        return res;
+    }
+
     bool res = false;
     switch (ctrltype)
     {
@@ -348,6 +354,7 @@ bool Parameter::is_bipolar()
     case ct_freq_mod:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_freq_shift:
     case ct_osc_feedback_negative:
     case ct_lfodeform:
@@ -394,6 +401,36 @@ bool Parameter::is_discrete_selection()
     }
 
     return false;
+}
+
+bool Parameter::is_nonlocal_on_change()
+{
+    switch (ctrltype)
+    {
+    case ct_eurotwist_engine:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool Parameter::appears_deactivated()
+{
+    if (dynamicDeactivation)
+        return dynamicDeactivation->getValue(this);
+
+    if (can_deactivate())
+        return deactivated;
+
+    return false;
+}
+
+Parameter *Parameter::get_primary_deactivation_driver()
+{
+    if (dynamicDeactivation)
+        return dynamicDeactivation->getPrimaryDeactivationDriver(this);
+    return nullptr;
 }
 
 void Parameter::set_user_data(ParamUserData *ud)
@@ -449,6 +486,9 @@ void Parameter::set_type(int ctrltype)
     affect_other_parameters = false;
     user_data = nullptr;
     dynamicName = nullptr;
+    dynamicBipolar = nullptr;
+    dynamicDeactivation = nullptr;
+
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
     ** and, grouped below, we set display info
@@ -880,6 +920,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_stringbal:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting:
         val_min.f = -1;
         val_max.f = 1;
         valtype = vt_float;
@@ -1121,6 +1162,12 @@ void Parameter::set_type(int ctrltype)
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
+        break;
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+        displayType = LinearWithScale;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
+        displayInfo.scale = 100;
+        displayInfo.customFeatures = ParamDisplayFeatures::kScaleBasedOnIsBiPolar;
         break;
     case ct_percent_bipolar_stereo:
         displayType = LinearWithScale;
@@ -1365,6 +1412,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent_bipolar:
         case ct_percent_bipolar_stereo:
         case ct_percent_bipolar_stringbal:
+        case ct_percent_bipolar_w_dynamic_unipolar_formatting:
         case ct_rotarydrive:
         case ct_osc_feedback:
         case ct_osc_feedback_negative:
@@ -1570,6 +1618,7 @@ bool Parameter::supportsDynamicName()
     case ct_dpw_trimix:
     case ct_percent:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_percent_deactivatable:
         return true;
     default:
@@ -1854,6 +1903,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             if (storage && !storage->isStandardTuning &&
                 storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                 u = "keys";
+        }
+
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
+        {
+            if (!is_bipolar())
+            {
+                f = (f + 1) * 0.5;
+                mf = mf * 0.5;
+            }
         }
         if (can_extend_range())
         {
@@ -2631,7 +2689,13 @@ void Parameter::get_display(char *txt, bool external, float ef)
                     storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
                     u = "keys";
             }
-
+            if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
+            {
+                if (!is_bipolar())
+                {
+                    f = (f + 1) * 0.5;
+                }
+            }
             if (can_extend_range())
             {
                 f = get_extended(f);
@@ -3408,6 +3472,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_stringbal:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:
@@ -3637,10 +3702,20 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
         float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
         float factor = ext_mul * abs_mul;
         float res = nv / displayInfo.scale / factor;
+
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
+        {
+            if (!is_bipolar())
+            {
+                res = res * 2 - 1;
+            }
+        }
+
         if (res < val_min.f || res > val_max.f)
         {
             return false;
         }
+
         onto.f = res;
         return true;
 
@@ -3819,6 +3894,15 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         valid = true;
         auto mv = (float)std::atof(s.c_str());
         mv /= displayInfo.scale;
+
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
+        {
+            if (!is_bipolar())
+            {
+                mv = mv * 2;
+            }
+        }
+
         if (can_be_absolute() && absolute)
         {
             mv /= displayInfo.absoluteFactor;

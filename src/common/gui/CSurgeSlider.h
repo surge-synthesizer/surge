@@ -99,6 +99,13 @@ class CSurgeSlider : public VSTGUI::CControl,
         invalid();
     }
 
+    std::function<bool()> isDeactivatedFn = []() { return false; };
+    void setDeactivatedFn(std::function<bool()> f)
+    {
+        isDeactivatedFn = f;
+        invalid();
+    }
+
     virtual void setTempoSync(bool b) { is_temposync = b; }
 
     void SetQuantitizedDispValue(float f);
@@ -118,8 +125,7 @@ class CSurgeSlider : public VSTGUI::CControl,
 
     bool in_hover = false;
     bool is_mod;
-    bool disabled;    // means it can't be used unless something else changes
-    bool deactivated; // means it has been turned off by user action
+    bool disabled; // means it can't be used unless something else changes
     bool hasBeenDraggedDuringMouseGesture = false;
 
     bool isStepped = false;

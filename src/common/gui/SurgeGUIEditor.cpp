@@ -3645,13 +3645,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     contextMenu->checkEntry(eid, p->absolute);
                     eid++;
                 }
-                if (p->can_deactivate())
+                if (p->can_deactivate() || p->get_primary_deactivation_driver())
                 {
+                    auto q = p->get_primary_deactivation_driver();
+                    if (!q)
+                    {
+                        q = p;
+                    }
+
                     std::string txt;
 
-                    if (p->deactivated)
+                    if (q->deactivated)
                     {
-                        if (p->ctrltype == ct_envtime_linkable_delay)
+                        if (q->ctrltype == ct_envtime_linkable_delay)
                         {
                             txt = Surge::UI::toOSCaseForMenu("Unlink from Left Channel");
                         }
@@ -3660,14 +3666,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             txt = Surge::UI::toOSCaseForMenu("Activate");
                         }
 
-                        addCallbackMenu(contextMenu, txt.c_str(), [this, p]() {
-                            p->deactivated = false;
+                        addCallbackMenu(contextMenu, txt.c_str(), [this, q]() {
+                            q->deactivated = false;
                             this->synth->refresh_editor = true;
                         });
                     }
                     else
                     {
-                        if (p->ctrltype == ct_envtime_linkable_delay)
+                        if (q->ctrltype == ct_envtime_linkable_delay)
                         {
                             txt = Surge::UI::toOSCaseForMenu("Link to Left Channel");
                         }
@@ -3676,8 +3682,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             txt = Surge::UI::toOSCaseForMenu("Deactivate");
                         }
 
-                        addCallbackMenu(contextMenu, txt.c_str(), [this, p]() {
-                            p->deactivated = true;
+                        addCallbackMenu(contextMenu, txt.c_str(), [this, q]() {
+                            q->deactivated = true;
                             this->synth->refresh_editor = true;
                         });
                     }
@@ -4780,7 +4786,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
         {
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
-            if (p->ctrltype == ct_eurotwist_engine)
+            if (p->is_nonlocal_on_change())
                 frame->invalid();
 
             char pname[256], pdisp[128], txt[128];
@@ -8266,10 +8272,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
                 .c_str());
 
-        if (p->can_deactivate())
-            hs->deactivated = p->deactivated;
-        else
-            hs->deactivated = false;
+        hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
 
 #if !TARGET_JUCE_UI && 0
         auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "");

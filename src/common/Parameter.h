@@ -44,6 +44,7 @@ enum ctrltypes
     ct_percent_bipolar,
     ct_percent_bipolar_stereo,    // bipolar with special text strings at -100% +100% and 0%
     ct_percent_bipolar_stringbal, // bipolar with special text strings
+    ct_percent_bipolar_w_dynamic_unipolar_formatting,
     ct_pitch_octave,
     ct_pitch_semi7bp,
     ct_pitch_semi7bp_absolutable,
@@ -222,6 +223,19 @@ struct ParameterDynamicNameFunction
 {
     virtual const char *getName(Parameter *p) = 0;
 };
+/*
+ * The DBF binds to a couple of properties (deactivate, bipolar) so have a general
+ * base class
+ */
+struct ParameterDynamicBoolFunction
+{
+    virtual const bool getValue(Parameter *p) = 0;
+};
+
+struct ParameterDynamicDeactivationFunction : public ParameterDynamicBoolFunction
+{
+    virtual Parameter *getPrimaryDeactivationDriver(Parameter *p) { return nullptr; };
+};
 
 /*
 ** It used to be parameters were assigned IDs in SurgePatch using an int which we ++ed along the
@@ -333,6 +347,24 @@ class Parameter
     bool has_deformoptions();
     bool is_bipolar();
     bool is_discrete_selection(); // basically a hint to use a dropdown not a slider
+    bool is_nonlocal_on_change(); // basically a change to me means other vals change so redraw
+                                  // everyone else too
+
+    /*
+     * Why "appears deactivated" vs "is_deactivated". Well we have primary items
+     * which are deactivated. That's cool. But sometimes a value change on another
+     * parameter or a deactivation of another control means that a subordinate control
+     * should also present as deactivated. So this is an API that clients of the parameter
+     * can use to determine whether the system intends this parameter to be editable
+     * by user action. DSP branches and stuff should still just use primary.deactivated
+     *
+     * For UI things, we will want to find the driver of deactivation (if there is
+     * one) so we can share the activate menu. get_primary_deactivation_driver does that
+     * basically meaning that the menu on B can toggle the decativated state on A by
+     * having B be able to locate A (A being the 'primary deactivation driver')
+     */
+    bool appears_deactivated();
+    Parameter *get_primary_deactivation_driver();
 
     void set_type(int ctrltype);
     void morph(Parameter *a, Parameter *b, float x);
@@ -423,7 +455,8 @@ class Parameter
         kHasCustomDefaultString = 1U << 2U,
         kHasCustomMinValue = 1U << 3U,
         kHasCustomMaxValue = 1U << 4U,
-        kUnitsAreSemitonesOrKeys = 1U << 5U
+        kUnitsAreSemitonesOrKeys = 1U << 5U,
+        kScaleBasedOnIsBiPolar = 1U << 6U
     };
 
 #define DISPLAYINFO_TXT_SIZE 128
@@ -455,6 +488,12 @@ class Parameter
 
     bool supportsDynamicName();
     ParameterDynamicNameFunction *dynamicName = nullptr;
+
+    /*
+     * Handlers for dynamic deactivation and dynamic bipolarity
+     */
+    ParameterDynamicDeactivationFunction *dynamicDeactivation = nullptr;
+    ParameterDynamicBoolFunction *dynamicBipolar = nullptr;
 
     bool hasSkinConnector = false;
 
