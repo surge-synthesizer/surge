@@ -41,7 +41,7 @@ class WaveguideOscillator : public Oscillator
     };
 
     WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), lp(s), noiseLp(s)
+        : Oscillator(s, o, p), lp{s, s}, hp{s, s}, noiseLp(s)
     {
     }
 
@@ -69,7 +69,8 @@ class WaveguideOscillator : public Oscillator
     float dustBuffer[2][BLOCK_SIZE_OS];
     void fillDustBuffer(float tap0, float tap1);
 
-    BiquadFilter lp, noiseLp;
+    BiquadFilter lp[2], hp[2], noiseLp;
+    void configureLpAndHpFromTone();
 };
 
 #endif // SURGE_WAVEGUIDEOSCILLATOR_H
