@@ -182,7 +182,6 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
     bufpos = 0;
     dc = 0;
 
-    // Init here
     id_shape = oscdata->p[sso_shape].param_id_in_scene;
     id_pw = oscdata->p[sso_width1].param_id_in_scene;
     id_pw2 = oscdata->p[sso_width2].param_id_in_scene;
