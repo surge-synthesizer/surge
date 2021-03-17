@@ -46,11 +46,17 @@ void Tape::process(float *dataL, float *dataR)
         R[i] = dataR[i];
     }
 
-    hysteresis.set_params(*f[tape_drive], *f[tape_saturation], *f[tape_bias]);
-    hysteresis.process_block(L, R);
+    if (!fxdata->p[tape_drive].deactivated)
+    {
+        hysteresis.set_params(*f[tape_drive], *f[tape_saturation], *f[tape_bias]);
+        hysteresis.process_block(L, R);
+    }
 
-    lossFilter.set_params(*f[tape_speed], *f[tape_spacing], *f[tape_gap], *f[tape_thickness]);
-    lossFilter.process(L, R);
+    if (!fxdata->p[tape_speed].deactivated)
+    {
+        lossFilter.set_params(*f[tape_speed], *f[tape_spacing], *f[tape_gap], *f[tape_thickness]);
+        lossFilter.process(L, R);
+    }
 
     mix.set_target_smoothed(limit_range(*f[tape_mix], 0.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
@@ -94,50 +100,109 @@ int Tape::group_label_ypos(int id)
 
 void Tape::init_ctrltypes()
 {
+    /*
+     * The actualy deactivation status is on gain, so reflet that down
+     * to freq and bw using the dynamic deactivation mechanism
+     */
+    static struct TapeDeact : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            switch (idx)
+            {
+            case tape_saturation:
+            case tape_bias:
+                return fx->p[tape_drive].deactivated;
+            case tape_gap:
+            case tape_spacing:
+            case tape_thickness:
+                return fx->p[tape_speed].deactivated;
+            case tape_degrade_amount:
+            case tape_degrade_variance:
+                return fx->p[tape_degrade_depth].deactivated;
+            }
+
+            return false;
+        }
+        Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            switch (idx)
+            {
+            case tape_saturation:
+            case tape_bias:
+                return &(fx->p[tape_drive]);
+            case tape_gap:
+            case tape_spacing:
+            case tape_thickness:
+                return &(fx->p[tape_speed]);
+            case tape_degrade_amount:
+            case tape_degrade_variance:
+                return &(fx->p[tape_degrade_depth]);
+            }
+            return nullptr;
+        }
+    } tapeGroupDeact;
+
     Effect::init_ctrltypes();
 
     fxdata->p[tape_drive].set_name("Drive");
-    fxdata->p[tape_drive].set_type(ct_percent);
+    fxdata->p[tape_drive].set_type(ct_percent_deactivatable);
     fxdata->p[tape_drive].posy_offset = 1;
     fxdata->p[tape_drive].val_default.f = 0.5f;
+    fxdata->p[tape_drive].deactivated = false;
     fxdata->p[tape_saturation].set_name("Saturation");
     fxdata->p[tape_saturation].set_type(ct_percent);
     fxdata->p[tape_saturation].posy_offset = 1;
     fxdata->p[tape_saturation].val_default.f = 0.5f;
+    fxdata->p[tape_saturation].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_bias].set_name("Bias");
     fxdata->p[tape_bias].set_type(ct_percent);
     fxdata->p[tape_bias].posy_offset = 1;
     fxdata->p[tape_bias].val_default.f = 0.5f;
+    fxdata->p[tape_bias].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_speed].set_name("Speed");
-    fxdata->p[tape_speed].set_type(ct_percent);
+    fxdata->p[tape_speed].set_type(ct_percent_deactivatable);
     fxdata->p[tape_speed].posy_offset = 3;
     fxdata->p[tape_speed].val_default.f = 1.0f;
+    fxdata->p[tape_speed].deactivated = false;
     fxdata->p[tape_gap].set_name("Gap");
     fxdata->p[tape_gap].set_type(ct_percent);
     fxdata->p[tape_gap].posy_offset = 3;
     fxdata->p[tape_gap].val_default.f = 0.0f;
+    fxdata->p[tape_gap].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_spacing].set_name("Spacing");
     fxdata->p[tape_spacing].set_type(ct_percent);
     fxdata->p[tape_spacing].posy_offset = 3;
     fxdata->p[tape_spacing].val_default.f = 0.0f;
+    fxdata->p[tape_spacing].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_thickness].set_name("Thickness");
     fxdata->p[tape_thickness].set_type(ct_percent);
     fxdata->p[tape_thickness].posy_offset = 3;
     fxdata->p[tape_thickness].val_default.f = 0.0f;
+    fxdata->p[tape_thickness].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_degrade_depth].set_name("Depth");
-    fxdata->p[tape_degrade_depth].set_type(ct_percent);
+    fxdata->p[tape_degrade_depth].set_type(ct_percent_deactivatable);
     fxdata->p[tape_degrade_depth].posy_offset = 5;
     fxdata->p[tape_degrade_depth].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_depth].deactivated = false;
     fxdata->p[tape_degrade_amount].set_name("Amount");
     fxdata->p[tape_degrade_amount].set_type(ct_percent);
     fxdata->p[tape_degrade_amount].posy_offset = 5;
     fxdata->p[tape_degrade_amount].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_amount].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_degrade_variance].set_name("Variance");
     fxdata->p[tape_degrade_variance].set_type(ct_percent);
     fxdata->p[tape_degrade_variance].posy_offset = 5;
     fxdata->p[tape_degrade_variance].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_variance].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_mix].set_name("Mix");
     fxdata->p[tape_mix].set_type(ct_percent);

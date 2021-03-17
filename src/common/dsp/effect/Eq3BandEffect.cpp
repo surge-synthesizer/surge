@@ -129,8 +129,8 @@ int Eq3BandEffect::group_label_ypos(int id)
 void Eq3BandEffect::init_ctrltypes()
 {
     /*
-     * The actualy deactivation status is on gain, so reflet that down
-     * to freq and bw using the dynamic deactivation mechanism
+     * The actual deactivation status is on gain, so reflect that down
+     * to freq and bandwidth using the dynamic deactivation mechanism
      */
     static struct EQD : public ParameterDynamicDeactivationFunction
     {
@@ -138,6 +138,7 @@ void Eq3BandEffect::init_ctrltypes()
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
+
             switch (idx)
             {
             case eq3_freq1:
@@ -157,6 +158,7 @@ void Eq3BandEffect::init_ctrltypes()
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
+
             switch (idx)
             {
             case eq3_freq1:

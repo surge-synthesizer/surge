@@ -408,6 +408,7 @@ bool Parameter::is_nonlocal_on_change()
     switch (ctrltype)
     {
     case ct_eurotwist_engine:
+    case ct_phaser_stages:
         return true;
     default:
         break;
