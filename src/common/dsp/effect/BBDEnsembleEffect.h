@@ -54,6 +54,17 @@ class BBDEnsembleEffect : public Effect
         ens_num_ctrls,
     };
 
+    enum EnsembleStages
+    {
+        ens_sinc = 0,
+        ens_128,
+        ens_256,
+        ens_512,
+        ens_1024,
+        ens_2048,
+        ens_4096,
+    };
+
     BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~BBDEnsembleEffect();
     virtual const char *get_effectname() override { return "Ensemble"; }
@@ -67,7 +78,8 @@ class BBDEnsembleEffect : public Effect
     virtual int group_label_ypos(int id) override;
 
   private:
-    void process_sinc_delays(float *dataL, float *dataR);
+    float getFeedbackGain(bool bbd) const noexcept;
+    void process_sinc_delays(float *dataL, float *dataR, float delayCenterMs, float delayScale);
 
     Surge::ModControl modlfos[2][3]; // 2 LFOs differening by 120 degree in phase at outputs
     SSESincDelayLine<8192> delL, delR;
@@ -79,6 +91,9 @@ class BBDEnsembleEffect : public Effect
     BBDDelayLine<4096> del_4096L1, del_4096L2, del_4096R1, del_4096R2;
 
     BBDNonlin bbd_saturation_sse;
-
     size_t block_counter;
+
+    float fbStateL, fbStateR;
+    BiquadFilter dc_blocker[2];
+    BiquadFilter sincInputFilter;
 };

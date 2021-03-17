@@ -73,13 +73,9 @@ void BiquadFilter::coeff_LP2B(double omega, double Q)
             (w_sq * w_sq) + (M_PI * M_PI * M_PI * M_PI) + w_sq * (M_PI * M_PI) * (1 / Q - 2);
         double G1 = min(1.0, sqrt((w_sq * w_sq) / den) * 0.5);
 
-        double cosi = cos(omega), sinu = sin(omega),
-               // alpha = sinu*sinh((log(2.0)/2.0) * (BW) * omega / sinu),
-            alpha = sinu / (2 * Q),
-               // G1 = 0.05, //powf(2,-log(M_PI/omega)/log(2.0)),
-               // set aa to 6 db
+        double cosi = cos(omega), sinu = sin(omega), alpha = sinu / (2 * Q),
 
-            A = 2 * sqrt(G1) * sqrt(2 - G1), b0 = (1 - cosi + G1 * (1 + cosi) + A * sinu) * 0.5,
+               A = 2 * sqrt(G1) * sqrt(2 - G1), b0 = (1 - cosi + G1 * (1 + cosi) + A * sinu) * 0.5,
                b1 = (1 - cosi - G1 * (1 + cosi)),
                b2 = (1 - cosi + G1 * (1 + cosi) - A * sinu) * 0.5, a0 = (1 + alpha), a1 = -2 * cosi,
                a2 = 1 - alpha;

@@ -61,6 +61,7 @@ class BiquadFilter
     BiquadFilter();
     BiquadFilter(SurgeStorage *storage);
     void coeff_LP(double omega, double Q);
+    /** Compared to coeff_LP, this version adds a small boost at high frequencies */
     void coeff_LP2B(double omega, double Q);
     void coeff_HP(double omega, double Q);
     void coeff_BP(double omega, double Q);
