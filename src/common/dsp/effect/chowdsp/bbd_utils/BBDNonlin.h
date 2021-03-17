@@ -75,17 +75,17 @@ class FastDiode : public chowdsp::WDF_SSE::WDFNode
 
 struct NonlinLUT
 {
-    NonlinLUT(double min, double max, int nPoints)
+    NonlinLUT(float min, float max, int nPoints)
     {
         table.resize(nPoints, 0.0f);
 
         offset = min;
-        scale = (double)nPoints / (max - min);
+        scale = (float)nPoints / (max - min);
 
         for (int i = 0; i < nPoints; ++i)
         {
-            auto x = (double)i / scale + offset;
-            table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33);
+            auto x = (float)i / scale + offset;
+            table[i] = 2.0e-9 * pwrs(std::abs(x), 0.33f);
         }
     }
 
@@ -99,15 +99,15 @@ struct NonlinLUT
         return std::pow(std::abs(x), y);
     }
 
-    inline double operator()(double x) const noexcept
+    inline float operator()(float x) const noexcept
     {
         auto idx = size_t((x - offset) * scale);
         return sgn(x) * table[idx];
     }
 
   private:
-    std::vector<double> table;
-    double offset, scale;
+    std::vector<float> table;
+    float offset, scale;
 };
 
 static NonlinLUT bbdNonlinLUT{-5.0, 5.0, 1 << 16};
@@ -117,10 +117,10 @@ class BBDNonlin
   public:
     BBDNonlin() = default;
 
-    void reset(double sampleRate)
+    void reset(float sampleRate)
     {
         using namespace chowdsp::WDF_SSE;
-        constexpr double alpha = 0.4;
+        constexpr float alpha = 0.4;
 
         S2.port1 = std::make_unique<Resistor>(2.7e3f); // Rgk
 
