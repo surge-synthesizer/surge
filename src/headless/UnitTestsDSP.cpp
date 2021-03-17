@@ -15,6 +15,9 @@
 
 #include "samplerate.h"
 
+#include "SSEComplex.h"
+#include <complex>
+
 using namespace Surge::Test;
 
 TEST_CASE("Simple Single Oscillator is Constant", "[dsp]")
@@ -817,6 +820,71 @@ TEST_CASE("Untuned is 2^x", "[dsp]")
     }
 }
 
+TEST_CASE("SSE std::complex", "[dsp]")
+{
+    SECTION("Can make a complex on m128")
+    {
+        auto a = SSEComplex();
+        // The atIndex operation is expensive. Stay vectorized as long as possible.
+        REQUIRE(a.atIndex(0) == std::complex<float>{0, 0});
+        auto b = a + a;
+
+        for (int i = 0; i < 4; ++i)
+            REQUIRE(a.atIndex(i) == b.atIndex(i));
+
+        auto q = SSEComplex({0.f, 1.f, 2.f, 3.f}, {1.f, 0.f, -1.f, -2.f});
+        auto r = SSEComplex({12.f, 1.2f, 2.4f, 3.7f}, {1.2f, 0.4f, -1.2f, -2.7f});
+        REQUIRE(q.atIndex(0) == std::complex<float>(0.f, 1.f));
+        REQUIRE(q.atIndex(1) == std::complex<float>(1.f, 0.f));
+        REQUIRE(q.atIndex(2) == std::complex<float>(2.f, -1.f));
+        REQUIRE(q.atIndex(3) == std::complex<float>(3.f, -2.f));
+
+        auto qpr = q + r;
+        for (int i = 0; i < 4; ++i)
+            REQUIRE(qpr.atIndex(i) == q.atIndex(i) + r.atIndex(i));
+
+        auto qtr = q * r;
+        for (int i = 0; i < 4; ++i)
+            REQUIRE(qtr.atIndex(i) == q.atIndex(i) * r.atIndex(i));
+
+        float sum = 0.f;
+        for (int i = 0; i < 4; ++i)
+            sum += qtr.atIndex(i).real();
+
+        float sumSSE alignas(16)[4];
+        _mm_store1_ps(sumSSE, sum_ps_to_ss(qtr.real()));
+        REQUIRE(sum == Approx(sumSSE[0]).margin(1e-5));
+
+        float angles alignas(16)[4];
+        angles[0] = 0;
+        angles[1] = M_PI / 2;
+        angles[2] = 3 * M_PI / 4;
+        angles[3] = M_PI;
+        auto asse = _mm_load_ps(angles);
+        auto c = SSEComplex::fastExp(asse);
+
+        auto c0 = c.atIndex(0);
+        REQUIRE(c0.real() == Approx(1).margin(1e-5));
+        REQUIRE(c0.imag() == Approx(0).margin(1e-5));
+
+        auto c1 = c.atIndex(1);
+        REQUIRE(c1.real() == Approx(0).margin(1e-5));
+        REQUIRE(c1.imag() == Approx(1).margin(1e-5));
+
+        auto c2 = c.atIndex(2);
+        REQUIRE(c2.real() == Approx(-sqrt(2.0) / 2).margin(1e-5));
+        REQUIRE(c2.imag() == Approx(sqrt(2.0) / 2).margin(1e-5));
+
+        // At this extrema we are a touch less acrrucate
+        auto c3 = c.atIndex(3);
+        REQUIRE(c3.real() == Approx(-1).margin(1e-4));
+        REQUIRE(c3.imag() == Approx(0).margin(1e-4));
+
+        auto powV = q.map([](const std::complex<float> &f) { return std::pow(f, 2.1f); });
+        for (int i = 0; i < 4; ++i)
+            REQUIRE(powV.atIndex(i) == pow(q.atIndex(i), 2.1f));
+    }
+}
 // When we return to #1514 this is a good starting point
 #if 0
 TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )

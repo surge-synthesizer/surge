@@ -4,6 +4,8 @@
 #include "omega.h"
 #include <string>
 #include <cmath>
+#include <memory>
+#include <type_traits>
 
 namespace chowdsp
 {
@@ -34,6 +36,24 @@ namespace chowdsp
  */
 namespace WDF
 {
+
+namespace detail
+{
+template <typename T>
+typename std::enable_if<std::is_default_constructible<T>::value, void>::type
+default_construct(std::unique_ptr<T> &ptr)
+{
+    ptr = std::make_unique<T>();
+}
+
+template <typename T>
+typename std::enable_if<!std::is_default_constructible<T>::value, void>::type
+default_construct(std::unique_ptr<T> &ptr)
+{
+    ptr.reset(nullptr);
+}
+} // namespace detail
+
 /** Wave digital filter base class */
 class WDF
 {
@@ -68,6 +88,10 @@ class WDF
     friend class YParameter;
     friend class WDFParallel;
     friend class WDFSeries;
+
+    template <typename Port1Type, typename Port2Type> friend class WDFParallelT;
+
+    template <typename Port1Type, typename Port2Type> friend class WDFSeriesT;
 
     double R = 1.0e-9;  // impedance
     double G = 1.0 / R; // admittance
@@ -389,6 +413,46 @@ class PolarityInverter : public WDFNode
     WDFNode *port1 = nullptr;
 };
 
+/** WDF Voltage Polarity Inverter */
+template <typename PortType> class PolarityInverterT : public WDFNode
+{
+  public:
+    /** Creates a new WDF polarity inverter */
+    PolarityInverterT() : WDFNode("Polarity Inverter") { detail::default_construct(port1); }
+    virtual ~PolarityInverterT() {}
+
+    void initialise()
+    {
+        port1->connectToNode(this);
+        calcImpedance();
+    }
+
+    /** Calculates the impedance of the WDF inverter
+     * (same impedance as the connected node).
+     */
+    inline void calcImpedance() override
+    {
+        R = port1->R;
+        G = 1.0 / R;
+    }
+
+    /** Accepts an incident wave into a WDF inverter. */
+    inline void incident(double x) noexcept override
+    {
+        a = x;
+        port1->incident(-x);
+    }
+
+    /** Propogates a reflected wave from a WDF inverter. */
+    inline double reflected() noexcept override
+    {
+        b = -port1->reflected();
+        return b;
+    }
+
+    std::unique_ptr<PortType> port1;
+};
+
 /** WDF y-parameter 2-port (short circuit admittance) */
 class YParameter : public WDFNode
 {
@@ -505,6 +569,61 @@ class WDFParallel : public WDFAdaptor
     double port2Reflect = 1.0;
 };
 
+/** WDF 3-port parallel adaptor */
+template <typename Port1Type, typename Port2Type> class WDFParallelT : public WDFNode
+{
+  public:
+    /** Creates a new WDF parallel adaptor from two connected ports. */
+    WDFParallelT() : WDFNode("Parallel")
+    {
+        detail::default_construct(port1);
+        detail::default_construct(port2);
+    }
+    virtual ~WDFParallelT() {}
+
+    void initialise()
+    {
+        port1->connectToNode(this);
+        port2->connectToNode(this);
+        calcImpedance();
+    }
+
+    /** Computes the impedance for a WDF parallel adaptor.
+     *  1     1     1
+     * --- = --- + ---
+     * Z_p   Z_1   Z_2
+     */
+    inline void calcImpedance() override
+    {
+        G = port1->G + port2->G;
+        R = 1.0 / G;
+        port1Reflect = port1->G / G;
+        port2Reflect = port2->G / G;
+    }
+
+    /** Accepts an incident wave into a WDF parallel adaptor. */
+    inline void incident(double x) noexcept override
+    {
+        port1->incident(x + (port2->b - port1->b) * port2Reflect);
+        port2->incident(x + (port2->b - port1->b) * -port1Reflect);
+        a = x;
+    }
+
+    /** Propogates a reflected wave from a WDF parallel adaptor. */
+    inline double reflected() noexcept override
+    {
+        b = port1Reflect * port1->reflected() + port2Reflect * port2->reflected();
+        return b;
+    }
+
+    std::unique_ptr<Port1Type> port1;
+    std::unique_ptr<Port2Type> port2;
+
+  private:
+    double port1Reflect = 1.0;
+    double port2Reflect = 1.0;
+};
+
 /** WDF 3-port series adaptor */
 class WDFSeries : public WDFAdaptor
 {
@@ -542,6 +661,60 @@ class WDFSeries : public WDFAdaptor
         b = -(port1->reflected() + port2->reflected());
         return b;
     }
+
+  private:
+    double port1Reflect = 1.0;
+    double port2Reflect = 1.0;
+};
+
+/** WDF 3-port series adaptor */
+template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFNode
+{
+  public:
+    /** Creates a new WDF series adaptor from two connected ports. */
+    WDFSeriesT() : WDFNode("Series")
+    {
+        detail::default_construct(port1);
+        detail::default_construct(port2);
+    }
+    virtual ~WDFSeriesT() {}
+
+    void initialise()
+    {
+        port1->connectToNode(this);
+        port2->connectToNode(this);
+        calcImpedance();
+    }
+
+    /** Computes the impedance for a WDF parallel adaptor.
+     * Z_s = Z_1 + Z_2
+     */
+    inline void calcImpedance() override
+    {
+        R = port1->R + port2->R;
+        G = 1.0 / R;
+        port1Reflect = port1->R / R;
+        port2Reflect = port2->R / R;
+    }
+
+    /** Accepts an incident wave into a WDF series adaptor. */
+    inline void incident(double x) noexcept override
+    {
+        port1->incident(port1->b - port1Reflect * (x + port1->b + port2->b));
+        port2->incident(port2->b - port2Reflect * (x + port1->b + port2->b));
+
+        a = x;
+    }
+
+    /** Propogates a reflected wave from a WDF series adaptor. */
+    inline double reflected() noexcept override
+    {
+        b = -(port1->reflected() + port2->reflected());
+        return b;
+    }
+
+    std::unique_ptr<Port1Type> port1;
+    std::unique_ptr<Port2Type> port2;
 
   private:
     double port1Reflect = 1.0;

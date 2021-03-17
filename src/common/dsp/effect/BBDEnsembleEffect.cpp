@@ -23,36 +23,39 @@ enum EnsembleStages
     ens_256,
     ens_512,
     ens_1024,
-    ens_2048
+    ens_2048,
+    ens_4096,
 };
 
 std::string ensemble_stage_name(int i)
 {
-    switch ((EnsembleStages)i)
+    switch (i)
     {
     case ens_sinc:
-        return "Sinc (clean) Delay";
+        return "Digital Delay";
     case ens_128:
-        return "128 Stage BBD";
+        return "BBD 128 Stages";
     case ens_256:
-        return "256 Stage BBD";
+        return "BBD 256 Stages";
     case ens_512:
-        return "512 Stage BBD";
+        return "BBD 512 Stages";
     case ens_1024:
-        return "1024 State BBD";
+        return "BBD 1024 Stages";
     case ens_2048:
-        return "2048 Stage BBD";
+        return "BBD 2048 Stages";
+    case ens_4096:
+        return "BBD 4096 Stages";
     }
     return "Error";
 }
 
-int ensemble_stage_count() { return 6; }
+int ensemble_stage_count() { return 7; }
 
 namespace
 {
 constexpr float delay1Ms = 0.6f;
 constexpr float delay2Ms = 0.2f;
-constexpr float delay0Ms = 5.0f;
+constexpr float dlyTimeCenter = 5.0f;
 } // namespace
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
@@ -75,9 +78,8 @@ void BBDEnsembleEffect::init()
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})
         {
             del->prepare(samplerate);
-            del->setWaveshapeParams(0.5f);
             del->setFilterFreq(10000.0f);
-            del->setDelayTime(delay0Ms * 0.001f);
+            del->setDelayTime(dlyTimeCenter * 0.001f);
         }
     };
 
@@ -86,6 +88,10 @@ void BBDEnsembleEffect::init()
     init_bbds(del_512L1, del_512L2, del_512R1, del_512R2);
     init_bbds(del_1024L1, del_1024L2, del_1024R1, del_1024R2);
     init_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
+    init_bbds(del_4096L1, del_4096L2, del_4096R1, del_4096R2);
+
+    bbd_saturation_sse.reset(samplerate);
+    bbd_saturation_sse.setDrive(0.5f);
 }
 
 void BBDEnsembleEffect::setvars(bool init)
@@ -111,7 +117,9 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR)
 {
     float del1 = delay1Ms * 0.001 * samplerate;
     float del2 = delay2Ms * 0.001 * samplerate;
-    float del0 = delay0Ms * 0.001 * samplerate;
+    float del0 = dlyTimeCenter * 0.001 * samplerate;
+
+    bbd_saturation_sse.setDrive(*f[ens_delay_sat]);
 
     for (int s = 0; s < BLOCK_SIZE; ++s)
     {
@@ -132,8 +140,19 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR)
         float rtap1 = t2;
         float rtap2 = t3;
 
-        L[s] = delL.read(ltap1) + delL.read(ltap2);
-        R[s] = delR.read(rtap1) + delR.read(rtap2);
+        float delayOuts alignas(16)[4];
+        delayOuts[0] = delL.read(ltap1);
+        delayOuts[1] = delL.read(ltap2);
+        delayOuts[2] = delR.read(rtap1);
+        delayOuts[3] = delR.read(rtap2);
+
+        auto delayOutsVec = vLoad(delayOuts);
+        auto waveshaperOutsVec = bbd_saturation_sse.processSample(delayOutsVec);
+
+        float waveshaperOuts alignas(16)[4];
+        _mm_store_ps(waveshaperOuts, waveshaperOutsVec);
+        L[s] = waveshaperOuts[0] + waveshaperOuts[1];
+        R[s] = waveshaperOuts[2] + waveshaperOuts[3];
 
         for (int i = 0; i < 3; ++i)
         {
@@ -175,20 +194,19 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         {
             const auto aa_cutoff =
                 std::min(2 * 3.14159265358979323846 * 440 *
-                             storage->note_to_pitch_ignoring_tuning(*f[ens_bbd_aa_cutoff]),
+                             storage->note_to_pitch_ignoring_tuning(*f[ens_input_cutoff]),
                          25000.0);
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
-            {
                 del->setFilterFreq(aa_cutoff);
-                del->setWaveshapeParams(*f[ens_bbd_nonlin]);
-            }
 
             block_counter = 0;
         }
 
+        bbd_saturation_sse.setDrive(*f[ens_delay_sat]);
+
         float del1 = delay1Ms * 0.001;
         float del2 = delay2Ms * 0.001;
-        float del0 = delay0Ms * 0.001;
+        float del0 = dlyTimeCenter * 0.001;
 
         for (int s = 0; s < BLOCK_SIZE; ++s)
         {
@@ -201,14 +219,24 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             float t2 = del1 * modlfos[0][1].value() + del2 * modlfos[1][1].value() + del0;
             float t3 = del1 * modlfos[0][2].value() + del2 * modlfos[1][2].value() + del0;
 
-            // @TODO: can we optimise these?
             delL1.setDelayTime(t1);
             delL2.setDelayTime(t2);
             delR1.setDelayTime(t2);
             delR2.setDelayTime(t3);
 
-            L[s] = delL1.process(dataL[s]) + delL2.process(dataL[s]);
-            R[s] = delR1.process(dataR[s]) + delR2.process(dataR[s]);
+            float delayOuts alignas(16)[4];
+            delayOuts[0] = delL1.process(dataL[s]);
+            delayOuts[1] = delL2.process(dataL[s]);
+            delayOuts[2] = delR1.process(dataR[s]);
+            delayOuts[3] = delR2.process(dataR[s]);
+
+            auto delayOutsVec = vLoad(delayOuts);
+            auto waveshaperOutsVec = bbd_saturation_sse.processSample(delayOutsVec);
+
+            float waveshaperOuts alignas(16)[4];
+            _mm_store_ps(waveshaperOuts, waveshaperOutsVec);
+            L[s] = waveshaperOuts[0] + waveshaperOuts[1];
+            R[s] = waveshaperOuts[2] + waveshaperOuts[3];
 
             for (int i = 0; i < 3; ++i)
                 for (int j = 0; j < 2; ++j)
@@ -219,7 +247,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         mul_block(R, db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
     };
 
-    auto bbd_stages = (EnsembleStages)*pdata_ival[ens_bbd_stages];
+    auto bbd_stages = (EnsembleStages)*pdata_ival[ens_delay_type];
     switch (bbd_stages)
     {
     case ens_sinc:
@@ -239,6 +267,9 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         break;
     case ens_2048:
         process_bbd_delays(dataL, dataR, del_2048L1, del_2048L2, del_2048R1, del_2048R2);
+        break;
+    case ens_4096:
+        process_bbd_delays(dataL, dataR, del_4096L1, del_4096L2, del_4096R1, del_4096R2);
         break;
     }
 
@@ -266,7 +297,7 @@ const char *BBDEnsembleEffect::group_label(int id)
     case 0:
         return "Input";
     case 1:
-        return "BBD";
+        return "Delay";
     case 2:
         return "Modulation";
     case 3:
@@ -282,11 +313,11 @@ int BBDEnsembleEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 5;
+        return 7;
     case 2:
-        return 13;
+        return 15;
     case 3:
-        return 23;
+        return 25;
     }
     return 0;
 }
@@ -298,27 +329,30 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_input_gain].set_name("Gain");
     fxdata->p[ens_input_gain].set_type(ct_decibel);
     fxdata->p[ens_input_gain].posy_offset = 1;
+    fxdata->p[ens_input_cutoff].set_name("Filter");
+    fxdata->p[ens_input_cutoff].set_type(ct_freq_audible);
+    fxdata->p[ens_input_cutoff].val_default.f = 3.65f * 12.f;
+    fxdata->p[ens_input_cutoff].posy_offset = 1;
 
-    fxdata->p[ens_bbd_stages].set_name("Stages");
-    fxdata->p[ens_bbd_stages].set_type(ct_ensemble_stages);
-    fxdata->p[ens_bbd_stages].posy_offset = 3;
-    fxdata->p[ens_bbd_aa_cutoff].set_name("AA Cutoff");
-    fxdata->p[ens_bbd_aa_cutoff].set_type(ct_freq_audible);
-    fxdata->p[ens_bbd_aa_cutoff].val_default.f = 3.65f * 12.f;
-    fxdata->p[ens_bbd_aa_cutoff].posy_offset = 3;
-    fxdata->p[ens_bbd_nonlin].set_name("Nonlinearity");
-    fxdata->p[ens_bbd_nonlin].set_type(ct_percent);
-    fxdata->p[ens_bbd_nonlin].val_default.f = 0.5f;
-    fxdata->p[ens_bbd_nonlin].posy_offset = 3;
+    fxdata->p[ens_delay_type].set_name("Type");
+    fxdata->p[ens_delay_type].set_type(ct_ensemble_stages);
+    fxdata->p[ens_delay_type].posy_offset = 3;
+    fxdata->p[ens_delay_clockrate].set_name("Clock Rate");
+    fxdata->p[ens_delay_clockrate].set_type(ct_ensemble_clockrate);
+    fxdata->p[ens_delay_clockrate].posy_offset = 3;
+    fxdata->p[ens_delay_sat].set_name("Saturation");
+    fxdata->p[ens_delay_sat].set_type(ct_percent);
+    fxdata->p[ens_delay_sat].val_default.f = 0.5f;
+    fxdata->p[ens_delay_sat].posy_offset = 3;
 
     fxdata->p[ens_lfo_freq1].set_name("Frequency 1");
-    fxdata->p[ens_lfo_freq1].set_type(ct_bbd_lforate);
+    fxdata->p[ens_lfo_freq1].set_type(ct_ensemble_lforate);
     fxdata->p[ens_lfo_freq1].posy_offset = 5;
     fxdata->p[ens_lfo_depth1].set_name("Depth 1");
     fxdata->p[ens_lfo_depth1].set_type(ct_percent);
     fxdata->p[ens_lfo_depth1].posy_offset = 5;
     fxdata->p[ens_lfo_freq2].set_name("Frequency 2");
-    fxdata->p[ens_lfo_freq2].set_type(ct_bbd_lforate);
+    fxdata->p[ens_lfo_freq2].set_type(ct_ensemble_lforate);
     fxdata->p[ens_lfo_freq2].posy_offset = 5;
     fxdata->p[ens_lfo_depth2].set_name("Depth 2");
     fxdata->p[ens_lfo_depth2].set_type(ct_percent);
@@ -340,10 +374,11 @@ void BBDEnsembleEffect::init_ctrltypes()
 void BBDEnsembleEffect::init_default_values()
 {
     fxdata->p[ens_input_gain].val.f = 0.f;
+    fxdata->p[ens_input_cutoff].val.f = 3.65f * 12.f;
 
-    fxdata->p[ens_bbd_stages].val.i = 2;
-    fxdata->p[ens_bbd_aa_cutoff].val.f = 3.65f * 12.f;
-    fxdata->p[ens_bbd_nonlin].val.f = 0.5f;
+    fxdata->p[ens_delay_type].val.i = 2;
+    fxdata->p[ens_delay_clockrate].val.f = 40.f;
+    fxdata->p[ens_delay_sat].val.f = 0.5f;
 
     fxdata->p[ens_width].val.f = 1.f;
     fxdata->p[ens_gain].val.f = 0.f;

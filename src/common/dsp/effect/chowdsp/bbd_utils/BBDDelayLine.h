@@ -2,11 +2,11 @@
 
 #include <algorithm>
 #include <array>
+#include <memory>
 #include <numeric>
 #include <vector>
 
-#include "BBDFilters.h"
-#include "BBDNonlin.h"
+#include "BBDFilterBank.h"
 
 template <size_t STAGES> class BBDDelayLine
 {
@@ -14,7 +14,6 @@ template <size_t STAGES> class BBDDelayLine
     BBDDelayLine() = default;
 
     void prepare(double sampleRate);
-    void setWaveshapeParams(float drive) { waveshape2.setDrive(drive); }
     void setFilterFreq(float freqHz);
 
     inline void setDelayTime(float delaySec) noexcept
@@ -23,29 +22,19 @@ template <size_t STAGES> class BBDDelayLine
         Ts_bbd = 1.0f / clock_rate_hz;
 
         const auto doubleTs = 2 * Ts_bbd;
-        for (auto &iFilt : inputFilters)
-            iFilt.set_delta(doubleTs);
-
-        for (auto &oFilt : outputFilters)
-            oFilt.set_delta(doubleTs);
+        inputFilter->set_delta(doubleTs);
+        outputFilter->set_delta(doubleTs);
     }
 
     inline float process(float u) noexcept
     {
-        std::array<std::complex<float>, FilterSpec::N_filt> xOutAccum;
-        std::fill(xOutAccum.begin(), xOutAccum.end(), std::complex<float>());
-
+        SSEComplex xOutAccum;
         while (tn < Ts)
         {
             if (evenOn)
             {
-                std::array<std::complex<float>, FilterSpec::N_filt> gIn;
-                float sum = 0.0f;
-                for (size_t i = 0; i < FilterSpec::N_filt; ++i)
-                {
-                    gIn[i] = inputFilters[i].calcGUp();
-                    sum += xIn[i].real() * gIn[i].real() - xIn[i].imag() * gIn[i].imag();
-                }
+                inputFilter->calcG();
+                auto sum = vSum(SSEComplexMulReal(inputFilter->Gcalc, inputFilter->x));
                 buffer[bufferPtr++] = sum;
                 bufferPtr = (bufferPtr < STAGES) ? bufferPtr : 0;
             }
@@ -54,8 +43,8 @@ template <size_t STAGES> class BBDDelayLine
                 auto yBBD = buffer[bufferPtr];
                 auto delta = yBBD - yBBD_old;
                 yBBD_old = yBBD;
-                for (size_t i = 0; i < FilterSpec::N_filt; ++i)
-                    xOutAccum[i] += outputFilters[i].calcGUp() * delta;
+                outputFilter->calcG();
+                xOutAccum += outputFilter->Gcalc * delta;
             }
 
             evenOn = !evenOn;
@@ -63,16 +52,10 @@ template <size_t STAGES> class BBDDelayLine
         }
         tn -= Ts;
 
-        float sum = 0.0f;
-        for (size_t i = 0; i < FilterSpec::N_filt; ++i)
-        {
-            inputFilters[i].process(u);
-            outputFilters[i].process(xOutAccum[i]);
-            sum += xOut[i].real();
-        }
-
-        float output = H0 * yBBD_old + sum;
-        return waveshape2.processSample(output);
+        inputFilter->process(u);
+        outputFilter->process(xOutAccum);
+        float sum = vSum(xOutAccum._r);
+        return H0 * yBBD_old + sum;
     }
 
   private:
@@ -80,8 +63,8 @@ template <size_t STAGES> class BBDDelayLine
     float Ts = 1.0f / FS;
     float Ts_bbd = Ts;
 
-    std::vector<InputFilter> inputFilters;
-    std::vector<OutputFilter> outputFilters;
+    std::unique_ptr<InputFilterBank> inputFilter;
+    std::unique_ptr<OutputFilterBank> outputFilter;
     float H0 = 1.0f;
 
     std::array<std::complex<float>, FilterSpec::N_filt> xIn;
@@ -93,6 +76,4 @@ template <size_t STAGES> class BBDDelayLine
     float yBBD_old = 0.0f;
     float tn = 0.0f;
     bool evenOn = true;
-
-    BBDNonlin waveshape2;
 };
