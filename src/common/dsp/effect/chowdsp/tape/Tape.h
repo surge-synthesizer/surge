@@ -14,9 +14,12 @@
 */
 
 #pragma once
+
 #include <dsp/effect/Effect.h>
 #include "HysteresisProcessor.h"
 #include "LossFilter.h"
+
+#include <vt_dsp/lipol.h>
 
 namespace chowdsp
 {
@@ -29,16 +32,26 @@ namespace chowdsp
 */
 class Tape : public Effect
 {
+    lipol_ps mix alignas(16);
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
+
   public:
     enum tape_params
     {
         tape_drive = 0,
         tape_saturation,
         tape_bias,
+
         tape_speed,
         tape_gap,
         tape_spacing,
-        tape_thick,
+        tape_thickness,
+
+        tape_degrade_depth,
+        tape_degrade_amount,
+        tape_degrade_variance,
+
+        tape_mix,
 
         tape_num_ctrls,
     };

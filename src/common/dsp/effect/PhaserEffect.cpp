@@ -176,9 +176,9 @@ const char *PhaserEffect::group_label(int id)
     switch (id)
     {
     case 0:
-        return "Stages";
-    case 1:
         return "Modulation";
+    case 1:
+        return "Stages";
     case 2:
         return "Output";
     }
@@ -191,7 +191,7 @@ int PhaserEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 13;
+        return 11;
     case 2:
         return 23;
     }
@@ -227,16 +227,16 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_mix].set_name("Mix");
     fxdata->p[ph_mix].set_type(ct_percent);
 
-    fxdata->p[ph_stages].posy_offset = -15;
-    fxdata->p[ph_center].posy_offset = 3;
-    fxdata->p[ph_spread].posy_offset = -13;
-    fxdata->p[ph_sharpness].posy_offset = 3;
-    fxdata->p[ph_feedback].posy_offset = 7;
+    fxdata->p[ph_mod_wave].posy_offset = -19;
+    fxdata->p[ph_mod_rate].posy_offset = -3;
+    fxdata->p[ph_mod_depth].posy_offset = -3;
+    fxdata->p[ph_stereo].posy_offset = -3;
 
-    fxdata->p[ph_mod_wave].posy_offset = -7;
-    fxdata->p[ph_mod_rate].posy_offset = 9;
-    fxdata->p[ph_mod_depth].posy_offset = 9;
-    fxdata->p[ph_stereo].posy_offset = 9;
+    fxdata->p[ph_stages].posy_offset = -5;
+    fxdata->p[ph_center].posy_offset = 13;
+    fxdata->p[ph_spread].posy_offset = -3;
+    fxdata->p[ph_sharpness].posy_offset = 13;
+    fxdata->p[ph_feedback].posy_offset = 17;
 
     fxdata->p[ph_width].posy_offset = 9;
     fxdata->p[ph_mix].posy_offset = 13;

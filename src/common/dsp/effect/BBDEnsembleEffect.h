@@ -30,26 +30,25 @@
 
 class BBDEnsembleEffect : public Effect
 {
-    lipol_ps input alignas(16), width alignas(16), gain alignas(16), mix alignas(16);
+    lipol_ps width alignas(16), mix alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
   public:
     enum ens_params
     {
-        ens_input_gain = 0,
-        ens_input_cutoff,
-
-        ens_delay_type,
-        ens_delay_clockrate,
-        ens_delay_sat,
+        ens_input_filter = 0,
 
         ens_lfo_freq1,
         ens_lfo_depth1,
         ens_lfo_freq2,
         ens_lfo_depth2,
 
+        ens_delay_type,
+        ens_delay_clockrate,
+        ens_delay_sat,
+        ens_delay_feedback,
+
         ens_width,
-        ens_gain,
         ens_mix,
 
         ens_num_ctrls,
