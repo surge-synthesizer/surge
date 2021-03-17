@@ -331,6 +331,71 @@ bool Parameter::has_deformoptions()
     return false;
 }
 
+bool Parameter::is_bipolar()
+{
+    bool res = false;
+    switch (ctrltype)
+    {
+    case ct_decibel:
+    case ct_decibel_deactivatable:
+    case ct_decibel_narrow:
+    case ct_decibel_narrow_deactivatable:
+    case ct_decibel_narrow_extendable:
+    case ct_decibel_extra_narrow_deactivatable:
+    case ct_decibel_narrow_short_extendable:
+    case ct_decibel_extra_narrow:
+    case ct_decibel_extendable:
+    case ct_freq_mod:
+    case ct_percent_bipolar:
+    case ct_percent_bipolar_stereo:
+    case ct_freq_shift:
+    case ct_osc_feedback_negative:
+    case ct_lfodeform:
+    case ct_airwindows_param_bipolar:
+    case ct_pitch:
+    case ct_pitch4oct:
+    case ct_dpw_trimix:
+    case ct_oscspread_bipolar:
+        res = true;
+        break;
+    case ct_lfoamplitude:
+        if (extend_range)
+            res = true;
+        break;
+    case ct_fmratio:
+        if (extend_range && !absolute)
+            res = true;
+    default:
+        res = false;
+    }
+    return res;
+}
+
+bool Parameter::is_discrete_selection()
+{
+    switch (ctrltype)
+    {
+    case ct_sinefmlegacy:
+    case ct_wt2window:
+    case ct_airwindows_fx:
+    case ct_flangermode:
+    case ct_fxlfowave:
+    case ct_distortion_waveshape:
+    case ct_reson_mode:
+    case ct_vocoder_bandcount:
+    case ct_nimbusmode:
+    case ct_nimbusquality:
+    case ct_waveguide_excitation_model:
+    case ct_eurotwist_engine:
+    case ct_ensemble_stages:
+        return true;
+    default:
+        break;
+    }
+
+    return false;
+}
+
 void Parameter::set_user_data(ParamUserData *ud)
 {
     switch (ctrltype)

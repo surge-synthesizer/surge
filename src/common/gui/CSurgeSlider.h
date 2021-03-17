@@ -91,7 +91,13 @@ class CSurgeSlider : public VSTGUI::CControl,
     virtual bool isInMouseInteraction();
 
     virtual void setValue(float val) override;
-    virtual void setBipolar(bool);
+
+    std::function<bool()> isBipolFn = []() { return false; };
+    void setBipolarFunction(std::function<bool()> f)
+    {
+        isBipolFn = f;
+        invalid();
+    }
 
     virtual void setTempoSync(bool b) { is_temposync = b; }
 

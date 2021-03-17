@@ -166,7 +166,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
     {
         if (style & kSemitone)
             typey = 2;
-        else if (style & kBipolar)
+        else if (isBipolFn())
             typey = 1;
         else
             typey = 0;
@@ -177,7 +177,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
     {
         if (style & kMini)
             typey = 2;
-        else if (style & kBipolar)
+        else if (isBipolFn())
             typey = 1;
         else
             typey = 0;
@@ -974,15 +974,6 @@ void CSurgeSlider::setValue(float val)
     }
 }
 
-void CSurgeSlider::setBipolar(bool b)
-{
-    if (b)
-        style |= kBipolar;
-    else
-        style &= ~kBipolar;
-
-    setDirty();
-}
 bool CSurgeSlider::onWheel(const VSTGUI::CPoint &where, const float &distance,
                            const VSTGUI::CButtonState &buttons)
 {
