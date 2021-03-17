@@ -123,10 +123,25 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     auto pitchmult_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
 
-    auto pitch2_t =
-        std::min(148.f, pitch + localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
-    auto pitchmult2_inv =
-        std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch2_t));
+    double pitch2_t = 1, pitchmult2_inv = 1;
+    if (oscdata->p[wg_str2_detune].absolute)
+    {
+        pitch2_t = std::min(148.f, pitch);
+        auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
+
+        auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
+        auto detune = localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f * fac;
+
+        frequency = std::max(10.0, frequency + detune);
+        pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
+    }
+    else
+    {
+        pitch2_t =
+            std::min(148.f, pitch + localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
+        pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
+                                           storage->note_to_pitch_inv(pitch2_t));
+    }
 
     noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     for (int i = 0; i < 3; ++i)
@@ -161,16 +176,19 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     d0 = powf(d0, 0.125);
 
     int dustrp = BLOCK_SIZE_OS;
+    configureLpAndHpFromTone();
+
     for (int i = 0; i < prefill; ++i)
     {
+        float dlv[2] = {0, 0};
         switch (mode)
         {
         case burst_sine:
             d0 = 1;
         case constant_sine:
         {
-            delayLine[0].write(0.707 * d0 * std::sin(2.0 * M_PI * phase1));
-            delayLine[1].write(0.707 * d0 * std::sin(2.0 * M_PI * phase2));
+            dlv[0] = (0.707 * d0 * std::sin(2.0 * M_PI * phase1));
+            dlv[1] = (0.707 * d0 * std::sin(2.0 * M_PI * phase2));
             phase1 += r1;
             phase2 += r2;
         }
@@ -181,9 +199,9 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         {
             // phase is 0,1 so tri is
             auto t1 = (phase1 < 0.5) ? (phase1 * 4 - 1) : ((1 - phase1)) * 4 - 1;
-            delayLine[0].write(0.707 * d0 * t1);
+            dlv[0] = (0.707 * d0 * t1);
             auto t2 = (phase2 < 0.5) ? (phase2 * 4 - 1) : ((1 - phase2)) * 4 - 1;
-            delayLine[1].write(0.707 * d0 * t2);
+            dlv[1] = (0.707 * d0 * t2);
             phase1 += r1;
             phase2 += r2;
 
@@ -197,8 +215,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1;
         case constant_square:
         {
-            delayLine[0].write(0.707 * d0 * ((phase1 > 0.5) * 2 - 1));
-            delayLine[1].write(0.707 * d0 * ((phase2 > 0.5) * 2 - 1));
+            dlv[0] = (0.707 * d0 * ((phase1 > 0.5) * 2 - 1));
+            dlv[1] = (0.707 * d0 * ((phase2 > 0.5) * 2 - 1));
 
             phase1 += r1;
             phase2 += r2;
@@ -213,8 +231,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1;
         case constant_ramp:
         {
-            delayLine[0].write(0.707 * d0 * (phase1 * 2 - 1));
-            delayLine[1].write(0.707 * d0 * (phase2 * 2 - 1));
+            dlv[0] = (0.707 * d0 * (phase1 * 2 - 1));
+            dlv[1] = (0.707 * d0 * (phase2 * 2 - 1));
 
             phase1 += r1;
             phase2 += r2;
@@ -231,20 +249,20 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         {
             if (phase1 == 0)
             {
-                delayLine[0].write(0.707 * d0);
+                dlv[0] = (0.707 * d0);
             }
             else
             {
-                delayLine[0].write(0.707 * d0 * std::sin(2.0 * M_PI / phase1));
+                dlv[0] = (0.707 * d0 * std::sin(2.0 * M_PI / phase1));
             }
 
             if (phase2 == 0)
             {
-                delayLine[1].write(0.707 * d0);
+                dlv[1] = (0.707 * d0);
             }
             else
             {
-                delayLine[1].write(0.707 * d0 * std::sin(2.0 * M_PI / phase2));
+                dlv[1] = (0.707 * d0 * std::sin(2.0 * M_PI / phase2));
             }
 
             phase1 += r1;
@@ -258,8 +276,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         break;
 
         case constant_audioin:
-            delayLine[0].write(0);
-            delayLine[1].write(0);
+            dlv[0] = (0);
+            dlv[1] = (0);
             break;
 
         case burst_pink_noise:
@@ -272,8 +290,8 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
                 fillDustBuffer(pitchmult_inv, pitchmult2_inv);
             }
 
-            delayLine[0].write(d0 * dustBuffer[0][dustrp]);
-            delayLine[1].write(d0 * dustBuffer[1][dustrp]);
+            dlv[0] = (d0 * dustBuffer[0][dustrp]);
+            dlv[1] = (d0 * dustBuffer[1][dustrp]);
             dustrp++;
         }
         break;
@@ -281,15 +299,53 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             d0 = 1;
         case constant_noise:
         default:
-            delayLine[0].write(d0 * (urd(gen) * 2 - 1));
-            delayLine[1].write(d0 * (urd(gen) * 2 - 1));
+            dlv[0] = (d0 * (urd(gen) * 2 - 1));
+            dlv[1] = (d0 * (urd(gen) * 2 - 1));
             break;
         }
+
+        for (int t = 0; t < 2; ++t)
+        {
+            auto lpt = lp[t].process_sample(dlv[t]);
+            auto hpt = hp[t].process_sample(dlv[t]);
+
+            delayLine[t].write(tone.v < 0 ? lpt : hpt);
+        }
     }
-    priorSample[0] = delayLine[0].buffer[(delayLine[0].wp - 1) & delayLine[0].comb_size];
-    priorSample[1] = delayLine[1].buffer[(delayLine[1].wp - 1) & delayLine[1].comb_size];
+    for (int t = 0; t < 2; ++t)
+    {
+        lp[t].flush_sample_denormal();
+        hp[t].flush_sample_denormal();
+        priorSample[t] = delayLine[t].buffer[(delayLine[t].wp - 1) & delayLine[t].comb_size];
+    }
 
     charFilt.init(storage->getPatch().character.val.i);
+}
+void WaveguideOscillator::configureLpAndHpFromTone()
+{
+    tone.newValue(limit_range(localcopy[oscdata->p[wg_stiffness].param_id_in_scene].f, -1.f, 1.f));
+
+    float clo = 10, cmidhi = 60, cmid = 100, chi = -70;
+    float hpCutoff = chi;
+    float lpCutoff = cmid;
+
+    if (tone.v > 0)
+    {
+        // OK so cool scale the hp cutoff
+        auto tv = tone.v;
+        hpCutoff = tv * (cmidhi - chi) + chi;
+    }
+    else
+    {
+        auto tv = -tone.v;
+        lpCutoff = tv * (clo - cmid) + cmid;
+    }
+
+    // Inefficient - copy coefficients later
+    lp[0].coeff_LP(lp[0].calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    hp[0].coeff_HP(hp[0].calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    lp[1].coeff_LP(lp[1].calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    hp[1].coeff_HP(hp[1].calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
@@ -319,19 +375,37 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         }
     }
 
+    auto dp1 = pitch_to_dphase(pitch_t);
+
     lfodetune = drift * driftLFO[1].next();
     auto p2off = oscdata->p[wg_str2_detune].get_extended(
         localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
-    auto pitch2_t = std::min(148.f, pitch + p2off + lfodetune);
-    auto pitchmult2_inv =
-        std::max((FIRipol_N >> 1) + 1.0,
-                 dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch2_t));
+
+    double pitch2_t = 1, pitchmult2_inv = 1;
+    double dp2;
+    if (oscdata->p[wg_str2_detune].absolute)
+    {
+        pitch2_t = std::min(148.f, pitch);
+        auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
+
+        auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
+        auto detune = localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f * fac;
+
+        frequency = std::max(10.0, frequency + detune);
+        pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
+        dp2 = frequency * dsamplerate_os_inv;
+    }
+    else
+    {
+        pitch2_t =
+            std::min(148.f, pitch + localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
+        pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
+                                           storage->note_to_pitch_inv(pitch2_t));
+        dp2 = pitch_to_dphase(pitch2_t);
+    }
 
     pitchmult_inv = std::min(pitchmult_inv, (delayLine[0].comb_size - 100) * 1.0);
     pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0].comb_size - 100) * 1.0);
-
-    auto dp1 = pitch_to_dphase(pitch_t);
-    auto dp2 = pitch_to_dphase(pitch2_t);
 
     tap[0].newValue(pitchmult_inv);
     tap[1].newValue(pitchmult2_inv);
@@ -368,27 +442,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     double fv = fmdepthV / 16.0;
     fmdepth.newValue(fv);
 
-    tone.newValue(limit_range(localcopy[oscdata->p[wg_stiffness].param_id_in_scene].f, -1.f, 1.f));
-
-    float clo = -12, cmid = 100, chi = -33;
-    float hpCutoff = chi;
-    float lpCutoff = cmid;
-
-    if (tone.v > 0)
-    {
-        // OK so cool scale the hp cutoff
-        auto tv = tone.v;
-        hpCutoff = tv * (cmid - chi) + chi;
-    }
-    else
-    {
-        auto tv = -tone.v;
-        lpCutoff = tv * (clo - cmid) + cmid;
-    }
-
-    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
-
-    // hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    configureLpAndHpFromTone();
 
     float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f};
 
@@ -515,18 +569,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             // precautionary hard clip
             auto fbv = limit_range(val[t] + fbNoOutVal[t], -1.f, 1.f);
 
-            // one pole filter the feedback value
-            auto lpfiltv = lp.process_sample(fbv);
-
-            auto tv1 = std::max(tone.v * 1.6f, 0.f) * 0.62; // if this was 625 I would go to 1
-            float hptv = tv1 * tv1 * tv1;
-            auto ophpfiltv = (1 - hptv) * fbv - (hptv)*priorSample[t];
-            ophpfiltv = (ophpfiltv < 1e-20 && ophpfiltv > -1e-20) ? 0.0 : ophpfiltv;
-            priorSample[t] = ophpfiltv;
-
-            auto filtv = (tone.v > 0) ? ophpfiltv : lpfiltv;
-            // This is basically the flush_denormals from the biquad
-            filtv = (filtv < 1e-20 && filtv > -1e-20) ? 0.0 : filtv;
+            auto lpfiltv = lp[t].process_sample(fbv);
+            auto hpfiltv = hp[t].process_sample(fbv);
+            auto filtv = (tone.v > 0) ? hpfiltv : lpfiltv;
 
             delayLine[t].write(filtv * feedback[t].v);
         }
@@ -550,7 +595,10 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         fmdepth.process();
     }
 
-    lp.flush_sample_denormal();
+    lp[0].flush_sample_denormal();
+    lp[1].flush_sample_denormal();
+    hp[0].flush_sample_denormal();
+    hp[1].flush_sample_denormal();
 
     if (charFilt.doFilter)
     {
