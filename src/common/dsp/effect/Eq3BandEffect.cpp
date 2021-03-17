@@ -128,6 +128,51 @@ int Eq3BandEffect::group_label_ypos(int id)
 
 void Eq3BandEffect::init_ctrltypes()
 {
+    /*
+     * The actualy deactivation status is on gain, so reflet that down
+     * to freq and bw using the dynamic deactivation mechanism
+     */
+    static struct EQD : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+            switch (idx)
+            {
+            case eq3_freq1:
+            case eq3_bw1:
+                return fx->p[eq3_gain1].deactivated;
+            case eq3_freq2:
+            case eq3_bw2:
+                return fx->p[eq3_gain2].deactivated;
+            case eq3_freq3:
+            case eq3_bw3:
+                return fx->p[eq3_gain3].deactivated;
+            }
+
+            return false;
+        }
+        Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+            switch (idx)
+            {
+            case eq3_freq1:
+            case eq3_bw1:
+                return &(fx->p[eq3_gain1]);
+            case eq3_freq2:
+            case eq3_bw2:
+                return &(fx->p[eq3_gain2]);
+            case eq3_freq3:
+            case eq3_bw3:
+                return &(fx->p[eq3_gain3]);
+            }
+            return nullptr;
+        }
+    } eqGroupDeact;
+
     Effect::init_ctrltypes();
 
     fxdata->p[eq3_gain1].set_name("Gain 1");
@@ -135,24 +180,30 @@ void Eq3BandEffect::init_ctrltypes()
     fxdata->p[eq3_gain1].deactivated = false;
     fxdata->p[eq3_freq1].set_name("Frequency 1");
     fxdata->p[eq3_freq1].set_type(ct_freq_audible);
+    fxdata->p[eq3_freq1].dynamicDeactivation = &eqGroupDeact;
     fxdata->p[eq3_bw1].set_name("Bandwidth 1");
     fxdata->p[eq3_bw1].set_type(ct_bandwidth);
+    fxdata->p[eq3_bw1].dynamicDeactivation = &eqGroupDeact;
 
     fxdata->p[eq3_gain2].set_name("Gain 2");
     fxdata->p[eq3_gain2].set_type(ct_decibel_deactivatable);
     fxdata->p[eq3_gain2].deactivated = false;
     fxdata->p[eq3_freq2].set_name("Frequency 2");
     fxdata->p[eq3_freq2].set_type(ct_freq_audible);
+    fxdata->p[eq3_freq2].dynamicDeactivation = &eqGroupDeact;
     fxdata->p[eq3_bw2].set_name("Bandwidth 2");
     fxdata->p[eq3_bw2].set_type(ct_bandwidth);
+    fxdata->p[eq3_bw2].dynamicDeactivation = &eqGroupDeact;
 
     fxdata->p[eq3_gain3].set_name("Gain 3");
     fxdata->p[eq3_gain3].set_type(ct_decibel_deactivatable);
     fxdata->p[eq3_gain3].deactivated = false;
     fxdata->p[eq3_freq3].set_name("Frequency 3");
     fxdata->p[eq3_freq3].set_type(ct_freq_audible);
+    fxdata->p[eq3_freq3].dynamicDeactivation = &eqGroupDeact;
     fxdata->p[eq3_bw3].set_name("Bandwidth 3");
     fxdata->p[eq3_bw3].set_type(ct_bandwidth);
+    fxdata->p[eq3_bw3].dynamicDeactivation = &eqGroupDeact;
 
     fxdata->p[eq3_gain].set_name("Gain");
     fxdata->p[eq3_gain].set_type(ct_decibel);
