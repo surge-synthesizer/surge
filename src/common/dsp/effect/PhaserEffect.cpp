@@ -130,6 +130,17 @@ void PhaserEffect::setvars()
 
     feedback.newValue(0.95f * *f[ph_feedback]);
     width.set_target_smoothed(db_to_linear(*f[ph_width]));
+
+    static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p) override
+        {
+            auto cge = p->ctrlgroup_entry - ms_lfo1;
+            auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+            // TODO: remove lt_function after implementing function modulator!
+            return lf->shape.val.i == lt_envelope || lf->shape.val.i == lt_function;
+        }
+    } lfoRatePhaseDeact;
 }
 
 void PhaserEffect::process(float *dataL, float *dataR)
@@ -200,6 +211,22 @@ int PhaserEffect::group_label_ypos(int id)
 
 void PhaserEffect::init_ctrltypes()
 {
+    static struct PhaserDeactivate : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            if (idx == ph_spread)
+            {
+                return fx->p[ph_stages].val.i == 1;
+            }
+
+            return false;
+        }
+    } phGroupDeact;
+
     Effect::init_ctrltypes();
 
     fxdata->p[ph_stages].set_name("Count");
@@ -233,13 +260,15 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_stereo].posy_offset = -3;
 
     fxdata->p[ph_stages].posy_offset = -5;
-    fxdata->p[ph_center].posy_offset = 13;
-    fxdata->p[ph_spread].posy_offset = -3;
+    fxdata->p[ph_center].posy_offset = 15;
+    fxdata->p[ph_spread].posy_offset = -5;
     fxdata->p[ph_sharpness].posy_offset = 13;
     fxdata->p[ph_feedback].posy_offset = 17;
 
     fxdata->p[ph_width].posy_offset = 9;
     fxdata->p[ph_mix].posy_offset = 13;
+    
+    fxdata->p[ph_spread].dynamicDeactivation = &phGroupDeact;
 }
 
 void PhaserEffect::init_default_values()
