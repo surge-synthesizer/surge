@@ -67,7 +67,7 @@ const char *Tape::group_label(int id)
     case 1:
         return "Loss";
     case 2:
-        return "Degrade";
+        return "Degrade (not implemented!)";
     case 3:
         return "Output";
     }
