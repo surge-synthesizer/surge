@@ -267,7 +267,7 @@ void PhaserEffect::init_ctrltypes()
 
     fxdata->p[ph_width].posy_offset = 9;
     fxdata->p[ph_mix].posy_offset = 13;
-    
+
     fxdata->p[ph_spread].dynamicDeactivation = &phGroupDeact;
 }
 
