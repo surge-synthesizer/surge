@@ -90,26 +90,10 @@ class BBDEnsembleEffect : public Effect
     BBDDelayLine<2048> del_2048L1, del_2048L2, del_2048R1, del_2048R2;
     BBDDelayLine<4096> del_4096L1, del_4096L2, del_4096R1, del_4096R2;
 
-    float fbStateL, fbStateR;
     BBDNonlin bbd_saturation_sse;
-    BiquadFilter dc_blocker[2];
     size_t block_counter;
 
-    // we want to be able to deactivate the input filter slider in Sinc delay mode
-    struct EnsembleFilterDeact : public ParameterDynamicDeactivationFunction
-    {
-        const BBDEnsembleEffect *effect;
-
-        EnsembleFilterDeact(const BBDEnsembleEffect *effect) noexcept : effect(effect) {}
-
-        const bool getValue(Parameter *p) override
-        {
-            return effect->fxdata->p[ens_delay_type].val.i == ens_sinc;
-        }
-
-        Parameter *getPrimaryDeactivationDriver(Parameter *p) override
-        {
-            return &effect->fxdata->p[ens_delay_type];
-        }
-    } ensembleFilterDeact;
+    float fbStateL, fbStateR;
+    BiquadFilter dc_blocker[2];
+    BiquadFilter sincInputFilter;
 };

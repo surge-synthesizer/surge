@@ -62,23 +62,29 @@ int ensemble_num_stages(int i)
 
 int ensemble_stage_count() { return 7; }
 
+float calculateFilterParamFrequency(float paramVal, SurgeStorage *storage)
+{
+    return std::min(2 * 3.14159265358979323846 * 440 *
+                        storage->note_to_pitch_ignoring_tuning(paramVal),
+                    25000.0);
+}
+
 namespace
 {
 constexpr float delay1Ms = 0.6f;
 constexpr float delay2Ms = 0.2f;
+
+constexpr float qVals2ndOrderButter[] = {1.0 / 0.7654, 1.0 / 1.8478};
 } // namespace
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), ensembleFilterDeact(this)
+    : Effect(storage, fxdata, pd)
 {
     width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
     for (int i = 0; i < 2; ++i)
-    {
         dc_blocker[i].setBlockSize(BLOCK_SIZE);
-        dc_blocker[i].suspend();
-    }
 }
 
 BBDEnsembleEffect::~BBDEnsembleEffect() {}
@@ -111,11 +117,18 @@ void BBDEnsembleEffect::init()
     fbStateR = 0.0f;
 
     // Butterworth highpass
-    const auto dc_omega = 300.0f / samplerate;
-    dc_blocker[0].coeff_HP(dc_omega, 1.0 / 0.7654);
-    dc_blocker[0].coeff_instantize();
-    dc_blocker[1].coeff_HP(dc_omega, 1.0 / 1.8478);
-    dc_blocker[1].coeff_instantize();
+    const auto dc_omega = 2 * M_PI * 50.0 / samplerate;
+    for (int i = 0; i < 2; ++i)
+    {
+        dc_blocker[i].suspend();
+        dc_blocker[i].coeff_HP(dc_omega, qVals2ndOrderButter[i]);
+        dc_blocker[i].coeff_instantize();
+    }
+
+    const auto hf_omega = 2 * M_PI * 20000.0 / samplerate;
+    sincInputFilter.suspend();
+    sincInputFilter.coeff_LP(hf_omega, 0.7071);
+    sincInputFilter.coeff_instantize();
 }
 
 void BBDEnsembleEffect::setvars(bool init)
@@ -142,6 +155,10 @@ float BBDEnsembleEffect::getFeedbackGain(bool bbd) const noexcept
 void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float delayCenterMs,
                                             float delayScale)
 {
+    const auto aa_cutoff = calculateFilterParamFrequency(*f[ens_input_filter], storage);
+    sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / samplerate, 0.7071);
+    sincInputFilter.process_block(dataL, dataR);
+
     float del1 = delayScale * delay1Ms * 0.001 * samplerate;
     float del2 = delayScale * delay2Ms * 0.001 * samplerate;
     float del0 = delayCenterMs * 0.001 * samplerate;
@@ -225,10 +242,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         // let's only do it every 4 times
         if (block_counter++ == 3)
         {
-            const auto aa_cutoff =
-                std::min(2 * 3.14159265358979323846 * 440 *
-                             storage->note_to_pitch_ignoring_tuning(*f[ens_input_filter]),
-                         25000.0);
+            const auto aa_cutoff = calculateFilterParamFrequency(*f[ens_input_filter], storage);
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
                 del->setFilterFreq(aa_cutoff);
 
@@ -366,7 +380,6 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_input_filter].set_type(ct_freq_audible);
     fxdata->p[ens_input_filter].val_default.f = 3.65f * 12.f;
     fxdata->p[ens_input_filter].posy_offset = 1;
-    fxdata->p[ens_input_filter].dynamicDeactivation = &ensembleFilterDeact;
 
     fxdata->p[ens_lfo_freq1].set_name("Frequency 1");
     fxdata->p[ens_lfo_freq1].set_type(ct_ensemble_lforate);
