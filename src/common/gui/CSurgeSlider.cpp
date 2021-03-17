@@ -60,7 +60,6 @@ CSurgeSlider::CSurgeSlider(const CPoint &loc, long stylee, IControlListener *lis
 
     modmode = 0;
     disabled = false;
-    deactivated = false;
 
     label[0] = 0;
     pModHandle = 0;
@@ -187,13 +186,13 @@ void CSurgeSlider::draw(CDrawContext *dc)
     if (has_modulation_current)
         typex = 2;
 
-    float slider_alpha = (disabled || deactivated) ? 0.35 : 1.0;
+    float slider_alpha = (disabled || isDeactivatedFn()) ? 0.35 : 1.0;
     bool showHandle = true;
 #if LINUX
     // linux transparency is a bit broken (i have it patched to ignored) as described in
     // #2053. For now just disable handles on linux transparent sliders, which is a bummer
     // but better than a mispaint, then come back to this after 1.7.0
-    if (disabled || deactivated)
+    if (disabled || isDeactivatedFn())
     {
         showHandle = false;
         slider_alpha = 1.0;
@@ -512,7 +511,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
         }
     }
 
-    if (pHandle && showHandle && (modmode != 2) && (!deactivated || !disabled))
+    if (pHandle && showHandle && (modmode != 2) && (!isDeactivatedFn() || !disabled))
     {
         draghandlecenter = hrect.getCenter();
 
@@ -555,7 +554,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
                 }
             }
         }
-        else if ((!deactivated || !disabled))
+        else if ((!isDeactivatedFn() || !disabled))
         {
             pHandle->draw(
                 dc, hrect, CPoint(0, 28 * typehy),
@@ -605,7 +604,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
     }
 
     // draw mod-fader
-    if (pHandle && showHandle && modmode && (!deactivated || !disabled))
+    if (pHandle && showHandle && modmode && (!isDeactivatedFn() || !disabled))
     {
         CRect hrect(headrect);
         handle_rect = handle_rect_orig;

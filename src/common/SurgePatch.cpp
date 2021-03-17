@@ -512,11 +512,23 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         }
     } lfoPhaseName;
 
+    static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p) override
+        {
+            auto cge = p->ctrlgroup_entry - ms_lfo1;
+            auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+            return lf->shape.val.i == lt_envelope;
+        }
+    } lfoRatePhaseDeact;
+
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         for (int lf = 0; lf < n_lfos; ++lf)
         {
             scene[sc].lfo[lf].start_phase.dynamicName = &lfoPhaseName;
+            scene[sc].lfo[lf].start_phase.dynamicDeactivation = &lfoRatePhaseDeact;
+            scene[sc].lfo[lf].rate.dynamicDeactivation = &lfoRatePhaseDeact;
         }
     }
 

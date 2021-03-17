@@ -113,6 +113,61 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     }
 } etDynamicName;
 
+static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
+{
+    std::vector<std::vector<bool>> engineBipolars;
+
+    EngineDynamicBipolar() noexcept
+    {
+        engineBipolars.push_back({true, true, true, true});
+        engineBipolars.push_back({true, false, false, true});
+        engineBipolars.push_back({true, false, true, true});
+
+        // TODO: Populate the rest of this
+        while (engineBipolars.size() < 16)
+            engineBipolars.push_back({true, true, true, true});
+    }
+
+    const bool getValue(Parameter *p) override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+
+        if (oscs->type.val.i != ot_eurotwist)
+            return false;
+
+        auto engp = &(oscs->p[EuroTwist::et_engine]);
+        auto eng = engp->val.i;
+        auto idx = (p - engp);
+
+        auto res = engineBipolars[eng][idx - 1];
+
+        return res;
+    }
+} etDynamicBipolar;
+
+/*
+ * The only place we use dynamic deactivation is on the LPG sliders where
+ * we bind this object to the decay and make it follow the response, which
+ * is why we don't have crafty ifs here. If we do more deactivation obviously
+ * we will want crafty ifs.
+ */
+static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
+{
+    EngineDynamicDeact() noexcept {}
+
+    const bool getValue(Parameter *p) override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+        return oscs->p[EuroTwist::et_lpg_response].deactivated;
+    }
+
+    Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+        return &(oscs->p[EuroTwist::et_lpg_response]);
+    }
+} etDynamicDeact;
+
 EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
@@ -363,26 +418,31 @@ void EuroTwist::init_ctrltypes()
     oscdata->p[et_engine].set_type(ct_eurotwist_engine);
 
     oscdata->p[et_harmonics].set_name("Harmonics");
-    oscdata->p[et_harmonics].set_type(ct_percent_bipolar);
+    oscdata->p[et_harmonics].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     oscdata->p[et_harmonics].dynamicName = &etDynamicName;
+    oscdata->p[et_harmonics].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_timbre].set_name("Timbre");
     oscdata->p[et_timbre].set_type(ct_percent_bipolar);
     oscdata->p[et_timbre].dynamicName = &etDynamicName;
+    oscdata->p[et_timbre].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_morph].set_name("Morph");
     oscdata->p[et_morph].set_type(ct_percent_bipolar);
     oscdata->p[et_morph].dynamicName = &etDynamicName;
+    oscdata->p[et_morph].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_aux_mix].set_name("Aux Mix");
     oscdata->p[et_aux_mix].set_type(ct_percent);
     oscdata->p[et_aux_mix].dynamicName = &etDynamicName;
+    oscdata->p[et_aux_mix].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_lpg_response].set_name("LPG Response");
     oscdata->p[et_lpg_response].set_type(ct_percent_deactivatable);
 
     oscdata->p[et_lpg_decay].set_name("LPG Decay");
     oscdata->p[et_lpg_decay].set_type(ct_percent);
+    oscdata->p[et_lpg_decay].dynamicDeactivation = &etDynamicDeact;
 }
 
 void EuroTwist::init_default_values()
