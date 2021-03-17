@@ -1693,8 +1693,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
         std::string uiid = p->ui_identifier;
 
         long style = p->ctrlstyle;
-        if (p->is_bipolar())
-            style |= kBipolar;
 
         if (p->ctrltype == ct_fmratio)
         {
@@ -8246,6 +8244,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             hs->setLabel(p->get_name());
         }
 
+        hs->setBipolarFunction([p]() { return p->is_bipolar(); });
         hs->setModPresent(synth->isModDestUsed(p->id));
         hs->setDefaultValue(p->get_default_value_f01());
         hs->font_style = Surge::UI::Skin::setFontStyleProperty(

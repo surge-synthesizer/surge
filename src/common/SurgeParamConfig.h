@@ -39,7 +39,6 @@ enum Style
 */
 enum CControlEnum_turbodeluxe
 {
-    kBipolar = 1U << 15U,
     kWhite = 1U << 16U,
     kSemitone = 1U << 17U,
     kMini = 1U << 18U,
