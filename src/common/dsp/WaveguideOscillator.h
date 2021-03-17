@@ -71,6 +71,9 @@ class WaveguideOscillator : public Oscillator
 
     BiquadFilter lp[2], hp[2], noiseLp;
     void configureLpAndHpFromTone();
+
+  private:
+    int id_exciterlvl, id_str1decay, id_str2decay, id_str2detune, id_strbalance, id_stiffness;
 };
 
 #endif // SURGE_WAVEGUIDEOSCILLATOR_H

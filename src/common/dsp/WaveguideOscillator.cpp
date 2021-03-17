@@ -108,6 +108,13 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 {
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
 
+    id_exciterlvl = oscdata->p[wg_exciter_level].param_id_in_scene;
+    id_str1decay = oscdata->p[wg_str1_decay].param_id_in_scene;
+    id_str2decay = oscdata->p[wg_str2_decay].param_id_in_scene;
+    id_str2detune = oscdata->p[wg_str2_detune].param_id_in_scene;
+    id_strbalance = oscdata->p[wg_str_balance].param_id_in_scene;
+    id_stiffness = oscdata->p[wg_stiffness].param_id_in_scene;
+
     if (is_display)
     {
         gen = std::minstd_rand(8675309);
@@ -117,40 +124,42 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         std::random_device rd;
         gen = std::minstd_rand(rd());
     }
+
     urd = std::uniform_real_distribution<float>(0.0, 1.0);
 
     auto pitch_t = std::min(148.f, pitch);
     auto pitchmult_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
-
+    auto p2off = oscdata->p[wg_str2_detune].get_extended(localcopy[id_str2detune].f);
     double pitch2_t = 1, pitchmult2_inv = 1;
+
     if (oscdata->p[wg_str2_detune].absolute)
     {
         pitch2_t = std::min(148.f, pitch);
-        auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
 
+        auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
         auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
-        auto detune = localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f * fac;
+        auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
         pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
     }
     else
     {
-        pitch2_t =
-            std::min(148.f, pitch + localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
+        pitch2_t = std::min(148.f, pitch + p2off);
         pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
                                            storage->note_to_pitch_inv(pitch2_t));
     }
 
-    noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     for (int i = 0; i < 3; ++i)
+    {
         fillDustBuffer(pitchmult_inv, pitchmult2_inv);
+    }
+
+    noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     tap[0].startValue(pitchmult_inv);
     tap[1].startValue(pitchmult2_inv);
-    t2level.startValue(
-        0.5 * limit_range(localcopy[oscdata->p[wg_str_balance].param_id_in_scene].f, -1.f, 1.f) +
-        0.5);
+    t2level.startValue(0.5 * limit_range(localcopy[id_strbalance].f, -1.f, 1.f) + 0.5);
 
     // we need a big prefill to supprot the delay line for FM
     auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv));
@@ -172,7 +181,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 
     auto r1 = 1.0 / pitchmult_inv;
     auto r2 = 1.0 / pitchmult2_inv;
-    auto d0 = limit_range(localcopy[oscdata->p[wg_exciter_level].param_id_in_scene].f, 0.f, 1.f);
+    auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
     d0 = powf(d0, 0.125);
 
     int dustrp = BLOCK_SIZE_OS;
@@ -181,6 +190,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     for (int i = 0; i < prefill; ++i)
     {
         float dlv[2] = {0, 0};
+
         switch (mode)
         {
         case burst_sine:
@@ -189,6 +199,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         {
             dlv[0] = (0.707 * d0 * std::sin(2.0 * M_PI * phase1));
             dlv[1] = (0.707 * d0 * std::sin(2.0 * M_PI * phase2));
+
             phase1 += r1;
             phase2 += r2;
         }
@@ -199,16 +210,23 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         {
             // phase is 0,1 so tri is
             auto t1 = (phase1 < 0.5) ? (phase1 * 4 - 1) : ((1 - phase1)) * 4 - 1;
-            dlv[0] = (0.707 * d0 * t1);
             auto t2 = (phase2 < 0.5) ? (phase2 * 4 - 1) : ((1 - phase2)) * 4 - 1;
+
+            dlv[0] = (0.707 * d0 * t1);
             dlv[1] = (0.707 * d0 * t2);
+
             phase1 += r1;
             phase2 += r2;
 
             if (phase1 > 1)
+            {
                 phase1 -= 1;
+            }
+
             if (phase2 > 1)
+            {
                 phase2 -= 1;
+            }
         }
         break;
         case burst_square:
@@ -222,9 +240,14 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             phase2 += r2;
 
             if (phase1 > 1)
+            {
                 phase1 -= 1;
+            }
+
             if (phase2 > 1)
+            {
                 phase2 -= 1;
+            }
         }
         break;
         case burst_ramp:
@@ -238,9 +261,14 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             phase2 += r2;
 
             if (phase1 > 1)
+            {
                 phase1 -= 1;
+            }
+
             if (phase2 > 1)
+            {
                 phase2 -= 1;
+            }
         }
         break;
         case burst_sweep:
@@ -269,9 +297,14 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             phase2 += r2;
 
             if (phase1 > 1)
+            {
                 phase1 -= 1;
+            }
+
             if (phase2 > 1)
+            {
                 phase2 -= 1;
+            }
         }
         break;
 
@@ -292,6 +325,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 
             dlv[0] = (d0 * dustBuffer[0][dustrp]);
             dlv[1] = (d0 * dustBuffer[1][dustrp]);
+
             dustrp++;
         }
         break;
@@ -312,6 +346,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             delayLine[t].write(tone.v < 0 ? lpt : hpt);
         }
     }
+
     for (int t = 0; t < 2; ++t)
     {
         lp[t].flush_sample_denormal();
@@ -321,9 +356,10 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
 
     charFilt.init(storage->getPatch().character.val.i);
 }
+
 void WaveguideOscillator::configureLpAndHpFromTone()
 {
-    tone.newValue(limit_range(localcopy[oscdata->p[wg_stiffness].param_id_in_scene].f, -1.f, 1.f));
+    tone.newValue(limit_range(localcopy[id_stiffness].f, -1.f, 1.f));
 
     float clo = 10, cmidhi = 60, cmid = 100, chi = -70;
     float hpCutoff = chi;
@@ -331,7 +367,7 @@ void WaveguideOscillator::configureLpAndHpFromTone()
 
     if (tone.v > 0)
     {
-        // OK so cool scale the hp cutoff
+        // OK so cool scale the HP cutoff
         auto tv = tone.v;
         hpCutoff = tv * (cmidhi - chi) + chi;
     }
@@ -357,7 +393,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
-    double d0 = limit_range(localcopy[oscdata->p[wg_exciter_level].param_id_in_scene].f, 0.f, 1.f);
+    double d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
 
     if (mode >= constant_noise)
     {
@@ -378,18 +414,18 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     auto dp1 = pitch_to_dphase(pitch_t);
 
     lfodetune = drift * driftLFO[1].next();
-    auto p2off = oscdata->p[wg_str2_detune].get_extended(
-        localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
 
-    double pitch2_t = 1, pitchmult2_inv = 1;
     double dp2;
+    double pitch2_t = 1, pitchmult2_inv = 1;
+    auto p2off = oscdata->p[wg_str2_detune].get_extended(localcopy[id_str2detune].f);
+
     if (oscdata->p[wg_str2_detune].absolute)
     {
         pitch2_t = std::min(148.f, pitch);
         auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
 
         auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
-        auto detune = localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f * fac;
+        auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
         pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
@@ -397,8 +433,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     }
     else
     {
-        pitch2_t =
-            std::min(148.f, pitch + localcopy[oscdata->p[wg_str2_detune].param_id_in_scene].f);
+        pitch2_t = std::min(148.f, pitch + p2off);
         pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
                                            storage->note_to_pitch_inv(pitch2_t));
         dp2 = pitch_to_dphase(pitch2_t);
@@ -410,11 +445,9 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
     tap[0].newValue(pitchmult_inv);
     tap[1].newValue(pitchmult2_inv);
 
-    t2level.newValue(
-        0.5 * limit_range(localcopy[oscdata->p[wg_str_balance].param_id_in_scene].f, -1.f, 1.f) +
-        0.5);
+    t2level.newValue(0.5 * limit_range(localcopy[id_strbalance].f, -1.f, 1.f) + 0.5);
 
-    auto fbp = limit_range(localcopy[oscdata->p[wg_str1_decay].param_id_in_scene].f, 0.f, 1.f);
+    auto fbp = limit_range(localcopy[id_str1decay].f, 0.f, 1.f);
 
     if (fbp < 0.2)
     {
@@ -427,7 +460,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         feedback[0].newValue(0.9375f + (0.0625f * fbp));
     }
 
-    auto fbp2 = limit_range(localcopy[oscdata->p[wg_str2_decay].param_id_in_scene].f, 0.f, 1.f);
+    auto fbp2 = limit_range(localcopy[id_str2decay].f, 0.f, 1.f);
 
     if (fbp2 < 0.2)
     {
@@ -440,6 +473,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
     // fmdepthV basically goes 0 -> 16 so lets push it 0,1 for now
     double fv = fmdepthV / 16.0;
+
     fmdepth.newValue(fv);
 
     configureLpAndHpFromTone();
@@ -576,7 +610,6 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             delayLine[t].write(filtv * feedback[t].v);
         }
 
-        // float out = (1.0 - t2level.v) * val[0] + t2level.v * val[1];
         float out = val[0] + t2level.v * (val[1] - val[0]);
 
         // softclip the output
