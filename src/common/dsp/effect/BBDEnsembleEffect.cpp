@@ -61,9 +61,7 @@ constexpr float dlyTimeCenter = 5.0f;
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
 {
-    input.set_blocksize(BLOCK_SIZE);
     width.set_blocksize(BLOCK_SIZE);
-    gain.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 }
 
@@ -98,18 +96,11 @@ void BBDEnsembleEffect::setvars(bool init)
 {
     if (init)
     {
-        input.set_target(0.f);
         width.set_target(0.f);
-        gain.set_target(0.f);
         mix.set_target(1.f);
 
-        input.instantize();
         width.instantize();
-        gain.instantize();
         mix.instantize();
-    }
-    else
-    {
     }
 }
 
@@ -182,10 +173,6 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         roff += onethird;
     }
 
-    // input gain
-    input.set_target_smoothed(db_to_linear(limit_range(*f[ens_input_gain], -48.f, 48.f)));
-    input.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
-
     auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
                                   auto &delR2) {
         // setting the filter frequency takes a while, so
@@ -194,7 +181,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         {
             const auto aa_cutoff =
                 std::min(2 * 3.14159265358979323846 * 440 *
-                             storage->note_to_pitch_ignoring_tuning(*f[ens_input_cutoff]),
+                             storage->note_to_pitch_ignoring_tuning(*f[ens_input_filter]),
                          25000.0);
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
                 del->setFilterFreq(aa_cutoff);
@@ -247,7 +234,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         mul_block(R, db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
     };
 
-    auto bbd_stages = (EnsembleStages)*pdata_ival[ens_delay_type];
+    auto bbd_stages = *pdata_ival[ens_delay_type];
+
     switch (bbd_stages)
     {
     case ens_sinc:
@@ -281,9 +269,6 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
-    gain.set_target_smoothed(db_to_linear(*f[ens_gain]));
-    gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
-
     mix.set_target_smoothed(limit_range(*f[ens_mix], -1.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
@@ -297,9 +282,9 @@ const char *BBDEnsembleEffect::group_label(int id)
     case 0:
         return "Input";
     case 1:
-        return "Delay";
-    case 2:
         return "Modulation";
+    case 2:
+        return "Delay";
     case 3:
         return "Output";
     }
@@ -313,7 +298,7 @@ int BBDEnsembleEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 7;
+        return 5;
     case 2:
         return 15;
     case 3:
@@ -326,45 +311,43 @@ void BBDEnsembleEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[ens_input_gain].set_name("Gain");
-    fxdata->p[ens_input_gain].set_type(ct_decibel);
-    fxdata->p[ens_input_gain].posy_offset = 1;
-    fxdata->p[ens_input_cutoff].set_name("Filter");
-    fxdata->p[ens_input_cutoff].set_type(ct_freq_audible);
-    fxdata->p[ens_input_cutoff].val_default.f = 3.65f * 12.f;
-    fxdata->p[ens_input_cutoff].posy_offset = 1;
-
-    fxdata->p[ens_delay_type].set_name("Type");
-    fxdata->p[ens_delay_type].set_type(ct_ensemble_stages);
-    fxdata->p[ens_delay_type].posy_offset = 3;
-    fxdata->p[ens_delay_clockrate].set_name("Clock Rate");
-    fxdata->p[ens_delay_clockrate].set_type(ct_ensemble_clockrate);
-    fxdata->p[ens_delay_clockrate].posy_offset = 3;
-    fxdata->p[ens_delay_sat].set_name("Saturation");
-    fxdata->p[ens_delay_sat].set_type(ct_percent);
-    fxdata->p[ens_delay_sat].val_default.f = 0.5f;
-    fxdata->p[ens_delay_sat].posy_offset = 3;
+    fxdata->p[ens_input_filter].set_name("Filter");
+    fxdata->p[ens_input_filter].set_type(ct_freq_audible);
+    fxdata->p[ens_input_filter].val_default.f = 3.65f * 12.f;
+    fxdata->p[ens_input_filter].posy_offset = 1;
 
     fxdata->p[ens_lfo_freq1].set_name("Frequency 1");
     fxdata->p[ens_lfo_freq1].set_type(ct_ensemble_lforate);
-    fxdata->p[ens_lfo_freq1].posy_offset = 5;
+    fxdata->p[ens_lfo_freq1].posy_offset = 3;
     fxdata->p[ens_lfo_depth1].set_name("Depth 1");
     fxdata->p[ens_lfo_depth1].set_type(ct_percent);
-    fxdata->p[ens_lfo_depth1].posy_offset = 5;
+    fxdata->p[ens_lfo_depth1].posy_offset = 3;
     fxdata->p[ens_lfo_freq2].set_name("Frequency 2");
     fxdata->p[ens_lfo_freq2].set_type(ct_ensemble_lforate);
-    fxdata->p[ens_lfo_freq2].posy_offset = 5;
+    fxdata->p[ens_lfo_freq2].posy_offset = 3;
     fxdata->p[ens_lfo_depth2].set_name("Depth 2");
     fxdata->p[ens_lfo_depth2].set_type(ct_percent);
-    fxdata->p[ens_lfo_depth2].posy_offset = 5;
+    fxdata->p[ens_lfo_depth2].posy_offset = 3;
+
+    fxdata->p[ens_delay_type].set_name("Type");
+    fxdata->p[ens_delay_type].set_type(ct_ensemble_stages);
+    fxdata->p[ens_delay_type].posy_offset = 5;
+    fxdata->p[ens_delay_clockrate].set_name("Clock Rate");
+    fxdata->p[ens_delay_clockrate].set_type(ct_ensemble_clockrate);
+    fxdata->p[ens_delay_clockrate].posy_offset = 5;
+    fxdata->p[ens_delay_sat].set_name("Saturation");
+    fxdata->p[ens_delay_sat].set_type(ct_percent);
+    fxdata->p[ens_delay_sat].val_default.f = 0.5f;
+    fxdata->p[ens_delay_sat].posy_offset = 5;
+    fxdata->p[ens_delay_feedback].set_name("Feedback");
+    fxdata->p[ens_delay_feedback].set_type(ct_percent);
+    fxdata->p[ens_delay_feedback].val_default.f = 0.f;
+    fxdata->p[ens_delay_feedback].posy_offset = 5;
 
     fxdata->p[ens_width].set_name("Width");
     fxdata->p[ens_width].set_type(ct_percent_bipolar);
     fxdata->p[ens_width].val_default.f = 1.f;
     fxdata->p[ens_width].posy_offset = 7;
-    fxdata->p[ens_gain].set_name("Gain");
-    fxdata->p[ens_gain].set_type(ct_decibel);
-    fxdata->p[ens_gain].posy_offset = 7;
     fxdata->p[ens_mix].set_name("Mix");
     fxdata->p[ens_mix].set_type(ct_percent);
     fxdata->p[ens_mix].val_default.f = 1.f;
@@ -373,16 +356,7 @@ void BBDEnsembleEffect::init_ctrltypes()
 
 void BBDEnsembleEffect::init_default_values()
 {
-    fxdata->p[ens_input_gain].val.f = 0.f;
-    fxdata->p[ens_input_cutoff].val.f = 3.65f * 12.f;
-
-    fxdata->p[ens_delay_type].val.i = 2;
-    fxdata->p[ens_delay_clockrate].val.f = 40.f;
-    fxdata->p[ens_delay_sat].val.f = 0.5f;
-
-    fxdata->p[ens_width].val.f = 1.f;
-    fxdata->p[ens_gain].val.f = 0.f;
-    fxdata->p[ens_mix].val.f = 1.f;
+    fxdata->p[ens_input_filter].val.f = 3.65f * 12.f;
 
     // we want LFO 1 at .18 Hz and LFO 2 at 5.52 Hz
     // these go as 2^x so...
@@ -391,4 +365,12 @@ void BBDEnsembleEffect::init_default_values()
 
     fxdata->p[ens_lfo_depth1].val.f = 1.f;
     fxdata->p[ens_lfo_depth2].val.f = 0.6f;
+
+    fxdata->p[ens_delay_type].val.i = 2;
+    fxdata->p[ens_delay_clockrate].val.f = 40.f;
+    fxdata->p[ens_delay_sat].val.f = 0.5f;
+    fxdata->p[ens_delay_feedback].val.f = 0.f;
+
+    fxdata->p[ens_width].val.f = 1.f;
+    fxdata->p[ens_mix].val.f = 1.f;
 }
