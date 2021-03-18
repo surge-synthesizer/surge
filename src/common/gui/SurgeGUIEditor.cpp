@@ -4649,6 +4649,8 @@ void SurgeGUIEditor::valueChanged(CControl *control)
                 {
                     synth->storage.getPatch().patchTuning.mappingContents =
                         synth->storage.currentMapping.rawText;
+                    synth->storage.getPatch().patchTuning.mappingName =
+                        synth->storage.currentMapping.name;
                 }
             }
 

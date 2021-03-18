@@ -3769,9 +3769,15 @@ void SurgeSynthesizer::populateDawExtraState()
 
     storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
     if (!storage.isStandardMapping)
+    {
         storage.getPatch().dawExtraState.mappingContents = storage.currentMapping.rawText;
+        storage.getPatch().dawExtraState.mappingName = storage.currentMapping.name;
+    }
     else
+    {
         storage.getPatch().dawExtraState.mappingContents = "";
+        storage.getPatch().dawExtraState.mappingName = "";
+    }
 
     int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
                                               // B will be duplicated on load)
@@ -3828,6 +3834,14 @@ void SurgeSynthesizer::loadFromDawExtraState()
         try
         {
             auto kb = Tunings::parseKBMData(storage.getPatch().dawExtraState.mappingContents);
+            if (storage.getPatch().dawExtraState.mappingName.size() > 1)
+            {
+                kb.name = storage.getPatch().dawExtraState.mappingName;
+            }
+            else
+            {
+                kb.name = storage.guessAtKBMName(kb);
+            }
             storage.remapToKeyboard(kb);
         }
         catch (Tunings::TuningError &e)
