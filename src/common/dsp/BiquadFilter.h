@@ -111,6 +111,12 @@ class BiquadFilter
         flush_denormal(reg1.d[0]);
     }
 
+    inline void flush_sample_denormal_aggressive()
+    {
+        flush_denormal(reg0.d[0], 1e-20);
+        flush_denormal(reg1.d[0], 1e-20);
+    }
+
     inline void process_sample(float L, float R, float &lOut, float &rOut)
     {
         a1.process();

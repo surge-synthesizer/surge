@@ -172,6 +172,12 @@ inline void flush_denormal(double &d)
         d = 0;
 }
 
+inline void flush_denormal(double &d, float thresh)
+{
+    if (fabs(d) < thresh)
+        d = 0;
+}
+
 inline bool within_range(int lo, int value, int hi) { return ((value >= lo) && (value <= hi)); }
 
 //#define limit_range(x,low,high) (max(low, min(x, high)))
