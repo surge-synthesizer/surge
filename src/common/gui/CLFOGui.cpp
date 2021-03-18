@@ -473,10 +473,12 @@ void CLFOGui::draw(CDrawContext *dc)
             {
                 dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::GhostedWave));
 #if !TARGET_JUCE_UI
-                // dc->setLineStyle(VSTGUI::kLineOnOffDash);
                 // kLineOnOffDash has the wrong join, causing alias overshoots
-                auto cl =
-                    VSTGUI::CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinBevel, 0, 2);
+                // so use custom line style instead
+                static const CCoord kDefaultOnOffDashLength[] = {1, 2};
+
+                auto cl = VSTGUI::CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinBevel,
+                                             0, 2, kDefaultOnOffDashLength);
                 dc->setLineStyle(cl);
 #endif
                 dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
