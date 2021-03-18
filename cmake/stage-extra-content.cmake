@@ -3,7 +3,7 @@
 #
 
 set(SURGE_EXTRA_CONTENT_REPO https://github.com/surge-synthesizer/surge-extra-content.git)
-set(SURGE_EXTRA_CONTENT_HASH b71755dfd56b849afe305e0db10fd4ff39b7b186)
+set(SURGE_EXTRA_CONTENT_HASH afc591cc06d9adc3dc8dc515a55c66873fa10296)
 
 find_package(Git)
 if( ${Git_FOUND} )
