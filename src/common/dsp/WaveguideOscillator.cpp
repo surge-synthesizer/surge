@@ -42,63 +42,43 @@
  */
 #include "WaveguideOscillator.h"
 
-enum ExModes
-{
-    burst_noise,
-    burst_pink_noise,
-    burst_sine,
-    burst_tri,
-    burst_ramp,
-    burst_square,
-    burst_sweep,
-
-    constant_noise,
-    constant_pink_noise,
-    constant_sine,
-    constant_tri,
-    constant_ramp,
-    constant_square,
-    constant_sweep,
-    constant_audioin,
-};
-
 int waveguide_excitations_count() { return 15; }
 
 std::string waveguide_excitation_name(int i)
 {
-    auto m = (ExModes)i;
+    auto m = (WaveguideOscillator::ExModes)i;
 
     switch (m)
     {
-    case burst_noise:
+    case WaveguideOscillator::burst_noise:
         return "Burst Noise";
-    case burst_pink_noise:
+    case WaveguideOscillator::burst_pink_noise:
         return "Burst Pink Noise";
-    case burst_sine:
+    case WaveguideOscillator::burst_sine:
         return "Burst Sine";
-    case burst_ramp:
+    case WaveguideOscillator::burst_ramp:
         return "Burst Ramp";
-    case burst_tri:
+    case WaveguideOscillator::burst_tri:
         return "Burst Triangle";
-    case burst_square:
+    case WaveguideOscillator::burst_square:
         return "Burst Square";
-    case burst_sweep:
+    case WaveguideOscillator::burst_sweep:
         return "Burst Sweep";
-    case constant_noise:
+    case WaveguideOscillator::constant_noise:
         return "Constant Noise";
-    case constant_pink_noise:
+    case WaveguideOscillator::constant_pink_noise:
         return "Constant Pink Noise";
-    case constant_sine:
+    case WaveguideOscillator::constant_sine:
         return "Constant Sine";
-    case constant_tri:
+    case WaveguideOscillator::constant_tri:
         return "Constant Triangle";
-    case constant_ramp:
+    case WaveguideOscillator::constant_ramp:
         return "Constant Ramp";
-    case constant_square:
+    case WaveguideOscillator::constant_square:
         return "Constant Square";
-    case constant_sweep:
+    case WaveguideOscillator::constant_sweep:
         return "Constant Sweep";
-    case constant_audioin:
+    case WaveguideOscillator::constant_audioin:
         return "Audio In";
     }
     return "Unknown";
@@ -151,12 +131,12 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
                                            storage->note_to_pitch_inv(pitch2_t));
     }
 
+    noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     for (int i = 0; i < 3; ++i)
     {
         fillDustBuffer(pitchmult_inv, pitchmult2_inv);
     }
 
-    noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     tap[0].startValue(pitchmult_inv);
     tap[1].startValue(pitchmult2_inv);
     t2level.startValue(0.5 * limit_range(localcopy[id_strbalance].f, -1.f, 1.f) + 0.5);
@@ -338,19 +318,20 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
             break;
         }
 
+        float lpt[2], hpt[2];
+        lp.process_sample(dlv[0], dlv[1], lpt[0], lpt[1]);
+        hp.process_sample(dlv[0], dlv[1], hpt[0], hpt[1]);
+
         for (int t = 0; t < 2; ++t)
         {
-            auto lpt = lp[t].process_sample(dlv[t]);
-            auto hpt = hp[t].process_sample(dlv[t]);
-
-            delayLine[t].write(tone.v < 0 ? lpt : hpt);
+            delayLine[t].write(tone.v < 0 ? lpt[t] : hpt[t]);
         }
     }
+    lp.flush_sample_denormal();
+    hp.flush_sample_denormal();
 
     for (int t = 0; t < 2; ++t)
     {
-        lp[t].flush_sample_denormal();
-        hp[t].flush_sample_denormal();
         priorSample[t] = delayLine[t].buffer[(delayLine[t].wp - 1) & delayLine[t].comb_size];
     }
 
@@ -378,17 +359,50 @@ void WaveguideOscillator::configureLpAndHpFromTone()
     }
 
     // Inefficient - copy coefficients later
-    lp[0].coeff_LP(lp[0].calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
-    hp[0].coeff_HP(hp[0].calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
-    lp[1].coeff_LP(lp[1].calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
-    hp[1].coeff_HP(hp[1].calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 }
 
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
                                         float fmdepthV)
 {
     auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
+#define P(m)                                                                                       \
+    case m:                                                                                        \
+        if (FM)                                                                                    \
+            process_block_internal<true, m>(pitch, drift, stereo, fmdepthV);                       \
+        else                                                                                       \
+            process_block_internal<false, m>(pitch, drift, stereo, fmdepthV);                      \
+        break;
 
+    switch (mode)
+    {
+        P(burst_noise)
+        P(burst_pink_noise)
+        P(burst_sine)
+        P(burst_tri)
+        P(burst_ramp)
+        P(burst_square)
+        P(burst_sweep)
+
+        P(constant_noise)
+        P(constant_pink_noise)
+        P(constant_sine)
+        P(constant_tri)
+        P(constant_ramp)
+        P(constant_square)
+        P(constant_sweep)
+
+        P(constant_audioin)
+    }
+
+#undef P
+}
+
+template <bool FM, WaveguideOscillator::ExModes mode>
+void WaveguideOscillator::process_block_internal(float pitch, float drift, bool stereo,
+                                                 float fmdepthV)
+{
     auto lfodetune = drift * driftLFO[0].next();
     auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
@@ -478,7 +492,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
     configureLpAndHpFromTone();
 
-    float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f};
+    float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f}, fbv[2] = {0, 0};
 
     if (mode == constant_pink_noise)
     {
@@ -521,11 +535,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
                 val[t] += examp.v * rn;
                 *phs += dp;
-
-                if (*phs > 1)
-                {
-                    *phs -= 1;
-                }
+                *phs -= (*phs > 1);
             }
             break;
             case constant_tri:
@@ -534,33 +544,21 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
                 val[t] += examp.v * rn;
                 *phs += dp;
-
-                if (*phs > 1)
-                {
-                    *phs -= 1;
-                }
+                *phs -= (*phs > 1);
             }
             break;
             case constant_sweep:
             {
-                float sv = 0;
+                float sv = 1.0;
 
-                if (*phs == 0)
-                {
-                    sv = 1.0;
-                }
-                else
+                if (*phs != 0)
                 {
                     sv = std::sin(2.0 * M_PI / *phs);
                 }
 
                 val[t] += examp.v * 0.707 * sv;
                 *phs += dp;
-
-                if (*phs > 1)
-                {
-                    *phs -= 1;
-                }
+                *phs -= (*phs > 1);
             }
             break;
             case constant_sine:
@@ -569,11 +567,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
                 val[t] += examp.v * 0.707 * sv;
                 *phs += dp;
-
-                if (*phs > 1)
-                {
-                    *phs -= 1;
-                }
+                *phs -= (*phs > 1);
             }
             break;
             case constant_square:
@@ -582,11 +576,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
                 val[t] += examp.v * rn;
                 *phs += dp;
-
-                if (*phs > 1)
-                {
-                    *phs -= 1;
-                }
+                *phs -= (*phs > 1);
             }
             break;
             case constant_audioin:
@@ -601,12 +591,19 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             }
 
             // precautionary hard clip
-            auto fbv = limit_range(val[t] + fbNoOutVal[t], -1.f, 1.f);
+            fbv[t] = limit_range(val[t] + fbNoOutVal[t], -1.f, 1.f);
+        }
 
-            auto lpfiltv = lp[t].process_sample(fbv);
-            auto hpfiltv = hp[t].process_sample(fbv);
-            auto filtv = (tone.v > 0) ? hpfiltv : lpfiltv;
+        float lpv[2], hpv[2];
+        lp.process_sample(fbv[0], fbv[1], lpv[0], lpv[1]);
+        hp.process_sample(fbv[0], fbv[1], hpv[0], hpv[1]);
 
+        for (int t = 0; t < 2; ++t)
+        {
+            auto filtv = (tone.v > 0) ? hpv[t] : lpv[t];
+
+            if (fabs(filtv) < 1e-16)
+                filtv = 0;
             delayLine[t].write(filtv * feedback[t].v);
         }
 
@@ -614,9 +611,6 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 
         // softclip the output
         out = out * (1.5 - 0.5 * out * out);
-
-        output[i] = out;
-        outputR[i] = out;
 
         tap[0].process();
         tap[1].process();
@@ -626,12 +620,13 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         tone.process();
         examp.process();
         fmdepth.process();
+
+        output[i] = out;
+        outputR[i] = out;
     }
 
-    lp[0].flush_sample_denormal();
-    lp[1].flush_sample_denormal();
-    hp[0].flush_sample_denormal();
-    hp[1].flush_sample_denormal();
+    lp.flush_sample_denormal_aggressive();
+    hp.flush_sample_denormal_aggressive();
 
     if (charFilt.doFilter)
     {

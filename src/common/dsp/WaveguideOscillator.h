@@ -40,8 +40,28 @@ class WaveguideOscillator : public Oscillator
         wg_stiffness,
     };
 
+    enum ExModes
+    {
+        burst_noise,
+        burst_pink_noise,
+        burst_sine,
+        burst_tri,
+        burst_ramp,
+        burst_square,
+        burst_sweep,
+
+        constant_noise,
+        constant_pink_noise,
+        constant_sine,
+        constant_tri,
+        constant_ramp,
+        constant_square,
+        constant_sweep,
+        constant_audioin,
+    };
+
     WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), lp{s, s}, hp{s, s}, noiseLp(s)
+        : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s)
     {
     }
 
@@ -51,6 +71,9 @@ class WaveguideOscillator : public Oscillator
     virtual void init_default_values();
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
+
+    template <bool FM, ExModes mode>
+    void process_block_internal(float pitch, float drift, bool stereo, float FMdepth);
 
     float phase1 = 0, phase2 = 0;
 
@@ -69,7 +92,7 @@ class WaveguideOscillator : public Oscillator
     float dustBuffer[2][BLOCK_SIZE_OS];
     void fillDustBuffer(float tap0, float tap1);
 
-    BiquadFilter lp[2], hp[2], noiseLp;
+    BiquadFilter lp, hp, noiseLp;
     void configureLpAndHpFromTone();
 
   private:

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <chrono>
+#include <deque>
 
 namespace Surge
 {
@@ -509,7 +510,7 @@ void filterAnalyzer(int ft, int sft, std::ostream &os)
     middleCSawIntoFilterVsReso(ft, sft, os);
 }
 
-void performancePlay(const std::string &patchName, int mode)
+[[noreturn]] void performancePlay(const std::string &patchName, int mode)
 {
     auto surge = Surge::Headless::createSurge(48000);
     std::cout << "Performance Mode with surge at 48k\n"
@@ -534,6 +535,13 @@ void performancePlay(const std::string &patchName, int mode)
     surge->playNote(0, 60, 127, 0);
 
     int ct = 0;
+    int nt = 0;
+    int noteOnEvery = 48000 / BLOCK_SIZE / 10;
+    std::deque<int> notesOn;
+    notesOn.push_back(60);
+
+#define PLAY_NOTES 1
+
     int target = 48000 / BLOCK_SIZE;
     auto cpt = std::chrono::high_resolution_clock::now();
     std::chrono::seconds oneSec(1);
@@ -541,6 +549,28 @@ void performancePlay(const std::string &patchName, int mode)
     while (true)
     {
         surge->process();
+#if PLAY_NOTES
+
+        if (nt++ == noteOnEvery)
+        {
+            int nextNote = notesOn.back() + 1;
+            if (notesOn.size() == 10)
+            {
+                auto removeNote = notesOn.front();
+                notesOn.pop_front();
+                surge->releaseNote(0, removeNote, 0);
+                nextNote = removeNote - 1;
+            }
+            if (nextNote < 10)
+                nextNote = 120;
+            if (nextNote > 121)
+                nextNote = 10;
+
+            notesOn.push_back(nextNote);
+            surge->playNote(0, nextNote, 127, 0);
+            nt = 0;
+        }
+#endif
         if (ct++ == target)
         {
             auto et = std::chrono::high_resolution_clock::now();
