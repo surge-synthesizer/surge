@@ -162,7 +162,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     auto r1 = 1.0 / pitchmult_inv;
     auto r2 = 1.0 / pitchmult2_inv;
     auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
-    d0 = powf(d0, 0.125);
+    d0 *= d0 * d0 * d0;
 
     int dustrp = BLOCK_SIZE_OS;
     configureLpAndHpFromTone();
@@ -366,7 +366,6 @@ void WaveguideOscillator::configureLpAndHpFromTone()
 void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
                                         float fmdepthV)
 {
-    auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
 #define P(m)                                                                                       \
     case m:                                                                                        \
         if (FM)                                                                                    \
@@ -374,6 +373,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
         else                                                                                       \
             process_block_internal<false, m>(pitch, drift, stereo, fmdepthV);                      \
         break;
+
+    auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
 
     switch (mode)
     {
@@ -407,21 +408,22 @@ void WaveguideOscillator::process_block_internal(float pitch, float drift, bool 
     auto pitch_t = std::min(148.f, pitch + lfodetune);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
-    double d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
+    auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
 
     if (mode >= constant_noise)
     {
-        examp.newValue(d0 * d0 * d0);
+        examp.newValue(d0 * d0 * d0 * d0);
     }
     else
     {
         if (d0 < 0.1)
         {
-            examp.newValue(d0 * 4.6415); // cbrt(0.1) * 10 to match it where cbrt(d0) starts below
+            // 5.6234 = powf(0.1, 0.25) * 10 to match it where powf(d0, 0.25) starts below
+            examp.newValue(d0 * 5.6234);
         }
         else
         {
-            examp.newValue(cbrt(d0));
+            examp.newValue(powf(d0, 0.25));
         }
     }
 
