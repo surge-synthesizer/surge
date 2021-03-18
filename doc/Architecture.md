@@ -9,8 +9,8 @@ document for our future selves**. As such, it is rather casual and incomplete no
 **Table of Contents**
 
 * [Code Layout](#code-layout)
-* [Parameter and Surge Synthesizer](#parameter-and-surge-synthesizer)
-* [SurgeGUI](#surgegui)
+* [SurgeStorage, Parameter and SurgeSynthesizer](#parameter-and-surge-synthesizer)
+* [SurgeGUIEditor](#surgegui)
 * [Voices and MPE](#voices-and-mpe)
 * [DSP](#dsp)
 * [Hosts](#hosts)
@@ -18,25 +18,24 @@ document for our future selves**. As such, it is rather casual and incomplete no
 
 # Code Layout
 
-Third-party libraries are copied or submoduled into `libs`. VSTSDK and VSTGUI are an exception. They
+Third-party libraries are copied or submoduled into `libs`. VST3SDK and VSTGUI are an exception. They
 are submodules in the top level directory. All of the Surge C++ source is in the `src` directory.
 
 `src/common` contains common code; `src/common/gui` and `src/common/dsp` contain the GUI and DSP code
 respectively.
 
 Each of the hosts has a directory in `src`: `src/vst2`, `src/vst3`, `src/au` and `src/headless` are the
-four flavors of host we have now.
+four flavors of hosts we have now.
 
 # SurgeStorage, Parameter and SurgeSynthesizer
 
-The code collaboration between the parts of Surge happens through the
+Code collaboration between various parts of Surge happens through the
 SurgeStorage class, which acts as a named bag of parameters. Each parameter
 is represented by the Parameter class, which holds type and value and has
-an update semantic. The SurgeSynthesizer at runtime reads the values from
-the current SurgeStorage.
+an update semantic. SurgeSynthesizer reads the values from the current SurgeStorage at runtime.
 
 This means that things like loading a new patch amount to unstreaming SurgeStorage
-into the synthesizer's current Storage instance. Similarly, changing a value in the UI
+into SurgeSynthesizer's current Storage instance. Similarly, changing a value in the UI
 means locating the appropriate set of Parameters and calling the appropriate invalidating
 value change function on them.
 
@@ -54,7 +53,7 @@ and MPE, which adds substantial complexity. The core data structure is a list of
 which are allocated at startup and configured with an in-place contructor. Each has a reference
 to state for the channel in which it is playing.
 
-The voice class is in `src/common/dsp/SurgeVoice.h` and contains a `SurgeVoiceState`.    
+The voice class is in `src/common/dsp/SurgeVoice.h` and contains a `SurgeVoiceState`.
 
 # DSP
 
