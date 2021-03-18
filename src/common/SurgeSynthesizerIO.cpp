@@ -277,8 +277,12 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                 }
                 if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                 {
-                    storage.remapToKeyboard(
-                        Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
+                    auto kb = Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
+                    if (storage.getPatch().patchTuning.mappingName.size() > 1)
+                        kb.name = storage.getPatch().patchTuning.mappingName;
+                    else
+                        kb.name = storage.guessAtKBMName(kb);
+                    storage.remapToKeyboard(kb);
                 }
                 else
                 {
@@ -315,8 +319,13 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                     }
                     if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                     {
-                        storage.remapToKeyboard(
-                            Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
+                        auto kb =
+                            Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
+                        if (storage.getPatch().patchTuning.mappingName.size() > 1)
+                            kb.name = storage.getPatch().patchTuning.mappingName;
+                        else
+                            kb.name = storage.guessAtKBMName(kb);
+                        storage.remapToKeyboard(kb);
                     }
                     else
                     {

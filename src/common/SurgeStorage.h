@@ -705,6 +705,7 @@ struct DAWExtraStateStorage
 
     bool hasMapping = false;
     std::string mappingContents = "";
+    std::string mappingName = "";
 
     std::unordered_map<int, int> midictrl_map;      // param -> midictrl
     std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
@@ -718,6 +719,7 @@ struct PatchTuningStorage
     bool tuningStoredInPatch = false;
     std::string scaleContents = "";
     std::string mappingContents = "";
+    std::string mappingName = "";
 };
 
 class SurgeStorage;
@@ -1099,12 +1101,21 @@ class alignas(16) SurgeStorage
      */
     inline bool tuningTableIs12TET()
     {
-        if ((isStandardTuning && isStandardMapping) ||      // nothing changed
+        if ((isStandardTuning) ||                           // nothing changed
             (oddsound_mts_client && oddsound_mts_active) || // MTS in command
             tuningApplicationMode == RETUNE_MIDI_ONLY       // tune the keyboard not the tables
         )
             return true;
         return false;
+    }
+
+    std::string guessAtKBMName(const Tunings::KeyboardMapping &k)
+    {
+        auto res = std::string("");
+        res += "Root " + std::to_string(k.middleNote);
+        res += " with note " + std::to_string(k.tuningConstantNote);
+        res += " @ " + std::to_string(k.tuningFrequency) + "Hz";
+        return res;
     }
 
     ControllerModulationSource::SmoothingMode smoothingMode =

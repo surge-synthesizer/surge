@@ -1809,6 +1809,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     patchTuning.tuningStoredInPatch = false;
     patchTuning.scaleContents = "";
     patchTuning.mappingContents = "";
+    patchTuning.mappingName = "";
 
     TiXmlElement *pt = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("patchTuning"));
     if (pt)
@@ -1826,6 +1827,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             patchTuning.tuningStoredInPatch = true;
             auto tc = base64_decode(td);
             patchTuning.mappingContents = tc;
+        }
+
+        if (patchTuning.tuningStoredInPatch && pt && (td = pt->Attribute("mname")))
+        {
+            patchTuning.mappingName = td;
         }
     }
 
@@ -1968,6 +1974,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 {
                     auto tc = base64_decode(td);
                     dawExtraState.mappingContents = tc;
+                }
+                p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mappingName"));
+                if (p && (td = p->Attribute("v")))
+                {
+                    dawExtraState.mappingName = td;
+                }
+                else
+                {
+                    dawExtraState.mappingName = "";
                 }
             }
 
@@ -2291,10 +2306,13 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                                            patchTuning.scaleContents.size())
                                  .c_str());
         if (patchTuning.mappingContents.size() > 0)
+        {
             pt.SetAttribute(
                 "m", base64_encode((unsigned const char *)patchTuning.mappingContents.c_str(),
                                    patchTuning.mappingContents.size())
                          .c_str());
+            pt.SetAttribute("mname", patchTuning.mappingName.c_str());
+        }
 
         patch.InsertEndChild(pt);
     }
@@ -2390,6 +2408,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                                        dawExtraState.mappingContents.size())
                              .c_str());
         dawExtraXML.InsertEndChild(mpc);
+
+        TiXmlElement mpn("mappingName");
+        mpn.SetAttribute("v", dawExtraState.mappingName.c_str());
+        dawExtraXML.InsertEndChild(mpn);
 
         /*
         ** Add the midi controls
