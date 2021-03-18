@@ -3507,6 +3507,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 eid++;
                             }
                         }
+
+                        break;
                     }
                     case ct_dpw_trimix:
                     {
@@ -3577,9 +3579,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         skp->setChecked((p->deform_type & subskipsync));
                         eid++;
+
+                        break;
                     }
                     default:
+                    {
                         break;
+                    }
                     }
                 }
 
@@ -3617,6 +3623,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         eid++;
                     }
                 }
+
                 if (p->can_be_absolute())
                 {
                     addCallbackMenu(contextMenu, "Absolute", [this, p]() {
@@ -3644,6 +3651,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     contextMenu->checkEntry(eid, p->absolute);
                     eid++;
                 }
+
                 if (p->can_deactivate() || p->get_primary_deactivation_driver())
                 {
                     auto q = p->get_primary_deactivation_driver();
@@ -3686,6 +3694,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             this->synth->refresh_editor = true;
                         });
                     }
+
                     eid++;
                 }
 
