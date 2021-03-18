@@ -3731,7 +3731,6 @@ void SurgeSynthesizer::process()
     // since the sceneout is now routable we also need to mute and clip it
     for (int sc = 0; sc < n_scenes; ++sc)
     {
-        amp.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
         amp_mute.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
 
         switch (storage.hardclipMode)
