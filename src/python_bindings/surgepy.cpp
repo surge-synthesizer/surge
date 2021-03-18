@@ -800,8 +800,9 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             throw std::invalid_argument(e.what()); // convert so python sees it
         }
     }
-    void retuneToStandardTuning() { storage.retuneToStandardTuning(); }
-    void remapToStandardKeyboard() { storage.remapToStandardKeyboard(); }
+    void retuneToStandardTuning() { storage.retuneTo12TETScaleC261Mapping(); }
+    void remapToStandardKeyboard() { storage.remapToConcertCKeyboard(); }
+    void retuneToStandardScale() { storage.retuneTo12TETScale(); }
 };
 
 SurgeSynthesizer *createSurge(float sr)
@@ -937,7 +938,9 @@ PYBIND11_MODULE(surgepy, m)
              "Load an SCL tuning file and apply tuning to this instance")
         .def("retuneToStandardTuning",
              &SurgeSynthesizerWithPythonExtensions::retuneToStandardTuning,
-             "Return this instance to 12-TET")
+             "Return this instance to 12-TET Concert Keyboard Mapping")
+        .def("retuneToStandardScale", &SurgeSynthesizerWithPythonExtensions::retuneToStandardScale,
+             "Return this instance to 12-TET Scale")
         .def("loadKBMFile", &SurgeSynthesizerWithPythonExtensions::loadKBMFile,
              "Load an KBM mapping file and apply tuning to this instance")
         .def("remapToStandardKeyboard",

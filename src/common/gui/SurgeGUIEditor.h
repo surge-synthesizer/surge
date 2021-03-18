@@ -328,10 +328,8 @@ class SurgeGUIEditor : public EditorType,
 
     void toggleMPE();
     void toggleTuning();
-    void tuningFileDropped(std::string fn);
+    void scaleFileDropped(std::string fn);
     void mappingFileDropped(std::string fn);
-    std::string tuningCacheForToggle = "";
-    std::string mappingCacheForToggle = "";
     std::string tuningToHtml();
 
     void swapControllers(int t1, int t2);

@@ -3761,11 +3761,11 @@ void SurgeSynthesizer::populateDawExtraState()
     storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
     storage.getPatch().dawExtraState.mpePitchBendRange = storage.mpePitchBendRange;
 
-    storage.getPatch().dawExtraState.hasTuning = !storage.isStandardTuning;
-    if (!storage.isStandardTuning)
-        storage.getPatch().dawExtraState.tuningContents = storage.currentScale.rawText;
+    storage.getPatch().dawExtraState.hasScale = !storage.isStandardScale;
+    if (!storage.isStandardScale)
+        storage.getPatch().dawExtraState.scaleContents = storage.currentScale.rawText;
     else
-        storage.getPatch().dawExtraState.tuningContents = "";
+        storage.getPatch().dawExtraState.scaleContents = "";
 
     storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
     if (!storage.isStandardMapping)
@@ -3805,22 +3805,22 @@ void SurgeSynthesizer::loadFromDawExtraState()
     storage.oddsoundRetuneMode =
         (SurgeStorage::OddsoundRetuneMode)storage.getPatch().dawExtraState.oddsoundRetuneMode;
 
-    if (storage.getPatch().dawExtraState.hasTuning)
+    if (storage.getPatch().dawExtraState.hasScale)
     {
         try
         {
-            auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.tuningContents);
+            auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.scaleContents);
             storage.retuneToScale(sc);
         }
         catch (Tunings::TuningError &e)
         {
             Surge::UserInteractions::promptError(e.what(), "Unable to restore tuning!");
-            storage.retuneToStandardTuning();
+            storage.retuneTo12TETScale();
         }
     }
     else
     {
-        storage.retuneToStandardTuning();
+        storage.retuneTo12TETScale();
     }
 
     if (storage.getPatch().dawExtraState.hasMapping)
@@ -3833,12 +3833,12 @@ void SurgeSynthesizer::loadFromDawExtraState()
         catch (Tunings::TuningError &e)
         {
             Surge::UserInteractions::promptError(e.what(), "Unable to restore mapping!");
-            storage.retuneToStandardTuning();
+            storage.remapToConcertCKeyboard();
         }
     }
     else
     {
-        storage.remapToStandardKeyboard();
+        storage.remapToConcertCKeyboard();
     }
 
     int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene

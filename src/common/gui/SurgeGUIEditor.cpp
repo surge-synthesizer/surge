@@ -1560,8 +1560,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto csc = dynamic_cast<CSwitchControl *>(statusTune);
             if (csc && synth->storage.isStandardTuning)
             {
-                csc->unValueClickable =
-                    (tuningCacheForToggle.size() == 0 && mappingCacheForToggle.size() == 0);
+                csc->unValueClickable = !synth->storage.isToggledToCache;
             }
             break;
         }
@@ -4624,8 +4623,15 @@ void SurgeGUIEditor::valueChanged(CControl *control)
                 patchTuning->getValue() > 0.5;
             if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
             {
-                synth->storage.getPatch().patchTuning.tuningContents =
-                    synth->storage.currentScale.rawText;
+                if (synth->storage.isStandardScale)
+                {
+                    synth->storage.getPatch().patchTuning.scaleContents = "";
+                }
+                else
+                {
+                    synth->storage.getPatch().patchTuning.scaleContents =
+                        synth->storage.currentScale.rawText;
+                }
                 if (synth->storage.isStandardMapping)
                 {
                     synth->storage.getPatch().patchTuning.mappingContents = "";
@@ -5331,29 +5337,7 @@ void SurgeGUIEditor::showLfoMenu(VSTGUI::CPoint &where)
 
 void SurgeGUIEditor::toggleTuning()
 {
-    if (this->synth->storage.isStandardTuning && tuningCacheForToggle.size() > 0)
-    {
-        try
-        {
-            this->synth->storage.retuneToScale(Tunings::parseSCLData(tuningCacheForToggle));
-            if (mappingCacheForToggle.size() > 0)
-                this->synth->storage.remapToKeyboard(Tunings::parseKBMData(mappingCacheForToggle));
-        }
-        catch (Tunings::TuningError &e)
-        {
-            Surge::UserInteractions::promptError(e.what(), "Microtuning Error");
-        }
-    }
-    else if (!this->synth->storage.isStandardTuning)
-    {
-        tuningCacheForToggle = this->synth->storage.currentScale.rawText;
-        if (!this->synth->storage.isStandardMapping)
-        {
-            mappingCacheForToggle = this->synth->storage.currentMapping.rawText;
-        }
-        this->synth->storage.remapToStandardKeyboard();
-        this->synth->storage.retuneToStandardTuning();
-    }
+    synth->storage.toggleTuningToCache();
 
     if (statusTune)
     {
@@ -5375,7 +5359,7 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
     frame->removeView(m, true);
 }
 
-void SurgeGUIEditor::tuningFileDropped(std::string fn)
+void SurgeGUIEditor::scaleFileDropped(std::string fn)
 {
     try
     {
@@ -5868,16 +5852,17 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     if (hu != "" && showhelp)
     {
         auto lurl = fullyResolvedHelpURL(hu);
-        addCallbackMenu(tuningSubMenu, "[?] Tuning",
+        addCallbackMenu(tuningSubMenu, "[?] Tuning ",
                         [lurl]() { Surge::UserInteractions::openURL(lurl); });
         tid++;
         tuningSubMenu->addSeparator();
     }
 
     bool isTuningEnabled = !synth->storage.isStandardTuning;
+    bool isScaleEnabled = !synth->storage.isStandardScale;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
 
-    if (isTuningEnabled)
+    if (isScaleEnabled)
     {
         auto tuningLabel = Surge::UI::toOSCaseForMenu("Current Tuning: ");
 
@@ -5913,26 +5898,31 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
     auto *st = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Tuning"),
                                [this]() {
-                                   this->synth->storage.init_tables();
-                                   tuningCacheForToggle = "";
+                                   this->synth->storage.retuneTo12TETScaleC261Mapping();
                                    this->synth->refresh_editor = true;
                                });
-    st->setEnabled(!this->synth->storage.isStandardTuning || tuningCacheForToggle.size() > 0);
+    st->setEnabled(!this->synth->storage.isStandardTuning);
     tid++;
 
+    st = addCallbackMenu(tuningSubMenu,
+                         Surge::UI::toOSCaseForMenu("Set to Standard Scale (12-TET)"), [this]() {
+                             this->synth->storage.retuneTo12TETScale();
+                             this->synth->refresh_editor = true;
+                         });
+    st->setEnabled(!this->synth->storage.isStandardScale);
+    tid++;
     auto *kst = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Keyboard Mapping"), [this]() {
-            this->synth->storage.remapToStandardKeyboard();
-            mappingCacheForToggle = "";
+        tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"), [this]() {
+            this->synth->storage.remapToConcertCKeyboard();
             this->synth->refresh_editor = true;
         });
-    kst->setEnabled(!this->synth->storage.isStandardMapping || mappingCacheForToggle.size() > 0);
+    kst->setEnabled(!this->synth->storage.isStandardMapping);
     tid++;
 
     tuningSubMenu->addSeparator();
     tid++;
 
-    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .scl Tuning..."), [this]() {
+    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
         auto cb = [this](std::string sf) {
             std::string sfx = ".scl";
             if (sf.length() >= sfx.length())
@@ -6017,7 +6007,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
     addCallbackMenu(
         tuningSubMenu,
-        Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) directly to..."),
+        Surge::UI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
         [this, middle_A, menuRect]() {
             char ma[256];
             sprintf(ma, "Remap %s Frequency", middle_A.c_str());
@@ -6028,6 +6018,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                               [this](const std::string &s) {
                                   float freq = ::atof(s.c_str());
                                   auto kb = Tunings::tuneA69To(freq);
+                                  kb.name = "Note 69 Retuned 440 to " + std::to_string(freq);
                                   if (!this->synth->storage.remapToKeyboard(kb))
                                   {
                                       Surge::UserInteractions::promptError(
@@ -8679,7 +8670,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     }
     else if (fExt == ".scl")
     {
-        tuningFileDropped(fname);
+        scaleFileDropped(fname);
     }
     else if (fExt == ".kbm")
     {

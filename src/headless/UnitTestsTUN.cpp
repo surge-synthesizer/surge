@@ -221,7 +221,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
         auto k440 = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
 
         surge->storage.retuneToScale(s);
-        surge->storage.remapToStandardKeyboard();
+        surge->storage.remapToConcertCKeyboard();
 
         auto f60std = frequencyForNote(surge, 60);
         auto f69std = frequencyForNote(surge, 69);
@@ -247,7 +247,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
             }
             else
             {
-                surge->storage.remapToStandardKeyboard();
+                surge->storage.remapToConcertCKeyboard();
                 auto f60 = frequencyForNote(surge, 60);
                 auto f69 = frequencyForNote(surge, 69);
                 REQUIRE(f60 == f60std);
@@ -262,7 +262,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
         auto k440 = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
 
         surge->storage.retuneToScale(s);
-        surge->storage.remapToStandardKeyboard();
+        surge->storage.remapToConcertCKeyboard();
         auto f60 = frequencyForNote(surge, 60);
         REQUIRE(f60 == Approx(261.63).margin(.1));
 
@@ -270,7 +270,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
         for (int i = 61; i < 72; ++i)
             ratios.push_back(frequencyForNote(surge, i) / f60);
 
-        surge->storage.remapToStandardKeyboard();
+        surge->storage.remapToConcertCKeyboard();
         auto f60map = frequencyForNote(surge, 60);
         for (int i = 61; i < 72; ++i)
         {

@@ -482,8 +482,14 @@ bailOnPortable:
     // Tunings Library Support
     currentScale = Tunings::evenTemperament12NoteScale();
     currentMapping = Tunings::KeyboardMapping();
+    cachedToggleOffScale = currentScale;
+    cachedToggleOffMapping = currentMapping;
     twelveToneStandardMapping =
         Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::KeyboardMapping());
+    isStandardTuning = true;
+    isToggledToCache = false;
+    for (int q = 0; q < 3; ++q)
+        togglePriorState[q] = false;
 
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
@@ -1670,11 +1676,8 @@ float glide_log(float x)
     return (1 - a) * table_glide_log[e & 0x1ff] + a * table_glide_log[(e + 1) & 0x1ff];
 }
 
-bool SurgeStorage::retuneToScale(const Tunings::Scale &s)
+bool SurgeStorage::resetToCurrentScaleAndMapping()
 {
-    currentScale = s;
-    isStandardTuning = false;
-
     currentTuning = Tunings::Tuning(currentScale, currentMapping);
 
     auto t = currentTuning;
@@ -1684,6 +1687,11 @@ bool SurgeStorage::retuneToScale(const Tunings::Scale &s)
         tuningPitch = 32.0;
         tuningPitchInv = 1.0 / 32.0;
         t = twelveToneStandardMapping;
+    }
+    else
+    {
+        tuningPitch = currentMapping.tuningFrequency / Tunings::MIDI_0_FREQ;
+        tuningPitchInv = 1.0 / tuningPitch;
     }
 
     for (int i = 0; i < 512; ++i)
@@ -1698,52 +1706,10 @@ bool SurgeStorage::retuneToScale(const Tunings::Scale &s)
     return true;
 }
 
-bool SurgeStorage::remapToStandardKeyboard()
-{
-    auto k = Tunings::KeyboardMapping();
-    currentMapping = k;
-    isStandardMapping = true;
-    tuningPitch = 32.0;
-    tuningPitchInv = 1.0 / 32.0;
-    if (isStandardTuning)
-    {
-        retuneToStandardTuning();
-    }
-    else
-    {
-        retuneToScale(currentScale);
-    }
-    return true;
-}
-
-bool SurgeStorage::retuneAndRemapToScaleAndMapping(const Tunings::Scale &s,
-                                                   const Tunings::KeyboardMapping &k)
-{
-    currentMapping = k;
-    currentScale = s;
-    isStandardMapping = false;
-
-    tuningPitch = k.tuningFrequency / Tunings::MIDI_0_FREQ;
-    tuningPitchInv = 1.0 / tuningPitch;
-    retuneToScale(currentScale);
-    return true;
-}
-
 void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
 {
     tuningApplicationMode = m;
-    retuneAndRemapToScaleAndMapping(currentScale, currentMapping);
-}
-
-bool SurgeStorage::remapToKeyboard(const Tunings::KeyboardMapping &k)
-{
-    currentMapping = k;
-    isStandardMapping = false;
-
-    tuningPitch = k.tuningFrequency / Tunings::MIDI_0_FREQ;
-    tuningPitchInv = 1.0 / tuningPitch;
-    retuneToScale(currentScale);
-    return true;
+    resetToCurrentScaleAndMapping();
 }
 
 bool SurgeStorage::skipLoadWtAndPatch = false;
@@ -1903,6 +1869,33 @@ void SurgeStorage::deinitialize_oddsound()
     }
     oddsound_mts_client = nullptr;
     oddsound_mts_active = false;
+}
+
+void SurgeStorage::toggleTuningToCache()
+{
+    if (isToggledToCache)
+    {
+        currentScale = cachedToggleOffScale;
+        currentMapping = cachedToggleOffMapping;
+
+        isStandardTuning = togglePriorState[0];
+        isStandardScale = togglePriorState[1];
+        isStandardMapping = togglePriorState[2];
+
+        resetToCurrentScaleAndMapping();
+        isToggledToCache = false;
+    }
+    else
+    {
+        cachedToggleOffScale = currentScale;
+        cachedToggleOffMapping = currentMapping;
+        togglePriorState[0] = isStandardTuning;
+        togglePriorState[1] = isStandardScale;
+        togglePriorState[2] = isStandardMapping;
+
+        retuneTo12TETScaleC261Mapping();
+        isToggledToCache = true;
+    }
 }
 
 namespace Surge

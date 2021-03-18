@@ -1807,7 +1807,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     patchTuning.tuningStoredInPatch = false;
-    patchTuning.tuningContents = "";
+    patchTuning.scaleContents = "";
     patchTuning.mappingContents = "";
 
     TiXmlElement *pt = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("patchTuning"));
@@ -1818,7 +1818,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             patchTuning.tuningStoredInPatch = true;
             auto tc = base64_decode(td);
-            patchTuning.tuningContents = tc;
+            patchTuning.scaleContents = tc;
         }
 
         if (pt && (td = pt->Attribute("m")))
@@ -1933,20 +1933,25 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             else
                 dawExtraState.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
 
+            /*
+             * We originally stored scale as 'hasTuning' but cleaned it all up in 1.9 in
+             * the data structures. To not break old sessions though we kept the wrong names in the
+             * XML
+             */
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("hasTuning"));
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
             {
-                dawExtraState.hasTuning = (ival != 0);
+                dawExtraState.hasScale = (ival != 0);
             }
 
             const char *td;
-            if (dawExtraState.hasTuning)
+            if (dawExtraState.hasScale)
             {
                 p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("tuningContents"));
                 if (p && (td = p->Attribute("v")))
                 {
                     auto tc = base64_decode(td);
-                    dawExtraState.tuningContents = tc;
+                    dawExtraState.scaleContents = tc;
                 }
             }
 
@@ -2282,10 +2287,9 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     if (patchTuning.tuningStoredInPatch)
     {
         TiXmlElement pt("patchTuning");
-        pt.SetAttribute("v",
-                        base64_encode((unsigned const char *)patchTuning.tuningContents.c_str(),
-                                      patchTuning.tuningContents.size())
-                            .c_str());
+        pt.SetAttribute("v", base64_encode((unsigned const char *)patchTuning.scaleContents.c_str(),
+                                           patchTuning.scaleContents.size())
+                                 .c_str());
         if (patchTuning.mappingContents.size() > 0)
             pt.SetAttribute(
                 "m", base64_encode((unsigned const char *)patchTuning.mappingContents.c_str(),
@@ -2355,8 +2359,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         osd.SetAttribute("v", dawExtraState.oddsoundRetuneMode);
         dawExtraXML.InsertEndChild(osd);
 
-        TiXmlElement tun("hasTuning");
-        tun.SetAttribute("v", dawExtraState.hasTuning ? 1 : 0);
+        TiXmlElement tun("hasTuning"); // see comment: Keep this name here for legacy compat
+        tun.SetAttribute("v", dawExtraState.hasScale ? 1 : 0);
         dawExtraXML.InsertEndChild(tun);
 
         /*
@@ -2366,8 +2370,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         */
         TiXmlElement tnc("tuningContents");
         tnc.SetAttribute("v",
-                         base64_encode((unsigned const char *)dawExtraState.tuningContents.c_str(),
-                                       dawExtraState.tuningContents.size())
+                         base64_encode((unsigned const char *)dawExtraState.scaleContents.c_str(),
+                                       dawExtraState.scaleContents.size())
                              .c_str());
         dawExtraXML.InsertEndChild(tnc);
 
