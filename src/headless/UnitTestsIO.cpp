@@ -87,8 +87,8 @@ TEST_CASE("All Patches are Loadable", "[io]")
         ++i;
 
         // A tiny oddity that the surge state pops up if we have tuning patches in the library so
-        surge->storage.remapToStandardKeyboard();
-        surge->storage.retuneToStandardTuning();
+        surge->storage.remapToConcertCKeyboard();
+        surge->storage.retuneTo12TETScaleC261Mapping();
     }
 }
 
@@ -225,7 +225,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         REQUIRE(surgeDest->storage.currentMapping.rawText ==
                 surgeSrc->storage.currentMapping.rawText);
 
-        surgeSrc->storage.remapToStandardKeyboard();
+        surgeSrc->storage.remapToConcertCKeyboard();
         REQUIRE(surgeSrc->storage.isStandardMapping);
         REQUIRE(!surgeDest->storage.isStandardMapping);
 

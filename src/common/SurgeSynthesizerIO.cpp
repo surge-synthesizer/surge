@@ -266,18 +266,29 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         {
             try
             {
-                storage.retuneToScale(
-                    Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+                if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                {
+                    storage.retuneToScale(
+                        Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents));
+                }
+                else
+                {
+                    storage.retuneTo12TETScale();
+                }
                 if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                 {
                     storage.remapToKeyboard(
                         Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
                 }
+                else
+                {
+                    storage.remapToConcertCKeyboard();
+                }
             }
             catch (Tunings::TuningError &e)
             {
                 Surge::UserInteractions::promptError(e.what(), "Error restoring tuning!");
-                storage.retuneToStandardTuning();
+                storage.retuneTo12TETScaleC261Mapping();
             }
         }
         else
@@ -293,18 +304,29 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
             {
                 try
                 {
-                    storage.retuneToScale(
-                        Tunings::parseSCLData(storage.getPatch().patchTuning.tuningContents));
+                    if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                    {
+                        storage.retuneToScale(
+                            Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents));
+                    }
+                    else
+                    {
+                        storage.retuneTo12TETScale();
+                    }
                     if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                     {
                         storage.remapToKeyboard(
                             Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents));
                     }
+                    else
+                    {
+                        storage.remapToConcertCKeyboard();
+                    }
                 }
                 catch (Tunings::TuningError &e)
                 {
                     Surge::UserInteractions::promptError(e.what(), "Error Restoring Tuning");
-                    storage.retuneToStandardTuning();
+                    storage.retuneTo12TETScaleC261Mapping();
                 }
             }
         }

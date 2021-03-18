@@ -700,8 +700,8 @@ struct DAWExtraStateStorage
     bool mpeEnabled = false;
     int mpePitchBendRange = -1;
 
-    bool hasTuning = false;
-    std::string tuningContents = "";
+    bool hasScale = false;
+    std::string scaleContents = "";
 
     bool hasMapping = false;
     std::string mappingContents = "";
@@ -716,7 +716,7 @@ struct DAWExtraStateStorage
 struct PatchTuningStorage
 {
     bool tuningStoredInPatch = false;
-    std::string tuningContents = "";
+    std::string scaleContents = "";
     std::string mappingContents = "";
 };
 
@@ -959,19 +959,105 @@ class alignas(16) SurgeStorage
     void note_to_omega(float, float &, float &);
     void note_to_omega_ignoring_tuning(float, float &, float &);
 
-    bool retuneToScale(const Tunings::Scale &s);
-    bool retuneToStandardTuning()
+    /*
+     * Tuning Support and Tuning State. Here's how it works
+     *
+     * We have SCL, KBM and Tunings and use the nomelcature "Scale", "Mapping", and "Tuning"
+     * consistently as of 1.9. The Tuning is the combination of a scale and mapping which results
+     * in pitches. We now consistently manage that three-part state in the functions below and
+     * make them available here as read-only state. (I mean I guess you could write directly
+     * to these members, but don't).
+     *
+     * The functions we provide are
+     * - retuneTo12TetCStandardMapping  (basically resets everytnig)
+     * - retuneTo12TETScale (resets scale, leaves mapping intact)
+     * - reemapToConcertCKeyboard (leaves scale, resets mapping)
+     * - retuneToScale( s ) (resets scale, leaves mapping)
+     * - remapToKeyboard( k ) (leaves scale, resets mapping)
+     * - retuneTosCaleAndMapping() ( pretty obvious right?)
+     */
+    Tunings::Tuning twelveToneStandardMapping;
+    Tunings::Tuning currentTuning;
+    Tunings::Scale currentScale;
+    Tunings::KeyboardMapping currentMapping;
+    bool isStandardTuning = true, isStandardScale = true, isStandardMapping = true;
+
+    enum TuningApplicationMode
     {
+        RETUNE_ALL = 0, // These values are streamed so don't change them if you add
+        RETUNE_MIDI_ONLY = 1
+    } tuningApplicationMode = RETUNE_MIDI_ONLY; // This is the default as of 1.9/sv16
+
+    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
+
+    Tunings::Scale cachedToggleOffScale;
+    Tunings::KeyboardMapping cachedToggleOffMapping;
+    bool isToggledToCache;
+    bool togglePriorState[3];
+    void toggleTuningToCache();
+
+    bool retuneToScale(const Tunings::Scale &s)
+    {
+        currentScale = s;
+        isStandardTuning = false;
+        isStandardScale = false;
+        return resetToCurrentScaleAndMapping();
+    }
+    bool retuneTo12TETScale()
+    {
+        currentScale = Tunings::evenTemperament12NoteScale();
+        isStandardScale = true;
+        isStandardTuning = isStandardMapping;
+
+        return resetToCurrentScaleAndMapping();
+    }
+    bool retuneTo12TETScaleC261Mapping()
+    {
+        currentScale = Tunings::evenTemperament12NoteScale();
+        currentMapping = Tunings::KeyboardMapping();
+        isStandardTuning = true;
+        isStandardScale = true;
+        isStandardMapping = true;
+        resetToCurrentScaleAndMapping();
         init_tables();
-        currentTuning = twelveToneStandardMapping;
         return true;
     }
+    bool remapToKeyboard(const Tunings::KeyboardMapping &k)
+    {
+        currentMapping = k;
+        isStandardMapping = false;
+        isStandardTuning = false;
 
-    bool remapToKeyboard(const Tunings::KeyboardMapping &k);
-    bool remapToStandardKeyboard();
+        tuningPitch = k.tuningFrequency / Tunings::MIDI_0_FREQ;
+        tuningPitchInv = 1.0 / tuningPitch;
+        return resetToCurrentScaleAndMapping();
+    }
 
-    bool retuneAndRemapToScaleAndMapping(const Tunings::Scale &s,
-                                         const Tunings::KeyboardMapping &k);
+    bool remapToConcertCKeyboard()
+    {
+        auto k = Tunings::KeyboardMapping();
+        currentMapping = k;
+        isStandardMapping = true;
+        isStandardTuning = isStandardScale;
+
+        tuningPitch = 32.0;
+        tuningPitchInv = 1.0 / 32.0;
+        return resetToCurrentScaleAndMapping();
+    }
+
+    bool retuneAndRemapToScaleAndMapping(const Tunings::Scale &s, const Tunings::KeyboardMapping &k)
+    {
+        currentMapping = k;
+        currentScale = s;
+        isStandardMapping = false;
+        isStandardScale = false;
+        isStandardTuning = false;
+
+        return resetToCurrentScaleAndMapping();
+    }
+
+    // Critically this does not touch the "isStandard" variables at all
+    bool resetToCurrentScaleAndMapping();
 
     inline int scaleConstantNote()
     {
@@ -994,21 +1080,7 @@ class alignas(16) SurgeStorage
         return tuningPitchInv;
     } // Obviously that's the inverse of the above
 
-    Tunings::Scale currentScale;
-    Tunings::Tuning twelveToneStandardMapping;
-    Tunings::Tuning currentTuning;
-
-    bool isStandardTuning;
-    enum TuningApplicationMode
-    {
-        RETUNE_ALL = 0, // These values are streamed so don't change them if you add
-        RETUNE_MIDI_ONLY = 1
-    } tuningApplicationMode = RETUNE_MIDI_ONLY; // This is the default as of 1.9/sv16
     void setTuningApplicationMode(const TuningApplicationMode m);
-
-    Tunings::KeyboardMapping currentMapping;
-    bool isStandardMapping = true;
-    float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
     void initialize_oddsound();
     void deinitialize_oddsound();
