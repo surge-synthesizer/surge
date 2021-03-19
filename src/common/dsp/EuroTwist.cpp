@@ -202,7 +202,7 @@ EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *l
     voice->Init(alloc.get());
     patch = std::make_unique<plaits::Patch>();
     int error;
-    srcstate = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    srcstate = src_new(SRC_SINC_FASTEST, 2, &error);
 
     if (error != 0)
     {
