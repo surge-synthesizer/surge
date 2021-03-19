@@ -138,6 +138,11 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
 std::string getUserDefaultValue(SurgeStorage *storage, const std::string &key,
                                 const std::string &valueIfMissing)
 {
+    if (storage->userPrefOverrides.find(key) != storage->userPrefOverrides.end())
+    {
+        return storage->userPrefOverrides[key].second;
+    }
+
     readDefaultsFile(defaultsFileName(storage));
 
     if (defaultsFileContents.find(key) != defaultsFileContents.end())
@@ -155,6 +160,11 @@ std::string getUserDefaultValue(SurgeStorage *storage, const std::string &key,
 
 int getUserDefaultValue(SurgeStorage *storage, const std::string &key, int valueIfMissing)
 {
+    if (storage->userPrefOverrides.find(key) != storage->userPrefOverrides.end())
+    {
+        return storage->userPrefOverrides[key].first;
+    }
+
     readDefaultsFile(defaultsFileName(storage));
 
     if (defaultsFileContents.find(key) != defaultsFileContents.end())
