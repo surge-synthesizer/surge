@@ -140,7 +140,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
     sdata.data_in = &(resample_this[0][0]);
     sdata.data_out = &(resample_into[0][0]);
     sdata.input_frames = BLOCK_SIZE;
-    sdata.output_frames = BLOCK_SIZE << 3;
+    sdata.output_frames = (BLOCK_SIZE << 3);
     auto res = src_process(surgeSR_to_euroSR, &sdata);
     consumed += sdata.input_frames_used;
 
@@ -149,11 +149,22 @@ void NimbusEffect::process(float *dataL, float *dataR)
         clouds::ShortFrame input[BLOCK_SIZE << 3];
         clouds::ShortFrame output[BLOCK_SIZE << 3];
 
+        int sp = 0;
+        if (hasStubInput)
+        {
+            sp = 1;
+            input[0].l = stub_input[0];
+            input[0].r = stub_input[1];
+        }
+        hasStubInput = false;
+
         for (int i = 0; i < sdata.output_frames_gen; ++i)
         {
-            input[i].l = (short)(clamp1bp(resample_into[i][0]) * 32767.0f);
-            input[i].r = (short)(clamp1bp(resample_into[i][1]) * 32767.0f);
+            input[i + sp].l = (short)(clamp1bp(resample_into[i][0]) * 32767.0f);
+            input[i + sp].r = (short)(clamp1bp(resample_into[i][1]) * 32767.0f);
         }
+
+        int inputSz = sdata.output_frames_gen + sp;
 
         processor->set_playback_mode(
             (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
@@ -184,9 +195,24 @@ void NimbusEffect::process(float *dataL, float *dataR)
         parm->gate = parm->freeze; // This is the CV for the freeze button
 
         processor->Prepare();
-        processor->Process(input, output, sdata.output_frames_gen);
 
-        for (int i = 0; i < sdata.output_frames_gen; ++i)
+        if (*pdata_ival[nmb_quality] >= 2)
+        {
+            /*
+             * In the 16 bit modes, Clouds crashes if you hand it an odd number
+             * of samples to process.
+             */
+            if (inputSz % 2)
+            {
+                stub_input[0] = input[inputSz - 1].l;
+                stub_input[1] = input[inputSz - 1].r;
+                inputSz--;
+                hasStubInput = true;
+            }
+        }
+        processor->Process(input, output, inputSz);
+
+        for (int i = 0; i < inputSz; ++i)
         {
             resample_this[i][0] = output[i].l / 32767.0f;
             resample_this[i][1] = output[i].r / 32767.0f;
@@ -197,7 +223,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
         odata.src_ratio = processor_sr_inv * samplerate;
         odata.data_in = &(resample_this[0][0]);
         odata.data_out = &(resample_into[0][0]);
-        odata.input_frames = sdata.output_frames_gen;
+        odata.input_frames = inputSz;
         odata.output_frames = BLOCK_SIZE << 3;
         auto reso = src_process(euroSR_to_surgeSR, &odata);
         created += odata.output_frames_gen;
