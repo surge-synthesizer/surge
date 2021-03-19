@@ -21,6 +21,17 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 {
     effectNum = fxt_delay;
     storage.reset(new SurgeStorage());
+    if (samplerate < 10000 || samplerate > 96000 * 16)
+    {
+        // set the samplerate to *something* in case the initpath in resetFxType and so on
+        // reads the SR (which it can in some cases)
+        storage->setSamplerate(44100); // this will be replaced later but will stop nan on init
+    }
+    else
+    {
+        // Just make sure it is all consistent since this is a global from a separate DLL
+        storage->setSamplerate(samplerate);
+    }
     storage->userPrefOverrides["highPrecisionReadouts"] = std::make_pair(0, "");
 
     fxstorage = &(storage->getPatch().fx[0]);
@@ -101,15 +112,7 @@ void SurgefxAudioProcessor::changeProgramName(int index, const String &newName) 
 //==============================================================================
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
-    samplerate = sr;
-    dsamplerate = sr;
-    samplerate_inv = 1.0 / sr;
-    dsamplerate_inv = 1.0 / sr;
-    dsamplerate_os = dsamplerate * OSC_OVERSAMPLING;
-    dsamplerate_os_inv = 1.0 / dsamplerate_os;
-    storage->init_tables();
-
-    // FIXME - assert samplesPerBlock is a multiple of BLOCK_SIZE
+    storage->setSamplerate(sr);
 }
 
 void SurgefxAudioProcessor::releaseResources()
