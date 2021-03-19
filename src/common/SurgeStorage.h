@@ -18,21 +18,21 @@
 #include "Parameter.h"
 #include "ModulationSource.h"
 #include "Wavetable.h"
+
+#include "tinyxml/tinyxml.h"
+#include "filesystem/import.h"
+
 #include <vector>
 #include <memory>
 #include <mutex>
 #include <atomic>
-#include <stdint.h>
-
-#include "tinyxml/tinyxml.h"
-
-#include "filesystem/import.h"
-
+#include <cstdint>
 #include <fstream>
 #include <iterator>
 #include <functional>
 #include <unordered_map>
 #include <map>
+#include <utility>
 
 #include "Tunings.h"
 
@@ -1117,6 +1117,12 @@ class alignas(16) SurgeStorage
         res += " @ " + std::to_string(k.tuningFrequency) + "Hz";
         return res;
     }
+
+    /*
+     * Other users of surge may want to force clients to override user prefs.
+     * Really we just use this to force the FX bank to 2 decimals for now. But...
+     */
+    std::unordered_map<std::string, std::pair<int, std::string>> userPrefOverrides;
 
     ControllerModulationSource::SmoothingMode smoothingMode =
         ControllerModulationSource::SmoothingMode::LEGACY;
