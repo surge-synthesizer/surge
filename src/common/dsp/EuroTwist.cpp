@@ -104,7 +104,7 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         // Analog Snare
         engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation Mix"});
         // Analog Hi-Hat
-        engineLabels.push_back({"Tone", "Low Cut", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation Mix"});
     }
 
     const char *getName(Parameter *p) override
