@@ -73,25 +73,38 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
 
     EngineDynamicName() noexcept
     {
+        // Waveforms
         engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync Mix"});
+        // Waveshaper
         engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation Mix"});
+        // 2-Operator FM
         engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub Mix"});
+        // Formant/PD
         engineLabels.push_back({"Ratio/Type", "Formant/Cutoff", "Shape", "PD Mix"});
+        // Harmonic
         engineLabels.push_back({"Bump", "Peak", "Shape", "Organ Mix"});
+        // Wavetable
         engineLabels.push_back({"Bank", "Morph Row", "Morph Column", "Lo-Fi Mix"});
-        engineLabels.push_back({"Chord Type", "Chord Inversion", "Shape", "Root Mix"});
+        // Chords
+        engineLabels.push_back({"Type", "Inversion", "Shape", "Root Mix"});
+        // Vowels/Speech
         engineLabels.push_back({"Speak", "Species", "Segment", "Raw Mix"});
+        // Granular Cloud
         engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine Mix"});
-        engineLabels.push_back(
-            {"Type/Separation", "Clock Frequency", "Resonance", "Dual Peak Mix"});
+        // Filtered Noise
+        engineLabels.push_back({"Type", "Clock Frequency", "Resonance", "Dual Peak Mix"});
+        // Particle Noise
         engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw Mix"});
+        // Inharmonic String
         engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter Mix"});
+        // Modal Resonator
         engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter Mix"});
+        // Analog Kick
         engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation Mix"});
+        // Analog Snare
         engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation Mix"});
-        engineLabels.push_back({"Tone", "Low Cut", "Decay Time", "Variation MIx"});
-        while (engineLabels.size() < 16)
-            engineLabels.push_back(defaultLabels);
+        // Analog Hi-Hat
+        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation Mix"});
     }
 
     const char *getName(Parameter *p) override
@@ -99,7 +112,9 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
         if (oscs->type.val.i != ot_eurotwist)
+        {
             return "ERROR";
+        }
 
         auto engp = &(oscs->p[EuroTwist::et_engine]);
         auto eng = engp->val.i;
@@ -119,13 +134,22 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
 
     EngineDynamicBipolar() noexcept
     {
-        engineBipolars.push_back({true, true, true, true});
-        engineBipolars.push_back({true, false, false, true});
-        engineBipolars.push_back({true, false, true, true});
-
-        // TODO: Populate the rest of this
-        while (engineBipolars.size() < 16)
-            engineBipolars.push_back({true, true, true, true});
+        engineBipolars.push_back({true, true, true, true});    // Waveforms
+        engineBipolars.push_back({true, false, false, true});  // Waveshaper
+        engineBipolars.push_back({true, false, true, true});   // 2-Operator FM
+        engineBipolars.push_back({false, false, false, true}); // Formant/PD
+        engineBipolars.push_back({false, false, false, true}); // Harmonic
+        engineBipolars.push_back({true, true, true, true});    // Wavetable
+        engineBipolars.push_back({false, true, true, true});   // Chords
+        engineBipolars.push_back({false, true, false, true});  // Vowels/Speech
+        engineBipolars.push_back({false, false, false, true}); // Granular Cloud
+        engineBipolars.push_back({false, false, false, true}); // Filtered Noise
+        engineBipolars.push_back({false, false, true, true});  // Particle Noise
+        engineBipolars.push_back({false, false, false, true}); // Inharmonic String
+        engineBipolars.push_back({false, false, false, true}); // Modal Resonator
+        engineBipolars.push_back({false, false, false, true}); // Analog Kick
+        engineBipolars.push_back({true, false, false, true});  // Analog Snare
+        engineBipolars.push_back({true, false, false, true});  // Analog Hi-Hat
     }
 
     const bool getValue(Parameter *p) override
@@ -133,7 +157,9 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
         if (oscs->type.val.i != ot_eurotwist)
+        {
             return false;
+        }
 
         auto engp = &(oscs->p[EuroTwist::et_engine]);
         auto eng = engp->val.i;
@@ -423,12 +449,12 @@ void EuroTwist::init_ctrltypes()
     oscdata->p[et_harmonics].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_timbre].set_name("Timbre");
-    oscdata->p[et_timbre].set_type(ct_percent_bipolar);
+    oscdata->p[et_timbre].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     oscdata->p[et_timbre].dynamicName = &etDynamicName;
     oscdata->p[et_timbre].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_morph].set_name("Morph");
-    oscdata->p[et_morph].set_type(ct_percent_bipolar);
+    oscdata->p[et_morph].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     oscdata->p[et_morph].dynamicName = &etDynamicName;
     oscdata->p[et_morph].dynamicBipolar = &etDynamicBipolar;
 
