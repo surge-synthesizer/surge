@@ -1787,24 +1787,8 @@ void SurgeSynthesizer::allNotesOff()
 
 void SurgeSynthesizer::setSamplerate(float sr)
 {
-    // If I am changing my sample rate I will change my internal tables, so this
-    // needs to be tuning aware and reapply tuning if needed
-    auto s = storage.currentScale;
-    bool wasST = storage.isStandardTuning;
-
-    samplerate = sr;
-    dsamplerate = sr;
-    samplerate_inv = 1.0 / sr;
-    dsamplerate_inv = 1.0 / sr;
-    dsamplerate_os = dsamplerate * OSC_OVERSAMPLING;
-    dsamplerate_os_inv = 1.0 / dsamplerate_os;
-    storage.init_tables();
+    storage.setSamplerate(sr);
     sinus.set_rate(1000.0 * dsamplerate_inv);
-
-    if (!wasST)
-    {
-        storage.retuneToScale(s);
-    }
 }
 
 //-------------------------------------------------------------------------------------------------

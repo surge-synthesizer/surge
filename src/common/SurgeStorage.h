@@ -878,6 +878,8 @@ class alignas(16) SurgeStorage
     int controllers[n_customcontrollers];
     float poly_aftertouch[2][128]; // TODO: FIX SCENE ASSUMPTION?
     float modsource_vu[n_modsources];
+    void setSamplerate(float sr);
+
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, std::string subdir);
     void refresh_patchlist();

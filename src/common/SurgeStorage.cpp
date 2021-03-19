@@ -1387,6 +1387,27 @@ void SurgeStorage::save_midi_controllers()
     save_snapshots();
 }
 
+void SurgeStorage::setSamplerate(float sr)
+{
+    // If I am changing my sample rate I will change my internal tables, so this
+    // needs to be tuning aware and reapply tuning if needed
+    auto s = currentScale;
+    bool wasST = isStandardTuning;
+
+    samplerate = sr;
+    dsamplerate = sr;
+    samplerate_inv = 1.0 / sr;
+    dsamplerate_inv = 1.0 / sr;
+    dsamplerate_os = dsamplerate * OSC_OVERSAMPLING;
+    dsamplerate_os_inv = 1.0 / dsamplerate_os;
+    init_tables();
+
+    if (!wasST)
+    {
+        retuneToScale(s);
+    }
+}
+
 void SurgeStorage::load_midi_controllers()
 {
     TiXmlElement *mc = getSnapshotSection("midictrl");
