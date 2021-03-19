@@ -2974,7 +2974,7 @@ void SurgeSynthesizer::getParameterStringW(long index, float value, wchar_t *ptr
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
         char text[128];
-        storage.getPatch().param_ptr[index]->get_display(text);
+        storage.getPatch().param_ptr[index]->get_display(text, true, value);
 
         swprintf(ptr, 128, L"%s", text);
     }
