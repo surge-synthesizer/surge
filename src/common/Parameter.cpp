@@ -1584,6 +1584,38 @@ void Parameter::bound_value(bool force_integer)
             val.f = 1.0 * intcount / count;
             break;
         }
+        case ct_fmratio:
+        {
+            if (absolute)
+            {
+                auto bpv = (val.f - 16.0) / 16.0;
+                auto note = 69.0 + (69.0 * bpv);
+                note = round(note);
+
+                val.f = note / 4.3125;
+            }
+            else if (extend_range)
+            {
+                float ratio;
+
+                if (val.f > 16.f)
+                {
+                    ratio = round((val.f - 16.f) * 31.f / 16.f + 1.f);
+                    val.f = 16.f + ((ratio - 1.f) / 1.9375); // 1.9375 = 31 / 16
+                }
+                else
+                {
+                    ratio = -round((16.f - val.f) * 31.f / 16.f + 1.f);
+                    val.f = 16.f + ((ratio + 1.f) / 1.9375);
+                }
+            }
+            else
+            {
+                val.f = floor(val.f + 0.5f);
+            }
+
+            break;
+        }
         default:
         {
             val.f = floor(val.f + 0.5f);
@@ -2799,7 +2831,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
             if (absolute)
             {
                 /*
-                 * OK so I am 0 to 32. So lets define a note
+                 * OK so I am 0 to 32. So let's define a note
                  */
                 float bpv = (f - 16.0) / 16.0;
                 auto note = 69 + 69 * bpv;
