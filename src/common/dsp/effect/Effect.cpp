@@ -18,10 +18,10 @@
 #include "TreemonsterEffect.h"
 #include "VocoderEffect.h"
 #include "airwindows/AirWindowsEffect.h"
-#include "chowdsp/Neuron.h"
-#include "chowdsp/Chow.h"
-#include "chowdsp/exciter/Exciter.h"
-#include "chowdsp/tape/Tape.h"
+#include "chowdsp/NeuronEffect.h"
+#include "chowdsp/ChowEffect.h"
+#include "chowdsp/ExciterEffect.h"
+#include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
 
 using namespace std;
@@ -61,7 +61,7 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_airwindows:
         return new AirWindowsEffect(storage, fxdata, pd);
     case fxt_neuron:
-        return new chowdsp::Neuron(storage, fxdata, pd);
+        return new chowdsp::NeuronEffect(storage, fxdata, pd);
     case fxt_geq11:
         return new GEQ11Effect(storage, fxdata, pd);
     case fxt_resonator:
@@ -69,13 +69,13 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_combulator:
         return new CombulatorEffect(storage, fxdata, pd);
     case fxt_chow:
-        return new chowdsp::Chow(storage, fxdata, pd);
+        return new chowdsp::CHOWEffect(storage, fxdata, pd);
     case fxt_nimbus:
         return new NimbusEffect(storage, fxdata, pd);
     case fxt_exciter:
-        return new chowdsp::Exciter(storage, fxdata, pd);
+        return new chowdsp::ExciterEffect(storage, fxdata, pd);
     case fxt_tape:
-        return new chowdsp::Tape(storage, fxdata, pd);
+        return new chowdsp::TapeEffect(storage, fxdata, pd);
     case fxt_ensemble:
         return new BBDEnsembleEffect(storage, fxdata, pd);
     case fxt_treemonster:

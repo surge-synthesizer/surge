@@ -13,20 +13,20 @@
 ** open source in September 2018.
 */
 
-#include "Tape.h"
+#include "TapeEffect.h"
 
 namespace chowdsp
 {
 
-Tape::Tape(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+TapeEffect::TapeEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), lossFilter(storage, 48)
 {
     mix.set_blocksize(BLOCK_SIZE);
 }
 
-Tape::~Tape() {}
+TapeEffect::~TapeEffect() {}
 
-void Tape::init()
+void TapeEffect::init()
 {
     hysteresis.reset(samplerate);
     lossFilter.prepare(samplerate, BLOCK_SIZE);
@@ -38,7 +38,7 @@ void Tape::init()
     mix.instantize();
 }
 
-void Tape::process(float *dataL, float *dataR)
+void TapeEffect::process(float *dataL, float *dataR)
 {
     for (int i = 0; i < BLOCK_SIZE; i++)
     {
@@ -62,9 +62,9 @@ void Tape::process(float *dataL, float *dataR)
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
-void Tape::suspend() {}
+void TapeEffect::suspend() {}
 
-const char *Tape::group_label(int id)
+const char *TapeEffect::group_label(int id)
 {
     switch (id)
     {
@@ -81,7 +81,7 @@ const char *Tape::group_label(int id)
     return 0;
 }
 
-int Tape::group_label_ypos(int id)
+int TapeEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -98,13 +98,13 @@ int Tape::group_label_ypos(int id)
     return 0;
 }
 
-void Tape::init_ctrltypes()
+void TapeEffect::init_ctrltypes()
 {
     /*
      * The actualy deactivation status is on gain, so reflet that down
      * to freq and bw using the dynamic deactivation mechanism
      */
-    static struct TapeDeact : public ParameterDynamicDeactivationFunction
+    static struct TapeEffectDeact : public ParameterDynamicDeactivationFunction
     {
         const bool getValue(Parameter *p) override
         {
@@ -210,7 +210,7 @@ void Tape::init_ctrltypes()
     fxdata->p[tape_mix].val_default.f = 1.f;
 }
 
-void Tape::init_default_values()
+void TapeEffect::init_default_values()
 {
     fxdata->p[tape_drive].val.f = 0.5f;
     fxdata->p[tape_saturation].val.f = 0.5f;

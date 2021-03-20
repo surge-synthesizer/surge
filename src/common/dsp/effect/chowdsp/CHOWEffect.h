@@ -25,9 +25,9 @@ namespace chowdsp
 /*
 ** CHOW is a truculent distortion effect, with similar
 ** characteristic and controls as a compressor. The original
-** implentation can be found at: https://github.com/Chowdhury-DSP/CHOW
+** implementation can be found at: https://github.com/Chowdhury-DSP/CHOW
 */
-class Chow : public Effect
+class CHOWEffect : public Effect
 {
   public:
     enum chow_params
@@ -41,8 +41,8 @@ class Chow : public Effect
         chow_num_ctrls,
     };
 
-    Chow(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~Chow();
+    CHOWEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~CHOWEffect();
 
     virtual const char *get_effectname() override { return "CHOW"; }
 

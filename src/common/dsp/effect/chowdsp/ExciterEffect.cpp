@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "Exciter.h"
+#include "ExciterEffect.h"
 
 namespace
 {
@@ -25,15 +25,15 @@ constexpr double q_val = 0.7071;
 namespace chowdsp
 {
 
-Exciter::Exciter(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
+ExciterEffect::ExciterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
 {
     wet_gain.set_blocksize(BLOCK_SIZE);
     drive_gain.set_blocksize(BLOCK_SIZE);
 }
 
-Exciter::~Exciter() {}
+ExciterEffect::~ExciterEffect() {}
 
-void Exciter::init()
+void ExciterEffect::init()
 {
     toneFilter.suspend();
     toneFilter.coeff_HP(M_PI, q_val);
@@ -45,7 +45,7 @@ void Exciter::init()
     wet_gain.set_target(0.0f);
 }
 
-void Exciter::process(float *dataL, float *dataR)
+void ExciterEffect::process(float *dataL, float *dataR)
 {
     set_params();
 
@@ -67,7 +67,7 @@ void Exciter::process(float *dataL, float *dataR)
     add_block(dataR, dryR, dataR, BLOCK_SIZE_QUAD);
 }
 
-void Exciter::set_params()
+void ExciterEffect::set_params()
 {
     // "Tone" param
     auto cutoff =
@@ -96,9 +96,9 @@ void Exciter::set_params()
     wet_gain.set_target_smoothed(limit_range(*f[exciter_mix], 0.f, 1.f));
 }
 
-void Exciter::suspend() { init(); }
+void ExciterEffect::suspend() { init(); }
 
-void Exciter::init_ctrltypes()
+void ExciterEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -137,7 +137,7 @@ void Exciter::init_ctrltypes()
     fxdata->p[exciter_mix].posy_offset = 5;
 }
 
-void Exciter::init_default_values()
+void ExciterEffect::init_default_values()
 {
     fxdata->p[exciter_drive].val.f = 0.5f;
     fxdata->p[exciter_tone].val.f = 0.5f;
@@ -146,7 +146,7 @@ void Exciter::init_default_values()
     fxdata->p[exciter_mix].val.f = 0.5f;
 }
 
-const char *Exciter::group_label(int id)
+const char *ExciterEffect::group_label(int id)
 {
     switch (id)
     {
@@ -161,7 +161,7 @@ const char *Exciter::group_label(int id)
     return 0;
 }
 
-int Exciter::group_label_ypos(int id)
+int ExciterEffect::group_label_ypos(int id)
 {
     switch (id)
     {

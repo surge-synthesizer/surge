@@ -16,8 +16,8 @@
 #pragma once
 
 #include <dsp/effect/Effect.h>
-#include "HysteresisProcessor.h"
-#include "LossFilter.h"
+#include "tape/HysteresisProcessor.h"
+#include "tape/LossFilter.h"
 
 #include <vt_dsp/lipol.h>
 
@@ -30,7 +30,7 @@ namespace chowdsp
 ** see https://github.com/jatinchowdhury18/AnalogTapeModel
 ** and http://dafx2019.bcu.ac.uk/papers/DAFx2019_paper_3.pdf
 */
-class Tape : public Effect
+class TapeEffect : public Effect
 {
     lipol_ps mix alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
@@ -56,8 +56,8 @@ class Tape : public Effect
         tape_num_ctrls,
     };
 
-    Tape(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~Tape();
+    TapeEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~TapeEffect();
 
     virtual const char *get_effectname() override { return "Tape"; }
 

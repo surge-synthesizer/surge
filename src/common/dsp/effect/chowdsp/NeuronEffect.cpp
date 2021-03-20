@@ -13,21 +13,21 @@
 ** open source in September 2018.
 */
 
-#include "Neuron.h"
+#include "NeuronEffect.h"
 
 namespace chowdsp
 {
 
-Neuron::Neuron(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
+NeuronEffect::NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
 {
     dc_blocker.setBlockSize(BLOCK_SIZE);
     makeup.set_blocksize(BLOCK_SIZE);
     outgain.set_blocksize(BLOCK_SIZE);
 }
 
-Neuron::~Neuron() {}
+NeuronEffect::~NeuronEffect() {}
 
-void Neuron::init()
+void NeuronEffect::init()
 {
     Wf.reset(numSteps);
     Wh.reset(numSteps);
@@ -58,7 +58,7 @@ void Neuron::init()
     outgain.set_target(0.0f);
 }
 
-void Neuron::process(float *dataL, float *dataR)
+void NeuronEffect::process(float *dataL, float *dataR)
 {
     set_params();
 
@@ -80,7 +80,7 @@ void Neuron::process(float *dataL, float *dataR)
     modLFO.post_process();
 }
 
-void Neuron::process_internal(float *dataL, float *dataR, const int numSamples)
+void NeuronEffect::process_internal(float *dataL, float *dataR, const int numSamples)
 {
     for (int k = 0; k < numSamples; k++)
     {
@@ -98,7 +98,7 @@ void Neuron::process_internal(float *dataL, float *dataR, const int numSamples)
     }
 }
 
-void Neuron::set_params()
+void NeuronEffect::set_params()
 {
     auto bf_clamped = limit_range(*f[neuron_bias_bf], 0.0f, 1.0f);
     auto wh_clamped = limit_range(*f[neuron_drive_wh], 0.0f, 1.0f);
@@ -153,9 +153,9 @@ void Neuron::set_params()
     outgain.set_target_smoothed(db_to_linear(*f[neuron_gain]));
 }
 
-void Neuron::suspend() { init(); }
+void NeuronEffect::suspend() { init(); }
 
-const char *Neuron::group_label(int id)
+const char *NeuronEffect::group_label(int id)
 {
     switch (id)
     {
@@ -172,7 +172,7 @@ const char *Neuron::group_label(int id)
     return 0;
 }
 
-int Neuron::group_label_ypos(int id)
+int NeuronEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -188,7 +188,7 @@ int Neuron::group_label_ypos(int id)
     return 0;
 }
 
-void Neuron::init_ctrltypes()
+void NeuronEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -245,7 +245,7 @@ void Neuron::init_ctrltypes()
     fxdata->p[neuron_gain].posy_offset = 7;
 }
 
-void Neuron::init_default_values()
+void NeuronEffect::init_default_values()
 {
     fxdata->p[neuron_drive_wh].val.f = 0.0f;
     fxdata->p[neuron_squash_wf].val.f = 0.5f;

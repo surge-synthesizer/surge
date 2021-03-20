@@ -36,7 +36,7 @@ namespace chowdsp
 ** please see this Medium article:
 *https://jatinchowdhury18.medium.com/complex-nonlinearities-episode-10-gated-recurrent-distortion-6d60948323cf
 */
-class Neuron : public Effect
+class NeuronEffect : public Effect
 {
   public:
     enum neuron_params
@@ -60,8 +60,8 @@ class Neuron : public Effect
         neuron_num_params,
     };
 
-    Neuron(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~Neuron();
+    NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~NeuronEffect();
 
     virtual const char *get_effectname() override { return "Neuron"; }
 
