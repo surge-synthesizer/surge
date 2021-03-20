@@ -34,6 +34,9 @@ void TapeEffect::init()
     clear_block(L, BLOCK_SIZE_QUAD);
     clear_block(R, BLOCK_SIZE_QUAD);
 
+    degrade.prepareToPlay((float)samplerate, BLOCK_SIZE);
+    chew.prepare((float)samplerate, BLOCK_SIZE);
+
     mix.set_target(1.f);
     mix.instantize();
 }
@@ -58,6 +61,18 @@ void TapeEffect::process(float *dataL, float *dataR)
         lossFilter.process(L, R);
     }
 
+    if (!fxdata->p[tape_degrade_depth].deactivated)
+    {
+        degrade.set_params(*f[tape_degrade_depth], *f[tape_degrade_amount],
+                           *f[tape_degrade_variance]);
+        degrade.process_block(L, R);
+
+        const auto chew_freq = 0.1f * *f[tape_degrade_amount] * 0.8f;
+        const auto chew_depth = *f[tape_degrade_depth] * 0.25f;
+        chew.set_params(chew_freq, chew_depth, *f[tape_degrade_variance]);
+        chew.process_block(L, R);
+    }
+
     mix.set_target_smoothed(limit_range(*f[tape_mix], 0.f, 1.f));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
@@ -73,7 +88,7 @@ const char *TapeEffect::group_label(int id)
     case 1:
         return "Loss";
     case 2:
-        return "Degrade (not implemented!)";
+        return "Degrade";
     case 3:
         return "Output";
     }
@@ -191,17 +206,17 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_degrade_depth].set_name("Depth");
     fxdata->p[tape_degrade_depth].set_type(ct_percent_deactivatable);
     fxdata->p[tape_degrade_depth].posy_offset = 5;
-    fxdata->p[tape_degrade_depth].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_depth].val_default.f = 0.0f;
     fxdata->p[tape_degrade_depth].deactivated = false;
     fxdata->p[tape_degrade_amount].set_name("Amount");
     fxdata->p[tape_degrade_amount].set_type(ct_percent);
     fxdata->p[tape_degrade_amount].posy_offset = 5;
-    fxdata->p[tape_degrade_amount].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_amount].val_default.f = 0.0f;
     fxdata->p[tape_degrade_amount].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_degrade_variance].set_name("Variance");
     fxdata->p[tape_degrade_variance].set_type(ct_percent);
     fxdata->p[tape_degrade_variance].posy_offset = 5;
-    fxdata->p[tape_degrade_variance].val_default.f = 0.5f;
+    fxdata->p[tape_degrade_variance].val_default.f = 0.0f;
     fxdata->p[tape_degrade_variance].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_mix].set_name("Mix");
@@ -221,9 +236,9 @@ void TapeEffect::init_default_values()
     fxdata->p[tape_gap].val.f = 0.0f;
     fxdata->p[tape_thickness].val.f = 0.0f;
 
-    fxdata->p[tape_degrade_depth].val.f = 0.5f;
-    fxdata->p[tape_degrade_amount].val.f = 0.5f;
-    fxdata->p[tape_degrade_variance].val.f = 0.5f;
+    fxdata->p[tape_degrade_depth].val.f = 0.0f;
+    fxdata->p[tape_degrade_amount].val.f = 0.0f;
+    fxdata->p[tape_degrade_variance].val.f = 0.0f;
 
     fxdata->p[tape_mix].val.f = 1.f;
 }

@@ -18,6 +18,8 @@
 #include <dsp/effect/Effect.h>
 #include "tape/HysteresisProcessor.h"
 #include "tape/LossFilter.h"
+#include "tape/DegradeProcessor.h"
+#include "tape/ChewProcessor.h"
 
 #include <vt_dsp/lipol.h>
 
@@ -73,6 +75,8 @@ class TapeEffect : public Effect
   private:
     HysteresisProcessor hysteresis;
     LossFilter lossFilter;
+    DegradeProcessor degrade;
+    ChewProcessor chew;
 };
 
 } // namespace chowdsp
