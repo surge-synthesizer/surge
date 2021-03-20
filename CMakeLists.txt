@@ -126,7 +126,7 @@ add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
 add_subdirectory(libs/oddsound-mts)
-add_subdirectory(libs/libsamplerate)
+add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
 
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
