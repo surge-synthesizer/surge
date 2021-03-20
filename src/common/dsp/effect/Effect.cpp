@@ -19,7 +19,7 @@
 #include "VocoderEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/NeuronEffect.h"
-#include "chowdsp/ChowEffect.h"
+#include "chowdsp/CHOWEffect.h"
 #include "chowdsp/ExciterEffect.h"
 #include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
