@@ -3521,8 +3521,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         for (int m : waves)
                         {
-                            auto mtm = addCallbackMenu(
-                                contextMenu, mo_multitype_names[m], [p, m, this]() {
+                            auto mtm =
+                                addCallbackMenu(contextMenu, mo_multitype_names[m], [p, m, this]() {
                                     // p->deform_type = m;
                                     p->deform_type = (p->deform_type & 0xFFF0) | m;
                                     synth->refresh_editor = true;
