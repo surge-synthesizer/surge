@@ -3609,6 +3609,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         case ct_percent_oscdrift:
                             txt = "Randomize Initial Drift Phase";
                             break;
+                        case ct_twist_aux_mix:
+                            txt = "Pan Main and Auxilliary Signals";
+                            break;
                         default:
                             break;
                         }
