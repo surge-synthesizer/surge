@@ -74,37 +74,37 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     EngineDynamicName() noexcept
     {
         // Waveforms
-        engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync "});
+        engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync"});
         // Waveshaper
-        engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation "});
+        engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation"});
         // 2-Operator FM
-        engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub "});
+        engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub"});
         // Formant/PD
-        engineLabels.push_back({"Ratio/Type", "Formant/Cutoff", "Shape", "PD "});
+        engineLabels.push_back({"Ratio/Type", "Formant", "Shape", "PD"});
         // Harmonic
-        engineLabels.push_back({"Bump", "Peak", "Shape", "Organ "});
+        engineLabels.push_back({"Bump", "Peak", "Shape", "Organ"});
         // Wavetable
-        engineLabels.push_back({"Bank", "Morph Row", "Morph Column", "Lo-Fi "});
+        engineLabels.push_back({"Bank", "Morph X", "Morph Y", "Lo-Fi"});
         // Chords
-        engineLabels.push_back({"Type", "Inversion", "Shape", "Root "});
+        engineLabels.push_back({"Type", "Inversion", "Shape", "Root"});
         // Vowels/Speech
-        engineLabels.push_back({"Speak", "Species", "Segment", "Raw "});
+        engineLabels.push_back({"Speak", "Species", "Segment", "Raw"});
         // Granular Cloud
-        engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine "});
+        engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine"});
         // Filtered Noise
-        engineLabels.push_back({"Type", "Clock Frequency", "Resonance", "Dual Peak "});
+        engineLabels.push_back({"Type", "Clock Frequency", "Resonance", "Dual Peak"});
         // Particle Noise
-        engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw "});
+        engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw"});
         // Inharmonic String
-        engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter "});
+        engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter"});
         // Modal Resonator
-        engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter "});
+        engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter"});
         // Analog Kick
-        engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation "});
+        engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation"});
         // Analog Snare
-        engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation "});
+        engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation"});
         // Analog Hi-Hat
-        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation "});
+        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation"});
     }
 
     const char *getName(Parameter *p) override
@@ -119,17 +119,17 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         auto engp = &(oscs->p[EuroTwist::et_engine]);
         auto eng = engp->val.i;
         auto idx = (p - engp);
-
         auto lab = engineLabels[eng][idx - 1];
+
         if (idx == EuroTwist::et_aux_mix)
         {
             if (p->extend_range)
             {
-                lab += "Pan";
+                lab = "Main<>" + lab + " Pan";
             }
             else
             {
-                lab += "Mix";
+                lab += " Mix";
             }
         }
 
@@ -147,10 +147,10 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
     {
         engineBipolars.push_back({true, true, true, true});    // Waveforms
         engineBipolars.push_back({true, false, false, true});  // Waveshaper
-        engineBipolars.push_back({true, false, true, true});   // 2-Operator FM
+        engineBipolars.push_back({false, false, true, true});  // 2-Operator FM
         engineBipolars.push_back({false, false, false, true}); // Formant/PD
         engineBipolars.push_back({false, false, false, true}); // Harmonic
-        engineBipolars.push_back({true, true, true, true});    // Wavetable
+        engineBipolars.push_back({true, false, false, true});  // Wavetable
         engineBipolars.push_back({false, true, true, true});   // Chords
         engineBipolars.push_back({false, true, false, true});  // Vowels/Speech
         engineBipolars.push_back({false, false, false, true}); // Granular Cloud
@@ -464,9 +464,13 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
     if (FM)
+    {
         EuroTwist::process_block_internal<true>(pitch, drift, stereo, FMdepth);
+    }
     else
+    {
         EuroTwist::process_block_internal<false>(pitch, drift, stereo, FMdepth);
+    }
 }
 
 void EuroTwist::init_ctrltypes()
@@ -490,7 +494,7 @@ void EuroTwist::init_ctrltypes()
     oscdata->p[et_morph].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_aux_mix].set_name("Aux Mix");
-    oscdata->p[et_aux_mix].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable);
+    oscdata->p[et_aux_mix].set_type(ct_twist_aux_mix);
     oscdata->p[et_aux_mix].dynamicName = &etDynamicName;
     oscdata->p[et_aux_mix].dynamicBipolar = &etDynamicBipolar;
 
@@ -504,12 +508,13 @@ void EuroTwist::init_ctrltypes()
 
 void EuroTwist::init_default_values()
 {
-    oscdata->p[et_engine].val.i = 0;
-    oscdata->p[et_harmonics].val.f = 0;
-    oscdata->p[et_timbre].val.f = 0;
-    oscdata->p[et_morph].val.f = 0;
-    oscdata->p[et_aux_mix].val.f = 0;
-    oscdata->p[et_lpg_response].val.f = 0;
+    oscdata->p[et_engine].val.i = 0.f;
+    oscdata->p[et_harmonics].val.f = 0.f;
+    oscdata->p[et_timbre].val.f = 0.f;
+    oscdata->p[et_morph].val.f = 0.f;
+    oscdata->p[et_aux_mix].val.f = -1.f;
+    oscdata->p[et_aux_mix].extend_range = false;
+    oscdata->p[et_lpg_response].val.f = 0.f;
     oscdata->p[et_lpg_response].deactivated = true;
-    oscdata->p[et_lpg_decay].val.f = 0;
+    oscdata->p[et_lpg_decay].val.f = 0.f;
 }
