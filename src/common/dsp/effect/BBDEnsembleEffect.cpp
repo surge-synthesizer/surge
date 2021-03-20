@@ -43,7 +43,7 @@ int ensemble_num_stages(int i)
     switch (i)
     {
     case BBDEnsembleEffect::ens_sinc:
-        return 256; // faking it :)!
+        return 512; // faking it :)!
     case BBDEnsembleEffect::ens_128:
         return 128;
     case BBDEnsembleEffect::ens_256:
@@ -168,6 +168,10 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
 
     for (int s = 0; s < BLOCK_SIZE; ++s)
     {
+        // reduce input by 3 dB
+        dataL[s] *= 0.75f;
+        dataR[s] *= 0.75f;
+
         // soft-clip input
         dataL[s] = lookup_waveshape(wst_soft, dataL[s] + fbStateL);
         dataR[s] = lookup_waveshape(wst_soft, dataR[s] + fbStateR);
@@ -258,6 +262,10 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
         for (int s = 0; s < BLOCK_SIZE; ++s)
         {
+            // reduce input by 3 dB
+            dataL[s] *= 0.75f;
+            dataR[s] *= 0.75f;
+
             // soft-clip input
             dataL[s] = lookup_waveshape(wst_soft, dataL[s] + fbStateL);
             dataR[s] = lookup_waveshape(wst_soft, dataR[s] + fbStateR);

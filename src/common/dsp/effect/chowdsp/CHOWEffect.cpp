@@ -13,20 +13,21 @@
 ** open source in September 2018.
 */
 
-#include "Chow.h"
+#include "CHOWEffect.h"
 
 namespace chowdsp
 {
 
-Chow::Chow(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
+CHOWEffect::CHOWEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+    : Effect(storage, fxdata, pd)
 {
     makeup.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 }
 
-Chow::~Chow() {}
+CHOWEffect::~CHOWEffect() {}
 
-void Chow::init()
+void CHOWEffect::init()
 {
     os.reset();
     makeup.set_target(1.0f);
@@ -56,7 +57,7 @@ static inline float chowProcess(float x, const float threshGain, const float rat
     return y;
 }
 
-void Chow::process(float *dataL, float *dataR)
+void CHOWEffect::process(float *dataL, float *dataR)
 {
     set_params();
 
@@ -77,7 +78,7 @@ void Chow::process(float *dataL, float *dataR)
     mix.fade_2_blocks_to(L, dataL, R, dataR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
-void Chow::set_params()
+void CHOWEffect::set_params()
 {
     auto thresh_clamped = limit_range(*f[chow_thresh], fxdata->p[chow_thresh].val_min.f,
                                       fxdata->p[chow_thresh].val_max.f);
@@ -95,7 +96,7 @@ void Chow::set_params()
     ratio_smooth.setTargetValue(ratio);
 }
 
-void Chow::process_block(float *dataL, float *dataR)
+void CHOWEffect::process_block(float *dataL, float *dataR)
 {
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -108,7 +109,7 @@ void Chow::process_block(float *dataL, float *dataR)
     }
 }
 
-void Chow::process_block_os(float *dataL, float *dataR)
+void CHOWEffect::process_block_os(float *dataL, float *dataR)
 {
     os.upsample(dataL, dataR);
 
@@ -131,9 +132,9 @@ void Chow::process_block_os(float *dataL, float *dataR)
     os.downsample(dataL, dataR);
 }
 
-void Chow::suspend() { init(); }
+void CHOWEffect::suspend() { init(); }
 
-void Chow::init_ctrltypes()
+void CHOWEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -155,7 +156,7 @@ void Chow::init_ctrltypes()
     fxdata->p[chow_mix].val_default.f = 1.f;
 }
 
-void Chow::init_default_values()
+void CHOWEffect::init_default_values()
 {
     fxdata->p[chow_thresh].val.f = -24.f;
     fxdata->p[chow_ratio].val.f = 10.f;
@@ -163,7 +164,7 @@ void Chow::init_default_values()
     fxdata->p[chow_mix].val.f = 1.f;
 }
 
-const char *Chow::group_label(int id)
+const char *CHOWEffect::group_label(int id)
 {
     switch (id)
     {
@@ -176,7 +177,7 @@ const char *Chow::group_label(int id)
     return 0;
 }
 
-int Chow::group_label_ypos(int id)
+int CHOWEffect::group_label_ypos(int id)
 {
     switch (id)
     {

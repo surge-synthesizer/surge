@@ -16,8 +16,8 @@
 #pragma once
 #include <dsp/effect/Effect.h>
 #include "BiquadFilter.h"
-#include "../shared/Oversampling.h"
-#include "LevelDetector.h"
+#include "shared/Oversampling.h"
+#include "exciter/LevelDetector.h"
 #include <vt_dsp/basic_dsp.h>
 #include <vt_dsp/lipol.h>
 
@@ -29,7 +29,7 @@ namespace chowdsp
 ** For more information, see here:
 ** https://jatinchowdhury18.medium.com/complex-nonlinearities-epsiode-2-harmonic-exciter-cd883d888a43
 */
-class Exciter : public Effect
+class ExciterEffect : public Effect
 {
   public:
     enum exciter_params
@@ -43,8 +43,8 @@ class Exciter : public Effect
         exciter_num_ctrls,
     };
 
-    Exciter(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~Exciter();
+    ExciterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~ExciterEffect();
 
     virtual const char *get_effectname() override { return "Exciter"; }
 

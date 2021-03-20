@@ -242,16 +242,16 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/VocoderEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
   src/common/dsp/effect/airwindows/AirWindowsEffect.h
-  src/common/dsp/effect/chowdsp/Chow.cpp
+  src/common/dsp/effect/chowdsp/CHOWEffect.cpp
+  src/common/dsp/effect/chowdsp/ExciterEffect.cpp
+  src/common/dsp/effect/chowdsp/NeuronEffect.cpp
+  src/common/dsp/effect/chowdsp/TapeEffect.cpp
   src/common/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
-  src/common/dsp/effect/chowdsp/exciter/Exciter.cpp
   src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
+  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
   src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
-  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
-  src/common/dsp/effect/chowdsp/tape/Tape.cpp
-  src/common/dsp/effect/chowdsp/Neuron.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp
