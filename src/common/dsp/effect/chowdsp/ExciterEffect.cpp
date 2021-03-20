@@ -25,7 +25,8 @@ constexpr double q_val = 0.7071;
 namespace chowdsp
 {
 
-ExciterEffect::ExciterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
+ExciterEffect::ExciterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+    : Effect(storage, fxdata, pd)
 {
     wet_gain.set_blocksize(BLOCK_SIZE);
     drive_gain.set_blocksize(BLOCK_SIZE);

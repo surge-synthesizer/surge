@@ -18,7 +18,8 @@
 namespace chowdsp
 {
 
-NeuronEffect::NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : Effect(storage, fxdata, pd)
+NeuronEffect::NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+    : Effect(storage, fxdata, pd)
 {
     dc_blocker.setBlockSize(BLOCK_SIZE);
     makeup.set_blocksize(BLOCK_SIZE);
