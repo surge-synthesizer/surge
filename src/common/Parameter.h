@@ -45,6 +45,7 @@ enum ctrltypes
     ct_percent_bipolar_stereo,    // bipolar with special text strings at -100% +100% and 0%
     ct_percent_bipolar_stringbal, // bipolar with special text strings
     ct_percent_bipolar_w_dynamic_unipolar_formatting,
+    ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable,
     ct_pitch_octave,
     ct_pitch_semi7bp,
     ct_pitch_semi7bp_absolutable,
