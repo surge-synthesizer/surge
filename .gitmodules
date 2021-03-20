@@ -25,7 +25,7 @@
 	url = https://github.com/pybind/pybind11
 [submodule "libs/eurorack/eurorack"]
 	path = libs/eurorack/eurorack
-	url = https://github.com/pichenettes/eurorack.git
+	url = https://github.com/surge-synthesizer/eurorack.git
 [submodule "libs/filesystem/ghc-filesystem"]
 	path = libs/filesystem/ghc-filesystem
 	url = https://github.com/gulrak/filesystem.git
