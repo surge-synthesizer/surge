@@ -272,6 +272,7 @@ bool Parameter::can_extend_range()
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_percent_oscdrift:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
         return true;
     }
     return false;
@@ -355,6 +356,7 @@ bool Parameter::is_bipolar()
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
     case ct_freq_shift:
     case ct_osc_feedback_negative:
     case ct_lfodeform:
@@ -922,6 +924,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
         val_min.f = -1;
         val_max.f = 1;
         valtype = vt_float;
@@ -1165,6 +1168,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 100;
         break;
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
@@ -1414,6 +1418,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent_bipolar_stereo:
         case ct_percent_bipolar_stringbal:
         case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+        case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
         case ct_rotarydrive:
         case ct_osc_feedback:
         case ct_osc_feedback_negative:
@@ -1652,6 +1657,7 @@ bool Parameter::supportsDynamicName()
     case ct_percent:
     case ct_percent_bipolar:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
     case ct_percent_deactivatable:
         return true;
     default:
@@ -3506,6 +3512,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:

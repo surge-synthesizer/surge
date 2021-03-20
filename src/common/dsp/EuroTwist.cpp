@@ -74,37 +74,37 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     EngineDynamicName() noexcept
     {
         // Waveforms
-        engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync Mix"});
+        engineLabels.push_back({"Detune", "Square Shape", "Saw Shape", "Sync "});
         // Waveshaper
-        engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation Mix"});
+        engineLabels.push_back({"Waveshaper", "Fold", "Asymmetry", "Variation "});
         // 2-Operator FM
-        engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub Mix"});
+        engineLabels.push_back({"Ratio", "Amount", "Feedback", "Sub "});
         // Formant/PD
-        engineLabels.push_back({"Ratio/Type", "Formant/Cutoff", "Shape", "PD Mix"});
+        engineLabels.push_back({"Ratio/Type", "Formant/Cutoff", "Shape", "PD "});
         // Harmonic
-        engineLabels.push_back({"Bump", "Peak", "Shape", "Organ Mix"});
+        engineLabels.push_back({"Bump", "Peak", "Shape", "Organ "});
         // Wavetable
-        engineLabels.push_back({"Bank", "Morph Row", "Morph Column", "Lo-Fi Mix"});
+        engineLabels.push_back({"Bank", "Morph Row", "Morph Column", "Lo-Fi "});
         // Chords
-        engineLabels.push_back({"Type", "Inversion", "Shape", "Root Mix"});
+        engineLabels.push_back({"Type", "Inversion", "Shape", "Root "});
         // Vowels/Speech
-        engineLabels.push_back({"Speak", "Species", "Segment", "Raw Mix"});
+        engineLabels.push_back({"Speak", "Species", "Segment", "Raw "});
         // Granular Cloud
-        engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine Mix"});
+        engineLabels.push_back({"Pitch Random", "Grain Density", "Grain Duration", "Sine "});
         // Filtered Noise
-        engineLabels.push_back({"Type", "Clock Frequency", "Resonance", "Dual Peak Mix"});
+        engineLabels.push_back({"Type", "Clock Frequency", "Resonance", "Dual Peak "});
         // Particle Noise
-        engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw Mix"});
+        engineLabels.push_back({"Freq Random", "Density", "Filter Type", "Raw "});
         // Inharmonic String
-        engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter Mix"});
+        engineLabels.push_back({"Inharmonicity", "Brightness", "Decay Time", "Exciter "});
         // Modal Resonator
-        engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter Mix"});
+        engineLabels.push_back({"Material", "Brightness", "Decay Time", "Exciter "});
         // Analog Kick
-        engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Sharpness", "Brightness", "Decay Time", "Variation "});
         // Analog Snare
-        engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Tone<>Noise", "Model", "Decay Time", "Variation "});
         // Analog Hi-Hat
-        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation Mix"});
+        engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation "});
     }
 
     const char *getName(Parameter *p) override
@@ -121,6 +121,17 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         auto idx = (p - engp);
 
         auto lab = engineLabels[eng][idx - 1];
+        if (idx == EuroTwist::et_aux_mix)
+        {
+            if (p->extend_range)
+            {
+                lab += "Pan";
+            }
+            else
+            {
+                lab += "Mix";
+            }
+        }
 
         static char result[TXT_SIZE];
         snprintf(result, TXT_SIZE, "%s", lab.c_str());
@@ -166,6 +177,8 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         auto idx = (p - engp);
 
         auto res = engineBipolars[eng][idx - 1];
+        if (idx == EuroTwist::et_aux_mix)
+            res = p->extend_range;
 
         return res;
     }
@@ -292,7 +305,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
     morph.newValue(fvbp(et_morph));
     lpgcol.newValue(fv(et_lpg_response));
     lpgdec.newValue(fv(et_lpg_decay));
-    auxmix.newValue(limit_range(fv(et_aux_mix), 0.f, 1.f));
+    auxmix.newValue(limit_range(fvbp(et_aux_mix), -1.f, 1.f));
 
     plaits::Modulations mod = {};
     // for now
@@ -335,8 +348,16 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 
     for (int i = 0; i < carrover_size; ++i)
     {
-        output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
-        outputR[i] = output[i];
+        if (oscdata->p[et_aux_mix].extend_range)
+        {
+            output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
+            outputR[i] = auxmix.v * carryover[i][0] + (1.0 - auxmix.v) * carryover[i][1];
+        }
+        else
+        {
+            output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
+            outputR[i] = output[i];
+        }
     }
 
     int total_generated = carrover_size;
@@ -401,9 +422,19 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
             }
             else if (!throwaway)
             {
-                output[total_generated + i] =
-                    auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
-                outputR[total_generated + i] = output[total_generated + i];
+                if (oscdata->p[et_aux_mix].extend_range)
+                {
+                    output[total_generated + i] =
+                        auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
+                    outputR[total_generated + i] =
+                        auxmix.v * src_out[i][0] + (1 - auxmix.v) * src_out[i][1];
+                }
+                else
+                {
+                    output[total_generated + i] =
+                        auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
+                    outputR[total_generated + i] = output[total_generated + i];
+                }
             }
         }
         total_generated += sdata.output_frames_gen;
@@ -459,7 +490,7 @@ void EuroTwist::init_ctrltypes()
     oscdata->p[et_morph].dynamicBipolar = &etDynamicBipolar;
 
     oscdata->p[et_aux_mix].set_name("Aux Mix");
-    oscdata->p[et_aux_mix].set_type(ct_percent);
+    oscdata->p[et_aux_mix].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting_extendable);
     oscdata->p[et_aux_mix].dynamicName = &etDynamicName;
     oscdata->p[et_aux_mix].dynamicBipolar = &etDynamicBipolar;
 
