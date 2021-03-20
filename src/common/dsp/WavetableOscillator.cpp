@@ -239,7 +239,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float tempt;
     if (oscdata->p[wt_unison_detune].absolute)
     {
-        // See the comment in SurgeSuperOscillator.cpp at the absolute treatment
+        // See the comment in ClassicOscillator.cpp at the absolute treatment
         tempt = storage->note_to_pitch_inv_ignoring_tuning(
             detune * storage->note_to_pitch_inv_ignoring_tuning(pitch_t) * 16 / 0.9443);
         if (tempt < 0.1)

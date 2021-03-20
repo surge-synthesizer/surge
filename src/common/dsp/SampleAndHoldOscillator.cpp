@@ -214,7 +214,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
     float t;
     if (oscdata->p[shn_unison_detune].absolute)
     {
-        // see the comment in SurgeSuperOscillator in the absolute branch
+        // see the comment in ClassicOscillator in the absolute branch
         t = storage->note_to_pitch_inv_ignoring_tuning(
             detune * storage->note_to_pitch_inv_ignoring_tuning(pitch) * 16 / 0.9443 + l_sync.v);
 

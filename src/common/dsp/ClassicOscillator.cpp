@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "SurgeSuperOscillator.h"
+#include "ClassicOscillator.h"
 #include "DspUtilities.h"
 
 /*
@@ -161,15 +161,15 @@ void AbstractBlitOscillator::prepare_unison(int voices)
     }
 }
 
-SurgeSuperOscillator::SurgeSuperOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
-                                           pdata *localcopy)
+ClassicOscillator::ClassicOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
+                                     pdata *localcopy)
     : AbstractBlitOscillator(storage, oscdata, localcopy)
 {
 }
 
-SurgeSuperOscillator::~SurgeSuperOscillator() {}
+ClassicOscillator::~ClassicOscillator() {}
 
-void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
+void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     assert(storage);
     first_run = true;
@@ -182,12 +182,12 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
     bufpos = 0;
     dc = 0;
 
-    id_shape = oscdata->p[sso_shape].param_id_in_scene;
-    id_pw = oscdata->p[sso_width1].param_id_in_scene;
-    id_pw2 = oscdata->p[sso_width2].param_id_in_scene;
-    id_sub = oscdata->p[sso_mainsubmix].param_id_in_scene;
-    id_sync = oscdata->p[sso_sync].param_id_in_scene;
-    id_detune = oscdata->p[sso_unison_detune].param_id_in_scene;
+    id_shape = oscdata->p[co_shape].param_id_in_scene;
+    id_pw = oscdata->p[co_width1].param_id_in_scene;
+    id_pw2 = oscdata->p[co_width2].param_id_in_scene;
+    id_sub = oscdata->p[co_mainsubmix].param_id_in_scene;
+    id_sync = oscdata->p[co_sync].param_id_in_scene;
+    id_detune = oscdata->p[co_unison_detune].param_id_in_scene;
 
     float rate = 0.05;
     l_pw.setRate(rate);
@@ -196,7 +196,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
     l_sub.setRate(rate);
     l_sync.setRate(rate);
 
-    n_unison = limit_range(oscdata->p[sso_unison_voices].val.i, 1, MAX_UNISON);
+    n_unison = limit_range(oscdata->p[co_unison_voices].val.i, 1, MAX_UNISON);
 
     if (is_display)
     {
@@ -225,7 +225,7 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
         else
         {
             double drand = (double)rand() / RAND_MAX;
-            double detune = oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) *
+            double detune = oscdata->p[co_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
             double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
             drand = (double)rand() / RAND_MAX;
@@ -241,37 +241,37 @@ void SurgeSuperOscillator::init(float pitch, bool is_display, bool nonzero_init_
     }
 }
 
-void SurgeSuperOscillator::init_ctrltypes()
+void ClassicOscillator::init_ctrltypes()
 {
-    oscdata->p[sso_shape].set_name("Shape");
-    oscdata->p[sso_shape].set_type(ct_percent_bipolar);
-    oscdata->p[sso_width1].set_name("Width 1");
-    oscdata->p[sso_width1].set_type(ct_percent);
-    oscdata->p[sso_width1].val_default.f = 0.5f;
-    oscdata->p[sso_width2].set_name("Width 2");
-    oscdata->p[sso_width2].set_type(ct_percent);
-    oscdata->p[sso_width2].val_default.f = 0.5f;
-    oscdata->p[sso_mainsubmix].set_name("Sub Mix");
-    oscdata->p[sso_mainsubmix].set_type(ct_percent);
-    oscdata->p[sso_sync].set_name("Sync");
-    oscdata->p[sso_sync].set_type(ct_syncpitch);
-    oscdata->p[sso_unison_detune].set_name("Unison Detune");
-    oscdata->p[sso_unison_detune].set_type(ct_oscspread);
-    oscdata->p[sso_unison_voices].set_name("Unison Voices");
-    oscdata->p[sso_unison_voices].set_type(ct_osccount);
+    oscdata->p[co_shape].set_name("Shape");
+    oscdata->p[co_shape].set_type(ct_percent_bipolar);
+    oscdata->p[co_width1].set_name("Width 1");
+    oscdata->p[co_width1].set_type(ct_percent);
+    oscdata->p[co_width1].val_default.f = 0.5f;
+    oscdata->p[co_width2].set_name("Width 2");
+    oscdata->p[co_width2].set_type(ct_percent);
+    oscdata->p[co_width2].val_default.f = 0.5f;
+    oscdata->p[co_mainsubmix].set_name("Sub Mix");
+    oscdata->p[co_mainsubmix].set_type(ct_percent);
+    oscdata->p[co_sync].set_name("Sync");
+    oscdata->p[co_sync].set_type(ct_syncpitch);
+    oscdata->p[co_unison_detune].set_name("Unison Detune");
+    oscdata->p[co_unison_detune].set_type(ct_oscspread);
+    oscdata->p[co_unison_voices].set_name("Unison Voices");
+    oscdata->p[co_unison_voices].set_type(ct_osccount);
 }
-void SurgeSuperOscillator::init_default_values()
+void ClassicOscillator::init_default_values()
 {
-    oscdata->p[sso_shape].val.f = 0.f;
-    oscdata->p[sso_width1].val.f = 0.5f;
-    oscdata->p[sso_width2].val.f = 0.5f;
-    oscdata->p[sso_mainsubmix].val.f = 0.f;
-    oscdata->p[sso_sync].val.f = 0.f;
-    oscdata->p[sso_unison_detune].val.f = 0.1f;
-    oscdata->p[sso_unison_voices].val.i = 1;
+    oscdata->p[co_shape].val.f = 0.f;
+    oscdata->p[co_width1].val.f = 0.5f;
+    oscdata->p[co_width2].val.f = 0.5f;
+    oscdata->p[co_mainsubmix].val.f = 0.f;
+    oscdata->p[co_sync].val.f = 0.f;
+    oscdata->p[co_unison_detune].val.f = 0.1f;
+    oscdata->p[co_unison_voices].val.i = 1;
 }
 
-template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
+template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
 {
     /*
     ** I've carefully documented the non-FM non-sync case here. The other cases are
@@ -287,7 +287,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     float detune = drift * driftLFO[voice].val();
     if (n_unison > 1)
     {
-        detune += oscdata->p[sso_unison_detune].get_extended(localcopy[id_detune].f) *
+        detune += oscdata->p[co_unison_detune].get_extended(localcopy[id_detune].f) *
                   (detune_bias * (float)voice + detune_offset);
     }
 
@@ -315,7 +315,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
         float t;
 
         // See the extensive comment below
-        if (!oscdata->p[sso_unison_detune].absolute)
+        if (!oscdata->p[co_unison_detune].absolute)
         {
             t = storage->note_to_pitch_inv_tuningctr(detune) * 2;
         }
@@ -381,7 +381,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
     float sync = min((float)l_sync.v, (12 + 72 + 72) - pitch);
     float t;
 
-    if (oscdata->p[sso_unison_detune].absolute)
+    if (oscdata->p[co_unison_detune].absolute)
     {
         /*
         ** Oh so this line of code. What is it doing?
@@ -560,7 +560,7 @@ template <bool FM> void SurgeSuperOscillator::convolute(int voice, bool stereo)
 // pow(ln(0.5)/(samplerate/50hz)
 const float hpf_cycle_loss = 0.995f;
 
-template <bool is_init> void SurgeSuperOscillator::update_lagvals()
+template <bool is_init> void ClassicOscillator::update_lagvals()
 {
     l_sync.newValue(max(0.f, localcopy[id_sync].f));
     l_pw.newValue(limit_range(localcopy[id_pw].f, 0.001f, 0.999f));
@@ -589,8 +589,7 @@ template <bool is_init> void SurgeSuperOscillator::update_lagvals()
     }
 }
 
-void SurgeSuperOscillator::process_block(float pitch0, float drift, bool stereo, bool FM,
-                                         float depth)
+void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bool FM, float depth)
 {
     /*
     ** So let's tie these comments back to the description at the top. Start by setting up your

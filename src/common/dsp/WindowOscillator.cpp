@@ -298,7 +298,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
 
     if (oscdata->p[win_unison_detune].absolute)
     {
-        // See comment in SurgeSuperOscillator
+        // See comment in ClassicOscillator
         Detune = oscdata->p[win_unison_detune].get_extended(
                      localcopy[oscdata->p[win_unison_detune].param_id_in_scene].f) *
                  storage->note_to_pitch_inv_ignoring_tuning(std::min(148.f, pitch)) * 16 / 0.9443;

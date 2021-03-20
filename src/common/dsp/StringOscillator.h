@@ -13,9 +13,6 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_WAVEGUIDEOSCILLATOR_H
-#define SURGE_WAVEGUIDEOSCILLATOR_H
-
 #include "OscillatorBase.h"
 #include "SurgeStorage.h"
 #include "DspUtilities.h"
@@ -24,23 +21,23 @@
 #include "OscillatorCommonFunctions.h"
 #include <random>
 
-class WaveguideOscillator : public Oscillator
+class StringOscillator : public Oscillator
 {
   public:
-    enum wg_params
+    enum str_params
     {
-        wg_exciter_mode,
-        wg_exciter_level,
+        str_exciter_mode,
+        str_exciter_level,
 
-        wg_str1_decay,
-        wg_str2_decay,
-        wg_str2_detune,
-        wg_str_balance,
+        str_str1_decay,
+        str_str2_decay,
+        str_str2_detune,
+        str_str_balance,
 
-        wg_stiffness,
+        str_stiffness,
     };
 
-    enum ExModes
+    enum exciter_modes
     {
         burst_noise,
         burst_pink_noise,
@@ -60,7 +57,7 @@ class WaveguideOscillator : public Oscillator
         constant_audioin,
     };
 
-    WaveguideOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
+    StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
         : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s)
     {
     }
@@ -72,7 +69,7 @@ class WaveguideOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    template <bool FM, ExModes mode>
+    template <bool FM, exciter_modes mode>
     void process_block_internal(float pitch, float drift, bool stereo, float FMdepth);
 
     float phase1 = 0, phase2 = 0;
@@ -98,5 +95,3 @@ class WaveguideOscillator : public Oscillator
   private:
     int id_exciterlvl, id_str1decay, id_str2decay, id_str2detune, id_strbalance, id_stiffness;
 };
-
-#endif // SURGE_WAVEGUIDEOSCILLATOR_H

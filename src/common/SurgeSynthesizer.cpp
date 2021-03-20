@@ -2364,7 +2364,7 @@ bool SurgeSynthesizer::loadOscalgos()
                 /*
                  * Some oscillator types can change display when you change values
                  */
-                if (storage.getPatch().scene[s].osc[i].type.val.i == ot_dpw)
+                if (storage.getPatch().scene[s].osc[i].type.val.i == ot_modern)
                 {
                     refresh_editor = true;
                 }

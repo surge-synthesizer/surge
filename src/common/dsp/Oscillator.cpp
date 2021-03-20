@@ -19,16 +19,16 @@
 #include <cmath>
 
 #include "AudioInputOscillator.h"
+#include "ClassicOscillator.h"
 #include "FM2Oscillator.h"
 #include "FM3Oscillator.h"
+#include "ModernOscillator.h"
 #include "SampleAndHoldOscillator.h"
 #include "SineOscillator.h"
-#include "SurgeSuperOscillator.h"
+#include "StringOscillator.h"
+#include "TwistOscillator.h"
 #include "WavetableOscillator.h"
-#include "WaveguideOscillator.h"
 #include "WindowOscillator.h"
-#include "DPWOscillator.h"
-#include "EuroTwist.h"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
     switch (osctype)
     {
     case ot_classic:
-        return new SurgeSuperOscillator(storage, oscdata, localcopy);
+        return new ClassicOscillator(storage, oscdata, localcopy);
     case ot_wavetable:
         return new WavetableOscillator(storage, oscdata, localcopy);
     case ot_window:
@@ -59,12 +59,12 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
         return new FM3Oscillator(storage, oscdata, localcopy);
     case ot_FM2:
         return new FM2Oscillator(storage, oscdata, localcopy);
-    case ot_dpw:
-        return new DPWOscillator(storage, oscdata, localcopy);
-    case ot_waveguide:
-        return new WaveguideOscillator(storage, oscdata, localcopy);
-    case ot_eurotwist:
-        return new EuroTwist(storage, oscdata, localcopy);
+    case ot_modern:
+        return new ModernOscillator(storage, oscdata, localcopy);
+    case ot_string:
+        return new StringOscillator(storage, oscdata, localcopy);
+    case ot_twist:
+        return new TwistOscillator(storage, oscdata, localcopy);
     case ot_sine:
     default:
         return new SineOscillator(storage, oscdata, localcopy);
