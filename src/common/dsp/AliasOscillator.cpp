@@ -47,8 +47,6 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
-    float atten = us.attenuation();
-
     for (int u = 0; u < n_unison; ++u)
     {
         unisonOffsets[u] = us.detune(u);
@@ -79,6 +77,9 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     uint8_t mask = limit_range(
         (int)(float)(0xFF * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0, 0xFF);
 
+    uint8_t threshold = limit_range(
+        (int)(float)(0xFF * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0, 0xFF);
+
     const double two32 = 4294967296.0;
     const float inverse256 = 1.0 / 255.0;
 
@@ -106,18 +107,18 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
             const uint16_t shifted = upper + shift;
 
-            uint8_t shaped = shifted; // default to untransformed (wrap any offset)
+            uint8_t shaped = shifted; // default to untransformed (wrap any overflow)
             if (wavetype == aot_tri)
             {
-                if (shifted > 0x7F)
-                { // flip wave to make a triangle shape
+                if (shifted > threshold)
+                { // flip wave to make a triangle shape (has a DC offset, needs fixing)
                     shaped = -shifted;
                 }
             }
             else if (wavetype == aot_pulse)
             {
                 // test highest bit to make pulse shape
-                shaped = (shifted >= 0x80) ? 0xFF : 0x00;
+                shaped = (shifted > threshold) ? 0xFF : 0x00;
             }
 
             const uint8_t masked = shaped ^ mask;
@@ -155,8 +156,6 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             charFilt.process_block(output, BLOCK_SIZE_OS);
         }
     }
-
-    starting = false;
 }
 
 void AliasOscillator::init_ctrltypes()
@@ -178,6 +177,10 @@ void AliasOscillator::init_ctrltypes()
     oscdata->p[ao_mask].set_type(ct_countedset_percent);
     oscdata->p[ao_mask].set_user_data(ud);
 
+    oscdata->p[ao_threshold].set_name("Threshold");
+    oscdata->p[ao_threshold].set_type(ct_countedset_percent);
+    oscdata->p[ao_threshold].set_user_data(ud);
+
     oscdata->p[ao_unison_detune].set_name("Unison Detune");
     oscdata->p[ao_unison_detune].set_type(ct_oscspread);
     oscdata->p[ao_unison_voices].set_name("Unison Voices");
@@ -189,6 +192,7 @@ void AliasOscillator::init_default_values()
     oscdata->p[ao_wave].val.i = 0;
     oscdata->p[ao_shift].val.f = 0.0f;
     oscdata->p[ao_mask].val.f = 0.0f;
+    oscdata->p[ao_threshold].val.f = 0.5f;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }

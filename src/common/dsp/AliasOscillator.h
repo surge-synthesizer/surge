@@ -25,7 +25,8 @@ class AliasOscillator : public Oscillator
         ao_wave,
         ao_shift,
         ao_mask,
-        ao_unison_detune,
+        ao_threshold,
+        ao_unison_detune = 5,
         ao_unison_voices,
     };
 
@@ -65,14 +66,11 @@ class AliasOscillator : public Oscillator
     Surge::Oscillator::CharacterFilter<float> charFilt;
 
     int n_unison = 1;
-    bool starting = true;
     uint32_t phase[MAX_UNISON];
     float unisonOffsets[MAX_UNISON];
     float mixL[MAX_UNISON], mixR[MAX_UNISON];
 
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
-
-    int cachedDeform = -1;
 };
 
 extern const char *ao_type_names[4];

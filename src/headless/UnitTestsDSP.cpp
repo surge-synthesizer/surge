@@ -786,7 +786,7 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
                 surge->input[1][q] = 0.f;
             }
 
-            surge->storage.getPatch().scene[0].osc[0].type.val.i = i;
+            surge->storage.getPatch().scene[0].osc[0].queue_type = i;
 
             for (int q = 0; q < 10; ++q)
                 surge->process();
