@@ -3217,8 +3217,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
         break;
         case ct_alias_wave:
         {
-            extern const char ao_type_names[4][16];
-            snprintf(txt, TXT_SIZE, "%s", ao_type_names[i]);
+            extern const char* ao_type_names[4];
+            snprintf(txt, TXT_SIZE, "%s", ao_type_names[i & 3]); // TODO: don't hardcode type limit
         }
         break;
         case ct_twist_engine:
