@@ -46,7 +46,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
 {
     // use uniform RNG, we need all 32 bits randomized, which rand() doesn't guarantee
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::default_random_engine gen(rd());
     std::uniform_int_distribution<> rng(0, 1 << 31);
 
     n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
