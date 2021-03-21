@@ -171,6 +171,7 @@ enum ctrltypes
     ct_twist_engine,
     ct_ensemble_stages,
     ct_ensemble_clockrate,
+    ct_alias_wave,
     num_ctrltypes,
 };
 

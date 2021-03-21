@@ -18,6 +18,7 @@
 #include "FastMath.h"
 #include <cmath>
 
+#include "AliasOscillator.h"
 #include "AudioInputOscillator.h"
 #include "ClassicOscillator.h"
 #include "FM2Oscillator.h"
@@ -65,6 +66,8 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
         return new StringOscillator(storage, oscdata, localcopy);
     case ot_twist:
         return new TwistOscillator(storage, oscdata, localcopy);
+    case ot_alias:
+        return new AliasOscillator(storage, oscdata, localcopy);
     case ot_sine:
     default:
         return new SineOscillator(storage, oscdata, localcopy);

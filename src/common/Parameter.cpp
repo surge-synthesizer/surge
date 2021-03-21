@@ -397,6 +397,7 @@ bool Parameter::is_discrete_selection()
     case ct_waveguide_excitation_model:
     case ct_twist_engine:
     case ct_ensemble_stages:
+    case ct_alias_wave:
         return true;
     default:
         break;
@@ -1029,6 +1030,15 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = waveguide_excitations_count() - 1;
+        val_default.i = 0;
+        break;
+    }
+    case ct_alias_wave:
+    {
+        extern const int ALIAS_OSCILLATOR_WAVE_TYPES;
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 3; // TODO fix, should reference ao_n_types somehow
         val_default.i = 0;
         break;
     }
@@ -3203,6 +3213,12 @@ void Parameter::get_display(char *txt, bool external, float ef)
             extern std::string waveguide_excitation_name(int);
             auto n = waveguide_excitation_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
+        }
+        break;
+        case ct_alias_wave:
+        {
+            extern const char ao_type_names[4][16];
+            snprintf(txt, TXT_SIZE, "%s", ao_type_names[i]);
         }
         break;
         case ct_twist_engine:
