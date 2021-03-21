@@ -20,7 +20,7 @@
 
 // says ao_n_types is undefined. makes no sense, whatever, for now I'm hardcoding it. TODO FIX.
 const int ALIAS_OSCILLATOR_WAVE_TYPES = /*ao_n_types*/ 4;
-const char* ao_type_names[4] = {"Saw", "Triangle", "Pulse", "Sine"};
+const char *ao_type_names[4] = {"Saw", "Triangle", "Pulse", "Sine"};
 
 const uint8_t ALIAS_SINETABLE[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -74,19 +74,18 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     const ao_types wavetype = (ao_types)oscdata->p[ao_wave].val.i;
 
     uint8_t shift = limit_range(
-        (int)(float)(0xFF * localcopy[oscdata->p[ao_shift].param_id_in_scene].f),
-        0, 0xFF);
+        (int)(float)(0xFF * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0, 0xFF);
 
-    uint8_t mask  = limit_range(
-        (int)(float)(0xFF * localcopy[oscdata->p[ao_mask ].param_id_in_scene].f),
-        0, 0xFF);
+    uint8_t mask = limit_range(
+        (int)(float)(0xFF * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0, 0xFF);
 
     const double two32 = 4294967296.0;
-    const float  inverse256 = 1.0 / 255.0;
-   
+    const float inverse256 = 1.0 / 255.0;
+
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
-    for (int u = 0; u < n_unison; ++u){
+    for (int u = 0; u < n_unison; ++u)
+    {
         const float lfodrift = drift * driftLFO[u].next();
         phase_increments[u] = pitch_to_dphase(pitch + lfodrift + ud * unisonOffsets[u]) * two32;
     }
@@ -104,16 +103,19 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         for (int u = 0; u < n_unison; ++u)
         {
             const uint8_t upper = phase[u] >> 24;
-            
+
             const uint16_t shifted = upper + shift;
-            
+
             uint8_t shaped = shifted; // default to untransformed (wrap any offset)
-            if(wavetype == aot_tri){
-                if(shifted > 0x7F){ // flip wave to make a triangle shape
+            if (wavetype == aot_tri)
+            {
+                if (shifted > 0x7F)
+                { // flip wave to make a triangle shape
                     shaped = -shifted;
                 }
             }
-            else if(wavetype == aot_pulse){
+            else if (wavetype == aot_pulse)
+            {
                 // test highest bit to make pulse shape
                 shaped = (shifted >= 0x80) ? 0xFF : 0x00;
             }
@@ -166,7 +168,7 @@ void AliasOscillator::init_ctrltypes()
     // Always256CountedSet does this, and we have a constant that does this, ALWAYS256COUNTEDSET.
     // But we need a ParamUserData*, no const. As Always256CountedSet contains no actual data,
     // it is safe to discard the const from the pointer via a cast.
-    ParamUserData* ud = (ParamUserData*) &ALWAYS256COUNTEDSET;
+    ParamUserData *ud = (ParamUserData *)&ALWAYS256COUNTEDSET;
 
     oscdata->p[ao_shift].set_name("Shift");
     oscdata->p[ao_shift].set_type(ct_countedset_percent);
@@ -184,9 +186,9 @@ void AliasOscillator::init_ctrltypes()
 
 void AliasOscillator::init_default_values()
 {
-    oscdata->p[ao_wave].val.i  = 0;
+    oscdata->p[ao_wave].val.i = 0;
     oscdata->p[ao_shift].val.f = 0.0f;
-    oscdata->p[ao_mask ].val.f = 0.0f;
+    oscdata->p[ao_mask].val.f = 0.0f;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }

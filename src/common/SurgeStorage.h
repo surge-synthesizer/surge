@@ -194,14 +194,14 @@ enum osc_type
     ot_wavetable,   // #2
     ot_shnoise,     // #3
     ot_audioinput,  // #4
-// used to be just FM (FM3 on GUI), so name it like this, but enum order has to stick
-    ot_FM3,         // #5
-    ot_FM2,         // #6
-    ot_window,      // #7
-    ot_modern,      // #8
-    ot_string,      // #9
-    ot_twist,       // #10
-    ot_alias,       // #11
+    // used to be just FM (FM3 on GUI), so name it like this, but enum order has to stick
+    ot_FM3,    // #5
+    ot_FM2,    // #6
+    ot_window, // #7
+    ot_modern, // #8
+    ot_string, // #9
+    ot_twist,  // #10
+    ot_alias,  // #11
     // ot_phasedist,
     // ot_chaos,
     // ot_FM4,
@@ -209,13 +209,15 @@ enum osc_type
     n_osc_types,
 };
 
-const char osc_type_names[n_osc_types][24] = {
-    "Classic", "Sine",   "Wavetable", "S&H Noise", "Audio In", "FM3",
-    "FM2",     "Window", "Modern",    "String",    "Twist", "Alias", /*, "Phase Distortion", "Chaos", "FM4"*/};
+const char osc_type_names[n_osc_types][24] = {"Classic",  "Sine",   "Wavetable", "S&H Noise",
+                                              "Audio In", "FM3",    "FM2",       "Window",
+                                              "Modern",   "String", "Twist",     "Alias",
+                                              /*, "Phase Distortion", "Chaos", "FM4"*/};
 
-const char osc_type_shortnames[n_osc_types][24] = {
-    "Classic", "Sine",   "WT",     "S&H Noise", "Audio In", "FM3",
-    "FM2",     "Window", "Modern", "String",    "Twist", "Alias", /*, "PD", "Chaos", "FM4"*/};
+const char osc_type_shortnames[n_osc_types][24] = {"Classic",  "Sine",   "WT",    "S&H Noise",
+                                                   "Audio In", "FM3",    "FM2",   "Window",
+                                                   "Modern",   "String", "Twist", "Alias",
+                                                   /*, "PD", "Chaos", "FM4"*/};
 
 const char window_names[9][16] = {
     "Triangle", "Cosine", "Blend 1", "Blend 2",   "Blend 3",

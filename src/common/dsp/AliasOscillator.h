@@ -75,11 +75,12 @@ class AliasOscillator : public Oscillator
     int cachedDeform = -1;
 };
 
-extern const char* ao_type_names[4];
+extern const char *ao_type_names[4];
 
 extern const uint8_t ALIAS_SINETABLE[256];
 
-struct Always256CountedSet: public CountedSetUserData // Something to feed to a ct_countedset_percent control
+struct Always256CountedSet
+    : public CountedSetUserData // Something to feed to a ct_countedset_percent control
 {
     virtual int getCountedSetSize() { return 256; }
 };
