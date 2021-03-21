@@ -13,42 +13,39 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_DPWOSCILLATOR_H
-#define SURGE_DPWOSCILLATOR_H
-
 #include "OscillatorBase.h"
 #include "DspUtilities.h"
 #include "OscillatorCommonFunctions.h"
 
-class DPWOscillator : public Oscillator
+class ModernOscillator : public Oscillator
 {
   public:
-    enum dpw_params
+    enum mo_params
     {
-        dpw_saw_mix = 0,
-        dpw_pulse_mix,
-        dpw_tri_mix,
-        dpw_pulse_width,
-        dpw_sync,
-        dpw_unison_detune,
-        dpw_unison_voices,
+        mo_saw_mix = 0,
+        mo_pulse_mix,
+        mo_tri_mix,
+        mo_pulse_width,
+        mo_sync,
+        mo_unison_detune,
+        mo_unison_voices,
     };
 
-    enum dpw_multitypes
+    enum mo_multitypes
     {
-        dpwm_triangle,
-        dpwm_square,
-        dpwm_sine,
-    } multitype = dpwm_triangle;
+        momt_triangle,
+        momt_square,
+        momt_sine,
+    } multitype = momt_triangle;
 
-    enum dpw_submask
+    enum mo_submask
     {
-        dpw_subone = 1U << 10,
-        dpw_subskipsync = 1U << 11,
+        mo_subone = 1U << 10,
+        mo_subskipsync = 1U << 11,
     };
 
     static constexpr int sigbuf_len = 6;
-    DPWOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
+    ModernOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
     {
         for (auto u = 0; u < MAX_UNISON; ++u)
         {
@@ -67,7 +64,7 @@ class DPWOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    template <dpw_multitypes multitype, bool subOctave, bool FM>
+    template <mo_multitypes multitype, bool subOctave, bool FM>
     void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
 
     lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
@@ -91,6 +88,4 @@ class DPWOscillator : public Oscillator
     int cachedDeform = -1;
 };
 
-const char dpw_multitype_names[3][16] = {"Triangle", "Square", "Sine"};
-
-#endif // SURGE_DPWOSCILLATOR_H
+const char mo_multitype_names[3][16] = {"Triangle", "Square", "Sine"};

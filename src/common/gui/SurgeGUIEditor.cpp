@@ -56,7 +56,7 @@
 #include "MSEGEditor.h"
 #include "version.h"
 #include "CMidiLearnOverlay.h"
-#include "DPWOscillator.h"
+#include "ModernOscillator.h"
 #include "libMTSClient.h"
 
 #if TARGET_VST3
@@ -3510,19 +3510,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         break;
                     }
-                    case ct_dpw_trimix:
+                    case ct_modern_trimix:
                     {
                         contextMenu->addSeparator();
                         eid++;
 
-                        std::vector<int> waves = {DPWOscillator::dpw_multitypes::dpwm_triangle,
-                                                  DPWOscillator::dpw_multitypes::dpwm_sine,
-                                                  DPWOscillator::dpw_multitypes::dpwm_square};
+                        std::vector<int> waves = {ModernOscillator::mo_multitypes::momt_triangle,
+                                                  ModernOscillator::mo_multitypes::momt_sine,
+                                                  ModernOscillator::mo_multitypes::momt_square};
 
                         for (int m : waves)
                         {
-                            auto mtm = addCallbackMenu(
-                                contextMenu, dpw_multitype_names[m], [p, m, this]() {
+                            auto mtm =
+                                addCallbackMenu(contextMenu, mo_multitype_names[m], [p, m, this]() {
                                     // p->deform_type = m;
                                     p->deform_type = (p->deform_type & 0xFFF0) | m;
                                     synth->refresh_editor = true;
@@ -3535,14 +3535,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         contextMenu->addSeparator();
                         eid++;
 
-                        int subosc = DPWOscillator::dpw_submask::dpw_subone;
+                        int subosc = ModernOscillator::mo_submask::mo_subone;
 
                         auto mtm = addCallbackMenu(
                             contextMenu, Surge::UI::toOSCaseForMenu("Sub-oscillator Mode"),
                             [p, subosc, this]() {
                                 auto usubosc = subosc;
                                 int usubskipsync =
-                                    p->deform_type & DPWOscillator::dpw_submask::dpw_subskipsync;
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subskipsync;
 
                                 if (p->deform_type & subosc)
                                 {
@@ -3557,7 +3557,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         mtm->setChecked((p->deform_type & subosc));
                         eid++;
 
-                        int subskipsync = DPWOscillator::dpw_submask::dpw_subskipsync;
+                        int subskipsync = ModernOscillator::mo_submask::mo_subskipsync;
 
                         auto skp = addCallbackMenu(
                             contextMenu,
@@ -3565,7 +3565,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             [p, subskipsync, this]() {
                                 auto usubskipsync = subskipsync;
                                 int usubosc =
-                                    p->deform_type & DPWOscillator::dpw_submask::dpw_subone;
+                                    p->deform_type & ModernOscillator::mo_submask::mo_subone;
 
                                 if (p->deform_type & subskipsync)
                                 {

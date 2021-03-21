@@ -323,7 +323,7 @@ bool Parameter::has_deformoptions()
     switch (ctrltype)
     {
     case ct_lfodeform:
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
         return true;
     default:
         break;
@@ -363,7 +363,7 @@ bool Parameter::is_bipolar()
     case ct_airwindows_param_bipolar:
     case ct_pitch:
     case ct_pitch4oct:
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
     case ct_oscspread_bipolar:
         res = true;
         break;
@@ -395,7 +395,7 @@ bool Parameter::is_discrete_selection()
     case ct_nimbusmode:
     case ct_nimbusquality:
     case ct_waveguide_excitation_model:
-    case ct_eurotwist_engine:
+    case ct_twist_engine:
     case ct_ensemble_stages:
         return true;
     default:
@@ -409,7 +409,7 @@ bool Parameter::is_nonlocal_on_change()
 {
     switch (ctrltype)
     {
-    case ct_eurotwist_engine:
+    case ct_twist_engine:
     case ct_phaser_stages:
         return true;
     default:
@@ -919,7 +919,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_default.f = 1;
         break;
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_stringbal:
@@ -1008,7 +1008,7 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 5; // sin, tri, saw, s&g, s&h, square
         val_default.i = 0;
         break;
-    case ct_eurotwist_engine:
+    case ct_twist_engine:
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = 15;
@@ -1162,7 +1162,7 @@ void Parameter::set_type(int ctrltype)
     case ct_countedset_percent:
     case ct_lfoamplitude:
     case ct_reson_res_extendable:
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
@@ -1428,7 +1428,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_airwindows_param_bipolar:
         case ct_lfodeform:
         case ct_reson_res_extendable:
-        case ct_dpw_trimix:
+        case ct_modern_trimix:
         {
             val.f = floor(val.f * 100) / 100.0;
             break;
@@ -1653,7 +1653,7 @@ bool Parameter::supportsDynamicName()
 {
     switch (ctrltype)
     {
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
     case ct_percent:
     case ct_percent_bipolar:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
@@ -3205,10 +3205,10 @@ void Parameter::get_display(char *txt, bool external, float ef)
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
         break;
-        case ct_eurotwist_engine:
+        case ct_twist_engine:
         {
-            extern std::string eurotwist_engine_name(int);
-            auto n = eurotwist_engine_name(i);
+            extern std::string twist_engine_name(int);
+            auto n = twist_engine_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
         break;
@@ -3584,7 +3584,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_comp_attack_ms:
     case ct_comp_release_ms:
     case ct_freq_ringmod:
-    case ct_dpw_trimix:
+    case ct_modern_trimix:
     case ct_ensemble_clockrate:
     {
         return true;

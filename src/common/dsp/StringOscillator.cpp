@@ -13,21 +13,20 @@
 ** open source in September 2018.
 */
 
-#include "DebugHelpers.h"
 #include "globals.h"
 #include "FastMath.h"
 
 /*
- * The waveguide oscillator is a self-oscillating delay with various filters and
+ * String oscillator is a self-oscillating delay with various filters and
  * feedback options.
  *
  * The basic circuit is
  *
- * At Init:
+ * At init:
  * - Excite the delay line with an input. In 'chirp' mode this is only pre-play and
  *   in 'continous' mode it is scaled by the amplitude during play
  *
- * At Runtime:
+ * At runtime:
  * - run two delay lines seeded the same and take two taps, tap1 and tap2,
  *   and create an output which is (1-mix) * tap1 + mix * tap2
  * - create a feedback signal fb* tap + excitation in each line
@@ -35,65 +34,62 @@
  * - drive that feedback signal and run it through a soft clipper in each line
  * - write that feedback signal to the head of the delay line
  *
- * Running TODO
- * - the softclip is dumb. Use that param differently. Perhaps per-tap feedback?
- * - The detune as a spread around 0 rather than an exact?
- *
  */
-#include "WaveguideOscillator.h"
+
+#include "StringOscillator.h"
 
 int waveguide_excitations_count() { return 15; }
 
 std::string waveguide_excitation_name(int i)
 {
-    auto m = (WaveguideOscillator::ExModes)i;
+    auto m = (StringOscillator::exciter_modes)i;
 
     switch (m)
     {
-    case WaveguideOscillator::burst_noise:
+    case StringOscillator::burst_noise:
         return "Burst Noise";
-    case WaveguideOscillator::burst_pink_noise:
+    case StringOscillator::burst_pink_noise:
         return "Burst Pink Noise";
-    case WaveguideOscillator::burst_sine:
+    case StringOscillator::burst_sine:
         return "Burst Sine";
-    case WaveguideOscillator::burst_ramp:
+    case StringOscillator::burst_ramp:
         return "Burst Ramp";
-    case WaveguideOscillator::burst_tri:
+    case StringOscillator::burst_tri:
         return "Burst Triangle";
-    case WaveguideOscillator::burst_square:
+    case StringOscillator::burst_square:
         return "Burst Square";
-    case WaveguideOscillator::burst_sweep:
+    case StringOscillator::burst_sweep:
         return "Burst Sweep";
-    case WaveguideOscillator::constant_noise:
+    case StringOscillator::constant_noise:
         return "Constant Noise";
-    case WaveguideOscillator::constant_pink_noise:
+    case StringOscillator::constant_pink_noise:
         return "Constant Pink Noise";
-    case WaveguideOscillator::constant_sine:
+    case StringOscillator::constant_sine:
         return "Constant Sine";
-    case WaveguideOscillator::constant_tri:
+    case StringOscillator::constant_tri:
         return "Constant Triangle";
-    case WaveguideOscillator::constant_ramp:
+    case StringOscillator::constant_ramp:
         return "Constant Ramp";
-    case WaveguideOscillator::constant_square:
+    case StringOscillator::constant_square:
         return "Constant Square";
-    case WaveguideOscillator::constant_sweep:
+    case StringOscillator::constant_sweep:
         return "Constant Sweep";
-    case WaveguideOscillator::constant_audioin:
+    case StringOscillator::constant_audioin:
         return "Audio In";
     }
     return "Unknown";
 }
 
-void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
+void StringOscillator::init(float pitch, bool is_display, bool nzi)
 {
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
 
-    id_exciterlvl = oscdata->p[wg_exciter_level].param_id_in_scene;
-    id_str1decay = oscdata->p[wg_str1_decay].param_id_in_scene;
-    id_str2decay = oscdata->p[wg_str2_decay].param_id_in_scene;
-    id_str2detune = oscdata->p[wg_str2_detune].param_id_in_scene;
-    id_strbalance = oscdata->p[wg_str_balance].param_id_in_scene;
-    id_stiffness = oscdata->p[wg_stiffness].param_id_in_scene;
+    id_exciterlvl = oscdata->p[str_exciter_level].param_id_in_scene;
+    id_str1decay = oscdata->p[str_str1_decay].param_id_in_scene;
+    id_str2decay = oscdata->p[str_str2_decay].param_id_in_scene;
+    id_str2detune = oscdata->p[str_str2_detune].param_id_in_scene;
+    id_strbalance = oscdata->p[str_str_balance].param_id_in_scene;
+    id_stiffness = oscdata->p[str_stiffness].param_id_in_scene;
 
     if (is_display)
     {
@@ -110,15 +106,15 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     auto pitch_t = std::min(148.f, pitch);
     auto pitchmult_inv =
         std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
-    auto p2off = oscdata->p[wg_str2_detune].get_extended(localcopy[id_str2detune].f);
+    auto p2off = oscdata->p[str_str2_detune].get_extended(localcopy[id_str2detune].f);
     double pitch2_t = 1, pitchmult2_inv = 1;
 
-    if (oscdata->p[wg_str2_detune].absolute)
+    if (oscdata->p[str_str2_detune].absolute)
     {
         pitch2_t = std::min(148.f, pitch);
 
         auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
-        auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
+        auto fac = oscdata->p[str_str2_detune].extend_range ? 12 * 16 : 16;
         auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
@@ -150,7 +146,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
         driftLFO[i].init(nzi);
     }
 
-    auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
+    auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
     phase1 = 0.0, phase2 = 0.0;
 
     if (!oscdata->retrigger.val.b && !is_display)
@@ -338,7 +334,7 @@ void WaveguideOscillator::init(float pitch, bool is_display, bool nzi)
     charFilt.init(storage->getPatch().character.val.i);
 }
 
-void WaveguideOscillator::configureLpAndHpFromTone()
+void StringOscillator::configureLpAndHpFromTone()
 {
     tone.newValue(limit_range(localcopy[id_stiffness].f, -1.f, 1.f));
 
@@ -363,8 +359,7 @@ void WaveguideOscillator::configureLpAndHpFromTone()
     hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
 }
 
-void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, bool FM,
-                                        float fmdepthV)
+void StringOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
 {
 #define P(m)                                                                                       \
     case m:                                                                                        \
@@ -374,7 +369,7 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
             process_block_internal<false, m>(pitch, drift, stereo, fmdepthV);                      \
         break;
 
-    auto mode = (ExModes)oscdata->p[wg_exciter_mode].val.i;
+    auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
 
     switch (mode)
     {
@@ -400,9 +395,8 @@ void WaveguideOscillator::process_block(float pitch, float drift, bool stereo, b
 #undef P
 }
 
-template <bool FM, WaveguideOscillator::ExModes mode>
-void WaveguideOscillator::process_block_internal(float pitch, float drift, bool stereo,
-                                                 float fmdepthV)
+template <bool FM, StringOscillator::exciter_modes mode>
+void StringOscillator::process_block_internal(float pitch, float drift, bool stereo, float fmdepthV)
 {
     auto lfodetune = drift * driftLFO[0].next();
     auto pitch_t = std::min(148.f, pitch + lfodetune);
@@ -433,14 +427,14 @@ void WaveguideOscillator::process_block_internal(float pitch, float drift, bool 
 
     double dp2;
     double pitch2_t = 1, pitchmult2_inv = 1;
-    auto p2off = oscdata->p[wg_str2_detune].get_extended(localcopy[id_str2detune].f);
+    auto p2off = oscdata->p[str_str2_detune].get_extended(localcopy[id_str2detune].f);
 
-    if (oscdata->p[wg_str2_detune].absolute)
+    if (oscdata->p[str_str2_detune].absolute)
     {
         pitch2_t = std::min(148.f, pitch);
         auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
 
-        auto fac = oscdata->p[wg_str2_detune].extend_range ? 12 * 16 : 16;
+        auto fac = oscdata->p[str_str2_detune].extend_range ? 12 * 16 : 16;
         auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
@@ -643,49 +637,49 @@ void WaveguideOscillator::process_block_internal(float pitch, float drift, bool 
     }
 }
 
-void WaveguideOscillator::init_ctrltypes()
+void StringOscillator::init_ctrltypes()
 {
-    oscdata->p[wg_exciter_mode].set_name("Exciter");
-    oscdata->p[wg_exciter_mode].set_type(ct_waveguide_excitation_model);
+    oscdata->p[str_exciter_mode].set_name("Exciter");
+    oscdata->p[str_exciter_mode].set_type(ct_waveguide_excitation_model);
 
-    oscdata->p[wg_exciter_level].set_name("Exciter Level");
-    oscdata->p[wg_exciter_level].set_type(ct_percent);
-    oscdata->p[wg_exciter_level].val_default.f = 1.f;
+    oscdata->p[str_exciter_level].set_name("Exciter Level");
+    oscdata->p[str_exciter_level].set_type(ct_percent);
+    oscdata->p[str_exciter_level].val_default.f = 1.f;
 
-    oscdata->p[wg_str1_decay].set_name("String 1 Decay");
-    oscdata->p[wg_str1_decay].set_type(ct_percent);
-    oscdata->p[wg_str1_decay].val_default.f = 0.95;
+    oscdata->p[str_str1_decay].set_name("String 1 Decay");
+    oscdata->p[str_str1_decay].set_type(ct_percent);
+    oscdata->p[str_str1_decay].val_default.f = 0.95;
 
-    oscdata->p[wg_str2_decay].set_name("String 2 Decay");
-    oscdata->p[wg_str2_decay].set_type(ct_percent);
-    oscdata->p[wg_str2_decay].val_default.f = 0.95;
+    oscdata->p[str_str2_decay].set_name("String 2 Decay");
+    oscdata->p[str_str2_decay].set_type(ct_percent);
+    oscdata->p[str_str2_decay].val_default.f = 0.95;
 
-    oscdata->p[wg_str2_detune].set_name("String 2 Detune");
-    oscdata->p[wg_str2_detune].set_type(ct_oscspread_bipolar);
+    oscdata->p[str_str2_detune].set_name("String 2 Detune");
+    oscdata->p[str_str2_detune].set_type(ct_oscspread_bipolar);
 
-    oscdata->p[wg_str_balance].set_name("String Balance");
-    oscdata->p[wg_str_balance].set_type(ct_percent_bipolar_stringbal);
+    oscdata->p[str_str_balance].set_name("String Balance");
+    oscdata->p[str_str_balance].set_type(ct_percent_bipolar_stringbal);
 
-    oscdata->p[wg_stiffness].set_name("Stiffness");
-    oscdata->p[wg_stiffness].set_type(ct_percent_bipolar);
+    oscdata->p[str_stiffness].set_name("Stiffness");
+    oscdata->p[str_stiffness].set_type(ct_percent_bipolar);
 }
 
-void WaveguideOscillator::init_default_values()
+void StringOscillator::init_default_values()
 {
-    oscdata->p[wg_exciter_mode].val.i = 0;
-    oscdata->p[wg_exciter_level].val.f = 1.f;
+    oscdata->p[str_exciter_mode].val.i = 0;
+    oscdata->p[str_exciter_level].val.f = 1.f;
 
-    oscdata->p[wg_str1_decay].val.f = 0.95f;
-    oscdata->p[wg_str2_decay].val.f = 0.95f;
+    oscdata->p[str_str1_decay].val.f = 0.95f;
+    oscdata->p[str_str2_decay].val.f = 0.95f;
 
-    oscdata->p[wg_str2_detune].val.f = 0.1f;
-    oscdata->p[wg_str2_detune].extend_range = false;
-    oscdata->p[wg_str_balance].val.f = 0.f;
+    oscdata->p[str_str2_detune].val.f = 0.1f;
+    oscdata->p[str_str2_detune].extend_range = false;
+    oscdata->p[str_str_balance].val.f = 0.f;
 
-    oscdata->p[wg_stiffness].val.f = 0.f;
+    oscdata->p[str_stiffness].val.f = 0.f;
 }
 
-void WaveguideOscillator::fillDustBuffer(float tap0, float tap1)
+void StringOscillator::fillDustBuffer(float tap0, float tap1)
 {
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {

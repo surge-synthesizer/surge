@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "EuroTwist.h"
+#include "TwistOscillator.h"
 #include "DebugHelpers.h"
 
 #define TEST
@@ -26,7 +26,7 @@
 #include "plaits/dsp/voice.h"
 #include "samplerate.h"
 
-std::string eurotwist_engine_name(int i)
+std::string twist_engine_name(int i)
 {
     switch (i)
     {
@@ -111,17 +111,17 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
-        if (oscs->type.val.i != ot_eurotwist)
+        if (oscs->type.val.i != ot_twist)
         {
             return "ERROR";
         }
 
-        auto engp = &(oscs->p[EuroTwist::et_engine]);
+        auto engp = &(oscs->p[TwistOscillator::twist_engine]);
         auto eng = engp->val.i;
         auto idx = (p - engp);
         auto lab = engineLabels[eng][idx - 1];
 
-        if (idx == EuroTwist::et_aux_mix)
+        if (idx == TwistOscillator::twist_aux_mix)
         {
             if (p->extend_range)
             {
@@ -167,17 +167,17 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
-        if (oscs->type.val.i != ot_eurotwist)
+        if (oscs->type.val.i != ot_twist)
         {
             return false;
         }
 
-        auto engp = &(oscs->p[EuroTwist::et_engine]);
+        auto engp = &(oscs->p[TwistOscillator::twist_engine]);
         auto eng = engp->val.i;
         auto idx = (p - engp);
 
         auto res = engineBipolars[eng][idx - 1];
-        if (idx == EuroTwist::et_aux_mix)
+        if (idx == TwistOscillator::twist_aux_mix)
             res = p->extend_range;
 
         return res;
@@ -197,17 +197,18 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
     const bool getValue(Parameter *p) override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
-        return oscs->p[EuroTwist::et_lpg_response].deactivated;
+        return oscs->p[TwistOscillator::twist_lpg_response].deactivated;
     }
 
     Parameter *getPrimaryDeactivationDriver(Parameter *p) override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
-        return &(oscs->p[EuroTwist::et_lpg_response]);
+        return &(oscs->p[TwistOscillator::twist_lpg_response]);
     }
 } etDynamicDeact;
 
-EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
+TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
+                                 pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
     voice = std::make_unique<plaits::Voice>();
@@ -230,7 +231,7 @@ EuroTwist::EuroTwist(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *l
     }
 }
 
-float EuroTwist::tuningAwarePitch(float pitch)
+float TwistOscillator::tuningAwarePitch(float pitch)
 {
     if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL &&
         !(storage->oddsound_mts_client && storage->oddsound_mts_active) &&
@@ -245,7 +246,7 @@ float EuroTwist::tuningAwarePitch(float pitch)
     return pitch;
 }
 
-void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
+void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 {
     charFilt.init(storage->getPatch().character.val.i);
 
@@ -271,7 +272,7 @@ void EuroTwist::init(float pitch, bool is_display, bool nonzero_drift)
 
     process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
 }
-EuroTwist::~EuroTwist()
+TwistOscillator::~TwistOscillator()
 {
     if (srcstate)
         srcstate = src_delete(srcstate);
@@ -285,8 +286,8 @@ template <bool FM> inline constexpr int getBlockSize() { return 4; }
 template <> inline constexpr int getBlockSize<true>() { return 1; }
 
 template <bool FM, bool throwaway>
-void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
-                                       int throwawayBlocks)
+void TwistOscillator::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
+                                             int throwawayBlocks)
 {
     if (!srcstate)
         return;
@@ -298,14 +299,14 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 
     auto driftv = driftLFO.next();
     patch->note = pitch + drift * driftv;
-    patch->engine = oscdata->p[et_engine].val.i;
+    patch->engine = oscdata->p[twist_engine].val.i;
 
-    harm.newValue(fvbp(et_harmonics));
-    timb.newValue(fvbp(et_timbre));
-    morph.newValue(fvbp(et_morph));
-    lpgcol.newValue(fv(et_lpg_response));
-    lpgdec.newValue(fv(et_lpg_decay));
-    auxmix.newValue(limit_range(fvbp(et_aux_mix), -1.f, 1.f));
+    harm.newValue(fvbp(twist_harmonics));
+    timb.newValue(fvbp(twist_timbre));
+    morph.newValue(fvbp(twist_morph));
+    lpgcol.newValue(fv(twist_lpg_response));
+    lpgdec.newValue(fv(twist_lpg_decay));
+    auxmix.newValue(limit_range(fvbp(twist_aux_mix), -1.f, 1.f));
 
     plaits::Modulations mod = {};
     // for now
@@ -348,7 +349,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
 
     for (int i = 0; i < carrover_size; ++i)
     {
-        if (oscdata->p[et_aux_mix].extend_range)
+        if (oscdata->p[twist_aux_mix].extend_range)
         {
             output[i] = auxmix.v * carryover[i][1] + (1.0 - auxmix.v) * carryover[i][0];
             outputR[i] = auxmix.v * carryover[i][0] + (1.0 - auxmix.v) * carryover[i][1];
@@ -364,7 +365,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
     carrover_size = 0;
     int required_blocks = throwaway ? throwawayBlocks : BLOCK_SIZE_OS;
 
-    bool lpgIsOn = !oscdata->p[et_lpg_response].deactivated;
+    bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
 
     while (total_generated < required_blocks)
     {
@@ -422,7 +423,7 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
             }
             else if (!throwaway)
             {
-                if (oscdata->p[et_aux_mix].extend_range)
+                if (oscdata->p[twist_aux_mix].extend_range)
                 {
                     output[total_generated + i] =
                         auxmix.v * src_out[i][1] + (1 - auxmix.v) * src_out[i][0];
@@ -461,60 +462,60 @@ void EuroTwist::process_block_internal(float pitch, float drift, bool stereo, fl
     }
 }
 
-void EuroTwist::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
+void TwistOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float FMdepth)
 {
     if (FM)
     {
-        EuroTwist::process_block_internal<true>(pitch, drift, stereo, FMdepth);
+        TwistOscillator::process_block_internal<true>(pitch, drift, stereo, FMdepth);
     }
     else
     {
-        EuroTwist::process_block_internal<false>(pitch, drift, stereo, FMdepth);
+        TwistOscillator::process_block_internal<false>(pitch, drift, stereo, FMdepth);
     }
 }
 
-void EuroTwist::init_ctrltypes()
+void TwistOscillator::init_ctrltypes()
 {
-    oscdata->p[et_engine].set_name("Engine");
-    oscdata->p[et_engine].set_type(ct_eurotwist_engine);
+    oscdata->p[twist_engine].set_name("Engine");
+    oscdata->p[twist_engine].set_type(ct_twist_engine);
 
-    oscdata->p[et_harmonics].set_name("Harmonics");
-    oscdata->p[et_harmonics].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
-    oscdata->p[et_harmonics].dynamicName = &etDynamicName;
-    oscdata->p[et_harmonics].dynamicBipolar = &etDynamicBipolar;
+    oscdata->p[twist_harmonics].set_name("Harmonics");
+    oscdata->p[twist_harmonics].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
+    oscdata->p[twist_harmonics].dynamicName = &etDynamicName;
+    oscdata->p[twist_harmonics].dynamicBipolar = &etDynamicBipolar;
 
-    oscdata->p[et_timbre].set_name("Timbre");
-    oscdata->p[et_timbre].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
-    oscdata->p[et_timbre].dynamicName = &etDynamicName;
-    oscdata->p[et_timbre].dynamicBipolar = &etDynamicBipolar;
+    oscdata->p[twist_timbre].set_name("Timbre");
+    oscdata->p[twist_timbre].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
+    oscdata->p[twist_timbre].dynamicName = &etDynamicName;
+    oscdata->p[twist_timbre].dynamicBipolar = &etDynamicBipolar;
 
-    oscdata->p[et_morph].set_name("Morph");
-    oscdata->p[et_morph].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
-    oscdata->p[et_morph].dynamicName = &etDynamicName;
-    oscdata->p[et_morph].dynamicBipolar = &etDynamicBipolar;
+    oscdata->p[twist_morph].set_name("Morph");
+    oscdata->p[twist_morph].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
+    oscdata->p[twist_morph].dynamicName = &etDynamicName;
+    oscdata->p[twist_morph].dynamicBipolar = &etDynamicBipolar;
 
-    oscdata->p[et_aux_mix].set_name("Aux Mix");
-    oscdata->p[et_aux_mix].set_type(ct_twist_aux_mix);
-    oscdata->p[et_aux_mix].dynamicName = &etDynamicName;
-    oscdata->p[et_aux_mix].dynamicBipolar = &etDynamicBipolar;
+    oscdata->p[twist_aux_mix].set_name("Aux Mix");
+    oscdata->p[twist_aux_mix].set_type(ct_twist_aux_mix);
+    oscdata->p[twist_aux_mix].dynamicName = &etDynamicName;
+    oscdata->p[twist_aux_mix].dynamicBipolar = &etDynamicBipolar;
 
-    oscdata->p[et_lpg_response].set_name("LPG Response");
-    oscdata->p[et_lpg_response].set_type(ct_percent_deactivatable);
+    oscdata->p[twist_lpg_response].set_name("LPG Response");
+    oscdata->p[twist_lpg_response].set_type(ct_percent_deactivatable);
 
-    oscdata->p[et_lpg_decay].set_name("LPG Decay");
-    oscdata->p[et_lpg_decay].set_type(ct_percent);
-    oscdata->p[et_lpg_decay].dynamicDeactivation = &etDynamicDeact;
+    oscdata->p[twist_lpg_decay].set_name("LPG Decay");
+    oscdata->p[twist_lpg_decay].set_type(ct_percent);
+    oscdata->p[twist_lpg_decay].dynamicDeactivation = &etDynamicDeact;
 }
 
-void EuroTwist::init_default_values()
+void TwistOscillator::init_default_values()
 {
-    oscdata->p[et_engine].val.i = 0.f;
-    oscdata->p[et_harmonics].val.f = 0.f;
-    oscdata->p[et_timbre].val.f = 0.f;
-    oscdata->p[et_morph].val.f = 0.f;
-    oscdata->p[et_aux_mix].val.f = -1.f;
-    oscdata->p[et_aux_mix].extend_range = false;
-    oscdata->p[et_lpg_response].val.f = 0.f;
-    oscdata->p[et_lpg_response].deactivated = true;
-    oscdata->p[et_lpg_decay].val.f = 0.f;
+    oscdata->p[twist_engine].val.i = 0.f;
+    oscdata->p[twist_harmonics].val.f = 0.f;
+    oscdata->p[twist_timbre].val.f = 0.f;
+    oscdata->p[twist_morph].val.f = 0.f;
+    oscdata->p[twist_aux_mix].val.f = -1.f;
+    oscdata->p[twist_aux_mix].extend_range = false;
+    oscdata->p[twist_lpg_response].val.f = 0.f;
+    oscdata->p[twist_lpg_response].deactivated = true;
+    oscdata->p[twist_lpg_decay].val.f = 0.f;
 }

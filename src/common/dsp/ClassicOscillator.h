@@ -20,21 +20,21 @@
 #include <vt_dsp/lipol.h>
 #include "BiquadFilter.h"
 
-class SurgeSuperOscillator : public AbstractBlitOscillator
+class ClassicOscillator : public AbstractBlitOscillator
 {
   public:
-    enum sso_params
+    enum co_params
     {
-        sso_shape = 0,
-        sso_width1,
-        sso_width2,
-        sso_mainsubmix,
-        sso_sync,
-        sso_unison_detune,
-        sso_unison_voices,
+        co_shape = 0,
+        co_width1,
+        co_width2,
+        co_mainsubmix,
+        co_sync,
+        co_unison_detune,
+        co_unison_voices,
     };
 
-    SurgeSuperOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    ClassicOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
     virtual void init(float pitch, bool is_display = false,
                       bool nonzero_init_drift = true) override;
     virtual void init_ctrltypes() override;
@@ -42,7 +42,7 @@ class SurgeSuperOscillator : public AbstractBlitOscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f) override;
     template <bool FM> void convolute(int voice, bool stereo);
-    virtual ~SurgeSuperOscillator();
+    virtual ~ClassicOscillator();
 
   private:
     bool first_run;

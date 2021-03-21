@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "DPWOscillator.h"
+#include "ModernOscillator.h"
 #include "DebugHelpers.h"
 
 /*
@@ -114,7 +114,7 @@
  * and the rest is just mixing and lagging. All pretty obvious.
  */
 
-void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
+void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     // we need a tiny little portamento since the derivative is pretty
     // unstable under super big pitch changes
@@ -123,7 +123,7 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     pwidth.setRate(0.001); // 4x slower
     sync.setRate(0.001 * BLOCK_SIZE_OS);
 
-    n_unison = is_display ? 1 : oscdata->p[dpw_unison_voices].val.i;
+    n_unison = is_display ? 1 : oscdata->p[mo_unison_voices].val.i;
 
     auto us = Surge::Oscillator::UnisonSetup<double>(n_unison);
 
@@ -145,12 +145,12 @@ void DPWOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     subphase = 0;
     subsphase = 0;
 
-    // This is the same implementation as SurgeSuperOscillator, just as doubles
+    // This is the same implementation as ClassicOscillator, just as doubles
     charFilt.init(storage->getPatch().character.val.i);
 }
 
-template <DPWOscillator::dpw_multitypes multitype, bool subOctave, bool FM>
-void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
+template <ModernOscillator::mo_multitypes multitype, bool subOctave, bool FM>
+void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float fmdepthV)
 {
     float submul = 1;
     if (subOctave)
@@ -158,10 +158,10 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
         submul = 0.5;
     }
 
-    float ud = oscdata->p[dpw_unison_detune].get_extended(
-        localcopy[oscdata->p[dpw_unison_detune].param_id_in_scene].f);
+    float ud = oscdata->p[mo_unison_detune].get_extended(
+        localcopy[oscdata->p[mo_unison_detune].param_id_in_scene].f);
     pitchlag.startValue(pitch);
-    sync.newValue(std::max(0.f, localcopy[oscdata->p[dpw_sync].param_id_in_scene].f));
+    sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
     for (int u = 0; u < n_unison; ++u)
     {
@@ -182,16 +182,15 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
 
     // Let people modulate outside the sliders a bit. but not catastrophically
     sawmix.newValue(0.5 *
-                    limit_range(localcopy[oscdata->p[dpw_saw_mix].param_id_in_scene].f, -2.f, 2.f));
+                    limit_range(localcopy[oscdata->p[mo_saw_mix].param_id_in_scene].f, -2.f, 2.f));
     sqrmix.newValue(
-        0.5 * limit_range(localcopy[oscdata->p[dpw_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
+        0.5 * limit_range(localcopy[oscdata->p[mo_pulse_mix].param_id_in_scene].f, -2.f, 2.f));
     trimix.newValue(0.5 *
-                    limit_range(localcopy[oscdata->p[dpw_tri_mix].param_id_in_scene].f, -2.f, 2.f));
+                    limit_range(localcopy[oscdata->p[mo_tri_mix].param_id_in_scene].f, -2.f, 2.f));
 
     // Since we always use this multiplied by 2, put the mul here to save it later
-    pwidth.newValue(2 *
-                    limit_range(1.f - localcopy[oscdata->p[dpw_pulse_width].param_id_in_scene].f,
-                                0.01f, 0.99f));
+    pwidth.newValue(2 * limit_range(1.f - localcopy[oscdata->p[mo_pulse_width].param_id_in_scene].f,
+                                    0.01f, 0.99f));
     pitchlag.process();
 
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
@@ -203,7 +202,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
                  triBuff alignas(16)[4] = {0, 0, 0, 0}, phases alignas(16)[4] = {0, 0, 0, 0};
 
     bool subsyncskip =
-        oscdata->p[dpw_tri_mix].deform_type & DPWOscillator::dpw_submask::dpw_subskipsync;
+        oscdata->p[mo_tri_mix].deform_type & ModernOscillator::mo_submask::mo_subskipsync;
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
@@ -261,13 +260,13 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
                 }
                 else
                 {
-                    if (multitype == dpwm_square)
+                    if (multitype == momt_square)
                     {
                         // double Q = std::signbit(p) * 2 - 1;
                         double Q = (p < 0) * 2 - 1;
                         triBuff[s] = p * (Q * p + 1) * 0.5;
                     }
-                    if (multitype == DPWOscillator::dpwm_sine)
+                    if (multitype == ModernOscillator::momt_sine)
                     {
                         // double pos = 1.0 - std::signbit(p);
                         double modpos = 2.0 * (p < 0) - 1.0;
@@ -304,7 +303,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
                          */
                         triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                     }
-                    if (multitype == DPWOscillator::dpwm_triangle)
+                    if (multitype == ModernOscillator::momt_triangle)
                     {
                         double tp = p + 0.5;
                         tp -= (tp > 1.0) * 2;
@@ -377,12 +376,12 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
                 double p = (p01 - 0.5) * 2;
                 double p3 = p * p * p;
 
-                if (multitype == dpwm_square)
+                if (multitype == momt_square)
                 {
                     double Q = (p < 0) * 2 - 1;
                     triBuff[s] = p * (Q * p + 1) * 0.5;
                 }
-                if (multitype == dpwm_sine)
+                if (multitype == momt_sine)
                 {
                     double modpos = 2.0 * (p < 0) - 1.0;
                     double p4 = p3 * p;
@@ -390,7 +389,7 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
 
                     triBuff[s] = -(modpos * p4 + 2 * p3 - p) * oo3;
                 }
-                if (multitype == dpwm_triangle)
+                if (multitype == momt_triangle)
                 {
                     double tp = p + 0.5;
 
@@ -455,17 +454,17 @@ void DPWOscillator::process_sblk(float pitch, float drift, bool stereo, float fm
     starting = false;
 }
 
-void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+void ModernOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
 {
-    if (oscdata->p[dpw_tri_mix].deform_type != cachedDeform)
+    if (oscdata->p[mo_tri_mix].deform_type != cachedDeform)
     {
-        cachedDeform = oscdata->p[dpw_tri_mix].deform_type;
-        multitype = ((DPWOscillator::dpw_multitypes)(cachedDeform & 0xF));
+        cachedDeform = oscdata->p[mo_tri_mix].deform_type;
+        multitype = ((ModernOscillator::mo_multitypes)(cachedDeform & 0xF));
     }
 
     bool subOct = false;
 
-    if (cachedDeform & dpw_subone)
+    if (cachedDeform & mo_subone)
     {
         subOct = true;
     }
@@ -474,57 +473,57 @@ void DPWOscillator::process_block(float pitch, float drift, bool stereo, bool FM
     {
         switch (multitype)
         {
-        case dpwm_sine:
+        case momt_sine:
             if (subOct)
-                return process_sblk<dpwm_sine, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, true, false>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_sine, false, false>(pitch, drift, stereo, fmdepthV);
-        case dpwm_square:
+                return process_sblk<momt_sine, false, false>(pitch, drift, stereo, fmdepthV);
+        case momt_square:
             if (subOct)
-                return process_sblk<dpwm_square, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, true, false>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_square, false, false>(pitch, drift, stereo, fmdepthV);
-        case dpwm_triangle:
+                return process_sblk<momt_square, false, false>(pitch, drift, stereo, fmdepthV);
+        case momt_triangle:
             if (subOct)
-                return process_sblk<dpwm_triangle, true, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, true, false>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_triangle, false, false>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, false, false>(pitch, drift, stereo, fmdepthV);
         }
     }
     else
     {
         switch (multitype)
         {
-        case dpwm_sine:
+        case momt_sine:
             if (subOct)
-                return process_sblk<dpwm_sine, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_sine, true, true>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_sine, false, true>(pitch, drift, stereo, fmdepthV);
-        case dpwm_square:
+                return process_sblk<momt_sine, false, true>(pitch, drift, stereo, fmdepthV);
+        case momt_square:
             if (subOct)
-                return process_sblk<dpwm_square, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_square, true, true>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_square, false, true>(pitch, drift, stereo, fmdepthV);
-        case dpwm_triangle:
+                return process_sblk<momt_square, false, true>(pitch, drift, stereo, fmdepthV);
+        case momt_triangle:
             if (subOct)
-                return process_sblk<dpwm_triangle, true, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, true, true>(pitch, drift, stereo, fmdepthV);
             else
-                return process_sblk<dpwm_triangle, false, true>(pitch, drift, stereo, fmdepthV);
+                return process_sblk<momt_triangle, false, true>(pitch, drift, stereo, fmdepthV);
         }
     }
 }
 
-static struct DPWTriName : public ParameterDynamicNameFunction
+static struct ModernTriName : public ParameterDynamicNameFunction
 {
     virtual const char *getName(Parameter *p)
     {
         auto flag = p->deform_type;
         int mt = flag & 0xF;
-        bool sub = flag & DPWOscillator::dpw_submask::dpw_subone;
+        bool sub = flag & ModernOscillator::mo_submask::mo_subone;
         static char tx[1024];
 
         std::string subs = sub ? " Sub" : "";
-        std::string res = dpw_multitype_names[mt] + subs;
+        std::string res = mo_multitype_names[mt] + subs;
 
         strncpy(tx, res.c_str(), 1024);
         tx[1023] = 0;
@@ -532,39 +531,39 @@ static struct DPWTriName : public ParameterDynamicNameFunction
     }
 } dpwTriName;
 
-void DPWOscillator::init_ctrltypes()
+void ModernOscillator::init_ctrltypes()
 {
-    oscdata->p[dpw_saw_mix].set_name("Sawtooth");
-    oscdata->p[dpw_saw_mix].set_type(ct_percent_bipolar);
+    oscdata->p[mo_saw_mix].set_name("Sawtooth");
+    oscdata->p[mo_saw_mix].set_type(ct_percent_bipolar);
 
-    oscdata->p[dpw_pulse_mix].set_name("Pulse");
-    oscdata->p[dpw_pulse_mix].set_type(ct_percent_bipolar);
+    oscdata->p[mo_pulse_mix].set_name("Pulse");
+    oscdata->p[mo_pulse_mix].set_type(ct_percent_bipolar);
 
-    oscdata->p[dpw_tri_mix].set_name("--DYNAMIC-NAME--");
-    oscdata->p[dpw_tri_mix].set_type(ct_dpw_trimix);
-    oscdata->p[dpw_tri_mix].dynamicName = &dpwTriName;
+    oscdata->p[mo_tri_mix].set_name("--DYNAMIC-NAME--");
+    oscdata->p[mo_tri_mix].set_type(ct_modern_trimix);
+    oscdata->p[mo_tri_mix].dynamicName = &dpwTriName;
 
-    oscdata->p[dpw_pulse_width].set_name("Width");
-    oscdata->p[dpw_pulse_width].set_type(ct_percent);
-    oscdata->p[dpw_pulse_width].val_default.f = 0.5;
+    oscdata->p[mo_pulse_width].set_name("Width");
+    oscdata->p[mo_pulse_width].set_type(ct_percent);
+    oscdata->p[mo_pulse_width].val_default.f = 0.5;
 
-    oscdata->p[dpw_sync].set_name("Sync");
-    oscdata->p[dpw_sync].set_type(ct_syncpitch);
+    oscdata->p[mo_sync].set_name("Sync");
+    oscdata->p[mo_sync].set_type(ct_syncpitch);
 
-    oscdata->p[dpw_unison_detune].set_name("Unison Detune");
-    oscdata->p[dpw_unison_detune].set_type(ct_oscspread);
-    oscdata->p[dpw_unison_voices].set_name("Unison Voices");
-    oscdata->p[dpw_unison_voices].set_type(ct_osccount);
+    oscdata->p[mo_unison_detune].set_name("Unison Detune");
+    oscdata->p[mo_unison_detune].set_type(ct_oscspread);
+    oscdata->p[mo_unison_voices].set_name("Unison Voices");
+    oscdata->p[mo_unison_voices].set_type(ct_osccount);
 }
 
-void DPWOscillator::init_default_values()
+void ModernOscillator::init_default_values()
 {
-    oscdata->p[dpw_saw_mix].val.f = 0.5;
-    oscdata->p[dpw_tri_mix].val.f = 0.0;
-    oscdata->p[dpw_tri_mix].deform_type = 0;
-    oscdata->p[dpw_pulse_mix].val.f = 0.0;
-    oscdata->p[dpw_pulse_width].val.f = 0.5;
-    oscdata->p[dpw_sync].val.f = 0.0;
-    oscdata->p[dpw_unison_detune].val.f = 0.2;
-    oscdata->p[dpw_unison_voices].val.i = 1;
+    oscdata->p[mo_saw_mix].val.f = 0.5;
+    oscdata->p[mo_tri_mix].val.f = 0.0;
+    oscdata->p[mo_tri_mix].deform_type = 0;
+    oscdata->p[mo_pulse_mix].val.f = 0.0;
+    oscdata->p[mo_pulse_width].val.f = 0.5;
+    oscdata->p[mo_sync].val.f = 0.0;
+    oscdata->p[mo_unison_detune].val.f = 0.2;
+    oscdata->p[mo_unison_voices].val.i = 1;
 }
