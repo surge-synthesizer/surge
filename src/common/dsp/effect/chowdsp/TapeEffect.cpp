@@ -50,33 +50,46 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_drive].deactivated)
     {
-        hysteresis.set_params(*f[tape_drive], *f[tape_saturation], *f[tape_bias]);
-        toneControl.set_params(*f[tape_tone]);
+        auto thd = clamp01(*f[tape_drive]);
+        auto ths = clamp01(*f[tape_saturation]);
+        auto thb = clamp01(*f[tape_bias]);
+        auto tht = clamp1bp(*f[tape_tone]);
+
+        hysteresis.set_params(thd, ths, thb);
+        toneControl.set_params(tht);
 
         toneControl.processBlockIn(L, R);
         hysteresis.process_block(L, R);
-        // toneControl.processBlockOut(L, R);
+        //toneControl.processBlockOut(L, R);
     }
 
     if (!fxdata->p[tape_speed].deactivated)
     {
-        lossFilter.set_params(*f[tape_speed], *f[tape_spacing], *f[tape_gap], *f[tape_thickness]);
+        auto tls = clamp01(*f[tape_speed]);
+        auto tlsp = clamp01(*f[tape_spacing]);
+        auto tlg = clamp01(*f[tape_gap]);
+        auto tlt = clamp01(*f[tape_thickness]);
+
+        lossFilter.set_params(tls, tlsp, tlg, tlt);
         lossFilter.process(L, R);
     }
 
     if (!fxdata->p[tape_degrade_depth].deactivated)
     {
-        degrade.set_params(*f[tape_degrade_depth], *f[tape_degrade_amount],
-                           *f[tape_degrade_variance]);
-        degrade.process_block(L, R);
+        auto tdd = clamp01(*f[tape_degrade_depth]);
+        auto tda = clamp01(*f[tape_degrade_amount]);
+        auto tdv = clamp01(*f[tape_degrade_variance]);
+        auto chew_freq = 0.9f - (tda * 0.8f);
+        auto chew_depth = tdd * 0.15f;
 
-        const auto chew_freq = 0.1f * *f[tape_degrade_amount] * 0.8f;
-        const auto chew_depth = *f[tape_degrade_depth] * 0.25f;
-        chew.set_params(chew_freq, chew_depth, *f[tape_degrade_variance]);
+        chew.set_params(chew_freq, chew_depth, tdv);
         chew.process_block(L, R);
+
+        degrade.set_params(tdd, tda, tdv);
+        degrade.process_block(L, R);
     }
 
-    mix.set_target_smoothed(limit_range(*f[tape_mix], 0.f, 1.f));
+    mix.set_target_smoothed(clamp01(*f[tape_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

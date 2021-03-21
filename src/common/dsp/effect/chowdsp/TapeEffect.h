@@ -68,6 +68,7 @@ class TapeEffect : public Effect
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
+    virtual int get_ringout_decay() override { return -1; };
 
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
