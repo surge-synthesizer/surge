@@ -254,6 +254,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
   src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
+  src/common/dsp/effect/chowdsp/tape/ToneControl.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp

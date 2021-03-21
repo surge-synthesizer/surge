@@ -14,6 +14,7 @@
 */
 
 #include "TapeEffect.h"
+#include <vt_dsp/basic_dsp.h>
 
 namespace chowdsp
 {
@@ -29,6 +30,7 @@ TapeEffect::~TapeEffect() {}
 void TapeEffect::init()
 {
     hysteresis.reset(samplerate);
+    toneControl.prepare(samplerate);
     lossFilter.prepare(samplerate, BLOCK_SIZE);
 
     clear_block(L, BLOCK_SIZE_QUAD);
@@ -43,16 +45,17 @@ void TapeEffect::init()
 
 void TapeEffect::process(float *dataL, float *dataR)
 {
-    for (int i = 0; i < BLOCK_SIZE; i++)
-    {
-        L[i] = dataL[i];
-        R[i] = dataR[i];
-    }
+    copy_block(dataL, L, BLOCK_SIZE_QUAD);
+    copy_block(dataR, R, BLOCK_SIZE_QUAD);
 
     if (!fxdata->p[tape_drive].deactivated)
     {
         hysteresis.set_params(*f[tape_drive], *f[tape_saturation], *f[tape_bias]);
+        toneControl.set_params(*f[tape_tone]);
+
+        toneControl.processBlockIn(L, R);
         hysteresis.process_block(L, R);
+        // toneControl.processBlockOut(L, R);
     }
 
     if (!fxdata->p[tape_speed].deactivated)
@@ -103,11 +106,11 @@ int TapeEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 9;
+        return 11;
     case 2:
-        return 19;
+        return 21;
     case 3:
-        return 27;
+        return 29;
     }
 
     return 0;
@@ -130,6 +133,7 @@ void TapeEffect::init_ctrltypes()
             {
             case tape_saturation:
             case tape_bias:
+            case tape_tone:
                 return fx->p[tape_drive].deactivated;
             case tape_gap:
             case tape_spacing:
@@ -151,6 +155,7 @@ void TapeEffect::init_ctrltypes()
             {
             case tape_saturation:
             case tape_bias:
+            case tape_tone:
                 return &(fx->p[tape_drive]);
             case tape_gap:
             case tape_spacing:
@@ -181,6 +186,11 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_bias].posy_offset = 1;
     fxdata->p[tape_bias].val_default.f = 0.5f;
     fxdata->p[tape_bias].dynamicDeactivation = &tapeGroupDeact;
+    fxdata->p[tape_tone].set_name("Tone");
+    fxdata->p[tape_tone].set_type(ct_percent_bipolar);
+    fxdata->p[tape_tone].posy_offset = 1;
+    fxdata->p[tape_tone].val_default.f = 0.0f;
+    fxdata->p[tape_tone].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_speed].set_name("Speed");
     fxdata->p[tape_speed].set_type(ct_percent_deactivatable);
@@ -230,6 +240,7 @@ void TapeEffect::init_default_values()
     fxdata->p[tape_drive].val.f = 0.5f;
     fxdata->p[tape_saturation].val.f = 0.5f;
     fxdata->p[tape_bias].val.f = 0.5f;
+    fxdata->p[tape_tone].val.f = 0.0f;
 
     fxdata->p[tape_speed].val.f = 1.0f;
     fxdata->p[tape_spacing].val.f = 0.0f;
