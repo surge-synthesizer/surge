@@ -3598,6 +3598,23 @@ void SurgeSynthesizer::process()
         hpB.process_block(sceneout[1][0], sceneout[1][1]);
     }
 
+    for (int cls = 0; cls < n_scenes; ++cls)
+    {
+        switch (storage.sceneHardclipMode[cls])
+        {
+        case SurgeStorage::HARDCLIP_TO_18DBFS:
+            hardclip_block8(sceneout[cls][0], BLOCK_SIZE_QUAD);
+            hardclip_block8(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            break;
+        case SurgeStorage::HARDCLIP_TO_0DBFS:
+            hardclip_block(sceneout[cls][0], BLOCK_SIZE_QUAD);
+            hardclip_block(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            break;
+        default:
+            break;
+        }
+    }
+
     // TODO: FIX SCENE ASSUMPTION
     bool sc_state[n_scenes];
 
