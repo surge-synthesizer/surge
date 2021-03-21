@@ -249,9 +249,12 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
   src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
   src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
+  src/common/dsp/effect/chowdsp/tape/ChewProcessor.cpp
+  src/common/dsp/effect/chowdsp/tape/DegradeProcessor.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
   src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
+  src/common/dsp/effect/chowdsp/tape/ToneControl.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/filters/Obxd.cpp
   src/common/dsp/filters/K35.cpp

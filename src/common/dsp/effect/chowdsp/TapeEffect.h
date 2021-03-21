@@ -18,6 +18,9 @@
 #include <dsp/effect/Effect.h>
 #include "tape/HysteresisProcessor.h"
 #include "tape/LossFilter.h"
+#include "tape/DegradeProcessor.h"
+#include "tape/ChewProcessor.h"
+#include "tape/ToneControl.h"
 
 #include <vt_dsp/lipol.h>
 
@@ -41,6 +44,7 @@ class TapeEffect : public Effect
         tape_drive = 0,
         tape_saturation,
         tape_bias,
+        tape_tone,
 
         tape_speed,
         tape_gap,
@@ -72,7 +76,10 @@ class TapeEffect : public Effect
 
   private:
     HysteresisProcessor hysteresis;
+    ToneControl toneControl;
     LossFilter lossFilter;
+    DegradeProcessor degrade;
+    ChewProcessor chew;
 };
 
 } // namespace chowdsp
