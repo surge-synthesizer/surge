@@ -71,13 +71,13 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     const ao_types wavetype = (ao_types)oscdata->p[ao_wave].val.i;
 
-    uint8_t shift = limit_range(
+    const uint8_t shift = limit_range(
         (int)(float)(0xFF * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0, 0xFF);
 
-    uint8_t mask = limit_range(
+    const uint8_t mask = limit_range(
         (int)(float)(0xFF * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0, 0xFF);
 
-    uint8_t threshold = limit_range(
+    const uint8_t threshold = limit_range(
         (int)(float)(0xFF * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0, 0xFF);
 
     const double two32 = 4294967296.0;
