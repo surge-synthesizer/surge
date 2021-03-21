@@ -519,7 +519,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
             // TODO: remove lt_function after implementing function modulator!
-            return lf->shape.val.i == lt_envelope || lf->shape.val.i == lt_function;
+            auto res = lf->shape.val.i == lt_envelope || lf->shape.val.i == lt_function;
+            if (!res && p->can_deactivate())
+                return p->deactivated;
+            return res;
         }
     } lfoRatePhaseDeact;
 
