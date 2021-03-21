@@ -60,7 +60,7 @@ void TapeEffect::process(float *dataL, float *dataR)
 
         toneControl.processBlockIn(L, R);
         hysteresis.process_block(L, R);
-        //toneControl.processBlockOut(L, R);
+        // toneControl.processBlockOut(L, R);
     }
 
     if (!fxdata->p[tape_speed].deactivated)
