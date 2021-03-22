@@ -753,7 +753,10 @@ void Parameter::set_type(int ctrltype)
         val_min.i = 0;
         val_default.i = 0;
         val_max.i = n_osc_types - 1;
-        affect_other_parameters = true;
+        /*
+         * BP: We do, but this isn't how we load osces
+         */
+        affect_other_parameters = false;
         break;
     case ct_reverbshape:
         valtype = vt_int;

@@ -1987,7 +1987,10 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                     }
                 }
             }
-            switch_toggled_queued = true;
+            /*
+             * Since we are setting a Queue, we don't need to toggle controls
+             */
+            switch_toggled_queued = false;
             need_refresh = true;
             refresh_editor = true;
             break;
