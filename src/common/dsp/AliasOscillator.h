@@ -26,6 +26,7 @@ class AliasOscillator : public Oscillator
         ao_shift,
         ao_mask,
         ao_threshold,
+        ao_depth,
 
         ao_unison_detune = 5,
         ao_unison_voices,
@@ -77,11 +78,3 @@ class AliasOscillator : public Oscillator
 extern const char *ao_type_names[4];
 
 extern const uint8_t ALIAS_SINETABLE[256];
-
-struct Always256CountedSet
-    : public CountedSetUserData // Something to feed to a ct_countedset_percent control
-{
-    virtual int getCountedSetSize() { return 256; }
-};
-
-const Always256CountedSet ALWAYS256COUNTEDSET;

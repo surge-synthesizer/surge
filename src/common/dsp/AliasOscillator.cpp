@@ -17,7 +17,6 @@
 
 #include "AliasOscillator.h"
 #include "DebugHelpers.h"
-#include <random>
 
 // says ao_n_types is undefined. makes no sense, whatever, for now I'm hardcoding it. TODO FIX.
 const int ALIAS_OSCILLATOR_WAVE_TYPES = /*ao_n_types*/ 4;
@@ -44,11 +43,6 @@ const uint8_t ALIAS_SINETABLE[256] = {
 
 void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
-    // use uniform RNG, we need all 32 bits randomized, which rand() doesn't guarantee
-    std::random_device rd;
-    std::default_random_engine gen(rd());
-    std::uniform_int_distribution<> rng(0, 1 << 31);
-
     n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
@@ -58,7 +52,11 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
         unisonOffsets[u] = us.detune(u);
         us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
-        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
+        // We want phase to be a random 32-bit number.
+        // The quality of the randomness doesn't matter.
+        // rand() is only guaranteed to produce 15 bits but on most modern platforms it's 31 bits.
+        // So just add rand() to rand() for now, it's good enough.
+        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : (rand() + rand());
 
         driftLFO[u].init(nonzero_init_drift);
     }
@@ -76,17 +74,28 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     const ao_types wavetype = (ao_types)oscdata->p[ao_wave].val.i;
 
-    const uint8_t shift = limit_range(
-        (int)(float)(0xFF * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0, 0xFF);
+    // how many bits to take from the 32bit phase counter
+    const uint32_t bit_depth =
+        limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].i, 1, 16);
+    const uint32_t bit_mask = (1 << bit_depth) - 1;
+    oscdata->wt.n_tables = bit_mask; // see init_default_values
 
-    const uint8_t mask = limit_range(
-        (int)(float)(0xFF * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0, 0xFF);
+    const float inverseBits = 1.0 / ((float)bit_mask);
+    const float inverse255 = 1.0 / ((float)0xFF);
 
-    const uint8_t threshold = limit_range(
-        (int)(float)(0xFF * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0, 0xFF);
+    const uint32_t shift =
+        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0,
+                    (int)bit_mask);
+
+    const uint32_t mask =
+        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0,
+                    (int)bit_mask);
+
+    const uint32_t threshold = limit_range(
+        (int)(float)(bit_mask * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0,
+        (int)bit_mask);
 
     const double two32 = 4294967296.0;
-    const float inverse256 = 1.0 / 255.0;
 
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
@@ -109,29 +118,42 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         float vL = 0.0f, vR = 0.0f;
         for (int u = 0; u < n_unison; ++u)
         {
-            const uint8_t upper = phase[u] >> 24;
+            const uint32_t upper = phase[u] >> (32 - bit_depth);
 
-            const uint16_t shifted = upper + shift;
+            const uint32_t shifted = upper + shift;
 
-            uint8_t shaped = shifted; // default to untransformed (wrap any overflow)
+            uint32_t shaped = shifted; // default to untransformed (wrap any overflow)
             if (wavetype == aot_tri)
             {
                 if (shifted > threshold)
                 { // flip wave to make a triangle shape (has a DC offset, needs fixing)
-                    shaped = -shifted;
+                    shaped = bit_mask - shifted;
                 }
             }
             else if (wavetype == aot_pulse)
             {
                 // test highest bit to make pulse shape
-                shaped = (shifted > threshold) ? 0xFF : 0x00;
+                shaped = (shifted > threshold) ? bit_mask : 0x00;
             }
 
             const uint8_t masked = shaped ^ mask;
 
-            const uint8_t result = (wavetype == aot_sine) ? ALIAS_SINETABLE[masked] : masked;
-
-            const float out = ((float)result - (float)0x7F) * inverse256;
+            // default to this for all waves except sine
+            float out = ((float)masked - (float)(bit_mask >> 1)) * inverseBits;
+            // but for sine...
+            if (wavetype == aot_sine)
+            {
+                if (bit_depth >= 8)
+                {
+                    out = ((float)ALIAS_SINETABLE[masked >> (8 - bit_depth)] - (float)0x7F) *
+                          inverse255;
+                }
+                else
+                {
+                    out = ((float)ALIAS_SINETABLE[masked << (8 - bit_depth)] - (float)0x7F) *
+                          inverse255;
+                }
+            }
 
             vL += out * mixL[u];
             vR += out * mixR[u];
@@ -169,23 +191,20 @@ void AliasOscillator::init_ctrltypes()
     oscdata->p[ao_wave].set_name("Shape");
     oscdata->p[ao_wave].set_type(ct_alias_wave);
 
-    // Shift and Mask need a user data parameter implementing CountedSetUserData.
-    // Always256CountedSet does this, and we have a constant that does this, ALWAYS256COUNTEDSET.
-    // But we need a ParamUserData*, no const. As Always256CountedSet contains no actual data,
-    // it is safe to discard the const from the pointer via a cast.
-    ParamUserData *ud = (ParamUserData *)&ALWAYS256COUNTEDSET;
-
     oscdata->p[ao_shift].set_name("Shift");
     oscdata->p[ao_shift].set_type(ct_countedset_percent);
-    oscdata->p[ao_shift].set_user_data(ud);
+    oscdata->p[ao_shift].set_user_data(oscdata);
 
     oscdata->p[ao_mask].set_name("Mask");
     oscdata->p[ao_mask].set_type(ct_countedset_percent);
-    oscdata->p[ao_mask].set_user_data(ud);
+    oscdata->p[ao_mask].set_user_data(oscdata);
 
     oscdata->p[ao_threshold].set_name("Threshold");
     oscdata->p[ao_threshold].set_type(ct_countedset_percent);
-    oscdata->p[ao_threshold].set_user_data(ud);
+    oscdata->p[ao_threshold].set_user_data(oscdata);
+
+    oscdata->p[ao_depth].set_name("Bit Depth");
+    oscdata->p[ao_depth].set_type(ct_fmratio_int);
 
     oscdata->p[ao_unison_detune].set_name("Unison Detune");
     oscdata->p[ao_unison_detune].set_type(ct_oscspread);
@@ -199,6 +218,16 @@ void AliasOscillator::init_default_values()
     oscdata->p[ao_shift].val.f = 0.0f;
     oscdata->p[ao_mask].val.f = 0.0f;
     oscdata->p[ao_threshold].val.f = 0.5f;
+    oscdata->p[ao_depth].val.i = 8;
+    // OscillatorStorage's implementation of CountedSetUserData is used to display
+    // the range of the parameters. This abuses the wavetable's n_tables field.
+    // As there are no actual wavetables used by this oscillator, this is safe even if
+    // somewhat messy.
+    oscdata->wt.n_tables = 255;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }
+
+/*int AliasOscillator::getCountedSetSize() {
+    return bit_mask;
+}*/
