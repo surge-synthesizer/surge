@@ -134,22 +134,18 @@ void NimbusEffect::process(float *dataL, float *dataR)
         auto parm = processor->mutable_parameters();
         float den_val, tex_val;
 
-        den_val = (fxdata->p[nmb_density].ctrltype == ct_percent) ? *f[nmb_density]
-                                                                  : (*f[nmb_density] + 1.f) * 0.5;
+        den_val = (*f[nmb_density] + 1.f) * 0.5;
+        tex_val = (*f[nmb_texture] + 1.f) * 0.5;
 
-        tex_val = (fxdata->p[nmb_texture].ctrltype == ct_percent) ? *f[nmb_texture]
-                                                                  : (*f[nmb_texture] + 1.f) * 0.5;
-
-        // nmb_in_gain,
-        parm->position = limit_range(*f[nmb_position], 0.f, 1.f);
-        parm->size = limit_range(*f[nmb_size], 0.f, 1.f);
-        parm->density = limit_range(den_val, 0.f, 1.f);
-        parm->texture = limit_range(tex_val, 0.f, 1.f);
+        parm->position = clamp01(*f[nmb_position]);
+        parm->size = clamp01(*f[nmb_size]);
+        parm->density = clamp01(den_val);
+        parm->texture = clamp01(tex_val);
         parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
-        parm->stereo_spread = limit_range(*f[nmb_spread], 0.f, 1.f);
-        parm->feedback = limit_range(*f[nmb_feedback], 0.f, 1.f);
+        parm->stereo_spread = clamp01(*f[nmb_spread]);
+        parm->feedback = clamp01(*f[nmb_feedback]);
         parm->freeze = *f[nmb_freeze] > 0.5;
-        parm->reverb = limit_range(*f[nmb_reverb], 0.f, 1.f);
+        parm->reverb = clamp01(*f[nmb_reverb]);
         parm->dry_wet = 1.f;
 
         parm->trigger = false;     // this is an external granulating source. Skip it
@@ -210,7 +206,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
     }
     resampReadPtr = rp;
 
-    mix.set_target_smoothed(limit_range(*f[nmb_mix], 0.f, 1.f));
+    mix.set_target_smoothed(clamp01(*f[nmb_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

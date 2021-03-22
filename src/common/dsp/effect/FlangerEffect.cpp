@@ -330,8 +330,8 @@ void FlangerEffect::process(float *dataL, float *dataR)
         float fbr = 0.f;
         if (feedback.v > 0)
         {
-            fbl = limit_range(feedback.v * combs[0][b], -1.f, 1.f);
-            fbr = limit_range(feedback.v * combs[1][b], -1.f, 1.f);
+            fbl = clamp1bp(feedback.v * combs[0][b]);
+            fbr = clamp1bp(feedback.v * combs[1][b]);
 
             fbl = 1.5 * fbl - 0.5 * fbl * fbl * fbl;
             fbr = 1.5 * fbr - 0.5 * fbr * fbr * fbr;
@@ -380,8 +380,8 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
         gainadj -= 0.07 * mix.v;
 
-        outl = limit_range((1.0f + gainadj) * outl, -1.f, 1.f);
-        outr = limit_range((1.0f + gainadj) * outr, -1.f, 1.f);
+        outl = clamp1bp((1.0f + gainadj) * outl);
+        outr = clamp1bp((1.0f + gainadj) * outr);
 
         outl = 1.5 * outl - 0.5 * outl * outl * outl;
         outr = 1.5 * outr - 0.5 * outr * outr * outr;

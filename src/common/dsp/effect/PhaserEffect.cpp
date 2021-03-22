@@ -89,7 +89,7 @@ void PhaserEffect::setvars()
     {
         auto rmin = fxdata->p[ph_mod_rate].val_min.f;
         auto rmax = fxdata->p[ph_mod_rate].val_max.f;
-        auto phase = limit_range((*f[ph_mod_rate] - rmin) / (rmax - rmin), 0.f, 1.f);
+        auto phase = clamp01((*f[ph_mod_rate] - rmin) / (rmax - rmin));
 
         modLFOL.pre_process(mwave, 0.f, depth, phase);
         modLFOR.pre_process(mwave, 0.f, depth, phase + 0.5 * *f[ph_stereo]);
@@ -165,7 +165,7 @@ void PhaserEffect::process(float *dataL, float *dataR)
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(limit_range(*f[ph_mix], 0.f, 1.f));
+    mix.set_target_smoothed(clamp01(*f[ph_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
