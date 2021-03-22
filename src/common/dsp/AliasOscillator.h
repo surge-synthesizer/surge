@@ -37,6 +37,7 @@ class AliasOscillator : public Oscillator
         aow_sine,
         aow_triangle,
         aow_pulse,
+        aow_noise,
 
         ao_n_waves
     };
@@ -70,6 +71,39 @@ class AliasOscillator : public Oscillator
     uint32_t phase[MAX_UNISON];
     float unisonOffsets[MAX_UNISON];
     float mixL[MAX_UNISON], mixR[MAX_UNISON];
+
+    struct UInt8RNG
+    {
+        // Based on http://en.wikipedia.org/wiki/Xorshift
+        // and inspired by https://github.com/edrosten/8bit_rng and
+        // http://www.donnelly-house.net/programming/cdp1802/8bitPRNGtest.html
+
+        uint8_t x, y, z, a;
+        uint8_t stepCount;
+        UInt8RNG() : x(21), y(229), z(181), a(rand() & 0xFF), stepCount(0) {}
+
+        inline uint8_t step()
+        {
+            uint8_t t = x ^ ((x << 3U) & 0xFF);
+            x = y;
+            y = z;
+            z = a;
+            a = a ^ (a >> 5U) ^ (t ^ (t >> 2U));
+            return a;
+        }
+        inline uint8_t stepTo(uint8_t sc, uint8_t every)
+        {
+            uint8_t r = a;
+            while (stepCount != sc)
+            {
+                stepCount++;
+                if (stepCount % every == 0)
+                    r = step();
+            }
+            return r;
+        }
+    };
+    UInt8RNG urng8[MAX_UNISON];
 
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 };
