@@ -93,7 +93,6 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     const double two32 = 4294967296.0;
 
-    // bit depth
     auto bits = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].f, 1.f, 8.f);
     auto quant = powf(2, bits);
     auto dequant = 1.f / quant;
@@ -111,7 +110,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
-        // Int64_t since I can span +/- two32 or beyond
+        // int64_t since I can span +/- two32 or beyond
         int64_t fmPhaseShift = 0;
 
         if (FM)
@@ -119,7 +118,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             fmPhaseShift = (int64_t)(fmdepth.v * master_osc[i] * two32);
         }
 
-        float vL = 0.0f, vR = 0.0f;
+        float vL = 0.f, vR = 0.f;
 
         for (int u = 0; u < n_unison; ++u)
         {
@@ -167,7 +166,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             vL += out * mixL[u];
             vR += out * mixR[u];
 
-            // This order actually kinda metters on 32 bit esp
+            // this order actually kinda matters in 32-bit especially
             phase[u] += fmPhaseShift;
             phase[u] += phase_increments[u];
         }
