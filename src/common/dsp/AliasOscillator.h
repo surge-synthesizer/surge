@@ -34,10 +34,9 @@ class AliasOscillator : public Oscillator
 
     enum ao_waves
     {
-        aow_sawtooth,
+        aow_sine,
         aow_triangle,
         aow_pulse,
-        aow_sine,
 
         ao_n_waves
     };
@@ -77,4 +76,4 @@ class AliasOscillator : public Oscillator
 
 extern const char *ao_type_names[4];
 
-extern const uint8_t ALIAS_SINETABLE[256];
+extern const uint8_t alias_sinetable[256];

@@ -172,6 +172,7 @@ enum ctrltypes
     ct_ensemble_stages,
     ct_ensemble_clockrate,
     ct_alias_wave,
+    ct_alias_mask,
     ct_alias_bits,
     num_ctrltypes,
 };
