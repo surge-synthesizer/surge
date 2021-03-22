@@ -394,7 +394,7 @@ bool Parameter::is_discrete_selection()
     case ct_vocoder_bandcount:
     case ct_nimbusmode:
     case ct_nimbusquality:
-    case ct_waveguide_excitation_model:
+    case ct_stringosc_excitation_model:
     case ct_twist_engine:
     case ct_ensemble_stages:
     case ct_alias_wave:
@@ -1027,22 +1027,30 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     }
-    case ct_waveguide_excitation_model:
+    case ct_stringosc_excitation_model:
     {
-        extern int waveguide_excitations_count();
+        extern int stringosc_excitations_count();
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = waveguide_excitations_count() - 1;
+        val_max.i = stringosc_excitations_count() - 1;
         val_default.i = 0;
         break;
     }
     case ct_alias_wave:
     {
-        extern const int ALIAS_OSCILLATOR_WAVE_TYPES;
+        extern int alias_waves_count();
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // TODO fix, should reference ao_n_types somehow
+        val_max.i = alias_waves_count() - 1;
         val_default.i = 0;
+        break;
+    }
+    case ct_alias_bits:
+    {
+        valtype = vt_float;
+        val_min.f = 1.f;
+        val_max.f = 8.f;
+        val_default.f = 8.f;
         break;
     }
     case ct_flangerspacing:
@@ -1387,6 +1395,13 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 1.f;
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "kHz");
+        break;
+
+    case ct_alias_bits:
+        displayType = LinearWithScale;
+        displayInfo.scale = 1.f;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "bits");
         break;
     }
 }
@@ -3211,17 +3226,17 @@ void Parameter::get_display(char *txt, bool external, float ef)
             }
         }
         break;
-        case ct_waveguide_excitation_model:
+        case ct_stringosc_excitation_model:
         {
-            extern std::string waveguide_excitation_name(int);
-            auto n = waveguide_excitation_name(i);
+            extern std::string stringosc_excitation_name(int);
+            auto n = stringosc_excitation_name(i);
             snprintf(txt, TXT_SIZE, "%s", n.c_str());
         }
         break;
         case ct_alias_wave:
         {
-            extern const char *ao_type_names[4];
-            snprintf(txt, TXT_SIZE, "%s", ao_type_names[i & 3]); // TODO: don't hardcode type limit
+            extern const char *alias_wave_name[];
+            snprintf(txt, TXT_SIZE, "%s", alias_wave_name[i]);
         }
         break;
         case ct_twist_engine:
@@ -3605,6 +3620,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_freq_ringmod:
     case ct_modern_trimix:
     case ct_ensemble_clockrate:
+    case ct_alias_bits:
     {
         return true;
         break;

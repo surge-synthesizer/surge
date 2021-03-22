@@ -32,14 +32,14 @@ class AliasOscillator : public Oscillator
         ao_unison_voices,
     };
 
-    enum ao_types
+    enum ao_waves
     {
-        aot_saw,
-        aot_tri,
-        aot_pulse,
-        aot_sine,
+        aow_sawtooth,
+        aow_triangle,
+        aow_pulse,
+        aow_sine,
 
-        ao_n_types
+        ao_n_waves
     };
 
     AliasOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
@@ -59,7 +59,7 @@ class AliasOscillator : public Oscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 
-    template <ao_types wavetype, bool subOctave, bool FM>
+    template <ao_waves wavetype, bool subOctave, bool FM>
     void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
 
     lag<float, true> fmdepth;

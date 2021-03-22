@@ -166,12 +166,13 @@ enum ctrltypes
     ct_freq_ringmod,
     ct_modern_trimix,
     ct_percent_oscdrift,
-    ct_waveguide_excitation_model,
+    ct_stringosc_excitation_model,
     ct_ensemble_lforate,
     ct_twist_engine,
     ct_ensemble_stages,
     ct_ensemble_clockrate,
     ct_alias_wave,
+    ct_alias_bits,
     num_ctrltypes,
 };
 

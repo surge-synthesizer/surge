@@ -16,13 +16,13 @@
 // This oscillator is intentionally bad! Not recommended as an example of good DSP!
 
 #include "AliasOscillator.h"
-#include "DebugHelpers.h"
+#include <random>
 
-// says ao_n_types is undefined. makes no sense, whatever, for now I'm hardcoding it. TODO FIX.
-const int ALIAS_OSCILLATOR_WAVE_TYPES = /*ao_n_types*/ 4;
-const char *ao_type_names[4] = {"Saw", "Triangle", "Pulse", "Sine"};
+int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 
-const uint8_t ALIAS_SINETABLE[256] = {
+const char *alias_wave_name[] = {"Saw", "Triangle", "Pulse", "Sine"};
+
+const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
     0xB0, 0xB3, 0xB6, 0xB8, 0xBB, 0xBE, 0xC1, 0xC3, 0xC6, 0xC8, 0xCB, 0xCD, 0xD0, 0xD2, 0xD5, 0xD7,
     0xD9, 0xDB, 0xDD, 0xE0, 0xE2, 0xE4, 0xE5, 0xE7, 0xE9, 0xEB, 0xEC, 0xEE, 0xEF, 0xF1, 0xF2, 0xF4,
@@ -47,19 +47,21 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
+    std::default_random_engine gen(rand());
+    std::uniform_int_distribution<> rng(0, 1 << 31);
+
     for (int u = 0; u < n_unison; ++u)
     {
         unisonOffsets[u] = us.detune(u);
         us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
-        // We want phase to be a random 32-bit number.
-        // The quality of the randomness doesn't matter.
-        // rand() is only guaranteed to produce 15 bits but on most modern platforms it's 31 bits.
-        // So just add rand() to rand() for now, it's good enough.
-        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : (rand() + rand());
+        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
+
+        printf("%d ", phase[u]);
 
         driftLFO[u].init(nonzero_init_drift);
     }
+    printf("\n");
 
     charFilt.init(storage->getPatch().character.val.i);
 }
@@ -72,11 +74,10 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
     fmdepth.newValue(fv);
 
-    const ao_types wavetype = (ao_types)oscdata->p[ao_wave].val.i;
+    const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
 
     // how many bits to take from the 32bit phase counter
-    const uint32_t bit_depth =
-        limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].i, 1, 16);
+    const uint32_t bit_depth = 8;
     const uint32_t bit_mask = (1 << bit_depth) - 1;
     oscdata->wt.n_tables = bit_mask; // see init_default_values
 
@@ -123,14 +124,16 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             const uint32_t shifted = upper + shift;
 
             uint32_t shaped = shifted; // default to untransformed (wrap any overflow)
-            if (wavetype == aot_tri)
+
+            if (wavetype == aow_triangle)
             {
+                // flip wave to make a triangle shape (has a DC offset, needs fixing)
                 if (shifted > threshold)
-                { // flip wave to make a triangle shape (has a DC offset, needs fixing)
+                {
                     shaped = bit_mask - shifted;
                 }
             }
-            else if (wavetype == aot_pulse)
+            else if (wavetype == aow_pulse)
             {
                 // test highest bit to make pulse shape
                 shaped = (shifted > threshold) ? bit_mask : 0x00;
@@ -140,17 +143,18 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
             // default to this for all waves except sine
             float out = ((float)masked - (float)(bit_mask >> 1)) * inverseBits;
+
             // but for sine...
-            if (wavetype == aot_sine)
+            if (wavetype == aow_sine)
             {
                 if (bit_depth >= 8)
                 {
-                    out = ((float)ALIAS_SINETABLE[masked >> (8 - bit_depth)] - (float)0x7F) *
+                    out = ((float)alias_sinetable[masked >> (8 - bit_depth)] - (float)0x7F) *
                           inverse255;
                 }
                 else
                 {
-                    out = ((float)ALIAS_SINETABLE[masked << (8 - bit_depth)] - (float)0x7F) *
+                    out = ((float)alias_sinetable[masked << (8 - bit_depth)] - (float)0x7F) *
                           inverse255;
                 }
             }
@@ -160,8 +164,14 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
             phase[u] += phase_increments[u] + fmPhaseShift;
         }
-        output[i] = vL;
-        outputR[i] = vR;
+
+        // bitcrush output
+        auto bits = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].f, 1.f, 8.f);
+        auto quant = powf(2, bits);
+        auto dequant = 1.f / quant;
+
+        output[i] = dequant * (int)(vL * quant);
+        outputR[i] = dequant * (int)(vR * quant);
 
         fmdepth.process();
     }
@@ -204,7 +214,7 @@ void AliasOscillator::init_ctrltypes()
     oscdata->p[ao_threshold].set_user_data(oscdata);
 
     oscdata->p[ao_depth].set_name("Bit Depth");
-    oscdata->p[ao_depth].set_type(ct_fmratio_int);
+    oscdata->p[ao_depth].set_type(ct_alias_bits);
 
     oscdata->p[ao_unison_detune].set_name("Unison Detune");
     oscdata->p[ao_unison_detune].set_type(ct_oscspread);
@@ -214,20 +224,17 @@ void AliasOscillator::init_ctrltypes()
 
 void AliasOscillator::init_default_values()
 {
-    oscdata->p[ao_wave].val.i = 0;
-    oscdata->p[ao_shift].val.f = 0.0f;
-    oscdata->p[ao_mask].val.f = 0.0f;
-    oscdata->p[ao_threshold].val.f = 0.5f;
-    oscdata->p[ao_depth].val.i = 8;
     // OscillatorStorage's implementation of CountedSetUserData is used to display
     // the range of the parameters. This abuses the wavetable's n_tables field.
     // As there are no actual wavetables used by this oscillator, this is safe even if
     // somewhat messy.
     oscdata->wt.n_tables = 255;
+
+    oscdata->p[ao_wave].val.i = 0;
+    oscdata->p[ao_shift].val.f = 0.0f;
+    oscdata->p[ao_mask].val.f = 0.0f;
+    oscdata->p[ao_threshold].val.f = 0.5f;
+    oscdata->p[ao_depth].val.f = 8.f;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }
-
-/*int AliasOscillator::getCountedSetSize() {
-    return bit_mask;
-}*/

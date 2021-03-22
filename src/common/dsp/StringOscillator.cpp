@@ -38,9 +38,9 @@
 
 #include "StringOscillator.h"
 
-int waveguide_excitations_count() { return 15; }
+int stringosc_excitations_count() { return 15; }
 
-std::string waveguide_excitation_name(int i)
+std::string stringosc_excitation_name(int i)
 {
     auto m = (StringOscillator::exciter_modes)i;
 
@@ -640,7 +640,7 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 void StringOscillator::init_ctrltypes()
 {
     oscdata->p[str_exciter_mode].set_name("Exciter");
-    oscdata->p[str_exciter_mode].set_type(ct_waveguide_excitation_model);
+    oscdata->p[str_exciter_mode].set_type(ct_stringosc_excitation_model);
 
     oscdata->p[str_exciter_level].set_name("Exciter Level");
     oscdata->p[str_exciter_level].set_type(ct_percent);
