@@ -130,17 +130,6 @@ void PhaserEffect::setvars()
 
     feedback.newValue(0.95f * *f[ph_feedback]);
     width.set_target_smoothed(db_to_linear(*f[ph_width]));
-
-    static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
-    {
-        const bool getValue(Parameter *p) override
-        {
-            auto cge = p->ctrlgroup_entry - ms_lfo1;
-            auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
-            // TODO: remove lt_function after implementing function modulator!
-            return lf->shape.val.i == lt_envelope || lf->shape.val.i == lt_function;
-        }
-    } lfoRatePhaseDeact;
 }
 
 void PhaserEffect::process(float *dataL, float *dataR)
