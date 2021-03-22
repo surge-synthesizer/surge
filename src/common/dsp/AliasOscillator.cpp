@@ -20,7 +20,7 @@
 
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 
-const char *alias_wave_name[] = {"Sine", "Triangle", "Pulse"};
+const char *alias_wave_name[] = {"Sine", "Triangle", "Pulse", "Noise"};
 
 const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -58,6 +58,9 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
 
         driftLFO[u].init(nonzero_init_drift);
+        // Seed the RNGs in display mode
+        if (is_display)
+            urng8[u].a = 73;
     }
 
     charFilt.init(storage->getPatch().character.val.i);
@@ -137,9 +140,20 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
                 // test highest bit to make pulse shape
                 shaped = (shifted > threshold) ? bit_mask : 0x00;
             }
+            else if (wavetype == aow_noise)
+            {
+                shaped = urng8[u].stepTo((shifted & 0xFF), threshold | 8U);
+                // OK so we want to wrap towards 255/0 so
+                int32_t shapes = shaped - 0x7F;
+                shapes = localClamp((int32_t)(shapes * drive), -0x7F, 0x7F - 1);
+                shaped = (uint8_t)(shapes + 0x7f);
+            }
 
-            // wraparound
-            shaped = (uint32_t)(shaped * drive) & 0xFFFF;
+            if (wavetype != aow_noise)
+            {
+                // wraparound
+                shaped = (uint32_t)(shaped * drive) & 0xFFFF;
+            }
 
             // XOR bitmask
             uint8_t masked = shaped ^ mask;
