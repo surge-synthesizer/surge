@@ -63,7 +63,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
     charFilt.init(storage->getPatch().character.val.i);
 }
 
-template <typename T> T localClamp(const T &a, const T &l, const T &h)
+template <typename T> inline T localClamp(const T &a, const T &l, const T &h)
 {
     return std::max(l, std::min(a, h));
 }
@@ -116,11 +116,12 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)
     {
-        float fmPhaseShift = 0.0;
+        // Int64_t since I can span +/- two32 or beyond
+        int64_t fmPhaseShift = 0;
 
         if (FM)
         {
-            fmPhaseShift = fmdepth.v * master_osc[i] * two32;
+            fmPhaseShift = (int64_t)(fmdepth.v * master_osc[i] * two32);
         }
 
         float vL = 0.0f, vR = 0.0f;
@@ -170,7 +171,9 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             vL += out * mixL[u];
             vR += out * mixR[u];
 
-            phase[u] += phase_increments[u] + fmPhaseShift;
+            // This order actually kinda metters on 32 bit esp
+            phase[u] += fmPhaseShift;
+            phase[u] += phase_increments[u];
         }
 
         // bitcrush output
