@@ -75,21 +75,25 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     const ao_types wavetype = (ao_types)oscdata->p[ao_wave].val.i;
 
     // how many bits to take from the 32bit phase counter
-    const uint32_t bit_depth = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].i, 1, 16);
+    const uint32_t bit_depth =
+        limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].i, 1, 16);
     const uint32_t bit_mask = (1 << bit_depth) - 1;
-    oscdata->wt.n_tables = (1 << bit_depth); // see init_default_values
+    oscdata->wt.n_tables = bit_mask; // see init_default_values
 
-    const float inverseBits = 1.0 / ((float) bit_mask);
-    const float inverse255 = 1.0 / ((float) 0xFF);
+    const float inverseBits = 1.0 / ((float)bit_mask);
+    const float inverse255 = 1.0 / ((float)0xFF);
 
-    const uint32_t shift = limit_range(
-        (int)(float)(bit_mask * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0, (int)bit_mask);
+    const uint32_t shift =
+        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0,
+                    (int)bit_mask);
 
-    const uint32_t mask = limit_range(
-        (int)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0, (int)bit_mask);
+    const uint32_t mask =
+        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0,
+                    (int)bit_mask);
 
     const uint32_t threshold = limit_range(
-        (int)(float)(bit_mask * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0, (int)bit_mask);
+        (int)(float)(bit_mask * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0,
+        (int)bit_mask);
 
     const double two32 = 4294967296.0;
 
@@ -137,12 +141,17 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             // default to this for all waves except sine
             float out = ((float)masked - (float)(bit_mask >> 1)) * inverseBits;
             // but for sine...
-            if(wavetype == aot_sine){
-                if(bit_depth >= 8){
-                    out = ((float)ALIAS_SINETABLE[masked >> (8 - bit_depth)] - (float)0x7F) * inverse255;
+            if (wavetype == aot_sine)
+            {
+                if (bit_depth >= 8)
+                {
+                    out = ((float)ALIAS_SINETABLE[masked >> (8 - bit_depth)] - (float)0x7F) *
+                          inverse255;
                 }
-                else{
-                    out = ((float)ALIAS_SINETABLE[masked << (8 - bit_depth)] - (float)0x7F) * inverse255;
+                else
+                {
+                    out = ((float)ALIAS_SINETABLE[masked << (8 - bit_depth)] - (float)0x7F) *
+                          inverse255;
                 }
             }
 
@@ -214,7 +223,7 @@ void AliasOscillator::init_default_values()
     // the range of the parameters. This abuses the wavetable's n_tables field.
     // As there are no actual wavetables used by this oscillator, this is safe even if
     // somewhat messy.
-    oscdata->wt.n_tables = 256;
+    oscdata->wt.n_tables = 255;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }
