@@ -17,6 +17,7 @@
 
 #include "AliasOscillator.h"
 #include "DebugHelpers.h"
+#include <random>
 
 // says ao_n_types is undefined. makes no sense, whatever, for now I'm hardcoding it. TODO FIX.
 const int ALIAS_OSCILLATOR_WAVE_TYPES = /*ao_n_types*/ 4;
@@ -43,6 +44,11 @@ const uint8_t ALIAS_SINETABLE[256] = {
 
 void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
+    // use uniform RNG, we need all 32 bits randomized, which rand() doesn't guarantee
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<> rng(0, 1 << 31);
+
     n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
@@ -52,8 +58,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
         unisonOffsets[u] = us.detune(u);
         us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
-        // TODO: replace this with something that actually randomises the full 32 bits
-        phase[u] = oscdata->retrigger.val.b || is_display ? 0 : rand();
+        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
 
         driftLFO[u].init(nonzero_init_drift);
     }
@@ -85,6 +90,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
+
     for (int u = 0; u < n_unison; ++u)
     {
         const float lfodrift = drift * driftLFO[u].next();

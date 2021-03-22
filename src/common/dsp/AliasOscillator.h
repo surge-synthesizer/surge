@@ -22,10 +22,11 @@ class AliasOscillator : public Oscillator
   public:
     enum ao_params
     {
-        ao_wave,
+        ao_wave = 0,
         ao_shift,
         ao_mask,
         ao_threshold,
+
         ao_unison_detune = 5,
         ao_unison_voices,
     };
