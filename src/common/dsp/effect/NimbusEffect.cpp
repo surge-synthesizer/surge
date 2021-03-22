@@ -76,46 +76,7 @@ void NimbusEffect::init()
     resampWritePtr = 1; // why 1? well while we are stalling we want to output 0 so write 1 ahead
 }
 
-void NimbusEffect::setvars(bool init)
-{
-    if (*pdata_ival[nmb_mode] != old_nmb_mode)
-    {
-        switch (*pdata_ival[nmb_mode])
-        {
-        case 0:
-            fxdata->p[nmb_density].set_name("Density");
-            fxdata->p[nmb_density].set_type(ct_percent_bipolar);
-
-            fxdata->p[nmb_texture].set_name("Texture");
-            fxdata->p[nmb_texture].set_type(ct_percent);
-
-            break;
-        case 1:
-        case 2:
-            fxdata->p[nmb_density].set_name("Diffusion");
-            fxdata->p[nmb_density].set_type(ct_percent);
-
-            fxdata->p[nmb_texture].set_name("Filter");
-            fxdata->p[nmb_texture].set_type(ct_percent_bipolar);
-            break;
-        case 3:
-            fxdata->p[nmb_density].set_name("Smear");
-            fxdata->p[nmb_density].set_type(ct_percent_bipolar);
-
-            fxdata->p[nmb_texture].set_name("Texture");
-            fxdata->p[nmb_texture].set_type(ct_percent_bipolar);
-            break;
-        }
-
-        fxdata->p[nmb_size].set_name((*pdata_ival[nmb_mode] == 3) ? "Warp" : "Size");
-
-        fxdata->p[nmb_density].posy_offset = 3;
-        fxdata->p[nmb_texture].posy_offset = 3;
-
-        old_nmb_mode = *pdata_ival[nmb_mode];
-        hasInvalidated = true;
-    }
-}
+void NimbusEffect::setvars(bool init) {}
 
 void NimbusEffect::process(float *dataL, float *dataR)
 {
@@ -291,6 +252,90 @@ void NimbusEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
+    // Dynamic names and bipolarity support
+    static struct DynTexDynamicNameBip : public ParameterDynamicNameFunction,
+                                         ParameterDynamicBoolFunction
+    {
+        const char *getName(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            static char res[TXT_SIZE];
+            res[0] = 0;
+            auto mode = fx->p[nmb_mode].val.i;
+            switch (mode)
+            {
+            case 0:
+                if (idx == nmb_density)
+                    snprintf(res, TXT_SIZE, "%s", "Density");
+                if (idx == nmb_texture)
+                    snprintf(res, TXT_SIZE, "%s", "Texture");
+                if (idx == nmb_size)
+                    snprintf(res, TXT_SIZE, "%s", "Size");
+                break;
+            case 1:
+            case 2:
+                if (idx == nmb_density)
+                    snprintf(res, TXT_SIZE, "%s", "Diffusion");
+                if (idx == nmb_texture)
+                    snprintf(res, TXT_SIZE, "%s", "Filter");
+                if (idx == nmb_size)
+                    snprintf(res, TXT_SIZE, "%s", "Size");
+                break;
+            case 3:
+                if (idx == nmb_density)
+                    snprintf(res, TXT_SIZE, "%s", "Smear");
+                if (idx == nmb_texture)
+                    snprintf(res, TXT_SIZE, "%s", "Texture");
+                if (idx == nmb_size)
+                    snprintf(res, TXT_SIZE, "%s", "Warp");
+                break;
+            }
+
+            return res;
+        }
+
+        const bool getValue(Parameter *p) override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            auto mode = fx->p[nmb_mode].val.i;
+
+            auto isBipolar = false;
+            switch (mode)
+            {
+            case 0:
+                if (idx == nmb_density)
+                    isBipolar = true;
+                break;
+            case 1:
+            case 2:
+                if (idx == nmb_texture)
+                    isBipolar = true;
+                break;
+            case 3:
+                if (idx != nmb_size)
+                    isBipolar = true;
+                break;
+            }
+
+            return isBipolar;
+        }
+    } dynTexDynamicNameBip;
+
+    static struct SpreadDeactivator : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(Parameter *p)
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto mode = fx->p[nmb_mode].val.i;
+
+            return mode != 0;
+        }
+    } spreadDeact;
+
     int ypos = 1;
     fxdata->p[nmb_mode].set_name("Mode");
     fxdata->p[nmb_mode].set_type(ct_nimbusmode);
@@ -305,20 +350,31 @@ void NimbusEffect::init_ctrltypes()
     fxdata->p[nmb_position].set_type(ct_percent);
     fxdata->p[nmb_position].posy_offset = ypos;
     fxdata->p[nmb_size].set_name("Size");
-    fxdata->p[nmb_size].set_type(ct_percent);
+    fxdata->p[nmb_size].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
+    fxdata->p[nmb_size].dynamicName = &dynTexDynamicNameBip;
+    fxdata->p[nmb_size].dynamicBipolar = &dynTexDynamicNameBip;
+
     fxdata->p[nmb_size].val_default.f = 0.5;
     fxdata->p[nmb_size].posy_offset = ypos;
     fxdata->p[nmb_pitch].set_name("Pitch");
     fxdata->p[nmb_pitch].set_type(ct_pitch4oct);
     fxdata->p[nmb_pitch].posy_offset = ypos;
+
     fxdata->p[nmb_density].set_name("Density");
-    fxdata->p[nmb_density].set_type(ct_percent_bipolar);
+    fxdata->p[nmb_density].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     fxdata->p[nmb_density].posy_offset = ypos;
+    fxdata->p[nmb_density].dynamicName = &dynTexDynamicNameBip;
+    fxdata->p[nmb_density].dynamicBipolar = &dynTexDynamicNameBip;
+
     fxdata->p[nmb_texture].set_name("Texture");
-    fxdata->p[nmb_texture].set_type(ct_percent);
+    fxdata->p[nmb_texture].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     fxdata->p[nmb_texture].posy_offset = ypos;
+    fxdata->p[nmb_texture].dynamicName = &dynTexDynamicNameBip;
+    fxdata->p[nmb_texture].dynamicBipolar = &dynTexDynamicNameBip;
+
     fxdata->p[nmb_spread].set_name("Spread");
     fxdata->p[nmb_spread].set_type(ct_percent);
+    fxdata->p[nmb_spread].dynamicDeactivation = &spreadDeact;
     fxdata->p[nmb_spread].posy_offset = ypos;
 
     ypos += 2;

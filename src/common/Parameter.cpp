@@ -412,6 +412,7 @@ bool Parameter::is_nonlocal_on_change()
     {
     case ct_twist_engine:
     case ct_phaser_stages:
+    case ct_nimbusmode:
         return true;
     default:
         break;
@@ -3267,7 +3268,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
         case ct_alias_wave:
         {
             extern const char *alias_wave_name[];
-            snprintf(txt, TXT_SIZE, "%s", alias_wave_name[i]);
+            extern int alias_waves_count();
+            snprintf(txt, TXT_SIZE, "%s", alias_wave_name[std::min(i, alias_waves_count() - 1)]);
         }
         break;
         case ct_twist_engine:
