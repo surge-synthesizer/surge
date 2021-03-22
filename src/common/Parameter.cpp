@@ -1045,6 +1045,14 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     }
+    case ct_alias_mask:
+    {
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 1.f;
+        val_default.f = 0.f;
+        break;
+    }
     case ct_alias_bits:
     {
         valtype = vt_float;
@@ -1184,6 +1192,7 @@ void Parameter::set_type(int ctrltype)
     case ct_lfoamplitude:
     case ct_reson_res_extendable:
     case ct_modern_trimix:
+    case ct_alias_mask:
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
@@ -1615,6 +1624,13 @@ void Parameter::bound_value(bool force_integer)
             auto fraccount = val.f * count;
             auto intcount = (int)fraccount;
             val.f = 1.0 * intcount / count;
+            break;
+        }
+        case ct_alias_mask:
+        {
+            auto fraccount = val.f * 255;
+            auto intcount = (int)fraccount;
+            val.f = 1.0 * intcount / 255;
             break;
         }
         case ct_fmratio:
@@ -2697,6 +2713,21 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
         }
 
         break;
+    case ct_alias_mask:
+    {
+        int bits = 8;
+        int mask = 1 << bits;
+        std::string bin;
+
+        while (bits--)
+        {
+            mask >>= 1;
+            bin += ((int)(val.f * 255) & mask) ? "1" : "0";
+        }
+
+        snprintf(txt, TXT_SIZE, "%s", bin.c_str());
+        break;
+    }
     }
 }
 
@@ -3620,6 +3651,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_freq_ringmod:
     case ct_modern_trimix:
     case ct_ensemble_clockrate:
+    case ct_alias_mask:
     case ct_alias_bits:
     {
         return true;
