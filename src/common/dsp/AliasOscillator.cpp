@@ -57,11 +57,8 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
 
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
 
-        printf("%d ", phase[u]);
-
         driftLFO[u].init(nonzero_init_drift);
     }
-    printf("\n");
 
     charFilt.init(storage->getPatch().character.val.i);
 }
@@ -117,6 +114,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         }
 
         float vL = 0.0f, vR = 0.0f;
+
         for (int u = 0; u < n_unison; ++u)
         {
             const uint32_t upper = phase[u] >> (32 - bit_depth);
