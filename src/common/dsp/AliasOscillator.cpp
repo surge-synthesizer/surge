@@ -78,18 +78,16 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
 
-    // how many bits to take from the 32bit phase counter
     const uint32_t bit_depth = 8;
     const uint32_t bit_mask = (1 << bit_depth) - 1;
-    const float inverseBits = 1.0 / ((float)bit_mask);
-    const float inverse255 = 1.0 / ((float)0xFF);
+    const float inv_bit_mask = 1.0 / (float)bit_mask;
 
     const uint32_t mask =
         localClamp((uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f),
                    0U, (uint32_t)bit_mask);
 
-    const float threshold =
-        (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f);
+    const uint8_t threshold = (uint8_t)(
+        (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
 
     const double two32 = 4294967296.0;
 
@@ -147,7 +145,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             uint8_t masked = shaped ^ mask;
 
             // default to this for all waves except sine
-            float out = ((float)masked - (float)(bit_mask >> 1)) * inverseBits;
+            float out = ((float)masked - (float)(bit_mask >> 1)) * inv_bit_mask;
 
             // but for sine...
             if (wavetype == aow_sine)
@@ -157,7 +155,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
                     masked += 0x7F - threshold;
                 }
 
-                out = ((float)alias_sinetable[0xFF - masked] - (float)0x7F) * inverse255;
+                out = ((float)alias_sinetable[0xFF - masked] - (float)0x7F) * inv_bit_mask;
             }
 
             // bitcrush
