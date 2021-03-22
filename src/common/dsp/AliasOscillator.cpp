@@ -48,7 +48,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
     std::default_random_engine gen(rand());
-    std::uniform_int_distribution<> rng(0, 1 << 31);
+    std::uniform_int_distribution<uint32_t> rng(0, 0xFFFFFFFF);
 
     for (int u = 0; u < n_unison; ++u)
     {
@@ -61,6 +61,11 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
     }
 
     charFilt.init(storage->getPatch().character.val.i);
+}
+
+template <typename T> T localClamp(const T &a, const T &l, const T &h)
+{
+    return std::max(l, std::min(a, h));
 }
 
 void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
@@ -81,17 +86,17 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     const float inverseBits = 1.0 / ((float)bit_mask);
     const float inverse255 = 1.0 / ((float)0xFF);
 
-    const uint32_t shift =
-        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0,
-                    (int)bit_mask);
+    const uint32_t shift = localClamp(
+        (uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_shift].param_id_in_scene].f), 0U,
+        (uint32_t)bit_mask);
 
     const uint32_t mask =
-        limit_range((int)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f), 0,
-                    (int)bit_mask);
+        localClamp((uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f),
+                   0U, (uint32_t)bit_mask);
 
-    const uint32_t threshold = limit_range(
-        (int)(float)(bit_mask * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0,
-        (int)bit_mask);
+    const uint32_t threshold = localClamp(
+        (uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_threshold].param_id_in_scene].f), 0U,
+        (uint32_t)bit_mask);
 
     const double two32 = 4294967296.0;
 
