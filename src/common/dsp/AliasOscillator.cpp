@@ -95,6 +95,11 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     const double two32 = 4294967296.0;
 
+    // bit depth related
+    auto bits = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].f, 1.f, 8.f);
+    auto quant = powf(2, bits);
+    auto dequant = 1.f / quant;
+
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
 
@@ -164,10 +169,6 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         }
 
         // bitcrush output
-        auto bits = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].f, 1.f, 8.f);
-        auto quant = powf(2, bits);
-        auto dequant = 1.f / quant;
-
         output[i] = dequant * (int)(vL * quant);
         outputR[i] = dequant * (int)(vR * quant);
 
