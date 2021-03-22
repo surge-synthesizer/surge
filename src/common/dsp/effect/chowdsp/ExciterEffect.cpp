@@ -71,15 +71,14 @@ void ExciterEffect::process(float *dataL, float *dataR)
 void ExciterEffect::set_params()
 {
     // "Tone" param
-    auto cutoff =
-        low_freq * std::pow(high_freq / low_freq, limit_range(*f[exciter_tone], 0.f, 1.f));
+    auto cutoff = low_freq * std::pow(high_freq / low_freq, clamp01(*f[exciter_tone]));
     cutoff = limit_range(cutoff, 10.0, samplerate * 0.48);
     auto omega_factor = samplerate_inv * 2.0 * M_PI / (double)os.getOSRatio();
     toneFilter.coeff_HP(cutoff * omega_factor, q_val);
 
     // "Drive" param
-    auto drive_makeup = std::pow(0.2f, 1.f - limit_range(*f[exciter_tone], 0.f, 1.f));
-    auto drive = 8.f * std::pow(limit_range(*f[exciter_drive], 0.f, 1.f), 1.5f) * drive_makeup;
+    auto drive_makeup = std::pow(0.2f, 1.f - clamp01(*f[exciter_tone]));
+    auto drive = 8.f * std::pow(clamp01(*f[exciter_drive]), 1.5f) * drive_makeup;
     drive_gain.set_target_smoothed(drive);
 
     // attack/release params
@@ -94,7 +93,7 @@ void ExciterEffect::set_params()
     levelDetector.set_release_time(release_ms);
 
     // "Mix" param
-    wet_gain.set_target_smoothed(limit_range(*f[exciter_mix], 0.f, 1.f));
+    wet_gain.set_target_smoothed(clamp01(*f[exciter_mix]));
 }
 
 void ExciterEffect::suspend() { init(); }

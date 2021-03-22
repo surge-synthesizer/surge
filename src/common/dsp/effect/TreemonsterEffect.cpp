@@ -105,7 +105,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         lp.process_block(tbuf[0], tbuf[1]);
     }
 
-    float qs = limit_range(*f[tm_speed], 0.f, 1.f);
+    float qs = clamp01(*f[tm_speed]);
     qs = qs * qs;
     qs = qs * qs;
     float speed = 0.998 - qs * 0.028;
@@ -191,7 +191,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     mul_block(R, dataR, tbuf[1], BLOCK_SIZE_QUAD);
 
     // mix pure pitch tracked sine with ring modulated signal
-    rm.set_target_smoothed(limit_range(*f[tm_ring_mix], 0.f, 1.f));
+    rm.set_target_smoothed(clamp01(*f[tm_ring_mix]));
     rm.fade_2_blocks_to(envscaledSineWave[0], tbuf[0], envscaledSineWave[1], tbuf[1], L, R,
                         BLOCK_SIZE_QUAD);
 
@@ -203,7 +203,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
     // main dry-wet mix
-    mix.set_target_smoothed(limit_range(*f[tm_mix], 0.f, 1.f));
+    mix.set_target_smoothed(clamp01(*f[tm_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

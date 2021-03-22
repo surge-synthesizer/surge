@@ -95,7 +95,7 @@ void CombulatorEffect::setvars(bool init)
         gain[i].newValue(amp_to_linear(limit_range(*f[combulator_gain1 + i], 0.f, 2.f)));
     }
 
-    noisemix.newValue(limit_range(*f[combulator_noise_mix], 0.f, 1.f));
+    noisemix.newValue(clamp01(*f[combulator_noise_mix]));
     feedback.newValue(*f[combulator_feedback]);
     tone.newValue(clamp1bp(*f[combulator_tone]));
     pan2.newValue(clamp1bp(*f[combulator_pan2]));
@@ -336,15 +336,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     lp.process_block(L, R);
     hp.process_block(L, R);
 
-    /*
-    auto cm = limit_range(*f[combulator_mix], -1.f, 1.f);
-    if (cm < 0)
-    {
-        negone.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
-        cm = -cm;
-    }
-    */
-    auto cm = limit_range(*f[combulator_mix], 0.f, 1.f);
+    auto cm = clamp01(*f[combulator_mix]);
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }

@@ -107,7 +107,7 @@ void DualDelayEffect::setvars(bool init)
 
     mix.set_target_smoothed(*f[dly_mix]);
     width.set_target_smoothed(db_to_linear(*f[dly_width]));
-    pan.set_target_smoothed(limit_range(*f[dly_input_channel], -1.f, 1.f));
+    pan.set_target_smoothed(clamp1bp(*f[dly_input_channel]));
 
     hp.coeff_HP(hp.calc_omega(*f[dly_lowcut] / 12.0), 0.707);
     lp.coeff_LP2B(lp.calc_omega(*f[dly_highcut] / 12.0), 0.707);

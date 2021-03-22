@@ -218,7 +218,7 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
     {
         for (int i = 0; i < airwin->paramCount && i < n_fx_params - 1; ++i)
         {
-            param_lags[i].newValue(limit_range(*f[i + 1], 0.f, 1.f));
+            param_lags[i].newValue(clamp01(*f[i + 1]));
             if (fxdata->p[i + 1].ctrltype == ct_airwindows_param_integral)
             {
                 airwin->setParameter(i, fxdata->p[i + 1].get_value_f01());

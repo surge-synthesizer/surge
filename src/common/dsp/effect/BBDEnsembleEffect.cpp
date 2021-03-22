@@ -342,7 +342,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(limit_range(*f[ens_mix], -1.f, 1.f));
+    mix.set_target_smoothed(clamp1bp(*f[ens_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
