@@ -692,7 +692,7 @@ ComponentResult aulayer::GetParameterInfo(AudioUnitScope inScope,
     outParameterInfo.defaultValue = 0.f;
 
     outParameterInfo.flags = kAudioUnitParameterFlag_IsWritable |
-                             kAudioUnitParameterFlag_IsReadable |
+                             kAudioUnitParameterFlag_IsReadable | kAudioUnitParameterFlag_CanRamp |
                              kAudioUnitParameterFlag_IsHighResolution;
 
     // kAudioUnitParameterFlag_IsGlobalMeta
