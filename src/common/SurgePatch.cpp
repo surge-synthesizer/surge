@@ -503,7 +503,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                     }
                     else
                     {
-                        snprintf(res, TXT_SIZE, "Shuffle"); 
+                        snprintf(res, TXT_SIZE, "Shuffle");
                     }
                     break;
                 default:
