@@ -112,4 +112,4 @@ class AliasOscillator : public Oscillator
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 };
 
-extern const char *ao_type_names[4];
+extern const char *ao_type_names[];
