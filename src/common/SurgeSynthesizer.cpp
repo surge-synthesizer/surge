@@ -3654,6 +3654,23 @@ void SurgeSynthesizer::process()
         }
     }
 
+    for (int cls = 0; cls < n_scenes; ++cls)
+    {
+        switch (storage.sceneHardclipMode[cls])
+        {
+        case SurgeStorage::HARDCLIP_TO_18DBFS:
+            hardclip_block8(sceneout[cls][0], BLOCK_SIZE_QUAD);
+            hardclip_block8(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            break;
+        case SurgeStorage::HARDCLIP_TO_0DBFS:
+            hardclip_block(sceneout[cls][0], BLOCK_SIZE_QUAD);
+            hardclip_block(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            break;
+        default:
+            break;
+        }
+    }
+
     // sum scenes
     // TODO: FIX SCENE ASSUMPTION
     copy_block(sceneout[0][0], output[0], BLOCK_SIZE_QUAD);
@@ -3736,20 +3753,6 @@ void SurgeSynthesizer::process()
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         amp_mute.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
-
-        switch (storage.hardclipMode)
-        {
-        case SurgeStorage::HARDCLIP_TO_18DBFS:
-            hardclip_block8(sceneout[sc][0], BLOCK_SIZE_QUAD);
-            hardclip_block8(sceneout[sc][1], BLOCK_SIZE_QUAD);
-            break;
-        case SurgeStorage::HARDCLIP_TO_0DBFS:
-            hardclip_block(sceneout[sc][0], BLOCK_SIZE_QUAD);
-            hardclip_block(sceneout[sc][1], BLOCK_SIZE_QUAD);
-            break;
-        case SurgeStorage::BYPASS_HARDCLIP:
-            break;
-        }
     }
 }
 
