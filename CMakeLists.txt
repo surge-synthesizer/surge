@@ -14,6 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
+message(STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
 if(NOT BUILD_TESTING)
   set(BUILD_TESTING "False" CACHE STRING "" FORCE)
@@ -855,7 +856,8 @@ if( BUILD_VST3 )
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMAND echo "Packaging up VST3 component"
       COMMAND pwd
-      COMMAND ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
+      COMMAND echo ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR} $<IF:$<CONFIG:DEBUG>,--nostrip,>
+      COMMAND ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR} $<IF:$<CONFIG:DEBUG>,--nostrip,>
       )
     elseif( WIN32 )
       add_custom_target( Surge-VST3-Packaged ALL

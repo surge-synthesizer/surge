@@ -132,27 +132,22 @@ void TripleSpread::getParameterName(VstInt32 index, char *text) {
     switch (index) {
         case kParamA: vst_strncpy (text, "Spread", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Tighten", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void TripleSpread::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string ((EXTV(A)*2.0)-1.0, text, kVstMaxParamStrLen); break;
-		case kParamB: float2string (EXTV(B), text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (EXTV(C), text, kVstMaxParamStrLen); break;
+        case kParamA: float2string ((EXTV(A) * 200.0) - 100.0, text, kVstMaxParamStrLen); break;
+		case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void TripleSpread::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy(text, "%", kVstMaxParamStrLen);
 }
 
 VstInt32 TripleSpread::canDo(char *text) 
@@ -177,23 +172,18 @@ bool TripleSpread::isParameterBipolar(VstInt32 index)
 }
 bool TripleSpread::parseParameterValueFromString(VstInt32 index, const char *str, float &f)
 {
-    if (index == kParamA)
+    auto v = std::atof(str);
+
+    switch (index)
     {
-        auto v = std::atof(str);
-        if( v >= -1 && v <= 1 )
-        {
-            f = (v + 1) * 0.5;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+    case kParamA:
+        f = (v + 100.0) / 200.0;
+        break;
+    default:
+        f = v / 100.0;
+        break;
     }
-    else
-    {
-        return AirWinBaseClass::parseParameterValueFromString(index, str, f);
-    }
+    return true;
 }
 
 } // end namespace TripleSpread

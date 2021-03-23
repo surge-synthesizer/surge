@@ -191,38 +191,29 @@ void MatrixVerb::getParameterName(VstInt32 index, char *text) {
         case kParamA: vst_strncpy (text, "Filter", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Damping", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Speed", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Vibrato", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "RmSize", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Modulation", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
 		case kParamF: vst_strncpy (text, "Flavor", kVstMaxParamStrLen); break;
-		case kParamG: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamG: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void MatrixVerb::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (EXTV(A), text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (EXTV(B), text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (EXTV(C), text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (EXTV(D), text, kVstMaxParamStrLen); break;
-        case kParamE: float2string (EXTV(E), text, kVstMaxParamStrLen); break;
-		case kParamF: float2string (EXTV(F), text, kVstMaxParamStrLen); break;
-		case kParamG: float2string (EXTV(G), text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE: float2string (EXTV(E) * 100.0, text, kVstMaxParamStrLen); break;
+		case kParamF: float2string (EXTV(F) * 100.0, text, kVstMaxParamStrLen); break;
+		case kParamG: float2string (EXTV(G) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void MatrixVerb::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamE: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamF: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamG: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy(text, "%", kVstMaxParamStrLen);
 }
 
 VstInt32 MatrixVerb::canDo(char *text) 
@@ -240,6 +231,13 @@ bool MatrixVerb::getProductString(char* text) {
 
 bool MatrixVerb::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
+}
+
+bool MatrixVerb::parseParameterValueFromString(VstInt32 index, const char *str, float &f)
+{
+    auto v = std::atof(str);
+    f = v / 100.0;
+    return true;
 }
 
 

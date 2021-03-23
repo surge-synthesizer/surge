@@ -53,6 +53,7 @@ public:
     virtual void getParameterLabel(VstInt32 index, char *text);  // label for the parameter (eg dB)
     virtual void getParameterName(VstInt32 index, char *text);    // name of the parameter
     virtual void getParameterDisplay(VstInt32 index, char *text, float, bool); // text description of the current value
+    virtual bool parseParameterValueFromString(VstInt32 index, const char *str, float &f);
     virtual VstInt32 canDo(char *text);
 private:
     char _programName[kVstMaxProgNameLen + 1];

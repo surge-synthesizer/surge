@@ -20,7 +20,14 @@
 
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 
-const char *alias_wave_name[] = {"Sine", "Triangle", "Pulse", "Noise"};
+const char *alias_wave_name[] = {"Sine",
+                                 "Triangle",
+                                 "Pulse",
+                                 "Noise",
+                                 "Memory - this",
+                                 "Memory - oscdata",
+                                 "Memory - scenedata",
+                                 "Memory - dawextrastate"};
 
 const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -80,6 +87,41 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     fmdepth.newValue(fv);
 
     const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
+
+    bool wavetable_mode = false;
+    const uint8_t *wavetable = alias_sinetable;
+    switch (wavetype)
+    {
+    case AliasOscillator::ao_waves::aow_sine:
+        wavetable_mode = true;
+        break;
+    case AliasOscillator::ao_waves::aow_mem_alias:
+        wavetable_mode = true;
+        static_assert(sizeof(*this) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)this;
+        break;
+    case AliasOscillator::ao_waves::aow_mem_oscdata:
+        wavetable_mode = true;
+        static_assert(sizeof(*oscdata) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)oscdata;
+        break;
+    case AliasOscillator::ao_waves::aow_mem_scenedata:
+        wavetable_mode = true;
+        static_assert(sizeof(storage->getPatch().scenedata) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)storage->getPatch().scenedata;
+        break;
+    case AliasOscillator::ao_waves::aow_mem_dawextra:
+        wavetable_mode = true;
+        static_assert(sizeof(storage->getPatch().dawExtraState) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)&storage->getPatch().dawExtraState;
+        break;
+    default:
+        break;
+    }
 
     const uint32_t bit_depth = 8;
     const uint32_t bit_mask = (1 << bit_depth) - 1;
@@ -158,18 +200,18 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             // XOR bitmask
             uint8_t masked = shaped ^ mask;
 
-            // default to this for all waves except sine
+            // default to this
             float out = ((float)masked - (float)(bit_mask >> 1)) * inv_bit_mask;
 
-            // but for sine...
-            if (wavetype == aow_sine)
+            // but for wavetable modes, index a table instead
+            if (wavetable_mode)
             {
                 if (masked > threshold)
                 {
                     masked += 0x7F - threshold;
                 }
 
-                out = ((float)alias_sinetable[0xFF - masked] - (float)0x7F) * inv_bit_mask;
+                out = ((float)wavetable[0xFF - masked] - (float)0x7F) * inv_bit_mask;
             }
 
             // bitcrush
