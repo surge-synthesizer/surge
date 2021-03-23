@@ -251,7 +251,6 @@
             <snapshot name="Pye Wacket" p0="10" p1="0.5" p2="0.5" p3="0.5" />
             <snapshot name="Surge" p0="11" p1="0" p2="1" />
             <snapshot name="Vari-Mu" p0="12" p1="0" p2="0.5" p3="1" p4="1" />
-            <snapshot name="TripleSpread" p0="52" p1="0.5"  p2="0.5" p3="0.5"/>
         </type>
         <type i="14" name="Filter">
             <snapshot name="Air" p0="43" p1="0.5" p2="0.5" p3="0.5" p4="0" p5="1" p6="1" />
@@ -287,6 +286,9 @@
             <snapshot name="Single-Ended Triode" p0="40" p1="0" p2="0" p3="0" p4="1" />
             <snapshot name="Spiral" p0="36" p1="0.5" p2="0" p3="0.5" p4="1" p5="1" />
             <snapshot name="Unbox" p0="37" p1="0.5" p2="0" p3="0.5" />
+        </type>
+        <type i="14" name="Stereo">
+            <snapshot name="Triple Spread" p0="53" p1="0.5"  p2="0.5" p3="0.5"/>
         </type>
         <type i="14" name="Tape">
             <snapshot name="Iron Oxide" p0="41" p1="0.5" p2="0.562341" p3="0.562341" p4="0.5" p5="0.5" p6="0.5" p7="1" />

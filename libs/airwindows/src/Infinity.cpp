@@ -145,29 +145,23 @@ void Infinity::getParameterName(VstInt32 index, char *text) {
         case kParamA: vst_strncpy (text, "Filter", kVstMaxParamStrLen); break;
 		case kParamB: vst_strncpy (text, "Damping", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "Dry/Wet", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
 
 void Infinity::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
-        case kParamA: float2string (EXTV(A), text, kVstMaxParamStrLen); break;
-        case kParamB: float2string (EXTV(B), text, kVstMaxParamStrLen); break;
-        case kParamC: float2string (EXTV(C), text, kVstMaxParamStrLen); break;
-        case kParamD: float2string (EXTV(D), text, kVstMaxParamStrLen); break;
+        case kParamA: float2string (EXTV(A) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Infinity::getParameterLabel(VstInt32 index, char *text) {
-    switch (index) {
-        case kParamA: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamB: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamC: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-        case kParamD: vst_strncpy (text, "", kVstMaxParamStrLen); break;
-		default: break; // unknown parameter, shouldn't happen!
-    }
+    vst_strncpy(text, "%", kVstMaxParamStrLen);
 }
 
 VstInt32 Infinity::canDo(char *text) 
@@ -185,6 +179,13 @@ bool Infinity::getProductString(char* text) {
 
 bool Infinity::getVendorString(char* text) {
   	vst_strncpy (text, "airwindows", kVstMaxVendorStrLen); return true;
+}
+
+bool Infinity::parseParameterValueFromString(VstInt32 index, const char *str, float &f)
+{
+    auto v = std::atof(str);
+    f = v / 100.0;
+    return true;
 }
 
 
