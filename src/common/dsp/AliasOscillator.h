@@ -38,6 +38,10 @@ class AliasOscillator : public Oscillator
         aow_triangle,
         aow_pulse,
         aow_noise,
+        aow_mem_alias,
+        aow_mem_oscdata,
+        aow_mem_scenedata,
+        aow_mem_dawextra,
 
         ao_n_waves
     };
@@ -109,5 +113,3 @@ class AliasOscillator : public Oscillator
 };
 
 extern const char *ao_type_names[4];
-
-extern const uint8_t alias_sinetable[256];
