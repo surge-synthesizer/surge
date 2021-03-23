@@ -212,6 +212,7 @@
         <snapshot name="Blurred Echo" p0="-1.99947" p1="-0.470558" p2="-1.60312" p3="0.140042" p4="0.234753" p5="0.0826876" p6="0.0833598" p7="1" p8="4.500000" p9="0.820355" />
         <snapshot name="Cathedral 1" p0="-4" p1="0.465002" p2="-1.05894" p3="1" p4="1" p5="0.201786" p6="0.348215" p7="0.728572" p8="12.0001" p9="0.199999" />
         <snapshot name="Cathedral 2" p0="-7.98393" p1="0.467" p2="2.16992" p3="1" p4="0.9" p5="0.5" p6="0" p7="1" p8="10" p9="0.3" />
+        <snapshot name="Deep Space" p0="-8" p1="1" p2="6" p3="1" p4="1" p5="0.35" p6="0" p7="0.9" p8="20" p9="0.3"/>
         <snapshot name="Diffuse Delay" p0="-4" p1="0" p2="1.43296" p3="0.35" p4="0" p5="0.3" p6="0.1" p7="0.15" p8="0" p9="0.35" />
         <snapshot name="Epic Hall" p0="-4" p1="0.7" p2="2.80735" p3="0.8" p4="0.98" p5="0.6" p6="0.35" p7="0.8" p8="0" p9="0.5" />
         <snapshot name="Gated Room" p0="-4" p1="-1" p2="-4" p3="0.8" p4="0" p5="0.00178571" p6="0.5" p7="1" p8="-6" p9="0.25" />
@@ -224,9 +225,13 @@
         <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000" />
         <type i="14" name="Ambience">
             <snapshot name="Bright Ambience" p0="21" p1="0.2" p2="0.2" p3="0" p4="0.5" />
+            <snapshot name="Galactic" p0="49" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1"/>
+            <snapshot name="Infinity" p0="50" p1="1" p2="0" p3="0.4" p4="1"/>
+            <snapshot name="MatrixVerb" p0="51" p1="1" p2="0" p3="0" p4="0" p5="0.5" p6="0.5" p7="1"/>
             <snapshot name="Melt" p0="23" p1="0.25" p2="0.75" p3="1" p4="1" />
             <snapshot name="Pocket Verbs" p0="24" p1="0" p2="0.5" p3="0" p4="0.5" />
             <snapshot name="Star Child" p0="25" p1="1" p2="0.7" p3="0.2" />
+            <snapshot name="Verbity" p0="52" p1="0.25" p2="0" p3="0.25" p4="0.25" />
         </type>
         <type i="14" name="Clipping">
             <snapshot name="AD Clip" p0="0" p1="0" p2="0.5" p3="0.5" p4="0" />
@@ -246,6 +251,7 @@
             <snapshot name="Pye Wacket" p0="10" p1="0.5" p2="0.5" p3="0.5" />
             <snapshot name="Surge" p0="11" p1="0" p2="1" />
             <snapshot name="Vari-Mu" p0="12" p1="0" p2="0.5" p3="1" p4="1" />
+            <snapshot name="TripleSpread" p0="52" p1="0.5"  p2="0.5" p3="0.5"/>
         </type>
         <type i="14" name="Filter">
             <snapshot name="Air" p0="43" p1="0.5" p2="0.5" p3="0.5" p4="0" p5="1" p6="1" />

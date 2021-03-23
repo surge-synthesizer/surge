@@ -21,12 +21,15 @@
 #include "DustBunny.h"
 #include "Focus.h"
 #include "Fracture.h"
+#include "Galactic.h"
 #include "GrooveWear.h"
 #include "HardVacuum.h"
 #include "Hombre.h"
+#include "Infinity.h"
 #include "IronOxide5.h"
 #include "Logical4.h"
 #include "Loud.h"
+#include "MatrixVerb.h"
 #include "Melt.h"
 #include "Mojo.h"
 #include "NCSeventeen.h"
@@ -43,8 +46,10 @@
 #include "Spiral2.h"
 #include "StarChild.h"
 #include "Surge.h"
+#include "TripleSpread.h"
 #include "ToTape6.h"
 #include "UnBox.h"
+#include "Verbity.h"
 #include "VariMu.h"
 #include "VoiceOfTheStarship.h"
 #include <map>
@@ -150,6 +155,13 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<Slew::Slew>, id++, 113, gnClipping, "Slew 1");
    reg.emplace_back(create<Slew2::Slew2>, id++, 114, gnClipping, "Slew 2");
 
+   // 1.9 additions
+   reg.emplace_back(create<Galactic::Galactic>, id++, 227, gnAmbience, "Galactic" );
+   reg.emplace_back(create<Infinity::Infinity>, id++, 230, gnAmbience, "Infinity" );
+   reg.emplace_back(create<MatrixVerb::MatrixVerb>, id++, 235, gnAmbience, "MatrixVerb" );
+   reg.emplace_back(create<Verbity::Verbity>, id++, 265, gnAmbience, "Verbity" );
+
+   reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 125, gnDynamics, "TripleSpread" );
    return reg;
 }
 
