@@ -70,6 +70,9 @@ add_library(${PROJECT_NAME}
   src/Fracture.cpp
   src/Fracture.h
   src/FractureProc.cpp
+  src/Galactic.cpp
+  src/Galactic.h
+  src/GalacticProc.cpp
   src/GrooveWear.cpp
   src/GrooveWear.h
   src/GrooveWearProc.cpp
@@ -79,6 +82,9 @@ add_library(${PROJECT_NAME}
   src/Hombre.cpp
   src/Hombre.h
   src/HombreProc.cpp
+  src/Infinity.cpp
+  src/Infinity.h
+  src/InfinityProc.cpp
   src/IronOxide5.cpp
   src/IronOxide5.h
   src/IronOxide5Proc.cpp
@@ -88,6 +94,9 @@ add_library(${PROJECT_NAME}
   src/Loud.cpp
   src/Loud.h
   src/LoudProc.cpp
+  src/MatrixVerb.cpp
+  src/MatrixVerb.h
+  src/MatrixVerbProc.cpp
   src/Melt.cpp
   src/Melt.h
   src/MeltProc.cpp
@@ -139,9 +148,15 @@ add_library(${PROJECT_NAME}
   src/ToTape6.cpp
   src/ToTape6.h
   src/ToTape6Proc.cpp
+  src/TripleSpread.cpp
+  src/TripleSpread.h
+  src/TripleSpreadProc.cpp
   src/UnBox.cpp
   src/UnBox.h
   src/UnBoxProc.cpp
+  src/Verbity.cpp
+  src/Verbity.h
+  src/VerbityProc.cpp
   src/VariMu.cpp
   src/VariMu.h
   src/VariMuProc.cpp
