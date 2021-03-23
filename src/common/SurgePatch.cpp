@@ -497,7 +497,14 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 switch (tp)
                 {
                 case lt_stepseq:
-                    snprintf(res, TXT_SIZE, "Shuffle");
+                    if (lf->rate.deactivated)
+                    {
+                        snprintf(res, TXT_SIZE, "Phase");
+                    }
+                    else
+                    {
+                        snprintf(res, TXT_SIZE, "Shuffle"); 
+                    }
                     break;
                 default:
                     snprintf(res, TXT_SIZE, "Phase");
