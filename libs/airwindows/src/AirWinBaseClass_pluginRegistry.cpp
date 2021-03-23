@@ -91,6 +91,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    std::string gnNoise = "Noise";
    std::string gnAmbience = "Ambience";
    std::string gnSaturation = "Saturation And More";
+   std::string gnStereo = "Stereo";
    std::string gnTape = "Tape";
 
    int id = 0; // add new effects only at the end of this list!
@@ -161,7 +162,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<MatrixVerb::MatrixVerb>, id++, 235, gnAmbience, "MatrixVerb" );
    reg.emplace_back(create<Verbity::Verbity>, id++, 265, gnAmbience, "Verbity" );
 
-   reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 125, gnDynamics, "TripleSpread" );
+   reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 440, gnStereo, "Triple Spread" );
    return reg;
 }
 
