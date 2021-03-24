@@ -105,11 +105,21 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         lp.process_block(tbuf[0], tbuf[1]);
     }
 
+    /*
+     * We assume wavelengths below this are just noisy detection errors. This is used to
+     * clamp when we have a pitch detect basically.
+     */
+    constexpr float smallest_wavelength = 16.0;
+
     float qs = clamp01(*f[tm_speed]);
     qs *= qs * qs * qs;
-    float speed = 0.9999 - qs * 0.0999;
-    length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];
-    length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
+    float speed = 0.9999 - qs * 0.0999 / 128;
+    float numberOfSteps = 32 * 48000 * samplerate_inv;
+    for (int i = 0; i < numberOfSteps; ++i)
+    {
+        length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];
+        length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
+    }
 
     oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) *
                   powf(2.0, *f[tm_pitch] * (1 / 12.f)));
@@ -139,7 +149,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         // pitch detection
         if ((lastval[0] < 0.f) && (tbuf[0][k] >= 0.f))
         {
-            if (tbuf[0][k] > thres)
+            if (tbuf[0][k] > thres && length[0] > smallest_wavelength)
             {
                 length_target[0] =
                     (length[0] > length_smooth[0] * 10 ? length_smooth[0] : length[0]);
@@ -153,7 +163,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
         if ((lastval[1] < 0.f) && (tbuf[1][k] >= 0.f))
         {
-            if (tbuf[1][k] > thres)
+            if (tbuf[1][k] > thres && length[1] > smallest_wavelength)
             {
                 length_target[1] =
                     (length[1] > length_smooth[1] * 10 ? length_smooth[1] : length[1]);
