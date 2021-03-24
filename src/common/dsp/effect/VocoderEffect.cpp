@@ -208,9 +208,9 @@ void VocoderEffect::process(float *dataL, float *dataR)
          // mix carrier with noise
          for(int i = 0; i < BLOCK_SIZE; i++)
          {
-            float rand11 = (((float) rand() / RAND_MAX) * 2.f - 1.f);
+            float rand11 = storage->rand_pm1();
             dataL[i] = rand11;
-            rand11 = (((float) rand() / RAND_MAX) * 2.f - 1.f);
+            rand11 = storage->rand_pm1();
             dataR[i] = rand11;
          }*/
 

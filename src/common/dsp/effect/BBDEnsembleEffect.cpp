@@ -14,7 +14,6 @@
 */
 
 #include "BBDEnsembleEffect.h"
-#include "DebugHelpers.h"
 
 std::string ensemble_stage_name(int i)
 {

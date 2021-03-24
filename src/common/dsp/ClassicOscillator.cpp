@@ -224,11 +224,10 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
         }
         else
         {
-            double drand = (double)rand() / RAND_MAX;
+            double drand = (double)storage->rand_01();
             double detune = oscdata->p[co_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
             double st = 0.5 * drand * storage->note_to_pitch_inv_tuningctr(detune);
-            drand = (double)rand() / RAND_MAX;
             oscstate[i] = st;
             syncstate[i] = st;
             last_level[i] = 0.f;

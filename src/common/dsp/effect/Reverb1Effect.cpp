@@ -143,8 +143,8 @@ void Reverb1Effect::loadpreset(int id)
 
     for (int t = 0; t < rev_taps; t++)
     {
-        // float r = (float)(rand() / RAND_MAX);
-        // float rbp = (((float) rand() / RAND_MAX) * 2.f - 1.f);
+        // float r = storage->rand_01();
+        // float rbp = storage->rand_pm1();
         // float a = 256.f * (3000.f * (1.f + rbp * rbp * *f[rev1_variation]))*(1.f + 1.f *
         // *f[rev1_roomsize]); delay_time[t] = (int)a;
         delay_time[t] = (int)((float)(2.f * *f[rev1_roomsize]) * delay_time[t]);

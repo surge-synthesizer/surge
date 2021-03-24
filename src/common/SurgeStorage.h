@@ -1165,10 +1165,10 @@ class alignas(16) SurgeStorage
     static bool skipLoadWtAndPatch;
 
     /*
-     * An RNG which is decoupled from the non-surge global state and is thread safe.
-     * This RNG has the semantic that it is seeded when the first surge in your session
+     * An RNG which is decoupled from the non-Surge global state and is threadsafe.
+     * This RNG has the semantic that it is seeded when the first Surge in your session
      * uses it on a given thread, and then retains its independent state. It is designed
-     * to ahve the same api as std::rand so 'std::rand -> storage::rand' is a good change.
+     * to have the same API as std::rand, so 'std::rand -> storage::rand' is a good change.
      *
      * Reseeding it impacts the global state on that thread.
      */
@@ -1176,14 +1176,16 @@ class alignas(16) SurgeStorage
     {
         RNGGen()
             : g(std::chrono::system_clock::now().time_since_epoch().count()), d(0, RAND_MAX),
-              pm1(-1.f, 1.f), z1(0.f, 1.f)
+              pm1(-1.f, 1.f), z1(0.f, 1.f), u32(0, 0xFFFFFFFF)
         {
         }
         std::minstd_rand g;
         std::uniform_int_distribution<int> d;
         std::uniform_real_distribution<float> pm1, z1;
+        std::uniform_int_distribution<uint32_t> u32;
     } rngGen;
     inline int rand() { return rngGen.d(rngGen.g); }
+    inline uint32_t rand_u32() { return rngGen.u32(rngGen.g); }
     inline float rand_pm1() { return rngGen.pm1(rngGen.g); }
     inline float rand_01() { return rngGen.z1(rngGen.g); }
     // void seed_rand(int s) { rngGen.g.seed(s); }
