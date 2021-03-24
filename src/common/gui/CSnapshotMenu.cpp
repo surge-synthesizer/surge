@@ -493,6 +493,9 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
             snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
             fxbuffer->p[i].extend_range =
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
+            fxbuffer->p[i].deactivated =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
         }
     }
 #if TARGET_LV2
@@ -508,11 +511,16 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
 {
     if (fx->type.val.i == 0)
+    {
         return;
+    }
+
     TiXmlElement *t = TINYXML_SAFE_TO_ELEMENT(e->FirstChild("type"));
+
     while (t)
     {
         int ii;
+
         if ((t->QueryIntAttribute("i", &ii) == TIXML_SUCCESS) && (ii == fx->type.val.i))
         {
             // if name already exists, delete old entry
@@ -533,6 +541,7 @@ void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
             {
                 char lbl[TXT_SIZE], txt[TXT_SIZE], sublbl[TXT_SIZE];
                 snprintf(lbl, TXT_SIZE, "p%i", p);
+
                 if (fx->p[p].ctrltype != ct_none)
                 {
                     neu.SetAttribute(lbl, fx->p[p].get_storage_value(txt));
@@ -547,12 +556,20 @@ void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
                         snprintf(sublbl, TXT_SIZE, "p%i_extend_range", p);
                         neu.SetAttribute(sublbl, "1");
                     }
+                    if (fx->p[p].deactivated)
+                    {
+                        snprintf(sublbl, TXT_SIZE, "p%i_deactivated", p);
+                        neu.SetAttribute(sublbl, "1");
+                    }
                 }
             }
+
             neu.SetAttribute("name", name);
             t->InsertEndChild(neu);
+
             return;
         }
+
         t = TINYXML_SAFE_TO_ELEMENT(t->NextSibling("type"));
     }
 }
@@ -571,6 +588,7 @@ void CFxMenu::rescanUserPresets()
 
     std::deque<fs::path> workStack;
     workStack.push_back(fs::path(ud));
+
     while (!workStack.empty())
     {
         auto top = workStack.front();
@@ -603,50 +621,70 @@ void CFxMenu::rescanUserPresets()
                 goto badPreset;
 
             auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
+
             if (!r)
                 goto badPreset;
 
             auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
+
             if (!s)
                 goto badPreset;
 
             if (!s->Attribute("name"))
                 goto badPreset;
+
             preset.name = s->Attribute("name");
 
             if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
                 goto badPreset;
+
             preset.type = t;
 
             for (int i = 0; i < n_fx_params; ++i)
             {
                 double fl;
                 std::string p = "p";
+
                 if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
                 {
                     preset.p[i] = fl;
                 }
+
                 if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
                         TIXML_SUCCESS &&
                     fl != 0)
                 {
                     preset.ts[i] = true;
                 }
+
                 if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(),
                                             &fl) == TIXML_SUCCESS &&
                     fl != 0)
                 {
-                    preset.er[i] = fl;
+                    preset.er[i] = true;
+                }
+
+                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deactivated").c_str(),
+                                            &fl) == TIXML_SUCCESS &&
+                    fl != 0)
+                {
+                    preset.da[i] = true;
                 }
             }
+
             if (userPresets.find(preset.type) == userPresets.end())
+            {
                 userPresets[preset.type] = std::vector<UserPreset>();
+            }
+
             userPresets[preset.type].push_back(preset);
         }
+
     badPreset:;
     }
 
     for (auto &a : userPresets)
+    {
         std::sort(a.second.begin(), a.second.end(), [](UserPreset a, UserPreset b) {
             if (a.type == b.type)
             {
@@ -657,6 +695,7 @@ void CFxMenu::rescanUserPresets()
                 return a.type < b.type;
             }
         });
+    }
 }
 
 void CFxMenu::populate()
@@ -879,6 +918,10 @@ void CFxMenu::saveFXIn(const std::string &s)
             {
                 pfile << "     p" << i << "_extend_range=\"1\"\n";
             }
+            if (fx->p[i].can_deactivate() && fx->p[i].deactivated)
+            {
+                pfile << "     p" << i << "_deactivated=\"1\"\n";
+            }
         }
     }
 
@@ -897,6 +940,7 @@ void CFxMenu::loadUserPreset(const UserPreset &p)
     fxbuffer->type.val.i = p.type;
 
     Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
+
     if (t_fx)
     {
         t_fx->init_ctrltypes();
@@ -920,15 +964,18 @@ void CFxMenu::loadUserPreset(const UserPreset &p)
             break;
         }
         fxbuffer->p[i].temposync = (int)p.ts[i];
-        ;
         fxbuffer->p[i].extend_range = (int)p.er[i];
+        fxbuffer->p[i].deactivated = (int)p.da[i];
+        printf("fx param %d deactivated value: %d\n", i, fxbuffer->p[i].deactivated);
     }
 
     selectedIdx = -1;
     selectedName = p.name;
 
     if (listenerNotForParent)
+    {
         listenerNotForParent->valueChanged(this);
+    }
 }
 
 void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu, int &idx)
