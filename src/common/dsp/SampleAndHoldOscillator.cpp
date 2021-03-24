@@ -72,8 +72,7 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
     }
     else
     {
-        std::random_device rd;
-        auto gen = std::minstd_rand(rd());
+        auto gen = std::minstd_rand(storage->rand());
         std::uniform_real_distribution<float> distro(-1.f, 1.f);
         urng = std::bind(distro, gen);
     }

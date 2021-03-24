@@ -33,6 +33,8 @@
 #include <unordered_map>
 #include <map>
 #include <utility>
+#include <random>
+#include <chrono>
 
 #include "Tunings.h"
 
@@ -1161,6 +1163,30 @@ class alignas(16) SurgeStorage
   public:
     // whether to skip loading, desired while exporting manifests. Only used by LV2 currently.
     static bool skipLoadWtAndPatch;
+
+    /*
+     * An RNG which is decoupled from the non-surge global state and is thread safe.
+     * This RNG has the semantic that it is seeded when the first surge in your session
+     * uses it on a given thread, and then retains its independent state. It is designed
+     * to ahve the same api as std::rand so 'std::rand -> storage::rand' is a good change.
+     *
+     * Reseeding it impacts the global state on that thread.
+     */
+    thread_local static struct RNGGen
+    {
+        RNGGen()
+            : g(std::chrono::system_clock::now().time_since_epoch().count()), d(0, RAND_MAX),
+              pm1(-1.f, 1.f), z1(0.f, 1.f)
+        {
+        }
+        std::minstd_rand g;
+        std::uniform_int_distribution<int> d;
+        std::uniform_real_distribution<float> pm1, z1;
+    } rngGen;
+    inline int rand() { return rngGen.d(rngGen.g); }
+    inline float rand_pm1() { return rngGen.pm1(rngGen.g); }
+    inline float rand_01() { return rngGen.z1(rngGen.g); }
+    // void seed_rand(int s) { rngGen.g.seed(s); }
 };
 
 float db_to_linear(float);

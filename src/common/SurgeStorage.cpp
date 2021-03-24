@@ -96,6 +96,8 @@ std::string getDLLPath()
 }
 #endif
 
+thread_local SurgeStorage::RNGGen SurgeStorage::rngGen;
+
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
     _patch.reset(new SurgePatch(this));
