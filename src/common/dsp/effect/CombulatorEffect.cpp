@@ -223,8 +223,9 @@ void CombulatorEffect::process(float *dataL, float *dataR)
             else
                 e = envR * (e - v) + v;
             envV[c] = e;
-            noise[c] = noisemix.v * 3.f * envV[c] *
-                       correlated_noise_o2mk2(noiseGen[c][0], noiseGen[c][1], 0);
+            noise[c] =
+                noisemix.v * 3.f * envV[c] *
+                correlated_noise_o2mk2_storagerng(noiseGen[c][0], noiseGen[c][1], 0, storage);
         }
 
         auto l128 = _mm_setzero_ps();

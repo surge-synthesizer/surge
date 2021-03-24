@@ -927,12 +927,13 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
         for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
         {
-            ((float *)tblock)[i] = correlated_noise_o2mk2(noisegenL[0], noisegenL[1], noisecol);
+            ((float *)tblock)[i] =
+                correlated_noise_o2mk2_storagerng(noisegenL[0], noisegenL[1], noisecol, storage);
             ((float *)tblock)[i + 1] = ((float *)tblock)[i];
             if (is_wide)
             {
-                ((float *)tblockR)[i] =
-                    correlated_noise_o2mk2(noisegenR[0], noisegenR[1], noisecol);
+                ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
+                    noisegenR[0], noisegenR[1], noisecol, storage);
                 ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
             }
         }

@@ -3115,6 +3115,7 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
 #if TARGET_LV2
     synth->getParent()->patchChanged();
 #endif
+
     synth->halt_engine = false;
 
     return 0;

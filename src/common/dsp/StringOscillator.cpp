@@ -97,8 +97,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     }
     else
     {
-        std::random_device rd;
-        gen = std::minstd_rand(rd());
+        gen = std::minstd_rand(storage->rand());
     }
 
     urd = std::uniform_real_distribution<float>(0.0, 1.0);

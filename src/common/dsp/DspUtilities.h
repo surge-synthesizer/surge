@@ -322,6 +322,10 @@ float correlated_noise_o2mk2(float &lastval, float &lastval2, float correlation)
 float correlated_noise_o2mk2_suppliedrng(float &lastval, float &lastval2, float correlation,
                                          std::function<float()> &urng);
 
+class SurgeStorage;
+float correlated_noise_o2mk2_storagerng(float &lastval, float &lastval2, float correlation,
+                                        SurgeStorage *storage);
+
 inline double hanning(int i, int n)
 {
     if (i >= n)
