@@ -23,6 +23,7 @@ TapeEffect::TapeEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), lossFilter(storage, 48)
 {
     mix.set_blocksize(BLOCK_SIZE);
+    makeup.set_blocksize(BLOCK_SIZE);
 }
 
 TapeEffect::~TapeEffect() {}
@@ -41,6 +42,9 @@ void TapeEffect::init()
 
     mix.set_target(1.f);
     mix.instantize();
+
+    makeup.set_target(std::pow(10.0f, 9.0f / 20.0f));
+    makeup.instantize();
 }
 
 void TapeEffect::process(float *dataL, float *dataR)
@@ -60,7 +64,8 @@ void TapeEffect::process(float *dataL, float *dataR)
 
         toneControl.processBlockIn(L, R);
         hysteresis.process_block(L, R);
-        // toneControl.processBlockOut(L, R);
+
+        makeup.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
     }
 
     if (!fxdata->p[tape_speed].deactivated)
@@ -187,7 +192,7 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_drive].set_name("Drive");
     fxdata->p[tape_drive].set_type(ct_percent_deactivatable);
     fxdata->p[tape_drive].posy_offset = 1;
-    fxdata->p[tape_drive].val_default.f = 0.5f;
+    fxdata->p[tape_drive].val_default.f = 0.85f;
     fxdata->p[tape_drive].deactivated = false;
     fxdata->p[tape_saturation].set_name("Saturation");
     fxdata->p[tape_saturation].set_type(ct_percent);
@@ -250,7 +255,7 @@ void TapeEffect::init_ctrltypes()
 
 void TapeEffect::init_default_values()
 {
-    fxdata->p[tape_drive].val.f = 0.5f;
+    fxdata->p[tape_drive].val.f = 0.85f;
     fxdata->p[tape_saturation].val.f = 0.5f;
     fxdata->p[tape_bias].val.f = 0.5f;
     fxdata->p[tape_tone].val.f = 0.0f;
