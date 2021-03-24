@@ -241,6 +241,7 @@ void TreemonsterEffect::init_ctrltypes()
 
     fxdata->p[tm_threshold].set_name("Threshold");
     fxdata->p[tm_threshold].set_type(ct_decibel_attenuation_large);
+    fxdata->p[tm_threshold].val_default.f = -24.f;
     fxdata->p[tm_threshold].posy_offset = 1;
     fxdata->p[tm_speed].set_name("Speed");
     fxdata->p[tm_speed].set_type(ct_percent);
