@@ -141,22 +141,28 @@ class CFxMenu : public CSnapshotMenu
     // We know this runs on the UI thread to populate always so we can use a static for user presets
     struct UserPreset
     {
+        std::string file;
+        std::string name;
+        int type;
+        float p[n_fx_params];
+        bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
+
         UserPreset()
         {
+            type = 0;
+
             for (int i = 0; i < n_fx_params; ++i)
             {
                 p[i] = 0.0;
                 ts[i] = false;
                 er[i] = false;
+                da[i] = false;
             }
         }
-        std::string file;
-        std::string name;
-        int type;
-        float p[n_fx_params];
-        bool ts[n_fx_params], er[n_fx_params];
     };
+
     static std::unordered_map<int, std::vector<UserPreset>> userPresets; // from type to presets
+
   public:
     static bool scanForUserPresets;
 
