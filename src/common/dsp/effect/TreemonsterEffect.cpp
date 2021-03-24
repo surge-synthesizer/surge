@@ -106,9 +106,8 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     }
 
     float qs = clamp01(*f[tm_speed]);
-    qs = qs * qs;
-    qs = qs * qs;
-    float speed = 0.998 - qs * 0.028;
+    qs *= qs * qs * qs;
+    float speed = 0.9999 - qs * 0.0999;
     length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];
     length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
 
@@ -245,6 +244,7 @@ void TreemonsterEffect::init_ctrltypes()
     fxdata->p[tm_threshold].posy_offset = 1;
     fxdata->p[tm_speed].set_name("Speed");
     fxdata->p[tm_speed].set_type(ct_percent);
+    fxdata->p[tm_speed].val_default.f = 0.5f;
     fxdata->p[tm_speed].posy_offset = 1;
     fxdata->p[tm_hp].set_name("Low Cut");
     fxdata->p[tm_hp].set_type(ct_freq_audible_deactivatable);
@@ -258,6 +258,7 @@ void TreemonsterEffect::init_ctrltypes()
     fxdata->p[tm_pitch].posy_offset = 3;
     fxdata->p[tm_ring_mix].set_name("Ring Modulation");
     fxdata->p[tm_ring_mix].set_type(ct_percent);
+    fxdata->p[tm_ring_mix].val_default.f = 0.5f;
     fxdata->p[tm_ring_mix].posy_offset = 3;
 
     fxdata->p[tm_width].set_name("Width");
@@ -272,7 +273,7 @@ void TreemonsterEffect::init_ctrltypes()
 void TreemonsterEffect::init_default_values()
 {
     fxdata->p[tm_threshold].val.f = -24.f;
-    fxdata->p[tm_speed].val.f = 0.f;
+    fxdata->p[tm_speed].val.f = 0.5f;
 
     fxdata->p[tm_hp].val.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_hp].deactivated = false;
@@ -280,7 +281,7 @@ void TreemonsterEffect::init_default_values()
     fxdata->p[tm_lp].deactivated = false;
 
     fxdata->p[tm_pitch].val.f = 0;
-    fxdata->p[tm_ring_mix].val.f = 1.f;
+    fxdata->p[tm_ring_mix].val.f = 0.5f;
 
     fxdata->p[tm_width].val.f = 1.f;
     fxdata->p[tm_mix].val.f = 1.f;
