@@ -618,8 +618,10 @@ void SurgePatch::init_default_values()
              * We need to do something if there's nothing otherwise swapping
              * to the wavetable oscilltor will core you out
              */
-            if (osc.wt.current_id == -1)
+            if (!osc.wt.everBuilt)
+            {
                 osc.wt.queue_id = 0;
+            }
             else
                 osc.wt.queue_id = -1;
             osc.wt.queue_filename[0] = 0;

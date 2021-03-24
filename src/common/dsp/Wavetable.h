@@ -31,6 +31,7 @@ class Wavetable
     void allocPointers(size_t newSize);
 
   public:
+    bool everBuilt = false;
     int size;
     unsigned int n_tables;
     int size_po2;
