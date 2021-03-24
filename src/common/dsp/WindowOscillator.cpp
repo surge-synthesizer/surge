@@ -65,8 +65,8 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
         }
         else
         {
-            Window.Pos[0] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
-                            << 16;
+            Window.Pos[0] =
+                (storage->WindowWT.size + (storage->rand() & (storage->WindowWT.size - 1))) << 16;
         }
 
         Window.driftLFO[0].init(nonzero_init_drift);
@@ -99,8 +99,9 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
             }
             else
             {
-                Window.Pos[i] = (storage->WindowWT.size + (rand() & (storage->WindowWT.size - 1)))
-                                << 16;
+                Window.Pos[i] =
+                    (storage->WindowWT.size + (storage->rand() & (storage->WindowWT.size - 1)))
+                    << 16;
             }
 
             Window.driftLFO[i].init(true); // Window has always started uni voices with non zero

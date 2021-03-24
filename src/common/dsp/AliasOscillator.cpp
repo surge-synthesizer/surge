@@ -54,15 +54,12 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
-    std::default_random_engine gen(rand());
-    std::uniform_int_distribution<uint32_t> rng(0, 0xFFFFFFFF);
-
     for (int u = 0; u < n_unison; ++u)
     {
         unisonOffsets[u] = us.detune(u);
         us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
-        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : rng(gen);
+        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : storage->rand_u32();
 
         driftLFO[u].init(nonzero_init_drift);
         // Seed the RNGs in display mode

@@ -68,7 +68,7 @@ void LfoModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     noised1 = 0.f;
     target = 0.f;
     for (int i = 0; i < 4; i++)
-        wf_history[i] = 0.f; //((float) rand()/(float)RAND_MAX)*2.f - 1.f;
+        wf_history[i] = 0.f; // storage->rand_pm1();
 }
 
 float LfoModulationSource::bend1(float x)
@@ -205,14 +205,14 @@ void LfoModulationSource::attack()
             msegEnvelopePhaseAdjustment();
             break;
         case lm_random:
-            phase = (float)rand() / (float)RAND_MAX;
+            phase = storage->rand_01();
             unwrappedphase_intpart = 0;
 
             msegEnvelopePhaseAdjustment();
             if (ss->loop_end == 0)
                 step = 0;
             else
-                step = (rand() % ss->loop_end) & (n_stepseqsteps - 1);
+                step = (storage->rand() % ss->loop_end) & (n_stepseqsteps - 1);
             break;
         case lm_freerun:
         {
@@ -525,7 +525,7 @@ void LfoModulationSource::process_block()
 
             wf_history[0] = correlated_noise_o2mk2_suppliedrng(
                 target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
-            // target = ((float) rand()/RAND_MAX)*2.f - 1.f;
+            // target = storage->rand_pm1();
         }
         break;
         case lt_stepseq:

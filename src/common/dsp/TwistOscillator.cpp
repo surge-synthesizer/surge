@@ -263,7 +263,7 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 
     if (!(oscdata->retrigger.val.b || is_display))
     {
-        cycleInSamples *= (1.0 + (float)rand() / (float)RAND_MAX);
+        cycleInSamples *= (1.0 + storage->rand_01());
     }
 
     memset(fmlagbuffer, 0, (BLOCK_SIZE_OS << 1) * sizeof(float));

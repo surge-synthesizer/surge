@@ -29,7 +29,7 @@ double calcmd(double x) { return x * x * x * 8.0 * M_PI; }
 void FM2Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     phase =
-        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
+        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * storage->rand_01() - M_PI);
     lastoutput = 0.0;
     driftLFO.init(nonzero_init_drift);
     fb_val = 0.0;

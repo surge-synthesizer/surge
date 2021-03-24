@@ -72,9 +72,8 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
     }
     else
     {
-        auto gen = std::minstd_rand(storage->rand());
         std::uniform_real_distribution<float> distro(-1.f, 1.f);
-        urng = std::bind(distro, gen);
+        urng = std::bind(distro, storage->rngGen.g);
     }
     prepare_unison(n_unison);
 
@@ -97,11 +96,11 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
         }
         else
         {
-            double drand = (double)rand() / RAND_MAX;
+            double drand = (double)storage->rand_01();
             double detune = oscdata->p[shn_unison_detune].get_extended(localcopy[id_detune].f) *
                             (detune_bias * float(i) + detune_offset);
             double st = drand * storage->note_to_pitch_tuningctr(detune) * 0.5;
-            drand = (double)rand() / RAND_MAX;
+            drand = (double)storage->rand_01();
             double ot = drand * storage->note_to_pitch_tuningctr(detune);
             oscstate[i] = st;
             syncstate[i] = st;

@@ -27,7 +27,7 @@ FM3Oscillator::FM3Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, 
 void FM3Oscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     phase =
-        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * rand() / RAND_MAX - M_PI);
+        (is_display || oscdata->retrigger.val.b) ? 0.f : (2.0 * M_PI * storage->rand_01() - M_PI);
     lastoutput = 0.f;
     driftLFO.init(nonzero_init_drift);
     fb_val = 0.f;

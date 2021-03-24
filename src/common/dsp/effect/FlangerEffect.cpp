@@ -1,6 +1,5 @@
 #include "FlangerEffect.h"
 #include "Tunings.h"
-#include "DebugHelpers.h"
 #include <algorithm>
 
 FlangerEffect::FlangerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
@@ -166,7 +165,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
             {
                 if (lforeset)
                 {
-                    lfosandhtarget[c][i] = 1.f * rand() / (float)RAND_MAX - 1.f;
+                    lfosandhtarget[c][i] = storage->rand_01() - 1.f;
                 }
 
                 if (mwave == flw_sng)

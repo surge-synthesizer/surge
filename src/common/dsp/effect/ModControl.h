@@ -16,6 +16,7 @@
 #pragma once
 
 #include "lipol.h"
+#include "SurgeStorage.h"
 
 namespace Surge
 {
@@ -165,7 +166,7 @@ class ModControl
         {
             if (lforeset)
             {
-                lfosandhtarget = 1.f * rand() / (float)RAND_MAX - 1.f;
+                lfosandhtarget = (rand() / (float)RAND_MAX) - 1.f;
             }
 
             if (mwave == mod_noise)
