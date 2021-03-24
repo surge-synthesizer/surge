@@ -7,11 +7,13 @@ namespace chowdsp
 ChewProcessor::ChewProcessor()
 {
     std::random_device rd;
-    auto gen = std::minstd_rand(rd());
+    auto gen02 = std::minstd_rand(rd());
     std::uniform_real_distribution<float> distro02(0.0f, 2.0f);
+    urng02 = std::bind(distro02, gen02);
+
+    auto gen01 = std::minstd_rand(rd());
     std::uniform_real_distribution<float> distro01(0.0f, 1.0f);
-    urng02 = std::bind(distro02, gen);
-    urng01 = std::bind(distro01, gen);
+    urng01 = std::bind(distro01, gen01);
 }
 
 void ChewProcessor::set_params(float new_freq, float new_depth, float new_var)
