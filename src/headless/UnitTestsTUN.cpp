@@ -897,8 +897,8 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
             float s, c, si, ci;
             surge->storage.note_to_omega(e, s, c);
             surge->storage.note_to_omega_ignoring_tuning(e, si, ci);
-            REQUIRE(s == si);
-            REQUIRE(c == ci);
+            REQUIRE(s == Approx(si).margin(1e-5));
+            REQUIRE(c == Approx(ci).margin(1e-5));
         }
     }
 
@@ -924,8 +924,8 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
             float s, c, si, ci;
             surge->storage.note_to_omega(e, s, c);
             surgeTuned->storage.note_to_omega_ignoring_tuning(e, si, ci);
-            REQUIRE(s == si);
-            REQUIRE(c == ci);
+            REQUIRE(s == Approx(si).margin(1e-5));
+            REQUIRE(c == Approx(ci).margin(1e-5));
         }
     }
 }
