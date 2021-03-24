@@ -86,6 +86,7 @@ Wavetable::Wavetable()
     memset(TableI16WeakPointers, 0, sizeof(TableI16WeakPointers));
     current_id = -1;
     queue_id = -1;
+    everBuilt = false;
     refresh_display = true; // I have never been drawn so assume I need refresh if asked
 }
 
@@ -116,6 +117,7 @@ void Wavetable::Copy(Wavetable *wt)
 
     current_id = -1;
     queue_id = -1;
+    everBuilt = wt->everBuilt;
 
     if (dataSizes < wt->dataSizes)
     {
@@ -258,6 +260,8 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     }
 
     MipMapWT();
+
+    everBuilt = true;
     return true;
 }
 
