@@ -58,6 +58,9 @@ struct fxChunkSetCustom
 
 void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
 {
+    // Don't increment if we still have an outstanding load
+    if (patchid_queue >= 0)
+        return;
     int p = storage.patch_list.size();
 
     if (!p)
