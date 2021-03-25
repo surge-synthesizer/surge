@@ -1360,12 +1360,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     // Set the default for TAM before 16
     if (revision <= 15)
     {
-        storage->tuningApplicationMode = SurgeStorage::RETUNE_ALL;
+        storage->setTuningApplicationMode(SurgeStorage::RETUNE_ALL);
     }
     else
     {
         // We shouldn't need this since all 16s will stream it, but just in case
-        storage->tuningApplicationMode = SurgeStorage::RETUNE_MIDI_ONLY;
+        storage->setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
     }
 
     // Default hardclip value
@@ -1399,7 +1399,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             int tv;
             if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
             {
-                storage->tuningApplicationMode = (SurgeStorage::TuningApplicationMode)(tv);
+                storage->setTuningApplicationMode((SurgeStorage::TuningApplicationMode)(tv));
             }
         }
         auto *hcs = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("hardclipmodes"));
