@@ -17,17 +17,16 @@
 
 #include "AliasOscillator.h"
 #include <random>
+#include "SineOscillator.h"
 
+// This linear representation is required for VST3 automatio and the like and needs to
+// match the param ID the UI is driven by the remapper code in init_ctrltypes
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
-
-const char *alias_wave_name[] = {"Sine",
-                                 "Triangle",
-                                 "Pulse",
-                                 "Noise",
-                                 "Memory - this",
-                                 "Memory - oscdata",
-                                 "Memory - scenedata",
-                                 "Memory - dawextrastate"};
+const char *alias_wave_name[] = {
+    "Sine",         "Triangle",  "Pulse",        "Noise",    "Alias Mem",
+    "OscState Mem", "Scene Mem", "DawExtra Mem", "TX2 Wave", "TX3 Wave",
+    "TX4 Wave",     "TX5 Wave",  "TX6 Wave",     "TX7 Wave", "TX8 Wave",
+};
 
 const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -48,8 +47,28 @@ const uint8_t alias_sinetable[256] = {
     0x4E, 0x51, 0x54, 0x57, 0x5A, 0x5D, 0x60, 0x63, 0x66, 0x69, 0x6C, 0x6F, 0x73, 0x76, 0x79, 0x7C,
 };
 
+static uint8_t shaped_sinetable[7][256];
+static bool initializedShapedSinetable = false;
+
 void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
+    if (!initializedShapedSinetable)
+    {
+        initializedShapedSinetable = true;
+        float dPhase = 2.0 * M_PI / (256 - 1);
+        for (int i = 0; i < 7; ++i)
+        {
+            for (int k = 0; k < 256; ++k)
+            {
+                float c = std::cos(k * dPhase);
+                float s = std::sin(k * dPhase);
+                auto r = SineOscillator::valueFromSinAndCos(s, c, i + 1);
+                auto r01 = (r + 1) * 0.5;
+                shaped_sinetable[i][k] = (uint8_t)(r01 * 0xFF);
+            }
+        }
+    }
+
     n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
@@ -118,6 +137,12 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         break;
     default:
         break;
+    }
+
+    if (wavetype >= aow_sine_tx2 && wavetype <= aow_sine_tx8)
+    {
+        wavetable_mode = true;
+        wavetable = (const uint8_t *)(shaped_sinetable[wavetype - aow_sine_tx2]);
     }
 
     const uint32_t bit_depth = 8;
@@ -250,8 +275,47 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
 void AliasOscillator::init_ctrltypes()
 {
+    static struct WaveRemapper : public ParameterDiscreteIndexRemapper
+    {
+        int remapStreamedIndexToDisplayIndex(int i) override { return i; }
+        std::string nameAtStreamedIndex(int i) override
+        {
+            if (i <= aow_noise)
+                return alias_wave_name[i];
+
+            if (i >= aow_sine_tx2 && i <= aow_sine_tx8)
+            {
+                int txi = i - aow_sine_tx2 + 2;
+                return std::string("TX") + std::to_string(txi) + "";
+            }
+
+            switch ((ao_waves)i)
+            {
+            case aow_mem_alias:
+                return "This Alias Instance";
+            case aow_mem_oscdata:
+                return "Osc Data";
+            case aow_mem_scenedata:
+                return "Scene Data";
+            case aow_mem_dawextra:
+                return "Daw State Chunk";
+            default:
+                return "ERROR";
+            }
+        }
+        bool hasGroupNames() override { return true; }
+        std::string groupNameAtStreamedIndex(int i) override
+        {
+            if (i <= aow_noise)
+                return "";
+            if (i < aow_sine_tx2)
+                return "Memory From...";
+            return "Quadrant Shaping";
+        }
+    } waveRemapper;
     oscdata->p[ao_wave].set_name("Shape");
     oscdata->p[ao_wave].set_type(ct_alias_wave);
+    oscdata->p[ao_wave].set_user_data(&waveRemapper);
 
     oscdata->p[ao_shift].set_name("Wrap");
     oscdata->p[ao_shift].set_type(ct_percent);

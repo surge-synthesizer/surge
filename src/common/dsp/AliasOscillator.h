@@ -43,6 +43,14 @@ class AliasOscillator : public Oscillator
         aow_mem_scenedata,
         aow_mem_dawextra,
 
+        aow_sine_tx2,
+        aow_sine_tx3,
+        aow_sine_tx4,
+        aow_sine_tx5,
+        aow_sine_tx6,
+        aow_sine_tx7,
+        aow_sine_tx8,
+
         ao_n_waves
     };
 
