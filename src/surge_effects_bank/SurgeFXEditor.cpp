@@ -12,22 +12,25 @@
 #include "SurgeFXEditor.h"
 
 static std::vector<std::vector<std::string>> fxnm = {
-    {"Eq", "GEq", "Reson", "Exciter", "Chow", "Dist", "Neuron", "Tape"},
-    {"Chorus", "Ens", "Flanger", "Phaser", "Rotary", "Delay", "Reverb1", "Reverb2"},
-    {"Combs", "Freq", "Nimbus", "Ring Mod", "TreeMon", "Vocoder", "Airwin", "Cond"}};
+    {"EQ", "Graphic EQ", "Resonator", "Exciter", "CHOW", "Distortion", "Neuron", "Tape"},
+    {"Chorus", "Ensemble", "Flanger", "Phaser", "Rotary", "Delay", "Reverb 1", "Reverb 2"},
+    {"Combulator", "Freq Shifter", "Nimbus", "Ring Modulator", "Treemonster", "Vocoder",
+     "Airwindows", "Conditioner"}};
+
 static std::vector<std::vector<int>> fxt = {
     {fxt_eq, fxt_geq11, fxt_resonator, fxt_exciter, fxt_chow, fxt_distortion, fxt_neuron, fxt_tape},
     {fxt_chorus4, fxt_ensemble, fxt_flanger, fxt_phaser, fxt_rotaryspeaker, fxt_delay, fxt_reverb,
      fxt_reverb2},
     {fxt_combulator, fxt_freqshift, fxt_nimbus, fxt_ringmod, fxt_treemonster, fxt_vocoder,
      fxt_airwindows, fxt_conditioner}};
+
 static std::vector<std::vector<int>> fxgroup = {
     {0, 0, 0, 0, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 3, 3, 3}, {4, 4, 4, 4, 4, 4, 5, 5}};
 
 // https://piccianeri.com/wp-content/uploads/2016/10/Complementary-palette-f27400.jpg
 static std::vector<juce::Colour> fxbuttoncolors = {
-    juce::Colour(0xFF038294), juce::Colour(0xFFFFAB5E), juce::Colour(0xFF026775),
-    juce::Colour(0xFF964800), juce::Colour(0xFF43a4b1), juce::Colour(0xFFF27400)};
+    juce::Colour(0xFF106060), juce::Colour(0xFFE03400), juce::Colour(0xFF104B60),
+    juce::Colour(0xFFF06000), juce::Colour(0xFF103560), juce::Colour(0xFFFF9000)};
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
@@ -37,18 +40,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setLookAndFeel(surgeLookFeel.get());
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(540, 55 * 6 + 80 + 50 * fxt.size());
+    setSize(650, 55 * 6 + 80 + 50 * fxt.size());
     setResizable(false, false); // For now
 
-    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge FX");
+    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge FX Bank");
     fxNameLabel->setFont(28);
     fxNameLabel->setColour(juce::Label::textColourId,
                            surgeLookFeel->findColour(SurgeLookAndFeel::blue));
-    fxNameLabel->setBounds(40, getHeight() - 40, 300, 38);
+    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(fxNameLabel.get());
 
-    int ypos0 = 50 * fxt.size() - 10;
+    int ypos0 = 50 * fxt.size() - 5;
+
     for (int i = 0; i < n_fx_params; ++i)
     {
         fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
@@ -103,26 +107,33 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     int en = processor.getEffectType();
     int maxButtonsPerRow = 0;
+
     for (auto &e : fxt)
+    {
         maxButtonsPerRow = std::max(maxButtonsPerRow, (int)e.size());
+    }
 
     int buttonsPerRow = maxButtonsPerRow;
     int i = 0;
+
     for (int row = 0; row < fxt.size(); ++row)
     {
         std::unordered_set<int> groupsPerRow;
+
         for (auto g : fxgroup[row])
         {
             groupsPerRow.insert(g);
         }
+
         auto nGroups = groupsPerRow.size();
 
         int bxsz = (getWidth() - 40) / buttonsPerRow;
         int bxmg = 10;
-        int bysz = 40;
+        int bysz = 38;
         int bymg = 10;
 
         int xPos = bxmg;
+
         if (nGroups > 2)
         {
             xPos -= bxmg / 3 * (nGroups - 2);
@@ -134,10 +145,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         }
 
         int currGrp = fxgroup[row][0];
+
         for (int col = 0; col < fxt[row].size(); ++col)
         {
             auto nm = fxnm[row][col];
             auto ty = fxt[row][col];
+
             selectType[i].setButtonText(nm);
             selectType[i].setColour(SurgeLookAndFeel::fxButtonFill,
                                     fxbuttoncolors[fxgroup[row][col]]);
@@ -156,6 +169,21 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             selectType[i].setBounds(bpos);
             selectType[i].setClickingTogglesState(true);
             selectType[i].onClick = [this, ty] { this->setEffectType(ty); };
+
+            // gross but works just so we don't see those ellipses
+            if (fxt[row][col] == fxt_treemonster || fxt[row][col] == fxt_rotaryspeaker)
+            {
+                bpos.setRight(bpos.getRight() + 4);
+                selectType[i].setBounds(bpos);
+            }
+            if (fxt[row][col] == fxt_vocoder)
+            {
+                auto pos = bpos.getPosition();
+                pos.setX(pos.x + 4);
+                bpos.setPosition(pos);
+                selectType[i].setBounds(bpos);
+            }
+
             if (ty == en)
             {
                 selectType[i].setToggleState(true, NotificationType::dontSendNotification);
@@ -164,7 +192,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             {
                 selectType[i].setToggleState(false, NotificationType::dontSendNotification);
             }
+
             addAndMakeVisible(selectType[i]);
+
             ++i;
         }
     }
@@ -193,8 +223,25 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       NotificationType::dontSendNotification);
     }
-    fxNameLabel->setText(juce::String("SurgeFX : ") + fx_type_names[processor.getEffectType()],
-                         juce::dontSendNotification);
+
+    int row, col;
+
+    // not elegant but works
+    for (int i = 0; i < fxt.size(); ++i)
+    {
+        for (int j = 0; j < fxt[row].size(); ++j)
+        {
+            if (fxt[i][j] == processor.getEffectType())
+            {
+                row = i;
+                col = j;
+            }
+        }
+    }
+
+    auto nm = fxnm[row][col];
+
+    fxNameLabel->setText(juce::String("Surge FX: " + nm), juce::dontSendNotification);
 }
 
 void SurgefxAudioProcessorEditor::setEffectType(int i)

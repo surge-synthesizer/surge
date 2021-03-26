@@ -18,6 +18,8 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         orangeMedium,
         orangeDark,
         blue,
+        black,
+        white,
 
         knobEdge,
         knobBg,
@@ -37,7 +39,10 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         fxButtonEdge,
         fxButtonHighlighted,
         fxButtonDown,
-        fxButonToggled
+        fxButonToggled,
+
+        fxButtonTextUnselected,
+        fxButtonTextSelected,
     };
 
     SurgeLookAndFeel()
@@ -57,17 +62,22 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         setColour(SurgeColourIds::orangeDark, surgeOrangeDark);
         setColour(SurgeColourIds::orangeMedium, surgeOrangeMedium);
         setColour(SurgeColourIds::blue, surgeBlue);
+        setColour(SurgeColourIds::black, black);
+        setColour(SurgeColourIds::white, white);
 
         setColour(SurgeColourIds::knobHandle, white);
         setColour(SurgeColourIds::knobBg, surgeOrange);
         setColour(SurgeColourIds::knobEdge, surgeBlue);
 
-        auto disableOpacity = 0.55;
+        auto disableOpacity = 0.666;
         setColour(SurgeColourIds::knobHandleDisable,
                   surgeBlue.interpolatedWith(surgeGrayBg, disableOpacity));
         setColour(SurgeColourIds::knobBgDisable,
                   surgeOrange.interpolatedWith(surgeGrayBg, disableOpacity));
         setColour(SurgeColourIds::knobEdgeDisable, surgeBlue);
+
+        setColour(SurgeColourIds::fxButtonTextUnselected, white);
+        setColour(SurgeColourIds::fxButtonTextSelected, black);
 
         setColour(SurgeColourIds::paramEnabledBg, black);
         setColour(SurgeColourIds::paramEnabledEdge, surgeOrange);
@@ -133,23 +143,49 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         };
 
         auto col = button.findColour(SurgeColourIds::fxButtonFill);
+
+        float edgeThickness = 1.5;
+
         if (isBlack(col))
+        {
             col = findColour(SurgeColourIds::orangeDark);
-        auto edge = button.findColour(SurgeColourIds::blue);
+        }
+
+        auto edge = button.findColour(SurgeColourIds::black);
 
         if (shouldDrawButtonAsHighlighted)
-            edge = juce::Colour(200, 200, 255);
+        {
+            edge = findColour(SurgeColourIds::white);
+            edgeThickness = 2.f;
+        }
 
         if (shouldDrawButtonAsDown)
+        {
             edge = edge.darker(0.4);
+        }
 
         if (button.getToggleState())
+        {
             col = col.brighter(0.5);
+        }
 
         g.setColour(col);
         g.fillRoundedRectangle(bounds, 3);
         g.setColour(edge);
-        g.drawRoundedRectangle(bounds, 3, 1);
+        g.drawRoundedRectangle(bounds, 3, edgeThickness);
+    }
+
+    virtual void drawButtonText(Graphics &g, TextButton &button, bool shouldDrawButtonAsHighlighted,
+                                bool shouldDrawButtonAsDown) override
+    {
+        button.setColour(TextButton::ColourIds::textColourOffId,
+                         findColour(SurgeColourIds::fxButtonTextUnselected));
+
+        button.setColour(TextButton::ColourIds::textColourOnId,
+                         findColour(SurgeColourIds::fxButtonTextSelected));
+
+        LookAndFeel_V4::drawButtonText(g, button, shouldDrawButtonAsHighlighted,
+                                       shouldDrawButtonAsDown);
     }
 
     void paintComponentBackground(Graphics &g, int w, int h)

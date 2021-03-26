@@ -1421,6 +1421,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
     target_sources(surge-fx PRIVATE
             src/surge_effects_bank/SurgeFXEditor.cpp
             src/surge_effects_bank/SurgeFXProcessor.cpp
+            src/surge_effects_bank/SurgeLookAndFeel.h
             ${SURGE_GENERATED_SOURCES}
             ${SURGE_OS_SOURCES}
             )
