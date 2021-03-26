@@ -19,13 +19,13 @@
 #include <random>
 #include "SineOscillator.h"
 
-// This linear representation is required for VST3 automatio and the like and needs to
+// This linear representation is required for VST3 automation and the like and needs to
 // match the param ID the UI is driven by the remapper code in init_ctrltypes
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 const char *alias_wave_name[] = {
-    "Sine",      "Triangle",     "Pulse",       "Noise",    "Alias Mem", "OscState Mem",
-    "Scene Mem", "DawExtra Mem", "StepSeq Mem", "Audio In", "TX2 Wave",  "TX3 Wave",
-    "TX4 Wave",  "TX5 Wave",     "TX6 Wave",    "TX7 Wave", "TX8 Wave",
+    "Sine",      "Triangle",      "Pulse",        "Noise",     "Alias Mem", "Osc Mem",
+    "Scene Mem", "DAW Chunk Mem", "Step Seq Mem", "Audio In",  "TX 2 Wave", "TX 3 Wave",
+    "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave",
 };
 
 const uint8_t alias_sinetable[256] = {
@@ -312,7 +312,7 @@ void AliasOscillator::init_ctrltypes()
             if (i >= aow_sine_tx2 && i <= aow_sine_tx8)
             {
                 int txi = i - aow_sine_tx2 + 2;
-                return std::string("TX") + std::to_string(txi) + "";
+                return std::string("TX ") + std::to_string(txi) + "";
             }
 
             switch ((ao_waves)i)
@@ -320,15 +320,15 @@ void AliasOscillator::init_ctrltypes()
             case aow_mem_alias:
                 return "This Alias Instance";
             case aow_mem_oscdata:
-                return "Osc Data";
+                return "Oscillator Data";
             case aow_mem_scenedata:
                 return "Scene Data";
             case aow_mem_dawextra:
-                return "Daw State Chunk";
+                return "DAW Chunk Data";
             case aow_mem_stepseqdata:
-                return "StepSequencer Storage";
+                return "Step Sequencer Data";
             case aow_audiobuffer:
-                return "AudioBuffer";
+                return "Audio In";
             default:
                 return "ERROR";
             }

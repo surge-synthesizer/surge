@@ -94,22 +94,30 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
 
     dc->setFont(displayFont);
     int splitPoint = 48;
+
     if (sge)
     {
         std::string dt = sge->getDisplayForTag(getTag());
         auto valcol = skin->getColor(Colors::Menu::Value);
 
         if (isHover)
+        {
             valcol = skin->getColor(Colors::Menu::ValueHover);
+        }
 
         if (deactivated)
+        {
             valcol = skin->getColor(Colors::Menu::ValueDeactivated);
+        }
 
         if (filtermode)
         {
             valcol = skin->getColor(Colors::Menu::FilterValue);
+
             if (isHover)
+            {
                 valcol = skin->getColor(Colors::Menu::FilterValueHover);
+            }
         }
 
         dc->setFont(displayFont);
@@ -120,6 +128,7 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
         auto t = d;
 
         t.right -= 14;
+
         if (filtermode)
         {
             t.right -= 6;
@@ -128,23 +137,32 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
             align = kLeftText;
         }
         else
-            t.left += splitPoint;
+        {
+            t.left += splitPoint - 2;
+        }
+
         auto td = dt;
+
         while (dc->getStringWidth(td.c_str()) > t.getWidth() && td.length() > 4)
         {
             td = td.substr(0, td.length() - 3);
             trunc = true;
         }
+
         if (trunc)
+        {
             td += "...";
+        }
+
         dc->drawString(td.c_str(), t, align, true);
 
         if (!filtermode)
         {
             auto l = d;
+            auto tl = label;
+
             l.left += 6;
             l.right = d.left + splitPoint;
-            auto tl = label;
             trunc = false;
 
             while (dc->getStringWidth(tl.c_str()) > l.getWidth() && tl.length() > 4)
@@ -154,14 +172,21 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
             }
 
             if (trunc)
+            {
                 tl += "...";
+            }
+
             auto labcol = skin->getColor(Colors::Menu::Name);
 
             if (isHover)
+            {
                 labcol = skin->getColor(Colors::Menu::NameHover);
+            }
 
             if (deactivated)
+            {
                 labcol = skin->getColor(Colors::Menu::NameDeactivated);
+            }
 
             dc->setFontColor(labcol);
             dc->drawString(tl.c_str(), l, kLeftText, true);
@@ -170,9 +195,9 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
         if (hasDragRegion)
         {
             int iv = floor(getValue() * (iMax - iMin) + 0.5);
-
             int yv = iv;
             int xv = 0;
+
             if (!glyphIndexMap.empty())
             {
                 auto gim = glyphIndexMap[iv];
@@ -193,6 +218,7 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
             else
             {
                 dbox = dragRegion;
+
                 if (glyphLocation == LEFT && dglyphsize == glyphH && dglyphsize == glyphW &&
                     dglyphsize == 18)
                 {
@@ -233,13 +259,16 @@ CMouseEventResult CMenuAsSlider::onMouseDown(CPoint &w, const CButtonState &butt
             dragStart = w;
             dragDir = unk;
         }
+
         return kMouseEventHandled;
     }
+
     if (!deactivated)
     {
         // fake up an RMB since we are a slider sit-in
         listener->controlModifierClicked(this, buttons | kRButton);
     }
+
     return kMouseEventHandled;
 }
 
@@ -255,34 +284,51 @@ CMouseEventResult CMenuAsSlider::onMouseMoved(CPoint &w, const CButtonState &but
         if (dragDir == unk)
         {
             if (distx > 1 || distx < -1)
+            {
                 dragDir = CMenuAsSlider::dirx;
+            }
+
             if (disty > 1 || disty < -1)
+            {
                 dragDir = CMenuAsSlider::diry;
+            }
         }
 
         float dist = (dragDir == dirx ? distx : (dragDir == diry ? disty : 0.0));
         int inc = 0;
+
         if (dist > 1)
         {
             inc = 1;
+
             if (!resetToShowLocation())
+            {
                 dragStart = w;
+            }
         }
+
         if (dist < -1)
         {
             inc = -1;
+
             if (!resetToShowLocation())
+            {
                 dragStart = w;
+            }
         }
 
         if (inc != 0)
         {
             float r = nextValueInOrder(getValue(), inc);
             setValue(r);
+
             if (listener)
+            {
                 listener->valueChanged(this);
+            }
         }
     }
+
     return kMouseEventHandled;
 }
 
@@ -293,6 +339,7 @@ CMouseEventResult CMenuAsSlider::onMouseUp(CPoint &w, const CButtonState &button
         endCursorHide();
         isDragRegionDrag = false;
     }
+
     return kMouseEventHandled;
 }
 
@@ -304,11 +351,15 @@ void CMenuAsSlider::onSkinChanged()
         {
             pBackground = associatedBitmapStore->getBitmapByStringID(bgrs);
             pBackgroundHover = nullptr;
+
             if (skinControl)
             {
                 auto hovim = skin->propertyValue(skinControl, Surge::Skin::Component::HOVER_IMAGE);
+
                 if (hovim.isJust())
+                {
                     pBackgroundHover = associatedBitmapStore->getBitmapByStringID(hovim.fromJust());
+                }
             }
         }
         else
@@ -321,11 +372,13 @@ void CMenuAsSlider::onSkinChanged()
         }
 
         pGlyph = nullptr;
+
         if (glyphImage != "")
         {
             pGlyph = associatedBitmapStore->getBitmapByStringID(glyphImage);
             pGlyphHover = associatedBitmapStore->getBitmapByStringID(glyphImageHover);
         }
+
         if (pGlyph == nullptr && dglphyid > 0)
         {
             pGlyph = associatedBitmapStore->getBitmap(dglphyid);
@@ -350,15 +403,22 @@ bool CMenuAsSlider::onWheel(const VSTGUI::CPoint &where, const float &distance,
     {
         wheelDistance = 0;
         setValue(nextValueInOrder(getValue(), -1));
+
         if (listener)
+        {
             listener->valueChanged(this);
+        }
     }
+
     if (wheelDistance < -threshold)
     {
         wheelDistance = 0;
         setValue(nextValueInOrder(getValue(), +1));
+
         if (listener)
+        {
             listener->valueChanged(this);
+        }
     }
     return true;
 }
@@ -369,38 +429,62 @@ float CMenuAsSlider::nextValueInOrder(float v, int inc)
     if (intOrdering.size() > 0 && iMax == intOrdering.size() - 1)
     {
         int pidx = 0;
+
         for (int idx = 0; idx < intOrdering.size(); idx++)
+        {
             if (intOrdering[idx] == iv)
             {
                 pidx = idx;
                 break;
             }
+        }
+
         int nidx = pidx + inc;
+
         if (nidx < 0)
+        {
             nidx = intOrdering.size() - 1;
+        }
         else if (nidx >= intOrdering.size())
+        {
             nidx = 0;
+        }
 
         while (intOrdering[nidx] < 0)
         {
             nidx += inc;
+
             if (nidx < 0)
+            {
                 nidx = intOrdering.size() - 1;
+            }
+
             if (nidx >= intOrdering.size())
+            {
                 nidx = 0;
+            }
         }
+
         iv = intOrdering[nidx];
     }
     else
     {
         iv = iv + inc;
+
         if (iv < 0)
+        {
             iv = iMax;
+        }
+
         if (iv > iMax)
+        {
             iv = 0;
+        }
     }
+
     // This is the get_value_f01 code
     float r = Parameter::intScaledToFloat(iv, iMax, iMin);
+
     return r;
 }
 void CMenuAsSlider::setDragRegion(const VSTGUI::CRect &r)
@@ -416,13 +500,21 @@ void CMenuAsSlider::setGlyphSettings(const std::string &img, const std::string &
     glyphImageHover = imghov;
 
     if (location == "right")
+    {
         glyphLocation = RIGHT;
+    }
     else if (location == "above")
+    {
         glyphLocation = ABOVE;
+    }
     else if (location == "below")
+    {
         glyphLocation = BELOW;
+    }
     else
+    {
         glyphLocation = LEFT;
+    }
 
     glyphW = w;
     glyphH = h;
@@ -430,6 +522,7 @@ void CMenuAsSlider::setGlyphSettings(const std::string &img, const std::string &
     auto vs = getViewSize();
     auto ch = vs.getHeight();
     auto cw = vs.getWidth();
+
     switch (glyphLocation)
     {
     case LEFT:
