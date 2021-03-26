@@ -224,7 +224,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
                                       NotificationType::dontSendNotification);
     }
 
-    int row, col;
+    int row = 0, col = 0;
 
     // not elegant but works
     for (int i = 0; i < fxt.size(); ++i)
