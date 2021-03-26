@@ -1,0 +1,13 @@
+At startup Surge scans for all information (skins, patches, wavetables, etc...) from both the factory folder and the user folder. 
+The factory folder is installed in an admin-writable central location and the user folder is in your user area. 
+The locations are outlined in the manual, but you can always find your user folder by doing "Menu > Data Folders > Open User Data Folder"
+
+If you put user content in the factory folder or otherwise change it, future installers will erase it. Our installers 
+never touch anything in the user area.
+
+So if you want to install a custom skin, set of patches, or otherwise add things to surge, put them in your user data folder not here,
+or risk losing them when you upgrade.
+
+For more information, please consult the manual.
+
+Thank you!
