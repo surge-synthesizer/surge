@@ -5401,8 +5401,10 @@ void SurgeGUIEditor::mappingFileDropped(std::string fn)
 
 bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
 {
+#if !LINUX
     correctedZf = zf;
     return true;
+#endif
 
     CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
 
@@ -5519,6 +5521,7 @@ void SurgeGUIEditor::showMinimumZoomError() const
 
 void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf) const
 {
+#if !LINUX
     std::ostringstream msg;
     msg << "Surge adjusts the maximum zoom level in order to prevent the interface becoming larger "
            "than available screen area. "
@@ -5534,6 +5537,7 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
         msg << "Surge chose the largest fitting zoom level of " << zf << "%.";
     }
     Surge::UserInteractions::promptError(msg.str(), "Zoom Level Adjusted");
+#endif
 }
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
