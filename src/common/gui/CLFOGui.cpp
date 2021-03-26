@@ -1402,6 +1402,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
                 }
             }
             invalid();
+            getFrame()->invalid();
             return kMouseEventHandled;
         }
         else if (ss_shift_left.pointInside(where))
@@ -1421,6 +1422,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
                             (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
 
             invalid();
+            getFrame()->invalid();
             return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
         }
         else if (ss_shift_right.pointInside(where))
@@ -1439,6 +1441,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
                            (((ss->trigmask & 0x00007fff00000000) << 1) |
                             (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
             invalid();
+            getFrame()->invalid();
             return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
         }
     }
@@ -1513,6 +1516,7 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint &where, const CButtonState &buttons)
 
                 ss->trigmask = (ss->trigmask & ~off) | on;
                 invalid();
+                getFrame()->invalid();
             }
         }
     }
@@ -1596,12 +1600,14 @@ CMouseEventResult CLFOGui::onMouseUp(CPoint &where, const CButtonState &buttons)
             }
 
             invalid();
+            getFrame()->invalid();
         }
     }
 
     if (controlstate == cs_steps)
     {
         endCursorHide(barDragTop);
+        getFrame()->invalid();
     }
 
     if (controlstate)
@@ -1789,7 +1795,10 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint &where, const CButtonState &butto
             }
         }
         if (change)
+        {
             invalid();
+            getFrame()->invalid();
+        }
     }
     else if (controlstate == cs_linedrag)
     {
@@ -1836,6 +1845,7 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint &where, const CButtonState &butto
         }
 
         invalid();
+        getFrame()->invalid();
     }
 
     return kMouseEventHandled;
@@ -1902,6 +1912,7 @@ bool CLFOGui::onWheel(const VSTGUI::CPoint &where, const float &distance,
                     ss->steps[i] = limit_range(ss->steps[i] + (distance / 10.f), -1.f, 1.f);
                 }
                 invalid();
+                getFrame()->invalid();
             }
         }
     }
