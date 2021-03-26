@@ -42,6 +42,9 @@ class AliasOscillator : public Oscillator
         aow_mem_oscdata,
         aow_mem_scenedata,
         aow_mem_dawextra,
+        aow_mem_stepseqdata,
+
+        aow_audiobuffer,
 
         aow_sine_tx2,
         aow_sine_tx3,
