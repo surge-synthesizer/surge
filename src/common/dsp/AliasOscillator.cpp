@@ -23,9 +23,9 @@
 // match the param ID the UI is driven by the remapper code in init_ctrltypes
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 const char *alias_wave_name[] = {
-    "Sine",         "Triangle",  "Pulse",        "Noise",    "Alias Mem",
-    "OscState Mem", "Scene Mem", "DawExtra Mem", "TX2 Wave", "TX3 Wave",
-    "TX4 Wave",     "TX5 Wave",  "TX6 Wave",     "TX7 Wave", "TX8 Wave",
+    "Sine",      "Triangle",     "Pulse",       "Noise",    "Alias Mem", "OscState Mem",
+    "Scene Mem", "DawExtra Mem", "StepSeq Mem", "Audio In", "TX2 Wave",  "TX3 Wave",
+    "TX4 Wave",  "TX5 Wave",     "TX6 Wave",    "TX7 Wave", "TX8 Wave",
 };
 
 const uint8_t alias_sinetable[256] = {
@@ -106,6 +106,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     bool wavetable_mode = false;
     const uint8_t *wavetable = alias_sinetable;
+    uint8_t audioInWT[256];
     switch (wavetype)
     {
     case AliasOscillator::ao_waves::aow_sine:
@@ -134,6 +135,31 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         static_assert(sizeof(storage->getPatch().dawExtraState) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
         wavetable = (const uint8_t *)&storage->getPatch().dawExtraState;
+        break;
+    case AliasOscillator::ao_waves::aow_mem_stepseqdata:
+        wavetable_mode = true;
+        static_assert(sizeof(storage->getPatch().stepsequences) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)storage->getPatch().stepsequences;
+        break;
+    case AliasOscillator::ao_waves::aow_audiobuffer:
+        wavetable_mode = true;
+        static_assert(sizeof(storage->audio_in) > 0xFF,
+                      "Memory region not large enough to be indexed by Alias");
+        wavetable = (const uint8_t *)audioInWT;
+        for (int qs = 0; qs < BLOCK_SIZE_OS; ++qs)
+        {
+            auto llong = (uint32_t)(((double)storage->audio_in[0][qs]) * (double)0xFFFFFFFF);
+            auto rlong = (uint32_t)(((double)storage->audio_in[1][qs]) * (double)0xFFFFFFFF);
+
+            llong = (llong >> 24) & 0xFF;
+            rlong = (rlong >> 24) & 0xFF;
+
+            audioInWT[4 * qs] = llong;
+            audioInWT[4 * qs + 1] = rlong;
+            audioInWT[4 * qs + 2] = llong;
+            audioInWT[4 * qs + 3] = rlong;
+        }
         break;
     default:
         break;
@@ -299,6 +325,10 @@ void AliasOscillator::init_ctrltypes()
                 return "Scene Data";
             case aow_mem_dawextra:
                 return "Daw State Chunk";
+            case aow_mem_stepseqdata:
+                return "StepSequencer Storage";
+            case aow_audiobuffer:
+                return "AudioBuffer";
             default:
                 return "ERROR";
             }
@@ -306,7 +336,7 @@ void AliasOscillator::init_ctrltypes()
         bool hasGroupNames() override { return true; }
         std::string groupNameAtStreamedIndex(int i) override
         {
-            if (i <= aow_noise)
+            if (i <= aow_noise || i == aow_audiobuffer)
                 return "";
             if (i < aow_sine_tx2)
                 return "Memory From...";
