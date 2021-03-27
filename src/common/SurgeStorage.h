@@ -1172,6 +1172,11 @@ class alignas(16) SurgeStorage
      *
      * Reseeding it impacts the global state on that thread.
      */
+#if STORAGE_USES_INDEPENDENT_RNG
+    /*
+     * This code path for some reason doesn't work on some windows versions. Thread local storage
+     * perhaps? See #4197
+     */
     thread_local static struct RNGGen
     {
         RNGGen()
@@ -1189,6 +1194,12 @@ class alignas(16) SurgeStorage
     inline float rand_pm1() { return rngGen.pm1(rngGen.g); }
     inline float rand_01() { return rngGen.z1(rngGen.g); }
     // void seed_rand(int s) { rngGen.g.seed(s); }
+#else
+    inline int rand() { return std::rand(); }
+    inline uint32_t rand_u32() { return (uint32_t)(rand_01() * (float)(0xFFFFFFFF)); }
+    inline float rand_pm1() { return rand_01() * 2 - 1; }
+    inline float rand_01() { return (float)std::rand() / (float)(RAND_MAX); }
+#endif
 };
 
 float db_to_linear(float);
