@@ -45,6 +45,9 @@ class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
     Slider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
+    SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
+    SurgeTempoSyncSwitch fxExtended[n_fx_params];
+    SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
 
     TextButton
         selectType[n_fx_types]; // this had better match the list of fxnames in the constructor

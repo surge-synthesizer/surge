@@ -61,9 +61,11 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         snprintf(lb, 256, "fx_temposync_%d", i);
         snprintf(nm, 256, "FX Temposync %d", i);
 
-        addParameter(fxTempoSync[i] = new AudioParameterBool(lb, nm, false));
-        *(fxTempoSync[i]) = fxstorage->p[fx_param_remap[i]].temposync;
-        fxBaseParams[i + n_fx_params + 1] = fxTempoSync[i];
+        // if you change this 0xFF also change the divide in the setValueNotifyingHost in
+        // setFXParamExtended etc
+        addParameter(fxParamFeatures[i] = new AudioParameterInt(lb, nm, 0, 0xFF, 0));
+        *(fxParamFeatures[i]) = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
+        fxBaseParams[i + n_fx_params + 1] = fxParamFeatures[i];
     }
 
     for (int i = 0; i < 2 * n_fx_params + 1; ++i)
@@ -75,7 +77,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        wasTempoSyncChanged[i] = false;
+        wasParamFeatureChanged[i] = false;
     }
 
     paramChangeListener = []() {};
@@ -194,7 +196,7 @@ void SurgefxAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer 
         for (int i = 0; i < n_fx_params; ++i)
         {
             fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
-            fxstorage->p[fx_param_remap[i]].temposync = *(fxTempoSync[i]);
+            paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), *(fxParamFeatures[i]));
         }
         copyGlobaldataSubset(storage_id_start, storage_id_end);
 
@@ -243,9 +245,9 @@ void SurgefxAudioProcessor::getStateInformation(MemoryBlock &destData)
         float val = *(fxParams[i]);
         xml->setAttribute(nm, val);
 
-        snprintf(nm, 256, "fxp_temposync_%d", i);
-        bool b = *(fxTempoSync[i]);
-        xml->setAttribute(nm, b);
+        snprintf(nm, 256, "fxp_param_features_%d", i);
+        int pf = *(fxParamFeatures[i]);
+        xml->setAttribute(nm, pf);
     }
     xml->setAttribute("fxt", effectNum);
 
@@ -269,9 +271,21 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                 float v = xmlState->getDoubleAttribute(nm, 0.0);
                 fxstorage->p[fx_param_remap[i]].set_value_f01(v);
 
+                // Legacy unstream
                 snprintf(nm, 256, "fxp_temposync_%d", i);
-                bool b = xmlState->getBoolAttribute(nm, false);
-                fxstorage->p[fx_param_remap[i]].temposync = b;
+                if (xmlState->hasAttribute(nm))
+                {
+                    bool b = xmlState->getBoolAttribute(nm, false);
+                    fxstorage->p[fx_param_remap[i]].temposync = b;
+                }
+
+                // Modern unstream
+                snprintf(nm, 256, "fxp_param_features_%d", i);
+                if (xmlState->hasAttribute(nm))
+                {
+                    int pf = xmlState->getIntAttribute(nm, 0);
+                    paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), pf);
+                }
             }
             updateJuceParamsFromStorage();
         }
@@ -358,10 +372,10 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
     reorderSurgeParams();
 
     /*
-    ** TempoSync settings may linger so whack them all to false again
+    ** TempoSync etc settings may linger so whack them all to false again
     */
     for (int i = 0; i < n_fx_params; ++i)
-        fxstorage->p[i].temposync = false;
+        paramFeatureOntoParam(&(fxstorage->p[i]), 0);
 
     if (updateJuceParams)
     {
@@ -377,7 +391,8 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
     for (int i = 0; i < n_fx_params; ++i)
     {
         *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
-        *(fxTempoSync[i]) = fxstorage->p[fx_param_remap[i]].temposync;
+        int32_t switchVal = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
+        *(fxParamFeatures[i]) = switchVal;
     }
     *(fxType) = effectNum;
 
