@@ -73,7 +73,12 @@ void SampleAndHoldOscillator::init(float pitch, bool is_display, bool nonzero_in
     else
     {
         std::uniform_real_distribution<float> distro(-1.f, 1.f);
+#ifdef STORAGE_USES_INDEPENDENT_RNG
         urng = std::bind(distro, storage->rngGen.g);
+#else
+        std::minstd_rand gen(std::rand());
+        urng = std::bind(distro, gen);
+#endif
     }
     prepare_unison(n_unison);
 
