@@ -303,19 +303,15 @@ class SurgeTempoSyncSwitch : public ToggleButton
         if (!isEnabled())
             return;
 
-        float controlRadius = bounds.getWidth() - 3;
-        float yPos;
+        float controlRadius = bounds.getWidth() - 4;
         float xPos = bounds.getX() + bounds.getWidth() / 2.0 - controlRadius / 2.0;
-        if (getToggleState())
-        {
-            yPos = bounds.getY() + 2;
-        }
-        else
-        {
-            yPos = bounds.getY() + bounds.getHeight() - controlRadius - 2;
-        }
+        float yPos = bounds.getY() + bounds.getHeight() - controlRadius - 2;
+
         auto kbounds = juce::Rectangle<float>(xPos, yPos, controlRadius, controlRadius);
         g.setColour(handle);
-        g.fillEllipse(kbounds);
+
+        g.drawRoundedRectangle(kbounds, controlRadius, 1);
+        if (getToggleState())
+            g.fillRoundedRectangle(kbounds, controlRadius);
     }
 };

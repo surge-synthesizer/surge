@@ -77,25 +77,58 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         };
         addAndMakeVisible(&(fxParamSliders[i]));
 
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55, (i % 6) * 60 + ypos0 + 12, 13,
-                                   55 - 24};
+        int buttonSize = 15;
+        int buttonMargin = 1;
+        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
+                                   (i % 6) * 60 + ypos0 + buttonMargin, buttonSize, buttonSize};
         fxTempoSync[i].setBounds(tsPos);
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       NotificationType::dontSendNotification);
         fxTempoSync[i].onClick = [i, this]() {
-            this->processor.setUserEditingTemposync(i, true);
+            this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamTempoSync(i, this->fxTempoSync[i].getToggleState());
             this->processor.setFXStorageTempoSync(i, this->fxTempoSync[i].getToggleState());
             fxParamDisplay[i].setDisplay(
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
-            this->processor.setUserEditingTemposync(i, false);
+            this->processor.setUserEditingParamFeature(i, false);
         };
-
         addAndMakeVisible(&(fxTempoSync[i]));
 
-        juce::Rectangle<int> dispPos{(i / 6) * getWidth() / 2 + 4 + 55 + 15, (i % 6) * 60 + ypos0,
-                                     getWidth() / 2 - 68 - 15, 55};
+        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
+                                   (i % 6) * 60 + ypos0 + 2 * buttonMargin + buttonSize, buttonSize,
+                                   buttonSize};
+        fxDeactivated[i].setBounds(daPos);
+        fxDeactivated[i].setEnabled(false);
+        addAndMakeVisible(&(fxDeactivated[i]));
+
+        juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
+                                   (i % 6) * 60 + ypos0 + 1 * buttonMargin + 0 * buttonSize,
+                                   buttonSize, buttonSize};
+        fxExtended[i].setBounds(exPos);
+        fxExtended[i].setEnabled(processor.canExtend(i));
+        fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
+                                     NotificationType::dontSendNotification);
+        fxExtended[i].onClick = [i, this]() {
+            this->processor.setUserEditingParamFeature(i, true);
+            this->processor.setFXParamExtended(i, this->fxExtended[i].getToggleState());
+            this->processor.setFXStorageExtended(i, this->fxExtended[i].getToggleState());
+            fxParamDisplay[i].setDisplay(
+                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            this->processor.setUserEditingParamFeature(i, false);
+        };
+        addAndMakeVisible(&(fxExtended[i]));
+
+        juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
+                                   (i % 6) * 60 + ypos0 + 2 * buttonMargin + 1 * buttonSize,
+                                   buttonSize, buttonSize};
+        fxAbsoluted[i].setBounds(abPos);
+        fxAbsoluted[i].setEnabled(false);
+        addAndMakeVisible(&(fxAbsoluted[i]));
+
+        juce::Rectangle<int> dispPos{
+            (i / 6) * getWidth() / 2 + 4 + 55 + 15 + 2 * buttonMargin + buttonSize,
+            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 15 - 2 * buttonMargin - buttonSize, 55};
         fxParamDisplay[i].setBounds(dispPos);
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
@@ -222,6 +255,12 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       NotificationType::dontSendNotification);
+
+        fxDeactivated[i].setEnabled(false);
+        fxExtended[i].setEnabled(processor.canExtend(i));
+        fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
+                                     NotificationType::dontSendNotification);
+        fxAbsoluted[i].setEnabled(false);
     }
 
     int row = 0, col = 0;
