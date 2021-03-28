@@ -681,75 +681,86 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 {
     int category = categories.size();
 
-    fs::path patchpath = string_to_path(userDir ? userDataPath : datapath);
-    if (!subdir.empty())
-        patchpath /= string_to_path(subdir);
-
-    if (!fs::is_directory(patchpath))
-    {
-        return;
-    }
-
-    /*
-    ** std::filesystem has a recursive_directory_iterator, but between the
-    ** hand rolled ipmmlementation on mac, expermiental on windows, and
-    ** ostensibly standard on linux it isn't consistent enough to warrant
-    ** using yet, so build my own recursive directory traversal with a simple
-    ** stack
-    */
-    std::vector<fs::path> alldirs;
-    std::deque<fs::path> workStack;
-    workStack.push_back(patchpath);
-    while (!workStack.empty())
-    {
-        auto top = workStack.front();
-        workStack.pop_front();
-        for (auto &d : fs::directory_iterator(top))
-        {
-            if (fs::is_directory(d))
-            {
-                alldirs.push_back(d);
-                workStack.push_back(d);
-            }
-        }
-    }
-
-    /*
-    ** We want to remove parent directory /user/foo or c:\\users\\bar\\
-    ** with a substr in the main loop, so get the length once
-    */
+    // See issue 4200. In some cases this can throw a filesystem exception so:
     std::vector<PatchCategory> local_categories;
-    auto patchpathStr(path_to_string(patchpath));
-    auto patchpathSubstrLength = patchpathStr.size() + 1;
-    if (patchpathStr.back() == '/' || patchpathStr.back() == '\\')
-        patchpathSubstrLength--;
 
-    for (auto &p : alldirs)
+    try
     {
-        PatchCategory c;
-        c.name = path_to_string(p).substr(patchpathSubstrLength);
-        c.internalid = category;
+        fs::path patchpath = string_to_path(userDir ? userDataPath : datapath);
+        if (!subdir.empty())
+            patchpath /= string_to_path(subdir);
 
-        c.numberOfPatchesInCatgory = 0;
-        for (auto &f : fs::directory_iterator(p))
+        if (!fs::is_directory(patchpath))
         {
-            std::string xtn = path_to_string(f.path().extension());
-            if (filterOp(xtn))
-            {
-                Patch e;
-                e.category = category;
-                e.path = f.path();
-                e.name = path_to_string(f.path().filename());
-                e.name = e.name.substr(0, e.name.size() - xtn.length());
-                items.push_back(e);
+            return;
+        }
 
-                c.numberOfPatchesInCatgory++;
+        /*
+        ** std::filesystem has a recursive_directory_iterator, but between the
+        ** hand rolled ipmmlementation on mac, expermiental on windows, and
+        ** ostensibly standard on linux it isn't consistent enough to warrant
+        ** using yet, so build my own recursive directory traversal with a simple
+        ** stack
+        */
+        std::vector<fs::path> alldirs;
+        std::deque<fs::path> workStack;
+        workStack.push_back(patchpath);
+        while (!workStack.empty())
+        {
+            auto top = workStack.front();
+            workStack.pop_front();
+            for (auto &d : fs::directory_iterator(top))
+            {
+                if (fs::is_directory(d))
+                {
+                    alldirs.push_back(d);
+                    workStack.push_back(d);
+                }
             }
         }
 
-        c.numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCatgory;
-        local_categories.push_back(c);
-        category++;
+        /*
+        ** We want to remove parent directory /user/foo or c:\\users\\bar\\
+        ** with a substr in the main loop, so get the length once
+        */
+        auto patchpathStr(path_to_string(patchpath));
+        auto patchpathSubstrLength = patchpathStr.size() + 1;
+        if (patchpathStr.back() == '/' || patchpathStr.back() == '\\')
+            patchpathSubstrLength--;
+
+        for (auto &p : alldirs)
+        {
+            PatchCategory c;
+            c.name = path_to_string(p).substr(patchpathSubstrLength);
+            c.internalid = category;
+
+            c.numberOfPatchesInCatgory = 0;
+            for (auto &f : fs::directory_iterator(p))
+            {
+                std::string xtn = path_to_string(f.path().extension());
+                if (filterOp(xtn))
+                {
+                    Patch e;
+                    e.category = category;
+                    e.path = f.path();
+                    e.name = path_to_string(f.path().filename());
+                    e.name = e.name.substr(0, e.name.size() - xtn.length());
+                    items.push_back(e);
+
+                    c.numberOfPatchesInCatgory++;
+                }
+            }
+
+            c.numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCatgory;
+            local_categories.push_back(c);
+            category++;
+        }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Experienced file system error when building patches. " << e.what();
+        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
     }
 
     /*
@@ -1744,21 +1755,30 @@ void SurgeStorage::rescanUserMidiMappings()
     userMidiMappingsXMLByName.clear();
     std::error_code ec;
     const auto extension{fs::path{".srgmid"}.native()};
-    for (const fs::path &d : fs::directory_iterator{string_to_path(userMidiMappingsPath), ec})
+    try
     {
-        if (d.extension().native() == extension)
+        for (const fs::path &d : fs::directory_iterator{string_to_path(userMidiMappingsPath), ec})
         {
-            TiXmlDocument doc;
-            if (!doc.LoadFile(d))
-                continue;
-            const auto r{TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-midi"))};
-            if (!r)
-                continue;
-            const auto a{r->Attribute("name")};
-            if (!a)
-                continue;
-            userMidiMappingsXMLByName.emplace(a, std::move(doc));
+            if (d.extension().native() == extension)
+            {
+                TiXmlDocument doc;
+                if (!doc.LoadFile(d))
+                    continue;
+                const auto r{TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-midi"))};
+                if (!r)
+                    continue;
+                const auto a{r->Attribute("name")};
+                if (!a)
+                    continue;
+                userMidiMappingsXMLByName.emplace(a, std::move(doc));
+            }
         }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Experienced file system error when loading MIDI settings. " << e.what();
+        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
     }
 }
 
