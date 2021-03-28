@@ -324,6 +324,7 @@ bool Parameter::has_deformoptions()
     {
     case ct_lfodeform:
     case ct_modern_trimix:
+    case ct_alias_mask:
         return true;
     default:
         break;
