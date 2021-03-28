@@ -1986,7 +1986,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformT
     }
     else
     {
-        std::cout << "IPlogFrame is not a runloop " << l << std::endl;
+        std::cout << "IPlugFrame is not a runloop " << l << std::endl;
     }
     if (l == nullptr)
     {
@@ -4421,7 +4421,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         enqueuePatchId = id;
 
 #if LINUX || TARGET_JUCE_UI
-        // On linux the popup memny will be gon eso we gotta process
+        // On linux the popup menu will be gone so we gotta process
         flushEnqueuedPatchId();
 #endif
         return;
@@ -5217,11 +5217,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl *control)
             ((CParameterTooltip *)infowindow)->Hide();
         else
         {
-#if LINUX
             clear_infoview_countdown = 15;
-#else
-            clear_infoview_countdown = 15;
-#endif
         }
     }
 }
