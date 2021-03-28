@@ -3582,6 +3582,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         break;
                     }
+                    case ct_alias_mask:
+                    {
+                        contextMenu->addSeparator();
+                        eid++;
+
+                        auto trimask = addCallbackMenu(
+                            contextMenu,
+                            Surge::UI::toOSCaseForMenu("Triangle not masked after threshold point"),
+                            [p, this]() {
+                                p->deform_type = !p->deform_type;
+
+                                synth->refresh_editor = true;
+                            });
+
+                        trimask->setChecked(p->deform_type);
+                        eid++;
+
+                        break;
+                    }
                     default:
                     {
                         break;

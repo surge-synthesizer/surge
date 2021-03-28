@@ -25,8 +25,7 @@ int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 const char *alias_wave_name[] = {
     "Sine",      "Triangle",      "Pulse",        "Noise",     "Alias Mem", "Osc Mem",
     "Scene Mem", "DAW Chunk Mem", "Step Seq Mem", "Audio In",  "TX 2 Wave", "TX 3 Wave",
-    "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave",
-};
+    "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave", "Step Seq Add"};
 
 const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -106,7 +105,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     bool wavetable_mode = false;
     const uint8_t *wavetable = alias_sinetable;
-    uint8_t audioInWT[256];
+    uint8_t dynamic_wavetable[256];
     switch (wavetype)
     {
     case AliasOscillator::ao_waves::aow_sine:
@@ -146,7 +145,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         wavetable_mode = true;
         static_assert(sizeof(storage->audio_in) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
-        wavetable = (const uint8_t *)audioInWT;
+        wavetable = (const uint8_t *)dynamic_wavetable;
         for (int qs = 0; qs < BLOCK_SIZE_OS; ++qs)
         {
             auto llong = (uint32_t)(((double)storage->audio_in[0][qs]) * (double)0xFFFFFFFF);
@@ -155,12 +154,32 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             llong = (llong >> 24) & 0xFF;
             rlong = (rlong >> 24) & 0xFF;
 
-            audioInWT[4 * qs] = llong;
-            audioInWT[4 * qs + 1] = rlong;
-            audioInWT[4 * qs + 2] = llong;
-            audioInWT[4 * qs + 3] = rlong;
+            dynamic_wavetable[4 * qs] = llong;
+            dynamic_wavetable[4 * qs + 1] = rlong;
+            dynamic_wavetable[4 * qs + 2] = llong;
+            dynamic_wavetable[4 * qs + 3] = rlong;
         }
         break;
+    case AliasOscillator::ao_waves::aow_stepseq_additive:
+    { // TODO: make this fast!
+        wavetable_mode = true;
+        wavetable = (const uint8_t *)dynamic_wavetable;
+
+        const float *amps = storage->getPatch().stepsequences[0][0].steps;
+        const float inv = 1.f / (float)n_stepseqsteps;
+        for (int s = 0; s < 256; s++)
+        { // s for sample
+            const float base_phase = s / 256.0f * M_PI * 2.0f;
+            float sample = 0.f;
+            for (int h = 0; h < n_stepseqsteps; h++)
+            { // h for harmonic
+                sample += sinf(base_phase * (float)(h + 1)) * amps[h];
+            }
+            // n.b. excess amplitude will wrap!
+            dynamic_wavetable[s] = (uint8_t)(sample * 32.f + 127.f);
+        }
+        break;
+    }
     default:
         break;
     }
@@ -171,24 +190,25 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         wavetable = (const uint8_t *)(shaped_sinetable[wavetype - aow_sine_tx2]);
     }
 
-    const uint32_t bit_depth = 8;
-    const uint32_t bit_mask = (1 << bit_depth) - 1;
-    const float inv_bit_mask = 1.0 / (float)bit_mask;
+    const uint32_t bit_mask = (1 << 8) - 1;           // 0xFF 255
+    const float inv_bit_mask = 1.0 / (float)bit_mask; // 1/255
+
+    const float wrap = 1.f + (clamp01(localcopy[oscdata->p[ao_wrap].param_id_in_scene].f) * 15.f);
 
     const uint32_t mask =
         localClamp((uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f),
                    0U, (uint32_t)bit_mask);
 
+    const bool triangle_unmasked_after_threshold = (bool)oscdata->p[ao_mask].deform_type;
+
     const uint8_t threshold = (uint8_t)(
         (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
-
     const double two32 = 4294967296.0;
 
-    auto bits = limit_range(localcopy[oscdata->p[ao_depth].param_id_in_scene].f, 1.f, 8.f);
-    auto quant = powf(2, bits);
-    auto dequant = 1.f / quant;
-
-    auto drive = 1.f + (clamp01(localcopy[oscdata->p[ao_shift].param_id_in_scene].f) * 15.f);
+    const float crush_bits =
+        limit_range(localcopy[oscdata->p[ao_bit_depth].param_id_in_scene].f, 1.f, 8.f);
+    const float quant = powf(2, crush_bits);
+    const float dequant = 1.f / quant;
 
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
@@ -213,53 +233,63 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
         for (int u = 0; u < n_unison; ++u)
         {
-            const uint32_t shifted = phase[u] >> (32 - bit_depth);
+            uint32_t _phase = phase[u]; // default to this
+            if (wavetype == aow_pulse)
+            { // but for pulse...
+                // fake hardsync
+                _phase = (uint32_t)((float)phase[u] * wrap);
+            }
+            const uint8_t upper = _phase >> 24; // upper 8 bits
+            const uint8_t masked = upper ^ mask;
 
-            uint32_t shaped = shifted; // default to untransformed (wrap any overflow)
+            uint8_t result = masked; // default to this
 
             if (wavetype == aow_triangle)
             {
-                // flip wave to make a triangle shape (has a DC offset, needs fixing)
-                if (shifted > threshold)
+                // flip wave to make a triangle shape (n.b. has a DC offset)
+                if (upper > threshold)
                 {
-                    shaped = bit_mask - shifted;
+                    if (triangle_unmasked_after_threshold)
+                    {
+                        result = bit_mask - upper;
+                    }
+                    else
+                    {
+                        result = bit_mask - masked;
+                    }
                 }
             }
             else if (wavetype == aow_pulse)
             {
-                // test highest bit to make pulse shape
-                shaped = (shifted > threshold) ? bit_mask : 0x00;
+                result = (masked > threshold) ? bit_mask : 0x00;
             }
             else if (wavetype == aow_noise)
             {
-                shaped = urng8[u].stepTo((shifted & 0xFF), threshold | 8U);
+                result = urng8[u].stepTo((upper & 0xFF), threshold | 8U);
                 // OK so we want to wrap towards 255/0 so
-                int32_t shapes = shaped - 0x7F;
-                shapes = localClamp((int32_t)(shapes * drive), -0x7F, 0x7F - 1);
-                shaped = (uint8_t)(shapes + 0x7f);
+                int32_t shapes = result - 0x7F;
+                shapes = localClamp((int32_t)(shapes * wrap), -0x7F, 0x7F - 1);
+                result = (uint8_t)(shapes + 0x7F);
             }
 
-            if (wavetype != aow_noise)
+            if (wavetype != aow_noise && wavetype != aow_pulse)
             {
-                // wraparound
-                shaped = (uint32_t)(shaped * drive) & 0xFFFF;
+                // wraparound. scales the result by a float, then casts back down to a byte
+                result = (uint8_t)((float)result * wrap);
             }
-
-            // XOR bitmask
-            uint8_t masked = shaped ^ mask;
 
             // default to this
-            float out = ((float)masked - (float)(bit_mask >> 1)) * inv_bit_mask;
+            float out = ((float)result - (float)0x7F) * inv_bit_mask;
 
             // but for wavetable modes, index a table instead
             if (wavetable_mode)
             {
-                if (masked > threshold)
+                if (result > threshold)
                 {
-                    masked += 0x7F - threshold;
+                    result += 0x7F - threshold;
                 }
 
-                out = ((float)wavetable[0xFF - masked] - (float)0x7F) * inv_bit_mask;
+                out = ((float)wavetable[0xFF - result] - (float)0x7F) * inv_bit_mask;
             }
 
             // bitcrush
@@ -329,6 +359,8 @@ void AliasOscillator::init_ctrltypes()
                 return "Step Sequencer Data";
             case aow_audiobuffer:
                 return "Audio In";
+            case aow_stepseq_additive:
+                return "Step Sequencer Additive";
             default:
                 return "ERROR";
             }
@@ -336,7 +368,7 @@ void AliasOscillator::init_ctrltypes()
         bool hasGroupNames() override { return true; }
         std::string groupNameAtStreamedIndex(int i) override
         {
-            if (i <= aow_noise || i == aow_audiobuffer)
+            if (i <= aow_noise || i == aow_audiobuffer || i == aow_stepseq_additive)
                 return "";
             if (i < aow_sine_tx2)
                 return "Memory From...";
@@ -347,18 +379,24 @@ void AliasOscillator::init_ctrltypes()
     oscdata->p[ao_wave].set_type(ct_alias_wave);
     oscdata->p[ao_wave].set_user_data(&waveRemapper);
 
-    oscdata->p[ao_shift].set_name("Wrap");
-    oscdata->p[ao_shift].set_type(ct_percent);
+    oscdata->p[ao_wrap].set_name("Wrap");
+    oscdata->p[ao_wrap].set_type(ct_percent);
 
     oscdata->p[ao_mask].set_name("Mask");
     oscdata->p[ao_mask].set_type(ct_alias_mask);
 
+    // Threshold slider needs a ParamUserData* implementing CountedSetUserData.
+    // Always255CountedSet does this, and we have a constant for that, ALWAYS255COUNTEDSET.
+    // But we need a ParamUserData*, no const. As Always255CountedSet contains no actual data,
+    // it is safe to discard the const from the pointer via a cast.
+    ParamUserData *ud = (ParamUserData *)&ALWAYS255COUNTEDSET;
     oscdata->p[ao_threshold].set_name("Threshold");
-    oscdata->p[ao_threshold].set_type(ct_percent);
+    oscdata->p[ao_threshold].set_type(ct_countedset_percent);
+    oscdata->p[ao_threshold].set_user_data(ud);
     oscdata->p[ao_threshold].val_default.f = 0.5;
 
-    oscdata->p[ao_depth].set_name("Bitcrush");
-    oscdata->p[ao_depth].set_type(ct_alias_bits);
+    oscdata->p[ao_bit_depth].set_name("Bitcrush");
+    oscdata->p[ao_bit_depth].set_type(ct_alias_bits);
 
     oscdata->p[ao_unison_detune].set_name("Unison Detune");
     oscdata->p[ao_unison_detune].set_type(ct_oscspread);
@@ -369,10 +407,11 @@ void AliasOscillator::init_ctrltypes()
 void AliasOscillator::init_default_values()
 {
     oscdata->p[ao_wave].val.i = 0;
-    oscdata->p[ao_shift].val.f = 0.f;
+    oscdata->p[ao_wrap].val.f = 0.f;
     oscdata->p[ao_mask].val.f = 0.f;
+    oscdata->p[ao_mask].deform_type = 0;
     oscdata->p[ao_threshold].val.f = 0.5f;
-    oscdata->p[ao_depth].val.f = 8.f;
+    oscdata->p[ao_bit_depth].val.f = 8.f;
     oscdata->p[ao_unison_detune].val.f = 0.2f;
     oscdata->p[ao_unison_voices].val.i = 1;
 }

@@ -23,10 +23,10 @@ class AliasOscillator : public Oscillator
     enum ao_params
     {
         ao_wave = 0,
-        ao_shift,
+        ao_wrap,
         ao_mask,
         ao_threshold,
-        ao_depth,
+        ao_bit_depth,
 
         ao_unison_detune = 5,
         ao_unison_voices,
@@ -53,6 +53,8 @@ class AliasOscillator : public Oscillator
         aow_sine_tx6,
         aow_sine_tx7,
         aow_sine_tx8,
+
+        aow_stepseq_additive,
 
         ao_n_waves
     };
@@ -122,5 +124,13 @@ class AliasOscillator : public Oscillator
 
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];
 };
+
+struct Always255CountedSet
+    : public CountedSetUserData // Something to feed to a ct_countedset_percent control
+{
+    virtual int getCountedSetSize() { return 255; }
+};
+
+const Always255CountedSet ALWAYS255COUNTEDSET;
 
 extern const char *ao_type_names[];
