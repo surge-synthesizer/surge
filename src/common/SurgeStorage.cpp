@@ -947,8 +947,17 @@ void SurgeStorage::perform_queued_wtloads()
                 {
                     patch.scene[sc].osc[o].queue_type = ot_wavetable;
                 }
+                int wtidx = -1, ct = 0;
+                for (const auto &wti : wt_list)
+                {
+                    if (path_to_string(wti.path) == patch.scene[sc].osc[0].wt.queue_filename)
+                    {
+                        wtidx = ct;
+                    }
+                    ct++;
+                }
 
-                patch.scene[sc].osc[o].wt.current_id = -1;
+                patch.scene[sc].osc[o].wt.current_id = wtidx;
                 load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
                 patch.scene[sc].osc[o].wt.refresh_display = true;

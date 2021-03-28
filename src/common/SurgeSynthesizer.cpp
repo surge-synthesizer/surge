@@ -3110,7 +3110,25 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
         auto s = path_to_string(p.stem());
         synth->has_patchid_file = false;
         synth->allNotesOff();
-        synth->loadPatchByPath(synth->patchid_file, -1, s.c_str());
+
+        int ptid = -1, ct = 0;
+        for (const auto &pti : synth->storage.patch_list)
+        {
+            if (path_to_string(pti.path) == synth->patchid_file)
+            {
+                ptid = ct;
+            }
+            ct++;
+        }
+
+        if (ptid >= 0)
+        {
+            synth->loadPatch(ptid);
+        }
+        else
+        {
+            synth->loadPatchByPath(synth->patchid_file, -1, s.c_str());
+        }
     }
 #if TARGET_LV2
     synth->getParent()->patchChanged();
