@@ -589,24 +589,33 @@ void CFxMenu::rescanUserPresets()
     std::deque<fs::path> workStack;
     workStack.push_back(fs::path(ud));
 
-    while (!workStack.empty())
+    try
     {
-        auto top = workStack.front();
-        workStack.pop_front();
-        if (fs::is_directory(top))
+        while (!workStack.empty())
         {
-            for (auto &d : fs::directory_iterator(top))
+            auto top = workStack.front();
+            workStack.pop_front();
+            if (fs::is_directory(top))
             {
-                if (fs::is_directory(d))
+                for (auto &d : fs::directory_iterator(top))
                 {
-                    workStack.push_back(d);
-                }
-                else if (path_to_string(d.path().extension()) == ".srgfx")
-                {
-                    sfxfiles.push_back(d.path());
+                    if (fs::is_directory(d))
+                    {
+                        workStack.push_back(d);
+                    }
+                    else if (path_to_string(d.path().extension()) == ".srgfx")
+                    {
+                        sfxfiles.push_back(d.path());
+                    }
                 }
             }
         }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Experienced file system error when scanning user FX. " << e.what();
+        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
     }
 
     for (const auto &f : sfxfiles)

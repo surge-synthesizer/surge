@@ -100,21 +100,29 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
         std::vector<fs::path> alldirs;
         std::deque<fs::path> workStack;
         workStack.push_back(source);
-        while (!workStack.empty())
+        try
         {
-            auto top = workStack.front();
-            workStack.pop_front();
-            if (fs::is_directory(top))
+            while (!workStack.empty())
             {
-                for (auto &d : fs::directory_iterator(top))
+                auto top = workStack.front();
+                workStack.pop_front();
+                if (fs::is_directory(top))
                 {
-                    if (fs::is_directory(d))
+                    for (auto &d : fs::directory_iterator(top))
                     {
-                        alldirs.push_back(d);
-                        workStack.push_back(d);
+                        if (fs::is_directory(d))
+                        {
+                            alldirs.push_back(d);
+                            workStack.push_back(d);
+                        }
                     }
                 }
             }
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            // This will give us a broken skin but no need to tell the users
+            FIXMEERROR << "Unable to travese for skins in user directory: " << e.what();
         }
 
         for (auto &p : alldirs)
@@ -426,29 +434,37 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
         if (g.first == "defaultimage")
         {
             const auto path = resourceName(g.second.props["directory"]);
-            fs::path source(string_to_path(path));
-            for (const fs::path &d : fs::directory_iterator(source))
+            try
             {
-                const auto pathStr = path_to_string(d);
-                const auto pos = pathStr.find("bmp");
-                if (pos != std::string::npos)
+                fs::path source(string_to_path(path));
+                for (const fs::path &d : fs::directory_iterator(source))
                 {
-                    auto postbmp = pathStr.substr(pos + 3);
-                    int idx = std::atoi(pathStr.c_str() + pos + 3);
-                    // We epxpect 5 digits and a .svg or .png
-                    auto xtn = pathStr.substr(pos + 8);
-
-                    if ((xtn == ".svg" || xtn == ".png") &&
-                        (imageAllowedIds.find(idx) != imageAllowedIds.end()))
+                    const auto pathStr = path_to_string(d);
+                    const auto pos = pathStr.find("bmp");
+                    if (pos != std::string::npos)
                     {
-                        bitmapStore->loadBitmapByPathForID(pathStr, idx);
+                        auto postbmp = pathStr.substr(pos + 3);
+                        int idx = std::atoi(pathStr.c_str() + pos + 3);
+                        // We epxpect 5 digits and a .svg or .png
+                        auto xtn = pathStr.substr(pos + 8);
+
+                        if ((xtn == ".svg" || xtn == ".png") &&
+                            (imageAllowedIds.find(idx) != imageAllowedIds.end()))
+                        {
+                            bitmapStore->loadBitmapByPathForID(pathStr, idx);
+                        }
+                    }
+                    else
+                    {
+                        std::string id = defaultImageIDPrefix + path_to_string(d.filename());
+                        bitmapStore->loadBitmapByPathForStringID(pathStr, id);
                     }
                 }
-                else
-                {
-                    std::string id = defaultImageIDPrefix + path_to_string(d.filename());
-                    bitmapStore->loadBitmapByPathForStringID(pathStr, id);
-                }
+            }
+            catch (const fs::filesystem_error &e)
+            {
+                // This will give us a broken skin but no need to tell the users
+                FIXMEERROR << "Unable to load image directory: " << e.what();
             }
         }
     }
