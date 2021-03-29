@@ -105,47 +105,54 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
     bool wavetable_mode = false;
     const uint8_t *wavetable = alias_sinetable;
-    uint8_t dynamic_wavetable[256];
     switch (wavetype)
     {
     case AliasOscillator::ao_waves::aow_sine:
         wavetable_mode = true;
         break;
     case AliasOscillator::ao_waves::aow_mem_alias:
-        wavetable_mode = true;
         static_assert(sizeof(*this) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+        wavetable_mode = true;
         wavetable = (const uint8_t *)this;
         break;
     case AliasOscillator::ao_waves::aow_mem_oscdata:
-        wavetable_mode = true;
         static_assert(sizeof(*oscdata) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+        wavetable_mode = true;
         wavetable = (const uint8_t *)oscdata;
         break;
     case AliasOscillator::ao_waves::aow_mem_scenedata:
-        wavetable_mode = true;
         static_assert(sizeof(storage->getPatch().scenedata) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+        wavetable_mode = true;
         wavetable = (const uint8_t *)storage->getPatch().scenedata;
         break;
     case AliasOscillator::ao_waves::aow_mem_dawextra:
-        wavetable_mode = true;
         static_assert(sizeof(storage->getPatch().dawExtraState) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+        wavetable_mode = true;
         wavetable = (const uint8_t *)&storage->getPatch().dawExtraState;
         break;
     case AliasOscillator::ao_waves::aow_mem_stepseqdata:
-        wavetable_mode = true;
         static_assert(sizeof(storage->getPatch().stepsequences) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+        wavetable_mode = true;
         wavetable = (const uint8_t *)storage->getPatch().stepsequences;
         break;
     case AliasOscillator::ao_waves::aow_audiobuffer:
-        wavetable_mode = true;
+        // TODO: correct size check here.
+        // should really check BLOCK_SIZE_OS etc, make sure everything is as expected
         static_assert(sizeof(storage->audio_in) > 0xFF,
                       "Memory region not large enough to be indexed by Alias");
+
+        wavetable_mode = true;
         wavetable = (const uint8_t *)dynamic_wavetable;
+
+        // make sure we definitely rebuild the dynamic wavetable next time after e.g. switching
+        // to additive mode after using this mode.
+        dynamic_wavetable_sleep = 0;
+
         for (int qs = 0; qs < BLOCK_SIZE_OS; ++qs)
         {
             auto llong = (uint32_t)(((double)storage->audio_in[0][qs]) * (double)0xFFFFFFFF);
@@ -161,23 +168,67 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         }
         break;
     case AliasOscillator::ao_waves::aow_stepseq_additive:
-    { // TODO: make this fast!
+    {
         wavetable_mode = true;
         wavetable = (const uint8_t *)dynamic_wavetable;
 
-        const float *amps = storage->getPatch().stepsequences[0][0].steps;
-        const float inv = 1.f / (float)n_stepseqsteps;
-        for (int s = 0; s < 256; s++)
-        { // s for sample
-            const float base_phase = s / 256.0f * M_PI * 2.0f;
-            float sample = 0.f;
-            for (int h = 0; h < n_stepseqsteps; h++)
-            { // h for harmonic
-                sample += sinf(base_phase * (float)(h + 1)) * amps[h];
-            }
-            // n.b. excess amplitude will wrap!
-            dynamic_wavetable[s] = (uint8_t)(sample * 32.f + 127.f);
+        if (dynamic_wavetable_sleep)
+        { // skip if recently generated
+            dynamic_wavetable_sleep--;
+            break;
+        } // else...
+
+        // obtain normalization factor for amp array.
+        // normally we'd multiply the array by 1/sqrt(squared sum) but since we want the output
+        // to go -127..127, instead make it 127/sqrt(squared sum).
+        // n.b. this will mean that the max amplitude of a single harmonnic is 1/2 of full scale.
+        float norm = 0.f;
+        for (int h = 0; h < n_stepseqsteps; h++)
+        {
+            norm += storage->getPatch().stepsequences[0][0].steps[h] *
+                    storage->getPatch().stepsequences[0][0].steps[h];
         }
+        norm = 127.f / sqrtf(norm);
+
+        // convert [-1, 1] floats into 8-bit ints
+        int8_t amps[16];
+        for (int h = 0; h < n_stepseqsteps; h++)
+        {
+            amps[h] = storage->getPatch().stepsequences[0][0].steps[h] * norm;
+        }
+
+        // s for sample
+        for (int s = 0; s < 256; s++)
+        {
+            int16_t sample = 0;
+
+            // h for harmonic
+            for (int h = 0; h < n_stepseqsteps; h++)
+            {
+                // sine table is unsigned where zero is 0x7F, correct for this
+                const int16_t scaled =
+                    ((int16_t)alias_sinetable[s * (h + 1) & 0xFF] - 0x7F) * amps[h];
+
+                // above is fixed point 0.8*0.8->8.8 multiplication; so accumulate the top 8 bits
+                sample += scaled >> 8;
+            }
+
+            // clamp sample
+            if (sample > 0x7F)
+            {
+                sample = 0x7F;
+            }
+            else if (sample < -0x7F)
+            { // TODO: should we actually go down to -0x80?
+                sample = -0x7F;
+            }
+
+            // shift our zero-is-zero signed integer to a zero-is-7F unsigned
+            dynamic_wavetable[s] = sample + 0x7F;
+        }
+
+        // wait some blocks before generating again. TODO: define this better
+        dynamic_wavetable_sleep = 20;
         break;
     }
     default:
