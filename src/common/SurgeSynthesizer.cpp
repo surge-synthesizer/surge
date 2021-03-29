@@ -3768,7 +3768,7 @@ void SurgeSynthesizer::process()
         break;
     }
 
-    // since the sceneout is now routable we also need to mute and clip it
+    // since the sceneout is now routable we also need to mute it
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         amp_mute.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
