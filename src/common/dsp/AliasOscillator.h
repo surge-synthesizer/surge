@@ -88,6 +88,8 @@ class AliasOscillator : public Oscillator
     uint32_t phase[MAX_UNISON];
     float unisonOffsets[MAX_UNISON];
     float mixL[MAX_UNISON], mixR[MAX_UNISON];
+    uint8_t dynamic_wavetable[256];
+    unsigned dynamic_wavetable_sleep = 0; // blocks to wait before recalculating dynamic wavetable
 
     struct UInt8RNG
     {
