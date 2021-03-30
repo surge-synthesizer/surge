@@ -305,6 +305,7 @@ bool Parameter::can_deactivate()
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_tape_speed:
         return true;
     }
     return false;
@@ -1160,6 +1161,20 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0.5f;
         break;
 
+    case ct_tape_microns:
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 500.f;
+        val_default.f = 50.0f;
+        break;
+
+    case ct_tape_speed:
+        valtype = vt_float;
+        val_min.f = 1.0f;
+        val_max.f = 50.0f;
+        val_default.f = 30.0f;
+        break;
+
     case ct_none:
     default:
         snprintf(dispname, NAMECHARS, "-");
@@ -1414,6 +1429,20 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 1.f;
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "bits");
+        break;
+
+    case ct_tape_microns:
+        displayType = LinearWithScale;
+        displayInfo.scale = 1.0f;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "μ");
+        break;
+
+    case ct_tape_speed:
+        displayType = LinearWithScale;
+        displayInfo.scale = 1.0f;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ips");
         break;
     }
 }
@@ -3657,6 +3686,8 @@ bool Parameter::can_setvalue_from_string()
     case ct_ensemble_clockrate:
     case ct_alias_mask:
     case ct_alias_bits:
+    case ct_tape_microns:
+    case ct_tape_speed:
     {
         return true;
         break;

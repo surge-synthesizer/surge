@@ -1,18 +1,5 @@
 #include "LossFilter.h"
 
-namespace
-{
-auto getSkew(float start, float end, float centre) -> float
-{
-    return std::log(0.5f) / std::log((centre - start) / (end - start));
-};
-
-const float speedSkew = getSkew(1.0f, 50.0f, 15.0f);
-const float spaceSkew = getSkew(0.1f, 20.0f, 10.0f);
-const float thickSkew = getSkew(0.1f, 50.0f, 15.0f);
-const float gapSkew = getSkew(1.0f, 50.0f, 10.0f);
-} // namespace
-
 namespace chowdsp
 {
 
@@ -32,7 +19,7 @@ void LossFilter::prepare(float sampleRate, int blockSize)
     currentCoefs.resize(curOrder);
     HCoefs.resize(curOrder);
 
-    set_params(1.0f, 0.0f, 0.0f, 0.0f);
+    set_params(30.0f, 0.1f, 1.0f, 0.1f);
     calcCoefs();
 
     for (int i = 0; i < 2; ++i)
@@ -56,20 +43,12 @@ void LossFilter::calcHeadBumpFilter(float speedIps, float gapMeters, float fs, B
     filter.coeff_peakEQ(filter.calc_omega_from_Hz(bumpFreq), 0.5, linear_to_dB(gain));
 }
 
-void LossFilter::set_params(float speed01, float spacing01, float gap01, float thick01)
+void LossFilter::set_params(float speed, float spacing, float gap, float thick)
 {
-    auto denorm = [](float val01, float skew, float start, float end) -> float {
-        val01 = clamp01(val01);
-        if (val01 > 0.0f)
-            val01 = std::exp(std::log(val01) / skew);
-
-        return start + (end - start) * val01;
-    };
-
-    curSpeed = denorm(speed01, speedSkew, 1.0f, 50.0f);
-    curSpacing = denorm(spacing01, spaceSkew, 0.1f, 20.0f);
-    curGap = denorm(gap01, gapSkew, 0.1f, 50.0f);
-    curThick = denorm(thick01, thickSkew, 1.0f, 50.0f);
+    curSpeed = speed;
+    curSpacing = spacing;
+    curGap = gap;
+    curThick = thick;
 }
 
 void LossFilter::calcCoefs()
