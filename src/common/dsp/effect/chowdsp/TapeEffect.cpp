@@ -70,10 +70,10 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_speed].deactivated)
     {
-        auto tls = clamp01(*f[tape_speed]);
-        auto tlsp = clamp01(*f[tape_spacing]);
-        auto tlg = clamp01(*f[tape_gap]);
-        auto tlt = clamp01(*f[tape_thickness]);
+        auto tls = limit_range(*f[tape_speed], 1.0f, 30.0f);
+        auto tlsp = limit_range(*f[tape_spacing], 0.1f, 20.0f);
+        auto tlg = limit_range(*f[tape_gap], 1.0f, 50.0f);
+        auto tlt = limit_range(*f[tape_thickness], 0.1f, 50.0f);
 
         lossFilter.set_params(tls, tlsp, tlg, tlt);
         lossFilter.process(L, R);
@@ -211,24 +211,29 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_tone].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_speed].set_name("Speed");
-    fxdata->p[tape_speed].set_type(ct_percent_deactivatable);
+    fxdata->p[tape_speed].set_type(ct_tape_speed);
     fxdata->p[tape_speed].posy_offset = 3;
-    fxdata->p[tape_speed].val_default.f = 1.0f;
     fxdata->p[tape_speed].deactivated = false;
     fxdata->p[tape_gap].set_name("Gap");
-    fxdata->p[tape_gap].set_type(ct_percent);
+    fxdata->p[tape_gap].set_type(ct_tape_microns);
     fxdata->p[tape_gap].posy_offset = 3;
-    fxdata->p[tape_gap].val_default.f = 0.0f;
+    fxdata->p[tape_gap].val_min.f = 1.0f;
+    fxdata->p[tape_gap].val_max.f = 50.0f;
+    fxdata->p[tape_gap].val_default.f = 10.0f;
     fxdata->p[tape_gap].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_spacing].set_name("Spacing");
-    fxdata->p[tape_spacing].set_type(ct_percent);
+    fxdata->p[tape_spacing].set_type(ct_tape_microns);
     fxdata->p[tape_spacing].posy_offset = 3;
-    fxdata->p[tape_spacing].val_default.f = 0.0f;
+    fxdata->p[tape_spacing].val_min.f = 0.1f;
+    fxdata->p[tape_spacing].val_max.f = 20.0f;
+    fxdata->p[tape_spacing].val_default.f = 0.1f;
     fxdata->p[tape_spacing].dynamicDeactivation = &tapeGroupDeact;
     fxdata->p[tape_thickness].set_name("Thickness");
-    fxdata->p[tape_thickness].set_type(ct_percent);
+    fxdata->p[tape_thickness].set_type(ct_tape_microns);
     fxdata->p[tape_thickness].posy_offset = 3;
-    fxdata->p[tape_thickness].val_default.f = 0.0f;
+    fxdata->p[tape_thickness].val_min.f = 0.1f;
+    fxdata->p[tape_thickness].val_max.f = 50.0f;
+    fxdata->p[tape_thickness].val_default.f = 0.1f;
     fxdata->p[tape_thickness].dynamicDeactivation = &tapeGroupDeact;
 
     fxdata->p[tape_degrade_depth].set_name("Depth");
@@ -260,10 +265,10 @@ void TapeEffect::init_default_values()
     fxdata->p[tape_bias].val.f = 0.5f;
     fxdata->p[tape_tone].val.f = 0.0f;
 
-    fxdata->p[tape_speed].val.f = 1.0f;
-    fxdata->p[tape_spacing].val.f = 0.0f;
-    fxdata->p[tape_gap].val.f = 0.0f;
-    fxdata->p[tape_thickness].val.f = 0.0f;
+    fxdata->p[tape_speed].val.f = 30.0f;
+    fxdata->p[tape_spacing].val.f = 0.1f;
+    fxdata->p[tape_gap].val.f = 1.0f;
+    fxdata->p[tape_thickness].val.f = 0.1f;
 
     fxdata->p[tape_degrade_depth].val.f = 0.0f;
     fxdata->p[tape_degrade_amount].val.f = 0.0f;

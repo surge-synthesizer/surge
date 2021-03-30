@@ -22,7 +22,7 @@ class LossFilter
 
     void prepare(float sampleRate, int blockSize);
     void process(float *dataL, float *dataR);
-    void set_params(float speed01, float spacing01, float gap01, float thick01);
+    void set_params(float speed, float spacing, float gap, float thick);
 
   private:
     void calcCoefs();
