@@ -33,6 +33,7 @@ class alignas(16) Oscillator
     virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
     virtual void init_ctrltypes(){};
     virtual void init_default_values(){};
+    virtual void init_extra_config() { oscdata->extraConfig.nData = 0; }
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f)
     {

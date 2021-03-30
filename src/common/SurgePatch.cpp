@@ -780,6 +780,7 @@ void SurgePatch::update_controls(
                 if (init || (init_osc == &sc.osc[osc]))
                 {
                     t_osc->init_default_values();
+                    t_osc->init_extra_config();
                 }
                 delete t_osc;
             }
@@ -1698,6 +1699,27 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     strxcpy(scene[ssc].osc[sos].wavetable_display_name,
                             lkid->Attribute("wavetable_display_name"), WAVETABLE_DISPLAY_NAME_SIZE);
                 }
+
+                auto ec = &(scene[ssc].osc[sos].extraConfig);
+                int ti;
+                double tf;
+                if (lkid->QueryIntAttribute("extra_n", &ti) == TIXML_SUCCESS)
+                {
+                    ec->nData = ti;
+                    for (int qq = 0; qq < ec->nData; ++qq)
+                    {
+                        std::string attr = "extra_data_" + std::to_string(qq);
+
+                        if (lkid->QueryDoubleAttribute(attr.c_str(), &tf) == TIXML_SUCCESS)
+                        {
+                            ec->data[qq] = tf;
+                        }
+                        else
+                        {
+                            ec->data[qq] = 0.f;
+                        }
+                    }
+                }
             }
         }
     }
@@ -2219,14 +2241,24 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         {
             std::string streaming_name =
                 "osc_extra_sc" + std::to_string(sc) + "_osc" + std::to_string(os);
+            TiXmlElement on(streaming_name.c_str());
+            on.SetAttribute("scene", sc);
+            on.SetAttribute("osc", os);
             if (uses_wavetabledata(scene[sc].osc[os].type.val.i))
             {
-                TiXmlElement on(streaming_name.c_str());
                 on.SetAttribute("wavetable_display_name", scene[sc].osc[os].wavetable_display_name);
-                on.SetAttribute("scene", sc);
-                on.SetAttribute("osc", os);
-                eod.InsertEndChild(on);
             }
+
+            auto ec = &(scene[sc].osc[os].extraConfig);
+            on.SetAttribute("extra_n", ec->nData);
+
+            for (auto q = 0; q < ec->nData; ++q)
+            {
+                std::string attr = "extra_data_" + std::to_string(q);
+                on.SetDoubleAttribute(attr.c_str(), ec->data[q]);
+            }
+
+            eod.InsertEndChild(on);
         }
     }
     patch.InsertEndChild(eod);
