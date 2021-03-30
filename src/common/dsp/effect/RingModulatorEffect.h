@@ -71,4 +71,5 @@ class RingModulatorEffect : public Effect
 
     HalfRateFilter halfbandOUT, halfbandIN;
     BiquadFilter lp, hp;
+    lipol_ps mix alignas(16);
 };

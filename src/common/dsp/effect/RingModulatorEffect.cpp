@@ -10,6 +10,7 @@ RingModulatorEffect::RingModulatorEffect(SurgeStorage *storage, FxStorage *fxdat
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage),
       hp(storage)
 {
+    mix.set_blocksize(BLOCK_SIZE);
 }
 
 RingModulatorEffect::~RingModulatorEffect() {}
@@ -32,6 +33,8 @@ void RingModulatorEffect::setvars(bool init)
 
         lp.coeff_LP2B(lp.calc_omega(*f[rm_highcut] / 12.0), 0.707);
         lp.coeff_instantize();
+
+        mix.instantize();
     }
 }
 
@@ -39,8 +42,10 @@ void RingModulatorEffect::setvars(bool init)
 
 void RingModulatorEffect::process(float *dataL, float *dataR)
 {
+    mix.set_target_smoothed(clamp01(*f[rm_mix]));
+
+    float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
     float dphase[MAX_UNISON];
-    auto mix = *f[rm_mix];
     auto uni = std::max(1, *pdata_ival[rm_unison_voices]);
 
     // Has unison reset? If so modify settings
@@ -71,21 +76,21 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
 
     // gain scale based on unison
     float gscale = 0.4 + 0.6 * (1.f / sqrtf(uni));
+    double sri = dsamplerate_inv;
+    int ub = BLOCK_SIZE;
 
 #if OVERSAMPLE
     // Now upsample
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
+    sri = dsamplerate_os_inv;
+    ub = BLOCK_SIZE_OS;
 #else
     float *dataOS[2];
     dataOS[0] = dataL;
     dataOS[1] = dataR;
 #endif
 
-    double sri = dsamplerate_inv;
-#if OVERSAMPLE
-    sri = dsamplerate_os_inv;
-#endif
     for (int u = 0; u < uni; ++u)
     {
         // need to calc this every time since carrier freq could change
@@ -106,11 +111,6 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    int ub = BLOCK_SIZE;
-#if OVERSAMPLE
-    ub = BLOCK_SIZE_OS;
-#endif
-
     for (int i = 0; i < ub; ++i)
     {
         float resL = 0, resR = 0;
@@ -121,10 +121,12 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
                 Surge::DSP::fastsin(2.0 * M_PI * (phase[u] - 0.5)),
                 Surge::DSP::fastcos(2.0 * M_PI * (phase[u] - 0.5)), *pdata_ival[rm_carrier_shape]);
             phase[u] += dphase[u];
+
             if (phase[u] > 1)
             {
                 phase[u] -= (int)phase[u];
             }
+
             for (int c = 0; c < 2; ++c)
             {
                 auto vin = (c == 0 ? dataOS[0][i] : dataOS[1][i]);
@@ -143,8 +145,9 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
                 resR += res * panR[u];
             }
         }
-        auto outl = gscale * (mix * resL + (1.f - mix) * dataOS[0][i]);
-        auto outr = gscale * (mix * resR + (1.f - mix) * dataOS[1][i]);
+
+        auto outl = gscale * resL;
+        auto outr = gscale * resR;
 
         outl = 1.5 * outl - 0.5 * outl * outl * outl;
         outr = 1.5 * outr - 0.5 * outr * outr * outr;
@@ -155,16 +158,18 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
 
 #if OVERSAMPLE
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
-    copy_block(dataOS[0], dataL, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], dataR, BLOCK_SIZE_QUAD);
+    copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
+    copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
 #endif
 
     // Apply the filters
     hp.coeff_HP(hp.calc_omega(*f[rm_lowcut] / 12.0), 0.707);
     lp.coeff_LP2B(lp.calc_omega(*f[rm_highcut] / 12.0), 0.707);
 
-    lp.process_block(dataL, dataR);
-    hp.process_block(dataL, dataR);
+    lp.process_block(wetL, wetR);
+    hp.process_block(wetL, wetR);
+
+    mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void RingModulatorEffect::suspend() { init(); }
