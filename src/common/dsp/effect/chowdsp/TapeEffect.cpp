@@ -193,7 +193,6 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_drive].set_type(ct_percent_deactivatable);
     fxdata->p[tape_drive].posy_offset = 1;
     fxdata->p[tape_drive].val_default.f = 0.85f;
-    fxdata->p[tape_drive].deactivated = false;
     fxdata->p[tape_saturation].set_name("Saturation");
     fxdata->p[tape_saturation].set_type(ct_percent);
     fxdata->p[tape_saturation].posy_offset = 1;
@@ -213,7 +212,6 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_speed].set_name("Speed");
     fxdata->p[tape_speed].set_type(ct_tape_speed);
     fxdata->p[tape_speed].posy_offset = 3;
-    fxdata->p[tape_speed].deactivated = false;
     fxdata->p[tape_gap].set_name("Gap");
     fxdata->p[tape_gap].set_type(ct_tape_microns);
     fxdata->p[tape_gap].posy_offset = 3;
@@ -240,7 +238,6 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_degrade_depth].set_type(ct_percent_deactivatable);
     fxdata->p[tape_degrade_depth].posy_offset = 5;
     fxdata->p[tape_degrade_depth].val_default.f = 0.0f;
-    fxdata->p[tape_degrade_depth].deactivated = false;
     fxdata->p[tape_degrade_amount].set_name("Amount");
     fxdata->p[tape_degrade_amount].set_type(ct_percent);
     fxdata->p[tape_degrade_amount].posy_offset = 5;
@@ -261,16 +258,19 @@ void TapeEffect::init_ctrltypes()
 void TapeEffect::init_default_values()
 {
     fxdata->p[tape_drive].val.f = 0.85f;
+    fxdata->p[tape_drive].deactivated = false;
     fxdata->p[tape_saturation].val.f = 0.5f;
     fxdata->p[tape_bias].val.f = 0.5f;
     fxdata->p[tape_tone].val.f = 0.0f;
 
     fxdata->p[tape_speed].val.f = 30.0f;
+    fxdata->p[tape_speed].deactivated = false;
     fxdata->p[tape_spacing].val.f = 0.1f;
     fxdata->p[tape_gap].val.f = 1.0f;
     fxdata->p[tape_thickness].val.f = 0.1f;
 
     fxdata->p[tape_degrade_depth].val.f = 0.0f;
+    fxdata->p[tape_degrade_depth].deactivated = false;
     fxdata->p[tape_degrade_amount].val.f = 0.0f;
     fxdata->p[tape_degrade_variance].val.f = 0.0f;
 

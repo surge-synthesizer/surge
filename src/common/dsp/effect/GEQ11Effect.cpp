@@ -171,7 +171,6 @@ void GEQ11Effect::init_ctrltypes()
 
     for (int i = 0; i < geq11_gain; i++)
     {
-        fxdata->p[i].deactivated = false;
         fxdata->p[i].set_name(band_names[i].c_str());
         fxdata->p[i].set_type(ct_decibel_narrow_deactivatable);
         fxdata->p[i].posy_offset = 1;
@@ -180,6 +179,11 @@ void GEQ11Effect::init_ctrltypes()
 
 void GEQ11Effect::init_default_values()
 {
+    for (int i = 0; i < geq11_gain; i++)
+    {
+        fxdata->p[i].deactivated = false;
+    }
+
     for (int i = 0; i < geq11_num_ctrls; i++)
     {
         fxdata->p[i].val.f = 0.f;
