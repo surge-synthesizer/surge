@@ -25,6 +25,11 @@
 #include "filesystem/import.h"
 #include "guihelpers.h"
 
+/*
+ * Custom Editor Types
+ */
+#include "AliasOscillator.h"
+
 using namespace VSTGUI;
 
 const float disp_pitch = 90.15f - 48.f;
@@ -34,6 +39,14 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext *dc)
 {
+
+    if (customEditor && customEditorActive)
+    {
+        customEditor->draw(dc);
+        drawExtraEditButton(dc, "Close");
+        return;
+    }
+
     pdata tp[2][n_scene_params]; // 0 is orange, 1 is blue
     Oscillator *osces[2];
     std::string olabel;
@@ -517,11 +530,35 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         dc->restoreGlobalState();
     }
 
+    if (canHaveCustomEditor())
+    {
+        drawExtraEditButton(dc, "Edit");
+    }
+
     setDirty(false);
 }
 
 CMouseEventResult COscillatorDisplay::onMouseDown(CPoint &where, const CButtonState &button)
 {
+    if (canHaveCustomEditor() && customEditButtonRect.pointInside(where))
+    {
+        if (customEditorActive)
+        {
+            customEditorActive = false;
+        }
+        else
+        {
+            setupCustomEditor();
+        }
+        invalid();
+        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+
+    if (customEditorActive && customEditor)
+    {
+        return customEditor->onMouseDown(where, button);
+    }
+
     if (listener && (button & (kMButton | kButton4 | kButton5)))
     {
         listener->controlModifierClicked(this, button);
@@ -791,6 +828,10 @@ void COscillatorDisplay::loadWavetableFromFile()
 
 CMouseEventResult COscillatorDisplay::onMouseUp(CPoint &where, const CButtonState &buttons)
 {
+    if (customEditorActive && customEditor)
+    {
+        return customEditor->onMouseUp(where, buttons);
+    }
     if (controlstate)
     {
         controlstate = 0;
@@ -799,6 +840,21 @@ CMouseEventResult COscillatorDisplay::onMouseUp(CPoint &where, const CButtonStat
 }
 CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint &where, const CButtonState &buttons)
 {
+    bool newEditButton = false;
+    if (canHaveCustomEditor() && customEditButtonRect.pointInside(where))
+    {
+        newEditButton = true;
+    }
+    if (newEditButton != editButtonHover)
+    {
+        editButtonHover = newEditButton;
+        invalid();
+    }
+
+    if (customEditorActive && customEditor)
+    {
+        return customEditor->onMouseMoved(where, buttons);
+    }
 
     if (uses_wavetabledata(oscdata->type.val.i))
     {
@@ -877,6 +933,10 @@ CMouseEventResult COscillatorDisplay::onMouseEntered(CPoint &where, const CButto
             isWTHover = MENU;
         }
     }
+
+    if (customEditorActive && customEditor)
+        customEditor->onMouseEntered(where, buttons);
+
     invalid();
     return kMouseEventHandled;
 }
@@ -884,5 +944,159 @@ CMouseEventResult COscillatorDisplay::onMouseExited(CPoint &where, const CButton
 {
     isWTHover = NONE;
     invalid();
+    if (customEditorActive && customEditor)
+        customEditor->onMouseExited(where, buttons);
     return kMouseEventHandled;
 }
+
+/*
+ * Custom Editor Support
+ */
+bool COscillatorDisplay::canHaveCustomEditor()
+{
+    if (oscdata->type.val.i == ot_alias &&
+        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void COscillatorDisplay::setupCustomEditor()
+{
+    customEditorActive = false;
+    if (!canHaveCustomEditor())
+        return; // shouldn't happen but hey...
+
+    struct AliasAdditive : public CustomEditor
+    {
+        explicit AliasAdditive(COscillatorDisplay *d) : CustomEditor(d) {}
+        std::array<CRect, 16> sliders;
+
+        void draw(VSTGUI::CDrawContext *dc) override
+        {
+            auto vs = disp->getViewSize();
+            auto divSize = vs.inset(3, 0);
+            divSize.top += 9;
+            divSize.bottom -= 15;
+            auto w = divSize.getWidth() / 16;
+            for (int i = 0; i < 16; ++i)
+            {
+                auto v = limit_range(disp->oscdata->extraConfig.data[i], 0.f, 1.f);
+
+                auto p = CRect(CPoint(divSize.left + i * w, divSize.top),
+                               CPoint(w, divSize.getHeight()));
+                sliders[i] = p;
+
+                auto q = p;
+                q.top = q.bottom - q.getHeight() * v;
+                dc->setFillColor(disp->skin->getColor(Colors::Osc::Display::Wave));
+                dc->drawRect(q, kDrawFilled);
+
+                dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Bounds));
+                if (i != 15)
+                {
+                    dc->drawLine(p.getTopRight(), p.getBottomRight());
+                }
+                if (i == hoveredSegment)
+                {
+                    // FIXME probably not this color
+                    dc->setFillColor(disp->skin->getColor(Colors::Osc::Filename::BackgroundHover));
+                    dc->drawRect(q, kDrawFilled);
+                }
+            }
+            dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Center));
+            dc->drawRect(divSize, kDrawStroked);
+        }
+
+        CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
+        {
+            if (buttons & kDoubleClick)
+            {
+                int i = 0;
+
+                for (auto &s : sliders)
+                {
+                    if (s.pointInside(where))
+                    {
+                        disp->oscdata->extraConfig.data[i] = 1.f / (i + 1);
+                        disp->invalid();
+                    }
+                    i++;
+                }
+                return kMouseEventHandled;
+            }
+            return onMouseMoved(where, buttons);
+        }
+        CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override
+        {
+            int ohs = hoveredSegment;
+            int nhs = 0;
+            for (auto &s : sliders)
+            {
+                if (s.pointInside(where))
+                {
+                    hoveredSegment = nhs;
+                }
+                nhs++;
+            }
+            if (hoveredSegment != ohs)
+                disp->invalid();
+
+            if (buttons & kLButton)
+            {
+                int i = 0;
+
+                for (auto &s : sliders)
+                {
+                    if (s.pointInside(where))
+                    {
+                        float f = (where.y - s.bottom) / (s.top - s.bottom);
+                        disp->invalid();
+                        disp->oscdata->extraConfig.data[i] = f;
+                        return kMouseEventHandled;
+                    }
+                    i++;
+                }
+            }
+
+            return kMouseEventNotHandled;
+        }
+        int hoveredSegment = -1;
+    };
+
+    if (oscdata->type.val.i == ot_alias &&
+        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
+    {
+        customEditor = std::make_shared<AliasAdditive>(this);
+        customEditorActive = true;
+        return;
+    }
+}
+
+void COscillatorDisplay::drawExtraEditButton(CDrawContext *dc, const std::string &label)
+{
+    auto size = getViewSize();
+    // similar to wavetable button
+    CRect posn(size);
+    posn.top = posn.bottom - wtbheight + 3;
+    posn.offset(0, -4);
+    posn.right = posn.left + 30;
+    if (editButtonHover)
+    {
+        dc->setFillColor(skin->getColor(Colors::Osc::Filename::BackgroundHover));
+        dc->setFrameColor(skin->getColor(Colors::Osc::Filename::FrameHover));
+        dc->setFontColor(skin->getColor(Colors::Osc::Filename::TextHover));
+    }
+    else
+    {
+        dc->setFillColor(skin->getColor(Colors::Osc::Filename::Background));
+        dc->setFrameColor(skin->getColor(Colors::Osc::Filename::Frame));
+        dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
+    }
+    dc->drawRect(posn, kDrawFilledAndStroked);
+    dc->setFont(displayFont);
+    dc->drawString(label.c_str(), posn, kCenterText, true);
+    customEditButtonRect = posn;
+};

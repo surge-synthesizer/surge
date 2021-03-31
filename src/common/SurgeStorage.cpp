@@ -152,12 +152,17 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     for (int s = 0; s < n_scenes; s++)
         for (int o = 0; o < n_oscs; o++)
+        {
             for (int i = 0; i < max_mipmap_levels; i++)
                 for (int j = 0; j < max_subtables; j++)
                 {
                     getPatch().scene[s].osc[o].wt.TableF32WeakPointers[i][j] = 0;
                     getPatch().scene[s].osc[o].wt.TableI16WeakPointers[i][j] = 0;
                 }
+            getPatch().scene[s].osc[o].extraConfig.nData = 0;
+            memset(getPatch().scene[s].osc[0].extraConfig.data, 0,
+                   sizeof(float) * OscillatorStorage::ExtraConfigurationData::max_config);
+        }
 
     for (int s = 0; s < n_scenes; ++s)
         for (int fu = 0; fu < n_filterunits_per_scene; ++fu)

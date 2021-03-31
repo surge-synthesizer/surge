@@ -83,7 +83,55 @@ class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsum
         delete cdisurf;
 #endif
     }
+
+    /*
+     * Custom Editor Support where I can change this UI based on a type to allow edits
+     * Currently only used by alias oscillator
+     */
+    struct CustomEditor
+    {
+        CustomEditor(COscillatorDisplay *d) : disp(d) {}
+        virtual ~CustomEditor() = default;
+        virtual void draw(VSTGUI::CDrawContext *dc) = 0;
+
+        virtual VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
+                                                      const VSTGUI::CButtonState &buttons)
+        {
+            return VSTGUI::kMouseEventNotHandled;
+        };
+        virtual VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
+                                                    const VSTGUI::CButtonState &buttons)
+        {
+            return VSTGUI::kMouseEventNotHandled;
+        };
+        virtual VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint &where,
+                                                       const VSTGUI::CButtonState &buttons)
+        {
+            return VSTGUI::kMouseEventNotHandled;
+        };
+        virtual VSTGUI::CMouseEventResult onMouseExited(VSTGUI::CPoint &where,
+                                                        const VSTGUI::CButtonState &buttons)
+        {
+            return VSTGUI::kMouseEventNotHandled;
+        };
+        virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
+                                                         const VSTGUI::CButtonState &buttons)
+        {
+            return VSTGUI::kMouseEventNotHandled;
+        };
+        // Entered and Exited too
+        COscillatorDisplay *disp;
+    };
+    bool canHaveCustomEditor();
+    void setupCustomEditor();
+    std::shared_ptr<CustomEditor> customEditor; // I really want unique but that
+    // clashes with the VSTGUI copy semantics
+    bool customEditorActive = false, editButtonHover = false;
+    VSTGUI::CRect customEditButtonRect;
+
     virtual void draw(VSTGUI::CDrawContext *dc) override;
+
+    void drawExtraEditButton(VSTGUI::CDrawContext *dc, const std::string &label);
 
     void loadWavetable(int id);
     void loadWavetableFromFile();

@@ -54,7 +54,7 @@ class AliasOscillator : public Oscillator
         aow_sine_tx7,
         aow_sine_tx8,
 
-        aow_stepseq_additive,
+        aow_additive,
 
         ao_n_waves
     };
@@ -73,6 +73,12 @@ class AliasOscillator : public Oscillator
     virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
     virtual void init_ctrltypes();
     virtual void init_default_values();
+    virtual void init_extra_config()
+    {
+        oscdata->extraConfig.nData = 16;
+        for (auto i = 0; i < oscdata->extraConfig.nData; ++i)
+            oscdata->extraConfig.data[i] = 1.f / (i + 1);
+    }
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
 

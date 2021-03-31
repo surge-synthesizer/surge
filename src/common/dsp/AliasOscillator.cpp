@@ -25,7 +25,7 @@ int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 const char *alias_wave_name[] = {
     "Sine",      "Triangle",      "Pulse",        "Noise",     "Alias Mem", "Osc Mem",
     "Scene Mem", "DAW Chunk Mem", "Step Seq Mem", "Audio In",  "TX 2 Wave", "TX 3 Wave",
-    "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave", "Step Seq Add"};
+    "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave", "Additive"};
 
 const uint8_t alias_sinetable[256] = {
     0x7F, 0x82, 0x85, 0x88, 0x8B, 0x8F, 0x92, 0x95, 0x98, 0x9B, 0x9E, 0xA1, 0xA4, 0xA7, 0xAA, 0xAD,
@@ -167,7 +167,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             dynamic_wavetable[4 * qs + 3] = rlong;
         }
         break;
-    case AliasOscillator::ao_waves::aow_stepseq_additive:
+    case AliasOscillator::ao_waves::aow_additive:
     {
         wavetable_mode = true;
         wavetable = (const uint8_t *)dynamic_wavetable;
@@ -185,8 +185,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         float norm = 0.f;
         for (int h = 0; h < n_stepseqsteps; h++)
         {
-            norm += storage->getPatch().stepsequences[0][0].steps[h] *
-                    storage->getPatch().stepsequences[0][0].steps[h];
+            norm += oscdata->extraConfig.data[h] * oscdata->extraConfig.data[h];
         }
         norm = 127.f / sqrtf(norm);
 
@@ -194,7 +193,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         int8_t amps[16];
         for (int h = 0; h < n_stepseqsteps; h++)
         {
-            amps[h] = storage->getPatch().stepsequences[0][0].steps[h] * norm;
+            amps[h] = oscdata->extraConfig.data[h] * norm;
         }
 
         // s for sample
@@ -410,8 +409,8 @@ void AliasOscillator::init_ctrltypes()
                 return "Step Sequencer Data";
             case aow_audiobuffer:
                 return "Audio In";
-            case aow_stepseq_additive:
-                return "Step Sequencer Additive";
+            case aow_additive:
+                return "Additive";
             default:
                 return "ERROR";
             }
@@ -419,7 +418,7 @@ void AliasOscillator::init_ctrltypes()
         bool hasGroupNames() override { return true; }
         std::string groupNameAtStreamedIndex(int i) override
         {
-            if (i <= aow_noise || i == aow_audiobuffer || i == aow_stepseq_additive)
+            if (i <= aow_noise || i == aow_audiobuffer || i == aow_additive)
                 return "";
             if (i < aow_sine_tx2)
                 return "Memory From...";

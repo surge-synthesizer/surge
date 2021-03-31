@@ -484,6 +484,13 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     void *queue_xmldata;
     int queue_type;
 
+    struct ExtraConfigurationData
+    {
+        static constexpr size_t max_config = 64;
+        int nData = 0;
+        float data[max_config];
+    } extraConfig;
+
     virtual int getCountedSetSize() { return wt.n_tables; }
 };
 
