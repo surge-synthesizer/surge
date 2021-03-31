@@ -1477,7 +1477,8 @@ void SurgeStorage::init_tables()
     isStandardTuning = true;
     float db60 = powf(10.f, 0.05f * -60.f);
     float _512th = 1.f / 512.f;
-    for (int i = 0; i < 512; i++)
+
+    for (int i = 0; i < tuning_table_size; i++)
     {
         table_dB[i] = powf(10.f, 0.05f * ((float)i - 384.f));
         table_pitch[i] = powf(2.f, ((float)i - 256.f) * (1.f / 12.f));
@@ -1539,7 +1540,7 @@ float SurgeStorage::note_to_pitch(float x)
     }
     else
     {
-        x += 256;
+        x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
         int e = (int)x;
         float a = x - (float)e;
 
@@ -1558,7 +1559,8 @@ float SurgeStorage::note_to_pitch_inv(float x)
     }
     else
     {
-        x += 256;
+        x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+        // x += 256;
         int e = (int)x;
         float a = x - (float)e;
 
@@ -1571,7 +1573,8 @@ float SurgeStorage::note_to_pitch_inv(float x)
 
 float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
 {
-    x += 256;
+    x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+    // x += 256;
     int e = (int)x;
     float a = x - (float)e;
 
@@ -1588,7 +1591,8 @@ float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
 
 float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
 {
-    x += 256;
+    x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+    // x += 256;
     int e = (int)x;
     float a = x - (float)e;
 
@@ -1605,7 +1609,8 @@ float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
 
 void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
 {
-    x += 256;
+    x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+    // x += 256;
     int e = (int)x;
     float a = x - (float)e;
 
@@ -1620,7 +1625,8 @@ void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
 
 void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi)
 {
-    x += 256;
+    x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+    // x += 256;
     int e = (int)x;
     float a = x - (float)e;
 
