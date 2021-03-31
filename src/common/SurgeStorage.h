@@ -853,12 +853,14 @@ class alignas(16) SurgeStorage
     //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
     SurgeStorage(std::string suppliedDataPath = "");
-    float table_pitch alignas(16)[512];
-    float table_pitch_inv alignas(16)[512];
-    float table_note_omega alignas(16)[2][512];
-    float table_pitch_ignoring_tuning alignas(16)[512];
-    float table_pitch_inv_ignoring_tuning alignas(16)[512];
-    float table_note_omega_ignoring_tuning alignas(16)[2][512];
+
+    static constexpr int tuning_table_size = 512;
+    float table_pitch alignas(16)[tuning_table_size];
+    float table_pitch_inv alignas(16)[tuning_table_size];
+    float table_note_omega alignas(16)[2][tuning_table_size];
+    float table_pitch_ignoring_tuning alignas(16)[tuning_table_size];
+    float table_pitch_inv_ignoring_tuning alignas(16)[tuning_table_size];
+    float table_note_omega_ignoring_tuning alignas(16)[2][tuning_table_size];
     // 2^0 -> 2^+/-1/12th. See comment in note_to_pitch
     float table_two_to_the alignas(16)[1001];
     float table_two_to_the_minus alignas(16)[1001];
