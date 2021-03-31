@@ -24,6 +24,7 @@
 
 #include "filesystem/import.h"
 #include "guihelpers.h"
+#include <utility>
 
 /*
  * Custom Editor Types
@@ -983,14 +984,19 @@ void COscillatorDisplay::setupCustomEditor()
             auto w = divSize.getWidth() / 16;
             for (int i = 0; i < 16; ++i)
             {
-                auto v = limit_range(disp->oscdata->extraConfig.data[i], 0.f, 1.f);
+                auto v = limit_range(disp->oscdata->extraConfig.data[i], -1.f, 1.f);
 
                 auto p = CRect(CPoint(divSize.left + i * w, divSize.top),
                                CPoint(w, divSize.getHeight()));
                 sliders[i] = p;
 
                 auto q = p;
-                q.top = q.bottom - q.getHeight() * v;
+                q.top = q.bottom - p.getHeight() / 2 * (1 + v);
+                q.bottom = q.bottom - p.getHeight() / 2;
+                if (q.top < q.bottom)
+                {
+                    std::swap(q.bottom, q.top);
+                }
                 dc->setFillColor(disp->skin->getColor(Colors::Osc::Display::Wave));
                 dc->drawRect(q, kDrawFilled);
 
@@ -1053,6 +1059,7 @@ void COscillatorDisplay::setupCustomEditor()
                     if (s.pointInside(where))
                     {
                         float f = (where.y - s.bottom) / (s.top - s.bottom);
+                        f = (f - 0.5) * 2;
                         disp->invalid();
                         disp->oscdata->extraConfig.data[i] = f;
                         return kMouseEventHandled;
