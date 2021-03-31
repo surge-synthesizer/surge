@@ -468,12 +468,12 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             {
                 if (s.first > 0.2 && obs == 0)
                 {
-                    REQUIRE(s.second == Approx(s1 * s1).margin(1e-3));
+                    REQUIRE(s.second == Approx(s1 * s1).margin(1e-2));
                     obs++;
                 }
                 if (s.first > 0.4 && obs == 1)
                 {
-                    REQUIRE(s.second == Approx(s2 * s2).margin(1e-3));
+                    REQUIRE(s.second == Approx(s2 * s2).margin(1e-2));
                     obs++;
                 }
             }
@@ -484,12 +484,12 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             {
                 if (s.first > 0.2 && obs == 0)
                 {
-                    REQUIRE(s.second == Approx(s1 * s1).margin(1e-3));
+                    REQUIRE(s.second == Approx(s1 * s1).margin(1e-2));
                     obs++;
                 }
                 if (s.first > 0.4 && obs == 1)
                 {
-                    REQUIRE(s.second == Approx(s2 * s2).margin(1e-5));
+                    REQUIRE(s.second == Approx(s2 * s2).margin(1e-3));
                     obs++;
                 }
             }
