@@ -888,7 +888,7 @@ class alignas(16) SurgeStorage
     int last_key[2]; // TODO: FIX SCENE ASSUMPTION?
     TiXmlElement *getSnapshotSection(const char *name);
     void load_midi_controllers();
-    void save_midi_controllers();
+    void write_midi_controllers_to_user_default();
     void save_snapshots();
     int controllers[n_customcontrollers];
     float poly_aftertouch[2][128]; // TODO: FIX SCENE ASSUMPTION?

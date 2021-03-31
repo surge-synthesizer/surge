@@ -1666,14 +1666,12 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
             storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
         }
-        storage.save_midi_controllers();
         learn_param = -1;
     }
 
     if ((learn_custom >= 0) && (learn_custom < n_customcontrollers))
     {
         storage.controllers[learn_custom] = cc_encoded;
-        storage.save_midi_controllers();
         learn_custom = -1;
     }
 
