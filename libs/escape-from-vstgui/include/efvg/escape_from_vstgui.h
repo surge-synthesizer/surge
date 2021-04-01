@@ -480,6 +480,7 @@ struct CButtonState
     }
     CButtonState(CButton &b) { state = (int)b; }
     CButtonState(int b) { state = b; }
+    CButtonState(const juce::ModifierKeys &m) { state = m.getRawFlags(); }
     operator int() const { return state; }
     bool isRightButton() const { return (state & kRButton); }
     bool isTouch() const { return (state & kTouch); }
@@ -1558,7 +1559,7 @@ inline CMouseEventResult juceCViewConnector<T>::traverseMouseParents(
     auto r = kMouseEventNotHandled;
     while (curr && r == kMouseEventNotHandled)
     {
-        r = vf(curr, w, CButtonState());
+        r = vf(curr, w, CButtonState(e.mods));
         curr = curr->getParentView();
     }
     if (r == kMouseEventNotHandled)
@@ -1711,7 +1712,7 @@ struct COptionMenu : public CControl
         alwaysLeak = true;
         doDebug = false;
     }
-    void setNbItemsPerColumn(int c) { UNIMPL; }
+    void setNbItemsPerColumn(int c) { OKUNIMPL; }
     void setEnabled(bool) { UNIMPL; }
     void addSeparator(int s = -1) { menu.addSeparator(); }
     CMenuItem *addEntry(const std::string &s, int eid = -1)
