@@ -19,15 +19,19 @@
 #include "CDIBitmap.h"
 #include "DspUtilities.h"
 #include "SkinSupport.h"
+#include "CursorControlGuard.h"
 
 #define OSC_MOD_ANIMATION 0
 
-class COscillatorDisplay : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class COscillatorDisplay : public VSTGUI::CControl,
+                           public Surge::UI::SkinConsumingComponent,
+                           public Surge::UI::CursorControlAdapter<COscillatorDisplay>
 {
   public:
     COscillatorDisplay(const VSTGUI::CRect &size, VSTGUI::IControlListener *l,
                        OscillatorStorage *oscdata, SurgeStorage *storage)
-        : VSTGUI::CControl(size, l, 0, 0)
+        : VSTGUI::CControl(size, l, 0, 0), Surge::UI::CursorControlAdapter<COscillatorDisplay>(
+                                               storage)
     {
         this->oscdata = oscdata;
         this->storage = storage;

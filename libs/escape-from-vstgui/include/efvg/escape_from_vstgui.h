@@ -259,6 +259,7 @@ struct CRect
 
     inline CPoint getSize() const { return CPoint(right - left, bottom - top); }
     inline CPoint getTopLeft() const { return CPoint(left, top); }
+    inline CPoint getBottomLeft() const { return CPoint(left, bottom); }
     inline CPoint getTopRight() const { return CPoint(right, top); }
     inline CPoint getBottomRight() const { return CPoint(right, bottom); }
 
