@@ -24,6 +24,7 @@
 
 #include "filesystem/import.h"
 #include "guihelpers.h"
+#include "CursorControlGuard.h"
 #include <utility>
 
 /*
@@ -1001,16 +1002,19 @@ void COscillatorDisplay::setupCustomEditor()
                 dc->drawRect(q, kDrawFilled);
 
                 dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Bounds));
-                if (i != 15)
+                if (i != 0)
                 {
-                    dc->drawLine(p.getTopRight(), p.getBottomRight());
+                    dc->drawLine(p.getTopLeft(), p.getBottomLeft());
                 }
+                /*
+                 * For now don't draw hovers
                 if (i == hoveredSegment)
                 {
                     // FIXME probably not this color
                     dc->setFillColor(disp->skin->getColor(Colors::Osc::Filename::BackgroundHover));
                     dc->drawRect(q, kDrawFilled);
                 }
+                 */
             }
             dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Center));
             dc->drawRect(divSize, kDrawStroked);
@@ -1026,13 +1030,102 @@ void COscillatorDisplay::setupCustomEditor()
                 {
                     if (s.pointInside(where))
                     {
-                        disp->oscdata->extraConfig.data[i] = 1.f / (i + 1);
+                        disp->oscdata->extraConfig.data[i] = 0;
                         disp->invalid();
                     }
                     i++;
                 }
                 return kMouseEventHandled;
             }
+
+            if (buttons & kRButton)
+            {
+                auto contextMenu = new COptionMenu(CRect(where, CPoint(0, 0)), 0, 0, 0, 0,
+                                                   COptionMenu::kMultipleCheckStyle);
+
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Additive Presets")));
+                    contextMenu->addEntry(actionItem);
+                    contextMenu->addSeparator();
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sine")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Saw")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Square")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Triangle")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] =
+                                (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+                            if (qq % 4 == 2)
+                                disp->oscdata->extraConfig.data[qq] *= -1.f;
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Randomize")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] = disp->storage->rand_pm1();
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+
+                disp->getFrame()->addView(contextMenu); // add to frame
+                contextMenu->setDirty();
+                contextMenu->popup();
+#if !TARGET_JUCE_UI
+                // wth is this?
+                contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
+#endif
+                // getFrame()->looseFocus(pContext);
+
+                disp->getFrame()->removeView(contextMenu, true); // remove from frame and forget
+                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+            }
+            disp->startCursorHide();
             return onMouseMoved(where, buttons);
         }
         CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override
@@ -1069,6 +1162,12 @@ void COscillatorDisplay::setupCustomEditor()
             }
 
             return kMouseEventNotHandled;
+        }
+
+        CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override
+        {
+            disp->endCursorHide(where);
+            return kMouseEventHandled;
         }
         int hoveredSegment = -1;
     };
