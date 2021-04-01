@@ -61,11 +61,13 @@ int ensemble_num_stages(int i)
 
 int ensemble_stage_count() { return 7; }
 
-float calculateFilterParamFrequency(float paramVal, SurgeStorage *storage)
+float calculateFilterParamFrequency(float *f, SurgeStorage *storage)
 {
-    return std::min(2 * 3.14159265358979323846 * 440 *
-                        storage->note_to_pitch_ignoring_tuning(paramVal),
-                    25000.0);
+    auto param_val = f[BBDEnsembleEffect::ens_input_filter];
+    auto clock_rate = f[BBDEnsembleEffect::ens_delay_clockrate];
+    auto freq = 2.0f * (float)M_PI * 400.0f * storage->note_to_pitch_ignoring_tuning(param_val);
+    auto freq_adjust = freq * std::pow(clock_rate * 0.01f, 0.75f);
+    return std::min(freq_adjust, 25000.0f);
 }
 
 namespace
@@ -154,7 +156,7 @@ float BBDEnsembleEffect::getFeedbackGain(bool bbd) const noexcept
 void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float delayCenterMs,
                                             float delayScale)
 {
-    const auto aa_cutoff = calculateFilterParamFrequency(*f[ens_input_filter], storage);
+    const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
     sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / samplerate, 0.7071);
     sincInputFilter.process_block(dataL, dataR);
 
@@ -245,7 +247,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         // let's only do it every 4 times
         if (block_counter++ == 3)
         {
-            const auto aa_cutoff = calculateFilterParamFrequency(*f[ens_input_filter], storage);
+            const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
                 del->setFilterFreq(aa_cutoff);
 
