@@ -1382,11 +1382,12 @@ TiXmlElement *SurgeStorage::getSnapshotSection(const char *name)
 
 void SurgeStorage::save_snapshots() { snapshotloader.SaveFile(); }
 
-void SurgeStorage::save_midi_controllers()
+void SurgeStorage::write_midi_controllers_to_user_default()
 {
-    TiXmlElement *mc = getSnapshotSection("midictrl");
-    assert(mc);
-    mc->Clear();
+    TiXmlDocument doc;
+
+    TiXmlElement root("midiconfig");
+    TiXmlElement mc("midictrl");
 
     int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
                                               // B will be duplicated on load)
@@ -1397,23 +1398,35 @@ void SurgeStorage::save_midi_controllers()
             TiXmlElement mc_e("entry");
             mc_e.SetAttribute("p", i);
             mc_e.SetAttribute("ctrl", getPatch().param_ptr[i]->midictrl);
-            mc->InsertEndChild(mc_e);
+            mc.InsertEndChild(mc_e);
         }
     }
+    root.InsertEndChild(mc);
 
-    TiXmlElement *cc = getSnapshotSection("customctrl");
-    assert(cc);
-    cc->Clear();
+    TiXmlElement cc("customctrl");
 
     for (int i = 0; i < n_customcontrollers; i++)
     {
         TiXmlElement cc_e("entry");
         cc_e.SetAttribute("p", i);
         cc_e.SetAttribute("ctrl", controllers[i]);
-        cc->InsertEndChild(cc_e);
+        cc.InsertEndChild(cc_e);
     }
+    root.InsertEndChild(cc);
+    doc.InsertEndChild(root);
 
-    save_snapshots();
+    try
+    {
+        auto dir = string_to_path(userDataPath);
+        fs::create_directories(dir);
+        auto f = string_to_path(userDataPath) / "SurgeMIDIDefaults.xml";
+        doc.SaveFile(f);
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        // Oh well.
+    }
+    // save_snapshots();
 }
 
 void SurgeStorage::setSamplerate(float sr)
@@ -1439,7 +1452,25 @@ void SurgeStorage::setSamplerate(float sr)
 
 void SurgeStorage::load_midi_controllers()
 {
-    TiXmlElement *mc = getSnapshotSection("midictrl");
+    auto mcp = string_to_path(userDataPath) / "SurgeMIDIDefaults.xml";
+    TiXmlDocument mcd;
+    TiXmlElement *midiRoot = nullptr;
+    if (mcd.LoadFile(mcp))
+    {
+        midiRoot = mcd.FirstChildElement("midiconfig");
+    }
+
+    auto get = [this, midiRoot](const char *n) {
+        if (midiRoot)
+        {
+            auto q = TINYXML_SAFE_TO_ELEMENT(midiRoot->FirstChild(n));
+            if (q)
+                return q;
+        }
+        return getSnapshotSection(n);
+    };
+
+    TiXmlElement *mc = get("midictrl");
     assert(mc);
 
     TiXmlElement *entry = TINYXML_SAFE_TO_ELEMENT(mc->FirstChild("entry"));
@@ -1456,7 +1487,7 @@ void SurgeStorage::load_midi_controllers()
         entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
     }
 
-    TiXmlElement *cc = getSnapshotSection("customctrl");
+    TiXmlElement *cc = get("customctrl");
     assert(cc);
 
     entry = TINYXML_SAFE_TO_ELEMENT(cc->FirstChild("entry"));

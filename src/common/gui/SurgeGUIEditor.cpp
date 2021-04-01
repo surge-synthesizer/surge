@@ -2753,7 +2753,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         cmd->setActions([this, ccid, mc](CCommandMenuItem *men) {
                             synth->storage.controllers[ccid] = mc;
-                            synth->storage.save_midi_controllers();
                         });
                         cmd->setEnabled(!disabled);
 
@@ -2805,10 +2804,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     addCallbackMenu(contextMenu,
                                     Surge::UI::toOSCaseForMenu(txt) +
                                         midicc_names[synth->storage.controllers[ccid]] + ")",
-                                    [this, ccid]() {
-                                        synth->storage.controllers[ccid] = -1;
-                                        synth->storage.save_midi_controllers();
-                                    });
+                                    [this, ccid]() { synth->storage.controllers[ccid] = -1; });
                     eid++;
                 }
 
@@ -3781,8 +3777,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl =
                                     mc;
                             }
-
-                            synth->storage.save_midi_controllers();
                         });
                         cmd->setEnabled(!disabled);
 
@@ -3852,8 +3846,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl =
                                     -1;
                             }
-
-                            synth->storage.save_midi_controllers();
                         });
                     eid++;
                 }
@@ -6871,6 +6863,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
                           Surge::UI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
 
     midiSubMenu->addSeparator();
+
+    auto menuItem = addCallbackMenu(
+        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As Global Default"),
+        [this]() { this->synth->storage.write_midi_controllers_to_user_default(); });
 
     addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
                     [this, menuRect]() {
