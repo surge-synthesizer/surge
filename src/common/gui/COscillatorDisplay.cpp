@@ -979,33 +979,40 @@ void COscillatorDisplay::setupCustomEditor()
         void draw(VSTGUI::CDrawContext *dc) override
         {
             auto vs = disp->getViewSize();
-            auto divSize = vs.inset(3, 0);
+            auto divSize = vs;
             divSize.top += 9;
             divSize.bottom -= 15;
             auto w = divSize.getWidth() / 16;
+
+            dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
+
             for (int i = 0; i < 16; ++i)
             {
                 auto v = limit_range(disp->oscdata->extraConfig.data[i], -1.f, 1.f);
-
                 auto p = CRect(CPoint(divSize.left + i * w, divSize.top),
                                CPoint(w, divSize.getHeight()));
+
                 sliders[i] = p;
 
                 auto q = p;
                 q.top = q.bottom - p.getHeight() / 2 * (1 + v);
                 q.bottom = q.bottom - p.getHeight() / 2;
+
                 if (q.top < q.bottom)
                 {
                     std::swap(q.bottom, q.top);
                 }
+
                 dc->setFillColor(disp->skin->getColor(Colors::Osc::Display::Wave));
                 dc->drawRect(q, kDrawFilled);
 
                 dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Bounds));
+
                 if (i != 0)
                 {
-                    dc->drawLine(p.getTopLeft(), p.getBottomLeft());
+                    dc->drawLine(p.getTopLeft(), p.getBottomLeft().offset(0, -1));
                 }
+
                 /*
                  * For now don't draw hovers
                 if (i == hoveredSegment)
@@ -1016,13 +1023,20 @@ void COscillatorDisplay::setupCustomEditor()
                 }
                  */
             }
+
+            auto midpoint = divSize.top + (divSize.getHeight() / 2);
+            auto midl = CPoint(divSize.left, midpoint);
+            auto midr = CPoint(divSize.right, midpoint);
+
+            dc->drawLine(midl, midr);
+
             dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Center));
             dc->drawRect(divSize, kDrawStroked);
         }
 
         CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
         {
-            if (buttons & kDoubleClick)
+            if (buttons & (kDoubleClick | kControl))
             {
                 int i = 0;
 
@@ -1045,7 +1059,7 @@ void COscillatorDisplay::setupCustomEditor()
 
                 {
                     auto actionItem = new CCommandMenuItem(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Additive Presets")));
+                        CCommandMenuItem::Desc("[?] Alias Osc Additive Options"));
                     contextMenu->addEntry(actionItem);
                     contextMenu->addSeparator();
                 }
@@ -1063,7 +1077,22 @@ void COscillatorDisplay::setupCustomEditor()
                 }
                 {
                     auto actionItem = new CCommandMenuItem(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Saw")));
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Triangle")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[qq] =
+                                (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+                            if (qq % 4 == 2)
+                                disp->oscdata->extraConfig.data[qq] *= -1.f;
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sawtooth")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < 16; ++qq)
                         {
@@ -1087,14 +1116,29 @@ void COscillatorDisplay::setupCustomEditor()
                 }
                 {
                     auto actionItem = new CCommandMenuItem(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Triangle")));
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Random")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < 16; ++qq)
                         {
-                            disp->oscdata->extraConfig.data[qq] =
-                                (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
-                            if (qq % 4 == 2)
-                                disp->oscdata->extraConfig.data[qq] *= -1.f;
+                            disp->oscdata->extraConfig.data[qq] = disp->storage->rand_pm1();
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+
+                contextMenu->addSeparator();
+
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Absolute")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            if (disp->oscdata->extraConfig.data[qq] < 0)
+                            {
+                                disp->oscdata->extraConfig.data[qq] *= -1;
+                            }
                         }
                     };
                     actionItem->setActions(action, nullptr);
@@ -1102,11 +1146,31 @@ void COscillatorDisplay::setupCustomEditor()
                 }
                 {
                     auto actionItem = new CCommandMenuItem(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Randomize")));
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Invert")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < 16; ++qq)
                         {
-                            disp->oscdata->extraConfig.data[qq] = disp->storage->rand_pm1();
+                            disp->oscdata->extraConfig.data[qq] =
+                                -disp->oscdata->extraConfig.data[qq];
+                        }
+                    };
+                    actionItem->setActions(action, nullptr);
+                    contextMenu->addEntry(actionItem);
+                }
+                {
+                    auto actionItem = new CCommandMenuItem(
+                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Reverse")));
+                    auto action = [this](CCommandMenuItem *item) {
+                        float pdata[16];
+
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            pdata[qq] = disp->oscdata->extraConfig.data[qq];
+                        }
+
+                        for (int qq = 0; qq < 16; ++qq)
+                        {
+                            disp->oscdata->extraConfig.data[15 - qq] = pdata[qq];
                         }
                     };
                     actionItem->setActions(action, nullptr);
@@ -1128,10 +1192,12 @@ void COscillatorDisplay::setupCustomEditor()
             disp->startCursorHide();
             return onMouseMoved(where, buttons);
         }
+
         CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override
         {
             int ohs = hoveredSegment;
             int nhs = 0;
+
             for (auto &s : sliders)
             {
                 if (s.pointInside(where))
@@ -1140,8 +1206,11 @@ void COscillatorDisplay::setupCustomEditor()
                 }
                 nhs++;
             }
+
             if (hoveredSegment != ohs)
+            {
                 disp->invalid();
+            }
 
             if (buttons & kLButton)
             {
@@ -1153,6 +1222,12 @@ void COscillatorDisplay::setupCustomEditor()
                     {
                         float f = (where.y - s.bottom) / (s.top - s.bottom);
                         f = (f - 0.5) * 2;
+
+                        if (buttons & kControl)
+                        {
+                            f = 0;
+                        }
+
                         disp->invalid();
                         disp->oscdata->extraConfig.data[i] = f;
                         return kMouseEventHandled;
@@ -1164,11 +1239,18 @@ void COscillatorDisplay::setupCustomEditor()
             return kMouseEventNotHandled;
         }
 
+        CMouseEventResult onMouseExited(CPoint &where, const CButtonState &buttons) override
+        {
+            disp->endCursorHide(where);
+            return kMouseEventHandled;
+        }
+
         CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override
         {
             disp->endCursorHide(where);
             return kMouseEventHandled;
         }
+
         int hoveredSegment = -1;
     };
 
