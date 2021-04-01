@@ -163,8 +163,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
             }
         }
 
+#if WINDOWS
         // make sure user category always ends up in second column
-        contextMenu->setNbItemsPerColumn(usercat_pos - 1 + 2);
+        auto multicolmenu =
+            Surge::Storage::getUserDefaultValue(this->storage, "multiColumnPatchMenu", false);
+
+        if (multicolmenu)
+        {
+            contextMenu->setNbItemsPerColumn(usercat_pos - 1 + 2);
+        }
+#endif
     }
 
     contextMenu->addSeparator();
