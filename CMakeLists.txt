@@ -1359,6 +1359,15 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
   set(JUCE_ASIO_SUPPORT FALSE)
 
+  if (DEFINED ENV{VST2SDK_DIR})
+    juce_set_vst2_sdk_path($ENV{VST2SDK_DIR})
+    set(SURGE_JUCE_FORMATS AU VST3 VST Standalone)
+    message(STATUS "JUCE VST2 SDK Path is $ENV{VST2SDK_DIR}")
+  else()
+    set(SURGE_JUCE_FORMATS AU VST3 Standalone)
+  endif()
+
+  message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
   if (DEFINED ENV{ASIOSDK_DIR})
     file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
     message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
@@ -1378,7 +1387,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             NEEDS_MIDI_OUTPUT FALSE
             IS_MIDI_EFFECT FALSE
 
-            FORMATS AU VST3 Standalone
+            FORMATS ${SURGE_JUCE_FORMATS}
             )
 
     juce_generate_juce_header( surge-fx )
@@ -1500,7 +1509,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             NEEDS_MIDI_OUTPUT FALSE
             IS_MIDI_EFFECT FALSE
 
-            FORMATS AU VST3 Standalone
+            FORMATS ${SURGE_JUCE_FORMATS}
             )
 
     juce_generate_juce_header( surge-xt )
