@@ -6864,10 +6864,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
 
     midiSubMenu->addSeparator();
 
-    auto menuItem = addCallbackMenu(
-        midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As Global Default"),
-        [this]() { this->synth->storage.write_midi_controllers_to_user_default(); });
-
     addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
                     [this, menuRect]() {
                         this->scannedForMidiPresets = false; // force a rescan
@@ -6879,8 +6875,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
                                           });
                     });
 
-    addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
-                    [this]() { Surge::UserInteractions::showHTML(this->midiMappingToHtml()); });
+    auto menuItem = addCallbackMenu(
+        midiSubMenu, Surge::UI::toOSCaseForMenu("Set Current MIDI Mapping as Default"),
+        [this]() { this->synth->storage.write_midi_controllers_to_user_default(); });
 
     addCallbackMenu(
         midiSubMenu, Surge::UI::toOSCaseForMenu("Clear Current MIDI Mapping"), [this]() {
@@ -6893,6 +6890,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
                     this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
             }
         });
+
+    midiSubMenu->addSeparator();
+    
+    addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
+                    [this]() { Surge::UserInteractions::showHTML(this->midiMappingToHtml()); });
 
     if (!scannedForMidiPresets)
     {
