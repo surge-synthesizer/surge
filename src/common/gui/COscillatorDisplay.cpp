@@ -21,6 +21,7 @@
 #include "UserInteractions.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
+#include "RuntimeFont.h"
 
 #include "filesystem/import.h"
 #include "guihelpers.h"
@@ -49,7 +50,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
     if (customEditor && customEditorActive)
     {
         customEditor->draw(dc);
-        drawExtraEditButton(dc, "Close");
+        drawExtraEditButton(dc, "CLOSE");
         return;
     }
 
@@ -537,7 +538,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
 
     if (canHaveCustomEditor())
     {
-        drawExtraEditButton(dc, "Edit");
+        drawExtraEditButton(dc, "EDIT");
     }
 
     setDirty(false);
@@ -825,10 +826,12 @@ CMouseEventResult COscillatorDisplay::onMouseUp(CPoint &where, const CButtonStat
 CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint &where, const CButtonState &buttons)
 {
     bool newEditButton = false;
+
     if (canHaveCustomEditor() && customEditButtonRect.pointInside(where))
     {
         newEditButton = true;
     }
+
     if (newEditButton != editButtonHover)
     {
         editButtonHover = newEditButton;
@@ -936,6 +939,15 @@ CMouseEventResult COscillatorDisplay::onMouseEntered(CPoint &where, const CButto
 }
 CMouseEventResult COscillatorDisplay::onMouseExited(CPoint &where, const CButtonState &buttons)
 {
+    if (canHaveCustomEditor() && !customEditButtonRect.pointInside(where))
+    {
+        if (editButtonHover)
+        {
+            editButtonHover = false;
+            invalid();
+        }
+    }
+
     isWTHover = NONE;
     invalid();
     if (customEditorActive && customEditor)
@@ -972,10 +984,11 @@ void COscillatorDisplay::openCustomEditor()
         {
             auto vs = disp->getViewSize();
             auto divSize = vs;
-            divSize.top += 9;
-            divSize.bottom -= 15;
+            divSize.top += 12;
+            divSize.bottom -= 11;
             auto w = divSize.getWidth() / 16;
 
+            dc->saveGlobalState();
             dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
             for (int i = 0; i < 16; ++i)
@@ -1024,11 +1037,14 @@ void COscillatorDisplay::openCustomEditor()
 
             dc->setFrameColor(disp->skin->getColor(Colors::Osc::Display::Center));
             dc->drawRect(divSize, kDrawStroked);
+
+            dc->restoreGlobalState();
         }
 
         CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
         {
             dragMode = NONE;
+
             if (buttons & (kDoubleClick | kControl))
             {
                 int i = 0;
@@ -1042,7 +1058,6 @@ void COscillatorDisplay::openCustomEditor()
                     }
                     i++;
                 }
-                return kMouseEventHandled;
             }
 
             if (buttons & kRButton)
@@ -1182,6 +1197,7 @@ void COscillatorDisplay::openCustomEditor()
                 disp->getFrame()->removeView(contextMenu, true); // remove from frame and forget
                 return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }
+
             dragMode = EDIT;
             disp->startCursorHide();
             return onMouseMoved(where, buttons);
@@ -1212,18 +1228,20 @@ void COscillatorDisplay::openCustomEditor()
 
                 for (auto &s : sliders)
                 {
-                    if (s.pointInside(where))
+                    if ((where.x >= s.left) && (where.x <= s.right))
                     {
                         float f = (where.y - s.bottom) / (s.top - s.bottom);
                         f = (f - 0.5) * 2;
+
+                        clamp1bp(f);
 
                         if (buttons & kControl)
                         {
                             f = 0;
                         }
 
-                        disp->invalid();
                         disp->oscdata->extraConfig.data[i] = f;
+                        disp->invalid();
                         return kMouseEventHandled;
                     }
                     i++;
@@ -1303,10 +1321,13 @@ void COscillatorDisplay::drawExtraEditButton(CDrawContext *dc, const std::string
 {
     auto size = getViewSize();
     CRect posn(size);
-    // Position this button just above the bottom bounds line
-    posn.bottom = (1.0 - scaleDownBy * 0.5) * getHeight() + posn.top - 1;
-    posn.top = posn.bottom - wtbheight + 2;
-    posn.right = posn.left + 30;
+    // Position this button just below the bottom bounds line
+    posn.bottom = getHeight() + posn.top - 1;
+    posn.top = posn.bottom - wtbheight + 4;
+    posn.right = posn.left + 45;
+
+    customEditButtonRect = posn;
+
     if (editButtonHover)
     {
         dc->setFillColor(skin->getColor(Colors::Osc::Filename::BackgroundHover));
@@ -1319,8 +1340,8 @@ void COscillatorDisplay::drawExtraEditButton(CDrawContext *dc, const std::string
         dc->setFrameColor(skin->getColor(Colors::Osc::Filename::Frame));
         dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
     }
+
     dc->drawRect(posn, kDrawFilledAndStroked);
-    dc->setFont(displayFont);
+    dc->setFont(Surge::GUI::getLatoAtSize(7, kBoldFace));
     dc->drawString(label.c_str(), posn, kCenterText, true);
-    customEditButtonRect = posn;
 };
