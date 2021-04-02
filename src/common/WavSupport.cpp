@@ -400,14 +400,13 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         }
     }
 
-    if (loopLen != -1 && (sh == 0 || loopCount < 2))
+    if (loopLen != -1 && (sh == 0 || loopCount < 1))
     {
         std::ostringstream oss;
-        oss << "Currently, Surge only supports wavetables with at least 2 frames of up to 4096 "
-               "samples each in power-of-two increments."
-            << " You provided a wavetable with " << loopCount
-            << (loopCount == 1 ? " frame" : " frames") << " of " << loopLen << " samples. '" << fn
-            << "'";
+        oss << "Currently, Surge only supports wavetables with at least a single frame, with up to "
+               "4096 samples per frame in power-of-two increments. You provided a wavetable with "
+            << loopCount << (loopCount == 1 ? " frame" : " frames") << " of " << loopLen
+            << " samples. '" << fn << "'";
         Surge::UserInteractions::promptError(oss.str(), uitag);
 
         if (wavdata)
