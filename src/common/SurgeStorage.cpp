@@ -96,10 +96,6 @@ std::string getDLLPath()
 }
 #endif
 
-#if STORAGE_USES_INDEPENDENT_RNG
-thread_local SurgeStorage::RNGGen SurgeStorage::rngGen;
-#endif
-
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
     _patch.reset(new SurgePatch(this));
