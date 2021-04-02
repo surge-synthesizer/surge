@@ -1186,12 +1186,12 @@ class alignas(16) SurgeStorage
      *
      * Reseeding it impacts the global state on that thread.
      */
+#define STORAGE_USES_INDEPENDENT_RNG 1
 #if STORAGE_USES_INDEPENDENT_RNG
     /*
-     * This code path for some reason doesn't work on some windows versions. Thread local storage
-     * perhaps? See #4197
+     * Turn this back on with a different threading check
      */
-    thread_local static struct RNGGen
+    struct RNGGen
     {
         RNGGen()
             : g(std::chrono::system_clock::now().time_since_epoch().count()), d(0, RAND_MAX),
@@ -1203,10 +1203,46 @@ class alignas(16) SurgeStorage
         std::uniform_real_distribution<float> pm1, z1;
         std::uniform_int_distribution<uint32_t> u32;
     } rngGen;
-    inline int rand() { return rngGen.d(rngGen.g); }
-    inline uint32_t rand_u32() { return rngGen.u32(rngGen.g); }
-    inline float rand_pm1() { return rngGen.pm1(rngGen.g); }
-    inline float rand_01() { return rngGen.z1(rngGen.g); }
+
+#define DEBUG_RNG_THREADING 0
+#if DEBUG_RNG_THREADING
+    pthread_t audioThreadID = 0;
+    inline void runningOnAudioThread()
+    {
+        if (audioThreadID && pthread_self() != audioThreadID)
+        {
+            std::cout << "BUM CALL ON NON AUDIO THREAD" << std::endl;
+        }
+    }
+#else
+#define runningOnAudioThread() (void *)0;
+#endif
+    /*
+     * These API points are only thread safe on the AUDIO thread.
+     * If you want to have an independent RNG on another thread, manage
+     * your lifecycle yourself or if you want make a new instance of the
+     * Storage::RNGGen utility class above
+     */
+    inline int rand()
+    {
+        runningOnAudioThread();
+        return rngGen.d(rngGen.g);
+    }
+    inline uint32_t rand_u32()
+    {
+        runningOnAudioThread();
+        return rngGen.u32(rngGen.g);
+    }
+    inline float rand_pm1()
+    {
+        runningOnAudioThread();
+        return rngGen.pm1(rngGen.g);
+    }
+    inline float rand_01()
+    {
+        runningOnAudioThread();
+        return rngGen.z1(rngGen.g);
+    }
     // void seed_rand(int s) { rngGen.g.seed(s); }
 #else
     inline int rand() { return std::rand(); }

@@ -3348,6 +3348,10 @@ void SurgeSynthesizer::processControl()
 
 void SurgeSynthesizer::process()
 {
+#if DEBUG_RNG_THREADING
+    storage.audioThreadID = pthread_self();
+#endif
+
     float mfade = 1.f;
 
     if (halt_engine)
