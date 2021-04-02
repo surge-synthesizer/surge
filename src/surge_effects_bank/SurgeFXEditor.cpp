@@ -52,6 +52,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     addAndMakeVisible(fxNameLabel.get());
 
     int ypos0 = 50 * fxt.size() - 5;
+    int byoff = 7;
 
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -80,7 +81,10 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         int buttonSize = 19;
         int buttonMargin = 1;
         juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + buttonMargin, buttonSize, buttonSize};
+                                   (i % 6) * 60 + ypos0 + byoff + buttonMargin, buttonSize,
+                                   buttonSize};
+        fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
+                                     BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
         fxTempoSync[i].setBounds(tsPos);
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
@@ -96,8 +100,10 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         addAndMakeVisible(&(fxTempoSync[i]));
 
         juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + 2 * buttonMargin + buttonSize, buttonSize,
-                                   buttonSize};
+                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + buttonSize,
+                                   buttonSize, buttonSize};
+        fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
+                                       BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
         fxDeactivated[i].setBounds(daPos);
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
@@ -113,8 +119,11 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         addAndMakeVisible(&(fxDeactivated[i]));
 
         juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + 1 * buttonMargin + 0 * buttonSize,
+                                   (i % 6) * 60 + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize,
                                    buttonSize, buttonSize};
+        fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
+                                    BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
+
         fxExtended[i].setBounds(exPos);
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
@@ -130,8 +139,11 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         addAndMakeVisible(&(fxExtended[i]));
 
         juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + 2 * buttonMargin + 1 * buttonSize,
+                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize,
                                    buttonSize, buttonSize};
+        fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
+                                     BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
+
         fxAbsoluted[i].setBounds(abPos);
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXParamAbsolute(i),

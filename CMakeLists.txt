@@ -1394,6 +1394,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
     file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
             resources/surge_effects_bank/*.svg
+            resources/surge_effects_bank/icons/*.svg
             )
 
     juce_add_binary_data( surge-fx-binary

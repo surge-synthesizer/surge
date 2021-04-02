@@ -83,7 +83,7 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         setColour(SurgeColourIds::paramEnabledEdge, surgeOrange);
         setColour(SurgeColourIds::paramDisabledBg,
                   black.interpolatedWith(surgeGrayBg, disableOpacity));
-        setColour(SurgeColourIds::paramDisabledEdge, surgeBlue);
+        setColour(SurgeColourIds::paramDisabledEdge, juce::Colour(150, 150, 150));
         setColour(SurgeColourIds::paramDisplay, white);
 
         surgeLogo = Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlue_svg,
@@ -286,10 +286,27 @@ class SurgeFXParamDisplay : public Component
 
 class SurgeTempoSyncSwitch : public ToggleButton
 {
+  public:
+    void setOnOffImage(const char *onimgData, size_t onimgSize, const char *offimgData,
+                       size_t offimgSize)
+    {
+        onImg = Drawable::createFromImageData(onimgData, onimgSize);
+        offImg = Drawable::createFromImageData(offimgData, offimgSize);
+    }
+    std::unique_ptr<juce::Drawable> onImg, offImg;
+
   protected:
     virtual void paintButton(Graphics &g, bool shouldDrawButtonAsHighlighted,
                              bool shouldDrawButtonAsDown) override
     {
+        if (isEnabled() && onImg && offImg)
+        {
+            if (getToggleState())
+                onImg->drawAt(g, 0, 0, 1);
+            else
+                offImg->drawAt(g, 0, 0, 1);
+            return;
+        }
         auto bounds = getLocalBounds().toFloat().reduced(1.f, 1.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
         auto handle = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
@@ -303,7 +320,8 @@ class SurgeTempoSyncSwitch : public ToggleButton
             edge = findColour(SurgeLookAndFeel::SurgeLookAndFeel::paramDisabledEdge);
         }
 
-        g.fillRoundedRectangle(bounds, radius);
+        if (isEnabled())
+            g.fillRoundedRectangle(bounds, radius);
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, radius, 1);
 
