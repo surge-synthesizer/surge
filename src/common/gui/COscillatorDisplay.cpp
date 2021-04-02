@@ -41,6 +41,10 @@ extern CFontRef displayFont;
 
 void COscillatorDisplay::draw(CDrawContext *dc)
 {
+    if (customEditor && !canHaveCustomEditor())
+    {
+        closeCustomEditor();
+    }
 
     if (customEditor && customEditorActive)
     {
@@ -154,7 +158,6 @@ void COscillatorDisplay::draw(CDrawContext *dc)
 #endif
 
     float valScale = 100.0f;
-    float scaleDownBy = 0.235;
 
     auto size = getViewSize();
 
@@ -546,11 +549,11 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint &where, const CButtonSt
     {
         if (customEditorActive)
         {
-            customEditorActive = false;
+            closeCustomEditor();
         }
         else
         {
-            setupCustomEditor();
+            openCustomEditor();
         }
         invalid();
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
@@ -683,33 +686,12 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     auto exportItem = new CCommandMenuItem(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save Wavetable to File...")));
     auto exportAction = [this](CCommandMenuItem *item) {
-        // FIXME - we need to find the scene and osc by iterating (gross).
-        int oscNum = -1;
-        int scene = -1;
-        for (int sc = 0; sc < n_scenes; sc++)
-        {
-            auto s = &(storage->getPatch().scene[sc]);
-            for (int o = 0; o < n_oscs; ++o)
-            {
-                if (&(s->osc[o]) == this->oscdata)
-                {
-                    oscNum = o;
-                    scene = sc;
-                }
-            }
-        }
-        if (scene == -1 || oscNum == -1)
-        {
-            Surge::UserInteractions::promptError(
-                "Unable to determine which oscillator has wavetable data ready for export!",
-                "Export Error");
-        }
-        else
-        {
-            std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
-                                   "_scene" + (scene == 0 ? "A" : "B");
-            storage->export_wt_wav_portable(baseName, &(oscdata->wt));
-        }
+        int oscNum = this->osc_in_scene;
+        int scene = this->scene;
+
+        std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
+                               "_scene" + (scene == 0 ? "A" : "B");
+        storage->export_wt_wav_portable(baseName, &(oscdata->wt));
     };
     exportItem->setActions(exportAction, nullptr);
     contextMenu->addEntry(exportItem);
@@ -900,6 +882,16 @@ CMouseEventResult COscillatorDisplay::onMouseMoved(CPoint &where, const CButtonS
     return kMouseEventHandled;
 }
 
+bool COscillatorDisplay::onWheel(const VSTGUI::CPoint &where, const float &distance,
+                                 const VSTGUI::CButtonState &buttons)
+{
+    if (customEditorActive && customEditor)
+    {
+        return customEditor->onWheel(where, distance, buttons);
+    }
+    return false;
+}
+
 void COscillatorDisplay::invalidateIfIdIsInRange(int id)
 {
     auto *currOsc = &oscdata->type;
@@ -965,7 +957,7 @@ bool COscillatorDisplay::canHaveCustomEditor()
     return false;
 }
 
-void COscillatorDisplay::setupCustomEditor()
+void COscillatorDisplay::openCustomEditor()
 {
     customEditorActive = false;
     if (!canHaveCustomEditor())
@@ -1036,6 +1028,7 @@ void COscillatorDisplay::setupCustomEditor()
 
         CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
         {
+            dragMode = NONE;
             if (buttons & (kDoubleClick | kControl))
             {
                 int i = 0;
@@ -1189,6 +1182,7 @@ void COscillatorDisplay::setupCustomEditor()
                 disp->getFrame()->removeView(contextMenu, true); // remove from frame and forget
                 return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }
+            dragMode = EDIT;
             disp->startCursorHide();
             return onMouseMoved(where, buttons);
         }
@@ -1212,7 +1206,7 @@ void COscillatorDisplay::setupCustomEditor()
                 disp->invalid();
             }
 
-            if (buttons & kLButton)
+            if (dragMode == EDIT)
             {
                 int i = 0;
 
@@ -1236,22 +1230,49 @@ void COscillatorDisplay::setupCustomEditor()
                 }
             }
 
-            return kMouseEventNotHandled;
+            return kMouseEventHandled;
         }
 
         CMouseEventResult onMouseExited(CPoint &where, const CButtonState &buttons) override
         {
+            return kMouseEventHandled;
+        }
+        CMouseEventResult onMouseEntered(CPoint &where, const CButtonState &buttons) override
+        {
+            return kMouseEventHandled;
+        }
+        CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override
+        {
+            dragMode = NONE;
             disp->endCursorHide(where);
             return kMouseEventHandled;
         }
 
-        CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override
+        bool onWheel(const VSTGUI::CPoint &where, const float &distance,
+                     const VSTGUI::CButtonState &buttons) override
         {
-            disp->endCursorHide(where);
-            return kMouseEventHandled;
+            int idx = 0;
+            for (auto &s : sliders)
+            {
+                if (s.pointInside(where))
+                {
+                    auto f = disp->oscdata->extraConfig.data[idx];
+                    f += 0.1 * distance;
+                    f = limit_range(f, -1.f, 1.f);
+                    disp->oscdata->extraConfig.data[idx] = f;
+                    disp->invalid();
+                }
+                idx++;
+            }
+            return true;
         }
 
         int hoveredSegment = -1;
+        enum DragMode
+        {
+            NONE,
+            EDIT
+        } dragMode = NONE;
     };
 
     if (oscdata->type.val.i == ot_alias &&
@@ -1259,17 +1280,32 @@ void COscillatorDisplay::setupCustomEditor()
     {
         customEditor = std::make_shared<AliasAdditive>(this);
         customEditorActive = true;
+        storage->getPatch()
+            .dawExtraState.editor.oscExtraEditState[scene][osc_in_scene]
+            .hasCustomEditor = true;
         return;
     }
+
+    storage->getPatch()
+        .dawExtraState.editor.oscExtraEditState[scene][osc_in_scene]
+        .hasCustomEditor = false;
 }
 
+void COscillatorDisplay::closeCustomEditor()
+{
+    customEditorActive = false;
+    customEditor = nullptr;
+    storage->getPatch()
+        .dawExtraState.editor.oscExtraEditState[scene][osc_in_scene]
+        .hasCustomEditor = false;
+}
 void COscillatorDisplay::drawExtraEditButton(CDrawContext *dc, const std::string &label)
 {
     auto size = getViewSize();
-    // similar to wavetable button
     CRect posn(size);
-    posn.top = posn.bottom - wtbheight + 3;
-    posn.offset(0, -4);
+    // Position this button just above the bottom bounds line
+    posn.bottom = (1.0 - scaleDownBy * 0.5) * getHeight() + posn.top - 1;
+    posn.top = posn.bottom - wtbheight + 2;
     posn.right = posn.left + 30;
     if (editButtonHover)
     {

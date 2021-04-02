@@ -708,6 +708,11 @@ struct DAWExtraStateStorage
         {
             int timeEditMode = 0;
         } msegEditState[n_scenes][n_lfos];
+
+        struct
+        {
+            bool hasCustomEditor = false;
+        } oscExtraEditState[n_scenes][n_lfos];
     } editor;
 
     bool mpeEnabled = false;
