@@ -6892,7 +6892,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
         });
 
     midiSubMenu->addSeparator();
-    
+
     addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
                     [this]() { Surge::UserInteractions::showHTML(this->midiMappingToHtml()); });
 
