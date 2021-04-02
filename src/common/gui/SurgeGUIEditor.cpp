@@ -6277,20 +6277,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
     }
 
 #if TARGET_VST3
-    zoomSubMenu->addSeparator(zid++);
+    if (!isFixed)
+    {
+        zoomSubMenu->addSeparator(zid++);
 
-    bool dragResize =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
+        bool dragResize =
+            Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
 
-    auto menuItem = addCallbackMenu(
-        zoomSubMenu, Surge::UI::toOSCaseForMenu("Resize by Dragging the Bottom Right Corner"),
-        [this, dragResize]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "dragResizeVST3",
-                                                   !dragResize);
-        });
-    menuItem->setChecked(dragResize);
+        auto menuItem = addCallbackMenu(
+            zoomSubMenu, Surge::UI::toOSCaseForMenu("Resize by Dragging the Bottom Right Corner"),
+            [this, dragResize]() {
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "dragResizeVST3",
+                                                       !dragResize);
+            });
+        menuItem->setChecked(dragResize);
 
-    zid++;
+        zid++;
+    }
 #endif
 
     return zoomSubMenu;
@@ -7125,11 +7128,12 @@ Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSiz
         // If the resolved currentZoomFactor changes size by more than a pixel, store new size
         auto zfdx = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeX()) / 100.0;
         auto zfdy = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeY()) / 100.0;
+        bool isFixed = currentSkin->hasFixedZooms();
         bool windowDragResize = std::max(zfdx, zfdy) > 1;
         bool allowDragResize =
             Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
 
-        if (allowDragResize && windowDragResize)
+        if (allowDragResize && windowDragResize && !isFixed)
         {
             setZoomFactor(currentZoomFactor);
         }
