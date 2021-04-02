@@ -1235,7 +1235,7 @@ void COscillatorDisplay::openCustomEditor()
 
                         clamp1bp(f);
 
-                        if (buttons & kControl)
+                        if ((buttons & kControl) || (buttons & kDoubleClick))
                         {
                             f = 0;
                         }
@@ -1275,7 +1275,10 @@ void COscillatorDisplay::openCustomEditor()
                 if (s.pointInside(where))
                 {
                     auto f = disp->oscdata->extraConfig.data[idx];
-                    f += 0.1 * distance;
+                    if (buttons & kShift)
+                        f += 0.1 * distance / 3;
+                    else
+                        f += 0.1 * distance;
                     f = limit_range(f, -1.f, 1.f);
                     disp->oscdata->extraConfig.data[idx] = f;
                     disp->invalid();
