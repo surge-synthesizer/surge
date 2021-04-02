@@ -77,7 +77,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         };
         addAndMakeVisible(&(fxParamSliders[i]));
 
-        int buttonSize = 15;
+        int buttonSize = 19;
         int buttonMargin = 1;
         juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
                                    (i % 6) * 60 + ypos0 + buttonMargin, buttonSize, buttonSize};
@@ -99,7 +99,17 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                                    (i % 6) * 60 + ypos0 + 2 * buttonMargin + buttonSize, buttonSize,
                                    buttonSize};
         fxDeactivated[i].setBounds(daPos);
-        fxDeactivated[i].setEnabled(false);
+        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
+        fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
+                                        NotificationType::dontSendNotification);
+        fxDeactivated[i].onClick = [i, this]() {
+            this->processor.setUserEditingParamFeature(i, true);
+            this->processor.setFXParamDeactivated(i, this->fxDeactivated[i].getToggleState());
+            this->processor.setFXStorageDeactivated(i, this->fxDeactivated[i].getToggleState());
+            // Special case - coupled dectivation
+            this->resetLabels();
+            this->processor.setUserEditingParamFeature(i, false);
+        };
         addAndMakeVisible(&(fxDeactivated[i]));
 
         juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
@@ -123,12 +133,22 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                                    (i % 6) * 60 + ypos0 + 2 * buttonMargin + 1 * buttonSize,
                                    buttonSize, buttonSize};
         fxAbsoluted[i].setBounds(abPos);
-        fxAbsoluted[i].setEnabled(false);
+        fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
+        fxAbsoluted[i].setToggleState(processor.getFXParamAbsolute(i),
+                                      NotificationType::dontSendNotification);
+        fxAbsoluted[i].onClick = [i, this]() {
+            this->processor.setUserEditingParamFeature(i, true);
+            this->processor.setFXParamAbsolute(i, this->fxAbsoluted[i].getToggleState());
+            this->processor.setFXStorageAbsolute(i, this->fxAbsoluted[i].getToggleState());
+            fxParamDisplay[i].setDisplay(
+                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            this->processor.setUserEditingParamFeature(i, false);
+        };
         addAndMakeVisible(&(fxAbsoluted[i]));
 
         juce::Rectangle<int> dispPos{
-            (i / 6) * getWidth() / 2 + 4 + 55 + 15 + 2 * buttonMargin + buttonSize,
-            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 15 - 2 * buttonMargin - buttonSize, 55};
+            (i / 6) * getWidth() / 2 + 4 + 55 + 2 * buttonMargin + 2 * buttonSize,
+            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 2 * buttonMargin - 2 * buttonSize, 55};
         fxParamDisplay[i].setBounds(dispPos);
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
@@ -251,7 +271,9 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
+        fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
+        fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
+                                     !processor.getFXStorageAppearsDeactivated(i));
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       NotificationType::dontSendNotification);
@@ -260,7 +282,12 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      NotificationType::dontSendNotification);
-        fxAbsoluted[i].setEnabled(false);
+        fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
+        fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
+                                      NotificationType::dontSendNotification);
+        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
+        fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
+                                        NotificationType::dontSendNotification);
     }
 
     int row = 0, col = 0;

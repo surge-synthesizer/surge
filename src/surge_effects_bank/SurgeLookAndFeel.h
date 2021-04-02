@@ -240,12 +240,18 @@ class SurgeFXParamDisplay : public Component
         repaint();
     };
 
+    virtual void setAppearsDeactivated(bool b)
+    {
+        appearsDeactivated = b;
+        repaint();
+    }
+
     virtual void paint(Graphics &g)
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
 
-        if (isEnabled())
+        if (isEnabled() && !appearsDeactivated)
             g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledBg));
         else
         {
@@ -275,6 +281,7 @@ class SurgeFXParamDisplay : public Component
     std::string group = "Uninit";
     std::string name = "Uninit";
     std::string display = "SoftwareError";
+    bool appearsDeactivated = false;
 };
 
 class SurgeTempoSyncSwitch : public ToggleButton

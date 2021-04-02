@@ -94,6 +94,38 @@ class SurgefxAudioProcessor : public AudioProcessor,
     bool getFXStorageExtended(int i) { return fxstorage->p[fx_param_remap[i]].extend_range; }
     bool canExtend(int i) { return fxstorage->p[fx_param_remap[i]].can_extend_range(); }
 
+    void setFXParamAbsolute(int i, bool b)
+    {
+        int v = *(fxParamFeatures[i]);
+        if (b)
+            v = v | kAbsolute;
+        else
+            v = v & ~kAbsolute;
+        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+    }
+    bool getFXParamAbsolute(int i) { return *(fxParamFeatures[i]) & kAbsolute; }
+    void setFXStorageAbsolute(int i, bool b) { fxstorage->p[fx_param_remap[i]].absolute = b; }
+    bool getFXStorageAbsolute(int i) { return fxstorage->p[fx_param_remap[i]].absolute; }
+    bool canAbsolute(int i) { return fxstorage->p[fx_param_remap[i]].can_be_absolute(); }
+
+    void setFXParamDeactivated(int i, bool b)
+    {
+        int v = *(fxParamFeatures[i]);
+        if (b)
+            v = v | kDeactivated;
+        else
+            v = v & ~kDeactivated;
+        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+    }
+    bool getFXParamDeactivated(int i) { return *(fxParamFeatures[i]) & kDeactivated; }
+    void setFXStorageDeactivated(int i, bool b) { fxstorage->p[fx_param_remap[i]].deactivated = b; }
+    bool getFXStorageDeactivated(int i) { return fxstorage->p[fx_param_remap[i]].deactivated; }
+    bool getFXStorageAppearsDeactivated(int i)
+    {
+        return fxstorage->p[fx_param_remap[i]].appears_deactivated();
+    }
+    bool canDeactitvate(int i) { return fxstorage->p[fx_param_remap[i]].can_deactivate(); }
+
     virtual void parameterValueChanged(int parameterIndex, float newValue) override
     {
         if (supressParameterUpdates)
