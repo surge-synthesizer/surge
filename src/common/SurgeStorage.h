@@ -472,7 +472,6 @@ struct MidiChannelState
 
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
 // from first/last position.
-const int n_alias_additive_partials = 16;
 struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
 {
     Parameter type;

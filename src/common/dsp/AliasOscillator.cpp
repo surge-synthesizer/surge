@@ -183,15 +183,15 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         // to go -127..127, instead make it 127/sqrt(squared sum).
         // n.b. this will mean that the max amplitude of a single harmonnic is 1/2 of full scale.
         float norm = 0.f;
-        for (int h = 0; h < n_alias_additive_partials; h++)
+        for (int h = 0; h < n_additive_partials; h++)
         {
             norm += oscdata->extraConfig.data[h] * oscdata->extraConfig.data[h];
         }
         norm = 127.f / sqrtf(norm);
 
         // convert [-1, 1] floats into 8-bit ints
-        int8_t amps[n_alias_additive_partials];
-        for (int h = 0; h < n_alias_additive_partials; h++)
+        int8_t amps[n_additive_partials];
+        for (int h = 0; h < n_additive_partials; h++)
         {
             amps[h] = oscdata->extraConfig.data[h] * norm;
         }
@@ -202,7 +202,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             int16_t sample = 0;
 
             // h for harmonic
-            for (int h = 0; h < n_alias_additive_partials; h++)
+            for (int h = 0; h < n_additive_partials; h++)
             {
                 // sine table is unsigned where zero is 0x7F, correct for this
                 const int16_t scaled =
