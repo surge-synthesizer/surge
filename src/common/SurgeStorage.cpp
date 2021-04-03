@@ -1132,6 +1132,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             strncpy(clipboard_wt_names[0],
                     getPatch().scene[scene].osc[entry].wavetable_display_name, 256);
         }
+        memcpy(&clipboard_extraconfig[0], &getPatch().scene[scene].osc[entry].extraConfig,
+               sizeof(OscillatorStorage::ExtraConfigurationData));
         break;
     case cp_lfo:
         cgroup = 6;
@@ -1159,6 +1161,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
             strncpy(clipboard_wt_names[i], getPatch().scene[scene].osc[i].wavetable_display_name,
                     256);
+            memcpy(&clipboard_extraconfig[i], &getPatch().scene[scene].osc[i].extraConfig,
+                   sizeof(OscillatorStorage::ExtraConfigurationData));
         }
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
     }
@@ -1245,6 +1249,9 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
         getPatch().scene[scene].osc[entry].type.val.i = clipboard_p[0].val.i;
         start = 1;
         getPatch().update_controls(false, &getPatch().scene[scene].osc[entry]);
+
+        memcpy(&getPatch().scene[scene].osc[entry].extraConfig, &clipboard_extraconfig[0],
+               sizeof(OscillatorStorage::ExtraConfigurationData));
         break;
     case cp_lfo:
         cgroup = 6;
@@ -1254,18 +1261,23 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
     case cp_scene:
     {
         id = getPatch().scene[scene].octave.id;
+
         for (int i = 0; i < n_lfos; i++)
         {
+            memcpy(&getPatch().scene[scene].osc[i].extraConfig, &clipboard_extraconfig[i],
+                   sizeof(OscillatorStorage::ExtraConfigurationData));
             memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
                    sizeof(StepSequencerStorage));
             getPatch().msegs[scene][i] = clipboard_msegs[i];
         }
+
         for (int i = 0; i < n_oscs; i++)
         {
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i],
                     256);
         }
+
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
     }
     break;

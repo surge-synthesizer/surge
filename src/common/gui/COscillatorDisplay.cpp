@@ -978,7 +978,7 @@ void COscillatorDisplay::openCustomEditor()
     struct AliasAdditive : public CustomEditor
     {
         explicit AliasAdditive(COscillatorDisplay *d) : CustomEditor(d) {}
-        std::array<CRect, 16> sliders;
+        std::array<CRect, AliasOscillator::n_additive_partials> sliders;
 
         void draw(VSTGUI::CDrawContext *dc) override
         {
@@ -986,12 +986,12 @@ void COscillatorDisplay::openCustomEditor()
             auto divSize = vs;
             divSize.top += 12;
             divSize.bottom -= 11;
-            auto w = divSize.getWidth() / 16;
+            auto w = divSize.getWidth() / AliasOscillator::n_additive_partials;
 
             dc->saveGlobalState();
             dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
 
-            for (int i = 0; i < 16; ++i)
+            for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
             {
                 auto v = limit_range(disp->oscdata->extraConfig.data[i], -1.f, 1.f);
                 auto p = CRect(CPoint(divSize.left + i * w, divSize.top),
@@ -1075,7 +1075,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sine")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
                         }
@@ -1087,7 +1087,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Triangle")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] =
                                 (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
@@ -1102,7 +1102,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sawtooth")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
                         }
@@ -1114,7 +1114,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Square")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
                         }
@@ -1126,7 +1126,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Random")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = disp->storage->rand_pm1();
                         }
@@ -1141,7 +1141,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Absolute")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             if (disp->oscdata->extraConfig.data[qq] < 0)
                             {
@@ -1156,7 +1156,7 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Invert")));
                     auto action = [this](CCommandMenuItem *item) {
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] =
                                 -disp->oscdata->extraConfig.data[qq];
@@ -1169,14 +1169,14 @@ void COscillatorDisplay::openCustomEditor()
                     auto actionItem = new CCommandMenuItem(
                         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Reverse")));
                     auto action = [this](CCommandMenuItem *item) {
-                        float pdata[16];
+                        float pdata[AliasOscillator::n_additive_partials];
 
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             pdata[qq] = disp->oscdata->extraConfig.data[qq];
                         }
 
-                        for (int qq = 0; qq < 16; ++qq)
+                        for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[15 - qq] = pdata[qq];
                         }

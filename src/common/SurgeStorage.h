@@ -1169,6 +1169,7 @@ class alignas(16) SurgeStorage
     int clipboard_type;
     StepSequencerStorage clipboard_stepsequences[n_lfos];
     MSEGStorage clipboard_msegs[n_lfos];
+    OscillatorStorage::ExtraConfigurationData clipboard_extraconfig[n_oscs];
     std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
     Wavetable clipboard_wt[n_oscs];
     char clipboard_wt_names[n_oscs][256];
