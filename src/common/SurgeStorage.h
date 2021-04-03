@@ -472,6 +472,7 @@ struct MidiChannelState
 
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
 // from first/last position.
+const int n_alias_additive_partials = 16;
 struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
 {
     Parameter type;
@@ -1169,6 +1170,7 @@ class alignas(16) SurgeStorage
     int clipboard_type;
     StepSequencerStorage clipboard_stepsequences[n_lfos];
     MSEGStorage clipboard_msegs[n_lfos];
+    OscillatorStorage::ExtraConfigurationData clipboard_extraconfig[n_oscs];
     std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
     Wavetable clipboard_wt[n_oscs];
     char clipboard_wt_names[n_oscs][256];
