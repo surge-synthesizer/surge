@@ -445,6 +445,9 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         P(aow_sine_tx7)
         P(aow_sine_tx8)
         P(aow_additive)
+    default:
+        // getting here is an error but for now just do nothing
+        break;
     }
 }
 
