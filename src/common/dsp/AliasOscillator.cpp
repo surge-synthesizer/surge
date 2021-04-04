@@ -98,12 +98,12 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
                                              const bool stereo, const float fmdepthV,
                                              const float crush_bits)
 {
-    float ud = oscdata->p[ao_unison_detune].get_extended(
+    const float ud = oscdata->p[ao_unison_detune].get_extended(
         localcopy[oscdata->p[ao_unison_detune].param_id_in_scene].f);
 
     if (do_FM)
     {
-        double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
+        const float fv = 16.0f * fmdepthV * fmdepthV * fmdepthV;
         fmdepth.newValue(fv);
     }
 
@@ -259,8 +259,12 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
         (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
     const double two32 = 4294967296.0;
 
-    const float quant = powf(2, crush_bits);
-    const float dequant = 1.f / quant;
+    // when we're not using the bit crusher we want to avoid these expensive operations.
+    // the branch is free as it will be done at compile time with a decent compiler (e.g. g++)
+    // it's just really ugly because in order to have it be const, with C scoping rules the only
+    // option is to use ternary ? operator.
+    const float quant = do_bitcrush ? powf(2, crush_bits) : 0.f;
+    const float dequant = do_bitcrush ? 1.f / quant : 0.f;
 
     // compute once for each unison voice here, then apply per sample
     uint32_t phase_increments[MAX_UNISON];
