@@ -16,14 +16,13 @@
 // This oscillator is intentionally bad! Not recommended as an example of good DSP!
 
 #include "AliasOscillator.h"
-#include <random>
 #include "SineOscillator.h"
 
 // This linear representation is required for VST3 automation and the like and needs to
 // match the param ID the UI is driven by the remapper code in init_ctrltypes
 int alias_waves_count() { return AliasOscillator::ao_waves::ao_n_waves; }
 const char *alias_wave_name[] = {
-    "Sine",      "Triangle",      "Pulse",        "Noise",     "Alias Mem", "Osc Mem",
+    "Sine",      "Ramp",          "Pulse",        "Noise",     "Alias Mem", "Osc Mem",
     "Scene Mem", "DAW Chunk Mem", "Step Seq Mem", "Audio In",  "TX 2 Wave", "TX 3 Wave",
     "TX 4 Wave", "TX 5 Wave",     "TX 6 Wave",    "TX 7 Wave", "TX 8 Wave", "Additive"};
 
@@ -93,15 +92,20 @@ template <typename T> inline T localClamp(const T &a, const T &l, const T &h)
     return std::max(l, std::min(a, h));
 }
 
-void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+// this templating makes the bool ifs etc faster
+template <bool do_FM, bool do_bitcrush, AliasOscillator::ao_waves wavetype>
+void AliasOscillator::process_block_internal(const float pitch, const float drift,
+                                             const bool stereo, const float fmdepthV,
+                                             const float crush_bits)
 {
     float ud = oscdata->p[ao_unison_detune].get_extended(
         localcopy[oscdata->p[ao_unison_detune].param_id_in_scene].f);
 
-    double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
-    fmdepth.newValue(fv);
-
-    const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
+    if (do_FM)
+    {
+        double fv = 16 * fmdepthV * fmdepthV * fmdepthV;
+        fmdepth.newValue(fv);
+    }
 
     bool wavetable_mode = false;
     const uint8_t *wavetable = alias_sinetable;
@@ -249,14 +253,12 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         localClamp((uint32_t)(float)(bit_mask * localcopy[oscdata->p[ao_mask].param_id_in_scene].f),
                    0U, (uint32_t)bit_mask);
 
-    const bool triangle_unmasked_after_threshold = (bool)oscdata->p[ao_mask].deform_type;
+    const bool ramp_unmasked_after_threshold = (bool)oscdata->p[ao_mask].deform_type;
 
     const uint8_t threshold = (uint8_t)(
         (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
     const double two32 = 4294967296.0;
 
-    const float crush_bits =
-        limit_range(localcopy[oscdata->p[ao_bit_depth].param_id_in_scene].f, 1.f, 8.f);
     const float quant = powf(2, crush_bits);
     const float dequant = 1.f / quant;
 
@@ -274,7 +276,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         // int64_t since I can span +/- two32 or beyond
         int64_t fmPhaseShift = 0;
 
-        if (FM)
+        if (do_FM)
         {
             fmPhaseShift = (int64_t)(fmdepth.v * master_osc[i] * two32);
         }
@@ -294,12 +296,12 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
 
             uint8_t result = masked; // default to this
 
-            if (wavetype == aow_triangle)
+            if (wavetype == aow_ramp)
             {
                 // flip wave to make a triangle shape (n.b. has a DC offset)
                 if (upper > threshold)
                 {
-                    if (triangle_unmasked_after_threshold)
+                    if (ramp_unmasked_after_threshold)
                     {
                         result = bit_mask - upper;
                     }
@@ -332,7 +334,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
             float out = ((float)result - (float)0x7F) * inv_bit_mask;
 
             // but for wavetable modes, index a table instead
-            if (wavetable_mode)
+            if (wavetable_mode) // TODO: maybe move this bool into the template?
             {
                 if (result > threshold)
                 {
@@ -342,14 +344,20 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
                 out = ((float)wavetable[0xFF - result] - (float)0x7F) * inv_bit_mask;
             }
 
-            // bitcrush
-            out = dequant * (int)(out * quant);
+            if (do_bitcrush)
+            {
+                // bitcrush
+                out = dequant * (int)(out * quant);
+            }
 
             vL += out * mixL[u];
             vR += out * mixR[u];
 
             // this order actually kinda matters in 32-bit especially
-            phase[u] += fmPhaseShift;
+            if (do_FM)
+            {
+                phase[u] += fmPhaseShift;
+            }
             phase[u] += phase_increments[u];
         }
 
@@ -376,6 +384,67 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
         {
             charFilt.process_block(output, BLOCK_SIZE_OS);
         }
+    }
+}
+
+// this function calls template-specialised versions of the above function
+void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
+{
+    const float crush_bits =
+        limit_range(localcopy[oscdata->p[ao_bit_depth].param_id_in_scene].f, 1.f, 8.f);
+
+    const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
+
+#define P(m)                                                                                       \
+    case m:                                                                                        \
+        if (crush_bits < 8.f)                                                                      \
+        {                                                                                          \
+            if (FM)                                                                                \
+            {                                                                                      \
+                AliasOscillator::process_block_internal<true, true, m>(pitch, drift, stereo,       \
+                                                                       fmdepthV, crush_bits);      \
+            }                                                                                      \
+            else                                                                                   \
+            {                                                                                      \
+                AliasOscillator::process_block_internal<false, true, m>(pitch, drift, stereo,      \
+                                                                        fmdepthV, crush_bits);     \
+            }                                                                                      \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            if (FM)                                                                                \
+            {                                                                                      \
+                AliasOscillator::process_block_internal<true, false, m>(pitch, drift, stereo,      \
+                                                                        fmdepthV, crush_bits);     \
+            }                                                                                      \
+            else                                                                                   \
+            {                                                                                      \
+                AliasOscillator::process_block_internal<false, false, m>(pitch, drift, stereo,     \
+                                                                         fmdepthV, crush_bits);    \
+            }                                                                                      \
+        }                                                                                          \
+        break;
+
+    switch (wavetype)
+    {
+        P(aow_sine)
+        P(aow_ramp)
+        P(aow_pulse)
+        P(aow_noise)
+        P(aow_mem_alias)
+        P(aow_mem_oscdata)
+        P(aow_mem_scenedata)
+        P(aow_mem_dawextra)
+        P(aow_mem_stepseqdata)
+        P(aow_audiobuffer)
+        P(aow_sine_tx2)
+        P(aow_sine_tx3)
+        P(aow_sine_tx4)
+        P(aow_sine_tx5)
+        P(aow_sine_tx6)
+        P(aow_sine_tx7)
+        P(aow_sine_tx8)
+        P(aow_additive)
     }
 }
 

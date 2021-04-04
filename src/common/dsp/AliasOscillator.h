@@ -35,7 +35,7 @@ class AliasOscillator : public Oscillator
     enum ao_waves
     {
         aow_sine,
-        aow_triangle,
+        aow_ramp,
         aow_pulse,
         aow_noise,
         aow_mem_alias,
@@ -83,9 +83,9 @@ class AliasOscillator : public Oscillator
     }
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f);
-
-    template <ao_waves wavetype, bool subOctave, bool FM>
-    void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
+    template <bool do_FM, bool do_bitcrush, AliasOscillator::ao_waves wavetype>
+    void process_block_internal(const float pitch, const float drift, const bool stereo,
+                                const float fmdepthV, const float crush_bits);
 
     lag<float, true> fmdepth;
 
