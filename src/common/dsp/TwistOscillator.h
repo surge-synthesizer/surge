@@ -13,11 +13,21 @@
 ** open source in September 2018.
 */
 
+/*
+ * What's our samplerate strategy
+ */
+#define SAMPLERATE_SRC 0
+#define SAMPLERATE_LANCZOS 1
+
 #include "OscillatorBase.h"
 #include <memory>
 #include "basic_dsp.h"
 #include "DspUtilities.h"
 #include "OscillatorCommonFunctions.h"
+
+#if SAMPLERATE_LANCZOS
+#include "LanczosResampler.h"
+#endif
 
 namespace plaits
 {
@@ -72,9 +82,15 @@ class TwistOscillator : public Oscillator
     std::unique_ptr<plaits::Patch> patch;
     std::unique_ptr<stmlib::BufferAllocator> alloc;
     char shared_buffer[16834];
+
+    // Keep this here for now even if using lanczos since I'm using SRC for FM still
     SRC_STATE_tag *srcstate, *fmdownsamplestate;
     float fmlagbuffer[BLOCK_SIZE_OS << 1];
     int fmwp, fmrp;
+
+#if SAMPLERATE_LANCZOS
+    LanczosResampler lrLeft, lrRight;
+#endif
 
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;
