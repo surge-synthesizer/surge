@@ -1965,6 +1965,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                 subtypep->val.i =
                     storage.subtypeMemory[typep->scene - 1][typep->ctrlgroup_entry][typep->val.i];
             }
+            refresh_editor = true;
             break;
         case ct_osctype:
         {
