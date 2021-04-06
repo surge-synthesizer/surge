@@ -272,6 +272,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/FilterCoefficientMaker.cpp
   src/common/dsp/FM2Oscillator.cpp
   src/common/dsp/FM3Oscillator.cpp
+  src/common/dsp/LanczosResampler.cpp
   src/common/dsp/LfoModulationSource.cpp
   src/common/dsp/ModernOscillator.cpp
   src/common/dsp/MSEGModulationHelper.cpp

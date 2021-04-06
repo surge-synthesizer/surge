@@ -24,7 +24,12 @@
 #endif
 #endif
 #include "plaits/dsp/voice.h"
+
 #include "samplerate.h"
+
+#if SAMPLERATE_LANCZOS
+#include "LanczosResampler.h"
+#endif
 
 std::string twist_engine_name(int i)
 {
@@ -210,6 +215,10 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
 TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                  pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
+#if SAMPLERATE_LANCZOS
+      ,
+      lrLeft(48000, dsamplerate_os), lrRight(48000, dsamplerate_os)
+#endif
 {
     voice = std::make_unique<plaits::Voice>();
     alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, sizeof(shared_buffer));
@@ -217,7 +226,7 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
     patch = std::make_unique<plaits::Patch>();
     int error;
     srcstate = src_new(SRC_SINC_FASTEST, 2, &error);
-
+    // srcstate = src_new(SRC_LINEAR, 2, &error);
     if (error != 0)
     {
         srcstate = nullptr;
@@ -347,6 +356,9 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
         }
     }
 
+    int required_blocks = throwaway ? throwawayBlocks : BLOCK_SIZE_OS;
+
+#if SAMPLERATE_SRC
     for (int i = 0; i < carrover_size; ++i)
     {
         if (oscdata->p[twist_aux_mix].extend_range)
@@ -360,12 +372,19 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
             outputR[i] = output[i];
         }
     }
-
     int total_generated = carrover_size;
     carrover_size = 0;
-    int required_blocks = throwaway ? throwawayBlocks : BLOCK_SIZE_OS;
+#else
+    int total_generated = required_blocks - lrLeft.inputsRequiredToGenerateOutputs(required_blocks);
+#endif
 
     bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
+
+    if (lpgIsOn)
+    {
+        mod.trigger = gate ? 1.0 : 0.0;
+        mod.trigger_patched = true;
+    }
 
     while (total_generated < required_blocks)
     {
@@ -381,12 +400,9 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
         morph.process();
         lpgdec.process();
         lpgcol.process();
+#if SAMPLERATE_SRC
         auxmix.process();
-        if (lpgIsOn)
-        {
-            mod.trigger = gate ? 1.0 : 0.0;
-            mod.trigger_patched = true;
-        }
+#endif
 
         if (FM)
         {
@@ -401,6 +417,15 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
         }
 
         voice->Render(*patch, mod, poutput, subblock);
+
+#if SAMPLERATE_LANCZOS
+        for (int i = 0; i < subblock; ++i)
+        {
+            lrLeft.push(poutput[i].out / 32768.f);
+            lrRight.push(poutput[i].aux / 32768.f);
+        }
+        total_generated = required_blocks - lrLeft.inputsRequiredToGenerateOutputs(required_blocks);
+#else
         for (int i = 0; i < subblock; ++i)
         {
             src_in[i][0] = poutput[i].out / 32768.f;
@@ -444,7 +469,39 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
             // FIXME
             std::cout << "DEAL " << std::endl;
         }
+#endif
     }
+
+#if SAMPLERATE_LANCZOS
+    if (throwaway)
+    {
+        lrLeft.advanceReadPointer(required_blocks);
+        lrRight.advanceReadPointer(required_blocks);
+    }
+    else
+    {
+        float tL[BLOCK_SIZE_OS], tR[BLOCK_SIZE_OS];
+        lrLeft.populateNext(tL, BLOCK_SIZE_OS);
+        lrRight.populateNext(tR, BLOCK_SIZE_OS);
+
+        for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+        {
+            if (oscdata->p[twist_aux_mix].extend_range)
+            {
+                output[i] = auxmix.v * tL[i] + (1 - auxmix.v) * tR[i];
+                outputR[i] = auxmix.v * tR[i] + (1 - auxmix.v) * tL[i];
+            }
+            else
+            {
+                output[i] = auxmix.v * tR[i] + (1 - auxmix.v) * tL[i];
+                outputR[i] = output[i];
+            }
+            auxmix.process();
+        }
+    }
+    lrLeft.renormalizePhases();
+    lrRight.renormalizePhases();
+#endif
 
     if (!throwaway && charFilt.doFilter)
     {
