@@ -73,6 +73,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     # GCC only
     add_compile_options(
         -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
+        -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
     )
   endif()
 endif()
