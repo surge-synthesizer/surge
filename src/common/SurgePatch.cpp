@@ -1173,8 +1173,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         if (p)
         {
             int type;
+            bool hasStreamedType = true;
             if (!(p->QueryIntAttribute("type", &type) == TIXML_SUCCESS))
+            {
+                hasStreamedType = false;
                 type = param_ptr[i]->valtype;
+            }
 
             if (type == (valtypes)vt_float)
             {
@@ -1303,7 +1307,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             int sceneId = param_ptr[i]->scene;
             int paramIdInScene = param_ptr[i]->param_id_in_scene;
             TiXmlElement *mr = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("modrouting"));
-            while (mr)
+            /*
+             * Note when we make int modulation work we will have to remove this conditional here
+             */
+            /*
+            if( mr && hasStreamedType && type != vt_float )
+                std::cout << "Dropping modulations for param " << p->Value()
+                << hasStreamedType << " " << type << " " << vt_float << std::endl;
+                */
+            while (mr && (!hasStreamedType || type == vt_float))
             {
                 int modsource;
                 double depth;
