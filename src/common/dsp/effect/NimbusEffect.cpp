@@ -38,13 +38,13 @@ NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     mix.set_blocksize(BLOCK_SIZE);
 
     int error;
-    surgeSR_to_euroSR = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    surgeSR_to_euroSR = src_new(SRC_SINC_FASTEST, 2, &error);
     if (error != 0)
     {
         surgeSR_to_euroSR = nullptr;
     }
 
-    euroSR_to_surgeSR = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &error);
+    euroSR_to_surgeSR = src_new(SRC_SINC_FASTEST, 2, &error);
     if (error != 0)
     {
         euroSR_to_surgeSR = nullptr;
