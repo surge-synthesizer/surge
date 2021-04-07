@@ -6556,20 +6556,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
         });
     menuItem->setChecked(patchJogWrap);
 
-    // multi-column patch browser menu (Windows only)
-#if WINDOWS
-    bool multiColumnPatchMenu =
-        Surge::Storage::getUserDefaultValue(&(this->synth->storage), "multiColumnPatchMenu", false);
-
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::UI::toOSCaseForMenu("Use Multiple Columns in Patch Browser Menu"),
-        [this, multiColumnPatchMenu]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "multiColumnPatchMenu",
-                                                   !multiColumnPatchMenu);
-        });
-    menuItem->setChecked(multiColumnPatchMenu);
-#endif
-
     uiOptionsMenu->addEntry(wfMenu, Surge::UI::toOSCaseForMenu("Workflow"));
     wfMenu->forget();
 

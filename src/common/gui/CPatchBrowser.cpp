@@ -87,8 +87,10 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     int main_e = 0;
     // if RMB is down, only show the current category
-    bool single_category = button & (kRButton | kControl);
+    bool single_category = button & (kRButton | kControl), has_3rdparty = false;
     int last_category = current_category;
+    int root_count = 0, usercat_pos = 0, col_breakpoint = 0;
+    auto patch_cat_size = storage->patch_category.size();
 
     if (single_category)
     {
@@ -123,11 +125,13 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
     else
     {
-        int root_count = 0, usercat_pos = 0;
-        auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
-        factory_add->setEnabled(0);
+        if (patch_cat_size && storage->firstThirdPartyCategory > 0)
+        {
+            auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
+            factory_add->setEnabled(0);
+        }
 
-        for (int i = 0; i < storage->patch_category.size(); i++)
+        for (int i = 0; i < patch_cat_size; i++)
         {
             if ((!single_category) || (i == last_category))
             {
@@ -136,10 +140,15 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 {
                     string txt;
 
-                    if (i == storage->firstThirdPartyCategory)
+                    if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
+                    {
+                        has_3rdparty = true;
                         txt = "THIRD PARTY PATCHES";
+                    }
                     else
+                    {
                         txt = "USER PATCHES";
+                    }
 
                     auto add = contextMenu->addEntry(txt.c_str());
                     add->setEnabled(0);
@@ -165,17 +174,27 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
 #if WINDOWS
         // make sure user category always ends up in second column
-        auto multicolmenu =
-            Surge::Storage::getUserDefaultValue(this->storage, "multiColumnPatchMenu", false);
-
-        if (multicolmenu)
-        {
-            contextMenu->setNbItemsPerColumn(usercat_pos - 1 + 2);
-        }
+        col_breakpoint = std::max(usercat_pos ? usercat_pos : (root_count + 1), 32);
+        contextMenu->setNbItemsPerColumn(col_breakpoint - 1 + 2);
 #endif
     }
 
-    contextMenu->addSeparator();
+#if WINDOWS
+    // since we're starting user presets on second column,
+    // we don't need this separator if we have no user presets,
+    // because then we'd have a dangling separator at the bottom of first column
+    if (usercat_pos || !has_3rdparty || storage->firstThirdPartyCategory == 0)
+    {
+        contextMenu->addSeparator();
+    }
+#else
+    // on Mac and Linux we cannot do multicolumns (at least not until JUCE!)
+    // so just add a separator and move on
+    if (!has_3rdparty || storage->firstThirdPartyCategory == 0)
+    {
+        contextMenu->addSeparator();
+    }
+#endif
 
     auto loadF = new CCommandMenuItem(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
@@ -222,6 +241,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu->addEntry(show3);
 
     contextMenu->addSeparator();
+
+    contextMenu->cleanupSeparators(false);
 
     auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
     if (sge)
