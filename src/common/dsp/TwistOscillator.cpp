@@ -122,7 +122,15 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         }
 
         auto engp = &(oscs->p[TwistOscillator::twist_engine]);
+        if (engp->ctrltype != ct_twist_engine)
+        {
+            return "ERROR";
+        }
         auto eng = engp->val.i;
+        if (eng < 0 || eng >= engineLabels.size())
+        {
+            return "ERROR";
+        }
         auto idx = (p - engp);
         auto lab = engineLabels[eng][idx - 1];
 
@@ -178,7 +186,15 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         }
 
         auto engp = &(oscs->p[TwistOscillator::twist_engine]);
+        if (engp->ctrltype != ct_twist_engine)
+        {
+            return "ERROR";
+        }
         auto eng = engp->val.i;
+        if (eng < 0 || eng >= engineBipolars.size())
+        {
+            return false;
+        }
         auto idx = (p - engp);
 
         auto res = engineBipolars[eng][idx - 1];
