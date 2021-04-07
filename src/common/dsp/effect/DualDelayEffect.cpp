@@ -109,8 +109,8 @@ void DualDelayEffect::setvars(bool init)
     width.set_target_smoothed(db_to_linear(*f[dly_width]));
     pan.set_target_smoothed(clamp1bp(*f[dly_input_channel]));
 
-    hp.coeff_HP(hp.calc_omega(*f[dly_lowcut] / 12.0), 0.707);
     lp.coeff_LP2B(lp.calc_omega(*f[dly_highcut] / 12.0), 0.707);
+    hp.coeff_HP(hp.calc_omega(*f[dly_lowcut] / 12.0), 0.707);
 
     if (init)
     {
@@ -121,8 +121,8 @@ void DualDelayEffect::setvars(bool init)
         mix.instantize();
         width.instantize();
         pan.instantize();
-        hp.coeff_instantize();
         lp.coeff_instantize();
+        hp.coeff_instantize();
     }
 }
 
@@ -170,8 +170,14 @@ void DualDelayEffect::process(float *dataL, float *dataR)
     softclip_block(tbufferL, BLOCK_SIZE_QUAD);
     softclip_block(tbufferR, BLOCK_SIZE_QUAD);
 
-    lp.process_block(tbufferL, tbufferR);
-    hp.process_block(tbufferL, tbufferR);
+    if (!fxdata->p[dly_highcut].deactivated)
+    {
+        lp.process_block(tbufferL, tbufferR);
+    }
+    if (!fxdata->p[dly_lowcut].deactivated)
+    {
+        hp.process_block(tbufferL, tbufferR);
+    }
 
     pan.trixpan_blocks(dataL, dataR, wbL, wbR, BLOCK_SIZE_QUAD);
 
@@ -264,9 +270,9 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_crossfeed].set_name("Crossfeed");
     fxdata->p[dly_crossfeed].set_type(ct_percent);
     fxdata->p[dly_lowcut].set_name("Low Cut");
-    fxdata->p[dly_lowcut].set_type(ct_freq_audible);
+    fxdata->p[dly_lowcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[dly_highcut].set_name("High Cut");
-    fxdata->p[dly_highcut].set_type(ct_freq_audible);
+    fxdata->p[dly_highcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[dly_mod_rate].set_name("Rate");
     fxdata->p[dly_mod_rate].set_type(ct_lforate);
     fxdata->p[dly_mod_depth].set_name("Depth");
@@ -303,10 +309,22 @@ void DualDelayEffect::init_default_values()
     fxdata->p[dly_feedback].val.f = 0.0f;
     fxdata->p[dly_crossfeed].val.f = 0.0f;
     fxdata->p[dly_lowcut].val.f = -24.f;
+    fxdata->p[dly_lowcut].deactivated = false;
     fxdata->p[dly_highcut].val.f = 30.f;
+    fxdata->p[dly_highcut].deactivated = false;
     fxdata->p[dly_mod_rate].val.f = -2.f;
     fxdata->p[dly_mod_depth].val.f = 0.f;
     fxdata->p[dly_input_channel].val.f = 0.f;
     fxdata->p[dly_mix].val.f = 1.f;
     fxdata->p[dly_width].val.f = 0.f;
+}
+
+void DualDelayEffect::handleStreamingMismatches(int streamingRevision,
+                                                int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[dly_lowcut].deactivated = false;
+        fxdata->p[dly_highcut].deactivated = false;
+    }
 }

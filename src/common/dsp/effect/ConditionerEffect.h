@@ -48,6 +48,8 @@ class ConditionerEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
     enum cond_params
     {
         cond_bass = 0,

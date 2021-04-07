@@ -104,7 +104,11 @@ void DistortionEffect::process(float *dataL, float *dataR)
         {
             L = Lin + fb * L;
             R = Rin + fb * R;
-            lp1.process_sample_nolag(L, R);
+
+            if (!fxdata->p[dist_preeq_highcut].deactivated)
+            {
+                lp1.process_sample_nolag(L, R);
+            }
 
             if (useSSEShaper)
             {
@@ -126,9 +130,15 @@ void DistortionEffect::process(float *dataL, float *dataR)
                 L = lookup_waveshape(wst_soft + ws, L);
                 R = lookup_waveshape(wst_soft + ws, R);
             }
+
             L += a;
             R += a; // denormal
-            lp2.process_sample_nolag(L, R);
+
+            if (!fxdata->p[dist_posteq_highcut].deactivated)
+            {
+                lp2.process_sample_nolag(L, R);
+            }
+
             bL[s + (k << dist_OS_bits)] = L;
             bR[s + (k << dist_OS_bits)] = R;
         }
@@ -186,7 +196,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_preeq_bw].set_name("Bandwidth");
     fxdata->p[dist_preeq_bw].set_type(ct_bandwidth);
     fxdata->p[dist_preeq_highcut].set_name("High Cut");
-    fxdata->p[dist_preeq_highcut].set_type(ct_freq_audible);
+    fxdata->p[dist_preeq_highcut].set_type(ct_freq_audible_deactivatable);
 
     fxdata->p[dist_drive].set_name("Drive");
     fxdata->p[dist_drive].set_type(ct_decibel_narrow_extendable);
@@ -202,7 +212,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_posteq_bw].set_name("Bandwidth");
     fxdata->p[dist_posteq_bw].set_type(ct_bandwidth);
     fxdata->p[dist_posteq_highcut].set_name("High Cut");
-    fxdata->p[dist_posteq_highcut].set_type(ct_freq_audible);
+    fxdata->p[dist_posteq_highcut].set_type(ct_freq_audible_deactivatable);
 
     fxdata->p[dist_gain].set_name("Gain");
     fxdata->p[dist_gain].set_type(ct_decibel_narrow);
@@ -228,13 +238,16 @@ void DistortionEffect::init_default_values()
     fxdata->p[dist_preeq_gain].val.f = 0.f;
     fxdata->p[dist_preeq_freq].val.f = 0.f;
     fxdata->p[dist_preeq_bw].val.f = 2.f;
+    fxdata->p[dist_preeq_highcut].deactivated = false;
+
+    fxdata->p[dist_model].val.f = 0.f;
 
     fxdata->p[dist_posteq_gain].val.f = 0.f;
     fxdata->p[dist_posteq_freq].val.f = 0.f;
     fxdata->p[dist_posteq_bw].val.f = 2.f;
-    fxdata->p[dist_gain].val.f = 0.f;
+    fxdata->p[dist_posteq_highcut].deactivated = false;
 
-    fxdata->p[dist_model].val.f = 0.f;
+    fxdata->p[dist_gain].val.f = 0.f;
 }
 
 void DistortionEffect::handleStreamingMismatches(int streamingRevision,
@@ -245,5 +258,11 @@ void DistortionEffect::handleStreamingMismatches(int streamingRevision,
         fxdata->p[dist_model].val.i = 0;
         fxdata->p[dist_preeq_gain].extend_range = false;
         fxdata->p[dist_posteq_gain].extend_range = false;
+    }
+
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[dist_preeq_highcut].deactivated = false;
+        fxdata->p[dist_posteq_highcut].deactivated = false;
     }
 }

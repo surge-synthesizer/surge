@@ -1435,7 +1435,7 @@ void Parameter::set_type(int ctrltype)
         displayType = LinearWithScale;
         displayInfo.scale = 1.0f;
         displayInfo.decimals = 2;
-        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "μ");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "μm");
         break;
 
     case ct_tape_speed:

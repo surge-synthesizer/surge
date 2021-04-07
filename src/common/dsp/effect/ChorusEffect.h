@@ -58,6 +58,9 @@ template <int v> class ChorusEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
+
   private:
     lag<float, true> time[v];
     float voicepan[v][2];

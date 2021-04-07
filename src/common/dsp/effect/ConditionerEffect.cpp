@@ -43,6 +43,7 @@ void ConditionerEffect::setvars(bool init)
 {
     band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[cond_bass]);
     band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[cond_treble]);
+
     if (init)
     {
     }
@@ -88,16 +89,26 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     vu[5] = min(8.f, a * vu[5]);
 
     setvars(false);
-    band1.process_block(dataL, dataR);
-    band2.process_block(dataL, dataR);
+
+    if (!fxdata->p[cond_bass].deactivated)
+    {
+        band1.process_block(dataL, dataR);
+    }
+
+    if (!fxdata->p[cond_treble].deactivated)
+    {
+        band2.process_block(dataL, dataR);
+    }
+
     float pregain = db_to_linear(-*f[cond_threshold]);
+
     ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[cond_balance]));
     ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[cond_balance]));
+
     width.set_target_smoothed(clamp1bp(*f[cond_width]));
     postamp.set_target_smoothed(db_to_linear(*f[cond_gain]));
 
-    float M alignas(16)[BLOCK_SIZE],
-        S alignas(16)[BLOCK_SIZE]; // wb = write-buffer
+    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
@@ -217,9 +228,9 @@ void ConditionerEffect::init_ctrltypes()
     Effect::init_ctrltypes();
 
     fxdata->p[cond_bass].set_name("Bass");
-    fxdata->p[cond_bass].set_type(ct_decibel_extra_narrow);
+    fxdata->p[cond_bass].set_type(ct_decibel_extra_narrow_deactivatable);
     fxdata->p[cond_treble].set_name("Treble");
-    fxdata->p[cond_treble].set_type(ct_decibel_extra_narrow);
+    fxdata->p[cond_treble].set_type(ct_decibel_extra_narrow_deactivatable);
 
     fxdata->p[cond_width].set_name("Width");
     fxdata->p[cond_width].set_type(ct_percent_bipolar);
@@ -246,4 +257,19 @@ void ConditionerEffect::init_ctrltypes()
     fxdata->p[cond_release].posy_offset = 11;
     fxdata->p[cond_gain].posy_offset = 13;
 }
-void ConditionerEffect::init_default_values() {}
+
+void ConditionerEffect::init_default_values()
+{
+    fxdata->p[cond_bass].deactivated = false;
+    fxdata->p[cond_treble].deactivated = false;
+}
+
+void ConditionerEffect::handleStreamingMismatches(int streamingRevision,
+                                                  int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[cond_bass].deactivated = false;
+        fxdata->p[cond_treble].deactivated = false;
+    }
+}

@@ -116,8 +116,16 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
         _mm_store_ss(&tbufferR[k], R);
     }
 
-    lp.process_block(tbufferL, tbufferR);
-    hp.process_block(tbufferL, tbufferR);
+    if (!fxdata->p[ch_highcut].deactivated)
+    {
+        lp.process_block(tbufferL, tbufferR);
+    }
+
+    if (!fxdata->p[ch_lowcut].deactivated)
+    {
+        hp.process_block(tbufferL, tbufferR);
+    }
+
     add_block(tbufferL, tbufferR, fbblock, BLOCK_SIZE_QUAD);
     feedback.multiply_block(fbblock, BLOCK_SIZE_QUAD);
     hardclip_block(fbblock, BLOCK_SIZE_QUAD);
@@ -170,9 +178,9 @@ template <int v> void ChorusEffect<v>::init_ctrltypes()
     fxdata->p[ch_feedback].set_type(ct_percent);
 
     fxdata->p[ch_lowcut].set_name("Low Cut");
-    fxdata->p[ch_lowcut].set_type(ct_freq_audible);
+    fxdata->p[ch_lowcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[ch_highcut].set_name("High Cut");
-    fxdata->p[ch_highcut].set_type(ct_freq_audible);
+    fxdata->p[ch_highcut].set_type(ct_freq_audible_deactivatable);
 
     fxdata->p[ch_mix].set_name("Mix");
     fxdata->p[ch_mix].set_type(ct_percent);
@@ -229,7 +237,20 @@ template <int v> void ChorusEffect<v>::init_default_values()
     fxdata->p[ch_depth].val.f = 0.3f;
     fxdata->p[ch_feedback].val.f = 0.5f;
     fxdata->p[ch_lowcut].val.f = -3.f * 12.f;
+    fxdata->p[ch_lowcut].deactivated = false;
     fxdata->p[ch_highcut].val.f = 3.f * 12.f;
+    fxdata->p[ch_highcut].deactivated = false;
     fxdata->p[ch_mix].val.f = 1.f;
     fxdata->p[ch_width].val.f = 0.f;
+}
+
+template <int v>
+void ChorusEffect<v>::handleStreamingMismatches(int streamingRevision,
+                                                int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[ch_lowcut].deactivated = false;
+        fxdata->p[ch_highcut].deactivated = false;
+    }
 }

@@ -271,9 +271,18 @@ void Reverb1Effect::process(float *dataL, float *dataR)
         _mm_store_ss(&wetL[k], L);
         _mm_store_ss(&wetR[k], R);
     }
-    locut.process_block_slowlag(wetL, wetR);
-    band1.process_block_slowlag(wetL, wetR);
-    hicut.process_block_slowlag(wetL, wetR);
+
+    if (!fxdata->p[rev1_lowcut].deactivated)
+    {
+        locut.process_block(wetL, wetR);
+    }
+
+    band1.process_block(wetL, wetR);
+
+    if (!fxdata->p[rev1_highcut].deactivated)
+    {
+        hicut.process_block(wetL, wetR);
+    }
 
     // scale width
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
@@ -337,13 +346,13 @@ void Reverb1Effect::init_ctrltypes()
     fxdata->p[rev1_damping].set_type(ct_percent);
 
     fxdata->p[rev1_lowcut].set_name("Low Cut");
-    fxdata->p[rev1_lowcut].set_type(ct_freq_audible);
+    fxdata->p[rev1_lowcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[rev1_freq1].set_name("Peak Freq");
     fxdata->p[rev1_freq1].set_type(ct_freq_audible);
     fxdata->p[rev1_gain1].set_name("Peak Gain");
     fxdata->p[rev1_gain1].set_type(ct_decibel);
     fxdata->p[rev1_highcut].set_name("High Cut");
-    fxdata->p[rev1_highcut].set_type(ct_freq_audible);
+    fxdata->p[rev1_highcut].set_type(ct_freq_audible_deactivatable);
 
     fxdata->p[rev1_mix].set_name("Mix");
     fxdata->p[rev1_mix].set_type(ct_percent);
@@ -379,9 +388,21 @@ void Reverb1Effect::init_default_values()
     fxdata->p[rev1_freq1].val.f = 0.0f;
     fxdata->p[rev1_gain1].val.f = 0.0f;
     fxdata->p[rev1_lowcut].val.f = -24.0f;
+    fxdata->p[rev1_lowcut].deactivated = false;
     fxdata->p[rev1_highcut].val.f = 72.0f;
+    fxdata->p[rev1_highcut].deactivated = false;
     fxdata->p[rev1_mix].val.f = 1.0f;
     fxdata->p[rev1_width].val.f = 0.0f;
 
     // fxdata->p[rev1_variation].val.f = 0.f;
+}
+
+void Reverb1Effect::handleStreamingMismatches(int streamingRevision,
+                                              int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[rev1_lowcut].deactivated = false;
+        fxdata->p[rev1_highcut].deactivated = false;
+    }
 }

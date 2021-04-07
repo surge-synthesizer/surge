@@ -166,8 +166,15 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
     hp.coeff_HP(hp.calc_omega(*f[rm_lowcut] / 12.0), 0.707);
     lp.coeff_LP2B(lp.calc_omega(*f[rm_highcut] / 12.0), 0.707);
 
-    lp.process_block(wetL, wetR);
-    hp.process_block(wetL, wetR);
+    if (!fxdata->p[rm_highcut].deactivated)
+    {
+        lp.process_block(wetL, wetR);
+    }
+
+    if (!fxdata->p[rm_lowcut].deactivated)
+    {
+        hp.process_block(wetL, wetR);
+    }
 
     mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
@@ -225,9 +232,9 @@ void RingModulatorEffect::init_ctrltypes()
     fxdata->p[rm_diode_linregion].set_type(ct_percent);
 
     fxdata->p[rm_lowcut].set_name("Low Cut");
-    fxdata->p[rm_lowcut].set_type(ct_freq_audible);
+    fxdata->p[rm_lowcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[rm_highcut].set_name("High Cut");
-    fxdata->p[rm_highcut].set_type(ct_freq_audible);
+    fxdata->p[rm_highcut].set_type(ct_freq_audible_deactivatable);
 
     fxdata->p[rm_mix].set_name("Mix");
     fxdata->p[rm_mix].set_type(ct_percent);
@@ -256,8 +263,20 @@ void RingModulatorEffect::init_default_values()
 
     // FIX THIS
     fxdata->p[rm_lowcut].val.f = fxdata->p[rm_lowcut].val_min.f;
+    fxdata->p[rm_lowcut].deactivated = false;
     fxdata->p[rm_highcut].val.f = fxdata->p[rm_highcut].val_max.f;
+    fxdata->p[rm_highcut].deactivated = false;
     fxdata->p[rm_mix].val.f = 1.0;
+}
+
+void RingModulatorEffect::handleStreamingMismatches(int streamingRevision,
+                                                    int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[rm_lowcut].deactivated = false;
+        fxdata->p[rm_highcut].deactivated = false;
+    }
 }
 
 float RingModulatorEffect::diode_sim(float v)

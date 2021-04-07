@@ -31,6 +31,22 @@ const int rev_taps = 1 << rev_tap_bits;
 
 class Reverb1Effect : public Effect
 {
+    enum rev1_params
+    {
+        rev1_predelay = 0,
+        rev1_shape,
+        rev1_roomsize,
+        rev1_decaytime,
+        rev1_damping,
+        rev1_lowcut,
+        rev1_freq1,
+        rev1_gain1,
+        rev1_highcut,
+        rev1_mix,
+        rev1_width,
+        // rev1_variation,
+    };
+
     float delay_pan_L alignas(16)[rev_taps], delay_pan_R alignas(16)[rev_taps];
     float delay_fb alignas(16)[rev_taps];
     float delay alignas(16)[rev_taps * max_rev_dly];
@@ -53,21 +69,8 @@ class Reverb1Effect : public Effect
     virtual int group_label_ypos(int id) override;
     virtual int get_ringout_decay() override { return ringout_time; }
 
-    enum rev1_params
-    {
-        rev1_predelay = 0,
-        rev1_shape,
-        rev1_roomsize,
-        rev1_decaytime,
-        rev1_damping,
-        rev1_lowcut,
-        rev1_freq1,
-        rev1_gain1,
-        rev1_highcut,
-        rev1_mix,
-        rev1_width,
-        // rev1_variation,
-    };
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
   private:
     void update_rtime();
