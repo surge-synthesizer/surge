@@ -33,6 +33,7 @@ namespace plaits
 {
 class Voice;
 class Patch;
+class Modulations;
 } // namespace plaits
 
 namespace stmlib
@@ -75,11 +76,12 @@ class TwistOscillator : public Oscillator
     inline float fv(twist_params ps) { return localcopy[oscdata->p[ps].param_id_in_scene].f; }
     inline float fvbp(twist_params ps)
     {
-        return limit_range((localcopy[oscdata->p[ps].param_id_in_scene].f + 1) * 0.5f, 0.f, 1.f);
+        return clamp01((localcopy[oscdata->p[ps].param_id_in_scene].f + 1) * 0.5f);
     }
 
     std::unique_ptr<plaits::Voice> voice;
     std::unique_ptr<plaits::Patch> patch;
+    std::unique_ptr<plaits::Modulations> mod;
     std::unique_ptr<stmlib::BufferAllocator> alloc;
     char shared_buffer[16834];
 
@@ -89,7 +91,7 @@ class TwistOscillator : public Oscillator
     int fmwp, fmrp;
 
 #if SAMPLERATE_LANCZOS
-    LanczosResampler lrLeft, lrRight;
+    LanczosResampler lancRes;
 #endif
 
     float carryover[BLOCK_SIZE_OS][2];

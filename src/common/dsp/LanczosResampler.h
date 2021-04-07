@@ -37,10 +37,12 @@ struct LanczosResampler
     static constexpr double dx = 1.0 / (tableObs);
 
     // Fixme: Make this static and shared
-    static float lanczosTable[tableObs][filterWidth], lanczosTableDX[tableObs][filterWidth];
+    static float lanczosTable alignas(16)[tableObs][filterWidth], lanczosTableDX
+        alignas(16)[tableObs][filterWidth];
     static bool tablesInitialized;
 
-    float input[BUFFER_SZ * 2];
+    // This is a stereo resampler
+    float input[2][BUFFER_SZ * 2];
     int wp = 0;
     float sri, sro;
     double phaseI, phaseO, dPhaseI, dPhaseO;
@@ -60,7 +62,7 @@ struct LanczosResampler
         dPhaseI = 1.0;
         dPhaseO = sri / sro;
 
-        memset(input, 0, BUFFER_SZ * sizeof(float));
+        memset(input, 0, 2 * BUFFER_SZ * sizeof(float));
         if (!tablesInitialized)
         {
             for (int t = 0; t < tableObs; ++t)
@@ -84,25 +86,28 @@ struct LanczosResampler
         }
     }
 
-    inline void push(float f)
+    inline void push(float fL, float fR)
     {
-        input[wp] = f;
-        input[wp + BUFFER_SZ] = f; // this way we can always wrap
+        input[0][wp] = fL;
+        input[0][wp + BUFFER_SZ] = fL; // this way we can always wrap
+        input[1][wp] = fR;
+        input[1][wp + BUFFER_SZ] = fR;
         wp = (wp + 1) & (BUFFER_SZ - 1);
         phaseI += dPhaseI;
     }
 
-    inline float readZOH(double xBack) const
+    inline void readZOH(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
         int idx0 = (int)p0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
         if (idx0 <= A)
             idx0 += BUFFER_SZ;
-        return input[idx0];
+        L = input[0][idx0];
+        R = input[1][idx0];
     }
 
-    inline float readLin(double xBack) const
+    inline void readLin(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
         int idx0 = (int)p0;
@@ -110,14 +115,15 @@ struct LanczosResampler
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
         if (idx0 <= A)
             idx0 += BUFFER_SZ;
-        return (1.0 - frac) * input[idx0] + frac * input[idx0 + 1];
+        L = (1.0 - frac) * input[0][idx0] + frac * input[0][idx0 + 1];
+        R = (1.0 - frac) * input[1][idx0] + frac * input[1][idx0 + 1];
     }
 
-    inline float read(double xBack) const
+    inline void read(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
         int idx0 = floor(p0);
-        double off0 = (p0 - idx0);
+        double off0 = 1.0 - (p0 - idx0);
 
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
         idx0 += (idx0 <= A) * BUFFER_SZ;
@@ -126,19 +132,27 @@ struct LanczosResampler
         int tidx = (int)(off0byto);
         double fidx = (off0byto - tidx);
 
-        auto f0 = _mm_loadu_ps(&lanczosTable[tidx][0]);
-        auto df0 = _mm_loadu_ps(&lanczosTableDX[tidx][0]);
-        f0 = _mm_add_ps(f0, _mm_mul_ps(df0, _mm_set1_ps((float)fidx)));
+        auto fl = _mm_set1_ps((float)fidx);
+        auto f0 = _mm_load_ps(&lanczosTable[tidx][0]);
+        auto df0 = _mm_load_ps(&lanczosTableDX[tidx][0]);
 
-        auto f1 = _mm_loadu_ps(&lanczosTable[tidx][4]);
-        auto df1 = _mm_loadu_ps(&lanczosTableDX[tidx][4]);
-        f1 = _mm_add_ps(f1, _mm_mul_ps(df1, _mm_set1_ps((float)fidx)));
+        f0 = _mm_add_ps(f0, _mm_mul_ps(df0, fl));
 
-        auto d0 = _mm_loadu_ps(&input[idx0 - A]);
-        auto d1 = _mm_loadu_ps(&input[idx0]);
+        auto f1 = _mm_load_ps(&lanczosTable[tidx][4]);
+        auto df1 = _mm_load_ps(&lanczosTableDX[tidx][4]);
+        f1 = _mm_add_ps(f1, _mm_mul_ps(df1, fl));
+
+        auto d0 = _mm_loadu_ps(&input[0][idx0 - A]);
+        auto d1 = _mm_loadu_ps(&input[0][idx0]);
         auto rv = _mm_add_ps(_mm_mul_ps(f0, d0), _mm_mul_ps(f1, d1));
-        auto res = vSum(rv);
-        return res;
+        L = vSum(rv);
+
+        d0 = _mm_loadu_ps(&input[1][idx0 - A]);
+        d1 = _mm_loadu_ps(&input[1][idx0]);
+        rv = _mm_add_ps(_mm_mul_ps(f0, d0), _mm_mul_ps(f1, d1));
+        R = vSum(rv);
+
+        R = 0;
     }
 
     inline size_t inputsRequiredToGenerateOutputs(size_t desiredOutputs) const
@@ -154,19 +168,14 @@ struct LanczosResampler
         return (size_t)std::max(res + 1, 0.0); // Check this calculation
     }
 
-    size_t populateNext(float *f, size_t max)
-    {
-        int populated = 0;
-        while (populated < max && (phaseI - phaseO) > A + 1)
-        {
-            f[populated] = read((phaseI - phaseO));
-            // f[populated] = readZOH(phaseI-phaseO);
-            // f[populated] = readLin(phaseI-phaseO);
-            phaseO += dPhaseO;
-            populated++;
-        }
-        return populated;
-    }
+    size_t populateNext(float *fL, float *fR, size_t max);
+
+    /*
+     * This is a dangerous but efficient function which more quickly
+     * populates BLOCK_SIZE_OS worth of items, but assumes you have
+     * checked the range.
+     */
+    void populateNextBlockSizeOS(float *fL, float *fR);
 
     inline void advanceReadPointer(size_t n) { phaseO += n * dPhaseO; }
     inline void snapOutToIn()

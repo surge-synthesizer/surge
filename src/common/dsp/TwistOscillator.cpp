@@ -217,13 +217,15 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
     : Oscillator(storage, oscdata, localcopy)
 #if SAMPLERATE_LANCZOS
       ,
-      lrLeft(48000, dsamplerate_os), lrRight(48000, dsamplerate_os)
+      lancRes(48000, dsamplerate_os)
 #endif
 {
     voice = std::make_unique<plaits::Voice>();
     alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, sizeof(shared_buffer));
     voice->Init(alloc.get());
     patch = std::make_unique<plaits::Patch>();
+    mod = std::make_unique<plaits::Modulations>();
+
     int error;
     srcstate = src_new(SRC_SINC_FASTEST, 2, &error);
     // srcstate = src_new(SRC_LINEAR, 2, &error);
@@ -261,6 +263,8 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 
     float tpitch = tuningAwarePitch(pitch);
     memset((void *)patch.get(), 0, sizeof(plaits::Patch));
+    memset((void *)mod.get(), 0, sizeof(plaits::Modulations));
+
     driftLFO.init(nonzero_drift);
 
     // Lets run forward a cycle
@@ -317,17 +321,15 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
     lpgdec.newValue(fv(twist_lpg_decay));
     auxmix.newValue(limit_range(fvbp(twist_aux_mix), -1.f, 1.f));
 
-    plaits::Modulations mod = {};
-    // for now
-    memset((void *)&mod, 0, sizeof(plaits::Modulations));
-
     constexpr int subblock = getBlockSize<FM>();
+#if SAMPLERATE_SRC
     float src_in[subblock][2];
     float src_out[BLOCK_SIZE_OS][2];
 
     SRC_DATA sdata;
     sdata.end_of_input = 0;
     sdata.src_ratio = dsamplerate_os / 48000.0;
+#endif
 
     float normFMdepth = 0;
 
@@ -375,15 +377,16 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
     int total_generated = carrover_size;
     carrover_size = 0;
 #else
-    int total_generated = required_blocks - lrLeft.inputsRequiredToGenerateOutputs(required_blocks);
+    int total_generated =
+        required_blocks - lancRes.inputsRequiredToGenerateOutputs(required_blocks);
 #endif
 
     bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
 
     if (lpgIsOn)
     {
-        mod.trigger = gate ? 1.0 : 0.0;
-        mod.trigger_patched = true;
+        mod->trigger = gate ? 1.0 : 0.0;
+        mod->trigger_patched = true;
     }
 
     while (total_generated < required_blocks)
@@ -406,25 +409,26 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 
         if (FM)
         {
-            mod.frequency_patched = true;
-            mod.frequency = 137 * fmlagbuffer[fmrp]; // this is in 'notes'
+            mod->frequency_patched = true;
+            mod->frequency = 137 * fmlagbuffer[fmrp]; // this is in 'notes'
             fmrp = (fmrp + 1) & ((BLOCK_SIZE_OS << 1) - 1);
             patch->frequency_modulation_amount = normFMdepth;
         }
         else
         {
+            mod->frequency_patched = false;
             patch->frequency_modulation_amount = 0;
         }
 
-        voice->Render(*patch, mod, poutput, subblock);
+        voice->Render(*patch, *mod, poutput, subblock);
 
 #if SAMPLERATE_LANCZOS
         for (int i = 0; i < subblock; ++i)
         {
-            lrLeft.push(poutput[i].out / 32768.f);
-            lrRight.push(poutput[i].aux / 32768.f);
+            lancRes.push(poutput[i].out / 32768.f, poutput[i].aux / 32768.f);
         }
-        total_generated = required_blocks - lrLeft.inputsRequiredToGenerateOutputs(required_blocks);
+        total_generated =
+            required_blocks - lancRes.inputsRequiredToGenerateOutputs(required_blocks);
 #else
         for (int i = 0; i < subblock; ++i)
         {
@@ -475,14 +479,12 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 #if SAMPLERATE_LANCZOS
     if (throwaway)
     {
-        lrLeft.advanceReadPointer(required_blocks);
-        lrRight.advanceReadPointer(required_blocks);
+        lancRes.advanceReadPointer(required_blocks);
     }
     else
     {
         float tL[BLOCK_SIZE_OS], tR[BLOCK_SIZE_OS];
-        lrLeft.populateNext(tL, BLOCK_SIZE_OS);
-        lrRight.populateNext(tR, BLOCK_SIZE_OS);
+        lancRes.populateNextBlockSizeOS(tL, tR);
 
         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
         {
@@ -499,8 +501,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
             auxmix.process();
         }
     }
-    lrLeft.renormalizePhases();
-    lrRight.renormalizePhases();
+    lancRes.renormalizePhases();
 #endif
 
     if (!throwaway && charFilt.doFilter)
