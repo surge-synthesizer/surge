@@ -44,6 +44,9 @@ class DualDelayEffect : public Effect
     virtual int group_label_ypos(int id) override;
     virtual int get_ringout_decay() override { return ringout_time; }
 
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
+
     enum delay_params
     {
         dly_time_left = 0,

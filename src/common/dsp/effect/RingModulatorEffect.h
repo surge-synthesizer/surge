@@ -44,6 +44,9 @@ class RingModulatorEffect : public Effect
 
     virtual int get_ringout_decay() override { return ringout_value; }
 
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
+
     float diode_sim(float x);
 
     enum ringmod_params
