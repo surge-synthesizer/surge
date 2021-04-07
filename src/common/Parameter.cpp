@@ -3300,7 +3300,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
         {
             extern const char *alias_wave_name[];
             extern int alias_waves_count();
-            snprintf(txt, TXT_SIZE, "%s", alias_wave_name[std::min(i, alias_waves_count() - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     alias_wave_name[std::max(0, std::min(i, alias_waves_count() - 1))]);
         }
         break;
         case ct_twist_engine:

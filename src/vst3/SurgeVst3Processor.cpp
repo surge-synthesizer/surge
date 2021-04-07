@@ -340,6 +340,31 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
                                                  IParameterChanges *parameterChanges,
                                                  int &eventIndex)
 {
+#define DUMB_STRESS_TEST 0 // See issue 4038
+#if DUMB_STRESS_TEST
+    static int64_t cts = 0;
+    if (cts % 3 == 0)
+    {
+        SurgeSynthesizer::ID did;
+        /* OSC A1
+        for( int idE = 116; idE < 116 + 8; ++idE )
+        if (surgeInstance->fromDAWSideId(idE, did))
+        {
+            float r = 1.f * rand() / (float)RAND_MAX;
+            surgeInstance->setParameter01(did, r, true);
+        }*/
+        // FX A1
+        for (int idE = 9; idE < 9 + 12; ++idE)
+            if (surgeInstance->fromDAWSideId(idE, did))
+            {
+                float r = 1.f * rand() / (float)RAND_MAX;
+                surgeInstance->setParameter01(did, r, true);
+            }
+    }
+    cts++;
+    return;
+#endif
+
     if (parameterChanges)
     {
         int32 numParamsChanged = parameterChanges->getParameterCount();
@@ -419,7 +444,9 @@ void SurgeVst3Processor::processParameterChanges(int sampleOffset,
 
                         // VST3 wants to send me these events a LOT
                         if (surgeInstance->getParameter01(did) != value)
+                        {
                             surgeInstance->setParameter01(did, value, true);
+                        }
                     }
                     else
                     {
