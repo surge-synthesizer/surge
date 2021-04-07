@@ -92,8 +92,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     int root_count = 0, usercat_pos = 0, col_breakpoint = 0;
     auto patch_cat_size = storage->patch_category.size();
 
-    printf("3P: %d | USR: %d\n", storage->firstThirdPartyCategory, storage->firstUserCategory);
-
     if (single_category)
     {
         contextMenu->setNbItemsPerColumn(32);
