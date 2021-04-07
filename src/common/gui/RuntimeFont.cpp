@@ -17,6 +17,7 @@
 #if TARGET_JUCE_UI
 #include <JuceHeader.h>
 #endif
+#include <iostream>
 
 namespace Surge
 {
@@ -54,8 +55,19 @@ VSTGUI::CFontRef getLatoAtSize(float size, int style)
     auto lato = juce::Font(tf).withPointHeight(size);
     return std::make_shared<VSTGUI::CFontInternal>(lato);
 #else
-    VSTGUI::SharedPointer<VSTGUI::CFontDesc> res = new VSTGUI::CFontDesc("Lato", size, style);
-    return res;
+    /*
+     * I simply cannot wait for VSTGUI to not be part of my life
+     */
+    static std::map<std::pair<float, int>, VSTGUI::SharedPointer<VSTGUI::CFontDesc>> fontCache;
+    auto key = std::make_pair(size, style);
+    if (fontCache.find(key) == fontCache.end())
+    {
+        fontCache[key] = VSTGUI::SharedPointer<VSTGUI::CFontDesc>(
+            new VSTGUI::CFontDesc("Lato", size, style), true);
+        // Just leak it to be safe since the ownership semantics are horrid
+        fontCache[key]->remember();
+    }
+    return fontCache[key];
 #endif
 }
 } // namespace GUI
