@@ -583,7 +583,7 @@ struct StepSequencerStorage
 const int max_msegs = 128;
 struct MSEGStorage
 {
-    struct segment
+    struct segment // If you add something here fix blankAllSegments in MSEGModulationHelper
     {
         float duration;
         float dragDuration; // Snap mode helper

@@ -1055,11 +1055,33 @@ void clearMSEG(MSEGStorage *ms)
     Surge::MSEG::rebuildCache(ms);
 }
 
+void blankAllSegments(MSEGStorage *ms)
+{
+    for (int i = 0; i < max_msegs; ++i)
+    {
+        ms->segments[i].duration = 0;
+        ms->segments[i].dragDuration = 0;
+        ms->segments[i].v0 = 0;
+        ms->segments[i].dragv0 = 0;
+        ms->segments[i].nv1 = 0;
+        ms->segments[i].dragv1 = 0;
+        ms->segments[i].cpduration = 0.5;
+        ms->segments[i].cpv = 0.0;
+        ms->segments[i].dragcpv = 0.0;
+        ms->segments[i].dragcpratio = 0.5;
+        ms->segments[i].useDeform = true;
+        ms->segments[i].invertDeform = false;
+        ms->segments[i].type = MSEGStorage::segment::Type::LINEAR;
+    }
+}
+
 void createInitVoiceMSEG(MSEGStorage *ms)
 {
     ms->editMode = MSEGStorage::EditMode::ENVELOPE;
     ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
     ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+
+    blankAllSegments(ms);
 
     ms->n_activeSegments = 4;
 
@@ -1106,6 +1128,8 @@ void createInitSceneMSEG(MSEGStorage *ms)
     ms->loopMode = MSEGStorage::LoopMode::LOOP;
 
     ms->n_activeSegments = 4;
+
+    blankAllSegments(ms);
 
     ms->segments[0].duration = 0.25f;
     ms->segments[0].type = MSEGStorage::segment::LINEAR;
