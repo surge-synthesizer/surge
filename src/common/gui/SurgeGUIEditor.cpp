@@ -1600,9 +1600,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "");
             lfoNameLabel->setTransparency(true);
 #if !TARGET_JUCE_UI
-            VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt =
-                new VSTGUI::CFontDesc("Lato", 10, kBoldFace);
-            lfoNameLabel->setFont(fnt);
+            lfoNameLabel->setFont(Surge::GUI::getLatoAtSize(10, kBoldFace));
 #endif
             lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
             lfoNameLabel->setHoriAlign(kCenterText);
@@ -1837,9 +1835,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
 #if !TARGET_JUCE_UI
             lb->setAntialias(true);
-            VSTGUI::SharedPointer<VSTGUI::CFontDesc> fnt =
-                new VSTGUI::CFontDesc("Lato", fsize, fstyle);
-            lb->setFont(fnt);
+            lb->setFont(Surge::GUI::getLatoAtSize(fsize, fstyle));
 #endif
 
             lb->setFontColor(col);
@@ -5819,10 +5815,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
                           });
     });
 
-    mpeSubMenu->addEntry(makeSmoothMenu(menuRect, "pitchSmoothingMode",
-                                        (int)ControllerModulationSource::SmoothingMode::DIRECT,
-                                        [this](auto md) { this->resetPitchSmoothing(md); }),
-                         Surge::UI::toOSCaseForMenu("MPE Pitch Bend Smoothing"));
+    auto men = makeSmoothMenu(menuRect, "pitchSmoothingMode",
+                              (int)ControllerModulationSource::SmoothingMode::DIRECT,
+                              [this](auto md) { this->resetPitchSmoothing(md); });
+    mpeSubMenu->addEntry(men, Surge::UI::toOSCaseForMenu("MPE Pitch Bend Smoothing"));
+    men->forget();
 
     return mpeSubMenu;
 }
@@ -6645,7 +6642,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
             addToThis->forget();
         }
     }
-
     skinSubMenu->addSeparator();
 
     if (useDevMenu)
@@ -6857,14 +6853,15 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
                                                VSTGUI::COptionMenu::kNoDrawStyle |
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-    midiSubMenu->addEntry(makeSmoothMenu(menuRect, "smoothingMode",
-                                         (int)ControllerModulationSource::SmoothingMode::LEGACY,
-                                         [this](auto md) { this->resetSmoothing(md); }),
-                          Surge::UI::toOSCaseForMenu("Controller Smoothing"));
+    auto smen = makeSmoothMenu(menuRect, "smoothingMode",
+                               (int)ControllerModulationSource::SmoothingMode::LEGACY,
+                               [this](auto md) { this->resetSmoothing(md); });
+    midiSubMenu->addEntry(smen, Surge::UI::toOSCaseForMenu("Controller Smoothing"));
+    smen->forget();
 
-    midiSubMenu->addEntry(makeMonoModeOptionsMenu(menuRect, true),
-                          Surge::UI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
-
+    auto mmom = makeMonoModeOptionsMenu(menuRect, true);
+    midiSubMenu->addEntry(mmom, Surge::UI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
+    mmom->forget();
     midiSubMenu->addSeparator();
 
     addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Save MIDI Mapping As..."),
