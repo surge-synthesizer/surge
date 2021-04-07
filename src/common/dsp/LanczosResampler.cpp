@@ -15,6 +15,31 @@
 
 #include "LanczosResampler.h"
 
-float LanczosResampler::lanczosTable[LanczosResampler::tableObs][LanczosResampler::filterWidth];
-float LanczosResampler::lanczosTableDX[LanczosResampler::tableObs][LanczosResampler::filterWidth];
+float LanczosResampler::lanczosTable alignas(
+    16)[LanczosResampler::tableObs][LanczosResampler::filterWidth];
+float LanczosResampler::lanczosTableDX alignas(
+    16)[LanczosResampler::tableObs][LanczosResampler::filterWidth];
+
 bool LanczosResampler::tablesInitialized = false;
+
+size_t LanczosResampler::populateNext(float *fL, float *fR, size_t max)
+{
+    int populated = 0;
+    while (populated < max && (phaseI - phaseO) > A + 1)
+    {
+        read((phaseI - phaseO), fL[populated], fR[populated]);
+        phaseO += dPhaseO;
+        populated++;
+    }
+    return populated;
+}
+
+void LanczosResampler::populateNextBlockSizeOS(float *fL, float *fR)
+{
+    double r0 = phaseI - phaseO;
+    for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+    {
+        read(r0 - i * dPhaseO, fL[i], fR[i]);
+    }
+    phaseO += BLOCK_SIZE_OS * dPhaseO;
+}
