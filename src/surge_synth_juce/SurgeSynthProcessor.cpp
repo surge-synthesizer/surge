@@ -33,6 +33,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
             // https://docs.juce.com/master/classAudioProcessorParameterGroup.html
             auto sja = new SurgeParamToJuceParamAdapter(surge.get(), par);
             addParameter(sja);
+            paramsByID[surge->idForParameter(par)] = sja;
         }
     }
 
@@ -80,7 +81,6 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
 {
     if (index != 0)
     {
-        std::cout << "Setting patchid_queue to " << presetOrderToPatchList[index - 1] << std::endl;
         surge->patchid_queue = presetOrderToPatchList[index - 1];
     }
 }
@@ -218,6 +218,12 @@ void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
     {
         sse->populateFromStreaming(surge.get());
     }
+}
+
+void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)
+{
+    auto spar = paramsByID[id];
+    spar->setValueNotifyingHost(f);
 }
 
 //==============================================================================

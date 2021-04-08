@@ -1225,6 +1225,9 @@ struct IControlListener
 {
     virtual void valueChanged(CControl *p) = 0;
     virtual int32_t controlModifierClicked(CControl *p, CButtonState s) { return false; }
+
+    virtual void controlBeginEdit(CControl *control){};
+    virtual void controlEndEdit(CControl *control){};
 };
 
 struct IKeyboardHook
@@ -1281,12 +1284,15 @@ struct CControl : public CView
 
     virtual void beginEdit()
     {
-        // UNIMPL;
+        if (listener)
+            listener->controlBeginEdit(this);
     }
 
     virtual void endEdit()
     {
-        // UNIMPL;
+
+        if (listener)
+            listener->controlEndEdit(this);
     }
 
     COLPAIR(BackColor);

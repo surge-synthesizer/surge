@@ -44,8 +44,8 @@ class JUCEPluginLayerProxy;
 using PluginLayer = JUCEPluginLayerProxy;
 #elif TARGET_JUCE_SYNTH
 #include <JuceHeader.h>
-
-using PluginLayer = juce::AudioProcessor;
+class SurgeSynthProcessor;
+using PluginLayer = SurgeSynthProcessor;
 #elif TARGET_HEADLESS
 class HeadlessPluginLayerProxy;
 using PluginLayer = HeadlessPluginLayerProxy;
@@ -425,3 +425,16 @@ class alignas(16) SurgeSynthesizer
     ControllerModulationSource *ControlInterpolator(int Idx);
     ControllerModulationSource *AddControlInterpolator(int Idx, bool &AlreadyExisted);
 };
+
+namespace std
+{
+
+template <> struct hash<SurgeSynthesizer::ID>
+{
+    std::size_t operator()(const SurgeSynthesizer::ID &k) const
+    {
+        return std::hash<int>()(k.getSynthSideId());
+    }
+};
+
+} // namespace std

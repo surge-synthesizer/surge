@@ -36,6 +36,8 @@
 #include "vstgui/plugin-bindings/plugguieditor.h"
 #elif TARGET_JUCE
 #include "JUCEPluginLayerProxy.h"
+#elif TARGET_JUCE_UI
+#include "SurgeSynthProcessor.h"
 #elif TARGET_HEADLESS
 #include "HeadlessPluginLayerProxy.h"
 #else
@@ -1389,6 +1391,8 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
     getParent()->ParameterUpdate(eid.getDawSideIndex());
 #elif TARGET_VST3
     getParent()->setParameterAutomated(index, value);
+#elif TARGET_JUCE_UI
+    getParent()->surgeParameterUpdated(eid, value);
 #elif TARGET_HEADLESS || TARGET_APP
         // NO OP
 #else
