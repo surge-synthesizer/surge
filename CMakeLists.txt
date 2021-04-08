@@ -1646,6 +1646,25 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
             )
 
+    if (APPLE)  # Just because BP is too lazy to code these up on the other OSes yet
+      add_custom_target(surge-xt-vst3-local)
+      add_dependencies(surge-xt-vst3-local surge-xt_VST3)
+      add_custom_command(TARGET surge-xt-vst3-local
+              POST_BUILD
+              WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
+              COMMAND ls -l
+              COMMAND ${CMAKE_COMMAND} -E copy_directory VST3 ~/Library/Audio/Plug-Ins/VST3
+              )
+
+      add_custom_target(surge-xt-au-local)
+      add_dependencies(surge-xt-au-local surge-xt_AU)
+      add_custom_command(TARGET surge-xt-au-local
+              POST_BUILD
+              WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
+              COMMAND ls -l
+              COMMAND ${CMAKE_COMMAND} -E copy_directory AU ~/Library/Audio/Plug-Ins/Components
+              )
+    endif()
   endif()
 endif()
 

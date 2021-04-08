@@ -16,6 +16,7 @@
 #include "SurgeStorage.h"
 
 #include <functional>
+#include <unordered_map>
 
 #if MAC
 #include <execinfo.h>
@@ -25,18 +26,34 @@
 /**
  */
 
+struct SurgeParamToJuceInfo
+{
+    static juce::String getParameterName(SurgeSynthesizer *s, Parameter *p)
+    {
+        char txt[TXT_SIZE];
+        s->getParameterName(s->idForParameter(p), txt);
+        return juce::String(txt);
+    }
+};
+
 struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
-        : s(s), p(p), range(0.f, 1.f, 0.1f), juce::RangedAudioParameter(p->get_storage_name(),
-                                                                        p->get_storage_name(), "")
+        : s(s), p(p), range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+                                                   p->get_storage_name(),
+                                                   SurgeParamToJuceInfo::getParameterName(s, p), "")
     {
+        setValueNotifyingHost(getValue());
     }
 
     // Oh this is all incorrect of course
     float getValue() const override { return s->getParameter01(s->idForParameter(p)); }
     float getDefaultValue() const override { return p->val_default.f; }
-    void setValue(float f) override { s->setParameter01(s->idForParameter(p), f, true); }
+    void setValue(float f) override
+    {
+        if (f != getValue())
+            s->setParameter01(s->idForParameter(p), f, true);
+    }
     float getValueForText(const juce::String &text) const override { return 0; }
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
@@ -82,7 +99,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
+    void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float value);
+
     std::unique_ptr<SurgeSynthesizer> surge;
+    std::unordered_map<SurgeSynthesizer::ID, SurgeParamToJuceParamAdapter *> paramsByID;
 
   private:
     std::vector<SurgeParamToJuceParamAdapter *> paramAdapters;
