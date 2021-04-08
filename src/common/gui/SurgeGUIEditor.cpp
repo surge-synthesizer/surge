@@ -3857,10 +3857,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 if (n_ms != n_modsources)
                 {
                     COptionMenu *addModSub =
-                        new COptionMenu(menuRect, 0, 0, 0, 0,
-                                        VSTGUI::COptionMenu::kNoDrawStyle |
-                                            VSTGUI::COptionMenu::kMultipleCheckStyle);
-                    contextMenu->addSeparator(eid++);
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+
+                    COptionMenu *addMacroSub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                    COptionMenu *addVLFOSub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                    COptionMenu *addSLFOSub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                    COptionMenu *addEGSub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                    COptionMenu *addMIDISub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+                    COptionMenu *addMiscSub =
+                        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
 
                     for (int k = 1; k < n_modsources; k++)
                     {
@@ -3871,14 +3881,109 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         {
                             char tmptxt[512];
                             sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
-                            addCallbackMenu(addModSub, tmptxt, [this, p, control, ms]() {
-                                this->promptForUserValueEntry(p, control, ms);
-                            });
+
+                            // TODO FIXME: Try not to be gross!
+                            if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers - 1)
+                            {
+                                addCallbackMenu(addMacroSub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
+                            else if (ms >= ms_lfo1 && ms <= ms_lfo1 + n_lfos_voice - 1)
+                            {
+                                addCallbackMenu(addVLFOSub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
+                            else if (ms >= ms_slfo1 && ms <= ms_slfo1 + n_lfos_scene - 1)
+                            {
+                                addCallbackMenu(addSLFOSub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
+                            else if (ms >= ms_ampeg && ms <= ms_filtereg)
+                            {
+                                addCallbackMenu(addEGSub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
+                            else if (ms >= ms_random_bipolar && ms <= ms_alternate_unipolar)
+                            {
+                                addCallbackMenu(addMiscSub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
+                            else
+                            {
+                                addCallbackMenu(addMIDISub, tmptxt, [this, p, control, ms]() {
+                                    this->promptForUserValueEntry(p, control, ms);
+                                });
+                            }
                         }
                     }
 
-                    contextMenu->addEntry(addModSub,
-                                          Surge::UI::toOSCaseForMenu("Add Modulation from..."));
+                    if (addMacroSub->getNbEntries())
+                    {
+                        addModSub->addEntry(addMacroSub, "Macros");
+                    }
+                    if (addVLFOSub->getNbEntries())
+                    {
+                        addModSub->addEntry(addVLFOSub, "Voice LFOs");
+                    }
+                    if (addSLFOSub->getNbEntries())
+                    {
+                        addModSub->addEntry(addSLFOSub, "Scene LFOs");
+                    }
+                    if (addEGSub->getNbEntries())
+                    {
+                        addModSub->addEntry(addEGSub, "Envelopes");
+                    }
+                    if (addMIDISub->getNbEntries())
+                    {
+                        addModSub->addEntry(addMIDISub, "MIDI");
+                    }
+                    if (addMiscSub->getNbEntries())
+                    {
+                        addModSub->addEntry(addMiscSub, "Internal");
+                    }
+
+                    if (addModSub->getNbEntries())
+                    {
+                        contextMenu->addSeparator(eid++);
+                        contextMenu->addEntry(addModSub,
+                                              Surge::UI::toOSCaseForMenu("Add Modulation from..."));
+                    }
+
+                    if (addMacroSub)
+                    {
+                        addMacroSub->forget();
+                        addMacroSub = nullptr;
+                    }
+                    if (addVLFOSub)
+                    {
+                        addVLFOSub->forget();
+                        addVLFOSub = nullptr;
+                    }
+                    if (addSLFOSub)
+                    {
+                        addSLFOSub->forget();
+                        addSLFOSub = nullptr;
+                    }
+                    if (addEGSub)
+                    {
+                        addEGSub->forget();
+                        addEGSub = nullptr;
+                    }
+                    if (addMIDISub)
+                    {
+                        addMIDISub->forget();
+                        addMIDISub = nullptr;
+                    }
+                    if (addMiscSub)
+                    {
+                        addMiscSub->forget();
+                        addMiscSub = nullptr;
+                    }
 
                     if (addModSub)
                     {
