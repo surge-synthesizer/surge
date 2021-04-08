@@ -66,6 +66,9 @@ class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumi
     void Hide()
     {
         visible = false;
+#if TARGET_JUCE_UI
+        this->setViewSize(VSTGUI::CRect(VSTGUI::CPoint(0, 0), VSTGUI::CPoint(1, 1)));
+#endif
         invalid();
         setDirty(true);
     }
@@ -161,6 +164,16 @@ class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumi
                     dc->drawString(label2left, tlower, VSTGUI::kLeftText, true);
                 }
             }
+        }
+        else
+        {
+#if 0
+            auto size = getViewSize();
+            size = size.inset(0.75, 0.75);
+            dc->setFrameColor(VSTGUI::kRedCColor);
+            dc->setFrameColor(VSTGUI::kBlueCColor);
+            dc->drawRect(size, VSTGUI::kDrawFilledAndStroked);
+#endif
         }
         setDirty(false);
     }
