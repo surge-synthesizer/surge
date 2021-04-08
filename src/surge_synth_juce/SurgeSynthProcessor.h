@@ -109,7 +109,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor
 
     std::vector<int> presetOrderToPatchList;
 
-    static constexpr int BUFFER_COPY_CHUNK = 4;
+    static constexpr int BUFFER_COPY_CHUNK = 16;
     int blockPos = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)

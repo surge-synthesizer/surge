@@ -17,9 +17,10 @@ using namespace juce;
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
     : AudioProcessor(BusesProperties()
-                         .withInput("Input", AudioChannelSet::stereo(), true)
                          .withOutput("Output", AudioChannelSet::stereo(), true)
-                         .withInput("Sidechain", AudioChannelSet::stereo(), true))
+                         .withInput("Sidechain", AudioChannelSet::stereo(), true)
+                         .withOutput("Scene A", AudioChannelSet::stereo(), false)
+                         .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
     surge = std::make_unique<SurgeSynthesizer>(this);
 
@@ -79,7 +80,7 @@ int SurgeSynthProcessor::getCurrentProgram()
 
 void SurgeSynthProcessor::setCurrentProgram(int index)
 {
-    if (index != 0)
+    if (index > 0 && index <= presetOrderToPatchList.size())
     {
         surge->patchid_queue = presetOrderToPatchList[index - 1];
     }
@@ -90,6 +91,10 @@ const String SurgeSynthProcessor::getProgramName(int index)
     if (index == 0)
         return "INIT OR DROPPED";
     index--;
+    if (index < 0 || index >= presetOrderToPatchList.size())
+    {
+        return "RANGE ERROR";
+    }
     auto patch = surge->storage.patch_list[presetOrderToPatchList[index]];
     auto res = surge->storage.patch_category[patch.category].name + " / " + patch.name;
     return res;
@@ -122,8 +127,28 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 {
     // FIXME obvioulsy
-    surge->time_data.tempo = 120;
-    surge->resetStateFromTimeData();
+    float thisBPM = 120.0;
+    auto playhead = getPlayHead();
+    if (playhead)
+    {
+        juce::AudioPlayHead::CurrentPositionInfo cp;
+        playhead->getCurrentPosition(cp);
+        surge->time_data.tempo = cp.bpm;
+
+        if (cp.isPlaying || cp.isRecording || cp.isLooping)
+            surge->time_data.ppqPos = cp.ppqPosition;
+
+        surge->time_data.timeSigNumerator = cp.timeSigNumerator;
+        surge->time_data.timeSigDenominator = cp.timeSigDenominator;
+        surge->resetStateFromTimeData();
+    }
+    else
+    {
+        surge->time_data.tempo = 120;
+        surge->time_data.timeSigNumerator = 4;
+        surge->time_data.timeSigDenominator = 4;
+        surge->resetStateFromTimeData();
+    }
 
     for (const MidiMessageMetadata it : midiMessages)
     {
@@ -163,18 +188,48 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         }
     }
 
-    auto mainInputOutput = getBusBuffer(buffer, false, 0);
-
+    auto mainInputOutput = getBusBuffer(buffer, true, 0);
+    auto sceneAOutput = getBusBuffer(buffer, false, 1);
+    auto sceneBOutput = getBusBuffer(buffer, false, 2);
     for (int i = 0; i < buffer.getNumSamples(); i += BUFFER_COPY_CHUNK)
     {
         auto outL = mainInputOutput.getWritePointer(0, i);
         auto outR = mainInputOutput.getWritePointer(1, i);
 
+        surge->time_data.ppqPos += (double)BLOCK_SIZE * surge->time_data.tempo / (60. * samplerate);
+
         if (blockPos == 0)
+        {
+            auto inL = mainInputOutput.getReadPointer(0, i);
+            auto inR = mainInputOutput.getReadPointer(1, i);
+            surge->process_input = true;
+            memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
+            memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
             surge->process();
+        }
 
         memcpy(outL, &(surge->output[0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
         memcpy(outR, &(surge->output[1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+
+        if (surge->activateExtraOutputs && sceneAOutput.getNumChannels() == 2 &&
+            sceneBOutput.getNumChannels() == 2)
+        {
+            auto sAL = sceneAOutput.getWritePointer(0, i);
+            auto sAR = sceneAOutput.getWritePointer(1, i);
+            auto sBL = sceneBOutput.getWritePointer(0, i);
+            auto sBR = sceneBOutput.getWritePointer(1, i);
+
+            if (sAL && sAR)
+            {
+                memcpy(sAL, &(surge->sceneout[0][0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+                memcpy(sAR, &(surge->sceneout[0][1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+            }
+            if (sBL && sBR)
+            {
+                memcpy(sBL, &(surge->sceneout[1][0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+                memcpy(sBR, &(surge->sceneout[1][1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+            }
+        }
 
         blockPos += BUFFER_COPY_CHUNK;
 
