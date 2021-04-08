@@ -1576,6 +1576,26 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             ${SURGE_SYNTH_JUCE_GUI_SOURCES}
             )
 
+    target_sources(surge-xt_VST3 PRIVATE
+            src/surge_synth_juce/SurgeSynthVST3Extensions.cpp
+            )
+
+    target_sources(surge-xt_Standalone PRIVATE
+            src/surge_synth_juce/SurgeSynthStandaloneExtensions.cpp
+            )
+
+    if( DEFINED ENV{VST2SDK_DIR} )
+      target_sources(surge-xt_VST2 PRIVATE
+              src/surge_synth_juce/SurgeSynthVST2Extensions.cpp
+              )
+    endif()
+
+    if( APPLE )
+      target_sources(surge-xt_AU PRIVATE
+              src/surge_synth_juce/SurgeSynthAUExtensions.cpp
+              )
+    endif()
+
     target_link_libraries(surge-xt PUBLIC
             surge::airwindows
             surge::filesystem
