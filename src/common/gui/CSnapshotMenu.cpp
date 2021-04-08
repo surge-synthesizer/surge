@@ -975,7 +975,6 @@ void CFxMenu::loadUserPreset(const UserPreset &p)
         fxbuffer->p[i].temposync = (int)p.ts[i];
         fxbuffer->p[i].extend_range = (int)p.er[i];
         fxbuffer->p[i].deactivated = (int)p.da[i];
-        printf("fx param %d deactivated value: %d\n", i, fxbuffer->p[i].deactivated);
     }
 
     selectedIdx = -1;
