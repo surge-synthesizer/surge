@@ -621,20 +621,6 @@ void SurgeStorage::refresh_patchlist()
     refreshPatchlistAddDir(false, "patches_factory");
     firstThirdPartyCategory = patch_category.size();
 
-    /*
-    ** Do a quick sanity check here - if there are no patches in factory we are mis-installed
-    */
-    int totalFactory = 0;
-    for (auto &cat : patch_category)
-        totalFactory += cat.numberOfPatchesInCatgory;
-    if (totalFactory == 0)
-    {
-        std::ostringstream ss;
-        ss << "Surge was unable to load factory patches from '" << datapath
-           << "'. Please reinstall Surge!";
-        Surge::UserInteractions::promptError(ss.str(), "Surge Installation Error");
-    }
-
     refreshPatchlistAddDir(false, "patches_3rdparty");
     firstUserCategory = patch_category.size();
     refreshPatchlistAddDir(true, "");
@@ -652,7 +638,9 @@ void SurgeStorage::refresh_patchlist()
     std::iota(patchCategoryOrdering.begin(), patchCategoryOrdering.end(), 0);
 
     for (int i = 0; i < patch_list.size(); i++)
+    {
         patch_list[patchOrdering[i]].order = i;
+    }
 
     auto categoryCompare = [this](const int &i1, const int &i2) -> bool {
         return strnatcasecmp(patch_category[i1].name.c_str(), patch_category[i2].name.c_str()) < 0;
@@ -661,11 +649,15 @@ void SurgeStorage::refresh_patchlist()
     int groups[4] = {0, firstThirdPartyCategory, firstUserCategory, (int)patch_category.size()};
 
     for (int i = 0; i < 3; i++)
+    {
         std::sort(std::next(patchCategoryOrdering.begin(), groups[i]),
                   std::next(patchCategoryOrdering.begin(), groups[i + 1]), categoryCompare);
+    }
 
     for (int i = 0; i < patch_category.size(); i++)
+    {
         patch_category[patchCategoryOrdering[i]].order = i;
+    }
 }
 
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
