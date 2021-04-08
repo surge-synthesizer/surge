@@ -13,6 +13,7 @@
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeSynthFlavorExtensions.h"
 
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
@@ -26,6 +27,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 60);
+
+    SurgeSynthEditorSpecificExtensions(this, adapter.get());
 }
 
 SurgeSynthEditor::~SurgeSynthEditor()

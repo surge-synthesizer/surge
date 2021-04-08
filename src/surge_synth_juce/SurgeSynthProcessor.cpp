@@ -11,6 +11,7 @@
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "DebugHelpers.h"
+#include "SurgeSynthFlavorExtensions.h"
 
 using namespace juce;
 
@@ -53,6 +54,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     }
 
     surge->hostProgram = juce::PluginHostType().getHostDescription();
+
+    SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor() {}
