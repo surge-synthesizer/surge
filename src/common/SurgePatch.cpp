@@ -1283,6 +1283,22 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     else
                         param_ptr[i]->deactivated = true;
                 }
+                else if (revision == 16 && param_ptr[i]->ctrlgroup == cg_FX)
+                {
+                    /*
+                     * So, alas, we added deactivatable FX filters and stuff very late in the 1.9
+                     * cycle. The handle streaming handles 15 versions and stuff but 16s with no POV
+                     * get the random default. Now, you may ask, why not put this inside the
+                     * can_deactivate block? Well since we haven't created the FX yet we don't
+                     * know the type and so we don't know if it is deactivatble.
+                     *
+                     * So what we do is, for revision 16 patches where we don't know if they
+                     * were saved during the 4 months of nightlies or 9 days before release,
+                     * we assume if there is no statement they were saved in the 4 months and
+                     * clobber any unknown deactivated state to false here.
+                     */
+                    param_ptr[i]->deactivated = false;
+                }
             }
 
             if (p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS)
