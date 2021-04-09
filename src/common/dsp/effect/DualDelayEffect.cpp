@@ -326,5 +326,6 @@ void DualDelayEffect::handleStreamingMismatches(int streamingRevision,
     {
         fxdata->p[dly_lowcut].deactivated = false;
         fxdata->p[dly_highcut].deactivated = false;
+        fxdata->p[dly_time_right].deactivated = false;
     }
 }
