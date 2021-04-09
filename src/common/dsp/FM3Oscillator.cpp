@@ -51,7 +51,7 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     if (m1 < 0)
     {
-        m1 = 1.0 / m1;
+        m1 = -1.0 / m1;
     }
 
     if (oscdata->p[fm3_m1ratio].absolute)
@@ -71,7 +71,7 @@ void FM3Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
 
     if (m2 < 0)
     {
-        m2 = 1.0 / m2;
+        m2 = -1.0 / m2;
     }
 
     if (oscdata->p[fm3_m2ratio].absolute)

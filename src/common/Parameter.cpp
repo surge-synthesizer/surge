@@ -2368,6 +2368,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             }
             qq = (qq + 31) / 64;
         }
+
         float exmf = qq;
         int dp = (detailedMode ? 6 : 2);
         switch (displaymode)
@@ -2375,7 +2376,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         case TypeIn:
             if (extend_range)
             {
-                snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 32);
+                snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 31 * 2);
             }
             else
             {
@@ -2390,11 +2391,11 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 if (isBipolar)
                 {
                     snprintf(txt, TXT_SIZE, "C : %s %.*f", (mf >= 0 ? "+/-" : "-/+"), dp,
-                             fabs(qq * 32));
+                             fabs(qq * 31 * 2));
                 }
                 else
                 {
-                    snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 32);
+                    snprintf(txt, TXT_SIZE, "C : %.*f", dp, qq * 31 * 2);
                 }
             }
             else
@@ -2436,7 +2437,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     else
                         snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, upval);
                     iw->valplus = dtxt;
-                    snprintf(dtxt, TXT_SIZE, "%.*f", dp, qq * 32);
+                    snprintf(dtxt, TXT_SIZE, "%.*f", dp, qq * 31 * 2);
                     iw->dvalplus = dtxt;
                     if (isBipolar)
                     {
@@ -2446,7 +2447,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                             snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, dnval);
                         iw->valminus = dtxt;
 
-                        snprintf(dtxt, TXT_SIZE, "%.*f", dp, -(qq * 32));
+                        snprintf(dtxt, TXT_SIZE, "%.*f", dp, -(qq * 31 * 2));
                         iw->dvalminus = dtxt;
                     }
                 }
@@ -4143,15 +4144,55 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         }
         if (extend_range)
         {
-            auto mv = (float)std::atof(s.c_str());
-            std::cout << "MV desired is " << mv << std::endl;
-            mv = mv / 31;
-            return mv;
+            /*
+             * OK so what's happening here? Well we need to give a number that
+             * when handed in asfter going through get_extended gives us what
+             * we typed in through the formatting.
+             *
+             * That is p->get_extended(mf) = v / 31 / 2. So lets get to work
+             */
+            float mv = 0.f;
+            const char *strip = &(s.c_str()[0]);
+            while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
+                ++strip;
+
+            // OK so do we contain a /?
+            const char *slp;
+            if ((slp = strstr(strip, "/")) != nullptr)
+            {
+                float num = std::atof(strip);
+                float den = std::atof(slp + 1);
+                if (den == 0)
+                    mv = 1;
+                else
+                {
+                    mv = num / den;
+                    if (mv < 1)
+                        mv = -1 / mv;
+                }
+            }
+            else
+            {
+                mv = std::atof(strip);
+            }
+            // Normalized value
+            auto exmf = (mv) / 31.0 / 2.0;
+            // This reverses the scaling for extended mode. We now have
+            // p->get_extended(val) = qq so reverse extended
+            auto qq = exmf * 64 - 31 + (mv < 0 ? 1 : -1);
+
+            // so the transformation out of extended is
+            // x = (f-16) * 31/16 +- 1
+            // ( x -+ 1 ) * 16 / 31 + 16 = f
+
+            auto res = (qq + ((qq >= -32) ? +1 : -1)) * 16.f / 31.f + 16.f;
+            return res / 32;
         }
     default:
     {
         // This works in all the linear cases so we need to handle fewer above than we'd think
         auto mv = (float)std::atof(s.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
+
         if (mv < -1 || mv > 1)
             valid = false;
         return mv;
