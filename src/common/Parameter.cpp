@@ -374,8 +374,11 @@ bool Parameter::is_bipolar()
             res = true;
         break;
     case ct_fmratio:
+    {
         if (extend_range && !absolute)
             res = true;
+    }
+    break;
     default:
         res = false;
     }
