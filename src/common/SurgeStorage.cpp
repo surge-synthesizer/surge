@@ -1256,8 +1256,6 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 
         for (int i = 0; i < n_lfos; i++)
         {
-            memcpy(&getPatch().scene[scene].osc[i].extraConfig, &clipboard_extraconfig[i],
-                   sizeof(OscillatorStorage::ExtraConfigurationData));
             memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
                    sizeof(StepSequencerStorage));
             getPatch().msegs[scene][i] = clipboard_msegs[i];
@@ -1265,6 +1263,8 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 
         for (int i = 0; i < n_oscs; i++)
         {
+            memcpy(&getPatch().scene[scene].osc[i].extraConfig, &clipboard_extraconfig[i],
+                   sizeof(OscillatorStorage::ExtraConfigurationData));
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i],
                     256);
