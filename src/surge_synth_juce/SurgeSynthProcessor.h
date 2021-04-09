@@ -36,6 +36,9 @@ struct SurgeParamToJuceInfo
     }
 };
 
+/*
+ * Obviously buckets of work to do here
+ */
 struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
@@ -48,13 +51,14 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
 
     // Oh this is all incorrect of course
     float getValue() const override { return s->getParameter01(s->idForParameter(p)); }
-    float getDefaultValue() const override { return p->val_default.f; }
+    float getDefaultValue() const override { return 0.0; /* FIXME */ }
     void setValue(float f) override
     {
         if (f != getValue())
             s->setParameter01(s->idForParameter(p), f, true);
     }
     float getValueForText(const juce::String &text) const override { return 0; }
+    bool isMetaParameter() const override { return true; }
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
     SurgeSynthesizer *s;

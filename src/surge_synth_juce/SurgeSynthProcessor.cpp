@@ -12,6 +12,7 @@
 #include "SurgeSynthProcessor.h"
 #include "DebugHelpers.h"
 #include "SurgeSynthFlavorExtensions.h"
+#include "version.h"
 
 using namespace juce;
 
@@ -23,6 +24,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                          .withOutput("Scene A", AudioChannelSet::stereo(), false)
                          .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
+    std::cout << "SurgeXT : Version " << Surge::Build::FullVersionStr << std::endl;
     surge = std::make_unique<SurgeSynthesizer>(this);
 
     for (auto par : surge->storage.getPatch().param_ptr)

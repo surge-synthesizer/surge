@@ -1585,7 +1585,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             )
 
     if( DEFINED ENV{VST2SDK_DIR} )
-      target_sources(surge-xt_VST2 PRIVATE
+      target_sources(surge-xt_VST PRIVATE
               src/surge_synth_juce/SurgeSynthVST2Extensions.cpp
               )
     endif()
