@@ -211,7 +211,9 @@ void Eq3BandEffect::init_ctrltypes()
     fxdata->p[eq3_mix].val_default.f = 1.f;
 
     for (int i = 0; i < eq3_num_ctrls; i++)
+    {
         fxdata->p[i].posy_offset = 1 + 2 * (i / 3);
+    }
 }
 
 void Eq3BandEffect::init_default_values()
@@ -241,5 +243,12 @@ void Eq3BandEffect::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 12)
     {
         fxdata->p[eq3_mix].val.f = 1.f;
+    }
+
+    if (streamingRevision <= 15)
+    {
+        fxdata->p[eq3_gain1].deactivated = false;
+        fxdata->p[eq3_gain2].deactivated = false;
+        fxdata->p[eq3_gain3].deactivated = false;
     }
 }
