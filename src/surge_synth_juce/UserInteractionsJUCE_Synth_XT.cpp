@@ -1,10 +1,12 @@
 #include "UserInteractions.h"
+#include "SurgeSynthInteractionsInterface.h"
 #include <iostream>
-#include <iomanip>
 
 #if MAC
 #include <execinfo.h>
 #endif
+
+std::atomic<SurgeSynthInteractionsInterface *> SurgeSynthInteractionsInterface::impl(0);
 
 void headlessStackDump()
 {
@@ -14,7 +16,7 @@ void headlessStackDump()
     char **strs = backtrace_symbols(callstack, frames);
     for (i = 1; i < 6; ++i)
     {
-        fprintf(stderr, "StackTrace[%3d]: %s\n", i, strs[i]);
+        std::cout << "StackTrace[" << i << "]" << strs[i] << std::endl;
     }
     free(strs);
 
@@ -28,8 +30,14 @@ namespace UserInteractions
 
 void promptError(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
-    std::cerr << "Surge Error\n" << title << "\n" << message << "\n" << std::flush;
-    headlessStackDump();
+    if (SurgeSynthInteractionsInterface::impl.load())
+    {
+        SurgeSynthInteractionsInterface::impl.load()->promptError(message, title, guiEditor);
+    }
+    else
+    {
+        std::cerr << "SurgeXT Error[" << title << "]\n" << message << std::endl;
+    }
 }
 
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
@@ -58,7 +66,7 @@ void promptFileOpenDialog(const std::string &initialDirectory, const std::string
                           SurgeGUIEditor *guiEditor)
 {
     UserInteractions::promptError(
-        "Open file dialog is not implemented in this version of Surge. Sorry!",
+        "Open file dialog is not implemented in this version of SurgeXT. Sorry!",
         "Unimplemented Function", guiEditor);
 }
 

@@ -1355,9 +1355,10 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
   # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
   # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-  # FIXME of course that this should go away in surge-xt
-  add_library(surge-juce-userint src/surge_effects_bank/UserInteractionsJUCE.cpp )
-  target_include_directories(surge-juce-userint PRIVATE ${SURGE_COMMON_INCLUDES})
+  # FIXME of course that this should go away in surge-xt. These are also split now for
+  # XT vs FX since FX is production code in 19 and XT is not
+  add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
+  target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
 
   set(JUCE_ASIO_SUPPORT FALSE)
 
@@ -1444,7 +1445,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             surge::tinyxml
 
             surge-shared
-            surge-juce-userint
+            surge-juce-userint-fx
             surge-fx-binary
 
             juce::juce_audio_utils
@@ -1559,7 +1560,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
 
     # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
     # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-    add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE.cpp )
+    add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE_Synth_XT.cpp)
     target_include_directories(surge-xt-userint PRIVATE ${SURGE_COMMON_INCLUDES})
 
     set(SURGE_SYNTH_JUCE_GUI_SOURCES
@@ -1602,7 +1603,7 @@ if( ${BUILD_SURGE_JUCE_PLUGINS} )
             surge::tinyxml
 
             surge-shared
-            surge-juce-userint
+            surge-xt-userint
 
             juce::juce_audio_utils
             juce::juce_audio_processors

@@ -47,6 +47,7 @@
               << std::endl;
 //#define UNIMPL void(0);
 #define UNIMPL DUNIMPL
+#define UNIMPL_STACK DUNIMPL EscapeNS::Internal::printStack(__func__);
 #define OKUNIMPL void(0);
 
 typedef int VstKeyCode;
@@ -63,6 +64,22 @@ namespace EscapeNS
 {
 namespace Internal
 {
+inline void printStack(const char *where)
+{
+#if MAC
+    void *callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char **strs = backtrace_symbols(callstack, frames);
+    std::ostringstream oss;
+    oss << "----- " << where << " -----\n";
+    for (i = 3; i < frames - 1 && i < 20; ++i)
+    {
+        oss << strs[i] << "\n";
+    }
+    free(strs);
+    std::cout << oss.str() << std::endl;
+#endif
+}
 #if DEBUG_EFVG_MEMORY
 struct DebugAllocRecord
 {
@@ -70,7 +87,7 @@ struct DebugAllocRecord
     void record(const std::string &where)
     {
 #if DEBUG_EFVG_MEMORY_STACKS
-#if MAC || LINUX
+#if MAC
         void *callstack[128];
         int i, frames = backtrace(callstack, 128);
         char **strs = backtrace_symbols(callstack, frames);
@@ -1216,7 +1233,7 @@ struct CFrame : public CViewContainer
     void setZoom(float z) { OKUNIMPL; }
     CGraphicsTransform getTransform() { return CGraphicsTransform(); }
     void getPosition(float &x, float &y) { UNIMPL; }
-    void getCurrentMouseLocation(CPoint &w) { UNIMPL; }
+    void getCurrentMouseLocation(CPoint &w) { UNIMPL_STACK; }
     CButtonState getCurrentMouseButtons() { return CButtonState(); }
 };
 
