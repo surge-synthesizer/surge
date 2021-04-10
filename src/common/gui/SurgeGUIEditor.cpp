@@ -3415,15 +3415,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                 case ct_freq_audible_with_tunability:
                 case ct_freq_audible_with_very_low_lowerbound:
-                    addCallbackMenu(contextMenu,
-                                    Surge::UI::toOSCaseForMenu("Reset Filter Cutoff To Keytrack Root"),
-                                    [this, p, control] {
-                                        auto kr = this->synth->storage.getPatch()
-                                                      .scene[current_scene]
-                                                      .keytrack_root.val.i;
-                                        p->set_value_f01(p->value_to_normalized(kr - 69));
-                                        control->setValue(p->get_value_f01());
-                                    });
+                    addCallbackMenu(
+                        contextMenu,
+                        Surge::UI::toOSCaseForMenu("Reset Filter Cutoff To Keytrack Root"),
+                        [this, p, control] {
+                            auto kr = this->synth->storage.getPatch()
+                                          .scene[current_scene]
+                                          .keytrack_root.val.i;
+                            p->set_value_f01(p->value_to_normalized(kr - 69));
+                            control->setValue(p->get_value_f01());
+                        });
                     eid++;
                     break;
 
