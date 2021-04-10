@@ -3416,7 +3416,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 case ct_freq_audible_with_tunability:
                 case ct_freq_audible_with_very_low_lowerbound:
                     addCallbackMenu(contextMenu,
-                                    Surge::UI::toOSCaseForMenu("Set Cutoff To Keytrack Root"),
+                                    Surge::UI::toOSCaseForMenu("Reset Filter Cutoff To Keytrack Root"),
                                     [this, p, control] {
                                         auto kr = this->synth->storage.getPatch()
                                                       .scene[current_scene]
@@ -3605,6 +3605,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     if (!(p->ctrltype == ct_fmratio && p->can_be_absolute() && p->absolute))
                     {
                         bool enable = true;
+                        bool visible = true;
                         std::string txt = "Extend Range";
                         switch (p->ctrltype)
                         {
@@ -3613,8 +3614,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             break;
                         case ct_freq_audible_with_tunability:
                         case ct_freq_audible_with_very_low_lowerbound:
-                            txt = "Filter Uses SCL/KBM Tuning";
-                            enable =
+                            txt = "Apply SCL/KBM Tuning to Filter Cutoff";
+                            visible =
                                 synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
                             break;
                         case ct_percent_oscdrift:
@@ -3627,14 +3628,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             break;
                         }
 
-                        auto ee = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
-                                                  [this, p]() {
-                                                      p->extend_range = !p->extend_range;
-                                                      this->synth->refresh_editor = true;
-                                                  });
-                        contextMenu->checkEntry(eid, p->extend_range);
-                        ee->setEnabled(enable);
-                        eid++;
+                        if (visible)
+                        {
+                            auto ee = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(txt),
+                                                      [this, p]() {
+                                                          p->extend_range = !p->extend_range;
+                                                          this->synth->refresh_editor = true;
+                                                      });
+                            contextMenu->checkEntry(eid, p->extend_range);
+                            ee->setEnabled(enable);
+                            eid++;
+                        }
                     }
                 }
 
