@@ -108,6 +108,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor
     std::unique_ptr<SurgeSynthesizer> surge;
     std::unordered_map<SurgeSynthesizer::ID, SurgeParamToJuceParamAdapter *> paramsByID;
 
+    std::string paramClumpName(int clumpid);
+
   private:
     std::vector<SurgeParamToJuceParamAdapter *> paramAdapters;
 

@@ -20,8 +20,9 @@
 /**
  */
 class SurgeSynthEditor : public juce::AudioProcessorEditor,
-                         juce::AsyncUpdater,
-                         EscapeFromVSTGUI::JuceVSTGUIEditorAdapter
+                         public juce::AsyncUpdater,
+                         public EscapeFromVSTGUI::JuceVSTGUIEditorAdapter,
+                         public juce::FileDragAndDropTarget
 {
   public:
     SurgeSynthEditor(SurgeSynthProcessor &);
@@ -34,13 +35,13 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void paramsChangedCallback();
     void setEffectType(int i);
 
-    virtual void handleAsyncUpdate() override;
-
-    void controlBeginEdit(VSTGUI::CControl *c) override {}
-    void controlEndEdit(VSTGUI::CControl *c) override {}
+    void handleAsyncUpdate() override;
 
     void populateForStreaming(SurgeSynthesizer *s);
     void populateFromStreaming(SurgeSynthesizer *s);
+
+    void beginParameterEdit(Parameter *p);
+    void endParameterEdit(Parameter *p);
 
     struct IdleTimer : juce::Timer
     {
@@ -51,6 +52,10 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     };
     void idle();
     std::unique_ptr<IdleTimer> idleTimer;
+
+    /* Drag and drop */
+    bool isInterestedInFileDrag(const juce::StringArray &files) override;
+    void filesDropped(const juce::StringArray &files, int, int) override;
 
   private:
     // This reference is provided as a quick way for your editor to

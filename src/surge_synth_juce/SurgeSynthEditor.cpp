@@ -73,6 +73,44 @@ void SurgeSynthEditor::populateFromStreaming(SurgeSynthesizer *s)
         adapter->loadFromDAWExtraState(s);
 }
 
+bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)
+{
+    if (files.size() != 1)
+        return false;
+
+    for (auto i = files.begin(); i != files.end(); ++i)
+    {
+        std::cout << *i << std::endl;
+        if (adapter->canDropTarget(i->toStdString()))
+            return true;
+    }
+    return false;
+}
+
+void SurgeSynthEditor::filesDropped(const juce::StringArray &files, int x, int y)
+{
+    if (files.size() != 1)
+        return;
+
+    for (auto i = files.begin(); i != files.end(); ++i)
+    {
+        if (adapter->canDropTarget(i->toStdString()))
+            adapter->onDrop(i->toStdString());
+    }
+}
+
+void SurgeSynthEditor::beginParameterEdit(Parameter *p)
+{
+    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    par->beginChangeGesture();
+}
+
+void SurgeSynthEditor::endParameterEdit(Parameter *p)
+{
+    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    par->endChangeGesture();
+}
+
 namespace Surge
 {
 namespace GUI

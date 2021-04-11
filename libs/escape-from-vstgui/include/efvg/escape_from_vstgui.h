@@ -1805,8 +1805,8 @@ struct JuceVSTGUIEditorAdapter : public JuceVSTGUIEditorAdapterBase
     virtual ~JuceVSTGUIEditorAdapter() = default;
     virtual bool open(void *parent) { return true; };
     virtual void close(){};
-    virtual void controlBeginEdit(VSTGUI::CControl *p) = 0;
-    virtual void controlEndEdit(VSTGUI::CControl *p) = 0;
+    virtual void controlBeginEdit(VSTGUI::CControl *p){};
+    virtual void controlEndEdit(VSTGUI::CControl *p){};
     virtual void beginEdit(int32_t id) {}
     virtual void endEdit(int32_t id) {}
 
