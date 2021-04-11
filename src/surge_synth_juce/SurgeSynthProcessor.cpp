@@ -302,7 +302,8 @@ void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)
 {
     auto spar = paramsByID[id];
-    spar->setValueNotifyingHost(f);
+    if (spar)
+        spar->setValueNotifyingHost(f);
 }
 
 std::string SurgeSynthProcessor::paramClumpName(int clumpid)

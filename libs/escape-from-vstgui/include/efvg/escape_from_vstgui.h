@@ -1212,8 +1212,44 @@ struct CFrame : public CViewContainer
 
     void setCursor(CCursorType c)
     {
-        // map to juce::MouseCursor
-        OKUNIMPL;
+        auto ct = juce::MouseCursor::StandardCursorType::NormalCursor;
+        switch (c)
+        {
+        case kCursorDefault:
+            break;
+        case kCursorWait:
+            ct = juce::MouseCursor::StandardCursorType::WaitCursor;
+            break;
+        case kCursorHSize:
+            ct = juce::MouseCursor::StandardCursorType::LeftRightResizeCursor;
+            break;
+        case kCursorVSize:
+            ct = juce::MouseCursor::StandardCursorType::UpDownResizeCursor;
+            break;
+        case kCursorSizeAll:
+            ct = juce::MouseCursor::StandardCursorType::UpDownLeftRightResizeCursor;
+            break;
+        case kCursorNESWSize:
+            ct = juce::MouseCursor::StandardCursorType::TopLeftCornerResizeCursor;
+            break;
+        case kCursorNWSESize:
+            ct = juce::MouseCursor::StandardCursorType::TopRightCornerResizeCursor;
+            break;
+        case kCursorCopy:
+            ct = juce::MouseCursor::StandardCursorType::CopyingCursor;
+            break;
+        case kCursorHand:
+            ct = juce::MouseCursor::StandardCursorType::PointingHandCursor;
+            break;
+        case kCursorIBeam:
+            ct = juce::MouseCursor::StandardCursorType::IBeamCursor;
+            break;
+        case kCursorNotAllowed: // what is this?
+            ct = juce::MouseCursor::StandardCursorType::CrosshairCursor;
+            break;
+        }
+
+        ed->getJuceEditor()->setMouseCursor(juce::MouseCursor(ct));
     }
     void invalid()
     {
@@ -1232,8 +1268,19 @@ struct CFrame : public CViewContainer
     void localToFrame(CPoint &p) { UNIMPL; };
     void setZoom(float z) { OKUNIMPL; }
     CGraphicsTransform getTransform() { return CGraphicsTransform(); }
-    void getPosition(float &x, float &y) { UNIMPL; }
-    void getCurrentMouseLocation(CPoint &w) { UNIMPL_STACK; }
+    void getPosition(float &x, float &y)
+    {
+        auto b = juceComponent()->getScreenPosition();
+        x = b.x;
+        y = b.y;
+    }
+    void getCurrentMouseLocation(CPoint &w)
+    {
+        auto pq = juce::Desktop::getInstance().getMainMouseSource().getScreenPosition();
+        auto b = juceComponent()->getLocalPoint(nullptr, pq);
+        w.x = b.x;
+        w.y = b.y;
+    }
     CButtonState getCurrentMouseButtons() { return CButtonState(); }
 };
 
