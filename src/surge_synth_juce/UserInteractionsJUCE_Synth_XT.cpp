@@ -37,13 +37,21 @@ void promptError(const std::string &message, const std::string &title, SurgeGUIE
     else
     {
         std::cerr << "SurgeXT Error[" << title << "]\n" << message << std::endl;
+        headlessStackDump();
     }
 }
 
 void promptInfo(const std::string &message, const std::string &title, SurgeGUIEditor *guiEditor)
 {
-    std::cerr << "Surge Info\n" << title << "\n" << message << "\n" << std::flush;
-    headlessStackDump();
+    if (SurgeSynthInteractionsInterface::impl.load())
+    {
+        SurgeSynthInteractionsInterface::impl.load()->promptInfo(message, title, guiEditor);
+    }
+    else
+    {
+        std::cerr << "SurgeXT Info\n" << title << "\n" << message << "\n" << std::flush;
+        headlessStackDump();
+    }
 }
 
 MessageResult promptOKCancel(const std::string &message, const std::string &title,
@@ -57,17 +65,31 @@ MessageResult promptOKCancel(const std::string &message, const std::string &titl
     return UserInteractions::CANCEL;
 }
 
-void openURL(const std::string &url) {}
-void showHTML(const std::string &html) { std::cerr << "SURGE HTML: " << html << std::endl; }
+void openURL(const std::string &url)
+{
+    if (SurgeSynthInteractionsInterface::impl.load())
+    {
+        SurgeSynthInteractionsInterface::impl.load()->openURL(url);
+    }
+}
+void showHTML(const std::string &html)
+{
+    if (SurgeSynthInteractionsInterface::impl.load())
+    {
+        SurgeSynthInteractionsInterface::impl.load()->showHTML(html);
+    }
+}
 
 void promptFileOpenDialog(const std::string &initialDirectory, const std::string &filterSuffix,
                           const std::string &filterDescription,
                           std::function<void(std::string)> callbackOnOpen, bool od, bool cd,
                           SurgeGUIEditor *guiEditor)
 {
-    UserInteractions::promptError(
-        "Open file dialog is not implemented in this version of SurgeXT. Sorry!",
-        "Unimplemented Function", guiEditor);
+    if (SurgeSynthInteractionsInterface::impl.load())
+    {
+        SurgeSynthInteractionsInterface::impl.load()->promptFileOpenDialog(
+            initialDirectory, filterSuffix, filterDescription, callbackOnOpen, od, cd, guiEditor);
+    }
 }
 
 }; // namespace UserInteractions
