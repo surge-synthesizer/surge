@@ -183,6 +183,21 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
     }
 }
 
+void SurgeSynthesizer::selectRandomPatch()
+{
+    if (patchid_queue >= 0)
+        return;
+    int p = storage.patch_list.size();
+
+    if (!p)
+    {
+        return;
+    }
+
+    auto r = storage.rand_u32() % p;
+    patchid_queue = r;
+}
+
 void SurgeSynthesizer::loadPatch(int id)
 {
     if (id < 0)
