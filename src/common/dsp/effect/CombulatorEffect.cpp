@@ -232,10 +232,10 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         auto r128 = _mm_setzero_ps();
 
         // FIXME - we want to interpolate the non-integral part if we like this
-        int panIndex2 =
-            (int)((limit_range(pan2.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
-        int panIndex3 =
-            (int)((limit_range(pan3.v, -1.f, 1.f) + 1) * (PANLAW_SIZE / 2)) & (PANLAW_SIZE - 1);
+        int panIndex2 = (int)((limit_range(pan2.v, -1.f, 1.f) + 1) * ((PANLAW_SIZE - 1) / 2)) &
+                        (PANLAW_SIZE - 1);
+        int panIndex3 = (int)((limit_range(pan3.v, -1.f, 1.f) + 1) * ((PANLAW_SIZE - 1) / 2)) &
+                        (PANLAW_SIZE - 1);
 
         if (filtptr)
         {
