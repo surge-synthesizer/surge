@@ -5282,6 +5282,15 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl *control)
         }
     }
 #endif
+
+#if TARGET_JUCE_UI
+    long tag = control->getTag();
+    int ptag = tag - start_paramtags;
+    if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
+    {
+        _effect->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+    }
+#endif
 }
 
 //------------------------------------------------------------------------------------------------
@@ -5308,6 +5317,16 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl *control)
         }
     }
 #endif
+
+#if TARGET_JUCE_UI
+    long tag = control->getTag();
+    int ptag = tag - start_paramtags;
+    if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
+    {
+        _effect->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+    }
+#endif
+
     if (((CParameterTooltip *)infowindow)->isVisible())
     {
         auto cs = dynamic_cast<CSurgeSlider *>(control);

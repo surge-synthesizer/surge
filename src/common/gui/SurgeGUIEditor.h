@@ -37,8 +37,9 @@ typedef VSTGUI::AEffGUIEditor EditorType;
 #elif TARGET_JUCE_UI
 #include <JuceHeader.h>
 #include "efvg/escape_from_vstgui.h"
+#include "SurgeSynthEditor.h"
 typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
-#define PARENT_PLUGIN_TYPE juce::AudioProcessorEditor
+#define PARENT_PLUGIN_TYPE SurgeSynthEditor
 #else
 #include "vstgui/plugin-bindings/plugguieditor.h"
 typedef VSTGUI::PluginGUIEditor EditorType;
@@ -435,9 +436,12 @@ class SurgeGUIEditor : public EditorType,
   private:
     SGEDropAdapter *dropAdapter = nullptr;
     friend class SGEDropAdapter;
+
+  public:
     bool canDropTarget(const std::string &fname); // these come as const char* from vstgui
     bool onDrop(const std::string &fname);
 
+  private:
     VSTGUI::CRect positionForModulationGrid(modsources entry);
 
     int wsx = BASE_WINDOW_SIZE_X;

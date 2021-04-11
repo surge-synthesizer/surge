@@ -33,19 +33,32 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     }
     surge = std::make_unique<SurgeSynthesizer>(this);
 
+    std::map<unsigned int, std::vector<std::unique_ptr<juce::AudioProcessorParameter>>> parByGroup;
     for (auto par : surge->storage.getPatch().param_ptr)
     {
         if (par)
         {
             parametermeta pm;
             surge->getParameterMeta(surge->idForParameter(par), pm);
-            // FIXME: use pm.clump to make as set of
-            // https://docs.juce.com/master/classAudioProcessorParameterGroup.html
-            auto sja = new SurgeParamToJuceParamAdapter(surge.get(), par);
-            addParameter(sja);
-            paramsByID[surge->idForParameter(par)] = sja;
+            auto sja = std::make_unique<SurgeParamToJuceParamAdapter>(surge.get(), par);
+            paramsByID[surge->idForParameter(par)] = sja.get();
+            parByGroup[pm.clump].push_back(std::move(sja));
         }
     }
+    auto parent = std::make_unique<AudioProcessorParameterGroup>();
+    for (auto &cv : parByGroup)
+    {
+        auto clump = cv.first;
+        std::string id = std::string("SRG_GRP_") + std::to_string(clump);
+        auto name = paramClumpName(clump);
+        auto subg = std::make_unique<AudioProcessorParameterGroup>(id, name, "|");
+        for (auto &p : cv.second)
+        {
+            subg->addChild(std::move(p));
+        }
+        parent->addChild(std::move(subg));
+    }
+    addParameterGroup(std::move(parent));
 
     presetOrderToPatchList.clear();
     for (int i = 0; i < surge->storage.firstThirdPartyCategory; i++)
@@ -290,6 +303,42 @@ void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, 
 {
     auto spar = paramsByID[id];
     spar->setValueNotifyingHost(f);
+}
+
+std::string SurgeSynthProcessor::paramClumpName(int clumpid)
+{
+    switch (clumpid)
+    {
+    case 1:
+        return "Macro Parameters";
+    case 2:
+        return "Global / FX";
+    case 3:
+        return "Scene A Common";
+    case 4:
+        return "Scene A Osc";
+    case 5:
+        return "Scene A Osc Mixer";
+    case 6:
+        return "Scene A Filters";
+    case 7:
+        return "Scene A Envelopes";
+    case 8:
+        return "Scene A LFOs";
+    case 9:
+        return "Scene B Common";
+    case 10:
+        return "Scene B Osc";
+    case 11:
+        return "Scene B Osc Mixer";
+    case 12:
+        return "Scene B Filters";
+    case 13:
+        return "Scene B Envelopes";
+    case 14:
+        return "Scene B LFOs";
+    }
+    return "";
 }
 
 //==============================================================================
