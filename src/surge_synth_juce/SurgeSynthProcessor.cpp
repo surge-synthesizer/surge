@@ -13,6 +13,7 @@
 #include "DebugHelpers.h"
 #include "SurgeSynthFlavorExtensions.h"
 #include "version.h"
+#include "SurgeSynthInteractionsImpl.h"
 
 using namespace juce;
 
@@ -25,6 +26,11 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                          .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
     std::cout << "SurgeXT : Version " << Surge::Build::FullVersionStr << std::endl;
+    if (!SurgeSynthInteractionsInterface::impl.load())
+    {
+        // FIXME - this leaks. We will rework this in XT anyway
+        SurgeSynthInteractionsImpl::impl = new SurgeSynthInteractionsImpl();
+    }
     surge = std::make_unique<SurgeSynthesizer>(this);
 
     for (auto par : surge->storage.getPatch().param_ptr)
