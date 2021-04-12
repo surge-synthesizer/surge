@@ -15,7 +15,7 @@
     <type i="2" name="Wavetable" retrigger="0" p5_extend_range="0" />
     <type i="7" name="Window" retrigger="0" p5_extend_range="0" />
     <separator />
-    <type i="1" name="Sine" retrigger="1" p1_extend_range="1" p5_extend_range="0"	 />
+    <type i="1" name="Sine" retrigger="1" p1_extend_range="1" p5_extend_range="0" />
     <type i="6" name="FM2" retrigger="1" p6_extend_range="1" />
     <type i="5" name="FM3" retrigger="1" p1_extend_range="0" p3_extend_range="0" p5_extend_range="0" p6_extend_range="1" />
     <separator />
@@ -54,17 +54,24 @@
         <snapshot name="Warm" p0="4" p1="-13.65" p2="0.71" p3="0" p4="6" p5="2" p6="0" p7="54.9643" p8="2.22322" p9="0" p10="1" />
     </type>
     <type i="19" name="Exciter">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0.5" p1="0.5" p2="0.5" p3="0.5" p4="0.5" />
+        <snapshot name="A Touch Of Sizzle" p0="0.692858" p1="1" p2="0.558593" p3="0.5" p4="0.0696428" />
+        <snapshot name="Master Shinichi" p0="0.741071" p1="0.448214" p2="0.510213" p3="0.5" p4="1" />
     </type>
     <type i="16" name="Graphic EQ">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="0" p2="0" p3="0" p4="0" p5="0" p6="0" p7="0" p8="0" p9="0" p10="0" p11="0" />
+        <snapshot name="Guitar Cab Cassette" p0="-10.4571" p1="0" p2="0" p3="-24" p4="-24" p5="-24" p6="-8.65715" p7="2.57142" p8="-24" p9="-24" p10="-24" p11="0" />
+        <snapshot name="Mids With 12k" p0="-24"  p1="-16.2" p2="-10.6286" p3="-4.02858" p4="0" p5="0" p6="0" p7="-12" p8="-6.68571" p9="-2.65715" p10="-24" p11="-1.54286" />
     </type>
     <type i="17" name="Resonator">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="-18.6305" p1="0.75" p2="0.793701" p3="8.03822" p4="0.75" p5="0.793701" p6="35.9013" p7="0.75" p8="0.793701" p9="1" p10="0" p11="1" />
+        <snapshot name="Kriskros" p0="-8.72919" p1="0.75" p2="0.900841" p3="0.42555" p4="0.75" p5="0.793701" p6="35.9013" p7="0.75" p8="0.793701" p9="1" p10="4.62852" p11="1" />
+        <snapshot name="Older Record" p0="-13.2072" p1="0.755357" p2="0.172272" p3="8.03822" p4="0.805357" p5="1" p6="44.1608" p7="0.35" p8="0.793701" p9="2" p10="0" p11="1" />
     </type>
     <separator />
     <type i="18" name="CHOW">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="-24" p1="10" p3="1" />
+        <snapshot name="Anomaly" p0="-81.6" p1="12.6714" p3="1" />
     </type>
     <type i="5" name="Distortion">
         <snapshot name="Init" p0="0.000000" p1="3.817860" p2="1.944644" p3="38.421448" p4="0.000000" p5="0.000000" p6="0.000000" p7="3.000000" p8="2.031250" p9="30.535736" />
@@ -86,35 +93,52 @@
         <snapshot name="Warm 5" p0="5.039993" p1="21.238914" p2="1.944644" p3="14.228958" p4="0.000000" p5="0.000000" p6="3.985725" p7="2.237354" p8="2.031250" p9="26.222519" p10="0.000000" />
     </type>
     <type i="15" name="Neuron">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="0.5" p2="0.5" p3="1" p4="0" p5="70" p6="0.5" p7="0" p8="-2" p9="0" p10="0" p11="0" />
+        <snapshot name="Disruption" p0="13.7143" p1="0.694643" p2="0.353572" p3="0.630357" p4="0.975" p5="32.8572" p6="-0.35701" p7="0" p8="2.52572" p9="0.6875" p10="0" p11="0" />
+        <snapshot name="This Cassette" p0="18.7714"¨p1="1" p2="0.882143" p3="1" p4="0.460714" p5="70" p6="0.5" p7="0" p8="-2" p9="0" p10="0" p11="0" />
     </type>
     <type i="23" name="Tape">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0.85" p1="0.5" p2="0.5" p3="0" p4="30" p5="1" p6="0.1" p7="0.1" p8="0" p9="0" p10="0" p11="1" />
+        <snapshot name="Buried Message" p0="0.716071" p1="1" p2="0.596429" p3="0.753572" p4="1" p5="0" p6="0" p7="0.726786" p8="0" p9="0.946429" p10="1" p11="1" />
+        <snapshot name="Muffled Warmth 1" p0="0.833929" p1="0.7125" p2="0.5" p3="0" p4="1" p5="0" p6="0" p7="0.726786" p8="0" p9="0.630357" p10="0" p11="1" />
+        <snapshot name="Muffled Warmth 2" p0="0.653572" p1="0.825" p2="0.5" p3="0" p4="1" p5="0" p6="0" p7="0.726786" p8="0" p9="0.630357" p10="0" p11="1" />
+        <snapshot name="Fattening (Send)" p0="0.951782" p1="0.807141" p2="0.235711" p3="-0.585719" p4="0.308929" p5="0.0803563" p6="0.714285" p7="0.471429" p8="0" p9="0" p10="0" p11="1" />
     </type>
     <separator />
     <type i="21" name="Combulator">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="-9" p2="0.25" p3="-0.25" p4="0.75" p5="0" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
+        <snapshot name="E Minor World" p0="0.296429" p1="-47.8137" p2="-30.1786" p3="28.6786" p4="0.9" p5="-0.214286" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
+        <snapshot name="Nice Sand" p0="0.296429" p1="19.4411" p2="17.8214" p3="-0.25" p4="0.75" p5="0" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
+        <snapshot name="Sparkle" p0="0" p1="-54.5057" p2="0.25" p3="-0.25" p4="0.75" p5="0" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
+        <snapshot name="Add Harshness (Send)" p0="0.721428" p1="43.1976" p2="0.25" p3="-0.25" p4="-0.414286" p5="0.846429" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
+        <snapshot name="Little Sparkle (Send)" p0="0" p1="-54.1711" p2="0.25" p3="-0.25" p4="-0.414286" p5="0.846429" p6="0.793701" p7="0.793701" p8="0.793701" p9="0.25" p10="-0.25" p11="1" />
     </type>
     <type i="7" name="Frequency Shifter">
         <snapshot name="Init" p0="0.000000" p1="1.000000" p2="-8.000000" p3="0.000000" p4="1.000000" />
+        <snapshot name="Building Robot Monkeys" p0="9.892857" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.843750" p4="0.322321" />
         <snapshot name="Chorusy" p0="-0.071431" p1="0.925000" p2="-8.000000" p2_temposync="1" p3="0.000000" p4="0.291964" />
         <snapshot name="Falling Down" p0="-3.767862" p1="1.000000" p2="-1.415038" p2_temposync="1" p3="0.841071" p4="0.367857" />
-        <snapshot name="I Am Building Robot Monkeys" p0="9.892857" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.843750" p4="0.322321" />
+        <snapshot name="Future Will Be Like This" p0="1.428571" p0_extend_range="1" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.811607" p4="0.200893" />
         <snapshot name="Pulsating" p0="-0.250003" p1="-0.589286" p2="-4" p2_temposync="1" p3="0.7" p4="0.3" />
-        <snapshot name="The Future Will Be Like This" p0="1.428571" p0_extend_range="1" p1="1.000000" p2="-3.000000" p2_temposync="1" p3="0.811607" p4="0.200893" />
     </type>
     <type i="22" name="Nimbus">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="0" p2="0" p3="0.5" p4="0" p5="0" p6="0" p7="0" p8="0" p9="0" p10="0" p11="0.5" />
+        <snapshot name="Creepy Combo (Send)" p0="0" p1="0" p2="0" p3="0.260712" p4="12" p5="-0.532144" p6="1" p7="0.851786" p8="0" p9="0.294643" p10="0.875" p11="1" />
+        <snapshot name="IDK About This (Send)" p0="2" p1="0" p2="0" p3="0.760714" p4="12" p5="0.832143" p6="-0.525" p7="0" p8="0" p9="0.530357" p10="0.657143" p11="1" />
+        <snapshot name="Subliminal Fluff (Send)" p0="1" p1="0" p2="0" p3="-0.0750001" p4="12" p5="0.832143" p6="-0.332143" p7="0" p8="0" p9="0.283928" p10="0.657143" p11="1" />
     </type>
     <type i="13" name="Ring Modulator">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="60" p2="0.2" p3="1" p4="0.3" p5="0.7" p6="-60" p7="70" p8="1" />
         <snapshot name="Crusher" p0="11" p1="60" p2="0.0714279" p3="2" p4="0.205357" p5="0.767857" p6="-60" p7="38.2131" p8="0.776786" />
+        <snapshot name="Poisonous" p0="6" p1="87.4409" p2="0.0964287" p3="6" p4="0.689284" p5="0.69107" p6="-60" p7="69.5357" p8="1" />
     </type>
     <type i="24" name="Treemonster">
         <snapshot name="Init" p0="-24" p1="0.5" p2="-60" p3="70" p4="0" p5="0.5" p6="1" p7="1" />
+        <snapshot name="Creepypasta" p0="0" p1="0" p2="-15.8928" p3="34.0178" p4="12" p5="0.651785" p6="0.182142" p7="1" />
+        <snapshot name="In The Back" p0="-52.457" p1="0.839283" p2="-15.8928" p3="34.0178" p4="-14.5714" p5="0.864284" p6="0.642855" p7="0.47143" />
     </type>
     <type i="10" name="Vocoder">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="0" p1="-96" p2="0" p3="0" p5="20" p6="-15.4741" p7="49.0958" p8="0" p9="0" p10="0" p11="1" />
     </type>
     <separator />
     <type i="9" name="Chorus">
@@ -131,7 +155,10 @@
         <snapshot name="Unison" p0="-5.65714" p1="-4.94314" p2="0.803572" p3="0.408928" p4="-23.625" p5="65.6625" p6="0.5" p7="12" />
     </type>
     <type i="20" name="Ensemble">
-        <snapshot name="Init" />
+        <snapshot name="Init" p0="43.8" p1="-2.47393" p2="1" p3="2.46467" p4="0.6" p5="2" p6="40" p7="0" p8="0" p9="1" p10="1" />
+        <snapshot name="Glassy Highs" p0="5.4965" p1="-0.055583" p2="0.871428" p3="1.16248" p4="0" p5="2" p6="41.583" p7="0" p8="0" p9="1" p10="1" />
+        <snapshot name="Kind Person" p0="43.8" p1="-0.388475" p2="0.539286" p3="3.03254" p4="0" p5="0" p6="40" p7="0.128571" p8="0.230357" p9="1" p10="1" />
+        <snapshot name="Monster Dirt" p0="23.8358" p1="0.806015" p2="0.532142" p3="-0.541138" p4="0.760714" p5="0" p6="66.208" p7="0.419643" p8="0" p9="0" p10="1" />
     </type>
     <type i="12" name="Flanger">
         <snapshot name="Init" p0="1" p1="0" p2="-2" p3="0.75" p4="3" p5="60" p6="12" p7="0.25" p8="0.2" p9="0" p10="1" />
@@ -161,6 +188,7 @@
         <snapshot name="Rotor Chorus" p0="2.33" p1="0.35" p2="0.15" p3="0.375" p4="0" p5="0" p6="14.8" p7="0.25" />
         <snapshot name="Slow" p0="1.293751" p1="0.251786" p2="0.495536" />
         <snapshot name="Turn The Rotor" p0="-0.532016" p1="0.2" p2="0.11" p3="0.282144" p4="0" p5="0" p6="12" p7="0.25" />
+        <snapshot name="Chorusy (Send)" p0="0.561703" p1="0.301785" p2="0.517858" p3="0.842856" p4="0.298214" p5="3" p6="1" p7="1" />
     </type>
     <separator />
     <type i="1" name="Delay">
@@ -212,22 +240,25 @@
         <snapshot name="Blurred Echo" p0="-1.99947" p1="-0.470558" p2="-1.60312" p3="0.140042" p4="0.234753" p5="0.0826876" p6="0.0833598" p7="1" p8="4.500000" p9="0.820355" />
         <snapshot name="Cathedral 1" p0="-4" p1="0.465002" p2="-1.05894" p3="1" p4="1" p5="0.201786" p6="0.348215" p7="0.728572" p8="12.0001" p9="0.199999" />
         <snapshot name="Cathedral 2" p0="-7.98393" p1="0.467" p2="2.16992" p3="1" p4="0.9" p5="0.5" p6="0" p7="1" p8="10" p9="0.3" />
-        <snapshot name="Deep Space" p0="-8" p1="1" p2="6" p3="1" p4="1" p5="0.35" p6="0" p7="0.9" p8="20" p9="0.3"/>
+        <snapshot name="Deep Space" p0="-8" p1="1" p2="6" p3="1" p4="1" p5="0.35" p6="0" p7="0.9" p8="20" p9="0.3" />
         <snapshot name="Diffuse Delay" p0="-4" p1="0" p2="1.43296" p3="0.35" p4="0" p5="0.3" p6="0.1" p7="0.15" p8="0" p9="0.35" />
         <snapshot name="Epic Hall" p0="-4" p1="0.7" p2="2.80735" p3="0.8" p4="0.98" p5="0.6" p6="0.35" p7="0.8" p8="0" p9="0.5" />
         <snapshot name="Gated Room" p0="-4" p1="-1" p2="-4" p3="0.8" p4="0" p5="0.00178571" p6="0.5" p7="1" p8="-6" p9="0.25" />
         <snapshot name="Ghostly Chamber" p0="-3.31105" p1="0.534785" p2="4.10847" p3="0.545083" p4="0.225994" p5="0.431124" p6="0.171199" p7="1" p8="3.000000" p9="0.712106" />
         <snapshot name="Grain Delay" p0="-4" p1="-0.54" p2="3.1375" p3="0" p4="0.03" p5="0.65" p6="0.15" p7="0.35" p8="0" p9="0.35" />
         <snapshot name="Warm Hall" p0="-4" p1="0.6" p2="-3.32143" p3="1" p4="1" p5="0.5" p6="0" p7="0.803572" p8="-1" p9="0.35" />
+        <snapshot name="Now That&apos;s Enough (Send)" p0="-8" p1="0.392854" p2="3.80355" p3="0.887496" p4="0.989283" p5="0.801786" p6="0" p7="0" p8="4.54287" p9="1" />
+        <snapshot name="Retro (Send)" p0="-8" p1="-0.550002" p2="-1.82144" p3="0.164284" p4="0.823212" p5="0.755357" p6="0.5" p7="0.5" p8="0" p9="1" />
+        <snapshot name="Wider Shot (Send)" p0="-8" p1="0.392854" p2="2.91069" p3="0.699997" p4="0.823212" p5="0.546429" p6="0.817858" p7="0.84464" p8="4.54287" p9="1" />
     </type>
     <separator />
     <type i="14" name="Airwindows">
         <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000" />
         <type i="14" name="Ambience">
             <snapshot name="Bright Ambience" p0="21" p1="0.2" p2="0.2" p3="0" p4="0.5" />
-            <snapshot name="Galactic" p0="49" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1"/>
-            <snapshot name="Infinity" p0="50" p1="1" p2="0" p3="0.4" p4="1"/>
-            <snapshot name="MatrixVerb" p0="51" p1="1" p2="0" p3="0" p4="0" p5="0.5" p6="0.5" p7="1"/>
+            <snapshot name="Galactic" p0="49" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1" />
+            <snapshot name="Infinity" p0="50" p1="1" p2="0" p3="0.4" p4="1" />
+            <snapshot name="MatrixVerb" p0="51" p1="1" p2="0" p3="0" p4="0" p5="0.5" p6="0.5" p7="1" />
             <snapshot name="Melt" p0="23" p1="0.25" p2="0.75" p3="1" p4="1" />
             <snapshot name="Pocket Verbs" p0="24" p1="0" p2="0.5" p3="0" p4="0.5" />
             <snapshot name="Star Child" p0="25" p1="1" p2="0.7" p3="0.2" />
@@ -288,7 +319,7 @@
             <snapshot name="Unbox" p0="37" p1="0.5" p2="0" p3="0.5" />
         </type>
         <type i="14" name="Stereo">
-            <snapshot name="Triple Spread" p0="53" p1="0.5"  p2="0.5" p3="0.5"/>
+            <snapshot name="Triple Spread" p0="53" p1="0.5" p2="0.5" p3="0.5" />
         </type>
         <type i="14" name="Tape">
             <snapshot name="Iron Oxide" p0="41" p1="0.5" p2="0.562341" p3="0.562341" p4="0.5" p5="0.5" p6="0.5" p7="1" />
@@ -300,6 +331,7 @@
         <snapshot name="Limiter 1" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-17.742889" p5="-0.085714" p6="0.000000" p7="-9.257149" />
         <snapshot name="Limiter 2" p0="0" p1="0" p2="0" p3="0" p4="-6" p5="0" p6="0.01" p7="0" />
         <snapshot name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
+        <snapshot name="Sit Tight" p0="-7.24292" p1="-0.300003" p2="1" p3="0" p4="-20.1857" p5="0.285714" p6="0.214284" p7="-4.02853" />
     </type>
 </fx>
 <customctrl>
