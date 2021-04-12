@@ -3199,6 +3199,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                         if (dm->sortGroupNames())
                             std::sort(groupAppearanceOrder.begin(), groupAppearanceOrder.end());
+                        else if (dm->useRemappedOrderingForGroupsIfNotSorted())
+                        {
+                            groupAppearanceOrder.clear();
+                            std::map<int, std::string> gnr;
+                            for (int i = p->val_min.i; i <= max; i += incr)
+                            {
+                                int idx = dm->remapStreamedIndexToDisplayIndex(i);
+                                if (idx >= 0)
+                                {
+                                    gnr[idx] = dm->groupNameAtStreamedIndex(i);
+                                }
+                            }
+                            std::unordered_set<std::string> dealt;
+                            for (const auto &p : gnr)
+                            {
+                                if (dealt.find(p.second) == dealt.end())
+                                {
+                                    groupAppearanceOrder.push_back(p.second);
+                                    dealt.insert(p.second);
+                                }
+                            }
+                        }
 
                         bool useSubMenus = dm->hasGroupNames();
                         COptionMenu *sub = nullptr;

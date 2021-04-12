@@ -38,6 +38,7 @@ class AliasOscillator : public Oscillator
         aow_ramp,
         aow_pulse,
         aow_noise,
+
         aow_mem_alias,
         aow_mem_oscdata,
         aow_mem_scenedata,

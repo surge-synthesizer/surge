@@ -459,7 +459,86 @@ void AliasOscillator::init_ctrltypes()
 {
     static struct WaveRemapper : public ParameterDiscreteIndexRemapper
     {
-        int remapStreamedIndexToDisplayIndex(int i) override { return i; }
+        bool hasGroupNames() override { return true; }
+        bool supportsTotalIndexOrdering() override { return true; };
+        bool sortGroupNames() override { return false; }
+        bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
+
+        std::vector<std::pair<int, std::string>> mapping;
+        std::unordered_map<int, int> inverseMapping;
+
+        void p(int i, std::string s) { mapping.push_back(std::make_pair(i, s)); }
+
+        WaveRemapper()
+        {
+            p(aow_sine, "");
+            p(aow_ramp, "");
+            p(aow_pulse, "");
+            p(aow_noise, "");
+            p(aow_additive, "");
+            p(aow_audiobuffer, "");
+
+            p(aow_sine_tx2, "Quadrant Shaping");
+            p(aow_sine_tx3, "Quadrant Shaping");
+            p(aow_sine_tx4, "Quadrant Shaping");
+            p(aow_sine_tx5, "Quadrant Shaping");
+            p(aow_sine_tx6, "Quadrant Shaping");
+            p(aow_sine_tx7, "Quadrant Shaping");
+            p(aow_sine_tx8, "Quadrant Shaping");
+
+            p(aow_mem_alias, "Memory From...");
+            p(aow_mem_oscdata, "Memory From...");
+            p(aow_mem_stepseqdata, "Memory From...");
+            p(aow_mem_scenedata, "Memory From...");
+            p(aow_mem_dawextra, "Memory From...");
+
+            int c = 0;
+            for (auto e : mapping)
+            {
+                inverseMapping[e.first] = c++;
+            }
+
+            if (mapping.size() != ao_n_waves)
+            {
+                std::cout << "BAD MAPPING TYPES" << std::endl;
+            }
+        }
+
+        int remapStreamedIndexToDisplayIndex(int i) override
+        {
+            switch ((ao_waves)i)
+            {
+            case aow_sine:
+            case aow_ramp:
+            case aow_pulse:
+            case aow_noise:
+                return i;
+            case aow_additive:
+                return 4;
+            case aow_audiobuffer:
+                return 5;
+            case aow_sine_tx2:
+            case aow_sine_tx3:
+            case aow_sine_tx4:
+            case aow_sine_tx5:
+            case aow_sine_tx6:
+            case aow_sine_tx7:
+            case aow_sine_tx8:
+                return 6 + (i - aow_sine_tx2);
+            case aow_mem_alias:
+            case aow_mem_oscdata:
+                return 13 + (i - aow_mem_alias);
+            case aow_mem_stepseqdata:
+                return 15;
+            case aow_mem_scenedata:
+                return 16;
+            case aow_mem_dawextra:
+                return 17;
+            default:
+                return i;
+            }
+        }
+
         std::string nameAtStreamedIndex(int i) override
         {
             if (i <= aow_noise)
@@ -468,7 +547,7 @@ void AliasOscillator::init_ctrltypes()
             if (i >= aow_sine_tx2 && i <= aow_sine_tx8)
             {
                 int txi = i - aow_sine_tx2 + 2;
-                return std::string("TX ") + std::to_string(txi) + "";
+                return std::string("TX ") + std::to_string(txi);
             }
 
             switch ((ao_waves)i)
@@ -491,16 +570,25 @@ void AliasOscillator::init_ctrltypes()
                 return "ERROR";
             }
         }
-        bool hasGroupNames() override { return true; }
+
         std::string groupNameAtStreamedIndex(int i) override
         {
-            if (i <= aow_noise || i == aow_audiobuffer || i == aow_additive)
-                return "";
-            if (i < aow_sine_tx2)
-                return "Memory From...";
-            return "Quadrant Shaping";
+            return mapping[inverseMapping[i]].second;
+        }
+
+        const std::vector<int> totalIndexOrdering() override
+        {
+            auto res = std::vector<int>();
+
+            for (auto m : mapping)
+            {
+                res.push_back(m.first);
+            }
+
+            return res;
         }
     } waveRemapper;
+
     oscdata->p[ao_wave].set_name("Shape");
     oscdata->p[ao_wave].set_type(ct_alias_wave);
     oscdata->p[ao_wave].set_user_data(&waveRemapper);
