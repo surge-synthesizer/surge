@@ -462,6 +462,7 @@ void AliasOscillator::init_ctrltypes()
         bool hasGroupNames() override { return true; }
         bool supportsTotalIndexOrdering() override { return true; };
         bool sortGroupNames() override { return false; }
+        bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
 
         std::vector<std::pair<int, std::string>> mapping;
         std::unordered_map<int, int> inverseMapping;

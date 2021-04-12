@@ -368,6 +368,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
     }
 
     virtual bool sortGroupNames() override { return false; }
+    bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
 
     virtual bool supportsTotalIndexOrdering() override { return true; }
     virtual const std::vector<int> totalIndexOrdering() override
