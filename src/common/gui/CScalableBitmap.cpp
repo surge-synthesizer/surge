@@ -1,6 +1,7 @@
 #if ESCAPE_FROM_VSTGUI
 #include <JuceHeader.h>
 #include "CScalableBitmap.h"
+#include "DisplayInfo.h"
 
 CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame *f)
     : VSTGUI::CBitmap(d)
@@ -27,17 +28,69 @@ CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame *f)
 
 CScalableBitmap::~CScalableBitmap() = default;
 
-void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor) {}
+void CScalableBitmap::setPhysicalZoomFactor(int zoomFactor)
+{
+    currentPhysicalZoomFactor = zoomFactor;
+}
 
 void CScalableBitmap::draw(VSTGUI::CDrawContext *context, const VSTGUI::CRect &rect,
                            const VSTGUI::CPoint &offset, float alpha)
 {
-    VSTGUI::CBitmap::draw(context, rect, offset, alpha);
+    if (pngZooms.size() == 0)
+    {
+        VSTGUI::CBitmap::draw(context, rect, offset, alpha);
+        return;
+    }
+    int useZoom = -1;
+    for (auto &p : pngZooms)
+    {
+        if (p.first <= currentPhysicalZoomFactor)
+            useZoom = p.first;
+    }
+
+    if (useZoom < 0)
+    {
+        VSTGUI::CBitmap::draw(context, rect, offset, alpha);
+        return;
+    }
+
+    resolvePNGForZoomLevel(useZoom);
+    if (!pngZooms[useZoom].second)
+    {
+        VSTGUI::CBitmap::draw(context, rect, offset, alpha);
+        return;
+    }
+
+    // This relies on the internal state a bit but that's OK
+    auto hcdf = Surge::GUI::getDisplayBackingScaleFactor(nullptr);
+    juce::Graphics::ScopedSaveState gs(context->g);
+    static auto warnOnce = false;
+    if (!warnOnce)
+    {
+        std::cout << "WARNING: THERE IS A HARDCODED 125 HERE!!! FIXME" << std::endl;
+        warnOnce = true;
+    }
+    // FIXME: What is this 1.25?
+    auto t = juce::AffineTransform().scaled(1.f / hcdf / 1.25, 1.f / hcdf / 1.25);
+    pngZooms[useZoom].second->drawable->draw(context->g, alpha, t);
 }
 
-void CScalableBitmap::addPNGForZoomLevel(std::string fname, int zoomLevel) {}
+void CScalableBitmap::addPNGForZoomLevel(std::string fname, int zoomLevel)
+{
+    pngZooms[zoomLevel] = std::make_pair(fname, nullptr);
+}
 
-void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel) {}
+void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel)
+{
+    if (pngZooms.find(zoomLevel) == pngZooms.end())
+        return;
+    if (pngZooms[zoomLevel].second)
+        return;
+
+    pngZooms[zoomLevel].second =
+        std::move(std::make_unique<CScalableBitmap>(pngZooms[zoomLevel].first.c_str(), nullptr));
+}
+
 #else
 
 #if MAC
