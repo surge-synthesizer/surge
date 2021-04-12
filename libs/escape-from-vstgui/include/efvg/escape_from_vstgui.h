@@ -828,7 +828,8 @@ struct CBitmap : public Internal::FakeRefcount
         // std::cout << " Deleting bitmap with " << desc.u.id << std::endl;
     }
 
-    void draw(CDrawContext *dc, const CRect &r, const CPoint &off = CPoint(), float alpha = 1.0)
+    virtual void draw(CDrawContext *dc, const CRect &r, const CPoint &off = CPoint(),
+                      float alpha = 1.0)
     {
         juce::Graphics::ScopedSaveState gs(dc->g);
         auto tl = r.asJuceIntRect().getTopLeft();
@@ -1210,6 +1211,7 @@ struct CFrame : public CViewContainer
     }
     ~CFrame() = default;
 
+    void draw(CDrawContext *dc) override { CViewContainer::draw(dc); }
     void setCursor(CCursorType c)
     {
         auto ct = juce::MouseCursor::StandardCursorType::NormalCursor;
