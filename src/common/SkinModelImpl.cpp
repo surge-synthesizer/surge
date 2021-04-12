@@ -242,7 +242,8 @@ Connector &Connector::asJogPlusMinus() noexcept
     payload->defaultComponent = Components::HSwitch2;
     payload->w = 32;
     payload->h = 12;
-    return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2);
+    return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2)
+        .withProperty(Component::DRAGGABLE_HSWITCH, false);
 }
 
 Connector Connector::connectorByID(const std::string &id)
