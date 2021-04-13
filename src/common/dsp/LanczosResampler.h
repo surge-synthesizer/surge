@@ -151,8 +151,6 @@ struct LanczosResampler
         d1 = _mm_loadu_ps(&input[1][idx0]);
         rv = _mm_add_ps(_mm_mul_ps(f0, d0), _mm_mul_ps(f1, d1));
         R = vSum(rv);
-
-        R = 0;
     }
 
     inline size_t inputsRequiredToGenerateOutputs(size_t desiredOutputs) const
