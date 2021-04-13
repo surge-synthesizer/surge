@@ -215,7 +215,7 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
     auto mainInputOutput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
     auto sceneBOutput = getBusBuffer(buffer, false, 2);
-    for (int i = 0; i < buffer.getNumSamples(); i += BUFFER_COPY_CHUNK)
+    for (int i = 0; i < buffer.getNumSamples(); i++)
     {
         auto outL = mainInputOutput.getWritePointer(0, i);
         auto outR = mainInputOutput.getWritePointer(1, i);
@@ -232,8 +232,8 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
             surge->process();
         }
 
-        memcpy(outL, &(surge->output[0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
-        memcpy(outR, &(surge->output[1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+        *outL = surge->output[0][blockPos];
+        *outR = surge->output[1][blockPos];
 
         if (surge->activateExtraOutputs && sceneAOutput.getNumChannels() == 2 &&
             sceneBOutput.getNumChannels() == 2)
@@ -245,20 +245,17 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
 
             if (sAL && sAR)
             {
-                memcpy(sAL, &(surge->sceneout[0][0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
-                memcpy(sAR, &(surge->sceneout[0][1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+                *sAL = surge->sceneout[0][0][blockPos];
+                *sAR = surge->sceneout[0][1][blockPos];
             }
             if (sBL && sBR)
             {
-                memcpy(sBL, &(surge->sceneout[1][0][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
-                memcpy(sBR, &(surge->sceneout[1][1][blockPos]), BUFFER_COPY_CHUNK * sizeof(float));
+                *sBL = surge->sceneout[1][0][blockPos];
+                *sBR = surge->sceneout[1][1][blockPos];
             }
         }
 
-        blockPos += BUFFER_COPY_CHUNK;
-
-        if (blockPos >= BLOCK_SIZE)
-            blockPos = 0;
+        blockPos = (blockPos + 1) & (BLOCK_SIZE - 1);
     }
 }
 
