@@ -1876,6 +1876,30 @@ void SurgeGUIEditor::openOrRecreateEditor()
     lb->setAntialias(true);
     frame->addView(lb);
     debugLabel = lb;
+
+#if TARGET_JUCE_UI
+    struct TestC : public juce::Component
+    {
+        ~TestC() { std::cout << "TestC Cleaned Up" << std::endl; }
+        juce::Colour bg = juce::Colour(255, 0, 255);
+        void paint(juce::Graphics &g) override
+        {
+            g.fillAll(bg);
+            g.setColour(juce::Colour(255, 255, 255));
+            g.drawText("JUCE BUILD", getLocalBounds(), juce::Justification::centred);
+        }
+        void mouseDown(const juce::MouseEvent &e) override
+        {
+            auto q = rand() % 255;
+            bg = juce::Colour(255, q, 255 - q);
+            repaint();
+        }
+    };
+    auto pt = std::make_unique<TestC>();
+    frame->juceComponent()->addAndMakeVisible(*pt);
+    pt->setBounds(150, 2, 100, 10);
+    frame->takeOwnership(std::move(pt));
+#endif
 #endif
     for (auto el : editorOverlay)
     {
