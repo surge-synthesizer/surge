@@ -877,7 +877,7 @@ template <typename T> struct juceCViewConnector : public T, public OnRemovedHand
     bool supressMoveAndUp = false;
 };
 
-class CView;
+struct CView;
 
 // Clena this up obviously
 struct CViewBase : public Internal::FakeRefcount
@@ -989,21 +989,27 @@ struct CViewBase : public Internal::FakeRefcount
     CFrame *getFrame();
 };
 
-template <typename T> struct CViewWithJuceComponent : public CViewBase
+struct CView : public CViewBase
 {
-    CViewWithJuceComponent(const CRect &size) : CViewBase(size) {}
-    std::unique_ptr<juceCViewConnector<T>> comp;
+    CView(const CRect &size) : CViewBase(size) {}
+    ~CView() {}
 
+    virtual void onAdded() {}
+    virtual void efvg_resolveDeferredAdds(){};
+
+    std::unique_ptr<juceCViewConnector<juce::Component>> comp;
     juce::Component *juceComponent() override
     {
         if (!comp)
         {
-            comp = std::make_unique<juceCViewConnector<T>>();
+            comp = std::make_unique<juceCViewConnector<juce::Component>>();
             comp->setBounds(size.asJuceIntRect());
             comp->setViewCompanion(this);
         }
         return comp.get();
     }
+
+    EscapeFromVSTGUI::JuceVSTGUIEditorAdapterBase *ed = nullptr; // FIX ME obviously
 };
 
 #define GSPAIR(x, sT, gT, gTV)                                                                     \
@@ -1015,17 +1021,6 @@ template <typename T> struct CViewWithJuceComponent : public CViewBase
     CColor m_##x;                                                                                  \
     virtual void set##x(const CColor &v) { m_##x = v; }                                            \
     virtual CColor get##x() const { return m_##x; }
-
-struct CView : public CViewWithJuceComponent<juce::Component>
-{
-    CView(const CRect &size) : CViewWithJuceComponent<juce::Component>(size) {}
-    ~CView() {}
-
-    virtual void onAdded() {}
-    virtual void efvg_resolveDeferredAdds(){};
-
-    EscapeFromVSTGUI::JuceVSTGUIEditorAdapterBase *ed = nullptr; // FIX ME obviously
-};
 
 inline CFrame *CViewBase::getFrame()
 {
@@ -1095,6 +1090,12 @@ struct CViewContainer : public CView
         views.push_back(v);
     }
 
+    std::unordered_set<std::unique_ptr<juce::Component>> rawAddedComponents;
+    virtual void takeOwnership(std::unique_ptr<juce::Component> c)
+    {
+        rawAddedComponents.insert(std::move(c));
+    }
+
     void removeViewInternals(CView *v, bool forgetChildren = true)
     {
         auto cvc = dynamic_cast<CViewContainer *>(v);
@@ -1154,6 +1155,12 @@ struct CViewContainer : public CView
     }
     void removeAll(bool b = true)
     {
+        for (auto &j : rawAddedComponents)
+        {
+            juceComponent()->removeChildComponent(j.get());
+        }
+        rawAddedComponents.clear();
+
         for (auto e : views)
         {
             removeViewInternals(e, b);
@@ -1608,7 +1615,6 @@ template <typename T> inline void juceCViewConnector<T>::setViewCompanion(CViewB
 
 template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g)
 {
-    T::paint(g);
     if (viewCompanion)
     {
         auto dc = std::make_unique<CDrawContext>(g);
@@ -1618,6 +1624,7 @@ template <typename T> inline void juceCViewConnector<T>::paint(juce::Graphics &g
         g.addTransform(t);
         viewCompanion->draw(dc.get());
     }
+    T::paint(g);
 }
 
 template <typename T>
