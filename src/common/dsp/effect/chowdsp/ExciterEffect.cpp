@@ -26,7 +26,7 @@ namespace chowdsp
 {
 
 ExciterEffect::ExciterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), toneFilter(storage)
 {
     wet_gain.set_blocksize(BLOCK_SIZE);
     drive_gain.set_blocksize(BLOCK_SIZE);
@@ -54,7 +54,7 @@ void ExciterEffect::process(float *dataL, float *dataR)
     copy_block(dataL, dryL, BLOCK_SIZE_QUAD);
     copy_block(dataR, dryR, BLOCK_SIZE_QUAD);
 
-    drive_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD * os.getOSRatio());
+    drive_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     os.upsample(dataL, dataR);
 
     for (int k = 0; k < os.getUpBlockSize(); k++)
