@@ -125,7 +125,8 @@ enum ctrltypes
     ct_character,
     ct_sineoscmode,
     ct_sinefmlegacy,
-    ct_countedset_percent, // what % through a counted set are you
+    ct_countedset_percent,            // what % through a counted set are you
+    ct_countedset_percent_extendable, // what % through a counted set are you
     ct_vocoder_bandcount,
     ct_distortion_waveshape,
     ct_flangerpitch,

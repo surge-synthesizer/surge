@@ -55,7 +55,7 @@ class WindowOscillator : public Oscillator
         unsigned int Pos[MAX_UNISON];
         unsigned int SubPos[MAX_UNISON];
         unsigned int Ratio[MAX_UNISON];
-        unsigned int Table[MAX_UNISON];
+        unsigned int Table[2][MAX_UNISON];
         unsigned int FormantMul[MAX_UNISON];
         unsigned char Gain[MAX_UNISON][2];
         // samples until playback should start (for per-sample scheduling)

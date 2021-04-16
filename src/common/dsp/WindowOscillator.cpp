@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -17,6 +17,7 @@
 #include "DspUtilities.h"
 
 #include <cstdint>
+#include "DebugHelpers.h"
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -120,7 +121,7 @@ WindowOscillator::~WindowOscillator() {}
 void WindowOscillator::init_ctrltypes()
 {
     oscdata->p[win_morph].set_name("Morph");
-    oscdata->p[win_morph].set_type(ct_countedset_percent);
+    oscdata->p[win_morph].set_type(ct_countedset_percent_extendable);
     oscdata->p[win_morph].set_user_data(oscdata);
 
     oscdata->p[win_formant].set_name("Formant");
@@ -176,6 +177,19 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
     int Table = limit_range(
         (int)(float)(oscdata->wt.n_tables * localcopy[oscdata->p[win_morph].param_id_in_scene].f),
         0, (int)oscdata->wt.n_tables - 1);
+    int TablePlusOne = limit_range(Table + 1, 0, (int)oscdata->wt.n_tables - 1);
+    float frac = oscdata->wt.n_tables * localcopy[oscdata->p[win_morph].param_id_in_scene].f;
+    float FTable = limit_range(frac - Table, 0.f, 1.f);
+
+    if (!oscdata->p[win_morph].extend_range)
+    {
+        // If I'm not extended, then clamp to table
+        FTable = 0.f;
+    }
+
+    auto ft128 = _mm_set1_ps(FTable);
+    auto ft128m1 = _mm_set1_ps(1.f - FTable);
+
     int FormantMul =
         (int)(float)(65536.f * storage->note_to_pitch_tuningctr(
                                    localcopy[oscdata->p[win_formant].param_id_in_scene].f));
@@ -205,8 +219,10 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
             unsigned int MipMapA = 0;
             unsigned int MipMapB = 0;
 
-            if (Window.Table[so] >= oscdata->wt.n_tables)
-                Window.Table[so] = Table;
+            if (Window.Table[0][so] >= oscdata->wt.n_tables)
+                Window.Table[0][so] = Table;
+            if (Window.Table[1][so] >= oscdata->wt.n_tables)
+                Window.Table[1][so] = TablePlusOne;
             // TableID may not be valid anymore if a new wavetable is loaded
 
             unsigned long MSBpos;
@@ -218,7 +234,8 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
             if (_BitScanReverse(&MSBpos, 3 * RatioA))
                 MipMapA = limit_range((int)MSBpos - 17, 0, storage->WindowWT.size_po2 - 1);
 
-            short *WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[so]];
+            short *WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[0][so]];
+            short *WaveAdrP1 = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[1][so]];
             short *WinAdr = storage->WindowWT.TableI16WeakPointers[MipMapA][SelWindow];
 
             for (int i = 0; i < BLOCK_SIZE_OS; i++)
@@ -235,8 +252,10 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
                 if (Pos & ~SizeMaskWin)
                 {
                     Window.FormantMul[so] = FormantMul;
-                    Window.Table[so] = Table;
+                    Window.Table[0][so] = Table;
+                    Window.Table[1][so] = TablePlusOne;
                     WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Table];
+                    WaveAdrP1 = oscdata->wt.TableI16WeakPointers[MipMapB][TablePlusOne];
                     Pos = Pos & SizeMaskWin;
                 }
 
@@ -250,12 +269,14 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
 
                 __m128i Wave = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + MSPos)),
                                               _mm_loadu_si128((__m128i *)&WaveAdr[MPos]));
+                __m128i WaveP1 = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + MSPos)),
+                                                _mm_loadu_si128((__m128i *)&WaveAdrP1[MPos]));
 
                 __m128i Win = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + WinSPos)),
                                              _mm_loadu_si128((__m128i *)&WinAdr[WinPos]));
 
                 // Sum
-                int iWin alignas(16)[4], iWave alignas(16)[4];
+                int iWin alignas(16)[4], iWaveP1 alignas(16)[4], iWave alignas(16)[4];
 #if MAC
                 // this should be very fast on C2D/C1D (and there are no macs with K8's)
                 iWin[0] = _mm_cvtsi128_si32(Win);
@@ -266,13 +287,22 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
                 iWave[1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(1, 1, 1, 1)));
                 iWave[2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(2, 2, 2, 2)));
                 iWave[3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(3, 3, 3, 3)));
+                iWaveP1[0] = _mm_cvtsi128_si32(WaveP1);
+                iWaveP1[1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(1, 1, 1, 1)));
+                iWaveP1[2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(2, 2, 2, 2)));
+                iWaveP1[3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(3, 3, 3, 3)));
+
 #else
                 _mm_store_si128((__m128i *)&iWin, Win);
                 _mm_store_si128((__m128i *)&iWave, Wave);
+                _mm_store_si128((__m128i *)&iWaveP1, WaveP1);
 #endif
 
                 iWin[0] = (iWin[0] + iWin[1] + iWin[2] + iWin[3]) >> 13;
                 iWave[0] = (iWave[0] + iWave[1] + iWave[2] + iWave[3]) >> 13;
+                iWaveP1[0] = (iWaveP1[0] + iWaveP1[1] + iWaveP1[2] + iWaveP1[3]) >> 13;
+
+                iWave[0] = (int)((1.f - FTable) * iWave[0] + FTable * iWaveP1[0]);
 
                 if (stereo)
                 {

@@ -273,6 +273,7 @@ bool Parameter::can_extend_range()
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_percent_oscdrift:
     case ct_twist_aux_mix:
+    case ct_countedset_percent_extendable:
         return true;
     }
     return false;
@@ -448,6 +449,7 @@ void Parameter::set_user_data(ParamUserData *ud)
     switch (ctrltype)
     {
     case ct_countedset_percent:
+    case ct_countedset_percent_extendable:
         if (dynamic_cast<CountedSetUserData *>(ud))
         {
             user_data = ud;
@@ -990,6 +992,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_countedset_percent:
+    case ct_countedset_percent_extendable:
         val_min.f = 0;
         val_max.f = 1;
         valtype = vt_float;
@@ -1210,6 +1213,7 @@ void Parameter::set_type(int ctrltype)
     case ct_lfodeform:
     case ct_rotarydrive:
     case ct_countedset_percent:
+    case ct_countedset_percent_extendable:
     case ct_lfoamplitude:
     case ct_reson_res_extendable:
     case ct_modern_trimix:
@@ -1652,6 +1656,7 @@ void Parameter::bound_value(bool force_integer)
             break;
         }
         case ct_countedset_percent:
+        case ct_countedset_percent_extendable:
         {
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
@@ -2738,6 +2743,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
         break;
     }
     case ct_countedset_percent:
+    case ct_countedset_percent_extendable:
         if (user_data != nullptr)
         {
             // We check when set so the reinterpret cast is safe and fast
@@ -3665,6 +3671,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_oscspread:
     case ct_oscspread_bipolar:
     case ct_countedset_percent:
+    case ct_countedset_percent_extendable:
     case ct_flangerpitch:
     case ct_flangervoices:
     case ct_flangerspacing:
