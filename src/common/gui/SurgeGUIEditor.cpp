@@ -5802,9 +5802,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     if (lt_stepseq == shapev)
         what = "Step Seq";
     if (lt_envelope == shapev)
-        what = "Env";
+        what = "Envelope";
     if (lt_function == shapev)
-        what = "Env"; // TODO FIXME: When function LFO type is added, remove it from this condition!
+        // TODO FIXME: When function LFO type is added, adjust this condition!
+        what = "Envelope";
 
     auto msurl = SurgeGUIEditor::helpURLForSpecial("lfo-presets");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
@@ -5819,8 +5820,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     addCallbackMenu(lfoSubMenu, Surge::UI::toOSCaseForMenu("Save " + what + " As..."),
                     [this, currentLfoId, what]() {
                         // Prompt for a name
-                        promptForMiniEdit("preset", "Enter " + what + " Preset Name",
-                                          "Please Name Preset", CPoint(-1, -1),
+                        promptForMiniEdit("preset", "Enter the name for " + what + " preset:",
+                                          what + " Preset Name", CPoint(-1, -1),
                                           [this, currentLfoId](const std::string &s) {
                                               Surge::ModulatorPreset::savePresetToUser(
                                                   string_to_path(s), &(this->synth->storage),

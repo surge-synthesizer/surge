@@ -40,6 +40,11 @@ void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int 
         containingPath = containingPath / fs::path{"MSEG"};
     else if (lfotype == lt_stepseq)
         containingPath = containingPath / fs::path{"Step Seq"};
+    else if (lfotype == lt_envelope)
+        containingPath = containingPath / fs::path{"Envelope"};
+    else if (lfotype == lt_function)
+        // TODO FIXME: When function LFO type is added, adjust this condition!
+        containingPath = containingPath / fs::path{"Envelope"};
     else
         containingPath = containingPath / fs::path{"LFO"};
 
