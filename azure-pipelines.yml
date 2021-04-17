@@ -3,48 +3,44 @@
 
 trigger:
 - main
+- xt-alpha
 - release/*
 
 pr:
 - main
+- xt-alpha
 
 jobs:
 - job: Build
   strategy:
     matrix:
-      macOS:
+      macOS-unit-test:
         imageName: 'macos-10.14'
         isMac: True
         isMacUnitTest: True
         cmakeArguments: "-GXcode"
-        cmakeTarget: "all-components"
+        cmakeTarget: "surge-headless"
         cmakeConfig: "Release"
       macOS-fat:
         imageName: 'macos-10.15'
         isMac: True
         isMacFat: True
         cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64;x86_64\""
-        cmakeTarget: "Surge-AU-Packaged"
+        cmakeTarget: "ci-pull-req"
         cmakeConfig: "Debug"
         xcodePath: "/Applications/Xcode_12.2.app"
-      macOS-juce-targets:
-        imageName: 'macos-10.15'
-        isMac: True
-        cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_JUCE_PLUGINS=True"
-        cmakeTarget: "surge-juce-pipeline-targets"
-        cmakeConfig: "Debug"
       windows-x64:
         imageName: 'windows-2019'
         isWindows: True
         cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
         cmakeConfig: "Debug"
-        cmakeTarget: "Surge-VST3-Packaged"
+        cmakeTarget: "ci-pull-req"
       windows-x86-vs2017:
         imageName: 'vs2017-win2016'
         isWindows: True
         cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
         cmakeConfig: "Debug"
-        cmakeTarget: "Surge-VST3-Packaged"
+        cmakeTarget: "ci-pull-req"
       windows-unittest:
         imageName: 'vs2017-win2016'
         isWindows: True
@@ -52,25 +48,12 @@ jobs:
         cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
         cmakeConfig: "Release"
         cmakeTarget: "surge-headless"
-      windows-juce-targets:
-        imageName: 'windows-2019'
-        isWindows: True
-        cmakeArguments: "-A x64 -DBUILD_SURGE_JUCE_PLUGINS=True -DCMAKE_BUILD_TYPE=Debug"
-        cmakeConfig: "Debug"
-        cmakeTarget: "surge-juce-pipeline-targets"
       linux-codequality:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: "clang"
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "code-quality-pipeline-checks"
-        cmakeConfig: "Debug"
-      linux-vst3:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        aptGetExtras: ""
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: "Surge-VST3-Packaged"
         cmakeConfig: "Debug"
       linux-pythonapi:
         imageName: 'ubuntu-20.04'
@@ -79,33 +62,11 @@ jobs:
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_PYTHON_BINDINGS=True"
         cmakeTarget: "surgepy"
         cmakeConfig: "Debug"
-      linux-lv2-ubuntu18:
+      linux-juce-targets:
         imageName: 'ubuntu-18.04'
         isLinux: True
-        aptGetExtras: ""
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: "Surge-LV2-Packaged"
-        cmakeConfig: "Debug"
-      linux-juce-targets:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        cmakeArguments: "-GNinja -DBUILD_SURGE_JUCE_PLUGINS=True -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: "surge-juce-pipeline-targets"
-        cmakeConfig: "Debug"
-      linux-clang:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        aptGetExtras: "clang"
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
-        cmakeTarget: "Surge-LV2-Packaged"
-        cmakeConfig: "Debug"
-      linux-arm-cross:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        isLinuxARM: True
-        aptGetExtras: "libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf"
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-arm-ubuntu-crosscompile-toolchain.cmake"
-        cmakeTarget: "surge-headless"
+        cmakeTarget: "ci-pull-req"
         cmakeConfig: "Debug"
       linux-unittest:
         imageName: 'ubuntu-20.04'
@@ -204,12 +165,12 @@ jobs:
       cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
     displayName: all - build with cmake 
 
-  - bash: |
-      set -e
-      echo "Surge.component"
-      lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-    displayName: mac - lipo the AU
-    condition: variables.isMacFat
+  #- bash: |
+  #    set -e
+  #    echo "Surge.component"
+  #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
+  #  displayName: mac - lipo the AU
+  #  condition: variables.isMacFat
 
   - bash: | 
       set -e

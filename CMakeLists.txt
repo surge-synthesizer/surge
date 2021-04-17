@@ -116,6 +116,15 @@ endif()
 set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
+set(BUILD_SURGE_JUCE_PLUGINS TRUE)
+if( SURGE_ALTERNATE_JUCE )
+  message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
+  add_subdirectory( ${SURGE_ALTERNATE_JUCE} )
+else()
+  message( STATUS "Using JUCE from submodule libs/JUCE" )
+  add_subdirectory( libs/JUCE )
+endif()
+
 include(cmake/stage-extra-content.cmake)
 
 add_library(surge-shared)
@@ -168,49 +177,10 @@ add_dependencies( surge-shared git-info )
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 find_package(LibMidiFile ${PACKAGE_OPTIONS})
 
-if( BUILD_SURGE_JUCE_PLUGINS )
-  set( BUILD_SURGE_EFFECTS_BANK TRUE )
-  set( BUILD_SURGE_XT TRUE )
-endif()
-
-if( BUILD_ONLY_SURGE_XT)
-  set( BUILD_SURGE_JUCE_PLUGINS TRUE )
-  set( BUILD_SURGE_XT TRUE )
-else()
-  # Things we can build
-  set( BUILD_HEADLESS true )
-  set( BUILD_VST3 true )
-
-  if( DEFINED ARM_NATIVE )
-     include( cmake/arm-${ARM_NATIVE}.cmake )
-  endif()
-
-  if( DEFINED ENV{VST2SDK_DIR} )
-    set( BUILD_VST2 true )
-    file( TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" VST2SDK_DIR )
-    if( AZURE_PIPELINE )
-      message( ERROR " Building VST2 using " ${VST2SDK_DIR} " - VST2 pipeline builds not allowed" )
-    else()
-      message( WARNING " Building VST2 using " ${VST2SDK_DIR} " - this is an unsupported configuration" )
-    endif()
-  else()
-    set( BUILD_VST2 false )
-  endif()
-
-  if( APPLE )
-    set( BUILD_AU true )
-  else()
-    set( BUILD_AU false )
-  endif()
-
-  if( UNIX AND NOT APPLE )
-    set( BUILD_LV2 true )
-  elseif( APPLE )
-    set( BUILD_LV2 false )  # Status as of Apr 26. This CMake will build 'something' in products/Surge.lv2 but :shrug:
-  else()
-    set( BUILD_LV2 false )
-  endif()
-endif()
+set( BUILD_SURGE_JUCE_PLUGINS TRUE )
+set( BUILD_SURGE_XT TRUE )
+set( BUILD_SURGE_EFFECTS_BANK TRUE )
+set( BUILD_HEADLESS TRUE )
 
 # Enumerate the sources into groups
 #    SURGE_SHARED_SOURCES - these are used to make the synth-free ui-free dsp and param lib
@@ -716,308 +686,6 @@ target_include_directories(surge-shared
         )
 target_compile_definitions(surge-shared PRIVATE ${OS_COMPILE_DEFINITIONS} )
 
-#
-# AUDIO UNIT
-#
-if( BUILD_AU )
-  add_library(surge-au-dll
-    SHARED
-    ${SURGE_SYNTH_SOURCES}
-    ${SURGE_GENERATED_SOURCES}
-    ${SURGE_GUI_SOURCES}
-    ${SURGE_OS_SOURCES}
-    ${SURGE_OS_GUI_SOURCES}
-    ${SURGE_AU_SOURCES}
-    ${SURGE_AU_LIBRARY_SOURCES}
-    )
-
-  target_compile_definitions(surge-au-dll
-    PRIVATE
-    ${OS_COMPILE_DEFINITIONS}
-    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-    TARGET_AUDIOUNIT=1
-    )
-
-  target_include_directories(surge-au-dll
-    PRIVATE
-    ${SURGE_COMMON_INCLUDES}
-    ${SURGE_GUI_INCLUDES} ${SURGE_PREJUCE_GUI_INCLUDES}
-    ${OS_INCLUDE_DIRECTORIES}
-    src/au
-    libs/AUPublic
-    libs/PublicUtility
-    )
-
-  target_link_libraries(surge-au-dll
-    PRIVATE
-    surge-shared
-    ${OS_LINK_LIBRARIES}
-    )
-
-  add_custom_target( Surge-AU-Packaged ALL )
-  add_dependencies( Surge-AU-Packaged surge-au-dll )
-  add_custom_command(
-    TARGET Surge-AU-Packaged
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Packaging up AU component"
-    COMMAND ./scripts/macOS/package-au.sh  $<TARGET_FILE:surge-au-dll> ${SURGE_PRODUCT_DIR}
-    COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.component/
-    COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.component/
-    )
-
-endif()
-
-# Currently this is MAC only VST3
-if( BUILD_VST3 )
-  if( UNIX AND NOT APPLE )
-    # Sigh - vst3sdk ships with non-working code if you has it
-    get_filename_component(full_path_test_cpp ${CMAKE_CURRENT_SOURCE_DIR}/vst3sdk/base/source/timer.cpp ABSOLUTE)
-    list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${full_path_test_cpp}")
-  endif()
-
-  if(MINGW)
-    # make Steinberg::FUnknownPrivate::atomicAdd() compile when Steinberg::int32 is int instead of long
-    set(funknown_path vst3sdk/pluginterfaces/base/funknown.cpp)
-    get_filename_component(funknown "${CMAKE_CURRENT_SOURCE_DIR}/${funknown_path}" ABSOLUTE)
-    list(REMOVE_ITEM SURGE_VST3_LIBRARY_SOURCES "${funknown}")
-    file(STRINGS "${funknown_path}" funknown NEWLINE_CONSUME NO_HEX_CONVERSION)
-    string(REPLACE "InterlockedExchangeAdd" "__sync_fetch_and_add" funknown "${funknown}")
-    string(REPLACE "#include \"" "#include \"pluginterfaces/base/" funknown "${funknown}")
-    file(WRITE "${CMAKE_BINARY_DIR}/${funknown_path}" ${funknown})
-    list(APPEND SURGE_VST3_LIBRARY_SOURCES "${CMAKE_BINARY_DIR}/${funknown_path}")
-  endif()
-
-  add_library(surge-vst3-dll
-    SHARED
-    ${SURGE_SYNTH_SOURCES}
-    ${SURGE_GENERATED_SOURCES}
-    ${SURGE_GUI_SOURCES}
-    ${SURGE_OS_SOURCES}
-    ${SURGE_OS_GUI_SOURCES}
-    ${SURGE_VST3_SOURCES}
-    ${SURGE_VST3_LIBRARY_SOURCES}
-    )
-
-  if( APPLE )
-    target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/macmain.cpp)
-  elseif( UNIX AND NOT APPLE )
-    target_sources(surge-vst3-dll PRIVATE
-         vst3sdk/public.sdk/source/main/linuxmain.cpp
-         src/linux/LinuxVST3Helpers.cpp)
-  elseif( WIN32 )
-    target_sources(surge-vst3-dll PRIVATE vst3sdk/public.sdk/source/main/dllmain.cpp resources/windows-vst3/surge.def)
-  endif()
-
-  target_compile_definitions(surge-vst3-dll
-    PRIVATE
-    ${OS_COMPILE_DEFINITIONS}
-    TARGET_VST3=1
-    $<IF:$<CONFIG:DEBUG>,DEVELOPMENT,RELEASE>=1
-    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-    DEBUG=$<CONFIG:DEBUG>
-    )
-
-  if(MINGW)
-    target_compile_definitions(surge-vst3-dll PRIVATE _NATIVE_WCHAR_T_DEFINED __wchar_t=wchar_t)
-  endif()
-
-  target_include_directories(surge-vst3-dll
-    PRIVATE
-    ${SURGE_COMMON_INCLUDES}
-    ${SURGE_GUI_INCLUDES} ${SURGE_PREJUCE_GUI_INCLUDES}
-    ${OS_INCLUDE_DIRECTORIES}
-    src/vst3
-    vst3sdk/
-    )
-
-  target_link_libraries(surge-vst3-dll
-    PRIVATE
-    surge-shared
-    ${OS_LINK_LIBRARIES}
-    )
-
-  if( APPLE )
-    add_custom_target( Surge-VST3-Packaged ALL )
-    add_dependencies( Surge-VST3-Packaged surge-vst3-dll )
-    add_custom_command(
-      TARGET Surge-VST3-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up VST3 component"
-      COMMAND ./scripts/macOS/package-vst3.sh $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}
-      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst3/
-      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst3/
-      )
-   elseif( UNIX )
-    add_custom_target( Surge-VST3-Packaged ALL )
-    add_dependencies( Surge-VST3-Packaged surge-vst3-dll )
-    add_custom_command(
-      TARGET Surge-VST3-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up VST3 component"
-      COMMAND pwd
-      COMMAND echo ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR} $<IF:$<CONFIG:DEBUG>,--nostrip,>
-      COMMAND ./scripts/linux/package-vst3.sh  $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR} $<IF:$<CONFIG:DEBUG>,--nostrip,>
-      )
-    elseif( WIN32 )
-      add_custom_target( Surge-VST3-Packaged ALL
-        DEPENDS surge-vst3-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst3-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3"
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst3-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.vst3
-        )
-   endif()
-
-endif()
-
-if( BUILD_VST2 )
-  add_library(surge-vst2-dll
-    SHARED
-    ${SURGE_SYNTH_SOURCES}
-    ${SURGE_GENERATED_SOURCES}
-    ${SURGE_GUI_SOURCES}
-    ${SURGE_OS_SOURCES}
-    ${SURGE_OS_GUI_SOURCES}
-    ${SURGE_VST2_SOURCES}
-    ${SURGE_VST2_LIBRARY_SOURCES}
-    )
-
-  if( UNIX AND NOT APPLE )
-    target_sources(surge-vst2-dll PRIVATE src/linux/linux-aeffguieditor.cpp )
-
-    # Ideally we wouldn't define __cdecl on linux. It's not needed
-    # Alas, the VST2 SDK has in aeffgui a _GNUC define which requires
-    # it so without __cdecl blank defined on linux vst2, we don't get
-    # reliable builds. We considered defining it just where used but
-    # it is used also, indirectly, by the vst3 sdk, so the smallest
-    # change is this diff plus this comment.
-    target_compile_definitions( surge-vst2-dll PRIVATE "__cdecl=" )
-  endif()
-  if( WIN32 )
-    target_sources(surge-vst2-dll PRIVATE resources/windows-vst2/surge.def)
-  endif()
-
-  target_compile_definitions(surge-vst2-dll
-    PRIVATE
-    ${OS_COMPILE_DEFINITIONS}
-    TARGET_VST2=1
-    VSTGUI_ENABLE_DEPRECATED_METHODS=0
-    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-  )
-
-  target_include_directories(surge-vst2-dll
-    PRIVATE
-    ${SURGE_COMMON_INCLUDES}
-    ${SURGE_GUI_INCLUDES} ${SURGE_PREJUCE_GUI_INCLUDES}
-    ${OS_INCLUDE_DIRECTORIES}
-    src/vst2
-    ${VST2SDK_DIR}
-    )
-
-  target_link_libraries(surge-vst2-dll
-    PRIVATE
-    surge-shared
-    ${OS_LINK_LIBRARIES}
-    )
-
-  if( APPLE )
-    add_custom_target( Surge-VST2-Packaged ALL )
-    add_dependencies( Surge-VST2-Packaged surge-vst2-dll )
-    add_custom_command(
-      TARGET Surge-VST2-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up VST2 component"
-      COMMAND ./scripts/macOS/package-vst.sh $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}
-      COMMAND codesign --force --sign - --timestamp=none ${SURGE_PRODUCT_DIR}/Surge.vst/
-      COMMAND codesign -v ${SURGE_PRODUCT_DIR}/Surge.vst/
-      )
-   endif()
-  if( UNIX AND NOT APPLE )
-    add_custom_target( Surge-VST2-Packaged ALL )
-    add_dependencies( Surge-VST2-Packaged surge-vst2-dll)
-    add_custom_command(
-      TARGET Surge-VST2-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/products
-      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/Surge.so
-      )
-   endif()
-   if( WIN32 )
-      add_custom_target( Surge-VST2-Packaged ALL
-        DEPENDS surge-vst2-dll
-        COMMAND ${CMAKE_COMMAND} -E echo "copying $<TARGET_FILE:surge-vst2-dll> to ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll"
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-vst2-dll> ${SURGE_PRODUCT_DIR}/${WIN_DLL_BASENAME}.dll
-        )
-   endif()
-
-endif()
-
-if( BUILD_LV2 )
-  add_library(surge-lv2-dll
-    SHARED
-    ${SURGE_SYNTH_SOURCES}
-    ${SURGE_GENERATED_SOURCES}
-    ${SURGE_GUI_SOURCES}
-    ${SURGE_OS_SOURCES}
-    ${SURGE_OS_GUI_SOURCES}
-    ${SURGE_LV2_SOURCES}
-    ${SURGE_LV2_LIBRARY_SOURCES}
-    )
-
-  target_compile_definitions(surge-lv2-dll
-    PRIVATE
-    ${OS_COMPILE_DEFINITIONS}
-    TARGET_LV2=1
-    $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-  )
-
-  target_include_directories(surge-lv2-dll
-    PRIVATE
-    ${SURGE_COMMON_INCLUDES}
-    ${SURGE_GUI_INCLUDES} ${SURGE_PREJUCE_GUI_INCLUDES}
-    ${OS_INCLUDE_DIRECTORIES}
-    src/lv2
-    libs/lv2
-    )
-
-  target_link_libraries(surge-lv2-dll
-    PRIVATE
-    surge-shared
-    ${OS_LINK_LIBRARIES}
-    )
-
-  # FIXME - these rules have all sorts of problems with out-of-line
-  add_custom_target( Surge-LV2-Packaged ALL )
-  add_dependencies( Surge-LV2-Packaged surge-lv2-dll )
-  if( APPLE )
-    add_custom_command(
-      TARGET Surge-LV2-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up LV2 component"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
-      COMMAND scripts/linux/generate-lv2-ttl ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.dylib
-      )
-  elseif( UNIX AND NOT APPLE )
-    add_custom_command(
-      TARGET Surge-LV2-Packaged
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Packaging up LV2 component"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PRODUCT_DIR}/Surge.lv2
-      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:surge-lv2-dll> ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
-      COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/resources/data ${CMAKE_BINARY_DIR}/lintemp/surge
-      COMMAND XDG_DATA_HOME=${CMAKE_BINARY_DIR}/lintemp scripts/linux/generate-lv2-ttl ${SURGE_PRODUCT_DIR}/Surge.lv2/Surge.so
-      )
-  endif()
-
-endif()
-
 if( BUILD_HEADLESS )
   add_executable(surge-headless
     ${SURGE_SYNTH_SOURCES}
@@ -1093,44 +761,11 @@ if( BUILD_HEADLESS )
   endif()
 endif()
 
-add_custom_target( all-components )
-add_custom_target( pipeline-components )
-if( BUILD_VST2 )
-  add_dependencies(all-components Surge-VST2-Packaged )
-endif()
-if( BUILD_VST3 )
-  add_dependencies(all-components Surge-VST3-Packaged )
-  add_dependencies(pipeline-components Surge-VST3-Packaged)
-endif()
-if( BUILD_AU )
-  add_dependencies(all-components Surge-AU-Packaged )
-  add_dependencies(pipeline-components Surge-AU-Packaged)
-endif()
-if( BUILD_LV2 )
-  add_dependencies(all-components Surge-LV2-Packaged )
-  # Since we dont' distro the LV2 don't build it in the pipeline
-  # add_dependencies(pipeline-components Surge-LV2-Packaged)
-endif()
-if( BUILD_HEADLESS )
-  add_dependencies(all-components surge-headless )
-endif()
 
 #
 # INSTALL RULES - currently implemented on APPLE and LINUX only
 #
 if( APPLE )
-  if( BUILD_HEADLESS )
-    add_custom_target( run-headless )
-    add_dependencies( run-headless install-resources-local )
-    add_dependencies( run-headless surge-headless )
-    add_custom_command(
-      TARGET run-headless
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND $<TARGET_FILE:surge-headless>
-      )
-  endif()
-
   add_custom_target( install-resources-local )
   add_custom_command(
     TARGET install-resources-local
@@ -1148,110 +783,6 @@ if( APPLE )
     COMMAND echo "Installing global resources"
     COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge/"
     )
-
-  if( BUILD_AU )
-    add_custom_target( install-au-local )
-    add_dependencies( install-au-local Surge-AU-Packaged )
-    add_dependencies( install-au-local install-resources-local )
-    add_custom_command(
-      TARGET install-au-local
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing audio unit locally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.component/" "\${HOME}/Library/Audio/Plug-Ins/Components/Surge.component/"
-      )
-
-    add_custom_target( install-au-global )
-    add_dependencies( install-au-global Surge-AU-Packaged )
-    add_dependencies( install-au-global install-resources-global )
-    add_custom_command(
-      TARGET install-au-global
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing audio unit globally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.component/" "/Library/Audio/Plug-Ins/Components/Surge.component/"
-      )
-
-    add_custom_target( validate-au )
-    add_dependencies( validate-au install-au-local )
-    add_custom_command(
-      TARGET validate-au
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND auval -vt aumu VmbA
-      )
-  endif()
-
-  if( BUILD_VST2 )
-    add_custom_target( install-vst2-local )
-    add_dependencies( install-vst2-local Surge-VST2-Packaged )
-    add_dependencies( install-vst2-local install-resources-local )
-    add_custom_command(
-      TARGET install-vst2-local
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst2 unit locally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst/" "\${HOME}/Library/Audio/Plug-Ins/VST/Surge.vst/"
-      )
-
-    add_custom_target( install-vst2-global )
-    add_dependencies( install-vst2-global Surge-VST2-Packaged )
-    add_dependencies( install-vst2-global install-resources-global )
-    add_custom_command(
-      TARGET install-vst2-global
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst2 unit globally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst/" "/Library/Audio/Plug-Ins/VST/Surge.vst/"
-      )
-  endif()
-
-  if( BUILD_VST3 )
-    add_custom_target( install-vst3-local )
-    add_dependencies( install-vst3-local Surge-VST3-Packaged )
-    add_dependencies( install-vst3-local install-resources-local )
-    add_custom_command(
-      TARGET install-vst3-local
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst3 unit locally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3/" "\${HOME}/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
-      )
-
-    add_custom_target( install-vst3-global )
-    add_dependencies( install-vst3-global Surge-VST3-Packaged )
-    add_dependencies( install-vst3-global install-resources-global )
-    add_custom_command(
-      TARGET install-vst3-global
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst3 unit globally"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3/" "/Library/Audio/Plug-Ins/VST3/Surge.vst3/"
-      )
-  endif()
-
-  add_custom_target( install-everything-local )
-  if( BUILD_AU )
-    add_dependencies( install-everything-local install-au-local )
-  endif()
-  if( BUILD_VST3 )
-    add_dependencies( install-everything-local install-vst3-local )
-  endif()
-  if( BUILD_VST2 )
-    add_dependencies( install-everything-local install-vst2-local )
-  endif()
-
-  add_custom_target( install-everything-global )
-  if( BUILD_AU )
-    add_dependencies( install-everything-global install-au-global )
-  endif()
-  if( BUILD_VST3 )
-    add_dependencies( install-everything-global install-vst3-global )
-  endif()
-  if( BUILD_VST2 )
-    add_dependencies( install-everything-global install-vst2-global )
-  endif()
-
 
 elseif( UNIX AND NOT APPLE )
   add_custom_target( install-resources-local )
@@ -1272,69 +803,6 @@ elseif( UNIX AND NOT APPLE )
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/surge
     COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
     )
-
-  if( BUILD_VST2 )
-    add_custom_target( install-vst2-local )
-    add_dependencies( install-vst2-local Surge-VST2-Packaged )
-    add_dependencies( install-vst2-local install-resources-local )
-    add_custom_command(
-      TARGET install-vst2-local
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst2 unit into ~/.vst"
-      COMMAND ${CMAKE_COMMAND} -E make_directory "\${HOME}/.vst"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.so" "\${HOME}/.vst"
-      )
-
-    add_custom_target( install-vst2-global )
-    add_dependencies( install-vst2-global Surge-VST2-Packaged )
-    add_dependencies( install-vst2-global install-resources-global )
-    add_custom_command(
-      TARGET install-vst2-global
-      POST_BUILD
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND echo "Installing vst2 unit into ${CMAKE_INSTALL_PREFIX}/lib/vst"
-      COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/vst"
-      COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.so" "${CMAKE_INSTALL_PREFIX}/lib/vst"
-      )
-  endif()
-
-  add_custom_target( install-vst3-local )
-  add_dependencies( install-vst3-local Surge-VST3-Packaged )
-  add_dependencies( install-vst3-local install-resources-local )
-  add_custom_command(
-    TARGET install-vst3-local
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Installing vst3 unit locally into ~/.vst3"
-    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3" "\${HOME}/.vst3"
-    )
-
-  add_custom_target( install-vst3-global )
-  add_dependencies( install-vst3-global Surge-VST3-Packaged )
-  add_dependencies( install-vst3-global install-resources-global )
-  add_custom_command(
-    TARGET install-vst3-global
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/lib/vst3
-    COMMAND echo "Installing vst3 unit locally into ${CMAKE_INSTALL_PREFIX}/lib/vst3"
-    COMMAND rsync -r --delete "${SURGE_PRODUCT_DIR}/Surge.vst3" "${CMAKE_INSTALL_PREFIX}/lib/vst3"
-    )
-
-  add_custom_target( install-everything-local )
-  add_dependencies( install-everything-local install-vst3-local )
-  if( BUILD_VST2 )
-    add_dependencies( install-everything-local install-vst2-local )
-  endif()
-
-  add_custom_target( install-everything-global )
-  add_dependencies( install-everything-global install-vst3-global )
-  if( BUILD_VST2 )
-    add_dependencies( install-everything-global install-vst2-global )
-  endif()
-
-
 endif()
 
 # Extra packages and utils
@@ -1342,351 +810,339 @@ if( ${BUILD_SVGSHOW} )
   add_subdirectory( utils/svgshow )
 endif()
 
-#
-# Various JUCE targets we build in the shared source environment
-#
-if( ${BUILD_SURGE_JUCE_PLUGINS} )
-  include( cmake/get-juce.cmake )
+add_custom_target(surge-juce-pipeline-targets)
 
-  add_custom_target(surge-juce-pipeline-targets)
+# LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
+# it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
+# FIXME of course that this should go away in surge-xt. These are also split now for
+# XT vs FX since FX is production code in 19 and XT is not
+add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
+target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
 
-  message( STATUS "Building JUCE targets with ${JUCE_LIB_DIR}" )
-  add_subdirectory( ${JUCE_LIB_DIR} )
+set(JUCE_ASIO_SUPPORT FALSE)
+
+if (DEFINED ENV{VST2SDK_DIR})
+  file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
+  juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
+  set(SURGE_JUCE_FORMATS AU VST3 VST Standalone)
+  message(STATUS "JUCE VST2 SDK Path is $ENV{VST2SDK_DIR}")
+else()
+  set(SURGE_JUCE_FORMATS AU VST3 Standalone)
+endif()
+
+message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
+if (DEFINED ENV{ASIOSDK_DIR})
+  file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
+  message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
+  set(JUCE_ASIO_SUPPORT TRUE)
+endif()
+
+if( BUILD_SURGE_EFFECTS_BANK )
+  juce_add_plugin(surge-fx
+          PRODUCT_NAME "SurgeEffectsBank XT"
+          COMPANY_NAME "Surge Synth Team"
+          BUNDLE_ID "org.surge-synth-team.surge-fx-xt"
+          PLUGIN_MANUFACTURER_CODE VmbA
+          PLUGIN_CODE SFXT
+
+          IS_SYNTH FALSE
+          NEEDS_MIDI_INPUT FALSE
+          NEEDS_MIDI_OUTPUT FALSE
+          IS_MIDI_EFFECT FALSE
+
+          FORMATS ${SURGE_JUCE_FORMATS}
+          )
+
+  juce_generate_juce_header( surge-fx )
+
+  file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
+          resources/surge_effects_bank/*.svg
+          resources/surge_effects_bank/icons/*.svg
+          )
+
+  juce_add_binary_data( surge-fx-binary
+          SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
+          )
+  set_target_properties(surge-fx-binary PROPERTIES
+          POSITION_INDEPENDENT_CODE TRUE
+          )
+
+  target_compile_definitions(surge-fx PUBLIC
+          JUCE_ALLOW_STATIC_NULL_VARIABLES=0
+          JUCE_STRICT_REFCOUNTEDPOINTER=1
+
+          JUCE_VST3_CAN_REPLACE_VST2=0
+          JUCE_USE_CURL=0
+          JUCE_WEB_BROWSER=0
+          JUCE_USE_CAMERA=disabled
+
+          JUCE_DISPLAY_SPLASH_SCREEN=0
+          JUCE_REPORT_APP_USAGE=0
+
+          JUCE_ALSA=1
+          JUCE_JACK=1
+
+          TARGET_HEADLESS=1
+          )
+
+  if (JUCE_ASIO_SUPPORT)
+    target_compile_definitions(surge-fx PUBLIC
+      JUCE_ASIO=1
+      )
+  endif()
+
+  target_sources(surge-fx PRIVATE
+          src/surge_effects_bank/SurgeFXEditor.cpp
+          src/surge_effects_bank/SurgeFXProcessor.cpp
+          src/surge_effects_bank/SurgeLookAndFeel.h
+          ${SURGE_GENERATED_SOURCES}
+          ${SURGE_OS_SOURCES}
+          )
+
+  target_link_libraries(surge-fx PRIVATE
+          surge::airwindows
+          surge::filesystem
+          surge::tinyxml
+
+          surge-shared
+          surge-juce-userint-fx
+          surge-fx-binary
+
+          juce::juce_audio_utils
+          juce::juce_audio_processors
+          )
+
+  target_include_directories(surge-fx PRIVATE
+          src/surge_effects_bank
+          ${SURGE_COMMON_INCLUDES}
+          ${OS_INCLUDE_DIRECTORIES}
+          )
+
+  if (JUCE_ASIO_SUPPORT)
+    target_include_directories(surge-fx PRIVATE
+      ${ASIOSDK_DIR}/common
+      )
+  endif()
+
+  target_compile_definitions(surge-fx PRIVATE ${OS_COMPILE_DEFINITIONS} )
+
+  get_target_property( SURGE_FX_OUTPUT_DIR surge-fx RUNTIME_OUTPUT_DIRECTORY )
+
+  add_custom_target( Surge-Effects-Bank-Packaged ALL )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_All )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_VST3 )
+  add_dependencies( Surge-Effects-Bank-Packaged surge-fx_Standalone )
+
+  add_dependencies(surge-juce-pipeline-targets surge-fx_Standalone)
+  add_custom_command(
+          TARGET Surge-Effects-Bank-Packaged
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Re-locating VST3 and Standalone components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/VST3 ${SURGE_PRODUCT_DIR}/
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/Standalone ${SURGE_PRODUCT_DIR}/
+  )
+
+  if( APPLE )
+    add_dependencies( Surge-Effects-Bank-Packaged surge-fx_AU )
+
+    add_custom_command(
+          TARGET Surge-Effects-Bank-Packaged
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Re-locating AU components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/AU ${SURGE_PRODUCT_DIR}/
+    )
+  endif()
+endif() # build surge effects bank
+
+if( BUILD_SURGE_XT )
+  juce_add_plugin(surge-xt
+          PRODUCT_NAME "Surge XT"
+          COMPANY_NAME "Surge Synth Team"
+          BUNDLE_ID "org.surge-synth-team.surge-xt"
+          PLUGIN_MANUFACTURER_CODE VmbA
+          PLUGIN_CODE SgXT
+
+          ICON_BIG "resources/surge-xt/SurgeLogo.png"
+
+          IS_SYNTH TRUE
+          NEEDS_MIDI_INPUT TRUE
+          NEEDS_MIDI_OUTPUT FALSE
+          IS_MIDI_EFFECT FALSE
+
+          FORMATS ${SURGE_JUCE_FORMATS}
+          )
+
+  juce_generate_juce_header( surge-xt )
+
+  file(GLOB SURGE_SYNTH_JUCE_RESOURCES_GLOB
+          assets/SurgeClassic/exported/*svg
+          resources/fonts/Lato*ttf
+          )
+
+  juce_add_binary_data( surge-xt-binary
+          SOURCES ${SURGE_SYNTH_JUCE_RESOURCES_GLOB}
+          )
+  set_target_properties(surge-xt-binary PROPERTIES
+          POSITION_INDEPENDENT_CODE TRUE
+          )
+
+  target_compile_definitions(surge-xt PUBLIC
+          JUCE_ALLOW_STATIC_NULL_VARIABLES=0
+          JUCE_STRICT_REFCOUNTEDPOINTER=1
+
+          JUCE_VST3_CAN_REPLACE_VST2=0
+          JUCE_USE_CURL=0
+          JUCE_WEB_BROWSER=0
+          JUCE_USE_CAMERA=disabled
+
+          JUCE_DISPLAY_SPLASH_SCREEN=0
+          JUCE_REPORT_APP_USAGE=0
+
+          JUCE_ALSA=1
+          JUCE_JACK=1
+
+          TARGET_JUCE_SYNTH=1
+          TARGET_HEADLESS=1
+          TARGET_JUCE_UI=1
+
+          $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+          )
+
+  if (JUCE_ASIO_SUPPORT)
+    target_compile_definitions(surge-xt PUBLIC
+      JUCE_ASIO=1
+      )
+  endif()
 
   # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
   # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-  # FIXME of course that this should go away in surge-xt. These are also split now for
-  # XT vs FX since FX is production code in 19 and XT is not
-  add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
-  target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
+  add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE_Synth_XT.cpp)
+  target_include_directories(surge-xt-userint PRIVATE ${SURGE_COMMON_INCLUDES})
 
-  set(JUCE_ASIO_SUPPORT FALSE)
+  set(SURGE_SYNTH_JUCE_GUI_SOURCES
+         ${SURGE_GUI_SOURCES}
+          )
 
-  if (DEFINED ENV{VST2SDK_DIR})
-    file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
-    juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
-    set(SURGE_JUCE_FORMATS AU VST3 VST Standalone)
-    message(STATUS "JUCE VST2 SDK Path is $ENV{VST2SDK_DIR}")
-  else()
-    set(SURGE_JUCE_FORMATS AU VST3 Standalone)
+  target_sources(surge-xt PRIVATE
+          src/surge_synth_juce/SurgeSynthEditor.cpp
+          src/surge_synth_juce/SurgeSynthProcessor.cpp
+          ${SURGE_GENERATED_SOURCES}
+          ${SURGE_OS_SOURCES}
+          ${SURGE_SYNTH_SOURCES}
+
+          ${SURGE_SYNTH_JUCE_GUI_SOURCES}
+          )
+
+  target_sources(surge-xt_VST3 PRIVATE
+          src/surge_synth_juce/SurgeSynthVST3Extensions.cpp
+          )
+
+  target_sources(surge-xt_Standalone PRIVATE
+          src/surge_synth_juce/SurgeSynthStandaloneExtensions.cpp
+          )
+
+  if( DEFINED ENV{VST2SDK_DIR} )
+    target_sources(surge-xt_VST PRIVATE
+            src/surge_synth_juce/SurgeSynthVST2Extensions.cpp
+            )
   endif()
 
-  message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
-  if (DEFINED ENV{ASIOSDK_DIR})
-    file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
-    message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
-    set(JUCE_ASIO_SUPPORT TRUE)
+  if( APPLE )
+    target_sources(surge-xt_AU PRIVATE
+            src/surge_synth_juce/SurgeSynthAUExtensions.cpp
+            )
   endif()
 
-  if( BUILD_SURGE_EFFECTS_BANK )
-    juce_add_plugin(surge-fx
-            PRODUCT_NAME "SurgeEffectsBank"
-            COMPANY_NAME "Surge Synth Team"
-            BUNDLE_ID "org.surge-synth-team.surge-fx"
-            PLUGIN_MANUFACTURER_CODE VmbA
-            PLUGIN_CODE SFXB
+  target_link_libraries(surge-xt PUBLIC
+          surge::airwindows
+          surge::filesystem
+          surge::tinyxml
 
-            IS_SYNTH FALSE
-            NEEDS_MIDI_INPUT FALSE
-            NEEDS_MIDI_OUTPUT FALSE
-            IS_MIDI_EFFECT FALSE
+          surge-shared
+          surge-xt-userint
 
-            FORMATS ${SURGE_JUCE_FORMATS}
-            )
+          juce::juce_audio_utils
+          juce::juce_audio_processors
+          juce::juce_audio_plugin_client
 
-    juce_generate_juce_header( surge-fx )
+          escape-from-vstgui
 
-    file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
-            resources/surge_effects_bank/*.svg
-            resources/surge_effects_bank/icons/*.svg
-            )
+          surge-xt-binary
+          )
 
-    juce_add_binary_data( surge-fx-binary
-            SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
-            )
-    set_target_properties(surge-fx-binary PROPERTIES
-            POSITION_INDEPENDENT_CODE TRUE
-            )
+  target_include_directories(surge-xt PUBLIC
+          src/surge_synth_juce
+          src/headless
+          ${SURGE_COMMON_INCLUDES}
+          ${SURGE_GUI_INCLUDES}
+          ${OS_INCLUDE_DIRECTORIES}
+          )
 
-    target_compile_definitions(surge-fx PUBLIC
-            JUCE_ALLOW_STATIC_NULL_VARIABLES=0
-            JUCE_STRICT_REFCOUNTEDPOINTER=1
-
-            JUCE_VST3_CAN_REPLACE_VST2=0
-            JUCE_USE_CURL=0
-            JUCE_WEB_BROWSER=0
-            JUCE_USE_CAMERA=disabled
-
-            JUCE_DISPLAY_SPLASH_SCREEN=0
-            JUCE_REPORT_APP_USAGE=0
-
-            JUCE_ALSA=1
-            JUCE_JACK=1
-
-            TARGET_HEADLESS=1
-            )
-
-    if (JUCE_ASIO_SUPPORT)
-      target_compile_definitions(surge-fx PUBLIC
-        JUCE_ASIO=1
-        )
-    endif()
-
-    target_sources(surge-fx PRIVATE
-            src/surge_effects_bank/SurgeFXEditor.cpp
-            src/surge_effects_bank/SurgeFXProcessor.cpp
-            src/surge_effects_bank/SurgeLookAndFeel.h
-            ${SURGE_GENERATED_SOURCES}
-            ${SURGE_OS_SOURCES}
-            )
-
-    target_link_libraries(surge-fx PRIVATE
-            surge::airwindows
-            surge::filesystem
-            surge::tinyxml
-
-            surge-shared
-            surge-juce-userint-fx
-            surge-fx-binary
-
-            juce::juce_audio_utils
-            juce::juce_audio_processors
-            )
-
-    target_include_directories(surge-fx PRIVATE
-            src/surge_effects_bank
-            ${SURGE_COMMON_INCLUDES}
-            ${OS_INCLUDE_DIRECTORIES}
-            )
-
-    if (JUCE_ASIO_SUPPORT)
-      target_include_directories(surge-fx PRIVATE
-        ${ASIOSDK_DIR}/common
-        )
-    endif()
-
-    target_compile_definitions(surge-fx PRIVATE ${OS_COMPILE_DEFINITIONS} )
-
-    get_target_property( SURGE_FX_OUTPUT_DIR surge-fx RUNTIME_OUTPUT_DIRECTORY )
-
-    add_custom_target( Surge-Effects-Bank-Packaged ALL )
-    add_dependencies( Surge-Effects-Bank-Packaged surge-fx_All )
-    add_dependencies( Surge-Effects-Bank-Packaged surge-fx_VST3 )
-    add_dependencies( Surge-Effects-Bank-Packaged surge-fx_Standalone )
-
-    add_dependencies(surge-juce-pipeline-targets surge-fx_Standalone)
-    add_custom_command(
-            TARGET Surge-Effects-Bank-Packaged
-            POST_BUILD
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMAND echo "Re-locating VST3 and Standalone components"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/VST3 ${SURGE_PRODUCT_DIR}/
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/Standalone ${SURGE_PRODUCT_DIR}/
-    )
-
-    if( APPLE )
-      add_dependencies( Surge-Effects-Bank-Packaged surge-fx_AU )
-
-      add_custom_command(
-            TARGET Surge-Effects-Bank-Packaged
-            POST_BUILD
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMAND echo "Re-locating AU components"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/AU ${SURGE_PRODUCT_DIR}/
-      )
-    endif()
-
-    add_dependencies( pipeline-components Surge-Effects-Bank-Packaged )
-  endif() # build surge effects bank
-
-  if( BUILD_SURGE_XT )
-    juce_add_plugin(surge-xt
-            PRODUCT_NAME "Surge XT"
-            COMPANY_NAME "Surge Synth Team"
-            BUNDLE_ID "org.surge-synth-team.surge-xt"
-            PLUGIN_MANUFACTURER_CODE VmbA
-            PLUGIN_CODE SgXT
-
-            ICON_BIG "resources/surge-xt/SurgeLogo.png"
-
-            IS_SYNTH TRUE
-            NEEDS_MIDI_INPUT TRUE
-            NEEDS_MIDI_OUTPUT FALSE
-            IS_MIDI_EFFECT FALSE
-
-            FORMATS ${SURGE_JUCE_FORMATS}
-            )
-
-    juce_generate_juce_header( surge-xt )
-
-    file(GLOB SURGE_SYNTH_JUCE_RESOURCES_GLOB
-            assets/SurgeClassic/exported/*svg
-            resources/fonts/Lato*ttf
-            )
-
-    juce_add_binary_data( surge-xt-binary
-            SOURCES ${SURGE_SYNTH_JUCE_RESOURCES_GLOB}
-            )
-    set_target_properties(surge-xt-binary PROPERTIES
-            POSITION_INDEPENDENT_CODE TRUE
-            )
-
-    target_compile_definitions(surge-xt PUBLIC
-            JUCE_ALLOW_STATIC_NULL_VARIABLES=0
-            JUCE_STRICT_REFCOUNTEDPOINTER=1
-
-            JUCE_VST3_CAN_REPLACE_VST2=0
-            JUCE_USE_CURL=0
-            JUCE_WEB_BROWSER=0
-            JUCE_USE_CAMERA=disabled
-
-            JUCE_DISPLAY_SPLASH_SCREEN=0
-            JUCE_REPORT_APP_USAGE=0
-
-            JUCE_ALSA=1
-            JUCE_JACK=1
-
-            TARGET_JUCE_SYNTH=1
-            TARGET_HEADLESS=1
-            TARGET_JUCE_UI=1
-
-            $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-            )
-
-    if (JUCE_ASIO_SUPPORT)
-      target_compile_definitions(surge-xt PUBLIC
-        JUCE_ASIO=1
-        )
-    endif()
-
-    # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
-    # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-    add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE_Synth_XT.cpp)
-    target_include_directories(surge-xt-userint PRIVATE ${SURGE_COMMON_INCLUDES})
-
-    set(SURGE_SYNTH_JUCE_GUI_SOURCES
-           ${SURGE_GUI_SOURCES}
-            )
-
-    target_sources(surge-xt PRIVATE
-            src/surge_synth_juce/SurgeSynthEditor.cpp
-            src/surge_synth_juce/SurgeSynthProcessor.cpp
-            ${SURGE_GENERATED_SOURCES}
-            ${SURGE_OS_SOURCES}
-            ${SURGE_SYNTH_SOURCES}
-
-            ${SURGE_SYNTH_JUCE_GUI_SOURCES}
-            )
-
-    target_sources(surge-xt_VST3 PRIVATE
-            src/surge_synth_juce/SurgeSynthVST3Extensions.cpp
-            )
-
-    target_sources(surge-xt_Standalone PRIVATE
-            src/surge_synth_juce/SurgeSynthStandaloneExtensions.cpp
-            )
-
-    if( DEFINED ENV{VST2SDK_DIR} )
-      target_sources(surge-xt_VST PRIVATE
-              src/surge_synth_juce/SurgeSynthVST2Extensions.cpp
-              )
-    endif()
-
-    if( APPLE )
-      target_sources(surge-xt_AU PRIVATE
-              src/surge_synth_juce/SurgeSynthAUExtensions.cpp
-              )
-    endif()
-
-    target_link_libraries(surge-xt PUBLIC
-            surge::airwindows
-            surge::filesystem
-            surge::tinyxml
-
-            surge-shared
-            surge-xt-userint
-
-            juce::juce_audio_utils
-            juce::juce_audio_processors
-            juce::juce_audio_plugin_client
-
-            escape-from-vstgui
-
-            surge-xt-binary
-            )
-
+  if (JUCE_ASIO_SUPPORT)
     target_include_directories(surge-xt PUBLIC
-            src/surge_synth_juce
-            src/headless
-            ${SURGE_COMMON_INCLUDES}
-            ${SURGE_GUI_INCLUDES}
-            ${OS_INCLUDE_DIRECTORIES}
-            )
+      ${ASIOSDK_DIR}/common
+      )
+  endif()
 
-    if (JUCE_ASIO_SUPPORT)
-      target_include_directories(surge-xt PUBLIC
-        ${ASIOSDK_DIR}/common
-        )
-    endif()
+  target_compile_definitions(surge-xt PUBLIC ${OS_COMPILE_DEFINITIONS} DONT_SET_USING_JUCE_NAMESPACE=1)
 
-    target_compile_definitions(surge-xt PUBLIC ${OS_COMPILE_DEFINITIONS} DONT_SET_USING_JUCE_NAMESPACE=1)
+  target_compile_definitions(surge-xt_Standalone PUBLIC
+          TARGET_JUCE_SYNTH=1
+          TARGET_HEADLESS=1
+          TARGET_JUCE_UI=1)
 
-    target_compile_definitions(surge-xt_Standalone PUBLIC
-            TARGET_JUCE_SYNTH=1
-            TARGET_HEADLESS=1
-            TARGET_JUCE_UI=1)
+  add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
 
-    add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
+  add_custom_target(surge-xt-distribution)
+  add_dependencies(surge-xt-distribution surge-xt_All)
+  if( APPLE )
+    set( SXT_ZIP AU VST3 Standalone)
+  else()
+    set( SXT_ZIP VST3 Standalone)
+  endif()
 
-    add_custom_target(surge-xt-distribution)
-    add_dependencies(surge-xt-distribution surge-xt_All)
-    if( APPLE )
-      set( SXT_ZIP AU VST3 Standalone)
-    else()
-      set( SXT_ZIP VST3 Standalone)
-    endif()
+  if( DEFINED ENV{SURGE_VERSION} )
+    set( SXTVER $ENV{SURGE_VERSION})
+  else()
+    set( SXTVER "LOCAL")
+  endif()
 
-    if( DEFINED ENV{SURGE_VERSION} )
-      set( SXTVER $ENV{SURGE_VERSION})
-    else()
-      set( SXTVER "LOCAL")
-    endif()
+  if( APPLE )
+    set( SXTOS "macOS" )
+  elseif( UNIX)
+    set( SXTOS "linux" )
+  else()
+    set( SXTOS "win64" )
+  endif()
 
-    if( APPLE )
-      set( SXTOS "macOS" )
-    elseif( UNIX)
-      set( SXTOS "linux" )
-    else()
-      set( SXTOS "win64" )
-    endif()
+  add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
+          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt .
+          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
+          COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
+          )
 
-    add_custom_command(TARGET surge-xt-distribution
+  if (APPLE)  # Just because BP is too lazy to code these up on the other OSes yet
+    add_custom_target(surge-xt-vst3-local)
+    add_dependencies(surge-xt-vst3-local surge-xt_VST3)
+    add_custom_command(TARGET surge-xt-vst3-local
             POST_BUILD
             WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt .
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
-            COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
+            COMMAND ls -l
+            COMMAND ${CMAKE_COMMAND} -E copy_directory VST3 ~/Library/Audio/Plug-Ins/VST3
             )
 
-    if (APPLE)  # Just because BP is too lazy to code these up on the other OSes yet
-      add_custom_target(surge-xt-vst3-local)
-      add_dependencies(surge-xt-vst3-local surge-xt_VST3)
-      add_custom_command(TARGET surge-xt-vst3-local
-              POST_BUILD
-              WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-              COMMAND ls -l
-              COMMAND ${CMAKE_COMMAND} -E copy_directory VST3 ~/Library/Audio/Plug-Ins/VST3
-              )
-
-      add_custom_target(surge-xt-au-local)
-      add_dependencies(surge-xt-au-local surge-xt_AU)
-      add_custom_command(TARGET surge-xt-au-local
-              POST_BUILD
-              WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-              COMMAND ls -l
-              COMMAND ${CMAKE_COMMAND} -E copy_directory AU ~/Library/Audio/Plug-Ins/Components
-              )
-    endif()
+    add_custom_target(surge-xt-au-local)
+    add_dependencies(surge-xt-au-local surge-xt_AU)
+    add_custom_command(TARGET surge-xt-au-local
+            POST_BUILD
+            WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
+            COMMAND ls -l
+            COMMAND ${CMAKE_COMMAND} -E copy_directory AU ~/Library/Audio/Plug-Ins/Components
+            )
   endif()
 endif()
 
@@ -1746,6 +1202,11 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
 else()
   message( STATUS "Python bindings disabled" )
 endif()
+
+# This is the custom target for the CI pipeline
+add_custom_target(ci-pull-req)
+add_dependencies(ci-pull-req surge-xt_All)
+add_dependencies(ci-pull-req surge-fx_All)
 
 # We have a special target here which the PR pipeline uses to make sure things
 # are of the appropriate code quality. This allows us to write CMAKE rules which
