@@ -136,6 +136,9 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
 
         phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : storage->rand_01();
         sphase[u] = phase[u];
+        sTurnFrac[u] = 0;
+        sprior[u] = 0;
+        sTurnVal[u] = 0;
 
         driftLFO[u].init(nonzero_init_drift);
 
@@ -327,6 +330,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             // super important - you have to mix after differentiating to avoid zipper noise
             // but I can save a multiply by putting it here
             double res = (sawmix.v * saw + trimix.v * tri + sqrmix.v * sqr) * denom;
+            res = res * (1.0 - sTurnFrac[u]) + sTurnFrac[u] * sTurnVal[u];
 
             vL += res * mixL[u];
             vR += res * mixR[u];
@@ -334,6 +338,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
             // we know phase is in 0,1 and dp is in 0,0.5
             phase[u] += dp;
             sphase[u] += dsp;
+            sTurnFrac[u] = 0.0;
 
             // If we try to unbranch this, we get the divide at every tick which is painful
             if (phase[u] > 1)
@@ -344,10 +349,24 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                 {
                     sphase[u] = phase[u] * dsp / dp;
                     sphase[u] -= floor(sphase[u]); // just in case we have a very high sync
+
+                    /*
+                     * So the way we do synch can be a bit aliasy. Basically we move the phase
+                     * forward and then difference over the new phase. WHat we should really do is
+                     * figure out continuous generators with sync in but ugh that's super hard and
+                     * it is late in the 1.9 cycle. So instead what we do is a little compensating
+                     * turnover where we linearly itnerpolate the prior phase forward one sample
+                     * (that is sTurnVal) and then average it into the next sample. Resetting
+                     * sTurnFrac above means this only happens at the turnover sample.
+                     */
+                    sTurnFrac[u] = 0.5; // std::min(std::max(0.1, osp-sphase[u]), 0.9);
+                    sTurnVal[u] = res + (sprior[u] - res) * dsp;
                 }
 
                 sReset[u] = !sReset[u];
             }
+
+            sprior[u] = res;
 
             sphase[u] -= (sphase[u] > 1) * 1.0;
 
