@@ -1580,10 +1580,7 @@ float SurgeStorage::note_to_pitch(float x)
         int e = (int)x;
         float a = x - (float)e;
 
-        if (e > 0x1fe)
-            e = 0x1fe;
-
-        return (1 - a) * table_pitch[e & 0x1ff] + a * table_pitch[(e + 1) & 0x1ff];
+        return (1 - a) * table_pitch[e] + a * table_pitch[(e + 1) & 0x1ff];
     }
 }
 
@@ -1596,14 +1593,10 @@ float SurgeStorage::note_to_pitch_inv(float x)
     else
     {
         x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
-        // x += 256;
         int e = (int)x;
         float a = x - (float)e;
 
-        if (e > 0x1fe)
-            e = 0x1fe;
-
-        return (1 - a) * table_pitch_inv[e & 0x1ff] + a * table_pitch_inv[(e + 1) & 0x1ff];
+        return (1 - a) * table_pitch_inv[e] + a * table_pitch_inv[(e + 1) & 0x1ff];
     }
 }
 
@@ -1614,33 +1607,26 @@ float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
     int e = (int)x;
     float a = x - (float)e;
 
-    if (e > 0x1fe)
-        e = 0x1fe;
-
     float pow2pos = a * 1000.0;
     int pow2idx = (int)pow2pos;
     float pow2frac = pow2pos - pow2idx;
     float pow2v =
         (1 - pow2frac) * table_two_to_the[pow2idx] + pow2frac * table_two_to_the[pow2idx + 1];
-    return table_pitch_ignoring_tuning[e & 0x1ff] * pow2v;
+    return table_pitch_ignoring_tuning[e] * pow2v;
 }
 
 float SurgeStorage::note_to_pitch_inv_ignoring_tuning(float x)
 {
     x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
-    // x += 256;
     int e = (int)x;
     float a = x - (float)e;
-
-    if (e > 0x1fe)
-        e = 0x1fe;
 
     float pow2pos = a * 1000.0;
     int pow2idx = (int)pow2pos;
     float pow2frac = pow2pos - pow2idx;
     float pow2v = (1 - pow2frac) * table_two_to_the_minus[pow2idx] +
                   pow2frac * table_two_to_the_minus[pow2idx + 1];
-    return table_pitch_inv_ignoring_tuning[e & 0x1ff] * pow2v;
+    return table_pitch_inv_ignoring_tuning[e] * pow2v;
 }
 
 void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
@@ -1650,13 +1636,8 @@ void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
     int e = (int)x;
     float a = x - (float)e;
 
-    if (e > 0x1fe)
-        e = 0x1fe;
-    else if (e < 0)
-        e = 0;
-
-    sinu = (1 - a) * table_note_omega[0][e & 0x1ff] + a * table_note_omega[0][(e + 1) & 0x1ff];
-    cosi = (1 - a) * table_note_omega[1][e & 0x1ff] + a * table_note_omega[1][(e + 1) & 0x1ff];
+    sinu = (1 - a) * table_note_omega[0][e] + a * table_note_omega[0][(e + 1) & 0x1ff];
+    cosi = (1 - a) * table_note_omega[1][e] + a * table_note_omega[1][(e + 1) & 0x1ff];
 }
 
 void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi)
@@ -1666,14 +1647,9 @@ void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &co
     int e = (int)x;
     float a = x - (float)e;
 
-    if (e > 0x1fe)
-        e = 0x1fe;
-    else if (e < 0)
-        e = 0;
-
-    sinu = (1 - a) * table_note_omega_ignoring_tuning[0][e & 0x1ff] +
+    sinu = (1 - a) * table_note_omega_ignoring_tuning[0][e] +
            a * table_note_omega_ignoring_tuning[0][(e + 1) & 0x1ff];
-    cosi = (1 - a) * table_note_omega_ignoring_tuning[1][e & 0x1ff] +
+    cosi = (1 - a) * table_note_omega_ignoring_tuning[1][e] +
            a * table_note_omega_ignoring_tuning[1][(e + 1) & 0x1ff];
 }
 
