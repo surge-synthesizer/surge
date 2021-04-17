@@ -77,7 +77,8 @@ class ModernOscillator : public Oscillator
 
     int n_unison = 1;
     bool starting = true;
-    double phase[MAX_UNISON], sphase[MAX_UNISON], subphase, subsphase;
+    double phase[MAX_UNISON], sphase[MAX_UNISON], sprior[MAX_UNISON], sTurnFrac[MAX_UNISON],
+        sTurnVal[MAX_UNISON], subphase, subsphase;
     bool sReset[MAX_UNISON];
     bool subReset;
     double unisonOffsets[MAX_UNISON];
