@@ -1,9 +1,6 @@
 # Surge CMake file
 # Exports targets for each of our builds
 #
-# Current Status - this builds the whole shooting match
-# See issue 1206 for our working list to get this finished
-#
 
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
@@ -20,7 +17,7 @@ if(NOT BUILD_TESTING)
   set(BUILD_TESTING "False" CACHE STRING "" FORCE)
 endif()
 
-project(Surge VERSION 1.9.0.0 LANGUAGES CXX ASM)
+project(Surge-XT VERSION 1.0.0.0 LANGUAGES CXX ASM)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 if(APPLE)
@@ -113,10 +110,9 @@ else()
   message( STATUS "Building in 64 bit configuration" )
 endif()
 
-set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_products)
+set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_xt_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
-set(BUILD_SURGE_JUCE_PLUGINS TRUE)
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
   add_subdirectory( ${SURGE_ALTERNATE_JUCE} )
@@ -139,6 +135,17 @@ add_subdirectory(libs/escape-from-vstgui)
 add_subdirectory(libs/oddsound-mts)
 add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
 
+juce_add_binary_data(surge-shared-binary
+        NAMESPACE SurgeCoreBinary
+        HEADER_NAME SurgeCoreBinary.h
+        SOURCES
+        resources/data/configuration.xml
+        resources/data/windows.wt
+        resources/data/paramdocumentation.xml)
+set_target_properties(surge-shared-binary PROPERTIES
+        POSITION_INDEPENDENT_CODE TRUE
+        )
+
 target_link_libraries(surge-shared PUBLIC
   surge::airwindows
   surge::eurorack
@@ -146,6 +153,7 @@ target_link_libraries(surge-shared PUBLIC
   surge::tinyxml
   surge::oddsound-mts
   samplerate
+  surge-shared-binary
 )
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
@@ -177,7 +185,6 @@ add_dependencies( surge-shared git-info )
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 find_package(LibMidiFile ${PACKAGE_OPTIONS})
 
-set( BUILD_SURGE_JUCE_PLUGINS TRUE )
 set( BUILD_SURGE_XT TRUE )
 set( BUILD_SURGE_EFFECTS_BANK TRUE )
 set( BUILD_HEADLESS TRUE )
@@ -327,95 +334,6 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/common/gui/UIInstrumentation.cpp)
 
-set(SURGE_VST3_SOURCES
-  src/vst3/SurgeVst3Processor.cpp
-  src/vst3/surgeentry.cpp
-  )
-
-file(GLOB SURGE_VST3_GLOB
-  vst3sdk/base/source/*.cpp
-  vst3sdk/base/thread/source/*.cpp
-  vst3sdk/public.sdk/source/common/*.cpp
-  vst3sdk/pluginterfaces/base/*.cpp
-  )
-
-set(SURGE_VST3_LIBRARY_SOURCES
-  ${SURGE_VST3_GLOB}
-  vst3sdk/public.sdk/source/main/pluginfactoryvst3.cpp
-  vst3sdk/public.sdk/source/vst/vstguieditor.cpp
-  vst3sdk/public.sdk/source/vst/vstinitiids.cpp
-  vst3sdk/public.sdk/source/vst/vstnoteexpressiontypes.cpp
-  vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
-  vst3sdk/public.sdk/source/vst/vstaudioeffect.cpp
-  vst3sdk/public.sdk/source/vst/vstcomponent.cpp
-  vst3sdk/public.sdk/source/vst/vstsinglecomponenteffect.cpp
-  vst3sdk/public.sdk/source/vst/vstcomponentbase.cpp
-  vst3sdk/public.sdk/source/vst/vstbus.cpp
-  vst3sdk/public.sdk/source/vst/vstparameters.cpp
-  )
-
-set(SURGE_AU_SOURCES
-  src/au/aulayer.cpp
-  src/au/aulayer_presets.cpp
-  src/au/aulayer_cocoaui.mm
-  )
-
-set(SURGE_AU_LIBRARY_SOURCES
-  libs/AUPublic/AUBase.cpp
-  libs/AUPublic/AUBaseHelper.cpp
-  libs/AUPublic/AUBuffer.cpp
-  libs/AUPublic/AUDispatch.cpp
-  libs/AUPublic/AUEffectBase.cpp
-  libs/AUPublic/AUInputElement.cpp
-  libs/AUPublic/AUInstrumentBase.cpp
-  libs/AUPublic/AUMIDIBase.cpp
-  libs/AUPublic/AUMIDIEffectBase.cpp
-  libs/AUPublic/AUOutputElement.cpp
-  libs/AUPublic/AUPlugInDispatch.cpp
-  libs/AUPublic/AUScopeElement.cpp
-  libs/AUPublic/ComponentBase.cpp
-  libs/AUPublic/MusicDeviceBase.cpp
-  libs/AUPublic/SynthElement.cpp
-  libs/AUPublic/SynthNote.cpp
-  libs/AUPublic/SynthNoteList.cpp
-  libs/PublicUtility/CAAUMIDIMap.cpp
-  libs/PublicUtility/CAAUMIDIMapManager.cpp
-  libs/PublicUtility/CAAudioChannelLayout.cpp
-  libs/PublicUtility/CAAudioChannelLayoutObject.cpp
-  libs/PublicUtility/CABufferList.cpp
-  libs/PublicUtility/CADebugMacros.cpp
-  libs/PublicUtility/CADebugPrintf.cpp
-  libs/PublicUtility/CADebugger.cpp
-  libs/PublicUtility/CAGuard.cpp
-  libs/PublicUtility/CAHostTimeBase.cpp
-  libs/PublicUtility/CAMutex.cpp
-  libs/PublicUtility/CAStreamBasicDescription.cpp
-  libs/PublicUtility/CAVectorUnit.cpp
-  libs/PublicUtility/CAXException.cpp
-
-  vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
-  )
-
-set(SURGE_VST2_SOURCES
-  src/vst2/Vst2PluginInstance.cpp
-  )
-
-set(SURGE_VST2_LIBRARY_SOURCES
-  ${VST2SDK_DIR}/public.sdk/source/vst2.x/audioeffect.cpp
-  ${VST2SDK_DIR}/public.sdk/source/vst2.x/audioeffectx.cpp
-  ${VST2SDK_DIR}/public.sdk/source/vst2.x/vstplugmain.cpp
-  vstgui.surge/vstgui/plugin-bindings/aeffguieditor.cpp
-  )
-
-set(SURGE_LV2_SOURCES
-  src/lv2/SurgeLv2Export.cpp
-  src/lv2/SurgeLv2Ui.cpp
-  src/lv2/SurgeLv2Util.cpp
-  src/lv2/SurgeLv2Vstgui.cpp
-  src/lv2/SurgeLv2Wrapper.cpp
-  vstgui.surge/vstgui/plugin-bindings/plugguieditor.cpp
-  )
-
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
   libs/
@@ -431,10 +349,6 @@ set(SURGE_GUI_INCLUDES
   src/common/gui
   )
 
-set(SURGE_PREJUCE_GUI_INCLUDES
-        vstgui.surge
-        libs/nanosvg/src
-        )
 ### OS SPECIFIC SECTION
 if( APPLE )
   set(SURGE_OS_SOURCES
@@ -445,8 +359,6 @@ if( APPLE )
     src/mac/DisplayInfoMac.mm
     src/mac/RuntimeFontMac.cpp
     src/mac/UserInteractionsMac.mm
-    vstgui.surge/vstgui/vstgui_mac.mm
-    vstgui.surge/vstgui/vstgui_uidescription_mac.mm
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -482,30 +394,10 @@ if( APPLE )
     )
 
 elseif( UNIX AND NOT APPLE )
-  file(GLOB PIGGY_INPUTS ${CMAKE_SOURCE_DIR}/assets/SurgeClassic/exported/*svg)
-  add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${PIGGY_INPUTS}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lintemp
-    COMMAND ${CMAKE_SOURCE_DIR}/scripts/linux/emit-vector-piggy ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/lintemp
-    )
-
-  file(GLOB LINUX_VSTGUI_GLOB vstgui.surge/vstgui/lib/platform/linux/*.cpp )
-
-  # Our friends at steinberg have this maddening habig of using #warning DEPRECATED in linux code
-  set_source_files_properties(${SURGE_VST3_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
-  set_source_files_properties(${LINUX_VSTGUI_GLOB} PROPERTIES COMPILE_FLAGS -Wno-cpp)
-
   set(SURGE_OS_GUI_SOURCES
-    ${CMAKE_BINARY_DIR}/lintemp/ScalablePiggy.S
-    ${LINUX_VSTGUI_GLOB}
     src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
     src/linux/UserInteractionsLinux.cpp
-    vstgui.surge/vstgui/lib/platform/common/genericoptionmenu.cpp
-    vstgui.surge/vstgui/lib/platform/common/generictextedit.cpp
-    vstgui.surge/vstgui/vstgui.cpp
-    vstgui.surge/vstgui/vstgui_uidescription.cpp
     )
 
   find_package(PkgConfig REQUIRED)
@@ -583,11 +475,6 @@ elseif( WIN32 )
     src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
     src/windows/UserInteractionsWin.cpp
-    src/windows/scalableresource.h
-    src/windows/surge.rc
-    src/windows/svgresources.rc
-    vstgui.surge/vstgui/vstgui_win32.cpp
-    vstgui.surge/vstgui/vstgui_uidescription_win32.cpp
   )
 
   set(OS_COMPILE_DEFINITIONS
@@ -603,15 +490,6 @@ elseif( WIN32 )
     UNICODE
     _UNICODE
     )
-
-  if( ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
-    set( WIN_DLL_BASENAME "Surge_x86" )
-    set( PNG_LINK_DIR "libs/libpng/win/x86/lib" )
-  else()
-    set( WIN_DLL_BASENAME "Surge" )
-    set( PNG_LINK_DIR "libs/libpng/win/x64/lib" )
-  endif()
-  message( STATUS "Configuring PNG linkage from ${PNG_LINK_DIR}" )
 
   set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -631,7 +509,6 @@ elseif( WIN32 )
     gdiplus
     comdlg32
     comctl32
-    ${CMAKE_SOURCE_DIR}/${PNG_LINK_DIR}/libpng16_static.lib
   )
 
   if(MINGW)
@@ -667,17 +544,15 @@ source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
 source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )
 source_group( "Headless" REGULAR_EXPRESSION "src/headless" )
 source_group( "Linux" REGULAR_EXPRESSION "src/linux" )
-source_group( "LV2 Plugin" REGULAR_EXPRESSION "src/lv2" )
 source_group( "macOS" REGULAR_EXPRESSION "src/mac" )
 source_group( "Windows" REGULAR_EXPRESSION "src/windows" )
-source_group( "VST2 Plugin" REGULAR_EXPRESSION "src/vst2" )
-source_group( "VST3 Plugin" REGULAR_EXPRESSION "src/vst3" )
-source_group( "VST3 SDK" REGULAR_EXPRESSION "vst3sdk" )
-source_group( "VSTGUI" REGULAR_EXPRESSION "vstgui.surge" )
+source_group( "Surge XT Juce" REGULAR_EXPRESSION "src/surge_synth_juce" )
+source_group( "Surge FX Juce" REGULAR_EXPRESSION "src/surge_effects_bank" )
 
 #
 # SURGE Core
 #
+
 target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES}  ${SURGE_OS_SHARED_SOURCES})
 target_include_directories(surge-shared
         PRIVATE
@@ -708,7 +583,8 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsMSEG.cpp
     src/headless/UnitTestsPARAM.cpp
     src/headless/UnitTestsTUN.cpp
-          src/headless/HeadlessNonTestFunctions.cpp src/headless/HeadlessNonTestFunctions.h)
+    src/headless/HeadlessNonTestFunctions.cpp
+    src/headless/HeadlessNonTestFunctions.h)
 
   target_compile_definitions(surge-headless
     PRIVATE
@@ -805,19 +681,7 @@ elseif( UNIX AND NOT APPLE )
     )
 endif()
 
-# Extra packages and utils
-if( ${BUILD_SVGSHOW} )
-  add_subdirectory( utils/svgshow )
-endif()
-
 add_custom_target(surge-juce-pipeline-targets)
-
-# LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
-# it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-# FIXME of course that this should go away in surge-xt. These are also split now for
-# XT vs FX since FX is production code in 19 and XT is not
-add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
-target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
 
 set(JUCE_ASIO_SUPPORT FALSE)
 
@@ -830,6 +694,24 @@ else()
   set(SURGE_JUCE_FORMATS AU VST3 Standalone)
 endif()
 
+
+if( BUILD_USING_MY_ASIO_LICENSE )
+  message(STATUS "** BUILD WITH YOUR ASIO LICENSE **" )
+  message(STATUS "   Downloading ASIO SDK from Steinberg" )
+  message(STATUS "   The resulting Surge Standalones are not licensed for distribution" )
+
+  add_custom_target(surge-get-local-asio)
+  add_custom_command(
+          TARGET surge-get-local-asio
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/asio
+          COMMAND ${CMAKE_COMMAND} -D ASIO_SDK_DESTINATION=${CMAKE_BINARY_DIR}/asio -P cmake/get-asio.cmake
+  )
+  set( ASIOSDK_DIR ${CMAKE_BINARY_DIR}/asio/asiosdk )
+  set( JUCE_ASIO_SUPPORT TRUE )
+  add_dependencies(surge-shared surge-get-local-asio)
+endif()
+
 message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
 if (DEFINED ENV{ASIOSDK_DIR})
   file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
@@ -838,6 +720,13 @@ if (DEFINED ENV{ASIOSDK_DIR})
 endif()
 
 if( BUILD_SURGE_EFFECTS_BANK )
+  # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
+  # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
+  # FIXME of course that this should go away in surge-xt. These are also split now for
+  # XT vs FX since FX is production code in 19 and XT is not
+  add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
+  target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
+
   juce_add_plugin(surge-fx
           PRODUCT_NAME "SurgeEffectsBank XT"
           COMPANY_NAME "Surge Synth Team"
@@ -881,6 +770,9 @@ if( BUILD_SURGE_EFFECTS_BANK )
 
           JUCE_ALSA=1
           JUCE_JACK=1
+
+          JUCE_WASAPI=1
+          JUCE_DIRECTSOUND=1
 
           TARGET_HEADLESS=1
           )
@@ -1002,6 +894,9 @@ if( BUILD_SURGE_XT )
 
           JUCE_ALSA=1
           JUCE_JACK=1
+
+          JUCE_WASAPI=1
+          JUCE_DIRECTSOUND=1
 
           TARGET_JUCE_SYNTH=1
           TARGET_HEADLESS=1

@@ -23,6 +23,8 @@
 #include <queue>
 #include <vt_dsp/vt_dsp_endian.h>
 #include "UserDefaults.h"
+#include "SurgeCoreBinary.h"
+
 #if MAC
 #include <cstdlib>
 #include <sys/stat.h>
@@ -435,11 +437,22 @@ bailOnPortable:
 
     userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
 
+    /*
     const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
 
     if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
     {
         Surge::UserInteractions::promptError("Cannot find 'configuration.xml' in path '" +
+                                                 datapath + "'. Please reinstall surge.",
+                                             "Surge is not properly installed.");
+    }
+    */
+
+    auto cxmlData =
+        std::string(SurgeCoreBinary::configuration_xml, SurgeCoreBinary::configuration_xmlSize);
+    if (!snapshotloader.Parse(cxmlData.c_str()))
+    {
+        Surge::UserInteractions::promptError("Cannot parse 'configuration.xml' in path '" +
                                                  datapath + "'. Please reinstall surge.",
                                              "Surge is not properly installed.");
     }
@@ -499,11 +512,13 @@ bailOnPortable:
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
     {
-        auto dsf = string_to_path(datapath + "paramdocumentation.xml");
+        auto pdData = std::string(SurgeCoreBinary::paramdocumentation_xml,
+                                  SurgeCoreBinary::paramdocumentation_xmlSize);
+
         TiXmlDocument doc;
-        if (!doc.LoadFile(dsf) || doc.Error())
+        if (!doc.Parse(pdData.c_str()) || doc.Error())
         {
-            std::cout << "Unable to load  '" << dsf << "'!" << std::endl;
+            std::cout << "Unable to load  'paramdocumentation'!" << std::endl;
             std::cout << "Unable to parse!\nError is:\n"
                       << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column "
                       << doc.ErrorCol() << std::endl;
