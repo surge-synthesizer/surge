@@ -1,19 +1,6 @@
-[submodule "vst3sdk"]
-	path = vst3sdk
-	url = https://github.com/surge-synthesizer/vst3sdk.git
-[submodule "vstgui.surge"]
-	path = vstgui.surge
-	url = https://github.com/surge-synthesizer/vstgui.git
-	branch = surge
 [submodule "libs/midifile"]
 	path = libs/midifile
 	url = https://github.com/craigsapp/midifile.git
-[submodule "libs/nanosvg"]
-	path = libs/nanosvg
-	url = https://github.com/surge-synthesizer/nanosvg.git
-[submodule "libs/lv2"]
-	path = libs/lv2
-	url = https://github.com/drobilla/lv2.git
 [submodule "libs/tuning-library"]
 	path = libs/tuning-library
 	url = https://github.com/surge-synthesizer/tuning-library
