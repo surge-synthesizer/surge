@@ -35,3 +35,6 @@
 [submodule "libs/libsamplerate"]
 	path = libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate.git
+[submodule "libs/JUCE"]
+	path = libs/JUCE
+	url = https://github.com/juce-framework/JUCE
