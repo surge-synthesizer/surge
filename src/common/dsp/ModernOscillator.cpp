@@ -357,9 +357,11 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                      * it is late in the 1.9 cycle. So instead what we do is a little compensating
                      * turnover where we linearly itnerpolate the prior phase forward one sample
                      * (that is sTurnVal) and then average it into the next sample. Resetting
-                     * sTurnFrac above means this only happens at the turnover sample.
+                     * sTurnFrac above means this only happens at the turnover sample. Only do this
+                     * if sync is on of course
                      */
-                    sTurnFrac[u] = 0.5; // std::min(std::max(0.1, osp-sphase[u]), 0.9);
+                    if (sync.v > 1e-4)
+                        sTurnFrac[u] = 0.5; // std::min(std::max(0.1, osp-sphase[u]), 0.9);
                     sTurnVal[u] = res + (sprior[u] - res) * dsp;
                 }
 
