@@ -110,9 +110,6 @@ else()
   message( STATUS "Building in 64 bit configuration" )
 endif()
 
-set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_xt_products)
-file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
-
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
   add_subdirectory( ${SURGE_ALTERNATE_JUCE} )
@@ -637,54 +634,6 @@ if( BUILD_HEADLESS )
   endif()
 endif()
 
-
-#
-# INSTALL RULES - currently implemented on APPLE and LINUX only
-#
-if( APPLE )
-  add_custom_target( install-resources-local )
-  add_custom_command(
-    TARGET install-resources-local
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Installing local resources"
-    COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
-    )
-
-  add_custom_target( install-resources-global )
-  add_custom_command(
-    TARGET install-resources-global
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Installing global resources"
-    COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge/"
-    )
-
-elseif( UNIX AND NOT APPLE )
-  add_custom_target( install-resources-local )
-  add_custom_command(
-    TARGET install-resources-local
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Installing local resources into ~/.local/share/surge"
-    COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge/"
-    )
-
-  add_custom_target( install-resources-global )
-  add_custom_command(
-    TARGET install-resources-global
-    POST_BUILD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/surge
-    COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
-    )
-endif()
-
-add_custom_target(surge-juce-pipeline-targets)
-
-set(JUCE_ASIO_SUPPORT FALSE)
-
 if (DEFINED ENV{VST2SDK_DIR})
   file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
   juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
@@ -695,6 +644,7 @@ else()
 endif()
 
 
+set(JUCE_ASIO_SUPPORT FALSE)
 if( BUILD_USING_MY_ASIO_LICENSE )
   message(STATUS "** BUILD WITH YOUR ASIO LICENSE **" )
   message(STATUS "   Downloading ASIO SDK from Steinberg" )
@@ -718,6 +668,11 @@ if (DEFINED ENV{ASIOSDK_DIR})
   message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
   set(JUCE_ASIO_SUPPORT TRUE)
 endif()
+
+
+set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_xt_products)
+file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
+add_custom_target(surge-staged-assets)
 
 if( BUILD_SURGE_EFFECTS_BANK )
   # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
@@ -825,7 +780,6 @@ if( BUILD_SURGE_EFFECTS_BANK )
   add_dependencies( Surge-Effects-Bank-Packaged surge-fx_VST3 )
   add_dependencies( Surge-Effects-Bank-Packaged surge-fx_Standalone )
 
-  add_dependencies(surge-juce-pipeline-targets surge-fx_Standalone)
   add_custom_command(
           TARGET Surge-Effects-Bank-Packaged
           POST_BUILD
@@ -846,6 +800,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
           COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_FX_OUTPUT_DIR}/AU ${SURGE_PRODUCT_DIR}/
     )
   endif()
+
+  add_dependencies(surge-staged-assets Surge-Effects-Bank-Packaged)
 endif() # build surge effects bank
 
 if( BUILD_SURGE_XT )
@@ -988,58 +944,77 @@ if( BUILD_SURGE_XT )
           TARGET_HEADLESS=1
           TARGET_JUCE_UI=1)
 
-  add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
+  # add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
 
-  add_custom_target(surge-xt-distribution)
-  add_dependencies(surge-xt-distribution surge-xt_All)
+  get_target_property( SURGE_XT_OUTPUT_DIR surge-xt RUNTIME_OUTPUT_DIRECTORY )
+
+  add_custom_target( Surge-XT-Packaged ALL )
+  add_dependencies( Surge-XT-Packaged surge-xt_All )
+  add_dependencies( Surge-XT-Packaged surge-xt_VST3 )
+  add_dependencies( Surge-XT-Packaged surge-xt_Standalone )
+
+  add_custom_command(
+          TARGET Surge-XT-Packaged
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Re-locating VST3 and Standalone components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_XT_OUTPUT_DIR}/VST3 ${SURGE_PRODUCT_DIR}/
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_XT_OUTPUT_DIR}/Standalone ${SURGE_PRODUCT_DIR}/
+  )
+
   if( APPLE )
-    set( SXT_ZIP AU VST3 Standalone)
-  else()
-    set( SXT_ZIP VST3 Standalone)
-  endif()
+    add_dependencies( Surge-XT-Packaged surge-xt_AU )
 
-  if( DEFINED ENV{SURGE_VERSION} )
-    set( SXTVER $ENV{SURGE_VERSION})
-  else()
-    set( SXTVER "LOCAL")
+    add_custom_command(
+            TARGET Surge-XT-Packaged
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND echo "Re-locating AU components"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_XT_OUTPUT_DIR}/AU ${SURGE_PRODUCT_DIR}/
+    )
   endif()
+  add_dependencies(surge-staged-assets Surge-XT-Packaged)
+endif()
 
-  if( APPLE )
-    set( SXTOS "macOS" )
-  elseif( UNIX)
-    set( SXTOS "linux" )
+add_custom_target(surge-staged-nonbuilt-assets)
+add_custom_command(TARGET surge-staged-nonbuilt-assets
+        POST_BUILD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt ${SURGE_PRODUCT_DIR}
+        )
+add_dependencies(surge-staged-assets surge-staged-nonbuilt-assets)
+
+add_custom_target(surge-xt-distribution)
+add_dependencies(surge-xt-distribution surge-staged-assets)
+
+if( DEFINED ENV{SURGE_VERSION} )
+  set( SXTVER $ENV{SURGE_VERSION})
+else()
+  set( SXTVER "LOCAL")
+endif()
+
+if( APPLE )
+  set( SXTOS "macOS" )
+elseif( UNIX)
+  set( SXTOS "linux" )
+else()
+  if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    set( SXTOS "win32" )
   else()
     set( SXTOS "win64" )
   endif()
-
-  add_custom_command(TARGET surge-xt-distribution
-          POST_BUILD
-          WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt .
-          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
-          COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SXT_ZIP} README.txt
-          )
-
-  if (APPLE)  # Just because BP is too lazy to code these up on the other OSes yet
-    add_custom_target(surge-xt-vst3-local)
-    add_dependencies(surge-xt-vst3-local surge-xt_VST3)
-    add_custom_command(TARGET surge-xt-vst3-local
-            POST_BUILD
-            WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-            COMMAND ls -l
-            COMMAND ${CMAKE_COMMAND} -E copy_directory VST3 ~/Library/Audio/Plug-Ins/VST3
-            )
-
-    add_custom_target(surge-xt-au-local)
-    add_dependencies(surge-xt-au-local surge-xt_AU)
-    add_custom_command(TARGET surge-xt-au-local
-            POST_BUILD
-            WORKING_DIRECTORY $<GENEX_EVAL:$<TARGET_PROPERTY:surge-xt,LIBRARY_OUTPUT_DIRECTORY>>
-            COMMAND ls -l
-            COMMAND ${CMAKE_COMMAND} -E copy_directory AU ~/Library/Audio/Plug-Ins/Components
-            )
-  endif()
 endif()
+
+set( SURGE_XT_DIST_TARGET_BASE surge-xt-alpha-${SXTVER}-${SXTOS})
+
+add_custom_command(TARGET surge-xt-distribution
+        POST_BUILD
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_TARGET_BASE}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_PRODUCT_DIR}/ ${SURGE_XT_DIST_TARGET_BASE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
+        COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
+        )
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   message( STATUS "Building Surge Python bindings with pybind11" )
@@ -1102,6 +1077,51 @@ endif()
 add_custom_target(ci-pull-req)
 add_dependencies(ci-pull-req surge-xt_All)
 add_dependencies(ci-pull-req surge-fx_All)
+
+
+#
+# INSTALL RULES - currently implemented on APPLE and LINUX only
+#
+if( APPLE )
+  add_custom_target( install-resources-local )
+  add_custom_command(
+          TARGET install-resources-local
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Installing local resources"
+          COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
+  )
+
+  add_custom_target( install-resources-global )
+  add_custom_command(
+          TARGET install-resources-global
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Installing global resources"
+          COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge/"
+  )
+
+elseif( UNIX AND NOT APPLE )
+  add_custom_target( install-resources-local )
+  add_custom_command(
+          TARGET install-resources-local
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Installing local resources into ~/.local/share/surge"
+          COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge/"
+  )
+
+  add_custom_target( install-resources-global )
+  add_custom_command(
+          TARGET install-resources-global
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge"
+          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/surge
+          COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
+  )
+endif()
+
 
 # We have a special target here which the PR pipeline uses to make sure things
 # are of the appropriate code quality. This allows us to write CMAKE rules which
