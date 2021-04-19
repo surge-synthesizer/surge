@@ -9053,8 +9053,8 @@ void SurgeGUIEditor::repushAutomationFor(Parameter *p)
 void SurgeGUIEditor::showAboutBox(int devModeGrid)
 {
     CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
-    aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram, currentSkin,
-                             bitmapStore, devModeGrid);
+    aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram,
+                             synth->juceWrapperType, currentSkin, bitmapStore, devModeGrid);
     aboutbox->setVisible(true);
     getFrame()->addView(aboutbox);
 }
