@@ -915,6 +915,7 @@ class alignas(16) SurgeStorage
     void load_wt(int id, Wavetable *wt, OscillatorStorage *);
     void load_wt(std::string filename, Wavetable *wt, OscillatorStorage *);
     bool load_wt_wt(std::string filename, Wavetable *wt);
+    bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
     // void load_wt_wav(std::string filename, Wavetable* wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt);
     void export_wt_wav_portable(std::string fbase, Wavetable *wt);
