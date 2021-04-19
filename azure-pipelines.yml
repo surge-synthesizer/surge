@@ -223,11 +223,22 @@ jobs:
     inputs:
       secureFile: notify-releases.sh
 
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: notify-xt-releases.sh
+
   - bash: |
       echo "Notifying releases for branch: $BUILD_SOURCEBRANCH"
 
       # remove refs/heads/
       export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
+
+      if [[ $BRANCH =~ ^xt-alpha$ ]]; then
+        echo "Launching the XT Release Build"
+        . $AGENT_TEMPDIRECTORY/notify-xt-releases.sh $BRANCH
+        exit
+      fi
+
       if ! [[ $BRANCH =~ ^(main|release/.+)$ ]]; then
         exit
       fi
