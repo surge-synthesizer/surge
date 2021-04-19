@@ -3677,6 +3677,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         case ct_twist_aux_mix:
                             txt = "Pan Main and Auxilliary Signals";
                             break;
+                        case ct_countedset_percent_extendable:
+                            txt = "Continuous Morph";
+                            break;
                         default:
                             break;
                         }
