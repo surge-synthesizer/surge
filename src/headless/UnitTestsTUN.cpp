@@ -1073,3 +1073,126 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
         }
     }
 }
+
+TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
+{
+    SECTION("N2P ignoring Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        float rl = surge->storage.note_to_pitch_ignoring_tuning(-256);
+        float ru = surge->storage.note_to_pitch_ignoring_tuning(256);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float ro = surge->storage.note_to_pitch_ignoring_tuning(x);
+            if (x <= -256)
+                REQUIRE(ro == rl);
+            if (x >= 256)
+                REQUIRE(ro == ru);
+        }
+    }
+
+    SECTION("N2PI ignoring Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        float rl = surge->storage.note_to_pitch_inv_ignoring_tuning(-256);
+        float ru = surge->storage.note_to_pitch_inv_ignoring_tuning(256);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float ro = surge->storage.note_to_pitch_inv_ignoring_tuning(x);
+            if (x <= -256)
+                REQUIRE(ro == rl);
+            if (x >= 256)
+                REQUIRE(ro == ru);
+        }
+    }
+
+    SECTION("N2O Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        float sl, cl, su, cu;
+        surge->storage.note_to_omega(-256, sl, cl);
+        surge->storage.note_to_omega(256, su, cu);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float so, co;
+            surge->storage.note_to_omega(x, so, co);
+            if (x <= -256)
+            {
+                REQUIRE(so == sl);
+                REQUIRE(co == cl);
+            }
+            if (x >= 256)
+            {
+                REQUIRE(so == su);
+                REQUIRE(co == cu);
+            }
+        }
+    }
+
+    SECTION("N2OI Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        float sl, cl, su, cu;
+        surge->storage.note_to_omega_ignoring_tuning(-256, sl, cl);
+        surge->storage.note_to_omega_ignoring_tuning(256, su, cu);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float so, co;
+            surge->storage.note_to_omega_ignoring_tuning(x, so, co);
+            if (x <= -256)
+            {
+                REQUIRE(so == sl);
+                REQUIRE(co == cl);
+            }
+            if (x >= 256)
+            {
+                REQUIRE(so == su);
+                REQUIRE(co == cu);
+            }
+        }
+    }
+
+    SECTION("N2P mod tuned Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
+        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        surge->storage.retuneToScale(s);
+
+        REQUIRE(!surge->storage.tuningTableIs12TET());
+
+        float rl = surge->storage.note_to_pitch(-256);
+        float ru = surge->storage.note_to_pitch(256);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float ro = surge->storage.note_to_pitch(x);
+            if (x <= -256)
+                REQUIRE(ro == rl);
+            if (x >= 256)
+                REQUIRE(ro == ru);
+        }
+    }
+
+    SECTION("N2PI mod tuned Span -1000 to 1000")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
+        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        surge->storage.retuneToScale(s);
+
+        REQUIRE(!surge->storage.tuningTableIs12TET());
+
+        float rl = surge->storage.note_to_pitch_inv(-256);
+        float ru = surge->storage.note_to_pitch_inv(256);
+        for (float x = -1000; x < 1000; x += 0.27)
+        {
+            float ro = surge->storage.note_to_pitch_inv(x);
+            if (x <= -256)
+                REQUIRE(ro == rl);
+            if (x >= 256)
+                REQUIRE(ro == ru);
+        }
+    }
+}
