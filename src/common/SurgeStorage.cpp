@@ -476,24 +476,14 @@ bailOnPortable:
 
     // WindowWT is a WaveTable which now has a constructor so don't do this
     // memset(&WindowWT, 0, sizeof(WindowWT));
-    if (loadWtAndPatch && !load_wt_wt(datapath + "windows.wt", &WindowWT))
+    if (loadWtAndPatch &&
+        !load_wt_wt_mem(SurgeCoreBinary::windows_wt, SurgeCoreBinary::windows_wtSize, &WindowWT))
     {
         WindowWT.size = 0;
         std::ostringstream oss;
-        oss << "Unable to load '" << datapath
-            << "windows.wt'. This file is required for Surge to work "
-            << "properly. This occurs when Surge is incorrectly installed and its resources are "
-               "not found at "
-#if MAC
-            << "the global or local user Library/Application Support/Surge directory."
-#endif
-#if WINDOWS
-            << "%ProgramData%\\Surge directory."
-#endif
-#if LINUX
-            << "/usr/share/Surge or ~/.local/share/Surge."
-#endif
-            << " Please reinstall Surge and try again!";
+        oss << "Unable to load 'windows.wt'. from memory. "
+            << "This is a usually fatal internal software error in Surge XT which should"
+            << " never occur!";
         Surge::UserInteractions::promptError(oss.str(), "Surge Resources Loading Error");
     }
 
@@ -1086,6 +1076,60 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
     }
     return wasBuilt;
 }
+
+bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *wt)
+{
+    wt_header wh;
+    if (dataSize < sizeof(wt_header))
+        return false;
+
+    memcpy(&wh, data, sizeof(wt_header));
+
+    // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
+    // if (wh.tag != vt_read_int32BE('vawt'))
+    if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
+    {
+        // SOME sort of error reporting is appropriate
+        return false;
+    }
+
+    size_t ds;
+    if (vt_read_int16LE(wh.flags) & wtf_int16)
+        ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+    else
+        ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+
+    if (dataSize < ds + sizeof(wt_header))
+    {
+        std::cout << "Data size " << dataSize << " < " << ds << " + " << sizeof(wt_header)
+                  << std::endl;
+        return false;
+    }
+
+    const char *wtData = data + sizeof(wt_header);
+    waveTableDataMutex.lock();
+    bool wasBuilt = wt->BuildWT((void *)wtData, wh, false);
+    waveTableDataMutex.unlock();
+
+    if (!wasBuilt)
+    {
+        std::ostringstream oss;
+        oss << "Wavetable could not be built, which means it has too many samples or frames."
+            << " You provided " << wh.n_tables << " frames of " << wh.n_samples
+            << "samples, while limit is " << max_subtables << " frames and " << max_wtable_size
+            << " samples."
+            << " In some cases, Surge detects this situation inconsistently. Surge is now in a "
+               "potentially "
+            << " inconsistent state. It is recommended to restart Surge and not load the "
+               "problematic wavetable again."
+            << " If you would like, please attach the wavetable which caused this message to a new "
+               "GitHub issue at "
+            << " https://github.com/surge-synthesizer/surge/";
+        Surge::UserInteractions::promptError(oss.str(), "Wavetable Loading Error");
+    }
+    return wasBuilt;
+}
+
 int SurgeStorage::get_clipboard_type() { return clipboard_type; }
 
 int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)
