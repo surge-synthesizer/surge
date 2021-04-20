@@ -1,0 +1,45 @@
+A collection of over 200 patches for Surge 1.9 from multi-instrumentalist composer and sound designer, Jacky Ligon, created for students, musicians, composers, educators and media composers working both in the context of 12-tone equal temperament, as well as with microtonal music composition.
+
+The presets here are designed to be played from MIDI keyboard controllers in order to take advantage of their full range of expression, and showcase many recent enhancements to the Surge virtual instrument, such as new oscillator types, filters, FX and features for microtuning, now including implementations of both the complete Scala SCL-KBM format, as well as full integration with the ODDSound MTS-ESP Suite and Mini microtuning plugins.
+
+Ambiance
+Single mode patches designed for sustaining textures with slower attack times.
+
+Atmospheres
+Dual mode patches designed for sustaining textures with slower attack times.
+
+Bass
+A small collection of monophonic synth bass patches.
+
+Keys
+Single and Dual mode patches designed for keyboard performance, featuring fast attack times.
+
+Leads
+A collection of monophonic synth lead patches.
+
+Mallets
+Patches resembling struck instruments made of glass, metal and stone, such as bells, vibes, xylophone and lithophones.
+
+Modelled
+A small collection of patches featuring physical modeling timbres made with the new String and Twist oscillators.
+
+Pads
+Harmonic timbres with slower attacks, for sustaining textures and longer release times. Also contains a set of lush harmonic analog string patches made with the Classic oscillator, featuring unison detune, OB-Xd filters, chorus and FX.
+
+Percussion
+A small collection of tuned membrane drum percussion patches.
+
+Plucks
+Pluck timbres with fast attacks and short release times.
+
+Sequences
+Patches featuring pitch sequencers.
+
+Soundscapes
+A range of textural patches that feature complex modulations, sequences, pitch bends, sweeps and FX.
+
+Splits
+Key Split mode patches with discrete timbres below and above middle C (MIDI note 60).
+
+Templates
+Single mode patches using each oscillator type.
