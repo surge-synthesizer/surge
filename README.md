@@ -35,12 +35,11 @@ The developer guide also contains information about testing and debugging in par
 on particular platforms.
 
 Surge-XT uses CMake for all of its build related tasks, and requires a set of free tools to build the synth. If you
-have a development environment set up, you almost definitely have what you need, but if not please checkout
+have a development environment set up, you almost definitely have what you need, but if not please checkout:
 
-*TODO: Fix these links*
-- [Setup Build Environment on Windows](#win-build)
-- [Setup Build Environment on macOS](#mac-build)
-- [Setup Build Environment on Linux](#lin-build)
+- [Setup Build Environment on Windows](#windows)
+- [Setup Build Environment on macOS](#macos)
+- [Setup Build Environment on Linux](#linux)
 
 Once you have set up your environment, you need to checkout the Surge code with git, grab submodules, run cmake
 to configure, then run cmake to build.  Your IDE may support CMake (more on that below) but a reliable way to build
