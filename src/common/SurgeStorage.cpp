@@ -448,8 +448,10 @@ bailOnPortable:
     }
     */
 
+    // TIXML requires a newline at end.
     auto cxmlData =
-        std::string(SurgeCoreBinary::configuration_xml, SurgeCoreBinary::configuration_xmlSize);
+        std::string(SurgeCoreBinary::configuration_xml, SurgeCoreBinary::configuration_xmlSize) +
+        "\n";
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
         Surge::UserInteractions::promptError("Cannot parse 'configuration.xml' in path '" +
@@ -503,7 +505,8 @@ bailOnPortable:
     if (loadWtAndPatch)
     {
         auto pdData = std::string(SurgeCoreBinary::paramdocumentation_xml,
-                                  SurgeCoreBinary::paramdocumentation_xmlSize);
+                                  SurgeCoreBinary::paramdocumentation_xmlSize) +
+                      "\n";
 
         TiXmlDocument doc;
         if (!doc.Parse(pdData.c_str()) || doc.Error())

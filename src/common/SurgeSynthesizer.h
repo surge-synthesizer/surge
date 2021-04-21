@@ -404,6 +404,7 @@ class alignas(16) SurgeSynthesizer
     QuadFilterChainState *FBQ[n_scenes];
 
     std::string hostProgram = "Unknown Host";
+    std::string juceWrapperType = "Unknown Wrapper Type";
     bool activateExtraOutputs = true;
     void setupActivateExtraOutputs();
 

@@ -24,7 +24,7 @@ class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
 {
   public:
     CAboutBox(const VSTGUI::CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
-              const std::string &host, Surge::UI::Skin::ptr_t skin,
+              const std::string &host, const std::string &wrapperType, Surge::UI::Skin::ptr_t skin,
               std::shared_ptr<SurgeBitmaps> bitmapStore, int devModeGrid);
     VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
                                         const VSTGUI::CButtonState &buttons) override;

@@ -74,8 +74,9 @@ struct CGridOverlay : public VSTGUI::CView
 };
 
 CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
-                     const std::string &host, Surge::UI::Skin::ptr_t skin,
-                     std::shared_ptr<SurgeBitmaps> bitmapStore, int devGrid)
+                     const std::string &host, const std::string &wrapperType,
+                     Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bitmapStore,
+                     int devGrid)
     : CViewContainer(size), devGridResolution(devGrid)
 {
     this->editor = editor;
@@ -214,17 +215,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
                             (std::string)Surge::Build::BuildHost + "' with '" +
                             (std::string)Surge::Build::BuildCompiler + "'";
 
-#if TARGET_AUDIOUNIT
-    std::string flavor = "AU";
-#elif TARGET_VST3
-    std::string flavor = "VST3";
-#elif TARGET_VST2
-    std::string flavor = "VST2 (unsupported)";
-#elif TARGET_LV2
-    std::string flavor = "LV2 (experimental)";
-#else
-    std::string flavor = "Standalone";
-#endif
+    std::string flavor = wrapperType;
 
     std::string arch = std::string(Surge::Build::BuildArch);
 #if MAC
