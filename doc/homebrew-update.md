@@ -38,8 +38,8 @@ Modify `surge-synthesizer.rb` appropriately and test. You primarily need to upda
 ```
 openssl dgst -sha256 (dmg)
 vi surge-synthesizer.rb
-brew cask audit --download {{cask_file}}
-brew cask style --fix {{cask_file}}
+brew audit --cask --online surge-synthesizer.rb 
+brew style --cask surge-synthesizer.rb
 ```
 
 commit and push then sweep the PR to homebrew, and their machinery will take over.
