@@ -17,7 +17,7 @@ if(NOT BUILD_TESTING)
   set(BUILD_TESTING "False" CACHE STRING "" FORCE)
 endif()
 
-project(Surge-XT VERSION 1.0.0.0 LANGUAGES CXX ASM)
+project(Surge-XT VERSION 1.0.0.0 LANGUAGES C CXX ASM)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 if(APPLE)
@@ -112,7 +112,7 @@ endif()
 
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
-  add_subdirectory( ${SURGE_ALTERNATE_JUCE} )
+  add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce )
 else()
   message( STATUS "Using JUCE from submodule libs/JUCE" )
   add_subdirectory( libs/JUCE )
@@ -640,6 +640,14 @@ else()
   set(SURGE_JUCE_FORMATS AU VST3 Standalone)
 endif()
 
+if(JUCE_SUPPORTS_LV2)
+  list(APPEND SURGE_JUCE_FORMATS LV2)
+  message( STATUS "Including JUCE LV2 support. You will need a different JUCE than the submodule" )
+  message( STATUS "Turning off deprecation warning to error since JUCE LV2 uses deprecated APIs" )
+  add_compile_options(
+          -Wno-error=deprecated-declarations
+  )
+endif()
 
 set(JUCE_ASIO_SUPPORT FALSE)
 if( BUILD_USING_MY_ASIO_LICENSE )
@@ -691,6 +699,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
+          LV2_URI https://surge-synthesizer.github.io/surge-fx-xt
+
           FORMATS ${SURGE_JUCE_FORMATS}
           )
 
@@ -727,6 +737,7 @@ if( BUILD_SURGE_EFFECTS_BANK )
           JUCE_DIRECTSOUND=1
 
           TARGET_HEADLESS=1
+          
           )
 
   if (JUCE_ASIO_SUPPORT)
@@ -816,6 +827,8 @@ if( BUILD_SURGE_XT )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
+          LV2_URI https://surge-synthesizer.github.io/surge-xt
+
           FORMATS ${SURGE_JUCE_FORMATS}
           )
 
@@ -891,6 +904,11 @@ if( BUILD_SURGE_XT )
           src/surge_synth_juce/SurgeSynthStandaloneExtensions.cpp
           )
 
+  if(JUCE_SUPPORTS_LV2)
+    target_sources(surge-xt_LV2 PRIVATE
+            src/surge_synth_juce/SurgeSynthLV2Extensions.cpp
+            )
+  endif()
   if( DEFINED ENV{VST2SDK_DIR} )
     target_sources(surge-xt_VST PRIVATE
             src/surge_synth_juce/SurgeSynthVST2Extensions.cpp
