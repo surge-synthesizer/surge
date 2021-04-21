@@ -353,7 +353,6 @@ if( APPLE )
       )
 
   set(SURGE_OS_GUI_SOURCES
-    src/mac/DisplayInfoMac.mm
     src/mac/RuntimeFontMac.cpp
     src/mac/UserInteractionsMac.mm
     )
@@ -392,7 +391,6 @@ if( APPLE )
 
 elseif( UNIX AND NOT APPLE )
   set(SURGE_OS_GUI_SOURCES
-    src/linux/DisplayInfoLinux.cpp
     src/linux/RuntimeFontLinux.cpp
     src/linux/UserInteractionsLinux.cpp
     )
@@ -469,7 +467,6 @@ elseif( UNIX AND NOT APPLE )
 elseif( WIN32 )
 
   set(SURGE_OS_GUI_SOURCES
-    src/windows/DisplayInfoWin.cpp
     src/windows/RuntimeFontWin.cpp
     src/windows/UserInteractionsWin.cpp
   )

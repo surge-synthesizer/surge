@@ -36,7 +36,6 @@
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
 #include "UserInteractions.h"
-#include "DisplayInfo.h"
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
@@ -5593,7 +5592,8 @@ bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
     return true;
 #endif
 
-    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+    auto screenDim =
+        CRect(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea);
 
     float baseW = getWindowSizeX();
     float baseH = getWindowSizeY();
@@ -5692,7 +5692,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
 {
-    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
+    float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
     int fullPhysicalZoomFactor = (int)(zf * dbs);
     if (bitmapStore != nullptr)
         bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
@@ -7093,7 +7093,7 @@ void SurgeGUIEditor::reloadFromSkin()
     if (!frame || !bitmapStore.get())
         return;
 
-    float dbs = Surge::GUI::getDisplayBackingScaleFactor(getFrame());
+    float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
     bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
     auto bg = currentSkin->customBackgroundImage();
@@ -7215,7 +7215,8 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
 {
     // Here is a very crude implementation
     int result = zoomHigh;
-    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
+    CRect screenDim =
+        CRect(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea);
     float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;
     float sy = screenDim.getHeight() * percentageOfScreenAvailable / 100.0;
 
