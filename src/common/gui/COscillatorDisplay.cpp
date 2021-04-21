@@ -38,8 +38,6 @@ using namespace VSTGUI;
 const float disp_pitch = 90.15f - 48.f;
 const int wtbheight = 12;
 
-extern CFontRef displayFont;
-
 void COscillatorDisplay::draw(CDrawContext *dc)
 {
     if (customEditor && !canHaveCustomEditor())
@@ -337,7 +335,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
             if (osces[1])
             {
                 dc->setFontColor(skin->getColor(Colors::Osc::Display::AnimatedWave));
-                dc->setFont(displayFont);
+                dc->setFont(Surge::GUI::getFontManager()->displayFont);
                 CPoint lab0(0, valScale * 0.1 - 10);
                 tf.transform(lab0);
                 CRect rlab(lab0, CPoint(10, 10));
@@ -450,7 +448,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         {
             dc->setFontColor(skin->getColor(Colors::Osc::Filename::Text));
         }
-        dc->setFont(displayFont);
+        dc->setFont(Surge::GUI::getFontManager()->displayFont);
         dc->drawString(wttxt, rmenu, kCenterText, true);
 
         /*CRect wtlbl_status(size);
@@ -1345,6 +1343,6 @@ void COscillatorDisplay::drawExtraEditButton(CDrawContext *dc, const std::string
     }
 
     dc->drawRect(posn, kDrawFilledAndStroked);
-    dc->setFont(Surge::GUI::getLatoAtSize(7, kBoldFace));
+    dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, kBoldFace));
     dc->drawString(label.c_str(), posn, kCenterText, true);
 };

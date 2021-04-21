@@ -101,7 +101,7 @@ class COscMenu : public CSnapshotMenu
     int text_hoffset = 0;
     int text_voffset = 0;
     int font_size = 8;
-    VSTGUI::CTxtFace font_style;
+    int font_style;
     VSTGUI::CHoriTxtAlign text_align;
 
   protected:

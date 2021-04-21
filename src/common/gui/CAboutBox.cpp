@@ -39,7 +39,7 @@ struct CGridOverlay : public VSTGUI::CView
     {
         auto vs = getViewSize();
 
-        dc->setFont(Surge::GUI::getLatoAtSize(9));
+        dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
         // Draw x lines with every 4th kinda bolder
         for (int i = 1; i < vs.getHeight() / res; ++i)
         {
@@ -118,7 +118,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     auto center = vs.getCenter();
     auto margin = 20;
     auto lblh = 16, lblvs = 15;
-    auto boldFont = Surge::GUI::getLatoAtSize(11, kBoldFace);
+    auto boldFont = Surge::GUI::getFontManager()->getLatoAtSize(11, kBoldFace);
 
     /* big centered Surge logo */
     auto logo = bitmapStore->getBitmap(IDB_ABOUT_BG);
@@ -134,7 +134,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     /* text label construction lambdas */
     auto addLabel = [this, &xp, &yp, &lblh, skin](std::string text, int width) {
         auto l1 = new CTextLabel(CRect(CPoint(xp, yp), CPoint(width, lblh)), text.c_str());
-        l1->setFont(aboutFont);
+        l1->setFont(Surge::GUI::getFontManager()->aboutFont);
         l1->setFontColor(skin->getColor(Colors::AboutPage::Text));
         l1->setMouseableArea(CRect());
         l1->setTransparency(true);
@@ -158,7 +158,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
         {
             auto l2 =
                 new CSurgeHyperlink(CRect(CPoint(xp + col1width, yp), CPoint(col2width, lblh)));
-            l2->setFont(aboutFont);
+            l2->setFont(Surge::GUI::getFontManager()->aboutFont);
             l2->setURL(URL);
             l2->setLabel(val.c_str());
             l2->setLabelColor(skin->getColor(Colors::AboutPage::Link));
@@ -169,7 +169,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
         {
             auto l2 = new CTextLabel(CRect(CPoint(xp + col1width, yp), CPoint(col2width, lblh)),
                                      val.c_str());
-            l2->setFont(aboutFont);
+            l2->setFont(Surge::GUI::getFontManager()->aboutFont);
             l2->setFontColor(skin->getColor(Colors::AboutPage::Text));
             l2->setTransparency(true);
             l2->setHoriAlign(kLeftText);

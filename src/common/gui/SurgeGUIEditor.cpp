@@ -128,18 +128,6 @@ const int yofs = 10;
 using namespace VSTGUI;
 using namespace std;
 
-#if LINUX && TARGET_VST3
-extern void LinuxVST3Init(Steinberg::Linux::IRunLoop *pf);
-extern void LinuxVST3Detatch();
-extern void LinuxVST3FrameOpen(CFrame *that, void *, const VSTGUI::PlatformType &pt);
-extern void LinuxVST3Idle();
-#endif
-
-CFontRef displayFont = NULL;
-CFontRef patchNameFont = NULL;
-CFontRef lfoTypeFont = NULL;
-CFontRef aboutFont = NULL;
-
 enum special_tags
 {
     tag_scene_select = 1,
@@ -334,68 +322,6 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
     zoomInvalid = (initialZoomFactor != 100);
 
     /*
-    ** As documented in RuntimeFonts.h, the contract of this function is to side-effect
-    ** onto globals displayFont and patchNameFont with valid fonts from the runtime
-    ** distribution
-    */
-    Surge::GUI::initializeRuntimeFont();
-
-    if (displayFont == NULL)
-    {
-        /*
-        ** OK the runtime load didn't work. Fall back to
-        ** the old defaults
-        **
-        ** FIXME: One day we will be confident enough in
-        ** our dyna loader to make this a Surge::UserInteraction::promptError
-        ** warning also.
-        **
-        ** For now, copy the defaults from above. (Don't factor this into
-        ** a function since the above defaults are initialized as dll
-        ** statics if we are not runtime).
-        */
-#if !TARGET_JUCE_UI
-#if MAC
-        SharedPointer<CFontDesc> minifont = new CFontDesc("Lucida Grande", 9);
-        SharedPointer<CFontDesc> patchfont = new CFontDesc("Lucida Grande", 14);
-        SharedPointer<CFontDesc> lfofont = new CFontDesc("Lucida Grande", 8);
-        SharedPointer<CFontDesc> aboutfont = new CFontDesc("Lucida Grande", 10);
-#elif LINUX
-        SharedPointer<CFontDesc> minifont = new CFontDesc("sans-serif", 9);
-        SharedPointer<CFontDesc> patchfont = new CFontDesc("sans-serif", 14);
-        SharedPointer<CFontDesc> lfofont = new CFontDesc("sans-serif", 8);
-        SharedPointer<CFontDesc> aboutfont = new CFontDesc("sans-serif", 10);
-#else
-        /*
-         * Choose to only warn on windows since (1) mac includes Lato in the bundle so this
-         * never happens there and (2) linux has all sorts of font noise
-         */
-        static bool warnedAboutLato =
-            Surge::Storage::getUserDefaultValue(&(synth->storage), "warnedAboutLato", 0);
-        if (!warnedAboutLato)
-        {
-            Surge::UserInteractions::promptError(
-                std::string("Surge was unable to resolve the Lato font. ") +
-                    "Install Lato or re-run the Surge installer to resolve this. " +
-                    "Surge will run anwyay, but some of your labels may clip or be mis-rendered.",
-                "Unable to resolve Lato Font");
-            warnedAboutLato = true;
-            Surge::Storage::updateUserDefaultValue(&(synth->storage), "warnedAboutLato", 1);
-        }
-        SharedPointer<CFontDesc> minifont = new CFontDesc("Microsoft Sans Serif", 9);
-        SharedPointer<CFontDesc> patchfont = new CFontDesc("Arial", 14);
-        SharedPointer<CFontDesc> lfofont = new CFontDesc("Microsoft Sans Serif", 8);
-        SharedPointer<CFontDesc> aboutfont = new CFontDesc("Microsoft Sans Serif", 10);
-#endif
-
-        displayFont = minifont;
-        patchNameFont = patchfont;
-        lfoTypeFont = lfofont;
-        aboutFont = aboutfont;
-#endif
-    }
-
-    /*
     ** See the comment in SurgeParamConfig.h
     */
     if ((int)Surge::ParamConfig::kHorizontal != (int)VSTGUI::CSlider::kHorizontal ||
@@ -443,18 +369,6 @@ SurgeGUIEditor::~SurgeGUIEditor()
 
 void SurgeGUIEditor::idle()
 {
-#if TARGET_VST2 && LINUX
-    if (!super::idle2())
-        return;
-#endif
-#if TARGET_VST3 && LINUX
-    LinuxVST3Idle();
-#endif
-#if TARGET_VST3
-    if (_effect)
-        _effect->uithreadIdleActivity();
-#endif
-
     if (!synth)
         return;
 
@@ -1598,9 +1512,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             // Room for improvement, obviously
             lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "");
             lfoNameLabel->setTransparency(true);
-#if !TARGET_JUCE_UI
-            lfoNameLabel->setFont(Surge::GUI::getLatoAtSize(10, kBoldFace));
-#endif
+            lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, kBoldFace));
             lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
             lfoNameLabel->setHoriAlign(kCenterText);
             frame->addView(lfoNameLabel);
@@ -1614,7 +1526,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fxPresetLabel = new CTextLabel(skinCtrl->getRect(), "Preset");
             fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name));
             fxPresetLabel->setTransparency(true);
-            fxPresetLabel->setFont(displayFont);
+            fxPresetLabel->setFont(Surge::GUI::getFontManager()->displayFont);
             fxPresetLabel->setHoriAlign(kRightText);
 #if !TARGET_JUCE_UI
             fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
@@ -1811,7 +1723,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto fs = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_SIZE, "12");
             auto fsize = std::atof(fs.c_str());
 
-            VSTGUI::CTxtFace fstyle = Surge::UI::Skin::setFontStyleProperty(
+            auto fstyle = Surge::UI::Skin::setFontStyleProperty(
                 currentSkin->propertyValue(l, Surge::Skin::Component::FONT_STYLE, "normal"));
 
             auto coln =
@@ -1834,7 +1746,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
 #if !TARGET_JUCE_UI
             lb->setAntialias(true);
-            lb->setFont(Surge::GUI::getLatoAtSize(fsize, fstyle));
+            lb->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fsize, fstyle));
 #endif
 
             lb->setFontColor(col);
@@ -1870,7 +1782,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     lb->setTransparency(false);
     lb->setBackColor(kRedCColor);
     lb->setFontColor(kWhiteCColor);
-    lb->setFont(displayFont);
+    lb->setFont(Surge::GUI::getFontManager()->displayFont);
     lb->setHoriAlign(VSTGUI::kCenterText);
     lb->setAntialias(true);
     frame->addView(lb);
@@ -7412,7 +7324,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, CControl *c, int ms)
     typeinLabel = new CTextLabel(CRect(2, 2, 114, 14), lab.c_str());
     typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
     typeinLabel->setTransparency(true);
-    typeinLabel->setFont(displayFont);
+    typeinLabel->setFont(Surge::GUI::getFontManager()->displayFont);
     inner->addView(typeinLabel);
 
     char txt[256];
@@ -7453,14 +7365,14 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, CControl *c, int ms)
         auto ml = new CTextLabel(CRect(2, 10, 114, 27), mls.c_str());
         ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
         ml->setTransparency(true);
-        ml->setFont(displayFont);
+        ml->setFont(Surge::GUI::getFontManager()->displayFont);
         inner->addView(ml);
     }
 
     typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
     typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
     typeinPriorValueLabel->setTransparency(true);
-    typeinPriorValueLabel->setFont(displayFont);
+    typeinPriorValueLabel->setFont(Surge::GUI::getFontManager()->displayFont);
     inner->addView(typeinPriorValueLabel);
 
     if (ismod)
@@ -7468,7 +7380,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, CControl *c, int ms)
         auto sl = new CTextLabel(CRect(2, 29 + 9, 116, 36 + 13), ptext2);
         sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
         sl->setTransparency(true);
-        sl->setFont(displayFont);
+        sl->setFont(Surge::GUI::getFontManager()->displayFont);
         inner->addView(sl);
     }
 
@@ -7909,8 +7821,8 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
     else
         containerSize.moveTo(CPoint(0, 0));
 
-    auto headerFont = Surge::GUI::getLatoAtSize(9, kBoldFace);
-    auto btnFont = Surge::GUI::getLatoAtSize(8);
+    auto headerFont = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
+    auto btnFont = Surge::GUI::getFontManager()->getLatoAtSize(8);
 
     auto outerc = new CViewContainer(containerSize);
     outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
@@ -8063,9 +7975,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 
         rr.offset(-rr.right + fs.getWidth() - 10, 0);
 
-    auto fnt = Surge::GUI::getLatoAtSize(11);
-    auto fnts = Surge::GUI::getLatoAtSize(9);
-    auto fntt = Surge::GUI::getLatoAtSize(9, kBoldFace);
+    auto fnt = Surge::GUI::getFontManager()->getLatoAtSize(11);
+    auto fnts = Surge::GUI::getFontManager()->getLatoAtSize(9);
+    auto fntt = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
 
     auto window = new CViewContainer(rr);
     window->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
@@ -8245,7 +8157,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
     VSTGUI::CGradient *presscg = VSTGUI::CGradient::create(presscsm);
     presscg->addColorStop(0, pressbtnbg);
 
-    auto fnt = Surge::GUI::getLatoAtSize(11);
+    auto fnt = Surge::GUI::getFontManager()->getLatoAtSize(11);
 
     auto label = CRect(CPoint(10, 10), CPoint(47, 19));
     auto pnamelbl = new CTextLabel(label, "Name");
@@ -8331,7 +8243,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
 
     auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
     auto cb = new CTextButtonWithHover(b1r, this, tag_store_cancel, "Cancel");
-    cb->setFont(aboutFont);
+    cb->setFont(Surge::GUI::getFontManager()->aboutFont);
     cb->setGradient(cg);
     cb->setFrameColor(btnborder);
     cb->setTextColor(btntext);
@@ -8345,7 +8257,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
 
     auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
     auto kb = new CTextButtonWithHover(b2r, this, tag_store_ok, "OK");
-    kb->setFont(aboutFont);
+    kb->setFont(Surge::GUI::getFontManager()->aboutFont);
     kb->setGradient(cg);
     kb->setFrameColor(btnborder);
     kb->setTextColor(btntext);
@@ -8456,7 +8368,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         hs->text_align = Surge::UI::Skin::setTextAlignProperty(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right"));
 
-        // CSurgeSlider is using labfont = displayFont, which is currently 9 pt in size
+        // CSurgeSlider is using labfont = Surge::GUI::getFontManager()->displayFont, which is
+        // currently 9 pt in size
         // TODO: Pull the default font size from some central location at a later date
         hs->font_size = std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());

@@ -12,11 +12,10 @@
 #include <UserDefaults.h>
 #include <vt_dsp/basic_dsp.h>
 #include <iostream>
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 using namespace std;
-
-extern CFontRef displayFont;
 
 enum
 {
@@ -192,7 +191,7 @@ void CModulationSourceButton::draw(CDrawContext *dc)
     CRect framer(sze);
     CRect fillr(framer);
     fillr.inset(1, 1);
-    dc->setFont(displayFont);
+    dc->setFont(Surge::GUI::getFontManager()->displayFont);
     dc->setFontColor(FontCol);
     dc->setFrameColor(FrameCol);
     dc->setFillColor(FillCol);
@@ -488,7 +487,7 @@ CMouseEventResult CModulationSourceButton::onMouseMoved(CPoint &where, const CBu
             FrameCol = skin->getColor(Colors::ModSource::Used::Border);
             FontCol = skin->getColor(Colors::ModSource::Used::Text);
 
-            l->setFont(displayFont);
+            l->setFont(Surge::GUI::getFontManager()->displayFont);
             l->setBackColor(FillCol);
             l->setFontColor(FontCol);
             l->setFrameColor(FrameCol);

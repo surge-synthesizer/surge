@@ -29,7 +29,7 @@ void CVerticalLabel::draw(VSTGUI::CDrawContext *dc)
 #endif
 
     auto f = getFont();
-    auto fh = f->getSize();
+    auto fh = f.getHeight();
     auto ht = 0.f;
     for (int i = 0; i < q; ++i)
     {

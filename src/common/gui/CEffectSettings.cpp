@@ -31,7 +31,7 @@ void CEffectSettings::draw(CDrawContext *dc)
         dc->saveGlobalState();
 
         dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
-        dc->setFont(Surge::GUI::getLatoAtSize(7, kBoldFace));
+        dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, kBoldFace));
 
         // scene A/B boxes
         for (int i = 0; i < n_scenes; ++i)
@@ -149,7 +149,7 @@ void CEffectSettings::draw(CDrawContext *dc)
         }
         else
         {
-            dc->setFont(Surge::GUI::getLatoAtSize(7, kBoldFace));
+            dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, kBoldFace));
             setColorsForFXSlot(dc, q, dragSource);
         }
     }

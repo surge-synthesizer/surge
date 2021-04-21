@@ -24,51 +24,31 @@ namespace Surge
 namespace GUI
 {
 
-void initializeRuntimeFont()
+DefaultFonts::DefaultFonts()
 {
-    /*
-     * Someone may have already initialized the globals. Don't do it twice
-     */
-    if (displayFont != NULL || patchNameFont != NULL)
-        return;
-
-#if !TARGET_JUCE_UI
-    if (!initializeRuntimeFontForOS())
-    {
-        return;
-    }
-#endif
+    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(BinaryData::LatoRegular_ttf,
+                                                                  BinaryData::LatoRegular_ttfSize);
 
     displayFont = getLatoAtSize(9);
     patchNameFont = getLatoAtSize(13);
     lfoTypeFont = getLatoAtSize(8);
     aboutFont = getLatoAtSize(10);
 }
-VSTGUI::CFontRef getLatoAtSize(float size, int style)
+
+DefaultFonts::~DefaultFonts(){};
+
+juce::Font DefaultFonts::getLatoAtSize(float size, int style) const
 {
-#if TARGET_JUCE_UI
-    /*
-     * Optimize this later to cache the face but for now. Also I'm ignoring style and stuff.
-     */
-    auto tf = juce::Typeface::createSystemTypefaceFor(BinaryData::LatoRegular_ttf,
-                                                      BinaryData::LatoRegular_ttfSize);
-    auto lato = juce::Font(tf).withPointHeight(size);
-    return std::make_shared<VSTGUI::CFontInternal>(lato);
-#else
-    /*
-     * I simply cannot wait for VSTGUI to not be part of my life
-     */
-    static std::map<std::pair<float, int>, VSTGUI::SharedPointer<VSTGUI::CFontDesc>> fontCache;
-    auto key = std::make_pair(size, style);
-    if (fontCache.find(key) == fontCache.end())
-    {
-        fontCache[key] = VSTGUI::SharedPointer<VSTGUI::CFontDesc>(
-            new VSTGUI::CFontDesc("Lato", size, style), true);
-        // Just leak it to be safe since the ownership semantics are horrid
-        fontCache[key]->remember();
-    }
-    return fontCache[key];
-#endif
+    return juce::Font(latoRegularTypeface).withPointHeight(size);
 }
+
+DefaultFonts *getFontManager()
+{
+    static DefaultFonts *fmi{nullptr};
+    if (!fmi)
+        fmi = new DefaultFonts();
+    return fmi;
+}
+
 } // namespace GUI
 } // namespace Surge

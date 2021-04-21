@@ -26,11 +26,10 @@
 #include "StringOps.h"
 #include <UserDefaults.h>
 #include <iostream>
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 using namespace std;
-
-extern CFontRef displayFont;
 
 enum
 {
@@ -53,10 +52,7 @@ CSurgeSlider::CSurgeSlider(const CPoint &loc, long stylee, IControlListener *lis
 
     this->storage = storage;
 
-    labfont = displayFont;
-#if !TARGET_JUCE_UI
-    labfont->remember();
-#endif
+    labfont = Surge::GUI::getFontManager()->displayFont;
 
     modmode = 0;
     disabled = false;
@@ -124,7 +120,7 @@ void CSurgeSlider::setModValue(float val)
     invalid();
 }
 
-CSurgeSlider::~CSurgeSlider() { labfont->forget(); }
+CSurgeSlider::~CSurgeSlider() {}
 
 void CSurgeSlider::setLabel(const char *txt)
 {
@@ -156,8 +152,8 @@ void CSurgeSlider::draw(CDrawContext *dc)
         drawLabel = false;
     }
 
-    labfont->setStyle(font_style);
-    labfont->setSize(font_size);
+    labfont.setStyleFlags(font_style);
+    labfont.setHeight(font_size);
 
     CRect size = getViewSize();
 

@@ -84,7 +84,7 @@ class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumi
     {
         if (visible)
         {
-            dc->setFont(Surge::GUI::getLatoAtSize(10));
+            dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
 
             auto frameCol = skin->getColor(Colors::InfoWindow::Border);
             auto bgCol = skin->getColor(Colors::InfoWindow::Background);

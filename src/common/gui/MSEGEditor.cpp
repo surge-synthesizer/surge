@@ -730,8 +730,8 @@ struct MSEGCanvas : public CControl,
 
     inline void drawAxis(CDrawContext *dc)
     {
-        auto primaryFont = Surge::GUI::getLatoAtSize(9, kBoldFace);
-        auto secondaryFont = Surge::GUI::getLatoAtSize(7);
+        auto primaryFont = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
+        auto secondaryFont = Surge::GUI::getFontManager()->getLatoAtSize(7);
 
         auto haxisArea = getHAxisArea();
         auto tpx = timeToPx();
@@ -2727,8 +2727,8 @@ void MSEGControlRegion::rebuild()
 {
     removeAll();
 
-    auto labelFont = Surge::GUI::getLatoAtSize(9, kBoldFace);
-    auto editFont = Surge::GUI::getLatoAtSize(9);
+    auto labelFont = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
+    auto editFont = Surge::GUI::getFontManager()->getLatoAtSize(9);
 
     int height = getViewSize().getHeight();
     int margin = 2;

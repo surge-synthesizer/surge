@@ -722,7 +722,7 @@ bool Skin::setAllCapsProperty(std::string propertyValue)
     }
 }
 
-VSTGUI::CTxtFace Skin::setFontStyleProperty(std::string propertyValue)
+int Skin::setFontStyleProperty(std::string propertyValue)
 {
     // make the property value not case sensitive
     std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
@@ -730,23 +730,19 @@ VSTGUI::CTxtFace Skin::setFontStyleProperty(std::string propertyValue)
 
     if (propertyValue == "bold")
     {
-        return VSTGUI::kBoldFace;
+        return juce::Font::FontStyleFlags::bold;
     }
     else if (propertyValue == "italic")
     {
-        return VSTGUI::kItalicFace;
+        return juce::Font::FontStyleFlags::italic;
     }
     else if (propertyValue == "underline")
     {
-        return VSTGUI::kUnderlineFace;
-    }
-    else if (propertyValue == "strikethrough")
-    {
-        return VSTGUI::kStrikethroughFace;
+        return juce::Font::FontStyleFlags::underlined;
     }
     else
     {
-        return VSTGUI::kNormalFace;
+        return juce::Font::FontStyleFlags::plain;
     }
 }
 

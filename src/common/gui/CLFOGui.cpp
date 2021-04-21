@@ -23,13 +23,10 @@
 #include "SkinColors.h"
 #include "StringOps.h"
 #include <cstdint>
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 using namespace std;
-
-extern CFontRef displayFont;
-extern CFontRef patchNameFont;
-extern CFontRef lfoTypeFont;
 
 void CLFOGui::drawtri(CRect r, CDrawContext *dc, int orientation)
 {
@@ -532,7 +529,7 @@ void CLFOGui::draw(CDrawContext *dc)
                     CRect tp(CPoint(xp + 1, valScale * 0.0), CPoint(10, 10));
                     tf.transform(tp);
                     dc->setFontColor(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
-                    dc->setFont(lfoTypeFont);
+                    dc->setFont(Surge::GUI::getFontManager()->lfoTypeFont);
                     dc->drawString(s, tp, VSTGUI::kLeftText, true);
                 }
                 else if (everyMeasure == 1)
@@ -575,7 +572,7 @@ void CLFOGui::draw(CDrawContext *dc)
             CRect tp(CPoint(xp + 0.5, typ + 0.5), CPoint(10, 10));
             tf.transform(tp);
             dc->setFontColor(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
-            dc->setFont(lfoTypeFont);
+            dc->setFont(Surge::GUI::getFontManager()->lfoTypeFont);
             char txt[TXT_SIZE];
             float tv = delta * l;
             if (fabs(roundf(tv) - tv) < 0.05)
@@ -618,7 +615,7 @@ void CLFOGui::draw(CDrawContext *dc)
     CColor cselected = skin->getColor(Colors::LFO::Type::SelectedBackground);
 
     dc->setFrameColor(cshadow);
-    dc->setFont(lfoTypeFont);
+    dc->setFont(Surge::GUI::getFontManager()->lfoTypeFont);
 
     rect_shapes = leftpanel;
     if (!typeImg)
@@ -1244,7 +1241,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
         snprintf(txt, TXT_SIZE, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
         dc->setFontColor(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-        dc->setFont(lfoTypeFont);
+        dc->setFont(Surge::GUI::getFontManager()->lfoTypeFont);
         dc->drawString(txt, labelR, VSTGUI::kLeftText, true);
 
         if (keyModMult > 0)

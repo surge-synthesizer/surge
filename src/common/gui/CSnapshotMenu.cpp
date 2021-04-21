@@ -18,8 +18,6 @@
 
 using namespace VSTGUI;
 
-extern CFontRef displayFont;
-
 // CSnapshotMenu
 
 CSnapshotMenu::CSnapshotMenu(const CRect &size, IControlListener *listener, long tag,
@@ -286,7 +284,7 @@ void COscMenu::draw(CDrawContext *dc)
         dc->saveGlobalState();
 
         dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
-        dc->setFont(Surge::GUI::getLatoAtSize(font_size, font_style));
+        dc->setFont(Surge::GUI::getFontManager()->getLatoAtSize(font_size, font_style));
 
         if (isHovered)
         {
@@ -436,7 +434,7 @@ void CFxMenu::draw(CDrawContext *dc)
         fgc = skin->getColor(Colors::Effect::Menu::TextHover);
 
     dc->setFontColor(fgc);
-    dc->setFont(displayFont);
+    dc->setFont(Surge::GUI::getFontManager()->displayFont);
 
     CRect txtbox(getViewSize());
     txtbox.inset(2, 2);
