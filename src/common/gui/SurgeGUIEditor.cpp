@@ -2374,44 +2374,32 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
             menuRect.offset(where.x, where.y);
 
-            COptionMenu *contextMenu =
-                new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-            int eid = 0;
+            auto contextMenu = juce::PopupMenu();
 
-            char txt[256];
             auto hu = helpURLForSpecial("scene-select");
+            char txt[TXT_SIZE];
             if (hu != "")
             {
                 snprintf(txt, TXT_SIZE, "[?] Scene %c", 'A' + a);
                 auto lurl = fullyResolvedHelpURL(hu);
-                addCallbackMenu(contextMenu, txt,
-                                [lurl]() { Surge::UserInteractions::openURL(lurl); });
-                eid++;
+                contextMenu.addItem(txt, [lurl]() { Surge::UserInteractions::openURL(lurl); });
             }
             else
             {
                 snprintf(txt, TXT_SIZE, "Scene %c", 'A' + a);
-                contextMenu->addEntry(txt, eid++);
+                contextMenu.addItem(txt, []() {});
             }
+            contextMenu.addSeparator();
+            contextMenu.addItem("Copy",
+                                [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
+            contextMenu.addItem("Paste",
+                                synth->storage.get_clipboard_type() == cp_scene, // enabled
+                                false, [this, a]() {
+                                    synth->storage.clipboard_paste(cp_scene, a, -1);
+                                    queue_refresh = true;
+                                });
 
-            contextMenu->addSeparator(eid++);
-
-            addCallbackMenu(contextMenu, "Copy",
-                            [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
-            eid++;
-            if (synth->storage.get_clipboard_type() == cp_scene)
-            {
-                addCallbackMenu(contextMenu, "Paste", [this, a]() {
-                    synth->storage.clipboard_paste(cp_scene, a, -1);
-                    queue_refresh = true;
-                });
-                eid++;
-            }
-
-            frame->addView(contextMenu); // add to frame
-            contextMenu->setDirty();
-            contextMenu->popup();
-            frame->removeView(contextMenu, true); // remove from frame and forget
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
 
             return 1;
         }
