@@ -20,10 +20,9 @@
 #include "SkinColors.h"
 #include "DebugHelpers.h"
 #include "Parameter.h"
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
-
-extern VSTGUI::CFontRef displayFont;
 
 CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint &loc, const VSTGUI::CPoint &sz,
                              VSTGUI::IControlListener *listener, long tag,
@@ -92,7 +91,7 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
 
     auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
 
-    dc->setFont(displayFont);
+    dc->setFont(Surge::GUI::getFontManager()->displayFont);
     int splitPoint = 48;
 
     if (sge)
@@ -120,7 +119,7 @@ void CMenuAsSlider::draw(VSTGUI::CDrawContext *dc)
             }
         }
 
-        dc->setFont(displayFont);
+        dc->setFont(Surge::GUI::getFontManager()->displayFont);
         dc->setFontColor(valcol);
 
         bool trunc = false;

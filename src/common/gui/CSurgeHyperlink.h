@@ -36,13 +36,7 @@ class CSurgeHyperlink : public VSTGUI::CControl
 
     void setLabelColor(VSTGUI::CColor col) { labelColor = col; }
     void setHoverColor(VSTGUI::CColor col) { hoverColor = col; }
-    void setFont(VSTGUI::CFontRef f)
-#if TARGET_JUCE_UI // SUPER GROSS fix this
-        override
-#endif
-    {
-        font = f;
-    }
+    void setFont(const juce::Font &f) override { font = f; }
     // void setMultiLabel();
 
   public:
@@ -86,7 +80,7 @@ class CSurgeHyperlink : public VSTGUI::CControl
     VSTGUI::CHoriTxtAlign textalign = VSTGUI::kLeftText;
 
     VSTGUI::CColor labelColor, hoverColor;
-    VSTGUI::CFontRef font;
+    juce::Font font;
 
     CLASS_METHODS(CSurgeHyperlink, VSTGUI::CControl);
 };

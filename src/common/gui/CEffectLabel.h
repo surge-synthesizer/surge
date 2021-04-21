@@ -17,8 +17,7 @@
 #include "vstcontrols.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
-
-extern VSTGUI::CFontRef displayFont;
+#include "RuntimeFont.h"
 
 class CEffectLabel : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
@@ -35,7 +34,7 @@ class CEffectLabel : public VSTGUI::CControl, public Surge::UI::SkinConsumingCom
         dc->drawRect(bl, VSTGUI::kDrawFilled);
 
         dc->setFontColor(skin->getColor(Colors::Effect::Label::Text));
-        dc->setFont(displayFont);
+        dc->setFont(Surge::GUI::getFontManager()->displayFont);
         dc->drawString(label.c_str(), size, VSTGUI::kLeftText, true);
 
         setDirty(false);

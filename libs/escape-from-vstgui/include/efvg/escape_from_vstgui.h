@@ -590,19 +590,6 @@ enum CTxtFace
     kStrikethroughFace = 1 << 4
 };
 
-struct CFontInternal
-{
-    juce::Font font;
-    CFontInternal() {}
-    CFontInternal(const juce::Font &f) : font(f) {}
-    float getSize() { return font.getHeight(); }
-    void setStyle(int newStyle = kNormalFace) { OKUNIMPL; }
-    void setSize(int newSize = 12) { OKUNIMPL; }
-    void remember() {}
-    void forget() {}
-};
-typedef std::shared_ptr<CFontInternal> CFontRef; // this is a gross signature
-
 struct CGraphicsPath : public Internal::FakeRefcount
 {
     juce::Path path;
@@ -630,7 +617,7 @@ struct CDrawContext
         OKUNIMPL;
         return CDrawMode();
     }
-    float getStringWidth(const std::string &s) { return font->font.getStringWidth(s); }
+    float getStringWidth(const std::string &s) { return font.getStringWidth(s); }
     void fillLinearGradient(CGraphicsPath *p, const CGradient &cg, const CPoint &, const CPoint &,
                             bool, CGraphicsTransform *tf)
     {
@@ -742,9 +729,9 @@ struct CDrawContext
         g.drawLine(start.x, start.y, end.x, end.y);
     }
 
-    CFontRef font;
-    void setFont(CFontRef f) { font = f; }
-    CFontRef getFont() { return font; }
+    juce::Font font;
+    void setFont(juce::Font f) { font = f; }
+    juce::Font getFont() { return font; }
 
     void drawString(const char *t, const CRect &r, int align = kLeftText, bool = true)
     {
@@ -754,15 +741,15 @@ struct CDrawContext
         if (align == kRightText)
             al = juce::Justification::centredRight;
 
-        g.setFont(font->font);
+        g.setFont(font);
         g.setColour(fontColor);
         g.drawText(juce::CharPointer_UTF8(t), r, al);
     }
     void drawString(const char *c, const CPoint &p, int = 0, bool = true)
     {
         OKUNIMPL;
-        auto w = font->font.getStringWidth(juce::CharPointer_UTF8(c));
-        auto h = font->font.getHeight();
+        auto w = font.getStringWidth(juce::CharPointer_UTF8(c));
+        auto h = font.getHeight();
         auto r = CRect(CPoint(p.x, p.y - h), CPoint(w, h));
         drawString(c, r);
     }
@@ -1383,7 +1370,7 @@ struct CControl : public CView
     }
     CBitmap *getBackground() { return bg; }
 
-    GSPAIR(Font, CFontRef, CFontRef, std::make_shared<CFontInternal>());
+    GSPAIR(Font, const juce::Font &, juce::Font, juce::Font());
 
     COLPAIR(FontColor);
     GSPAIR(Transparency, bool, bool, false);
@@ -1465,10 +1452,10 @@ struct CTextLabel : public CControl
             }
         }
     }
-    void setFont(CFontRef v) override
+    void setFont(const juce::Font &v) override
     {
         if (lab)
-            lab->setFont(v->font);
+            lab->setFont(v);
 
         CControl::setFont(v);
     }

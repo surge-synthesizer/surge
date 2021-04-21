@@ -24,11 +24,11 @@
 #include "CScalableBitmap.h"
 #include "Parameter.h"
 #include "StringOps.h"
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 
 const int width = 62, margin = 6, height = 8, vmargin = 1;
-extern CFontRef displayFont;
 
 using namespace std;
 
@@ -502,7 +502,7 @@ void CNumberField::draw(CDrawContext *pContext)
         break;
     }
 
-    pContext->setFont(displayFont);
+    pContext->setFont(Surge::GUI::getFontManager()->displayFont);
     pContext->setFontColor(fontColor);
 
     pContext->drawString(the_text, getViewSize(), kCenterText, true);

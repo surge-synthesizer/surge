@@ -20,12 +20,10 @@
 #include "guihelpers.h"
 
 #include <vector>
+#include "RuntimeFont.h"
 
 using namespace VSTGUI;
 using namespace std;
-
-extern CFontRef displayFont;
-extern CFontRef patchNameFont;
 
 void CPatchBrowser::draw(CDrawContext *dc)
 {
@@ -61,11 +59,11 @@ void CPatchBrowser::draw(CDrawContext *dc)
     dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
 
     // patch name
-    dc->setFont(patchNameFont);
+    dc->setFont(Surge::GUI::getFontManager()->patchNameFont);
     dc->drawString(pname.c_str(), pbrowser, kCenterText, true);
 
     // category/author name
-    dc->setFont(displayFont);
+    dc->setFont(Surge::GUI::getFontManager()->displayFont);
     dc->drawString(category.c_str(), cat, kLeftText, true);
     dc->drawString(author.c_str(), auth, skin->getVersion() >= 2 ? kRightText : kLeftText, true);
 

@@ -110,16 +110,8 @@ class CSurgeSlider : public VSTGUI::CControl,
 
     void SetQuantitizedDispValue(float f);
 
-#if !TARGET_JUCE_UI
-    void setFont(VSTGUI::CFontRef f)
-    {
-        if (labfont)
-            labfont->forget();
-        labfont = f;
-        labfont->remember();
-    }
-#endif
-    VSTGUI::CFontRef labfont = nullptr;
+    void setFont(const juce::Font &f) override { labfont = f; }
+    juce::Font labfont;
 
     CLASS_METHODS(CSurgeSlider, CControl)
 
@@ -133,7 +125,7 @@ class CSurgeSlider : public VSTGUI::CControl,
 
     int font_size, text_hoffset, text_voffset;
     VSTGUI::CHoriTxtAlign text_align;
-    VSTGUI::CTxtFace font_style;
+    int font_style;
 
     SurgeStorage *storage = nullptr;
 
