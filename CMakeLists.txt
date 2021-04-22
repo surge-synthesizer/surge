@@ -685,9 +685,9 @@ if( BUILD_SURGE_EFFECTS_BANK )
   target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
 
   juce_add_plugin(surge-fx
-          PRODUCT_NAME "SurgeEffectsBank XT"
+          PRODUCT_NAME "Surge XT Effects"
           COMPANY_NAME "Surge Synth Team"
-          BUNDLE_ID "org.surge-synth-team.surge-fx-xt"
+          BUNDLE_ID "org.surge-synth-team.surge-xt-fx"
           PLUGIN_MANUFACTURER_CODE VmbA
           PLUGIN_CODE SFXT
 
@@ -696,7 +696,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
-          LV2_URI https://surge-synthesizer.github.io/surge-fx-xt
+          LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
+          LV2_SHARED_LIBRARY_NAME SurgeXT_FX
 
           FORMATS ${SURGE_JUCE_FORMATS}
           )
@@ -824,7 +825,8 @@ if( BUILD_SURGE_XT )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
-          LV2_URI https://surge-synthesizer.github.io/surge-xt
+          LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt
+          LV2_SHARED_LIBRARY_NAME SurgeXT
 
           FORMATS ${SURGE_JUCE_FORMATS}
           )
