@@ -177,7 +177,18 @@ struct FakeRefcount
         if (refCount == 0)
         {
             if (!alwaysLeak)
+            {
                 delete this;
+            }
+            else
+            {
+                std::cout << "Skipping a destroy: ptr=" << this << "id=" << typeid(*this).name()
+                          << std::endl;
+            }
+        }
+        else if (refCount < 0)
+        {
+            std::cout << "REFCOUNT NEGATIVE" << std::endl;
         }
     }
     int64_t refCount = 0;
@@ -194,9 +205,9 @@ inline void showMemoryOutstanding()
     {
         if (p.first->doDebug)
         {
-            std::cout << "Still here! " << p.first << " " << p.first->refCount << " "
-                      << p.second.remembers << " " << p.second.forgets << " "
-                      << typeid(*(p.first)).name() << std::endl;
+            std::cout << "Still here! ptr=" << p.first << " refct=" << p.first->refCount
+                      << " remembers=" << p.second.remembers << " forgets=" << p.second.forgets
+                      << " " << typeid(*(p.first)).name() << std::endl;
             for (auto &r : p.second.records)
                 std::cout << r << "\n" << std::endl;
         }
@@ -1743,16 +1754,21 @@ inline void juceCViewConnector<T>::mouseMagnify(const juce::MouseEvent &event, f
 }
 
 // The ownership here is all ascreed p and if you make the refcout del it crashes
+struct COptionMenu;
+
 struct CMenuItem
 {
     virtual ~CMenuItem() {}
-    void setChecked(bool b = true) { OKUNIMPL; }
-    void setEnabled(bool b = true) { OKUNIMPL; }
+    void setChecked(bool b = true);
+    void setEnabled(bool b = true);
 
-    virtual void remember() {}
-    virtual void forget() {}
+    void remember() {}
+    void forget() {}
 
     std::string name;
+
+    COptionMenu *weakPtr = nullptr;
+    int nodeIndex = -1;
 };
 struct CCommandMenuItem : public CMenuItem
 {
@@ -1776,55 +1792,128 @@ struct COptionMenu : public CControl
         kNoDrawStyle = 2
     };
 
-    juce::PopupMenu menu;
+    /*
+     * New approach: Basically make a data structure and traverse it onto a juce menu
+     * in popup
+     */
+    struct MenuNode
+    {
+        enum Type
+        {
+            LABEL,
+            OP,
+            SUB,
+            SEP,
+            ROOT
+        } type = ROOT;
+
+        MenuNode() {}
+        MenuNode(const Type &t) : type(t) {}
+        std::string label = "";
+        std::function<void(void)> op = []() {};
+        std::vector<MenuNode> children;
+        bool checked = false;
+        bool enabled = true;
+    } rootNode;
 
     COptionMenu(const CRect &r, IControlListener *l, int32_t tag, int, int = 0, int = 0)
-        : CControl(r, l, tag), menu()
+        : CControl(r, l, tag)
     {
         // Obviously fix this
-        alwaysLeak = true;
-        doDebug = false;
+        alwaysLeak = false;
+        doDebug = true;
     }
     void setNbItemsPerColumn(int c) { OKUNIMPL; }
     void setEnabled(bool) { UNIMPL; }
-    void addSeparator(int s = -1) { menu.addSeparator(); }
-    CMenuItem *addEntry(const std::string &s, int eid = -1)
+    void addSeparator(int s = -1) { rootNode.children.push_back(MenuNode{MenuNode::SEP}); }
+    std::shared_ptr<CMenuItem> addEntry(const std::string &s, int eid = -1)
     {
-        menu.addItem(juce::CharPointer_UTF8(s.c_str()), []() { UNIMPL; });
+        // menu.addItem(juce::CharPointer_UTF8(s.c_str()), []() { UNIMPL; });
+        auto r = MenuNode{MenuNode::LABEL};
+        r.label = s;
+        rootNode.children.push_back(r);
 
-        auto res = new CMenuItem();
-        res->remember();
+        auto res = std::make_shared<CMenuItem>();
+        res->weakPtr = this;
+        res->nodeIndex = rootNode.children.size() - 1;
         return res;
     }
     CMenuItem *addEntry(CCommandMenuItem *r)
     {
         r->remember();
-        auto op = r->func;
-        menu.addItem(juce::CharPointer_UTF8(r->desc.name.c_str()), [op]() { op(nullptr); });
-        auto res = new CMenuItem();
-        res->remember();
-        return res;
+
+        auto q = MenuNode{MenuNode::OP};
+        q.label = r->desc.name;
+        q.op = [r]() { r->func(r); };
+        rootNode.children.push_back(q);
+
+        // menu.addItem(juce::CharPointer_UTF8(r->desc.name.c_str()), [op]() { op(nullptr); });
+        r->weakPtr = this;
+        r->nodeIndex = rootNode.children.size() - 1;
+        return r;
     }
-    CMenuItem *addEntry(COptionMenu *m, const std::string &nm)
-    {
-        menu.addSubMenu(juce::CharPointer_UTF8(nm.c_str()), m->menu);
-        auto res = new CMenuItem();
-        res->remember();
-        return res;
-    }
-    CMenuItem *addEntry(COptionMenu *m, const char *nm)
+    std::shared_ptr<CMenuItem> addEntry(COptionMenu *m, const std::string &nm)
     {
         m->remember();
-        menu.addSubMenu(juce::CharPointer_UTF8(nm), m->menu);
-        auto res = new CMenuItem();
-        res->remember();
+        // menu.addSubMenu(juce::CharPointer_UTF8(nm.c_str()), m->menu);
+        auto r = MenuNode{MenuNode::SUB};
+        r.children = m->rootNode.children;
+        r.label = nm;
+        rootNode.children.push_back(r);
+
+        auto res = std::make_shared<CMenuItem>();
+        res->weakPtr = this;
+        res->nodeIndex = rootNode.children.size() - 1;
         return res;
     }
+    std::shared_ptr<CMenuItem> addEntry(COptionMenu *m, const char *nm)
+    {
+        return addEntry(m, std::string(nm));
+    }
     void checkEntry(int, bool) { UNIMPL; }
-    void popup() { menu.showMenuAsync(juce::PopupMenu::Options()); }
+
+    void build(juce::PopupMenu &m, const std::vector<MenuNode> &n, const std::string &pfx = "")
+    {
+        for (auto &k : n)
+        {
+            switch (k.type)
+            {
+            case MenuNode::OP:
+                m.addItem(juce::CharPointer_UTF8(k.label.c_str()), k.enabled, k.checked, k.op);
+                // std::cout << pfx << k.label << "   [](){}";
+                // std::cout << (k.enabled ? "" : " (off)") << " " << (k.checked ? "V" : "" ) <<
+                // "\n";
+                break;
+            case MenuNode::LABEL:
+                m.addItem(juce::CharPointer_UTF8(k.label.c_str()),
+                          []() { std::cout << "NO OP" << std::endl; });
+                // std::cout << pfx << k.label << "\n";
+                break;
+            case MenuNode::SEP:
+                m.addSeparator();
+                // std::cout << pfx << "------------\n";
+                break;
+            case MenuNode::ROOT:
+                // std::cout << pfx << "***ERROR***\n";
+                break;
+            case MenuNode::SUB:
+                // std::cout << pfx << k.label << " >\n";
+                juce::PopupMenu sub;
+                build(sub, k.children, pfx + "    ");
+                m.addSubMenu(juce::CharPointer_UTF8(k.label.c_str()), sub);
+                break;
+            }
+        }
+    }
+    void popup()
+    {
+        juce::PopupMenu menu;
+        build(menu, rootNode.children);
+        menu.showMenuAsync(juce::PopupMenu::Options());
+    }
     inline void setHeight(float h) { UNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }
-    int getNbEntries() { return 0; }
+    int getNbEntries() { return rootNode.children.size(); }
 
     CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
     {
@@ -1832,6 +1921,22 @@ struct COptionMenu : public CControl
         return kMouseEventHandled;
     }
 };
+
+inline void CMenuItem::setChecked(bool b)
+{
+    if (weakPtr && nodeIndex >= 0 && nodeIndex < weakPtr->rootNode.children.size())
+    {
+        weakPtr->rootNode.children[nodeIndex].checked = b;
+    }
+}
+
+inline void CMenuItem::setEnabled(bool b)
+{
+    if (weakPtr && nodeIndex >= 0 && nodeIndex < weakPtr->rootNode.children.size())
+    {
+        weakPtr->rootNode.children[nodeIndex].enabled = b;
+    }
+}
 
 enum DragOperation
 {

@@ -2626,10 +2626,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
                 COptionMenu *currentSub = nullptr;
 
+                bool isChecked = false;
                 for (int subs = 0; subs < 7; ++subs)
                 {
                     if (currentSub)
                     {
+                        char name[16];
+                        snprintf(name, 16, "CC %d ... %d", (subs - 1) * 20,
+                                 min(((subs - 1) * 20) + 20, 128) - 1);
+                        auto added_to_menu = midiSub->addEntry(currentSub, name);
+                        added_to_menu->setChecked(isChecked);
+
                         currentSub->forget();
                         currentSub = nullptr;
                     }
@@ -2637,11 +2644,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-                    char name[16];
-
-                    snprintf(name, 16, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
-
-                    auto added_to_menu = midiSub->addEntry(currentSub, name);
+                    isChecked = false;
 
                     for (int item = 0; item < 20; ++item)
                     {
@@ -2669,20 +2672,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         cmd->setActions([this, ccid, mc](CCommandMenuItem *men) {
                             synth->storage.controllers[ccid] = mc;
                         });
-                        cmd->setEnabled(!disabled);
 
                         auto added = currentSub->addEntry(cmd);
+                        added->setEnabled(!disabled);
 
                         if (synth->storage.controllers[ccid] == mc)
                         {
                             added->setChecked();
-                            added_to_menu->setChecked();
+                            isChecked = true;
                         }
                     }
                 }
 
                 if (currentSub)
                 {
+                    int subs = 7;
+                    char name[16];
+                    snprintf(name, 16, "CC %d ... %d", (subs - 1) * 20,
+                             min(((subs - 1) * 20) + 20, 128) - 1);
+                    auto added_to_menu = midiSub->addEntry(currentSub, name);
+                    added_to_menu->setChecked(isChecked);
+
                     currentSub->forget();
                     currentSub = nullptr;
                 }
@@ -3669,22 +3679,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
                 COptionMenu *currentSub = nullptr;
 
+                bool isChecked = false;
+
                 for (int subs = 0; subs < 7; ++subs)
                 {
                     if (currentSub)
                     {
+                        char name[16];
+                        sprintf(name, "CC %d ... %d", (subs - 1) * 20,
+                                min(((subs - 1) * 20) + 20, 128) - 1);
+                        auto added_to_menu = midiSub->addEntry(currentSub, name);
+                        added_to_menu->setChecked(isChecked);
                         currentSub->forget();
                         currentSub = nullptr;
                     }
                     currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
                                                  VSTGUI::COptionMenu::kNoDrawStyle |
                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-                    char name[16];
-
-                    sprintf(name, "CC %d ... %d", subs * 20, min((subs * 20) + 20, 128) - 1);
-
-                    auto added_to_menu = midiSub->addEntry(currentSub, name);
+                    isChecked = false;
 
                     for (int item = 0; item < 20; ++item)
                     {
@@ -3723,29 +3735,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                     mc;
                             }
                         });
-                        cmd->setEnabled(!disabled);
 
                         auto added = currentSub->addEntry(cmd);
+                        cmd->setEnabled(!disabled);
 
                         if ((ptag < n_global_params && p->midictrl == mc) ||
                             (ptag > n_global_params &&
                              synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
                         {
                             added->setChecked();
-                            added_to_menu->setChecked();
+                            isChecked = true;
                         }
                     }
                 }
 
                 if (currentSub)
                 {
+                    char name[16];
+                    sprintf(name, "CC %d ... %d", 7 * 20, min((7 * 20) + 20, 128) - 1);
+                    auto added_to_menu = midiSub->addEntry(currentSub, name);
+                    added_to_menu->setChecked(isChecked);
                     currentSub->forget();
                     currentSub = nullptr;
                 }
 
                 contextMenu->addEntry(midiSub,
                                       Surge::UI::toOSCaseForMenu("Assign Parameter To..."));
-
+                midiSub->forget();
                 eid++;
 
                 if (synth->learn_param > -1 && synth->learn_param == p->id)
@@ -3875,25 +3891,51 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     {
                         addModSub->addEntry(addMacroSub, "Macros");
                     }
+                    else
+                    {
+                        /* This is a pain. Not needed in VSTGUI classic but definitely needed here
+                         */
+                        addMacroSub->remember();
+                    }
                     if (addVLFOSub->getNbEntries())
                     {
                         addModSub->addEntry(addVLFOSub, "Voice LFOs");
+                    }
+                    else
+                    {
+                        addVLFOSub->remember();
                     }
                     if (addSLFOSub->getNbEntries())
                     {
                         addModSub->addEntry(addSLFOSub, "Scene LFOs");
                     }
+                    else
+                    {
+                        addSLFOSub->remember();
+                    }
                     if (addEGSub->getNbEntries())
                     {
                         addModSub->addEntry(addEGSub, "Envelopes");
+                    }
+                    else
+                    {
+                        addEGSub->remember();
                     }
                     if (addMIDISub->getNbEntries())
                     {
                         addModSub->addEntry(addMIDISub, "MIDI");
                     }
+                    else
+                    {
+                        addMIDISub->remember();
+                    }
                     if (addMiscSub->getNbEntries())
                     {
                         addModSub->addEntry(addMiscSub, "Internal");
+                    }
+                    else
+                    {
+                        addMiscSub->remember();
                     }
 
                     if (addModSub->getNbEntries())
@@ -3901,6 +3943,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         contextMenu->addSeparator(eid++);
                         contextMenu->addEntry(addModSub,
                                               Surge::UI::toOSCaseForMenu("Add Modulation from..."));
+                    }
+                    else
+                    {
+                        addModSub->remember();
                     }
 
                     if (addMacroSub)
@@ -8542,7 +8588,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         }
     }
 
-#if DEBUG_JUCE_XT_LEAK_STUFF
+#if 0 // DEBUG_JUCE_XT_LEAK_STUFF
     if (skinCtrl->ultimateparentclassname == "CFXMenu")
         return nullptr;
     if (skinCtrl->ultimateparentclassname == "COSCMenu")
