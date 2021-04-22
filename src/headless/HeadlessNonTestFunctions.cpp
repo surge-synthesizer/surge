@@ -95,33 +95,6 @@ void statsFromPlayingEveryPatch()
     Surge::Headless::playOnEveryPatch(surge, scale, callBack);
 }
 
-void playSomeBach()
-{
-    auto surge = Surge::Headless::createSurge(44100);
-
-    std::string tmpdir = "/tmp";
-    std::string fname = tmpdir + "/988-v05.mid";
-
-    if (!fs::exists(fs::path{fname}))
-    {
-        std::string cmd = "curl -o " + fname + " http://www.jsbach.net/midi/bwv988/988-v05.mid";
-        auto res = system(cmd.c_str());
-    }
-
-    std::string otp = "DX EP 1";
-    for (int i = 0; i < surge->storage.patch_list.size(); ++i)
-    {
-        Patch p = surge->storage.patch_list[i];
-        if (p.name == otp)
-        {
-            std::cout << "Found '" << otp << "' patch @" << i << std::endl;
-            surge->loadPatch(i);
-            break;
-        }
-    }
-    Surge::Headless::renderMidiFileToWav(surge, fname, fname + ".wav");
-}
-
 void standardCutoffCurve(int ft, int sft, std::ostream &os)
 {
     /*

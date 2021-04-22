@@ -180,7 +180,6 @@ add_dependencies( surge-shared git-info )
 
 # Set up external packages
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
-find_package(LibMidiFile ${PACKAGE_OPTIONS})
 
 set( BUILD_SURGE_XT TRUE )
 set( BUILD_SURGE_EFFECTS_BANK TRUE )
@@ -557,7 +556,6 @@ if( BUILD_HEADLESS )
     ${SURGE_SYNTH_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
-    ${LIB_MIDIFILE_SOURCES}
     src/headless/main.cpp
     src/headless/UserInteractionsHeadless.cpp
     src/headless/LinkFixesHeadless.cpp
@@ -581,14 +579,12 @@ if( BUILD_HEADLESS )
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
     TARGET_HEADLESS=1
-    LIBMIDIFILE=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
 
   target_include_directories(surge-headless
     PRIVATE
     ${SURGE_COMMON_INCLUDES}
-    ${LIB_MIDIFILE_INCLUDES}
     ${OS_INCLUDE_DIRECTORIES}
     src/headless
     )
@@ -1051,14 +1047,12 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
           PRIVATE
           ${OS_COMPILE_DEFINITIONS}
           TARGET_HEADLESS=1
-          LIBMIDIFILE=1
           $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
           )
 
   target_include_directories(surgepy
           PRIVATE
           ${SURGE_COMMON_INCLUDES}
-          ${LIB_MIDIFILE_INCLUDES}
           ${OS_INCLUDE_DIRECTORIES}
           src/headless
           ${PYSRCD}

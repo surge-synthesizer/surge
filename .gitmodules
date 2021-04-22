@@ -1,6 +1,3 @@
-[submodule "libs/midifile"]
-	path = libs/midifile
-	url = https://github.com/craigsapp/midifile.git
 [submodule "libs/tuning-library"]
 	path = libs/tuning-library
 	url = https://github.com/surge-synthesizer/tuning-library
