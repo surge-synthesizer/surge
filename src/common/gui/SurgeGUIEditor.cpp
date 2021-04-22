@@ -410,16 +410,6 @@ void SurgeGUIEditor::idle()
         }
         removeFromFrame.clear();
 
-        if (clearOffscreenCachesAtZero == 0)
-        {
-            bitmapStore->clearAllBitmapOffscreenCaches();
-            frame->invalid();
-        }
-        if (clearOffscreenCachesAtZero >= 0)
-        {
-            clearOffscreenCachesAtZero--;
-        }
-
         {
             bool expected = true;
             if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) &&
@@ -1791,7 +1781,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 #if TARGET_JUCE_UI
     struct TestC : public juce::Component
     {
-        ~TestC() { std::cout << "TestC Cleaned Up" << std::endl; }
+        ~TestC() {}
         juce::Colour bg = juce::Colour(255, 0, 255);
         void paint(juce::Graphics &g) override
         {
@@ -7053,7 +7043,6 @@ void SurgeGUIEditor::reloadFromSkin()
 #else
     setZoomFactor(getZoomFactor());
 #endif
-    clearOffscreenCachesAtZero = 1;
 
     // update MSEG editor if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))
@@ -8552,6 +8541,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
             return slfo;
         }
     }
+
+#if DEBUG_JUCE_XT_LEAK_STUFF
+    if (skinCtrl->ultimateparentclassname == "CFXMenu")
+        return nullptr;
+    if (skinCtrl->ultimateparentclassname == "COSCMenu")
+        return nullptr;
+#endif
+
     if (skinCtrl->ultimateparentclassname == "COSCMenu")
     {
         CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
@@ -8605,6 +8602,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
         fxmenu = m;
         return m;
     }
+
     if (skinCtrl->ultimateparentclassname == "CNumberField")
     {
         CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
