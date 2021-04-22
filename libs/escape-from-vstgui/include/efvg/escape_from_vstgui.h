@@ -825,6 +825,12 @@ struct CBitmap : public Internal::FakeRefcount
         dc->g.reduceClipRegion(r.asJuceIntRect());
         drawable->draw(dc->g, alpha, t);
     }
+
+    // The entire memory management of these happens through SurgeBitmaps so deal
+    // with it there
+    void remember() override {}
+    void forget() override {}
+
     CResourceDescription desc;
     std::unique_ptr<juce::Drawable> drawable;
 };

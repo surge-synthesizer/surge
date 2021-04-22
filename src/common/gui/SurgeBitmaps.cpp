@@ -33,35 +33,19 @@ void SurgeBitmaps::clearAllLoadedBitmaps()
 {
     for (auto pair : bitmap_registry)
     {
-        pair.second->forget();
+        delete pair.second;
     }
     for (auto pair : bitmap_file_registry)
     {
-        pair.second->forget();
+        delete pair.second;
     }
     for (auto pair : bitmap_stringid_registry)
     {
-        pair.second->forget();
+        delete pair.second;
     }
     bitmap_registry.clear();
     bitmap_file_registry.clear();
     bitmap_stringid_registry.clear();
-}
-
-void SurgeBitmaps::clearAllBitmapOffscreenCaches()
-{
-    for (auto pair : bitmap_registry)
-    {
-        pair.second->clearOffscreenCaches();
-    }
-    for (auto pair : bitmap_file_registry)
-    {
-        pair.second->clearOffscreenCaches();
-    }
-    for (auto pair : bitmap_stringid_registry)
-    {
-        pair.second->clearOffscreenCaches();
-    }
 }
 
 void SurgeBitmaps::setupBitmapsForFrame(VSTGUI::CFrame *f)
@@ -162,7 +146,7 @@ CScalableBitmap *SurgeBitmaps::loadBitmapByPath(std::string path)
 {
     if (bitmap_file_registry.find(path) != bitmap_file_registry.end())
     {
-        bitmap_file_registry[path]->forget();
+        delete bitmap_file_registry[path];
     }
     bitmap_file_registry[path] = new CScalableBitmap(path, frame);
     return bitmap_file_registry[path];
@@ -172,7 +156,7 @@ CScalableBitmap *SurgeBitmaps::loadBitmapByPathForID(std::string path, int id)
 {
     if (bitmap_registry.find(id) != bitmap_registry.end())
     {
-        bitmap_registry[id]->forget();
+        delete bitmap_registry[id];
     }
     bitmap_registry[id] = new CScalableBitmap(path, frame);
     return bitmap_registry[id];
@@ -182,7 +166,7 @@ CScalableBitmap *SurgeBitmaps::loadBitmapByPathForStringID(std::string path, std
 {
     if (bitmap_stringid_registry.find(id) != bitmap_stringid_registry.end())
     {
-        bitmap_stringid_registry[id]->forget();
+        delete bitmap_stringid_registry[id];
     }
     bitmap_stringid_registry[id] = new CScalableBitmap(path, frame);
     return bitmap_stringid_registry[id];

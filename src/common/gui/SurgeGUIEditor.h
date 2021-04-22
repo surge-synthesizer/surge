@@ -424,14 +424,6 @@ class SurgeGUIEditor : public EditorType,
 
     bool hasIdleRun = false;
     VSTGUI::CPoint resizeToOnIdle = VSTGUI::CPoint(-1, -1);
-    /*
-     * A countdown which will clearr the bitmap store offscreen caches
-     * after N idles if set to a positive N. This is needed as some
-     * DAWS (cough cough LIVE) handle draw and resize events in a
-     * different order so the offscren cache when going classic->royal
-     * at 100% (for instance) is the wrong size.
-     */
-    int clearOffscreenCachesAtZero = -1;
 
   private:
     SGEDropAdapter *dropAdapter = nullptr;

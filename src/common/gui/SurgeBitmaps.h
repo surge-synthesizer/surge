@@ -22,7 +22,6 @@ class SurgeBitmaps
 
     void setupBitmapsForFrame(VSTGUI::CFrame *f);
     void setPhysicalZoomFactor(int pzf);
-    void clearAllBitmapOffscreenCaches();
 
     CScalableBitmap *getBitmap(int id);
     CScalableBitmap *getBitmapByPath(std::string filename);
@@ -56,6 +55,7 @@ class SurgeBitmaps
     static std::atomic<int> instances;
 
     void addEntry(int id, VSTGUI::CFrame *f);
+    // I own and am responsible for deleting these
     std::map<int, CScalableBitmap *> bitmap_registry;
     std::map<std::string, CScalableBitmap *> bitmap_file_registry;
 

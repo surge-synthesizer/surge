@@ -54,32 +54,10 @@ class CScalableBitmap : public VSTGUI::CBitmap
     */
     void setExtraScaleFactor(int a) { extraScaleFactor = a; }
 
-    void clearOffscreenCaches()
-    {
-        for (auto const &pair : offscreenCache)
-        {
-            auto val = pair.second;
-            if (val)
-                val->forget();
-        }
-        offscreenCache.clear();
-    }
-
     int resourceID;
     std::string fname;
 
   private:
-    struct CPointCompare
-    {
-        bool operator()(const VSTGUI::CPoint &k1, const VSTGUI::CPoint &k2) const
-        {
-            if (k1.x == k2.x)
-                return k1.y < k2.y;
-            return k1.x < k2.x;
-        }
-    };
-
-    std::map<VSTGUI::CPoint, VSTGUI::CBitmap *, CPointCompare> offscreenCache;
     static std::atomic<int> instances;
 
     int lastSeenZoom, bestFitScaleGroup;
@@ -87,16 +65,10 @@ class CScalableBitmap : public VSTGUI::CBitmap
 
     VSTGUI::CFrame *frame;
 
-    struct NSVGimage *svgImage;
-    void drawSVG(VSTGUI::CDrawContext *context, const VSTGUI::CRect &rect,
-                 const VSTGUI::CPoint &offset, float alpha);
-    VSTGUI::CColor svgColorToCColor(int svgColor, float opacity = 1.0);
-
     /*
      * The zoom 100 bitmap and optional higher resolution bitmaps for zooms
      * map vs unordered is on purpose here - we need this ordered for our zoom search
      */
     std::map<int, std::pair<std::string, std::unique_ptr<VSTGUI::CBitmap>>> pngZooms;
-
     int currentPhysicalZoomFactor;
 };
