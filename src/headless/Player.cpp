@@ -1,12 +1,5 @@
 #include "Player.h"
 
-#if LIBMIDIFILE
-#include "MidiFile.h"
-#endif
-#if LIBSNDFILE
-#include <sndfile.h>
-#endif
-
 namespace Surge
 {
 namespace Headless
@@ -191,100 +184,6 @@ void playOnNRandomPatches(std::shared_ptr<SurgeSynthesizer> surge, const playerE
         if (data)
             delete[] data;
     }
-}
-
-void playMidiFile(std::shared_ptr<SurgeSynthesizer> synth, std::string midiFileName,
-                  long callBackEvery,
-                  std::function<void(float *data, int nSamples, int nChannels)> dataCB)
-{
-#if LIBMIDIFILE
-    smf::MidiFile mf;
-    mf.read(midiFileName.c_str());
-    mf.doTimeAnalysis();
-    mf.linkNotePairs();
-    mf.joinTracks();
-
-    // float sampleRate = synth->getSampleRate();
-    float sampleRate = 44100.0;
-
-    int tracks = mf.getTrackCount();
-    if (tracks != 1)
-    {
-        std::cerr << "Track Join failed\n";
-        return;
-    }
-
-    int currentEvent = 0;
-    double currentTime = mf[0][currentEvent].seconds;
-
-    if ((callBackEvery) % (BLOCK_SIZE * 2) != 0)
-    {
-        std::cerr << "Please make callBackEvery a multiple of " << BLOCK_SIZE << "*2" << std::endl;
-        return;
-    }
-
-    float *ldata = new float[callBackEvery * 2];
-    long flidx = 0;
-    double deltaT = BLOCK_SIZE / sampleRate;
-
-    while (currentEvent < mf[0].size() ||
-           (synth->getNonUltrareleaseVoices(0) > 0 || synth->getNonUltrareleaseVoices(1) > 0))
-    {
-        while (currentEvent < mf[0].size() && mf[0][currentEvent].seconds < currentTime + deltaT)
-        {
-            smf::MidiEvent &evt = mf[0][currentEvent];
-            if (evt.isNoteOn())
-                synth->playNote(1, evt.getKeyNumber(), evt.getVelocity(), 0);
-            if (evt.isNoteOff())
-                synth->releaseNote(1, evt.getKeyNumber(), evt.getVelocity());
-
-            currentEvent++;
-        }
-        currentTime += deltaT;
-
-        synth->process();
-        for (int sm = 0; sm < BLOCK_SIZE; ++sm)
-        {
-            for (int oi = 0; oi < synth->getNumOutputs(); ++oi)
-            {
-                ldata[flidx++] = synth->output[oi][sm];
-            }
-        }
-        if (flidx >= callBackEvery * 2)
-        {
-            flidx = 0;
-            dataCB(ldata, callBackEvery, 2);
-        }
-    }
-
-#else
-    std::cout << "LIB_MIDIFILE not included on this platform." << std::endl;
-#endif
-}
-
-void renderMidiFileToWav(std::shared_ptr<SurgeSynthesizer> surge, std::string midiFileName,
-                         std::string outputWavFile)
-{
-#if LIBSNDFILE
-    SF_INFO sfinfo;
-    sfinfo.channels = 2;
-    sfinfo.samplerate = 44100; // FIX
-    sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-
-    SNDFILE *of = sf_open(outputWavFile.c_str(), SFM_WRITE, &sfinfo);
-
-    playMidiFile(surge, midiFileName,
-                 1024 * 100, // write every 100k
-                 [of](float *data, int nSamples, int nChannels) {
-                     sf_write_float(of, &data[0], nSamples * nChannels);
-                     sf_write_sync(of);
-                 });
-    sf_close(of);
-
-#else
-    std::cout << "renderMidiFileToWav requires libsndfile which is not available on your platform."
-              << std::endl;
-#endif
 }
 
 } // namespace Headless
