@@ -22,12 +22,18 @@ using namespace VSTGUI;
 
 CSnapshotMenu::CSnapshotMenu(const CRect &size, IControlListener *listener, long tag,
                              SurgeStorage *storage)
-    : COptionMenu(size, nullptr, tag, 0)
+    : CControl(size, nullptr, tag)
 {
     this->storage = storage;
     this->listenerNotForParent = listener;
 }
-CSnapshotMenu::~CSnapshotMenu() {}
+CSnapshotMenu::~CSnapshotMenu()
+{
+    if (menu)
+    {
+        menu->forget();
+    }
+}
 
 CMouseEventResult CSnapshotMenu::onMouseDown(CPoint &where, const CButtonState &button)
 {
@@ -36,7 +42,10 @@ CMouseEventResult CSnapshotMenu::onMouseDown(CPoint &where, const CButtonState &
         listenerNotForParent->controlModifierClicked(this, button);
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
-    return COptionMenu::onMouseDown(where, button);
+    if (menu)
+        menu->popup();
+
+    return kMouseEventHandled;
 }
 
 void CSnapshotMenu::draw(CDrawContext *dc) { setDirty(false); }
@@ -50,6 +59,8 @@ void CSnapshotMenu::populate()
 
     int idx = 0;
     TiXmlElement *sect = storage->getSnapshotSection(mtype);
+    initializeMenu();
+
     if (sect)
     {
         TiXmlElement *type = sect->FirstChildElement();
@@ -58,16 +69,17 @@ void CSnapshotMenu::populate()
         {
             if (type->Value() && strcmp(type->Value(), "type") == 0)
             {
-                auto sm = populateSubmenuFromTypeElement(type, this, main, sub, max_sub, idx);
+                auto sm = populateSubmenuFromTypeElement(type, menu, main, sub, max_sub, idx);
 
                 if (sm)
                 {
                     addToTopLevelTypeMenu(type, sm, idx);
+                    sm->forget();
                 }
             }
             else if (type->Value() && strcmp(type->Value(), "separator") == 0)
             {
-                addSeparator();
+                menu->addSeparator();
             }
 
             type = type->NextSiblingElement();
@@ -150,7 +162,7 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     int type_id = 0;
     type->Attribute("i", &type_id);
     sub = 0;
-    COptionMenu *subMenu = new COptionMenu(getViewSize(), 0, main, 0, 0, kNoDrawStyle);
+    COptionMenu *subMenu = new COptionMenu(getViewSize(), 0, main, 0);
     subMenu->setNbItemsPerColumn(20);
     TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
     while (snapshot)
@@ -195,7 +207,9 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     TiXmlElement *subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
     while (subType)
     {
-        populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
+        auto res = populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
+        if (res)
+            res->forget();
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
     }
 
@@ -214,6 +228,8 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     }
     else
     {
+        subMenu->remember(); // Annoynace from vstgui port. Fix this later
+
         auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
 
         if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
@@ -232,11 +248,14 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
         parent->addEntry(actionItem);
     }
 
-    subMenu->forget();
+    // subMenu->forget();
     if (sub)
         return subMenu; // OK to return forgoten since it has lifetime of parent
     else
+    {
+        subMenu->forget();
         return nullptr;
+    }
 }
 
 // COscMenu
@@ -721,26 +740,26 @@ void CFxMenu::populate()
     ** Add copy/paste/save
     */
 
-    this->addSeparator();
+    menu->addSeparator();
 
     auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
     auto copy = [this](CCommandMenuItem *item) { this->copyFX(); };
     copyItem->setActions(copy, nullptr);
-    this->addEntry(copyItem);
+    menu->addEntry(copyItem);
 
     auto pasteItem = new CCommandMenuItem(CCommandMenuItem::Desc("Paste"));
     auto paste = [this](CCommandMenuItem *item) { this->pasteFX(); };
     pasteItem->setActions(paste, nullptr);
-    this->addEntry(pasteItem);
+    menu->addEntry(pasteItem);
 
-    this->addSeparator();
+    menu->addSeparator();
 
     if (fx->type.val.i != fxt_off)
     {
         auto saveItem = new CCommandMenuItem(
             CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
         saveItem->setActions([this](CCommandMenuItem *item) { this->saveFX(); });
-        this->addEntry(saveItem);
+        menu->addEntry(saveItem);
     }
 
     auto rescanItem = new CCommandMenuItem(
@@ -751,7 +770,7 @@ void CFxMenu::populate()
         if (sge)
             sge->queueRebuildUI();
     });
-    this->addEntry(rescanItem);
+    menu->addEntry(rescanItem);
 }
 
 void CFxMenu::copyFX()

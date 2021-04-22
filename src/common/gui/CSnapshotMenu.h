@@ -22,7 +22,7 @@
 #include <vector>
 #include <map>
 
-class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumingComponent
+class CSnapshotMenu : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
 {
   public:
     CSnapshotMenu(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
@@ -66,6 +66,15 @@ class CSnapshotMenu : public VSTGUI::COptionMenu, public Surge::UI::SkinConsumin
     bool isHovered = false;
     int selectedIdx = -1;
     std::string selectedName = "";
+    VSTGUI::COptionMenu *menu = nullptr;
+    void initializeMenu()
+    {
+        if (menu)
+            menu->forget();
+
+        menu = new VSTGUI::COptionMenu(getViewSize(), listener, getTag(), 0);
+        menu->remember();
+    }
 
   protected:
     VSTGUI::COptionMenu *populateSubmenuFromTypeElement(TiXmlElement *typeElement,

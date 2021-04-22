@@ -409,7 +409,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
 
         if (!single_category)
         {
-            CMenuItem *entry = contextMenu->addEntry(subMenu, name.c_str());
+            auto entry = contextMenu->addEntry(subMenu, name.c_str());
             if (c == current_category || amIChecked)
                 entry->setChecked(true);
             subMenu->forget(); // Important, so that the refcounter gets it right

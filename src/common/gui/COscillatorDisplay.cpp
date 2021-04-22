@@ -782,7 +782,7 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu *contextMenu, int c
         strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
     }
 
-    CMenuItem *submenuItem = contextMenu->addEntry(subMenu, name);
+    auto submenuItem = contextMenu->addEntry(subMenu, name);
 
     if (selected || (selectedItem >= 0 && storage->wt_list[selectedItem].category == categoryId))
     {
