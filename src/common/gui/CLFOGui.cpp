@@ -1266,8 +1266,8 @@ void CLFOGui::openPopup(CPoint &where)
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     auto addCb = [](COptionMenu *p, const std::string &l,
-                    std::function<void()> op) -> CCommandMenuItem * {
-        auto m = new CCommandMenuItem(CCommandMenuItem::Desc(l.c_str()));
+                    std::function<void()> op) -> std::shared_ptr<CCommandMenuItem> {
+        auto m = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(l.c_str()));
         m->setActions([op](CCommandMenuItem *m) { op(); });
         p->addEntry(m);
         return m;

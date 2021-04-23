@@ -1758,12 +1758,29 @@ struct COptionMenu;
 
 struct CMenuItem
 {
-    virtual ~CMenuItem() {}
+    CMenuItem() { log(+1); }
+    virtual ~CMenuItem() { log(-1); }
     void setChecked(bool b = true);
     void setEnabled(bool b = true);
 
     void remember() {}
     void forget() {}
+
+    void log(int d)
+    {
+#if 0 // useful for debugging so leave it in for now
+        static int instances = 0;
+        instances += d;
+        if( instances > 0 && instances % 10 == 0 )
+        {
+            std::cout <<"CMenuItem Instances = " << instances << std::endl;
+        }
+        if( instances == 0 )
+        {
+            std::cout << "CMenuItem all cleaned uP!" << std::endl;
+        }
+#endif
+    }
 
     std::string name;
 
@@ -1778,6 +1795,7 @@ struct CCommandMenuItem : public CMenuItem
         Desc(const std::string &s) : name(s) {}
     } desc;
     CCommandMenuItem(const Desc &d) : desc(d) {}
+    ~CCommandMenuItem() = default;
     void setActions(std::function<void(CCommandMenuItem *)> f, void *userData = nullptr)
     {
         func = f;
@@ -1838,13 +1856,13 @@ struct COptionMenu : public CControl
         res->nodeIndex = rootNode.children.size() - 1;
         return res;
     }
-    CMenuItem *addEntry(CCommandMenuItem *r)
+    std::shared_ptr<CMenuItem> addEntry(std::shared_ptr<CCommandMenuItem> r)
     {
         r->remember();
 
         auto q = MenuNode{MenuNode::OP};
         q.label = r->desc.name;
-        q.op = [r]() { r->func(r); };
+        q.op = [r]() { r->func(r.get()); };
         rootNode.children.push_back(q);
 
         // menu.addItem(juce::CharPointer_UTF8(r->desc.name.c_str()), [op]() { op(nullptr); });

@@ -2371,7 +2371,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 offLab += modsource_names[idOff];
                 bool activeMod = (cms->state & 3) == 2;
 
-                auto *mi = addCallbackMenu(contextMenu, offLab, [this, modsource, cms]() {
+                auto mi = addCallbackMenu(contextMenu, offLab, [this, modsource, cms]() {
                     cms->setUseAlternate(!cms->useAlternate);
                     modsource_is_alternate[modsource] = cms->useAlternate;
                     this->refresh_mod();
@@ -2667,7 +2667,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         snprintf(name, 128, "CC %d (%s) %s", mc, midicc_names[mc],
                                  (disabled == 1 ? "- RESERVED" : ""));
 
-                        CCommandMenuItem *cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+                        auto cmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name));
 
                         cmd->setActions([this, ccid, mc](CCommandMenuItem *men) {
                             synth->storage.controllers[ccid] = mc;
@@ -3719,7 +3719,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
                                 (disabled == 1 ? "- RESERVED" : ""));
 
-                        CCommandMenuItem *cmd = new CCommandMenuItem(CCommandMenuItem::Desc(name));
+                        auto cmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name));
 
                         cmd->setActions([this, p, ptag, mc](CCommandMenuItem *men) {
                             if (ptag < n_global_params)
@@ -6017,7 +6017,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         {
             tuningLabel += synth->storage.currentScale.description;
         }
-        auto curTuning = new CCommandMenuItem(CCommandMenuItem::Desc(tuningLabel.c_str()));
+        auto curTuning =
+            std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(tuningLabel.c_str()));
         curTuning->setEnabled(false);
         tuningSubMenu->addEntry(curTuning);
         tid++;
@@ -6027,7 +6028,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     {
         auto mappingLabel = Surge::UI::toOSCaseForMenu("Current Keyboard Mapping: ");
         mappingLabel += path_to_string(fs::path(synth->storage.currentMapping.name).stem());
-        auto curMapping = new CCommandMenuItem(CCommandMenuItem::Desc(mappingLabel.c_str()));
+        auto curMapping =
+            std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(mappingLabel.c_str()));
         curMapping->setEnabled(false);
         tuningSubMenu->addEntry(curMapping);
         tid++;
@@ -6039,11 +6041,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         tid++;
     }
 
-    auto *st = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Tuning"),
-                               [this]() {
-                                   this->synth->storage.retuneTo12TETScaleC261Mapping();
-                                   this->synth->refresh_editor = true;
-                               });
+    auto st = addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Tuning"),
+                              [this]() {
+                                  this->synth->storage.retuneTo12TETScaleC261Mapping();
+                                  this->synth->refresh_editor = true;
+                              });
     st->setEnabled(!this->synth->storage.isStandardTuning);
     tid++;
 
@@ -6054,7 +6056,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                          });
     st->setEnabled(!this->synth->storage.isStandardScale);
     tid++;
-    auto *kst = addCallbackMenu(
+    auto kst = addCallbackMenu(
         tuningSubMenu, Surge::UI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"), [this]() {
             this->synth->storage.remapToConcertCKeyboard();
             this->synth->refresh_editor = true;
@@ -6254,7 +6256,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     tuningSubMenu->addSeparator();
 
     tid++;
-    auto *sct = addCallbackMenu(
+    auto sct = addCallbackMenu(
         tuningSubMenu, Surge::UI::toOSCaseForMenu("Show Current Tuning Information..."),
         [this]() { Surge::UserInteractions::showHTML(this->tuningToHtml()); });
     sct->setEnabled(!this->synth->storage.isStandardTuning);
@@ -6301,7 +6303,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
     {
         std::ostringstream lab;
         lab << "Zoom to " << s << "%";
-        CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+        auto zcmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(lab.str()));
         zcmd->setActions([this, s](CCommandMenuItem *m) { resizeWindow(s); });
         zoomSubMenu->addEntry(zcmd);
         if (s == zoomFactor)
@@ -6328,7 +6330,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
             else
                 lab << "Shrink by " << -jog << "%";
 
-            CCommandMenuItem *zcmd = new CCommandMenuItem(CCommandMenuItem::Desc(lab.str()));
+            auto zcmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(lab.str()));
             zcmd->setActions(
                 [this, jog](CCommandMenuItem *m) { resizeWindow(getZoomFactor() + jog); });
             zoomSubMenu->addEntry(zcmd);
@@ -6337,7 +6339,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
 
         zoomSubMenu->addSeparator(zid++);
 
-        CCommandMenuItem *biggestZ = new CCommandMenuItem(
+        auto biggestZ = std::make_shared<CCommandMenuItem>(
             CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Largest")));
         biggestZ->setActions([this](CCommandMenuItem *m) {
             int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
@@ -6348,7 +6350,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
         zoomSubMenu->addEntry(biggestZ);
         zid++;
 
-        CCommandMenuItem *smallestZ = new CCommandMenuItem(
+        auto smallestZ = std::make_shared<CCommandMenuItem>(
             CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Zoom to Smallest")));
         smallestZ->setActions([this](CCommandMenuItem *m) { resizeWindow(minimumZoom); });
         zoomSubMenu->addEntry(smallestZ);
@@ -6360,14 +6362,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
             Surge::Storage::getUserDefaultValue(&(synth->storage), "defaultZoom", zoomFactor);
         std::ostringstream dss;
         dss << "Zoom to Default (" << dzf << "%)";
-        CCommandMenuItem *todefaultZ = new CCommandMenuItem(
+        auto todefaultZ = std::make_shared<CCommandMenuItem>(
             CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu(dss.str().c_str())));
         todefaultZ->setActions([this, dzf](CCommandMenuItem *m) { resizeWindow(dzf); });
         zoomSubMenu->addEntry(todefaultZ);
         zid++;
     }
 
-    CCommandMenuItem *defaultZ = new CCommandMenuItem(
+    auto defaultZ = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Set Current Zoom Level as Default")));
     defaultZ->setActions([this](CCommandMenuItem *m) {
         Surge::Storage::updateUserDefaultValue(&(synth->storage), "defaultZoom", zoomFactor);
@@ -6447,9 +6449,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
     std::string mouseMedium = "Medium";
     std::string mouseExact = "Exact";
 
-    VSTGUI::CCommandMenuItem *menuItem = nullptr;
-
-    menuItem = addCallbackMenu(mouseSubMenu, mouseLegacy.c_str(), [this]() {
+    auto menuItem = addCallbackMenu(mouseSubMenu, mouseLegacy.c_str(), [this]() {
         CSurgeSlider::sliderMoveRateState = CSurgeSlider::kLegacy;
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "sliderMoveRateState",
                                                CSurgeSlider::sliderMoveRateState);
@@ -6518,9 +6518,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
                                                 VSTGUI::COptionMenu::kNoDrawStyle |
                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-    VSTGUI::CCommandMenuItem *pdItem = nullptr;
-
-    pdItem = addCallbackMenu(
+    auto pdItem = addCallbackMenu(
         patchDefMenu, Surge::UI::toOSCaseForMenu("Set Default Patch Author..."),
         [this, menuRect]() {
             string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
@@ -6601,11 +6599,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
                                                   VSTGUI::COptionMenu::kNoDrawStyle |
                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-    VSTGUI::CCommandMenuItem *mcItem = nullptr;
-
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
 
-    mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
+    auto mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "middleC", 2);
         synth->refresh_editor = true;
     });
@@ -6755,9 +6751,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     {
         auto f5Value =
             Surge::Storage::getUserDefaultValue(&(this->synth->storage), "skinReloadViaF5", 0);
-        VSTGUI::CCommandMenuItem *valItem = nullptr;
 
-        valItem = addCallbackMenu(
+        auto valItem = addCallbackMenu(
             skinSubMenu, Surge::UI::toOSCaseForMenu("Use F5 To Reload Current Skin"),
             [this, f5Value]() {
                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "skinReloadViaF5",
@@ -7122,12 +7117,10 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
 
 #if WINDOWS
-    VSTGUI::CCommandMenuItem *conItem = nullptr;
-
     static bool consoleState;
 
-    conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Debug Console..."),
-                              []() { consoleState = Surge::Debug::toggleConsole(); });
+    auto conItem = addCallbackMenu(devSubMenu, Surge::UI::toOSCaseForMenu("Show Debug Console..."),
+                                   []() { consoleState = Surge::Debug::toggleConsole(); });
     conItem->setChecked(consoleState);
     tid++;
 #endif
@@ -7167,11 +7160,11 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
     return result;
 }
 
-VSTGUI::CCommandMenuItem *SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu *toThis,
-                                                          std::string label,
-                                                          std::function<void()> op)
+std::shared_ptr<VSTGUI::CCommandMenuItem>
+SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label,
+                                std::function<void()> op)
 {
-    CCommandMenuItem *menu = new CCommandMenuItem(CCommandMenuItem::Desc(label.c_str()));
+    auto menu = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(label.c_str()));
     menu->setActions([op](CCommandMenuItem *m) { op(); });
     toThis->addEntry(menu);
     return menu;

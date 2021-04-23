@@ -182,7 +182,7 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
 
         if (firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end())
             firstSnapshotByType[snapshotTypeID] = idx;
-        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
+        auto actionItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(txt.c_str()));
         auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem *item) {
             this->selectedIdx = idx;
             this->loadSnapshot(snapshotTypeID, snapshot, idx);
@@ -230,7 +230,7 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     {
         subMenu->remember(); // Annoynace from vstgui port. Fix this later
 
-        auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(txt.c_str()));
+        auto actionItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(txt.c_str()));
 
         if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
             firstSnapshotByType[type_id] = idx;
@@ -742,12 +742,12 @@ void CFxMenu::populate()
 
     menu->addSeparator();
 
-    auto copyItem = new CCommandMenuItem(CCommandMenuItem::Desc("Copy"));
+    auto copyItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("Copy"));
     auto copy = [this](CCommandMenuItem *item) { this->copyFX(); };
     copyItem->setActions(copy, nullptr);
     menu->addEntry(copyItem);
 
-    auto pasteItem = new CCommandMenuItem(CCommandMenuItem::Desc("Paste"));
+    auto pasteItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("Paste"));
     auto paste = [this](CCommandMenuItem *item) { this->pasteFX(); };
     pasteItem->setActions(paste, nullptr);
     menu->addEntry(pasteItem);
@@ -756,13 +756,13 @@ void CFxMenu::populate()
 
     if (fx->type.val.i != fxt_off)
     {
-        auto saveItem = new CCommandMenuItem(
+        auto saveItem = std::make_shared<CCommandMenuItem>(
             CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
         saveItem->setActions([this](CCommandMenuItem *item) { this->saveFX(); });
         menu->addEntry(saveItem);
     }
 
-    auto rescanItem = new CCommandMenuItem(
+    auto rescanItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh FX Preset List")));
     rescanItem->setActions([this](CCommandMenuItem *item) {
         scanForUserPresets = true;
@@ -1028,7 +1028,7 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
         Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
 #endif
 
-        auto i = new CCommandMenuItem(CCommandMenuItem::Desc(fxName.c_str()));
+        auto i = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(fxName.c_str()));
         i->setActions([this, ps](CCommandMenuItem *item) { this->loadUserPreset(ps); });
         subMenu->addEntry(i);
     }

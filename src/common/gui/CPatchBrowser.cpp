@@ -194,7 +194,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
 #endif
 
-    auto loadF = new CCommandMenuItem(
+    auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
     loadF->setActions([this](CCommandMenuItem *item) {
         Surge::UserInteractions::promptFileOpenDialog(
@@ -207,7 +207,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     });
     contextMenu->addEntry(loadF);
 
-    auto refreshItem = new CCommandMenuItem(
+    auto refreshItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
     auto refreshAction = [this](CCommandMenuItem *item) { this->storage->refresh_patchlist(); };
     refreshItem->setActions(refreshAction, nullptr);
@@ -215,14 +215,14 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     contextMenu->addSeparator();
 
-    auto showU = new CCommandMenuItem(
+    auto showU = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open User Patches Folder...")));
     showU->setActions([this](CCommandMenuItem *item) {
         Surge::UserInteractions::openFolderInFileBrowser(this->storage->userDataPath);
     });
     contextMenu->addEntry(showU);
 
-    auto showF = new CCommandMenuItem(
+    auto showF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Factory Patches Folder...")));
     showF->setActions([this](CCommandMenuItem *item) {
         Surge::UserInteractions::openFolderInFileBrowser(
@@ -230,7 +230,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     });
     contextMenu->addEntry(showF);
 
-    auto show3 = new CCommandMenuItem(
+    auto show3 = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Third Party Patches Folder...")));
     show3->setActions([this](CCommandMenuItem *item) {
         Surge::UserInteractions::openFolderInFileBrowser(
@@ -249,7 +249,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto hi = new CCommandMenuItem(CCommandMenuItem::Desc("[?] Patch Browser"));
+            auto hi =
+                std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("[?] Patch Browser"));
             auto ca = [lurl](CCommandMenuItem *i) { Surge::UserInteractions::openURL(lurl); };
             hi->setActions(ca, nullptr);
             contextMenu->addEntry(hi);
@@ -358,7 +359,8 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
             Surge::Storage::findReplaceSubstring(name, string("&"), string("&&"));
 #endif
 
-            auto actionItem = new CCommandMenuItem(CCommandMenuItem::Desc(name.c_str()));
+            auto actionItem =
+                std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name.c_str()));
             auto action = [this, p](CCommandMenuItem *item) { this->loadPatch(p); };
 
             if (p == current_patch)
