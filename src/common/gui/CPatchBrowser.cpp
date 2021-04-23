@@ -369,10 +369,6 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
 
             name = storage->patch_list[p].name;
 
-#if WINDOWS
-            Surge::Storage::findReplaceSubstring(name, string("&"), string("&&"));
-#endif
-
             auto actionItem =
                 std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name.c_str()));
             auto action = [this, p](CCommandMenuItem *item) { this->loadPatch(p); };
@@ -418,10 +414,6 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
         // tuck in the category name by 4 spaces, but only the root categories
         if (rootCall)
             name = "    " + name;
-
-#if WINDOWS
-        Surge::Storage::findReplaceSubstring(name, string("&"), string("&&"));
-#endif
 
         if (!single_category)
         {
