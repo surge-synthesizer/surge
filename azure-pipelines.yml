@@ -83,6 +83,14 @@ jobs:
         cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
         cmakeConfig: "Release"
         cmakeTarget: "surge-headless"
+      # See #4030 for why this is commented out
+      #linux-lv2:
+      #  imageName: 'ubuntu-20.04'
+      #  isLinux: True
+      #  needsLV2: True
+      #  cmakeArguments: "-DCMAKE_BUILD_TYPE=Debug -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
+      #  cmakeConfig: "Debug"
+      #  cmakeTarget: "surge-xt_LV2"
 
   pool:
     vmImage: $(imageName)
@@ -162,7 +170,19 @@ jobs:
       sudo xcode-select -s $(xcodePath)
     displayName: mac - run xcode-select
     condition: variables.isMacFat
-    
+
+  - bash: |
+      set -e
+      cd libs
+      sudo apt-get install -y lv2-dev
+      git clone --depth 1 --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
+      cd JUCE-lv2
+      git checkout lv2
+
+      cd ..
+    displayName: linux - grab LV2 JUCE
+    condition: variables.needsLV2
+
   - bash: |
       set -e
       cmake -Bbuild $(cmakeArguments)
@@ -172,8 +192,22 @@ jobs:
       set -e
       cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
     displayName: all - build with cmake 
+    condition: not(variables.needsLV2)
 
-  #- bash: |
+  - bash: |
+      set -e
+
+      echo "Starting Xvfb on 9898"
+      nohup Xvfb :9898 &
+      export DISPLAY=:9898
+      sleep 3
+
+      cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
+    displayName: all - build with cmake
+    condition: variables.needsLV2
+
+
+    #- bash: |
   #    set -e
   #    echo "Surge.component"
   #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
