@@ -69,30 +69,3 @@
 #define IDB_VUMETER_BARS 181
 #define IDB_MIDI_LEARN 182
 // == /SVG == Do not remove this comment
-
-#define IDC_NAME 1001
-#define IDC_CATEGORY 1002
-#define IDC_DESCRIPTION 1003
-#define IDC_AUTHOR 1004
-#define IDC_TEDIT 1024
-#define IDC_TPROMPT 1025
-
-#define IDR_LATO_FONT 501
-
-// Next default values for new objects
-//
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE 166
-#define _APS_NEXT_COMMAND_VALUE 40001
-#define _APS_NEXT_CONTROL_VALUE 1005
-#define _APS_NEXT_SYMED_VALUE 101
-#endif
-#endif
-
-#if WINDOWS
-#define SCALABLE_SVG_OFFSET 80000
-
-#include "scalableresource.h" // found in src/windows
-
-#endif
