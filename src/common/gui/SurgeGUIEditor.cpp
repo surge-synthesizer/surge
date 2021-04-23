@@ -3193,11 +3193,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 if (useSubMenus && grpN == "")
                                     addTo = contextMenu;
 
-#if WINDOWS
-                                Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"),
-                                                                     std::string("&&"));
-#endif
-
                                 auto b =
                                     addCallbackMenu(addTo, displaytxt.c_str(), [this, p, i, tag]() {
                                         float ef = Parameter::intScaledToFloat(i, p->val_max.i,
@@ -3232,11 +3227,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             p->get_display(txt, true, ef);
 
                             std::string displaytxt = txt;
-
-#if WINDOWS
-                            Surge::Storage::findReplaceSubstring(displaytxt, std::string("&"),
-                                                                 std::string("&&"));
-#endif
 
                             auto b = addCallbackMenu(
                                 contextMenu, displaytxt.c_str(), [this, ef, p, i]() {
@@ -5856,10 +5846,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 
         auto catname = cat.name;
 
-#if WINDOWS
-        Surge::Storage::findReplaceSubstring(catname, std::string("&"), std::string("&&"));
-#endif
-
         parentMenu->addEntry(catSubMenu, catname.c_str());
         catSubMenu->forget();
     }
@@ -5882,10 +5868,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         for (auto const &p : cat.presets)
         {
             auto pname = p.name;
-
-#if WINDOWS
-            Surge::Storage::findReplaceSubstring(pname, std::string("&"), std::string("&&"));
-#endif
 
             addCallbackMenu(catSubMenu, pname, [this, p, currentLfoId]() {
                 Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage),

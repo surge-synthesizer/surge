@@ -169,12 +169,9 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     {
         txt = snapshot->Attribute("name");
 
-#if WINDOWS
-        Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
-#endif
-
         int snapshotTypeID = type_id;
         int tmpI;
+
         if (snapshot->Attribute("i", &tmpI) != nullptr)
         {
             snapshotTypeID = tmpI;
@@ -217,10 +214,6 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     ** Then add myself to parent
     */
     txt = type->Attribute("name");
-
-#if WINDOWS
-    Surge::Storage::findReplaceSubstring(txt, std::string("&"), std::string("&&"));
-#endif
 
     if (sub)
     {
@@ -1025,11 +1018,6 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
     for (auto &ps : userPresets[type_id])
     {
         auto fxName = ps.name;
-
-#if WINDOWS
-        Surge::Storage::findReplaceSubstring(fxName, std::string("&"), std::string("&&"));
-#endif
-
         auto i = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(fxName.c_str()));
         i->setActions([this, ps](CCommandMenuItem *item) { this->loadUserPreset(ps); });
         subMenu->addEntry(i);
