@@ -116,10 +116,3 @@ message( STATUS "Configuring ${SURGEBLD}/geninclude/version.cpp" )
 configure_file( ${SURGESRC}/src/common/version.cpp.in
   ${SURGEBLD}/geninclude/version.cpp )
 
-if( WIN32 )
-  message( STATUS "Configuring surgeversion.rc" )
-  configure_file( ${SURGESRC}/src/windows/surgeversion.rc.in
-    ${SURGEBLD}/geninclude/surgeversion.rc
-    )
-endif()
-  
