@@ -1277,7 +1277,7 @@ void CLFOGui::openPopup(CPoint &where)
         storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    addCb(contextMenu, "[?] MSEG Segment", [hurl]() { Surge::UserInteractions::openURL(hurl); });
+    addCb(contextMenu, "[?] MSEG Segment", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
     contextMenu->addSeparator();
 

@@ -1,5 +1,4 @@
 #include "UserDefaults.h"
-#include "UserInteractions.h"
 #include "SurgeStorage.h"
 
 #include <string>
@@ -41,7 +40,7 @@ std::string defaultsFileName(SurgeStorage *storage)
     return fn;
 }
 
-void readDefaultsFile(std::string fn, bool forceRead = false)
+void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
 {
     if (!haveReadDefaultsFile || forceRead)
     {
@@ -59,7 +58,7 @@ void readDefaultsFile(std::string fn, bool forceRead = false)
                 oss << "This version of Surge only reads version 1 defaults. You user defaults "
                        "version is "
                     << version << ". Defaults ignored";
-                Surge::UserInteractions::promptError(oss.str(), "File Version Error");
+                storage->reportError(oss.str(), "File Version Error");
                 return;
             }
 
@@ -86,7 +85,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
                            UserDefaultValue::ValueType type)
 {
     // Re-read the file in case another surge has updated it
-    readDefaultsFile(defaultsFileName(storage), true);
+    readDefaultsFile(defaultsFileName(storage), true, storage);
 
     /*
     ** Surge has a habit of creating the user directories it needs.
@@ -111,7 +110,7 @@ bool storeUserDefaultValue(SurgeStorage *storage, const std::string &key, const 
     {
         std::ostringstream emsg;
         emsg << "Unable to open defaults file '" << defaultsFileName(storage) << "' for writing.";
-        Surge::UserInteractions::promptError(emsg.str(), "Defaults Not Saved");
+        storage->reportError(emsg.str(), "Defaults Not Saved");
         return false;
     }
 
@@ -143,7 +142,7 @@ std::string getUserDefaultValue(SurgeStorage *storage, const std::string &key,
         return storage->userPrefOverrides[key].second;
     }
 
-    readDefaultsFile(defaultsFileName(storage));
+    readDefaultsFile(defaultsFileName(storage), false, storage);
 
     if (defaultsFileContents.find(key) != defaultsFileContents.end())
     {
@@ -165,7 +164,7 @@ int getUserDefaultValue(SurgeStorage *storage, const std::string &key, int value
         return storage->userPrefOverrides[key].first;
     }
 
-    readDefaultsFile(defaultsFileName(storage));
+    readDefaultsFile(defaultsFileName(storage), false, storage);
 
     if (defaultsFileContents.find(key) != defaultsFileContents.end())
     {

@@ -15,13 +15,8 @@
 
 #pragma once
 
-#if ESCAPE_FROM_VSTGUI
 #include <efvg/escape_from_vstgui.h>
-#else
-#include "vstgui/vstgui.h"
-#endif
 #include <string>
-#include "UserInteractions.h"
 
 class CSurgeHyperlink : public VSTGUI::CControl
 {
@@ -49,7 +44,7 @@ class CSurgeHyperlink : public VSTGUI::CControl
     VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint &where,
                                         const VSTGUI::CButtonState &buttons) override
     {
-        Surge::UserInteractions::openURL(url);
+        juce::URL(url).launchInDefaultBrowser();
         return VSTGUI::kMouseEventHandled;
     }
 

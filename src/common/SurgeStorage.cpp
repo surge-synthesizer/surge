@@ -15,7 +15,6 @@
 
 #include "DspUtilities.h"
 #include "SurgeStorage.h"
-#include "UserInteractions.h"
 #include <set>
 #include <numeric>
 #include <cctype>
@@ -450,7 +449,7 @@ bailOnPortable:
 
     if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
     {
-        Surge::UserInteractions::promptError("Cannot find 'configuration.xml' in path '" +
+        reportError("Cannot find 'configuration.xml' in path '" +
                                                  datapath + "'. Please reinstall surge.",
                                              "Surge is not properly installed.");
     }
@@ -462,9 +461,9 @@ bailOnPortable:
         "\n";
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
-        Surge::UserInteractions::promptError("Cannot parse 'configuration.xml' in path '" +
-                                                 datapath + "'. Please reinstall surge.",
-                                             "Surge is not properly installed.");
+        reportError("Cannot parse 'configuration.xml' in path '" + datapath +
+                        "'. Please reinstall surge.",
+                    "Surge is not properly installed.");
     }
 
     load_midi_controllers();
@@ -494,7 +493,7 @@ bailOnPortable:
         oss << "Unable to load 'windows.wt'. from memory. "
             << "This is a usually fatal internal software error in Surge XT which should"
             << " never occur!";
-        Surge::UserInteractions::promptError(oss.str(), "Surge Resources Loading Error");
+        reportError(oss.str(), "Surge Resources Loading Error");
     }
 
     // Tunings Library Support
@@ -529,7 +528,7 @@ bailOnPortable:
             TiXmlElement *pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
             if (!pdoc)
             {
-                Surge::UserInteractions::promptError(
+                reportError(
                     "Unknown top element in paramdocumentation.xml - not a parameter documentation "
                     "XML file!",
                     "Error");
@@ -778,7 +777,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
     {
         std::ostringstream oss;
         oss << "Experienced file system error when building patches. " << e.what();
-        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
+        reportError(oss.str(), "FileSystem Error");
     }
 
     /*
@@ -872,7 +871,7 @@ void SurgeStorage::refresh_wtlist()
         std::ostringstream ss;
         ss << "Surge was unable to load wavetables from '" << datapath
            << "'. Please reinstall Surge!";
-        Surge::UserInteractions::promptError(ss.str(), "Surge Installation Error");
+        reportError(ss.str(), "Surge Installation Error");
     }
 
     firstThirdPartyWTCategory = wt_category.size();
@@ -1031,7 +1030,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
             << "! Surge only supports .wav and .wt wavetable files!";
-        Surge::UserInteractions::promptError(oss.str(), "Error");
+        reportError(oss.str(), "Error");
     }
 
     if (osc && loaded)
@@ -1092,7 +1091,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
             << " If you would like, please attach the wavetable which caused this message to a new "
                "GitHub issue at "
             << " https://github.com/surge-synthesizer/surge/";
-        Surge::UserInteractions::promptError(oss.str(), "Wavetable Loading Error");
+        reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
 }
@@ -1145,7 +1144,7 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
             << " If you would like, please attach the wavetable which caused this message to a new "
                "GitHub issue at "
             << " https://github.com/surge-synthesizer/surge/";
-        Surge::UserInteractions::promptError(oss.str(), "Wavetable Loading Error");
+        reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
 }
@@ -1884,7 +1883,7 @@ void SurgeStorage::rescanUserMidiMappings()
     {
         std::ostringstream oss;
         oss << "Experienced file system error when loading MIDI settings. " << e.what();
-        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
+        reportError(oss.str(), "FileSystem Error");
     }
 }
 
@@ -1902,8 +1901,8 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
     if (!sm)
     {
         // Invalid XML Document. Show an error?
-        Surge::UserInteractions::promptError(
-            "Unable to locate surge-midi element in XML. Not a valid MIDI mapping!", "Surge MIDI");
+        reportError("Unable to locate surge-midi element in XML. Not a valid MIDI mapping!",
+                    "Surge MIDI");
         return;
     }
 
@@ -1995,7 +1994,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     {
         std::ostringstream oss;
         oss << "Unable to save MIDI settings to '" << fn << "'!";
-        Surge::UserInteractions::promptError(oss.str(), "Error");
+        reportError(oss.str(), "Error");
     }
 }
 
@@ -2047,6 +2046,19 @@ void SurgeStorage::toggleTuningToCache()
         retuneTo12TETScaleC261Mapping();
         isToggledToCache = true;
     }
+}
+
+void SurgeStorage::reportError(const std::string &msg, const std::string &title)
+{
+    std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
+    if (errorListeners.empty())
+    {
+        std::lock_guard<std::mutex> g(preListenerErrorMutex);
+        preListenerErrors.emplace_back(msg, title);
+    }
+
+    for (auto l : errorListeners)
+        l->onSurgeError(msg, title);
 }
 
 namespace Surge

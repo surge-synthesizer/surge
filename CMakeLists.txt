@@ -357,7 +357,6 @@ if( APPLE )
       )
 
   set(SURGE_OS_GUI_SOURCES
-    src/mac/UserInteractionsMac.mm
     )
 
   set(OS_INCLUDE_DIRECTORIES
@@ -394,7 +393,6 @@ if( APPLE )
 
 elseif( UNIX AND NOT APPLE )
   set(SURGE_OS_GUI_SOURCES
-    src/linux/UserInteractionsLinux.cpp
     )
 
   find_package(PkgConfig REQUIRED)
@@ -469,7 +467,6 @@ elseif( UNIX AND NOT APPLE )
 elseif( WIN32 )
 
   set(SURGE_OS_GUI_SOURCES
-    src/windows/UserInteractionsWin.cpp
   )
 
   set(OS_COMPILE_DEFINITIONS
@@ -562,7 +559,6 @@ if( BUILD_HEADLESS )
     ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     src/headless/main.cpp
-    src/headless/UserInteractionsHeadless.cpp
     src/headless/LinkFixesHeadless.cpp
     src/headless/HeadlessUtils.cpp
     src/headless/Player.cpp
@@ -678,13 +674,6 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 add_custom_target(surge-staged-assets)
 
 if( BUILD_SURGE_EFFECTS_BANK )
-  # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
-  # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-  # FIXME of course that this should go away in surge-xt. These are also split now for
-  # XT vs FX since FX is production code in 19 and XT is not
-  add_library(surge-juce-userint-fx src/surge_effects_bank/UserInteractionsJUCE.cpp )
-  target_include_directories(surge-juce-userint-fx PRIVATE ${SURGE_COMMON_INCLUDES})
-
   juce_add_plugin(surge-fx
           PRODUCT_NAME "Surge XT Effects"
           COMPANY_NAME "Surge Synth Team"
@@ -759,7 +748,6 @@ if( BUILD_SURGE_EFFECTS_BANK )
           surge::tinyxml
 
           surge-shared
-          surge-juce-userint-fx
           surge-fx-binary
 
           juce::juce_audio_utils
@@ -878,11 +866,6 @@ if( BUILD_SURGE_XT )
       )
   endif()
 
-  # LinkOrder on Linux matters so make a little lib which contains UIJUCE so I can link
-  # it AFTER surge-shared (since the libs come after the source in the JUCE build of course)
-  add_library(surge-xt-userint src/surge_synth_juce/UserInteractionsJUCE_Synth_XT.cpp)
-  target_include_directories(surge-xt-userint PRIVATE ${SURGE_COMMON_INCLUDES})
-
   set(SURGE_SYNTH_JUCE_GUI_SOURCES
          ${SURGE_GUI_SOURCES}
           )
@@ -928,7 +911,6 @@ if( BUILD_SURGE_XT )
           surge::tinyxml
 
           surge-shared
-          surge-xt-userint
 
           juce::juce_audio_utils
           juce::juce_audio_processors
@@ -1046,7 +1028,6 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
 
           ${PYSRCD}/surgepy.cpp
           src/headless/HeadlessUtils.cpp
-          src/headless/UserInteractionsHeadless.cpp
           )
 
   target_compile_definitions(surgepy

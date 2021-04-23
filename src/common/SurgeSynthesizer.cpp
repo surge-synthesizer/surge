@@ -3853,7 +3853,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
         }
         catch (Tunings::TuningError &e)
         {
-            Surge::UserInteractions::promptError(e.what(), "Unable to restore tuning!");
+            storage.reportError(e.what(), "Unable to restore tuning!");
             storage.retuneTo12TETScale();
         }
     }
@@ -3879,7 +3879,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
         }
         catch (Tunings::TuningError &e)
         {
-            Surge::UserInteractions::promptError(e.what(), "Unable to restore mapping!");
+            storage.reportError(e.what(), "Unable to restore mapping!");
             storage.remapToConcertCKeyboard();
         }
     }

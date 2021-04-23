@@ -18,7 +18,6 @@
 #include "Oscillator.h"
 #include <time.h>
 #include "unitconversion.h"
-#include "UserInteractions.h"
 #include "guihelpers.h"
 #include "SkinColors.h"
 #include "RuntimeFont.h"
@@ -690,7 +689,12 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
 
         std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
                                "_scene" + (scene == 0 ? "A" : "B");
-        storage->export_wt_wav_portable(baseName, &(oscdata->wt));
+        auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
+        if (!fn.empty())
+        {
+            std::string message = "Wav file exported to '" + fn + "'";
+            juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Exported Wav", message);
+        }
     };
     exportItem->setActions(exportAction, nullptr);
     contextMenu->addEntry(exportItem);
@@ -698,8 +702,9 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     auto omi = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Exported Wavetables Folder...")));
     omi->setActions([this](CCommandMenuItem *i) {
-        Surge::UserInteractions::openFolderInFileBrowser(
-            Surge::Storage::appendDirectory(this->storage->userDataPath, "Exported Wavetables"));
+        juce::URL(juce::File(Surge::Storage::appendDirectory(this->storage->userDataPath,
+                                                             "Exported Wavetables")))
+            .launchInDefaultBrowser();
     });
     contextMenu->addEntry(omi);
 
@@ -711,7 +716,7 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
             auto hi = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("[?] Wavetables"));
-            auto ca = [lurl](CCommandMenuItem *i) { Surge::UserInteractions::openURL(lurl); };
+            auto ca = [lurl](CCommandMenuItem *i) { juce::URL(lurl).launchInDefaultBrowser(); };
             hi->setActions(ca, nullptr);
             contextMenu->addSeparator();
             contextMenu->addEntry(hi);
@@ -804,9 +809,14 @@ void COscillatorDisplay::loadWavetable(int id)
 
 void COscillatorDisplay::loadWavetableFromFile()
 {
-    Surge::UserInteractions::promptFileOpenDialog("", "", "", [this](std::string s) {
-        strncpy(this->oscdata->wt.queue_filename, s.c_str(), 255);
-    });
+    juce::FileChooser c("Select Wavetable to Load");
+    auto r = c.browseForFileToOpen();
+    if (r)
+    {
+        auto res = c.getResult();
+        auto rString = res.getFullPathName().toStdString();
+        strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
+    }
 }
 
 CMouseEventResult COscillatorDisplay::onMouseUp(CPoint &where, const CButtonState &buttons)

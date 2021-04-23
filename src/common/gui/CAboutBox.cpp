@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "version.h"
 
-#include "UserInteractions.h"
 #include "SkinColors.h"
 #include "CSurgeHyperlink.h"
 #include "SurgeGUIEditor.h"

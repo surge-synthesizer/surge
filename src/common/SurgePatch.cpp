@@ -23,7 +23,6 @@
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "SkinModel.h"
-#include "UserInteractions.h"
 #include "UserDefaults.h"
 #include "version.h"
 
@@ -1109,7 +1108,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             << ". Features of the patch will not be available in your "
             << "session. You can always find the latest Surge at "
                "https://surge-synthesizer.github.io/";
-        Surge::UserInteractions::promptError(oss.str(), "Surge Patch Version Mismatch");
+        storage->reportError(oss.str(), "Surge Patch Version Mismatch");
     }
 
     TiXmlElement *meta = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));

@@ -10,6 +10,27 @@ namespace UI
 }
 } // namespace Surge
 
+void SurgeGUIEditor::showHTML(const std::string &html)
+{
+    static struct filesToDelete : juce::DeletedAtShutdown
+    {
+        ~filesToDelete()
+        {
+            for (const auto &d : deleteThese)
+            {
+                d.deleteFile();
+            }
+        }
+        std::vector<juce::File> deleteThese;
+    } *byebyeOnExit = new filesToDelete();
+
+    auto f = juce::File::createTempFile("_surge.html");
+    f.replaceWithText(html);
+    auto U = juce::URL(f);
+    U.launchInDefaultBrowser();
+    byebyeOnExit->deleteThese.push_back(f);
+};
+
 std::string SurgeGUIEditor::tuningToHtml()
 {
     std::ostringstream htmls;

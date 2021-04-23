@@ -33,13 +33,11 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
     {
         ~OptionalForget()
         {
-#if TARGET_JUCE_UI
             if (isSet && item)
             {
-                item->forget();
+                // item->forget();
                 item = nullptr;
             }
-#endif
         }
         T item = T();
         bool isSet = false;
@@ -54,11 +52,11 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
     {
         if (getGradient())
         {
-            getGradient()->forget();
+            // getGradient()->forget();
         }
         if (getGradientHighlighted())
         {
-            getGradientHighlighted()->forget();
+            // getGradientHighlighted()->forget();
         }
     }
     VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
