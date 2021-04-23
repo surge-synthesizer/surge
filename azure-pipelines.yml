@@ -83,14 +83,13 @@ jobs:
         cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
         cmakeConfig: "Release"
         cmakeTarget: "surge-headless"
-      # See #4030 for why this is commented out
-      #linux-lv2:
-      #  imageName: 'ubuntu-20.04'
-      #  isLinux: True
-      #  needsLV2: True
-      #  cmakeArguments: "-DCMAKE_BUILD_TYPE=Debug -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
-      #  cmakeConfig: "Debug"
-      #  cmakeTarget: "surge-xt_LV2"
+      linux-lv2:
+        imageName: 'ubuntu-20.04'
+        isLinux: True
+        needsLV2: True
+        cmakeArguments: "-DCMAKE_BUILD_TYPE=Debug -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
+        cmakeConfig: "Debug"
+        cmakeTarget: "surge-xt_LV2"
 
   pool:
     vmImage: $(imageName)
@@ -197,11 +196,7 @@ jobs:
   - bash: |
       set -e
 
-      echo "Starting Xvfb on 9898"
-      nohup Xvfb :9898 &
-      export DISPLAY=:9898
-      sleep 3
-
+      export PIPELINE_OVERRIDE_DATA_HOME=`pwd`/resources/data
       cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
     displayName: all - build with cmake
     condition: variables.needsLV2
