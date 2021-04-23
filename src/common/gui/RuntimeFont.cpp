@@ -26,8 +26,14 @@ namespace GUI
 
 DefaultFonts::DefaultFonts()
 {
+#define TEST_WITH_INDIE_FLOWER 0
+#if TEST_WITH_INDIE_FLOWER
+    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(BinaryData::IndieFlower_ttf,
+                                                                  BinaryData::IndieFlower_ttfSize);
+#else
     latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(BinaryData::LatoRegular_ttf,
                                                                   BinaryData::LatoRegular_ttfSize);
+#endif
 
     displayFont = getLatoAtSize(9);
     patchNameFont = getLatoAtSize(13);

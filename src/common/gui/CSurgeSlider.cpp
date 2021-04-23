@@ -153,7 +153,8 @@ void CSurgeSlider::draw(CDrawContext *dc)
     }
 
     labfont.setStyleFlags(font_style);
-    labfont.setHeight(font_size);
+    if (font_size != labfont.getHeightInPoints())
+        labfont = labfont.withPointHeight(font_size);
 
     CRect size = getViewSize();
 

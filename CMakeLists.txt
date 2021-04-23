@@ -837,6 +837,7 @@ if( BUILD_SURGE_XT )
   file(GLOB SURGE_SYNTH_JUCE_RESOURCES_GLOB
           assets/SurgeClassic/exported/*svg
           resources/fonts/Lato*ttf
+          resources/fonts/IndieFlower.ttf
           )
 
   juce_add_binary_data( surge-xt-binary
