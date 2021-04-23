@@ -352,15 +352,11 @@ set(SURGE_GUI_INCLUDES
 
 ### OS SPECIFIC SECTION
 if( APPLE )
-  set(SURGE_OS_SOURCES
-      src/mac/objc_utils.mm
-      )
+  set(SURGE_OS_SOURCES)
 
-  set(SURGE_OS_GUI_SOURCES
-    )
+  set(SURGE_OS_GUI_SOURCES)
 
   set(OS_INCLUDE_DIRECTORIES
-    src/mac
     libs/simde
     )
   set(OS_COMPILE_DEFINITIONS
@@ -421,8 +417,6 @@ elseif( UNIX AND NOT APPLE )
     )
 
   set(OS_INCLUDE_DIRECTORIES
-    src/linux
-
     ${CAIRO_INCLUDE_DIRS}
     ${FONTCONFIG_INCLUDE_DIRS}
     ${X11_INCLUDE_DIRS}
@@ -485,7 +479,6 @@ elseif( WIN32 )
 
   set(OS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
-    src/windows
     ${CMAKE_BINARY_DIR}/geninclude
     )
 
@@ -535,9 +528,6 @@ source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
 source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
 source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )
 source_group( "Headless" REGULAR_EXPRESSION "src/headless" )
-source_group( "Linux" REGULAR_EXPRESSION "src/linux" )
-source_group( "macOS" REGULAR_EXPRESSION "src/mac" )
-source_group( "Windows" REGULAR_EXPRESSION "src/windows" )
 source_group( "Surge XT Juce" REGULAR_EXPRESSION "src/surge_synth_juce" )
 source_group( "Surge FX Juce" REGULAR_EXPRESSION "src/surge_effects_bank" )
 
