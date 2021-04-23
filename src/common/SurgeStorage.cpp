@@ -257,6 +257,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
+        const char *buildOverrideDataPath = getenv("PIPELINE_OVERRIDE_DATA_HOME");
         const char *xdgDataPath = getenv("XDG_DATA_HOME");
         std::string localDataPath = std::string(homePath) + "/.local/share/surge/";
         if (xdgDataPath)
@@ -296,6 +297,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                 else
                     datapath = "/usr/share/Surge/";
             }
+        }
+
+        if (buildOverrideDataPath)
+        {
+            datapath = std::string(buildOverrideDataPath);
+            std::cout << "WARNING: Surge Overriding DataPath to " << datapath << std::endl;
+            std::cout << "         Only use this in build pipelines please" << std::endl;
         }
     }
     else
