@@ -372,7 +372,8 @@ class SurgeGUIEditor : public EditorType,
     {
         NO_EDITOR,
         MSEG_EDITOR,
-        STORE_PATCH
+        STORE_PATCH,
+        PATCH_BROWSER
     };
 
     void addEditorOverlay(
@@ -408,6 +409,9 @@ class SurgeGUIEditor : public EditorType,
 
     void closeStorePatchDialog();
     void showStorePatchDialog();
+
+    void closePatchBrowserDialog();
+    void showPatchBrowserDialog();
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();

@@ -37,6 +37,7 @@
 #include <chrono>
 
 #include "Tunings.h"
+#include "PatchDB.h"
 
 #if WINDOWS
 #define PATH_SEPARATOR '\\'
@@ -879,6 +880,7 @@ class alignas(16) SurgeStorage
 
     ~SurgeStorage();
 
+    std::unique_ptr<Surge::PatchStorage::PatchDB> patchDB;
     std::unique_ptr<SurgePatch> _patch;
 
     SurgePatch &getPatch();
