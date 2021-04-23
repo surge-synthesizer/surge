@@ -65,6 +65,27 @@ to do a build.
 
 ## Building an LV2
 
+On Linux, using a community fork of JUCE, you can build an LV2. Here's how. We assume you ahve checked out surge and can build.
+
+First, to some directory of your chosing, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2
+
+```
+sudo apt-get install -y lv2-dev
+cd /some/location
+git clone --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
+```
+
+then run a fresh CMake to (1) point to that juce and (2) activate LV2
+
+```
+cmake -Bbuild_lv2 -DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=/some/location/JUCE-lv2/
+cmake --build build_lv2 --config Release --target surge-xt_LV2 --parallel 4
+cmake --build build_lv2 --config Release --target surge-fx_LV2 --parallel 4
+```
+
+You will then have LV2s in `build_lv2/surge-xt_artefacts/Release/LV2` and  `build_lv2/surge-fx_artefacts/Release/LV2` 
+respectively.
+
 ## Platform Specific Choices
 
 ### Building 32 vs 64 bit windows
