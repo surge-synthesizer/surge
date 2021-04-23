@@ -137,12 +137,4 @@ VSTGUI::CRect getScreenDimensions(VSTGUI::CFrame *)
 }
 } // namespace GUI
 
-namespace UserInteractions
-{
-/*
- * This means I have a link wrong
- */
-void openFolderInFileBrowser(const std::string &folder) {}
-
-} // namespace UserInteractions
 } // namespace Surge

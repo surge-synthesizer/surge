@@ -38,6 +38,7 @@
 
 #include "Tunings.h"
 #include "PatchDB.h"
+#include <unordered_set>
 
 #if WINDOWS
 #define PATH_SEPARATOR '\\'
@@ -867,6 +868,43 @@ class alignas(16) SurgeStorage
 
     SurgeStorage(std::string suppliedDataPath = "");
 
+    // With XT surgestorage can now keep a cache of errors it reports to the user
+    void reportError(const std::string &msg, const std::string &title);
+    struct ErrorListener
+    {
+        // This can be called from any thread. Beware. But it is called only
+        // when an error occurs so if you want to be sloppy and just lock thats OK
+        virtual void onSurgeError(const std::string &msg, const std::string &title) = 0;
+    };
+    std::unordered_set<ErrorListener *> errorListeners;
+    std::mutex preListenerErrorMutex; // this mutex is ONLY locked in the error path and
+    // when registering a listener (from the UI thread)
+    std::vector<std::pair<std::string, std::string>> preListenerErrors;
+    void addErrorListener(ErrorListener *l)
+    {
+        errorListeners.insert(l);
+        std::lock_guard<std::mutex> g(preListenerErrorMutex);
+        for (auto p : preListenerErrors)
+            l->onSurgeError(p.first, p.second);
+        preListenerErrors.clear();
+    }
+    void removeErrorListener(ErrorListener *l) { errorListeners.erase(l); }
+
+    enum OkCancel
+    {
+        OK,
+        CANCEL
+    };
+    std::function<OkCancel(const std::string &msg, const std::string &title, OkCancel def)>
+        okCancelProvider =
+            [](const std::string &, const std::string &, OkCancel def) { return def; };
+    void clearOkCancelProvider()
+    {
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def) {
+            return def;
+        };
+    }
+
     static constexpr int tuning_table_size = 512;
     float table_pitch alignas(16)[tuning_table_size];
     float table_pitch_inv alignas(16)[tuning_table_size];
@@ -920,7 +958,7 @@ class alignas(16) SurgeStorage
     bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
     // void load_wt_wav(std::string filename, Wavetable* wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt);
-    void export_wt_wav_portable(std::string fbase, Wavetable *wt);
+    std::string export_wt_wav_portable(std::string fbase, Wavetable *wt);
     void clipboard_copy(int type, int scene, int entry);
     void clipboard_paste(int type, int scene, int entry);
     int get_clipboard_type();

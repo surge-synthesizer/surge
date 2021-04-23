@@ -1,5 +1,4 @@
 #include "UIInstrumentation.h"
-#include "UserInteractions.h"
 #include <unordered_map>
 #include <map>
 #include <vector>

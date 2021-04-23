@@ -17,7 +17,6 @@
 
 #include "sqlite3.h"
 #include "SurgeStorage.h"
-#include "UserInteractions.h"
 #include <sstream>
 #include <iterator>
 #include "vt_dsp_endian.h"
@@ -70,7 +69,7 @@ CREATE TABLE PatchFeature (
             std::ostringstream oss;
             oss << "An error occured opening sqlite file '" << dbname << "'. The error was '"
                 << sqlite3_errmsg(dbh) << "'.";
-            Surge::UserInteractions::promptError(oss.str(), "Surge Patch Database Error");
+            storage->reportError(oss.str(), "Surge Patch Database Error");
             dbh = nullptr;
         }
         char *emsg;

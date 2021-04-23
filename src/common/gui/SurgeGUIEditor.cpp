@@ -35,7 +35,6 @@
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
-#include "UserInteractions.h"
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
@@ -242,6 +241,17 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
 SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *synth, void *userdata)
     : super(effect)
 {
+    synth->storage.addErrorListener(this);
+    synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
+                                             SurgeStorage::OkCancel def) {
+        // think about threading one day probably
+        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg, "OK",
+                                                      "Cancel", nullptr, nullptr);
+
+        if (res)
+            return SurgeStorage::OK;
+        return SurgeStorage::CANCEL;
+    };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
 #endif
@@ -345,6 +355,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+    synth->storage.clearOkCancelProvider();
     auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
     populateDawExtraState(synth); // If I must die, leave my state for future generations
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
@@ -367,6 +378,7 @@ SurgeGUIEditor::~SurgeGUIEditor()
 #if TARGET_JUCE_UI
     frame->forget();
 #endif
+    synth->storage.removeErrorListener(this);
 }
 
 void SurgeGUIEditor::idle()
@@ -376,6 +388,20 @@ void SurgeGUIEditor::idle()
 
     if (pause_idle_updates)
         return;
+
+    if (errorItemCount)
+    {
+        std::vector<std::pair<std::string, std::string>> cp;
+        {
+            std::lock_guard<std::mutex> g(errorItemsMutex);
+            cp = errorItems;
+            errorItems.clear();
+        }
+        for (const auto &p : cp)
+        {
+            juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, p.second, p.first);
+        }
+    }
 
     if (editor_open && frame && !synth->halt_engine)
     {
@@ -438,7 +464,7 @@ void SurgeGUIEditor::idle()
                     << "running in order to load Surge patches. If the audio system is working, "
                        "you can probably"
                     << " ignore this message and continue once Surge catches up.";
-                Surge::UserInteractions::promptError(oss.str(), "Patch Loading Error");
+                synth->storage.reportError(oss.str(), "Patch Loading Error");
             }
         }
 
@@ -1048,7 +1074,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
                                db.getAndResetErrorString();
                     currentSkin = db.defaultSkin(&(synth->storage));
                     currentSkin->reloadSkin(bitmapStore);
-                    Surge::UserInteractions::promptError(msg, "Skin Loading Error");
+                    synth->storage.reportError(msg, "Skin Loading Error");
                 }
 
                 reloadFromSkin();
@@ -1579,7 +1605,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         if (i == n_paramslots)
         {
             // This would only happen if a dev added params.
-            Surge::UserInteractions::promptError(
+            synth->storage.reportError(
                 "INTERNAL ERROR: List of parameters is larger than maximum number of parameter "
                 "slots. Increase n_paramslots in SurgeGUIEditor.h!",
                 "Error");
@@ -1913,7 +1939,7 @@ bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformT
     }
     if (l == nullptr)
     {
-        Surge::UserInteractions::promptError("Starting VST3 with null runloop", "Software Error");
+        synth->storage.reportError("Starting VST3 with null runloop", "Software Error");
     }
     LinuxVST3Init(l);
 #endif
@@ -2217,7 +2243,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 snprintf(txt, TXT_SIZE, "[?] Osc %i", a + 1);
                 auto lurl = fullyResolvedHelpURL(hu);
                 addCallbackMenu(contextMenu, txt,
-                                [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                                [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
                 eid++;
             }
             else
@@ -2285,7 +2311,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             {
                 snprintf(txt, TXT_SIZE, "[?] Scene %c", 'A' + a);
                 auto lurl = fullyResolvedHelpURL(hu);
-                contextMenu.addItem(txt, [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                contextMenu.addItem(txt, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
             }
             else
             {
@@ -2362,7 +2388,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     auto lurl = fullyResolvedHelpURL(hu);
                     std::string hs = std::string("[?] ") + (char *)modsource_names[idOn];
                     addCallbackMenu(contextMenu, hs,
-                                    [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                                    [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
                     eid++;
                 }
                 else
@@ -2389,7 +2415,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     auto lurl = fullyResolvedHelpURL(hu);
                     std::string hs = std::string("[?] ") + modulatorName(modsource, false);
                     addCallbackMenu(contextMenu, hs,
-                                    [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                                    [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
                     eid++;
                 }
                 else
@@ -2912,7 +2938,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 std::string helpstr = "[?] ";
                 auto lurl = fullyResolvedHelpURL(helpurl);
                 addCallbackMenu(contextMenu, std::string(helpstr + p->get_full_name()).c_str(),
-                                [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                                [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
                 eid++;
             }
 
@@ -4260,7 +4286,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
     std::string txt;
 
     addCallbackMenu(effmen, "[?] Effect Settings",
-                    [hurl]() { Surge::UserInteractions::openURL(hurl); });
+                    [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
     effmen->addSeparator();
 
@@ -5506,7 +5532,7 @@ void SurgeGUIEditor::scaleFileDropped(std::string fn)
     }
     catch (Tunings::TuningError &e)
     {
-        Surge::UserInteractions::promptError(e.what(), "SCL Error");
+        synth->storage.reportError(e.what(), "SCL Error");
     }
 }
 
@@ -5519,7 +5545,7 @@ void SurgeGUIEditor::mappingFileDropped(std::string fn)
     }
     catch (Tunings::TuningError &e)
     {
-        Surge::UserInteractions::promptError(e.what(), "KBM Error");
+        synth->storage.reportError(e.what(), "KBM Error");
     }
 }
 
@@ -5641,7 +5667,7 @@ void SurgeGUIEditor::showMinimumZoomError() const
     std::ostringstream oss;
     oss << "The smallest zoom level possible on your platform is " << minimumZoom
         << "%. Sorry, you cannot make Surge any smaller!";
-    Surge::UserInteractions::promptError(oss.str(), "Zoom Level Error");
+    synth->storage.reportError(oss.str(), "Zoom Level Error");
 }
 
 void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf) const
@@ -5661,7 +5687,7 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
     {
         msg << "Surge chose the largest fitting zoom level of " << zf << "%.";
     }
-    Surge::UserInteractions::promptError(msg.str(), "Zoom Level Adjusted");
+    synth->storage.reportError(msg.str(), "Zoom Level Adjusted");
 #endif
 }
 
@@ -5719,29 +5745,30 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu->addSeparator(eid++);
 
     addCallbackMenu(settingsMenu, Surge::UI::toOSCaseForMenu("Reach the Developers..."), []() {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/feedback");
+        juce::URL("https://surge-synthesizer.github.io/feedback").launchInDefaultBrowser();
     });
     eid++;
 
     addCallbackMenu(settingsMenu, Surge::UI::toOSCaseForMenu("Read the Code..."), []() {
-        Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/surge/");
+        juce::URL("https://github.com/surge-synthesizer/surge/").launchInDefaultBrowser();
     });
     eid++;
 
-    addCallbackMenu(
-        settingsMenu, Surge::UI::toOSCaseForMenu("Download Additional Content..."), []() {
-            Surge::UserInteractions::openURL("https://github.com/surge-synthesizer/"
-                                             "surge-synthesizer.github.io/wiki/Additional-Content");
-        });
+    addCallbackMenu(settingsMenu, Surge::UI::toOSCaseForMenu("Download Additional Content..."),
+                    []() {
+                        juce::URL("https://github.com/surge-synthesizer/"
+                                  "surge-synthesizer.github.io/wiki/Additional-Content")
+                            .launchInDefaultBrowser();
+                    });
     eid++;
 
     addCallbackMenu(settingsMenu, Surge::UI::toOSCaseForMenu("Surge Website..."), []() {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/");
+        juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
     });
     eid++;
 
     addCallbackMenu(settingsMenu, Surge::UI::toOSCaseForMenu("Surge Manual..."), []() {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/manual/");
+        juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
     });
     eid++;
 
@@ -5778,7 +5805,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     COptionMenu *lfoSubMenu =
         new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
     addCallbackMenu(lfoSubMenu, "[?] LFO Presets",
-                    [hurl]() { Surge::UserInteractions::openURL(hurl); }),
+                    [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); }),
 
         lfoSubMenu->addSeparator();
 
@@ -5899,7 +5926,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     {
         auto lurl = fullyResolvedHelpURL(hu);
         addCallbackMenu(mpeSubMenu, "[?] MPE",
-                        [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
         mpeSubMenu->addSeparator();
     }
 
@@ -5998,7 +6025,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     {
         auto lurl = fullyResolvedHelpURL(hu);
         addCallbackMenu(tuningSubMenu, "[?] Tuning ",
-                        [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
         tid++;
         tuningSubMenu->addSeparator();
     }
@@ -6076,8 +6103,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
             {
                 if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
                 {
-                    Surge::UserInteractions::promptError("Please select only .scl files!",
-                                                         "Invalid Choice");
+                    synth->storage.reportError("Please select only .scl files!", "Invalid Choice");
                     std::cout << "FILE is [" << sf << "]" << std::endl;
                     return;
                 }
@@ -6088,65 +6114,75 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
                 if (!this->synth->storage.retuneToScale(sc))
                 {
-                    Surge::UserInteractions::promptError("This .scl file is not valid!",
-                                                         "File Format Error");
+                    synth->storage.reportError("This .scl file is not valid!", "File Format Error");
                     return;
                 }
                 this->synth->refresh_editor = true;
             }
             catch (Tunings::TuningError &e)
             {
-                Surge::UserInteractions::promptError(e.what(), "Loading Error");
+                synth->storage.reportError(e.what(), "Loading Error");
             }
         };
 
         auto scl_path =
             Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
 
-        Surge::UserInteractions::promptFileOpenDialog(scl_path, ".scl",
-                                                      "Scala microtuning files (*.scl)", cb);
+        juce::FileChooser c("Select SCL Scale", juce::File(scl_path), "*.scl");
+        auto r = c.browseForFileToOpen();
+        if (r)
+        {
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+            cb(rString);
+        }
     });
     tid++;
 
-    addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
-            auto cb = [this](std::string sf) {
-                std::string sfx = ".kbm";
-                if (sf.length() >= sfx.length())
-                {
-                    if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                    {
-                        Surge::UserInteractions::promptError("Please select only .kbm files!",
-                                                             "Invalid Choice");
-                        std::cout << "FILE is [" << sf << "]" << std::endl;
-                        return;
-                    }
-                }
-                try
-                {
-                    auto kb = Tunings::readKBMFile(sf);
+    addCallbackMenu(tuningSubMenu, Surge::UI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."),
+                    [this]() {
+                        auto cb = [this](std::string sf) {
+                            std::string sfx = ".kbm";
+                            if (sf.length() >= sfx.length())
+                            {
+                                if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
+                                {
+                                    synth->storage.reportError("Please select only .kbm files!",
+                                                               "Invalid Choice");
+                                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                                    return;
+                                }
+                            }
+                            try
+                            {
+                                auto kb = Tunings::readKBMFile(sf);
 
-                    if (!this->synth->storage.remapToKeyboard(kb))
-                    {
-                        Surge::UserInteractions::promptError("This .kbm file is not valid!",
-                                                             "File Format Error");
-                        return;
-                    }
+                                if (!this->synth->storage.remapToKeyboard(kb))
+                                {
+                                    synth->storage.reportError("This .kbm file is not valid!",
+                                                               "File Format Error");
+                                    return;
+                                }
 
-                    this->synth->refresh_editor = true;
-                }
-                catch (Tunings::TuningError &e)
-                {
-                    Surge::UserInteractions::promptError(e.what(), "Loading Error");
-                }
-            };
+                                this->synth->refresh_editor = true;
+                            }
+                            catch (Tunings::TuningError &e)
+                            {
+                                synth->storage.reportError(e.what(), "Loading Error");
+                            }
+                        };
 
-            auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
-                                                            "tuning-library", "KBM Concert Pitch");
-
-            Surge::UserInteractions::promptFileOpenDialog(
-                kbm_path, ".kbm", "Scala keyboard mapping files (*.kbm)", cb);
-        });
+                        auto kbm_path = Surge::Storage::appendDirectory(
+                            this->synth->storage.datapath, "tuning-library", "KBM Concert Pitch");
+                        juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
+                        auto r = c.browseForFileToOpen();
+                        if (r)
+                        {
+                            auto res = c.getResult();
+                            auto rString = res.getFullPathName().toStdString();
+                            cb(rString);
+                        }
+                    });
     tid++;
 
     int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
@@ -6168,8 +6204,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                                   kb.name = "Note 69 Retuned 440 to " + std::to_string(freq);
                                   if (!this->synth->storage.remapToKeyboard(kb))
                                   {
-                                      Surge::UserInteractions::promptError(
-                                          "This .kbm file is not valid!", "File Format Error");
+                                      synth->storage.reportError("This .kbm file is not valid!",
+                                                                 "File Format Error");
                                       return;
                                   }
                               });
@@ -6258,9 +6294,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
     tuningSubMenu->addSeparator();
 
     tid++;
-    auto sct = addCallbackMenu(
-        tuningSubMenu, Surge::UI::toOSCaseForMenu("Show Current Tuning Information..."),
-        [this]() { Surge::UserInteractions::showHTML(this->tuningToHtml()); });
+    auto sct = addCallbackMenu(tuningSubMenu,
+                               Surge::UI::toOSCaseForMenu("Show Current Tuning Information..."),
+                               [this]() { showHTML(this->tuningToHtml()); });
     sct->setEnabled(!this->synth->storage.isStandardTuning);
 
     addCallbackMenu(
@@ -6268,7 +6304,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
             auto dpath =
                 Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
 
-            Surge::UserInteractions::openFolderInFileBrowser(dpath);
+            juce::URL(juce::File(dpath)).launchInDefaultBrowser();
         });
 
     return tuningSubMenu;
@@ -6287,7 +6323,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
     {
         auto lurl = fullyResolvedHelpURL(hu);
         addCallbackMenu(zoomSubMenu, "[?] Zoom",
-                        [lurl]() { Surge::UserInteractions::openURL(lurl); });
+                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
         zid++;
 
         zoomSubMenu->addSeparator(zid++);
@@ -6801,7 +6837,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 db.getAndResetErrorString();
             this->currentSkin = db.defaultSkin(&(this->synth->storage));
             this->currentSkin->reloadSkin(this->bitmapStore);
-            Surge::UserInteractions::promptError(msg, "Skin Loading Error");
+            synth->storage.reportError(msg, "Skin Loading Error");
         }
 
         reloadFromSkin();
@@ -6835,21 +6871,20 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
                     [this]() {
-                        Surge::UserInteractions::openFolderInFileBrowser(this->currentSkin->root +
-                                                                         this->currentSkin->name);
+                        juce::URL(juce::File(this->currentSkin->root + this->currentSkin->name))
+                            .launchInDefaultBrowser();
                     });
     tid++;
 
     skinSubMenu->addSeparator();
 
     addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Show Skin Inspector..."),
-                    [this]() { Surge::UserInteractions::showHTML(skinInspectorHtml()); });
+                    [this]() { showHTML(skinInspectorHtml()); });
 
     tid++;
 
-    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."), []() {
-        Surge::UserInteractions::openURL("https://surge-synthesizer.github.io/skin-manual.html");
-    });
+    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Skin Development Guide..."),
+                    []() { juce::URL("https://surge-synthesizer.github.io/skin-manual.html"); });
 
     tid++;
 
@@ -6865,14 +6900,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
 
     addCallbackMenu(
         dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."), [this]() {
-            Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.datapath);
+            juce::URL(juce::File(this->synth->storage.datapath)).launchInDefaultBrowser();
         });
     did++;
 
     addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
         // make it if it isn't there
         fs::create_directories(string_to_path(this->synth->storage.userDataPath));
-        Surge::UserInteractions::openFolderInFileBrowser(this->synth->storage.userDataPath);
+        juce::URL(juce::File(this->synth->storage.userDataPath)).launchInDefaultBrowser();
     });
     did++;
 
@@ -6885,8 +6920,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
                 this->synth->storage.refresh_wtlist();
                 this->synth->storage.refresh_patchlist();
             };
+            /*
+             * TODO: Implement JUCE direcotry picker
             Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath, "", "",
                                                           cb, true, true);
+                                                          */
         });
     did++;
 
@@ -6998,7 +7036,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
     midiSubMenu->addSeparator();
 
     addCallbackMenu(midiSubMenu, Surge::UI::toOSCaseForMenu("Show Current MIDI Mapping..."),
-                    [this]() { Surge::UserInteractions::showHTML(this->midiMappingToHtml()); });
+                    [this]() { showHTML(this->midiMappingToHtml()); });
 
     if (!scannedForMidiPresets)
     {
@@ -7752,7 +7790,7 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::UI::SkinDB::Entry &entry)
         auto msg = std::string(oss.str());
         this->currentSkin = db.defaultSkin(&(this->synth->storage));
         this->currentSkin->reloadSkin(this->bitmapStore);
-        Surge::UserInteractions::promptError(msg, "Skin Loading Error");
+        synth->storage.reportError(msg, "Skin Loading Error");
     }
     reloadFromSkin();
 }
@@ -9060,4 +9098,10 @@ void SurgeGUIEditor::toggleAlternateFor(VSTGUI::CControl *c)
         modsource_is_alternate[modsource] = cms->useAlternate;
         this->refresh_mod();
     }
+}
+void SurgeGUIEditor::onSurgeError(const string &msg, const string &title)
+{
+    std::lock_guard<std::mutex> g(errorItemsMutex);
+    errorItems.emplace_back(msg, title);
+    errorItemCount++;
 }

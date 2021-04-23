@@ -1,7 +1,5 @@
 #include "SurgeBitmaps.h"
-#include "UserInteractions.h"
 
-#include "UIInstrumentation.h"
 #include "CScalableBitmap.h"
 #include <iostream>
 #include <cassert>

@@ -17,37 +17,11 @@
 
 #include "globals.h"
 
-#if TARGET_AUDIOUNIT
-//#include "vstkeycode.h"
-#include "vstgui/plugin-bindings/plugguieditor.h"
-typedef VSTGUI::PluginGUIEditor EditorType;
-#elif TARGET_VST3
-#include "public.sdk/source/vst/vstguieditor.h"
-#include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
-typedef Steinberg::Vst::VSTGUIEditor EditorType;
-#define PARENT_PLUGIN_TYPE SurgeVst3Processor
-#elif TARGET_VST2
-#if LINUX
-#include "../linux/linux-aeffguieditor.h"
-typedef VSTGUI::LinuxAEffGUIEditor EditorType;
-#else
-#include "vstgui/plugin-bindings/aeffguieditor.h"
-typedef VSTGUI::AEffGUIEditor EditorType;
-#endif
-#elif TARGET_JUCE_UI
 #include <JuceHeader.h>
 #include "efvg/escape_from_vstgui.h"
 #include "SurgeSynthEditor.h"
 typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
 #define PARENT_PLUGIN_TYPE SurgeSynthEditor
-#else
-#include "vstgui/plugin-bindings/plugguieditor.h"
-typedef VSTGUI::PluginGUIEditor EditorType;
-#endif
-
-#ifndef PARENT_PLUGIN_TYPE
-#define PARENT_PLUGIN_TYPE void
-#endif
 
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
@@ -60,6 +34,8 @@ typedef VSTGUI::PluginGUIEditor EditorType;
 
 #include <vector>
 #include "MSEGEditor.h"
+#include <thread>
+#include <atomic>
 
 class CSurgeSlider;
 class CModulationSourceButton;
@@ -80,7 +56,8 @@ struct SGEDropAdapter;
 
 class SurgeGUIEditor : public EditorType,
                        public VSTGUI::IControlListener,
-                       public VSTGUI::IKeyboardHook
+                       public VSTGUI::IKeyboardHook,
+                       public SurgeStorage::ErrorListener
 #if TARGET_VST3
     ,
                        public Steinberg::IPlugViewContentScaleSupport
@@ -92,6 +69,11 @@ class SurgeGUIEditor : public EditorType,
   public:
     SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *synth, void *userdata = nullptr);
     virtual ~SurgeGUIEditor();
+
+    std::atomic<int> errorItemCount{0};
+    std::vector<std::pair<std::string, std::string>> errorItems;
+    std::mutex errorItemsMutex;
+    void onSurgeError(const std::string &msg, const std::string &title) override;
 
     static int start_paramtag_value;
 
@@ -326,6 +308,8 @@ class SurgeGUIEditor : public EditorType,
     void showTuningMenu(VSTGUI::CPoint &where);
     void showZoomMenu(VSTGUI::CPoint &where);
     void showLfoMenu(VSTGUI::CPoint &menuRect);
+
+    void showHTML(const std::string &s);
 
     void toggleMPE();
     void toggleTuning();

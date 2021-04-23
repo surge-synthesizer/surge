@@ -18,7 +18,6 @@
 #include "SurgeVoice.h"
 #include "effect/Effect.h"
 #include "BiquadFilter.h"
-#include "UserInteractions.h"
 
 struct QuadFilterChainState;
 

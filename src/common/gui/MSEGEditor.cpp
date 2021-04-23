@@ -2161,7 +2161,7 @@ struct MSEGCanvas : public CControl,
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
         addCb(contextMenu, "[?] MSEG Segment",
-              [hurl]() { Surge::UserInteractions::openURL(hurl); });
+              [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
         contextMenu->addSeparator();
 
@@ -2677,7 +2677,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
         auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor");
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-        addcb("[?] " + menuName, [hurl]() { Surge::UserInteractions::openURL(hurl); });
+        addcb("[?] " + menuName, [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
         com->addSeparator();
         if (isOnOff)
         {

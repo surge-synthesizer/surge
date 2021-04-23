@@ -632,7 +632,9 @@ void CFxMenu::rescanUserPresets()
     {
         std::ostringstream oss;
         oss << "Experienced file system error when scanning user FX. " << e.what();
-        Surge::UserInteractions::promptError(oss.str(), "FileSystem Error");
+
+        if (storage)
+            storage->reportError(oss.str(), "FileSystem Error");
     }
 
     for (const auto &f : sfxfiles)
@@ -902,8 +904,8 @@ void CFxMenu::saveFXIn(const std::string &s)
     std::ofstream pfile(fn, std::ios::out);
     if (!pfile.is_open())
     {
-        Surge::UserInteractions::promptError(
-            std::string("Unable to open FX preset file '") + fn + "' for writing!", "Error");
+        storage->reportError(std::string("Unable to open FX preset file '") + fn + "' for writing!",
+                             "Error");
         return;
     }
 

@@ -16,6 +16,8 @@
 
 #include "SurgeSynthProcessor.h"
 
+class SurgeGUIEditor;
+
 //==============================================================================
 /**
  */

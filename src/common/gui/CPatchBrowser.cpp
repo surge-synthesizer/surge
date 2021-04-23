@@ -15,7 +15,6 @@
 
 #include "SurgeGUIEditor.h"
 #include "CPatchBrowser.h"
-#include "UserInteractions.h"
 #include "SkinColors.h"
 #include "guihelpers.h"
 
@@ -207,13 +206,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
     loadF->setActions([this](CCommandMenuItem *item) {
-        Surge::UserInteractions::promptFileOpenDialog(
-            "", "fxp", "Surge FXP Files", [this](std::string fn) {
-                auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-                if (!sge)
-                    return;
-                sge->queuePatchFileLoad(fn);
-            });
+        juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
+        auto r = c.browseForFileToOpen();
+        if (r)
+        {
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            if (sge)
+                sge->queuePatchFileLoad(rString);
+        }
     });
     contextMenu->addEntry(loadF);
 
@@ -228,23 +230,25 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     auto showU = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open User Patches Folder...")));
     showU->setActions([this](CCommandMenuItem *item) {
-        Surge::UserInteractions::openFolderInFileBrowser(this->storage->userDataPath);
+        juce::URL(juce::File(this->storage->userDataPath)).launchInDefaultBrowser();
     });
     contextMenu->addEntry(showU);
 
     auto showF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Factory Patches Folder...")));
     showF->setActions([this](CCommandMenuItem *item) {
-        Surge::UserInteractions::openFolderInFileBrowser(
-            Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
+        juce::URL(
+            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory")))
+            .launchInDefaultBrowser();
     });
     contextMenu->addEntry(showF);
 
     auto show3 = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Third Party Patches Folder...")));
     show3->setActions([this](CCommandMenuItem *item) {
-        Surge::UserInteractions::openFolderInFileBrowser(
-            Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
+        juce::URL(juce::File(
+                      Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty")))
+            .launchInDefaultBrowser();
     });
     contextMenu->addEntry(show3);
 
@@ -261,7 +265,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
             auto lurl = sge->fullyResolvedHelpURL(hu);
             auto hi =
                 std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("[?] Patch Browser"));
-            auto ca = [lurl](CCommandMenuItem *i) { Surge::UserInteractions::openURL(lurl); };
+            auto ca = [lurl](CCommandMenuItem *i) { juce::URL(lurl).launchInDefaultBrowser(); };
             hi->setActions(ca, nullptr);
             contextMenu->addEntry(hi);
         }

@@ -5,7 +5,6 @@
 #include "SkinSupport.h"
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
-#include "UserInteractions.h"
 #include "UserDefaults.h"
 #include "UIInstrumentation.h"
 #include "CScalableBitmap.h"
@@ -170,7 +169,7 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
             << "set of resources. Surge looked in '" << storage->datapath << "' and '"
             << storage->userDataPath << "'. "
             << "Please reinstall Surge or remove incompatible resources.";
-        Surge::UserInteractions::promptError(oss.str(), "Skin Loading Error");
+        storage->reportError(oss.str(), "Skin Loading Error");
     }
 
     // Run over the skins parsing the name
@@ -1009,8 +1008,9 @@ VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor &def,
                "visited during traversal are: ";
         for (auto l : noLoops)
             oss << "'" << l << "' ";
-        // FIXME ERROR
-        Surge::UserInteractions::promptError(oss.str(), "Skin Configuration Error");
+        // FIXME thread a storage here
+        std::cout << oss.str() << std::endl;
+        // storage->reportError(oss.str(), "Skin Configuration Error");
         return def;
     }
     noLoops.insert(id);
