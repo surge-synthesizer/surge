@@ -576,8 +576,8 @@ class SurgeGUIEditor : public EditorType,
     /*
     ** Utility Function
     */
-    VSTGUI::CCommandMenuItem *addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label,
-                                              std::function<void()> op);
+    std::shared_ptr<VSTGUI::CCommandMenuItem>
+    addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label, std::function<void()> op);
 
     VSTGUI::COptionMenu *
     makeSmoothMenu(VSTGUI::CRect &menuRect, const std::string &key, int defaultValue,

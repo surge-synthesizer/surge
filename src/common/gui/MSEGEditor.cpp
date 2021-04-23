@@ -2149,8 +2149,8 @@ struct MSEGCanvas : public CControl,
         }
 
         auto addCb = [](COptionMenu *p, const std::string &l,
-                        std::function<void()> op) -> CCommandMenuItem * {
-            auto m = new CCommandMenuItem(CCommandMenuItem::Desc(l.c_str()));
+                        std::function<void()> op) -> std::shared_ptr<CCommandMenuItem> {
+            auto m = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(l.c_str()));
             m->setActions([op](CCommandMenuItem *m) { op(); });
             p->addEntry(m);
             return m;
@@ -2669,7 +2669,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
                                     VSTGUI::COptionMenu::kNoDrawStyle |
                                         VSTGUI::COptionMenu::kMultipleCheckStyle);
         auto addcb = [com](std::string label, auto action) {
-            CCommandMenuItem *menu = new CCommandMenuItem(CCommandMenuItem::Desc(label.c_str()));
+            auto menu = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(label.c_str()));
             menu->setActions([action](CCommandMenuItem *m) { action(); });
             com->addEntry(menu);
             return menu;
