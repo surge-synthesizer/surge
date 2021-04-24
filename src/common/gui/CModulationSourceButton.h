@@ -15,7 +15,6 @@
 
 #pragma once
 
-#include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include <iostream>
 #include "SkinSupport.h"

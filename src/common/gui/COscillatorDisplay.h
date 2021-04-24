@@ -14,9 +14,7 @@
 */
 
 #pragma once
-#include "vstcontrols.h"
 #include "SurgeStorage.h"
-#include "CDIBitmap.h"
 #include "DspUtilities.h"
 #include "SkinSupport.h"
 #include "CursorControlGuard.h"

@@ -65,7 +65,7 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
     Parameter *p;
 };
 
-class SurgeSynthProcessor : public juce::AudioProcessor
+class SurgeSynthProcessor : public juce::AudioProcessor, public SurgeSynthesizer::PluginLayer
 {
   public:
     //==============================================================================
@@ -103,7 +103,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
-    void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float value);
+    void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float value) override;
 
     std::unique_ptr<SurgeSynthesizer> surge;
     std::unordered_map<SurgeSynthesizer::ID, SurgeParamToJuceParamAdapter *> paramsByID;

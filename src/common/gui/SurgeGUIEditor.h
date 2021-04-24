@@ -18,15 +18,11 @@
 #include "globals.h"
 
 #include <JuceHeader.h>
-#include "efvg/escape_from_vstgui.h"
-#include "SurgeSynthEditor.h"
-typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
-#define PARENT_PLUGIN_TYPE SurgeSynthEditor
 
+#include "efvg/escape_from_vstgui.h"
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
 
-#include "vstcontrols.h"
 #include "SurgeSynthesizer.h"
 
 #include "SkinSupport.h"
@@ -37,20 +33,14 @@ typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
 #include <thread>
 #include <atomic>
 
+#include "SurgeSynthEditor.h"
+typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
+#define PARENT_PLUGIN_TYPE SurgeSynthEditor
+
 class CSurgeSlider;
 class CModulationSourceButton;
 class CAboutBox;
 class CMidiLearnOverlay;
-
-#if TARGET_VST3
-namespace Steinberg
-{
-namespace Vst
-{
-class IContextMenu;
-}
-} // namespace Steinberg
-#endif
 
 struct SGEDropAdapter;
 
@@ -58,10 +48,6 @@ class SurgeGUIEditor : public EditorType,
                        public VSTGUI::IControlListener,
                        public VSTGUI::IKeyboardHook,
                        public SurgeStorage::ErrorListener
-#if TARGET_VST3
-    ,
-                       public Steinberg::IPlugViewContentScaleSupport
-#endif
 {
   private:
     using super = EditorType;
@@ -77,11 +63,7 @@ class SurgeGUIEditor : public EditorType,
 
     static int start_paramtag_value;
 
-#if TARGET_AUDIOUNIT | TARGET_VST2 | TARGET_LV2
-    void idle() override;
-#else
     void idle();
-#endif
     bool queue_refresh;
     virtual void toggle_mod_editing();
 
@@ -91,44 +73,8 @@ class SurgeGUIEditor : public EditorType,
     static long applyParameterOffset(long index);
     static long unapplyParameterOffset(long index);
 
-#if !TARGET_VST3
     bool open(void *parent) override;
     void close() override;
-#else
-    virtual bool PLUGIN_API
-    open(void *parent, const VSTGUI::PlatformType &platformType = VSTGUI::kDefaultNative) override;
-    virtual void PLUGIN_API close() override;
-
-    virtual Steinberg::tresult PLUGIN_API onWheel(float distance) override
-    {
-        /*
-        ** in VST3 the VstGuiEditorBase we have - even if the OS has handled it
-        ** a call to the VSTGUIEditor::onWheel (trust me; I put in stack traces
-        ** and prints). That's probably wrong. But when you use VSTGUI Zoom
-        ** and frame->getCurrentPosition gets screwed up because VSTGUI has transform
-        ** bugs it is definitely wrong. So the mouse wheel event gets mistakenly
-        ** delivered twice (OK) but to the wrong spot (not OK!).
-        **
-        ** So stop the superclass from doing that by just making this do nothing.
-        */
-        return Steinberg::kResultFalse;
-    }
-
-    virtual Steinberg::tresult PLUGIN_API canResize() override { return Steinberg::kResultTrue; }
-
-    void resizeFromIdleSentinel();
-
-    bool initialZoom();
-    virtual Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect *newSize) override;
-    virtual Steinberg::tresult PLUGIN_API
-    checkSizeConstraint(Steinberg::ViewRect *newSize) override;
-    virtual Steinberg::tresult PLUGIN_API setContentScaleFactor(ScaleFactor factor) override
-    {
-        // Unused for now. Consider removing this callback since not all hosts use it
-        return Steinberg::kResultTrue;
-    }
-
-#endif
 
     bool pause_idle_updates = false;
     int enqueuePatchId = -1;
@@ -168,18 +114,6 @@ class SurgeGUIEditor : public EditorType,
 
     void effectSettingsBackgroundClick(int whichScene);
 
-#if TARGET_VST3
-  public:
-    /**
-     * getIPlugFrame
-     *
-     * Amazingly, IPlugView has a setFrame( IPlugFrame ) method but
-     * no getter. It does, however, store the value as a protected
-     * variable. To collaborate for zoom, we need this reference
-     * in the VST Processor, so expose this function
-     */
-    Steinberg::IPlugFrame *getIPlugFrame() { return plugFrame; }
-#endif
     void setDisabledForParameter(Parameter *p, CSurgeSlider *s);
     void showSettingsMenu(VSTGUI::CRect &menuRect);
 
@@ -452,12 +386,6 @@ class SurgeGUIEditor : public EditorType,
     void hideMidiLearnOverlay();
 
   private:
-#if TARGET_VST3
-    Steinberg::Vst::IContextMenu *
-    addVst3MenuForParams(VSTGUI::COptionMenu *c, const SurgeSynthesizer::ID &,
-                         int &eid); // just a noop if you aren't a vst3 of course
-#endif
-
     std::function<void(SurgeGUIEditor *, bool resizeWindow)> zoom_callback;
     bool zoomInvalid = false;
     int minimumZoom = 100;
@@ -554,11 +482,6 @@ class SurgeGUIEditor : public EditorType,
     bool blinkstate = false;
     PARENT_PLUGIN_TYPE *_effect = nullptr;
     void *_userdata = nullptr;
-#if TARGET_JUCE_UI
-    std::shared_ptr<int> _idleTimer; // FIXME
-#else
-    VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> _idleTimer;
-#endif
     int firstIdleCountdown = 0;
 
     /*
@@ -594,14 +517,6 @@ class SurgeGUIEditor : public EditorType,
     static std::string fullyResolvedHelpURL(std::string helpurl);
 
   private:
-#if TARGET_VST3
-    OBJ_METHODS(SurgeGUIEditor, EditorType)
-    DEFINE_INTERFACES
-    DEF_INTERFACE(Steinberg::IPlugViewContentScaleSupport)
-    END_DEFINE_INTERFACES(EditorType)
-    REFCOUNT_METHODS(EditorType)
-#endif
-
     void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
 
     /*

@@ -14,9 +14,7 @@
 */
 
 #include "RuntimeFont.h"
-#if TARGET_JUCE_UI
 #include <JuceHeader.h>
-#endif
 #include <iostream>
 
 namespace Surge

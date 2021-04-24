@@ -29,11 +29,8 @@
 #include "CursorControlGuard.h"
 #include "guihelpers.h"
 
-#if LINUX || TARGET_JUCE_UI
+// FIXME when you get cursor hiding working
 #define DISABLE_CURSOR_HIDING 1
-#else
-#define DISABLE_CURSOR_HIDING 0
-#endif
 
 using namespace VSTGUI;
 
@@ -1211,17 +1208,9 @@ struct MSEGCanvas : public CControl,
         }
 
         int uniLimit = 0;
-#if LINUX && !TARGET_JUCE_UI
-        // Linux has a bug that it ignores the zoom
-        auto tfpath = CGraphicsTransform()
-                          .scale(1.0 / pathScale, 1.0 / pathScale)
-                          .translate(getFrame()->getZoom() * drawArea.left,
-                                     getFrame()->getZoom() * drawArea.top);
-#else
         auto tfpath = CGraphicsTransform()
                           .scale(1.0 / pathScale, 1.0 / pathScale)
                           .translate(drawArea.left, drawArea.top);
-#endif
 
         VSTGUI::CGradient::ColorStopMap csm;
         VSTGUI::CGradient *cg = VSTGUI::CGradient::create(csm);
@@ -1241,11 +1230,6 @@ struct MSEGCanvas : public CControl,
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
         addP(fillpath, uniLimit, pathFirstY);
-
-        // Make sure to restore this
-#if LINUX && !TARGET_JUCE_UI
-        Surge::UI::NonIntegralAntiAliasGuard naig(dc);
-#endif
 
         dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
         fillpath->forget();
@@ -1313,14 +1297,16 @@ struct MSEGCanvas : public CControl,
             else
             {
                 dc->setFrameColor(secondaryHGridColor);
-#if !TARGET_JUCE_UI
+#if FIX_DASKES
                 CCoord dashes[] = {2, 5};
                 dc->setLineStyle(
                     CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
+#else
+                std::cout << "FIXME: Dashed Lines" << std::endl;
 #endif
             }
 
-#if !TARGET_JUCE_UI
+#if FIX_DASHES
             if (!(val == -1.f &&
                   dc->getLineStyle() !=
                       kLineSolid)) // make sure never to draw a dashed line at the bottom

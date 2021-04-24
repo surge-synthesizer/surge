@@ -301,8 +301,7 @@ set(SURGE_GENERATED_SOURCES
 
 set(SURGE_GUI_SOURCES
   src/common/gui/CAboutBox.cpp
-  src/common/gui/CDIBitmap.cpp
-  src/common/gui/CEffectLabel.h
+        src/common/gui/CEffectLabel.h
   src/common/gui/CEffectSettings.cpp
   src/common/gui/CHSwitch2.cpp
   src/common/gui/CLFOGui.cpp
@@ -535,7 +534,7 @@ source_group( "Surge FX Juce" REGULAR_EXPRESSION "src/surge_effects_bank" )
 # SURGE Core
 #
 
-target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES}  ${SURGE_OS_SHARED_SOURCES})
+target_sources(surge-shared PRIVATE ${SURGE_SHARED_SOURCES}  ${SURGE_SYNTH_SOURCES} ${SURGE_OS_SHARED_SOURCES})
 target_include_directories(surge-shared
         PRIVATE
         ${SURGE_COMMON_INCLUDES}
@@ -545,7 +544,6 @@ target_compile_definitions(surge-shared PRIVATE ${OS_COMPILE_DEFINITIONS} )
 
 if( BUILD_HEADLESS )
   add_executable(surge-headless
-    ${SURGE_SYNTH_SOURCES}
     ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     src/headless/main.cpp
@@ -865,7 +863,6 @@ if( BUILD_SURGE_XT )
           src/surge_synth_juce/SurgeSynthProcessor.cpp
           ${SURGE_GENERATED_SOURCES}
           ${SURGE_OS_SOURCES}
-          ${SURGE_SYNTH_SOURCES}
 
           ${SURGE_SYNTH_JUCE_GUI_SOURCES}
           )
@@ -1012,7 +1009,6 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   pybind11_add_module(surgepy )
 
   target_sources( surgepy PRIVATE
-          ${SURGE_SYNTH_SOURCES}
           ${SURGE_OS_SOURCES}
           ${SURGE_GENERATED_SOURCES}
 

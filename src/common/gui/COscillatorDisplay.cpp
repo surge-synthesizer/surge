@@ -151,10 +151,6 @@ void COscillatorDisplay::draw(CDrawContext *dc)
     int averagingWindow = 4; // this must be both less than BLOCK_SIZE_OS and BLOCK_SIZE_OS must be
                              // an integer multiple of it
 
-#if LINUX && !TARGET_JUCE_UI
-    Surge::UI::NonIntegralAntiAliasGuard naag(dc);
-#endif
-
     float valScale = 100.0f;
 
     auto size = getViewSize();
@@ -256,15 +252,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
                                             .scale(getWidth() / valScale, h / valScale)
                                             .translate(size.getTopLeft().x, size.getTopLeft().y)
                                             .translate(0, extraYTranslate);
-#if LINUX && !TARGET_JUCE_UI
-        auto tmps = size;
-        dc->getCurrentTransform().transform(tmps);
-        VSTGUI::CGraphicsTransform tpath = VSTGUI::CGraphicsTransform()
-                                               .scale(getWidth() / valScale, h / valScale)
-                                               .translate(tmps.getTopLeft().x, tmps.getTopLeft().y);
-#else
         auto tpath = tf;
-#endif
 
         dc->saveGlobalState();
 
@@ -321,12 +309,8 @@ void COscillatorDisplay::draw(CDrawContext *dc)
                     float xoff = (xd == 0 ? esize : 0);
                     auto er = CRect(dotPoint.x - esize + xoff, dotPoint.y - esize,
                                     dotPoint.x + esize + xoff, dotPoint.y + esize);
-#if LINUX && !TARGET_JUCE_UI
-                    dc->drawPoint(dotPoint, pointColor);
-#else
                     dc->setFillColor(pointColor);
                     dc->drawEllipse(er, VSTGUI::kDrawFilled);
-#endif
                 }
             }
 
@@ -343,11 +327,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         }
 
         dc->setLineWidth(1.3);
-#if LINUX && !TARGET_JUCE_UI
-        dc->setDrawMode(VSTGUI::kAntiAliasing | VSTGUI::kNonIntegralMode);
-#else
         dc->setDrawMode(VSTGUI::kAntiAliasing);
-#endif
         if (c == 1)
             dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
         else
@@ -356,9 +336,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         if (use_display)
         {
             CRect oldcr;
-#if TARGET_JUCE_UI
             dc->setClipRect(waveBoundsRect);
-#endif
             dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tpath);
         }
         dc->restoreGlobalState();
@@ -603,10 +581,6 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint &where, const CButtonSt
             getFrame()->addView(contextMenu); // add to frame
             contextMenu->setDirty();
             contextMenu->popup();
-#if !TARGET_JUCE_UI
-            // wth is this?
-            contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
-#endif
             // getFrame()->looseFocus(pContext);
 
             getFrame()->removeView(contextMenu, true); // remove from frame and forget
@@ -1196,10 +1170,7 @@ void COscillatorDisplay::openCustomEditor()
                 disp->getFrame()->addView(contextMenu); // add to frame
                 contextMenu->setDirty();
                 contextMenu->popup();
-#if !TARGET_JUCE_UI
-                // wth is this?
-                contextMenu->onMouseDown(where, kLButton); // <-- modal menu loop is here
-#endif
+
                 // getFrame()->looseFocus(pContext);
 
                 disp->getFrame()->removeView(contextMenu, true); // remove from frame and forget

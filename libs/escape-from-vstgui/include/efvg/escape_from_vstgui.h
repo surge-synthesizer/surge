@@ -1822,6 +1822,8 @@ struct COptionMenu : public CControl
             OP,
             SUB,
             SEP,
+            COLBK,
+            SECT,
             ROOT
         } type = ROOT;
 
@@ -1841,7 +1843,8 @@ struct COptionMenu : public CControl
         alwaysLeak = false;
         doDebug = true;
     }
-    void setNbItemsPerColumn(int c) { OKUNIMPL; }
+    int nbi = -1;
+    void setNbItemsPerColumn(int c) { nbi = c; }
     void setEnabled(bool) { UNIMPL; }
     void addSeparator(int s = -1) { rootNode.children.push_back(MenuNode{MenuNode::SEP}); }
     std::shared_ptr<CMenuItem> addEntry(const std::string &s, int eid = -1)
@@ -1889,9 +1892,17 @@ struct COptionMenu : public CControl
         return addEntry(m, std::string(nm));
     }
     void checkEntry(int, bool) { UNIMPL; }
+    void addColumnBreak() { rootNode.children.push_back(MenuNode{MenuNode::COLBK}); }
+    void addSectionHeader(const std::string &h)
+    {
+        auto q = MenuNode{MenuNode::SECT};
+        q.label = h;
+        rootNode.children.push_back(q);
+    }
 
     void build(juce::PopupMenu &m, const std::vector<MenuNode> &n, const std::string &pfx = "")
     {
+        int ct = 0;
         for (auto &k : n)
         {
             switch (k.type)
@@ -1915,11 +1926,25 @@ struct COptionMenu : public CControl
                 // std::cout << pfx << "***ERROR***\n";
                 break;
             case MenuNode::SUB:
+            {
                 // std::cout << pfx << k.label << " >\n";
                 juce::PopupMenu sub;
                 build(sub, k.children, pfx + "    ");
                 m.addSubMenu(juce::CharPointer_UTF8(k.label.c_str()), sub);
+            }
+            break;
+            case MenuNode::COLBK:
+                m.addColumnBreak();
+                ct--;
                 break;
+            case MenuNode::SECT:
+                m.addSectionHeader(k.label);
+                break;
+            }
+            ct++;
+            if (nbi > 0 && ct % nbi == 0)
+            {
+                m.addColumnBreak();
             }
         }
     }
