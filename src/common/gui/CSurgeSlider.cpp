@@ -185,16 +185,6 @@ void CSurgeSlider::draw(CDrawContext *dc)
 
     float slider_alpha = (disabled || isDeactivatedFn()) ? 0.35 : 1.0;
     bool showHandle = true;
-#if LINUX && !TARGET_JUCE_UI
-    // linux transparency is a bit broken (i have it patched to ignored) as described in
-    // #2053. For now just disable handles on linux transparent sliders, which is a bummer
-    // but better than a mispaint, then come back to this after 1.7.0
-    if (disabled || isDeactivatedFn())
-    {
-        showHandle = false;
-        slider_alpha = 1.0;
-    }
-#endif
 
     if (pTray)
     {

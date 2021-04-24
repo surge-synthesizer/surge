@@ -31,7 +31,6 @@
 #include "CEffectLabel.h"
 #include "CTextButtonWithHover.h"
 #include "CAboutBox.h"
-#include "vstcontrols.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
@@ -57,69 +56,7 @@
 #include "ModernOscillator.h"
 #include "libMTSClient.h"
 
-#if TARGET_VST3
-#include "pluginterfaces/vst/ivstcontextmenu.h"
-#include "pluginterfaces/base/ustring.h"
-
-#include "vstgui/lib/cvstguitimer.h"
-
-#include "SurgeVst3Processor.h"
-
-template <typename T> struct RememberForgetGuard
-{
-    RememberForgetGuard(T *tg)
-    {
-        t = tg;
-
-        int rc = -1;
-        if (t)
-            rc = t->addRef();
-    }
-    RememberForgetGuard(const RememberForgetGuard &other)
-    {
-        int rc = -1;
-        if (t)
-        {
-            rc = t->release();
-        }
-        t = other.t;
-        if (t)
-        {
-            rc = t->addRef();
-        }
-    }
-    ~RememberForgetGuard()
-    {
-        if (t)
-        {
-            t->release();
-        }
-    }
-    T *t = nullptr;
-};
-
-DEF_CLASS_IID(IPlugViewContentScaleSupport);
-
-#endif
-
-#if TARGET_AUDIOUNIT
-#include "aulayer.h"
-#endif
-
 #include "filesystem/import.h"
-
-#if LINUX && !TARGET_JUCE_UI
-#include "vstgui/lib/platform/platform_x11.h"
-#include "vstgui/lib/platform/linux/x11platform.h"
-#endif
-
-#if LINUX && TARGET_LV2
-namespace SurgeLv2
-{
-VSTGUI::SharedPointer<VSTGUI::X11::IRunLoop> createRunLoop(void *ui);
-}
-#endif
-
 #include "RuntimeFont.h"
 
 const int yofs = 10;
@@ -167,69 +104,6 @@ enum special_tags
     start_paramtags,
 };
 
-#if !TARGET_JUCE_UI
-// TODO: CHECK REFERENCE COUNTING
-struct SGEDropAdapter : public VSTGUI::IDropTarget, public VSTGUI::ReferenceCounted<int>
-{
-    SurgeGUIEditor *buddy = nullptr;
-    SGEDropAdapter(SurgeGUIEditor *buddy)
-    {
-        this->buddy = buddy;
-        // std::cout << "Adapter created" << std::endl;
-    }
-    ~SGEDropAdapter()
-    {
-        // std::cout << "Adapter Destroyed" << std::endl;
-    }
-
-    std::string singleFileFName(VSTGUI::DragEventData data)
-    {
-        auto drag = data.drag;
-        auto where = data.pos;
-        uint32_t ct = drag->getCount();
-        if (ct == 1)
-        {
-            IDataPackage::Type t = drag->getDataType(0);
-            if (t == IDataPackage::kFilePath)
-            {
-                const void *fn;
-                drag->getData(0, fn, t);
-                const char *fName = static_cast<const char *>(fn);
-                return fName;
-            }
-        }
-        return "";
-    }
-
-    virtual VSTGUI::DragOperation onDragEnter(VSTGUI::DragEventData data) override
-    {
-        auto fn = singleFileFName(data);
-
-        if (buddy && buddy->canDropTarget(fn))
-            return VSTGUI::DragOperation::Copy;
-        // Hand this decision off to SGE
-        return VSTGUI::DragOperation::None;
-    }
-    virtual VSTGUI::DragOperation onDragMove(VSTGUI::DragEventData data) override
-    {
-        auto fn = singleFileFName(data);
-
-        if (buddy && buddy->canDropTarget(fn))
-            return VSTGUI::DragOperation::Copy;
-
-        return VSTGUI::DragOperation::None;
-    }
-    virtual void onDragLeave(VSTGUI::DragEventData data) override {}
-    virtual bool onDrop(VSTGUI::DragEventData data) override
-    {
-        auto fn = singleFileFName(data);
-        if (buddy)
-            return buddy->onDrop(fn);
-        return false;
-    }
-};
-#endif
-
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 
 bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q)
@@ -257,11 +131,6 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
 #endif
     frame = 0;
 
-#if TARGET_VST3
-    // setIdleRate(25);
-    // synth = ((SurgeProcessor*)effect)->getSurge();
-#endif
-
     patchname = 0;
     blinktimer = 0.f;
     blinkstate = false;
@@ -282,13 +151,10 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
 
     rect.left = 0;
     rect.top = 0;
-#if TARGET_VST2 || TARGET_VST3
-    rect.right = getWindowSizeX() * initialZoomFactor * 0.01;
-    rect.bottom = getWindowSizeY() * initialZoomFactor * 0.01;
-#else
+
     rect.right = getWindowSizeX();
     rect.bottom = getWindowSizeY();
-#endif
+
     editor_open = false;
     queue_refresh = false;
     memset(param, 0, n_paramslots * sizeof(void *));
@@ -361,23 +227,10 @@ SurgeGUIEditor::~SurgeGUIEditor()
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
     if (frame)
     {
-#if !TARGET_JUCE_UI
-        getFrame()->unregisterKeyboardHook(this);
-#endif
         frame->close();
     }
-#if !TARGET_JUCE_UI
-    if (dropAdapter)
-    {
-        dropAdapter->buddy = nullptr;
-        dropAdapter->forget();
-        dropAdapter = nullptr;
-    }
-#endif
 
-#if TARGET_JUCE_UI
     frame->forget();
-#endif
     synth->storage.removeErrorListener(this);
 }
 
@@ -473,10 +326,6 @@ void SurgeGUIEditor::idle()
             setZoomFactor(getZoomFactor());
             zoomInvalid = false;
         }
-
-#if TARGET_VST3
-        resizeFromIdleSentinel();
-#endif
 
         if (showMSEGEditorOnNextIdleOrOpen)
         {
@@ -594,9 +443,6 @@ void SurgeGUIEditor::idle()
 
         if (patchChanged)
         {
-#if TARGET_AUDIOUNIT
-            synth->getParent()->setPresetByID(synth->patchid);
-#endif
             for (int i = 0; i < n_fx_slots; ++i)
             {
                 fxPresetName[i] = "";
@@ -1044,13 +890,6 @@ void SurgeGUIEditor::refresh_mod()
             gui_modsrc[i]->invalid();
         }
     }
-// ctnvg frame->redraw();
-// frame->setDirty();
-#if LINUX
-    frame->invalid();
-    // Turns out linux is very bad with lots of little invalid rects in vstgui
-    // see github issue 1103
-#endif
 }
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
@@ -1546,9 +1385,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fxPresetLabel->setTransparency(true);
             fxPresetLabel->setFont(Surge::GUI::getFontManager()->displayFont);
             fxPresetLabel->setHoriAlign(kRightText);
-#if !TARGET_JUCE_UI
-            fxPresetLabel->setTextTruncateMode(CTextLabel::TextTruncateMode::kTruncateTail);
-#endif
             frame->addView(fxPresetLabel);
             break;
         }
@@ -1762,11 +1598,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lb->setTransparency((bgcol == dcol && frcol == dcol));
             lb->setHoriAlign(txtalign);
 
-#if !TARGET_JUCE_UI
-            lb->setAntialias(true);
-            lb->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fsize, fstyle));
-#endif
-
             lb->setFontColor(col);
             lb->setBackColor(bgcol);
             lb->setFrameColor(frcol);
@@ -1806,7 +1637,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     frame->addView(lb);
     debugLabel = lb;
 
-#if TARGET_JUCE_UI
     struct TestC : public juce::Component
     {
         ~TestC() {}
@@ -1828,7 +1658,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     frame->juceComponent()->addAndMakeVisible(*pt);
     pt->setBounds(150, 2, 100, 10);
     frame->takeOwnership(std::move(pt));
-#endif
 #endif
     for (auto el : editorOverlay)
     {
@@ -1897,11 +1726,7 @@ void SurgeGUIEditor::close_editor()
     setzero(param);
 }
 
-#if !TARGET_VST3
 bool SurgeGUIEditor::open(void *parent)
-#else
-bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformType)
-#endif
 {
     if (samplerate == 0)
     {
@@ -1914,114 +1739,26 @@ bool PLUGIN_API SurgeGUIEditor::open(void *parent, const PlatformType &platformT
         */
         synth->setSamplerate(44100);
     }
-#if !TARGET_VST3
-    // !!! always call this !!!
+
     super::open(parent);
 
-#if !TARGET_JUCE_UI
-    PlatformType platformType = kDefaultNative;
-#else
     int platformType = 0;
-#endif
-#endif
-
-#if TARGET_VST3
-#if LINUX
-    Steinberg::Linux::IRunLoop *l = nullptr;
-    if (getIPlugFrame()->queryInterface(Steinberg::Linux::IRunLoop::iid, (void **)&l) ==
-        Steinberg::kResultOk)
-    {
-        std::cout << "IPlugFrame is a runloop " << l << std::endl;
-    }
-    else
-    {
-        std::cout << "IPlugFrame is not a runloop " << l << std::endl;
-    }
-    if (l == nullptr)
-    {
-        synth->storage.reportError("Starting VST3 with null runloop", "Software Error");
-    }
-    LinuxVST3Init(l);
-#endif
-#endif
-
     float fzf = getZoomFactor() / 100.0;
-#if TARGET_VST2
-    CRect wsize(0, 0, currentSkin->getWindowSizeX() * fzf, currentSkin->getWindowSizeY() * fzf);
-#else
     CRect wsize(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
-#endif
 
     CFrame *nframe = new CFrame(wsize, this);
 
-#if TARGET_JUCE_UI
     nframe->remember();
-#endif
 
     bitmapStore.reset(new SurgeBitmaps());
     bitmapStore->setupBitmapsForFrame(nframe);
     currentSkin->reloadSkin(bitmapStore);
     nframe->setZoom(fzf);
-    /*
-     * OK so WTF is this? Well:
-     * CFrame is a CView so it can be a drop thing
-     * but CFrame is final so you can't subclass it
-     * You could call setDropTarget on it but that's not what CViewContainers use
-     * They instead use this attribute, kCViewContainerDropTargetAttribute
-     * but that's not public so copy its value here
-     * and add a comment
-     * and think - sigh. VSTGUI.
-     */
-
-#if !TARGET_JUCE_UI
-    dropAdapter = new SGEDropAdapter(this);
-    dropAdapter->remember();
-
-    VSTGUI::IDropTarget *dt = nullptr;
-    nframe->getAttribute('vcdt', dt);
-    if (dt)
-        dt->forget();
-    nframe->setAttribute('vcdt', dropAdapter);
-#endif
 
     frame = nframe;
 
-#if LINUX && TARGET_VST3
-    LinuxVST3FrameOpen(frame, parent, platformType);
-#elif LINUX && TARGET_LV2
-    VSTGUI::X11::FrameConfig frameConfig;
-    frameConfig.runLoop = SurgeLv2::createRunLoop(_userdata);
-    frame->open(parent, platformType, &frameConfig);
-#else
     frame->open(parent, platformType);
-#endif
 
-#if TARGET_VST3 || TARGET_LV2
-    _idleTimer = VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer>(
-        new CVSTGUITimer([this](CVSTGUITimer *timer) { idle(); }, 50, false), false);
-    _idleTimer->start();
-#endif
-
-#if TARGET_VST3 && LINUX
-    firstIdleCountdown = 2;
-#endif
-
-    /*#if TARGET_AUDIOUNIT
-      synth = (sub3_synth*)_effect;
-      #elif TARGET_VST3
-      //synth = (sub3_synth*)_effect; ??
-      #else
-      vstlayer *plug = (vstlayer*)_effect;
-      if(!plug->initialized) plug->init();
-      synth = (sub3_synth*)plug->plugin_instance;
-      #endif*/
-
-    /*
-    ** Register only once (when we open)
-    */
-#if !TARGET_JUCE_UI
-    frame->registerKeyboardHook(this);
-#endif
     reloadFromSkin();
     openOrRecreateEditor();
 
@@ -2050,40 +1787,9 @@ void SurgeGUIEditor::close()
         f();
         editorOverlayTagAtClose = el.first;
     }
-#if TARGET_VST2 // && WINDOWS
-    // We may need this in other hosts also; but for now
-    if (frame)
-    {
-        getFrame()->unregisterKeyboardHook(this);
-        frame->close();
-        frame = nullptr;
-    }
-
-    if (dropAdapter)
-    {
-        dropAdapter->buddy = nullptr;
-        dropAdapter->forget();
-        dropAdapter = nullptr;
-    }
-
-#endif
-
-#if !TARGET_VST3
     super::close();
-#endif
-
-#if TARGET_VST3 || TARGET_LV2
-    _idleTimer->stop();
-    _idleTimer = nullptr;
-#endif
     hasIdleRun = false;
     firstIdleCountdown = 0;
-
-#if TARGET_VST3
-#if LINUX
-    LinuxVST3Detatch();
-#endif
-#endif
 }
 
 void SurgeGUIEditor::setParameter(long index, float value)
@@ -2618,9 +2324,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 }
             }
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
-#if TARGET_VST3
-            Steinberg::Vst::IContextMenu *hostMenu = nullptr;
-#endif
 
             if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
             {
@@ -2815,13 +2518,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             });
                     });
                 eid++;
-
-#if TARGET_VST3
-                SurgeSynthesizer::ID mid;
-                if (synth->fromSynthSideId(modsource - ms_ctrl1 + metaparam_offset, mid))
-                    hostMenu = addVst3MenuForParams(contextMenu, mid, eid);
-#endif
-
                 midiSub->forget();
             }
 
@@ -2852,11 +2548,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             contextMenu->setDirty();
             contextMenu->popup();
             frame->removeView(contextMenu, true); // remove from frame and forget
-
-#if TARGET_VST3
-            if (hostMenu)
-                hostMenu->release();
-#endif
 
             return 1;
         }
@@ -4131,18 +3822,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 eid++;
             }
 
-#if TARGET_VST3
-            auto hostMenu = addVst3MenuForParams(contextMenu, synth->idForParameter(p), eid);
-#endif
-
             frame->addView(contextMenu); // add to frame
             contextMenu->popup();
             frame->removeView(contextMenu, true); // remove from frame and forget
-
-#if TARGET_VST3
-            if (hostMenu)
-                hostMenu->release();
-#endif
 
             return 1;
         }
@@ -4525,11 +4207,7 @@ void SurgeGUIEditor::valueChanged(CControl *control)
         int id = ((CPatchBrowser *)control)->enqueue_sel_id;
         // synth->load_patch(id);
         enqueuePatchId = id;
-
-#if LINUX || TARGET_JUCE_UI
-        // On linux the popup menu will be gone so we gotta process
         flushEnqueuedPatchId();
-#endif
         return;
     }
     break;
@@ -5245,95 +4923,24 @@ void SurgeGUIEditor::endEdit(long tag)
 
 void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControl *control)
 {
-#if TARGET_AUDIOUNIT
-    long tag = control->getTag();
-    int ptag = tag - start_paramtags;
-
-    if (tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8)
-    {
-        ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
-        SurgeSynthesizer::ID did;
-        if (synth->fromSynthSideId(ptag, did))
-        {
-            synth->getParent()->ParameterBeginEdit(did.getDawSideIndex());
-        }
-    }
-    else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
-    {
-        SurgeSynthesizer::ID did;
-
-        if (synth->fromSynthSideId(ptag, did))
-        {
-            synth->getParent()->ParameterBeginEdit(did.getDawSideIndex());
-        }
-    }
-
-#endif
-
-#if TARGET_VST3
-    /*
-     * I am sure this is us doing something wrong, but the first time through
-     * of an edit of a discrete value (the digital/analog for instance) the
-     * beignEdit starts sending me the old value over and over which isn't what
-     * I want, and that old value is gotten when beginEdit is called, not when
-     * endEdit is called. So this code, in LIve, establishes the value as correct
-     * at the beginning of beginEdit. Which is odd but fixes issue #3283.
-     */
-    if (synth->hostProgram.find("Ableton") != string::npos)
-    {
-        long tag = control->getTag();
-        int ptag = tag - start_paramtags;
-        if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
-        {
-            auto id = synth->idForParameter(synth->storage.getPatch().param_ptr[ptag]);
-            synth->setParameter01(id, control->getValue(), false);
-        }
-    }
-#endif
-
-#if TARGET_JUCE_UI
     long tag = control->getTag();
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
         _effect->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
-#endif
 }
 
 //------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::controlEndEdit(VSTGUI::CControl *control)
 {
-#if TARGET_AUDIOUNIT
-    long tag = control->getTag();
-    int ptag = tag - start_paramtags;
-    if (tag >= tag_mod_source0 + ms_ctrl1 && tag <= tag_mod_source0 + ms_ctrl8)
-    {
-        ptag = metaparam_offset + tag - tag_mod_source0 - ms_ctrl1;
-        SurgeSynthesizer::ID did;
-        if (synth->fromSynthSideId(ptag, did))
-            synth->getParent()->ParameterEndEdit(did.getDawSideIndex());
-    }
-    else if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
-    {
-        SurgeSynthesizer::ID did;
-
-        if (synth->fromSynthSideId(ptag, did))
-        {
-            synth->getParent()->ParameterEndEdit(did.getDawSideIndex());
-        }
-    }
-#endif
-
-#if TARGET_JUCE_UI
     long tag = control->getTag();
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
         _effect->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
-#endif
 
     if (((CParameterTooltip *)infowindow)->isVisible())
     {
@@ -5585,63 +5192,10 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
-#if TARGET_JUCE_UI
     zoomFactor = zf;
     if (currentSkin && resizeWindow)
         parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     parentEd->setScaleFactor(zf * 0.01);
-#else
-
-    if (zf < minimumZoom)
-    {
-        zf = minimumZoom;
-        showMinimumZoomError();
-    }
-
-    CRect screenDim = Surge::GUI::getScreenDimensions(getFrame());
-
-    /*
-    ** If getScreenDimensions() can't determine a size on all platforms it now
-    ** returns a size 0 screen. In that case we will skip the min check but
-    ** need to remember the zoom is invalid
-    */
-    if (screenDim.getWidth() == 0 || screenDim.getHeight() == 0)
-    {
-        zoomInvalid = true;
-    }
-
-    float newZf;
-    if (doesZoomFitToScreen(zf, newZf))
-    {
-        zoomFactor = zf;
-    }
-    else
-    {
-        zoomFactor = newZf;
-        showTooLargeZoomError(screenDim.getWidth(), screenDim.getHeight(), zoomFactor);
-    }
-
-    /*
-     * Fixed zoom: zoom factor constraint
-     */
-    if (currentSkin && currentSkin->hasFixedZooms())
-    {
-        int nzf = 100;
-        for (auto z : currentSkin->getFixedZooms())
-        {
-            if (z <= zoomFactor)
-                nzf = z;
-        }
-        zoomFactor = nzf;
-    }
-
-    // update zoom level stored in DAW extra state
-    synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor = zoomFactor;
-
-    zoom_callback(this, resizeWindow);
-
-    setBitmapZoomFactor(zoomFactor);
-#endif
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
@@ -6416,26 +5970,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
         zid++;
     }
 
-#if TARGET_VST3
-    if (!isFixed)
-    {
-        zoomSubMenu->addSeparator(zid++);
-
-        bool dragResize =
-            Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
-
-        auto menuItem = addCallbackMenu(
-            zoomSubMenu, Surge::UI::toOSCaseForMenu("Resize by Dragging the Bottom Right Corner"),
-            [this, dragResize]() {
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage), "dragResizeVST3",
-                                                       !dragResize);
-            });
-        menuItem->setChecked(dragResize);
-
-        zid++;
-    }
-#endif
-
     return zoomSubMenu;
 }
 
@@ -7074,38 +6608,13 @@ void SurgeGUIEditor::reloadFromSkin()
     wsy = currentSkin->getWindowSizeY();
 
     float sf = 1;
-#if TARGET_VST2
-    sf = getZoomFactor() / 100.0;
-#endif
+
     frame->setSize(wsx * sf, wsy * sf);
-
-#if TARGET_VST3
-    float uzf = getZoomFactor();
-
-    if (currentSkin->hasFixedZooms())
-    {
-        for (auto z : currentSkin->getFixedZooms())
-        {
-            if (z <= zoomFactor)
-            {
-                uzf = z;
-            }
-        }
-    }
-
-    resizeToOnIdle = VSTGUI::CPoint(wsx * uzf / 100.0, wsy * uzf / 100.0);
-
-    sf = uzf / 100.0;
-#endif
 
     rect.right = wsx * sf;
     rect.bottom = wsy * sf;
 
-#if TARGET_JUCE_UI
     setZoomFactor(getZoomFactor(), true);
-#else
-    setZoomFactor(getZoomFactor());
-#endif
 
     // update MSEG editor if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))
@@ -7192,112 +6701,9 @@ SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label,
     return menu;
 }
 
-#if TARGET_VST3
-bool SurgeGUIEditor::initialZoom()
-{
-    if (initialZoomFactor != 100)
-    {
-        // Daw does not necessarily have any idea what size to draw on init. We need to tell it.
-        setZoomFactor(initialZoomFactor);
-        initialZoomFactor = 100;
-
-        // Important: this is the one and only window resize operation allowed inside onSize.
-        // Infinite recursion warning!
-        zoom_callback(this, true);
-        return true;
-    }
-    return false;
-}
-
-void SurgeGUIEditor::resizeFromIdleSentinel()
-{
-    if (resizeToOnIdle.x > 10 && resizeToOnIdle.y > 10)
-    {
-        Steinberg::IPlugFrame *ipf = getIPlugFrame();
-        if (ipf)
-        {
-            Steinberg::ViewRect vr(0, 0, resizeToOnIdle.x, resizeToOnIdle.y);
-            Steinberg::tresult res = ipf->resizeView(this, &vr);
-            resizeToOnIdle = VSTGUI::CPoint(-1, -1);
-        }
-    }
-}
-
-Steinberg::tresult PLUGIN_API SurgeGUIEditor::onSize(Steinberg::ViewRect *newSize)
-{
-    if (!initialZoom())
-    {
-        float width = newSize->getWidth();
-        float height = newSize->getHeight();
-
-        // resolve current zoomFactor
-        float izfx = ceil(width / getWindowSizeX() * 100.0);
-        float izfy = ceil(height / getWindowSizeY() * 100.0);
-        float currentZoomFactor = std::min(izfx, izfy);
-        currentZoomFactor = std::max(currentZoomFactor, 1.0f * minimumZoom);
-
-        // Don't allow me to set a zoom which will pop a dialog from this drag event. See #1212
-        float correctedZoomFactor;
-
-        if (!doesZoomFitToScreen(currentZoomFactor, correctedZoomFactor))
-        {
-            currentZoomFactor = correctedZoomFactor;
-        }
-
-        // If the resolved currentZoomFactor changes size by more than a pixel, store new size
-        auto zfdx = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeX()) / 100.0;
-        auto zfdy = std::fabs((currentZoomFactor - zoomFactor) * getWindowSizeY()) / 100.0;
-        bool isFixed = currentSkin->hasFixedZooms();
-        bool windowDragResize = std::max(zfdx, zfdy) > 1;
-        bool allowDragResize =
-            Surge::Storage::getUserDefaultValue(&(this->synth->storage), "dragResizeVST3", true);
-
-        if (allowDragResize && windowDragResize && !isFixed)
-        {
-            setZoomFactor(currentZoomFactor);
-        }
-    }
-
-    return Steinberg::Vst::VSTGUIEditor::onSize(newSize);
-}
-
-Steinberg::tresult PLUGIN_API SurgeGUIEditor::checkSizeConstraint(Steinberg::ViewRect *newSize)
-{
-    // we want cratio == tration by adjusting height so
-    // WSX / WSY = gW / gH
-    // gH = gW * WSY / WSX
-    if (synth->hostProgram.find("Fruit") != std::string::npos) // see #2466
-    {
-        return EditorType::checkSizeConstraint(newSize);
-    }
-    else
-    {
-        float tratio = 1.0 * getWindowSizeX() / getWindowSizeY();
-        float cratio = 1.0 * newSize->getWidth() / newSize->getHeight();
-        if (cratio < tratio)
-        {
-            float newHeight = newSize->getWidth() / tratio;
-            newSize->bottom = newSize->top + std::ceil(newHeight);
-        }
-        else
-        {
-            float newWidth = newSize->getHeight() * tratio;
-            newSize->right = newSize->left + std::ceil(newWidth);
-        }
-
-        return Steinberg::kResultTrue;
-    }
-}
-
-#endif
-
 void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
 {
-#if TARGET_LV2
-    // revisit this for non-LV2 outside 1.6.6
-    synth->sendParameterAutomation(synth->idForParameter(p),
-                                   synth->getParameter01(synth->idForParameter(p)));
-#endif
+    std::cout << "FIXME - REMOVE THIS" << __func__ << std::endl;
 }
 //------------------------------------------------------------------------------------------------
 
@@ -7529,141 +6935,6 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button)
     else
         return std::string(modsource_names[i]);
 }
-
-#if TARGET_VST3
-Steinberg::Vst::IContextMenu *SurgeGUIEditor::addVst3MenuForParams(VSTGUI::COptionMenu *contextMenu,
-                                                                   const SurgeSynthesizer::ID &pid,
-                                                                   int &eid)
-{
-    CRect menuRect;
-    Steinberg::Vst::IComponentHandler *componentHandler = getController()->getComponentHandler();
-    Steinberg::FUnknownPtr<Steinberg::Vst::IComponentHandler3> componentHandler3(componentHandler);
-    Steinberg::Vst::IContextMenu *hostMenu = nullptr;
-    if (componentHandler3)
-    {
-        std::stack<COptionMenu *> menuStack;
-        menuStack.push(contextMenu);
-        std::stack<int> eidStack;
-        eidStack.push(eid);
-
-        Steinberg::Vst::ParamID param = pid.getDawSideId();
-        hostMenu = componentHandler3->createContextMenu(this, &param);
-
-        int N = hostMenu ? hostMenu->getItemCount() : 0;
-        if (N > 0)
-        {
-            contextMenu->addSeparator();
-            eid++;
-        }
-
-        std::deque<COptionMenu *> parentMenus;
-        for (int i = 0; i < N; i++)
-        {
-            Steinberg::Vst::IContextMenu::Item item = {0};
-            Steinberg::Vst::IContextMenuTarget *target = {0};
-
-            hostMenu->getItem(i, item, &target);
-
-            // char nm[1024];
-            // Steinberg::UString128(item.name, 128).toAscii(nm, 1024);
-#if WINDOWS
-            // https://stackoverflow.com/questions/32055357/visual-studio-c-2015-stdcodecvt-with-char16-t-or-char32-t
-            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> conversion;
-            std::string nm = conversion.to_bytes((wchar_t *)(item.name));
-#else
-            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conversion;
-            std::string nm = conversion.to_bytes((char16_t *)(item.name));
-#endif
-
-            if (nm[0] ==
-                '-') // FL sends us this as a separator with no VST indication so just strip the '-'
-            {
-                int pos = 1;
-                while (nm[pos] == ' ' && nm[pos] != 0)
-                    pos++;
-                nm = nm.substr(pos);
-            }
-
-            auto itag = item.tag;
-            /*
-            ** Leave this here so we can debug if another vst3 problem comes up
-            std::cout << nm << " FL=" << item.flags << " jGS=" <<
-            Steinberg::Vst::IContextMenuItem::kIsGroupStart
-            << " and=" << ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart )
-            << " IGS="
-            << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart ) ==
-            Steinberg::Vst::IContextMenuItem::kIsGroupStart ) << " IGE="
-            << ( ( item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) ==
-            Steinberg::Vst::IContextMenuItem::kIsGroupEnd ) << " "
-            << std::endl;
-
-            if( item.flags != 0 )
-               printf( "FLAG %d IGS %d IGE %d SEP %d\n",
-                      item.flags,
-                      item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart,
-                      item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd,
-                      item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator
-                      );
-                      */
-            if ((item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupStart) ==
-                Steinberg::Vst::IContextMenuItem::kIsGroupStart)
-            {
-                COptionMenu *subMenu = new COptionMenu(
-                    menuRect, 0, 0, 0, 0,
-                    VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
-                menuStack.top()->addEntry(subMenu, nm.c_str());
-                menuStack.push(subMenu);
-                subMenu->forget();
-                eidStack.push(0);
-
-                /*
-                  VSTGUI doesn't seem to allow a disabled or checked grouping menu.
-                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled )
-                  {
-                  subMenu->setEnabled(false);
-                  }
-                  if( item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked )
-                  {
-                  subMenu->setChecked(true);
-                  }
-                */
-            }
-            else if ((item.flags & Steinberg::Vst::IContextMenuItem::kIsGroupEnd) ==
-                     Steinberg::Vst::IContextMenuItem::kIsGroupEnd)
-            {
-                menuStack.pop();
-                eidStack.pop();
-            }
-            else if (item.flags & Steinberg::Vst::IContextMenuItem::kIsSeparator)
-            // separator not group end. Thanks for the insane definition of these constants VST3!
-            // (See #3090)
-            {
-                menuStack.top()->addSeparator();
-            }
-            else
-            {
-                RememberForgetGuard<Steinberg::Vst::IContextMenuTarget> tg(target);
-                RememberForgetGuard<Steinberg::Vst::IContextMenu> hm(hostMenu);
-
-                auto menu = addCallbackMenu(
-                    menuStack.top(), nm, [this, hm, tg, itag]() { tg.t->executeMenuItem(itag); });
-                eidStack.top()++;
-                if (item.flags & Steinberg::Vst::IContextMenuItem::kIsDisabled)
-                {
-                    menu->setEnabled(false);
-                }
-                if (item.flags & Steinberg::Vst::IContextMenuItem::kIsChecked)
-                {
-                    menu->setChecked(true);
-                }
-            }
-            // hostMenu->addItem(item, &target);
-        }
-        eid = eidStack.top();
-    }
-    return hostMenu;
-}
-#endif
 
 std::string SurgeGUIEditor::helpURLFor(Parameter *p)
 {
@@ -8942,14 +8213,12 @@ void SurgeGUIEditor::toggleMSEGEditor()
 
 void SurgeGUIEditor::showPatchBrowserDialog()
 {
-#if TARGET_JUCE_UI
     auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(750, 450)));
     auto pt = std::make_unique<PatchDBViewer>(this, &(this->synth->storage));
     c->juceComponent()->addAndMakeVisible(*pt);
     pt->setBounds(0, 0, 750, 450);
     c->takeOwnership(std::move(pt));
     addEditorOverlay(c, "Patch Browser", PATCH_BROWSER, CPoint(50, 50), false, true, [this]() {});
-#endif
 }
 
 void SurgeGUIEditor::closePatchBrowserDialog()
@@ -9023,12 +8292,6 @@ void SurgeGUIEditor::repushAutomationFor(Parameter *p)
 {
     auto id = synth->idForParameter(p);
     synth->sendParameterAutomation(id, synth->getParameter01(id));
-
-#if TARGET_AUDIOUNIT
-    synth->getParent()->ParameterBeginEdit(id.getDawSideIndex());
-    synth->getParent()->ParameterUpdate(id.getDawSideIndex());
-    synth->getParent()->ParameterEndEdit(id.getDawSideIndex());
-#endif
 }
 
 void SurgeGUIEditor::showAboutBox(int devModeGrid)

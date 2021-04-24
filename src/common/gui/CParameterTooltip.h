@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#include "vstcontrols.h"
 #include "Parameter.h"
 #include <iostream>
 #include "SkinSupport.h"
@@ -66,9 +65,7 @@ class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumi
     void Hide()
     {
         visible = false;
-#if TARGET_JUCE_UI
         this->setViewSize(VSTGUI::CRect(VSTGUI::CPoint(0, 0), VSTGUI::CPoint(1, 1)));
-#endif
         invalid();
         setDirty(true);
     }

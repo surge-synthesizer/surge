@@ -337,17 +337,7 @@ void CLFOGui::draw(CDrawContext *dc)
                 .translate(boxo.getTopLeft().x, boxo.getTopLeft().y)
                 .translate(maindisp.getTopLeft().x, maindisp.getTopLeft().y);
 
-#if LINUX && !TARGET_JUCE_UI
-        auto xdisp = maindisp;
-        dc->getCurrentTransform().transform(xdisp);
-        VSTGUI::CGraphicsTransform tfpath =
-            VSTGUI::CGraphicsTransform()
-                .scale(boxo.getWidth() / valScale, boxo.getHeight() / valScale)
-                .translate(boxo.getTopLeft().x, boxo.getTopLeft().y)
-                .translate(xdisp.getTopLeft().x, xdisp.getTopLeft().y);
-#else
         auto tfpath = tf;
-#endif
 
         dc->saveGlobalState();
 
@@ -392,20 +382,12 @@ void CLFOGui::draw(CDrawContext *dc)
                 float xoff = (xd == 0 ? esize : 0);
                 auto er = CRect(dotPoint.x - esize + xoff, dotPoint.y - esize,
                                 dotPoint.x + esize + xoff, dotPoint.y + esize);
-#if LINUX && !TARGET_JUCE_UI
-                dc->drawPoint(dotPoint, pointColor);
-#else
                 dc->setFillColor(pointColor);
                 dc->drawEllipse(er, VSTGUI::kDrawFilled);
-#endif
             }
         }
 
-#if LINUX && !TARGET_JUCE_UI
-        dc->setLineWidth(0.7);
-#else
         dc->setLineWidth(1.0);
-#endif
         // LFO ruler bounds AKA the upper and lower horizontal lines that draw the envelope if
         // enabled
         dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Envelope));
@@ -469,15 +451,13 @@ void CLFOGui::draw(CDrawContext *dc)
             if (waveIsAmpWave)
             {
                 dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::GhostedWave));
-#if !TARGET_JUCE_UI
-                // kLineOnOffDash has the wrong join, causing alias overshoots
-                // so use custom line style instead
-                static const CCoord kDefaultOnOffDashLength[] = {1, 2};
 
-                auto cl = VSTGUI::CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinBevel,
-                                             0, 2, kDefaultOnOffDashLength);
-                dc->setLineStyle(cl);
-#endif
+                static bool once = false;
+                if (!once)
+                {
+                    std::cout << "FIXME: Dashed LInes in JUCE" << std::endl;
+                    once = true;
+                }
                 dc->drawGraphicsPath(deactPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
                                      &tfpath);
             }
@@ -1097,9 +1077,6 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
     delete tlfo;
 
     auto q = boxo;
-#if LINUX && !TARGET_JUCE_UI
-    dc->getCurrentTransform().transform(q);
-#endif
 
     VSTGUI::CGraphicsTransform tf =
         VSTGUI::CGraphicsTransform()
@@ -1107,22 +1084,13 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
             .translate(q.getTopLeft().x, q.getTopLeft().y);
 
     auto tfpath = tf;
-
-#if LINUX
-    dc->setLineWidth(50.0);
-#else
     dc->setLineWidth(1.0);
-#endif
 
     dc->setFrameColor(skin->getColor(Colors::LFO::StepSeq::Envelope));
     dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
     dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 
-#if LINUX
-    dc->setLineWidth(60.0);
-#else
     dc->setLineWidth(1.0);
-#endif
     dc->setFrameColor(skin->getColor(Colors::LFO::StepSeq::Wave));
     dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
 

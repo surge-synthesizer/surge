@@ -15,7 +15,6 @@
 
 #pragma once
 
-#include "vstcontrols.h"
 #include "SkinSupport.h"
 #include "SurgeParamConfig.h"
 #include "CursorControlGuard.h"

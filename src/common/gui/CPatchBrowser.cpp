@@ -134,8 +134,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     {
         if (patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
-            auto factory_add = contextMenu->addEntry("FACTORY PATCHES");
-            factory_add->setEnabled(0);
+            contextMenu->addSectionHeader("FACTORY PATCHES");
         }
 
         for (int i = 0; i < patch_cat_size; i++)
@@ -157,8 +156,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                         txt = "USER PATCHES";
                     }
 
-                    auto add = contextMenu->addEntry(txt.c_str());
-                    add->setEnabled(0);
+                    contextMenu->addColumnBreak();
+                    contextMenu->addSectionHeader(txt);
                 }
 
                 // Remap index to the corresponding category in alphabetical order.
@@ -178,31 +177,13 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
             }
         }
-
-#if WINDOWS
-        // make sure user category always ends up in second column
-        col_breakpoint = std::max(usercat_pos ? usercat_pos : (root_count + 1), 32);
-        contextMenu->setNbItemsPerColumn(col_breakpoint - 1 + 2);
-#endif
     }
 
-#if WINDOWS
-    // since we're starting user presets on second column,
-    // we don't need this separator if we have no user presets,
-    // because then we'd have a dangling separator at the bottom of first column
-    if (usercat_pos || !has_3rdparty || storage->firstThirdPartyCategory == 0)
+    if (!single_category)
     {
-        contextMenu->addSeparator();
+        contextMenu->addColumnBreak();
+        contextMenu->addSectionHeader("Functions");
     }
-#else
-    // on Mac and Linux we cannot do multicolumns (at least not until JUCE!)
-    // so just add a separator and move on
-    if (!has_3rdparty || storage->firstThirdPartyCategory == 0)
-    {
-        contextMenu->addSeparator();
-    }
-#endif
-
     auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
     loadF->setActions([this](CCommandMenuItem *item) {
@@ -311,13 +292,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         getFrame()->removeView(contextMenu, true); // remove from frame and forget
 
         sge->pause_idle_updates = false;
-
-#if !LINUX || TARGET_JUCE_UI
-        // on linux none of this matters because popup always returns right away
-        // so if we flush now it actually crashes us for the above reason.
-        // INstead linux should flush in the valueChanged callback
-        sge->flushEnqueuedPatchId();
-#endif
     }
     return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }

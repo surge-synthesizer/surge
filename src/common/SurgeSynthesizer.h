@@ -26,32 +26,6 @@ struct QuadFilterChainState;
 #include <atomic>
 #include <cstdio>
 
-#if TARGET_AUDIOUNIT
-class aulayer;
-typedef aulayer PluginLayer;
-#elif TARGET_VST3
-class SurgeVst3Processor;
-typedef SurgeVst3Processor PluginLayer;
-#elif TARGET_VST2
-class Vst2PluginInstance;
-using PluginLayer = Vst2PluginInstance;
-#elif TARGET_LV2
-class SurgeLv2Wrapper;
-using PluginLayer = SurgeLv2Wrapper;
-#elif TARGET_JUCE
-class JUCEPluginLayerProxy;
-using PluginLayer = JUCEPluginLayerProxy;
-#elif TARGET_JUCE_SYNTH
-#include <JuceHeader.h>
-class SurgeSynthProcessor;
-using PluginLayer = SurgeSynthProcessor;
-#elif TARGET_HEADLESS
-class HeadlessPluginLayerProxy;
-using PluginLayer = HeadlessPluginLayerProxy;
-#else
-class PluginLayer;
-#endif
-
 struct timedata
 {
     double ppqPos, tempo;
@@ -85,6 +59,11 @@ class alignas(16) SurgeSynthesizer
 
     // methods
   public:
+    struct ID;
+    struct PluginLayer
+    {
+        virtual void surgeParameterUpdated(const ID &, float) = 0;
+    };
     SurgeSynthesizer(PluginLayer *parent, std::string suppliedDataPath = "");
     virtual ~SurgeSynthesizer();
     void playNote(char channel, char key, char velocity, char detune);
@@ -154,41 +133,23 @@ class alignas(16) SurgeSynthesizer
     /*
      * For more on this IFDEF see the comment in SurgeSynthesizerIDManagement.cpp
      */
-#if TARGET_VST3 || TARGET_HEADLESS
-#define PLUGIN_ID_AND_INDEX_ARE_DISTINCT 1
-#endif
-
     struct ID
     {
         int getDawSideIndex() const { return dawindex; }
-        int getDawSideId() const
-        {
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-            return dawid;
-#else
-            return dawindex;
-#endif
-        }
+        int getDawSideId() const { return dawid; }
         int getSynthSideId() const { return synthid; }
 
         std::string toString() const
         {
             std::ostringstream oss;
-            oss << "ID[ dawidx=" << dawindex
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-                << ", dawid=" << dawid
-#endif
-                << " synthid=" << synthid << " ]";
+            oss << "ID[ dawidx=" << dawindex << ", dawid=" << dawid << " synthid=" << synthid
+                << " ]";
             return oss.str();
         }
 
         bool operator==(const ID &other) const
         {
-            return dawindex == other.dawindex
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-                   && dawid == other.dawid
-#endif
-                   && synthid == other.synthid;
+            return dawindex == other.dawindex && dawid == other.dawid && synthid == other.synthid;
         }
         bool operator!=(const ID &other) const { return !(*this == other); }
 
@@ -199,17 +160,11 @@ class alignas(16) SurgeSynthesizer
         }
 
       private:
-        int dawindex = -1,
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
-            dawid = -1,
-#endif
-            synthid = -1;
+        int dawindex = -1, dawid = -1, synthid = -1;
         friend SurgeSynthesizer;
     };
 
-#if PLUGIN_ID_AND_INDEX_ARE_DISTINCT
     bool fromDAWSideId(int i, ID &q);
-#endif
     bool fromDAWSideIndex(int i, ID &q);
     bool fromSynthSideId(int i, ID &q);
     bool fromSynthSideIdWithGuiOffset(int i, int start_paramtags, int start_metacontrol_tag, ID &q);

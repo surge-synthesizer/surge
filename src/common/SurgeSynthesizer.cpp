@@ -23,32 +23,6 @@
 #include <process.h>
 #endif
 
-#if TARGET_AUDIOUNIT
-#include "aulayer.h"
-#elif TARGET_VST3
-#include "SurgeVst3Processor.h"
-#include "vstgui/plugin-bindings/plugguieditor.h"
-#elif TARGET_LV2
-#include "SurgeLv2Wrapper.h"
-#include "vstgui/plugin-bindings/plugguieditor.h"
-#elif TARGET_APP
-#include "PluginLayer.h"
-#include "vstgui/plugin-bindings/plugguieditor.h"
-#elif TARGET_JUCE
-#include "JUCEPluginLayerProxy.h"
-#elif TARGET_JUCE_UI
-#include "SurgeSynthProcessor.h"
-#elif TARGET_HEADLESS
-#include "HeadlessPluginLayerProxy.h"
-#else
-#include "Vst2PluginInstance.h"
-
-#if LINUX
-#include "../linux/linux-aeffguieditor.h"
-#else
-#include "vstgui/plugin-bindings/aeffguieditor.h"
-#endif
-#endif
 #include "SurgeParamConfig.h"
 
 #include "UserDefaults.h"
@@ -61,7 +35,6 @@
 using namespace std;
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedDataPath)
-    //: halfband_AL(false),halfband_AR(false),halfband_BL(false),halfband_BR(false),
     : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
       halfbandB(6, true), halfbandIN(6, true)
 {
@@ -251,25 +224,6 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     storage.mpePitchBendRange =
         (float)Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
     mpeGlobalPitchBendRange = 0;
-
-#if TARGET_VST3 || TARGET_VST2 || TARGET_AUDIOUNIT
-    // If we are in a DAW hosted environment, choose a preset from the preset library
-    // Skip LV2 until we sort out the patch change dynamics there
-    int pid = 0;
-    for (auto p : storage.patch_list)
-    {
-        if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Init")
-        {
-            // patchid_queue = pid;
-            // This is the wrong thing to do. I *think* what we need to do here is to
-            // explicitly load the file directly inline on thread using loadPatchFromFile
-            // and set up the location int rather than defer the load. But do that
-            // later
-            break;
-        }
-        pid++;
-    }
-#endif
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
@@ -1387,17 +1341,7 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
     if (!fromSynthSideId(index, eid))
         return;
 
-#if TARGET_AUDIOUNIT
-    getParent()->ParameterUpdate(eid.getDawSideIndex());
-#elif TARGET_VST3
-    getParent()->setParameterAutomated(index, value);
-#elif TARGET_JUCE_UI
     getParent()->surgeParameterUpdated(eid, value);
-#elif TARGET_HEADLESS || TARGET_APP
-        // NO OP
-#else
-    getParent()->setParameterAutomated(eid.getDawSideIndex(), value);
-#endif
 }
 
 void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue)
@@ -2376,18 +2320,6 @@ bool SurgeSynthesizer::loadOscalgos()
                 }
                 storage.getPatch().scene[s].osc[i].queue_xmldata = 0;
             }
-            if (resend)
-            {
-#if TARGET_LV2
-                auto tp = &(storage.getPatch().scene[s].osc[i].type);
-                sendParameterAutomation(tp->id, getParameter01(tp->id));
-                for (int k = 0; k < n_osc_params; k++)
-                {
-                    auto pp = &(storage.getPatch().scene[s].osc[i].p[k]);
-                    sendParameterAutomation(pp->id, getParameter01(pp->id));
-                }
-#endif
-            }
         }
     }
     return true;
@@ -3133,9 +3065,6 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
             synth->loadPatchByPath(synth->patchid_file, -1, s.c_str());
         }
     }
-#if TARGET_LV2
-    synth->getParent()->patchChanged();
-#endif
 
     synth->halt_engine = false;
 
@@ -3150,9 +3079,6 @@ void SurgeSynthesizer::processThreadunsafeOperations()
         if (patchid_queue >= 0)
         {
             loadPatch(patchid_queue);
-#if TARGET_LV2
-            getParent()->patchChanged();
-#endif
             patchid_queue = -1;
         }
 
@@ -3782,7 +3708,7 @@ void SurgeSynthesizer::process()
     }
 }
 
-PluginLayer *SurgeSynthesizer::getParent()
+SurgeSynthesizer::PluginLayer *SurgeSynthesizer::getParent()
 {
     assert(_parent != nullptr);
     return _parent;

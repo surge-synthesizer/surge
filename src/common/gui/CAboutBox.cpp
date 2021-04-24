@@ -83,35 +83,12 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     if (devGridResolution > 0)
     {
-#if !TARGET_JUCE_UI
-        setTransparency(true);
-        auto bg = new CGridOverlay(
-            CRect(CPoint(0, 0), CPoint(skin->getWindowSizeX(), skin->getWindowSizeY())),
-            devGridResolution);
-        bg->setTransparency(true);
-        bg->setMouseableArea(CRect()); // Make sure I don't get clicked on
-        addView(bg);
-#else
         std::cout << "IMplemnt this in JUCE" << std::endl;
-#endif
         return;
     }
 
-#if TARGET_JUCE_UI
     setTransparency(false);
     setBackgroundColor(CColor(0, 0, 0, 212));
-#else
-    setTransparency(true);
-
-    /* dark semitransparent background */
-
-    auto bg =
-        new CTextLabel(CRect(CPoint(0, 0), CPoint(skin->getWindowSizeX(), skin->getWindowSizeY())),
-                       nullptr, nullptr);
-    bg->setMouseableArea(CRect()); // Make sure I don't get clicked on
-    bg->setBackColor(CColor(0, 0, 0, 212));
-    addView(bg);
-#endif
 
     auto vs = getViewSize();
     auto center = vs.getCenter();
@@ -203,11 +180,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     /* bottom left version info */
 
-#if TARGET_JUCE_UI
     std::string version = std::string("Surge XT ") + Surge::Build::FullVersionStr;
-#else
-    std::string version = Surge::Build::FullVersionStr;
-#endif
     std::string buildinfo = "Built on " + (std::string)Surge::Build::BuildDate + " at " +
                             (std::string)Surge::Build::BuildTime + ", using " +
                             (std::string)Surge::Build::BuildLocation + " host '" +
@@ -294,10 +267,8 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     yp -= lblvs;
 
-#if TARGET_VST2 || TARGET_VST3 || TARGET_JUCE_UI
     if (host != "Unknown")
         addTwoColumnLabel("Plugin Host:", host, false, "", 76, 500, true, true);
-#endif
 
     addTwoColumnLabel("System:", system, false, "", 76, 500, true, true);
     addTwoColumnLabel("Build Info:", buildinfo, false, "", 76, 500, true, true);
@@ -431,24 +402,6 @@ void CAboutBox::valueChanged(CControl *pControl)
     if (pControl->getTag() == tag_copy)
     {
         std::string identifierLine = infoStringForClipboard; // don't forget the space at the end
-#if TARGET_JUCE_UI
         std::cout << "IMPLEMENT JUCE COPY AND PASTE" << std::endl;
-#else
-#if LINUX
-        auto xc = popen("xclip -selection c", "w");
-        if (!xc)
-        {
-            std::cout << "Unable to open xclip for writing to clipboard. About is:\n"
-                      << identifierLine << std::endl;
-            return;
-        }
-        fprintf(xc, "%s", identifierLine.c_str());
-        pclose(xc);
-#else
-        auto a =
-            CDropSource::create(identifierLine.c_str(), identifierLine.size(), IDataPackage::kText);
-        getFrame()->setClipboard(a);
-#endif
-#endif
     }
 }

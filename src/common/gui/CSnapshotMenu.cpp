@@ -508,15 +508,6 @@ void CFxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
         }
     }
-#if TARGET_LV2
-    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-    if (sge)
-    {
-        sge->forceautomationchangefor(&(fxbuffer->type));
-        for (int i = 0; i < n_fx_params; ++i)
-            sge->forceautomationchangefor(&(fxbuffer->p[i]));
-    }
-#endif
 }
 void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
 {

@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#include "vstcontrols.h"
 #include "SkinSupport.h"
 #include "CScalableBitmap.h"
 
