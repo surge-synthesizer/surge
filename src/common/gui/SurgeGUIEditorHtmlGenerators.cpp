@@ -168,7 +168,8 @@ std::string SurgeGUIEditor::tuningToHtml()
     for (int i = 0; i < 128; ++i)
     {
         int oct_offset = 1;
-        oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage), "middleC", 1);
+        oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                         Surge::Storage::MiddleC, 1);
         char notename[16];
 
         std::string rowstyle = "";

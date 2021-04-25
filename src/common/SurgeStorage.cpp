@@ -431,7 +431,7 @@ bailOnPortable:
     userDefaultFilePath = userDataPath;
 
     std::string userSpecifiedDataPath =
-        Surge::Storage::getUserDefaultValue(this, "userDataPath", "UNSPEC");
+        Surge::Storage::getUserDefaultValue(this, Surge::Storage::UserDataPath, "UNSPEC");
     if (userSpecifiedDataPath != "UNSPEC")
     {
         userDataPath = userSpecifiedDataPath;
@@ -602,14 +602,14 @@ bailOnPortable:
     }
 
     monoPedalMode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(
-        this, "monoPedalMode", MonoPedalMode::HOLD_ALL_NOTES);
+        this, Surge::Storage::MonoPedalMode, MonoPedalMode::HOLD_ALL_NOTES);
 
     for (int s = 0; s < n_scenes; ++s)
     {
         getPatch().scene[s].drift.extend_range = true;
     }
 
-    bool mtsMode = Surge::Storage::getUserDefaultValue(this, "useODDMTS", false);
+    bool mtsMode = Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
     if (mtsMode)
     {
         initialize_oddsound();

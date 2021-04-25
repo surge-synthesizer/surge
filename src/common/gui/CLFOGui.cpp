@@ -173,8 +173,8 @@ void CLFOGui::draw(CDrawContext *dc)
         else if (lfodata->magnitude.val.f != lfodata->magnitude.val_max.f &&
                  skin->getVersion() >= 2)
         {
-            bool useAmpWave =
-                Surge::Storage::getUserDefaultValue(storage, "showGhostedLFOWaveReference", 1);
+            bool useAmpWave = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::ShowGhostedLFOWaveReference, 1);
             if (useAmpWave)
             {
                 hasFullWave = true;
@@ -1149,8 +1149,8 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
 
         if (storage)
         {
-            int detailedMode =
-                Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+            int detailedMode = Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::HighPrecisionReadouts, 0);
             if (detailedMode)
             {
                 prec = 6;

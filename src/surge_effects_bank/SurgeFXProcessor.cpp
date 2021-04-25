@@ -32,7 +32,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         // Just make sure it is all consistent since this is a global from a separate DLL
         storage->setSamplerate(samplerate);
     }
-    storage->userPrefOverrides["highPrecisionReadouts"] = std::make_pair(0, "");
+    storage->userPrefOverrides[Surge::Storage::HighPrecisionReadouts] = std::make_pair(0, "");
 
     fxstorage = &(storage->getPatch().fx[0]);
     audio_thread_surge_effect.reset();

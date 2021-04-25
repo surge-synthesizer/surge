@@ -251,7 +251,8 @@ void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
 
     bool detailedMode = false;
     if (storage)
-        detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+        detailedMode =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
 
     int dp = (detailedMode ? 6 : 2);
 

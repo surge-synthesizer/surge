@@ -102,7 +102,7 @@ class alignas(16) AirWindowsEffect : public Effect
                     if (fx->storage)
                     {
                         auto detailedMode = Surge::Storage::getUserDefaultValue(
-                            fx->storage, "highPrecisionReadouts", 0);
+                            fx->storage, Surge::Storage::HighPrecisionReadouts, 0);
 
                         fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
                     }
