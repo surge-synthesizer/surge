@@ -17,6 +17,7 @@
 #include "SurgeSynthProcessor.h"
 
 class SurgeGUIEditor;
+class SurgeJUCELookAndFeel;
 
 //==============================================================================
 /**
@@ -68,6 +69,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     std::unique_ptr<VSTGUI::CFrame> vstguiFrame;
     std::unique_ptr<juce::Drawable> logo;
+
+    std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };
