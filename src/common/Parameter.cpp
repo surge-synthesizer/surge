@@ -2002,7 +2002,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     int detailedMode = false;
 
     if (storage)
-        detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+        detailedMode =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
 
     int dp = (detailedMode ? 6 : displayInfo.decimals);
 
@@ -2719,7 +2720,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
 
         if (storage)
         {
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         }
 
         snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
@@ -2735,7 +2736,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef)
 
         if (storage)
         {
-            oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+            oct_offset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         }
 
         snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
@@ -2788,7 +2789,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
     int detailedMode = 0;
 
     if (storage)
-        detailedMode = Surge::Storage::getUserDefaultValue(storage, "highPrecisionReadouts", 0);
+        detailedMode =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
 
     switch (valtype)
     {
@@ -3016,7 +3018,8 @@ void Parameter::get_display(char *txt, bool external, float ef)
 
             if (storage)
             {
-                oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+                oct_offset =
+                    Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
             }
 
             snprintf(txt, TXT_SIZE, "%s", get_notename(notename, val.i, oct_offset));
@@ -3811,7 +3814,8 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
                 // construct the integer note value
                 int oct_offset = 1;
                 if (storage)
-                    oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+                    oct_offset =
+                        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
 
                 ni = ((oct + oct_offset) * 12 * neg) + val;
             }
@@ -3884,7 +3888,8 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
                 int oct_offset = 0;
                 if (storage)
                 {
-                    oct_offset = Surge::Storage::getUserDefaultValue(storage, "middleC", 1);
+                    oct_offset =
+                        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
                 }
                 int note = 0, sf = 0;
                 if (s[0] >= 'a' && s[0] <= 'g')

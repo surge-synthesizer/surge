@@ -21,8 +21,9 @@ std::string toOSCaseForMenu(std::string menuName)
 
 bool showCursor(SurgeStorage *storage)
 {
-    bool sc = Surge::Storage::getUserDefaultValue(storage, "showCursorWhileEditing", 0);
-    bool tm = Surge::Storage::getUserDefaultValue(storage, "touchMouseMode", false);
+    bool sc =
+        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::ShowCursorWhileEditing, 0);
+    bool tm = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::TouchMouseMode, false);
 
     return sc || tm;
 };

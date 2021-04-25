@@ -39,6 +39,7 @@
 #include "Tunings.h"
 #include "PatchDB.h"
 #include <unordered_set>
+#include "UserDefaults.h"
 
 #if WINDOWS
 #define PATH_SEPARATOR '\\'
@@ -1185,7 +1186,7 @@ class alignas(16) SurgeStorage
      * Other users of surge may want to force clients to override user prefs.
      * Really we just use this to force the FX bank to 2 decimals for now. But...
      */
-    std::unordered_map<std::string, std::pair<int, std::string>> userPrefOverrides;
+    std::unordered_map<Surge::Storage::DefaultKey, std::pair<int, std::string>> userPrefOverrides;
 
     ControllerModulationSource::SmoothingMode smoothingMode =
         ControllerModulationSource::SmoothingMode::LEGACY;

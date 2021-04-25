@@ -92,10 +92,11 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
 
     storage.smoothingMode =
         (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-            &storage, "smoothingMode", (int)(ControllerModulationSource::SmoothingMode::LEGACY));
+            &storage, Surge::Storage::SmoothingMode,
+            (int)(ControllerModulationSource::SmoothingMode::LEGACY));
     storage.pitchSmoothingMode =
         (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-            &storage, "pitchSmoothingMode",
+            &storage, Surge::Storage::PitchSmoothingMode,
             (int)(ControllerModulationSource::SmoothingMode::DIRECT));
 
     patch.polylimit.val.i = DEFAULT_POLYLIMIT;
@@ -222,7 +223,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     mpeEnabled = false;
     mpeVoices = 0;
     storage.mpePitchBendRange =
-        (float)Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+        (float)Surge::Storage::getUserDefaultValue(&storage, Surge::Storage::MPEPitchBendRange, 48);
     mpeGlobalPitchBendRange = 0;
 }
 
@@ -1393,8 +1394,8 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
         mpeEnabled = msbValue > 0;
         mpeVoices = msbValue & 0xF;
         if (storage.mpePitchBendRange < 0.0f)
-            storage.mpePitchBendRange =
-                Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
+            storage.mpePitchBendRange = Surge::Storage::getUserDefaultValue(
+                &storage, Surge::Storage::MPEPitchBendRange, 48);
         mpeGlobalPitchBendRange = 0;
         return;
     }
@@ -3845,8 +3846,8 @@ void SurgeSynthesizer::setupActivateExtraOutputs()
     if (hostProgram.find("Fruit") == 0) // FruityLoops default off
         defval = false;
 
-    activateExtraOutputs =
-        Surge::Storage::getUserDefaultValue(&(storage), "activateExtraOutputs", defval ? 1 : 0);
+    activateExtraOutputs = Surge::Storage::getUserDefaultValue(
+        &(storage), Surge::Storage::ActivateExtraOutputs, defval ? 1 : 0);
 }
 
 void SurgeSynthesizer::swapMetaControllers(int c1, int c2)

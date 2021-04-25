@@ -52,13 +52,13 @@ SkinDB::~SkinDB()
 std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
 {
     rescanForSkins(storage);
-    auto uds = Surge::Storage::getUserDefaultValue(storage, "defaultSkin", "");
+    auto uds = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::DefaultSkin, "");
     if (uds == "")
         return getSkin(defaultSkinEntry);
     else
     {
-        auto st = (Entry::RootType)(
-            Surge::Storage::getUserDefaultValue(storage, "defaultSkinRootType", Entry::UNKNOWN));
+        auto st = (Entry::RootType)(Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::DefaultSkinRootType, Entry::UNKNOWN));
 
         for (auto e : availableSkins)
         {

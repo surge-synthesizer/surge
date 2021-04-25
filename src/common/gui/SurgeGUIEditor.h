@@ -491,7 +491,7 @@ class SurgeGUIEditor : public EditorType,
     addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label, std::function<void()> op);
 
     VSTGUI::COptionMenu *
-    makeSmoothMenu(VSTGUI::CRect &menuRect, const std::string &key, int defaultValue,
+    makeSmoothMenu(VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
 
     VSTGUI::COptionMenu *makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);

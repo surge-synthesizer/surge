@@ -1781,8 +1781,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     // restore msegs. We optionally don't restore the snap from patch
-    bool userPrefRestoreMSEGFromPatch =
-        Surge::Storage::getUserDefaultValue(storage, "restoreMSEGSnapFromPatch", true);
+    bool userPrefRestoreMSEGFromPatch = Surge::Storage::getUserDefaultValue(
+        storage, Surge::Storage::RestoreMSEGSnapFromPatch, true);
     for (int s = 0; s < n_scenes; ++s)
         for (int m = 0; m < n_lfos; ++m)
         {
