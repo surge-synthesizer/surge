@@ -94,8 +94,16 @@ respectively.
 
 ### Building for Raspberry PI
 
-*ToDo: Expand README documentation*
+To build for a raspberry PI you want to add the `LINUX_ON_ARM` cmake variable at your first cmake run. Otherwise
+the commands are unchanged. So on a PI you can do:
 
+```
+cmake -Bbuild -DLINUX_ON_ARM=True
+cmake --build build --config Release --target surge-staged-assets
+```
+
+Cross compiling should also work but we've not tried it in this cycle. If you get it to work with one of the
+cmake toolchain files in cmake, we would welcome a PR to this documentation with information.
 
 # Setting up for your OS
 
