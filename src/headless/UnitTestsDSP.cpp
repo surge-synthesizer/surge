@@ -792,6 +792,25 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
 
             for (int q = 0; q < 10; ++q)
                 surge->process();
+
+            int idx = 0;
+            bool got = false;
+            for (auto q : surge->storage.wt_list)
+            {
+                if (q.name == "Sine Power HQ")
+                {
+                    got = true;
+                    surge->storage.getPatch().scene[0].osc[0].wt.queue_id = idx;
+                }
+                idx++;
+            }
+            REQUIRE(got);
+            for (int q = 0; q < 10; ++q)
+                surge->process();
+
+            REQUIRE(std::string(surge->storage.getPatch().scene[0].osc[0].wavetable_display_name) ==
+                    "Sine Power HQ");
+
             float sumAbsOut = 0;
             surge->playNote(0, 60, 127, 0);
             for (int q = 0; q < 100; ++q)
