@@ -3,19 +3,23 @@
 # Documentation for pkgbuild and productbuild: https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html
 
 # preflight check
+INDIR=$1
+SOURCEDIR=$2
+TARGET_DIR=$3
+VERSION=$4
 
-if [[ ! -f ./make_installer.sh ]]; then
-	echo "You must run this script from within the installer_osx directory!"
-	exit 1
-fi
+TMPDIR="./installer-tmp"
+mkdir -p $TMPDIR
 
-# version
+echo "MAKE from $INDIR $SOURCEDIR into $TARGET_DIR with $VERSION"
 
-if [ "$SURGE_VERSION" != "" ]; then
-    VERSION="$SURGE_VERSION"
-elif [ "$1" != "" ]; then
-    VERSION="$1"
-fi
+VST3="Surge XT.vst3"
+AU="Surge XT.component"
+APP="Surge XT.app"
+FXAU="Surge XT Effects.component"
+FXVST3="Surge XT Effects.vst3"
+FXAPP="Surge XT Effects.app"
+
 
 if [ "$VERSION" == "" ]; then
     echo "You must specify the version you are packaging!"
@@ -23,33 +27,21 @@ if [ "$VERSION" == "" ]; then
     exit 1
 fi
 
-# locations
 
-PRODUCTS="../build/surge_products/"
-FXPRODUCTS="../build/surge_products/"
-
-VST3="Surge.vst3"
-AU="Surge.component"
-FXAU="SurgeEffectsBank.component"
-FXVST3="SurgeEffectsBank.vst3"
-
-RSRCS="../resources/data"
-
-OUTPUT_BASE_FILENAME="Surge-$VERSION-Setup"
-
-TARGET_DIR="installer";
+OUTPUT_BASE_FILENAME="Surge-XT-$VERSION-Setup"
 
 build_flavor()
 {
-    TMPDIR=${TARGET_DIR}/tmp-pkg
     flavor=$1
     flavorprod=$2
     ident=$3
     loc=$4
-    proddir=$5
 
-    echo --- BUILDING Surge_${flavor}.pkg ---
-    
+    echo --- BUILDING Surge_XT_${flavor}.pkg from "$flavorprod" ---
+
+    workdir=$TMPDIR/$flavor
+    mkdir -p $workdir
+
     # In the past we would pkgbuild --analyze first to make a plist file, but we are perfectly fine with the
     # defaults, so we skip that step here. http://thegreyblog.blogspot.com/2014/06/os-x-creating-packages-from-command_2.html
     # was pretty handy in figuring that out and man pkgbuild convinced us to not do it, as did testing.
@@ -57,78 +49,84 @@ build_flavor()
     # The defaults only work if a component is a sole entry in a staging directory though, so synthesize that
     # by moving the product to a tmp dir
 
-    mkdir -p $TMPDIR
-    mv $proddir/$flavorprod $TMPDIR
+    cp -r "$INDIR/$flavorprod" "$workdir"
+    ls -l $workdir
 
-    pkgbuild --root $TMPDIR --identifier $ident --version $VERSION --install-location $loc Surge_${flavor}.pkg || exit 1
+    pkgbuild --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
 
-    mv $TMPDIR/${flavorprod} $proddir
-    rmdir $TMPDIR
+    rm -rf $workdir
 }
 
 
 # try to build VST3 package
 
-if [[ -d $PRODUCTS/$VST3 ]]; then
-    build_flavor "VST3" $VST3 "com.vemberaudio.vst3.pkg" "/Library/Audio/Plug-Ins/VST3" $PRODUCTS
+if [[ -d $INDIR/$VST3 ]]; then
+    build_flavor "VST3" "$VST3" "com.surge-synth-team.surge-xt.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
 fi
 
-# try to build AU package
-
-if [[ -d $PRODUCTS/$AU ]]; then
-    build_flavor "AU" $AU "com.vemberaudio.au.pkg" "/Library/Audio/Plug-Ins/Components" $PRODUCTS
+if [[ -d $INDIR/$FXVST3 ]]; then
+    build_flavor "FXVST3" "$FXVST3" "com.surge-synth-team.surge-xt-fx.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
 fi
 
-# And the FXen
-
-if [[ -d $FXPRODUCTS/$FXAU ]]; then
-    build_flavor "FXAU" $FXAU "org.surge-synthesizer.fxau.pkg" "/Library/Audio/Plug-Ins/Components" $FXPRODUCTS
+if [[ -d $INDIR/$AU ]]; then
+    build_flavor "AU" "$AU" "com.surge-synth-team.surge-xt.component.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
-if [[ -d $FXPRODUCTS/$FXVST3 ]]; then
-    build_flavor "FXVST3" $FXVST3 "org.surge-synthesizer.fxvst3.pkg" "/Library/Audio/Plug-Ins/VST3" $FXPRODUCTS
+if [[ -d $INDIR/$FXAU ]]; then
+    build_flavor "FXAU" "$FXAU" "com.surge-synth-team.surge-xt-fx.vst3.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
-# write build info to resources folder
+if [[ -d $INDIR/$APP ]]; then
+    build_flavor "APP" "$APP" "com.surge-synth-team.surge-xt.app.pkg" "/Applications"
+fi
 
-echo "Version: ${VERSION}" > "$RSRCS/BuildInfo.txt"
-echo "Packaged on: $(date "+%Y-%m-%d %H:%M:%S")" >> "$RSRCS/BuildInfo.txt"
-echo "On host: $(hostname)" >> "$RSRCS/BuildInfo.txt"
-echo "Commit: $(git rev-parse HEAD)" >> "$RSRCS/BuildInfo.txt"
+if [[ -d $INDIR/$FXAPP ]]; then
+    build_flavor "FXAPP" "$FXAPP" "com.surge-synth-team.surge-xt-fx.app.pkg" "/Applications"
+fi
 
-# build resources package
-
+# Build the resources pagkage
+RSRCS=${SOURCEDIR}/resources/data
 echo --- BUILDING Resources pkg ---
-pkgbuild --root "$RSRCS" --identifier "com.vemberaudio.resources.pkg" --version $VERSION --scripts ResourcesPackageScript --install-location "/tmp/Surge" Surge_Resources.pkg
+pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/installer_mac/ResourcesPackageScript --install-location "/tmp/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
 
-# remove build info from resource folder
-
-rm "$RSRCS/BuildInfo.txt"
+echo --- Sub Packages Created ---
+ls -l "${TMPDIR}"
 
 # create distribution.xml
 
-if [[ -d $PRODUCTS/$VST3 ]]; then
-	VST3_PKG_REF='<pkg-ref id="com.vemberaudio.vst3.pkg"/>'
-	VST3_CHOICE='<line choice="com.vemberaudio.vst3.pkg"/>'
-	VST3_CHOICE_DEF="<choice id=\"com.vemberaudio.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST3\"><pkg-ref id=\"com.vemberaudio.vst3.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_VST3.pkg</pkg-ref>"
+if [[ -d $INDIR/$VST3 ]]; then
+	VST3_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.vst3.pkg"/>'
+	VST3_CHOICE='<line choice="com.surge-synth-team.surge-xt.vst3.pkg"/>'
+	VST3_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT VST3\"><pkg-ref id=\"com.surge-synth-team.surge-xt.vst3.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_VST3.pkg</pkg-ref>"
 fi
-if [[ -d $PRODUCTS/$AU ]]; then
-	AU_PKG_REF='<pkg-ref id="com.vemberaudio.au.pkg"/>'
-	AU_CHOICE='<line choice="com.vemberaudio.au.pkg"/>'
-	AU_CHOICE_DEF="<choice id=\"com.vemberaudio.au.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit\"><pkg-ref id=\"com.vemberaudio.au.pkg\"/></choice><pkg-ref id=\"com.vemberaudio.au.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_AU.pkg</pkg-ref>"
+if [[ -d $INDIR/$AU ]]; then
+	AU_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.component.pkg"/>'
+	AU_CHOICE='<line choice="com.surge-synth-team.surge-xt.component.pkg"/>'
+	AU_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Audio Unit\"><pkg-ref id=\"com.surge-synth-team.surge-xt.component.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_AU.pkg</pkg-ref>"
 fi
-if [[ -d $FXPRODUCTS/$FXAU ]]; then
-	FXAU_PKG_REF='<pkg-ref id="org.surge-synthesizer.fxau.pkg"/>'
-	FXAU_CHOICE='<line choice="org.surge-synthesizer.fxau.pkg"/>'
-	FXAU_CHOICE_DEF="<choice id=\"org.surge-synthesizer.fxau.pkg\" visible=\"true\" start_selected=\"true\" title=\"Audio Unit for Standalone FX\"><pkg-ref id=\"org.surge-synthesizer.fxau.pkg\"/></choice><pkg-ref id=\"org.surge-synthesizer.fxau.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_FXAU.pkg</pkg-ref>"
-fi
-if [[ -d $FXPRODUCTS/$FXVST3 ]]; then
-	FXVST3_PKG_REF='<pkg-ref id="org.surge-synthesizer.fxvst3.pkg"/>'
-	FXVST3_CHOICE='<line choice="org.surge-synthesizer.fxvst3.pkg"/>'
-	FXVST3_CHOICE_DEF="<choice id=\"org.surge-synthesizer.fxvst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"VST3 for Standalone FX\"><pkg-ref id=\"org.surge-synthesizer.fxvst3.pkg\"/></choice><pkg-ref id=\"org.surge-synthesizer.fxvst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_FXVST3.pkg</pkg-ref>"
+if [[ -d $INDIR/$APP ]]; then
+	APP_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.app.pkg"/>'
+	APP_CHOICE='<line choice="com.surge-synth-team.surge-xt.app.pkg"/>'
+	APP_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT App\"><pkg-ref id=\"com.surge-synth-team.surge-xt.app.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_APP.pkg</pkg-ref>"
 fi
 
-cat > distribution.xml << XMLEND
+if [[ -d $INDIR/$FXVST3 ]]; then
+	FXVST3_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
+	FXVST3_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
+	FXVST3_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank VST3\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXVST3.pkg</pkg-ref>"
+fi
+if [[ -d $INDIR/$FXAU ]]; then
+	FXAU_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.component.pkg"/>'
+	FXAU_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.component.pkg"/>'
+	FXAU_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank Audio Unit\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.component.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAU.pkg</pkg-ref>"
+fi
+if [[ -d $INDIR/$FXAPP ]]; then
+	FXAPP_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.app.pkg"/>'
+	FXAPP_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.app.pkg"/>'
+	FXAPP_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank App\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.app.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAPP.pkg</pkg-ref>"
+fi
+
+cat > $TMPDIR/distribution.xml << XMLEND
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="1">
     <title>Surge ${VERSION}</title>
@@ -136,48 +134,53 @@ cat > distribution.xml << XMLEND
     <readme file="Readme.rtf" />
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
+    ${APP_PKG_REF}
     ${FXVST3_PKG_REF}
     ${FXAU_PKG_REF}
-    <pkg-ref id="com.vemberaudio.resources.pkg"/>
+    ${FXAPP_PKG_REF}
+    <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg"/>
     <options require-scripts="false" customize="always" />
     <choices-outline>
         ${VST3_CHOICE}
         ${AU_CHOICE}
+        ${APP_CHOICE}
         ${FXVST3_CHOICE}
         ${FXAU_CHOICE}
-        <line choice="com.vemberaudio.resources.pkg"/>
+        ${FXAPP_CHOICE}
+        <line choice="com.surge-synth-team.surge-xt.resources.pkg"/>
     </choices-outline>
     ${VST3_CHOICE_DEF}
     ${AU_CHOICE_DEF}
+    ${APP_CHOICE_DEF}
     ${FXVST3_CHOICE_DEF}
     ${FXAU_CHOICE_DEF}
-    <choice id="com.vemberaudio.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
-        <pkg-ref id="com.vemberaudio.resources.pkg"/>
+    ${FXAPP_CHOICE_DEF}
+    <choice id="com.surge-synth-team.surge-xt.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
+        <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg"/>
     </choice>
-    <pkg-ref id="com.vemberaudio.resources.pkg" version="${VERSION}" onConclusion="none">Surge_Resources.pkg</pkg-ref>
+    <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg" version="${VERSION}" onConclusion="none">Surge_XT_Resources.pkg</pkg-ref>
 </installer-gui-script>
 XMLEND
 
 # build installation bundle
 
-if [[ ! -d ${TARGET_DIR} ]]; then
-	mkdir ${TARGET_DIR}
-fi
-productbuild --distribution distribution.xml --package-path "./" --resources Resources "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.pkg"
-Rez -append Resources/icns.rsrc -o "${TARGET_DIR}/${OUTPUT_BASE_FILENAME}.pkg"
-SetFile -a C "${TARGET_DIR}/${OUTPUT_BASE_FILENAME}.pkg"
+pushd ${TMPDIR}
+productbuild --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
+popd
 
+Rez -append ${SOURCEDIR}/installer_mac/Resources/icns.rsrc -o "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
+SetFile -a C "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
+mkdir "${TMPDIR}/Surge XT"
+mv "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg" "${TMPDIR}/Surge XT"
 # create a DMG if required
 
-if [[ $2 == "--dmg" ]]; then
-	if [[ -f "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg" ]]; then
-		rm "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
-	fi
-	hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "./${TARGET_DIR}/"
-	hdiutil convert /tmp/tmp.dmg -format UDZO -o "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
+if [[ -f "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg" ]]; then
+  rm "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
 fi
+hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "${TMPDIR}/Surge XT/"
+hdiutil convert /tmp/tmp.dmg -format UDZO -o "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
 
 # clean up
 
-rm distribution.xml
-rm Surge_*.pkg
+#rm distribution.xml
+#rm Surge_*.pkg

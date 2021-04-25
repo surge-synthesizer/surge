@@ -991,6 +991,7 @@ else()
   endif()
 endif()
 
+set( SURGE_XT_DIST_OUTPUT_DIR surge-xt-dist )
 set( SURGE_XT_DIST_TARGET_BASE surge-xt-alpha-${SXTVER}-${SXTOS})
 
 add_custom_command(TARGET surge-xt-distribution
@@ -998,9 +999,19 @@ add_custom_command(TARGET surge-xt-distribution
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_TARGET_BASE}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_PRODUCT_DIR}/ ${SURGE_XT_DIST_TARGET_BASE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/surge-xt-zip
-        COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/surge-xt-zip/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
         )
+
+# Build OS specific installers
+if( APPLE )
+  add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_mac/make_installer.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          COMMAND ${CMAKE_SOURCE_DIR}/installer_mac/make_installer.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          )
+endif()
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   message( STATUS "Building Surge Python bindings with pybind11" )
