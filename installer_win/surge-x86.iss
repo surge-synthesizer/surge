@@ -2,11 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppPublisher "Surge Synth Team"
-#define MyAppPublisherShort "SST"
 #define MyAppURL "http://www.surge-synth-team.org/"
-#define MyAppName "Surge"
+#define MyAppName "Surge XT"
 #define MyAppVersion GetEnv('SURGE_VERSION')
-#define MyID "650E559A-2F44-44FE-861F-4108AE4BC30F"
+#define MyID "69F3FE96-DEEC-4C7C-B72D-E8957EC8411C"
 
 #if MyAppVersion == ""
 #define MyAppVersion "0.0.0"
@@ -19,13 +18,13 @@
 AppId={#MyID}
 AppName="{#MyAppName} {#MyAppVersion}"
 AppVersion={#MyAppVersion}
-AppVerName={#MyAppPublisherShort} {#MyAppName} (32-bit)
+AppVerName={#MyAppName} (32-bit) by {#MyAppPublisher}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={cf}\VST3\Surge Synth Team\
-DefaultGroupName=Surge
+DefaultDirName={commoncf32}\VST3\Surge Synth Team\
+DefaultGroupName=Surge XT
 DisableProgramGroupPage=yes
 DisableDirPage=yes
 DisableReadyPage=no
@@ -36,41 +35,39 @@ UninstallDisplayIcon=surge.ico
 UsePreviousAppDir=yes
 Compression=lzma
 SolidCompression=yes
-UninstallFilesDir={commonappdata}\Surge\uninstall\x86\
+UninstallFilesDir={commonappdata}\Surge XT\uninstall\x86\
 
-;; since the fx bank is now a dir not a file we have to force delete the old version in case it was a file
 [InstallDelete]
-Type: filesandordirs; Name: "{cf}\VST3\SurgeEffectsBank.vst3"
-Type: filesandordirs; Name: "{cf}\VST3\Surge Synth Team\SurgeEffectsBank.vst3"
-;; also since we're now putting the .vst3 file in SST subfolder, remove old one
-Type: files; Name: "{cf}\VST3\Surge.vst3"
+Type: filesandordirs; Name: "{commoncf32}\VST3\Surge Synth Team\Surge XT Effects.vst3"
 ;; clean up factory data folder, except tuning-library folder (users might link to their own custom tunings into this folder)
-Type: filesandordirs; Name: "{commonappdata}\Surge\modulator_presets"
-Type: filesandordirs; Name: "{commonappdata}\Surge\patches_3rdparty"
-Type: filesandordirs; Name: "{commonappdata}\Surge\patches_factory"
-Type: filesandordirs; Name: "{commonappdata}\Surge\skins"
-Type: filesandordirs; Name: "{commonappdata}\Surge\wavetables"
-Type: filesandordirs; Name: "{commonappdata}\Surge\wavetables_3rdparty"
-Type: files; Name: "{commonappdata}\Surge\windows.wt"
-Type: files; Name: "{commonappdata}\Surge\configuration.xml"
-Type: files; Name: "{commonappdata}\Surge\paramdocumentation.xml"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\modulator_presets"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_3rdparty"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_factory"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\skins"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\wavetables"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\wavetables_3rdparty"
 
 [Components]
+Name: VST3; Description: Surge XT VST3 (32-bit); Types: full compact custom; Flags: checkablealone
+Name: EffectsVST3; Description: Surge XT Effects VST3 (32-bit); Types: full custom; Flags: checkablealone
+Name: SA; Description: Surge XT Standalone (32-bit); Types: full custom; Flags: checkablealone
+Name: EffectsSA; Description: Surge XT Effects Standalone (32-bit); Types: full custom; Flags: checkablealone
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
-Name: VST3; Description: Surge VST3 (32-bit); Types: full compact custom; Flags: checkablealone
-Name: EffectsVST3; Description: SurgeEffectsBank VST3 (32-bit); Types: full compact custom; Flags: checkablealone
 
 [Files]
-Source: ..\resources\data\*; DestDir: {commonappdata}\Surge; Components: Data; Flags: recursesubdirs; Excludes: "*.git";
-Source: ..\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: ..\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
 
-;; these two lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
-Source: ..\build\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
-Source: ..\build\surge_products\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+;; these lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
+Source: ..\build\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
+Source: ..\build\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: ..\build\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
+Source: ..\build\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
 
-;; these two lines are used when building the installer locally - uncomment them if you want to do that!
-;;Source: ..\build32\surge_products\Surge_x86.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion
-;;Source: ..\surge-fx\build32\product\SurgeEffectsBank.vst3; DestDir: {cf}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+;; these lines are used when building the installer locally - uncomment them if you want to do that!
+;;Source: ..\build32\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
+;;Source: ..\build32\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+;;Source: ..\build32\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
+;;Source: ..\build32\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -80,8 +77,8 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
 Filename: "{cmd}"; \
-    WorkingDir: "{cf}\VST3"; \
-    Parameters: "/C mklink /D /J  ""{cf}\VST3\Surge Synth Team\SurgeData"" ""{commonappdata}\Surge"""; \
+    WorkingDir: "{commoncf32}\VST3"; \
+    Parameters: "/C mklink /D /J  ""{commoncf32}\VST3\Surge Synth Team\SurgeXTData"" ""{commonappdata}\Surge XT"""; \
     Flags: runascurrentuser
 
 [Code]
@@ -97,8 +94,9 @@ begin
   AddToReadyMemo(Result, MemoComponentsInfo, NewLine);
 
   Result := Result + 'Installation Locations:' + NewLine
-  Result := Result + Space + 'Data Files: ' + ExpandConstant( '{commonappdata}' ) + '\Surge' + NewLine
-  Result := Result + Space + 'VST3: ' + ExpandConstant( '{cf}' ) + '\VST3\Surge Synth Team' + NewLine
-  Result := Result + Space + 'Portable Junction: ' + ExpandConstant( '{cf}' ) + '\VST3\Surge Synth Team\SurgeData' + NewLine
+  Result := Result + Space + 'Data Files: ' + ExpandConstant( '{commonappdata}' ) + '\Surge XT' + NewLine
+  Result := Result + Space + 'VST3 Plugins: ' + ExpandConstant( '{commoncf32}' ) + '\VST3\Surge Synth Team' + NewLine
+  Result := Result + Space + 'Standalone: ' + ExpandConstant( '{commonpf32}' ) + '\Surge Synth Team' + NewLine
+  Result := Result + Space + 'Portable Junction: ' + ExpandConstant( '{commoncf32}' ) + '\VST3\Surge Synth Team\SurgeXTData' + NewLine
   
 end;
