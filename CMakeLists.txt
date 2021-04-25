@@ -331,6 +331,7 @@ set(SURGE_GUI_SOURCES
   src/common/gui/SurgeBitmaps.cpp
   src/common/gui/SurgeGUIEditor.cpp
   src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/common/gui/SurgeJUCELookAndFeel.cpp
   src/common/gui/UIInstrumentation.cpp)
 
 # Includes and Compiler Flags

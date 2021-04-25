@@ -14,11 +14,14 @@
 #include "CScalableBitmap.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeSynthFlavorExtensions.h"
+#include "SurgeJUCELookAndFeel.h"
 
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : AudioProcessorEditor(&p), processor(p), EscapeFromVSTGUI::JuceVSTGUIEditorAdapter(this)
 {
+    surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
+    juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
     setSize(BASE_WINDOW_SIZE_X, BASE_WINDOW_SIZE_Y);
     setResizable(true, false); // For now
 
