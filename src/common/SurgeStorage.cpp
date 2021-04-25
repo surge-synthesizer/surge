@@ -223,12 +223,12 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
         FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
         std::string localpath = path;
-        localpath += "/Surge/";
+        localpath += "/Surge XT/";
 
         err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
         FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
         std::string rootpath = path;
-        rootpath += "/Surge/";
+        rootpath += "/Surge XT/";
 
         struct stat linfo;
         auto lxml = localpath + "configuration.xml";
@@ -258,10 +258,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         const char *buildOverrideDataPath = getenv("PIPELINE_OVERRIDE_DATA_HOME");
         const char *xdgDataPath = getenv("XDG_DATA_HOME");
-        std::string localDataPath = std::string(homePath) + "/.local/share/surge/";
+        std::string localDataPath = std::string(homePath) + "/.local/share/surge-xt/";
         if (xdgDataPath)
         {
-            datapath = std::string(xdgDataPath) + "/surge/";
+            datapath = std::string(xdgDataPath) + "/surge-xt/";
         }
         else if (fs::is_directory(string_to_path(localDataPath)))
         {
@@ -269,7 +269,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         }
         else
         {
-            datapath = std::string(homePath) + "/.local/share/Surge/";
+            datapath = std::string(homePath) + "/.local/share/Surge XT/";
         }
 
         /*
@@ -279,22 +279,22 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         if (!fs::is_directory(string_to_path(datapath)))
         {
             if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) +
-                                                "/share/surge")))
+                                                "/share/surge-xt")))
             {
-                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge";
+                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge-xt";
             }
             else if (fs::is_directory(string_to_path(
-                         std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/Surge")))
+                         std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/Surge XT")))
             {
-                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge";
+                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge XT";
             }
             else
             {
-                std::string systemDataPath = "/usr/share/surge/";
+                std::string systemDataPath = "/usr/share/surge-xt/";
                 if (fs::is_directory(string_to_path(systemDataPath)))
                     datapath = systemDataPath;
                 else
-                    datapath = "/usr/share/Surge/";
+                    datapath = "/usr/share/Surge XT/";
             }
         }
 
@@ -377,7 +377,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
         path.remove_filename();
         dllPath = path;
-        path /= L"SurgeData";
+        path /= L"SurgeXTData";
         if (fs::is_directory(path))
         {
             datapath = path_to_string(path);
@@ -391,7 +391,7 @@ bailOnPortable:
         if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
         {
             fs::path path(commonAppData);
-            path /= L"Surge";
+            path /= L"Surge XT";
             if (fs::is_directory(path))
             {
                 datapath = path_to_string(path);
@@ -405,7 +405,7 @@ bailOnPortable:
         if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
         {
             fs::path path(localAppData);
-            path /= L"Surge";
+            path /= L"Surge XT";
             datapath = path_to_string(path);
         }
     }

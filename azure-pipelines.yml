@@ -212,10 +212,10 @@ jobs:
   - bash: | 
       set -e
 
-      mkdir -p "${LOCALAPPDATA}/Surge/"
-      cd resources/data && tar cf - . | ( cd ${LOCALAPPDATA}/Surge && tar xf - ) && cd ../..
+      mkdir -p "${LOCALAPPDATA}/Surge XT/"
+      cd resources/data && tar cf - . | ( cd "${LOCALAPPDATA}/Surge XT" && tar xf - ) && cd ../..
 
-      ls -l "${LOCALAPPDATA}/Surge/"
+      ls -l "${LOCALAPPDATA}/Surge XT/"
       
       build/Release/surge-headless.exe
 
@@ -231,7 +231,7 @@ jobs:
       echo "Running HeadlessTest"
       export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
       mkdir -p $XDG_DATA_HOME
-      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge/"
+      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge-xt/"
 
       ./build/surge-headless
     condition: variables.isLinuxUnitTest
@@ -242,8 +242,8 @@ jobs:
 
       export PATH=$AGENT_TEMPDIRECTORY:$PATH
       
-      mkdir "$HOME/Library/Application Support/Surge"
-      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge/"
+      mkdir "$HOME/Library/Application Support/Surge XT"
+      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge XT/"
       
       ./build/Release/surge-headless
     condition: variables.isMacUnitTest
