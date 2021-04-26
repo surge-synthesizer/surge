@@ -306,39 +306,39 @@ set(SURGE_GENERATED_SOURCES
   )
 
 set(SURGE_GUI_SOURCES
-  src/common/gui/CAboutBox.cpp
-        src/common/gui/CEffectLabel.h
-  src/common/gui/CEffectSettings.cpp
-  src/common/gui/CHSwitch2.cpp
-  src/common/gui/CLFOGui.cpp
-  src/common/gui/CMenuAsSlider.cpp
-  src/common/gui/CModulationSourceButton.cpp
-  src/common/gui/CNumberField.cpp
-  src/common/gui/COscillatorDisplay.cpp
-  src/common/gui/CParameterTooltip.h
-  src/common/gui/CPatchBrowser.cpp
-  src/common/gui/CScalableBitmap.cpp
-  src/common/gui/CSnapshotMenu.cpp
-  src/common/gui/CSurgeHyperlink.cpp
-  src/common/gui/CSurgeSlider.cpp
-  src/common/gui/CSurgeVuMeter.cpp
-  src/common/gui/CSwitchControl.cpp
-  src/common/gui/CTextButtonWithHover.cpp
-  src/common/gui/CursorControlGuard.cpp
-  src/common/gui/CVerticalLabel.cpp
-  src/common/gui/guihelpers.cpp
+  src/gui/CAboutBox.cpp
+        src/gui/CEffectLabel.h
+  src/gui/CEffectSettings.cpp
+  src/gui/CHSwitch2.cpp
+  src/gui/CLFOGui.cpp
+  src/gui/CMenuAsSlider.cpp
+  src/gui/CModulationSourceButton.cpp
+  src/gui/CNumberField.cpp
+  src/gui/COscillatorDisplay.cpp
+  src/gui/CParameterTooltip.h
+  src/gui/CPatchBrowser.cpp
+  src/gui/CScalableBitmap.cpp
+  src/gui/CSnapshotMenu.cpp
+  src/gui/CSurgeHyperlink.cpp
+  src/gui/CSurgeSlider.cpp
+  src/gui/CSurgeVuMeter.cpp
+  src/gui/CSwitchControl.cpp
+  src/gui/CTextButtonWithHover.cpp
+  src/gui/CursorControlGuard.cpp
+  src/gui/CVerticalLabel.cpp
+  src/gui/guihelpers.cpp
   src/common/ModulatorPresetManager.cpp
-  src/common/gui/MSEGEditor.cpp
-  src/common/gui/PatchDBViewer.cpp
-  src/common/gui/RuntimeFont.cpp
-  src/common/gui/SkinFontLoader.cpp
-  src/common/gui/SkinImageMaps.h
-  src/common/gui/SkinSupport.cpp
-  src/common/gui/SurgeBitmaps.cpp
-  src/common/gui/SurgeGUIEditor.cpp
-  src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
-  src/common/gui/SurgeJUCELookAndFeel.cpp
-  src/common/gui/UIInstrumentation.cpp)
+  src/gui/MSEGEditor.cpp
+  src/gui/PatchDBViewer.cpp
+  src/gui/RuntimeFont.cpp
+  src/gui/SkinFontLoader.cpp
+  src/gui/SkinImageMaps.h
+  src/gui/SkinSupport.cpp
+  src/gui/SurgeBitmaps.cpp
+  src/gui/SurgeGUIEditor.cpp
+  src/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/gui/SurgeJUCELookAndFeel.cpp
+  src/gui/UIInstrumentation.cpp)
 
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
@@ -353,7 +353,7 @@ set(SURGE_COMMON_INCLUDES
   )
 
 set(SURGE_GUI_INCLUDES
-  src/common/gui
+  src/gui
   )
 
 ### OS SPECIFIC SECTION
@@ -490,7 +490,7 @@ source_group( "AirWindows" REGULAR_EXPRESSION "libs/airwindows/" )
 source_group( "Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp" )
 source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
 source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effect" )
-source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
+source_group( "Surge GUI" REGULAR_EXPRESSION "src/gui" )
 source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
 source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )
 source_group( "Headless" REGULAR_EXPRESSION "src/headless" )
