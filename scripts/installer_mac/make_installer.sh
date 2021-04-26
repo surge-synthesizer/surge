@@ -87,7 +87,7 @@ fi
 # Build the resources pagkage
 RSRCS=${SOURCEDIR}/resources/data
 echo --- BUILDING Resources pkg ---
-pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/installer_mac/ResourcesPackageScript --install-location "/tmp/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
 
 echo --- Sub Packages Created ---
 ls -l "${TMPDIR}"
@@ -165,10 +165,10 @@ XMLEND
 # build installation bundle
 
 pushd ${TMPDIR}
-productbuild --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
+productbuild --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/scripts/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
 popd
 
-Rez -append ${SOURCEDIR}/installer_mac/Resources/icns.rsrc -o "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
+Rez -append ${SOURCEDIR}/scripts/installer_mac/Resources/icns.rsrc -o "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
 SetFile -a C "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
 mkdir "${TMPDIR}/Surge XT"
 mv "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg" "${TMPDIR}/Surge XT"

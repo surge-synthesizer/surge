@@ -16,7 +16,8 @@ TEST_CASE("Channel Split Routes on Channel", "[midi]")
 {
     auto surge = std::shared_ptr<SurgeSynthesizer>(Surge::Headless::createSurge(44100));
     REQUIRE(surge);
-    REQUIRE(surge->loadPatchByPath("test-data/patches/ChannelSplit-Sin-2OctaveB.fxp", -1, "Test"));
+    REQUIRE(surge->loadPatchByPath("resources/test-data/patches/ChannelSplit-Sin-2OctaveB.fxp", -1,
+                                   "Test"));
 
     SECTION("Regular (non-MPE)")
     {

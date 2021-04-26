@@ -110,6 +110,12 @@ else()
   message( STATUS "Building in 64 bit configuration" )
 endif()
 
+if( NOT SURGE_COPY_AFTER_BUILD )
+  set( SURGE_COPY_AFTER_BUILD False )
+else()
+  message( STATUS "Surge Copy After Build activated" )
+endif()
+
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
   add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce )
@@ -507,13 +513,6 @@ elseif( WIN32 )
     )
   endif()
 
-  if( ${BUILD_DLLCHECK} )
-    add_executable( dllcheck
-      utils/dllcheck/dllcheck.cpp
-      ${CMAKE_BINARY_DIR}/geninclude/version.cpp
-      )
-    target_include_directories( dllcheck PRIVATE src/common )
-  endif()
 else()
   message(FATAL_ERROR "UNKNOWN OS. Please use lin mac or win" )
 endif()
@@ -675,6 +674,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
+          COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
+
           LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
           LV2_SHARED_LIBRARY_NAME SurgeXT_FX
 
@@ -803,6 +804,8 @@ if( BUILD_SURGE_XT )
           NEEDS_MIDI_OUTPUT FALSE
           IS_MIDI_EFFECT FALSE
 
+          COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
+
           LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt
           LV2_SHARED_LIBRARY_NAME SurgeXT
 
@@ -812,7 +815,7 @@ if( BUILD_SURGE_XT )
   juce_generate_juce_header( surge-xt )
 
   file(GLOB SURGE_SYNTH_JUCE_RESOURCES_GLOB
-          assets/SurgeClassic/exported/*svg
+          resources/classic-skin-svgs/*.svg
           resources/fonts/Lato*ttf
           resources/fonts/IndieFlower.ttf
           )
@@ -1009,9 +1012,19 @@ if( APPLE )
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
           COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_mac/make_installer.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
-          COMMAND ${CMAKE_SOURCE_DIR}/installer_mac/make_installer.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_mac/make_installer.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           )
 endif()
+
+if( UNIX AND NOT APPLE )
+  add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          )
+endif()
+
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   message( STATUS "Building Surge Python bindings with pybind11" )

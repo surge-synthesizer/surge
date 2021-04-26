@@ -182,7 +182,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     if (!single_category)
     {
         contextMenu->addColumnBreak();
-        contextMenu->addSectionHeader("Functions");
+        contextMenu->addSectionHeader("FUNCTIONS");
     }
     auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));

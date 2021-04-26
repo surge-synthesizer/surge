@@ -114,10 +114,6 @@ jobs:
       . ./scripts/misc/defensive-submodule.sh
       . ./scripts/misc/defensive-submodule.sh
       . ./scripts/misc/defensive-submodule.sh
-
-      export SURGE_VERSION=$(cat VERSION)
-      echo "SURGE_VERSION=$SURGE_VERSION"
-      echo "##vso[task.setvariable variable=SURGE_VERSION]$SURGE_VERSION"
     displayName: all - submodule init
 
 

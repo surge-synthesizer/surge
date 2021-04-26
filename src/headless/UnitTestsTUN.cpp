@@ -21,7 +21,7 @@ TEST_CASE("Retune Surge to .scl files", "[tun]")
     // Tunings::Scale s = Tunings::readSCLFile("/Users/paul/dev/music/test_scl/Q4.scl" );
     SECTION("12-intune SCL file")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/12-intune.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
         INFO(surge->storage.scaleConstantNote() << " " << surge->storage.scaleConstantPitch() << " "
                                                 << n2f(surge->storage.scaleConstantNote()));
@@ -36,7 +36,7 @@ TEST_CASE("Retune Surge to .scl files", "[tun]")
 
     SECTION("Zeus 22")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(n2f(surge->storage.scaleConstantNote()) == surge->storage.scaleConstantPitch());
         REQUIRE(n2f(surge->storage.scaleConstantNote() + s.count) ==
@@ -49,7 +49,7 @@ TEST_CASE("Retune Surge to .scl files", "[tun]")
 
     SECTION("6 exact")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(n2f(surge->storage.scaleConstantNote()) == surge->storage.scaleConstantPitch());
         REQUIRE(n2f(surge->storage.scaleConstantNote() + s.count) ==
@@ -79,7 +79,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
 
     SECTION("Straight tuning scl file")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/12-intune.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
         auto f60 = frequencyForNote(surge, 60);
         auto f72 = frequencyForNote(surge, 72);
@@ -101,7 +101,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
 
     SECTION("Zeus 22")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
         auto f60 = frequencyForNote(surge, 60);
         auto fDouble = frequencyForNote(surge, 60 + s.count);
@@ -114,7 +114,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
 
     SECTION("6 exact")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
 
         auto f60 = frequencyForNote(surge, 60);
@@ -147,8 +147,8 @@ TEST_CASE("KBM File Parsing", "[tun]")
 
     SECTION("Parse A440 File")
     {
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
-        REQUIRE(k.name == "test-data/scl/mapping-a440-constant.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
+        REQUIRE(k.name == "resources/test-data/scl/mapping-a440-constant.kbm");
         REQUIRE(k.count == 12);
         REQUIRE(k.firstMidi == 0);
         REQUIRE(k.lastMidi == 127);
@@ -162,8 +162,8 @@ TEST_CASE("KBM File Parsing", "[tun]")
 
     SECTION("Parse 7 to 12 mapping File")
     {
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-a442-7-to-12.kbm");
-        REQUIRE(k.name == "test-data/scl/mapping-a442-7-to-12.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a442-7-to-12.kbm");
+        REQUIRE(k.name == "resources/test-data/scl/mapping-a442-7-to-12.kbm");
         REQUIRE(k.count == 12);
         REQUIRE(k.firstMidi == 0);
         REQUIRE(k.lastMidi == 127);
@@ -189,7 +189,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
     {
         float unmapped[3];
 
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/marvel12.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
         surge->storage.retuneToScale(s);
         auto f60 = frequencyForNote(surge, 60);
         auto f72 = frequencyForNote(surge, 72);
@@ -202,7 +202,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
         unmapped[1] = f72;
         unmapped[2] = f69;
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
 
         surge->storage.remapToKeyboard(k);
 
@@ -217,8 +217,8 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
     // and back and then back again
     SECTION("Can Map and ReMap consistently")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/marvel12.scl");
-        auto k440 = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
+        auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
 
         surge->storage.retuneToScale(s);
         surge->storage.remapToConcertCKeyboard();
@@ -258,8 +258,8 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
 
     SECTION("Scale Ratio is Unch")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/marvel12.scl");
-        auto k440 = Tunings::readKBMFile("test-data/scl/mapping-a440-constant.kbm");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
+        auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
 
         surge->storage.retuneToScale(s);
         surge->storage.remapToConcertCKeyboard();
@@ -325,7 +325,7 @@ TEST_CASE("Non-uniform keyboard mapping", "[tun]")
         REQUIRE(frequencies[0] == Approx(261.63).margin(0.1));
         REQUIRE(frequencies[5] == Approx(440.00).margin(0.1));
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-whitekeys-c261.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-c261.kbm");
         REQUIRE(k.count == 12);
         REQUIRE(k.octaveDegrees == 7);
         surge->storage.remapToKeyboard(k);
@@ -347,8 +347,8 @@ TEST_CASE("Non-uniform keyboard mapping", "[tun]")
 
     SECTION("7 Note Scale with Tuning Centers")
     {
-        auto k261 = Tunings::readKBMFile("test-data/scl/mapping-whitekeys-c261.kbm");
-        auto k440 = Tunings::readKBMFile("test-data/scl/mapping-whitekeys-a440.kbm");
+        auto k261 = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-c261.kbm");
+        auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-a440.kbm");
 
         surge->storage.retuneToScale(sWonky);
         surge->storage.remapToKeyboard(k261);
@@ -381,7 +381,7 @@ TEST_CASE("Zero Size Maps", "[tun]")
         auto f61std = frequencyForNote(surge, 61);
         REQUIRE(f60std == Approx(261.63).margin(0.1));
 
-        auto k61 = Tunings::readKBMFile("test-data/scl/empty-note61.kbm");
+        auto k61 = Tunings::readKBMFile("resources/test-data/scl/empty-note61.kbm");
         REQUIRE(k61.count == 0);
         surge->storage.remapToKeyboard(k61);
 
@@ -398,7 +398,7 @@ TEST_CASE("Zero Size Maps", "[tun]")
         REQUIRE(f60std == Approx(261.63).margin(0.1));
         REQUIRE(f69std == Approx(440.0).margin(0.1));
 
-        auto k69 = Tunings::readKBMFile("test-data/scl/empty-note69.kbm");
+        auto k69 = Tunings::readKBMFile("resources/test-data/scl/empty-note69.kbm");
         REQUIRE(k69.count == 0);
         surge->storage.remapToKeyboard(k69);
 
@@ -410,14 +410,14 @@ TEST_CASE("Zero Size Maps", "[tun]")
 
     SECTION("Note 69 with Tuning")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/marvel12.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
         surge->storage.retuneToScale(s);
         auto f60std = frequencyForNote(surge, 60);
         auto f69std = frequencyForNote(surge, 69);
         REQUIRE(f60std == Approx(261.63).margin(0.1));
         REQUIRE(f69std != Approx(440.0).margin(0.1));
 
-        auto k69 = Tunings::readKBMFile("test-data/scl/empty-note69.kbm");
+        auto k69 = Tunings::readKBMFile("resources/test-data/scl/empty-note69.kbm");
         REQUIRE(k69.count == 0);
         surge->storage.remapToKeyboard(k69);
 
@@ -463,7 +463,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("Tuned to 12 OSC octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/12-intune.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
 
         auto f60 = frequencyForNote(surge, 60);
@@ -480,7 +480,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("Tuned to 12 Scene Octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/12-intune.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
 
         auto f60 = frequencyForNote(surge, 60);
@@ -497,7 +497,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("22 note scale OSC Octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(s.count == 22);
 
@@ -515,7 +515,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("22 note scale Scene Octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(s.count == 22);
 
@@ -533,7 +533,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("6 note scale OSC Octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(s.count == 6);
 
@@ -551,7 +551,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
 
     SECTION("6 note scale Scene Octave")
     {
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
         REQUIRE(s.count == 6);
 
@@ -574,14 +574,14 @@ TEST_CASE("Non-Monotonic Tunings", "[tun]")
     {
         auto surge = surgeOnSine();
 
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/12-intune.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
         std::vector<float> straight, shuffle;
 
         for (int i = 0; i <= 12; ++i)
             straight.push_back(frequencyForNote(surge, 60 + i));
 
-        Tunings::Scale sh = Tunings::readSCLFile("test-data/scl/12-shuffled.scl");
+        Tunings::Scale sh = Tunings::readSCLFile("resources/test-data/scl/12-shuffled.scl");
         surge->storage.retuneToScale(sh);
         for (int i = 0; i <= 12; ++i)
             shuffle.push_back(frequencyForNote(surge, 60 + i));
@@ -602,7 +602,7 @@ TEST_CASE("Non-Monotonic Tunings", "[tun]")
         for (int i = 0; i <= 12; ++i)
             straight.push_back(frequencyForNote(surge, 60 + i));
 
-        auto k = Tunings::readKBMFile("test-data/scl/shuffle-a440-constant.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/shuffle-a440-constant.kbm");
         surge->storage.remapToKeyboard(k);
         for (int i = 0; i <= 12; ++i)
             shuffle.push_back(frequencyForNote(surge, 60 + i));
@@ -624,7 +624,7 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note54-to-259-6.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note54-to-259-6.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[54 + 256] == Approx(259.6 / 8.175798915).margin(1e-4));
@@ -641,7 +641,7 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note48-to-100.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note48-to-100.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[48 + 256] == Approx(100.0 / 8.175798915).margin(1e-4));
@@ -658,7 +658,7 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note42-to-100.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note42-to-100.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[42 + 256] == Approx(100.0 / 8.175798915).margin(1e-4));
@@ -675,7 +675,7 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note72-to-500.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note72-to-500.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[72 + 256] == Approx(500.0 / 8.175798915).margin(1e-4));
@@ -692,7 +692,7 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note80-to-1000.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note80-to-1000.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[80 + 256] == Approx(1000.0 / 8.175798915).margin(1e-4));
@@ -709,10 +709,10 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        auto s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note54-to-259-6.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note54-to-259-6.kbm");
         surge->storage.remapToKeyboard(k);
 
         REQUIRE(surge->storage.table_pitch[54 + 256] == Approx(259.6 / 8.175798915).margin(1e-4));
@@ -729,10 +729,10 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        auto s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note42-to-100.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note42-to-100.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[42 + 256] == Approx(100.0 / 8.175798915).margin(1e-4));
@@ -749,10 +749,10 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto s = Tunings::readSCLFile("test-data/scl/6-exact.scl");
+        auto s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note80-to-1000.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note80-to-1000.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[80 + 256] == Approx(1000.0 / 8.175798915).margin(1e-4));
@@ -769,10 +769,10 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto s = Tunings::readSCLFile("test-data/scl/ED3-17.scl");
+        auto s = Tunings::readSCLFile("resources/test-data/scl/ED3-17.scl");
         surge->storage.retuneToScale(s);
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note42-to-100.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note42-to-100.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[42 + 256] == Approx(100.0 / 8.175798915).margin(1e-4));
@@ -789,10 +789,10 @@ TEST_CASE("Mapping below and outside of count")
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         REQUIRE(surge.get());
 
-        auto s = Tunings::readSCLFile("test-data/scl/ED3-17.scl");
+        auto s = Tunings::readSCLFile("resources/test-data/scl/ED3-17.scl");
         surge->storage.retuneToScale(s);
 
-        auto k = Tunings::readKBMFile("test-data/scl/mapping-note80-to-1000.kbm");
+        auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-note80-to-1000.kbm");
 
         surge->storage.remapToKeyboard(k);
         REQUIRE(surge->storage.table_pitch[80 + 256] == Approx(1000.0 / 8.175798915).margin(1e-4));
@@ -854,7 +854,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
     {
         auto surge = surgeOnSine();
         REQUIRE(surge.get());
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/31edo.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
         surge->storage.retuneToScale(s);
 
         surge->storage.getPatch().scene[0].lowcut.val.f = -12.0;
@@ -906,7 +906,7 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
     {
         auto surge = surgeOnSine();
         auto surgeTuned = surgeOnSine();
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/31edo.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
         surgeTuned->storage.retuneToScale(s);
 
         for (int i = 0; i < 1000; ++i)
@@ -942,10 +942,10 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             REQUIRE(surge.get());
             surge->storage.setTuningApplicationMode(mode);
 
-            auto scl = Tunings::readSCLFile("test-data/scl/ED2-15.scl");
+            auto scl = Tunings::readSCLFile("resources/test-data/scl/ED2-15.scl");
             surge->storage.retuneToScale(scl);
 
-            auto kbm = Tunings::readKBMFile("test-data/scl/60-262-60-c.kbm");
+            auto kbm = Tunings::readKBMFile("resources/test-data/scl/60-262-60-c.kbm");
             surge->storage.remapToKeyboard(kbm);
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(60) ==
                     Approx(60 / 12));
@@ -953,7 +953,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             auto f60 = frequencyForNote(surge, 60);
             REQUIRE(f60 == Approx(261.62).margin(1));
 
-            kbm = Tunings::readKBMFile("test-data/scl/62-294-62-d.kbm");
+            kbm = Tunings::readKBMFile("resources/test-data/scl/62-294-62-d.kbm");
             surge->storage.remapToKeyboard(kbm);
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(62) ==
                     Approx(62.f / 12));
@@ -961,7 +961,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             auto f62 = frequencyForNote(surge, 62);
             REQUIRE(f62 == Approx(293.66).margin(1));
 
-            kbm = Tunings::readKBMFile("test-data/scl/64-330-64-e.kbm");
+            kbm = Tunings::readKBMFile("resources/test-data/scl/64-330-64-e.kbm");
             surge->storage.remapToKeyboard(kbm);
 
             auto f64 = frequencyForNote(surge, 64);
@@ -976,10 +976,10 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             REQUIRE(surge.get());
             surge->storage.setTuningApplicationMode(mode);
 
-            auto scl = Tunings::readSCLFile("test-data/scl/ED2-15.scl");
+            auto scl = Tunings::readSCLFile("resources/test-data/scl/ED2-15.scl");
             surge->storage.retuneToScale(scl);
 
-            auto kbm = Tunings::readKBMFile("test-data/scl/60-262-60-c.kbm");
+            auto kbm = Tunings::readKBMFile("resources/test-data/scl/60-262-60-c.kbm");
             surge->storage.remapToKeyboard(kbm);
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(60) ==
                     Approx(60 / 12));
@@ -987,7 +987,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             auto f60 = frequencyForNote(surge, 60);
             REQUIRE(f60 == Approx(261.62).margin(1));
 
-            kbm = Tunings::readKBMFile("test-data/scl/62-294-62-d.kbm");
+            kbm = Tunings::readKBMFile("resources/test-data/scl/62-294-62-d.kbm");
             surge->storage.remapToKeyboard(kbm);
             REQUIRE(surge->storage.currentTuning.logScaledFrequencyForMidiNote(62) ==
                     Approx(62.f / 12));
@@ -995,7 +995,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             auto f62 = frequencyForNote(surge, 62);
             REQUIRE(f62 == Approx(293.66).margin(1));
 
-            kbm = Tunings::readKBMFile("test-data/scl/64-330-64-e.kbm");
+            kbm = Tunings::readKBMFile("resources/test-data/scl/64-330-64-e.kbm");
             surge->storage.remapToKeyboard(kbm);
 
             auto f64 = frequencyForNote(surge, 64);
@@ -1014,7 +1014,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             REQUIRE(surge.get());
             surge->storage.setTuningApplicationMode(mode);
 
-            auto scl = Tunings::readSCLFile("test-data/scl/ED2-06.scl");
+            auto scl = Tunings::readSCLFile("resources/test-data/scl/ED2-06.scl");
             surge->storage.retuneToScale(scl);
 
             auto f60 = frequencyForNote(surge, 60);
@@ -1048,7 +1048,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             REQUIRE(surge.get());
             surge->storage.setTuningApplicationMode(mode);
 
-            auto scl = Tunings::readSCLFile("test-data/scl/ED2-06.scl");
+            auto scl = Tunings::readSCLFile("resources/test-data/scl/ED2-06.scl");
             surge->storage.retuneToScale(scl);
 
             auto f60 = frequencyForNote(surge, 60);
@@ -1157,7 +1157,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         auto surge = Surge::Headless::createSurge(44100);
 
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
 
         REQUIRE(!surge->storage.tuningTableIs12TET());
@@ -1179,7 +1179,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         auto surge = Surge::Headless::createSurge(44100);
 
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
-        Tunings::Scale s = Tunings::readSCLFile("test-data/scl/zeus22.scl");
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
 
         REQUIRE(!surge->storage.tuningTableIs12TET());

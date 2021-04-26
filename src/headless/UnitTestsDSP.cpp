@@ -120,26 +120,26 @@ TEST_CASE("Unison Absolute and Relative", "[osc]")
 
     SECTION("Wavetable Oscillator")
     {
-        assertRelative("test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
-        assertAbsolute("test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+        assertRelative("resources/test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
+        assertAbsolute("resources/test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
     }
 
     SECTION("Window Oscillator")
     {
-        assertRelative("test-data/patches/Window-Sin-Uni2-Relative.fxp");
-        assertAbsolute("test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+        assertRelative("resources/test-data/patches/Window-Sin-Uni2-Relative.fxp");
+        assertAbsolute("resources/test-data/patches/Window-Sin-Uni2-Absolute.fxp");
     }
 
     SECTION("Classic Oscillator")
     {
-        assertRelative("test-data/patches/Classic-Uni2-Relative.fxp");
-        assertAbsolute("test-data/patches/Classic-Uni2-Absolute.fxp");
+        assertRelative("resources/test-data/patches/Classic-Uni2-Relative.fxp");
+        assertAbsolute("resources/test-data/patches/Classic-Uni2-Absolute.fxp");
     }
 
     SECTION("SH Oscillator")
     {
-        assertRelative("test-data/patches/SH-Uni2-Relative.fxp");
-        assertAbsolute("test-data/patches/SH-Uni2-Absolute.fxp");
+        assertRelative("resources/test-data/patches/SH-Uni2-Relative.fxp");
+        assertAbsolute("resources/test-data/patches/SH-Uni2-Absolute.fxp");
     }
 }
 
@@ -234,11 +234,11 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
             INFO("Wavetable test at " << sr);
             auto surge = Surge::Headless::createSurge(sr);
 
-            assertRelative(surge, "test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
-            assertAbsolute(surge, "test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+            assertRelative(surge, "resources/test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
+            assertAbsolute(surge, "resources/test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
             // HF noise in the wavetable makes my detector unreliable at zero crossings in this case
             // It passes 99% of the time but leave this test out for now.
-            // randomAbsolute(surge, "test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
+            // randomAbsolute(surge, "resources/test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
         }
     }
 
@@ -249,9 +249,9 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
             INFO("Window Oscillator test at " << sr);
             auto surge = Surge::Headless::createSurge(sr);
 
-            assertRelative(surge, "test-data/patches/Window-Sin-Uni2-Relative.fxp");
-            assertAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
-            randomAbsolute(surge, "test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+            assertRelative(surge, "resources/test-data/patches/Window-Sin-Uni2-Relative.fxp");
+            assertAbsolute(surge, "resources/test-data/patches/Window-Sin-Uni2-Absolute.fxp");
+            randomAbsolute(surge, "resources/test-data/patches/Window-Sin-Uni2-Absolute.fxp");
         }
 
         for (auto sr : srs)
@@ -259,9 +259,9 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
             INFO("Classic Oscillator test at " << sr);
             auto surge = Surge::Headless::createSurge(sr);
 
-            assertRelative(surge, "test-data/patches/Classic-Uni2-Relative.fxp");
-            assertAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
-            randomAbsolute(surge, "test-data/patches/Classic-Uni2-Absolute.fxp");
+            assertRelative(surge, "resources/test-data/patches/Classic-Uni2-Relative.fxp");
+            assertAbsolute(surge, "resources/test-data/patches/Classic-Uni2-Absolute.fxp");
+            randomAbsolute(surge, "resources/test-data/patches/Classic-Uni2-Absolute.fxp");
         }
 
         for (auto sr : srs)
@@ -269,9 +269,9 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
             INFO("SH Oscillator test at " << sr);
             auto surge = Surge::Headless::createSurge(sr);
 
-            assertRelative(surge, "test-data/patches/SH-Uni2-Relative.fxp");
-            assertAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
-            // randomAbsolute(surge, "test-data/patches/SH-Uni2-Absolute.fxp");
+            assertRelative(surge, "resources/test-data/patches/SH-Uni2-Relative.fxp");
+            assertAbsolute(surge, "resources/test-data/patches/SH-Uni2-Absolute.fxp");
+            // randomAbsolute(surge, "resources/test-data/patches/SH-Uni2-Absolute.fxp");
         }
     }
 }
@@ -954,7 +954,7 @@ TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
 {
    auto surge = Surge::Headless::createSurge(44100);
    REQUIRE( surge );
-   REQUIRE( surge->loadPatchByPath( "test-data/patches/VinceyCrash1514.fxp", -1, "Test" ) );
+   REQUIRE( surge->loadPatchByPath( "resources/test-data/patches/VinceyCrash1514.fxp", -1, "Test" ) );
 
    for( int d=0; d<10; d++ )
    {
