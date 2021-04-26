@@ -275,7 +275,6 @@ set(SURGE_SHARED_SOURCES
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
   src/common/DebugHelpers.cpp
-  # src/common/DeferredAssetLoader.cpp
   src/common/Parameter.cpp
   src/common/PatchDB.cpp
   src/common/SurgePatch.cpp
