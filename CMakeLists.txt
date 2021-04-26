@@ -203,102 +203,102 @@ set( BUILD_HEADLESS TRUE )
 #    SURGE_(os)_SOURCES
 
 set(SURGE_SHARED_SOURCES
-  src/common/dsp/effect/BBDEnsembleEffect.cpp
-  src/common/dsp/effect/ChorusEffectImpl.h
-  src/common/dsp/effect/CombulatorEffect.cpp
-  src/common/dsp/effect/ConditionerEffect.cpp
-  src/common/dsp/effect/DistortionEffect.cpp
-  src/common/dsp/effect/DualDelayEffect.cpp
-  src/common/dsp/effect/Effect.cpp
-  src/common/dsp/effect/Eq3BandEffect.cpp
-  src/common/dsp/effect/FreqshiftEffect.cpp
-  src/common/dsp/effect/FlangerEffect.cpp
-  src/common/dsp/effect/GEQ11Effect.cpp
-  src/common/dsp/effect/NimbusEffect.cpp
-  src/common/dsp/effect/PhaserEffect.cpp
-  src/common/dsp/effect/ResonatorEffect.cpp
-  src/common/dsp/effect/Reverb1Effect.cpp
-  src/common/dsp/effect/Reverb2Effect.cpp
-  src/common/dsp/effect/RingModulatorEffect.cpp
-  src/common/dsp/effect/RotarySpeakerEffect.cpp
-  src/common/dsp/effect/TreemonsterEffect.cpp
-  src/common/dsp/effect/VocoderEffect.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.h
-  src/common/dsp/effect/chowdsp/CHOWEffect.cpp
-  src/common/dsp/effect/chowdsp/ExciterEffect.cpp
-  src/common/dsp/effect/chowdsp/NeuronEffect.cpp
-  src/common/dsp/effect/chowdsp/TapeEffect.cpp
-  src/common/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
-  src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
-  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
-  src/common/dsp/effect/chowdsp/tape/ChewProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/DegradeProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
-  src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
-  src/common/dsp/effect/chowdsp/tape/ToneControl.cpp
-  src/common/dsp/filters/VintageLadders.cpp
-  src/common/dsp/filters/Obxd.cpp
-  src/common/dsp/filters/K35.cpp
-  src/common/dsp/filters/DiodeLadder.cpp
-  src/common/dsp/filters/NonlinearFeedback.cpp
-  src/common/dsp/filters/NonlinearStates.cpp
-  src/common/dsp/AliasOscillator.cpp
-  src/common/dsp/AudioInputOscillator.cpp
-  src/common/dsp/BiquadFilter.cpp
-  src/common/dsp/BiquadFilterSSE2.cpp
-  src/common/dsp/ClassicOscillator.cpp
-  src/common/dsp/DspUtilities.cpp
-  src/common/dsp/FilterCoefficientMaker.cpp
-  src/common/dsp/FM2Oscillator.cpp
-  src/common/dsp/FM3Oscillator.cpp
-  src/common/dsp/LanczosResampler.cpp
-  src/common/dsp/LfoModulationSource.cpp
-  src/common/dsp/ModernOscillator.cpp
-  src/common/dsp/MSEGModulationHelper.cpp
-  src/common/dsp/Oscillator.cpp
-  src/common/dsp/QuadFilterChain.cpp
-  src/common/dsp/QuadFilterUnit.cpp
-  src/common/dsp/SampleAndHoldOscillator.cpp
-  src/common/dsp/SineOscillator.cpp
-  src/common/dsp/StringOscillator.cpp
-  src/common/dsp/SurgeVoice.cpp
-  src/common/dsp/TwistOscillator.cpp
-  src/common/dsp/VectorizedSvfFilter.cpp
-  src/common/dsp/Wavetable.cpp
-  src/common/dsp/WavetableOscillator.cpp
-  src/common/dsp/WindowOscillator.cpp
-  src/common/util/FpuState.cpp
-  src/common/vt_dsp/basic_dsp.cpp
-  src/common/vt_dsp/halfratefilter.cpp
-  src/common/vt_dsp/lipol.cpp
-  src/common/vt_dsp/macspecific.cpp
-  src/common/DebugHelpers.cpp
-  # src/common/DeferredAssetLoader.cpp
-  src/common/Parameter.cpp
-  src/common/PatchDB.cpp
-  src/common/SurgePatch.cpp
-  src/common/SurgeStorage.cpp
-  src/common/UserDefaults.cpp
-  src/common/WavSupport.cpp
+  src/engine/dsp/effect/BBDEnsembleEffect.cpp
+  src/engine/dsp/effect/ChorusEffectImpl.h
+  src/engine/dsp/effect/CombulatorEffect.cpp
+  src/engine/dsp/effect/ConditionerEffect.cpp
+  src/engine/dsp/effect/DistortionEffect.cpp
+  src/engine/dsp/effect/DualDelayEffect.cpp
+  src/engine/dsp/effect/Effect.cpp
+  src/engine/dsp/effect/Eq3BandEffect.cpp
+  src/engine/dsp/effect/FreqshiftEffect.cpp
+  src/engine/dsp/effect/FlangerEffect.cpp
+  src/engine/dsp/effect/GEQ11Effect.cpp
+  src/engine/dsp/effect/NimbusEffect.cpp
+  src/engine/dsp/effect/PhaserEffect.cpp
+  src/engine/dsp/effect/ResonatorEffect.cpp
+  src/engine/dsp/effect/Reverb1Effect.cpp
+  src/engine/dsp/effect/Reverb2Effect.cpp
+  src/engine/dsp/effect/RingModulatorEffect.cpp
+  src/engine/dsp/effect/RotarySpeakerEffect.cpp
+  src/engine/dsp/effect/TreemonsterEffect.cpp
+  src/engine/dsp/effect/VocoderEffect.cpp
+  src/engine/dsp/effect/airwindows/AirWindowsEffect.cpp
+  src/engine/dsp/effect/airwindows/AirWindowsEffect.h
+  src/engine/dsp/effect/chowdsp/CHOWEffect.cpp
+  src/engine/dsp/effect/chowdsp/ExciterEffect.cpp
+  src/engine/dsp/effect/chowdsp/NeuronEffect.cpp
+  src/engine/dsp/effect/chowdsp/TapeEffect.cpp
+  src/engine/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
+  src/engine/dsp/effect/chowdsp/exciter/LevelDetector.cpp
+  src/engine/dsp/effect/chowdsp/shared/DelayLine.cpp
+  src/engine/dsp/effect/chowdsp/tape/ChewProcessor.cpp
+  src/engine/dsp/effect/chowdsp/tape/DegradeProcessor.cpp
+  src/engine/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
+  src/engine/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
+  src/engine/dsp/effect/chowdsp/tape/LossFilter.cpp
+  src/engine/dsp/effect/chowdsp/tape/ToneControl.cpp
+  src/engine/dsp/filters/VintageLadders.cpp
+  src/engine/dsp/filters/Obxd.cpp
+  src/engine/dsp/filters/K35.cpp
+  src/engine/dsp/filters/DiodeLadder.cpp
+  src/engine/dsp/filters/NonlinearFeedback.cpp
+  src/engine/dsp/filters/NonlinearStates.cpp
+  src/engine/dsp/AliasOscillator.cpp
+  src/engine/dsp/AudioInputOscillator.cpp
+  src/engine/dsp/BiquadFilter.cpp
+  src/engine/dsp/BiquadFilterSSE2.cpp
+  src/engine/dsp/ClassicOscillator.cpp
+  src/engine/dsp/DspUtilities.cpp
+  src/engine/dsp/FilterCoefficientMaker.cpp
+  src/engine/dsp/FM2Oscillator.cpp
+  src/engine/dsp/FM3Oscillator.cpp
+  src/engine/dsp/LanczosResampler.cpp
+  src/engine/dsp/LfoModulationSource.cpp
+  src/engine/dsp/ModernOscillator.cpp
+  src/engine/dsp/MSEGModulationHelper.cpp
+  src/engine/dsp/Oscillator.cpp
+  src/engine/dsp/QuadFilterChain.cpp
+  src/engine/dsp/QuadFilterUnit.cpp
+  src/engine/dsp/SampleAndHoldOscillator.cpp
+  src/engine/dsp/SineOscillator.cpp
+  src/engine/dsp/StringOscillator.cpp
+  src/engine/dsp/SurgeVoice.cpp
+  src/engine/dsp/TwistOscillator.cpp
+  src/engine/dsp/VectorizedSvfFilter.cpp
+  src/engine/dsp/Wavetable.cpp
+  src/engine/dsp/WavetableOscillator.cpp
+  src/engine/dsp/WindowOscillator.cpp
+  src/engine/util/FpuState.cpp
+  src/engine/vt_dsp/basic_dsp.cpp
+  src/engine/vt_dsp/halfratefilter.cpp
+  src/engine/vt_dsp/lipol.cpp
+  src/engine/vt_dsp/macspecific.cpp
+  src/engine/DebugHelpers.cpp
+  # src/engine/DeferredAssetLoader.cpp
+  src/engine/Parameter.cpp
+  src/engine/PatchDB.cpp
+  src/engine/SurgePatch.cpp
+  src/engine/SurgeStorage.cpp
+  src/engine/UserDefaults.cpp
+  src/engine/WavSupport.cpp
 
-  src/common/SkinModel.cpp
-  src/common/SkinModelImpl.cpp
-  src/common/SkinColors.cpp
+  src/engine/SkinModel.cpp
+  src/engine/SkinModelImpl.cpp
+  src/engine/SkinColors.cpp
 
   libs/strnatcmp/strnatcmp.cpp
-  src/common/dsp/FastMath.h
-  src/common/dsp/AdsrEnvelope.h
-  src/common/dsp/OscillatorBase.h
-  src/common/dsp/OscillatorCommonFunctions.h
-  src/common/dsp/SurgeVoiceState.h
+  src/engine/dsp/FastMath.h
+  src/engine/dsp/AdsrEnvelope.h
+  src/engine/dsp/OscillatorBase.h
+  src/engine/dsp/OscillatorCommonFunctions.h
+  src/engine/dsp/SurgeVoiceState.h
   )
 
 set(SURGE_SYNTH_SOURCES
-  src/common/SurgeSynthesizer.cpp
-  src/common/SurgeSynthesizerIDManagement.cpp
-  src/common/SurgeSynthesizerIO.cpp
+  src/engine/SurgeSynthesizer.cpp
+  src/engine/SurgeSynthesizerIDManagement.cpp
+  src/engine/SurgeSynthesizerIO.cpp
   )
 
 set(SURGE_GENERATED_SOURCES
@@ -306,39 +306,39 @@ set(SURGE_GENERATED_SOURCES
   )
 
 set(SURGE_GUI_SOURCES
-  src/common/gui/CAboutBox.cpp
-        src/common/gui/CEffectLabel.h
-  src/common/gui/CEffectSettings.cpp
-  src/common/gui/CHSwitch2.cpp
-  src/common/gui/CLFOGui.cpp
-  src/common/gui/CMenuAsSlider.cpp
-  src/common/gui/CModulationSourceButton.cpp
-  src/common/gui/CNumberField.cpp
-  src/common/gui/COscillatorDisplay.cpp
-  src/common/gui/CParameterTooltip.h
-  src/common/gui/CPatchBrowser.cpp
-  src/common/gui/CScalableBitmap.cpp
-  src/common/gui/CSnapshotMenu.cpp
-  src/common/gui/CSurgeHyperlink.cpp
-  src/common/gui/CSurgeSlider.cpp
-  src/common/gui/CSurgeVuMeter.cpp
-  src/common/gui/CSwitchControl.cpp
-  src/common/gui/CTextButtonWithHover.cpp
-  src/common/gui/CursorControlGuard.cpp
-  src/common/gui/CVerticalLabel.cpp
-  src/common/gui/guihelpers.cpp
-  src/common/ModulatorPresetManager.cpp
-  src/common/gui/MSEGEditor.cpp
-  src/common/gui/PatchDBViewer.cpp
-  src/common/gui/RuntimeFont.cpp
-  src/common/gui/SkinFontLoader.cpp
-  src/common/gui/SkinImageMaps.h
-  src/common/gui/SkinSupport.cpp
-  src/common/gui/SurgeBitmaps.cpp
-  src/common/gui/SurgeGUIEditor.cpp
-  src/common/gui/SurgeGUIEditorHtmlGenerators.cpp
-  src/common/gui/SurgeJUCELookAndFeel.cpp
-  src/common/gui/UIInstrumentation.cpp)
+  src/gui/CAboutBox.cpp
+        src/gui/CEffectLabel.h
+  src/gui/CEffectSettings.cpp
+  src/gui/CHSwitch2.cpp
+  src/gui/CLFOGui.cpp
+  src/gui/CMenuAsSlider.cpp
+  src/gui/CModulationSourceButton.cpp
+  src/gui/CNumberField.cpp
+  src/gui/COscillatorDisplay.cpp
+  src/gui/CParameterTooltip.h
+  src/gui/CPatchBrowser.cpp
+  src/gui/CScalableBitmap.cpp
+  src/gui/CSnapshotMenu.cpp
+  src/gui/CSurgeHyperlink.cpp
+  src/gui/CSurgeSlider.cpp
+  src/gui/CSurgeVuMeter.cpp
+  src/gui/CSwitchControl.cpp
+  src/gui/CTextButtonWithHover.cpp
+  src/gui/CursorControlGuard.cpp
+  src/gui/CVerticalLabel.cpp
+  src/gui/guihelpers.cpp
+  src/engine/ModulatorPresetManager.cpp
+  src/gui/MSEGEditor.cpp
+  src/gui/PatchDBViewer.cpp
+  src/gui/RuntimeFont.cpp
+  src/gui/SkinFontLoader.cpp
+  src/gui/SkinImageMaps.h
+  src/gui/SkinSupport.cpp
+  src/gui/SurgeBitmaps.cpp
+  src/gui/SurgeGUIEditor.cpp
+  src/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/gui/SurgeJUCELookAndFeel.cpp
+  src/gui/UIInstrumentation.cpp)
 
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
@@ -346,14 +346,14 @@ set(SURGE_COMMON_INCLUDES
   libs/strnatcmp
   libs/tuning-library/include
 
-  src/common
-  src/common/dsp
-  src/common/thread
-  src/common/vt_dsp
+  src/engine
+  src/engine/dsp
+  src/engine/thread
+  src/engine/vt_dsp
   )
 
 set(SURGE_GUI_INCLUDES
-  src/common/gui
+  src/gui
   )
 
 ### OS SPECIFIC SECTION
@@ -487,10 +487,10 @@ endif()
 # Source Groups
 source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
 source_group( "AirWindows" REGULAR_EXPRESSION "libs/airwindows/" )
-source_group( "Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp" )
-source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
-source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effect" )
-source_group( "Surge GUI" REGULAR_EXPRESSION "src/common/gui" )
+source_group( "Surge Core" REGULAR_EXPRESSION "src/engine/.*\.cpp" )
+source_group( "Surge DSP" REGULAR_EXPRESSION "src/engine/(vt_dsp|dsp)" )
+source_group( "Surge FX" REGULAR_EXPRESSION "src/engine/dsp/effect" )
+source_group( "Surge GUI" REGULAR_EXPRESSION "src/gui" )
 source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
 source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )
 source_group( "Headless" REGULAR_EXPRESSION "src/headless" )

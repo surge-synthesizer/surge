@@ -113,6 +113,6 @@ string( TIMESTAMP SURGE_BUILD_TIME "%H:%M:%S" )
 message( STATUS "Using SURGE_VERSION=${SURGE_FULL_VERSION}" )
 
 message( STATUS "Configuring ${SURGEBLD}/geninclude/version.cpp" )
-configure_file( ${SURGESRC}/src/common/version.cpp.in
+configure_file( ${SURGESRC}/src/engine/version.cpp.in
   ${SURGEBLD}/geninclude/version.cpp )
 
