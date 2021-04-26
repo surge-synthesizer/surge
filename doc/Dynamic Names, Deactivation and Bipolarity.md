@@ -2,9 +2,9 @@
 
 In Surge 1.9, we have finally (finally!) implemented dynamic names, bipolarity, and activation
 status for sliders. This allows you to do things like rename on value changes etc. at
-draw time without having to trigger an entire UI re-build. The mechanism is made slightly
+draw time without having to trigger an entire UI rebuild. The mechanism is made slightly
 complicated by the fact that Parameter can't have any complex object members (so you can't have
-a std::function as a member on Parameter). So here's how it works!
+a `std::function` as a member on Parameter). So here's how it works!
 
 ## General Stuff
 

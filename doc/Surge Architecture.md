@@ -6,26 +6,22 @@ and works. This is not a developer how-to. That information is covered in [our D
 **This document is still being written. As we fix things, if we remember, we add them to this
 document for our future selves**. As such, it is rather casual and incomplete now. Sorry!
 
-**Table of Contents**
-
 * [Code Layout](#code-layout)
 * [SurgeStorage, Parameter and SurgeSynthesizer](#parameter-and-surge-synthesizer)
 * [SurgeGUIEditor](#surgegui)
 * [Voices and MPE](#voices-and-mpe)
 * [DSP](#dsp)
-* [Hosts](#hosts)
-* [VSTGUI](#vstgui)
+* [Headless](#headless)
 
 # Code Layout
 
-Third-party libraries are copied or submoduled into `libs`. VST3SDK and VSTGUI are an exception. They
-are submodules in the top level directory. All of the Surge C++ source is in the `src` directory.
+Third-party libraries are copied or submoduled into `libs`. All of the Surge C++ source code is in the `src` directory.
 
-`src/common` contains common code; `src/common/gui` and `src/common/dsp` contain the GUI and DSP code
-respectively.
+`src/common` contains the complete engine code of Surge, all the DSP and voice handling logic, and so on.
+`src\gui` contains the user interface code, along with custom UI widget classes, various helpers, etc.
 
-Each of the hosts has a directory in `src`: `src/vst2`, `src/vst3`, `src/au` and `src/headless` are the
-four flavors of hosts we have now.
+Each of the plugin flavors is handled by JUCE plugin wrappers, which can be found in `src/surge_synth_juce`.
+Additionally, we also have a headless flavor in `src/headless`.
 
 # SurgeStorage, Parameter and SurgeSynthesizer
 
@@ -44,7 +40,7 @@ value change function on them.
 SurgeGUIEditor collaborates with the Parameter set as outlined above.
 
 Critically, it also has an ::idle thread which allows parameter changes from outside
-the UI (like those delivered by the host) to be reflected in the UI.
+of the UI (like those delivered by the host) to be reflected in the UI.
 
 # Voices and MPE
 
@@ -61,13 +57,6 @@ The most important thing about the DSP engine is that it contains hand-coded SSE
 most activities. This makes the engine fast, but also requires all data structures to align
 on 16 byte boundaries.
 
-# Hosts
+# Headless
 
-The three traditional hosts (VST2, 3 and AU) are pretty straightforward.
-
-The headless host makes an executable of Surge without a UI attached. Right now, it is
-primarily used for debugging and testing.
-
-# VSTGUI
-
-See (our documentation on how we use VSTGUI in Surge)[vstgui-dev.md].
+The headless host makes an executable of Surge without a UI attached. Right now, it is primarily used for debugging and testing.
