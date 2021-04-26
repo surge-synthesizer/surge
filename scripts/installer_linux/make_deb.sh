@@ -1,24 +1,10 @@
 #!/bin/bash
 
-# preflight check
-if [[ ! -f ./make_deb.sh ]]; then
-	echo "You must run this script from within the installer_linux directory!"
-	exit 1
-fi
+INDIR=$1
+SOURCEDIR=$2
+TARGET_DIR=$3
+VERSION=$4
 
-# version
-
-if [ "$SURGE_VERSION" != "" ]; then
-    VERSION="$SURGE_VERSION"
-elif [ "$1" != "" ]; then
-    VERSION="$1"
-fi
-
-if [ "$VERSION" == "" ]; then
-    echo "You must specify the version you are packaging!"
-    echo "eg: ./make_deb.sh 1.0.6b4"
-    exit 1
-fi
 
 # Valid version for DEB start with a digit.
 DEB_VERSION=$VERSION
@@ -32,18 +18,19 @@ else
     echo "DEB VERSION is ${DEB_VERSION}"
 fi
 
+mkdir ./installer-tmp
+pushd ./installer-tmp
 
 # Names
-SURGE_NAME=surge
+SURGE_NAME=surge-xt
 PACKAGE_NAME="$SURGE_NAME"
-# SURGE_NAME=surge-synthesizer
 
 # locations
 
 # Cleanup from failed prior runs
 rm -rf ${PACKAGE_NAME} product
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
-# mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
+mkdir -p ${PACKAGE_NAME}/usr/bin
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
 chmod -R 0755 ${PACKAGE_NAME}
@@ -60,12 +47,12 @@ Package: ${PACKAGE_NAME}
 Version: $DEB_VERSION
 Architecture: amd64
 Maintainer: surgeteam <noreply@github.com>
-Depends: libc6 (>=2.27), libcairo2, libfontconfig1, libfreetype6, libx11-6, libxcb-cursor0, libxcb-util1, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0, fonts-lato, xdg-utils, zenity, xclip
+Depends: libc6 (>=2.27), libcairo2, libfontconfig1, libfreetype6, libx11-6, libxcb-cursor0, libxcb-xkb1, libxcb1, libxkbcommon-x11-0, libxkbcommon0,  xdg-utils, xclip
 Provides: vst-plugin
 Section: sound
 Priority: optional
 Description: Subtractive hybrid synthesizer virtual instrument
- Surge includes VST3, and LV2 virtual instrument formats for use in compatible hosts.
+ Surge XT includes VST3 instrument formats for use in compatible hosts and a standalone executable
 EOT
 
 touch ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
@@ -83,12 +70,14 @@ gzip -9 -n ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 
 #copy data and vst plugins
 
-cp ../LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
-cp -r ../resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
+cp ${SOURCEDIR}/LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
+cp -r ${SOURCEDIR}/resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 
 # Copy the VST3 bundld 
-cp -r ../build/surge_products/Surge.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
-cp -r ../build/surge_products/SurgeEffectsBank.vst3 ${PACKAGE_NAME}/usr/lib/vst3/
+cp -r "${INDIR}/Surge XT.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
+cp -r "${INDIR}/Surge XT Effects.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
+cp -r "${INDIR}/Surge XT" ${PACKAGE_NAME}/usr/bin/
+cp -r "${INDIR}/Surge XT Effects" ${PACKAGE_NAME}/usr/bin/
 
 # copy the lv2 bundle
 # cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
@@ -102,9 +91,7 @@ find ${PACKAGE_NAME}/usr/lib -print
 
 # build package
 
-mkdir -p product
-dpkg-deb --build ${PACKAGE_NAME} product/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
+dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
 rm -rf ${PACKAGE_NAME}
+popd
 
-echo "Built DEB Package"
-pwd
