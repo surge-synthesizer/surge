@@ -1,4 +1,4 @@
-# Surge 1.7.1 Patch Tag Data Model
+# Surge Patch Tag Data Model
 
 This document describes two things. The physical (code) model for how we store tags and the
 end use (value/data) model for how that physical model is used to tag patches. It does not
@@ -6,7 +6,7 @@ describe any particular implementation or tool. It is currently a RFC.
 
 ## Physical Patch Data Model
 
-A patch has the following characteristics inside surge
+A patch has the following characteristics inside Surge:
 
 - Gleaned from the filesystem
   - path: filesystem path to the location of the patch file (currently .fxp)
@@ -15,51 +15,51 @@ A patch has the following characteristics inside surge
   - author (up to 256 chars of an author identifier)
   - comment (up to 4096 chars of plain text comment)
 - A List of categorized tags
-  - each patch has a list of (category,value) pair tags
+  - each patch has a list of (category, value) pair tags
   - a typed tag has a category of up to 256 chars and a value of up to 1024 chars
-  - this list can be arbitrarily long. 
+  - this list can be arbitrarily long.
   - The implementation places no constraints
-    on tag categories or values other than that they are utf-16 strings.
-  
+    on tag categories or values other than that they are UTF-16 strings
+
 ## Using the Tags to generate a Logical (Content) Model
 
-With the above flexible approach we can apply any set of key value pairs we want
-to any patch. Great. That implementation choice would lead to a mess if we didn't
+With the above flexible approach we can apply any set of key-value pairs we want
+to any patch - great! That implementation choice would lead to a mess if we didn't
 also define some core tag categories.
 
-A tag category has a few features
+A tag category has a few features:
 - Is the tag allowed multiple times in a patch or just once
 - Does the tag have constrained values or free values
 
-Here is a proposed set of tag categories
+Here is a proposed set of tag categories.
 
 ### Tags describing the patch
 
 Obviously, descriptive genres are not MECE. Here's a proposal.
 
-- `factory_status`: has the value `factory` `third_party` or `user`. One per patch
-- `category`: One per patch. Prescribed values. The list of values is (still being determined) `keys`, `pads`, `fx`
-   (this needs feedback obviously - what's the list)
-- `sub-category`: Zero or more per patch. Free values. You can tag categories with sub-categories as you 
-   see fit. For instance you may want `EP` and `FM` as sub-categories of a patch in `Keys`
-- `features`: Many per patch. Prescribed values. The list of values is (still being determined) 
-   `layered`, `split`, `sequenced`, `mpe`
+- `factory_status`: One per patch. Has the value `factory` `third_party` or `user`
+- `category`: One per patch. Prescribed values. The list of values is (still being determined) `Keys`, `Pads`, `FX`
+   (this needs feedback obviously - what's the list?)
+- `sub-category`: Zero or more per patch. Free values. You can tag categories with sub-categories as you
+   see fit. For instance, you may want `EP` and `FM` as sub-categories of a patch in `Keys`
+- `features`: Many per patch. Prescribed values. The list of values is (still being determined)
+   `Layered`, `Split`, `Sequenced`, `MPE`
 - `character`: Many per patch. Prescribed values. The list of values is (still being determined)
-   `cinematic`, `analog`
+   `Cinematic`, `Analog`
 
 ### Tags for extended authorship
 
 - `author_collection`: An author can ascribe a collection name to their bank of patches
-- `author_url`: A website
+- `author_url`: A link to author's website
 - `author_license`: A license, ideally from https://spdx.org/licenses/
 
 ### User Tags
 
-- `user_tag` is allowed as many times as you want with arbitrary content.
+- `user_tag` Allowed as many times as you want with arbitrary content
 
-# An Example
+# Example
 
-Lets take the factory patch "Keyboards/DX EP.fxp". One would imagine tagging it like this
+Let's take the factory patch "Keyboards/DX EP.fxp". One would imagine tagging it like this:
 
 - name: DX EP
 - author: Claes
@@ -68,14 +68,14 @@ Lets take the factory patch "Keyboards/DX EP.fxp". One would imagine tagging it 
 - category: Keyboards
 - sub-category: EP
 - sub-category: FM
-- character: digital
-- character: emulator
+- character: Digital
+- character: Emulation
 - author_license: GPL-3.0-or-later
 - author_url: https://surge-synthesizer.github.io/
 
-Or imagine a sequnced MPE patch I made for a project I'm working on called "ChamberSynth"
+Or imagine a sequnced MPE patch I made for a project I'm working on called "ChamberSynth":
 
-- name: That Pad from CS4
+- name: That Pad From CS4
 - author: baconpaul
 - factory_status: user
 - comment: In CS4 this is the pad under the piano
@@ -86,5 +86,3 @@ Or imagine a sequnced MPE patch I made for a project I'm working on called "Cham
 - user_tag: ChamberSynth Patches
 - user_tag: CS4
 - user_tag: 2020-07 Patches
-
-

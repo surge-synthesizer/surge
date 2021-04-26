@@ -36,7 +36,7 @@ A tag can be either `Related <issue number>`, `Closes <issue number>` or `Addres
 
 ### GitHub usage
 
-* The [git-howto](git-howto.md) is a good basic primer if you are new to `git`.
+* The [How to Git](How%20to%20Git.md) document is a good basic primer if you are new to `git`.
 * Generally, try and have a GitHub issue which documents what you are trying to do
 * Name your branch with a descriptive name and an issue number. For instance,
 `mac-wav-file-198` is a branch to implement WAV file reading on Mac, in response to issue #198
