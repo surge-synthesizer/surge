@@ -708,10 +708,18 @@ struct CDrawContext
                 path.startNewSubPath(p);
             else
                 path.lineTo(p);
+            started = true;
         }
-        g.setColour(kRedCColor.asJuceColour());
-        g.fillPath(path);
-        OKUNIMPL;
+        path.closeSubPath();
+        if (s == kDrawFilled || s == kDrawFilledAndStroked)
+        {
+            g.setColour(fillColor);
+            g.fillPath(path);
+        }
+        if (s == kDrawFilledAndStroked || s == kDrawStroked)
+        {
+            UNIMPL;
+        }
     }
 
     CGraphicsPath *createRoundRectGraphicsPath(const CRect &r, float radius)
