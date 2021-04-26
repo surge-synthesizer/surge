@@ -19,10 +19,14 @@
 #include "guihelpers.h"
 
 #include <vector>
+#include <algorithm>
 #include "RuntimeFont.h"
 
 using namespace VSTGUI;
 using namespace std;
+
+// 32 + header
+const int maxMenuItemsPerColumn = 33;
 
 void CPatchBrowser::draw(CDrawContext *dc)
 {
@@ -83,7 +87,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
     auto pdbF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch DB...")));
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch Database...")));
     pdbF->setActions([this](CCommandMenuItem *item) {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
         if (sge)
@@ -101,18 +105,20 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     if (single_category)
     {
-        contextMenu->setNbItemsPerColumn(32);
-
         /*
         ** in the init scenario we don't have a category yet. Our two choices are
         ** don't pop up the menu or pick one. I choose to pick one. If I can
         ** find the one called "Init" use that. Otherwise pick 0.
         */
         int rightMouseCategory = current_category;
+
         if (current_category < 0)
         {
             if (storage->patchCategoryOrdering.size() == 0)
+            {
                 return kMouseEventHandled;
+            }
+
             for (auto c : storage->patchCategoryOrdering)
             {
                 if (_stricmp(storage->patch_category[c].name.c_str(), "Init") == 0)
@@ -126,6 +132,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 rightMouseCategory = storage->patchCategoryOrdering[0];
             }
         }
+
+        // get just the category name and not the path leading to it
+        std::string menuName = storage->patch_category[rightMouseCategory].name;
+        if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+        {
+            menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
+        }
+        std::transform(menuName.begin(), menuName.end(), menuName.begin(), ::toupper);
+
+        contextMenu->addSectionHeader("PATCHES (" + menuName + ")");
 
         populatePatchMenuForCategory(rightMouseCategory, contextMenu, single_category, main_e,
                                      false);
@@ -179,11 +195,23 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         }
     }
 
-    if (!single_category)
-    {
-        contextMenu->addColumnBreak();
-        contextMenu->addSectionHeader("FUNCTIONS");
-    }
+    contextMenu->addColumnBreak();
+    contextMenu->addSectionHeader("FUNCTIONS");
+
+    auto initItem = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Initialize Patch")));
+    auto initAction = [this](CCommandMenuItem *item) { /* load init state */ };
+    initItem->setActions(initAction, nullptr);
+    contextMenu->addEntry(initItem);
+
+    contextMenu->addSeparator();
+
+    auto refreshItem = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
+    auto refreshAction = [this](CCommandMenuItem *item) { this->storage->refresh_patchlist(); };
+    refreshItem->setActions(refreshAction, nullptr);
+    contextMenu->addEntry(refreshItem);
+
     auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
     loadF->setActions([this](CCommandMenuItem *item) {
@@ -199,12 +227,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         }
     });
     contextMenu->addEntry(loadF);
-
-    auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
-    auto refreshAction = [this](CCommandMenuItem *item) { this->storage->refresh_patchlist(); };
-    refreshItem->setActions(refreshAction, nullptr);
-    contextMenu->addEntry(refreshItem);
 
     contextMenu->addSeparator();
 
@@ -301,12 +323,21 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
 {
     bool amIChecked = false;
     PatchCategory cat = storage->patch_category[c];
+
+    // stop it going in the top menu which is a straight iteration
     if (rootCall && !cat.isRoot)
-        return false; // stop it going in the top menu which is a straight iteration
+    {
+        return false;
+    }
+
+    // don't do empty categories
     if (cat.numberOfPatchesInCategoryAndChildren == 0)
-        return false; // Don't do empty categories
+    {
+        return false;
+    }
 
     int splitcount = 256;
+
     // Go through the whole patch list in alphabetical order and filter
     // out only the patches that belong to the current category.
     vector<int> ctge;
@@ -318,21 +349,22 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
         }
     }
 
-    // Divide categories with more entries than splitcount into subcategories f.ex. bass (1,2) etc
-    // etc
+    // Divide categories with more entries than splitcount into subcategories f.ex. bass (1, 2) etc
     int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
+
     for (int subc = 0; subc < n_subc; subc++)
     {
         string name;
         COptionMenu *subMenu;
 
         if (single_category)
+        {
             subMenu = contextMenu;
+        }
         else
         {
             subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0,
                                       COptionMenu::kMultipleCheckStyle);
-            subMenu->setNbItemsPerColumn(32);
         }
 
         int sub = 0;
@@ -352,9 +384,20 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
                 actionItem->setChecked(true);
                 amIChecked = true;
             }
+
             actionItem->setActions(action, nullptr);
             subMenu->addEntry(actionItem);
             sub++;
+
+            if (sub != 0 && sub % 32 == 0)
+            {
+                subMenu->addColumnBreak();
+
+                if (single_category)
+                {
+                    subMenu->addSectionHeader("");
+                }
+            }
         }
 
         for (auto &childcat : cat.children)
@@ -375,25 +418,31 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
             }
         }
 
+        // get just the category name and not the path leading to it
         string menuName = storage->patch_category[c].name;
-
         if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+        {
             menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
+        }
 
         if (n_subc > 1)
+        {
             name = menuName.c_str() + (subc + 1);
+        }
         else
+        {
             name = menuName.c_str();
-
-        // tuck in the category name by 4 spaces, but only the root categories
-        if (rootCall)
-            name = "    " + name;
+        }
 
         if (!single_category)
         {
             auto entry = contextMenu->addEntry(subMenu, name.c_str());
+
             if (c == current_category || amIChecked)
+            {
                 entry->setChecked(true);
+            }
+
             subMenu->forget(); // Important, so that the refcounter gets it right
         }
         main_e++;
