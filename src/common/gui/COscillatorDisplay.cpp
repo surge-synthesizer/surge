@@ -592,14 +592,20 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint &where, const CButtonSt
 void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem)
 {
     int idx = 0;
-    bool needToAddSep = false;
+
+    contextMenu->addSectionHeader("FACTORY WAVETABLES");
+
     for (auto c : storage->wtCategoryOrdering)
     {
-        if (idx == storage->firstThirdPartyWTCategory ||
-            (idx == storage->firstUserWTCategory &&
-             storage->firstUserWTCategory != storage->wt_category.size()))
+        if (idx == storage->firstThirdPartyWTCategory)
         {
-            needToAddSep = true; // only add if there's actually data coming so defer the add
+            contextMenu->addSectionHeader("3RD PARTY WAVETABLES");
+        }
+
+        if (idx == storage->firstUserWTCategory &&
+            storage->firstUserWTCategory != storage->wt_category.size())
+        {
+            contextMenu->addSectionHeader("USER WAVETABLES");
         }
 
         idx++;
@@ -610,17 +616,17 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
 
         if (cat.isRoot)
         {
-            if (needToAddSep)
-            {
-                contextMenu->addEntry("-");
-                needToAddSep = false;
-            }
             populateMenuForCategory(contextMenu, c, selectedItem);
         }
     }
 
-    // Add direct open here
     contextMenu->addSeparator();
+
+    auto refreshItem = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
+    auto refresh = [this](CCommandMenuItem *item) { this->storage->refresh_wtlist(); };
+    refreshItem->setActions(refresh, nullptr);
+    contextMenu->addEntry(refreshItem);
 
     auto renameItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name...")));
@@ -641,12 +647,6 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     renameItem->setActions(rnaction, nullptr);
     contextMenu->addEntry(renameItem);
 
-    auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
-    auto refresh = [this](CCommandMenuItem *item) { this->storage->refresh_wtlist(); };
-    refreshItem->setActions(refresh, nullptr);
-    contextMenu->addEntry(refreshItem);
-
     contextMenu->addSeparator();
 
     auto actionItem = std::make_shared<CCommandMenuItem>(
@@ -666,8 +666,9 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
         auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
         if (!fn.empty())
         {
-            std::string message = "Wav file exported to '" + fn + "'";
-            juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Exported Wav", message);
+            std::string message = "Wavetable was successfully exported to '" + fn + "'";
+            juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Wavetable Exported!",
+                                              message);
         }
     };
     exportItem->setActions(exportAction, nullptr);
