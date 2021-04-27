@@ -70,11 +70,14 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     pitch_t = pitch;
     update_lagvals<true>();
 
+    // nointerp adjusts the tableid range so that it scans the whole wavetable
+    // rather than wavetable from first to second to last frame
+    nointerp = !oscdata->p[wt_morph].extend_range;
     float shape = oscdata->p[wt_morph].val.f;
     float intpart;
-    shape *= ((float)oscdata->wt.n_tables - 1.f) * 0.99999f;
+    shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
     tableipol = modff(shape, &intpart);
-    tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2);
+    tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
     last_tableipol = tableipol;
     last_tableid = tableid;
     hskew = 0.f;
@@ -178,7 +181,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
         if (oscdata->wt.flags & wtf_is_sample)
         {
             tableid++;
-            if (tableid > oscdata->wt.n_tables - 3)
+            if (tableid > oscdata->wt.n_tables - 3 + nointerp)
             {
                 if (sampleloop < 7)
                     sampleloop--;
@@ -189,7 +192,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
                 }
                 else
                 {
-                    tableid = oscdata->wt.n_tables - 2;
+                    tableid = oscdata->wt.n_tables - 2 + nointerp;
                     oscstate[voice] = 100000000000.f; // rather large number
                     return;
                 }
@@ -280,14 +283,23 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
     float newlevel;
 
-    float contmorph = oscdata->p[wt_morph].extend_range;
+    // in Continuous Morph mode tblip_ipol gives us position between current and next frame
+    // when not in Continuous Morph mode, we don't interpolate so this position should be zero
+    float lipol = (1 - nointerp) * tblip_ipol;
 
-    // do the crossfade if Continous Morph toggle is enabled, otherwise... don't
-    newlevel =
-        distort_level((oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] *
-                       (1.f - (tblip_ipol * contmorph))) +
-                      (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] *
-                       tblip_ipol * contmorph));
+    float nextframe = 0.f;
+
+    // avoid reading off the end of memory by only calculating next frame + interpolation
+    // if we're in Continous Morph mode
+    if (!nointerp)
+    {
+        nextframe =
+            oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * lipol;
+    }
+
+    newlevel = distort_level(
+        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - lipol) +
+        nextframe);
 
     g = newlevel - last_level[voice];
     last_level[voice] = newlevel;
@@ -389,6 +401,7 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
     pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is
                                      // not precise enough
     this->drift = drift;
+    nointerp = !oscdata->p[wt_morph].extend_range;
 
     update_lagvals<false>();
     l_shape.process();
@@ -417,9 +430,9 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
 
         float shape = l_shape.v;
         float intpart;
-        shape *= ((float)oscdata->wt.n_tables - 1.f) * 0.99999f;
+        shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
         tableipol = modff(shape, &intpart);
-        tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2);
+        tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
 
         if (tableid > last_tableid)
         {
