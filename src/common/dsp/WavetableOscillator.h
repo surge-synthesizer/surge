@@ -61,6 +61,7 @@ class WavetableOscillator : public AbstractBlitOscillator
     float hskew, last_hskew;
     int id_shape, id_vskew, id_hskew, id_clip, id_detune, id_formant, tableid, last_tableid;
     int FMdelay;
+    int nointerp;
     float FMmul_inv;
     int sampleloop;
 };
