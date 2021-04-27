@@ -265,8 +265,22 @@ void LfoModulationSource::attack()
         noise = 0.f;
         noised1 = 0.f;
         target = 0.f;
-        iout = correlated_noise_o2mk2_suppliedrng(
-            target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+
+        if (lfo->deform.deform_type == type_2)
+        {
+            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
+            wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
+            wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
+            wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
+
+            iout = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+        }
+        else
+        {
+            iout = correlated_noise_o2mk2_suppliedrng(
+                target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+        }
+
         break;
     case lt_stepseq:
     {
@@ -513,8 +527,19 @@ void LfoModulationSource::process_block()
         {
         case lt_snh:
         {
-            iout = correlated_noise_o2mk2_suppliedrng(
-                target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+            if (lfo->deform.deform_type == type_2)
+            {
+                wf_history[3] = wf_history[2];
+                wf_history[2] = wf_history[1];
+                wf_history[1] = wf_history[0];
+
+                wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            }
+            else
+            {
+                iout = correlated_noise_o2mk2_suppliedrng(
+                    target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+            }
         }
         break;
         case lt_noise:
@@ -683,6 +708,36 @@ void LfoModulationSource::process_block()
         iout = (phase > (0.5f + 0.5f * localcopy[ideform].f)) ? -1.f : 1.f;
         break;
 
+    case lt_snh:
+    {
+        if (lfo->deform.deform_type == type_2)
+        {
+            float df = localcopy[ideform].f;
+            if (df > 0.5f)
+            {
+                float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
+                float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
+                                               wf_history[0], phase);
+                iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
+            }
+            else if (df > -0.0001f)
+            {
+                float cf = max(0.f, min(phase / (2.f * df + 0.00001f), 1.0f));
+                iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
+            }
+            else if (df > -0.5f)
+            {
+                float cf = max(0.f, min((1.f - phase) / (-2.f * df + 0.00001f), 1.0f));
+                iout = (1.f - cf) * 0 + cf * wf_history[1];
+            }
+            else
+            {
+                float cf = max(0.f, min(phase / (2.f + 2.f * df + 0.00001f), 1.0f));
+                iout = (1.f - cf) * wf_history[1] + cf * 0;
+            }
+        }
+        break;
+    }
     case lt_noise:
     {
         // iout = noise*(1-phase) + phase*target;

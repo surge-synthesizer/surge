@@ -382,7 +382,7 @@ const int lt_num_deforms[n_lfo_types] = {
     0, // lt_square
     3, // lt_ramp
     0, // lt_noise
-    0, // lt_snh
+    2, // lt_snh
     3, // lt_envelope
     0, // lt_stepseq
     0, // lt_mseg
@@ -900,13 +900,12 @@ class alignas(16) SurgeStorage
         CANCEL
     };
     std::function<OkCancel(const std::string &msg, const std::string &title, OkCancel def)>
-        okCancelProvider =
-            [](const std::string &, const std::string &, OkCancel def) { return def; };
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def)
+    { return def; };
     void clearOkCancelProvider()
     {
-        okCancelProvider = [](const std::string &, const std::string &, OkCancel def) {
-            return def;
-        };
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def)
+        { return def; };
     }
 
     static constexpr int tuning_table_size = 512;
