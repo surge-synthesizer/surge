@@ -287,8 +287,6 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     // when not in Continuous Morph mode, we don't interpolate so this position should be zero
     float lipol = (1 - nointerp) * tblip_ipol;
 
-    float nextframe = 0.f;
-
     // that 1 - nointerp makes sure we don't read the table off memory, keeps us bounded
     // and since it gets multiplied by lipol, in morph mode ends up being zero - no sweat!
     newlevel = distort_level(
