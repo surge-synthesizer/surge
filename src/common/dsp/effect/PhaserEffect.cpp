@@ -272,13 +272,13 @@ void PhaserEffect::init_default_values()
 void PhaserEffect::handleStreamingMismatches(int streamingRevision,
                                              int currentSynthStreamingRevision)
 {
-    if (streamingRevision < 14)
+    if (streamingRevision <= 13)
     {
         fxdata->p[ph_stages].val.i = 4;
         fxdata->p[ph_width].val.f = 0.f;
     }
 
-    if (streamingRevision < 16)
+    if (streamingRevision <= 15)
     {
         fxdata->p[ph_mod_wave].val.i = 1;
         fxdata->p[ph_mod_rate].deactivated = false;

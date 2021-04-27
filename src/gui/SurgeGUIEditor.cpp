@@ -2468,29 +2468,29 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 contextMenu->addSeparator(eid++);
 
-                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Bipolar Mode"),
-                                [this, control, ccid]() {
-                                    bool bp = !synth->storage.getPatch()
-                                                   .scene[current_scene]
-                                                   .modsources[ms_ctrl1 + ccid]
-                                                   ->is_bipolar();
-                                    synth->storage.getPatch()
-                                        .scene[current_scene]
-                                        .modsources[ms_ctrl1 + ccid]
-                                        ->set_bipolar(bp);
-
-                                    float f = synth->storage.getPatch()
+                auto bp = addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Bipolar Mode"),
+                                          [this, control, ccid]() {
+                                              bool bp = !synth->storage.getPatch()
+                                                             .scene[current_scene]
+                                                             .modsources[ms_ctrl1 + ccid]
+                                                             ->is_bipolar();
+                                              synth->storage.getPatch()
                                                   .scene[current_scene]
                                                   .modsources[ms_ctrl1 + ccid]
-                                                  ->get_output01();
-                                    control->setValue(f);
-                                    ((CModulationSourceButton *)control)->setBipolar(bp);
-                                    refresh_mod();
-                                });
-                contextMenu->checkEntry(eid, synth->storage.getPatch()
-                                                 .scene[current_scene]
-                                                 .modsources[ms_ctrl1 + ccid]
-                                                 ->is_bipolar());
+                                                  ->set_bipolar(bp);
+
+                                              float f = synth->storage.getPatch()
+                                                            .scene[current_scene]
+                                                            .modsources[ms_ctrl1 + ccid]
+                                                            ->get_output01();
+                                              control->setValue(f);
+                                              ((CModulationSourceButton *)control)->setBipolar(bp);
+                                              refresh_mod();
+                                          });
+                bp->setChecked(synth->storage.getPatch()
+                                   .scene[current_scene]
+                                   .modsources[ms_ctrl1 + ccid]
+                                   ->is_bipolar());
                 eid++;
 
                 addCallbackMenu(
@@ -3098,37 +3098,42 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     contextMenu->addSeparator(eid++);
 
-                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Constant Rate"),
-                                    [this, p]() { p->porta_constrate = !p->porta_constrate; });
-                    contextMenu->checkEntry(eid, p->porta_constrate);
+                    auto cr =
+                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Constant Rate"),
+                                        [this, p]() { p->porta_constrate = !p->porta_constrate; });
+                    cr->setChecked(p->porta_constrate);
                     eid++;
 
-                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Glissando"),
-                                    [this, p]() { p->porta_gliss = !p->porta_gliss; });
-                    contextMenu->checkEntry(eid, p->porta_gliss);
+                    auto gliss =
+                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Glissando"),
+                                        [this, p]() { p->porta_gliss = !p->porta_gliss; });
+                    gliss->setChecked(p->porta_gliss);
                     eid++;
 
-                    addCallbackMenu(contextMenu,
-                                    Surge::UI::toOSCaseForMenu("Retrigger at Scale Degrees"),
-                                    [this, p]() { p->porta_retrigger = !p->porta_retrigger; });
-                    contextMenu->checkEntry(eid, p->porta_retrigger);
+                    auto rtsd = addCallbackMenu(
+                        contextMenu, Surge::UI::toOSCaseForMenu("Retrigger at Scale Degrees"),
+                        [this, p]() { p->porta_retrigger = !p->porta_retrigger; });
+                    rtsd->setChecked(p->porta_retrigger);
                     eid++;
 
                     contextMenu->addSeparator(eid++);
 
-                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Logarithmic Curve"),
-                                    [this, p]() { p->porta_curve = -1; });
-                    contextMenu->checkEntry(eid, (p->porta_curve == -1));
+                    auto log = addCallbackMenu(contextMenu,
+                                               Surge::UI::toOSCaseForMenu("Logarithmic Curve"),
+                                               [this, p]() { p->porta_curve = -1; });
+                    log->setChecked(p->porta_curve == -1);
                     eid++;
 
-                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Linear Curve"),
-                                    [this, p]() { p->porta_curve = 0; });
-                    contextMenu->checkEntry(eid, (p->porta_curve == 0));
+                    auto lin =
+                        addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Linear Curve"),
+                                        [this, p]() { p->porta_curve = 0; });
+                    lin->setChecked(p->porta_curve == 0);
                     eid++;
 
-                    addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Exponential Curve"),
-                                    [this, p]() { p->porta_curve = 1; });
-                    contextMenu->checkEntry(eid, (p->porta_curve == 1));
+                    auto exp = addCallbackMenu(contextMenu,
+                                               Surge::UI::toOSCaseForMenu("Exponential Curve"),
+                                               [this, p]() { p->porta_curve = 1; });
+                    exp->setChecked(p->porta_curve == 1);
                     eid++;
                 }
 
@@ -3152,13 +3157,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                 char title[32];
                                 sprintf(title, "Deform Type %d", (i + 1));
 
-                                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(title),
-                                                [this, p, i]() {
-                                                    p->deform_type = i;
-                                                    if (frame)
-                                                        frame->invalid();
-                                                });
-                                contextMenu->checkEntry(eid, (p->deform_type == i));
+                                auto dm = addCallbackMenu(
+                                    contextMenu, Surge::UI::toOSCaseForMenu(title), [this, p, i]() {
+                                        p->deform_type = i;
+                                        if (frame)
+                                            frame->invalid();
+                                    });
+                                dm->setChecked(p->deform_type == i);
                                 eid++;
                             }
                         }
@@ -3301,7 +3306,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                                                           p->extend_range = !p->extend_range;
                                                           this->synth->refresh_editor = true;
                                                       });
-                            contextMenu->checkEntry(eid, p->extend_range);
+                            ee->setChecked(p->extend_range);
                             ee->setEnabled(enable);
                             eid++;
                         }
@@ -3310,7 +3315,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                 if (p->can_be_absolute())
                 {
-                    addCallbackMenu(contextMenu, "Absolute", [this, p]() {
+                    auto abs = addCallbackMenu(contextMenu, "Absolute", [this, p]() {
                         p->absolute = !p->absolute;
 
                         // FIXME : What's a better aprpoach?
@@ -3332,7 +3337,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             synth->refresh_editor = true;
                         }
                     });
-                    contextMenu->checkEntry(eid, p->absolute);
+                    abs->setChecked(p->absolute);
                     eid++;
                 }
 
@@ -3768,32 +3773,32 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 std::string sc = std::string("Scene ") + (char)('A' + current_scene);
                 contextMenu->addSeparator(eid++);
                 // FIXME - add unified menu here
-                addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu(sc + " Hard Clip Disabled"),
-                                [this]() {
-                                    synth->storage.sceneHardclipMode[current_scene] =
-                                        SurgeStorage::BYPASS_HARDCLIP;
-                                });
-                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
-                                                 SurgeStorage::BYPASS_HARDCLIP);
+                auto hcmen = addCallbackMenu(
+                    contextMenu, Surge::UI::toOSCaseForMenu(sc + " Hard Clip Disabled"), [this]() {
+                        synth->storage.sceneHardclipMode[current_scene] =
+                            SurgeStorage::BYPASS_HARDCLIP;
+                    });
+                hcmen->setChecked(synth->storage.sceneHardclipMode[current_scene] ==
+                                  SurgeStorage::BYPASS_HARDCLIP);
                 eid++;
 
-                addCallbackMenu(contextMenu,
-                                Surge::UI::toOSCaseForMenu(sc + " Hard Clip at 0 dBFS"), [this]() {
-                                    synth->storage.sceneHardclipMode[current_scene] =
-                                        SurgeStorage::HARDCLIP_TO_0DBFS;
-                                });
-                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
-                                                 SurgeStorage::HARDCLIP_TO_0DBFS);
+                hcmen = addCallbackMenu(
+                    contextMenu, Surge::UI::toOSCaseForMenu(sc + " Hard Clip at 0 dBFS"), [this]() {
+                        synth->storage.sceneHardclipMode[current_scene] =
+                            SurgeStorage::HARDCLIP_TO_0DBFS;
+                    });
+                hcmen->setChecked(synth->storage.sceneHardclipMode[current_scene] ==
+                                SurgeStorage::HARDCLIP_TO_0DBFS);
                 eid++;
 
-                addCallbackMenu(contextMenu,
-                                Surge::UI::toOSCaseForMenu(sc + " Hard Clip at +18 dBFS"),
-                                [this]() {
-                                    synth->storage.sceneHardclipMode[current_scene] =
-                                        SurgeStorage::HARDCLIP_TO_18DBFS;
-                                });
-                contextMenu->checkEntry(eid, synth->storage.sceneHardclipMode[current_scene] ==
-                                                 SurgeStorage::HARDCLIP_TO_18DBFS);
+                hcmen = addCallbackMenu(
+                    contextMenu, Surge::UI::toOSCaseForMenu(sc + " Hard Clip at +18 dBFS"),
+                    [this]() {
+                        synth->storage.sceneHardclipMode[current_scene] =
+                            SurgeStorage::HARDCLIP_TO_18DBFS;
+                    });
+                hcmen->setChecked(synth->storage.sceneHardclipMode[current_scene] ==
+                                 SurgeStorage::HARDCLIP_TO_18DBFS);
                 eid++;
             }
 
@@ -3802,25 +3807,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 contextMenu->addSeparator(eid++);
                 // FIXME - add unified menu here
 
-                addCallbackMenu(
+                auto hcmen = addCallbackMenu(
                     contextMenu, Surge::UI::toOSCaseForMenu("Global Hard Clip Disabled"),
                     [this]() { synth->storage.hardclipMode = SurgeStorage::BYPASS_HARDCLIP; });
-                contextMenu->checkEntry(eid, synth->storage.hardclipMode ==
-                                                 SurgeStorage::BYPASS_HARDCLIP);
+                hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::BYPASS_HARDCLIP);
                 eid++;
 
-                addCallbackMenu(
+                hcmen = addCallbackMenu(
                     contextMenu, Surge::UI::toOSCaseForMenu("Global Hard Clip at 0 dBFS"),
                     [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_0DBFS; });
-                contextMenu->checkEntry(eid, synth->storage.hardclipMode ==
-                                                 SurgeStorage::HARDCLIP_TO_0DBFS);
+                hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_0DBFS);
                 eid++;
 
-                addCallbackMenu(
+                hcmen = addCallbackMenu(
                     contextMenu, Surge::UI::toOSCaseForMenu("Global Hard Clip at +18 dBFS"),
                     [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_18DBFS; });
-                contextMenu->checkEntry(eid, synth->storage.hardclipMode ==
-                                                 SurgeStorage::HARDCLIP_TO_18DBFS);
+                hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_18DBFS);
                 eid++;
             }
 

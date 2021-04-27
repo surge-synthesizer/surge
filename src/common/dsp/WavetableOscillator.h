@@ -43,6 +43,8 @@ class WavetableOscillator : public AbstractBlitOscillator
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f) override;
     virtual ~WavetableOscillator();
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
   private:
     void convolute(int voice, bool FM, bool stereo);

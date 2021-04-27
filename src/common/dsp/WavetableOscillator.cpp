@@ -112,7 +112,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 void WavetableOscillator::init_ctrltypes()
 {
     oscdata->p[wt_morph].set_name("Morph");
-    oscdata->p[wt_morph].set_type(ct_countedset_percent);
+    oscdata->p[wt_morph].set_type(ct_countedset_percent_extendable);
     oscdata->p[wt_morph].set_user_data(oscdata);
     oscdata->p[wt_skewv].set_name("Skew Vertical");
     oscdata->p[wt_skewv].set_type(ct_percent_bipolar);
@@ -131,6 +131,7 @@ void WavetableOscillator::init_ctrltypes()
 void WavetableOscillator::init_default_values()
 {
     oscdata->p[wt_morph].val.f = 0.0f;
+    oscdata->p[wt_morph].extend_range = true;
     oscdata->p[wt_skewv].val.f = 0.0f;
     oscdata->p[wt_saturate].val.f = 0.f;
     oscdata->p[wt_formant].val.f = 0.f;
@@ -277,10 +278,16 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     state[voice] = state[voice] & (wtsize - 1);
 
     float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
-    float newlevel = distort_level(
+    float newlevel;
+
+    float contmorph = oscdata->p[wt_morph].extend_range;
+
+    // do the crossfade if Continous Morph toggle is enabled, otherwise... don't
+    newlevel = distort_level(
         oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] *
-            (1.f - tblip_ipol) +
-        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * tblip_ipol);
+            (1.f - (tblip_ipol * contmorph)) +
+        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] *
+                          tblip_ipol * contmorph));
 
     g = newlevel - last_level[voice];
     last_level[voice] = newlevel;
@@ -518,5 +525,14 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
                 _mm_store_ps(&oscbufferR[OB_LENGTH + k], zero);
             }
         }
+    }
+}
+
+void WavetableOscillator::handleStreamingMismatches(int streamingRevision,
+                                                    int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 16)
+    {
+        oscdata->p[wt_morph].extend_range = true;
     }
 }

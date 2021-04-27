@@ -79,16 +79,19 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 10 -> 11 (1.6.2 release) added DAW extra state
 // 11 -> 12 (1.6.3 release) added new parameters to the Distortion effect
 // 12 -> 13 (1.7.0 release) slider deactivation
-//                          sine LP/HP filters
-//                          sine/FM2/FM3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 nightlies) add phaser stages/center/spread parameters
-//                            add ability to configure vocoder modulator mono/sterao/L/R
+//                          Sine LP/HP filters
+//                          Sine/FM2/FM3 feedback extension/bipolar
+// 13 -> 14 (1.8.0 nightlies) add Phaser stages/center/spread parameters
+//                            add ability to configure Vocoder modulator mono/sterao/L/R input
 //                            add comb filter tuning and compatibility block
 // 14 -> 15 (1.8.0 release) apply the great filter remap (GitHub issue #3006)
 // 15 -> 16 (1.9.0 release) implement oscillator retrigger consistently (GitHub issue #3171)
 //                          add tuningApplicationMode to patch
+//                          add disable toggle to various low/high cut filters in various effects
+//                          add disable toggle to Phaser rate, and different waveform options
+// 16 -> 17 (XT 1.0 release) wavetable oscillator continuous morph toggle
 
-const int ff_revision = 16;
+const int ff_revision = 17;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
