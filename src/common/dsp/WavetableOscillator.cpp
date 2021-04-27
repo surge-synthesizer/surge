@@ -283,11 +283,11 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float contmorph = oscdata->p[wt_morph].extend_range;
 
     // do the crossfade if Continous Morph toggle is enabled, otherwise... don't
-    newlevel = distort_level(
-        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] *
-            (1.f - (tblip_ipol * contmorph)) +
-        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] *
-                          tblip_ipol * contmorph));
+    newlevel =
+        distort_level((oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] *
+                       (1.f - (tblip_ipol * contmorph))) +
+                      (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] *
+                       tblip_ipol * contmorph));
 
     g = newlevel - last_level[voice];
     last_level[voice] = newlevel;

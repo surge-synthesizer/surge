@@ -3788,17 +3788,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                             SurgeStorage::HARDCLIP_TO_0DBFS;
                     });
                 hcmen->setChecked(synth->storage.sceneHardclipMode[current_scene] ==
-                                SurgeStorage::HARDCLIP_TO_0DBFS);
+                                  SurgeStorage::HARDCLIP_TO_0DBFS);
                 eid++;
 
-                hcmen = addCallbackMenu(
-                    contextMenu, Surge::UI::toOSCaseForMenu(sc + " Hard Clip at +18 dBFS"),
-                    [this]() {
-                        synth->storage.sceneHardclipMode[current_scene] =
-                            SurgeStorage::HARDCLIP_TO_18DBFS;
-                    });
+                hcmen = addCallbackMenu(contextMenu,
+                                        Surge::UI::toOSCaseForMenu(sc + " Hard Clip at +18 dBFS"),
+                                        [this]() {
+                                            synth->storage.sceneHardclipMode[current_scene] =
+                                                SurgeStorage::HARDCLIP_TO_18DBFS;
+                                        });
                 hcmen->setChecked(synth->storage.sceneHardclipMode[current_scene] ==
-                                 SurgeStorage::HARDCLIP_TO_18DBFS);
+                                  SurgeStorage::HARDCLIP_TO_18DBFS);
                 eid++;
             }
 
