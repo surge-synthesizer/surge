@@ -289,17 +289,12 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
     float nextframe = 0.f;
 
-    // avoid reading off the end of memory by only calculating next frame + interpolation
-    // if we're in Continous Morph mode
-    if (!nointerp)
-    {
-        nextframe =
-            oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1][state[voice]] * lipol;
-    }
-
+    // that 1 - nointerp makes sure we don't read the table off memory, keeps us bounded
+    // and since it gets multiplied by lipol, in morph mode ends up being zero - no sweat!
     newlevel = distort_level(
-        oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - lipol) +
-        nextframe);
+        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - lipol)) +
+        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1 - nointerp][state[voice]] *
+         lipol));
 
     g = newlevel - last_level[voice];
     last_level[voice] = newlevel;
