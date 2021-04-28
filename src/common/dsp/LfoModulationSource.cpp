@@ -268,10 +268,10 @@ void LfoModulationSource::attack()
 
         if (lfo->deform.deform_type == type_2)
         {
-            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
-            wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
-            wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
-            wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng) * phase;
+            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
 
             iout = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
         }
