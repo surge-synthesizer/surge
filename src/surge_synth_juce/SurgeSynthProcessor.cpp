@@ -172,34 +172,35 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
     for (const MidiMessageMetadata it : midiMessages)
     {
         MidiMessage m = it.getMessage();
+        const int ch = m.getChannel() - 1;
+
         if (m.isNoteOn())
         {
-            surge->playNote(m.getChannel(), m.getNoteNumber(), m.getVelocity(), 0);
+            surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0);
         }
         else if (m.isNoteOff())
         {
-            surge->releaseNote(m.getChannel(), m.getNoteNumber(), m.getVelocity());
+            surge->releaseNote(ch, m.getNoteNumber(), m.getVelocity());
         }
         else if (m.isChannelPressure())
         {
-            surge->channelAftertouch(m.getChannel(), m.getChannelPressureValue());
+            surge->channelAftertouch(ch, m.getChannelPressureValue());
         }
         else if (m.isAftertouch())
         {
-            surge->polyAftertouch(m.getChannel(), m.getNoteNumber(), m.getAfterTouchValue());
+            surge->polyAftertouch(ch, m.getNoteNumber(), m.getAfterTouchValue());
         }
         else if (m.isPitchWheel())
         {
-            surge->pitchBend(m.getChannel(), m.getPitchWheelValue() - 8192);
+            surge->pitchBend(ch, m.getPitchWheelValue() - 8192);
         }
         else if (m.isController())
         {
-            surge->channelController(m.getChannel(), m.getControllerNumber(),
-                                     m.getControllerValue());
+            surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
         }
         else if (m.isProgramChange())
         {
-            // Implement program change in 1.9
+            // Implement program change in XT
         }
         else
         {
