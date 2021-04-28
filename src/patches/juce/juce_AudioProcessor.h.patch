@@ -1,0 +1,38 @@
+diff --git a/modules/juce_audio_processors/processors/juce_AudioProcessor.h b/modules/juce_audio_processors/processors/juce_AudioProcessor.h
+index ad9bc4367..afb17c7cf 100644
+--- a/modules/juce_audio_processors/processors/juce_AudioProcessor.h
++++ b/modules/juce_audio_processors/processors/juce_AudioProcessor.h
+@@ -23,6 +23,19 @@
+   ==============================================================================
+ */
+ 
++#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
++namespace Steinberg {
++        class FUnknown;
++        namespace Vst {
++            class IHostApplication;
++        }
++}
++namespace juce {
++    class JuceVST3EditController;
++	class JuceAudioProcessor;
++}
++#endif
++
+ namespace juce
+ {
+ 
+@@ -71,6 +84,13 @@ protected:
+     }
+ 
+ public:
++#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
++    virtual void handleVST3HostContext(
++        Steinberg::FUnknown* hostContext,
++        Steinberg::Vst::IHostApplication* host,
++	    JuceAudioProcessor* comPluginInstance,
++	    JuceVST3EditController* juceVST3EditController) {};
++#endif
+     //==============================================================================
+     enum ProcessingPrecision
+     {
