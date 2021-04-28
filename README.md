@@ -50,7 +50,7 @@ git clone https://github.com/surge-synthesizer/surge.git
 cd surge
 git checkout xt-alpha
 git submodule update --init --recursive
-cmake -Bbuild 
+cmake -Bbuild
 cmake --build build --config Release --target surge-staged-assets
 ```
 
@@ -61,7 +61,50 @@ to do a build.
 
 ## Building projects for your IDE
 
-## Building with support for VST2 or ASIO
+## Building a VST2
+
+Due to licensing restrictions, VST2 builds of Surge may not
+be re-distributed. However, it is possible to build a VST2
+of Surge for your own personal use. First, obtain a local
+copy of the VST2 SDK, and unzip it to a folder of your choice.
+Then set `VST2SDK_DIR` to point to that folder:
+```
+export VST2SDK_DIR="/your/path/to/VST2SDK"
+```
+or, in the Windows command prompt:
+```
+set VST2SDK_DIR=c:\path\to\VST2SDK
+```
+
+Finally, run a fresh CMake, and build the VST2 targets:
+```
+cmake -Bbuild_vst2
+cmake --build build_vst2 --config Release --target surge-xt_VST --parallel 4
+cmake --build build_vst2 --config Release --target surge-fx_VST --parallel 4
+```
+
+You will then have VST2s in `build_vst2/surge-xt_artefacts/Release/VST` and  `build_vst2/surge-fx_artefacts/Release/VST` respectively.
+
+## Building with support for ASIO
+
+On Windows, building with ASIO is often preferred for Surge Standalone,
+since it enables users to use the ASIO low-latency audio driver.
+
+Unfortunately, due to licensing conflicts, binaries of Surge that are built
+with ASIO **may not** be re-distributed. However, you may build Surge with ASIO
+for your own personal use, provided you do not re-distribute those builds.
+
+If you already have a copy of the ASIO SDK, simply set the following environment variable:
+```
+set ASIOSDK_DIR=c:\path\to\asio
+```
+
+If you do not have a copy of the ASIO SDK, CMake can download it for you, and
+allow you to build with ASIO under your own personal license. To enable this
+functionality, run your CMake configuration command as follows:
+```
+cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
+```
 
 ## Building an LV2
 
@@ -89,6 +132,25 @@ respectively.
 ## Platform Specific Choices
 
 ### Building 32 vs 64 bit windows
+
+If you are building with Visual Studio 2019, then use the `-A` flag in your CMake command to specify 32/64-bit:
+```bash
+# 64-bit
+cmake -Bbuild -G"Visual Studio 16 2019" -A x64
+
+# 32-bit
+cmake -Bbuild -G"Visual Studio 16 2019" -A Win32
+```
+
+If you are using an older version of Visual Studio, then you must specify your preference with your choice
+of CMake generator:
+```bash
+# 64-bit
+cmake -Bbuild -G"Visual Studio 15 2017 Win64"
+
+# 32-bit
+cmake -Bbuild -G"Visual Studio 15 2017"
+```
 
 ### Building a mac FAT (arm/Intel) binary
 
