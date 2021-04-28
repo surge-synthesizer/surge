@@ -899,13 +899,15 @@ class alignas(16) SurgeStorage
         OK,
         CANCEL
     };
+
     std::function<OkCancel(const std::string &msg, const std::string &title, OkCancel def)>
-        okCancelProvider = [](const std::string &, const std::string &, OkCancel def)
-    { return def; };
+        okCancelProvider =
+            [](const std::string &, const std::string &, OkCancel def) { return def; };
     void clearOkCancelProvider()
     {
-        okCancelProvider = [](const std::string &, const std::string &, OkCancel def)
-        { return def; };
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def) {
+            return def;
+        };
     }
 
     static constexpr int tuning_table_size = 512;
