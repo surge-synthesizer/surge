@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Build for 10.9")
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "Build for 10.9")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -588,6 +588,10 @@ else()
   set(SURGE_JUCE_FORMATS AU VST3 Standalone)
 endif()
 
+if(SURGE_XT_BUILD_AUV3)
+  list(APPEND SURGE_JUCE_FORMATS AUv3)
+endif()
+
 if(JUCE_SUPPORTS_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
   message( STATUS "Including JUCE LV2 support. You will need a different JUCE than the submodule" )
@@ -860,6 +864,11 @@ if( BUILD_SURGE_XT )
     target_sources(surge-xt_AU PRIVATE
             src/surge_synth_juce/SurgeSynthAUExtensions.cpp
             )
+    if(TARGET surge-xt_AUv3)
+      target_sources(surge-xt_AUv3 PRIVATE
+              src/surge_synth_juce/SurgeSynthAUv3Extensions.cpp
+              )
+    endif()
   endif()
 
   target_link_libraries(surge-xt PUBLIC
