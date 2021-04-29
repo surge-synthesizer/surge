@@ -3880,6 +3880,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         p->set_value_f01(p->get_default_value_f01());
                         control->setValue(p->get_value_f01());
                     }
+                    control->invalid();
                     return 0;
                 }
                 default:
