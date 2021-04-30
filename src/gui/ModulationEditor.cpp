@@ -36,6 +36,11 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         int dest_id = -1, source_id = -1;
         std::string dest_name, source_name;
         int modNum;
+
+        float depth;
+        bool isBipolar;
+
+        ModulationDisplayInfoWindowStrings mss;
     };
     std::vector<Datum> rows;
     std::string debugRows;
@@ -62,6 +67,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             auto r = getBounds().withTrimmedLeft(15);
 
+            auto dat = mod->rows[row];
+
             g.setColour(juce::Colour(50, 50, 50));
             if (mod->rows[row].modNum % 2)
                 g.setColour(juce::Colour(75, 75, 90));
@@ -70,9 +77,15 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             auto er = r.expanded(-1);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             g.setColour(juce::Colour(255, 255, 255));
-            g.drawText(mod->rows[row].source_name, r, juce::Justification::left);
+            g.drawText(dat.source_name, r, juce::Justification::left);
             auto rR = r.withTrimmedRight(r.getWidth() / 2);
-            g.drawText(mod->rows[row].dest_name, rR, juce::Justification::right);
+            g.drawText(dat.dest_name, rR, juce::Justification::right);
+
+            auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
+            if (dat.isBipolar)
+                g.drawText(dat.mss.valminus, rL, juce::Justification::left);
+            g.drawText(dat.mss.val, rL, juce::Justification::centred);
+            g.drawText(dat.mss.valplus, rL, juce::Justification::right);
         }
         ModulationListBoxModel *mod;
         int row;
@@ -80,7 +93,34 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
     struct EditComponent : public juce::Component
     {
-        EditComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row) {}
+        std::unique_ptr<juce::Button> clearButton;
+        std::unique_ptr<juce::Slider> modSlider;
+        EditComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row)
+        {
+            clearButton = std::make_unique<juce::TextButton>("Clear");
+            clearButton->setButtonText("Clear");
+            addAndMakeVisible(*clearButton);
+
+            modSlider = std::make_unique<juce::Slider>("Modulation");
+            modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+            modSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+            modSlider->setRange(-1, 1);
+            modSlider->setValue(mod->rows[row].depth);
+            addAndMakeVisible(*modSlider);
+        }
+
+        void resized() override
+        {
+            auto b = getBounds().withTrimmedLeft(15).expanded(-1).withRight(
+                getBounds().getTopLeft().getX() + 50);
+            clearButton->setBounds(b);
+
+            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(50 + 3).expanded(-1).withRight(
+                getWidth() / 2);
+            modSlider->setBounds(b);
+
+            Component::resized();
+        }
         void paint(juce::Graphics &g) override
         {
             auto r = getBounds().withTrimmedLeft(15);
@@ -89,12 +129,20 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             if (mod->rows[row].modNum % 2)
                 g.setColour(juce::Colour(75, 75, 90));
 
+            auto dat = mod->rows[row];
+
             g.fillRect(r);
 
             auto er = r.expanded(-1);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             g.setColour(juce::Colour(200, 200, 255));
-            g.drawText("Edit Controls Coming Soon", r, juce::Justification::left);
+            // g.drawText("Edit Controls Coming Soon", r, juce::Justification::left);
+
+            g.setColour(juce::Colour(255, 255, 255));
+            auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
+            if (dat.isBipolar)
+                g.drawText(dat.mss.dvalminus, rL, juce::Justification::left);
+            g.drawText(dat.mss.dvalplus, rL, juce::Justification::right);
         }
         ModulationListBoxModel *mod;
         int row;
@@ -115,7 +163,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         std::ostringstream oss;
         int modNum = 0;
         auto append = [&oss, &modNum, this](const std::string &type,
-                                            const std::vector<ModulationRouting> &r) {
+                                            const std::vector<ModulationRouting> &r, int idBase) {
             if (r.empty())
                 return;
 
@@ -128,15 +176,25 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             for (auto q : r)
             {
                 SurgeSynthesizer::ID ptagid;
-                if (moded->synth->fromSynthSideId(q.destination_id, ptagid))
+                if (moded->synth->fromSynthSideId(q.destination_id + idBase, ptagid))
                     moded->synth->getParameterName(ptagid, nm);
                 std::string sname = moded->ed->modulatorName(q.source_id, false);
                 auto rDisp = Datum(Datum::SHOW_ROW);
                 rDisp.source_id = q.source_id;
-                rDisp.dest_id = q.destination_id;
+                rDisp.dest_id = q.destination_id + idBase;
                 rDisp.source_name = sname;
                 rDisp.dest_name = nm;
                 rDisp.modNum = modNum++;
+
+                char pdisp[256];
+                auto p = moded->synth->storage.getPatch().param_ptr[q.destination_id + idBase];
+                int ptag = p->id;
+                modsources thisms = (modsources)q.source_id;
+                p->get_display_of_modulation_depth(pdisp, moded->synth->getModDepth(ptag, thisms),
+                                                   moded->synth->isBipolarModulation(thisms),
+                                                   Parameter::InfoWindow, &(rDisp.mss));
+                rDisp.depth = moded->synth->getModDepth(ptag, thisms);
+                rDisp.isBipolar = moded->synth->isBipolarModulation(thisms);
                 rows.push_back(rDisp);
 
                 rDisp.type = Datum::EDIT_ROW;
@@ -146,11 +204,15 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                     << nm << " at " << q.depth << "\n";
             }
         };
-        append("Global", moded->synth->storage.getPatch().modulation_global);
-        append("Scene A Voice", moded->synth->storage.getPatch().scene[0].modulation_voice);
-        append("Scene A Scene", moded->synth->storage.getPatch().scene[0].modulation_scene);
-        append("Scene B Voice", moded->synth->storage.getPatch().scene[1].modulation_voice);
-        append("Scene B Scene", moded->synth->storage.getPatch().scene[1].modulation_scene);
+        append("Global", moded->synth->storage.getPatch().modulation_global, 0);
+        append("Scene A Voice", moded->synth->storage.getPatch().scene[0].modulation_voice,
+               moded->synth->storage.getPatch().scene_start[0]);
+        append("Scene A Scene", moded->synth->storage.getPatch().scene[0].modulation_scene,
+               moded->synth->storage.getPatch().scene_start[0]);
+        append("Scene B Voice", moded->synth->storage.getPatch().scene[1].modulation_voice,
+               moded->synth->storage.getPatch().scene_start[1]);
+        append("Scene B Scene", moded->synth->storage.getPatch().scene[1].modulation_scene,
+               moded->synth->storage.getPatch().scene_start[0]);
         debugRows = oss.str();
     }
 
