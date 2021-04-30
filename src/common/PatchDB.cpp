@@ -184,8 +184,12 @@ CREATE TABLE PatchFeature (
             std::vector<std::tuple<fs::path, std::string, std::string>> doThis;
             {
                 std::unique_lock<std::mutex> lk(qLock);
-                if (pathQ.empty())
+
+                while (keepRunning && pathQ.empty())
+                {
                     qCV.wait(lk);
+                }
+
                 if (keepRunning)
                 {
                     auto b = pathQ.begin();
