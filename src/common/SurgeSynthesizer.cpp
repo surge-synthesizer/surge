@@ -2359,7 +2359,7 @@ bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource)
 ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsource)
 {
     if (!isValidModulation(ptag, modsource))
-        return 0;
+        return nullptr;
 
     int scene = storage.getPatch().param_ptr[ptag]->scene;
     vector<ModulationRouting> *modlist = nullptr;
@@ -2389,7 +2389,7 @@ ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsour
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 float SurgeSynthesizer::getModDepth(long ptag, modsources modsource)

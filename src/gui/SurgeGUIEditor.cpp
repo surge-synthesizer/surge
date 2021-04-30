@@ -42,6 +42,7 @@
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
+#include "ModulationEditor.h"
 
 #include <iostream>
 #include <iomanip>
@@ -2132,6 +2133,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 }
             }
 
+            contextMenu->addSeparator();
+            addCallbackMenu(contextMenu, Surge::UI::toOSCaseForMenu("Modulation Editor"), [this]() {
+                if (!isAnyOverlayPresent(MODULATION_EDITOR))
+                    showModulationEditorDialog();
+            });
             int n_total_md = synth->storage.getPatch().param_ptr.size();
 
             const int max_md = 4096;
@@ -3072,6 +3078,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                         eid++;
                     }
                 }
+
+                addCallbackMenu(contextMenu,
+                                Surge::UI::toOSCaseForMenu("Open Modulation Editor..."), [this]() {
+                                    if (!isAnyOverlayPresent(MODULATION_EDITOR))
+                                        showModulationEditorDialog();
+                                });
 
                 switch (p->ctrltype)
                 {
@@ -8248,6 +8260,25 @@ void SurgeGUIEditor::closePatchBrowserDialog()
     if (isAnyOverlayPresent(PATCH_BROWSER))
     {
         dismissEditorOfType(PATCH_BROWSER);
+    }
+}
+
+void SurgeGUIEditor::showModulationEditorDialog()
+{
+    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(750, 450)));
+    auto pt = std::make_unique<ModulationEditor>(this, this->synth);
+    c->juceComponent()->addAndMakeVisible(*pt);
+    pt->setBounds(0, 0, 750, 450);
+    c->takeOwnership(std::move(pt));
+    addEditorOverlay(c, "Open Modulation Editor...", MODULATION_EDITOR, CPoint(50, 50), false, true,
+                     [this]() {});
+}
+
+void SurgeGUIEditor::closeModulationEditorDialog()
+{
+    if (isAnyOverlayPresent(MODULATION_EDITOR))
+    {
+        dismissEditorOfType(MODULATION_EDITOR);
     }
 }
 
