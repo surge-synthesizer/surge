@@ -619,15 +619,15 @@ bailOnPortable:
         oddsound_mts_client = nullptr;
         oddsound_mts_active = false;
     }
+}
 
-    /*
-     * Disable this for merge - come back here once I engage in getting this done
+void SurgeStorage::initializePatchDb()
+{
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
     for (auto p : patch_list)
     {
         patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name);
     }
-     */
 }
 
 SurgePatch &SurgeStorage::getPatch() { return *_patch.get(); }

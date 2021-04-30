@@ -86,16 +86,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     COptionMenu *contextMenu =
         new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
 
-    auto pdbF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch Database...")));
-    pdbF->setActions([this](CCommandMenuItem *item) {
-        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-        if (sge)
-            sge->showPatchBrowserDialog();
-    });
-    // contextMenu->addEntry(pdbF);
-    // contextMenu->addSeparator();
-
     int main_e = 0;
     // if RMB is down, only show the current category
     bool single_category = button & (kRButton | kControl), has_3rdparty = false;
@@ -200,10 +190,30 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     auto initItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Initialize Patch")));
-    auto initAction = [this](CCommandMenuItem *item) { /* load init state */ };
+    auto initAction = [this](CCommandMenuItem *item) {
+        int i = 0;
+        for (auto p : storage->patch_list)
+        {
+            if (p.name == "Init Saw" && storage->patch_category[p.category].name == "Templates")
+            {
+                loadPatch(i);
+                break;
+            }
+            ++i;
+        }
+    };
     initItem->setActions(initAction, nullptr);
     contextMenu->addEntry(initItem);
+    contextMenu->addSeparator();
 
+    auto pdbF = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch Database...")));
+    pdbF->setActions([this](CCommandMenuItem *item) {
+        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+        if (sge)
+            sge->showPatchBrowserDialog();
+    });
+    contextMenu->addEntry(pdbF);
     contextMenu->addSeparator();
 
     auto refreshItem = std::make_shared<CCommandMenuItem>(
