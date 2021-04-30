@@ -248,7 +248,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     auto showU = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open User Patches Folder...")));
     showU->setActions([this](CCommandMenuItem *item)
-                      { juce::File(this->storage->userDataPath).startAsProcess(); });
+                      { Surge::UI::openFileOrFolder(this->storage->userDataPath); });
     contextMenu->addEntry(showU);
 
     auto showF = std::make_shared<CCommandMenuItem>(
@@ -256,8 +256,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     showF->setActions(
         [this](CCommandMenuItem *item)
         {
-            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"))
-                .startAsProcess();
+            Surge::UI::openFileOrFolder(
+                Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
         });
     contextMenu->addEntry(showF);
 
@@ -266,8 +266,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     show3->setActions(
         [this](CCommandMenuItem *item)
         {
-            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"))
-                .startAsProcess();
+            Surge::UI::openFileOrFolder(
+                Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
         });
     contextMenu->addEntry(show3);
 

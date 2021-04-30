@@ -34,5 +34,7 @@ struct NonIntegralAntiAliasGuard
     VSTGUI::CDrawContext *dc;
     VSTGUI::CDrawMode mode;
 };
+
+void openFileOrFolder(const std::string &f);
 } // namespace UI
 } // namespace Surge

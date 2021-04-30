@@ -6571,7 +6571,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         addCallbackMenu(
             skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
             [this]()
-            { juce::File(this->currentSkin->root + this->currentSkin->name).startAsProcess(); });
+            { Surge::UI::openFileOrFolder(this->currentSkin->root + this->currentSkin->name); });
     }
     else
     {
@@ -6582,7 +6582,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                                 this->synth->storage.userDataPath, "Skins");
                             // make it if it isn't there
                             fs::create_directories(string_to_path(skinspath));
-                            juce::File(skinspath).startAsProcess();
+                            Surge::UI::openFileOrFolder(skinspath);
                         });
     }
     tid++;
@@ -6610,7 +6610,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
 
     addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."),
-                    [this]() { juce::File(this->synth->storage.datapath).startAsProcess(); });
+                    [this]() { Surge::UI::openFileOrFolder(this->synth->storage.datapath); });
     did++;
 
     addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."),
@@ -6618,7 +6618,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
                     {
                         // make it if it isn't there
                         fs::create_directories(string_to_path(this->synth->storage.userDataPath));
-                        juce::File(this->synth->storage.userDataPath).startAsProcess();
+                        Surge::UI::openFileOrFolder(this->synth->storage.userDataPath);
                     });
     did++;
 

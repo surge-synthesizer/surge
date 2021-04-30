@@ -56,5 +56,19 @@ bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float
     return false; // No collision
 }
 
+void openFileOrFolder(const std::string &f)
+{
+    juce::File path = f;
+
+    if (path.isDirectory())
+    {
+        path.startAsProcess();
+    }
+    else
+    {
+        path.revealToUser();
+    }
+}
+
 } // namespace UI
 } // namespace Surge
