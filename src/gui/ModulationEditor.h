@@ -21,12 +21,16 @@
 class SurgeGUIEditor;
 class SurgeSynthesizer;
 
+class ModulationListBoxModel;
+
 class ModulationEditor : public juce::Component
 {
   public:
     ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s);
     ~ModulationEditor();
 
+    std::unique_ptr<juce::ListBox> listBox;
+    std::unique_ptr<ModulationListBoxModel> listBoxModel;
     std::unique_ptr<juce::TextEditor> textBox;
     SurgeGUIEditor *ed;
     SurgeSynthesizer *synth;
