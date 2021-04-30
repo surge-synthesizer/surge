@@ -291,7 +291,8 @@ class SurgeGUIEditor : public EditorType,
         NO_EDITOR,
         MSEG_EDITOR,
         STORE_PATCH,
-        PATCH_BROWSER
+        PATCH_BROWSER,
+        MODULATION_EDITOR
     };
 
     void addEditorOverlay(
@@ -330,6 +331,9 @@ class SurgeGUIEditor : public EditorType,
 
     void closePatchBrowserDialog();
     void showPatchBrowserDialog();
+
+    void closeModulationEditorDialog();
+    void showModulationEditorDialog();
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();
@@ -454,8 +458,10 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CTextLabel *lfoNameLabel = nullptr;
     VSTGUI::CTextLabel *fxPresetLabel = nullptr;
 
+  public:
     std::string modulatorName(int ms, bool forButton);
 
+  private:
     Parameter *typeinEditTarget = nullptr;
     int typeinModSource = -1;
 

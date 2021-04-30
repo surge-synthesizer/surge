@@ -275,6 +275,7 @@ set(SURGE_SHARED_SOURCES
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
   src/common/DebugHelpers.cpp
+  src/common/ModulatorPresetManager.cpp
   src/common/Parameter.cpp
   src/common/PatchDB.cpp
   src/common/SurgePatch.cpp
@@ -326,7 +327,7 @@ set(SURGE_GUI_SOURCES
   src/gui/CursorControlGuard.cpp
   src/gui/CVerticalLabel.cpp
   src/gui/guihelpers.cpp
-  src/common/ModulatorPresetManager.cpp
+  src/gui/ModulationEditor.cpp
   src/gui/MSEGEditor.cpp
   src/gui/PatchDBViewer.cpp
   src/gui/RuntimeFont.cpp

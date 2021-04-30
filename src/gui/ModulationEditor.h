@@ -13,15 +13,23 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_XT_SURGEJUCELOOKANDFEEL_H
-#define SURGE_XT_SURGEJUCELOOKANDFEEL_H
+#ifndef SURGE_XT_MODULATIONEDITOR_H
+#define SURGE_XT_MODULATIONEDITOR_H
 
 #include <JuceHeader.h>
 
-class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4
+class SurgeGUIEditor;
+class SurgeSynthesizer;
+
+class ModulationEditor : public juce::Component
 {
   public:
-    void drawLabel(juce::Graphics &graphics, juce::Label &label) override;
+    ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s);
+    ~ModulationEditor();
+
+    std::unique_ptr<juce::TextEditor> textBox;
+    SurgeGUIEditor *ed;
+    SurgeSynthesizer *synth;
 };
 
-#endif // SURGE_XT_SURGEJUCELOOKANDFEEL_H
+#endif // SURGE_XT_MODULATIONEDITOR_H
