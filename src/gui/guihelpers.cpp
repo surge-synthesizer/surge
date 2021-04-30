@@ -1,6 +1,7 @@
 #include "guihelpers.h"
 
 #include <cctype>
+#include <JuceHeader.h>
 
 namespace Surge
 {
@@ -58,7 +59,7 @@ bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float
 
 void openFileOrFolder(const std::string &f)
 {
-    juce::File path = f;
+    auto path = juce::File(f);
 
     if (path.isDirectory())
     {
