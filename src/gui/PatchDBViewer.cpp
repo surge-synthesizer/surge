@@ -16,6 +16,7 @@
 #include "PatchDBViewer.h"
 #include "PatchDB.h"
 #include "SurgeGUIEditor.h"
+#include "RuntimeFont.h"
 
 class PatchDBSQLTableModel : public juce::TableListBoxModel
 {
@@ -27,7 +28,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
                             bool rowIsSelected) override
     {
         // this is obviously a dumb hack
-        if (rowNumber % 2 == 0)
+        if (rowNumber % 6 < 3)
             g.fillAll(juce::Colour(170, 170, 200));
         else
             g.fillAll(juce::Colour(190, 190, 190));
@@ -37,7 +38,6 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
                    bool rowIsSelected) override
     {
         g.setColour(juce::Colour(100, 100, 100));
-        g.drawRect(juce::Rectangle<int>{0, 0, width, height});
         g.setColour(juce::Colour(0, 0, 0));
         auto d = data[rowNumber];
         auto s = std::to_string(d.id);
@@ -53,6 +53,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
             s = d.author;
             break;
         }
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
         g.drawText(s.c_str(), 0, 0, width, height, juce::Justification::centredLeft);
     }
 
@@ -86,6 +87,7 @@ void PatchDBViewer::createElements()
     table->getHeader().addColumn("author", 4, 200);
 
     table->setBounds(0, 50, getWidth(), getHeight() - 50);
+    table->setRowHeight(18);
     addAndMakeVisible(*table);
 
     nameTypein = std::make_unique<juce::TextEditor>("Patch Name");
