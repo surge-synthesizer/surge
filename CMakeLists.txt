@@ -121,6 +121,7 @@ if( SURGE_ALTERNATE_JUCE )
   add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce )
 else()
   message( STATUS "Using JUCE from submodule libs/JUCE" )
+  include("${CMAKE_CURRENT_LIST_DIR}/cmake/patch-juce.cmake")
   add_subdirectory( libs/JUCE )
 endif()
 

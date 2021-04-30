@@ -3,27 +3,30 @@ set(FOUND_PATCH_EXECUTABLE 0)
 # Try to use FindPatch() and then find_program() to find a "patch" binary, fatal error if none found
 # [CMake +3.10] https://cmake.org/cmake/help/latest/module/FindPatch.html
 find_package(Patch)
+message("Searching for patch using FindPatch()")
 if(Patch_FOUND)
   message("Patch found: ${Patch_EXECUTABLE}")
-  set(FOUND_PATCH_EXECUTABLE Patch_EXECUTABLE)
+  set(FOUND_PATCH_EXECUTABLE ${Patch_EXECUTABLE})
 else()
+  message("Searching for patch using find_program()")
   find_program(
     PATCH_EXECUTABLE
     NAMES "patch"
     # This is for my personal use
     HINTS "C:\\Program Files\\Git\\usr\\bin"
   )
-  if(_PATCH_EXECUTABLE)
-    set(FOUND_PATCH_EXECUTABLE PATCH_EXECUTABLE)
+  if(PATCH_EXECUTABLE)
+    set(FOUND_PATCH_EXECUTABLE ${PATCH_EXECUTABLE})
   else()
     message(FATAL_ERROR "Unable to find a patch executable with either of FindPatch() or find_program()")
   endif()
 endif()
 
 # Sanity check
-if (not FOUND_PATCH_EXECUTABLE)
+if (NOT FOUND_PATCH_EXECUTABLE)
   message(FATAL_ERROR "Failed both patch executable searches but continued execution. Stopping, as this was unintended.")
 endif()
+message("FOUND_PATCH_EXECUTABLE=${FOUND_PATCH_EXECUTABLE}")
 
 ################################################################
 
