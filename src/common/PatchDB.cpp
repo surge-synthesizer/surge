@@ -27,12 +27,19 @@ namespace PatchStorage
 {
 struct PatchDB::workerS
 {
+    static constexpr const char *schema_version = "1"; // I will rebuild if this is not my verion
+
     /*
      * Obviously a lot of thought needs to go into this
      */
     static constexpr const char *setup_sql = R"SQL(
 DROP TABLE IF EXISTS "Patches";
 DROP TABLE IF EXISTS "PatchFeature";
+DROP TABLE IF EXISTS "Version";
+CREATE TABLE "Version" (
+    id integer primary key,
+    schema_version varchar(256)
+);
 CREATE TABLE "Patches" (
       id integer primary key,
       path varchar(2048),
@@ -62,6 +69,7 @@ CREATE TABLE PatchFeature (
 
     explicit workerS(SurgeStorage *storage) : storage(storage)
     {
+        fs::create_directories(string_to_path(storage->userDataPath));
         auto dbname = storage->userDataPath + "/SurgePatches.db";
         auto ec = sqlite3_open(dbname.c_str(), &dbh);
         if (ec != SQLITE_OK)
@@ -72,14 +80,62 @@ CREATE TABLE PatchFeature (
             storage->reportError(oss.str(), "Surge Patch Database Error");
             dbh = nullptr;
         }
+
+        /*
+         * OK check my version
+         */
+        bool rebuild = true;
         char *emsg;
-        auto res = sqlite3_exec(dbh, setup_sql, nullptr, nullptr, &emsg);
-        if (res != SQLITE_OK)
+
+        sqlite3_stmt *qs;
+        auto rc = sqlite3_prepare_v2(dbh, "SELECT * FROM Version", -1, &qs, nullptr);
+        // FIXME - error handling everywhere of course
+        if (rc != SQLITE_OK)
         {
-            std::cout << "Error: " << emsg << std::endl;
-            sqlite3_free(emsg);
+            std::cout << "No VERSION table. Rebuilding" << std::endl;
+            rebuild = true;
         }
-        std::cout << "SQLITE RES: " << res << " " << SQLITE_OK << std::endl;
+        else
+        {
+            while (sqlite3_step(qs) == SQLITE_ROW)
+            {
+                int id = sqlite3_column_int(qs, 0);
+                auto ver = reinterpret_cast<const char *>(sqlite3_column_text(qs, 1));
+                std::cout << "id/ver='" << id << "' '" << ver << "' '" << schema_version << "'"
+                          << std::endl;
+                if (strcmp(ver, schema_version) == 0)
+                {
+                    std::cout << "That's a match. Lets not nuke" << std::endl;
+                    rebuild = false;
+                }
+            }
+        }
+
+        sqlite3_finalize(qs);
+
+        if (rebuild)
+        {
+            auto res = sqlite3_exec(dbh, setup_sql, nullptr, nullptr, &emsg);
+            if (res != SQLITE_OK)
+            {
+                std::ostringstream oss;
+                oss << "Error creating SQL database: " << emsg;
+                storage->reportError(oss.str(), "PatchDB Error");
+                sqlite3_free(emsg);
+            }
+            std::cout << "SQLITE RES: " << res << " " << SQLITE_OK << std::endl;
+            auto versql = std::string("INSERT INTO VERSION (\"schema_version\") VALUES (\"") +
+                          schema_version + "\")";
+            std::cout << versql << std::endl;
+            res = sqlite3_exec(dbh, versql.c_str(), nullptr, nullptr, &emsg);
+            if (res != SQLITE_OK)
+            {
+                std::ostringstream oss;
+                oss << "Error writing SQL Schema Version: " << emsg;
+                storage->reportError(oss.str(), "PatchDB Error");
+                sqlite3_free(emsg);
+            }
+        }
         qThread = std::thread([this]() { this->loadQueueFunction(); });
     }
 
@@ -88,6 +144,7 @@ CREATE TABLE PatchFeature (
         keepRunning = false;
         qCV.notify_all();
         qThread.join();
+        // clean up all the prepared statements
         if (dbh)
             sqlite3_close(dbh);
     }
@@ -145,7 +202,8 @@ CREATE TABLE PatchFeature (
         }
     }
 
-    sqlite3_stmt *insertStmt = nullptr, *insfeatureStmt = nullptr;
+    sqlite3_stmt *insertStmt = nullptr, *insfeatureStmt = nullptr, *checkExistsStmt = nullptr,
+                 *dropIdStmt = nullptr;
 
     void parseFXPIntoDB(const std::tuple<fs::path, std::string, std::string> &p)
     {
@@ -153,6 +211,87 @@ CREATE TABLE PatchFeature (
         auto qtime = fs::last_write_time(std::get<0>(p));
         int64_t qtimeInt =
             std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
+
+        if (checkExistsStmt == nullptr)
+        {
+            auto rc = sqlite3_prepare_v2(
+                dbh, "SELECT id, last_write_time from Patches WHERE Patches.Path LIKE ?1;", -1,
+                &checkExistsStmt, nullptr);
+            if (rc != SQLITE_OK)
+            {
+                checkExistsStmt = nullptr;
+                return;
+            }
+        }
+        bool patchLoaded = false;
+        std::vector<int> dropIds;
+
+        {
+            auto s = path_to_string(std::get<0>(p));
+            auto rc = sqlite3_bind_text(checkExistsStmt, 1, s.c_str(), s.length(), SQLITE_STATIC);
+            if (rc != SQLITE_OK)
+            {
+                std::cout << "COULD NOT BIND" << std::endl;
+            }
+            bool first = true;
+            while (sqlite3_step(checkExistsStmt) == SQLITE_ROW)
+            {
+                auto id = sqlite3_column_int(checkExistsStmt, 0);
+                auto t = sqlite3_column_int64(checkExistsStmt, 1);
+                if (t < qtimeInt || (t == qtimeInt && patchLoaded))
+                {
+                    dropIds.push_back(id);
+                }
+                if (t >= qtimeInt)
+                    patchLoaded = true;
+                first = false;
+            }
+            rc = sqlite3_clear_bindings(checkExistsStmt);
+            if (rc != SQLITE_OK)
+                std::cout << "Cant Clear Check" << std::endl;
+            rc = sqlite3_reset(checkExistsStmt);
+            if (rc != SQLITE_OK)
+                std::cout << "Cant Reset Check" << std::endl;
+        }
+
+        if (dropIdStmt == nullptr)
+        {
+            auto rc = sqlite3_prepare_v2(
+                dbh, "DELETE FROM Patches WHERE ID=?1; DELETE FROM PatchFeature WHERE ID=?1", -1,
+                &dropIdStmt, nullptr);
+            if (rc != SQLITE_OK)
+            {
+                dropIdStmt = nullptr;
+                std::cout << "Can't build dropStatement" << std::endl;
+            }
+        }
+
+        if (dropIdStmt)
+        {
+            for (auto did : dropIds)
+            {
+                auto rc = sqlite3_bind_int64(dropIdStmt, 1, did);
+                if (rc != SQLITE_OK)
+                {
+                    std::cout << "COULD NOT BIND DID 1" << std::endl;
+                }
+                /*rc = sqlite3_bind_int(dropIdStmt, 2, did);
+                if (rc != SQLITE_OK)
+                {
+                    std::cout << "COULD NOT BIND DID 2" << std::endl;
+                }*/
+                while (sqlite3_step(dropIdStmt) == SQLITE_ROW)
+                {
+                }
+                rc = sqlite3_clear_bindings(dropIdStmt);
+                if (rc != SQLITE_OK)
+                    std::cout << "Cant Clear Check" << std::endl;
+                rc = sqlite3_reset(dropIdStmt);
+            }
+        }
+
+        if (patchLoaded)
+            return;
 
         // Oh so much to fix here, but lets start with error handling
         if (insertStmt == nullptr)
@@ -164,7 +303,6 @@ CREATE TABLE PatchFeature (
                 -1, &insertStmt, nullptr);
             if (rc != SQLITE_OK)
             {
-                std::cout << "prepare failed" << std::endl;
                 insertStmt = nullptr;
                 return;
             }

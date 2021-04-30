@@ -26,6 +26,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 {
     std::cout << "SurgeXT : Version " << Surge::Build::FullVersionStr << std::endl;
     surge = std::make_unique<SurgeSynthesizer>(this);
+    surge->storage.initializePatchDb(); // In the UI branch we want the patch DB running
 
     std::map<unsigned int, std::vector<std::unique_ptr<juce::AudioProcessorParameter>>> parByGroup;
     for (auto par : surge->storage.getPatch().param_ptr)

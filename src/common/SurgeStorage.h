@@ -924,6 +924,8 @@ class alignas(16) SurgeStorage
     ~SurgeStorage();
 
     std::unique_ptr<Surge::PatchStorage::PatchDB> patchDB;
+    void initializePatchDb();
+
     std::unique_ptr<SurgePatch> _patch;
 
     SurgePatch &getPatch();

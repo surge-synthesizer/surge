@@ -26,7 +26,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
                    bool rowIsSelected) override
     {
         g.setColour(juce::Colour(100, 100, 100));
-        g.drawRect(juce::Rectangle<int>{0, 0, width - 1, height - 1});
+        g.drawRect(juce::Rectangle<int>{0, 0, width, height});
         g.setColour(juce::Colour(0, 0, 0));
         auto d = data[rowNumber];
         auto s = std::to_string(d.id);
