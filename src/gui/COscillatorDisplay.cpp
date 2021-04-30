@@ -23,7 +23,6 @@
 #include "RuntimeFont.h"
 
 #include "filesystem/import.h"
-#include "guihelpers.h"
 #include "CursorControlGuard.h"
 #include <utility>
 
@@ -630,6 +629,7 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
 
     auto renameItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name...")));
+
     auto rnaction = [this](CCommandMenuItem *item) {
         char c[256];
         strncpy(c, this->oscdata->wavetable_display_name, 256);
@@ -677,9 +677,8 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     auto omi = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Exported Wavetables Folder...")));
     omi->setActions([this](CCommandMenuItem *i) {
-        juce::URL(juce::File(Surge::Storage::appendDirectory(this->storage->userDataPath,
-                                                             "Exported Wavetables")))
-            .launchInDefaultBrowser();
+        Surge::UI::openFileOrFolder(
+            Surge::Storage::appendDirectory(this->storage->userDataPath, "Exported Wavetables"));
     });
     contextMenu->addEntry(omi);
 

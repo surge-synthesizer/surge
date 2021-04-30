@@ -6378,10 +6378,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         if (!this->currentSkin->reloadSkin(this->bitmapStore))
         {
             auto &db = Surge::UI::SkinDB::get();
-            auto msg =
-                std::string(
-                    "Unable to load skin! Reverting the skin to Surge Classic.\n\nSkin error:\n") +
-                db.getAndResetErrorString();
+            auto msg = std::string("Unable to load skin! Reverting the skin to "
+                                   "Surge Classic.\n\nSkin error:\n") +
+                       db.getAndResetErrorString();
             this->currentSkin = db.defaultSkin(&(this->synth->storage));
             this->currentSkin->reloadSkin(this->bitmapStore);
             synth->storage.reportError(msg, "Skin Loading Error");
@@ -6416,11 +6415,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     skinSubMenu->addSeparator(tid++);
 
-    addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."),
-                    [this]() {
-                        juce::URL(juce::File(this->currentSkin->root + this->currentSkin->name))
-                            .launchInDefaultBrowser();
-                    });
+    if (useDevMenu)
+    {
+        addCallbackMenu(
+            skinSubMenu, Surge::UI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
+                Surge::UI::openFileOrFolder(this->currentSkin->root + this->currentSkin->name);
+            });
+    }
+    else
+    {
+        addCallbackMenu(skinSubMenu, Surge::UI::toOSCaseForMenu("Install a New Skin..."), [this]() {
+            std::string skinspath =
+                Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Skins");
+            // make it if it isn't there
+            fs::create_directories(string_to_path(skinspath));
+            Surge::UI::openFileOrFolder(skinspath);
+        });
+    }
     tid++;
 
     skinSubMenu->addSeparator();
@@ -6445,16 +6456,14 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
                                                VSTGUI::COptionMenu::kNoDrawStyle |
                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
 
-    addCallbackMenu(
-        dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."), [this]() {
-            juce::URL(juce::File(this->synth->storage.datapath)).launchInDefaultBrowser();
-        });
+    addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open Factory Data Folder..."),
+                    [this]() { Surge::UI::openFileOrFolder(this->synth->storage.datapath); });
     did++;
 
     addCallbackMenu(dataSubMenu, Surge::UI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
         // make it if it isn't there
         fs::create_directories(string_to_path(this->synth->storage.userDataPath));
-        juce::URL(juce::File(this->synth->storage.userDataPath)).launchInDefaultBrowser();
+        Surge::UI::openFileOrFolder(this->synth->storage.userDataPath);
     });
     did++;
 
@@ -6469,7 +6478,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
                             this->synth->storage.refresh_patchlist();
                         };
                         /*
-                         * TODO: Implement JUCE direcotry picker
+                         * TODO: Implement JUCE directory picker
                         Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
                         "", "", cb, true, true);
                                                                       */
