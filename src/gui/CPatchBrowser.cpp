@@ -190,7 +190,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     auto initItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Initialize Patch")));
-    auto initAction = [this](CCommandMenuItem *item) {
+    auto initAction = [this](CCommandMenuItem *item)
+    {
         int i = 0;
         for (auto p : storage->patch_list)
         {
@@ -208,11 +209,13 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     auto pdbF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch Database...")));
-    pdbF->setActions([this](CCommandMenuItem *item) {
-        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-        if (sge)
-            sge->showPatchBrowserDialog();
-    });
+    pdbF->setActions(
+        [this](CCommandMenuItem *item)
+        {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            if (sge)
+                sge->showPatchBrowserDialog();
+        });
     contextMenu->addEntry(pdbF);
     contextMenu->addSeparator();
 
@@ -224,45 +227,48 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     auto loadF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
-    loadF->setActions([this](CCommandMenuItem *item) {
-        juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
-        auto r = c.browseForFileToOpen();
-        if (r)
+    loadF->setActions(
+        [this](CCommandMenuItem *item)
         {
-            auto res = c.getResult();
-            auto rString = res.getFullPathName().toStdString();
-            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
-            if (sge)
-                sge->queuePatchFileLoad(rString);
-        }
-    });
+            juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
+            auto r = c.browseForFileToOpen();
+            if (r)
+            {
+                auto res = c.getResult();
+                auto rString = res.getFullPathName().toStdString();
+                auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+                if (sge)
+                    sge->queuePatchFileLoad(rString);
+            }
+        });
     contextMenu->addEntry(loadF);
 
     contextMenu->addSeparator();
 
     auto showU = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open User Patches Folder...")));
-    showU->setActions([this](CCommandMenuItem *item) {
-        juce::URL(juce::File(this->storage->userDataPath)).launchInDefaultBrowser();
-    });
+    showU->setActions([this](CCommandMenuItem *item)
+                      { juce::File(this->storage->userDataPath).startAsProcess(); });
     contextMenu->addEntry(showU);
 
     auto showF = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Factory Patches Folder...")));
-    showF->setActions([this](CCommandMenuItem *item) {
-        juce::URL(
-            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory")))
-            .launchInDefaultBrowser();
-    });
+    showF->setActions(
+        [this](CCommandMenuItem *item)
+        {
+            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"))
+                .startAsProcess();
+        });
     contextMenu->addEntry(showF);
 
     auto show3 = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Third Party Patches Folder...")));
-    show3->setActions([this](CCommandMenuItem *item) {
-        juce::URL(juce::File(
-                      Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty")))
-            .launchInDefaultBrowser();
-    });
+    show3->setActions(
+        [this](CCommandMenuItem *item)
+        {
+            juce::File(Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"))
+                .startAsProcess();
+        });
     contextMenu->addEntry(show3);
 
     contextMenu->addSeparator();

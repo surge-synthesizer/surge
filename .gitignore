@@ -31,7 +31,7 @@
 *.out
 *.app
 
-# Visual studio
+# Visual Studio
 obj/
 *.sln
 *.vcxproj
@@ -63,7 +63,7 @@ fxbuild/
 # IntelliJ IDEA
 .idea
 
-# linux
+# Linux
 Makefile
 surge-*.make
 premake-stamp
@@ -75,7 +75,7 @@ cmake-stamp
 *.txt.user
 *.txt.user.*
 
-# cmake
+# CMake
 build/
 build32/
 buildlin/
@@ -93,6 +93,7 @@ bwd/
 
 surge-fx
 VERSION_GIT_INFO
+.clang-tidy
 
 # Juce until we add a submodule
 libs/juce-*
