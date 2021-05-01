@@ -83,15 +83,17 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
             auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
             if (dat.isBipolar)
-                g.drawText(dat.mss.valminus, rL, juce::Justification::left);
+                g.drawText(dat.mss.dvalminus, rL, juce::Justification::left);
             g.drawText(dat.mss.val, rL, juce::Justification::centred);
-            g.drawText(dat.mss.valplus, rL, juce::Justification::right);
+            g.drawText(dat.mss.dvalplus, rL, juce::Justification::right);
         }
         ModulationListBoxModel *mod;
         int row;
     };
 
-    struct EditComponent : public juce::Component
+    struct EditComponent : public juce::Component,
+                           public juce::Slider::Listener,
+                           public juce::Button::Listener
     {
         std::unique_ptr<juce::Button> clearButton;
         std::unique_ptr<juce::Slider> modSlider;
@@ -99,16 +101,31 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             clearButton = std::make_unique<juce::TextButton>("Clear");
             clearButton->setButtonText("Clear");
+            clearButton->addListener(this);
             addAndMakeVisible(*clearButton);
 
             modSlider = std::make_unique<juce::Slider>("Modulation");
             modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
             modSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
             modSlider->setRange(-1, 1);
-            modSlider->setValue(mod->rows[row].depth);
+            modSlider->setValue(mod->rows[row].depth, juce::NotificationType::dontSendNotification);
+            modSlider->addListener(this);
             addAndMakeVisible(*modSlider);
         }
-
+        void sliderValueChanged(juce::Slider *slider) override
+        {
+            // std::cout << "SVC " << slider->getValue() << std::endl;
+        }
+        void buttonClicked(juce::Button *button) override
+        {
+            if (button == clearButton.get())
+            {
+                mod->moded->synth->clearModulation(mod->rows[row].dest_id,
+                                                   (modsources)mod->rows[row].source_id);
+                mod->updateRows();
+                mod->moded->listBox->updateContent();
+            }
+        }
         void resized() override
         {
             auto b = getBounds().withTrimmedLeft(15).expanded(-1).withRight(
@@ -141,8 +158,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             g.setColour(juce::Colour(255, 255, 255));
             auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
             if (dat.isBipolar)
-                g.drawText(dat.mss.dvalminus, rL, juce::Justification::left);
-            g.drawText(dat.mss.dvalplus, rL, juce::Justification::right);
+                g.drawText(dat.mss.valminus, rL, juce::Justification::left);
+            g.drawText(dat.mss.valplus, rL, juce::Justification::right);
         }
         ModulationListBoxModel *mod;
         int row;
@@ -160,6 +177,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
     void updateRows()
     {
+        rows.clear();
         std::ostringstream oss;
         int modNum = 0;
         auto append = [&oss, &modNum, this](const std::string &type,
