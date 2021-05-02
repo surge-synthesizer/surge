@@ -633,8 +633,15 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 add_custom_target(surge-staged-assets)
 
 if( BUILD_SURGE_EFFECTS_BANK )
+
+  if( WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
+    set( SURGE_FX_PRODUCT_NAME "Surge XT Effects (32-bit)" )
+  else()
+    set( SURGE_FX_PRODUCT_NAME "Surge XT Effects" )
+  endif()
+
   juce_add_plugin(surge-fx
-          PRODUCT_NAME "Surge XT Effects"
+          PRODUCT_NAME ${SURGE_FX_PRODUCT_NAME}
           COMPANY_NAME "Surge Synth Team"
           BUNDLE_ID "org.surge-synth-team.surge-xt-fx"
           PLUGIN_MANUFACTURER_CODE VmbA
@@ -761,8 +768,15 @@ if( BUILD_SURGE_EFFECTS_BANK )
 endif() # build surge effects bank
 
 if( BUILD_SURGE_XT )
+  
+  if( WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
+    set( SURGE_XT_PRODUCT_NAME "Surge XT (32-bit)" )
+  else()
+    set( SURGE_XT_PRODUCT_NAME "Surge XT" )
+  endif()
+
   juce_add_plugin(surge-xt
-          PRODUCT_NAME "Surge XT"
+          PRODUCT_NAME ${SURGE_XT_PRODUCT_NAME}
           COMPANY_NAME "Surge Synth Team"
           BUNDLE_ID "org.surge-synth-team.surge-xt"
           PLUGIN_MANUFACTURER_CODE VmbA
@@ -1000,6 +1014,34 @@ if( UNIX AND NOT APPLE )
           COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           )
 endif()
+
+if( WIN32 )
+  find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
+  if(NOT SURGE_NUGET_EXE)
+    message(STATUS "Cant find NUGET; cmake won't make an installer image with inno")
+  else()
+    message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}" )
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+      message(STATUS "Skipping 32 bit build for now while we sort out plugin names" )
+      add_custom_command(TARGET surge-xt-distribution
+        POST_BUILD
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
+        COMMAND ${CMAKE_COMMAND} -E echo Tools.InnoSetup.6.1.2/tools/iscc.exe /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge.iss"
+        COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge-x86.iss"
+      )
+    else()
+      add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
+          COMMAND ${CMAKE_COMMAND} -E echo Tools.InnoSetup.6.1.2/tools/iscc.exe /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge.iss"
+          COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge.iss"
+        )
+    endif() 
+  endif()
+endif()
+
 
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )

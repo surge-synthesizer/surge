@@ -28,10 +28,10 @@ DefaultGroupName=Surge XT
 DisableProgramGroupPage=yes
 DisableDirPage=yes
 DisableReadyPage=no
-LicenseFile=..\LICENSE
+LicenseFile={#SURGE_SRC}\LICENSE
 OutputBaseFilename="{#MyAppName}-{#MyAppVersion}-Setup-x86"
 SetupIconFile=surge.ico
-UninstallDisplayIcon=surge.ico
+UninstallDisplayIcon={#SURGE_SRC}\scripts\installer_win\surge.ico
 UsePreviousAppDir=yes
 Compression=lzma
 SolidCompression=yes
@@ -55,19 +55,13 @@ Name: EffectsSA; Description: Surge XT Effects Standalone (32-bit); Types: full 
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
 
 [Files]
-Source: ..\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
+Source: {#SURGE_SRC}\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
 
 ;; these lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
-Source: ..\build\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
-Source: ..\build\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
-Source: ..\build\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
-Source: ..\build\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
-
-;; these lines are used when building the installer locally - uncomment them if you want to do that!
-;;Source: ..\build32\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
-;;Source: ..\build32\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
-;;Source: ..\build32\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
-;;Source: ..\build32\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
