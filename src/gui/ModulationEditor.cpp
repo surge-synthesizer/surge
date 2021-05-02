@@ -35,11 +35,12 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         std::string hLab;
         int dest_id = -1, source_id = -1;
         std::string dest_name, source_name;
-        int modNum;
+        int modNum = -1;
 
-        float depth;
-        bool isBipolar;
-
+        float depth = 0;
+        bool isBipolar = false;
+        // const Parameter *p;
+        Parameter *p = nullptr; // When we do proper consting return to this
         ModulationDisplayInfoWindowStrings mss;
     };
     std::vector<Datum> rows;
@@ -108,12 +109,19 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
             modSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
             modSlider->setRange(-1, 1);
-            modSlider->setValue(mod->rows[row].depth, juce::NotificationType::dontSendNotification);
+            modSlider->setValue(mod->rows[row].p->get_modulation_f01(mod->rows[row].depth),
+                                juce::NotificationType::dontSendNotification);
             modSlider->addListener(this);
             addAndMakeVisible(*modSlider);
         }
         void sliderValueChanged(juce::Slider *slider) override
         {
+            auto rd = mod->rows[row];
+            auto um = rd.p->set_modulation_f01(slider->getValue());
+            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id,
+                                             slider->getValue());
+            mod->updateRowByModnum(rd.modNum);
+            mod->moded->repaint();
             // std::cout << "SVC " << slider->getValue() << std::endl;
         }
         void buttonClicked(juce::Button *button) override
@@ -175,6 +183,23 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
     int getNumRows() override { return rows.size(); }
 
+    void updateRowByModnum(int modnum)
+    {
+        // bit inefficient for now
+        for (auto &r : rows)
+        {
+            if (r.modNum == modnum)
+            {
+                char pdisp[TXT_SIZE];
+                int ptag = r.p->id;
+                modsources thisms = (modsources)r.source_id;
+                r.p->get_display_of_modulation_depth(pdisp, moded->synth->getModDepth(ptag, thisms),
+                                                     moded->synth->isBipolarModulation(thisms),
+                                                     Parameter::InfoWindow, &(r.mss));
+                r.depth = moded->synth->getModDepth(ptag, thisms);
+            }
+        }
+    }
     void updateRows()
     {
         rows.clear();
@@ -188,6 +213,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             oss << type << "\n";
             auto h = Datum(Datum::HEADER);
             h.hLab = type;
+            h.modNum = -1;
             rows.push_back(h);
 
             char nm[TXT_SIZE], dst[TXT_SIZE];
@@ -203,6 +229,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 rDisp.source_name = sname;
                 rDisp.dest_name = nm;
                 rDisp.modNum = modNum++;
+                rDisp.p = moded->synth->storage.getPatch().param_ptr[rDisp.dest_id];
 
                 char pdisp[256];
                 auto p = moded->synth->storage.getPatch().param_ptr[q.destination_id + idBase];
