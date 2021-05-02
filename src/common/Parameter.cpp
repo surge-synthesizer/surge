@@ -3538,7 +3538,7 @@ void Parameter::set_value_f01(float v, bool force_integer)
     bound_value(force_integer);
 }
 
-float Parameter::get_modulation_f01(float mod)
+float Parameter::get_modulation_f01(float mod) const
 {
     if (ctrltype == ct_none)
         return 0;
@@ -3551,7 +3551,7 @@ float Parameter::get_modulation_f01(float mod)
     return limit_range(v, -1.0f, 1.0f);
 }
 
-float Parameter::set_modulation_f01(float v)
+float Parameter::set_modulation_f01(float v) const
 {
     if (ctrltype == ct_none)
         return 0;

@@ -407,10 +407,14 @@ class Parameter
     void set_value_f01(float v, bool force_integer = false);
     bool set_value_from_string(std::string s);
     bool set_value_from_string_onto(std::string s, pdata &ontoThis);
-    float
-    get_modulation_f01(float mod); // used by the gui to get the position of the modulated handle
-    float set_modulation_f01(float v); // used by the gui to set the modulation to match the
-                                       // position of the modulated handle
+
+    /*
+     * These two functions convert the modulation depth to a -1,1 range appropriate
+     * for this parameter
+     */
+    float get_modulation_f01(float mod) const;
+    float set_modulation_f01(float v) const;
+
     float calculate_modulation_value_from_string(const std::string &s, bool &valid);
 
     void bound_value(bool force_integer = false);
