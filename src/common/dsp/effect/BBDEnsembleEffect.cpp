@@ -156,9 +156,13 @@ float BBDEnsembleEffect::getFeedbackGain(bool bbd) const noexcept
 void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float delayCenterMs,
                                             float delayScale)
 {
+    // copy input data ("dry") to processed output ("wet)
+    copy_block(dataL, L, BLOCK_SIZE_QUAD);
+    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+
     const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
     sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / samplerate, 0.7071);
-    sincInputFilter.process_block(dataL, dataR);
+    sincInputFilter.process_block(L, R);
 
     float del1 = delayScale * delay1Ms * 0.001 * samplerate;
     float del2 = delayScale * delay2Ms * 0.001 * samplerate;
@@ -170,15 +174,15 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
     for (int s = 0; s < BLOCK_SIZE; ++s)
     {
         // reduce input by 3 dB
-        dataL[s] *= 0.75f;
-        dataR[s] *= 0.75f;
+        L[s] *= 0.75f;
+        R[s] *= 0.75f;
 
         // soft-clip input
-        dataL[s] = lookup_waveshape(wst_soft, dataL[s] + fbStateL);
-        dataR[s] = lookup_waveshape(wst_soft, dataR[s] + fbStateR);
+        L[s] = lookup_waveshape(wst_soft, L[s] + fbStateL);
+        R[s] = lookup_waveshape(wst_soft, R[s] + fbStateR);
 
-        delL.write(dataL[s]);
-        delR.write(dataR[s]);
+        delL.write(L[s]);
+        delR.write(R[s]);
 
         // OK so look at the diagram in #3743
         float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
@@ -243,6 +247,10 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
     auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
                                   auto &delR2) {
+        // copy input data ("dry") to processed output ("wet)
+        copy_block(dataL, L, BLOCK_SIZE_QUAD);
+        copy_block(dataR, R, BLOCK_SIZE_QUAD);
+
         // setting the filter frequency takes a while, so
         // let's only do it every 4 times
         if (block_counter++ == 3)
@@ -264,12 +272,12 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         for (int s = 0; s < BLOCK_SIZE; ++s)
         {
             // reduce input by 3 dB
-            dataL[s] *= 0.75f;
-            dataR[s] *= 0.75f;
+            L[s] *= 0.75f;
+            R[s] *= 0.75f;
 
             // soft-clip input
-            dataL[s] = lookup_waveshape(wst_soft, dataL[s] + fbStateL);
-            dataR[s] = lookup_waveshape(wst_soft, dataR[s] + fbStateR);
+            L[s] = lookup_waveshape(wst_soft, L[s] + fbStateL);
+            R[s] = lookup_waveshape(wst_soft, R[s] + fbStateR);
 
             // OK so look at the diagram in #3743
             float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
@@ -282,13 +290,14 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             delR2.setDelayTime(t3);
 
             float delayOuts alignas(16)[4];
-            delayOuts[0] = delL1.process(dataL[s]);
-            delayOuts[1] = delL2.process(dataL[s]);
-            delayOuts[2] = delR1.process(dataR[s]);
-            delayOuts[3] = delR2.process(dataR[s]);
+            delayOuts[0] = delL1.process(L[s]);
+            delayOuts[1] = delL2.process(L[s]);
+            delayOuts[2] = delR1.process(R[s]);
+            delayOuts[3] = delR2.process(R[s]);
 
             fbStateL = fbGain * (delayOuts[0] + delayOuts[1]);
             fbStateR = fbGain * (delayOuts[1] + delayOuts[2]);
+
             // avoid DC build-up in the feedback path
             dc_blocker[0].process_sample_nolag(fbStateL, fbStateR);
             dc_blocker[1].process_sample_nolag(fbStateL, fbStateR);
