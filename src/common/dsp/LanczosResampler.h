@@ -37,8 +37,8 @@ struct LanczosResampler
     static constexpr double dx = 1.0 / (tableObs);
 
     // Fixme: Make this static and shared
-    static float lanczosTable alignas(16)[tableObs][filterWidth], lanczosTableDX
-        alignas(16)[tableObs][filterWidth];
+    static float lanczosTable alignas(16)[tableObs + 1][filterWidth], lanczosTableDX
+        alignas(16)[tableObs + 1][filterWidth];
     static bool tablesInitialized;
 
     // This is a stereo resampler
@@ -65,7 +65,7 @@ struct LanczosResampler
         memset(input, 0, 2 * BUFFER_SZ * sizeof(float));
         if (!tablesInitialized)
         {
-            for (int t = 0; t < tableObs; ++t)
+            for (int t = 0; t < tableObs + 1; ++t)
             {
                 double x0 = dx * t;
                 for (int i = 0; i < filterWidth; ++i)
@@ -81,6 +81,11 @@ struct LanczosResampler
                     lanczosTableDX[t][i] =
                         lanczosTable[(t + 1) & (tableObs - 1)][i] - lanczosTable[t][i];
                 }
+            }
+            for (int i = 0; i < filterWidth; ++i)
+            {
+                // Wrap at the end - deriv is the same
+                lanczosTableDX[tableObs][i] = lanczosTable[0][i];
             }
             tablesInitialized = true;
         }

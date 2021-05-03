@@ -16,9 +16,9 @@
 #include "LanczosResampler.h"
 
 float LanczosResampler::lanczosTable alignas(
-    16)[LanczosResampler::tableObs][LanczosResampler::filterWidth];
+    16)[LanczosResampler::tableObs + 1][LanczosResampler::filterWidth];
 float LanczosResampler::lanczosTableDX alignas(
-    16)[LanczosResampler::tableObs][LanczosResampler::filterWidth];
+    16)[LanczosResampler::tableObs + 1][LanczosResampler::filterWidth];
 
 bool LanczosResampler::tablesInitialized = false;
 
