@@ -18,7 +18,6 @@
 #include "BiquadFilter.h"
 #include "DspUtilities.h"
 #include "AllpassFilter.h"
-#include "VectorizedSvfFilter.h"
 
 #include "dsp/effect/ModControl.h"
 #include <vt_dsp/halfratefilter.h>

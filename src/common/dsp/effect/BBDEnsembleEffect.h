@@ -19,8 +19,6 @@
 #include "DspUtilities.h"
 #include "AllpassFilter.h"
 
-#include "VectorizedSvfFilter.h"
-
 #include <vt_dsp/halfratefilter.h>
 #include <vt_dsp/lipol.h>
 #include "ModControl.h"
