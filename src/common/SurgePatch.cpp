@@ -1362,6 +1362,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     t.depth = (float)depth;
                     t.source_id = modsource;
 
+                    int muted = 0;
+                    if (mr->QueryIntAttribute("muted", &muted) == TIXML_SUCCESS)
+                        t.muted = muted;
+                    else
+                        t.muted = false;
+
                     if (sceneId != 0)
                         t.destination_id = paramIdInScene;
                     else
@@ -2175,6 +2181,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
                             mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
+                            mr.SetAttribute("muted", r->at(b).muted);
                             p.InsertEndChild(mr);
                         }
                     }

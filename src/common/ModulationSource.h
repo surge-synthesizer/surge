@@ -261,6 +261,7 @@ struct ModulationRouting
     int source_id;
     int destination_id;
     float depth;
+    bool muted = false;
 };
 
 class ModulationSource

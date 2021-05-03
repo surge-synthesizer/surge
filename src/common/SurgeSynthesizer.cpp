@@ -2598,6 +2598,28 @@ float SurgeSynthesizer::getModulation(long ptag, modsources modsource)
     return storage.getPatch().param_ptr[ptag]->get_modulation_f01(0);
 }
 
+bool SurgeSynthesizer::isModulationMuted(long ptag, modsources modsource)
+{
+    if (!isValidModulation(ptag, modsource))
+        return false;
+
+    ModulationRouting *r = getModRouting(ptag, modsource);
+    if (r)
+        return r->muted;
+
+    return false;
+}
+
+void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, bool mute)
+{
+    if (!isValidModulation(ptag, modsource))
+        return;
+
+    ModulationRouting *r = getModRouting(ptag, modsource);
+    if (r)
+        r->muted = mute;
+}
+
 void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
 {
     storage.modRoutingMutex.lock();
@@ -2717,6 +2739,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
             t.depth = value;
             t.source_id = modsource;
             t.destination_id = id;
+            t.muted = false;
             modlist->push_back(t);
         }
         else
@@ -2728,26 +2751,6 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
 
     return true;
 }
-
-#if 0
-int SurgeSynthesizer::remapExternalApiToInternalId(unsigned int x)
-{
-   if (x < n_customcontrollers)
-      return metaparam_offset + x;
-   else if (x >= n_total_params)
-      return x - n_total_params;
-   return x;
-}
-
-int SurgeSynthesizer::remapInternalToExternalApiId(unsigned int x)
-{
-   if (x >= metaparam_offset)
-      return (x - metaparam_offset);
-   else if (x < n_customcontrollers)
-      return x + n_total_params;
-   return x;
-}
-#endif
 
 float SurgeSynthesizer::getParameter01(long index)
 {
@@ -3230,7 +3233,8 @@ void SurgeSynthesizer::processControl()
                     int dst_id = storage.getPatch().scene[s].modulation_scene[i].destination_id;
                     float depth = storage.getPatch().scene[s].modulation_scene[i].depth;
                     storage.getPatch().scenedata[s][dst_id].f +=
-                        depth * storage.getPatch().scene[s].modsources[src_id]->output;
+                        depth * storage.getPatch().scene[s].modsources[src_id]->output *
+                        (1.0 - storage.getPatch().scene[s].modulation_scene[i].muted);
                 }
             }
 
@@ -3248,7 +3252,8 @@ void SurgeSynthesizer::processControl()
         int dst_id = storage.getPatch().modulation_global[i].destination_id;
         float depth = storage.getPatch().modulation_global[i].depth;
         storage.getPatch().globaldata[dst_id].f +=
-            depth * storage.getPatch().scene[0].modsources[src_id]->output;
+            depth * storage.getPatch().scene[0].modsources[src_id]->output *
+            (1 - storage.getPatch().modulation_global[i].muted);
     }
 
     if (switch_toggled_queued)

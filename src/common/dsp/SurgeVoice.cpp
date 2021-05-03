@@ -338,7 +338,7 @@ void SurgeVoice::switch_toggled()
         float depth = iter->depth;
         if (modsources[src_id] && src_id == ms_keytrack)
         {
-            localcopy[dst_id].f += depth * modsources[ms_keytrack]->output;
+            localcopy[dst_id].f += depth * modsources[ms_keytrack]->output * (1 - iter->muted);
         }
         iter++;
     }
@@ -568,7 +568,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
         if (modsources[src_id])
         {
-            localcopy[dst_id].f += depth * modsources[src_id]->output;
+            localcopy[dst_id].f += depth * modsources[src_id]->output * (1.0 - iter->muted);
         }
         iter++;
     }
@@ -590,7 +590,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
                 if (dst_id >= 0 && dst_id < n_scene_params)
                 {
                     float depth = iter->depth;
-                    localcopy[dst_id].f += depth * modsources[src_id]->output;
+                    localcopy[dst_id].f += depth * modsources[src_id]->output * (1.0 - iter->muted);
                 }
             }
             iter++;
