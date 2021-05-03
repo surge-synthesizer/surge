@@ -71,7 +71,11 @@ CREATE TABLE PatchFeature (
     {
         fs::create_directories(string_to_path(storage->userDataPath));
         auto dbname = storage->userDataPath + "/SurgePatches.db";
-        auto ec = sqlite3_open(dbname.c_str(), &dbh);
+        auto flag = SQLITE_OPEN_FULLMUTEX; // basically lock
+        flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+
+        auto ec = sqlite3_open_v2(dbname.c_str(), &dbh, flag, nullptr);
+
         if (ec != SQLITE_OK)
         {
             std::ostringstream oss;
@@ -468,7 +472,10 @@ std::vector<PatchDB::record> PatchDB::rawQueryForNameLike(const std::string &nam
     // FIXME - error handling everywhere of course
     if (rc != SQLITE_OK)
     {
-        std::cout << "BAD STATEMENT" << std::endl;
+        std::ostringstream oss;
+        oss << "An error occured opening querying for '" << nameLikeThisP << "'. The error was '"
+            << sqlite3_errmsg(worker->dbh) << "'.";
+        storage->reportError(oss.str(), "Surge Patch Database Error");
         return res;
     }
 
