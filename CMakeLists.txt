@@ -87,6 +87,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
         -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
     )
+    add_link_options("-Wl,-z,noexecstack" )
   endif()
 endif()
 
@@ -942,6 +943,14 @@ if( BUILD_SURGE_XT )
   # add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
 
   get_target_property( SURGE_XT_OUTPUT_DIR surge-xt RUNTIME_OUTPUT_DIRECTORY )
+
+  # Really just a little convnience for BP on lin and win
+  add_custom_target( surge-xt-run-standalone )
+  add_dependencies( surge-xt-run-standalone surge-xt_Standalone )
+  add_custom_command( TARGET surge-xt-run-standalone
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND "${SURGE_XT_OUTPUT_DIR}/Standalone/Surge XT" )
 
   add_custom_target( Surge-XT-Packaged ALL )
   add_dependencies( Surge-XT-Packaged surge-xt_All )
