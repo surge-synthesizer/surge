@@ -40,7 +40,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
         // FIXME - make sure the codition this is handling is handled everywhere consistently
         if (rowNumber >= data.size())
         {
-            return; 
+            return;
         }
 
         g.setColour(juce::Colour(100, 100, 100));
