@@ -10,6 +10,7 @@
 #include "SurgeGUIEditor.h"
 #include "CScalableBitmap.h"
 #include "CTextButtonWithHover.h"
+#include "CPUFeatures.h"
 
 #if WINDOWS
 // For __cpuid so we can get processor name
@@ -189,73 +190,13 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
 
     std::string flavor = wrapperType;
 
-    std::string arch = std::string(Surge::Build::BuildArch);
+    std::string arch = Surge::CPUFeatures::cpuBrand();
 #if MAC
     std::string platform = "macOS";
-
-    char buffer[1024];
-    size_t bufsz = sizeof(buffer);
-    if (sysctlbyname("machdep.cpu.brand_string", (void *)(&buffer), &bufsz, nullptr, (size_t)0) < 0)
-    {
-#if ARM_NEON
-        arch = "Apple Silicon";
-#endif
-    }
-    else
-    {
-        arch = buffer;
-#if ARM_NEON
-        arch += " (Apple Silicon)";
-#endif
-    }
-
 #elif WINDOWS
     std::string platform = "Windows";
-
-    int CPUInfo[4] = {-1};
-    unsigned nExIds, i = 0;
-    char CPUBrandString[0x40];
-    // Get the information associated with each extended ID.
-    __cpuid(CPUInfo, 0x80000000);
-    nExIds = CPUInfo[0];
-    for (i = 0x80000000; i <= nExIds; ++i)
-    {
-        __cpuid(CPUInfo, i);
-        // Interpret CPU brand string
-        if (i == 0x80000002)
-            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000003)
-            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000004)
-            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
-    }
-    arch = CPUBrandString;
 #elif LINUX
     std::string platform = "Linux";
-
-    // Lets see what /proc/cpuinfo has to say for us
-    // on intels this is "model name"
-    auto pinfo = std::ifstream("/proc/cpuinfo");
-    if (pinfo.is_open())
-    {
-        std::string line;
-        while (std::getline(pinfo, line))
-        {
-            if (line.find("model name") == 0)
-            {
-                auto colon = line.find(":");
-                arch = line.substr(colon + 1);
-                break;
-            }
-            if (line.find("Model") == 0) // rasperry pi branch
-            {
-                auto colon = line.find(":");
-                arch = line.substr(colon + 1);
-                break;
-            }
-        }
-    }
-    pinfo.close();
 #else
     std::string platform = "GLaDOS, Orac or Skynet";
 #endif

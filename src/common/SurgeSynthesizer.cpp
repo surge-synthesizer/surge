@@ -16,6 +16,7 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <ctime>
+#include "CPUFeatures.h"
 #if MAC || LINUX
 #include <pthread.h>
 #else
@@ -38,6 +39,16 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
       halfbandB(6, true), halfbandIN(6, true)
 {
+    // Remember CPU features works on ARM also
+    if (!Surge::CPUFeatures::hasAVX())
+    {
+        storage.reportError(
+            "Surge XT in the future will require processor with AVX extensions. Surge Xt may"
+            " not work on this hardware in future versions. Enjoy Surge 1.9!",
+            "CPU Incompatability");
+        // Try anyway
+    }
+
     switch_toggled_queued = false;
     audio_processing_active = false;
     halt_engine = false;

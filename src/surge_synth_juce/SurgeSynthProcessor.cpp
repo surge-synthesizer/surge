@@ -13,6 +13,7 @@
 #include "DebugHelpers.h"
 #include "SurgeSynthFlavorExtensions.h"
 #include "version.h"
+#include "CPUFeatures.h"
 
 using namespace juce;
 
@@ -146,6 +147,8 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 
 void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 {
+    auto fpuguard = Surge::CPUFeatures::FPUStateGuard();
+
     // FIXME obvioulsy
     float thisBPM = 120.0;
     auto playhead = getPlayHead();
