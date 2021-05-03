@@ -49,6 +49,21 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
       add_compile_options(-msse2 -mfpmath=sse)
     endif()
   endif()
+
+  # Add AVX support
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("
+#if defined(__x86_64__) || defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+  #ifndef __AVX__
+  #error
+  #endif
+#endif
+    int main() {}" COMPILER_HAS_AVX_OR_IS_ARM)
+  if (NOT COMPILER_HAS_AVX_OR_IS_ARM)
+    message(STATUS "Adding -mavx to allow __AVX__ compiles" )
+    add_compile_options("-mavx")
+  endif()
+
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Any Clang
     add_compile_options(
@@ -76,7 +91,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 endif()
 
 if(MSVC)
-  # MSVC and pretenders
   add_compile_options(
     -WX       # treat all warnings as errors
 
@@ -96,6 +110,8 @@ if(MSVC)
 
     /Zc:alignedNew
     /bigobj
+
+    /arch:AVX
 
     # Build with Multiple Processes (Clang-cl builds use Ninja instead)
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
@@ -269,11 +285,11 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableOscillator.cpp
   src/common/dsp/WindowOscillator.cpp
-  src/common/util/FpuState.cpp
   src/common/vt_dsp/basic_dsp.cpp
   src/common/vt_dsp/halfratefilter.cpp
   src/common/vt_dsp/lipol.cpp
   src/common/vt_dsp/macspecific.cpp
+  src/common/CPUFeatures.cpp
   src/common/DebugHelpers.cpp
   src/common/ModulatorPresetManager.cpp
   src/common/Parameter.cpp

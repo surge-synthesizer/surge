@@ -1,0 +1,206 @@
+/*
+** Surge Synthesizer is Free and Open Source Software
+**
+** Surge is made available under the Gnu General Public License, v3.0
+** https://www.gnu.org/licenses/gpl-3.0.en.html
+**
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
+**
+** All source at: https://github.com/surge-synthesizer/surge.git
+**
+** Surge was a commercial product from 2004-2018, with Copyright and ownership
+** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+** open source in September 2018.
+*/
+
+#include "CPUFeatures.h"
+#include "globals.h"
+
+#if MAC
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
+#if LINUX
+#include <fstream>
+#endif
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
+namespace Surge
+{
+namespace CPUFeatures
+{
+
+#if LINUX && !ARM_NEON
+#ifdef __GNUC__
+// Thanks to https://gist.github.com/hi2p-perim/7855506
+void __cpuid(int *cpuinfo, int info)
+{
+    __asm__ __volatile__("xchg %%ebx, %%edi;"
+                         "cpuid;"
+                         "xchg %%ebx, %%edi;"
+                         : "=a"(cpuinfo[0]), "=D"(cpuinfo[1]), "=c"(cpuinfo[2]), "=d"(cpuinfo[3])
+                         : "0"(info));
+}
+
+unsigned long long _xgetbv(unsigned int index)
+{
+    unsigned int eax, edx;
+    __asm__ __volatile__("xgetbv;" : "=a"(eax), "=d"(edx) : "c"(index));
+    return ((unsigned long long)edx << 32) | eax;
+}
+
+#endif
+#endif
+
+std::string cpuBrand()
+{
+    std::string arch = "Unknown CPU";
+#if MAC
+
+    char buffer[1024];
+    size_t bufsz = sizeof(buffer);
+    if (sysctlbyname("machdep.cpu.brand_string", (void *)(&buffer), &bufsz, nullptr, (size_t)0) < 0)
+    {
+#if ARM_NEON
+        arch = "Apple Silicon";
+#endif
+    }
+    else
+    {
+        arch = buffer;
+#if ARM_NEON
+        arch += " (Apple Silicon)";
+#endif
+    }
+
+#elif WINDOWS
+    std::string platform = "Windows";
+
+    int CPUInfo[4] = {-1};
+    unsigned nExIds, i = 0;
+    char CPUBrandString[0x40];
+    // Get the information associated with each extended ID.
+    __cpuid(CPUInfo, 0x80000000);
+    nExIds = CPUInfo[0];
+    for (i = 0x80000000; i <= nExIds; ++i)
+    {
+        __cpuid(CPUInfo, i);
+        // Interpret CPU brand string
+        if (i == 0x80000002)
+            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000003)
+            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+        else if (i == 0x80000004)
+            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    }
+    arch = CPUBrandString;
+#elif LINUX
+    std::string platform = "Linux";
+
+    // Lets see what /proc/cpuinfo has to say for us
+    // on intels this is "model name"
+    auto pinfo = std::ifstream("/proc/cpuinfo");
+    if (pinfo.is_open())
+    {
+        std::string line;
+        while (std::getline(pinfo, line))
+        {
+            if (line.find("model name") == 0)
+            {
+                auto colon = line.find(":");
+                arch = line.substr(colon + 1);
+                break;
+            }
+            if (line.find("Model") == 0) // rasperry pi branch
+            {
+                auto colon = line.find(":");
+                arch = line.substr(colon + 1);
+                break;
+            }
+        }
+    }
+    pinfo.close();
+#endif
+    return arch;
+}
+
+bool isArm()
+{
+#if ARM_NEON
+    return true;
+#else
+    return false;
+#endif
+}
+bool isX86()
+{
+#if ARM_NEON
+    return false;
+#else
+    return true;
+#endif
+}
+bool hasSSE2() { return true; }
+bool hasAVX()
+{
+#if ARM_NEON
+    return true; // thanks simde
+#else
+#if MAC
+    return true;
+#endif
+#if WINDOWS || LINUX
+    bool avxSup;
+    int cpuinfo[4];
+    __cpuid(cpuinfo, 1);
+
+    avxSup = cpuinfo[2] & (1 << 28) || false;
+    bool osxsaveSup = cpuinfo[2] & (1 << 27) || false;
+    if (osxsaveSup && avxSup)
+    {
+        // _XCR_XFEATURE_ENABLED_MASK = 0
+        unsigned long long xcrFeatureMask = _xgetbv(0);
+        avxSup = (xcrFeatureMask & 0x6) == 0x6;
+    }
+    return avxSup;
+#endif
+
+#endif
+}
+
+#if !(__AVX__ || ARM_NEON)
+#error "You must compile SURGE with AVX support in compiler flags"
+#endif
+
+FPUStateGuard::FPUStateGuard()
+{
+#ifndef ARM_NEON
+    auto _SSE_Flags = 0x8040;
+    bool fpuExceptions = false;
+
+    priorS = _mm_getcsr();
+    if (fpuExceptions)
+    {
+        _mm_setcsr(((priorS & ~_MM_MASK_MASK) | _SSE_Flags) | _MM_EXCEPT_MASK); // all on
+    }
+    else
+    {
+        _mm_setcsr((priorS | _SSE_Flags) | _MM_MASK_MASK);
+    }
+
+    _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
+#endif
+}
+
+FPUStateGuard::~FPUStateGuard()
+{
+#ifndef ARM_NEON
+    _mm_setcsr(priorS);
+#endif
+}
+} // namespace CPUFeatures
+} // namespace Surge
