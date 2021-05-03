@@ -193,7 +193,8 @@ CREATE TABLE PatchFeature (
                 if (keepRunning)
                 {
                     auto b = pathQ.begin();
-                    auto e = std::min(pathQ.end(), pathQ.begin() + transChunkSize);
+                    auto e = (pathQ.size() < transChunkSize) ? pathQ.end()
+                                                             : pathQ.begin() + transChunkSize;
                     std::copy(b, e, std::back_inserter(doThis));
                     pathQ.erase(b, e);
                 }
