@@ -57,7 +57,33 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
         if (f != getValue())
             s->setParameter01(s->idForParameter(p), f, true);
     }
-    float getValueForText(const juce::String &text) const override { return 0; }
+    int getNumSteps() const override { return RangedAudioParameter::getNumSteps(); }
+    float getValueForText(const juce::String &text) const override
+    {
+        pdata onto;
+        if (p->set_value_from_string_onto(text.toStdString(), onto))
+        {
+            if (p->valtype == vt_float)
+                return onto.f;
+            if (p->valtype == vt_int)
+                return onto.i;
+            if (p->valtype == vt_bool)
+                return onto.b;
+        }
+        return 0;
+    }
+    juce::String getCurrentValueAsText() const override
+    {
+        char txt[TXT_SIZE];
+        p->get_display(txt);
+        return txt;
+    }
+    juce::String getText(float normalisedValue, int i) const override
+    {
+        char txt[TXT_SIZE];
+        p->get_display(txt, true, normalisedValue);
+        return txt;
+    }
     bool isMetaParameter() const override { return true; }
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
