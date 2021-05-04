@@ -191,6 +191,15 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     std::string flavor = wrapperType;
 
     std::string arch = Surge::CPUFeatures::cpuBrand();
+
+    if (Surge::CPUFeatures::hasAVX())
+    {
+        arch += " (including AVX)";
+    }
+    else
+    {
+        arch += " (no AVX support)";
+    }
 #if MAC
     std::string platform = "macOS";
 #elif WINDOWS
