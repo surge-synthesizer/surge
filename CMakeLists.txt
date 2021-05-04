@@ -60,8 +60,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 #endif
     int main() {}" COMPILER_HAS_AVX_OR_IS_ARM)
   if (NOT COMPILER_HAS_AVX_OR_IS_ARM)
-    message(STATUS "Adding -mavx to allow __AVX__ compiles" )
-    add_compile_options("-mavx")
+    message(STATUS "Holding off on AVX support. See #4479 for the strategy" )
+    # add_compile_options("-mavx")
   endif()
 
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -112,7 +112,7 @@ if(MSVC)
     /Zc:alignedNew
     /bigobj
 
-    /arch:AVX
+    # /arch:AVX
 
     # Build with Multiple Processes (Clang-cl builds use Ninja instead)
     $<$<CXX_COMPILER_ID:MSVC>:/MP>

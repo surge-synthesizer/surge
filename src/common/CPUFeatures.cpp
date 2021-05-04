@@ -172,10 +172,6 @@ bool hasAVX()
 #endif
 }
 
-#if !(__AVX__ || ARM_NEON)
-#error "You must compile SURGE with AVX support in compiler flags"
-#endif
-
 FPUStateGuard::FPUStateGuard()
 {
 #ifndef ARM_NEON
