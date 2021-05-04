@@ -1,4 +1,4 @@
-# Surge
+# Surge XT
 
 CI: [![CI Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.surge?branchName=main)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=2&branchName=main)
 Release: [![Release Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1&branchName=master)
@@ -18,8 +18,11 @@ details below and also in [the contributors section of the Surge website](https:
 
 In spring 2021, after the release of Surge 1.9, the Surge team embarked on a plan to replatform Surge as a JUCE plugin.
 There are a variety of reasons for this choice, including the difficulty of maintaining hand wrappers aroudn VST3, AU and LV2
-and limitations in the VSTGUI framework. As such *If you want to build Surge 1.9 or earlier, you need to check out the
-repo on a branch.* **Document This Post Merge**
+and limitations in the VSTGUI framework. 
+
+As such, if you are looking to build Surge in the 1.9 family, you need to use the github
+branch `classic` (for the head of the code; although it has no diffs since 1.9 of note) 
+or the tag `release_1.9.0` to build exactly the 1.9 release.
 
 This README serves as the root of developer documentation for Surge.
 
@@ -48,7 +51,6 @@ surge on all platforms is
 ```
 git clone https://github.com/surge-synthesizer/surge.git
 cd surge
-git checkout xt-alpha
 git submodule update --init --recursive
 cmake -Bbuild
 cmake --build build --config Release --target surge-staged-assets
@@ -59,7 +61,25 @@ to do a build.
 
 ## Developing from your own fork
 
+Our [git howto](doc/How%20to%20Git.md) explains how we are using git. If you want to develop
+from your own fork, please consult it there, but the short version is (1) fork this project
+on github and (2) clone your fork rather than the main repo as described above. So press the `fork`
+button here and then:
+
+```
+git clone git@github.com:youruserid/surge.git
+```
+
+and the rest of the steps are unchanged.
+
 ## Building projects for your IDE
+
+When you run the first cmake step, cmake will generate IDE compatible files for you.
+On windows, it will generate visual studio files. On mac by default it will generate
+makefiles, but if you add the argument `-GXcode` you can get an xcode project if you want.
+
+Surge developers regularly develop with all sorts of tools. CLion, Visual Studio, vim, emacs,
+visual studio code, and many others can work properly with the software.
 
 ## Building a VST2
 
@@ -128,6 +148,13 @@ cmake --build build_lv2 --config Release --target surge-fx_LV2 --parallel 4
 
 You will then have LV2s in `build_lv2/surge-xt_artefacts/Release/LV2` and  `build_lv2/surge-fx_artefacts/Release/LV2` 
 respectively.
+
+## Building an Installer
+
+The cmake target `surge-xt-distribution` builds an install image on your platform
+at the end of the build process. On mac and linux, the installer generator is built
+into the platform; on windows our cmake file uses nuget to download innosetup, so 
+you will need the [nuget.exe CLI](https://nuget.org/) in your path.
 
 ## Platform Specific Choices
 

@@ -4,7 +4,7 @@
 trigger:
 - main
 - xt-alpha
-- release/*
+- release-xt/*
 
 pr:
 - main
