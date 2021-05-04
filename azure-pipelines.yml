@@ -2,11 +2,11 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+- classic
 - release/*
 
 pr:
-- main
+- classic
 
 jobs:
 - job: Build
@@ -267,7 +267,7 @@ jobs:
 
       # remove refs/heads/
       export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
-      if ! [[ $BRANCH =~ ^(main|release/.+)$ ]]; then
+      if ! [[ $BRANCH =~ ^(classic|release/.+)$ ]]; then
         exit
       fi
 
