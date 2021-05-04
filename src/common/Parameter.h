@@ -381,8 +381,8 @@ class Parameter
     const char *get_name();
     const char *get_full_name();
     void set_name(const char *n); // never change name_storage as it is used for storage/recall
-    const char *get_internal_name();
-    const char *get_storage_name();
+    const char *get_internal_name() const;
+    const char *get_storage_name() const;
     const wchar_t *getUnit() const;
     void get_display(char *txt, bool external = false, float ef = 0.f);
     enum ModulationDisplayMode

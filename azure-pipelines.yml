@@ -266,15 +266,10 @@ jobs:
       # remove refs/heads/
       export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
 
-      if [[ $BRANCH =~ ^xt-alpha$ ]]; then
-        echo "Launching the XT Release Build"
-        . $AGENT_TEMPDIRECTORY/notify-xt-releases.sh $BRANCH
+      if ! [[ $BRANCH =~ ^(main|release-xt/.+)$ ]]; then
         exit
       fi
 
-      if ! [[ $BRANCH =~ ^(main|release/.+)$ ]]; then
-        exit
-      fi
-
-      . $AGENT_TEMPDIRECTORY/notify-releases.sh $BRANCH
+      echo "Launching the XT Release Build"
+      . $AGENT_TEMPDIRECTORY/notify-xt-releases.sh $BRANCH
     displayName: Notify Releases

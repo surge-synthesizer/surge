@@ -1,5 +1,15 @@
 # Surge XT
 
+**If you are a musician looking to use Surge, please download the appropriate binary
+[from our website](https://surge-synthesizer.github.io). The Surge developer team makes regular releases for all supported platforms.**
+
+**If you are a developer looking to compile a stable production version of Surge, please do not
+use the main branch; instead use a release tag (such as `release_1.9.0`) or branch (such as
+`release/1.9.0`). Surge is undergoing substantial 
+development right now, and the `main` branch is currently an 
+incomplete alpha version for our fall 2021 release.**
+
+
 CI: [![CI Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.surge?branchName=main)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=2&branchName=main)
 Release: [![Release Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1&branchName=master)
 Release-XT: [![Release-XT Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases-xt?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=13&branchName=master)
@@ -10,8 +20,6 @@ Claes chose to release a partially completed version of Surge 1.6 under GPL3, an
 of developers have been improving it since. You can learn more about the team at https://surge-synth-team.org/ or
 connect with us on [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link).
 
-**If you are a musician only looking to use Surge, please download the appropriate binary
-[from our website](https://surge-synthesizer.github.io). The Surge developer team makes regular releases for all supported platforms.**
 
 If you would also like to participate in discussions, testing and design of Surge, we have
 details below and also in [the contributors section of the Surge website](https://surge-synthesizer.github.io/#contributors).

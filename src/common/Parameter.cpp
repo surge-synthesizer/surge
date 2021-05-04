@@ -1771,9 +1771,9 @@ const char *Parameter::get_full_name()
     return fullname;
 }
 
-const char *Parameter::get_internal_name() { return name; }
+const char *Parameter::get_internal_name() const { return name; }
 
-const char *Parameter::get_storage_name() { return name_storage; }
+const char *Parameter::get_storage_name() const { return name_storage; }
 
 char *Parameter::get_storage_value(char *str)
 {
