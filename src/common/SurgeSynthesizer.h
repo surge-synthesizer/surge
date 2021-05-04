@@ -269,6 +269,8 @@ class alignas(16) SurgeSynthesizer
     ModulationRouting *getModRouting(long ptag, modsources modsource);
     bool setModulation(long ptag, modsources modsource, float value);
     float getModulation(long ptag, modsources modsource);
+    void muteModulation(long ptag, modsources modsource, bool mute);
+    bool isModulationMuted(long ptag, modsources modsource);
     float getModDepth(long ptag, modsources modsource);
     void clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid = false);
     void clear_osc_modulation(

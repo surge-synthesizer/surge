@@ -97,6 +97,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                            public juce::Button::Listener
     {
         std::unique_ptr<juce::Button> clearButton;
+        std::unique_ptr<juce::Button> muteButton;
         std::unique_ptr<juce::Slider> modSlider;
         EditComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row)
         {
@@ -104,6 +105,15 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             clearButton->setButtonText("Clear");
             clearButton->addListener(this);
             addAndMakeVisible(*clearButton);
+
+            muteButton = std::make_unique<juce::ToggleButton>("Mute");
+            muteButton->setButtonText("Mute");
+            muteButton->addListener(this);
+            muteButton->setToggleState(
+                mod->moded->synth->isModulationMuted(mod->rows[row].dest_id,
+                                                     (modsources)mod->rows[row].source_id),
+                juce::NotificationType::dontSendNotification);
+            addAndMakeVisible(*muteButton);
 
             modSlider = std::make_unique<juce::Slider>("Modulation");
             modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
@@ -133,6 +143,12 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 mod->updateRows();
                 mod->moded->listBox->updateContent();
             }
+            if (button == muteButton.get())
+            {
+                mod->moded->synth->muteModulation(mod->rows[row].dest_id,
+                                                  (modsources)mod->rows[row].source_id,
+                                                  button->getToggleState());
+            }
         }
         void resized() override
         {
@@ -140,7 +156,11 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 getBounds().getTopLeft().getX() + 50);
             clearButton->setBounds(b);
 
-            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(50 + 3).expanded(-1).withRight(
+            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(35).expanded(-1).withRight(
+                getBounds().getTopLeft().getX() + 97);
+            muteButton->setBounds(b);
+
+            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(100 + 3).expanded(-1).withRight(
                 getWidth() / 2);
             modSlider->setBounds(b);
 
