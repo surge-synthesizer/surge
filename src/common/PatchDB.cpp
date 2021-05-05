@@ -27,7 +27,7 @@ namespace PatchStorage
 {
 struct PatchDB::workerS
 {
-    static constexpr const char *schema_version = "1"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "2"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -168,14 +168,39 @@ CREATE TABLE PatchFeature (
         std::vector<feature> res;
         TiXmlDocument doc;
         doc.Parse(xml.c_str(), nullptr, TIXML_ENCODING_LEGACY);
+        if (doc.Error())
+        {
+            std::cout << "        - ERROR: Unable to load XML; Skipping file" << std::endl;
+            return res;
+        }
 
         auto patch = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("patch"));
+
+        if (!patch)
+        {
+            std::cout << "        - ERROR: No 'patch' element in XML" << std::endl;
+            return res;
+        }
+
         int rev = 0;
-        patch->QueryIntAttribute("revision", &rev);
-        res.emplace_back("REVISION", INT, rev, "");
+        if (patch->QueryIntAttribute("revision", &rev) == TIXML_SUCCESS)
+        {
+            res.emplace_back("REVISION", INT, rev, "");
+        }
+        else
+        {
+            std::cout << "        - ERROR: No Revision in XML" << std::endl;
+            return res;
+        }
 
         auto meta = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
-        res.emplace_back("AUTHOR", STRING, 0, meta->Attribute("author"));
+        if (meta)
+        {
+            if (meta->Attribute("author"))
+            {
+                res.emplace_back("AUTHOR", STRING, 0, meta->Attribute("author"));
+            }
+        }
         return res;
     }
 
@@ -218,6 +243,13 @@ CREATE TABLE PatchFeature (
 
     void parseFXPIntoDB(const std::tuple<fs::path, std::string, std::string> &p)
     {
+        std::cout << "         - Loading '" << path_to_string(std::get<0>(p)) << "'" << std::endl;
+        if (!fs::exists(std::get<0>(p)))
+        {
+            std::cout << "    - Warning: Non existent " << path_to_string(std::get<0>(p))
+                      << std::endl;
+            return;
+        }
         // Check with
         auto qtime = fs::last_write_time(std::get<0>(p));
         int64_t qtimeInt =
