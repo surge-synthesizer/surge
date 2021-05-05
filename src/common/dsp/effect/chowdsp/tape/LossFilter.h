@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../BiquadFilter.h"
+#include "BiquadFilter.h"
 #include "../shared/FIRFIlter.h"
 
 namespace chowdsp

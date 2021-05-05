@@ -16,7 +16,7 @@
 #pragma once
 #include "SurgeStorage.h"
 #include "SurgeVoice.h"
-#include "effect/Effect.h"
+#include "Effect.h"
 #include "BiquadFilter.h"
 
 struct QuadFilterChainState;

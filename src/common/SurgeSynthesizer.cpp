@@ -28,7 +28,7 @@
 
 #include "UserDefaults.h"
 #include "filesystem/import.h"
-#include "effect/Effect.h"
+#include "Effect.h"
 
 #include <thread>
 #include "libMTSClient.h"

@@ -14,7 +14,7 @@
 */
 
 #pragma once
-#include <dsp/effect/Effect.h>
+#include "Effect.h"
 #include "BiquadFilter.h"
 #include "shared/Oversampling.h"
 #include "exciter/LevelDetector.h"

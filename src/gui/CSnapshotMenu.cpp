@@ -2,7 +2,7 @@
 #include "SurgeGUIEditor.h"
 #include "DspUtilities.h"
 #include "CSnapshotMenu.h"
-#include "effect/Effect.h"
+#include "Effect.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h"
