@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <dsp/effect/Effect.h>
+#include <Effect.h>
 #include "tape/HysteresisProcessor.h"
 #include "tape/LossFilter.h"
 #include "tape/DegradeProcessor.h"

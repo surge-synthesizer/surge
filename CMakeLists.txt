@@ -227,7 +227,6 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/ConditionerEffect.cpp
   src/common/dsp/effect/DistortionEffect.cpp
   src/common/dsp/effect/DualDelayEffect.cpp
-  src/common/dsp/effect/Effect.cpp
   src/common/dsp/effect/Eq3BandEffect.cpp
   src/common/dsp/effect/FreqshiftEffect.cpp
   src/common/dsp/effect/FlangerEffect.cpp
@@ -256,37 +255,46 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
   src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
   src/common/dsp/effect/chowdsp/tape/ToneControl.cpp
-  src/common/dsp/filters/VintageLadders.cpp
-  src/common/dsp/filters/Obxd.cpp
-  src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/AllpassFilter.h
+  src/common/dsp/filters/BiquadFilter.cpp
+  src/common/dsp/filters/BiquadFilterSSE2.cpp
   src/common/dsp/filters/DiodeLadder.cpp
+  src/common/dsp/filters/FilterCoefficientMaker.cpp
+  src/common/dsp/filters/K35.cpp
   src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/filters/NonlinearStates.cpp
-  src/common/dsp/AliasOscillator.cpp
-  src/common/dsp/AudioInputOscillator.cpp
-  src/common/dsp/BiquadFilter.cpp
-  src/common/dsp/BiquadFilterSSE2.cpp
-  src/common/dsp/ClassicOscillator.cpp
-  src/common/dsp/DspUtilities.cpp
-  src/common/dsp/FilterCoefficientMaker.cpp
-  src/common/dsp/FM2Oscillator.cpp
-  src/common/dsp/FM3Oscillator.cpp
-  src/common/dsp/LanczosResampler.cpp
-  src/common/dsp/LfoModulationSource.cpp
-  src/common/dsp/ModernOscillator.cpp
-  src/common/dsp/MSEGModulationHelper.cpp
+  src/common/dsp/filters/Obxd.cpp
+  src/common/dsp/filters/VectorizedSvfFilter.cpp
+  src/common/dsp/filters/VintageLadders.cpp
+  src/common/dsp/oscillators/AliasOscillator.cpp
+  src/common/dsp/oscillators/AudioInputOscillator.cpp
+  src/common/dsp/oscillators/ClassicOscillator.cpp
+  src/common/dsp/oscillators/FM2Oscillator.cpp
+  src/common/dsp/oscillators/FM3Oscillator.cpp
+  src/common/dsp/oscillators/ModernOscillator.cpp
+  src/common/dsp/oscillators/OscillatorBase.h
+  src/common/dsp/oscillators/OscillatorCommonFunctions.h
+  src/common/dsp/oscillators/SampleAndHoldOscillator.cpp
+  src/common/dsp/oscillators/SineOscillator.cpp
+  src/common/dsp/oscillators/StringOscillator.cpp
+  src/common/dsp/oscillators/TwistOscillator.cpp
+  src/common/dsp/oscillators/Wavetable.cpp
+  src/common/dsp/oscillators/WavetableOscillator.cpp
+  src/common/dsp/oscillators/WindowOscillator.cpp
+  src/common/dsp/modulators/AdsrEnvelope.h
+  src/common/dsp/modulators/LfoModulationSource.cpp
+  src/common/dsp/modulators/MSEGModulationHelper.cpp
+  src/common/dsp/utilities/DspUtilities.cpp
+  src/common/dsp/utilities/FastMath.h
+  src/common/dsp/utilities/SSEComplex.h
+  src/common/dsp/utilities/SSESincDelayLine.h
+  src/common/dsp/utilities/LanczosResampler.cpp
+  src/common/dsp/Effect.cpp
   src/common/dsp/Oscillator.cpp
+  src/common/dsp/SurgeVoice.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
-  src/common/dsp/SampleAndHoldOscillator.cpp
-  src/common/dsp/SineOscillator.cpp
-  src/common/dsp/StringOscillator.cpp
-  src/common/dsp/SurgeVoice.cpp
-  src/common/dsp/TwistOscillator.cpp
-  src/common/dsp/VectorizedSvfFilter.cpp
-  src/common/dsp/Wavetable.cpp
-  src/common/dsp/WavetableOscillator.cpp
-  src/common/dsp/WindowOscillator.cpp
+  src/common/dsp/SurgeVoiceState.h
   src/common/vt_dsp/basic_dsp.cpp
   src/common/vt_dsp/halfratefilter.cpp
   src/common/vt_dsp/lipol.cpp
@@ -300,17 +308,11 @@ set(SURGE_SHARED_SOURCES
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
-
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
   src/common/SkinColors.cpp
 
   libs/strnatcmp/strnatcmp.cpp
-  src/common/dsp/FastMath.h
-  src/common/dsp/AdsrEnvelope.h
-  src/common/dsp/OscillatorBase.h
-  src/common/dsp/OscillatorCommonFunctions.h
-  src/common/dsp/SurgeVoiceState.h
   )
 
 set(SURGE_SYNTH_SOURCES
@@ -325,7 +327,7 @@ set(SURGE_GENERATED_SOURCES
 
 set(SURGE_GUI_SOURCES
   src/gui/CAboutBox.cpp
-        src/gui/CEffectLabel.h
+  src/gui/CEffectLabel.h
   src/gui/CEffectSettings.cpp
   src/gui/CHSwitch2.cpp
   src/gui/CLFOGui.cpp
@@ -366,6 +368,11 @@ set(SURGE_COMMON_INCLUDES
 
   src/common
   src/common/dsp
+  src/common/dsp/effect
+  src/common/dsp/filters
+  src/common/dsp/oscillators
+  src/common/dsp/modulators
+  src/common/dsp/utilities
   src/common/thread
   src/common/vt_dsp
   )
@@ -711,7 +718,7 @@ if( BUILD_SURGE_EFFECTS_BANK )
           JUCE_DIRECTSOUND=1
 
           TARGET_HEADLESS=1
-          
+
           )
 
   if (JUCE_ASIO_SUPPORT)
@@ -786,7 +793,7 @@ if( BUILD_SURGE_EFFECTS_BANK )
 endif() # build surge effects bank
 
 if( BUILD_SURGE_XT )
-  
+
   if( WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
     set( SURGE_XT_PRODUCT_NAME "Surge XT (32-bit)" )
   else()
@@ -1064,7 +1071,7 @@ if( WIN32 )
           COMMAND ${CMAKE_COMMAND} -E echo Tools.InnoSetup.6.1.2/tools/iscc.exe /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge.iss"
           COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge.iss"
         )
-    endif() 
+    endif()
   endif()
 endif()
 

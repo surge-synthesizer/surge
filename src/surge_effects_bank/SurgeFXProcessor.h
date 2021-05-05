@@ -13,7 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SurgeStorage.h"
 #include <functional>
-#include "dsp/effect/Effect.h"
+#include "Effect.h"
 
 #if MAC
 #include <execinfo.h>
