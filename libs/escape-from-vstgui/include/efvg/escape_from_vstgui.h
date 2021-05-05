@@ -43,7 +43,7 @@
 
 // The layers of unimpl. Really bad (D), standard, and we are OK with it for now (OKUNIMPL);
 #define DUNIMPL                                                                                    \
-    std::cout << "Unimplemented : " << __func__ << " at " << __FILE__ << ":" << __LINE__           \
+    std::cout << "  - efvg unimplemented : " << __func__ << " at " << __FILE__ << ":" << __LINE__  \
               << std::endl;
 //#define UNIMPL void(0);
 #define UNIMPL DUNIMPL
@@ -199,13 +199,13 @@ struct FakeRefcount
 
 inline void showMemoryOutstanding()
 {
-    std::cout << "Total activity : Create=" << getRefActivity()->creates
-              << " Delete=" << getRefActivity()->deletes << std::endl;
+    std::cout << "EscapeFromVSTGUI Memory Check:\n   - Total activity : Create="
+              << getRefActivity()->creates << " Delete=" << getRefActivity()->deletes << std::endl;
     for (auto &p : *(getAllocMap()))
     {
         if (p.first->doDebug)
         {
-            std::cout << "Still here! ptr=" << p.first << " refct=" << p.first->refCount
+            std::cout << "   - Still here! ptr=" << p.first << " refct=" << p.first->refCount
                       << " remembers=" << p.second.remembers << " forgets=" << p.second.forgets
                       << " " << typeid(*(p.first)).name() << std::endl;
             for (auto &r : p.second.records)
@@ -1832,6 +1832,7 @@ struct COptionMenu : public CControl
             SEP,
             COLBK,
             SECT,
+            CUSTOM,
             ROOT
         } type = ROOT;
 
@@ -1840,6 +1841,8 @@ struct COptionMenu : public CControl
         std::string label = "";
         std::function<void(void)> op = []() {};
         std::vector<MenuNode> children;
+        // std::unique_ptr<juce::PopupMenu::CustomComponent> customComponent;
+        juce::PopupMenu::CustomComponent *customComponent;
         bool checked = false;
         bool enabled = true;
     } rootNode;
@@ -1881,6 +1884,19 @@ struct COptionMenu : public CControl
         r->nodeIndex = rootNode.children.size() - 1;
         return r;
     }
+    std::shared_ptr<CMenuItem> addEntry(juce::PopupMenu::CustomComponent *compPtr, // I own
+                                        const std::function<void(void)> &callback)
+    {
+        auto q = MenuNode{MenuNode::CUSTOM};
+        q.customComponent = compPtr;
+        q.op = callback;
+        rootNode.children.push_back(q);
+
+        auto res = std::make_shared<CMenuItem>();
+        res->weakPtr = this;
+        res->nodeIndex = rootNode.children.size() - 1;
+        return res;
+    }
     std::shared_ptr<CMenuItem> addEntry(COptionMenu *m, const std::string &nm)
     {
         m->remember();
@@ -1907,6 +1923,8 @@ struct COptionMenu : public CControl
         q.label = h;
         rootNode.children.push_back(q);
     }
+
+    std::unordered_map<int, std::function<void(void)>> customCallbacks;
 
     void build(juce::PopupMenu &m, const std::vector<MenuNode> &n, const std::string &pfx = "")
     {
@@ -1948,6 +1966,13 @@ struct COptionMenu : public CControl
             case MenuNode::SECT:
                 m.addSectionHeader(k.label);
                 break;
+            case MenuNode::CUSTOM:
+                auto rr = std::unique_ptr<juce::PopupMenu::CustomComponent>(k.customComponent);
+                static int cid = 1000;
+                m.addCustomItem(cid, std::move(rr));
+                customCallbacks[cid] = k.op;
+                cid++;
+                break;
             }
             ct++;
             if (nbi > 0 && ct % nbi == 0)
@@ -1960,7 +1985,13 @@ struct COptionMenu : public CControl
     {
         juce::PopupMenu menu;
         build(menu, rootNode.children);
-        menu.showMenuAsync(juce::PopupMenu::Options());
+        auto cbcopy = customCallbacks;
+        menu.showMenuAsync(juce::PopupMenu::Options(), [=](int mi) {
+            if (mi > 0 && cbcopy.find(mi) != cbcopy.end())
+            {
+                cbcopy.at(mi)();
+            }
+        });
     }
     inline void setHeight(float h) { UNIMPL; }
     void cleanupSeparators(bool b) { UNIMPL; }

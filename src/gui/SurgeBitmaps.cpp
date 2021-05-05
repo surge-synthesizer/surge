@@ -14,7 +14,7 @@ SurgeBitmaps::SurgeBitmaps()
     Surge::Debug::record("SurgeBitmaps::SurgeBitmaps");
 #endif
 
-    std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
+    // std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 SurgeBitmaps::~SurgeBitmaps()
@@ -24,7 +24,7 @@ SurgeBitmaps::~SurgeBitmaps()
 #endif
     clearAllLoadedBitmaps();
     instances--;
-    std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
+    // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
 }
 
 void SurgeBitmaps::clearAllLoadedBitmaps()

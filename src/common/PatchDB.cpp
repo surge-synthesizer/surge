@@ -74,6 +74,7 @@ CREATE TABLE PatchFeature (
         auto flag = SQLITE_OPEN_FULLMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
+        std::cout << "\nPatchDB : Opening sqlitedb " << dbname << std::endl;
         auto ec = sqlite3_open_v2(dbname.c_str(), &dbh, flag, nullptr);
 
         if (ec != SQLITE_OK)
@@ -96,7 +97,7 @@ CREATE TABLE PatchFeature (
         // FIXME - error handling everywhere of course
         if (rc != SQLITE_OK)
         {
-            std::cout << "No VERSION table. Rebuilding" << std::endl;
+            std::cout << "        : No VERSION table. Rebuilding database" << std::endl;
             rebuild = true;
         }
         else
@@ -105,11 +106,11 @@ CREATE TABLE PatchFeature (
             {
                 int id = sqlite3_column_int(qs, 0);
                 auto ver = reinterpret_cast<const char *>(sqlite3_column_text(qs, 1));
-                std::cout << "id/ver='" << id << "' '" << ver << "' '" << schema_version << "'"
-                          << std::endl;
+                std::cout << "        : schema check. DBVersion='" << ver << "' SchemaVersion='"
+                          << schema_version << "'" << std::endl;
                 if (strcmp(ver, schema_version) == 0)
                 {
-                    std::cout << "That's a match. Lets not nuke" << std::endl;
+                    std::cout << "        : Schema matches. Reusing database." << std::endl;
                     rebuild = false;
                 }
             }
@@ -119,6 +120,9 @@ CREATE TABLE PatchFeature (
 
         if (rebuild)
         {
+            std::cout << "        : Schema missing or mismatched. Dropping and Rebuilding Database."
+                      << std::endl;
+
             auto res = sqlite3_exec(dbh, setup_sql, nullptr, nullptr, &emsg);
             if (res != SQLITE_OK)
             {
@@ -127,10 +131,8 @@ CREATE TABLE PatchFeature (
                 storage->reportError(oss.str(), "PatchDB Error");
                 sqlite3_free(emsg);
             }
-            std::cout << "SQLITE RES: " << res << " " << SQLITE_OK << std::endl;
             auto versql = std::string("INSERT INTO VERSION (\"schema_version\") VALUES (\"") +
                           schema_version + "\")";
-            std::cout << versql << std::endl;
             res = sqlite3_exec(dbh, versql.c_str(), nullptr, nullptr, &emsg);
             if (res != SQLITE_OK)
             {

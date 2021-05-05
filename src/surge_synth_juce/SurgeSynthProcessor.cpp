@@ -25,7 +25,14 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                          .withOutput("Scene A", AudioChannelSet::stereo(), false)
                          .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
-    std::cout << "SurgeXT : Version " << Surge::Build::FullVersionStr << std::endl;
+    std::cout << "SurgeXT Startup\n"
+              << "  - Version    : " << Surge::Build::FullVersionStr << "\n"
+              << "  - Build Info : " << Surge::Build::BuildArch << " "
+              << Surge::Build::BuildCompiler << "\n"
+              << "  - Build Time : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
+              << "\n"
+              << "  - CPU        : " << Surge::CPUFeatures::cpuBrand() << std::endl;
+
     surge = std::make_unique<SurgeSynthesizer>(this);
     surge->storage.initializePatchDb(); // In the UI branch we want the patch DB running
 
