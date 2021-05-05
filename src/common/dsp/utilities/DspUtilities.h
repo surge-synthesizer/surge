@@ -19,8 +19,8 @@
 
 #include "globals.h"
 #include "unitconversion.h"
-#include <vt_dsp/basic_dsp.h>
-#include <vt_dsp/halfratefilter.h>
+#include <vembertech/basic_dsp.h>
+#include <vembertech/halfratefilter.h>
 #include <functional>
 #include "StringOps.h"
 

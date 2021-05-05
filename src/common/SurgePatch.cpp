@@ -18,7 +18,7 @@
 #include "SurgeParamConfig.h"
 #include "Effect.h"
 #include <list>
-#include <vt_dsp/vt_dsp_endian.h>
+#include <vembertech/vt_dsp_endian.h>
 #include "MSEGModulationHelper.h"
 #include "DebugHelpers.h"
 #include "StringOps.h"

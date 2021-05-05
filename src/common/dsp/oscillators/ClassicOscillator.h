@@ -17,7 +17,7 @@
 
 #include "OscillatorBase.h"
 #include "DspUtilities.h"
-#include <vt_dsp/lipol.h>
+#include <vembertech/lipol.h>
 #include "BiquadFilter.h"
 
 class ClassicOscillator : public AbstractBlitOscillator

@@ -10,7 +10,7 @@
 #include "SurgeStorage.h"
 #include "SkinColors.h"
 #include <UserDefaults.h>
-#include <vt_dsp/basic_dsp.h>
+#include <vembertech/basic_dsp.h>
 #include <iostream>
 #include "RuntimeFont.h"
 

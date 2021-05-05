@@ -19,7 +19,7 @@
 #include "SurgeVoiceState.h"
 #include "AdsrEnvelope.h"
 #include "LfoModulationSource.h"
-#include <vt_dsp/lipol.h>
+#include <vembertech/lipol.h>
 #include "FilterCoefficientMaker.h"
 #include "QuadFilterChain.h"
 #include <array>
