@@ -9,7 +9,7 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
-#include "effect/ModControl.h"
+#include "ModControl.h"
 
 using namespace Surge::Test;
 

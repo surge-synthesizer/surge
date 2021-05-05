@@ -20,7 +20,7 @@
 #include <cctype>
 #include <map>
 #include <queue>
-#include <vt_dsp/vt_dsp_endian.h>
+#include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
 #include "SurgeCoreBinary.h"
 

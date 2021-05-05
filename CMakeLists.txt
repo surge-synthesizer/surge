@@ -221,40 +221,40 @@ set( BUILD_HEADLESS TRUE )
 #    SURGE_(os)_SOURCES
 
 set(SURGE_SHARED_SOURCES
-  src/common/dsp/effect/BBDEnsembleEffect.cpp
-  src/common/dsp/effect/ChorusEffectImpl.h
-  src/common/dsp/effect/CombulatorEffect.cpp
-  src/common/dsp/effect/ConditionerEffect.cpp
-  src/common/dsp/effect/DistortionEffect.cpp
-  src/common/dsp/effect/DualDelayEffect.cpp
-  src/common/dsp/effect/Eq3BandEffect.cpp
-  src/common/dsp/effect/FreqshiftEffect.cpp
-  src/common/dsp/effect/FlangerEffect.cpp
-  src/common/dsp/effect/GEQ11Effect.cpp
-  src/common/dsp/effect/NimbusEffect.cpp
-  src/common/dsp/effect/PhaserEffect.cpp
-  src/common/dsp/effect/ResonatorEffect.cpp
-  src/common/dsp/effect/Reverb1Effect.cpp
-  src/common/dsp/effect/Reverb2Effect.cpp
-  src/common/dsp/effect/RingModulatorEffect.cpp
-  src/common/dsp/effect/RotarySpeakerEffect.cpp
-  src/common/dsp/effect/TreemonsterEffect.cpp
-  src/common/dsp/effect/VocoderEffect.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.cpp
-  src/common/dsp/effect/airwindows/AirWindowsEffect.h
-  src/common/dsp/effect/chowdsp/CHOWEffect.cpp
-  src/common/dsp/effect/chowdsp/ExciterEffect.cpp
-  src/common/dsp/effect/chowdsp/NeuronEffect.cpp
-  src/common/dsp/effect/chowdsp/TapeEffect.cpp
-  src/common/dsp/effect/chowdsp/bbd_utils/BBDDelayLine.cpp
-  src/common/dsp/effect/chowdsp/exciter/LevelDetector.cpp
-  src/common/dsp/effect/chowdsp/shared/DelayLine.cpp
-  src/common/dsp/effect/chowdsp/tape/ChewProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/DegradeProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/HysteresisProcessing.cpp
-  src/common/dsp/effect/chowdsp/tape/HysteresisProcessor.cpp
-  src/common/dsp/effect/chowdsp/tape/LossFilter.cpp
-  src/common/dsp/effect/chowdsp/tape/ToneControl.cpp
+  src/common/dsp/effects/BBDEnsembleEffect.cpp
+  src/common/dsp/effects/ChorusEffectImpl.h
+  src/common/dsp/effects/CombulatorEffect.cpp
+  src/common/dsp/effects/ConditionerEffect.cpp
+  src/common/dsp/effects/DistortionEffect.cpp
+  src/common/dsp/effects/DualDelayEffect.cpp
+  src/common/dsp/effects/Eq3BandEffect.cpp
+  src/common/dsp/effects/FreqshiftEffect.cpp
+  src/common/dsp/effects/FlangerEffect.cpp
+  src/common/dsp/effects/GEQ11Effect.cpp
+  src/common/dsp/effects/NimbusEffect.cpp
+  src/common/dsp/effects/PhaserEffect.cpp
+  src/common/dsp/effects/ResonatorEffect.cpp
+  src/common/dsp/effects/Reverb1Effect.cpp
+  src/common/dsp/effects/Reverb2Effect.cpp
+  src/common/dsp/effects/RingModulatorEffect.cpp
+  src/common/dsp/effects/RotarySpeakerEffect.cpp
+  src/common/dsp/effects/TreemonsterEffect.cpp
+  src/common/dsp/effects/VocoderEffect.cpp
+  src/common/dsp/effects/airwindows/AirWindowsEffect.cpp
+  src/common/dsp/effects/airwindows/AirWindowsEffect.h
+  src/common/dsp/effects/chowdsp/CHOWEffect.cpp
+  src/common/dsp/effects/chowdsp/ExciterEffect.cpp
+  src/common/dsp/effects/chowdsp/NeuronEffect.cpp
+  src/common/dsp/effects/chowdsp/TapeEffect.cpp
+  src/common/dsp/effects/chowdsp/bbd_utils/BBDDelayLine.cpp
+  src/common/dsp/effects/chowdsp/exciter/LevelDetector.cpp
+  src/common/dsp/effects/chowdsp/shared/DelayLine.cpp
+  src/common/dsp/effects/chowdsp/tape/ChewProcessor.cpp
+  src/common/dsp/effects/chowdsp/tape/DegradeProcessor.cpp
+  src/common/dsp/effects/chowdsp/tape/HysteresisProcessing.cpp
+  src/common/dsp/effects/chowdsp/tape/HysteresisProcessor.cpp
+  src/common/dsp/effects/chowdsp/tape/LossFilter.cpp
+  src/common/dsp/effects/chowdsp/tape/ToneControl.cpp
   src/common/dsp/filters/AllpassFilter.h
   src/common/dsp/filters/BiquadFilter.cpp
   src/common/dsp/filters/BiquadFilterSSE2.cpp
@@ -289,16 +289,16 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/utilities/SSEComplex.h
   src/common/dsp/utilities/SSESincDelayLine.h
   src/common/dsp/utilities/LanczosResampler.cpp
+  src/common/dsp/vembertech/basic_dsp.cpp
+  src/common/dsp/vembertech/halfratefilter.cpp
+  src/common/dsp/vembertech/lipol.cpp
+  src/common/dsp/vembertech/macspecific.cpp
   src/common/dsp/Effect.cpp
   src/common/dsp/Oscillator.cpp
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
   src/common/dsp/SurgeVoiceState.h
-  src/common/vt_dsp/basic_dsp.cpp
-  src/common/vt_dsp/halfratefilter.cpp
-  src/common/vt_dsp/lipol.cpp
-  src/common/vt_dsp/macspecific.cpp
   src/common/CPUFeatures.cpp
   src/common/DebugHelpers.cpp
   src/common/ModulatorPresetManager.cpp
@@ -368,13 +368,13 @@ set(SURGE_COMMON_INCLUDES
 
   src/common
   src/common/dsp
-  src/common/dsp/effect
+  src/common/dsp/effects
   src/common/dsp/filters
   src/common/dsp/oscillators
   src/common/dsp/modulators
   src/common/dsp/utilities
+  src/common/dsp/vembertech
   src/common/thread
-  src/common/vt_dsp
   )
 
 set(SURGE_GUI_INCLUDES
@@ -513,8 +513,8 @@ endif()
 source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
 source_group( "AirWindows" REGULAR_EXPRESSION "libs/airwindows/" )
 source_group( "Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp" )
-source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/(vt_dsp|dsp)" )
-source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effect" )
+source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/dsp" )
+source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effects" )
 source_group( "Surge GUI" REGULAR_EXPRESSION "src/gui" )
 source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
 source_group( "AU Plugin" REGULAR_EXPRESSION "src/au" )

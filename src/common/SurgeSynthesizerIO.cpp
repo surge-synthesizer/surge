@@ -16,7 +16,7 @@
 #include "SurgeSynthesizer.h"
 #include "DspUtilities.h"
 #include <time.h>
-#include <vt_dsp/vt_dsp_endian.h>
+#include <vembertech/vt_dsp_endian.h>
 
 #include "filesystem/import.h"
 

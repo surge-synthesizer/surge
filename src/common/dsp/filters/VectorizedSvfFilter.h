@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vt_dsp/portable_intrinsics.h>
+#include <vembertech/portable_intrinsics.h>
 
 //------------------------------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 #include "QuadFilterChain.h"
 #include "SurgeStorage.h"
-#include <vt_dsp/basic_dsp.h>
-#include <vt_dsp/portable_intrinsics.h>
+#include <vembertech/basic_dsp.h>
+#include <vembertech/portable_intrinsics.h>
 
 #define MWriteOutputs(x)                                                                           \
     d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                          \
