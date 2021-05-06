@@ -261,9 +261,11 @@ void RingModulatorEffect::init_default_values()
     fxdata->p[rm_unison_detune].val.f = 0.2;
     fxdata->p[rm_unison_voices].val.i = 1;
 
-    // FIX THIS
+    fxdata->p[rm_lowcut].val_default.f = fxdata->p[rm_lowcut].val_min.f;
     fxdata->p[rm_lowcut].val.f = fxdata->p[rm_lowcut].val_min.f;
     fxdata->p[rm_lowcut].deactivated = false;
+
+    fxdata->p[rm_highcut].val_default.f = fxdata->p[rm_highcut].val_max.f;
     fxdata->p[rm_highcut].val.f = fxdata->p[rm_highcut].val_max.f;
     fxdata->p[rm_highcut].deactivated = false;
     fxdata->p[rm_mix].val.f = 1.0;

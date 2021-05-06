@@ -53,19 +53,24 @@ void AudioInputOscillator::init_ctrltypes(int scene, int osc)
 {
     oscdata->p[audioin_channel].set_name("Audio In Channel");
     oscdata->p[audioin_channel].set_type(ct_percent_bipolar_stereo);
+
     oscdata->p[audioin_gain].set_name("Audio In Gain");
     oscdata->p[audioin_gain].set_type(ct_decibel);
+
     if (scene == 1)
     {
         oscdata->p[audioin_sceneAchan].set_name("Scene A Channel");
         oscdata->p[audioin_sceneAchan].set_type(ct_percent_bipolar_stereo);
+
         oscdata->p[audioin_sceneAgain].set_name("Scene A Gain");
         oscdata->p[audioin_sceneAgain].set_type(ct_decibel);
+
         oscdata->p[audioin_sceneAmix].set_name("Scene A Mix");
         oscdata->p[audioin_sceneAmix].set_type(ct_percent);
     }
     oscdata->p[audioin_lowcut].set_name("Low Cut");
     oscdata->p[audioin_lowcut].set_type(ct_freq_audible_deactivatable);
+
     oscdata->p[audioin_highcut].set_name("High Cut");
     oscdata->p[audioin_highcut].set_type(ct_freq_audible_deactivatable);
 }
@@ -74,16 +79,22 @@ void AudioInputOscillator::init_default_values()
 {
     oscdata->p[audioin_channel].val.f = 0.0f;
     oscdata->p[audioin_gain].val.f = 0.0f;
+
     if (isInSceneB)
     {
         oscdata->p[audioin_sceneAchan].val.f = 0.0f;
         oscdata->p[audioin_sceneAgain].val.f = 0.0f;
         oscdata->p[audioin_sceneAmix].val.f = 0.0f;
     }
-    oscdata->p[audioin_lowcut].val.f =
-        oscdata->p[audioin_lowcut].val_min.f; // high cut at the bottom
+
+    // high cut at the bottom
+    oscdata->p[audioin_lowcut].val_default.f = oscdata->p[audioin_lowcut].val_min.f;
+    oscdata->p[audioin_lowcut].val.f = oscdata->p[audioin_lowcut].val_min.f;
     oscdata->p[audioin_lowcut].deactivated = true;
-    oscdata->p[audioin_highcut].val.f = oscdata->p[audioin_highcut].val_max.f; // low cut at the top
+
+    // low cut at the top
+    oscdata->p[audioin_highcut].val_default.f = oscdata->p[audioin_highcut].val_max.f;
+    oscdata->p[audioin_highcut].val.f = oscdata->p[audioin_highcut].val_max.f;
     oscdata->p[audioin_highcut].deactivated = true;
 }
 
