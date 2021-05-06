@@ -80,7 +80,7 @@ struct CursorControlAdapter
 {
     CursorControlAdapter(SurgeStorage *s)
     {
-#if !TARGET_JUCE_UI
+#if RESOLVED_ISSUE_4350
         if (s)
             hideCursor = !Surge::UI::showCursor(s);
 #else

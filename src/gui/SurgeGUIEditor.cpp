@@ -896,7 +896,7 @@ void SurgeGUIEditor::refresh_mod()
 
 int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
 {
-#if !TARGET_JUCE_UI
+#if RESOLVED_ISSUE_4383
     if (code.virt != 0)
     {
         switch (code.virt)
@@ -7769,7 +7769,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control>
 
         hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
 
-#if !TARGET_JUCE_UI && 0
+#if RESOLVED_ISSUE_2464
         auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "");
         if (ff.size() > 0)
         {
