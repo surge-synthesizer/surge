@@ -31,7 +31,14 @@ inline bool _BitScanReverse(unsigned long *result, unsigned long bits)
 }
 } // anonymous namespace
 #endif
-
+int Float2Int(float x)
+{
+#ifdef ARM_NEON
+    return int(x + 0.5f);
+#else
+    return _mm_cvt_ss2si(_mm_load_ss(&x));
+#endif
+}
 WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                    pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)

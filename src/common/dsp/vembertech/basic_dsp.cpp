@@ -3,58 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-int Min(int a, int b) { return std::min(a, b); }
-int Max(int a, int b) { return std::max(a, b); }
-
-double Max(double a, double b)
-{
-#if (_M_IX86_FP > 1)
-    _mm_store_sd(&a, _mm_max_sd(_mm_load_sd(&a), _mm_load_sd(&b)));
-    return a;
-#else
-    if (a > b)
-        return a;
-    return b;
-#endif
-}
-
-unsigned int Min(unsigned int a, unsigned int b) { return std::min(a, b); }
-unsigned int Max(unsigned int a, unsigned int b) { return std::max(a, b); }
-
-int limit_range(int x, int l, int h) { return std::max(std::min(x, h), l); }
-
-int Sign(int x) { return (x < 0) ? -1 : 1; }
-
-unsigned int limit_range(unsigned int x, unsigned int l, unsigned int h)
-{
-    return std::max(std::min(x, h), l);
-}
-/*
-float limit_range(float x, float min, float max)
-{
-   float result;
-        _mm_store_ss(&result,
-_mm_min_ss(_mm_max_ss(_mm_load_ss(&x),_mm_load_ss(&min)),_mm_load_ss(&max))); return result;
-}*/
-
-double limit_range(double x, double min, double max)
-{
-    if (x > max)
-        return max;
-    if (x < min)
-        return min;
-    return x;
-}
-
-int Float2Int(float x)
-{
-#ifdef ARM_NEON
-    return int(x + 0.5f);
-#else
-    return _mm_cvt_ss2si(_mm_load_ss(&x));
-#endif
-}
-
 void float2i15_block(float *f, short *s, int n)
 {
     for (int i = 0; i < n; i++)
