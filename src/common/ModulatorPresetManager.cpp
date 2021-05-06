@@ -212,6 +212,9 @@ void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lf
 static std::vector<Category> scanedPresets;
 static bool haveScanedPresets = false;
 
+/*
+ * Note: Clients rely on this being sorted by category path if you change it
+ */
 std::vector<Category> getPresets(SurgeStorage *s)
 {
     if (haveScanedPresets)
