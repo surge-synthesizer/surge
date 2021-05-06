@@ -5396,30 +5396,6 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
             new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
         subMenuMaps[cat.path] = std::make_pair(catSubMenu, false);
     }
-    for (auto const &cat : presetCategories)
-    {
-        if (subMenuMaps.find(cat.path) == subMenuMaps.end())
-        {
-            // should never happen
-            continue;
-        }
-        auto catSubMenu = subMenuMaps[cat.path].first;
-
-        auto parentMenu = lfoSubMenu;
-        if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
-        {
-            parentMenu = subMenuMaps[cat.parentPath].first;
-            if (!subMenuMaps[cat.parentPath].second)
-            {
-                subMenuMaps[cat.parentPath].second = true;
-            }
-        }
-
-        auto catname = cat.name;
-
-        parentMenu->addEntry(catSubMenu, catname.c_str());
-        catSubMenu->forget();
-    }
 
     for (auto const &cat : presetCategories)
     {
@@ -5459,6 +5435,37 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                 this->synth->refresh_editor = true;
             });
         }
+    }
+
+    /*
+     * With the escape menu hack need to add in child firstr order; this is
+     * sorted by string path so go backwards
+     */
+    for (auto it = presetCategories.rbegin(); it != presetCategories.rend(); it++)
+    {
+        const auto &cat = *it;
+
+        if (subMenuMaps.find(cat.path) == subMenuMaps.end())
+        {
+            // should never happen
+            continue;
+        }
+        auto catSubMenu = subMenuMaps[cat.path].first;
+
+        auto parentMenu = lfoSubMenu;
+        if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
+        {
+            parentMenu = subMenuMaps[cat.parentPath].first;
+            if (!subMenuMaps[cat.parentPath].second)
+            {
+                subMenuMaps[cat.parentPath].second = true;
+            }
+        }
+
+        auto catname = cat.name;
+
+        parentMenu->addEntry(catSubMenu, catname.c_str());
+        catSubMenu->forget();
     }
 
     lfoSubMenu->addSeparator();
