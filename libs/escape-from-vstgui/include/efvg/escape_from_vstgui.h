@@ -1412,7 +1412,8 @@ struct CControl : public CView
     CGradient *getGradient() const { return mGradient; }
     virtual void setGradient(CGradient *g)
     {
-        g->remember();
+        if (g)
+            g->remember();
         if (mGradient)
             mGradient->forget();
         mGradient = g;
@@ -1422,7 +1423,8 @@ struct CControl : public CView
     CGradient *getGradientHighlighted() const { return mGradientHL; }
     virtual void setGradientHighlighted(CGradient *g)
     {
-        g->remember();
+        if (g)
+            g->remember();
         if (mGradientHL)
             mGradientHL->forget();
         mGradientHL = g;

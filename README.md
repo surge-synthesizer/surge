@@ -168,6 +168,41 @@ at the end of the build process. On Mac and Linux, the installer generator is bu
 into the platform; on Windows, our CMake file uses NuGet to download InnoSetup, so
 you will need the [nuget.exe CLI](https://nuget.org/) in your path.
 
+## Using CMake on the Command Line for More
+
+In Surge 1.6-1.9 we had a pair of scripts `build-osx.sh` and `build-linux.sh` which originated
+before Surge was a cmake project and contained a lot of utility functions. We have moved those
+to cmake and as a result, have a bunch of features our CMake file supports which make development
+easier on the command lines and in CMake aware IDEs.
+
+### Plugin Development 
+
+JUCE supports a mode where a plugin (AU, VST3, etc...) is copied to a local install area after a build.
+This is off by default with CMake JUCE but you can turn it on with `-DSURGE_COPY_AFTER_BUILD=True` at
+`cmake` time. If you do this on unixes, building the VST3 or AU targets will copy them to the appropriate local area
+(`~/.vst3` on linux, '~/Library/Audio/Plugins` on mac). On windows it will attempt to install the VST3
+so setting this option may require admin privileges in your build environment.
+
+### Installing assets (unixes only)
+
+The targets `install-resources-local` and `install-resources-global` install the plugin resources
+to the appropriate `surge-xt` or `Surge XT` directories on your system in the unixes. The global option 
+will require elevated priviledges.
+
+### Running the standalone from cmake directly
+
+For @baconpaul, at least, it is useful to have a cmake command that builds stuff and runs the standalone.
+The target `surge-xt-run-standalone` does this. Here's a sample cmake session (using the surge `ignore` 
+directory which we keep in our `.gitignore` file):
+
+```
+cmake -Bignore/lind -DCMAKE_BUILD_TYPE=Debug
+cmake --build ignore/lind/ --config Debug --target install-resources-local
+cmake --build ignore/lind/ --config Debug --target surge-xt-run-standalone --parallel 4
+```
+
+The second line is only needed if you've never installed resources, obviously.
+
 ## Platform Specific Choices
 
 ### Building 32- vs 64-bit on Windows

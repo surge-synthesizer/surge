@@ -1146,7 +1146,7 @@ if( APPLE )
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           COMMAND echo "Installing local resources"
-          COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge/"
+          COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge XT/"
   )
 
   add_custom_target( install-resources-global )
@@ -1155,7 +1155,7 @@ if( APPLE )
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           COMMAND echo "Installing global resources"
-          COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge/"
+          COMMAND rsync -r --delete "resources/data/" "/Library/Application Support/Surge XT/"
   )
 
 elseif( UNIX AND NOT APPLE )
@@ -1164,8 +1164,9 @@ elseif( UNIX AND NOT APPLE )
           TARGET install-resources-local
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          COMMAND echo "Installing local resources into ~/.local/share/surge"
-          COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge/"
+          COMMAND echo "Installing local resources into ~/.local/share/surge-xt"
+          COMMAND ${CMAKE_COMMAND} -E make_directory "\${HOME}/.local/share/surge-xt/"
+          COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge-xt/"
   )
 
   add_custom_target( install-resources-global )
@@ -1173,9 +1174,9 @@ elseif( UNIX AND NOT APPLE )
           TARGET install-resources-global
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge"
-          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_INSTALL_PREFIX}/share/surge
-          COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge/"
+          COMMAND echo "Installing local resources into ${CMAKE_INSTALL_PREFIX}/share/surge-xt"
+          COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/share/surge-xt"
+          COMMAND rsync -r --delete "resources/data/" "${CMAKE_INSTALL_PREFIX}/share/surge-xt/"
   )
 endif()
 
