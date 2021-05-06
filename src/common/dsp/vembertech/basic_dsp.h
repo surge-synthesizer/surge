@@ -1,17 +1,14 @@
 #pragma once
 #include "shared.h"
 
-int Min(int a, int b);
-int Max(int a, int b);
-double Max(double a, double b);
-unsigned int Min(unsigned int a, unsigned int b);
-unsigned int Max(unsigned int a, unsigned int b);
-int limit_range(int x, int low, int high);
-unsigned int limit_range(unsigned int x, unsigned int low, unsigned int high);
-double limit_range(double x, double low, double high);
-int Float2Int(float x);
-unsigned int Float2UInt(float x);
-int Sign(int x);
+template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
+{
+#if __cplusplus > 201402L
+    return std::clamp(x, low, high);
+#else
+    return std::min(std::max(x, low), high);
+#endif
+}
 
 void hardclip_block(float *x, unsigned int nquads);
 void hardclip_block8(float *x, unsigned int nquads);
@@ -41,14 +38,6 @@ void i16toi15_block(short *, short *, int);
 
 float sine_ss(unsigned int x);
 int sine(int x);
-
-inline float limit_range(float x, float low, float high)
-{
-    float result;
-    _mm_store_ss(&result,
-                 _mm_min_ss(_mm_max_ss(_mm_load_ss(&x), _mm_load_ss(&low)), _mm_load_ss(&high)));
-    return result;
-}
 
 inline __m128 sum_ps_to_ss(__m128 x)
 {

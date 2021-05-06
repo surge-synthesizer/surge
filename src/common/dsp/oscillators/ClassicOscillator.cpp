@@ -597,7 +597,7 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
     this->pitch = min(148.f, pitch0);
     this->drift = drift;
     pitchmult_inv =
-        Max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
+        std::max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
     // This must be a real division, reciprocal approximation is not precise enough
     pitchmult = 1.f / pitchmult_inv;
 
