@@ -226,6 +226,20 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     storage.mpePitchBendRange =
         (float)Surge::Storage::getUserDefaultValue(&storage, Surge::Storage::MPEPitchBendRange, 48);
     mpeGlobalPitchBendRange = 0;
+
+    int pid = 0;
+    for (auto p : storage.patch_list)
+    {
+        if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Templates")
+        {
+            patchid_queue = pid;
+            break;
+        }
+        pid++;
+    }
+    if (patchid_queue >= 0)
+        processThreadunsafeOperations(true); // DANGER MODE IS ON
+    patchid_queue = -1;
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
@@ -3076,9 +3090,9 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
     return 0;
 }
 
-void SurgeSynthesizer::processThreadunsafeOperations()
+void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
 {
-    if (!audio_processing_active)
+    if (!audio_processing_active || dangerMode)
     {
         // if the audio processing is inactive, patchloading should occur anyway
         if (patchid_queue >= 0)
