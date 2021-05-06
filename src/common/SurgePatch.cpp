@@ -1140,10 +1140,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     // delete volume & fx_bypass if it's a preset. Those settings should stick
     if (is_preset)
     {
-        TiXmlElement *tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("volume"));
-        if (tp)
-            parameters->RemoveChild(tp);
-        tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("fx_bypass"));
+        if (revision < 17)
+        {
+            TiXmlElement *tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("volume"));
+            if (tp)
+                parameters->RemoveChild(tp);
+        }
+
+        auto tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("fx_bypass"));
         if (tp)
             parameters->RemoveChild(tp);
 
