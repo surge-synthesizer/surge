@@ -1731,18 +1731,6 @@ void SurgeGUIEditor::close_editor()
 
 bool SurgeGUIEditor::open(void *parent)
 {
-    if (samplerate == 0)
-    {
-        std::cout << "Sample rate was not set when editor opened. Defaulting to 44.1k" << std::endl;
-
-        /*
-        ** The oscillator displays need a sample rate; some test hosts don't call
-        ** setSampleRate so if we are in this state make the bad but reasonable
-        ** default choice
-        */
-        synth->setSamplerate(44100);
-    }
-
     super::open(parent);
 
     int platformType = 0;
