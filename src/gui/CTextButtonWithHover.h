@@ -35,11 +35,19 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
         {
             if (isSet && item)
             {
-                // item->forget();
+                item->forget();
                 item = nullptr;
             }
         }
-        T item = T();
+        void set(T v)
+        {
+            isSet = true;
+            v->remember();
+            if (item)
+                item->forget();
+            item = v;
+        }
+        T item = nullptr;
         bool isSet = false;
     };
 
@@ -48,17 +56,7 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
         : CTextButton(r, l, tag, lab)
     {
     }
-    ~CTextButtonWithHover()
-    {
-        if (getGradient())
-        {
-            // getGradient()->forget();
-        }
-        if (getGradientHighlighted())
-        {
-            // getGradientHighlighted()->forget();
-        }
-    }
+    ~CTextButtonWithHover() {}
     VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
                                              const VSTGUI::CButtonState &buttons) override;
     void draw(VSTGUI::CDrawContext *context) override;
@@ -70,11 +68,7 @@ class CTextButtonWithHover : public VSTGUI::CTextButton
      */
 #define ADD_HOVER(m, T)                                                                            \
     OptionalForget<T> hc_##m;                                                                      \
-    void setHover##m(T c)                                                                          \
-    {                                                                                              \
-        hc_##m.item = c;                                                                           \
-        hc_##m.isSet = true;                                                                       \
-    }
+    void setHover##m(T c) { hc_##m.set(c); }
 
 #define ADD_HOVER_CR(m, T)                                                                         \
     Optional<T> hc_##m;                                                                            \

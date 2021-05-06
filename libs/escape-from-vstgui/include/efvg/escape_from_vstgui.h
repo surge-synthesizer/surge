@@ -72,7 +72,7 @@ inline void printStack(const char *where)
     char **strs = backtrace_symbols(callstack, frames);
     std::ostringstream oss;
     oss << "----- " << where << " -----\n";
-    for (i = 3; i < frames - 1 && i < 20; ++i)
+    for (i = 0; i < frames - 1 && i < 20; ++i)
     {
         oss << strs[i] << "\n";
     }
@@ -93,7 +93,7 @@ struct DebugAllocRecord
         char **strs = backtrace_symbols(callstack, frames);
         std::ostringstream oss;
         oss << "----- " << where << " -----\n";
-        for (i = 3; i < frames - 1 && i < 20; ++i)
+        for (i = 0; i < frames - 1 && i < 20; ++i)
         {
             oss << strs[i] << "\n";
         }
@@ -1331,6 +1331,10 @@ struct CControl : public CView
     }
     ~CControl()
     {
+        if (mGradient)
+            mGradient->forget();
+        if (mGradientHL)
+            mGradientHL->forget();
         /* if (bg)
             bg->forget();
             It seems that is not the semantic of CControl!
@@ -1404,8 +1408,25 @@ struct CControl : public CView
     COLPAIR(TextColorHighlighted);
     COLPAIR(FrameColorHighlighted);
 
-    GSPAIR(Gradient, CGradient *, CGradient *, nullptr);
-    GSPAIR(GradientHighlighted, CGradient *, CGradient *, nullptr);
+    CGradient *mGradient = nullptr;
+    CGradient *getGradient() const { return mGradient; }
+    virtual void setGradient(CGradient *g)
+    {
+        g->remember();
+        if (mGradient)
+            mGradient->forget();
+        mGradient = g;
+    }
+
+    CGradient *mGradientHL = nullptr;
+    CGradient *getGradientHighlighted() const { return mGradientHL; }
+    virtual void setGradientHighlighted(CGradient *g)
+    {
+        g->remember();
+        if (mGradientHL)
+            mGradientHL->forget();
+        mGradientHL = g;
+    }
 
     COLPAIR(FillColor);
     COLPAIR(TextColor);
