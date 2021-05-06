@@ -183,6 +183,19 @@ This is off by default with CMake JUCE but you can turn it on with `-DSURGE_COPY
 (`~/.vst3` on linux, '~/Library/Audio/Plugins` on mac). On windows it will attempt to install the VST3
 so setting this option may require admin privileges in your build environment.
 
+### CMake Install Targets (Linux and other non-apple unixes only)
+
+On systems which are `UNIX AND NOT APPLE`, the cmake file provides an install target which will install
+all needed assets to the `CMAKE_INSTALL_PREFIX`. This means a complete install can be accomplished by
+
+```
+cmake -Bignore/sxt -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build ignore/sxt --config Release --parallel 8
+sudo cmake --install ignore/sxt
+```
+
+and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`
+
 ### Installing assets (unixes only)
 
 The targets `install-resources-local` and `install-resources-global` install the plugin resources

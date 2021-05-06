@@ -136,10 +136,10 @@ endif()
 
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
-  add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce )
+  add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce  EXCLUDE_FROM_ALL)
 else()
   message( STATUS "Using JUCE from submodule libs/JUCE" )
-  add_subdirectory( libs/JUCE )
+  add_subdirectory( libs/JUCE EXCLUDE_FROM_ALL )
 endif()
 
 include(cmake/stage-extra-content.cmake)
@@ -1075,6 +1075,30 @@ if( WIN32 )
   endif()
 endif()
 
+# Add CMake Install rules for LINUX only right now (mac and win use an installer)
+if( UNIX AND NOT APPLE)
+  if( BUILD_SURGE_XT)
+    install(TARGETS surge-xt_Standalone DESTINATION bin)
+    # Alas you would think you could just say 
+    # install(TARGETS surge-xt_VST3 DESTINATION lib/vst3 )
+    # but you can't because surge-xt_VST3 points to the .so inside the VST3 bundle so instead say
+    install( DIRECTORY "${SURGE_XT_OUTPUT_DIR}/VST3/Surge XT.vst3" DESTINATION lib/vst3 )
+    if( JUCE_SUPPORTS_LV2 )
+      install(TARGETS surge-xt_LV2 DESTINATION lib/lv2 )
+    endif()
+  endif()
+  if( BUILD_SURGE_EFFECTS_BANK )
+    install(TARGETS surge-fx_Standalone DESTINATION bin)
+    # and again
+    # install(TARGETS surge-fx_VST3 DESTINATION lib/vst3 )
+    install( DIRECTORY "${SURGE_FX_OUTPUT_DIR}/VST3/Surge XT Effects.vst3" DESTINATION lib/vst3 )
+   
+    if( JUCE_SUPPORTS_LV2 )
+      install(TARGETS surge-fx_LV2 DESTINATION lib/lv2)
+    endif()
+  endif()
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/data/ DESTINATION share/surge-xt)
+endif()
 
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )
