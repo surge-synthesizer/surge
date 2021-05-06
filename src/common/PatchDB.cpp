@@ -243,7 +243,6 @@ CREATE TABLE PatchFeature (
 
     void parseFXPIntoDB(const std::tuple<fs::path, std::string, std::string> &p)
     {
-        std::cout << "         - Loading '" << path_to_string(std::get<0>(p)) << "'" << std::endl;
         if (!fs::exists(std::get<0>(p)))
         {
             std::cout << "    - Warning: Non existent " << path_to_string(std::get<0>(p))
@@ -335,6 +334,8 @@ CREATE TABLE PatchFeature (
 
         if (patchLoaded)
             return;
+
+        std::cout << "        - Loading '" << path_to_string(std::get<0>(p)) << "'" << std::endl;
 
         // Oh so much to fix here, but lets start with error handling
         if (insertStmt == nullptr)
