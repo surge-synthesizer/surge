@@ -387,10 +387,15 @@ void Reverb1Effect::init_default_values()
     fxdata->p[rev1_damping].val.f = 0.2f;
     fxdata->p[rev1_freq1].val.f = 0.0f;
     fxdata->p[rev1_gain1].val.f = 0.0f;
+
+    fxdata->p[rev1_lowcut].val_default.f = fxdata->p[rev1_lowcut].val_min.f;
     fxdata->p[rev1_lowcut].val.f = -24.0f;
     fxdata->p[rev1_lowcut].deactivated = false;
+
+    fxdata->p[rev1_highcut].val_default.f = fxdata->p[rev1_highcut].val_max.f;
     fxdata->p[rev1_highcut].val.f = 72.0f;
     fxdata->p[rev1_highcut].deactivated = false;
+
     fxdata->p[rev1_mix].val.f = 1.0f;
     fxdata->p[rev1_width].val.f = 0.0f;
 

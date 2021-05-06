@@ -308,10 +308,15 @@ void DualDelayEffect::init_default_values()
     fxdata->p[dly_time_right].deactivated = false;
     fxdata->p[dly_feedback].val.f = 0.0f;
     fxdata->p[dly_crossfeed].val.f = 0.0f;
+
+    fxdata->p[dly_lowcut].val_default.f = fxdata->p[dly_lowcut].val_min.f;
     fxdata->p[dly_lowcut].val.f = -24.f;
     fxdata->p[dly_lowcut].deactivated = false;
+
+    fxdata->p[dly_highcut].val_default.f = fxdata->p[dly_highcut].val_max.f;
     fxdata->p[dly_highcut].val.f = 30.f;
     fxdata->p[dly_highcut].deactivated = false;
+
     fxdata->p[dly_mod_rate].val.f = -2.f;
     fxdata->p[dly_mod_depth].val.f = 0.f;
     fxdata->p[dly_input_channel].val.f = 0.f;

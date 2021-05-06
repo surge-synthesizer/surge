@@ -236,10 +236,15 @@ template <int v> void ChorusEffect<v>::init_default_values()
     fxdata->p[ch_rate].val.f = -2.f;
     fxdata->p[ch_depth].val.f = 0.3f;
     fxdata->p[ch_feedback].val.f = 0.5f;
+
+    fxdata->p[ch_lowcut].val_default.f = fxdata->p[ch_lowcut].val_min.f;
     fxdata->p[ch_lowcut].val.f = -3.f * 12.f;
     fxdata->p[ch_lowcut].deactivated = false;
+
+    fxdata->p[ch_highcut].val_default.f = fxdata->p[ch_lowcut].val_max.f;
     fxdata->p[ch_highcut].val.f = 3.f * 12.f;
     fxdata->p[ch_highcut].deactivated = false;
+
     fxdata->p[ch_mix].val.f = 1.f;
     fxdata->p[ch_width].val.f = 0.f;
 }

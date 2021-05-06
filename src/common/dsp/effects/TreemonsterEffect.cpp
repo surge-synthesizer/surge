@@ -286,8 +286,11 @@ void TreemonsterEffect::init_default_values()
     fxdata->p[tm_threshold].val.f = -24.f;
     fxdata->p[tm_speed].val.f = 0.5f;
 
+    fxdata->p[tm_hp].val_default.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_hp].val.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_hp].deactivated = false;
+
+    fxdata->p[tm_lp].val_default.f = fxdata->p[tm_lp].val_max.f;
     fxdata->p[tm_lp].val.f = fxdata->p[tm_lp].val_max.f;
     fxdata->p[tm_lp].deactivated = false;
 

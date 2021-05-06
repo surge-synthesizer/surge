@@ -146,9 +146,14 @@ void WindowOscillator::init_default_values()
     oscdata->p[win_formant].val.f = 0.0f;
     oscdata->p[win_window].val.i = 0;
 
-    oscdata->p[win_lowcut].val.f = oscdata->p[win_lowcut].val_min.f; // high cut at the bottom
+    // high cut at the bottom
+    oscdata->p[win_lowcut].val_default.f = oscdata->p[win_lowcut].val_min.f;
+    oscdata->p[win_lowcut].val.f = oscdata->p[win_lowcut].val_min.f;
     oscdata->p[win_lowcut].deactivated = true;
-    oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
+
+    // low cut at the top
+    oscdata->p[win_highcut].val_default.f = oscdata->p[win_highcut].val_max.f;
+    oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f;
     oscdata->p[win_highcut].deactivated = true;
 
     oscdata->p[win_unison_detune].val.f = 0.1f;
@@ -186,9 +191,6 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
         // If I'm not extended, then clamp to table
         FTable = 0.f;
     }
-
-    auto ft128 = _mm_set1_ps(FTable);
-    auto ft128m1 = _mm_set1_ps(1.f - FTable);
 
     int FormantMul =
         (int)(float)(65536.f * storage->note_to_pitch_tuningctr(

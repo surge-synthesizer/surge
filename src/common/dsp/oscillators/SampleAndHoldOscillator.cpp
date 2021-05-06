@@ -144,12 +144,21 @@ void SampleAndHoldOscillator::init_ctrltypes()
 void SampleAndHoldOscillator::init_default_values()
 {
     oscdata->p[shn_correlation].val.f = 0.f;
+
     oscdata->p[shn_width].val.f = 0.5f;
-    oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f; // high cut at the bottom
+
+    // high cut at the bottom
+    oscdata->p[shn_lowcut].val_default.f = oscdata->p[shn_lowcut].val_min.f;
+    oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f;
     oscdata->p[shn_lowcut].deactivated = true;
-    oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // low cut at the top
-    oscdata->p[shn_sync].deactivated = true;
+
+    // low cut at the top
+    oscdata->p[shn_highcut].val_default.f = oscdata->p[shn_highcut].val_max.f;
+    oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f;
+    oscdata->p[shn_highcut].deactivated = true;
+
     oscdata->p[shn_sync].val.f = 0.f;
+
     oscdata->p[shn_unison_detune].val.f = 0.1f;
     oscdata->p[shn_unison_voices].val.i = 1;
 }

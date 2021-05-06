@@ -1016,9 +1016,14 @@ void SineOscillator::init_default_values()
     oscdata->p[sine_feedback].val.f = 0;
     oscdata->p[sine_FMmode].val.i = 1;
 
-    oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f; // high cut at the bottom
+    // high cut at the bottom
+    oscdata->p[sine_lowcut].val_default.f = oscdata->p[sine_lowcut].val_min.f;
+    oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f;
     oscdata->p[sine_lowcut].deactivated = true;
-    oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f; // low cut at the top
+
+    // low cut at the top
+    oscdata->p[sine_highcut].val_default.f = oscdata->p[sine_highcut].val_max.f;
+    oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f;
     oscdata->p[sine_highcut].deactivated = true;
 
     oscdata->p[sine_unison_detune].val.f = 0.1;
@@ -1041,10 +1046,14 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
 
     if (streamingRevision <= 12)
     {
-        oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f; // high cut at the bottom
+        // high cut at the bottom
+        oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f;
         oscdata->p[sine_lowcut].deactivated = true;
-        oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f; // low cut at the top
+
+        // low cut at the top
+        oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f;
         oscdata->p[sine_highcut].deactivated = true;
+
         oscdata->p[sine_feedback].set_type(ct_osc_feedback);
 
         int wave_remap[] = {0, 8, 9, 10, 1, 11, 4, 12, 13, 2, 3, 5, 6, 7, 14, 15, 16, 17, 18, 19};
