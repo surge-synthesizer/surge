@@ -92,7 +92,14 @@ class alignas(16) SurgeSynthesizer
 
     void resetStateFromTimeData();
     void processControl();
-    void processThreadunsafeOperations();
+    /*
+     * processThreadunsafeOperations reloads a patch if the audio thread isn't running
+     * but if it is running lets the deferred queue handle it. But it has an option
+     * which is *extremely dangerous* to force you to load in the current thread immediately.
+     * If you use this option and dont' know what you are doing it will explode - basically
+     * we only use it in the startup constructor path.
+     */
+    void processThreadunsafeOperations(bool doItEvenIfAudioIsRunningDANGER = false);
     bool loadFx(bool initp, bool force_reload_all);
     bool loadOscalgos();
     bool load_fx_needed;
