@@ -19,7 +19,7 @@ template <typename T> struct HoverGuard
 {
     HoverGuard() {}
 
-    void activate(std::function<T()> getf, std::function<void(T &)> isetf, T &overr)
+    void activate(std::function<T()> getf, std::function<void(T)> isetf, T overr)
     {
         active = true;
         setf = isetf;
@@ -30,11 +30,42 @@ template <typename T> struct HoverGuard
     ~HoverGuard()
     {
         if (active)
+        {
             setf(orig);
+        }
     }
 
     bool active = false;
-    std::function<void(T &)> setf;
+    std::function<void(T)> setf;
+    T orig;
+};
+
+template <typename T> struct HoverGuardRF
+{
+    HoverGuardRF() {}
+
+    void activate(std::function<T()> getf, std::function<void(T)> isetf, T overr)
+    {
+        active = true;
+        setf = isetf;
+        orig = getf();
+        if (orig)
+            orig->remember();
+        setf(overr);
+    }
+
+    ~HoverGuardRF()
+    {
+        if (active)
+        {
+            setf(orig);
+            if (orig)
+                orig->forget();
+        }
+    }
+
+    bool active = false;
+    std::function<void(T)> setf;
     T orig;
 };
 
@@ -45,15 +76,22 @@ void CTextButtonWithHover::draw(VSTGUI::CDrawContext *context)
     HoverGuard<T> hg_##x;                                                                          \
     if (hc_##x.isSet)                                                                              \
     {                                                                                              \
-        hg_##x.activate([this]() { return get##x(); }, [this](T &c) { set##x(c); }, hc_##x.item);  \
+        hg_##x.activate([this]() { return get##x(); }, [this](T c) { set##x(c); }, hc_##x.item);   \
+    }
+
+#define DO_HOVERRF(x, T)                                                                           \
+    HoverGuardRF<T> hg_##x;                                                                        \
+    if (hc_##x.isSet)                                                                              \
+    {                                                                                              \
+        hg_##x.activate([this]() { return get##x(); }, [this](T c) { set##x(c); }, hc_##x.item);   \
     }
 
     if (isHovered)
     {
-        DO_HOVER(Gradient, VSTGUI::CGradient *);
+        DO_HOVERRF(Gradient, VSTGUI::CGradient *);
         DO_HOVER(FrameColor, VSTGUI::CColor);
         DO_HOVER(TextColor, VSTGUI::CColor);
-        DO_HOVER(GradientHighlighted, VSTGUI::CGradient *);
+        DO_HOVERRF(GradientHighlighted, VSTGUI::CGradient *);
         DO_HOVER(FrameColorHighlighted, VSTGUI::CColor);
         DO_HOVER(TextColorHighlighted, VSTGUI::CColor);
         CTextButton::draw(context);

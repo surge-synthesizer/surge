@@ -1302,7 +1302,12 @@ struct MSEGCanvas : public CControl,
                 dc->setLineStyle(
                     CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
 #else
-                std::cout << "FIXME: Dashed Lines" << std::endl;
+                static bool warned = false;
+                if (!warned)
+                {
+                    std::cout << "FIXME: Dashed Lines " << __FILE__ << __LINE__ << std::endl;
+                    warned = true;
+                }
 #endif
             }
 

@@ -7249,9 +7249,14 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         b->setHoverFrameColor(hovbtnborder);
         b->setHoverTextColor(hovbtntext);
         b->setGradientHighlighted(presscg);
+        b->setHoverGradientHighlighted(presscg);
         b->setFrameColorHighlighted(pressbtnborder);
         b->setTextColorHighlighted(pressbtntext);
         b->setRoundRadius(CCoord(3.f));
+
+        presscg->forget();
+        hovcg->forget();
+        cg->forget();
 
         innerc->addView(b);
     }
@@ -7278,6 +7283,7 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
     // save the onClose function
     editorOverlay.push_back(std::make_pair(editorTag, editorOverlayC));
     editorOverlayOnClose[editorOverlayC] = onClose;
+    editorOverlayContentsWeakReference[editorOverlayC] = c;
     editorOverlayContentsWeakReference[editorOverlayC] = c;
 }
 
@@ -7451,6 +7457,10 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     kb->setTextColorHighlighted(pressbtntext);
     kb->setRoundRadius(CCoord(3.f));
     bg->addView(kb);
+
+    presscg->forget();
+    hovcg->forget();
+    cg->forget();
 }
 
 void SurgeGUIEditor::swapControllers(int t1, int t2)
@@ -7632,6 +7642,10 @@ void SurgeGUIEditor::makeStorePatchDialog()
     kb->setFrameColorHighlighted(pressbtnborder);
     kb->setTextColorHighlighted(pressbtntext);
     kb->setRoundRadius(CCoord(3.f));
+
+    cg->forget();
+    presscg->forget();
+    hovcg->forget();
 
     saveDialog->addView(pnamelbl);
     saveDialog->addView(pcatlbl);
