@@ -99,6 +99,24 @@ std::string getDLLPath()
 
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
+    if (samplerate == 0)
+    {
+        setSamplerate(48000);
+    }
+    else if (samplerate < 12000 || samplerate > 48000 * 32)
+    {
+        std::ostringstream oss;
+        oss << "Warning: SurgeStorage constructed with invalid samplerate :" << samplerate
+            << " - resetting to 48000 until Audio System tells us otherwise" << std::endl;
+        reportError(oss.str(), "SampleRate Corrputed on Startup");
+        setSamplerate(48000);
+    }
+    else
+    {
+        // Just in case, make sure we are completely consistent in all tables etc
+        setSamplerate(samplerate);
+    }
+
     _patch.reset(new SurgePatch(this));
 
     float cutoff = 0.455f;
