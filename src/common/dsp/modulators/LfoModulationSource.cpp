@@ -5,11 +5,11 @@
 
 using namespace std;
 
-int LfoModulationSource::urngSeed = 1234;
+int LFOModulationSource::urngSeed = 1234;
 
-LfoModulationSource::LfoModulationSource() {}
+LFOModulationSource::LFOModulationSource() {}
 
-void LfoModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *localcopy,
+void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *localcopy,
                                  SurgeVoiceState *state, StepSequencerStorage *ss, MSEGStorage *ms,
                                  FormulaModulatorStorage *fs, bool is_display)
 {
@@ -71,7 +71,7 @@ void LfoModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
         wf_history[i] = 0.f; // storage->rand_pm1();
 }
 
-float LfoModulationSource::bend1(float x)
+float LFOModulationSource::bend1(float x)
 {
     float a = 0.5f * limit_range(localcopy[ideform].f, -3.f, 3.f);
 
@@ -81,7 +81,7 @@ float LfoModulationSource::bend1(float x)
     return x;
 }
 
-float LfoModulationSource::bend2(float x)
+float LFOModulationSource::bend2(float x)
 {
     float a = localcopy[ideform].f;
 
@@ -90,7 +90,7 @@ float LfoModulationSource::bend2(float x)
     return x;
 }
 
-float LfoModulationSource::bend3(float x)
+float LFOModulationSource::bend3(float x)
 {
     float a = localcopy[ideform].f;
 
@@ -114,7 +114,7 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
     return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
-void LfoModulationSource::msegEnvelopePhaseAdjustment()
+void LFOModulationSource::msegEnvelopePhaseAdjustment()
 {
     /*
      * If we have an envelope MSEG length above 1 we want phase to span the duration
@@ -131,7 +131,7 @@ void LfoModulationSource::msegEnvelopePhaseAdjustment()
     }
 }
 
-void LfoModulationSource::initPhaseFromStartPhase()
+void LFOModulationSource::initPhaseFromStartPhase()
 {
     phase = localcopy[startphase].f;
     phaseInitialized = true;
@@ -146,7 +146,7 @@ void LfoModulationSource::initPhaseFromStartPhase()
     msegEnvelopePhaseAdjustment();
 }
 
-void LfoModulationSource::attack()
+void LFOModulationSource::attack()
 {
     // For VLFO you don't need this but SLFO get recycled, so you do
     msegstate = Surge::MSEG::EvaluatorState();
@@ -353,7 +353,7 @@ void LfoModulationSource::attack()
     }
 }
 
-void LfoModulationSource::release()
+void LFOModulationSource::release()
 {
     if (lfo->release.val.f < lfo->release.val_max.f)
     {
@@ -367,7 +367,7 @@ void LfoModulationSource::release()
     }
 }
 
-void LfoModulationSource::process_block()
+void LFOModulationSource::process_block()
 {
     if ((!phaseInitialized) || (lfo->trigmode.val.i == lm_keytrigger && lfo->rate.deactivated))
     {

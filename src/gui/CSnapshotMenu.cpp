@@ -9,7 +9,7 @@
 #include "filesystem/import.h"
 #include "SkinColors.h"
 #include "RuntimeFont.h"
-#include "guihelpers.h"
+#include "SurgeGUIUtils.h"
 #include "StringOps.h"
 
 #include <iostream>

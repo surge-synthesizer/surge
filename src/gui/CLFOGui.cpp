@@ -19,7 +19,7 @@
 #include "UserDefaults.h"
 #include <chrono>
 #include "DebugHelpers.h"
-#include "guihelpers.h"
+#include "SurgeGUIUtils.h"
 #include "SkinColors.h"
 #include "StringOps.h"
 #include <cstdint>
@@ -142,8 +142,8 @@ void CLFOGui::draw(CDrawContext *dc)
             lfoEnvelopeDAHDTime + std::min(pow(2.0f, lfodata->release.val.f), 4.f) +
             0.5; // susTime; this is now 0.5 to keep the envelope fixed in gate mode
 
-        LfoModulationSource *tlfo = new LfoModulationSource();
-        LfoModulationSource *tFullWave = nullptr;
+        LFOModulationSource *tlfo = new LFOModulationSource();
+        LFOModulationSource *tFullWave = nullptr;
         tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
         tlfo->attack();
 
@@ -166,7 +166,7 @@ void CLFOGui::draw(CDrawContext *dc)
             deactivateStorage.start_phase.val.f = 0;
             tpd[lfodata->start_phase.param_id_in_scene].f = 0;
             tpd[lfodata->rate.param_id_in_scene].f = desiredRate;
-            tFullWave = new LfoModulationSource();
+            tFullWave = new LFOModulationSource();
             tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
             tFullWave->attack();
         }
@@ -184,7 +184,7 @@ void CLFOGui::draw(CDrawContext *dc)
 
                 deactivateStorage.magnitude.val.f = 1.f;
                 tpd[lfodata->magnitude.param_id_in_scene].f = 1.f;
-                tFullWave = new LfoModulationSource();
+                tFullWave = new LFOModulationSource();
                 tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
                 tFullWave->attack();
             }
@@ -990,7 +990,7 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
     float totalSampleTime = cyclesec * n_stepseqsteps;
     float susTime = 4.0 * cyclesec;
 
-    LfoModulationSource *tlfo = new LfoModulationSource();
+    LFOModulationSource *tlfo = new LFOModulationSource();
     tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
     tlfo->attack();
     CRect boxo(rect_steps);

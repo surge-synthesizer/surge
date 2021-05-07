@@ -145,8 +145,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
 
         for (int l = 0; l < n_lfos_scene; l++)
         {
-            scene.modsources[ms_slfo1 + l] = new LfoModulationSource();
-            ((LfoModulationSource *)scene.modsources[ms_slfo1 + l])
+            scene.modsources[ms_slfo1 + l] = new LFOModulationSource();
+            ((LFOModulationSource *)scene.modsources[ms_slfo1 + l])
                 ->assign(&storage, &scene.lfo[n_lfos_voice + l], storage.getPatch().scenedata[sc],
                          0, &patch.stepsequences[sc][n_lfos_voice + l],
                          &patch.msegs[sc][n_lfos_voice + l],
