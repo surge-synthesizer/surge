@@ -18,7 +18,7 @@
 #include "UserDefaults.h"
 #include <string>
 #include <math.h>
-#include "unitconversion.h"
+#include "UnitConversions.h"
 #include <iostream>
 #include "SkinColors.h"
 #include "CScalableBitmap.h"

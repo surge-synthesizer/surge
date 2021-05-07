@@ -1,8 +1,8 @@
-#include "DualDelayEffect.h"
+#include "DelayEffect.h"
 
 using namespace std;
 
-DualDelayEffect::DualDelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+DelayEffect::DelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), timeL(0.0001), timeR(0.0001), lp(storage), hp(storage)
 {
     mix.set_blocksize(BLOCK_SIZE);
@@ -11,9 +11,9 @@ DualDelayEffect::DualDelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     crossfeed.set_blocksize(BLOCK_SIZE);
 }
 
-DualDelayEffect::~DualDelayEffect() {}
+DelayEffect::~DelayEffect() {}
 
-void DualDelayEffect::init()
+void DelayEffect::init()
 {
     memset(buffer[0], 0, (max_delay_length + FIRipol_N) * sizeof(float));
     memset(buffer[1], 0, (max_delay_length + FIRipol_N) * sizeof(float));
@@ -31,7 +31,7 @@ void DualDelayEffect::init()
     inithadtempo = (storage->temposyncratio_inv != 0);
 }
 
-void DualDelayEffect::setvars(bool init)
+void DelayEffect::setvars(bool init)
 {
     if (!inithadtempo && storage->temposyncratio_inv != 0)
     {
@@ -126,7 +126,7 @@ void DualDelayEffect::setvars(bool init)
     }
 }
 
-void DualDelayEffect::process(float *dataL, float *dataR)
+void DelayEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
@@ -220,9 +220,9 @@ void DualDelayEffect::process(float *dataL, float *dataR)
     wpos = wpos & (max_delay_length - 1);
 }
 
-void DualDelayEffect::suspend() { init(); }
+void DelayEffect::suspend() { init(); }
 
-const char *DualDelayEffect::group_label(int id)
+const char *DelayEffect::group_label(int id)
 {
     switch (id)
     {
@@ -239,7 +239,7 @@ const char *DualDelayEffect::group_label(int id)
     }
     return 0;
 }
-int DualDelayEffect::group_label_ypos(int id)
+int DelayEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -257,7 +257,7 @@ int DualDelayEffect::group_label_ypos(int id)
     return 0;
 }
 
-void DualDelayEffect::init_ctrltypes()
+void DelayEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -301,7 +301,7 @@ void DualDelayEffect::init_ctrltypes()
     fxdata->p[dly_width].posy_offset = 5;
 }
 
-void DualDelayEffect::init_default_values()
+void DelayEffect::init_default_values()
 {
     fxdata->p[dly_time_left].val.f = -2.f;
     fxdata->p[dly_time_right].val.f = -2.f;
@@ -324,8 +324,8 @@ void DualDelayEffect::init_default_values()
     fxdata->p[dly_width].val.f = 0.f;
 }
 
-void DualDelayEffect::handleStreamingMismatches(int streamingRevision,
-                                                int currentSynthStreamingRevision)
+void DelayEffect::handleStreamingMismatches(int streamingRevision,
+                                            int currentSynthStreamingRevision)
 {
     if (streamingRevision <= 15)
     {

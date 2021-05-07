@@ -15,7 +15,7 @@
 
 #include "SurgeGUIEditor.h"
 #include "CLFOGui.h"
-#include "LFOModSource.h"
+#include "LFOModulationSource.h"
 #include "UserDefaults.h"
 #include <chrono>
 #include "DebugHelpers.h"

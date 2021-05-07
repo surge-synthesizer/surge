@@ -13,9 +13,9 @@
 ** open source in September 2018.
 */
 
-#include "GEQ11Effect.h"
+#include "GraphicEQ11BandEffect.h"
 
-GEQ11Effect::GEQ11Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+GraphicEQ11BandEffect::GraphicEQ11BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage), band4(storage),
       band5(storage), band6(storage), band7(storage), band8(storage), band9(storage),
       band10(storage), band11(storage)
@@ -35,9 +35,9 @@ GEQ11Effect::GEQ11Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     gain.set_blocksize(BLOCK_SIZE);
 }
 
-GEQ11Effect::~GEQ11Effect() {}
+GraphicEQ11BandEffect::~GraphicEQ11BandEffect() {}
 
-void GEQ11Effect::init()
+void GraphicEQ11BandEffect::init()
 {
     setvars(true);
     band1.suspend();
@@ -54,7 +54,7 @@ void GEQ11Effect::init()
     bi = 0;
 }
 
-void GEQ11Effect::setvars(bool init)
+void GraphicEQ11BandEffect::setvars(bool init)
 {
     if (init)
     {
@@ -103,7 +103,7 @@ void GEQ11Effect::setvars(bool init)
     }
 }
 
-void GEQ11Effect::process(float *dataL, float *dataR)
+void GraphicEQ11BandEffect::process(float *dataL, float *dataR)
 {
     if (bi == 0)
         setvars(false);
@@ -136,9 +136,9 @@ void GEQ11Effect::process(float *dataL, float *dataR)
     gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
-void GEQ11Effect::suspend() { init(); }
+void GraphicEQ11BandEffect::suspend() { init(); }
 
-const char *GEQ11Effect::group_label(int id)
+const char *GraphicEQ11BandEffect::group_label(int id)
 {
     switch (id)
     {
@@ -149,7 +149,7 @@ const char *GEQ11Effect::group_label(int id)
     }
     return 0;
 }
-int GEQ11Effect::group_label_ypos(int id)
+int GraphicEQ11BandEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -161,7 +161,7 @@ int GEQ11Effect::group_label_ypos(int id)
     return 0;
 }
 
-void GEQ11Effect::init_ctrltypes()
+void GraphicEQ11BandEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -177,7 +177,7 @@ void GEQ11Effect::init_ctrltypes()
     }
 }
 
-void GEQ11Effect::init_default_values()
+void GraphicEQ11BandEffect::init_default_values()
 {
     for (int i = 0; i < geq11_gain; i++)
     {

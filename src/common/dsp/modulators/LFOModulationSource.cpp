@@ -1,4 +1,4 @@
-#include "LFOModSource.h"
+#include "LFOModulationSource.h"
 #include <cmath>
 #include "DebugHelpers.h"
 #include "MSEGModulationHelper.h"
