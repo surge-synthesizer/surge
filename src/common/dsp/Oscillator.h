@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SurgeStorage.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <vembertech/lipol.h>
 #include "BiquadFilter.h"
 

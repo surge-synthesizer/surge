@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 
 /*	base class			*/

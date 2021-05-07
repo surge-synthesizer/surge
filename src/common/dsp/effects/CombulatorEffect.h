@@ -16,7 +16,7 @@
 #pragma once
 #include "Effect.h"
 #include "BiquadFilter.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "QuadFilterUnit.h"
 
 #include <vembertech/lipol.h>

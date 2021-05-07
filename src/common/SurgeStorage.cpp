@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 #include <set>
 #include <numeric>

@@ -14,7 +14,7 @@
 */
 
 #include "WindowOscillator.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 
 #include <cstdint>
 #include "DebugHelpers.h"

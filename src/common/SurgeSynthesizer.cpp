@@ -14,7 +14,7 @@
 */
 
 #include "SurgeSynthesizer.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <ctime>
 #include "CPUFeatures.h"
 #if MAC || LINUX

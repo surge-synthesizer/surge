@@ -22,7 +22,7 @@
 #include "OscillatorBase.h"
 #include <memory>
 #include "basic_dsp.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "OscillatorCommonFunctions.h"
 
 #if SAMPLERATE_LANCZOS

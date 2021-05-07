@@ -281,10 +281,10 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/oscillators/Wavetable.cpp
   src/common/dsp/oscillators/WavetableOscillator.cpp
   src/common/dsp/oscillators/WindowOscillator.cpp
-  src/common/dsp/modulators/AdsrEnvelope.h
-  src/common/dsp/modulators/LfoModulationSource.cpp
+  src/common/dsp/modulators/ADSRModulationSource.h
+  src/common/dsp/modulators/LFOModSource.cpp
   src/common/dsp/modulators/MSEGModulationHelper.cpp
-  src/common/dsp/utilities/DspUtilities.cpp
+  src/common/dsp/utilities/DSPUtils.cpp
   src/common/dsp/utilities/FastMath.h
   src/common/dsp/utilities/SSEComplex.h
   src/common/dsp/utilities/SSESincDelayLine.h

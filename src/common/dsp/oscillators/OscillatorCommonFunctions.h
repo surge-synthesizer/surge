@@ -16,7 +16,7 @@
 #ifndef SURGE_OSCILLATORCOMMONFUNCTIONS_H
 #define SURGE_OSCILLATORCOMMONFUNCTIONS_H
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 
 namespace Surge

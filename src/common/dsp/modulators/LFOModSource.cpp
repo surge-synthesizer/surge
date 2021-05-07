@@ -1,4 +1,4 @@
-#include "LfoModulationSource.h"
+#include "LFOModSource.h"
 #include <cmath>
 #include "DebugHelpers.h"
 #include "MSEGModulationHelper.h"
@@ -25,7 +25,7 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     iout = 0;
     output = 0;
     step = 0;
-    env_state = lenv_delay;
+    env_state = lfoeg_delay;
     env_val = 0.f;
     env_phase = 0;
     shuffle_id = 0;
@@ -155,20 +155,20 @@ void LFOModulationSource::attack()
     {
         initPhaseFromStartPhase();
     }
-    env_state = lenv_delay;
+    env_state = lfoeg_delay;
 
     env_val = 0.f;
     env_phase = 0;
     ratemult = 1.f;
     if (localcopy[idelay].f == lfo->delay.val_min.f)
     {
-        env_state = lenv_attack;
+        env_state = lfoeg_attack;
         if (localcopy[iattack].f == lfo->attack.val_min.f)
         {
-            env_state = lenv_hold;
+            env_state = lfoeg_hold;
             env_val = 1.f;
             if (localcopy[ihold].f == lfo->hold.val_min.f)
-                env_state = lenv_decay;
+                env_state = lfoeg_decay;
         }
     }
 
@@ -357,13 +357,13 @@ void LFOModulationSource::release()
 {
     if (lfo->release.val.f < lfo->release.val_max.f)
     {
-        env_state = lenv_release;
+        env_state = lfoeg_release;
         env_releasestart = env_val;
         env_phase = 0;
     }
     else if (lfo->shape.val.i == lt_mseg)
     {
-        env_state = lenv_msegrelease;
+        env_state = lfoeg_msegrelease;
     }
 }
 
@@ -410,33 +410,33 @@ void LFOModulationSource::process_block()
         phase = 0.001; // step forward a smidge
     }
 
-    if (env_state != lenv_stuck && env_state != lenv_msegrelease)
+    if (env_state != lfoeg_stuck && env_state != lfoeg_msegrelease)
     {
         float envrate = 0;
 
         switch (env_state)
         {
-        case lenv_delay:
+        case lfoeg_delay:
             envrate = envelope_rate_linear_nowrap(localcopy[idelay].f);
             if (lfo->delay.temposync)
                 envrate *= storage->temposyncratio;
             break;
-        case lenv_attack:
+        case lfoeg_attack:
             envrate = envelope_rate_linear_nowrap(localcopy[iattack].f);
             if (lfo->attack.temposync)
                 envrate *= storage->temposyncratio;
             break;
-        case lenv_hold:
+        case lfoeg_hold:
             envrate = envelope_rate_linear_nowrap(localcopy[ihold].f);
             if (lfo->hold.temposync)
                 envrate *= storage->temposyncratio;
             break;
-        case lenv_decay:
+        case lfoeg_decay:
             envrate = envelope_rate_linear_nowrap(localcopy[idecay].f);
             if (lfo->decay.temposync)
                 envrate *= storage->temposyncratio;
             break;
-        case lenv_release:
+        case lfoeg_release:
             envrate = envelope_rate_linear_nowrap(localcopy[irelease].f);
             if (lfo->release.temposync)
                 envrate *= storage->temposyncratio;
@@ -450,25 +450,25 @@ void LFOModulationSource::process_block()
         {
             switch (env_state)
             {
-            case lenv_delay:
-                env_state = lenv_attack;
+            case lfoeg_delay:
+                env_state = lfoeg_attack;
                 env_phase = 0.f;
                 break;
-            case lenv_attack:
-                env_state = lenv_hold;
+            case lfoeg_attack:
+                env_state = lfoeg_hold;
                 env_phase = 0.f;
                 break;
-            case lenv_hold:
-                env_state = lenv_decay;
+            case lfoeg_hold:
+                env_state = lfoeg_decay;
                 env_phase = 0.f;
                 break;
-            case lenv_decay:
-                env_state = lenv_stuck;
+            case lfoeg_decay:
+                env_state = lfoeg_stuck;
                 env_phase = 0;
                 env_val = sustainlevel;
                 break;
-            case lenv_release:
-                env_state = lenv_stuck;
+            case lfoeg_release:
+                env_state = lfoeg_stuck;
                 env_phase = 0;
                 env_val = 0.f;
                 break;
@@ -476,19 +476,19 @@ void LFOModulationSource::process_block()
         }
         switch (env_state)
         {
-        case lenv_delay:
+        case lfoeg_delay:
             env_val = 0.f;
             break;
-        case lenv_attack:
+        case lfoeg_attack:
             env_val = env_phase;
             break;
-        case lenv_hold:
+        case lfoeg_hold:
             env_val = 1.f;
             break;
-        case lenv_decay:
+        case lfoeg_decay:
             env_val = (1.f - env_phase) + env_phase * sustainlevel;
             break;
-        case lenv_release:
+        case lfoeg_release:
             env_val = (1.f - env_phase) * env_releasestart;
             break;
         };
@@ -829,7 +829,7 @@ void LFOModulationSource::process_block()
         break;
 
     case lt_mseg:
-        msegstate.released = (env_state == lenv_release || env_state == lenv_msegrelease);
+        msegstate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
 
         iout = Surge::MSEG::valueAt(unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
                                     &msegstate);

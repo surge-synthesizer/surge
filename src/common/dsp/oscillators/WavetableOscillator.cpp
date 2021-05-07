@@ -14,7 +14,7 @@
 */
 
 #include "WavetableOscillator.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 
 using namespace std;
 

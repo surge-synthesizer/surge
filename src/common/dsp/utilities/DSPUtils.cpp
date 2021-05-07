@@ -1,4 +1,4 @@
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 
 float correlated_noise(float lastval, float correlation)

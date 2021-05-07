@@ -15,23 +15,23 @@
 
 #pragma once
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
 #include "MSEGModulationHelper.h" // We need this for the MSEGEvalatorState member
 #include <functional>
 
-enum lfoenv_state
+enum LFOEG_state
 {
-    lenv_off = 0,
-    lenv_delay,
-    lenv_attack,
-    lenv_hold,
-    lenv_decay,
-    lenv_release,
-    lenv_msegrelease,
-    lenv_stuck,
+    lfoeg_off = 0,
+    lfoeg_delay,
+    lfoeg_attack,
+    lfoeg_hold,
+    lfoeg_decay,
+    lfoeg_release,
+    lfoeg_msegrelease,
+    lfoeg_stuck,
 };
 
 class LFOModulationSource : public ModulationSource

@@ -14,7 +14,7 @@
 */
 
 #include "SurgeVoice.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "QuadFilterChain.h"
 #include <math.h>
 #include "libMTSClient.h"
@@ -538,17 +538,17 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     {
         if (lfo[i].retrigger_AEG)
         {
-            ((ADSREnvelope *)modsources[ms_ampeg])->retrigger();
+            ((ADSRModulationSource *)modsources[ms_ampeg])->retrigger();
         }
         if (lfo[i].retrigger_FEG)
         {
-            ((ADSREnvelope *)modsources[ms_filtereg])->retrigger();
+            ((ADSRModulationSource *)modsources[ms_filtereg])->retrigger();
         }
     }
 
     modsources[ms_ampeg]->process_block();
     modsources[ms_filtereg]->process_block();
-    if (((ADSREnvelope *)modsources[ms_ampeg])->is_idle())
+    if (((ADSRModulationSource *)modsources[ms_ampeg])->is_idle())
         state.keep_playing = false;
 
     // TODO memcpy is bottleneck
@@ -621,8 +621,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     if (state.porta_doretrigger)
     {
         state.porta_doretrigger = false;
-        ((ADSREnvelope *)modsources[ms_ampeg])->retrigger();
-        ((ADSREnvelope *)modsources[ms_filtereg])->retrigger();
+        ((ADSRModulationSource *)modsources[ms_ampeg])->retrigger();
+        ((ADSRModulationSource *)modsources[ms_filtereg])->retrigger();
     }
 
     float pb = modsources[ms_pitchbend]->output;

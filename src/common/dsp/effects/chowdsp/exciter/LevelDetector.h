@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 
 namespace chowdsp
 {

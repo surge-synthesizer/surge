@@ -16,7 +16,7 @@
 #pragma once
 #include "Effect.h"
 #include "BiquadFilter.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "AllpassFilter.h"
 
 #include "VectorizedSVFilter.h"

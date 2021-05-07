@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <math.h>
 #include "SurgeStorage.h"
 

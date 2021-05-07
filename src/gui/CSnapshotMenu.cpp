@@ -1,6 +1,6 @@
 #include "globals.h"
 #include "SurgeGUIEditor.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "CSnapshotMenu.h"
 #include "Effect.h"
 #include "CScalableBitmap.h"

@@ -14,7 +14,7 @@
 */
 
 #include "ClassicOscillator.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 
 /*
 **
