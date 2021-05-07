@@ -15,7 +15,8 @@
 
 #include "ParametricEQ3BandEffect.h"
 
-ParametricEQ3BandEffect::ParametricEQ3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+ParametricEQ3BandEffect::ParametricEQ3BandEffect(SurgeStorage *storage, FxStorage *fxdata,
+                                                 pdata *pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage)
 {
     band1.setBlockSize(BLOCK_SIZE * slowrate); // does not matter ATM as they're smoothed
@@ -238,7 +239,7 @@ void ParametricEQ3BandEffect::init_default_values()
 }
 
 void ParametricEQ3BandEffect::handleStreamingMismatches(int streamingRevision,
-                                              int currentSynthStreamingRevision)
+                                                        int currentSynthStreamingRevision)
 {
     if (streamingRevision <= 12)
     {

@@ -325,7 +325,7 @@ void DelayEffect::init_default_values()
 }
 
 void DelayEffect::handleStreamingMismatches(int streamingRevision,
-                                                int currentSynthStreamingRevision)
+                                            int currentSynthStreamingRevision)
 {
     if (streamingRevision <= 15)
     {
