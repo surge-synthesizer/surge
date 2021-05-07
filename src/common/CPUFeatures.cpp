@@ -29,32 +29,26 @@
 #include <intrin.h>
 #endif
 
+#ifdef _WIN32
+//  Windows
+#define cpuid(info, x) __cpuidex(info, x, 0)
+#else
+#if LINUX && !ARM_NEON
+#ifdef __GNUC__
+//  GCC Intrinsics
+#include <cpuid.h>
+void cpuid(int info[4], int InfoType)
+{
+    __cpuid_count(InfoType, 0, info[0], info[1], info[2], info[3]);
+}
+#endif
+#endif
+#endif
+
 namespace Surge
 {
 namespace CPUFeatures
 {
-
-#if LINUX && !ARM_NEON
-#ifdef __GNUC__
-// Thanks to https://gist.github.com/hi2p-perim/7855506
-void __cpuid(int *cpuinfo, int info)
-{
-    __asm__ __volatile__("xchg %%ebx, %%edi;"
-                         "cpuid;"
-                         "xchg %%ebx, %%edi;"
-                         : "=a"(cpuinfo[0]), "=D"(cpuinfo[1]), "=c"(cpuinfo[2]), "=d"(cpuinfo[3])
-                         : "0"(info));
-}
-
-unsigned long long _xgetbv(unsigned int index)
-{
-    unsigned int eax, edx;
-    __asm__ __volatile__("xgetbv;" : "=a"(eax), "=d"(edx) : "c"(index));
-    return ((unsigned long long)edx << 32) | eax;
-}
-
-#endif
-#endif
 
 std::string cpuBrand()
 {
@@ -147,7 +141,6 @@ bool isX86()
 bool hasSSE2() { return true; }
 bool hasAVX()
 {
-    return true;
 #if ARM_NEON
     return true; // thanks simde
 #else
@@ -155,19 +148,21 @@ bool hasAVX()
     return true;
 #endif
 #if WINDOWS || LINUX
-    bool avxSup;
-    int cpuinfo[4];
-    __cpuid(cpuinfo, 1);
+    int info[4];
+    cpuid(info, 0);
+    unsigned int nIds = info[0];
 
-    avxSup = cpuinfo[2] & (1 << 28) || false;
+    cpuid(info, 0x80000000);
+    unsigned nExIds = info[0];
 
-    bool osxsaveSup = cpuinfo[2] & (1 << 27) || false;
-    if (osxsaveSup && avxSup)
+    bool avxSup = false;
+    if (nIds >= 0x00000001)
     {
-        // _XCR_XFEATURE_ENABLED_MASK = 0
-        unsigned long long xcrFeatureMask = _xgetbv(0);
-        avxSup = (xcrFeatureMask & 0x6) == 0x6;
+        cpuid(info, 0x00000001);
+
+        avxSup = (info[2] & ((int)1 << 28)) != 0;
     }
+
     return avxSup;
 #endif
 

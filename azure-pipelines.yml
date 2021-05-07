@@ -70,6 +70,13 @@ jobs:
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_PYTHON_BINDINGS=True"
         cmakeTarget: "surgepy"
         cmakeConfig: "Debug"
+      linux-clang-juce:
+        imageName: 'ubuntu-18.04'
+        isLinux: True
+        aptGetExtras: "clang"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+        cmakeTarget: "surge-xt_Standalone"
+        cmakeConfig: "Debug"
       linux-juce-targets:
         imageName: 'ubuntu-18.04'
         isLinux: True
