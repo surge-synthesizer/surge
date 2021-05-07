@@ -15,7 +15,7 @@
 
 #pragma once
 #include "Effect.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <vembertech/lipol.h>
 #include "QuadFilterUnit.h"
 

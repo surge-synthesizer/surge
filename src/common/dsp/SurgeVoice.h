@@ -17,8 +17,8 @@
 #include "SurgeStorage.h"
 #include "Oscillator.h"
 #include "SurgeVoiceState.h"
-#include "AdsrEnvelope.h"
-#include "LfoModulationSource.h"
+#include "ADSRModulationSource.h"
+#include "LFOModSource.h"
 #include <vembertech/lipol.h>
 #include "FilterCoefficientMaker.h"
 #include "QuadFilterChain.h"
@@ -185,8 +185,8 @@ class alignas(16) SurgeVoice
     ControllerModulationSource monoAftertouchSource;
     ControllerModulationSource timbreSource;
     ModulationSource rndUni, rndBi, altUni, altBi;
-    ADSREnvelope ampEGSource;
-    ADSREnvelope filterEGSource;
+    ADSRModulationSource ampEGSource;
+    ADSRModulationSource filterEGSource;
 
     // filterblock stuff
     int id_cfa, id_cfb, id_kta, id_ktb, id_emoda, id_emodb, id_resoa, id_resob, id_drive, id_vca,

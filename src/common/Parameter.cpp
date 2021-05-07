@@ -15,7 +15,7 @@
 
 #include "SurgeStorage.h"
 #include "Parameter.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <cstring>
 #include <iomanip>
 #include <sstream>

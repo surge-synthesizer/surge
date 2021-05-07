@@ -15,7 +15,7 @@
 
 #include "SurgeGUIEditor.h"
 #include "CLFOGui.h"
-#include "LfoModulationSource.h"
+#include "LFOModSource.h"
 #include "UserDefaults.h"
 #include <chrono>
 #include "DebugHelpers.h"
@@ -233,11 +233,11 @@ void CLFOGui::draw(CDrawContext *dc)
                 tlfo->process_block();
                 if (tFullWave)
                     tFullWave->process_block();
-                if (susCountdown < 0 && tlfo->env_state == lenv_stuck)
+                if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
                 {
                     susCountdown = susTime * samplerate / BLOCK_SIZE;
                 }
-                else if (susCountdown == 0 && tlfo->env_state == lenv_stuck)
+                else if (susCountdown == 0 && tlfo->env_state == lfoeg_stuck)
                 {
                     tlfo->release();
                     if (tFullWave)
@@ -1024,11 +1024,11 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
         for (int s = 0; s < averagingWindow; s++)
         {
             tlfo->process_block();
-            if (susCountdown < 0 && tlfo->env_state == lenv_stuck)
+            if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
             {
                 susCountdown = susTime * samplerate / BLOCK_SIZE;
             }
-            else if (susCountdown == 0 && tlfo->env_state == lenv_stuck)
+            else if (susCountdown == 0 && tlfo->env_state == lfoeg_stuck)
             {
                 tlfo->release();
             }

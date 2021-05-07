@@ -15,13 +15,13 @@
 
 #pragma once
 
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SurgeStorage.h"
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
 #include "DebugHelpers.h"
 
-enum AdsrState
+enum ADSRState
 {
     s_attack = 0,
     s_decay,
@@ -37,10 +37,10 @@ const float zero = 0.f;
 const float db96 = powf(10.f, 0.05f * -96.f);
 const float db60 = powf(10.f, 0.05f * -60.f);
 
-class ADSREnvelope : public ModulationSource
+class ADSRModulationSource : public ModulationSource
 {
   public:
-    ADSREnvelope() {}
+    ADSRModulationSource() {}
 
     void init(SurgeStorage *storage, ADSRStorage *adsr, pdata *localcopy, SurgeVoiceState *state)
     {

@@ -1,5 +1,5 @@
 #include "CSurgeVuMeter.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SkinColors.h"
 #include "SkinSupport.h"
 #include "CScalableBitmap.h"

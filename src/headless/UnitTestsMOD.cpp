@@ -27,7 +27,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
                            bool isAnalog, float releaseAfter, float runUntil, float pushSusAt = -1,
                            float pushSusTo = 0) {
         auto *adsrstorage = &(surge->storage.getPatch().scene[0].adsr[0]);
-        std::shared_ptr<ADSREnvelope> adsr(new ADSREnvelope());
+        std::shared_ptr<ADSRModulationSource> adsr(new ADSRModulationSource());
         adsr->init(&(surge->storage), adsrstorage, surge->storage.getPatch().scenedata[0], nullptr);
         REQUIRE(adsr.get());
 

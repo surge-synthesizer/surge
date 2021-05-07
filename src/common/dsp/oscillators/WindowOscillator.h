@@ -16,7 +16,7 @@
 #pragma once
 
 #include "OscillatorBase.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include <vembertech/lipol.h>
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"

@@ -15,7 +15,7 @@
 
 #include "OscillatorBase.h"
 #include "SurgeStorage.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SSESincDelayLine.h"
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"

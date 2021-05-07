@@ -15,7 +15,7 @@
 
 #pragma once
 #include "SurgeStorage.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "SkinSupport.h"
 #include "CursorControlGuard.h"
 

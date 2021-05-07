@@ -14,7 +14,7 @@
 */
 
 #include "OscillatorBase.h"
-#include "DspUtilities.h"
+#include "DSPUtils.h"
 #include "OscillatorCommonFunctions.h"
 
 class AliasOscillator : public Oscillator
