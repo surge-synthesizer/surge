@@ -17,8 +17,8 @@
 #include "SurgeStorage.h"
 #include "Oscillator.h"
 #include "SurgeVoiceState.h"
-#include "AdsrEnvelope.h"
-#include "LfoModulationSource.h"
+#include "ADSREnvelope.h"
+#include "LFOModulationSource.h"
 #include <vembertech/lipol.h>
 #include "FilterCoefficientMaker.h"
 #include "QuadFilterChain.h"

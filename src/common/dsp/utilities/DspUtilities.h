@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include "globals.h"
-#include "unitconversion.h"
+#include "UnitConversion.h"
 #include <vembertech/basic_dsp.h>
 #include <vembertech/halfratefilter.h>
 #include <functional>

@@ -227,7 +227,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effects/ConditionerEffect.cpp
   src/common/dsp/effects/DistortionEffect.cpp
   src/common/dsp/effects/DualDelayEffect.cpp
-  src/common/dsp/effects/Eq3BandEffect.cpp
+  src/common/dsp/effects/EQ3BandEffect.cpp
   src/common/dsp/effects/FreqshiftEffect.cpp
   src/common/dsp/effects/FlangerEffect.cpp
   src/common/dsp/effects/GEQ11Effect.cpp
@@ -260,11 +260,11 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/filters/BiquadFilterSSE2.cpp
   src/common/dsp/filters/DiodeLadder.cpp
   src/common/dsp/filters/FilterCoefficientMaker.cpp
-  src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/K35Filter.cpp
   src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/filters/NonlinearStates.cpp
-  src/common/dsp/filters/Obxd.cpp
-  src/common/dsp/filters/VectorizedSvfFilter.cpp
+  src/common/dsp/filters/OBXDFilter.cpp
+  src/common/dsp/filters/VectorizedSVFilter.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/oscillators/AliasOscillator.cpp
   src/common/dsp/oscillators/AudioInputOscillator.cpp
@@ -281,8 +281,8 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/oscillators/Wavetable.cpp
   src/common/dsp/oscillators/WavetableOscillator.cpp
   src/common/dsp/oscillators/WindowOscillator.cpp
-  src/common/dsp/modulators/AdsrEnvelope.h
-  src/common/dsp/modulators/LfoModulationSource.cpp
+  src/common/dsp/modulators/ADSREnvelope.h
+  src/common/dsp/modulators/LFOModulationSource.cpp
   src/common/dsp/modulators/MSEGModulationHelper.cpp
   src/common/dsp/utilities/DspUtilities.cpp
   src/common/dsp/utilities/FastMath.h
@@ -307,7 +307,7 @@ set(SURGE_SHARED_SOURCES
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
-  src/common/WavSupport.cpp
+  src/common/WAVSupport.cpp
   src/common/SkinModel.cpp
   src/common/SkinModelImpl.cpp
   src/common/SkinColors.cpp
@@ -330,7 +330,7 @@ set(SURGE_GUI_SOURCES
   src/gui/CEffectLabel.h
   src/gui/CEffectSettings.cpp
   src/gui/CHSwitch2.cpp
-  src/gui/CLFOGui.cpp
+  src/gui/CLFOGUI.cpp
   src/gui/CMenuAsSlider.cpp
   src/gui/CModulationSourceButton.cpp
   src/gui/CNumberField.cpp
@@ -346,7 +346,7 @@ set(SURGE_GUI_SOURCES
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/CVerticalLabel.cpp
-  src/gui/guihelpers.cpp
+  src/gui/GUIHelpers.cpp
   src/gui/ModulationEditor.cpp
   src/gui/MSEGEditor.cpp
   src/gui/PatchDBViewer.cpp
@@ -356,7 +356,7 @@ set(SURGE_GUI_SOURCES
   src/gui/SkinSupport.cpp
   src/gui/SurgeBitmaps.cpp
   src/gui/SurgeGUIEditor.cpp
-  src/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/gui/SurgeGUIEditorHTMLGenerators.cpp
   src/gui/SurgeJUCELookAndFeel.cpp
   src/gui/UIInstrumentation.cpp)
 
@@ -1079,7 +1079,7 @@ endif()
 if( UNIX AND NOT APPLE)
   if( BUILD_SURGE_XT)
     install(TARGETS surge-xt_Standalone DESTINATION bin)
-    # Alas you would think you could just say 
+    # Alas you would think you could just say
     # install(TARGETS surge-xt_VST3 DESTINATION lib/vst3 )
     # but you can't because surge-xt_VST3 points to the .so inside the VST3 bundle so instead say
     install( DIRECTORY "${SURGE_XT_OUTPUT_DIR}/VST3/Surge XT.vst3" DESTINATION lib/vst3 )
@@ -1092,7 +1092,7 @@ if( UNIX AND NOT APPLE)
     # and again
     # install(TARGETS surge-fx_VST3 DESTINATION lib/vst3 )
     install( DIRECTORY "${SURGE_FX_OUTPUT_DIR}/VST3/Surge XT Effects.vst3" DESTINATION lib/vst3 )
-   
+
     if( JUCE_SUPPORTS_LV2 )
       install(TARGETS surge-fx_LV2 DESTINATION lib/lv2)
     endif()

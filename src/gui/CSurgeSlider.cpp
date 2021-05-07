@@ -15,7 +15,7 @@
 
 #include "SurgeGUIEditor.h"
 #include "CSurgeSlider.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 #include "resource.h"
 #include "DspUtilities.h"
 #include "MouseCursorControl.h"

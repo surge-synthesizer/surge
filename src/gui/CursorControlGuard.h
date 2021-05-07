@@ -21,7 +21,7 @@
 #endif
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 
 namespace Surge
 {

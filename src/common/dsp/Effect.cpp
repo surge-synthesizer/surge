@@ -4,7 +4,7 @@
 #include "ConditionerEffect.h"
 #include "DistortionEffect.h"
 #include "DualDelayEffect.h"
-#include "Eq3BandEffect.h"
+#include "EQ3BandEffect.h"
 #include "FlangerEffect.h"
 #include "FreqshiftEffect.h"
 #include "GEQ11Effect.h"
