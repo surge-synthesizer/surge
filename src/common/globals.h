@@ -21,7 +21,6 @@
 #include <algorithm>
 
 #if MAC
-#include "vembertech/macspecific.h"
 
 #if defined(__x86_64__)
 #else
