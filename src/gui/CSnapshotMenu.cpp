@@ -271,7 +271,7 @@ void COscMenu::draw(CDrawContext *dc)
     {
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             skinControl, dynamic_cast<CScalableBitmap *>(bmp), associatedBitmapStore,
-            Surge::UI::Skin::HOVER);
+            Surge::GUI::Skin::HOVER);
         attemptedHoverLoad = true;
     }
     CRect size = getViewSize();
@@ -426,7 +426,7 @@ void CFxMenu::draw(CDrawContext *dc)
         pBackground = associatedBitmapStore->getBitmap(IDB_MENU_AS_SLIDER);
         pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
             skinControl, dynamic_cast<CScalableBitmap *>(pBackground), associatedBitmapStore,
-            Surge::UI::Skin::HoverType::HOVER);
+            Surge::GUI::Skin::HoverType::HOVER);
     }
 
     if (pBackground)
@@ -743,13 +743,13 @@ void CFxMenu::populate()
     if (fx->type.val.i != fxt_off)
     {
         auto saveItem = std::make_shared<CCommandMenuItem>(
-            CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save FX Preset")));
+            CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Save FX Preset")));
         saveItem->setActions([this](CCommandMenuItem *item) { this->saveFX(); });
         menu->addEntry(saveItem);
     }
 
     auto rescanItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh FX Preset List")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List")));
     rescanItem->setActions([this](CCommandMenuItem *item) {
         scanForUserPresets = true;
         auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);

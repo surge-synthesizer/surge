@@ -30,7 +30,7 @@
 
 namespace Surge
 {
-namespace UI
+namespace GUI
 {
 /*
  * I want to count shows and hides. macOS does this internally inside the API
@@ -132,5 +132,5 @@ void CursorControlGuard::setShowLocationFromViewLocation(VSTGUI::CView *v,
     setShowLocationFromFrameLocation(v->getFrame(), r);
 }
 
-} // namespace UI
+} // namespace GUI
 } // namespace Surge

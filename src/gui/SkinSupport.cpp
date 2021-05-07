@@ -18,14 +18,14 @@
 
 namespace Surge
 {
-namespace UI
+namespace GUI
 {
 
 const std::string NoneClassName = "none";
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
 std::ostringstream SkinDB::errorStream;
 
-SkinDB &Surge::UI::SkinDB::get()
+SkinDB &Surge::GUI::SkinDB::get()
 {
     static SkinDB instance;
     return instance;
@@ -1123,7 +1123,7 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBit
     return nullptr;
 }
 
-void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c, int version)
+void Surge::GUI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c, int version)
 {
     x = c.payload->posx;
     y = c.payload->posy;
@@ -1241,7 +1241,7 @@ void Surge::UI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c
     }
 }
 
-void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
+void Surge::GUI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
 {
     if (c->parentResolved)
         return;
@@ -1279,5 +1279,5 @@ void Surge::UI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
     c->parentResolved = true;
 }
 
-} // namespace UI
+} // namespace GUI
 } // namespace Surge

@@ -25,8 +25,8 @@
 class CScalableBitmap;
 
 class CLFOGui : public VSTGUI::CControl,
-                public Surge::UI::SkinConsumingComponent,
-                public Surge::UI::CursorControlAdapter<CLFOGui>
+                public Surge::GUI::SkinConsumingComponent,
+                public Surge::GUI::CursorControlAdapter<CLFOGui>
 {
     enum control_states
     {
@@ -53,7 +53,7 @@ class CLFOGui : public VSTGUI::CControl,
             StepSequencerStorage *ss = 0, MSEGStorage *ms = 0, FormulaModulatorStorage *fs = 0,
             std::shared_ptr<SurgeBitmaps> ibms = nullptr)
         : VSTGUI::CControl(size, listener, tag, 0),
-          bitmapStore(ibms), Surge::UI::CursorControlAdapter<CLFOGui>(storage)
+          bitmapStore(ibms), Surge::GUI::CursorControlAdapter<CLFOGui>(storage)
     {
         this->lfodata = lfodata;
         this->storage = storage;

@@ -25,7 +25,7 @@
 
 namespace Surge
 {
-namespace UI
+namespace GUI
 {
 
 /*
@@ -192,5 +192,5 @@ template <typename T> struct CursorControlAdapterWithMouseDelta : public CursorC
     VSTGUI::CPoint deltapoint, origdeltapoint;
 };
 
-} // namespace UI
+} // namespace GUI
 } // namespace Surge

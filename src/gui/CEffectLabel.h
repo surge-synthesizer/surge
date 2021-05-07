@@ -18,7 +18,7 @@
 #include "SkinColors.h"
 #include "RuntimeFont.h"
 
-class CEffectLabel : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CEffectLabel : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CEffectLabel(const VSTGUI::CRect &size) : VSTGUI::CControl(size, 0, 0, 0) {}

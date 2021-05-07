@@ -20,7 +20,7 @@
 #include <CoreText/CoreText.h>
 #endif
 
-void Surge::UI::addFontSearchPathToSystem(const fs::path &p)
+void Surge::GUI::addFontSearchPathToSystem(const fs::path &p)
 {
 #if MAC
     // Mac is traverse for TTF files and add to the path

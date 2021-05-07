@@ -21,8 +21,8 @@
 #include "SkinSupport.h"
 
 class CMenuAsSlider : public VSTGUI::CControl,
-                      public Surge::UI::SkinConsumingComponent,
-                      public Surge::UI::CursorControlAdapter<CMenuAsSlider>
+                      public Surge::GUI::SkinConsumingComponent,
+                      public Surge::GUI::CursorControlAdapter<CMenuAsSlider>
 {
   public:
     CMenuAsSlider(const VSTGUI::CPoint &loc, VSTGUI::IControlListener *listener, long tag,

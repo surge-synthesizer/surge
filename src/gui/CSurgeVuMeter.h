@@ -18,7 +18,7 @@
 #include "SkinSupport.h"
 
 class CScalableBitmap;
-class CSurgeVuMeter : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CSurgeVuMeter : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CSurgeVuMeter(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener);

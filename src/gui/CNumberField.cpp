@@ -76,7 +76,7 @@ void unit_prefix(float value, char *text, bool allow_milli = true, bool allow_ki
 
 CNumberField::CNumberField(const CRect &size, IControlListener *listener, long tag,
                            CBitmap *pBackground, SurgeStorage *storage)
-    : CControl(size, listener, tag, pBackground), Surge::UI::CursorControlAdapter<CNumberField>(
+    : CControl(size, listener, tag, pBackground), Surge::GUI::CursorControlAdapter<CNumberField>(
                                                       storage)
 {
     i_value = 60;
@@ -280,7 +280,7 @@ void CNumberField::draw(CDrawContext *pContext)
     {
         bg = skin->backgroundBitmapForControl(skinControl, associatedBitmapStore);
         hoverBg = skin->hoverBitmapOverlayForBackgroundBitmap(
-            skinControl, bg, associatedBitmapStore, Surge::UI::Skin::HOVER);
+            skinControl, bg, associatedBitmapStore, Surge::GUI::Skin::HOVER);
         triedToLoadBg = true;
     }
 

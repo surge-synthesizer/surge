@@ -5,7 +5,7 @@
 
 namespace Surge
 {
-namespace UI
+namespace GUI
 {
 
 std::string toOSCaseForMenu(std::string menuName)
@@ -71,5 +71,5 @@ void openFileOrFolder(const std::string &f)
     }
 }
 
-} // namespace UI
+} // namespace GUI
 } // namespace Surge

@@ -622,13 +622,13 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     contextMenu->addSeparator();
 
     auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Wavetable List")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List")));
     auto refresh = [this](CCommandMenuItem *item) { this->storage->refresh_wtlist(); };
     refreshItem->setActions(refresh, nullptr);
     contextMenu->addEntry(refreshItem);
 
     auto renameItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Change Wavetable Display Name...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Change Wavetable Display Name...")));
 
     auto rnaction = [this](CCommandMenuItem *item) {
         char c[256];
@@ -650,13 +650,13 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     contextMenu->addSeparator();
 
     auto actionItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Wavetable from File...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Load Wavetable from File...")));
     auto action = [this](CCommandMenuItem *item) { this->loadWavetableFromFile(); };
     actionItem->setActions(action, nullptr);
     contextMenu->addEntry(actionItem);
 
     auto exportItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Save Wavetable to File...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Save Wavetable to File...")));
     auto exportAction = [this](CCommandMenuItem *item) {
         int oscNum = this->osc_in_scene;
         int scene = this->scene;
@@ -675,9 +675,9 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     contextMenu->addEntry(exportItem);
 
     auto omi = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Exported Wavetables Folder...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Exported Wavetables Folder...")));
     omi->setActions([this](CCommandMenuItem *i) {
-        Surge::UI::openFileOrFolder(
+        Surge::GUI::openFileOrFolder(
             Surge::Storage::appendDirectory(this->storage->userDataPath, "Exported Wavetables"));
     });
     contextMenu->addEntry(omi);
@@ -1055,7 +1055,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sine")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Sine")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1067,7 +1067,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Triangle")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Triangle")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1082,7 +1082,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Sawtooth")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Sawtooth")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1094,7 +1094,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Square")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Square")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1106,7 +1106,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Random")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Random")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1121,7 +1121,7 @@ void COscillatorDisplay::openCustomEditor()
 
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Absolute")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Absolute")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1136,7 +1136,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Invert")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Invert")));
                     auto action = [this](CCommandMenuItem *item) {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
@@ -1149,7 +1149,7 @@ void COscillatorDisplay::openCustomEditor()
                 }
                 {
                     auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Reverse")));
+                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Reverse")));
                     auto action = [this](CCommandMenuItem *item) {
                         float pdata[AliasOscillator::n_additive_partials];
 

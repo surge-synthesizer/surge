@@ -17,7 +17,7 @@
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 
-class CPatchBrowser : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CPatchBrowser : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CPatchBrowser(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,

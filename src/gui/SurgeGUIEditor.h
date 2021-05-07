@@ -528,10 +528,10 @@ class SurgeGUIEditor : public EditorType,
     /*
     ** Skin support
     */
-    Surge::UI::Skin::ptr_t currentSkin;
-    void setupSkinFromEntry(const Surge::UI::SkinDB::Entry &entry);
+    Surge::GUI::Skin::ptr_t currentSkin;
+    void setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry);
     void reloadFromSkin();
-    VSTGUI::CControl *layoutComponentForSkin(std::shared_ptr<Surge::UI::Skin::Control> skinCtrl,
+    VSTGUI::CControl *layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl,
                                              long tag, int paramIndex = -1, Parameter *p = nullptr,
                                              int style = 0);
 

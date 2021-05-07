@@ -21,7 +21,7 @@
 #include <vector>
 #include <map>
 
-class CSnapshotMenu : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CSnapshotMenu : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CSnapshotMenu(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,

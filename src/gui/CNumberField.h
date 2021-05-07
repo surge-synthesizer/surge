@@ -69,8 +69,8 @@ enum label_placement
 class CScalableBitmap;
 
 class CNumberField : public VSTGUI::CControl,
-                     public Surge::UI::SkinConsumingComponent,
-                     public Surge::UI::CursorControlAdapter<CNumberField>
+                     public Surge::GUI::SkinConsumingComponent,
+                     public Surge::GUI::CursorControlAdapter<CNumberField>
 {
   public:
     CNumberField(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener = 0, long tag = 0,

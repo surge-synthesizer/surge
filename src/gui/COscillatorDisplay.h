@@ -22,13 +22,13 @@
 #define OSC_MOD_ANIMATION 0
 
 class COscillatorDisplay : public VSTGUI::CControl,
-                           public Surge::UI::SkinConsumingComponent,
-                           public Surge::UI::CursorControlAdapter<COscillatorDisplay>
+                           public Surge::GUI::SkinConsumingComponent,
+                           public Surge::GUI::CursorControlAdapter<COscillatorDisplay>
 {
   public:
     COscillatorDisplay(const VSTGUI::CRect &size, VSTGUI::IControlListener *l,
                        OscillatorStorage *oscdata, SurgeStorage *storage)
-        : VSTGUI::CControl(size, l, 0, 0), Surge::UI::CursorControlAdapter<COscillatorDisplay>(
+        : VSTGUI::CControl(size, l, 0, 0), Surge::GUI::CursorControlAdapter<COscillatorDisplay>(
                                                storage)
     {
         this->oscdata = oscdata;

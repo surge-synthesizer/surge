@@ -45,7 +45,7 @@ CSurgeSlider::CSurgeSlider(const CPoint &loc, long stylee, IControlListener *lis
                            bool is_mod, std::shared_ptr<SurgeBitmaps> bitmapStore,
                            SurgeStorage *storage)
     : CControl(CRect(loc, CPoint(1, 1)), listener, tag, 0),
-      Surge::UI::CursorControlAdapterWithMouseDelta<CSurgeSlider>(storage)
+      Surge::GUI::CursorControlAdapterWithMouseDelta<CSurgeSlider>(storage)
 {
     this->style = stylee;
     this->is_mod = is_mod;
@@ -692,7 +692,7 @@ CMouseEventResult CSurgeSlider::onMouseDown(CPoint &where, const CButtonState &b
         }
     }
     if (storage)
-        this->hideCursor = !Surge::UI::showCursor(storage);
+        this->hideCursor = !Surge::GUI::showCursor(storage);
 
     hasBeenDraggedDuringMouseGesture = false;
     if (wheelInitiatedEdit)
@@ -1062,5 +1062,5 @@ void CSurgeSlider::onSkinChanged()
     if (!pHandleHover)
         pHandleHover = skin->hoverBitmapOverlayForBackgroundBitmap(
             skinControl, dynamic_cast<CScalableBitmap *>(pHandle), associatedBitmapStore,
-            Surge::UI::Skin::HoverType::HOVER);
+            Surge::GUI::Skin::HoverType::HOVER);
 }

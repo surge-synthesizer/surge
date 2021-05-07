@@ -17,7 +17,7 @@
 #include "SurgeBitmaps.h"
 #include "SkinSupport.h"
 
-class CEffectSettings : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CEffectSettings : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
     enum MouseActionMode
     {

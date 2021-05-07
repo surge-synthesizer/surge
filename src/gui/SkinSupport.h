@@ -83,7 +83,7 @@ template <typename T> class Maybe
     T _value;
 };
 
-namespace UI
+namespace GUI
 {
 
 /*
@@ -260,7 +260,7 @@ class Skin
         auto res = controlForUIID(c.payload->id);
         if (!res)
         {
-            res = std::make_shared<Surge::UI::Skin::Control>();
+            res = std::make_shared<Surge::GUI::Skin::Control>();
             res->copyFromConnector(c, getVersion());
             // resolveBaseParentOffsets( res );
             controls.push_back(res);
@@ -495,5 +495,5 @@ class SkinConsumingComponent
     Skin::Control::ptr_t skinControl = nullptr;
     std::shared_ptr<SurgeBitmaps> associatedBitmapStore = nullptr;
 };
-} // namespace UI
+} // namespace GUI
 } // namespace Surge

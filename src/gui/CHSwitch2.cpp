@@ -46,7 +46,7 @@ void CHSwitch2::draw(CDrawContext *dc)
             {
                 hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
                     skinControl, dynamic_cast<CScalableBitmap *>(getBackground()),
-                    associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER);
+                    associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
             }
             else
             {
@@ -57,7 +57,7 @@ void CHSwitch2::draw(CDrawContext *dc)
             {
                 hoverOnBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
                     skinControl, dynamic_cast<CScalableBitmap *>(getBackground()),
-                    associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER_OVER_ON);
+                    associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER_OVER_ON);
             }
             else
             {
