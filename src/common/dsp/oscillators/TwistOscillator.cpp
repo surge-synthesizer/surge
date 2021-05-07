@@ -205,6 +205,44 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
     }
 } etDynamicBipolar;
 
+static struct EngineDisplayFormatter : ParameterExternalFormatter
+{
+    bool formatValue(Parameter *p, float value, char *txt, int txtlen) override { return false; }
+    bool stringToValue(Parameter *p, const char *txt, float &outVal) override { return false; }
+    bool formatAltValue(Parameter *p, float value, char *txt, int txtlen) override
+    {
+        auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
+
+        if (oscs->type.val.i != ot_twist)
+        {
+            return false;
+        }
+
+        auto engp = &(oscs->p[TwistOscillator::twist_engine]);
+        if (engp->ctrltype != ct_twist_engine)
+        {
+            return false;
+        }
+        auto eng = engp->val.i;
+        if (eng == 6)
+        {
+            // This is the chords engine
+            static std::vector<std::string> chords = {"oct", "5",   "sus4", "m",  "m7", "m9",
+                                                      "m11", "6/9", "M9",   "M7", "M"};
+
+            float univalue = (value + 1) * 0.5;
+            int whichC = floor(univalue * (chords.size()));
+            if (whichC < 0)
+                whichC = 0;
+            if (whichC >= chords.size())
+                whichC = chords.size() - 1;
+            snprintf(txt, txtlen, "%s", chords[whichC].c_str());
+            return true;
+        }
+        return false;
+    }
+} etDynamicFormatter;
+
 /*
  * The only place we use dynamic deactivation is on the LPG sliders where
  * we bind this object to the decay and make it follow the response, which
@@ -557,6 +595,7 @@ void TwistOscillator::init_ctrltypes()
     oscdata->p[twist_harmonics].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);
     oscdata->p[twist_harmonics].dynamicName = &etDynamicName;
     oscdata->p[twist_harmonics].dynamicBipolar = &etDynamicBipolar;
+    oscdata->p[twist_harmonics].set_user_data(&etDynamicFormatter);
 
     oscdata->p[twist_timbre].set_name("Timbre");
     oscdata->p[twist_timbre].set_type(ct_percent_bipolar_w_dynamic_unipolar_formatting);

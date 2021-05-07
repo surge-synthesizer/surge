@@ -79,7 +79,7 @@ class alignas(16) AirWindowsEffect : public Effect
     struct AWFxParamFormatter : public ParameterExternalFormatter
     {
         AWFxParamFormatter(AirWindowsEffect *fx, int i) : fx(fx), idx(i) {}
-        virtual void formatValue(float value, char *txt, int txtlen) override
+        virtual bool formatValue(Parameter *p, float value, char *txt, int txtlen) override
         {
             if (fx && fx->airwin)
             {
@@ -116,9 +116,10 @@ class alignas(16) AirWindowsEffect : public Effect
             {
                 snprintf(txt, TXT_SIZE, "AWA.ERROR %lf", value);
             }
+            return true;
         }
 
-        virtual bool stringToValue(const char *txt, float &outVal) override
+        virtual bool stringToValue(Parameter *p, const char *txt, float &outVal) override
         {
             if (fx && fx->airwin)
             {
