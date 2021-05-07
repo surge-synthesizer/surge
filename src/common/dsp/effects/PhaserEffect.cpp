@@ -9,9 +9,7 @@ PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
 {
     for (int i = 0; i < n_bq_units; i++)
     {
-        biquad[i] = (BiquadFilter *)_aligned_malloc(sizeof(BiquadFilter), 16);
-        memset(biquad[i], 0, sizeof(BiquadFilter));
-        new (biquad[i]) BiquadFilter(storage);
+        biquad[i] = new BiquadFilter(storage);
     }
 
     n_bq_units_initialised = n_bq_units;
@@ -24,7 +22,7 @@ PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
 PhaserEffect::~PhaserEffect()
 {
     for (int i = 0; i < n_bq_units_initialised; i++)
-        _aligned_free(biquad[i]);
+        delete biquad[i];
 }
 
 void PhaserEffect::init()
@@ -56,9 +54,7 @@ inline void PhaserEffect::init_stages()
         // we need to increase the number of stages
         for (int k = n_bq_units_initialised; k < n_bq_units; k++)
         {
-            biquad[k] = (BiquadFilter *)_aligned_malloc(sizeof(BiquadFilter), 16);
-            memset(biquad[k], 0, sizeof(BiquadFilter));
-            new (biquad[k]) BiquadFilter(storage);
+            biquad[k] = new BiquadFilter(storage);
         }
 
         n_bq_units_initialised = n_bq_units;

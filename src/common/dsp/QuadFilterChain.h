@@ -61,7 +61,7 @@
  * bool resume = v->process_block(FBQ[s][FBentry[s] >> 2], FBentry[s] & 3);
  *
  * that is for a given voice number (which is basically FBentry) modulo it by 3 and update that
- * point in the filter bank. And that FBQ is created with the _aligned_malloc all the way at the
+ * point in the filter bank. And that FBQ is created aligned all the way at the
  * outset of SurgeSynth.
  *
  * So cool. We now know how we go from synth to filter. The synth creates QaudFilterChainStates. It

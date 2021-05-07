@@ -150,8 +150,6 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
            layouts.getMainInputChannelSet() == AudioChannelSet::stereo();
 }
 
-#define is_aligned(POINTER, BYTE_COUNT) (((uintptr_t)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
-
 void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
 {
     auto fpuguard = Surge::CPUFeatures::FPUStateGuard();

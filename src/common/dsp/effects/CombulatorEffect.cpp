@@ -24,7 +24,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     hp.setBlockSize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    qfus = (QuadFilterUnitState *)_aligned_malloc(2 * sizeof(QuadFilterUnitState), 16);
+    qfus = new QuadFilterUnitState[2]();
 
     for (int e = 0; e < 3; ++e)
     {
@@ -61,7 +61,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     noiseGen[1][1] = 0.f;
 }
 
-CombulatorEffect::~CombulatorEffect() { _aligned_free(qfus); }
+CombulatorEffect::~CombulatorEffect() { delete[] qfus; }
 
 void CombulatorEffect::init()
 {
