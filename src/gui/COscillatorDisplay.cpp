@@ -17,7 +17,7 @@
 #include "COscillatorDisplay.h"
 #include "Oscillator.h"
 #include <time.h>
-#include "unitconversion.h"
+#include "UnitConversions.h"
 #include "SurgeGUIUtils.h"
 #include "SkinColors.h"
 #include "RuntimeFont.h"

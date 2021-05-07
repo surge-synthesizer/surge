@@ -3,12 +3,12 @@
 #include "CombulatorEffect.h"
 #include "ConditionerEffect.h"
 #include "DistortionEffect.h"
-#include "DualDelayEffect.h"
-#include "Eq3BandEffect.h"
+#include "DelayEffect.h"
 #include "FlangerEffect.h"
-#include "FreqshiftEffect.h"
-#include "GEQ11Effect.h"
+#include "FrequencyShifterEffect.h"
+#include "GraphicEQ11BandEffect.h"
 #include "NimbusEffect.h"
+#include "ParametricEQ3BandEffect.h"
 #include "PhaserEffect.h"
 #include "ResonatorEffect.h"
 #include "Reverb1Effect.h"
@@ -33,9 +33,9 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     switch (id)
     {
     case fxt_delay:
-        return new DualDelayEffect(storage, fxdata, pd);
+        return new DelayEffect(storage, fxdata, pd);
     case fxt_eq:
-        return new Eq3BandEffect(storage, fxdata, pd);
+        return new ParametricEQ3BandEffect(storage, fxdata, pd);
     case fxt_phaser:
         return new PhaserEffect(storage, fxdata, pd);
     case fxt_rotaryspeaker:
@@ -47,7 +47,7 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_reverb2:
         return new Reverb2Effect(storage, fxdata, pd);
     case fxt_freqshift:
-        return new FreqshiftEffect(storage, fxdata, pd);
+        return new FrequencyShifterEffect(storage, fxdata, pd);
     case fxt_conditioner:
         return new ConditionerEffect(storage, fxdata, pd);
     case fxt_chorus4:
@@ -63,7 +63,7 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_neuron:
         return new chowdsp::NeuronEffect(storage, fxdata, pd);
     case fxt_geq11:
-        return new GEQ11Effect(storage, fxdata, pd);
+        return new GraphicEQ11BandEffect(storage, fxdata, pd);
     case fxt_resonator:
         return new ResonatorEffect(storage, fxdata, pd);
     case fxt_combulator:

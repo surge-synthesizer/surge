@@ -22,37 +22,14 @@
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
 
-class Eq3BandEffect : public Effect
+class FrequencyShifterEffect : public Effect
 {
-    lipol_ps gain alignas(16);
-    lipol_ps mix alignas(16);
-
-    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
-
   public:
-    enum eq3_params
-    {
-        eq3_gain1 = 0,
-        eq3_freq1,
-        eq3_bw1,
-
-        eq3_gain2,
-        eq3_freq2,
-        eq3_bw2,
-
-        eq3_gain3,
-        eq3_freq3,
-        eq3_bw3,
-
-        eq3_gain,
-        eq3_mix,
-
-        eq3_num_ctrls,
-    };
-
-    Eq3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~Eq3BandEffect();
-    virtual const char *get_effectname() override { return "EQ"; }
+    HalfRateFilter fr alignas(16), fi alignas(16);
+    lipol_ps mix alignas(16);
+    FrequencyShifterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~FrequencyShifterEffect();
+    virtual const char *get_effectname() override { return "freqshift"; }
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
@@ -61,11 +38,26 @@ class Eq3BandEffect : public Effect
     virtual void init_default_values() override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
+    virtual int get_ringout_decay() override { return ringout_time; }
 
-    virtual void handleStreamingMismatches(int streamingRevision,
-                                           int currentSynthStreamingRevision) override;
+    enum freqshift_params
+    {
+        freq_shift = 0,
+        freq_rmult,
+        freq_delay,
+        freq_feedback,
+        freq_mix,
+
+        freq_num_params,
+    };
 
   private:
-    BiquadFilter band1, band2, band3;
-    int bi; // block increment (to keep track of events not occurring every n blocks)
+    lipol<float, true> feedback;
+    lag<float, true> time, shiftL, shiftR;
+    bool inithadtempo;
+    float buffer[2][max_delay_length];
+    int wpos;
+    // CHalfBandFilter<6> frL,fiL,frR,fiR;
+    quadr_osc o1L, o2L, o1R, o2R;
+    int ringout_time;
 };

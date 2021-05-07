@@ -1,17 +1,17 @@
-#include "FreqshiftEffect.h"
+#include "FrequencyShifterEffect.h"
 
 using namespace std;
 
-FreqshiftEffect::FreqshiftEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+FrequencyShifterEffect::FrequencyShifterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), time(0.0001), shiftL(0.01),
       shiftR(0.01), // fiL(true), frL(true), fiR(true), frR(true)
       fr(6, true), fi(6, true)
 {
 }
 
-FreqshiftEffect::~FreqshiftEffect() {}
+FrequencyShifterEffect::~FrequencyShifterEffect() {}
 
-void FreqshiftEffect::init()
+void FrequencyShifterEffect::init()
 {
     memset(buffer, 0, 2 * max_delay_length * sizeof(float));
     wpos = 0;
@@ -25,7 +25,7 @@ void FreqshiftEffect::init()
     inithadtempo = (storage->temposyncratio_inv != 0);
 }
 
-void FreqshiftEffect::setvars(bool init)
+void FrequencyShifterEffect::setvars(bool init)
 {
     if (!inithadtempo && storage->temposyncratio_inv != 0)
     {
@@ -81,7 +81,7 @@ void FreqshiftEffect::setvars(bool init)
     }
 }
 
-void FreqshiftEffect::process(float *dataL, float *dataR)
+void FrequencyShifterEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
@@ -148,13 +148,13 @@ void FreqshiftEffect::process(float *dataL, float *dataR)
     wpos = wpos & (max_delay_length - 1);
 }
 
-void FreqshiftEffect::suspend()
+void FrequencyShifterEffect::suspend()
 {
     init();
     ringout = 10000000;
 }
 
-const char *FreqshiftEffect::group_label(int id)
+const char *FrequencyShifterEffect::group_label(int id)
 {
     switch (id)
     {
@@ -168,7 +168,7 @@ const char *FreqshiftEffect::group_label(int id)
     return 0;
 }
 
-int FreqshiftEffect::group_label_ypos(int id)
+int FrequencyShifterEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -182,7 +182,7 @@ int FreqshiftEffect::group_label_ypos(int id)
     return 0;
 }
 
-void FreqshiftEffect::init_ctrltypes()
+void FrequencyShifterEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
@@ -206,7 +206,7 @@ void FreqshiftEffect::init_ctrltypes()
     fxdata->p[freq_mix].posy_offset = 5;
 }
 
-void FreqshiftEffect::init_default_values()
+void FrequencyShifterEffect::init_default_values()
 {
     fxdata->p[freq_shift].val.f = 0.f;
     fxdata->p[freq_rmult].val.f = 1.f;

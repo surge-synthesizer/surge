@@ -13,9 +13,9 @@
 ** open source in September 2018.
 */
 
-#include "Eq3BandEffect.h"
+#include "ParametricEQ3BandEffect.h"
 
-Eq3BandEffect::Eq3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+ParametricEQ3BandEffect::ParametricEQ3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), band3(storage)
 {
     band1.setBlockSize(BLOCK_SIZE * slowrate); // does not matter ATM as they're smoothed
@@ -26,9 +26,9 @@ Eq3BandEffect::Eq3BandEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     mix.set_blocksize(BLOCK_SIZE);
 }
 
-Eq3BandEffect::~Eq3BandEffect() {}
+ParametricEQ3BandEffect::~ParametricEQ3BandEffect() {}
 
-void Eq3BandEffect::init()
+void ParametricEQ3BandEffect::init()
 {
     setvars(true);
     band1.suspend();
@@ -37,7 +37,7 @@ void Eq3BandEffect::init()
     bi = 0;
 }
 
-void Eq3BandEffect::setvars(bool init)
+void ParametricEQ3BandEffect::setvars(bool init)
 {
     if (init)
     {
@@ -70,7 +70,7 @@ void Eq3BandEffect::setvars(bool init)
     }
 }
 
-void Eq3BandEffect::process(float *dataL, float *dataR)
+void ParametricEQ3BandEffect::process(float *dataL, float *dataR)
 {
     if (bi == 0)
         setvars(false);
@@ -93,9 +93,9 @@ void Eq3BandEffect::process(float *dataL, float *dataR)
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
-void Eq3BandEffect::suspend() { init(); }
+void ParametricEQ3BandEffect::suspend() { init(); }
 
-const char *Eq3BandEffect::group_label(int id)
+const char *ParametricEQ3BandEffect::group_label(int id)
 {
     switch (id)
     {
@@ -110,7 +110,7 @@ const char *Eq3BandEffect::group_label(int id)
     }
     return 0;
 }
-int Eq3BandEffect::group_label_ypos(int id)
+int ParametricEQ3BandEffect::group_label_ypos(int id)
 {
     switch (id)
     {
@@ -126,7 +126,7 @@ int Eq3BandEffect::group_label_ypos(int id)
     return 0;
 }
 
-void Eq3BandEffect::init_ctrltypes()
+void ParametricEQ3BandEffect::init_ctrltypes()
 {
     /*
      * The actual deactivation status is on gain, so reflect that down
@@ -216,7 +216,7 @@ void Eq3BandEffect::init_ctrltypes()
     }
 }
 
-void Eq3BandEffect::init_default_values()
+void ParametricEQ3BandEffect::init_default_values()
 {
     fxdata->p[eq3_gain1].deactivated = false;
     fxdata->p[eq3_gain1].val.f = 0.f;
@@ -237,7 +237,7 @@ void Eq3BandEffect::init_default_values()
     fxdata->p[eq3_mix].val.f = 1.f;
 }
 
-void Eq3BandEffect::handleStreamingMismatches(int streamingRevision,
+void ParametricEQ3BandEffect::handleStreamingMismatches(int streamingRevision,
                                               int currentSynthStreamingRevision)
 {
     if (streamingRevision <= 12)

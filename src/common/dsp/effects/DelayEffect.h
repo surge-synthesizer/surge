@@ -22,15 +22,15 @@
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
 
-class DualDelayEffect : public Effect
+class DelayEffect : public Effect
 {
     lipol_ps feedback alignas(16), crossfeed alignas(16), aligpan alignas(16), pan alignas(16),
         mix alignas(16), width alignas(16);
     float buffer alignas(16)[2][max_delay_length + FIRipol_N];
 
   public:
-    DualDelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~DualDelayEffect();
+    DelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    virtual ~DelayEffect();
     virtual const char *get_effectname() override { return "dualdelay"; }
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;

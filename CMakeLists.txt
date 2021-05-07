@@ -226,12 +226,12 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/effects/CombulatorEffect.cpp
   src/common/dsp/effects/ConditionerEffect.cpp
   src/common/dsp/effects/DistortionEffect.cpp
-  src/common/dsp/effects/DualDelayEffect.cpp
-  src/common/dsp/effects/Eq3BandEffect.cpp
-  src/common/dsp/effects/FreqshiftEffect.cpp
+  src/common/dsp/effects/DelayEffect.cpp
+  src/common/dsp/effects/FrequencyShifterEffect.cpp
   src/common/dsp/effects/FlangerEffect.cpp
-  src/common/dsp/effects/GEQ11Effect.cpp
+  src/common/dsp/effects/GraphicEQ11BandEffect.cpp
   src/common/dsp/effects/NimbusEffect.cpp
+  src/common/dsp/effects/ParametricEQ3BandEffect.cpp
   src/common/dsp/effects/PhaserEffect.cpp
   src/common/dsp/effects/ResonatorEffect.cpp
   src/common/dsp/effects/Reverb1Effect.cpp
@@ -282,7 +282,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/oscillators/WavetableOscillator.cpp
   src/common/dsp/oscillators/WindowOscillator.cpp
   src/common/dsp/modulators/ADSRModulationSource.h
-  src/common/dsp/modulators/LFOModSource.cpp
+  src/common/dsp/modulators/LFOModulationSource.cpp
   src/common/dsp/modulators/MSEGModulationHelper.cpp
   src/common/dsp/utilities/DSPUtils.cpp
   src/common/dsp/utilities/FastMath.h
@@ -292,7 +292,6 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/vembertech/basic_dsp.cpp
   src/common/dsp/vembertech/halfratefilter.cpp
   src/common/dsp/vembertech/lipol.cpp
-  src/common/dsp/vembertech/macspecific.cpp
   src/common/dsp/Effect.cpp
   src/common/dsp/Oscillator.cpp
   src/common/dsp/SurgeVoice.cpp
@@ -310,7 +309,7 @@ set(SURGE_SHARED_SOURCES
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
-  src/common/WavSupport.cpp
+  src/common/WAVFileSupport.cpp
 
   libs/strnatcmp/strnatcmp.cpp
   )
@@ -671,6 +670,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
           BUNDLE_ID "org.surge-synth-team.surge-xt-fx"
           PLUGIN_MANUFACTURER_CODE VmbA
           PLUGIN_CODE SFXT
+
+          ICON_BIG "resources/surge_effects_bank/SurgeFXLogo.png"
 
           IS_SYNTH FALSE
           NEEDS_MIDI_INPUT FALSE
