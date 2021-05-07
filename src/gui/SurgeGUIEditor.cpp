@@ -5201,10 +5201,10 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
-    zoomFactor = zf;
+    zoomFactor = std::max(zf, 25.f);
     if (currentSkin && resizeWindow)
         parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
-    parentEd->setScaleFactor(zf * 0.01);
+    parentEd->setScaleFactor(zoomFactor * 0.01);
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
