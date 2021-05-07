@@ -207,10 +207,17 @@ struct CountedSetUserData : public ParamUserData
     virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
 };
 
+class Parameter;
+
 struct ParameterExternalFormatter : public ParamUserData
 {
-    virtual void formatValue(float value, char *txt, int txtlen) = 0;
-    virtual bool stringToValue(const char *txt, float &outVal) = 0;
+    virtual bool formatValue(Parameter *p, float value, char *txt, int txtlen) = 0;
+    virtual bool formatAltValue(Parameter *p, float value, char *txt, int txtlen)
+    {
+        txt[0] = 0;
+        return true;
+    }
+    virtual bool stringToValue(Parameter *p, const char *txt, float &outVal) = 0;
 };
 
 struct ParameterDiscreteIndexRemapper : public ParamUserData
