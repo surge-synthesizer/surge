@@ -260,11 +260,11 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/filters/BiquadFilterSSE2.cpp
   src/common/dsp/filters/DiodeLadder.cpp
   src/common/dsp/filters/FilterCoefficientMaker.cpp
-  src/common/dsp/filters/K35.cpp
+  src/common/dsp/filters/K35Filter.cpp
   src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/filters/NonlinearStates.cpp
-  src/common/dsp/filters/Obxd.cpp
-  src/common/dsp/filters/VectorizedSvfFilter.cpp
+  src/common/dsp/filters/OBXDFilter.cpp
+  src/common/dsp/filters/VectorizedSVFilter.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/oscillators/AliasOscillator.cpp
   src/common/dsp/oscillators/AudioInputOscillator.cpp
@@ -304,13 +304,13 @@ set(SURGE_SHARED_SOURCES
   src/common/ModulatorPresetManager.cpp
   src/common/Parameter.cpp
   src/common/PatchDB.cpp
+  src/common/SkinModel.cpp
+  src/common/SkinModelImpl.cpp
+  src/common/SkinColors.cpp
   src/common/SurgePatch.cpp
   src/common/SurgeStorage.cpp
   src/common/UserDefaults.cpp
   src/common/WavSupport.cpp
-  src/common/SkinModel.cpp
-  src/common/SkinModelImpl.cpp
-  src/common/SkinColors.cpp
 
   libs/strnatcmp/strnatcmp.cpp
   )
@@ -1079,7 +1079,7 @@ endif()
 if( UNIX AND NOT APPLE)
   if( BUILD_SURGE_XT)
     install(TARGETS surge-xt_Standalone DESTINATION bin)
-    # Alas you would think you could just say 
+    # Alas you would think you could just say
     # install(TARGETS surge-xt_VST3 DESTINATION lib/vst3 )
     # but you can't because surge-xt_VST3 points to the .so inside the VST3 bundle so instead say
     install( DIRECTORY "${SURGE_XT_OUTPUT_DIR}/VST3/Surge XT.vst3" DESTINATION lib/vst3 )
@@ -1092,7 +1092,7 @@ if( UNIX AND NOT APPLE)
     # and again
     # install(TARGETS surge-fx_VST3 DESTINATION lib/vst3 )
     install( DIRECTORY "${SURGE_FX_OUTPUT_DIR}/VST3/Surge XT Effects.vst3" DESTINATION lib/vst3 )
-   
+
     if( JUCE_SUPPORTS_LV2 )
       install(TARGETS surge-fx_LV2 DESTINATION lib/lv2)
     endif()

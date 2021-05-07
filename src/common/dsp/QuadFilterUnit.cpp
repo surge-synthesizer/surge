@@ -5,8 +5,8 @@
 #include "DebugHelpers.h"
 
 #include "filters/VintageLadders.h"
-#include "filters/Obxd.h"
-#include "filters/K35.h"
+#include "filters/OBXDFilter.h"
+#include "filters/K35Filter.h"
 #include "filters/DiodeLadder.h"
 #include "filters/NonlinearFeedback.h"
 #include "filters/NonlinearStates.h"
