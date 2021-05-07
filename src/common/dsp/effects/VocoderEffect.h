@@ -19,7 +19,7 @@
 #include "DspUtilities.h"
 #include "AllpassFilter.h"
 
-#include "VectorizedSvfFilter.h"
+#include "VectorizedSVFilter.h"
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>

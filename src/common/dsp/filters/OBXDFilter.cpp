@@ -1,4 +1,3 @@
-#include "Obxd.h"
 
 /*
   ==============================================================================
@@ -19,6 +18,7 @@
 */
 
 #include <math.h>
+#include "OBXDFilter.h"
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
