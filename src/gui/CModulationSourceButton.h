@@ -22,8 +22,8 @@
 
 class CModulationSourceButton
     : public VSTGUI::CControl,
-      public Surge::UI::SkinConsumingComponent,
-      public Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>
+      public Surge::GUI::SkinConsumingComponent,
+      public Surge::GUI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>
 {
   public:
     CModulationSourceButton(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,

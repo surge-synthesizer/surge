@@ -17,7 +17,7 @@
 #include "SkinSupport.h"
 #include "CScalableBitmap.h"
 
-class CSwitchControl : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CSwitchControl : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CSwitchControl(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,

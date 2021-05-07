@@ -189,7 +189,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu->addSectionHeader("FUNCTIONS");
 
     auto initItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Initialize Patch")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Initialize Patch")));
     auto initAction = [this](CCommandMenuItem *item) {
         int i = 0;
         for (auto p : storage->patch_list)
@@ -207,7 +207,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu->addSeparator();
 
     auto pdbF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Patch Database...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Patch Database...")));
     pdbF->setActions([this](CCommandMenuItem *item) {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
         if (sge)
@@ -217,13 +217,13 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu->addSeparator();
 
     auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Refresh Patch List")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh Patch List")));
     auto refreshAction = [this](CCommandMenuItem *item) { this->storage->refresh_patchlist(); };
     refreshItem->setActions(refreshAction, nullptr);
     contextMenu->addEntry(refreshItem);
 
     auto loadF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Load Patch from File...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Load Patch from File...")));
     loadF->setActions([this](CCommandMenuItem *item) {
         juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
         auto r = c.browseForFileToOpen();
@@ -241,24 +241,24 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu->addSeparator();
 
     auto showU = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open User Patches Folder...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open User Patches Folder...")));
     showU->setActions([this](CCommandMenuItem *item) {
-        Surge::UI::openFileOrFolder(this->storage->userDataPath);
+        Surge::GUI::openFileOrFolder(this->storage->userDataPath);
     });
     contextMenu->addEntry(showU);
 
     auto showF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Factory Patches Folder...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder...")));
     showF->setActions([this](CCommandMenuItem *item) {
-        Surge::UI::openFileOrFolder(
+        Surge::GUI::openFileOrFolder(
             Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
     });
     contextMenu->addEntry(showF);
 
     auto show3 = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::UI::toOSCaseForMenu("Open Third Party Patches Folder...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder...")));
     show3->setActions([this](CCommandMenuItem *item) {
-        Surge::UI::openFileOrFolder(
+        Surge::GUI::openFileOrFolder(
             Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
     });
     contextMenu->addEntry(show3);

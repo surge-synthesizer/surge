@@ -19,7 +19,7 @@
 #include "RefreshableOverlay.h"
 
 struct MSEGEditor : public VSTGUI::CViewContainer,
-                    public Surge::UI::SkinConsumingComponent,
+                    public Surge::GUI::SkinConsumingComponent,
                     public RefreshableOverlay
 {
     /*
@@ -33,7 +33,7 @@ struct MSEGEditor : public VSTGUI::CViewContainer,
         int timeEditMode = 0;
     };
     MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-               Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
     ~MSEGEditor();
     void forceRefresh();
 };

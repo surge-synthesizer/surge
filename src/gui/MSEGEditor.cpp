@@ -37,11 +37,11 @@ using namespace VSTGUI;
 struct MSEGCanvas;
 
 struct MSEGControlRegion : public CViewContainer,
-                           public Surge::UI::SkinConsumingComponent,
+                           public Surge::GUI::SkinConsumingComponent,
                            public VSTGUI::IControlListener
 {
     MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos,
-                      MSEGStorage *ms, MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin,
+                      MSEGStorage *ms, MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
                       std::shared_ptr<SurgeBitmaps> b)
         : CViewContainer(size)
     {
@@ -86,12 +86,13 @@ struct MSEGControlRegion : public CViewContainer,
 };
 
 struct MSEGCanvas : public CControl,
-                    public Surge::UI::SkinConsumingComponent,
-                    public Surge::UI::CursorControlAdapter<MSEGCanvas>
+                    public Surge::GUI::SkinConsumingComponent,
+                    public Surge::GUI::CursorControlAdapter<MSEGCanvas>
 {
     MSEGCanvas(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
-               MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b)
-        : CControl(size), Surge::UI::CursorControlAdapter<MSEGCanvas>(nullptr)
+               MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
+               std::shared_ptr<SurgeBitmaps> b)
+        : CControl(size), Surge::GUI::CursorControlAdapter<MSEGCanvas>(nullptr)
     {
         setSkin(skin, b);
         this->storage = storage;
@@ -2160,16 +2161,16 @@ struct MSEGCanvas : public CControl,
         {
             if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
             {
-                auto cbStart =
-                    addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
-                        Surge::MSEG::setLoopStart(ms, tts);
-                        modelChanged();
-                    });
+                auto cbStart = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Set Loop Start"),
+                                     [this, tts]() {
+                                         Surge::MSEG::setLoopStart(ms, tts);
+                                         modelChanged();
+                                     });
             }
 
             if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
             {
-                auto cbEnd = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Set Loop End"),
+                auto cbEnd = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Set Loop End"),
                                    [this, tts, t]() {
                                        auto along = t - ms->segmentStart[tts];
 
@@ -2213,12 +2214,12 @@ struct MSEGCanvas : public CControl,
 
             actionsMenu->addSeparator();
 
-            addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Double Duration"), [this]() {
+            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Double Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
                 modelChanged();
                 zoomToFull();
             });
-            addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Half Duration"), [this]() {
+            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Half Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
                 modelChanged();
                 zoomToFull();
@@ -2226,11 +2227,11 @@ struct MSEGCanvas : public CControl,
 
             actionsMenu->addSeparator();
 
-            addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Vertically"), [this]() {
+            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Flip Vertically"), [this]() {
                 Surge::MSEG::scaleValues(this->ms, -1);
                 modelChanged();
             });
-            addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Flip Horizontally"), [this]() {
+            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Flip Horizontally"), [this]() {
                 Surge::MSEG::mirrorMSEG(this->ms);
                 modelChanged();
             });
@@ -2238,7 +2239,7 @@ struct MSEGCanvas : public CControl,
             actionsMenu->addSeparator();
 
             auto q1 =
-                addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
+                addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
                       [this]() {
                           Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
                           modelChanged();
@@ -2246,12 +2247,12 @@ struct MSEGCanvas : public CControl,
             q1->setEnabled(ms->editMode != MSEGStorage::LFO);
 
             auto q2 = addCb(actionsMenu,
-                            Surge::UI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this]() {
+                            Surge::GUI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this]() {
                                 Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                 modelChanged();
                             });
             q2->setEnabled(ms->editMode != MSEGStorage::LFO);
-            addCb(actionsMenu, Surge::UI::toOSCaseForMenu("Distribute Nodes Evenly"), [this]() {
+            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Distribute Nodes Evenly"), [this]() {
                 Surge::MSEG::setAllDurationsTo(this->ms,
                                                ms->totalDuration / this->ms->n_activeSegments);
                 modelChanged();
@@ -2265,7 +2266,7 @@ struct MSEGCanvas : public CControl,
 
             contextMenu->addEntry(createMenu, "Create");
 
-            addCb(createMenu, Surge::UI::toOSCaseForMenu("Minimal MSEG"), [this]() {
+            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Minimal MSEG"), [this]() {
                 Surge::MSEG::clearMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2275,7 +2276,7 @@ struct MSEGCanvas : public CControl,
 
             createMenu->addSeparator();
 
-            addCb(createMenu, Surge::UI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
+            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
                 Surge::MSEG::createInitVoiceMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2283,7 +2284,7 @@ struct MSEGCanvas : public CControl,
                 modelChanged();
             });
 
-            addCb(createMenu, Surge::UI::toOSCaseForMenu("Default Scene MSEG"), [this]() {
+            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Default Scene MSEG"), [this]() {
                 Surge::MSEG::createInitSceneMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2297,7 +2298,8 @@ struct MSEGCanvas : public CControl,
 
             for (int i : stepCounts)
             {
-                addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"),
+                addCb(createMenu,
+                      Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"),
                       [this, i]() {
                           Surge::MSEG::createStepseqMSEG(this->ms, i);
                           this->zoomToFull();
@@ -2312,7 +2314,7 @@ struct MSEGCanvas : public CControl,
             for (int i : stepCounts)
             {
                 addCb(createMenu,
-                      Surge::UI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
+                      Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
                       [this, i]() {
                           Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
                           this->zoomToFull();
@@ -2325,7 +2327,7 @@ struct MSEGCanvas : public CControl,
             createMenu->addSeparator();
             for (int i : stepCounts)
             {
-                addCb(createMenu, Surge::UI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
+                addCb(createMenu, Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
                       [this, i] {
                           Surge::MSEG::createSinLineMSEG(this->ms, i);
                           this->zoomToFull();
@@ -2340,7 +2342,7 @@ struct MSEGCanvas : public CControl,
                 VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
 
             auto cm = addCb(
-                settingsMenu, Surge::UI::toOSCaseForMenu("Link Start and End Nodes"), [this]() {
+                settingsMenu, Surge::GUI::toOSCaseForMenu("Link Start and End Nodes"), [this]() {
                     if (this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
                         this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
                     else
@@ -2355,7 +2357,7 @@ struct MSEGCanvas : public CControl,
             settingsMenu->addSeparator();
 
             auto def = ms->segments[tts].useDeform;
-            auto dm = addCb(settingsMenu, Surge::UI::toOSCaseForMenu("Deform Applied to Segment"),
+            auto dm = addCb(settingsMenu, Surge::GUI::toOSCaseForMenu("Deform Applied to Segment"),
                             [this, tts]() {
                                 this->ms->segments[tts].useDeform =
                                     !this->ms->segments[tts].useDeform;
@@ -2365,7 +2367,7 @@ struct MSEGCanvas : public CControl,
 
             auto invdef = ms->segments[tts].invertDeform;
             auto im = addCb(
-                settingsMenu, Surge::UI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
+                settingsMenu, Surge::GUI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
                     this->ms->segments[tts].invertDeform = !this->ms->segments[tts].invertDeform;
                     modelChanged();
                 });
@@ -2386,7 +2388,7 @@ struct MSEGCanvas : public CControl,
             };
             typeTo("Hold", MSEGStorage::segment::Type::HOLD);
             typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
-            typeTo(Surge::UI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
+            typeTo(Surge::GUI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
             typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
 
             contextMenu->addSeparator();
@@ -2398,9 +2400,9 @@ struct MSEGCanvas : public CControl,
             contextMenu->addSeparator();
             typeTo("Bump", MSEGStorage::segment::Type::BUMP);
             typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
-            typeTo(Surge::UI::toOSCaseForMenu("Smooth Stairs"),
+            typeTo(Surge::GUI::toOSCaseForMenu("Smooth Stairs"),
                    MSEGStorage::segment::Type::SMOOTH_STAIRS);
-            typeTo(Surge::UI::toOSCaseForMenu("Brownian Bridge"),
+            typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
             contextMenu->cleanupSeparators(false);
@@ -2603,7 +2605,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
         options.push_back(std::make_pair("Off", 0));
         options.push_back(std::make_pair("Loop", 0.5));
         options.push_back(
-            std::make_pair(Surge::UI::toOSCaseForMenu("Gate (Loop Until Release)").c_str(), 1.0));
+            std::make_pair(Surge::GUI::toOSCaseForMenu("Gate (Loop Until Release)").c_str(), 1.0));
         break;
 
     case tag_edit_mode:
@@ -2674,7 +2676,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
         {
             if (pControl->getValue() > 0.5)
             {
-                addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": Off", [pControl, this]() {
+                addcb(Surge::GUI::toOSCaseForMenu("Edit Value") + ": Off", [pControl, this]() {
                     pControl->setValue(0);
                     pControl->valueChanged();
                     pControl->invalid();
@@ -2684,7 +2686,7 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
             }
             else
             {
-                addcb(Surge::UI::toOSCaseForMenu("Edit Value") + ": On", [pControl, this]() {
+                addcb(Surge::GUI::toOSCaseForMenu("Edit Value") + ": On", [pControl, this]() {
                     pControl->setValue(1);
                     pControl->valueChanged();
                     pControl->invalid();
@@ -2850,7 +2852,7 @@ void MSEGControlRegion::rebuild()
          * I choose 2.
          */
         auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
-        auto cnfSkinCtrl = std::make_shared<Surge::UI::Skin::Control>();
+        auto cnfSkinCtrl = std::make_shared<Surge::GUI::Skin::Control>();
         cnfSkinCtrl->defaultComponent = Surge::Skin::Components::NumberField;
         cnfSkinCtrl->allprops["bg_id"] = std::to_string(IDB_MSEG_SNAPVALUE_NUMFIELD);
         cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
@@ -2892,7 +2894,7 @@ struct MSEGMainEd : public CViewContainer
 {
 
     MSEGMainEd(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
-               MSEGEditor::State *eds, Surge::UI::Skin::ptr_t skin,
+               MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
                std::shared_ptr<SurgeBitmaps> bmp)
         : CViewContainer(size)
     {
@@ -2926,12 +2928,12 @@ struct MSEGMainEd : public CViewContainer
         }
     }
 
-    Surge::UI::Skin::ptr_t skin;
+    Surge::GUI::Skin::ptr_t skin;
     MSEGStorage *ms;
 };
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-                       Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b)
+                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b)
     : CViewContainer(CRect(0, 0, 1, 1))
 {
     auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;

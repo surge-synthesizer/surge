@@ -34,7 +34,7 @@ void CSwitchControl::draw(CDrawContext *dc)
             lookedForHover = true;
             hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
                 skinControl, dynamic_cast<CScalableBitmap *>(getBackground()),
-                associatedBitmapStore, Surge::UI::Skin::HoverType::HOVER);
+                associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
         }
 
         if (hoverBmp && doingHover)

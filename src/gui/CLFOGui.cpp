@@ -351,7 +351,6 @@ void CLFOGui::draw(CDrawContext *dc)
         tf.transform(top1);
         tf.transform(bot0);
         tf.transform(bot1);
-        Surge::UI::NonIntegralAntiAliasGuard niaag(dc);
 
         dc->setLineWidth(1.0);
         // LFO bg center line
@@ -602,9 +601,9 @@ void CLFOGui::draw(CDrawContext *dc)
     {
         typeImg = bitmapStore->getBitmap(IDB_LFO_TYPE);
         typeImgHover = skin->hoverBitmapOverlayForBackgroundBitmap(
-            skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER);
+            skinControl, typeImg, bitmapStore, Surge::GUI::Skin::HOVER);
         typeImgHoverOn = skin->hoverBitmapOverlayForBackgroundBitmap(
-            skinControl, typeImg, bitmapStore, Surge::UI::Skin::HOVER_OVER_ON);
+            skinControl, typeImg, bitmapStore, Surge::GUI::Skin::HOVER_OVER_ON);
     }
 
     if (typeImg)
@@ -681,8 +680,6 @@ void CLFOGui::draw(CDrawContext *dc)
 void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
                           VSTGUI::CRect &leftpanel)
 {
-    Surge::UI::NonIntegralAntiAliasGuard naag(dc);
-
     auto size = getViewSize();
 
     int w = size.getWidth() - splitpoint;
@@ -1253,14 +1250,14 @@ void CLFOGui::openPopup(CPoint &where)
     std::string openname = (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                ? "Open MSEG Editor"
                                : "Close MSEG Editor";
-    addCb(contextMenu, Surge::UI::toOSCaseForMenu(openname), [this, sge]() {
+    addCb(contextMenu, Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
         if (sge)
             sge->toggleMSEGEditor();
     });
 
     contextMenu->addSeparator();
 
-    auto lpoff = addCb(contextMenu, Surge::UI::toOSCaseForMenu("No Looping"), [this, sge]() {
+    auto lpoff = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("No Looping"), [this, sge]() {
         ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
         if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
         {
@@ -1271,7 +1268,7 @@ void CLFOGui::openPopup(CPoint &where)
     });
     lpoff->setChecked(ms->loopMode == MSEGStorage::LoopMode::ONESHOT);
 
-    auto lpon = addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Always"), [this, sge]() {
+    auto lpon = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Loop Always"), [this, sge]() {
         ms->loopMode = MSEGStorage::LoopMode::LOOP;
         if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
         {
@@ -1283,7 +1280,7 @@ void CLFOGui::openPopup(CPoint &where)
     lpon->setChecked(ms->loopMode == MSEGStorage::LoopMode::LOOP);
 
     auto lpgate =
-        addCb(contextMenu, Surge::UI::toOSCaseForMenu("Loop Until Release"), [this, sge]() {
+        addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Loop Until Release"), [this, sge]() {
             ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
             if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
             {
@@ -1336,7 +1333,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
         if (rect_steps.pointInside(where))
         {
             if (storage)
-                this->hideCursor = !Surge::UI::showCursor(storage);
+                this->hideCursor = !Surge::GUI::showCursor(storage);
 
             if (buttons.isRightButton())
             {
@@ -1777,28 +1774,28 @@ CMouseEventResult CLFOGui::onMouseMoved(CPoint &where, const CButtonState &butto
             // this is supposed to be better but doesn't quite work yet!
             float rx, ry;
 
-            if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
-                                                 rect_steps.left, rect_steps.top, rect_steps.right,
-                                                 rect_steps.top, &rx, &ry))
+            if (Surge::GUI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x, where.y,
+                                                  rect_steps.left, rect_steps.top, rect_steps.right,
+                                                  rect_steps.top, &rx, &ry))
             {
                 rmStepCurr.x = rx;
                 rmStepCurr.y = ry + 1;
             }
-            else if (Surge::UI::get_line_intersection(rmStepStart.x, rmStepStart.y, where.x,
-                                                      where.y, rect_steps.left, rect_steps.top,
-                                                      rect_steps.left, rect_steps.bottom, &rx, &ry))
+            else if (Surge::GUI::get_line_intersection(
+                         rmStepStart.x, rmStepStart.y, where.x, where.y, rect_steps.left,
+                         rect_steps.top, rect_steps.left, rect_steps.bottom, &rx, &ry))
             {
                 rmStepCurr.x = rx + 1;
                 rmStepCurr.y = ry;
             }
-            else if (Surge::UI::get_line_intersection(
+            else if (Surge::GUI::get_line_intersection(
                          rmStepStart.x, rmStepStart.y, where.x, where.y, rect_steps.right,
                          rect_steps.top, rect_steps.right, rect_steps.bottom, &rx, &ry))
             {
                 rmStepCurr.x = rx - 1;
                 rmStepCurr.y = ry;
             }
-            else if (Surge::UI::get_line_intersection(
+            else if (Surge::GUI::get_line_intersection(
                          rmStepStart.x, rmStepStart.y, where.x, where.y, rect_steps.left,
                          rect_steps.bottom, rect_steps.right, rect_steps.bottom, &rx, &ry))
             {

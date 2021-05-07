@@ -4,7 +4,7 @@
 
 namespace Surge
 {
-namespace UI
+namespace GUI
 {
 #include "SkinImageMaps.h"
 }
@@ -504,7 +504,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     startSection("imageid", "Image IDs");
 
     {
-        auto q = Surge::UI::createIdNameMap();
+        auto q = Surge::GUI::createIdNameMap();
 
         std::vector<std::pair<std::string, int>> asV(q.begin(), q.end());
         std::sort(asV.begin(), asV.end(), [](auto a, auto b) { return a.second < b.second; });
@@ -560,7 +560,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     // Skin Connectors
     startSection("skinConnectors", "Skin Component Connectors");
     {
-        auto imgid = Surge::UI::createIdNameMap();
+        auto imgid = Surge::GUI::createIdNameMap();
 
         auto co = Surge::Skin::Connector::allConnectorIDs();
         htmls << "<table><tr><th>Name</th><th>Geometry "

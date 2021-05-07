@@ -75,7 +75,7 @@ struct CGridOverlay : public VSTGUI::CView
 
 CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *storage,
                      const std::string &host, const std::string &wrapperType,
-                     Surge::UI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bitmapStore,
+                     Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bitmapStore,
                      int devGrid)
     : CViewContainer(size), devGridResolution(devGrid)
 {
@@ -200,6 +200,7 @@ CAboutBox::CAboutBox(const CRect &size, SurgeGUIEditor *editor, SurgeStorage *st
     {
         arch += " (no AVX support)";
     }
+
 #if MAC
     std::string platform = "macOS";
 #elif WINDOWS

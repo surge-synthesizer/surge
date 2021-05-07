@@ -147,6 +147,7 @@ bool isX86()
 bool hasSSE2() { return true; }
 bool hasAVX()
 {
+    return true;
 #if ARM_NEON
     return true; // thanks simde
 #else
@@ -159,6 +160,7 @@ bool hasAVX()
     __cpuid(cpuinfo, 1);
 
     avxSup = cpuinfo[2] & (1 << 28) || false;
+
     bool osxsaveSup = cpuinfo[2] & (1 << 27) || false;
     if (osxsaveSup && avxSup)
     {

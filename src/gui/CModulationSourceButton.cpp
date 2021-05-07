@@ -34,7 +34,8 @@ CModulationSourceButton::CModulationSourceButton(const CRect &size, IControlList
                                                  std::shared_ptr<SurgeBitmaps> bitmapStore,
                                                  SurgeStorage *storage)
     : CControl(size, listener, tag, 0),
-      OldValue(0.f), Surge::UI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>(storage)
+      OldValue(0.f), Surge::GUI::CursorControlAdapterWithMouseDelta<CModulationSourceButton>(
+                         storage)
 {
     this->state = state;
     this->msid = msid;
@@ -312,7 +313,7 @@ CMouseEventResult CModulationSourceButton::onMouseDown(CPoint &where, const CBut
     hasMovedBar = false;
 
     if (storage)
-        this->hideCursor = !Surge::UI::showCursor(storage);
+        this->hideCursor = !Surge::GUI::showCursor(storage);
 
     if (!getMouseEnabled())
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;

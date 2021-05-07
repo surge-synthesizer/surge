@@ -20,8 +20,8 @@
 #include "CursorControlGuard.h"
 
 class CSurgeSlider : public VSTGUI::CControl,
-                     public Surge::UI::CursorControlAdapterWithMouseDelta<CSurgeSlider>,
-                     public Surge::UI::SkinConsumingComponent
+                     public Surge::GUI::CursorControlAdapterWithMouseDelta<CSurgeSlider>,
+                     public Surge::GUI::SkinConsumingComponent
 {
   public:
     CSurgeSlider(const VSTGUI::CPoint &loc, long style, VSTGUI::IControlListener *listener,

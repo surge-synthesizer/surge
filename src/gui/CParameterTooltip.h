@@ -20,7 +20,7 @@
 #include "SkinColors.h"
 #include "RuntimeFont.h"
 
-class CParameterTooltip : public VSTGUI::CControl, public Surge::UI::SkinConsumingComponent
+class CParameterTooltip : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
   public:
     CParameterTooltip(const VSTGUI::CRect &size) : VSTGUI::CControl(size, 0, 0, 0)

@@ -28,7 +28,7 @@ CMenuAsSlider::CMenuAsSlider(const VSTGUI::CPoint &loc, const VSTGUI::CPoint &sz
                              VSTGUI::IControlListener *listener, long tag,
                              std::shared_ptr<SurgeBitmaps> bitmapStore, SurgeStorage *storage)
     : CControl(CRect(loc, sz), listener, tag, nullptr),
-      Surge::UI::CursorControlAdapter<CMenuAsSlider>(storage)
+      Surge::GUI::CursorControlAdapter<CMenuAsSlider>(storage)
 {
     // this->storage = storage;
     auto size = CRect(0, 0, sz.x, sz.y);
@@ -367,7 +367,7 @@ void CMenuAsSlider::onSkinChanged()
 
             pBackgroundHover = skin->hoverBitmapOverlayForBackgroundBitmap(
                 skinControl, dynamic_cast<CScalableBitmap *>(pBackground), associatedBitmapStore,
-                Surge::UI::Skin::HoverType::HOVER);
+                Surge::GUI::Skin::HoverType::HOVER);
         }
 
         pGlyph = nullptr;
@@ -383,7 +383,7 @@ void CMenuAsSlider::onSkinChanged()
             pGlyph = associatedBitmapStore->getBitmap(dglphyid);
             pGlyphHover = skin->hoverBitmapOverlayForBackgroundBitmap(
                 skinControl, dynamic_cast<CScalableBitmap *>(pGlyph), associatedBitmapStore,
-                Surge::UI::Skin::HoverType::HOVER);
+                Surge::GUI::Skin::HoverType::HOVER);
         }
     }
 }
