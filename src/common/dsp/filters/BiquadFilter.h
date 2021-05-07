@@ -51,7 +51,7 @@ class vlag
     }
 };
 
-class BiquadFilter
+class alignas(16) BiquadFilter
 {
     // alignas(16) lag<double,false> a1,a2,b0,b1,b2;
     vlag a1 alignas(16), a2 alignas(16), b0 alignas(16), b1 alignas(16), b2 alignas(16);

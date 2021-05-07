@@ -4,7 +4,7 @@
 
 const int n_filter_registers = 16;
 
-struct QuadFilterUnitState
+struct alignas(16) QuadFilterUnitState
 {
     __m128 C[n_cm_coeffs], dC[n_cm_coeffs]; // coefficients
     __m128 R[n_filter_registers];           // registers

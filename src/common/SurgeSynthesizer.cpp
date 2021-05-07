@@ -80,8 +80,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
 
     for (int sc = 0; sc < n_scenes; sc++)
     {
-        FBQ[sc] = (QuadFilterChainState *)_aligned_malloc(
-            (MAX_VOICES >> 2) * sizeof(QuadFilterChainState), 16);
+        FBQ[sc] = new QuadFilterChainState[MAX_VOICES >> 2]();
 
         for (int i = 0; i < (MAX_VOICES >> 2); ++i)
         {
@@ -248,7 +247,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
 
     for (int sc = 0; sc < n_scenes; sc++)
     {
-        _aligned_free(FBQ[sc]);
+        delete[] FBQ[sc];
     }
 
     for (int sc = 0; sc < n_scenes; sc++)
@@ -1722,7 +1721,6 @@ void SurgeSynthesizer::allNotesOff()
         list<SurgeVoice *>::const_iterator iter;
         for (iter = voices[s].begin(); iter != voices[s].end(); iter++)
         {
-            //_aligned_free(*iter);
             freeVoice(*iter);
         }
         voices[s].clear();
@@ -3461,7 +3459,6 @@ void SurgeSynthesizer::process()
 
             if (!resume)
             {
-                //_aligned_free(v);
                 freeVoice(v);
                 iter = voices[s].erase(iter);
             }

@@ -22,7 +22,7 @@ ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     gain.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    qfus = (QuadFilterUnitState *)_aligned_malloc(2 * sizeof(QuadFilterUnitState), 16);
+    qfus = new QuadFilterUnitState[2]();
 
     for (int e = 0; e < 3; ++e)
     {
@@ -36,7 +36,7 @@ ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     }
 }
 
-ResonatorEffect::~ResonatorEffect() { _aligned_free(qfus); }
+ResonatorEffect::~ResonatorEffect() { delete[] qfus; }
 
 void ResonatorEffect::init()
 {

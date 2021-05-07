@@ -547,6 +547,7 @@ if( BUILD_HEADLESS )
     src/headless/UnitTestsDSP.cpp
     src/headless/UnitTestsFLT.cpp
     src/headless/UnitTestsFX.cpp
+    src/headless/UnitTestsINFRA.cpp
     src/headless/UnitTestsIO.cpp
     src/headless/UnitTestsMIDI.cpp
     src/headless/UnitTestsMOD.cpp
