@@ -34,10 +34,10 @@ enum lfoenv_state
     lenv_stuck,
 };
 
-class LfoModulationSource : public ModulationSource
+class LFOModulationSource : public ModulationSource
 {
   public:
-    LfoModulationSource();
+    LFOModulationSource();
     void assign(SurgeStorage *storage, LFOStorage *lfo, pdata *localcopy, SurgeVoiceState *state,
                 StepSequencerStorage *ss, MSEGStorage *ms, FormulaModulatorStorage *fs,
                 bool is_display = false);

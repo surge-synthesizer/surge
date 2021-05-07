@@ -2,7 +2,7 @@
 #include "CSurgeSlider.h"
 #include "MouseCursorControl.h"
 #include "globals.h"
-#include "guihelpers.h"
+#include "SurgeGUIUtils.h"
 #include "ModulationSource.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"

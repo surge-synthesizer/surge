@@ -38,7 +38,7 @@
 #include "SkinSupport.h"
 #include "SkinColors.h"
 #include "UIInstrumentation.h"
-#include "guihelpers.h"
+#include "SurgeGUIUtils.h"
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"

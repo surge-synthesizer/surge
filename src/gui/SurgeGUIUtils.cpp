@@ -1,4 +1,4 @@
-#include "guihelpers.h"
+#include "SurgeGUIUtils.h"
 
 #include <cctype>
 #include <JuceHeader.h>

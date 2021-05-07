@@ -37,10 +37,10 @@ const float zero = 0.f;
 const float db96 = powf(10.f, 0.05f * -96.f);
 const float db60 = powf(10.f, 0.05f * -60.f);
 
-class AdsrEnvelope : public ModulationSource
+class ADSREnvelope : public ModulationSource
 {
   public:
-    AdsrEnvelope() {}
+    ADSREnvelope() {}
 
     void init(SurgeStorage *storage, ADSRStorage *adsr, pdata *localcopy, SurgeVoiceState *state)
     {

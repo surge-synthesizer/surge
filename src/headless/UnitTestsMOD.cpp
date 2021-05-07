@@ -27,7 +27,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
                            bool isAnalog, float releaseAfter, float runUntil, float pushSusAt = -1,
                            float pushSusTo = 0) {
         auto *adsrstorage = &(surge->storage.getPatch().scene[0].adsr[0]);
-        std::shared_ptr<AdsrEnvelope> adsr(new AdsrEnvelope());
+        std::shared_ptr<ADSREnvelope> adsr(new ADSREnvelope());
         adsr->init(&(surge->storage), adsrstorage, surge->storage.getPatch().scenedata[0], nullptr);
         REQUIRE(adsr.get());
 
@@ -717,7 +717,7 @@ TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
 
         REQUIRE(surge);
 
-        auto lfo = std::make_unique<LfoModulationSource>();
+        auto lfo = std::make_unique<LFOModulationSource>();
         auto ss = std::make_unique<StepSequencerStorage>();
         auto lfostorage = &(surge->storage.getPatch().scene[0].lfo[0]);
         lfostorage->rate.temposync = true;
