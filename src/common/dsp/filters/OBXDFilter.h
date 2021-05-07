@@ -3,7 +3,7 @@
 
 #include "QuadFilterUnit.h"
 
-namespace ObxdFilter
+namespace OBXDFilter
 {
 enum Poles
 {
@@ -14,6 +14,6 @@ void makeCoefficients(FilterCoefficientMaker *cm, Poles p, float freq, float res
                       SurgeStorage *storage);
 __m128 process_2_pole(QuadFilterUnitState *__restrict f, __m128 sample);
 __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample);
-} // namespace ObxdFilter
+} // namespace OBXDFilter
 
 #endif

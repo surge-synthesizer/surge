@@ -7,11 +7,11 @@
 
 //------------------------------------------------------------------------------------------------
 
-VectorizedSvfFilter::VectorizedSvfFilter() { Reset(); }
+VectorizedSVFilter::VectorizedSVFilter() { Reset(); }
 
 //------------------------------------------------------------------------------------------------
 
-void VectorizedSvfFilter::Reset()
+void VectorizedSVFilter::Reset()
 {
     L1 = vZero;
     L2 = vZero;
@@ -24,7 +24,7 @@ void VectorizedSvfFilter::Reset()
 
 //------------------------------------------------------------------------------------------------
 
-void VectorizedSvfFilter::SetCoeff(float pOmega[4], float QVal, float Spread)
+void VectorizedSVFilter::SetCoeff(float pOmega[4], float QVal, float Spread)
 {
     float Freq1 alignas(16)[4];
     float Freq2 alignas(16)[4];
@@ -46,7 +46,7 @@ void VectorizedSvfFilter::SetCoeff(float pOmega[4], float QVal, float Spread)
 
 //------------------------------------------------------------------------------------------------
 
-void VectorizedSvfFilter::CopyCoeff(const VectorizedSvfFilter &SVF)
+void VectorizedSVFilter::CopyCoeff(const VectorizedSVFilter &SVF)
 {
     F1 = SVF.F1;
     F2 = SVF.F2;
@@ -55,10 +55,10 @@ void VectorizedSvfFilter::CopyCoeff(const VectorizedSvfFilter &SVF)
 
 //------------------------------------------------------------------------------------------------
 
-float VectorizedSvfFilter::CalcF(float Omega) { return 2.0 * sin(M_PI * Omega); }
+float VectorizedSVFilter::CalcF(float Omega) { return 2.0 * sin(M_PI * Omega); }
 
 //------------------------------------------------------------------------------------------------
 
-float VectorizedSvfFilter::CalcQ(float Quality) { return 1.f / Quality; }
+float VectorizedSVFilter::CalcQ(float Quality) { return 1.f / Quality; }
 
 //------------------------------------------------------------------------------------------------

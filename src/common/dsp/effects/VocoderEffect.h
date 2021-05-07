@@ -79,10 +79,10 @@ class VocoderEffect : public Effect
                                            int currentSynthStreamingRevision) override;
 
   private:
-    VectorizedSvfFilter mCarrierL alignas(16)[voc_vector_size];
-    VectorizedSvfFilter mCarrierR alignas(16)[voc_vector_size];
-    VectorizedSvfFilter mModulator alignas(16)[voc_vector_size];
-    VectorizedSvfFilter mModulatorR alignas(16)[voc_vector_size];
+    VectorizedSVFilter mCarrierL alignas(16)[voc_vector_size];
+    VectorizedSVFilter mCarrierR alignas(16)[voc_vector_size];
+    VectorizedSVFilter mModulator alignas(16)[voc_vector_size];
+    VectorizedSVFilter mModulatorR alignas(16)[voc_vector_size];
     vFloat mEnvF alignas(16)[voc_vector_size];
     vFloat mEnvFR alignas(16)[voc_vector_size];
     lipol_ps mGain alignas(16);

@@ -4,16 +4,16 @@
 
 //------------------------------------------------------------------------------------------------
 
-class VectorizedSvfFilter
+class VectorizedSVFilter
 {
   public:
-    VectorizedSvfFilter();
+    VectorizedSVFilter();
 
     void Reset();
 
     void SetCoeff(float Omega[4], float Q, float Spread);
 
-    void CopyCoeff(const VectorizedSvfFilter &SVF);
+    void CopyCoeff(const VectorizedSVFilter &SVF);
 
     inline vFloat CalcBPF(vFloat In)
     {

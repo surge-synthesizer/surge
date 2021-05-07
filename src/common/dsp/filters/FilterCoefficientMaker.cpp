@@ -119,22 +119,22 @@ void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int Su
          * 2 on a new type. But don't rewrite the filter for now. Just reconstruct the subtypes
          * */
     case fut_obxd_2pole_lp:
-        ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4, storageI);
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4, storageI);
         break;
     case fut_obxd_2pole_bp:
-        ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 1,
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 1,
                                      storageI);
         break;
     case fut_obxd_2pole_hp:
-        ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 2,
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 2,
                                      storageI);
         break;
     case fut_obxd_2pole_n:
-        ObxdFilter::makeCoefficients(this, ObxdFilter::TWO_POLE, Freq, Reso, SubType * 4 + 3,
+        OBXDFilter::makeCoefficients(this, OBXDFilter::TWO_POLE, Freq, Reso, SubType * 4 + 3,
                                      storageI);
         break;
     case fut_obxd_4pole:
-        ObxdFilter::makeCoefficients(this, ObxdFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
+        OBXDFilter::makeCoefficients(this, OBXDFilter::FOUR_POLE, Freq, Reso, SubType, storageI);
         break;
     case fut_k35_lp:
         K35Filter::makeCoefficients(this, Freq, Reso, true, fut_k35_saturations[SubType], storageI);

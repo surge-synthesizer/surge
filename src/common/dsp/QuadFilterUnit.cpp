@@ -823,10 +823,10 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
     case fut_obxd_2pole_bp:
     case fut_obxd_2pole_n:
         // All the differences are in subtype wrangling int he coefficnent maker
-        return ObxdFilter::process_2_pole;
+        return OBXDFilter::process_2_pole;
         break;
     case fut_obxd_4pole:
-        return ObxdFilter::process_4_pole;
+        return OBXDFilter::process_4_pole;
         break;
     case fut_k35_lp:
         return K35Filter::process_lp;

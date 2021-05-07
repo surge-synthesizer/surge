@@ -24,7 +24,7 @@
 #include "DebugHelpers.h"
 #include "FilterCoefficientMaker.h"
 
-namespace ObxdFilter
+namespace OBXDFilter
 {
 
 enum Obxd12dBCoeff
@@ -305,4 +305,4 @@ __m128 process_4_pole(QuadFilterUnitState *__restrict f, __m128 sample)
     auto out = _mm_mul_ps(mc, _mm_add_ps(one, _mm_mul_ps(f->C[R24], zero_four_five)));
     return _mm_mul_ps(out, gainAdjustment4Pole);
 }
-} // namespace ObxdFilter
+} // namespace OBXDFilter
