@@ -16,7 +16,7 @@
 #include "SurgeGUIEditor.h"
 #include "CPatchBrowser.h"
 #include "SkinColors.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 
 #include <vector>
 #include <algorithm>

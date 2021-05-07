@@ -330,7 +330,7 @@ set(SURGE_GUI_SOURCES
   src/gui/CEffectLabel.h
   src/gui/CEffectSettings.cpp
   src/gui/CHSwitch2.cpp
-  src/gui/CLFOGui.cpp
+  src/gui/CLFOGUI.cpp
   src/gui/CMenuAsSlider.cpp
   src/gui/CModulationSourceButton.cpp
   src/gui/CNumberField.cpp
@@ -341,12 +341,12 @@ set(SURGE_GUI_SOURCES
   src/gui/CSnapshotMenu.cpp
   src/gui/CSurgeHyperlink.cpp
   src/gui/CSurgeSlider.cpp
-  src/gui/CSurgeVuMeter.cpp
+  src/gui/CSurgeVUMeter.cpp
   src/gui/CSwitchControl.cpp
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/CVerticalLabel.cpp
-  src/gui/guihelpers.cpp
+  src/gui/GUIHelpers.cpp
   src/gui/ModulationEditor.cpp
   src/gui/MSEGEditor.cpp
   src/gui/PatchDBViewer.cpp
@@ -356,7 +356,7 @@ set(SURGE_GUI_SOURCES
   src/gui/SkinSupport.cpp
   src/gui/SurgeBitmaps.cpp
   src/gui/SurgeGUIEditor.cpp
-  src/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/gui/SurgeGUIEditorHTMLGenerators.cpp
   src/gui/SurgeJUCELookAndFeel.cpp
   src/gui/UIInstrumentation.cpp)
 

@@ -15,7 +15,7 @@
 
 #include "MSEGEditor.h"
 #include "MSEGModulationHelper.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
@@ -27,7 +27,7 @@
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include "CursorControlGuard.h"
-#include "guihelpers.h"
+#include "GUIHelpers.h"
 
 // FIXME when you get cursor hiding working
 #define DISABLE_CURSOR_HIDING 1
