@@ -1058,6 +1058,17 @@ if( UNIX AND NOT APPLE )
           COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           )
+
+add_custom_target(surge-xt-rpm)
+add_dependencies(surge-xt-rpm surge-staged-assets)
+
+  add_custom_command(TARGET surge-xt-rpm
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}
+          COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_linux/make_rpm.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_rpm.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
+          )
 endif()
 
 if( WIN32 )

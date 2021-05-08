@@ -295,6 +295,7 @@ You will also need to install a set of dependencies:
 - libxcb-cursor-dev
 - libxcb-keysyms1-dev
 - libxcb-util-dev
+- libxrander-dev
 
 # Continuous Integration
 
