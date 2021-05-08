@@ -668,6 +668,7 @@ if( BUILD_SURGE_EFFECTS_BANK )
   juce_add_plugin(surge-fx
           PRODUCT_NAME ${SURGE_FX_PRODUCT_NAME}
           COMPANY_NAME "Surge Synth Team"
+          COMPANY_WEBSITE "https://surge-synth-team.org/"
           BUNDLE_ID "org.surge-synth-team.surge-xt-fx"
           PLUGIN_MANUFACTURER_CODE VmbA
           PLUGIN_CODE SFXT
@@ -680,6 +681,10 @@ if( BUILD_SURGE_EFFECTS_BANK )
           IS_MIDI_EFFECT FALSE
 
           COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
+
+          VST3_CATEGORIES Fx
+          VST2_CATEGORY kPlugCategEffect
+          AU_MAIN_TYPE kAudioUnitType_Effect
 
           LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
           LV2_SHARED_LIBRARY_NAME SurgeXT_FX
@@ -805,6 +810,7 @@ if( BUILD_SURGE_XT )
   juce_add_plugin(surge-xt
           PRODUCT_NAME ${SURGE_XT_PRODUCT_NAME}
           COMPANY_NAME "Surge Synth Team"
+          COMPANY_WEBSITE "https://surge-synth-team.org/"
           BUNDLE_ID "org.surge-synth-team.surge-xt"
           PLUGIN_MANUFACTURER_CODE VmbA
           PLUGIN_CODE SgXT
@@ -817,6 +823,10 @@ if( BUILD_SURGE_XT )
           IS_MIDI_EFFECT FALSE
 
           COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
+
+          VST3_CATEGORIES Instrument Synth
+          VST2_CATEGORY kPlugCategSynth
+          AU_MAIN_TYPE kAudioUnitType_MusicDevice
 
           LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt
           LV2_SHARED_LIBRARY_NAME SurgeXT
