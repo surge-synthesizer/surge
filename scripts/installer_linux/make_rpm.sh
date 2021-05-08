@@ -22,6 +22,7 @@ if [[ "$#" -ne 4 ]]; then
     echo "    TARGET_DIR  where to put the output"
     echo "    VERSION     build/rpm version"
     echo
+    exit -1
 fi
 
 # Intermediate build artifacts
