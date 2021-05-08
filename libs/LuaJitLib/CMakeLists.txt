@@ -19,8 +19,7 @@ if( APPLE )
 
 
   add_library(luajit-5.1 INTERFACE)
-  target_link_libraries (luajit-5.1 INTERFACE luajit )
-  target_link_directories(luajit-5.1 INTERFACE ${LUAJIT_BLD}/bin)
+  target_link_libraries (luajit-5.1 INTERFACE ${LUAJIT_BLD}/bin/libluajit.a )
   target_include_directories(luajit-5.1 INTERFACE ${LUAJIT_DIR}/src)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUAJIT=1)
 
@@ -31,6 +30,10 @@ if( APPLE )
             COMMAND ./build-fat-luajit.sh "${LUAJIT_BLD}"
             OUTPUT_VARIABLE O
             ERROR_VARIABLE E)
+    message( STATUS ${O} )
+    message( STATUE ${E} )
+    file(GLOB_RECURSE LUACONTENTS "${LUAJIT_BLD}/bin/*")
+    message( STATUS ${LUACONTENTS})
   endif()
 
 

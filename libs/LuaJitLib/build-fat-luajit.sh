@@ -33,4 +33,4 @@ MACOSX_DEPLOYMENT_TARGET=10.9 make
 mv src/lib*a "${OD}/x86_64"
 
 lipo -create -arch arm64 "${OD}/arm64/libluajit.a" -arch x86_64 "${OD}/x86_64/libluajit.a" -output "${OD}/libluajit.a"
-
+ls -al ${OD}

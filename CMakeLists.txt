@@ -287,6 +287,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/oscillators/WavetableOscillator.cpp
   src/common/dsp/oscillators/WindowOscillator.cpp
   src/common/dsp/modulators/ADSRModulationSource.h
+  src/common/dsp/modulators/FormulaModulationHelper.cpp
   src/common/dsp/modulators/LFOModulationSource.cpp
   src/common/dsp/modulators/MSEGModulationHelper.cpp
   src/common/dsp/utilities/DSPUtils.cpp
