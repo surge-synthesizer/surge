@@ -10,6 +10,8 @@
 
 #include "UnitTestUtilities.h"
 
+#include "FormulaModulationHelper.h"
+
 #if HAS_LUAJIT
 extern "C"
 {
@@ -179,6 +181,126 @@ end
         {
             bool luaIsFunc = false;
             REQUIRE(luaIsFunc);
+        }
+    }
+}
+
+struct formulaObservation
+{
+    formulaObservation(int ip, float fp, float va)
+    {
+        iPhase = ip;
+        fPhase = fp;
+        phase = ip + fp;
+        v = va;
+    }
+    int iPhase;
+    float fPhase;
+    float v;
+    float phase;
+};
+
+std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dPhase,
+                                           float phaseMax, float deform = 0,
+                                           float releaseAfter = -1)
+{
+    auto res = std::vector<formulaObservation>();
+    double phase = 0.0;
+    int iphase = 0;
+    Surge::Formula::EvaluatorState es;
+    Surge::Formula::prepareForEvaluation(fs, es, true);
+    while (phase + iphase < phaseMax)
+    {
+        bool release = false;
+        if (releaseAfter >= 0 && phase + iphase >= releaseAfter)
+            release = true;
+        es.released = release;
+
+        auto r = Surge::Formula::valueAt(iphase, phase, deform, fs, &es);
+        res.push_back(formulaObservation(iphase, phase, r));
+        phase += dPhase;
+        if (phase > 1)
+        {
+            phase -= 1;
+            iphase += 1;
+        }
+    }
+    return res;
+}
+
+TEST_CASE("Basic Formula Evaluation", "[formula]")
+{
+    SECTION("Identity Modulator")
+    {
+        FormulaModulatorStorage fs;
+        fs.formula = R"FN(
+function process(modstate)
+    -- a bipolar saw
+    modstate["output"] = modstate["phase"]
+    return modstate
+end)FN";
+        auto runIt = runFormula(&fs, 0.0321, 5);
+        for (auto c : runIt)
+        {
+            REQUIRE(c.fPhase == Approx(c.v));
+        }
+    }
+
+    SECTION("Saw Modulator")
+    {
+        FormulaModulatorStorage fs;
+        fs.formula = R"FN(
+function process(modstate)
+    -- a bipolar saw
+    modstate["output"] = 2 * modstate["phase"] - 1
+    return modstate
+end)FN";
+        auto runIt = runFormula(&fs, 0.0321, 5);
+        for (auto c : runIt)
+        {
+            REQUIRE(2 * c.fPhase - 1 == Approx(c.v));
+        }
+    }
+
+    SECTION("Sin Modulator")
+    {
+        FormulaModulatorStorage fs;
+        fs.formula = R"FN(
+function process(modstate)
+    -- a bipolar saw
+    modstate["output"] = math.sin( modstate["phase"] * 3.14159 * 2 )
+    return modstate
+end)FN";
+        auto runIt = runFormula(&fs, 0.0321, 5);
+        for (auto c : runIt)
+        {
+            REQUIRE(std::sin(c.fPhase * 3.14159 * 2) == Approx(c.v));
+        }
+    }
+
+    SECTION("Test Deform")
+    {
+        FormulaModulatorStorage fs;
+        fs.formula = R"FN(
+function process(modstate)
+    -- a bipolar saw
+    p = modstate["phase"]
+    d = modstate["deform"]
+    r = math.pow( p, 3 * d + 1) * 2 - 1
+    modstate["output"] = r
+    return modstate
+end)FN";
+
+        for (int id = 0; id <= 10; id++)
+        {
+            float def = id / 10.0;
+            float pe = 3 * def + 1;
+            auto runIt = runFormula(&fs, 0.0321, 5, def);
+            for (auto c : runIt)
+            {
+                auto q = pow(c.fPhase, pe) * 2 - 1;
+                REQUIRE(q == Approx(c.v));
+            }
         }
     }
 }

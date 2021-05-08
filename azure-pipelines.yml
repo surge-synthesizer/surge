@@ -15,12 +15,13 @@ jobs:
   strategy:
     matrix:
       macOS-unit-test:
-        imageName: 'macos-10.14'
+        imageName: 'macos-10.15'
         isMac: True
         isMacUnitTest: True
         cmakeArguments: "-GXcode"
         cmakeTarget: "surge-headless"
         cmakeConfig: "Release"
+        xcodePath: "/Applications/Xcode_12.2.app"
       macOS-x86:
         imageName: 'macos-10.15'
         isMac: True
@@ -171,7 +172,7 @@ jobs:
       set -e
       sudo xcode-select -s $(xcodePath)
     displayName: mac - run xcode-select
-    condition: variables.isMacFat
+    condition: variables.isMac
 
   - bash: |
       set -e

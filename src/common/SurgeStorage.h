@@ -674,8 +674,18 @@ struct MSEGStorage
     static constexpr float minimumDuration = 0.0;
 };
 
+#if HAS_LUAJIT
+#define HAS_FORMULA_MODULATOR 1
+#endif
+
 struct FormulaModulatorStorage
-{ // Currently an unused placeholder
+{
+    std::string formula = R"FN(
+function process(modstate)
+    -- a bipolar saw
+    modstate["output"] = modstate["phase"] * 2 - 1
+    return modstate
+end)FN";
 };
 
 /*
