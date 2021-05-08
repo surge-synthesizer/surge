@@ -281,6 +281,7 @@ class SurgeGUIEditor : public EditorType,
     int getWindowSizeX() const { return wsx; }
     int getWindowSizeY() const { return wsy; }
 
+    void invalidateFrame() const { frame->invalid(); }
     /*
      * We have an enumerated set of overlay tags which we can push
      * to the UI. You *have* to give a new overlay type a tag in
@@ -292,7 +293,8 @@ class SurgeGUIEditor : public EditorType,
         MSEG_EDITOR,
         STORE_PATCH,
         PATCH_BROWSER,
-        MODULATION_EDITOR
+        MODULATION_EDITOR,
+        FORMULA_EDITOR
     };
 
     void addEditorOverlay(
@@ -334,6 +336,10 @@ class SurgeGUIEditor : public EditorType,
 
     void closeModulationEditorDialog();
     void showModulationEditorDialog();
+
+    void closeFormulaEditorDialog();
+    void showFormulaEditorDialog();
+    void toggleFormulaEditorDialog();
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();

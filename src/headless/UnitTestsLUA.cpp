@@ -209,6 +209,7 @@ std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dP
     int iphase = 0;
     Surge::Formula::EvaluatorState es;
     Surge::Formula::prepareForEvaluation(fs, es, true);
+    es.deform = deform;
     while (phase + iphase < phaseMax)
     {
         bool release = false;
@@ -216,7 +217,7 @@ std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dP
             release = true;
         es.released = release;
 
-        auto r = Surge::Formula::valueAt(iphase, phase, deform, fs, &es);
+        auto r = Surge::Formula::valueAt(iphase, phase, fs, &es);
         res.push_back(formulaObservation(iphase, phase, r));
         phase += dPhase;
         if (phase > 1)

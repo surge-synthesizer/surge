@@ -43,6 +43,7 @@
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
 #include "ModulationEditor.h"
+#include "FormulaModulatorEditor.h"
 
 #include <iostream>
 #include <iomanip>
@@ -1351,12 +1352,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             msegEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
             msegEditSwitch->setVisible(false);
-            msegEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR));
+            msegEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
+                                     isAnyOverlayPresent(FORMULA_EDITOR));
             auto q = modsource_editor[current_scene];
             if ((q >= ms_lfo1 && q <= ms_lfo6) || (q >= ms_slfo1 && q <= ms_slfo6))
             {
                 auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
-                if (lfodata->shape.val.i == lt_mseg)
+                if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
                     msegEditSwitch->setVisible(true);
             }
             break;
@@ -4054,11 +4056,21 @@ void SurgeGUIEditor::valueChanged(CControl *control)
     {
         if (control->getValue() > 0.5)
         {
-            showMSEGEditor();
+            auto q = modsource_editor[current_scene];
+            auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
+            if (lfodata->shape.val.i == lt_mseg)
+            {
+                showMSEGEditor();
+            }
+            else if (lfodata->shape.val.i == lt_formula)
+            {
+                showFormulaEditorDialog();
+            }
         }
         else
         {
             closeMSEGEditor();
+            closeFormulaEditorDialog();
         }
         return;
     }
@@ -5348,7 +5360,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         what = "Step Seq";
     if (lt_envelope == shapev)
         what = "Envelope";
-    if (lt_function == shapev)
+    if (lt_formula == shapev)
         // TODO FIXME: When function LFO type is added, adjust this condition!
         what = "Envelope";
 
@@ -6944,18 +6956,16 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button)
                 sprintf(txt, "%s MSEG %d", (isS ? "Scene" : "Voice"), fnum + 1);
             return std::string(txt);
         }
-        else if (lfodata->shape.val.i == lt_function)
+        else if (lfodata->shape.val.i == lt_formula)
         {
             char txt[64];
 
             // TODO FIXME: When function LFO type is added, uncomment the second sprintf and remove
             // the first one!
             if (button)
-                sprintf(txt, "%sENV %d", (isS ? "S-" : ""), fnum + 1);
-            // sprintf( txt, "%sFUN %d", (isS ? "S-" : "" ), fnum + 1 );
+                sprintf(txt, "%sFRM %d", (isS ? "S-" : ""), fnum + 1);
             else
-                sprintf(txt, "%s Envelope %d", (isS ? "Scene" : "Voice"), fnum + 1);
-            // sprintf( txt, "%s Function %d", (isS ? "Scene" : "Voice" ), fnum + 1 );
+                sprintf(txt, "%s Formula %d", (isS ? "Scene" : "Voice"), fnum + 1);
             return std::string(txt);
         }
     }
@@ -8209,11 +8219,12 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
-    if (prior != curr || prior == lt_mseg || curr == lt_mseg)
+    if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
+        curr == lt_formula)
     {
         if (msegEditSwitch)
         {
-            msegEditSwitch->setVisible(curr == lt_mseg);
+            msegEditSwitch->setVisible(curr == lt_mseg || curr == lt_formula);
         }
     }
 
@@ -8226,6 +8237,17 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     {
         // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
         closeMSEGEditor();
+    }
+
+    if (curr == lt_formula && isAnyOverlayPresent(FORMULA_EDITOR))
+    {
+        // We have the MSEGEditor open and have swapped to the MSEG here
+        showFormulaEditorDialog();
+    }
+    else if (prior == lt_formula && curr != lt_formula && isAnyOverlayPresent(FORMULA_EDITOR))
+    {
+        // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
+        closeFormulaEditorDialog();
     }
 
     // update the LFO title label
@@ -8304,6 +8326,46 @@ void SurgeGUIEditor::closeModulationEditorDialog()
     if (isAnyOverlayPresent(MODULATION_EDITOR))
     {
         dismissEditorOfType(MODULATION_EDITOR);
+    }
+}
+
+void SurgeGUIEditor::showFormulaEditorDialog()
+{
+    // For now, follow the MSEG Sizing
+    auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
+    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h)));
+    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+    auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
+
+    auto pt = std::make_unique<FormulaModulatorEditor>(this, &(this->synth->storage), fs);
+    pt->setBounds(0, 0, skinCtrl->w, skinCtrl->h);
+    c->juceComponent()->addAndMakeVisible(*pt);
+    c->takeOwnership(std::move(pt));
+
+    addEditorOverlay(c, "Formula Editor", FORMULA_EDITOR, CPoint(skinCtrl->x, skinCtrl->y), false,
+                     true, [this]() {});
+}
+
+void SurgeGUIEditor::closeFormulaEditorDialog()
+{
+    if (isAnyOverlayPresent(FORMULA_EDITOR))
+    {
+        dismissEditorOfType(FORMULA_EDITOR);
+    }
+}
+
+void SurgeGUIEditor::toggleFormulaEditorDialog()
+{
+    if (isAnyOverlayPresent(FORMULA_EDITOR))
+    {
+        closeFormulaEditorDialog();
+    }
+    else
+    {
+        showFormulaEditorDialog();
     }
 }
 

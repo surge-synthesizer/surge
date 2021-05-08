@@ -1183,4 +1183,8 @@ void SurgeVoice::freeAllocatedElements()
         osc[i].reset(nullptr);
         osctype[i] = -1;
     }
+    for (int i = 0; i < n_lfos_voice; ++i)
+    {
+        lfo[i].completedModulation();
+    }
 }

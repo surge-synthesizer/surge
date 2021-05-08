@@ -1105,7 +1105,7 @@ PYBIND11_MODULE(surgepy, m)
     C(lt_snh);
     C(lt_envelope);
     C(lt_mseg);
-    C(lt_function);
+    C(lt_formula);
 
     C(wst_none);
     C(wst_soft);

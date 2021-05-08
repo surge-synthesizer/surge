@@ -366,7 +366,7 @@ enum lfo_type
     lt_envelope,
     lt_stepseq,
     lt_mseg,
-    lt_function,
+    lt_formula,
 
     n_lfo_types,
 };
@@ -386,7 +386,7 @@ const int lt_num_deforms[n_lfo_types] = {
     3, // lt_envelope
     0, // lt_stepseq
     0, // lt_mseg
-    3, // lt_function
+    3, // lt_formula
 };
 
 /*
@@ -781,6 +781,8 @@ class SurgePatch
     void msegFromXMLElement(MSEGStorage *ms, TiXmlElement *parent, bool restoreSnaps) const;
     void stepSeqToXmlElement(StepSequencerStorage *ss, TiXmlElement &parent, bool streamMask) const;
     void stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *parent) const;
+    void formulaToXMLElement(FormulaModulatorStorage *ms, TiXmlElement &parent) const;
+    void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
