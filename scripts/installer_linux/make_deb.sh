@@ -73,7 +73,7 @@ gzip -9 -n ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 cp ${SOURCEDIR}/LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
 cp -r ${SOURCEDIR}/resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
 
-# Copy the VST3 bundld 
+# Copy the VST3 bundle
 cp -r "${INDIR}/Surge XT.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
 cp -r "${INDIR}/Surge XT Effects.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
 cp -r "${INDIR}/Surge XT" ${PACKAGE_NAME}/usr/bin/
@@ -83,15 +83,21 @@ cp -r "${INDIR}/Surge XT Effects" ${PACKAGE_NAME}/usr/bin/
 # cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
 
 # set permissions on shared libraries
-find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" | xargs chmod 0644
-# find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" | xargs chmod 0644
+find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
+# find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" -exec chmod 0644 {} +
 
 echo "----- LIBRARY CONTENTS (except resource) -----"
 find ${PACKAGE_NAME}/usr/lib -print
 
-# build package
-
+# build deb package
 dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
+
+# create a tarball of the {PACKAGE_NAME}/usr contents.
+pushd ${PACKAGE_NAME}/usr
+    tar -czf ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.tar.gz *
+popd
+
+
 rm -rf ${PACKAGE_NAME}
 popd
 
