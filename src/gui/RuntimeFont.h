@@ -13,6 +13,7 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     ~DefaultFonts();
     // Fix (or expand) this signature to not couple to VSTGUI
     juce::Font getLatoAtSize(float size, int style = VSTGUI::kNormalFace) const;
+    juce::Font getFiraMonoAtSize(float size) const;
 
     juce::Font displayFont;
     juce::Font patchNameFont;
@@ -20,6 +21,7 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::Font aboutFont;
 
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface;
+    juce::ReferenceCountedObjectPtr<juce::Typeface> firaMonoRegularTypeface;
 };
 
 DefaultFonts *getFontManager();

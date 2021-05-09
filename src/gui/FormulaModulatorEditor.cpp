@@ -29,7 +29,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     addAndMakeVisible(applyButton.get());
 
     mainEditor = std::make_unique<juce::TextEditor>("Formula");
-    mainEditor->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
     mainEditor->setMultiLine(true, false);
     mainEditor->setReturnKeyStartsNewLine(true);
     mainEditor->setText(fs->formula);
