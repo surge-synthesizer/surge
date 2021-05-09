@@ -848,6 +848,7 @@ if( BUILD_SURGE_XT )
           resources/classic-skin-svgs/*.svg
           resources/fonts/Lato*ttf
           resources/fonts/IndieFlower.ttf
+          resources/fonts/FiraMono-Regular.ttf
           )
 
   juce_add_binary_data( surge-xt-binary
