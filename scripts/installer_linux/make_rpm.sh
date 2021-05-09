@@ -41,7 +41,8 @@ echo running make_rpm.sh $INDIR $SOURCEDIR $TARGET_DIR $VERSION
 if [[ ${VERSION:0:1} =~ [0-9] ]]; then
     echo "Build Version (${VERSION})"
 elif [[ ${VERSION} = NIGHTLY* ]]; then
-    VERSION="9.${VERSION}"
+    # rpmbuild does not allow dashes in the rpm version.
+    VERSION="9.${VERSION//-/$'.'}"
     echo "NIGHTLY; VERSION is ${VERSION}"
 else
     VERSION="0.${VERSION}"
