@@ -20,6 +20,7 @@
 #include <list>
 #include <vembertech/vt_dsp_endian.h>
 #include "MSEGModulationHelper.h"
+#include "FormulaModulationHelper.h"
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "SkinModel.h"
@@ -524,8 +525,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
-            // TODO: remove lt_function after implementing function modulator!
-            auto res = lf->shape.val.i == lt_envelope || lf->shape.val.i == lt_function;
+            auto res = lf->shape.val.i == lt_envelope;
             if (!res && p->can_deactivate())
                 return p->deactivated;
             return res;
@@ -1806,6 +1806,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 Surge::MSEG::createInitVoiceMSEG(ms);
             }
             Surge::MSEG::rebuildCache(ms);
+
+            auto *fs = &(formulamods[s][m]);
+            Surge::Formula::createInitFormula(fs);
         }
 
     TiXmlElement *ms = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("msegs"));
@@ -1844,6 +1847,28 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 }
             }
         }
+    }
+
+    // Unstream formula mods
+    TiXmlElement *fs = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("formulae"));
+    if (fs)
+        p = TINYXML_SAFE_TO_ELEMENT(fs->FirstChild("formula"));
+    else
+        p = nullptr;
+    while (p)
+    {
+        int v;
+        auto sc = 0;
+        if (p->QueryIntAttribute("scene", &v) == TIXML_SUCCESS)
+            sc = v;
+
+        auto mi = 0;
+        if (p->QueryIntAttribute("i", &v) == TIXML_SUCCESS)
+            mi = v;
+        auto *fs = &(formulamods[sc][mi]);
+
+        formulaFromXMLElement(fs, p);
+        p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("formula"));
     }
 
     for (int i = 0; i < n_customcontrollers; i++)
@@ -2339,6 +2364,25 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     patch.InsertEndChild(mseg);
 
+    TiXmlElement formulae("formulae");
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int l = 0; l < n_lfos; l++)
+        {
+            if (scene[sc].lfo[l].shape.val.i == lt_formula)
+            {
+                TiXmlElement p("formula");
+                p.SetAttribute("scene", sc);
+                p.SetAttribute("i", l);
+
+                auto *fs = &(formulamods[sc][l]);
+                formulaToXMLElement(fs, p);
+                formulae.InsertEndChild(p);
+            }
+        }
+    }
+    patch.InsertEndChild(formulae);
+
     TiXmlElement cc("customcontroller");
     for (int l = 0; l < n_customcontrollers; l++)
     {
@@ -2749,4 +2793,16 @@ void SurgePatch::stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *p
         else
             ss->steps[s] = 0.f;
     }
+}
+
+void SurgePatch::formulaToXMLElement(FormulaModulatorStorage *fs, TiXmlElement &parent) const
+{
+    parent.SetAttribute(
+        "formula", base64_encode((unsigned const char *)fs->formula.c_str(), fs->formula.length()));
+}
+
+void SurgePatch::formulaFromXMLElement(FormulaModulatorStorage *fs, TiXmlElement *parent) const
+{
+    auto fb64 = parent->Attribute("formula");
+    fs->formula = base64_decode(fb64);
 }

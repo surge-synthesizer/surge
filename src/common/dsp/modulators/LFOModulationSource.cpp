@@ -7,7 +7,8 @@ using namespace std;
 
 int LFOModulationSource::urngSeed = 1234;
 
-LFOModulationSource::LFOModulationSource() {}
+LFOModulationSource::LFOModulationSource() { Surge::Formula::initEvaluatorState(formulastate); }
+LFOModulationSource::~LFOModulationSource() { Surge::Formula::cleanEvaluatorState(formulastate); }
 
 void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *localcopy,
                                  SurgeVoiceState *state, StepSequencerStorage *ss, MSEGStorage *ms,
@@ -21,6 +22,8 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     this->ms = ms;
     this->fs = fs;
     this->is_display = is_display;
+
+    Surge::Formula::cleanEvaluatorState(formulastate);
 
     iout = 0;
     output = 0;
@@ -348,7 +351,11 @@ void LFOModulationSource::attack()
             }
         }
     }
-
+    break;
+    case lt_formula:
+    {
+        Surge::Formula::prepareForEvaluation(fs, formulastate, is_display);
+    }
     break;
     }
 }
@@ -597,10 +604,10 @@ void LFOModulationSource::process_block()
         };
     }
 
+    float useenvval = env_val;
     switch (s)
     {
     case lt_envelope:
-    case lt_function: // TODO FIXME: When function LFO type is added, remove it from this case!
         switch (lfo->deform.deform_type)
         {
         case type_1:
@@ -834,6 +841,37 @@ void LFOModulationSource::process_block()
         iout = Surge::MSEG::valueAt(unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
                                     &msegstate);
         break;
+    case lt_formula:
+        formulastate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
+
+        formulastate.del = localcopy[idelay].f;
+        formulastate.a = localcopy[iattack].f;
+        formulastate.h = localcopy[ihold].f;
+        formulastate.dec = localcopy[idecay].f;
+        formulastate.s = localcopy[isustain].f;
+        formulastate.r = localcopy[irelease].f;
+        formulastate.rate = localcopy[rate].f;
+        formulastate.amp = localcopy[magn].f;
+        formulastate.phase = localcopy[startphase].f;
+        formulastate.deform = localcopy[ideform].f;
+        formulastate.tempo = storage->temposyncratio * 120.0;
+        formulastate.songpos = storage->songpos;
+
+        iout = Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate);
+        if (!formulastate.useEnvelope)
+        {
+            useenvval = 1.0;
+        }
+
+        if (formulastate.raisedError)
+        {
+            auto em = formulastate.error;
+            formulastate.error = "";
+            formulastate.raisedError = false;
+            // storage->reportError(em, "Formula Evaluator Error" );
+            std::cout << "ERROR: " << em << std::endl;
+        }
+        break;
     };
 
     float io2 = iout;
@@ -851,5 +889,13 @@ void LFOModulationSource::process_block()
     }
 
     auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
-    output = env_val * magnf * io2;
+    output = useenvval * magnf * io2;
+}
+
+void LFOModulationSource::completedModulation()
+{
+    if (lfo->shape.val.i == lt_formula)
+    {
+        Surge::Formula::cleanEvaluatorState(formulastate);
+    }
 }

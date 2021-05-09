@@ -20,6 +20,7 @@
 #include "SurgeVoiceState.h"
 #include "ModulationSource.h"
 #include "MSEGModulationHelper.h" // We need this for the MSEGEvalatorState member
+#include "FormulaModulationHelper.h"
 #include <functional>
 
 enum LFOEG_state
@@ -38,6 +39,7 @@ class LFOModulationSource : public ModulationSource
 {
   public:
     LFOModulationSource();
+    ~LFOModulationSource();
     void assign(SurgeStorage *storage, LFOStorage *lfo, pdata *localcopy, SurgeVoiceState *state,
                 StepSequencerStorage *ss, MSEGStorage *ms, FormulaModulatorStorage *fs,
                 bool is_display = false);
@@ -47,6 +49,7 @@ class LFOModulationSource : public ModulationSource
     virtual void attack() override;
     virtual void release() override;
     virtual void process_block() override;
+    virtual void completedModulation();
 
     virtual const char *get_title() override { return "LFO"; }
     virtual int get_type() override { return mst_lfo; }
@@ -63,7 +66,10 @@ class LFOModulationSource : public ModulationSource
     StepSequencerStorage *ss;
     MSEGStorage *ms;
     Surge::MSEG::EvaluatorState msegstate;
+
     FormulaModulatorStorage *fs;
+    Surge::Formula::EvaluatorState formulastate;
+
     pdata *localcopy;
     bool phaseInitialized;
     void initPhaseFromStartPhase();

@@ -281,8 +281,8 @@ void CLFOGui::draw(CDrawContext *dc)
                 path->beginSubpath(xc, val);
                 eupath->beginSubpath(xc, euval);
                 if ((lfodata->unipolar.val.b == false) && (lfodata->shape.val.i != lt_envelope) &&
-                    (lfodata->shape.val.i != lt_function)) // TODO FIXME: When function LFO type is
-                                                           // added, remove it from this condition!
+                    (lfodata->shape.val.i != lt_formula)) // TODO FIXME: When function LFO type is
+                                                          // added, remove it from this condition!
                     edpath->beginSubpath(xc, edval);
                 if (tFullWave)
                 {
@@ -327,9 +327,13 @@ void CLFOGui::draw(CDrawContext *dc)
                 }
             }
         }
+        tlfo->completedModulation();
         delete tlfo;
         if (tFullWave)
+        {
+            tFullWave->completedModulation();
             delete tFullWave;
+        }
 
         VSTGUI::CGraphicsTransform tf =
             VSTGUI::CGraphicsTransform()
@@ -1304,7 +1308,7 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
-    if (lfodata->shape.val.i == lt_mseg)
+    if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
     {
         // only the LFO waveform area
         auto displayrect = getViewSize();
@@ -1316,7 +1320,12 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
 
             if (sge && displayrect.pointInside(where))
-                sge->toggleMSEGEditor();
+            {
+                if (lfodata->shape.val.i == lt_mseg)
+                    sge->toggleMSEGEditor();
+                if (lfodata->shape.val.i == lt_formula)
+                    sge->toggleFormulaEditorDialog();
+            }
         }
 
         // open context menu with various MSEG related options

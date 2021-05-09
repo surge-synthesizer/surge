@@ -30,8 +30,6 @@ if( APPLE )
             COMMAND ./build-fat-luajit.sh "${LUAJIT_BLD}"
             OUTPUT_VARIABLE O
             ERROR_VARIABLE E)
-    message( STATUS ${O} )
-    message( STATUE ${E} )
     file(GLOB_RECURSE LUACONTENTS "${LUAJIT_BLD}/bin/*")
     message( STATUS ${LUACONTENTS})
   endif()
