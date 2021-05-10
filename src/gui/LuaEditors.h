@@ -13,8 +13,12 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_XT_FORMULAMODULATOREDITOR_H
-#define SURGE_XT_FORMULAMODULATOREDITOR_H
+/*
+ * This file contains all the various LUA editors as specialized
+ * classes and shared function base classes.
+ */
+#ifndef SURGE_XT_LUAEDITORS_H
+#define SURGE_XT_LUAEDITORS_H
 
 #include <JuceHeader.h>
 #include "SurgeStorage.h"
@@ -42,4 +46,4 @@ class FormulaModulatorEditor : public juce::Component,
     FormulaModulatorStorage *formulastorage;
 };
 
-#endif // SURGE_XT_FORMULAMODULATOREDITOR_H
+#endif // SURGE_XT_LUAEDITORS_H

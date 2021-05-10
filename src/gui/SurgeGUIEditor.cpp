@@ -43,7 +43,7 @@
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
 #include "ModulationEditor.h"
-#include "FormulaModulatorEditor.h"
+#include "LuaEditors.h"
 
 #include <iostream>
 #include <iomanip>

@@ -13,9 +13,54 @@
 ** open source in September 2018.
 */
 
-#include "FormulaModulatorEditor.h"
+#include "LuaEditors.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
+
+struct EditorColors
+// http://www.zovirl.com/2011/07/22/solarized_cheat_sheet/
+// replace this with skin engine one day
+{
+    static constexpr uint32_t base03 = 0xFF002b36;
+    static constexpr uint32_t base02 = 0xFF073642;
+    static constexpr uint32_t base01 = 0xFF586e75;
+    static constexpr uint32_t base00 = 0xFF657b83;
+    static constexpr uint32_t base0 = 0xFF839496;
+    static constexpr uint32_t base1 = 0xFF93a1a1;
+    static constexpr uint32_t base2 = 0xFFeee8d5;
+    static constexpr uint32_t base3 = 0xFFfdf6e3;
+    static constexpr uint32_t yellow = 0xFFb58900;
+    static constexpr uint32_t orange = 0xFFcb4b16;
+    static constexpr uint32_t red = 0xFFdc322f;
+    static constexpr uint32_t magenta = 0xFFd33682;
+    static constexpr uint32_t violet = 0xFF6c71c4;
+    static constexpr uint32_t blue = 0xFF268bd2;
+    static constexpr uint32_t cyan = 0xFF2aa198;
+    static constexpr uint32_t green = 0xFF859900;
+
+    static void setupLight(juce::CodeEditorComponent *comp)
+    {
+        auto cs = comp->getColourScheme();
+        cs.set("Error", juce::Colour(red));
+        cs.set("Comment", juce::Colour(base1));
+        cs.set("Keyword", juce::Colour(violet));
+        cs.set("Operator", juce::Colour(green));
+        cs.set("Identifier", juce::Colour(cyan));
+        cs.set("Float", juce::Colour(red));
+        cs.set("Integer", juce::Colour(orange));
+        cs.set("Bracket", juce::Colour(green));
+        cs.set("Punctuation", juce::Colour(green));
+
+        comp->setColourScheme(cs);
+
+        comp->setColour(juce::CodeEditorComponent::defaultTextColourId, juce::Colour(base03));
+        comp->setColour(juce::CodeEditorComponent::backgroundColourId, juce::Colour(base3));
+        comp->setColour(juce::CodeEditorComponent::lineNumberTextId, juce::Colour(orange));
+        comp->setColour(juce::CodeEditorComponent::lineNumberBackgroundId, juce::Colour(base2));
+
+        comp->retokenise(0, -1);
+    }
+};
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                FormulaModulatorStorage *fs)
@@ -31,18 +76,13 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     mainDocument = std::make_unique<juce::CodeDocument>();
     mainDocument->insertText(0, fs->formula);
     mainDocument->addListener(this);
-
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
     mainEditor = std::make_unique<juce::CodeEditorComponent>(*mainDocument, tokenizer.get());
     mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
     mainEditor->setBounds(5, 25, 730, 310);
-    mainEditor->setColour(juce::CodeEditorComponent::backgroundColourId,
-                          juce::Colour(253, 246, 227));
-    mainEditor->setColour(juce::CodeEditorComponent::lineNumberTextId, juce::Colour(203, 75, 22));
-    mainEditor->setColour(juce::CodeEditorComponent::lineNumberBackgroundId,
-                          juce::Colour(238, 232, 213));
 
+    EditorColors::setupLight(mainEditor.get());
     addAndMakeVisible(mainEditor.get());
 
     warningLabel = std::make_unique<juce::Label>("Warning");
@@ -52,6 +92,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     warningLabel->setText("WARNING: Dont use this! Super alpha! It will crash and probably won't "
                           "load in the future or work now. And have fun!",
                           juce::NotificationType::dontSendNotification);
+
     addAndMakeVisible(warningLabel.get());
 }
 void FormulaModulatorEditor::buttonClicked(juce::Button *button)

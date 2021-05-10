@@ -351,7 +351,7 @@ set(SURGE_GUI_SOURCES
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/CVerticalLabel.cpp
-  src/gui/FormulaModulatorEditor.cpp
+        src/gui/LuaEditors.cpp
   src/gui/ModulationEditor.cpp
   src/gui/MSEGEditor.cpp
   src/gui/PatchDBViewer.cpp

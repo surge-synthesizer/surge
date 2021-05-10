@@ -65,11 +65,14 @@ class LFOModulationSource : public ModulationSource
     SurgeStorage *storage;
     StepSequencerStorage *ss;
     MSEGStorage *ms;
-    Surge::MSEG::EvaluatorState msegstate;
 
     FormulaModulatorStorage *fs;
+
+  public:
+    Surge::MSEG::EvaluatorState msegstate;
     Surge::Formula::EvaluatorState formulastate;
 
+  private:
     pdata *localcopy;
     bool phaseInitialized;
     void initPhaseFromStartPhase();
