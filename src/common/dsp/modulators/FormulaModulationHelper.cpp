@@ -269,8 +269,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
 
 void createInitFormula(FormulaModulatorStorage *fs)
 {
-    fs->formula = R"FN(
-function process(modstate)
+    fs->formula = R"FN(function process(modstate)
     -- this is a short lua script for a modulator. it must define
     -- a function called 'process'. input will contain keys 'phase' 'intphase',
     -- 'deform'. You must set the output value and return it. See the manual for more.

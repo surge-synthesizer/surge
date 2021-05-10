@@ -28,13 +28,21 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     applyButton->addListener(this);
     addAndMakeVisible(applyButton.get());
 
-    mainEditor = std::make_unique<juce::TextEditor>("Formula");
+    mainDocument = std::make_unique<juce::CodeDocument>();
+    mainDocument->insertText(0, fs->formula);
+    mainDocument->addListener(this);
+
+    tokenizer = std::make_unique<juce::LuaTokeniser>();
+
+    mainEditor = std::make_unique<juce::CodeEditorComponent>(*mainDocument, tokenizer.get());
     mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
-    mainEditor->setMultiLine(true, false);
-    mainEditor->setReturnKeyStartsNewLine(true);
-    mainEditor->setText(fs->formula);
     mainEditor->setBounds(5, 25, 730, 310);
-    mainEditor->addListener(this);
+    mainEditor->setColour(juce::CodeEditorComponent::backgroundColourId,
+                          juce::Colour(253, 246, 227));
+    mainEditor->setColour(juce::CodeEditorComponent::lineNumberTextId, juce::Colour(203, 75, 22));
+    mainEditor->setColour(juce::CodeEditorComponent::lineNumberBackgroundId,
+                          juce::Colour(238, 232, 213));
+
     addAndMakeVisible(mainEditor.get());
 
     warningLabel = std::make_unique<juce::Label>("Warning");
@@ -50,14 +58,10 @@ void FormulaModulatorEditor::buttonClicked(juce::Button *button)
 {
     if (button == applyButton.get())
     {
-        formulastorage->formula = mainEditor->getText().toStdString();
+        formulastorage->formula = mainDocument->getAllContent().toStdString();
         applyButton->setEnabled(false);
         editor->invalidateFrame();
     }
-}
-void FormulaModulatorEditor::textEditorTextChanged(juce::TextEditor &te)
-{
-    applyButton->setEnabled(true);
 }
 
 void FormulaModulatorEditor::resized()
@@ -68,4 +72,12 @@ void FormulaModulatorEditor::resized()
     warningLabel->setBounds(m, m, w - m2, 20);
     mainEditor->setBounds(m, 20 + m2, w - m2, h - 40 - m2 - m2);
     applyButton->setBounds(m, h - 20, 50, 20 - m);
+}
+void FormulaModulatorEditor::codeDocumentTextInserted(const juce::String &newText, int insertIndex)
+{
+    applyButton->setEnabled(true);
+}
+void FormulaModulatorEditor::codeDocumentTextDeleted(int startIndex, int endIndex)
+{
+    applyButton->setEnabled(true);
 }

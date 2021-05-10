@@ -22,18 +22,21 @@
 class SurgeGUIEditor;
 
 class FormulaModulatorEditor : public juce::Component,
-                               public juce::TextEditor::Listener,
+                               public juce::CodeDocument::Listener,
                                public juce::Button::Listener
 {
   public:
     FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs);
-    std::unique_ptr<juce::TextEditor> mainEditor;
+    std::unique_ptr<juce::CodeDocument> mainDocument;
+    std::unique_ptr<juce::CodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
     std::unique_ptr<juce::Label> warningLabel;
 
-    void buttonClicked(juce::Button *button) override;
-    void textEditorTextChanged(juce::TextEditor &editor) override;
+    std::unique_ptr<juce::LuaTokeniser> tokenizer;
 
+    void buttonClicked(juce::Button *button) override;
+    void codeDocumentTextDeleted(int startIndex, int endIndex) override;
+    void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
     void resized() override;
     SurgeGUIEditor *editor;
     FormulaModulatorStorage *formulastorage;
