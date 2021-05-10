@@ -16,6 +16,8 @@
 #include "LuaEditors.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
+#include "SkinSupport.h"
+#include "SkinColors.h"
 
 struct EditorColors
 // http://www.zovirl.com/2011/07/22/solarized_cheat_sheet/
@@ -38,10 +40,13 @@ struct EditorColors
     static constexpr uint32_t cyan = 0xFF2aa198;
     static constexpr uint32_t green = 0xFF859900;
 
-    static void setupLight(juce::CodeEditorComponent *comp)
+    static void setColorsFromSkin(juce::CodeEditorComponent *comp,
+                                  const Surge::GUI::Skin::ptr_t &skin)
     {
         auto cs = comp->getColourScheme();
         cs.set("Error", juce::Colour(red));
+        // If you want this to be a skin do something like this
+        // cs.set("Comment", skin->getColor(Colors::AboutPage::Text).asJuceColour());
         cs.set("Comment", juce::Colour(base1));
         cs.set("Keyword", juce::Colour(violet));
         cs.set("Operator", juce::Colour(green));
@@ -63,7 +68,8 @@ struct EditorColors
 };
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
-                                               FormulaModulatorStorage *fs)
+                                               FormulaModulatorStorage *fs,
+                                               Surge::GUI::Skin::ptr_t skin)
     : editor(ed), formulastorage(fs)
 {
     applyButton = std::make_unique<juce::TextButton>("Apply");
@@ -82,7 +88,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
     mainEditor->setBounds(5, 25, 730, 310);
 
-    EditorColors::setupLight(mainEditor.get());
+    EditorColors::setColorsFromSkin(mainEditor.get(), skin);
     addAndMakeVisible(mainEditor.get());
 
     warningLabel = std::make_unique<juce::Label>("Warning");
