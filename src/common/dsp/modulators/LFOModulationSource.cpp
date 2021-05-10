@@ -844,12 +844,13 @@ void LFOModulationSource::process_block()
     case lt_formula:
         formulastate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
 
-        formulastate.del = localcopy[idelay].f;
-        formulastate.a = localcopy[iattack].f;
-        formulastate.h = localcopy[ihold].f;
-        formulastate.dec = localcopy[idecay].f;
-        formulastate.s = localcopy[isustain].f;
-        formulastate.r = localcopy[irelease].f;
+        formulastate.del = lfo->delay.value_to_normalized(localcopy[idelay].f);
+        formulastate.a = lfo->attack.value_to_normalized(localcopy[iattack].f);
+        formulastate.h = lfo->hold.value_to_normalized(localcopy[ihold].f);
+        formulastate.dec = lfo->decay.value_to_normalized(localcopy[idecay].f);
+        formulastate.s = lfo->sustain.value_to_normalized(localcopy[isustain].f);
+        formulastate.r = lfo->release.value_to_normalized(localcopy[irelease].f);
+
         formulastate.rate = localcopy[rate].f;
         formulastate.amp = localcopy[magn].f;
         formulastate.phase = localcopy[startphase].f;

@@ -56,7 +56,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 
     // OK so now evaluate the formula. This is a mistake - the loading and
     // compiling can be expensive so lets look it up by hash first
-    auto h = std::hash<std::string>{}(fs->formula);
+    auto h = fs->formulaHash;
     auto pvn = std::string("pvn") + std::to_string(is_display) + "_" + std::to_string(h);
     auto pvf = pvn + "_f";
     snprintf(s.funcName, TXT_SIZE, "%s", pvf.c_str());
@@ -68,7 +68,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     bool hasString = false;
     if (lua_isstring(s.L, -1))
     {
-        if (fs->formula != lua_tostring(s.L, -1))
+        if (fs->formulaString != lua_tostring(s.L, -1))
         {
             s.adderror("Hash Collision in function. Bad luck!");
         }
@@ -84,7 +84,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     }
     else
     {
-        const char *lua_script = fs->formula.c_str();
+        const char *lua_script = fs->formulaString.c_str();
         int load_stat = luaL_loadbuffer(s.L, lua_script, strlen(lua_script), lua_script);
         auto res = lua_pcall(s.L, 0, 0, 0); // FIXME error
 
@@ -296,7 +296,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
 
 void createInitFormula(FormulaModulatorStorage *fs)
 {
-    fs->formula = R"FN(function process(modstate)
+    fs->setFormula(R"FN(function process(modstate)
     -- this is a short lua script for a modulator. it must define
     -- a function called 'process'. input will contain keys 'phase' 'intphase',
     -- 'deform'. You must set the output value and return it. See the manual for more.
@@ -304,7 +304,7 @@ void createInitFormula(FormulaModulatorStorage *fs)
     -- simple saw
     modstate["output"] = modstate["phase"] * 2 - 1
     return modstate
-end)FN";
+end)FN");
 }
 } // namespace Formula
 } // namespace Surge

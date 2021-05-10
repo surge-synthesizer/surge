@@ -680,12 +680,13 @@ struct MSEGStorage
 
 struct FormulaModulatorStorage
 {
-    std::string formula = R"FN(
-function process(modstate)
-    -- a bipolar saw
-    modstate["output"] = modstate["phase"] * 2 - 1
-    return modstate
-end)FN";
+    std::string formulaString = "";
+    size_t formulaHash = 0;
+    void setFormula(const std::string &s)
+    {
+        formulaString = s;
+        formulaHash = std::hash<std::string>{}(s);
+    }
 };
 
 /*

@@ -80,12 +80,14 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     addAndMakeVisible(applyButton.get());
 
     mainDocument = std::make_unique<juce::CodeDocument>();
-    mainDocument->insertText(0, fs->formula);
+    mainDocument->insertText(0, fs->formulaString);
     mainDocument->addListener(this);
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
     mainEditor = std::make_unique<juce::CodeEditorComponent>(*mainDocument, tokenizer.get());
     mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
+    mainEditor->setTabSize(4, true);
+    mainEditor->addKeyListener(this);
     mainEditor->setBounds(5, 25, 730, 310);
 
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
@@ -101,13 +103,18 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
 
     addAndMakeVisible(warningLabel.get());
 }
+
+void FormulaModulatorEditor::applyToStorage()
+{
+    formulastorage->setFormula(mainDocument->getAllContent().toStdString());
+    applyButton->setEnabled(false);
+    editor->invalidateFrame();
+}
 void FormulaModulatorEditor::buttonClicked(juce::Button *button)
 {
     if (button == applyButton.get())
     {
-        formulastorage->formula = mainDocument->getAllContent().toStdString();
-        applyButton->setEnabled(false);
-        editor->invalidateFrame();
+        applyToStorage();
     }
 }
 
@@ -127,4 +134,17 @@ void FormulaModulatorEditor::codeDocumentTextInserted(const juce::String &newTex
 void FormulaModulatorEditor::codeDocumentTextDeleted(int startIndex, int endIndex)
 {
     applyButton->setEnabled(true);
+}
+bool FormulaModulatorEditor::keyPressed(const juce::KeyPress &key, juce::Component *o)
+{
+    if (key.getKeyCode() == juce::KeyPress::returnKey &&
+        (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown()))
+    {
+        applyToStorage();
+        return true;
+    }
+    else
+    {
+        return Component::keyPressed(key);
+    }
 }

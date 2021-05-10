@@ -29,6 +29,7 @@ class SurgeGUIEditor;
 class FormulaModulatorEditor : public juce::Component,
                                public juce::CodeDocument::Listener,
                                public juce::Button::Listener,
+                               public juce::KeyListener,
                                public Surge::GUI::SkinConsumingComponent
 {
   public:
@@ -44,9 +45,11 @@ class FormulaModulatorEditor : public juce::Component,
     void buttonClicked(juce::Button *button) override;
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
+    bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
     void resized() override;
     SurgeGUIEditor *editor;
     FormulaModulatorStorage *formulastorage;
+    void applyToStorage();
 };
 
 #endif // SURGE_XT_LUAEDITORS_H
