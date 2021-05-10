@@ -345,8 +345,8 @@ inline char *float_to_str(float value, char *str)
     if (!str)
         return 0;
     Surge::ScopedLocale localGuard;
-    snprintf(str, TXT_SIZE, "%f",
-             value); // yeah str isn't necessarily TXT_SIZE but better than nothing. TODO fix.
+    // yeah str isn't necessarily TXT_SIZE but better than nothing. TODO fix.
+    snprintf(str, TXT_SIZE, "%f", value);
     return str;
 }
 

@@ -5361,8 +5361,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     if (lt_envelope == shapev)
         what = "Envelope";
     if (lt_formula == shapev)
-        // TODO FIXME: When function LFO type is added, adjust this condition!
-        what = "Envelope";
+        what = "Formula";
 
     auto msurl = SurgeGUIEditor::helpURLForSpecial("lfo-presets");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
@@ -6963,7 +6962,7 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button)
             // TODO FIXME: When function LFO type is added, uncomment the second sprintf and remove
             // the first one!
             if (button)
-                sprintf(txt, "%sFRM %d", (isS ? "S-" : ""), fnum + 1);
+                sprintf(txt, "%sFORM %d", (isS ? "S-" : ""), fnum + 1);
             else
                 sprintf(txt, "%s Formula %d", (isS ? "Scene" : "Voice"), fnum + 1);
             return std::string(txt);

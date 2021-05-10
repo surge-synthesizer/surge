@@ -1,17 +1,17 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ ** Surge Synthesizer is Free and Open Source Software
+ **
+ ** Surge is made available under the Gnu General Public License, v3.0
+ ** https://www.gnu.org/licenses/gpl-3.0.en.html
+ **
+ ** Copyright 2004-2021 by various individuals as described by the Git transaction log
+ **
+ ** All source at: https://github.com/surge-synthesizer/surge.git
+ **
+ ** Surge was a commercial product from 2004-2018, with Copyright and ownership
+ ** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+ ** open source in September 2018.
+ */
 
 #include "LuaEditors.h"
 #include "SurgeGUIEditor.h"
@@ -44,24 +44,33 @@ struct EditorColors
                                   const Surge::GUI::Skin::ptr_t &skin)
     {
         auto cs = comp->getColourScheme();
-        cs.set("Error", juce::Colour(red));
-        // If you want this to be a skin do something like this
-        // cs.set("Comment", skin->getColor(Colors::AboutPage::Text).asJuceColour());
-        cs.set("Comment", juce::Colour(base1));
-        cs.set("Keyword", juce::Colour(violet));
-        cs.set("Operator", juce::Colour(green));
-        cs.set("Identifier", juce::Colour(cyan));
-        cs.set("Float", juce::Colour(red));
-        cs.set("Integer", juce::Colour(orange));
-        cs.set("Bracket", juce::Colour(green));
-        cs.set("Punctuation", juce::Colour(green));
+
+        cs.set("Bracket", skin->getColor(Colors::FormulaEditor::Lua::Bracket).asJuceColour());
+        cs.set("Comment", skin->getColor(Colors::FormulaEditor::Lua::Comment).asJuceColour());
+        cs.set("Error", skin->getColor(Colors::FormulaEditor::Lua::Error).asJuceColour());
+        cs.set("Float", skin->getColor(Colors::FormulaEditor::Lua::Number).asJuceColour());
+        cs.set("Integer", skin->getColor(Colors::FormulaEditor::Lua::Number).asJuceColour());
+        cs.set("Identifier", skin->getColor(Colors::FormulaEditor::Lua::Identifier).asJuceColour());
+        cs.set("Keyword", skin->getColor(Colors::FormulaEditor::Lua::Keyword).asJuceColour());
+        cs.set("Operator",
+               skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
+        cs.set("Punctuation",
+               skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
+        cs.set("String",
+               skin->getColor(Colors::FormulaEditor::Lua::String).asJuceColour());
 
         comp->setColourScheme(cs);
 
-        comp->setColour(juce::CodeEditorComponent::defaultTextColourId, juce::Colour(base03));
-        comp->setColour(juce::CodeEditorComponent::backgroundColourId, juce::Colour(base3));
-        comp->setColour(juce::CodeEditorComponent::lineNumberTextId, juce::Colour(orange));
-        comp->setColour(juce::CodeEditorComponent::lineNumberBackgroundId, juce::Colour(base2));
+        comp->setColour(juce::CodeEditorComponent::backgroundColourId,
+                        skin->getColor(Colors::FormulaEditor::Background).asJuceColour());
+        comp->setColour(juce::CodeEditorComponent::highlightColourId,
+                        skin->getColor(Colors::FormulaEditor::Highlight).asJuceColour());
+        comp->setColour(juce::CodeEditorComponent::defaultTextColourId,
+                        skin->getColor(Colors::FormulaEditor::Text).asJuceColour());
+        comp->setColour(juce::CodeEditorComponent::lineNumberBackgroundId,
+                        skin->getColor(Colors::FormulaEditor::LineNumBackground).asJuceColour());
+        comp->setColour(juce::CodeEditorComponent::lineNumberTextId,
+                        skin->getColor(Colors::FormulaEditor::LineNumText).asJuceColour());
 
         comp->retokenise(0, -1);
     }
