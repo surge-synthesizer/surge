@@ -56,8 +56,7 @@ struct EditorColors
                skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
         cs.set("Punctuation",
                skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
-        cs.set("String",
-               skin->getColor(Colors::FormulaEditor::Lua::String).asJuceColour());
+        cs.set("String", skin->getColor(Colors::FormulaEditor::Lua::String).asJuceColour());
 
         comp->setColourScheme(cs);
 
