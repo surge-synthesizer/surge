@@ -147,7 +147,7 @@ rpmbuild -bb --define "_topdir $RPM_BUILD_DIR" ${RPM_SPEC_FILE}
 # TODO add key signing, or sign as a post build step
 
 # move rpm to target directory
-mv $RPM_BUILD_DIR/RPMS/$ARCH/$PACKAGE_NAME-linux-$ARCH-$VERSION-$RPM_RELEASE.rpm ${TARGET_DIR}/
+mv $RPM_BUILD_DIR/RPMS/$ARCH/$PACKAGE_NAME-$VERSION-$RPM_RELEASE.$ARCH.rpm ${TARGET_DIR}/
 
 if [[ $? -ne 0 ]]
 then
