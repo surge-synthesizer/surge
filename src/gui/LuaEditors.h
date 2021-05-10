@@ -22,15 +22,18 @@
 
 #include <JuceHeader.h>
 #include "SurgeStorage.h"
+#include "SkinSupport.h"
 
 class SurgeGUIEditor;
 
 class FormulaModulatorEditor : public juce::Component,
                                public juce::CodeDocument::Listener,
-                               public juce::Button::Listener
+                               public juce::Button::Listener,
+                               public Surge::GUI::SkinConsumingComponent
 {
   public:
-    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs);
+    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs,
+                           Surge::GUI::Skin::ptr_t sk);
     std::unique_ptr<juce::CodeDocument> mainDocument;
     std::unique_ptr<juce::CodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;

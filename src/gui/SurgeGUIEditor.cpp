@@ -8340,8 +8340,10 @@ void SurgeGUIEditor::showFormulaEditorDialog()
     auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
     auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
 
-    auto pt = std::make_unique<FormulaModulatorEditor>(this, &(this->synth->storage), fs);
+    auto pt =
+        std::make_unique<FormulaModulatorEditor>(this, &(this->synth->storage), fs, currentSkin);
     pt->setBounds(0, 0, skinCtrl->w, skinCtrl->h);
+    pt->setSkin(currentSkin, bitmapStore);
     c->juceComponent()->addAndMakeVisible(*pt);
     c->takeOwnership(std::move(pt));
 
