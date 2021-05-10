@@ -1047,8 +1047,16 @@ add_custom_command(TARGET surge-xt-distribution
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_TARGET_BASE}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${SURGE_PRODUCT_DIR}/ ${SURGE_XT_DIST_TARGET_BASE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-alpha-${SXTVER}-${SXTOS}.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
         )
+
+if( WIN32 )
+  # Windows gets the zips but only windows
+  add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}}
+          COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-${SXTOS}-${SXTVER}-pluginsonly.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
+          )
+endif()
 
 # Build OS specific installers
 if( APPLE )
@@ -1087,7 +1095,6 @@ if( WIN32 )
   else()
     message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}" )
     if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
-      message(STATUS "Skipping 32 bit build for now while we sort out plugin names" )
       add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

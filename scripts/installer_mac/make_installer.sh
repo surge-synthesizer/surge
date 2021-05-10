@@ -28,7 +28,7 @@ if [ "$VERSION" == "" ]; then
 fi
 
 
-OUTPUT_BASE_FILENAME="Surge-XT-$VERSION-Setup"
+OUTPUT_BASE_FILENAME="surge-xt-macOS-$VERSION"
 
 build_flavor()
 {
