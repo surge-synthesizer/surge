@@ -43,8 +43,7 @@ void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int 
     else if (lfotype == lt_envelope)
         containingPath = containingPath / fs::path{"Envelope"};
     else if (lfotype == lt_formula)
-        // TODO FIXME: When function LFO type is added, adjust this condition!
-        containingPath = containingPath / fs::path{"Envelope"};
+        containingPath = containingPath / fs::path{"Formula"};
     else
         containingPath = containingPath / fs::path{"LFO"};
 

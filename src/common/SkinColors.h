@@ -106,6 +106,17 @@ extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, Borde
 } // namespace Grid
 } // namespace Effect
 
+namespace FormulaEditor
+{
+extern const Surge::Skin::Color Background, Highlight, Text, LineNumBackground, LineNumText;
+
+namespace Lua
+{
+extern const Surge::Skin::Color Bracket, Comment, Error, Identifier, Interpunction, Number, Keyword,
+    String;
+} // namespace Lua
+} // namespace FormulaEditor
+
 namespace InfoWindow
 {
 extern const Surge::Skin::Color Background, Border, Text;

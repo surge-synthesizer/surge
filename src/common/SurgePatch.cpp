@@ -44,7 +44,6 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             p_id.next(), 0, "volume_FX2", "Send FX 2 Return", ct_amplitude,
             Surge::Skin::Global::fx2_return, 0, cg_GLOBAL, 0, true,
             Surge::ParamConfig::kHorizontal));
-        // TODO don't store in the patch ?
         param_ptr.push_back(volume.assign(p_id.next(), 0, "volume", "Global Volume",
                                           ct_decibel_attenuation_clipper,
                                           Surge::Skin::Global::master_volume, 0, cg_GLOBAL, 0, true,
@@ -66,7 +65,6 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     param_ptr.push_back(fx_disable.assign(p_id.next(), 0, "fx_disable", "FX Disable", ct_none,
                                           Surge::Skin::Global::fx_disable, 0, cg_GLOBAL, 0, false));
 
-    // shouldnt't be stored in the patch
     param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Polyphony Limit",
                                          ct_polylimit, Surge::Skin::Scene::polylimit, 0, cg_GLOBAL,
                                          0, false, Surge::ParamConfig::kHorizontal | kNoPopup));
