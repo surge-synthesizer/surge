@@ -78,6 +78,8 @@ void CLFOGui::draw(CDrawContext *dc)
     maindisp.top += 1;
     maindisp.bottom -= 1;
 
+    bool drawEnvelope = true;
+
     if (ss && lfodata->shape.val.i == lt_stepseq)
     {
         drawStepSeq(dc, maindisp, leftpanel);
@@ -327,6 +329,10 @@ void CLFOGui::draw(CDrawContext *dc)
                 }
             }
         }
+        if (lfodata->shape.val.i == lt_formula)
+        {
+            drawEnvelope = tlfo->formulastate.useEnvelope;
+        }
         tlfo->completedModulation();
         delete tlfo;
         if (tFullWave)
@@ -391,11 +397,14 @@ void CLFOGui::draw(CDrawContext *dc)
         }
 
         dc->setLineWidth(1.0);
-        // LFO ruler bounds AKA the upper and lower horizontal lines that draw the envelope if
-        // enabled
         dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Envelope));
-        dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
-        dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+        if (drawEnvelope)
+        {
+            // LFO ruler bounds AKA the upper and lower horizontal lines that draw the envelope if
+            // enabled
+            dc->drawGraphicsPath(eupath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+            dc->drawGraphicsPath(edpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+        }
 
         // calculate beat grid related data
         auto bpm = storage->temposyncratio * 120;

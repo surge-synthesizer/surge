@@ -135,6 +135,33 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
         lua_setglobal(s.L,
                       s.stateName); // FIXME - we have to clean this up when evaluat is done
     }
+
+    if (is_display)
+    {
+        // Seed the RNG
+        lua_getglobal(s.L, "math");
+        if (lua_isnil(s.L, -1))
+        {
+            std::cout << "NIL MATH " << std::endl;
+        }
+        else
+        {
+            lua_pushstring(s.L, "randomseed");
+            lua_gettable(s.L, -2);
+            if (lua_isnil(s.L, -1))
+            {
+                std::cout << "NUL randomseed" << std::endl;
+            }
+            else
+            {
+                lua_pushnumber(s.L, 8675309);
+                lua_pcall(s.L, 1, 0, 0);
+            }
+            lua_pop(s.L, -1);
+        }
+        lua_pop(s.L, -1);
+    }
+
     s.useEnvelope = true;
 
     s.del = 0;
