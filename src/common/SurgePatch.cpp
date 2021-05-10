@@ -2797,12 +2797,12 @@ void SurgePatch::stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *p
 
 void SurgePatch::formulaToXMLElement(FormulaModulatorStorage *fs, TiXmlElement &parent) const
 {
-    parent.SetAttribute(
-        "formula", base64_encode((unsigned const char *)fs->formula.c_str(), fs->formula.length()));
+    parent.SetAttribute("formula", base64_encode((unsigned const char *)fs->formulaString.c_str(),
+                                                 fs->formulaString.length()));
 }
 
 void SurgePatch::formulaFromXMLElement(FormulaModulatorStorage *fs, TiXmlElement *parent) const
 {
     auto fb64 = parent->Attribute("formula");
-    fs->formula = base64_decode(fb64);
+    fs->setFormula(base64_decode(fb64));
 }

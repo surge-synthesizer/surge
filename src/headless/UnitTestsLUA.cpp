@@ -234,12 +234,12 @@ TEST_CASE("Basic Formula Evaluation", "[formula]")
     SECTION("Identity Modulator")
     {
         FormulaModulatorStorage fs;
-        fs.formula = R"FN(
+        fs.setFormula(R"FN(
 function process(modstate)
     -- a bipolar saw
     modstate["output"] = modstate["phase"]
     return modstate
-end)FN";
+end)FN");
         auto runIt = runFormula(&fs, 0.0321, 5);
         for (auto c : runIt)
         {
@@ -250,12 +250,12 @@ end)FN";
     SECTION("Saw Modulator")
     {
         FormulaModulatorStorage fs;
-        fs.formula = R"FN(
+        fs.setFormula(R"FN(
 function process(modstate)
     -- a bipolar saw
     modstate["output"] = 2 * modstate["phase"] - 1
     return modstate
-end)FN";
+end)FN");
         auto runIt = runFormula(&fs, 0.0321, 5);
         for (auto c : runIt)
         {
@@ -266,12 +266,12 @@ end)FN";
     SECTION("Sin Modulator")
     {
         FormulaModulatorStorage fs;
-        fs.formula = R"FN(
+        fs.setFormula(R"FN(
 function process(modstate)
     -- a bipolar saw
     modstate["output"] = math.sin( modstate["phase"] * 3.14159 * 2 )
     return modstate
-end)FN";
+end)FN");
         auto runIt = runFormula(&fs, 0.0321, 5);
         for (auto c : runIt)
         {
@@ -282,7 +282,7 @@ end)FN";
     SECTION("Test Deform")
     {
         FormulaModulatorStorage fs;
-        fs.formula = R"FN(
+        fs.setFormula(R"FN(
 function process(modstate)
     -- a bipolar saw
     p = modstate["phase"]
@@ -290,7 +290,7 @@ function process(modstate)
     r = math.pow( p, 3 * d + 1) * 2 - 1
     modstate["output"] = r
     return modstate
-end)FN";
+end)FN");
 
         for (int id = 0; id <= 10; id++)
         {
