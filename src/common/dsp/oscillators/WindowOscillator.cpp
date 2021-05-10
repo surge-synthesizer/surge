@@ -228,11 +228,8 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
             unsigned int MipMapA = 0;
             unsigned int MipMapB = 0;
 
-            if (Window.Table[0][so] >= oscdata->wt.n_tables)
-                Window.Table[0][so] = Table;
-            if (Window.Table[1][so] >= oscdata->wt.n_tables)
-                Window.Table[1][so] = TablePlusOne;
-            // TableID may not be valid anymore if a new wavetable is loaded
+            Window.Table[0][so] = Table;
+            Window.Table[1][so] = TablePlusOne;
 
             unsigned long MSBpos;
             unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
