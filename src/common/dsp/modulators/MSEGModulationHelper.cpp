@@ -96,7 +96,12 @@ void rebuildCache(MSEGStorage *ms)
 float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot)
 {
     if (ms->n_activeSegments <= 0)
+    {
         return df;
+    }
+
+    es->retrigger_FEG = false;
+    es->retrigger_AEG = false;
 
     // This still has some problems but lets try this for now
     double up = (double)ip + fup;
@@ -164,6 +169,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
     {
         segInit = true;
         es->lastEval = idx;
+        es->retrigger_FEG = ms->segments[idx].retriggerFEG;
+        es->retrigger_AEG = ms->segments[idx].retriggerAEG;
     }
 
     if (!ms->segments[idx].useDeform)
@@ -711,6 +718,8 @@ void insertAtIndex(MSEGStorage *ms, int insertIndex)
     ms->segments[insertIndex].duration = 0.25;
     ms->segments[insertIndex].useDeform = true;
     ms->segments[insertIndex].invertDeform = false;
+    ms->segments[insertIndex].retriggerFEG = false;
+    ms->segments[insertIndex].retriggerAEG = false;
 
     int nxt = insertIndex + 1;
     if (nxt >= ms->n_activeSegments)
@@ -836,6 +845,8 @@ void splitSegment(MSEGStorage *ms, float t, float nv)
         ms->segments[idx + 1].duration = q.duration * (1 - dt);
         ms->segments[idx + 1].useDeform = ms->segments[idx].useDeform;
         ms->segments[idx + 1].invertDeform = ms->segments[idx].invertDeform;
+        ms->segments[idx + 1].retriggerFEG = ms->segments[idx].retriggerFEG;
+        ms->segments[idx + 1].retriggerAEG = ms->segments[idx].retriggerAEG;
 
         // Now these are normalized this is easy
         ms->segments[idx].cpduration = q.cpduration;
@@ -1046,8 +1057,10 @@ void clearMSEG(MSEGStorage *ms)
     ms->segments[0].cpduration = 0.5;
     ms->segments[0].v0 = 1.f;
     ms->segments[0].nv1 = 0.f;
-    ms->segments[0].invertDeform = false;
     ms->segments[0].useDeform = true;
+    ms->segments[0].invertDeform = false;
+    ms->segments[0].retriggerFEG = false;
+    ms->segments[0].retriggerAEG = false;
 
     ms->loop_start = 0;
     ms->loop_end = ms->n_activeSegments - 1;
@@ -1071,6 +1084,8 @@ void blankAllSegments(MSEGStorage *ms)
         ms->segments[i].dragcpratio = 0.5;
         ms->segments[i].useDeform = true;
         ms->segments[i].invertDeform = false;
+        ms->segments[i].retriggerFEG = false;
+        ms->segments[i].retriggerAEG = false;
         ms->segments[i].type = MSEGStorage::segment::Type::LINEAR;
     }
 }
@@ -1114,6 +1129,8 @@ void createInitVoiceMSEG(MSEGStorage *ms)
     {
         ms->segments[i].invertDeform = false;
         ms->segments[i].useDeform = true;
+        ms->segments[i].retriggerFEG = false;
+        ms->segments[i].retriggerAEG = false;
     }
 
     ms->loop_start = 2;
@@ -1137,6 +1154,8 @@ void createInitSceneMSEG(MSEGStorage *ms)
     ms->segments[0].cpduration = 0.5;
     ms->segments[0].v0 = 0.f;
     ms->segments[0].invertDeform = false;
+    ms->segments[0].retriggerFEG = false;
+    ms->segments[0].retriggerAEG = false;
 
     ms->segments[1].duration = 0.25f;
     ms->segments[1].type = MSEGStorage::segment::LINEAR;
@@ -1144,6 +1163,8 @@ void createInitSceneMSEG(MSEGStorage *ms)
     ms->segments[1].cpduration = 0.5;
     ms->segments[1].v0 = 1.f;
     ms->segments[1].invertDeform = true;
+    ms->segments[1].retriggerFEG = false;
+    ms->segments[1].retriggerAEG = false;
 
     ms->segments[2].duration = 0.25f;
     ms->segments[2].type = MSEGStorage::segment::LINEAR;
@@ -1151,6 +1172,8 @@ void createInitSceneMSEG(MSEGStorage *ms)
     ms->segments[2].cpduration = 0.5;
     ms->segments[2].v0 = 0.f;
     ms->segments[2].invertDeform = false;
+    ms->segments[2].retriggerFEG = false;
+    ms->segments[2].retriggerAEG = false;
 
     ms->segments[3].duration = 0.25f;
     ms->segments[3].type = MSEGStorage::segment::LINEAR;
@@ -1158,6 +1181,8 @@ void createInitSceneMSEG(MSEGStorage *ms)
     ms->segments[3].cpduration = 0.5;
     ms->segments[3].v0 = -1.f;
     ms->segments[3].invertDeform = true;
+    ms->segments[3].retriggerFEG = false;
+    ms->segments[3].retriggerAEG = false;
 
     ms->loop_start = 0;
     ms->loop_end = ms->n_activeSegments - 1;
@@ -1193,8 +1218,10 @@ void createStepseqMSEG(MSEGStorage *ms, int numSegments)
 
     for (int i = 0; i < ms->n_activeSegments; i++)
     {
-        ms->segments[i].invertDeform = false;
         ms->segments[i].useDeform = true;
+        ms->segments[i].invertDeform = false;
+        ms->segments[i].retriggerFEG = false;
+        ms->segments[i].retriggerAEG = false;
     }
 
     Surge::MSEG::rebuildCache(ms);
@@ -1236,8 +1263,10 @@ void createSawMSEG(MSEGStorage *ms, int numSegments, float curve)
 
     for (int i = 0; i < ms->n_activeSegments; i++)
     {
-        ms->segments[i].invertDeform = false;
         ms->segments[i].useDeform = true;
+        ms->segments[i].invertDeform = false;
+        ms->segments[i].retriggerFEG = false;
+        ms->segments[i].retriggerAEG = false;
     }
 
     Surge::MSEG::rebuildCache(ms);
@@ -1261,8 +1290,10 @@ void createSinLineMSEG(MSEGStorage *ms, int numSegments)
         ms->segments[i].cpduration = 0.5;
         ms->segments[i].cpv = 0.0;
         ms->segments[i].type = MSEGStorage::segment::LINEAR;
-        ms->segments[i].invertDeform = false;
         ms->segments[i].useDeform = true;
+        ms->segments[i].invertDeform = false;
+        ms->segments[i].retriggerFEG = false;
+        ms->segments[i].retriggerAEG = false;
     }
 
     ms->loop_start = 0;

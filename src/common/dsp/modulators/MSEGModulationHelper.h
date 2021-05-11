@@ -20,7 +20,7 @@ struct EvaluatorState
     int lastEval = -1;
     float lastOutput = 0;
     float msegState[6] = {0};
-    bool released = false;
+    bool released = false, retrigger_FEG = false, retrigger_AEG = false;
     enum LoopState
     {
         PLAYING,

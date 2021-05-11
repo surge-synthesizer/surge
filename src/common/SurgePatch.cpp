@@ -2604,6 +2604,8 @@ void SurgePatch::msegToXMLElement(MSEGStorage *ms, TiXmlElement &p) const
         seg.SetAttribute("type", (int)(ms->segments[s].type));
         seg.SetAttribute("useDeform", (int)(ms->segments[s].useDeform));
         seg.SetAttribute("invertDeform", (int)(ms->segments[s].invertDeform));
+        seg.SetAttribute("retriggerFEG", (int)(ms->segments[s].retriggerFEG));
+        seg.SetAttribute("retriggerAEG", (int)(ms->segments[s].retriggerAEG));
         segs.InsertEndChild(seg);
     }
     p.InsertEndChild(segs);
@@ -2703,6 +2705,16 @@ void SurgePatch::msegFromXMLElement(MSEGStorage *ms, TiXmlElement *p, bool resto
                 ms->segments[idx].invertDeform = v;
             else
                 ms->segments[idx].invertDeform = false;
+
+            if (seg->QueryIntAttribute("retriggerFEG", &v) == TIXML_SUCCESS)
+                ms->segments[idx].retriggerFEG = v;
+            else
+                ms->segments[idx].retriggerFEG = false;
+
+            if (seg->QueryIntAttribute("retriggerAEG", &v) == TIXML_SUCCESS)
+                ms->segments[idx].retriggerAEG = v;
+            else
+                ms->segments[idx].retriggerAEG = false;
 
             seg = TINYXML_SAFE_TO_ELEMENT(seg->NextSibling("segment"));
 

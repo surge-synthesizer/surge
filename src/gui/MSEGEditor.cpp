@@ -2258,12 +2258,11 @@ struct MSEGCanvas : public CControl,
             });
 
             contextMenu->addEntry(actionsMenu, "Actions");
+            actionsMenu->forget();
 
             COptionMenu *createMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
                                                       VSTGUI::COptionMenu::kNoDrawStyle |
                                                           VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-            contextMenu->addEntry(createMenu, "Create");
 
             addCb(createMenu, Surge::GUI::toOSCaseForMenu("Minimal MSEG"), [this]() {
                 Surge::MSEG::clearMSEG(this->ms);
@@ -2336,6 +2335,47 @@ struct MSEGCanvas : public CControl,
                       });
             }
 
+            contextMenu->addEntry(createMenu, "Create");
+            createMenu->forget();
+
+            COptionMenu *triggerMenu = new COptionMenu(
+                CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
+                VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+
+            auto rtstate = ms->segments[tts].retriggerFEG + (ms->segments[tts].retriggerAEG * 2);
+
+            auto tnone = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Nothing"), [this, tts]() {
+                this->ms->segments[tts].retriggerFEG = false;
+                this->ms->segments[tts].retriggerAEG = false;
+                modelChanged();
+            });
+            tnone->setChecked(rtstate == 0);
+
+            auto trtfeg =
+                addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Filter EG"), [this, tts]() {
+                    this->ms->segments[tts].retriggerFEG = true;
+                    this->ms->segments[tts].retriggerAEG = false;
+                    modelChanged();
+                });
+            trtfeg->setChecked(rtstate == 1);
+
+            auto trtaeg = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Amp EG"), [this, tts]() {
+                this->ms->segments[tts].retriggerFEG = false;
+                this->ms->segments[tts].retriggerAEG = true;
+                modelChanged();
+            });
+            trtaeg->setChecked(rtstate == 2);
+
+            auto trtboth = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Both"), [this, tts]() {
+                this->ms->segments[tts].retriggerFEG = true;
+                this->ms->segments[tts].retriggerAEG = true;
+                modelChanged();
+            });
+            trtboth->setChecked(rtstate == 3);
+
+            contextMenu->addEntry(triggerMenu, "Trigger");
+            triggerMenu->forget();
+
             COptionMenu *settingsMenu = new COptionMenu(
                 CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
                 VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -2373,6 +2413,7 @@ struct MSEGCanvas : public CControl,
             im->setChecked(invdef);
 
             contextMenu->addEntry(settingsMenu, "Settings");
+            settingsMenu->forget();
 
             contextMenu->addSeparator();
 

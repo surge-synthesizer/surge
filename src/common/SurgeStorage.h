@@ -600,8 +600,10 @@ struct MSEGStorage
                       // MSEGModulationHelper::rebuildCache will set it
         float dragv1; // Only used in the endpoint
         float cpduration, cpv, dragcpv, dragcpratio = 0.5;
-        bool useDeform = true;
-        bool invertDeform = false;
+
+        bool useDeform = true, invertDeform = false;
+        bool retriggerFEG = false, retriggerAEG = false;
+
         enum Type
         {
             LINEAR = 1,
