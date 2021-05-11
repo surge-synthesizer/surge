@@ -39,6 +39,7 @@ class FormulaModulatorEditor : public juce::Component,
     std::unique_ptr<juce::CodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
     std::unique_ptr<juce::Label> warningLabel;
+    std::unique_ptr<juce::Label> lesserWarningLabel;
 
     std::unique_ptr<juce::LuaTokeniser> tokenizer;
 
