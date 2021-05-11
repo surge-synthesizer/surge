@@ -20,7 +20,7 @@ struct EvaluatorState
     int lastEval = -1;
     float lastOutput = 0;
     float msegState[6] = {0};
-    bool released = false;
+    bool released = false, retrigger_FEG = false, retrigger_AEG = false;
     enum LoopState
     {
         PLAYING,
@@ -34,8 +34,7 @@ struct EvaluatorState
     void seed(long l) { gen = std::minstd_rand(l); }
 };
 float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *ms,
-              EvaluatorState *state, bool forceOneShot = false, bool retriggerFEG = false,
-              bool retriggerAEG = false);
+              EvaluatorState *state, bool forceOneShot = false);
 
 /*
 ** Edit and Utility functions. After the call to all of these you will want to rebuild cache

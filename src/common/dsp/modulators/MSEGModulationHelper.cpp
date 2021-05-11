@@ -93,11 +93,15 @@ void rebuildCache(MSEGStorage *ms)
     }
 }
 
-float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot,
-              bool &retriggerFEG, bool &retriggerAEG)
+float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, bool forceOneShot)
 {
     if (ms->n_activeSegments <= 0)
+    {
         return df;
+    }
+
+    es->retrigger_FEG = false;
+    es->retrigger_AEG = false;
 
     // This still has some problems but lets try this for now
     double up = (double)ip + fup;
@@ -165,8 +169,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
     {
         segInit = true;
         es->lastEval = idx;
-        retriggerFEG = ms->segments[idx].retriggerFEG;
-        retriggerAEG = ms->segments[idx].retriggerAEG;
+        es->retrigger_FEG = ms->segments[idx].retriggerFEG;
+        es->retrigger_AEG = ms->segments[idx].retriggerAEG;
     }
 
     if (!ms->segments[idx].useDeform)
