@@ -310,10 +310,18 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
     // stack is now just the result
     if (lres == LUA_OK)
     {
+        if (lua_isnumber(s->L, -1))
+        {
+            // OK so you returned a value. Just use it
+            auto r = lua_tonumber(s->L, -1);
+            lua_pop(s->L, 1);
+            return r;
+        }
         if (!lua_istable(s->L, -1))
         {
-            s->adderror("The return of your LUA function must be a table. Just return input with "
-                        "output set.");
+            s->adderror(
+                "The return of your LUA function must be a number or table. Just return input with "
+                "output set.");
             s->isvalid = false;
             lua_pop(s->L, 1);
             return 0;
