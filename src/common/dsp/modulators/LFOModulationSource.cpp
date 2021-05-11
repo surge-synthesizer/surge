@@ -863,6 +863,8 @@ void LFOModulationSource::process_block()
         {
             useenvval = 1.0;
         }
+        retrigger_AEG = formulastate.retrigger_AEG;
+        retrigger_FEG = formulastate.retrigger_FEG;
 
         if (formulastate.raisedError)
         {
