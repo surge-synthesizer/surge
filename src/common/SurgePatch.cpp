@@ -353,8 +353,9 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
              * otherwise identical types, we make the choice to look up the connector by the
              * ID rather than put the direct external reference in here
              */
-            auto getCon = [this, envs](std::string sub)
-            { return Surge::Skin::Connector::connectorByID(envs + sub); };
+            auto getCon = [this, envs](std::string sub) {
+                return Surge::Skin::Connector::connectorByID(envs + sub);
+            };
 
             a->push_back(scene[sc].adsr[e].a.assign(
                 p_id.next(), id_s++, "attack", "Attack", ct_envtime, getCon("attack"), sc_id,
