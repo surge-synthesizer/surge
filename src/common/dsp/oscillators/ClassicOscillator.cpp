@@ -444,15 +444,16 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
     {
         pwidth[voice] = l_pw.v;
         pwidth2[voice] = 2.f * l_pw2.v;
-        float tg =
-            ((1 + wf) * 0.5f + (1 - pwidth[voice]) * (-wf)) * (1 - sub) +
-            0.5f * sub *
-                (2.f - pwidth2[voice]); // calculate the height of the first impulse of the cycle
+
+        // calculate the height of the first impulse of the cycle
+        float tg = ((1 + wf) * 0.5f + (1 - pwidth[voice]) * (-wf)) * (1 - sub) +
+                   0.5f * sub * (2.f - pwidth2[voice]);
+
         g = tg - last_level[voice];
         last_level[voice] = tg;
-        last_level[voice] -= (pwidth[voice]) * (pwidth2[voice]) * (1.f + wf) *
-                             (1.f - sub); // calculate the level the sub-cycle will have at the end
-                                          // of its duration taking DC into account
+
+        // calculate the level sub-cycle will have at the end of its duration taking DC into account
+        last_level[voice] -= (pwidth[voice]) * (pwidth2[voice]) * (1.f + wf) * (1.f - sub);
         break;
     }
     case 1:
