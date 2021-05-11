@@ -257,10 +257,13 @@ bool initEvaluatorState(EvaluatorState &s)
 }
 float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs, EvaluatorState *s)
 {
-    auto gs = SGLD("valueAt", s->L);
+    if (s->L == nullptr)
+        return 0;
+
     if (!s->isvalid)
         return 0;
 
+    auto gs = SGLD("valueAt", s->L);
     /*
      * So: make the stack my evaluation func then my table; then push my table
      * values; then call my function; then update my global

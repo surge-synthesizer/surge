@@ -110,6 +110,13 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
                           juce::NotificationType::dontSendNotification);
 
     addAndMakeVisible(warningLabel.get());
+
+    lesserWarningLabel = std::make_unique<juce::Label>("Lesser Warning");
+    lesserWarningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    lesserWarningLabel->setText(
+        "We will copy the script to clipboard when you apply, just in case.",
+        juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(lesserWarningLabel.get());
 }
 
 void FormulaModulatorEditor::applyToStorage()
@@ -117,6 +124,7 @@ void FormulaModulatorEditor::applyToStorage()
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     applyButton->setEnabled(false);
     editor->invalidateFrame();
+    juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
 }
 void FormulaModulatorEditor::buttonClicked(juce::Button *button)
 {
@@ -134,6 +142,7 @@ void FormulaModulatorEditor::resized()
     warningLabel->setBounds(m, m, w - m2, 20);
     mainEditor->setBounds(m, 20 + m2, w - m2, h - 40 - m2 - m2);
     applyButton->setBounds(m, h - 20, 50, 20 - m);
+    lesserWarningLabel->setBounds(m2 + 50, h - 20, w - 70, 20 - m);
 }
 void FormulaModulatorEditor::codeDocumentTextInserted(const juce::String &newText, int insertIndex)
 {
