@@ -2120,6 +2120,11 @@ struct MSEGCanvas : public CControl,
         invalid();
     }
 
+    // see if it can be done in a cleaner way
+    // TODO: once we have more than 6 voice/scene LFOs, this condition will need tweaking,
+    // because new LFOs will need to be appended at the end of the list of modsources
+    bool isSceneMSEG() const { return lfodata->shape.ctrlgroup_entry >= ms_slfo1; }
+
     void openPopup(const VSTGUI::CPoint &iw)
     {
         CPoint w = iw;
@@ -2369,7 +2374,11 @@ struct MSEGCanvas : public CControl,
                 modelChanged();
             });
 
-            contextMenu->addEntry(triggerMenu, "Trigger");
+            if (!isSceneMSEG())
+            {
+                contextMenu->addEntry(triggerMenu, "Trigger");
+            }
+
             triggerMenu->forget();
 
             COptionMenu *settingsMenu = new COptionMenu(
