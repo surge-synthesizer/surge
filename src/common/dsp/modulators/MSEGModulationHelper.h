@@ -34,7 +34,8 @@ struct EvaluatorState
     void seed(long l) { gen = std::minstd_rand(l); }
 };
 float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *ms,
-              EvaluatorState *state, bool forceOneShot = false);
+              EvaluatorState *state, bool forceOneShot = false, bool retriggerFEG = false,
+              bool retriggerAEG = false);
 
 /*
 ** Edit and Utility functions. After the call to all of these you will want to rebuild cache

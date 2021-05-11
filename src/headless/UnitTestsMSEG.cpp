@@ -38,7 +38,7 @@ std::vector<msegObservation> runMSEG(MSEGStorage *ms, float dPhase, float phaseM
             release = true;
         es.released = release;
 
-        auto r = Surge::MSEG::valueAt(iphase, phase, deform, ms, &es, false);
+        auto r = Surge::MSEG::valueAt(iphase, phase, deform, ms, &es, false, false, false);
         res.push_back(msegObservation(iphase, phase, r));
         phase += dPhase;
         if (phase > 1)

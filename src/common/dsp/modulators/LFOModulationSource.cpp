@@ -839,7 +839,7 @@ void LFOModulationSource::process_block()
         msegstate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
 
         iout = Surge::MSEG::valueAt(unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
-                                    &msegstate);
+                                    &msegstate, &retrigger_FEG, &retrigger_AEG);
         break;
     case lt_formula:
         formulastate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
@@ -859,6 +859,7 @@ void LFOModulationSource::process_block()
         formulastate.songpos = storage->songpos;
 
         iout = Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate);
+
         if (!formulastate.useEnvelope)
         {
             useenvval = 1.0;
