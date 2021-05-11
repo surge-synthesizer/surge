@@ -67,9 +67,11 @@ class WindowOscillator : public Oscillator
 
     BiquadFilter lp, hp;
     void applyFilter();
+    template <bool is_init> void update_lagvals();
 
     void ProcessWindowOscs(bool stereo, bool FM);
     lag<double> FMdepth[MAX_UNISON];
+    lag<float> l_morph;
 
     float OutAttenuation;
     float DetuneBias, DetuneOffset;

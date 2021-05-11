@@ -45,9 +45,22 @@ WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *osc
 {
 }
 
+template <bool is_init> void WindowOscillator::update_lagvals()
+{
+    l_morph.newValue(limit_range(localcopy[oscdata->p[win_morph].param_id_in_scene].f, 0.f, 1.f));
+
+    if (is_init)
+    {
+        l_morph.instantize();
+    }
+}
+
 void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
     memset(&Window, 0, sizeof(Window));
+
+    l_morph.setRate(0.05);
+    update_lagvals<true>();
 
     NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
 
@@ -186,11 +199,10 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
 
     unsigned char SelWindow = limit_range(oscdata->p[win_window].val.i, 0, 8);
 
-    int Table = limit_range(
-        (int)(float)(oscdata->wt.n_tables * localcopy[oscdata->p[win_morph].param_id_in_scene].f),
-        0, (int)oscdata->wt.n_tables - 1);
+    int Table = limit_range((int)(float)(oscdata->wt.n_tables * l_morph.v), 0,
+                            (int)oscdata->wt.n_tables - 1);
     int TablePlusOne = limit_range(Table + 1, 0, (int)oscdata->wt.n_tables - 1);
-    float frac = oscdata->wt.n_tables * localcopy[oscdata->p[win_morph].param_id_in_scene].f;
+    float frac = oscdata->wt.n_tables * l_morph.v;
     float FTable = limit_range(frac - Table, 0.f, 1.f);
 
     if (!oscdata->p[win_morph].extend_range)
@@ -228,8 +240,15 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
             unsigned int MipMapA = 0;
             unsigned int MipMapB = 0;
 
-            Window.Table[0][so] = Table;
-            Window.Table[1][so] = TablePlusOne;
+            if (Window.Table[0][so] >= oscdata->wt.n_tables || oscdata->p[win_morph].extend_range)
+            {
+                Window.Table[0][so] = Table;
+            }
+
+            if (Window.Table[1][so] >= oscdata->wt.n_tables || oscdata->p[win_morph].extend_range)
+            {
+                Window.Table[1][so] = TablePlusOne;
+            }
 
             unsigned long MSBpos;
             unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
@@ -328,8 +347,14 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
 void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepth)
 {
     memset(IOutputL, 0, BLOCK_SIZE_OS * sizeof(int));
+
     if (stereo)
+    {
         memset(IOutputR, 0, BLOCK_SIZE_OS * sizeof(int));
+    }
+
+    update_lagvals<false>();
+    l_morph.process();
 
     float Detune;
 
