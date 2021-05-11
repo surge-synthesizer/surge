@@ -2282,12 +2282,11 @@ struct MSEGCanvas : public CControl,
                   });
 
             contextMenu->addEntry(actionsMenu, "Actions");
+            actionsMenu->forget();
 
             COptionMenu *createMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
                                                       VSTGUI::COptionMenu::kNoDrawStyle |
                                                           VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-            contextMenu->addEntry(createMenu, "Create");
 
             addCb(createMenu, Surge::GUI::toOSCaseForMenu("Minimal MSEG"),
                   [this]()
@@ -2369,6 +2368,9 @@ struct MSEGCanvas : public CControl,
                       });
             }
 
+            contextMenu->addEntry(createMenu, "Create");
+            createMenu->forget();
+
             COptionMenu *triggerMenu = new COptionMenu(
                 CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
                 VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
@@ -2412,6 +2414,7 @@ struct MSEGCanvas : public CControl,
             trtboth->setChecked(rtstate == 3);
 
             contextMenu->addEntry(triggerMenu, "Trigger");
+            triggerMenu->forget();
 
             COptionMenu *settingsMenu = new COptionMenu(
                 CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
@@ -2455,6 +2458,7 @@ struct MSEGCanvas : public CControl,
             im->setChecked(invdef);
 
             contextMenu->addEntry(settingsMenu, "Settings");
+            settingsMenu->forget();
 
             contextMenu->addSeparator();
 
