@@ -64,6 +64,8 @@ struct EvaluatorState
     float rate, amp, phase, deform;
     float tempo, songpos;
 
+    bool retrigger_AEG, retrigger_FEG;
+
     std::string error;
     bool raisedError = false;
     void adderror(const std::string &s)

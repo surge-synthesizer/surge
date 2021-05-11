@@ -682,6 +682,13 @@ struct FormulaModulatorStorage
 {
     std::string formulaString = "";
     size_t formulaHash = 0;
+
+    // these values stream so don't change the numerical equivalents
+    enum Interpreter
+    {
+        LUA = 1001
+    } interpreter = LUA;
+
     void setFormula(const std::string &s)
     {
         formulaString = s;

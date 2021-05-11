@@ -2797,10 +2797,18 @@ void SurgePatch::formulaToXMLElement(FormulaModulatorStorage *fs, TiXmlElement &
 {
     parent.SetAttribute("formula", base64_encode((unsigned const char *)fs->formulaString.c_str(),
                                                  fs->formulaString.length()));
+    parent.SetAttribute("interpreter", (int)fs->interpreter);
 }
 
 void SurgePatch::formulaFromXMLElement(FormulaModulatorStorage *fs, TiXmlElement *parent) const
 {
     auto fb64 = parent->Attribute("formula");
     fs->setFormula(base64_decode(fb64));
+
+    int interp;
+    fs->interpreter = FormulaModulatorStorage::LUA;
+    if (parent->QueryIntAttribute("interpreter", &interp) == TIXML_SUCCESS)
+    {
+        fs->interpreter = (FormulaModulatorStorage::Interpreter)(interp);
+    }
 }

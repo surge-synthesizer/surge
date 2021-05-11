@@ -284,6 +284,12 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         lua_settable(s->L, -3);
     };
 
+    auto addnil = [s](const char *q) {
+        lua_pushstring(s->L, q);
+        lua_pushnil(s->L);
+        lua_settable(s->L, -3);
+    };
+
     addn("phase", phaseFracPart);
     addn("delay", s->del);
     addn("attack", s->a);
@@ -296,6 +302,9 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
     addn("deform", s->deform);
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
+
+    addnil("retrigger_AEG");
+    addnil("retrigger_FEG");
 
     auto lres = lua_pcall(s->L, 1, 1, 0);
     // stack is now just the result
@@ -329,17 +338,21 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         // pop the result and the function
         lua_pop(s->L, 1);
 
-        lua_pushstring(s->L, "use_envelope");
-        lua_gettable(s->L, -2);
-        if (lua_isboolean(s->L, -1))
-        {
-            s->useEnvelope = lua_toboolean(s->L, -1);
-        }
-        else
-        {
-            s->useEnvelope = true;
-        }
-        lua_pop(s->L, 1);
+        auto getBoolDefault = [s](const char *n, bool def) -> bool {
+            auto res = def;
+            lua_pushstring(s->L, n);
+            lua_gettable(s->L, -2);
+            if (lua_isboolean(s->L, -1))
+            {
+                res = lua_toboolean(s->L, -1);
+            }
+            lua_pop(s->L, 1);
+            return res;
+        };
+
+        s->useEnvelope = getBoolDefault("use_envelope", true);
+        s->retrigger_AEG = getBoolDefault("retrigger_AEG", false);
+        s->retrigger_FEG = getBoolDefault("retrigger_FEG", false);
 
         // Finally pop the table result
         lua_pop(s->L, 1);
@@ -367,6 +380,7 @@ void createInitFormula(FormulaModulatorStorage *fs)
     modstate["output"] = modstate["phase"] * 2 - 1
     return modstate
 end)FN");
+    fs->interpreter = FormulaModulatorStorage::LUA;
 }
 } // namespace Formula
 } // namespace Surge
