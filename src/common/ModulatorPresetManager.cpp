@@ -100,6 +100,12 @@ void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int 
         s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss, true);
         lfox.InsertEndChild(ss);
     }
+    if (lfotype == lt_formula)
+    {
+        TiXmlElement fm("formula");
+        s->getPatch().formulaToXMLElement(&(s->getPatch().formulamods[scene][lfoid]), fm);
+        lfox.InsertEndChild(fm);
+    }
 
     doc.InsertEndChild(lfox);
 
@@ -205,6 +211,13 @@ void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lf
         auto msn = lfox->FirstChildElement("sequence");
         if (msn)
             s->getPatch().stepSeqFromXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), msn);
+    }
+
+    if (lfotype == lt_formula)
+    {
+        auto frm = lfox->FirstChildElement("formula");
+        if (frm)
+            s->getPatch().formulaFromXMLElement(&(s->getPatch().formulamods[scene][lfoid]), frm);
     }
 }
 

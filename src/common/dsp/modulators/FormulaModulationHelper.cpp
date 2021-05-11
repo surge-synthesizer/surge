@@ -21,6 +21,29 @@ namespace Surge
 {
 namespace Formula
 {
+
+// Stack guard leak debugger
+struct SGLD
+{
+    SGLD(const std::string &lab, lua_State *L) : label(lab), L(L) { top = lua_gettop(L); }
+
+    ~SGLD()
+    {
+        auto nt = lua_gettop(L);
+        if (nt != top)
+        {
+            std::cout << "Guarded stack leak: [" << label << "] exit=" << nt << " enter=" << top
+                      << std::endl;
+            if (label == "valueAt")
+                std::cout << "Q" << std::endl;
+        }
+    }
+
+    std::string label;
+    lua_State *L;
+    int top;
+};
+
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display)
 {
     static lua_State *audioState = nullptr, *displayState = nullptr;
@@ -54,6 +77,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
             did = 1;
     }
 
+    auto lg = SGLD("prepareForEvaluation", s.L);
     // OK so now evaluate the formula. This is a mistake - the loading and
     // compiling can be expensive so lets look it up by hash first
     auto h = fs->formulaHash;
@@ -77,6 +101,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
             hasString = true;
         }
     }
+    lua_pop(s.L, 1); // we don't need the string or whatever on the stack
     if (hasString)
     {
         snprintf(s.funcName, TXT_SIZE, "%s", pvf.c_str());
@@ -101,11 +126,36 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 
                 lua_getglobal(s.L, s.funcName);
                 lua_createtable(s.L, 0, 10);
+                // stack is now func > table
+
                 lua_pushstring(s.L, "math");
                 lua_getglobal(s.L, "math");
+                // stack is now func > table > "math" > (math)
+
                 lua_settable(s.L, -3);
+
+                // stack is now func > table again *BUT* now load math in stripped
+                lua_getglobal(s.L, "math");
+                lua_pushnil(s.L);
+
+                // func > table > (math) > nil so lua next -2 will iterate over (math)
+                while (lua_next(s.L, -2))
+                {
+                    // stack is now f>t>(m)>k>v
+                    lua_pushvalue(s.L, -2);
+                    lua_pushvalue(s.L, -2);
+                    // stack is now f>t>(m)>k>v>k>v and we want k>v in the table
+                    lua_settable(s.L, -6);
+                    // stack is now f>t>(m)>k>v and we want the key on top for next so
+                    lua_pop(s.L, 1);
+                }
+
+                lua_pop(s.L, 1);
+                // and now we are back to f>t so we can setfenv it
                 lua_setfenv(s.L, -2);
 
+                // and so we are now back to f which we no longer need so
+                lua_pop(s.L, 1);
                 s.isvalid = true;
             }
             else
@@ -113,6 +163,8 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
                 // FIXME error
                 s.adderror("After parsing formula, no function 'process' present. You must define "
                            "a function called 'process' in your LUA.");
+                // Pop whatever I got
+                lua_pop(s.L, 1);
                 s.isvalid = false;
             }
         }
@@ -138,8 +190,10 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 
     if (is_display)
     {
+        auto dg = SGLD("set RNG", s.L);
         // Seed the RNG
         lua_getglobal(s.L, "math");
+        // > math
         if (lua_isnil(s.L, -1))
         {
             std::cout << "NIL MATH " << std::endl;
@@ -148,18 +202,20 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
         {
             lua_pushstring(s.L, "randomseed");
             lua_gettable(s.L, -2);
+            // > math > randomseed
             if (lua_isnil(s.L, -1))
             {
                 std::cout << "NUL randomseed" << std::endl;
+                lua_pop(s.L, -1);
             }
             else
             {
                 lua_pushnumber(s.L, 8675309);
                 lua_pcall(s.L, 1, 0, 0);
             }
-            lua_pop(s.L, -1);
         }
-        lua_pop(s.L, -1);
+        // math or nil so
+        lua_pop(s.L, 1);
     }
 
     s.useEnvelope = true;
@@ -201,6 +257,7 @@ bool initEvaluatorState(EvaluatorState &s)
 }
 float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs, EvaluatorState *s)
 {
+    auto gs = SGLD("valueAt", s->L);
     if (!s->isvalid)
         return 0;
 
@@ -212,10 +269,11 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
     if (lua_isnil(s->L, -1))
     {
         s->isvalid = false;
+        lua_pop(s->L, 1);
         return 0;
     }
     lua_getglobal(s->L, s->stateName);
-    // Stack is now top / table / func so we can update the table
+    // Stack is now func > table  so we can update the table
     lua_pushstring(s->L, "intphase");
     lua_pushinteger(s->L, phaseIntPart);
     lua_settable(s->L, -3);
@@ -240,6 +298,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
     addn("songpos", s->songpos);
 
     auto lres = lua_pcall(s->L, 1, 1, 0);
+    // stack is now just the result
     if (lres == LUA_OK)
     {
         if (!lua_istable(s->L, -1))
@@ -247,10 +306,13 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
             s->adderror("The return of your LUA function must be a table. Just return input with "
                         "output set.");
             s->isvalid = false;
+            lua_pop(s->L, 1);
+            return 0;
         }
         // Store the value and keep it on top of the stack
         lua_setglobal(s->L, s->stateName);
         lua_getglobal(s->L, s->stateName);
+
         lua_pushstring(s->L, "output");
         lua_gettable(s->L, -2);
         // top of stack is now the result
@@ -277,9 +339,9 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         {
             s->useEnvelope = true;
         }
-        lua_pop(s->L, -1);
+        lua_pop(s->L, 1);
 
-        // Finally pop the function
+        // Finally pop the table result
         lua_pop(s->L, 1);
 
         return res;
