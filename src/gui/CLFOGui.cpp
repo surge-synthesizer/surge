@@ -1315,23 +1315,20 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
-    if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
+    if (lfodata->shape.val.i == lt_mseg)
     {
         // only the LFO waveform area
         auto displayrect = getViewSize();
         displayrect.left += lpsize + 19;
 
-        // open MSEG editor when clicking on waveform
+        // open the MSEG or formula editor when clicking on waveform
         if (buttons & kLButton)
         {
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
 
             if (sge && displayrect.pointInside(where))
             {
-                if (lfodata->shape.val.i == lt_mseg)
-                    sge->toggleMSEGEditor();
-                if (lfodata->shape.val.i == lt_formula)
-                    sge->toggleFormulaEditorDialog();
+                sge->toggleMSEGEditor();
             }
         }
 
@@ -1340,6 +1337,24 @@ CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &button
         {
             openPopup(where);
             return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        }
+    }
+
+    if (lfodata->shape.val.i == lt_formula)
+    {
+        // only the LFO waveform area
+        auto displayrect = getViewSize();
+        displayrect.left += lpsize + 19;
+
+        // open the formula editor when clicking on waveform
+        if (buttons & kLButton)
+        {
+            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
+            if (sge && displayrect.pointInside(where))
+            {
+                sge->toggleFormulaEditorDialog();
+            }
         }
     }
 
