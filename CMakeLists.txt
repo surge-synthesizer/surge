@@ -306,6 +306,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/SurgeVoiceState.h
   src/common/CPUFeatures.cpp
   src/common/DebugHelpers.cpp
+  src/common/LuaSupport.cpp
   src/common/ModulatorPresetManager.cpp
   src/common/Parameter.cpp
   src/common/PatchDB.cpp

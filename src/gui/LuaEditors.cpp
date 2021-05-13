@@ -20,26 +20,7 @@
 #include "SkinColors.h"
 
 struct EditorColors
-// http://www.zovirl.com/2011/07/22/solarized_cheat_sheet/
-// replace this with skin engine one day
 {
-    static constexpr uint32_t base03 = 0xFF002b36;
-    static constexpr uint32_t base02 = 0xFF073642;
-    static constexpr uint32_t base01 = 0xFF586e75;
-    static constexpr uint32_t base00 = 0xFF657b83;
-    static constexpr uint32_t base0 = 0xFF839496;
-    static constexpr uint32_t base1 = 0xFF93a1a1;
-    static constexpr uint32_t base2 = 0xFFeee8d5;
-    static constexpr uint32_t base3 = 0xFFfdf6e3;
-    static constexpr uint32_t yellow = 0xFFb58900;
-    static constexpr uint32_t orange = 0xFFcb4b16;
-    static constexpr uint32_t red = 0xFFdc322f;
-    static constexpr uint32_t magenta = 0xFFd33682;
-    static constexpr uint32_t violet = 0xFF6c71c4;
-    static constexpr uint32_t blue = 0xFF268bd2;
-    static constexpr uint32_t cyan = 0xFF2aa198;
-    static constexpr uint32_t green = 0xFF859900;
-
     static void setColorsFromSkin(juce::CodeEditorComponent *comp,
                                   const Surge::GUI::Skin::ptr_t &skin)
     {
@@ -75,20 +56,17 @@ struct EditorColors
     }
 };
 
-FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
-                                               FormulaModulatorStorage *fs,
-                                               Surge::GUI::Skin::ptr_t skin)
-    : editor(ed), formulastorage(fs)
+CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s,
+                                                           Surge::GUI::Skin::ptr_t skin)
+    : editor(ed), storage(s)
 {
     applyButton = std::make_unique<juce::TextButton>("Apply");
     applyButton->setButtonText("Apply");
     applyButton->setEnabled(false);
-    applyButton->setBounds(5, 340, 40, 15);
     applyButton->addListener(this);
     addAndMakeVisible(applyButton.get());
 
     mainDocument = std::make_unique<juce::CodeDocument>();
-    mainDocument->insertText(0, fs->formulaString);
     mainDocument->addListener(this);
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
@@ -96,10 +74,47 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
-    mainEditor->setBounds(5, 25, 730, 310);
-
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
     addAndMakeVisible(mainEditor.get());
+}
+
+void CodeEditorContainerWithApply::buttonClicked(juce::Button *button)
+{
+    if (button == applyButton.get())
+    {
+        applyCode();
+    }
+}
+
+void CodeEditorContainerWithApply::codeDocumentTextInserted(const juce::String &newText,
+                                                            int insertIndex)
+{
+    applyButton->setEnabled(true);
+}
+void CodeEditorContainerWithApply::codeDocumentTextDeleted(int startIndex, int endIndex)
+{
+    applyButton->setEnabled(true);
+}
+bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::Component *o)
+{
+    if (key.getKeyCode() == juce::KeyPress::returnKey &&
+        (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown()))
+    {
+        applyCode();
+        return true;
+    }
+    else
+    {
+        return Component::keyPressed(key);
+    }
+}
+
+FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
+                                               FormulaModulatorStorage *fs,
+                                               Surge::GUI::Skin::ptr_t skin)
+    : CodeEditorContainerWithApply(ed, s, skin), formulastorage(fs)
+{
+    mainDocument->insertText(0, fs->formulaString);
 
     warningLabel = std::make_unique<juce::Label>("Warning");
     warningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(14));
@@ -119,19 +134,12 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     addAndMakeVisible(lesserWarningLabel.get());
 }
 
-void FormulaModulatorEditor::applyToStorage()
+void FormulaModulatorEditor::applyCode()
 {
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     applyButton->setEnabled(false);
     editor->invalidateFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
-}
-void FormulaModulatorEditor::buttonClicked(juce::Button *button)
-{
-    if (button == applyButton.get())
-    {
-        applyToStorage();
-    }
 }
 
 void FormulaModulatorEditor::resized()
@@ -144,24 +152,36 @@ void FormulaModulatorEditor::resized()
     applyButton->setBounds(m, h - 20, 50, 20 - m);
     lesserWarningLabel->setBounds(m2 + 50, h - 20, w - 70, 20 - m);
 }
-void FormulaModulatorEditor::codeDocumentTextInserted(const juce::String &newText, int insertIndex)
+
+WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s,
+                                                 OscillatorStorage *os, Surge::GUI::Skin::ptr_t sk)
+    : CodeEditorContainerWithApply(ed, s, sk), osc(os)
 {
-    applyButton->setEnabled(true);
+    mainDocument->insertText(0, osc->wavetable_formula);
+
+    warningLabel = std::make_unique<juce::Label>("Warning");
+    warningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(14));
+    warningLabel->setBounds(5, 5, 730, 20);
+    warningLabel->setColour(juce::Label::textColourId, juce::Colour(255, 0, 0));
+    warningLabel->setText("THIS DOES ABSOLUTELY NOTHING YET. Just a placeholder",
+                          juce::NotificationType::dontSendNotification);
+
+    addAndMakeVisible(warningLabel.get());
 }
-void FormulaModulatorEditor::codeDocumentTextDeleted(int startIndex, int endIndex)
+
+void WavetableEquationEditor::resized()
 {
-    applyButton->setEnabled(true);
+    auto w = getWidth() - 5;
+    auto h = getHeight() - 5; // this is a hack obvs
+    int m = 3;
+    warningLabel->setBounds(m, m, w - m * 2, 20);
+
+    mainEditor->setBounds(m, m * 2 + 20, w - 2 * m, h - 30 - 20 - 2 * m);
+    applyButton->setBounds(m, h - 28, 100, 25);
 }
-bool FormulaModulatorEditor::keyPressed(const juce::KeyPress &key, juce::Component *o)
+
+void WavetableEquationEditor::applyCode()
 {
-    if (key.getKeyCode() == juce::KeyPress::returnKey &&
-        (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown()))
-    {
-        applyToStorage();
-        return true;
-    }
-    else
-    {
-        return Component::keyPressed(key);
-    }
+    std::cout << "Would apply " << mainDocument->getAllContent().toStdString() << std::endl;
+    osc->wavetable_formula = mainDocument->getAllContent().toStdString();
 }

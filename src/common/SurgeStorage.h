@@ -487,6 +487,8 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     Wavetable wt;
 #define WAVETABLE_DISPLAY_NAME_SIZE 256
     char wavetable_display_name[WAVETABLE_DISPLAY_NAME_SIZE];
+    std::string wavetable_formula = "";
+
     void *queue_xmldata;
     int queue_type;
 

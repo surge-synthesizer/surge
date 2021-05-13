@@ -26,31 +26,61 @@
 
 class SurgeGUIEditor;
 
-class FormulaModulatorEditor : public juce::Component,
-                               public juce::CodeDocument::Listener,
-                               public juce::Button::Listener,
-                               public juce::KeyListener,
-                               public Surge::GUI::SkinConsumingComponent
+/*
+ * This is a base class that provides you an apply button, an editor, a document
+ * a tokenizer, etc... which you need to layout with yoru other components by
+ * having a superclass constructor and implementing resized; and where you have
+ * to handle the apply condition with applyCode()
+ */
+class CodeEditorContainerWithApply : public juce::Component,
+                                     public juce::CodeDocument::Listener,
+                                     public juce::Button::Listener,
+                                     public juce::KeyListener,
+                                     public Surge::GUI::SkinConsumingComponent
 {
   public:
-    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs,
-                           Surge::GUI::Skin::ptr_t sk);
+    CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s, Surge::GUI::Skin::ptr_t sk);
     std::unique_ptr<juce::CodeDocument> mainDocument;
     std::unique_ptr<juce::CodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
-    std::unique_ptr<juce::Label> warningLabel;
-    std::unique_ptr<juce::Label> lesserWarningLabel;
-
     std::unique_ptr<juce::LuaTokeniser> tokenizer;
-
     void buttonClicked(juce::Button *button) override;
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
-    void resized() override;
+
     SurgeGUIEditor *editor;
+    SurgeStorage *storage;
+
+    virtual void applyCode() = 0;
+};
+
+class FormulaModulatorEditor : public CodeEditorContainerWithApply
+{
+  public:
+    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs,
+                           Surge::GUI::Skin::ptr_t sk);
+    std::unique_ptr<juce::Label> warningLabel;
+    std::unique_ptr<juce::Label> lesserWarningLabel;
+
+    void resized() override;
+    void applyCode() override;
+
     FormulaModulatorStorage *formulastorage;
-    void applyToStorage();
+};
+
+class WavetableEquationEditor : public CodeEditorContainerWithApply
+{
+  public:
+    WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
+                            Surge::GUI::Skin::ptr_t sk);
+
+    std::unique_ptr<juce::Label> warningLabel;
+
+    void resized() override;
+    void applyCode() override;
+
+    OscillatorStorage *osc;
 };
 
 #endif // SURGE_XT_LUAEDITORS_H

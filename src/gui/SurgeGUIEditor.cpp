@@ -8358,6 +8358,31 @@ void SurgeGUIEditor::closeFormulaEditorDialog()
     }
 }
 
+void SurgeGUIEditor::showWavetableScripter()
+{
+    int w = 750, h = 400;
+    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(w, h)));
+    auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    auto pt =
+        std::make_unique<WavetableEquationEditor>(this, &(this->synth->storage), os, currentSkin);
+    pt->setBounds(0, 0, w, h);
+    pt->setSkin(currentSkin, bitmapStore);
+    c->juceComponent()->addAndMakeVisible(*pt);
+    c->takeOwnership(std::move(pt));
+
+    addEditorOverlay(c, "Wavetable Scripter", FORMULA_EDITOR, CPoint(40, 40), false, true,
+                     [this]() {});
+}
+
+void SurgeGUIEditor::closeWavetableScripter()
+{
+    if (isAnyOverlayPresent(WAVETABLESCRIPTING_EDITOR))
+    {
+        dismissEditorOfType(WAVETABLESCRIPTING_EDITOR);
+    }
+}
+
 void SurgeGUIEditor::toggleFormulaEditorDialog()
 {
     if (isAnyOverlayPresent(FORMULA_EDITOR))

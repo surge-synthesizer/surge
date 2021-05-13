@@ -294,7 +294,8 @@ class SurgeGUIEditor : public EditorType,
         STORE_PATCH,
         PATCH_BROWSER,
         MODULATION_EDITOR,
-        FORMULA_EDITOR
+        FORMULA_EDITOR,
+        WAVETABLESCRIPTING_EDITOR,
     };
 
     void addEditorOverlay(
@@ -340,6 +341,9 @@ class SurgeGUIEditor : public EditorType,
     void closeFormulaEditorDialog();
     void showFormulaEditorDialog();
     void toggleFormulaEditorDialog();
+
+    void closeWavetableScripter();
+    void showWavetableScripter();
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();

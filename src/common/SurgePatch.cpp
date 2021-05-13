@@ -126,6 +126,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         {
             // Initialize the display name here
             scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_formula = "";
 
             a->push_back(scene[sc].osc[osc].type.assign(p_id.next(), id_s++, "type", "Type",
                                                         ct_osctype, Surge::Skin::Osc::osc_type,
@@ -1715,6 +1716,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         for (int osc = 0; osc < n_oscs; osc++)
         {
             scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_formula = "";
         }
     }
 
@@ -1733,6 +1735,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 {
                     strxcpy(scene[ssc].osc[sos].wavetable_display_name,
                             lkid->Attribute("wavetable_display_name"), WAVETABLE_DISPLAY_NAME_SIZE);
+                }
+
+                if (lkid->Attribute("wavetable_formula"))
+                {
+                    scene[ssc].osc[sos].wavetable_formula =
+                        base64_decode(lkid->Attribute("wavetable_formula"));
                 }
 
                 auto ec = &(scene[ssc].osc[sos].extraConfig);
@@ -2308,6 +2316,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             if (uses_wavetabledata(scene[sc].osc[os].type.val.i))
             {
                 on.SetAttribute("wavetable_display_name", scene[sc].osc[os].wavetable_display_name);
+                auto wtfo = scene[sc].osc[os].wavetable_formula;
+                auto wtfol = wtfo.length();
+                on.SetAttribute("wavetable_formula",
+                                base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
             }
 
             auto ec = &(scene[sc].osc[os].extraConfig);
