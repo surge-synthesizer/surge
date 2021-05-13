@@ -15,6 +15,19 @@
 
 #include "LuaSupport.h"
 #include <iostream>
+#include <string>
+#include <vector>
+#include "basic_dsp.h"
+
+int lua_limitRange(lua_State *L)
+{
+    auto x = luaL_checknumber(L, -3);
+    auto low = luaL_checknumber(L, -2);
+    auto high = luaL_checknumber(L, -1);
+    auto res = limit_range(x, low, high);
+    lua_pushnumber(L, res);
+    return 1;
+}
 
 bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
 {
@@ -30,6 +43,19 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_pushstring(L, "math");
     lua_getglobal(L, "math");
     // stack is now func > table > "math" > (math) so set math on table
+    lua_settable(L, -3);
+
+    // Now a list of functions we do include
+    std::vector<std::string> functionWhitelist = {"ipairs"};
+    for (const auto &f : functionWhitelist)
+    {
+        lua_pushstring(L, f.c_str());
+        lua_getglobal(L, f.c_str());
+        lua_settable(L, -3);
+    }
+
+    lua_pushstring(L, "limit_range");
+    lua_pushcfunction(L, lua_limitRange);
     lua_settable(L, -3);
 
     // stack is now func > table again *BUT* now load math in stripped

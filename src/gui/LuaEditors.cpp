@@ -18,6 +18,7 @@
 #include "RuntimeFont.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
+#include "WavetableScriptEvaluator.h"
 
 struct EditorColors
 {
@@ -153,35 +154,164 @@ void FormulaModulatorEditor::resized()
     lesserWarningLabel->setBounds(m2 + 50, h - 20, w - 70, 20 - m);
 }
 
+struct WavetablePreviewComponent : juce::Component
+{
+    WavetablePreviewComponent(SurgeStorage *s, OscillatorStorage *os, Surge::GUI::Skin::ptr_t skin)
+        : storage(s), osc(os), skin(skin)
+    {
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        g.fillAll(juce::Colour(0, 0, 0));
+        g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+
+        g.setColour(juce::Colour(230, 230, 255)); // could be a skin->getColor of course
+        auto s1 = std::string("Frame : ") + std::to_string(frameNumber);
+        auto s2 = std::string("Res   : ") + std::to_string(points.size());
+        g.drawSingleLineText(s1, 3, 18);
+        g.drawSingleLineText(s2, 3, 30);
+
+        g.setColour(juce::Colour(160, 160, 160));
+        auto h = getHeight();
+        auto w = getWidth();
+
+        auto t = h * 0.05;
+        auto m = h * 0.5;
+        auto b = h * 0.95;
+        g.drawLine(0, t, w, t);
+        g.drawLine(0, m, w, m);
+        g.drawLine(0, b, w, b);
+
+        auto p = juce::Path();
+        auto dx = 1.0 / (points.size() - 1);
+        for (int i = 0; i < points.size(); ++i)
+        {
+            float xp = dx * i * w;
+            float yp = -((points[i] + 1) * 0.5) * (b - t) + b;
+            if (i == 0)
+                p.startNewSubPath(xp, yp);
+            else
+                p.lineTo(xp, yp);
+        }
+        g.setColour(juce::Colour(255, 180, 0));
+        g.strokePath(p, juce::PathStrokeType(1.0));
+    }
+
+    int frameNumber = 0;
+    std::vector<float> points;
+
+    SurgeStorage *storage;
+    OscillatorStorage *osc;
+    Surge::GUI::Skin::ptr_t skin;
+};
+
 WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                  OscillatorStorage *os, Surge::GUI::Skin::ptr_t sk)
     : CodeEditorContainerWithApply(ed, s, sk), osc(os)
 {
     mainDocument->insertText(0, osc->wavetable_formula);
 
-    warningLabel = std::make_unique<juce::Label>("Warning");
-    warningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(14));
-    warningLabel->setBounds(5, 5, 730, 20);
-    warningLabel->setColour(juce::Label::textColourId, juce::Colour(255, 0, 0));
-    warningLabel->setText("THIS DOES ABSOLUTELY NOTHING YET. Just a placeholder",
-                          juce::NotificationType::dontSendNotification);
+    resolutionLabel = std::make_unique<juce::Label>("resLabl");
+    resolutionLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    resolutionLabel->setText("Resolution:", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(resolutionLabel.get());
 
-    addAndMakeVisible(warningLabel.get());
+    resolution = std::make_unique<juce::ComboBox>("res");
+    int id = 1, grid = 32;
+    while (grid <= 4096)
+    {
+        resolution->addItem(std::to_string(grid), id);
+        id++;
+        grid *= 2;
+    }
+    resolution->setSelectedId(5, juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(resolution.get());
+
+    framesLabel = std::make_unique<juce::Label>("frmLabl");
+    framesLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    framesLabel->setText("nFrames:", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(framesLabel.get());
+
+    frames = std::make_unique<juce::TextEditor>("frm");
+    frames->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    frames->setText("10", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(frames.get());
+
+    generate = std::make_unique<juce::TextButton>("gen");
+    generate->setButtonText("generate");
+    addAndMakeVisible(generate.get());
+
+    renderer = std::make_unique<WavetablePreviewComponent>(storage, osc, sk);
+    addAndMakeVisible(renderer.get());
+
+    currentFrame = std::make_unique<juce::Slider>("currF");
+    currentFrame->setSliderStyle(juce::Slider::LinearVertical);
+    currentFrame->setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+    currentFrame->setMinAndMaxValues(0.0, 10.0);
+    currentFrame->addListener(this);
+    addAndMakeVisible(currentFrame.get());
 }
+
+WavetableEquationEditor::~WavetableEquationEditor() noexcept = default;
 
 void WavetableEquationEditor::resized()
 {
     auto w = getWidth() - 5;
     auto h = getHeight() - 5; // this is a hack obvs
     int m = 3;
-    warningLabel->setBounds(m, m, w - m * 2, 20);
 
-    mainEditor->setBounds(m, m * 2 + 20, w - 2 * m, h - 30 - 20 - 2 * m);
-    applyButton->setBounds(m, h - 28, 100, 25);
+    int topH = 20;
+    int itemW = 100;
+
+    int renderH = 150;
+
+    resolutionLabel->setBounds(m, m, itemW, topH);
+    resolution->setBounds(m * 2 + itemW, m, itemW, topH);
+    framesLabel->setBounds(m * 3 + 2 * itemW, m, itemW, topH);
+    frames->setBounds(m * 4 + 3 * itemW, m, itemW, topH);
+
+    generate->setBounds(w - m - itemW, m, itemW, topH);
+    applyButton->setBounds(w - 2 * m - 2 * itemW, m, itemW, topH);
+
+    mainEditor->setBounds(m, m * 2 + topH, w - 2 * m, h - topH - renderH - 3 * m);
+
+    currentFrame->setBounds(m, h - m - renderH, 32, renderH);
+    renderer->setBounds(m + 32, h - m - renderH, w - 2 * m - 32, renderH);
+
+    rerenderFromUIState();
 }
 
 void WavetableEquationEditor::applyCode()
 {
-    std::cout << "Would apply " << mainDocument->getAllContent().toStdString() << std::endl;
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
+    applyButton->setEnabled(false);
+    rerenderFromUIState();
+
+    editor->invalidateFrame();
 }
+
+void WavetableEquationEditor::rerenderFromUIState()
+{
+    std::cout << "Would apply " << mainDocument->getAllContent().toStdString() << std::endl;
+    auto resi = resolution->getSelectedId();
+    auto nfr = std::atoi(frames->getText().toRawUTF8());
+    auto cfr = (int)round(nfr * currentFrame->getValue() / 10.0);
+
+    auto respt = 32;
+    for (int i = 1; i < resi; ++i)
+        respt *= 2;
+    std::cout << "    - " << resi << " " << respt << " " << nfr << " " << cfr << " "
+              << currentFrame->getValue() << std::endl;
+
+    renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
+        mainDocument->getAllContent().toStdString(), respt, cfr);
+    renderer->frameNumber = cfr;
+    renderer->repaint();
+}
+
+void WavetableEquationEditor::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
+{
+    rerenderFromUIState();
+}
+void WavetableEquationEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }

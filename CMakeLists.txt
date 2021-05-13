@@ -283,7 +283,6 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/oscillators/SineOscillator.cpp
   src/common/dsp/oscillators/StringOscillator.cpp
   src/common/dsp/oscillators/TwistOscillator.cpp
-  src/common/dsp/oscillators/Wavetable.cpp
   src/common/dsp/oscillators/WavetableOscillator.cpp
   src/common/dsp/oscillators/WindowOscillator.cpp
   src/common/dsp/modulators/ADSRModulationSource.h
@@ -304,6 +303,8 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
   src/common/dsp/SurgeVoiceState.h
+  src/common/dsp/Wavetable.cpp
+  src/common/dsp/WavetableScriptEvaluator.cpp
   src/common/CPUFeatures.cpp
   src/common/DebugHelpers.cpp
   src/common/LuaSupport.cpp
