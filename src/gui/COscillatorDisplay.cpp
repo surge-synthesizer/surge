@@ -620,6 +620,17 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
     }
 
     contextMenu->addSeparator();
+    auto wtformItem = std::make_shared<CCommandMenuItem>(
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Wavetable Scripter...")));
+    auto owts = [this](CCommandMenuItem *item) {
+        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+        if (sge)
+            sge->showWavetableScripter();
+    };
+    wtformItem->setActions(owts, nullptr);
+    contextMenu->addEntry(wtformItem);
+
+    contextMenu->addSeparator();
 
     auto refreshItem = std::make_shared<CCommandMenuItem>(
         CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List")));

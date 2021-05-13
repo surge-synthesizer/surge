@@ -965,7 +965,7 @@ struct CViewBase : public Internal::FakeRefcount
     void setMouseEnabled(bool b) { OKUNIMPL; }
     CPoint localToFrame(CPoint &w)
     {
-        UNIMPL;
+        OKUNIMPL;
         return w;
     }
 
