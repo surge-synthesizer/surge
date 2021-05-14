@@ -38,7 +38,7 @@ This readme serves as the root of developer documentation for Surge.
 We welcome developers! Our workflow revolves around GitHub issues in this repository
 and conversations at our Discord server and IRC chatroom. You can read our developer guidelines
 in [our developer guide document](doc/Developer%20Guide.md). If you want to contribute and are new to Git,
-we also have a [Git How To](doc/git-howto.md), tailored at Surge development.
+we also have a [Git How To](doc/How%20to%20Git.md), tailored at Surge development.
 
 The developer guide also contains information about testing and debugging in particular hosts
 on particular platforms.
@@ -175,7 +175,7 @@ before Surge was a cmake project and contained a lot of utility functions. We ha
 to cmake and as a result, have a bunch of features our CMake file supports which make development
 easier on the command lines and in CMake aware IDEs.
 
-### Plugin Development 
+### Plugin Development
 
 JUCE supports a mode where a plugin (AU, VST3, etc...) is copied to a local install area after a build.
 This is off by default with CMake JUCE but you can turn it on with `-DSURGE_COPY_AFTER_BUILD=True` at
@@ -199,13 +199,13 @@ and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`
 ### Installing assets (unixes only)
 
 The targets `install-resources-local` and `install-resources-global` install the plugin resources
-to the appropriate `surge-xt` or `Surge XT` directories on your system in the unixes. The global option 
+to the appropriate `surge-xt` or `Surge XT` directories on your system in the unixes. The global option
 will require elevated priviledges.
 
 ### Running the standalone from cmake directly
 
 For @baconpaul, at least, it is useful to have a cmake command that builds stuff and runs the standalone.
-The target `surge-xt-run-standalone` does this. Here's a sample cmake session (using the surge `ignore` 
+The target `surge-xt-run-standalone` does this. Here's a sample cmake session (using the surge `ignore`
 directory which we keep in our `.gitignore` file):
 
 ```
