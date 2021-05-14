@@ -36,16 +36,16 @@ VERSION=$4
 
 echo running make_rpm.sh $INDIR $SOURCEDIR $TARGET_DIR $VERSION
 
-
+RPM_VERSION=$VERSION
 # generate/modify version
 if [[ ${VERSION:0:1} =~ [0-9] ]]; then
-    echo "Build Version (${VERSION})"
+    echo "Build Version (${RPM_VERSION})"
 elif [[ ${VERSION} = NIGHTLY* ]]; then
     # rpmbuild does not allow dashes in the rpm version.
-    VERSION="9.${VERSION//-/$'.'}"
+    RPM_VERSION="9.${VERSION//-/$'.'}"
     echo "NIGHTLY; VERSION is ${VERSION}"
 else
-    VERSION="0.${VERSION}"
+    RPM_VERSION="0.${VERSION}"
     echo "VERSION is ${VERSION}"
 fi
 
@@ -84,7 +84,7 @@ RPM_SPEC_FILE=${PACKAGE_NAME}.spec
 touch ${RPM_SPEC_FILE}
 cat << EOT > ${RPM_SPEC_FILE}
 Name:       ${PACKAGE_NAME}
-Version:    $VERSION
+Version:    ${RPM_VERSION}
 Release:    ${RPM_RELEASE}
 BuildArch:  ${ARCH}
 Summary:    Subtractive hybrid synthesizer virtual instrument
@@ -147,7 +147,7 @@ rpmbuild -bb --define "_topdir $RPM_BUILD_DIR" ${RPM_SPEC_FILE}
 # TODO add key signing, or sign as a post build step
 
 # move rpm to target directory
-mv $RPM_BUILD_DIR/RPMS/$ARCH/$PACKAGE_NAME-$VERSION-$RPM_RELEASE.$ARCH.rpm ${TARGET_DIR}/
+mv $RPM_BUILD_DIR/RPMS/$ARCH/$PACKAGE_NAME-${RPM_VERSION}-$RPM_RELEASE.$ARCH.rpm ${TARGET_DIR}/${PACKAGE_NAME}-$ARCH-${VERSION}.rpm
 
 if [[ $? -ne 0 ]]
 then
