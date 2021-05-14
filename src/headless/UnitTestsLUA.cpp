@@ -11,6 +11,7 @@
 #include "UnitTestUtilities.h"
 
 #include "FormulaModulationHelper.h"
+#include "WavetableScriptEvaluator.h"
 
 #if HAS_LUAJIT
 extern "C"
@@ -301,6 +302,34 @@ end)FN");
             {
                 auto q = pow(c.fPhase, pe) * 2 - 1;
                 REQUIRE(q == Approx(c.v));
+            }
+        }
+    }
+}
+
+TEST_CASE("WavetableScript", "[formula]")
+{
+    SECTION("Just the Sins")
+    {
+        const std::string s = R"FN(
+function generate(xs, n)
+    res = xs
+    for i,x in ipairs(xs) do
+        res[i] = math.sin(x * (n+1) * 2 * math.pi)
+    end
+    return res
+end
+        )FN";
+        for (int fno = 0; fno < 4; ++fno)
+        {
+            auto fr = Surge::WavetableScript::evaluateScriptAtFrame(s, 512, fno);
+            REQUIRE(fr.size() == 512);
+            auto dp = 1.0 / (512 - 1);
+            for (int i = 0; i < 512; ++i)
+            {
+                auto x = i * dp;
+                auto r = sin(x * (fno + 1) * 2 * M_PI);
+                REQUIRE(r == Approx(fr[i]));
             }
         }
     }

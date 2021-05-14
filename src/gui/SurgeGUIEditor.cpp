@@ -8360,7 +8360,9 @@ void SurgeGUIEditor::closeFormulaEditorDialog()
 
 void SurgeGUIEditor::showWavetableScripter()
 {
-    int w = 750, h = 400;
+    int w = 800, h = 520;
+    auto px = (getWindowSizeX() - w) / 2;
+    auto py = (getWindowSizeY() - h) / 2;
     auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(w, h)));
     auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
@@ -8371,7 +8373,7 @@ void SurgeGUIEditor::showWavetableScripter()
     c->juceComponent()->addAndMakeVisible(*pt);
     c->takeOwnership(std::move(pt));
 
-    addEditorOverlay(c, "Wavetable Scripter", FORMULA_EDITOR, CPoint(40, 40), false, true,
+    addEditorOverlay(c, "Wavetable Scripter", FORMULA_EDITOR, CPoint(px, py), false, true,
                      [this]() {});
 }
 

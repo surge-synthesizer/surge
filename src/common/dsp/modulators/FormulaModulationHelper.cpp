@@ -89,7 +89,15 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     else
     {
         const char *lua_script = fs->formulaString.c_str();
-        int load_stat = luaL_loadbuffer(s.L, lua_script, strlen(lua_script), lua_script);
+        int load_stat = luaL_loadbuffer(s.L, lua_script, strlen(lua_script), "processScript");
+        if (load_stat != LUA_OK)
+        {
+            std::ostringstream oss;
+            oss << "Error parsing user script: " << lua_error(s.L);
+            s.adderror(oss.str());
+            std::cout << "FIXME : Do I need to pop here?" << std::endl;
+            return false;
+        }
         auto res = lua_pcall(s.L, 0, 0, 0); // FIXME error
 
         if (res == LUA_OK)

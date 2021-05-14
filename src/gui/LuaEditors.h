@@ -69,16 +69,35 @@ class FormulaModulatorEditor : public CodeEditorContainerWithApply
     FormulaModulatorStorage *formulastorage;
 };
 
-class WavetableEquationEditor : public CodeEditorContainerWithApply
+class WavetablePreviewComponent;
+
+class WavetableEquationEditor : public CodeEditorContainerWithApply,
+                                public juce::Slider::Listener,
+                                public juce::ComboBox::Listener
 {
   public:
     WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
                             Surge::GUI::Skin::ptr_t sk);
+    ~WavetableEquationEditor() noexcept;
 
-    std::unique_ptr<juce::Label> warningLabel;
+    std::unique_ptr<juce::Label> resolutionLabel;
+    std::unique_ptr<juce::ComboBox> resolution;
+
+    std::unique_ptr<juce::Label> framesLabel;
+    std::unique_ptr<juce::TextEditor> frames;
+
+    std::unique_ptr<juce::Slider> currentFrame;
+    std::unique_ptr<WavetablePreviewComponent> renderer;
+
+    std::unique_ptr<juce::Button> generate;
+
+    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
+    void sliderValueChanged(juce::Slider *slider) override;
 
     void resized() override;
     void applyCode() override;
+
+    void rerenderFromUIState();
 
     OscillatorStorage *osc;
 };
