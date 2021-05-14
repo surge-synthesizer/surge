@@ -1232,6 +1232,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
                    sizeof(StepSequencerStorage));
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
             clipboard_msegs[0] = getPatch().msegs[scene][entry];
+        if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
+            clipboard_formulae[0] = getPatch().formulamods[scene][entry];
         break;
     case cp_scene:
     {
@@ -1243,6 +1245,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             memcpy(&clipboard_stepsequences[i], &getPatch().stepsequences[scene][i],
                    sizeof(StepSequencerStorage));
             clipboard_msegs[i] = getPatch().msegs[scene][i];
+            clipboard_formulae[i] = getPatch().formulamods[scene][i];
         }
         for (int i = 0; i < n_oscs; i++)
         {
@@ -1355,6 +1358,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
                    sizeof(StepSequencerStorage));
             getPatch().msegs[scene][i] = clipboard_msegs[i];
+            getPatch().formulamods[scene][i] = clipboard_formulae[i];
         }
 
         for (int i = 0; i < n_oscs; i++)
@@ -1431,6 +1435,8 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
                        sizeof(StepSequencerStorage));
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
                 getPatch().msegs[scene][entry] = clipboard_msegs[0];
+            if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
+                getPatch().formulamods[scene][entry] = clipboard_formulae[0];
 
             break;
         case cp_scene:
