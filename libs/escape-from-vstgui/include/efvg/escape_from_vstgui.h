@@ -1758,14 +1758,14 @@ inline void juceCViewConnector<T>::mouseWheelMove(const juce::MouseEvent &e,
     OKUNIMPL;
     float mouseScaleFactor = 3;
 
-    auto r = viewCompanion->onWheel(w, kMouseWheelAxisX, mouseScaleFactor * wheel.deltaX,
+    auto r = viewCompanion->onWheel(w, kMouseWheelAxisX, -mouseScaleFactor * wheel.deltaX,
                                     CButtonState()) ||
-             viewCompanion->onWheel(w, kMouseWheelAxisY, -mouseScaleFactor * wheel.deltaY,
+             viewCompanion->onWheel(w, kMouseWheelAxisY, mouseScaleFactor * wheel.deltaY,
                                     CButtonState());
 
     if (!r)
     {
-        r = viewCompanion->onWheel(w, -mouseScaleFactor * wheel.deltaY, CButtonState());
+        r = viewCompanion->onWheel(w, mouseScaleFactor * wheel.deltaY, CButtonState());
     }
     if (!r)
     {
