@@ -60,9 +60,11 @@ class CHSwitch2 : public VSTGUI::CHorizontalSwitch, public Surge::GUI::SkinConsu
     virtual VSTGUI::CMouseEventResult onMouseMoved(
         VSTGUI::CPoint &where,
         const VSTGUI::CButtonState &buttons) override; ///< called when a mouse move event occurs
-    virtual bool onWheel(
-        const VSTGUI::CPoint &where, const float &distance,
-        const VSTGUI::CButtonState &buttons) override; ///< called when scrollwheel events occurs
+
+    // Support juce native wheel events
+    virtual bool supportsJuceNativeWheel() override { return true; }
+    virtual void mouseWheelMove(const juce::MouseEvent &e,
+                                const juce::MouseWheelDetails &wheel) override;
 
     virtual VSTGUI::CMouseEventResult onMouseEntered(VSTGUI::CPoint &where,
                                                      const VSTGUI::CButtonState &buttons) override

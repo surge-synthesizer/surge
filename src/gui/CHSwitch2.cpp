@@ -231,24 +231,37 @@ void CHSwitch2::calculateHoverValue(const CPoint &where)
         }
     }
 }
-bool CHSwitch2::onWheel(const CPoint &where, const float &distance, const CButtonState &buttons)
+
+void CHSwitch2::mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel)
 {
     if (usesMouseWheel)
     {
+#if 0
+        std::cout << "MouseWheelEvent native juce" << std::endl;
+        std::cout << "   Wheel Details:\n"
+                  << "     - deltaX     : " << wheel.deltaX << "\n"
+                  << "     - deltaY     : " << wheel.deltaY << "\n"
+                  << "     - isSmooth   : " << wheel.isSmooth << "\n"
+                  << "     - isInertial : " << wheel.isInertial << "\n"
+                  << "     - isReversed : " << wheel.isReversed << "\n"
+                  << "   Event Details: pos=" << e.x << "," << e.y << " and theres more"
+                  << std::endl;
+#endif
+
         float newVal = value;
         float rate = 1.0f;
+        float speedup = 3.0f; // just make it a bit more snappy really
         float range = getRange();
+        float distance = wheel.deltaX + (wheel.isReversed ? 1 : -1) * wheel.deltaY;
         if (columns > 1)
         {
-            rate = range / (float)(columns - 1); // Colums-1 = number of scroll steps
+            rate = speedup * range / (float)(columns - 1); // Colums-1 = number of scroll steps
             newVal += rate * distance;
         }
         else
         {
-            rate = range / (float)(rows - 1); // Rows-1 = Number of scroll steps
-            newVal +=
-                rate *
-                -distance; // flip distance (==direction) because it makes more sense when wheeling
+            rate = speedup * range / (float)(rows - 1); // Rows-1 = Number of scroll steps
+            newVal += rate * distance;
         }
         beginEdit();
         value = newVal;
@@ -258,8 +271,10 @@ bool CHSwitch2::onWheel(const CPoint &where, const float &distance, const CButto
             listener->valueChanged(this);
         setValue(value);
         endEdit();
-        return true;
+
+        // Note the JUCE handler needs to add an invalid
+        invalid();
     }
-    return false;
 }
+
 void CHSwitch2::setUsesMouseWheel(bool wheel) { usesMouseWheel = wheel; }
