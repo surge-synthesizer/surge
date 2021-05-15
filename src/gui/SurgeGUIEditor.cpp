@@ -1922,60 +1922,48 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
         if (tag == tag_osc_select)
         {
             CRect r = control->getViewSize();
-            CRect menuRect;
 
             CPoint where;
             frame->getCurrentMouseLocation(where);
             frame->localToFrame(where);
 
             int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
-            menuRect.offset(where.x, where.y);
 
-            COptionMenu *contextMenu =
-                new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-            int eid = 0;
-
-            char txt[256];
+            auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("osc-select");
+            char txt[TXT_SIZE];
+
             if (hu != "")
             {
-                snprintf(txt, TXT_SIZE, "[?] Osc %i", a + 1);
+                snprintf(txt, TXT_SIZE, "[?] Osc %d", a + 1);
                 auto lurl = fullyResolvedHelpURL(hu);
-                addCallbackMenu(contextMenu, txt,
-                                [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-                eid++;
+                contextMenu.addItem(txt, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
             }
             else
             {
-                snprintf(txt, TXT_SIZE, "Osc %i", a + 1);
-                contextMenu->addEntry(txt, eid++);
+                snprintf(txt, TXT_SIZE, "Osc %d", a + 1);
+                contextMenu.addItem(txt, []() {});
             }
 
-            contextMenu->addSeparator(eid++);
-            addCallbackMenu(contextMenu, "Copy", [this, a]() {
-                synth->storage.clipboard_copy(cp_osc, current_scene, a);
-            });
-            eid++;
+            contextMenu.addSeparator();
 
-            addCallbackMenu(
-                contextMenu, Surge::GUI::toOSCaseForMenu("Copy With Modulation"),
-                [this, a]() { synth->storage.clipboard_copy(cp_oscmod, current_scene, a); });
-            eid++;
+            contextMenu.addItem(
+                "Copy", [this, a]() { synth->storage.clipboard_copy(cp_osc, current_scene, a); });
+
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy With Modulation"), [this, a]() {
+                synth->storage.clipboard_copy(cp_oscmod, current_scene, a);
+            });
 
             if (synth->storage.get_clipboard_type() == cp_osc)
             {
-                addCallbackMenu(contextMenu, "Paste", [this, a]() {
+                contextMenu.addItem("Paste", [this, a]() {
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
                     queue_refresh = true;
                 });
-                eid++;
             }
 
-            frame->addView(contextMenu); // add to frame
-            contextMenu->setDirty();
-            contextMenu->popup();
-            frame->removeView(contextMenu, true); // remove from frame and forget
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
 
             return 1;
         }
@@ -2065,7 +2053,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             {
                 hu = helpURLForSpecial("internalmod-modbutton");
             }
-
             else
             {
                 hu = helpURLForSpecial("other-modbutton");
@@ -2075,6 +2062,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
             {
                 int idOn = modsource;
                 int idOff = cms->alternateId;
+
                 if (cms->useAlternate)
                 {
                     auto t = idOn;
@@ -2094,17 +2082,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                 {
                     contextMenu->addEntry((char *)modsource_names[idOn], eid++);
                 }
+
+                bool activeMod = (cms->state & 3) == 2;
                 std::string offLab = "Switch to ";
                 offLab += modsource_names[idOff];
-                bool activeMod = (cms->state & 3) == 2;
 
                 auto mi = addCallbackMenu(contextMenu, offLab, [this, modsource, cms]() {
                     cms->setUseAlternate(!cms->useAlternate);
                     modsource_is_alternate[modsource] = cms->useAlternate;
                     this->refresh_mod();
                 });
+
                 if (activeMod)
+                {
                     mi->setEnabled(false);
+                }
                 eid++;
             }
             else
