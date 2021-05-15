@@ -283,7 +283,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             Surge::Skin::Scene::vel_sensitivity, sc_id, cg_GLOBAL, 0, false));
 
         a->push_back(scene[sc].feedback.assign(p_id.next(), id_s++, "feedback", "Feedback",
-                                               ct_percent_bipolar, Surge::Skin::Filter::feedback,
+                                               ct_osc_feedback_negative, Surge::Skin::Filter::feedback,
                                                sc_id, cg_GLOBAL, 0, true,
                                                Surge::ParamConfig::kHorizontal | kWhite | sceasy));
         a->push_back(scene[sc].filterblock_configuration.assign(
