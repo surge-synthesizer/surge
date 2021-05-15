@@ -282,10 +282,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             p_id.next(), id_s++, "vca_velsense", "Velocity > VCA Gain", ct_decibel_attenuation,
             Surge::Skin::Scene::vel_sensitivity, sc_id, cg_GLOBAL, 0, false));
 
-        a->push_back(scene[sc].feedback.assign(p_id.next(), id_s++, "feedback", "Feedback",
-                                               ct_percent_bipolar, Surge::Skin::Filter::feedback,
-                                               sc_id, cg_GLOBAL, 0, true,
-                                               Surge::ParamConfig::kHorizontal | kWhite | sceasy));
+        a->push_back(scene[sc].feedback.assign(
+            p_id.next(), id_s++, "feedback", "Feedback", ct_osc_feedback_negative,
+            Surge::Skin::Filter::feedback, sc_id, cg_GLOBAL, 0, true,
+            Surge::ParamConfig::kHorizontal | kWhite | sceasy));
         a->push_back(scene[sc].filterblock_configuration.assign(
             p_id.next(), id_s++, "fb_config", "Filter Configuration", ct_fbconfig,
             Surge::Skin::Filter::config, sc_id, cg_GLOBAL, 0, false));
