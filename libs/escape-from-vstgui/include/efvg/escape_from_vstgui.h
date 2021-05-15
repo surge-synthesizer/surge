@@ -946,6 +946,10 @@ struct CViewBase : public Internal::FakeRefcount
         return kMouseEventNotHandled;
     }
 
+    virtual bool supportsJuceNativeWheel() { return false; }
+
+    virtual void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel) {}
+
     virtual bool onWheel(const CPoint &where, const float &distance, const CButtonState &buttons)
     {
         return false;
@@ -1344,11 +1348,7 @@ struct CControl : public CView
     virtual void looseFocus() { UNIMPL; }
     virtual void takeFocus() { UNIMPL; }
     CButtonState getMouseButtons() { return CButtonState(); }
-    virtual float getRange()
-    {
-        UNIMPL;
-        return 0;
-    }
+    virtual float getRange() { return getMax() - getMin(); }
     virtual float getValue() { return value; }
     virtual void setValue(float v) { value = v; }
     virtual void setDefaultValue(float v) { vdef = v; }
@@ -1367,9 +1367,17 @@ struct CControl : public CView
     uint32_t tag;
     virtual uint32_t getTag() { return tag; }
     virtual void setMax(float f) { vmax = f; }
+    virtual float getMax() { return vmax; }
     void valueChanged() { UNIMPL; }
     virtual void setMin(float f) { vmin = f; }
-    virtual void bounceValue() { UNIMPL; }
+    virtual float getMin() { return vmin; }
+    virtual void bounceValue()
+    {
+        if (value < getMin())
+            value = getMin();
+        if (value > getMax())
+            value = getMax();
+    }
 
     virtual void beginEdit()
     {
@@ -1752,6 +1760,10 @@ template <typename T>
 inline void juceCViewConnector<T>::mouseWheelMove(const juce::MouseEvent &e,
                                                   const juce::MouseWheelDetails &wheel)
 {
+    if (viewCompanion->supportsJuceNativeWheel())
+    {
+        viewCompanion->mouseWheelMove(e, wheel);
+    }
     auto b = T::getBounds().getTopLeft();
     CPoint w(e.x + b.x, e.y + b.y);
 
