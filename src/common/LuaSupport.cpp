@@ -154,8 +154,6 @@ Surge::LuaSupport::SGLD::~SGLD()
         {
             std::cout << "Guarded stack leak: [" << label << "] exit=" << nt << " enter=" << top
                       << std::endl;
-            if (label == "valueAt")
-                std::cout << "Q" << std::endl;
         }
     }
 }
