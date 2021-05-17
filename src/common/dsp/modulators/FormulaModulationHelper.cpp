@@ -27,6 +27,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 {
     static lua_State *audioState = nullptr, *displayState = nullptr;
 
+    bool firstTimeThrough = false;
     if (!is_display)
     {
         static int aid = 1;
@@ -34,6 +35,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
         {
             audioState = lua_open();
             luaL_openlibs(audioState);
+            firstTimeThrough = true;
         }
         s.L = audioState;
         snprintf(s.stateName, TXT_SIZE, "audiostate_%d", aid);
@@ -48,6 +50,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
         {
             displayState = lua_open();
             luaL_openlibs(displayState);
+            firstTimeThrough = true;
         }
         s.L = displayState;
         snprintf(s.stateName, TXT_SIZE, "dispstate_%d", did);
@@ -57,6 +60,23 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     }
 
     auto lg = Surge::LuaSupport::SGLD("prepareForEvaluation", s.L);
+
+    if (firstTimeThrough)
+    {
+        auto reserved0 = std::string(R"FN(
+function surge_reserved_formula_error_stub(m)
+    return 0;
+end
+)FN");
+        std::string emsg;
+        bool r0 = Surge::LuaSupport::parseStringDefiningFunction(
+            s.L, reserved0, "surge_reserved_formula_error_stub", emsg);
+        if (r0)
+        {
+            lua_setglobal(s.L, "surge_reserved_formula_error_stub");
+        }
+    }
+
     // OK so now evaluate the formula. This is a mistake - the loading and
     // compiling can be expensive so lets look it up by hash first
     auto h = fs->formulaHash;
@@ -205,6 +225,22 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         return 0;
 
     auto gs = Surge::LuaSupport::SGLD("valueAt", s->L);
+    struct OnErrorReplaceWithZero
+    {
+        OnErrorReplaceWithZero(lua_State *L, std::string fn) : L(L), fn(fn) {}
+        ~OnErrorReplaceWithZero()
+        {
+            if (replace)
+            {
+                // std::cout << "Would nuke " << fn << std::endl;
+                lua_getglobal(L, "surge_reserved_formula_error_stub");
+                lua_setglobal(L, fn.c_str());
+            }
+        }
+        lua_State *L;
+        std::string fn;
+        bool replace = true;
+    } onerr(s->L, s->funcName);
     /*
      * So: make the stack my evaluation func then my table; then push my table
      * values; then call my function; then update my global
@@ -308,7 +344,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
 
         // Finally pop the table result
         lua_pop(s->L, 1);
-
+        onerr.replace = false;
         return res;
     }
     else
@@ -317,6 +353,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         std::ostringstream oss;
         oss << "Failed to evaluate 'process' function." << lua_tostring(s->L, -1);
         s->adderror(oss.str());
+        lua_pop(s->L, 1);
         return 0;
     }
 }
