@@ -38,61 +38,49 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
     auto values = std::vector<float>();
 
     auto wg = Surge::LuaSupport::SGLD("WavetableScript::evaluate", L);
-    int load_stat = luaL_loadbuffer(L, eqn.c_str(), eqn.length(), "wtScript");
-    if (load_stat != LUA_OK)
+    std::string emsg;
+    auto res = Surge::LuaSupport::parseStringDefiningFunction(L, eqn.c_str(), "generate", emsg);
+    if (res)
     {
-        std::cout << "FIXME: Error Handling " << lua_error(L) << std::endl;
-        return values;
-    }
-    auto res = lua_pcall(L, 0, 0, 0);
-    if (res == LUA_OK)
-    {
-        lua_getglobal(L, "generate");
-        if (lua_isfunction(L, -1))
+        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
+        /*
+         * Alright so we want the stack to be an array of 0...1 and a frame
+         * Right now the stack is just our generation function so
+         */
+        lua_createtable(L, resolution, 0);
+        double dp = 1.0 / (resolution - 1);
+        for (auto i = 0; i < resolution; ++i)
         {
-            Surge::LuaSupport::setSurgeFunctionEnvironment(L);
-            /*
-             * Alright so we want the stack to be an array of 0...1 and a frame
-             * Right now the stack is just our generation function so
-             */
-            lua_createtable(L, resolution, 0);
-            double dp = 1.0 / (resolution - 1);
-            for (auto i = 0; i < resolution; ++i)
+            lua_pushinteger(L, i + 1); // lua has a 1 based convention
+            lua_pushnumber(L, i * dp);
+            lua_settable(L, -3);
+        }
+        lua_pushinteger(L, frame);
+        auto pcr = lua_pcall(L, 2, 1, 0);
+        if (pcr == LUA_OK)
+        {
+            if (lua_istable(L, -1))
             {
-                lua_pushinteger(L, i + 1); // lua has a 1 based convention
-                lua_pushnumber(L, i * dp);
-                lua_settable(L, -3);
-            }
-            lua_pushinteger(L, frame);
-            auto pcr = lua_pcall(L, 2, 1, 0);
-            if (pcr == LUA_OK)
-            {
-                if (lua_istable(L, -1))
+                for (auto i = 0; i < resolution; ++i)
                 {
-                    for (auto i = 0; i < resolution; ++i)
+                    lua_pushinteger(L, i + 1);
+                    lua_gettable(L, -2);
+                    if (lua_isnumber(L, -1))
                     {
-                        lua_pushinteger(L, i + 1);
-                        lua_gettable(L, -2);
-                        if (lua_isnumber(L, -1))
-                        {
-                            values.push_back(lua_tonumber(L, -1));
-                        }
-                        else
-                        {
-                            values.push_back(0.f);
-                        }
-                        lua_pop(L, 1);
+                        values.push_back(lua_tonumber(L, -1));
                     }
+                    else
+                    {
+                        values.push_back(0.f);
+                    }
+                    lua_pop(L, 1);
                 }
             }
-            else
-            {
-                std::cout << "FIXME : Error " << std::endl;
-            }
         }
-        else
-        {
-        }
+    }
+    else
+    {
+        std::cout << emsg << std::endl;
         lua_pop(L, 1);
     }
     return values;

@@ -17,7 +17,68 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <cstring>
 #include "basic_dsp.h"
+
+bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::string &definition,
+                                                    const std::string &functionName,
+                                                    std::string &errorMessage)
+{
+    const char *lua_script = definition.c_str();
+    auto lerr = luaL_loadbuffer(L, lua_script, strlen(lua_script), "lua-script");
+    if (lerr != LUA_OK)
+    {
+        if (lerr == LUA_ERRSYNTAX)
+        {
+            std::ostringstream oss;
+            oss << "Lua Syntax Error: " << lua_tostring(L, -1);
+            errorMessage = oss.str();
+        }
+        else
+        {
+            std::ostringstream oss;
+            oss << "Lua Unknown Error: " << lua_tostring(L, -1);
+            errorMessage = oss.str();
+        }
+        lua_pop(L, 1);
+        lua_pushnil(L);
+        return false;
+    }
+
+    lerr = lua_pcall(L, 0, 0, 0);
+    if (lerr != LUA_OK)
+    {
+        // FIXME obviously
+        std::ostringstream oss;
+        oss << "Lua Evaluation Error: " << lua_tostring(L, -1);
+        errorMessage = oss.str();
+        lua_pop(L, 1);
+        lua_pushnil(L);
+        return false;
+    }
+
+    lua_getglobal(L, functionName.c_str());
+    if (lua_isfunction(L, -1))
+        return true;
+
+    if (lua_isnil(L, -1))
+    {
+        std::ostringstream oss;
+        oss << "Resolving global name '" << functionName << "' after parse returned nil."
+            << " Did you define the function?";
+        errorMessage = oss.str();
+        return false;
+    }
+
+    std::ostringstream oss;
+    oss << "After trying to find function '" << functionName << "' found non-function type '"
+        << lua_typename(L, lua_type(L, -1)) << "'";
+    errorMessage = oss.str();
+    lua_pop(L, 1);
+    lua_pushnil(L);
+    return false;
+}
 
 int lua_limitRange(lua_State *L)
 {

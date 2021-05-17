@@ -84,59 +84,39 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     if (hasString)
     {
         snprintf(s.funcName, TXT_SIZE, "%s", pvf.c_str());
-        s.isvalid = true;
+        // CHECK that I can actually get the function here
+        lua_getglobal(s.L, s.funcName);
+        s.isvalid = lua_isfunction(s.L, -1);
+        lua_pop(s.L, 1);
     }
     else
     {
-        const char *lua_script = fs->formulaString.c_str();
-        int load_stat = luaL_loadbuffer(s.L, lua_script, strlen(lua_script), "processScript");
-        if (load_stat != LUA_OK)
+        std::string emsg;
+        bool res =
+            Surge::LuaSupport::parseStringDefiningFunction(s.L, fs->formulaString, "process", emsg);
+
+        if (res)
         {
-            std::ostringstream oss;
-            oss << "Error parsing user script: " << lua_error(s.L);
-            s.adderror(oss.str());
-            std::cout << "FIXME : Do I need to pop here?" << std::endl;
-            return false;
-        }
-        auto res = lua_pcall(s.L, 0, 0, 0); // FIXME error
+            // Great - rename it and nuke process
+            lua_setglobal(s.L, s.funcName);
+            lua_pushnil(s.L);
+            lua_setglobal(s.L, "process");
 
-        if (res == LUA_OK)
-        {
-            // great now get the modfunc
-            lua_getglobal(s.L, "process");
-            if (lua_isfunction(s.L, -1))
-            {
-                // Great - rename it and nuke process
-                lua_setglobal(s.L, s.funcName);
-                lua_pushnil(s.L);
-                lua_setglobal(s.L, "process");
+            // Then get it and set its env
+            lua_getglobal(s.L, s.funcName);
+            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
+            lua_pop(s.L, 1);
 
-                // Then get it and set its env
-                lua_getglobal(s.L, s.funcName);
-                Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
-                lua_pop(s.L, 1);
-
-                s.isvalid = true;
-            }
-            else
-            {
-                // FIXME error
-                s.adderror("After parsing formula, no function 'process' present. You must define "
-                           "a function called 'process' in your LUA.");
-                // Pop whatever I got
-                lua_pop(s.L, 1);
-                s.isvalid = false;
-            }
+            s.isvalid = true;
         }
         else
         {
-            std::ostringstream oss;
-            oss << "LUA Raised an error parsing formula: " << lua_tostring(s.L, -1);
-            s.adderror(oss.str());
+            s.adderror(emsg);
+            lua_pop(s.L, 1);
         }
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
-        lua_pushstring(s.L, lua_script);
+        lua_pushstring(s.L, fs->formulaString.c_str());
         lua_setglobal(s.L, pvn.c_str());
     }
 
@@ -230,7 +210,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
      * values; then call my function; then update my global
      */
     lua_getglobal(s->L, s->funcName);
-    if (lua_isnil(s->L, -1))
+    if (!lua_isfunction(s->L, -1))
     {
         s->isvalid = false;
         lua_pop(s->L, 1);
