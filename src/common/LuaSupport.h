@@ -44,6 +44,17 @@ namespace LuaSupport
 #if HAS_LUAJIT
 
 /*
+ * Given a string which is supposed to be valid lua defining a function
+ * with a name, parse the string, look for the function, and if the parse
+ * and stuff has no errors, return true with the function on the top of the
+ * stack, oterhwise return false with nil on top of the stack. So increases
+ * stack by 1.
+ */
+
+bool parseStringDefiningFunction(lua_State *s, const std::string &definition,
+                                 const std::string &functionName, std::string &errorMessage);
+
+/*
  * Call this function with the top of your stack being a
  * lua_function and the function will get wrapped in the standard
  * surge environment (math imported, most things stripped, add

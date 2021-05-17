@@ -12,6 +12,7 @@
 
 #include "FormulaModulationHelper.h"
 #include "WavetableScriptEvaluator.h"
+#include "LuaSupport.h"
 
 #if HAS_LUAJIT
 extern "C"
@@ -183,6 +184,126 @@ end
             bool luaIsFunc = false;
             REQUIRE(luaIsFunc);
         }
+    }
+}
+
+TEST_CASE("Parse to Function", "[lua]")
+{
+    SECTION("Simple Success")
+    {
+        auto fn = R"FN(
+function plus_one(x)
+    return x + 1
+end
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        bool res = Surge::LuaSupport::parseStringDefiningFunction(L, fn, "plus_one", err);
+        REQUIRE(res);
+        REQUIRE(lua_gettop(L) == 1);
+
+        // OK so the top of the stack should be my function. Lets call it
+        lua_pushnumber(L, 13);
+        lua_pcall(L, 1, 1, 0);
+        REQUIRE(lua_isnumber(L, -1));
+        REQUIRE(lua_tonumber(L, -1) == 14);
+        REQUIRE(lua_gettop(L) == 1);
+        lua_pop(L, 1);
+        REQUIRE(lua_gettop(L) == 0);
+        lua_close(L);
+    }
+    SECTION("Isnt a Function")
+    {
+        auto fn = R"FN(
+shazbot = 13
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        bool res = Surge::LuaSupport::parseStringDefiningFunction(L, fn, "shazbot", err);
+        REQUIRE(!res);
+        REQUIRE(lua_gettop(L) == 1);
+        REQUIRE(lua_isnil(L, -1));
+        REQUIRE(err == "After trying to find function 'shazbot' found non-function type 'number'");
+        lua_pop(L, 1);
+        lua_close(L);
+    }
+
+    SECTION("Isnt Found")
+    {
+        auto fn = R"FN(
+function double(x)
+    return x * 2
+end
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        bool res = Surge::LuaSupport::parseStringDefiningFunction(L, fn, "triple", err);
+        REQUIRE(!res);
+        REQUIRE(lua_gettop(L) == 1);
+        REQUIRE(lua_isnil(L, -1));
+        REQUIRE(err == "Resolving global name 'triple' after parse returned nil. Did you define "
+                       "the function?");
+        lua_pop(L, 1);
+        lua_close(L);
+    }
+
+    SECTION("Doesnt Parse")
+    {
+        auto fn = R"FN(
+function double(x)
+    if x > 0 then
+        return 2
+    else
+end
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        bool res = Surge::LuaSupport::parseStringDefiningFunction(L, fn, "triple", err);
+        REQUIRE(!res);
+        REQUIRE(lua_gettop(L) == 1);
+        REQUIRE(lua_isnil(L, -1));
+        REQUIRE(err == "Lua Syntax Error: [string \"lua-script\"]:7: 'end' expected (to close "
+                       "'function' at line 2) near '<eof>'");
+        lua_pop(L, 1);
+        lua_close(L);
+    }
+
+    SECTION("Doesnt Evaluate")
+    {
+        auto fn = R"FN(
+-- A bit of a contrived case but that's OK
+error("I will parse but will not run")
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        bool res = Surge::LuaSupport::parseStringDefiningFunction(L, fn, "triple", err);
+        REQUIRE(!res);
+        REQUIRE(lua_gettop(L) == 1);
+        REQUIRE(lua_isnil(L, -1));
+        REQUIRE(err ==
+                "Lua Evaluation Error: [string \"lua-script\"]:3: I will parse but will not run");
+        lua_pop(L, 1);
+        lua_close(L);
     }
 }
 
