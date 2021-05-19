@@ -2130,9 +2130,7 @@ struct MSEGCanvas : public CControl,
         CPoint w = iw;
         localToFrame(w);
 
-        COptionMenu *contextMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                                                   VSTGUI::COptionMenu::kNoDrawStyle |
-                                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
+        auto contextMenu = juce::PopupMenu();
 
         auto tf = pxToTime();
         auto t = tf(iw.x);
@@ -2144,132 +2142,122 @@ struct MSEGCanvas : public CControl,
             t = ms->segmentStart[tts];
         }
 
-        auto addCb = [](COptionMenu *p, const std::string &l,
-                        std::function<void()> op) -> std::shared_ptr<CCommandMenuItem> {
-            auto m = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(l.c_str()));
-            m->setActions([op](CCommandMenuItem *m) { op(); });
-            p->addEntry(m);
-            return m;
-        };
-
         auto msurl =
             storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-        addCb(contextMenu, "[?] MSEG Segment",
-              [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+        contextMenu.addItem("[?] MSEG Segment",
+                            [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
-        contextMenu->addSeparator();
+        contextMenu.addSeparator();
 
         if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
         {
             if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
             {
-                auto cbStart = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Set Loop Start"),
-                                     [this, tts]() {
-                                         Surge::MSEG::setLoopStart(ms, tts);
-                                         modelChanged();
-                                     });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Loop Start"), [this, tts]() {
+                    Surge::MSEG::setLoopStart(ms, tts);
+                    modelChanged();
+                });
             }
 
             if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
             {
-                auto cbEnd = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Set Loop End"),
-                                   [this, tts, t]() {
-                                       auto along = t - ms->segmentStart[tts];
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Loop End"), [this, tts, t]() {
+                    auto along = t - ms->segmentStart[tts];
 
-                                       if (ms->segments[tts].duration == 0)
-                                           along = 0;
-                                       else
-                                           along = along / ms->segments[tts].duration;
+                    if (ms->segments[tts].duration == 0)
+                    {
+                        along = 0;
+                    }
+                    else
+                    {
+                        along = along / ms->segments[tts].duration;
+                    }
 
-                                       int target = tts;
+                    int target = tts;
 
-                                       if (along < 0.1 && tts > 0)
-                                           target = tts - 1;
+                    if (along < 0.1 && tts > 0)
+                    {
+                        target = tts - 1;
+                    }
 
-                                       Surge::MSEG::setLoopEnd(ms, target);
-                                       modelChanged();
-                                   });
+                    Surge::MSEG::setLoopEnd(ms, target);
+                    modelChanged();
+                });
             }
 
-            contextMenu->addSeparator();
+            contextMenu.addSeparator();
         }
 
         if (tts >= 0)
         {
-            COptionMenu *actionsMenu = new COptionMenu(
-                CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
+            auto actionsMenu = juce::PopupMenu();
 
             auto pv = pxToVal();
             auto v = pv(iw.y);
 
-            addCb(actionsMenu, "Split", [this, t, v]() {
+            actionsMenu.addItem("Split", [this, t, v]() {
                 Surge::MSEG::splitSegment(this->ms, t, v);
                 modelChanged();
             });
-            auto deleteMenu = addCb(actionsMenu, "Delete", [this, t]() {
+
+            actionsMenu.addItem("Delete", (ms->n_activeSegments > 1), false, [this, t]() {
                 Surge::MSEG::deleteSegment(this->ms, t);
                 modelChanged();
             });
-            if (ms->n_activeSegments <= 1)
-                deleteMenu->setEnabled(false);
 
-            actionsMenu->addSeparator();
+            actionsMenu.addSeparator();
 
-            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Double Duration"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Double Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
                 modelChanged();
                 zoomToFull();
             });
-            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Half Duration"), [this]() {
+
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Half Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
                 modelChanged();
                 zoomToFull();
             });
 
-            actionsMenu->addSeparator();
+            actionsMenu.addSeparator();
 
-            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Flip Vertically"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Flip Vertically"), [this]() {
                 Surge::MSEG::scaleValues(this->ms, -1);
                 modelChanged();
             });
-            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Flip Horizontally"), [this]() {
+
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Flip Horizontally"), [this]() {
                 Surge::MSEG::mirrorMSEG(this->ms);
                 modelChanged();
             });
 
-            actionsMenu->addSeparator();
+            actionsMenu.addSeparator();
 
-            auto q1 =
-                addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
-                      [this]() {
-                          Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
-                          modelChanged();
-                      });
-            q1->setEnabled(ms->editMode != MSEGStorage::LFO);
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Quantize Nodes to Snap Divisions"),
+                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+                                    Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
+                                    modelChanged();
+                                });
 
-            auto q2 = addCb(actionsMenu,
-                            Surge::GUI::toOSCaseForMenu("Quantize Nodes to Whole Units"), [this]() {
-                                Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
-                                modelChanged();
-                            });
-            q2->setEnabled(ms->editMode != MSEGStorage::LFO);
-            addCb(actionsMenu, Surge::GUI::toOSCaseForMenu("Distribute Nodes Evenly"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Quantize Nodes to Whole Units"),
+                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+                                    Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
+                                    modelChanged();
+                                });
+
+            actionsMenu.addItem(Surge::GUI::toOSCaseForMenu("Distribute Nodes Evenly"), [this]() {
                 Surge::MSEG::setAllDurationsTo(this->ms,
                                                ms->totalDuration / this->ms->n_activeSegments);
                 modelChanged();
             });
 
-            contextMenu->addEntry(actionsMenu, "Actions");
-            actionsMenu->forget();
+            contextMenu.addSubMenu("Actions", actionsMenu);
 
-            COptionMenu *createMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                                                      VSTGUI::COptionMenu::kNoDrawStyle |
-                                                          VSTGUI::COptionMenu::kMultipleCheckStyle);
+            auto createMenu = juce::PopupMenu();
 
-            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Minimal MSEG"), [this]() {
+            createMenu.addItem(Surge::GUI::toOSCaseForMenu("Minimal MSEG"), [this]() {
                 Surge::MSEG::clearMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2277,9 +2265,9 @@ struct MSEGCanvas : public CControl,
                 modelChanged();
             });
 
-            createMenu->addSeparator();
+            createMenu.addSeparator();
 
-            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
+            createMenu.addItem(Surge::GUI::toOSCaseForMenu("Default Voice MSEG"), [this]() {
                 Surge::MSEG::createInitVoiceMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2287,7 +2275,7 @@ struct MSEGCanvas : public CControl,
                 modelChanged();
             });
 
-            addCb(createMenu, Surge::GUI::toOSCaseForMenu("Default Scene MSEG"), [this]() {
+            createMenu.addItem(Surge::GUI::toOSCaseForMenu("Default Scene MSEG"), [this]() {
                 Surge::MSEG::createInitSceneMSEG(this->ms);
                 this->zoomToFull();
                 if (controlregion)
@@ -2295,100 +2283,98 @@ struct MSEGCanvas : public CControl,
                 modelChanged();
             });
 
-            createMenu->addSeparator();
+            createMenu.addSeparator();
 
             int stepCounts[3] = {8, 16, 32};
 
             for (int i : stepCounts)
             {
-                addCb(createMenu,
-                      Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"),
-                      [this, i]() {
-                          Surge::MSEG::createStepseqMSEG(this->ms, i);
-                          this->zoomToFull();
-                          if (controlregion)
-                              controlregion->rebuild();
-                          modelChanged();
-                      });
+                createMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"),
+                    [this, i]() {
+                        Surge::MSEG::createStepseqMSEG(this->ms, i);
+                        this->zoomToFull();
+                        if (controlregion)
+                            controlregion->rebuild();
+                        modelChanged();
+                    });
             }
 
-            createMenu->addSeparator();
+            createMenu.addSeparator();
 
             for (int i : stepCounts)
             {
-                addCb(createMenu,
-                      Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
-                      [this, i]() {
-                          Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
-                          this->zoomToFull();
-                          if (controlregion)
-                              controlregion->rebuild();
-                          modelChanged();
-                      });
+                createMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
+                    [this, i]() {
+                        Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
+                        this->zoomToFull();
+                        if (controlregion)
+                            controlregion->rebuild();
+                        modelChanged();
+                    });
             }
 
-            createMenu->addSeparator();
+            createMenu.addSeparator();
+
             for (int i : stepCounts)
             {
-                addCb(createMenu, Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
-                      [this, i] {
-                          Surge::MSEG::createSinLineMSEG(this->ms, i);
-                          this->zoomToFull();
-                          if (controlregion)
-                              controlregion->rebuild();
-                          modelChanged();
-                      });
+                createMenu.addItem(Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Lines Sine"),
+                                   [this, i] {
+                                       Surge::MSEG::createSinLineMSEG(this->ms, i);
+                                       this->zoomToFull();
+                                       if (controlregion)
+                                           controlregion->rebuild();
+                                       modelChanged();
+                                   });
             }
 
-            contextMenu->addEntry(createMenu, "Create");
-            createMenu->forget();
-
-            COptionMenu *triggerMenu = new COptionMenu(
-                CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-            auto trtfeg =
-                addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Filter EG"), [this, tts]() {
-                    this->ms->segments[tts].retriggerFEG = !this->ms->segments[tts].retriggerFEG;
-                    modelChanged();
-                });
-            trtfeg->setChecked(ms->segments[tts].retriggerFEG);
-
-            auto trtaeg = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Amp EG"), [this, tts]() {
-                this->ms->segments[tts].retriggerAEG = !this->ms->segments[tts].retriggerAEG;
-                modelChanged();
-            });
-            trtaeg->setChecked(ms->segments[tts].retriggerAEG);
-
-            triggerMenu->addSeparator();
-
-            auto tnone = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("Nothing"), [this, tts]() {
-                this->ms->segments[tts].retriggerFEG = false;
-                this->ms->segments[tts].retriggerAEG = false;
-                modelChanged();
-            });
-
-            auto trtboth = addCb(triggerMenu, Surge::GUI::toOSCaseForMenu("All"), [this, tts]() {
-                this->ms->segments[tts].retriggerFEG = true;
-                this->ms->segments[tts].retriggerAEG = true;
-                modelChanged();
-            });
+            contextMenu.addSubMenu("Create", createMenu);
 
             if (!isSceneMSEG())
             {
-                contextMenu->addEntry(triggerMenu, "Trigger");
+                auto triggerMenu = juce::PopupMenu();
+
+                triggerMenu.addItem(Surge::GUI::toOSCaseForMenu("Filter EG"), true,
+                                    (ms->segments[tts].retriggerFEG), [this, tts]() {
+                                        this->ms->segments[tts].retriggerFEG =
+                                            !this->ms->segments[tts].retriggerFEG;
+                                        modelChanged();
+                                    });
+
+                triggerMenu.addItem(Surge::GUI::toOSCaseForMenu("Amp EG"), true,
+                                    (ms->segments[tts].retriggerAEG), [this, tts]() {
+                                        this->ms->segments[tts].retriggerAEG =
+                                            !this->ms->segments[tts].retriggerAEG;
+                                        modelChanged();
+                                    });
+
+                triggerMenu.addSeparator();
+
+                triggerMenu.addItem(Surge::GUI::toOSCaseForMenu("Nothing"), [this, tts]() {
+                    this->ms->segments[tts].retriggerFEG = false;
+                    this->ms->segments[tts].retriggerAEG = false;
+                    modelChanged();
+                });
+
+                triggerMenu.addItem(Surge::GUI::toOSCaseForMenu("All"), [this, tts]() {
+                    this->ms->segments[tts].retriggerFEG = true;
+                    this->ms->segments[tts].retriggerAEG = true;
+                    modelChanged();
+                });
+
+                contextMenu.addSubMenu("Trigger", triggerMenu);
             }
 
-            triggerMenu->forget();
+            auto settingsMenu = juce::PopupMenu();
 
-            COptionMenu *settingsMenu = new COptionMenu(
-                CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-            auto cm = addCb(
-                settingsMenu, Surge::GUI::toOSCaseForMenu("Link Start and End Nodes"), [this]() {
+            settingsMenu.addItem(
+                Surge::GUI::toOSCaseForMenu("Link Start and End Nodes"), true,
+                (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED), [this]() {
                     if (this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
+                    {
                         this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
+                    }
                     else
                     {
                         this->ms->endpointMode = MSEGStorage::EndpointMode::LOCKED;
@@ -2396,53 +2382,50 @@ struct MSEGCanvas : public CControl,
                         modelChanged();
                     }
                 });
-            cm->setChecked(ms->endpointMode == MSEGStorage::EndpointMode::LOCKED);
 
-            settingsMenu->addSeparator();
+            settingsMenu.addSeparator();
 
-            auto def = ms->segments[tts].useDeform;
-            auto dm = addCb(settingsMenu, Surge::GUI::toOSCaseForMenu("Deform Applied to Segment"),
-                            [this, tts]() {
-                                this->ms->segments[tts].useDeform =
-                                    !this->ms->segments[tts].useDeform;
-                                modelChanged();
-                            });
-            dm->setChecked(def);
+            settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Deform Applied to Segment"), true,
+                                 ms->segments[tts].useDeform, [this, tts]() {
+                                     this->ms->segments[tts].useDeform =
+                                         !this->ms->segments[tts].useDeform;
+                                     modelChanged();
+                                 });
 
-            auto invdef = ms->segments[tts].invertDeform;
-            auto im = addCb(
-                settingsMenu, Surge::GUI::toOSCaseForMenu("Invert Deform Value"), [this, tts]() {
-                    this->ms->segments[tts].invertDeform = !this->ms->segments[tts].invertDeform;
-                    modelChanged();
-                });
-            im->setChecked(invdef);
+            settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Invert Deform Value"), true,
+                                 ms->segments[tts].invertDeform, [this, tts]() {
+                                     this->ms->segments[tts].invertDeform =
+                                         !this->ms->segments[tts].invertDeform;
+                                     modelChanged();
+                                 });
 
-            contextMenu->addEntry(settingsMenu, "Settings");
-            settingsMenu->forget();
+            contextMenu.addSubMenu("Settings", settingsMenu);
 
-            contextMenu->addSeparator();
+            contextMenu.addSeparator();
 
-            auto typeTo = [this, contextMenu, t, addCb, tts](std::string n,
-                                                             MSEGStorage::segment::Type type) {
-                auto m = addCb(contextMenu, n, [this, t, type]() {
-                    Surge::MSEG::changeTypeAt(this->ms, t, type);
-                    modelChanged();
-                });
-                if (tts >= 0)
-                    m->setChecked(this->ms->segments[tts].type == type);
+            auto typeTo = [this, contextMenu, t, tts](std::string n,
+                                                      MSEGStorage::segment::Type type) {
+                contextMenu.addItem(n, true, (tts >= 0 && this->ms->segments[tts].type == type),
+                                    [this, t, type]() {
+                                        Surge::MSEG::changeTypeAt(this->ms, t, type);
+                                        modelChanged();
+                                    });
             };
+
             typeTo("Hold", MSEGStorage::segment::Type::HOLD);
             typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
             typeTo(Surge::GUI::toOSCaseForMenu("S-Curve"), MSEGStorage::segment::Type::SCURVE);
             typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
 
-            contextMenu->addSeparator();
+            contextMenu.addSeparator();
+
             typeTo("Sine", MSEGStorage::segment::Type::SINE);
             typeTo("Triangle", MSEGStorage::segment::Type::TRIANGLE);
             typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
             typeTo("Square", MSEGStorage::segment::Type::SQUARE);
 
-            contextMenu->addSeparator();
+            contextMenu.addSeparator();
+
             typeTo("Bump", MSEGStorage::segment::Type::BUMP);
             typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
             typeTo(Surge::GUI::toOSCaseForMenu("Smooth Stairs"),
@@ -2450,12 +2433,7 @@ struct MSEGCanvas : public CControl,
             typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
-            contextMenu->cleanupSeparators(false);
-
-            getFrame()->addView(contextMenu);
-            contextMenu->setDirty();
-            contextMenu->popup();
-            getFrame()->removeView(contextMenu, true);
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
         }
     }
 
