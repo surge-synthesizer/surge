@@ -2127,9 +2127,6 @@ struct MSEGCanvas : public CControl,
 
     void openPopup(const VSTGUI::CPoint &iw)
     {
-        CPoint w = iw;
-        localToFrame(w);
-
         auto contextMenu = juce::PopupMenu();
 
         auto tf = pxToTime();
@@ -2403,8 +2400,8 @@ struct MSEGCanvas : public CControl,
 
             contextMenu.addSeparator();
 
-            auto typeTo = [this, contextMenu, t, tts](std::string n,
-                                                      MSEGStorage::segment::Type type) {
+            auto typeTo = [this, &contextMenu, t, tts](std::string n,
+                                                       MSEGStorage::segment::Type type) {
                 contextMenu.addItem(n, true, (tts >= 0 && this->ms->segments[tts].type == type),
                                     [this, t, type]() {
                                         Surge::MSEG::changeTypeAt(this->ms, t, type);
@@ -2679,43 +2676,39 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
 
     if (options.size() || isOnOff)
     {
-        VSTGUI::CPoint where;
-        getFrame()->getCurrentMouseLocation(where);
-        auto *com = new COptionMenu(CRect(where, CPoint()), nullptr, 0, 0, 0,
-                                    VSTGUI::COptionMenu::kNoDrawStyle |
-                                        VSTGUI::COptionMenu::kMultipleCheckStyle);
-        auto addcb = [com](std::string label, auto action) {
-            auto menu = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(label.c_str()));
-            menu->setActions([action](CCommandMenuItem *m) { action(); });
-            com->addEntry(menu);
-            return menu;
-        };
+        auto contextMenu = juce::PopupMenu();
+
         auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor");
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-        addcb("[?] " + menuName, [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
-        com->addSeparator();
+        contextMenu.addItem("[?] " + menuName,
+                            [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+
+        contextMenu.addSeparator();
+
         if (isOnOff)
         {
             if (pControl->getValue() > 0.5)
             {
-                addcb(Surge::GUI::toOSCaseForMenu("Edit Value") + ": Off", [pControl, this]() {
-                    pControl->setValue(0);
-                    pControl->valueChanged();
-                    pControl->invalid();
-                    canvas->invalid();
-                    invalid();
-                });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value") + ": Off",
+                                    [pControl, this]() {
+                                        pControl->setValue(0);
+                                        pControl->valueChanged();
+                                        pControl->invalid();
+                                        canvas->invalid();
+                                        invalid();
+                                    });
             }
             else
             {
-                addcb(Surge::GUI::toOSCaseForMenu("Edit Value") + ": On", [pControl, this]() {
-                    pControl->setValue(1);
-                    pControl->valueChanged();
-                    pControl->invalid();
-                    canvas->invalid();
-                    invalid();
-                });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value") + ": On",
+                                    [pControl, this]() {
+                                        pControl->setValue(1);
+                                        pControl->valueChanged();
+                                        pControl->invalid();
+                                        canvas->invalid();
+                                        invalid();
+                                    });
             }
         }
         else
@@ -2723,18 +2716,15 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
             for (auto op : options)
             {
                 auto val = op.second;
-                auto men = addcb(op.first, [val, pControl]() {
-                    pControl->setValue(val);
-                    pControl->invalid();
-                    pControl->valueChanged();
-                });
-                if (val == pControl->getValue())
-                    men->setChecked(true);
+                contextMenu.addItem(op.first, true, (val == pControl->getValue()),
+                                    [val, pControl]() {
+                                        pControl->setValue(val);
+                                        pControl->invalid();
+                                        pControl->valueChanged();
+                                    });
             }
         }
-        getFrame()->addView(com);
-        com->popup();
-        getFrame()->removeView(com, true);
+        contextMenu.showMenuAsync(juce::PopupMenu::Options());
     }
     return 1;
 }
