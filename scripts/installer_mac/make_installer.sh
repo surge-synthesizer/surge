@@ -73,7 +73,7 @@ if [[ -d $INDIR/$AU ]]; then
 fi
 
 if [[ -d $INDIR/$FXAU ]]; then
-    build_flavor "FXAU" "$FXAU" "com.surge-synth-team.surge-xt-fx.vst3.pkg" "/Library/Audio/Plug-Ins/Components"
+    build_flavor "FXAU" "$FXAU" "com.surge-synth-team.surge-xt-fx.component.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
 if [[ -d $INDIR/$APP ]]; then
