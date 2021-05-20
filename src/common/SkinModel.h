@@ -131,6 +131,7 @@ struct Component
         CONTROL_TEXT,
         FONT_SIZE,
         FONT_STYLE,
+        FONT_FAMILY,
         TEXT,
         TEXT_ALIGN,
         TEXT_ALL_CAPS,

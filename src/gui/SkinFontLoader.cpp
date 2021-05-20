@@ -14,32 +14,29 @@
 */
 
 #include "SkinSupport.h"
-#include <iostream>
-#if MAC
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreText/CoreText.h>
-#endif
+#include <fstream>
 
-void Surge::GUI::addFontSearchPathToSystem(const fs::path &p)
+void Surge::GUI::loadTypefacesFromPath(const fs::path &p,
+                                       std::unordered_map<std::string, juce::Typeface::Ptr> &result)
 {
-#if MAC
-    // Mac is traverse for TTF files and add to the path
-    for (const fs::path &ent : fs::directory_iterator(p))
+    for (const fs::path &d : fs::directory_iterator(p))
     {
-        if (ent.extension().native() == ".ttf")
+        if (d.has_extension())
         {
-            CFURLRef url = nullptr;
-            auto path = path_to_string(ent);
-            url = CFURLCreateFromFileSystemRepresentation(NULL, (const unsigned char *)path.c_str(),
-                                                          path.size(), false);
-            if (url)
+            if (path_to_string(d.extension()) == ".ttf")
             {
-                CTFontManagerRegisterFontsForURL(url, kCTFontManagerScopeProcess, NULL);
-                CFRelease(url);
+                auto key = path_to_string(d.stem());
+
+                std::ifstream stream(d, std::ios::in | std::ios::binary);
+                std::vector<uint8_t> contents((std::istreambuf_iterator<char>(stream)),
+                                              std::istreambuf_iterator<char>());
+
+                auto tf = juce::Typeface::createSystemTypefaceFor((void *)(&contents[0]),
+                                                                  contents.size());
+                std::cout << path_to_string(d.stem()) << " " << path_to_string(d.filename()) << " "
+                          << path_to_string(d) << std::endl;
+                result[key] = tf;
             }
         }
     }
-#else
-    std::cerr << "Unsupported font search path addition" << std::endl;
-#endif
 }

@@ -331,7 +331,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
     auto fontPath = string_to_path(resourceName("fonts"));
     if (fs::is_directory(fontPath))
     {
-        addFontSearchPathToSystem(fontPath);
+        typeFaces.clear();
+        loadTypefacesFromPath(fontPath, typeFaces);
     }
 
     /*

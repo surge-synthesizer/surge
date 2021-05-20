@@ -141,6 +141,7 @@ std::string Component::propertyEnumToString(Properties p)
 
         PN(CONTROL_TEXT)
         PN(FONT_SIZE)
+        PN(FONT_FAMILY)
         PN(FONT_STYLE)
         PN(TEXT)
         PN(TEXT_ALIGN)

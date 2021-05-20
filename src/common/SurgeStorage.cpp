@@ -235,6 +235,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
 #if MAC
     char path[1024];
+    const char *buildOverrideDataPath = getenv("PIPELINE_OVERRIDE_DATA_HOME");
+    if (buildOverrideDataPath)
+    {
+        hasSuppliedDataPath = true;
+        suppliedDataPath = buildOverrideDataPath;
+    }
+
     if (!hasSuppliedDataPath)
     {
         FSRef foundRef;

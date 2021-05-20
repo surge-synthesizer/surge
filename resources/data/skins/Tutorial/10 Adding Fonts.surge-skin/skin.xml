@@ -1,0 +1,13 @@
+<!--[doc]
+Write this documentation; especially since it is XT only
+[doc]-->
+<surge-skin name="10 Adding Fonts" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+  <globals>
+  </globals>
+  <component-classes>
+  </component-classes>
+  <controls>
+    <control ui_identifier="osc.param_1" font_family="UglyTypist"/>
+    <control ui_identifier="osc.param_2" font_family="Mrs Beasley"/>
+  </controls>
+</surge-skin>
