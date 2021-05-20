@@ -70,6 +70,7 @@ Component Slider =
                       {"Hovered slider handle image when parameter is tempo-synced - required if "
                        "you want feedback on mouse hover"})
         .withProperty(Component::FONT_SIZE, {"font_size"}, {"Font size in points, integer only"})
+        .withProperty(Component::FONT_FAMILY, {"font_family"}, {"Font family ttf from skin"})
         .withProperty(Component::FONT_STYLE, {"font_style"},
                       {"Valid values: normal, bold, italic, underline, strikethrough"})
         .withProperty(Component::TEXT_ALIGN, {"text_align"}, {"Valid values: left, center, right"})

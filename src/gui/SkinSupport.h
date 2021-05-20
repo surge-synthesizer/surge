@@ -86,10 +86,8 @@ template <typename T> class Maybe
 namespace GUI
 {
 
-/*
- * This function is defined in SkinFontLoader.cpp
- */
-void addFontSearchPathToSystem(const fs::path &p);
+void loadTypefacesFromPath(const fs::path &p,
+                           std::unordered_map<std::string, juce::Typeface::Ptr> &result);
 
 extern const std::string NoneClassName;
 class SkinDB;
@@ -354,6 +352,8 @@ class Skin
     }
 
     static const std::string defaultImageIDPrefix;
+
+    std::unordered_map<std::string, juce::Typeface::Ptr> typeFaces;
 
   private:
     static std::atomic<int> instances;

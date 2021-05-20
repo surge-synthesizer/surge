@@ -7759,13 +7759,12 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
 
-#if RESOLVED_ISSUE_2464
-        auto ff = currentSkin->propertyValue(skinCtrl, "font-family", "");
+        auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
         if (ff.size() > 0)
         {
-            hs->setFont(new CFontDesc(ff.c_str(), 9));
+            if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
+                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(hs->font_size));
         }
-#endif
 
         if (p->valtype == vt_int || p->valtype == vt_bool)
         {
