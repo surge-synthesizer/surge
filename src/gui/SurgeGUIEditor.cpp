@@ -3950,18 +3950,19 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
     auto msurl = SurgeGUIEditor::helpURLForSpecial("fx-selector");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    fxGridMenu.addItem("[?] Effect Settings", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    fxGridMenu.addItem("[?] Effect Settings",
+                       [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
     fxGridMenu.addSeparator();
 
     std::string sc = std::string("Scene ") + (char)('A' + whichScene);
 
-    fxGridMenu.addItem(sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled"), true,
-                   (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::BYPASS_HARDCLIP),
-                   [this, whichScene]() {
-                       this->synth->storage.sceneHardclipMode[whichScene] =
-                           SurgeStorage::BYPASS_HARDCLIP;
-                   });
+    fxGridMenu.addItem(
+        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled"), true,
+        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::BYPASS_HARDCLIP),
+        [this, whichScene]() {
+            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::BYPASS_HARDCLIP;
+        });
 
     fxGridMenu.addItem(
         sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at 0 dBFS"), true,
