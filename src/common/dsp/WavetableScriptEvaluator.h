@@ -41,6 +41,9 @@ namespace WavetableScript
  * one thread at a time and just you know generally be careful.
  */
 std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame);
+
+std::string defaultWavetableFormula();
+
 } // namespace WavetableScript
 } // namespace Surge
 #endif // SURGE_XT_WAVETABLESCRIPTEVALUATOR_H

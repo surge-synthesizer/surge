@@ -86,5 +86,24 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
     return values;
 #endif
 }
+
+std::string defaultWavetableFormula()
+{
+    return R"FN(function generate(xs,n)
+--- This function was inserted as a guide since your wavetable scripter in this patch/osc has no
+--- generator function. The function takes an array of x values (xs) and a frame number (n) and
+--- generates the result as the nth frame. A sample below generates a fourier sine to saw
+--- which remember is sum 2 / pi n * sin n x
+    res = {}
+    for i,x in ipairs(xs) do
+        lv = 0
+        for q = 1,(n+1) do
+            lv = lv + 2 * sin ( q * x * 2 * pi ) / ( pi * q )
+        end
+        res[i] = lv
+    end
+    return res
+end)FN";
+}
 } // namespace WavetableScript
 } // namespace Surge
