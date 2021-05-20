@@ -3945,60 +3945,53 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
 void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
 {
-    CPoint where;
-    CRect menuRect;
-    frame->getCurrentMouseLocation(where);
-    frame->localToFrame(where);
-
-    menuRect.offset(where.x, where.y);
-
-    auto effmen = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                  VSTGUI::COptionMenu::kNoDrawStyle |
-                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto fxGridMenu = juce::PopupMenu();
 
     auto msurl = SurgeGUIEditor::helpURLForSpecial("fx-selector");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
-    std::string txt;
 
-    addCallbackMenu(effmen, "[?] Effect Settings",
-                    [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    fxGridMenu.addItem("[?] Effect Settings", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
-    effmen->addSeparator();
+    fxGridMenu.addSeparator();
 
     std::string sc = std::string("Scene ") + (char)('A' + whichScene);
 
-    txt = sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled");
-    auto hcmen = addCallbackMenu(effmen, txt.c_str(), [this, whichScene]() {
-        this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::BYPASS_HARDCLIP;
-    });
-    hcmen->setChecked(synth->storage.sceneHardclipMode[whichScene] ==
-                      SurgeStorage::BYPASS_HARDCLIP);
+    fxGridMenu.addItem(sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled"), true,
+                   (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::BYPASS_HARDCLIP),
+                   [this, whichScene]() {
+                       this->synth->storage.sceneHardclipMode[whichScene] =
+                           SurgeStorage::BYPASS_HARDCLIP;
+                   });
 
-    txt = sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at 0 dBFS");
-    hcmen = addCallbackMenu(effmen, txt.c_str(), [this, whichScene]() {
-        this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_0DBFS;
-    });
-    hcmen->setChecked(synth->storage.sceneHardclipMode[whichScene] ==
-                      SurgeStorage::HARDCLIP_TO_0DBFS);
+    fxGridMenu.addItem(
+        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at 0 dBFS"), true,
+        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_0DBFS),
+        [this, whichScene]() {
+            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_0DBFS;
+        });
 
-    txt = sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at +18 dBFS");
-    hcmen = addCallbackMenu(effmen, txt.c_str(), [this, whichScene]() {
-        this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_18DBFS;
-    });
-    hcmen->setChecked(synth->storage.sceneHardclipMode[whichScene] ==
-                      SurgeStorage::HARDCLIP_TO_18DBFS);
+    fxGridMenu.addItem(
+        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at +18 dBFS"), true,
+        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_18DBFS),
+        [this, whichScene]() {
+            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_18DBFS;
+        });
 
-    frame->addView(effmen);
-    effmen->popup();
-    frame->removeView(effmen, true);
+    fxGridMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
 void SurgeGUIEditor::valueChanged(CControl *control)
 {
     if (!frame)
+    {
         return;
+    }
+
     if (!editor_open)
+    {
         return;
+    }
+
     long tag = control->getTag();
 
     if (typeinDialog != nullptr && tag != tag_value_typein)
