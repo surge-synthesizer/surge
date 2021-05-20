@@ -44,6 +44,7 @@ target/
 packages.config
 CMakeSettings.json
 .vscode
+.cache
 
 # XCode
 Surge.xcworkspace/
@@ -84,6 +85,7 @@ buildmac/
 buildwin/
 buildxt/
 build-arm/
+build_lv2
 buildiwyu/
 cmake-build-*/
 bwd/
