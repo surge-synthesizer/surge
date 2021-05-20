@@ -1237,14 +1237,6 @@ void CLFOGui::openPopup(CPoint &where)
 
     auto contextMenu = juce::PopupMenu();
 
-    auto addCb = [](COptionMenu *p, const std::string &l,
-                    std::function<void()> op) -> std::shared_ptr<CCommandMenuItem> {
-        auto m = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(l.c_str()));
-        m->setActions([op](CCommandMenuItem *m) { op(); });
-        p->addEntry(m);
-        return m;
-    };
-
     auto msurl =
         storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
