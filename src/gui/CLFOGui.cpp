@@ -1235,11 +1235,7 @@ void CLFOGui::openPopup(CPoint &where)
 {
     CPoint w = where;
 
-    printf("%.2f %.2f\n", w.x, w.y);
-
-    COptionMenu *contextMenu = new COptionMenu(CRect(w, CPoint(0, 0)), 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto contextMenu = juce::PopupMenu();
 
     auto addCb = [](COptionMenu *p, const std::string &l,
                     std::function<void()> op) -> std::shared_ptr<CCommandMenuItem> {
@@ -1253,57 +1249,58 @@ void CLFOGui::openPopup(CPoint &where)
         storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    addCb(contextMenu, "[?] MSEG Segment", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    contextMenu.addItem("[?] MSEG Segment", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
 
-    contextMenu->addSeparator();
+    contextMenu.addSeparator();
 
     auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
     std::string openname = (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                ? "Open MSEG Editor"
                                : "Close MSEG Editor";
-    addCb(contextMenu, Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
         if (sge)
+        {
             sge->toggleMSEGEditor();
-    });
-
-    contextMenu->addSeparator();
-
-    auto lpoff = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("No Looping"), [this, sge]() {
-        ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
-        if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-        {
-            sge->closeMSEGEditor();
-            sge->showMSEGEditor();
         }
-        invalid();
     });
-    lpoff->setChecked(ms->loopMode == MSEGStorage::LoopMode::ONESHOT);
 
-    auto lpon = addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Loop Always"), [this, sge]() {
-        ms->loopMode = MSEGStorage::LoopMode::LOOP;
-        if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-        {
-            sge->closeMSEGEditor();
-            sge->showMSEGEditor();
-        }
-        invalid();
-    });
-    lpon->setChecked(ms->loopMode == MSEGStorage::LoopMode::LOOP);
+    contextMenu.addSeparator();
 
-    auto lpgate =
-        addCb(contextMenu, Surge::GUI::toOSCaseForMenu("Loop Until Release"), [this, sge]() {
-            ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
-            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-            {
-                sge->closeMSEGEditor();
-                sge->showMSEGEditor();
-            }
-            invalid();
-        });
-    lpgate->setChecked(ms->loopMode == MSEGStorage::LoopMode::GATED_LOOP);
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true,
+                        (ms->loopMode == MSEGStorage::LoopMode::ONESHOT), [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            invalid();
+                        });
 
-    getFrame()->addView(contextMenu);
-    contextMenu->popup();
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true,
+                        (ms->loopMode == MSEGStorage::LoopMode::LOOP), [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            invalid();
+                        });
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true,
+                        (ms->loopMode == MSEGStorage::LoopMode::GATED_LOOP), [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            invalid();
+                        });
+
+    contextMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
 CMouseEventResult CLFOGui::onMouseDown(CPoint &where, const CButtonState &buttons)
