@@ -1247,8 +1247,8 @@ void CLFOGui::openPopup(CPoint &where)
 
     auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
     std::string openname = (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-                               ? "Open MSEG Editor"
-                               : "Close MSEG Editor";
+                               ? "Close MSEG Editor"
+                               : "Open MSEG Editor";
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
         if (sge)
