@@ -3062,12 +3062,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     }
                 }
 
-                addCallbackMenu(contextMenu,
-                                Surge::GUI::toOSCaseForMenu("Open Modulation Editor..."), [this]() {
-                                    if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                                        showModulationEditorDialog();
-                                });
-
                 switch (p->ctrltype)
                 {
                 case ct_freq_audible_with_tunability:
@@ -3654,8 +3648,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
                     if (addModSub->getNbEntries())
                     {
                         contextMenu->addSeparator(eid++);
-                        contextMenu->addEntry(
-                            addModSub, Surge::GUI::toOSCaseForMenu("Add Modulation from..."));
+                        contextMenu->addEntry(addModSub,
+                                              Surge::GUI::toOSCaseForMenu("Add Modulation from"));
                     }
                     else
                     {
@@ -3701,6 +3695,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControl *control, CButtonState b
 
                     eid++;
                 }
+
+                addCallbackMenu(contextMenu,
+                                Surge::GUI::toOSCaseForMenu("Open Modulation Overview..."),
+                                [this]() {
+                                    if (!isAnyOverlayPresent(MODULATION_EDITOR))
+                                        showModulationEditorDialog();
+                                });
 
                 if (n_ms)
                 {
@@ -8302,7 +8303,7 @@ void SurgeGUIEditor::showModulationEditorDialog()
     c->juceComponent()->addAndMakeVisible(*pt);
     pt->setBounds(0, 0, 750, 450);
     c->takeOwnership(std::move(pt));
-    addEditorOverlay(c, "Open Modulation Editor...", MODULATION_EDITOR, CPoint(50, 50), false, true,
+    addEditorOverlay(c, "Modulation Overview", MODULATION_EDITOR, CPoint(50, 50), false, true,
                      [this]() {});
 }
 
