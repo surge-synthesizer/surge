@@ -127,6 +127,8 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             // Initialize the display name here
             scene[sc].osc[osc].wavetable_display_name[0] = '\0';
             scene[sc].osc[osc].wavetable_formula = "";
+            scene[sc].osc[osc].wavetable_formula_nframes = 10;
+            scene[sc].osc[osc].wavetable_formula_res_base = 5;
 
             a->push_back(scene[sc].osc[osc].type.assign(p_id.next(), id_s++, "type", "Type",
                                                         ct_osctype, Surge::Skin::Osc::osc_type,
@@ -1717,6 +1719,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             scene[sc].osc[osc].wavetable_display_name[0] = '\0';
             scene[sc].osc[osc].wavetable_formula = "";
+            scene[sc].osc[osc].wavetable_formula_nframes = 10;
+            scene[sc].osc[osc].wavetable_formula_res_base = 5;
         }
     }
 
@@ -1741,6 +1745,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 {
                     scene[ssc].osc[sos].wavetable_formula =
                         base64_decode(lkid->Attribute("wavetable_formula"));
+                    int wfi;
+                    if (lkid->QueryIntAttribute("wavetable_formula_nframes", &wfi) == TIXML_SUCCESS)
+                        scene[ssc].osc[sos].wavetable_formula_nframes = wfi;
+                    if (lkid->QueryIntAttribute("wavetable_formula_res_base", &wfi) ==
+                        TIXML_SUCCESS)
+                        scene[ssc].osc[sos].wavetable_formula_res_base = wfi;
                 }
 
                 auto ec = &(scene[ssc].osc[sos].extraConfig);
@@ -2320,6 +2330,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                 auto wtfol = wtfo.length();
                 on.SetAttribute("wavetable_formula",
                                 base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
+                on.SetAttribute("wavetable_formula_nframes",
+                                scene[sc].osc[os].wavetable_formula_nframes);
+                on.SetAttribute("wavetable_formula_res_base",
+                                scene[sc].osc[os].wavetable_formula_res_base);
             }
 
             auto ec = &(scene[sc].osc[os].extraConfig);

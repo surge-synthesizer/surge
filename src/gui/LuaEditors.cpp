@@ -210,7 +210,14 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
                                                  OscillatorStorage *os, Surge::GUI::Skin::ptr_t sk)
     : CodeEditorContainerWithApply(ed, s, sk), osc(os)
 {
-    mainDocument->insertText(0, osc->wavetable_formula);
+    if (osc->wavetable_formula == "")
+    {
+        mainDocument->insertText(0, Surge::WavetableScript::defaultWavetableFormula());
+    }
+    else
+    {
+        mainDocument->insertText(0, osc->wavetable_formula);
+    }
 
     resolutionLabel = std::make_unique<juce::Label>("resLabl");
     resolutionLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
@@ -225,7 +232,8 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
         id++;
         grid *= 2;
     }
-    resolution->setSelectedId(5, juce::NotificationType::dontSendNotification);
+    resolution->setSelectedId(os->wavetable_formula_res_base,
+                              juce::NotificationType::dontSendNotification);
     addAndMakeVisible(resolution.get());
 
     framesLabel = std::make_unique<juce::Label>("frmLabl");
@@ -235,7 +243,8 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
 
     frames = std::make_unique<juce::TextEditor>("frm");
     frames->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-    frames->setText("10", juce::NotificationType::dontSendNotification);
+    frames->setText(std::to_string(osc->wavetable_formula_nframes),
+                    juce::NotificationType::dontSendNotification);
     addAndMakeVisible(frames.get());
 
     generate = std::make_unique<juce::TextButton>("gen");
@@ -285,6 +294,9 @@ void WavetableEquationEditor::resized()
 void WavetableEquationEditor::applyCode()
 {
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
+    osc->wavetable_formula_res_base = resolution->getSelectedId();
+    osc->wavetable_formula_nframes = std::atoi(frames->getText().toRawUTF8());
+
     applyButton->setEnabled(false);
     rerenderFromUIState();
 
