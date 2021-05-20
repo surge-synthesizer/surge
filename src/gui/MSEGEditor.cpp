@@ -2688,28 +2688,18 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
 
         if (isOnOff)
         {
-            if (pControl->getValue() > 0.5)
-            {
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value") + ": Off",
-                                    [pControl, this]() {
-                                        pControl->setValue(0);
-                                        pControl->valueChanged();
-                                        pControl->invalid();
-                                        canvas->invalid();
-                                        invalid();
-                                    });
-            }
-            else
-            {
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value") + ": On",
-                                    [pControl, this]() {
-                                        pControl->setValue(1);
-                                        pControl->valueChanged();
-                                        pControl->invalid();
-                                        canvas->invalid();
-                                        invalid();
-                                    });
-            }
+            bool ctrlVal = pControl->getValue() > 0.5;
+            auto val = ctrlVal ? 0.f : 1.f;
+            std::string onOff = ctrlVal ? "Off" : "On";
+
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value: ") + onOff,
+                                [pControl, val, this]() {
+                                    pControl->setValue(val);
+                                    pControl->valueChanged();
+                                    pControl->invalid();
+                                    canvas->invalid();
+                                    invalid();
+                                });
         }
         else
         {
