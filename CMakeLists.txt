@@ -137,9 +137,11 @@ endif()
 if( SURGE_ALTERNATE_JUCE )
   message( STATUS "Using *Alternate* JUCE from ${SURGE_ALTERNATE_JUCE}" )
   add_subdirectory( ${SURGE_ALTERNATE_JUCE} ${CMAKE_BINARY_DIR}/alternate-juce  EXCLUDE_FROM_ALL)
+  set( SURGE_JUCE_LOCATION ${SURGE_ALTERNATE_JUCE} )
 else()
   message( STATUS "Using JUCE from submodule libs/JUCE" )
   add_subdirectory( libs/JUCE EXCLUDE_FROM_ALL )
+  set( SURGE_JUCE_LOCATION ${CMAKE_SOURCE_DIR}/libs/JUCE )
 endif()
 
 include(cmake/stage-extra-content.cmake)
@@ -637,6 +639,15 @@ if(JUCE_SUPPORTS_LV2)
   )
 endif()
 
+set(SURGE_JUCE_ACCESSIBLE FALSE)
+if(EXISTS ${SURGE_JUCE_LOCATION}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h )
+  set(SURGE_JUCE_ACCESSIBLE TRUE)
+  message( STATUS "Including JUCE Accessibility Support")
+else()
+  message( STATUS "No JUCE Accessibility Support in this version" )
+endif()
+
+
 set(JUCE_ASIO_SUPPORT FALSE)
 if( BUILD_USING_MY_ASIO_LICENSE )
   message(STATUS "** BUILD WITH YOUR ASIO LICENSE **" )
@@ -860,6 +871,12 @@ if( BUILD_SURGE_XT )
           POSITION_INDEPENDENT_CODE TRUE
           )
 
+  if (${SURGE_JUCE_ACCESSIBLE})
+    set( SURGE_JUCE_ACCESSIBLE_DEFINE 1)
+  else()
+    set( SURGE_JUCE_ACCESSIBLE_DEFINE 0)
+  endif()
+
   target_compile_definitions(surge-xt PUBLIC
           JUCE_ALLOW_STATIC_NULL_VARIABLES=0
           JUCE_STRICT_REFCOUNTEDPOINTER=1
@@ -879,6 +896,8 @@ if( BUILD_SURGE_XT )
           JUCE_DIRECTSOUND=1
 
           JUCE_CATCH_UNHANDLED_EXCEPTIONS=$<IF:$<CONFIG:DEBUG>,1,0>
+
+          SURGE_JUCE_ACCESSIBLE=${SURGE_JUCE_ACCESSIBLE_DEFINE}
 
           TARGET_JUCE_SYNTH=1
           TARGET_HEADLESS=1

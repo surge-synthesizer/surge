@@ -26,12 +26,16 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                          .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
     std::cout << "SurgeXT Startup\n"
-              << "  - Version    : " << Surge::Build::FullVersionStr << "\n"
-              << "  - Build Info : " << Surge::Build::BuildArch << " "
+              << "  - Version      : " << Surge::Build::FullVersionStr << "\n"
+              << "  - Build Info   : " << Surge::Build::BuildArch << " "
               << Surge::Build::BuildCompiler << "\n"
-              << "  - Build Time : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
+              << "  - Build Time   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
               << "\n"
-              << "  - CPU        : " << Surge::CPUFeatures::cpuBrand() << std::endl;
+              << "  - JUCE Version : " << std::hex << JUCE_VERSION << std::dec << "\n"
+#if SURGE_JUCE_ACCESSIBLE
+              << "  - Accessiblity : Enabled\n"
+#endif
+              << "  - CPU          : " << Surge::CPUFeatures::cpuBrand() << std::endl;
 
     surge = std::make_unique<SurgeSynthesizer>(this);
     surge->storage.initializePatchDb(); // In the UI branch we want the patch DB running
