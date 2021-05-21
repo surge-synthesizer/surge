@@ -249,6 +249,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
 
     generate = std::make_unique<juce::TextButton>("gen");
     generate->setButtonText("generate");
+    generate->addListener(this);
     addAndMakeVisible(generate.get());
 
     renderer = std::make_unique<WavetablePreviewComponent>(storage, osc, sk);
@@ -305,7 +306,6 @@ void WavetableEquationEditor::applyCode()
 
 void WavetableEquationEditor::rerenderFromUIState()
 {
-    std::cout << "Would apply " << mainDocument->getAllContent().toStdString() << std::endl;
     auto resi = resolution->getSelectedId();
     auto nfr = std::atoi(frames->getText().toRawUTF8());
     auto cfr = (int)round(nfr * currentFrame->getValue() / 10.0);
@@ -313,8 +313,6 @@ void WavetableEquationEditor::rerenderFromUIState()
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
         respt *= 2;
-    std::cout << "    - " << resi << " " << respt << " " << nfr << " " << cfr << " "
-              << currentFrame->getValue() << std::endl;
 
     renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
         mainDocument->getAllContent().toStdString(), respt, cfr);
@@ -327,3 +325,30 @@ void WavetableEquationEditor::comboBoxChanged(juce::ComboBox *comboBoxThatHasCha
     rerenderFromUIState();
 }
 void WavetableEquationEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
+void WavetableEquationEditor::buttonClicked(juce::Button *button)
+{
+    if (button == generate.get())
+    {
+        std::cout << "GENERATE" << std::endl;
+        auto resi = resolution->getSelectedId();
+        auto nfr = std::atoi(frames->getText().toRawUTF8());
+        auto respt = 32;
+        for (int i = 1; i < resi; ++i)
+            respt *= 2;
+
+        wt_header wh;
+        float *wd = nullptr;
+        Surge::WavetableScript::constructWavetable(mainDocument->getAllContent().toStdString(),
+                                                   respt, nfr, wh, &wd);
+        storage->waveTableDataMutex.lock();
+        osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
+        snprintf(osc->wavetable_display_name, 256, "Scripted WT");
+        storage->waveTableDataMutex.unlock();
+
+        delete[] wd;
+        editor->invalidateFrame();
+
+        return;
+    }
+    CodeEditorContainerWithApply::buttonClicked(button);
+}

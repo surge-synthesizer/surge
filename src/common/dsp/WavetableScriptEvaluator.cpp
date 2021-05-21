@@ -76,6 +76,7 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
                     lua_pop(L, 1);
                 }
             }
+            lua_pop(L, 1);
         }
     }
     else
@@ -87,6 +88,22 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
 #endif
 }
 
+bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_header &wh,
+                        float **wavdata)
+{
+    auto wd = new float[frames * resolution];
+    wh.n_samples = resolution;
+    wh.n_tables = frames;
+    wh.flags = 0;
+    *wavdata = wd;
+
+    for (int i = 0; i < frames; ++i)
+    {
+        auto v = evaluateScriptAtFrame(eqn, resolution, i);
+        memcpy(&(wd[i * resolution]), &(v[0]), resolution * sizeof(float));
+    }
+    return true;
+}
 std::string defaultWavetableFormula()
 {
     return R"FN(function generate(xs,n)
