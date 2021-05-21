@@ -18,6 +18,7 @@
 
 #include "SurgeStorage.h"
 #include "StringOps.h"
+#include "Wavetable.h"
 
 #if HAS_LUAJIT
 extern "C"
@@ -41,6 +42,13 @@ namespace WavetableScript
  * one thread at a time and just you know generally be careful.
  */
 std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame);
+
+/*
+ * Generate all the data required to call BuildWT. The wavdata here is data you
+ * must free with delete[]
+ */
+bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_header &wh,
+                        float **wavdata);
 
 std::string defaultWavetableFormula();
 

@@ -99,6 +99,8 @@ class WavetableEquationEditor : public CodeEditorContainerWithApply,
 
     void rerenderFromUIState();
 
+    void buttonClicked(juce::Button *button) override;
+
     OscillatorStorage *osc;
 };
 
