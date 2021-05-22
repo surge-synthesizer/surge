@@ -348,7 +348,7 @@ CMouseEventResult CAboutBox::onMouseUp(CPoint &where, const CButtonState &button
     return res;
 }
 
-void CAboutBox::valueChanged(CControl *pControl)
+void CAboutBox::valueChanged(CControlValueInterface *pControl)
 {
     if (pControl->getTag() == tag_copy)
     {

@@ -892,7 +892,15 @@ template <typename T> struct juceCViewConnector : public T, public OnRemovedHand
 struct CView;
 
 // Clena this up obviously
-struct CViewBase : public Internal::FakeRefcount
+
+struct BaseViewFunctions
+{
+    virtual void invalid() = 0;
+    virtual CRect getViewSize() = 0;
+    virtual CCoord getHeight() = 0;
+};
+
+struct CViewBase : public Internal::FakeRefcount, public BaseViewFunctions
 {
     CViewBase(const CRect &size) : size(size), ma(size) {}
     virtual ~CViewBase(){
@@ -1276,7 +1284,7 @@ struct CFrame : public CViewContainer
 
         ed->getJuceEditor()->setMouseCursor(juce::MouseCursor(ct));
     }
-    void invalid()
+    void invalid() override
     {
         for (auto v : views)
             v->invalid();
@@ -1309,14 +1317,24 @@ struct CFrame : public CViewContainer
     CButtonState getCurrentMouseButtons() { return CButtonState(); }
 };
 
-struct CControl;
+struct CControlValueInterface
+{
+    virtual uint32_t getTag() = 0;
+    virtual float getValue() = 0;
+    virtual void setValue(float) = 0;
+    virtual void valueChanged() = 0;
+};
+
 struct IControlListener
 {
-    virtual void valueChanged(CControl *p) = 0;
-    virtual int32_t controlModifierClicked(CControl *p, CButtonState s) { return false; }
+    virtual void valueChanged(CControlValueInterface *p) = 0;
+    virtual int32_t controlModifierClicked(CControlValueInterface *p, CButtonState s)
+    {
+        return false;
+    }
 
-    virtual void controlBeginEdit(CControl *control){};
-    virtual void controlEndEdit(CControl *control){};
+    virtual void controlBeginEdit(CControlValueInterface *control){};
+    virtual void controlEndEdit(CControlValueInterface *control){};
 };
 
 struct IKeyboardHook
@@ -1325,7 +1343,7 @@ struct IKeyboardHook
     virtual int32_t onKeyUp(const VstKeyCode &code, CFrame *frame) = 0;
 };
 
-struct CControl : public CView
+struct CControl : public CView, public CControlValueInterface
 {
     CControl(const CRect &r, IControlListener *l = nullptr, int32_t tag = 0, CBitmap *bg = nullptr)
         : CView(r), listener(l), tag(tag)
