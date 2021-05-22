@@ -621,7 +621,7 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
 
     contextMenu->addSeparator();
     auto wtformItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Wavetable Scripter...")));
+        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Wavetable Editor...")));
     auto owts = [this](CCommandMenuItem *item) {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
         if (sge)

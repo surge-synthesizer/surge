@@ -107,10 +107,10 @@ bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_h
 std::string defaultWavetableFormula()
 {
     return R"FN(function generate(xs,n)
---- This function was inserted as a guide since your wavetable scripter in this patch/osc has no
+--- This function was inserted as a guide, since the wavetable editor in this patch/oscillator has no
 --- generator function. The function takes an array of x values (xs) and a frame number (n) and
---- generates the result as the nth frame. A sample below generates a fourier sine to saw
---- which remember is sum 2 / pi n * sin n x
+--- generates the result as the n-th frame. The sample below generates a Fourier sine to saw
+--- which, remember, is: sum 2 / pi n * sin n x
     res = {}
     for i,x in ipairs(xs) do
         lv = 0

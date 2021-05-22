@@ -400,7 +400,6 @@ void SurgeGUIEditor::idle()
         if (mod_editor && oscdisplay)
         {
             ((COscillatorDisplay *)oscdisplay)->tickModTime();
-            oscdisplay->invalid(true);
             oscdisplay->invalid();
         }
 #endif
@@ -721,7 +720,6 @@ void SurgeGUIEditor::idle()
                 }
 
                 cc->invalid();
-                cc->invalid();
             }
 #if 0
          /*
@@ -843,7 +841,6 @@ void SurgeGUIEditor::refresh_mod()
                     s->setModCurrent(synth->isActiveModulation(i, thisms),
                                      synth->isBipolarModulation(thisms));
                 }
-                // s->invalid();
                 s->setModValue(synth->getModulation(i, thisms));
                 s->invalid();
             }
@@ -855,7 +852,6 @@ void SurgeGUIEditor::refresh_mod()
         ((COscillatorDisplay *)oscdisplay)->setIsMod(mod_editor);
         ((COscillatorDisplay *)oscdisplay)->setModSource(thisms);
         oscdisplay->invalid();
-        oscdisplay->invalid(true);
     }
 #endif
 
@@ -1522,7 +1518,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if (!curr)
             {
                 param[i]->invalid();
-                param[i]->invalid();
             }
         }
     }
@@ -1539,7 +1534,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             ((CSurgeSlider *)param[i])->disabled = true;
             if (!curr)
             {
-                param[i]->invalid();
                 param[i]->invalid();
             }
         }
@@ -3709,8 +3703,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     eid++;
                 }
 
-                addCallbackMenu(contextMenu,
-                                Surge::GUI::toOSCaseForMenu("Open Modulation Overview..."),
+                addCallbackMenu(contextMenu, Surge::GUI::toOSCaseForMenu("Modulation Overview..."),
                                 [this]() {
                                     if (!isAnyOverlayPresent(MODULATION_EDITOR))
                                         showModulationEditorDialog();
@@ -4814,11 +4807,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 if (oscdisplay && ((p->ctrlgroup == cg_OSC) || (p->ctrltype == ct_character)))
                 {
                     oscdisplay->invalid();
-                    oscdisplay->invalid();
                 }
                 if (lfodisplay && (p->ctrlgroup == cg_LFO))
                 {
-                    lfodisplay->invalid();
                     lfodisplay->invalid();
                 }
                 for (auto el : editorOverlay)
@@ -4858,7 +4849,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
             ((CSwitchControl *)filtersubtype[idx])->ivalue = a + 1;
 
         filtersubtype[idx]->invalid();
-        filtersubtype[idx]->invalid();
     }
 
     if (tag == fmconfig_tag)
@@ -4869,7 +4859,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
             ((CSurgeSlider *)param[i])->disabled =
                 (synth->storage.getPatch().scene[current_scene].fm_switch.val.i == fm_off);
 
-        param[i]->invalid();
         param[i]->invalid();
     }
 
@@ -4885,7 +4874,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                  fc_wide);
 
         param[i]->invalid();
-        param[i]->invalid();
 
         // feedback control
         i = synth->storage.getPatch().scene[current_scene].feedback.id;
@@ -4894,7 +4882,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i ==
                  fc_serial1);
 
-        param[i]->invalid();
         param[i]->invalid();
     }
 
@@ -8400,7 +8387,7 @@ void SurgeGUIEditor::showWavetableScripter()
     c->juceComponent()->addAndMakeVisible(*pt);
     c->takeOwnership(std::move(pt));
 
-    addEditorOverlay(c, "Wavetable Scripter", FORMULA_EDITOR, CPoint(px, py), false, true,
+    addEditorOverlay(c, "Wavetable Editor", FORMULA_EDITOR, CPoint(px, py), false, true,
                      [this]() {});
 }
 
