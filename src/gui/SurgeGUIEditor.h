@@ -102,11 +102,11 @@ class SurgeGUIEditor : public EditorType,
     virtual void setParameter(long index, float value);
 
     // listener class
-    void valueChanged(VSTGUI::CControl *control) override;
-    int32_t controlModifierClicked(VSTGUI::CControl *pControl,
+    void valueChanged(VSTGUI::CControlValueInterface *control) override;
+    int32_t controlModifierClicked(VSTGUI::CControlValueInterface *pControl,
                                    VSTGUI::CButtonState button) override;
-    void controlBeginEdit(VSTGUI::CControl *pControl) override;
-    void controlEndEdit(VSTGUI::CControl *pControl) override;
+    void controlBeginEdit(VSTGUI::CControlValueInterface *pControl) override;
+    void controlEndEdit(VSTGUI::CControlValueInterface *pControl) override;
 
   public:
     void refresh_mod();
@@ -135,7 +135,8 @@ class SurgeGUIEditor : public EditorType,
     int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0, filterblock_tag = 0, fmconfig_tag = 0;
     double lastTempo = 0;
     int lastTSNum = 0, lastTSDen = 0;
-    void draw_infowindow(int ptag, VSTGUI::CControl *control, bool modulate, bool forceMB = false);
+    void draw_infowindow(int ptag, VSTGUI::BaseViewFunctions *control, bool modulate,
+                         bool forceMB = false);
     void adjustSize(float &width, float &height) const;
 
     struct patchdata
@@ -533,7 +534,8 @@ class SurgeGUIEditor : public EditorType,
     static std::string fullyResolvedHelpURL(std::string helpurl);
 
   private:
-    void promptForUserValueEntry(Parameter *p, VSTGUI::CControl *c, int modulationSource = -1);
+    void promptForUserValueEntry(Parameter *p, VSTGUI::BaseViewFunctions *c,
+                                 int modulationSource = -1);
 
     /*
     ** Skin support

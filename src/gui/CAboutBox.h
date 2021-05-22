@@ -29,7 +29,7 @@ class CAboutBox : public VSTGUI::CViewContainer, public VSTGUI::IControlListener
                                         const VSTGUI::CButtonState &buttons) override;
     VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint &where,
                                           const VSTGUI::CButtonState &buttons) override;
-    void valueChanged(VSTGUI::CControl *pControl) override;
+    void valueChanged(VSTGUI::CControlValueInterface *pControl) override;
 
     SurgeGUIEditor *editor;
     SurgeStorage *storage;

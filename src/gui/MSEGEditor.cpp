@@ -67,8 +67,9 @@ struct MSEGControlRegion : public CViewContainer,
     };
 
     void rebuild();
-    virtual void valueChanged(CControl *p) override;
-    virtual int32_t controlModifierClicked(CControl *pControl, CButtonState button) override;
+    virtual void valueChanged(CControlValueInterface *p) override;
+    virtual int32_t controlModifierClicked(CControlValueInterface *pControl,
+                                           CButtonState button) override;
 
     virtual void draw(CDrawContext *dc) override
     {
@@ -2518,7 +2519,7 @@ struct MSEGCanvas : public CControl,
     CLASS_METHODS(MSEGCanvas, CControl);
 };
 
-void MSEGControlRegion::valueChanged(CControl *p)
+void MSEGControlRegion::valueChanged(CControlValueInterface *p)
 {
     auto tag = p->getTag();
     auto val = p->getValue();
@@ -2598,7 +2599,8 @@ void MSEGControlRegion::valueChanged(CControl *p)
     }
 }
 
-int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonState button)
+int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pControl,
+                                                  CButtonState button)
 {
     int tag = pControl->getTag();
 
@@ -2696,7 +2698,9 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
                                 [pControl, val, this]() {
                                     pControl->setValue(val);
                                     pControl->valueChanged();
-                                    pControl->invalid();
+                                    auto iv = dynamic_cast<VSTGUI::BaseViewFunctions *>(pControl);
+                                    if (iv)
+                                        iv->invalid();
                                     canvas->invalid();
                                     invalid();
                                 });
@@ -2706,12 +2710,14 @@ int32_t MSEGControlRegion::controlModifierClicked(CControl *pControl, CButtonSta
             for (auto op : options)
             {
                 auto val = op.second;
-                contextMenu.addItem(op.first, true, (val == pControl->getValue()),
-                                    [val, pControl]() {
-                                        pControl->setValue(val);
-                                        pControl->invalid();
-                                        pControl->valueChanged();
-                                    });
+                contextMenu.addItem(
+                    op.first, true, (val == pControl->getValue()), [val, pControl]() {
+                        pControl->setValue(val);
+                        auto iv = dynamic_cast<VSTGUI::BaseViewFunctions *>(pControl);
+                        if (iv)
+                            iv->invalid();
+                        pControl->valueChanged();
+                    });
             }
         }
         contextMenu.showMenuAsync(juce::PopupMenu::Options());
