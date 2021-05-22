@@ -260,9 +260,15 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
             surge->process_input = true;
             memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
             memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+        }
+        else
+        {
+            surge->process_input = false;
+        }
+        if (blockPos == 0)
+        {
             surge->process();
         }
-
         *outL = surge->output[0][blockPos];
         *outR = surge->output[1][blockPos];
 
