@@ -269,14 +269,18 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                     << nm << " at " << q.depth << "\n";
             }
         };
-        append("Global", moded->synth->storage.getPatch().modulation_global, 0);
-        append("Scene A Voice", moded->synth->storage.getPatch().scene[0].modulation_voice,
+        append("Global Modulators", moded->synth->storage.getPatch().modulation_global, 0);
+        append("Scene A - Voice Modulators",
+               moded->synth->storage.getPatch().scene[0].modulation_voice,
                moded->synth->storage.getPatch().scene_start[0]);
-        append("Scene A Scene", moded->synth->storage.getPatch().scene[0].modulation_scene,
+        append("Scene A - Scene Modulators",
+               moded->synth->storage.getPatch().scene[0].modulation_scene,
                moded->synth->storage.getPatch().scene_start[0]);
-        append("Scene B Voice", moded->synth->storage.getPatch().scene[1].modulation_voice,
+        append("Scene B - Voice Modulators",
+               moded->synth->storage.getPatch().scene[1].modulation_voice,
                moded->synth->storage.getPatch().scene_start[1]);
-        append("Scene B Scene", moded->synth->storage.getPatch().scene[1].modulation_scene,
+        append("Scene B - Scene Modulators",
+               moded->synth->storage.getPatch().scene[1].modulation_scene,
                moded->synth->storage.getPatch().scene_start[0]);
         debugRows = oss.str();
     }

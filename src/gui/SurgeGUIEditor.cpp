@@ -3703,8 +3703,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     eid++;
                 }
 
-                addCallbackMenu(contextMenu,
-                                Surge::GUI::toOSCaseForMenu("Open Modulation Overview..."),
+                addCallbackMenu(contextMenu, Surge::GUI::toOSCaseForMenu("Modulation Overview..."),
                                 [this]() {
                                     if (!isAnyOverlayPresent(MODULATION_EDITOR))
                                         showModulationEditorDialog();
@@ -8388,7 +8387,7 @@ void SurgeGUIEditor::showWavetableScripter()
     c->juceComponent()->addAndMakeVisible(*pt);
     c->takeOwnership(std::move(pt));
 
-    addEditorOverlay(c, "Wavetable Scripter", FORMULA_EDITOR, CPoint(px, py), false, true,
+    addEditorOverlay(c, "Wavetable Editor", FORMULA_EDITOR, CPoint(px, py), false, true,
                      [this]() {});
 }
 

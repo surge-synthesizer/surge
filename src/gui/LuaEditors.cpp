@@ -238,7 +238,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
 
     framesLabel = std::make_unique<juce::Label>("frmLabl");
     framesLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-    framesLabel->setText("nFrames:", juce::NotificationType::dontSendNotification);
+    framesLabel->setText("Frames:", juce::NotificationType::dontSendNotification);
     addAndMakeVisible(framesLabel.get());
 
     frames = std::make_unique<juce::TextEditor>("frm");
@@ -248,7 +248,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     addAndMakeVisible(frames.get());
 
     generate = std::make_unique<juce::TextButton>("gen");
-    generate->setButtonText("generate");
+    generate->setButtonText("Generate");
     generate->addListener(this);
     addAndMakeVisible(generate.get());
 
@@ -342,7 +342,7 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
                                                    respt, nfr, wh, &wd);
         storage->waveTableDataMutex.lock();
         osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
-        snprintf(osc->wavetable_display_name, 256, "Scripted WT");
+        snprintf(osc->wavetable_display_name, 256, "Scripted Wavetable");
         storage->waveTableDataMutex.unlock();
 
         delete[] wd;
