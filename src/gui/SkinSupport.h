@@ -144,8 +144,13 @@ class Skin
 
     struct Control
     {
+        typedef uint64_t sessionid_t;
         typedef std::shared_ptr<Control> ptr_t;
         int x, y, w, h;
+
+        Control();
+
+        sessionid_t sessionid;
 
         Surge::Skin::Component defaultComponent;
 

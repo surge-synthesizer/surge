@@ -17,7 +17,7 @@
 #include "resource.h"
 #include "CSurgeSlider.h"
 #include "CHSwitch2.h"
-#include "CSwitchControl.h"
+#include "widgets/Switch.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
 #include "COscillatorDisplay.h"
@@ -425,7 +425,7 @@ void SurgeGUIEditor::idle()
             if ((v < 0.5 && synth->mpeEnabled) || (v > 0.5 && !synth->mpeEnabled))
             {
                 statusMPE->setValue(synth->mpeEnabled ? 1 : 0);
-                statusMPE->invalid();
+                statusMPE->asBaseViewFunctions()->invalid();
             }
         }
 
@@ -438,7 +438,7 @@ void SurgeGUIEditor::idle()
                 bool hasmts =
                     synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
                 statusTune->setValue(!synth->storage.isStandardTuning || hasmts);
-                statusTune->invalid();
+                statusTune->asBaseViewFunctions()->invalid();
             }
         }
 
@@ -630,7 +630,7 @@ void SurgeGUIEditor::idle()
                 ** So have a second array and drop select items in here so we
                 ** can actually get them redrawing when an external param set occurs.
                 */
-                CControl *cc = nonmod_param[j];
+                CControlValueInterface *cc = nonmod_param[j];
 
                 /*
                 ** Some state changes enable and disable sliders. If this is one of those state
@@ -710,16 +710,24 @@ void SurgeGUIEditor::idle()
                 }
 
                 // Integer switches also work differently
-                auto assw = dynamic_cast<CSwitchControl *>(cc);
+                auto assw = dynamic_cast<Surge::Widgets::Switch *>(cc);
                 if (assw)
                 {
-                    if (assw->is_itype)
+                    if (assw->isMultiIntegerValued())
                     {
-                        assw->ivalue = synth->storage.getPatch().param_ptr[j]->val.i + 1;
+                        assw->setIntegerValue(synth->storage.getPatch().param_ptr[j]->val.i + 1);
                     }
                 }
 
-                cc->invalid();
+                auto bvf = dynamic_cast<BaseViewFunctions *>(cc);
+                if (bvf)
+                {
+                    bvf->invalid();
+                }
+                else
+                {
+                    jassert(false);
+                }
             }
 #if 0
          /*
@@ -1102,8 +1110,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
     }
     CPoint nopoint(0, 0);
     CPoint sz(getWindowSizeX(), getWindowSizeY());
-    auto lcb = new LastChanceEventCapture(sz, this);
-    frame->addView(lcb);
+    // auto lcb = new LastChanceEventCapture(sz, this);
+    // frame->addView(lcb);
 
     clear_infoview_peridle = -1;
 
@@ -1326,10 +1334,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
             statusTune->setValue(synth->storage.isStandardTuning ? hasmts : 1);
 
-            auto csc = dynamic_cast<CSwitchControl *>(statusTune);
+            auto csc = dynamic_cast<Surge::Widgets::Switch *>(statusTune);
             if (csc && synth->storage.isStandardTuning)
             {
-                csc->unValueClickable = !synth->storage.isToggledToCache;
+                csc->setUnValueClickable(!synth->storage.isToggledToCache);
             }
             break;
         }
@@ -1346,7 +1354,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
         {
             msegEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
-            msegEditSwitch->setVisible(false);
+            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            jassert(msejc);
+            msejc->setVisible(false);
             msegEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
                                      isAnyOverlayPresent(FORMULA_EDITOR));
             auto q = modsource_editor[current_scene];
@@ -1354,7 +1364,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
                 if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
-                    msegEditSwitch->setVisible(true);
+                    msejc->setVisible(true);
             }
             break;
         }
@@ -1840,7 +1850,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
     auto bvf = dynamic_cast<BaseViewFunctions *>(control);
     if (bvf)
     {
-        viewSize = bvf->getViewSize();
+        viewSize = bvf->getControlViewSize();
     }
     else
     {
@@ -4006,7 +4016,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     auto bvf = dynamic_cast<BaseViewFunctions *>(control);
     if (bvf)
     {
-        viewSize = bvf->getViewSize();
+        viewSize = bvf->getControlViewSize();
     }
     else
     {
@@ -4176,9 +4186,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     if ((tag == f1subtypetag) || (tag == f2subtypetag))
     {
         int idx = (tag == f2subtypetag) ? 1 : 0;
-        auto csc = dynamic_cast<CSwitchControl *>(control);
-        int valdir = csc->value_direction;
-        csc->value_direction = 0;
+        auto csc = dynamic_cast<Surge::Widgets::Switch *>(control);
+        int valdir = csc->getValueDirection();
+        csc->clearValueDirection();
 
         int a =
             synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i + valdir;
@@ -4194,9 +4204,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         if (csc)
         {
             if (nn == 0)
-                csc->ivalue = 0;
+                csc->setIntegerValue(0);
             else
-                csc->ivalue = a + 1;
+                csc->setIntegerValue(a + 1);
         }
         if (bvf)
             bvf->invalid();
@@ -4819,12 +4829,13 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
             }
             if (p->ctrltype == ct_filtertype)
             {
-                auto *subsw = dynamic_cast<CSwitchControl *>(filtersubtype[p->ctrlgroup_entry]);
+                auto *subsw =
+                    dynamic_cast<Surge::Widgets::Switch *>(filtersubtype[p->ctrlgroup_entry]);
                 if (subsw)
                 {
                     int sc = fut_subcount[p->val.i];
 
-                    subsw->imax = sc;
+                    subsw->setIntegerMax(sc);
                 }
             }
         }
@@ -4844,9 +4855,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
             a = 0;
         synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i = a;
         if (!nn)
-            ((CSwitchControl *)filtersubtype[idx])->ivalue = 0;
+            ((Surge::Widgets::Switch *)filtersubtype[idx])->setIntegerValue(0);
         else
-            ((CSwitchControl *)filtersubtype[idx])->ivalue = a + 1;
+            ((Surge::Widgets::Switch *)filtersubtype[idx])->setIntegerValue(a + 1);
 
         filtersubtype[idx]->invalid();
     }
@@ -5014,7 +5025,7 @@ void SurgeGUIEditor::draw_infowindow(int ptag, BaseViewFunctions *control, bool 
             r.right += 20;
     }
 
-    CRect r2 = control->getViewSize();
+    CRect r2 = control->getControlViewSize();
 
     // OK this is a heuristic to stop deform overpainting and stuff
     if (r2.bottom > getWindowSizeY() - r.getHeight() - 2)
@@ -5088,7 +5099,7 @@ void SurgeGUIEditor::toggleMPE()
     if (statusMPE)
     {
         statusMPE->setValue(this->synth->mpeEnabled ? 1 : 0);
-        statusMPE->invalid();
+        statusMPE->asBaseViewFunctions()->invalid();
     }
 }
 void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
@@ -6793,7 +6804,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c,
 
     bool ismod = p && ms > 0;
     int boxht = 56;
-    auto cp = c->getViewSize();
+    auto cp = c->getControlViewSize();
 
     if (ismod)
         boxht += 22;
@@ -6802,8 +6813,8 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c,
 
     if (cp.top - boxht < 0)
     {
-        typeinSize =
-            CRect(cp.left, cp.top + c->getHeight(), cp.left + 120, cp.top + c->getHeight() + boxht);
+        typeinSize = CRect(cp.left, cp.top + c->getControlHeight(), cp.left + 120,
+                           cp.top + c->getControlHeight() + boxht);
     }
 
     typeinModSource = ms;
@@ -7690,7 +7701,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
                      false, false, [this]() {});
 }
 
-VSTGUI::CControl *
+VSTGUI::CControlValueInterface *
 SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl,
                                        long tag, int paramIndex, Parameter *p, int style)
 {
@@ -7890,12 +7901,23 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         auto bmp = currentSkin->backgroundBitmapForControl(skinCtrl, bitmapStore);
         if (bmp)
         {
-            CSwitchControl *hsw = new CSwitchControl(rect, this, tag, bmp);
+            auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
+            frame->juceComponent()->addAndMakeVisible(*hsw);
+
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
-            hsw->setMouseableArea(rect);
-            frame->addView(hsw);
+            hsw->setBounds(rect.asJuceIntRect());
+            hsw->setTag(tag);
+            hsw->addListener(this);
+
+            auto hoverBmp = currentSkin->hoverBitmapOverlayForBackgroundBitmap(
+                skinCtrl, dynamic_cast<CScalableBitmap *>(bmp), bitmapStore,
+                Surge::GUI::Skin::HoverType::HOVER);
+            hsw->setSwitchDrawable(bmp->drawable.get());
+            if (hoverBmp)
+                hsw->setHoverSwitchDrawable(hoverBmp->drawable.get());
+
             if (paramIndex >= 0)
-                nonmod_param[paramIndex] = hsw;
+                nonmod_param[paramIndex] = hsw.get();
             if (p)
             {
                 hsw->setValue(p->get_value_f01());
@@ -7908,25 +7930,30 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                                         .filterunit[p->ctrlgroup_entry]
                                         .type.val.i;
                     auto stc = fut_subcount[filttype];
-                    hsw->is_itype = true;
-                    hsw->imax = stc;
-                    hsw->ivalue = std::min(p->val.i + 1, stc);
+                    hsw->setIsMultiIntegerValued(true);
+                    hsw->setIntegerMax(stc);
+                    hsw->setIntegerValue(std::min(p->val.i + 1, stc));
                     if (fut_subcount[filttype] == 0)
-                        hsw->ivalue = 0;
+                        hsw->setIntegerValue(0);
 
                     if (p->ctrlgroup_entry == 1)
                     {
                         f2subtypetag = p->id + start_paramtags;
-                        filtersubtype[1] = hsw;
+                        filtersubtype[1] = hsw.get();
                     }
                     else
                     {
                         f1subtypetag = p->id + start_paramtags;
-                        filtersubtype[0] = hsw;
+                        filtersubtype[0] = hsw.get();
                     }
                 }
             }
-            return hsw;
+
+            // frame->deferredJuceAdds.push_back(hsw.get());
+            juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
+
+            return dynamic_cast<CControlValueInterface *>(
+                juceSkinComponents[skinCtrl->sessionid].get());
         }
     }
     if (skinCtrl->ultimateparentclassname == "CLFOGui")
@@ -8237,7 +8264,8 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     {
         if (msegEditSwitch)
         {
-            msegEditSwitch->setVisible(curr == lt_mseg || curr == lt_formula);
+            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            msejc->setVisible(curr == lt_mseg || curr == lt_formula);
         }
     }
 
@@ -8459,14 +8487,14 @@ void SurgeGUIEditor::showMSEGEditor()
                          if (msegEditSwitch)
                          {
                              msegEditSwitch->setValue(0.0);
-                             msegEditSwitch->invalid();
+                             msegEditSwitch->asBaseViewFunctions()->invalid();
                          }
                      });
 
     if (msegEditSwitch)
     {
         msegEditSwitch->setValue(1.0);
-        msegEditSwitch->invalid();
+        msegEditSwitch->asBaseViewFunctions()->invalid();
     }
 }
 

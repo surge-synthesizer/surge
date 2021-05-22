@@ -42,6 +42,14 @@ class CModulationSourceButton;
 class CAboutBox;
 class CMidiLearnOverlay;
 
+namespace Surge
+{
+namespace Widgets
+{
+struct Switch;
+}
+} // namespace Surge
+
 struct SGEDropAdapter;
 
 class SurgeGUIEditor : public EditorType,
@@ -420,7 +428,8 @@ class SurgeGUIEditor : public EditorType,
   private:
     VSTGUI::CControl *vu[16];
     VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
-    VSTGUI::CControl *statusMPE = nullptr, *statusTune = nullptr, *statusZoom = nullptr;
+    VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
+                                   *statusZoom = nullptr;
     CAboutBox *aboutbox = nullptr;
     CMidiLearnOverlay *midiLearnOverlay = nullptr;
     VSTGUI::CTextEdit *patchName = nullptr;
@@ -438,7 +447,7 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CTextLabel *typeinLabel = nullptr;
     VSTGUI::CTextLabel *typeinPriorValueLabel = nullptr;
     VSTGUI::CControl *typeinEditControl = nullptr;
-    VSTGUI::CControl *msegEditSwitch = nullptr;
+    VSTGUI::CControlValueInterface *msegEditSwitch = nullptr;
     enum TypeInMode
     {
         Inactive,
@@ -465,6 +474,37 @@ class SurgeGUIEditor : public EditorType,
                            const std::string &title, const VSTGUI::CPoint &where,
                            std::function<void(const std::string &)> onOK);
 
+    /*
+     * This is the JUCE component management
+     */
+    std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, std::unique_ptr<juce::Component>>
+        juceSkinComponents;
+    template <typename T>
+    std::unique_ptr<T> componentForSkinSession(const Surge::GUI::Skin::Control::sessionid_t id)
+    {
+        std::unique_ptr<T> hsw;
+        if (juceSkinComponents.find(id) != juceSkinComponents.end())
+        {
+            // this has the wrong type for a std::move so do this instead - sigh
+            auto pq = dynamic_cast<T *>(juceSkinComponents[id].get());
+            if (pq)
+            {
+                juceSkinComponents[id].release();
+                juceSkinComponents.erase(id);
+                hsw = std::unique_ptr<Surge::Widgets::Switch>{pq};
+            }
+            else
+            {
+                jassert(false);
+            }
+        }
+        else
+        {
+            hsw = std::make_unique<T>();
+        }
+        return std::move(hsw);
+    }
+
   private:
     VSTGUI::CTextLabel *lfoNameLabel = nullptr;
     VSTGUI::CTextLabel *fxPresetLabel = nullptr;
@@ -482,11 +522,11 @@ class SurgeGUIEditor : public EditorType,
 
     static const int n_paramslots = 1024;
     VSTGUI::CControl *param[n_paramslots] = {};
-    VSTGUI::CControl *nonmod_param[n_paramslots] = {};
+    VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
     CModulationSourceButton *gui_modsrc[n_modsources] = {};
     VSTGUI::CControl *metaparam[n_customcontrollers] = {};
     VSTGUI::CControl *lfodisplay = nullptr;
-    VSTGUI::CControl *filtersubtype[2] = {};
+    Surge::Widgets::Switch *filtersubtype[2] = {};
     VSTGUI::CControl *fxmenu = nullptr;
     int clear_infoview_countdown = 0;
 
@@ -543,9 +583,9 @@ class SurgeGUIEditor : public EditorType,
     Surge::GUI::Skin::ptr_t currentSkin;
     void setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry);
     void reloadFromSkin();
-    VSTGUI::CControl *layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl,
-                                             long tag, int paramIndex = -1, Parameter *p = nullptr,
-                                             int style = 0);
+    VSTGUI::CControlValueInterface *
+    layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl, long tag,
+                           int paramIndex = -1, Parameter *p = nullptr, int style = 0);
 
     /*
     ** General MIDI CC names

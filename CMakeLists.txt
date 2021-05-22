@@ -351,11 +351,10 @@ set(SURGE_GUI_SOURCES
   src/gui/CSurgeHyperlink.cpp
   src/gui/CSurgeSlider.cpp
   src/gui/CSurgeVuMeter.cpp
-  src/gui/CSwitchControl.cpp
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/CVerticalLabel.cpp
-        src/gui/LuaEditors.cpp
+  src/gui/LuaEditors.cpp
   src/gui/ModulationEditor.cpp
   src/gui/MSEGEditor.cpp
   src/gui/PatchDBViewer.cpp
@@ -368,7 +367,9 @@ set(SURGE_GUI_SOURCES
   src/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/gui/SurgeGUIUtils.cpp
   src/gui/SurgeJUCELookAndFeel.cpp
-  src/gui/UIInstrumentation.cpp)
+  src/gui/UIInstrumentation.cpp
+  src/gui/widgets/Switch.cpp
+        )
 
 # Includes and Compiler Flags
 set(SURGE_COMMON_INCLUDES
@@ -384,7 +385,6 @@ set(SURGE_COMMON_INCLUDES
   src/common/dsp/modulators
   src/common/dsp/utilities
   src/common/dsp/vembertech
-  src/common/thread
   )
 
 set(SURGE_GUI_INCLUDES

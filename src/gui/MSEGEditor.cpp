@@ -23,7 +23,7 @@
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "CHSwitch2.h"
-#include "CSwitchControl.h"
+#include "widgets/Switch.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include "CursorControlGuard.h"
@@ -77,6 +77,8 @@ struct MSEGControlRegion : public CViewContainer,
         dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
         dc->drawRect(r, kDrawFilled);
     }
+
+    std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
 
     MSEGStorage *ms = nullptr;
     MSEGEditor::State *eds = nullptr;
@@ -2845,12 +2847,19 @@ void MSEGControlRegion::rebuild()
 
         ypos += margin + labelHeight;
 
-        auto hbut = new CSwitchControl(
-            CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight)), this,
-            tag_horizontal_snap, associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP));
-        hbut->setSkin(skin, associatedBitmapStore);
-        addView(hbut);
-        hbut->setValue(ms->hSnap < 0.001 ? 0 : 1);
+        hSnapButton = std::make_unique<Surge::Widgets::Switch>();
+        hSnapButton->setSkin(skin, associatedBitmapStore);
+        hSnapButton->addListener(this);
+        hSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
+        hSnapButton->setTag(tag_horizontal_snap);
+        hSnapButton->setValue(ms->hSnap < 0.001 ? 0 : 1);
+        auto hsbmp = associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP);
+        hSnapButton->setSwitchDrawable(hsbmp->drawable.get());
+        auto hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
+            nullptr, dynamic_cast<CScalableBitmap *>(hsbmp), associatedBitmapStore,
+            Surge::GUI::Skin::HoverType::HOVER);
+        hSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
+        juceComponent()->addAndMakeVisible(*hSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
 
@@ -2878,12 +2887,18 @@ void MSEGControlRegion::rebuild()
 
         xpos += segWidth;
 
-        auto vbut = new CSwitchControl(
-            CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight)), this, tag_vertical_snap,
-            associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP));
-        vbut->setSkin(skin, associatedBitmapStore);
-        addView(vbut);
-        vbut->setValue(ms->vSnap < 0.001 ? 0 : 1);
+        vSnapButton = std::make_unique<Surge::Widgets::Switch>();
+        vSnapButton->setSkin(skin, associatedBitmapStore);
+        vSnapButton->addListener(this);
+        vSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
+        vSnapButton->setTag(tag_vertical_snap);
+        vSnapButton->setValue(ms->vSnap < 0.001 ? 0 : 1);
+        auto vsbmp = associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP);
+        vSnapButton->setSwitchDrawable(vsbmp->drawable.get());
+        hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
+            nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
+        vSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
+        juceComponent()->addAndMakeVisible(*vSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
 

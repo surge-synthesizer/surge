@@ -269,7 +269,13 @@ struct CRect
 {
     double top = 0, bottom = 0, left = 0, right = 0;
     CRect() = default;
-    CRect(juce::Rectangle<int> rect) { DUNIMPL; }
+    CRect(juce::Rectangle<int> rect)
+    {
+        top = rect.getX();
+        left = rect.getY();
+        right = left + rect.getWidth();
+        bottom = top + rect.getHeight();
+    }
     CRect(const CPoint &corner, const CPoint &size)
     {
         top = corner.y;
@@ -896,8 +902,8 @@ struct CView;
 struct BaseViewFunctions
 {
     virtual void invalid() = 0;
-    virtual CRect getViewSize() = 0;
-    virtual CCoord getHeight() = 0;
+    virtual CRect getControlViewSize() = 0;
+    virtual CCoord getControlHeight() = 0;
 };
 
 struct CViewBase : public Internal::FakeRefcount, public BaseViewFunctions
@@ -907,6 +913,9 @@ struct CViewBase : public Internal::FakeRefcount, public BaseViewFunctions
         // Here we probably have to make sure that the juce component is removed
     };
     virtual juce::Component *juceComponent() = 0;
+
+    CRect getControlViewSize() override { return getViewSize(); }
+    CCoord getControlHeight() override { return getHeight(); }
 
     virtual void draw(CDrawContext *dc){};
     CRect getViewSize()
@@ -969,7 +978,7 @@ struct CViewBase : public Internal::FakeRefcount, public BaseViewFunctions
         return false;
     }
 
-    void invalid() { juceComponent()->repaint(); }
+    void invalid() override { juceComponent()->repaint(); }
 
     CRect ma;
     CRect getMouseableArea() { return ma; }
@@ -1224,9 +1233,16 @@ struct CViewContainer : public CView
             v->efvg_resolveDeferredAdds();
         }
         deferredAdds.clear();
+
+        for (auto v : deferredJuceAdds)
+        {
+            juceComponent()->addAndMakeVisible(v);
+        }
+        deferredJuceAdds.clear();
     }
 
     std::vector<CView *> deferredAdds;
+    std::vector<juce::Component *> deferredJuceAdds;
     std::vector<CView *> views;
 };
 
@@ -1319,10 +1335,19 @@ struct CFrame : public CViewContainer
 
 struct CControlValueInterface
 {
-    virtual uint32_t getTag() = 0;
-    virtual float getValue() = 0;
+    virtual uint32_t getTag() const = 0;
+    virtual float getValue() const = 0;
     virtual void setValue(float) = 0;
     virtual void valueChanged() = 0;
+
+    BaseViewFunctions *asBaseViewFunctions()
+    {
+        auto r = dynamic_cast<BaseViewFunctions *>(this);
+        if (r)
+            return r;
+        jassert(false);
+        return nullptr;
+    }
 };
 
 struct IControlListener
@@ -1367,7 +1392,7 @@ struct CControl : public CView, public CControlValueInterface
     virtual void takeFocus() { UNIMPL; }
     CButtonState getMouseButtons() { return CButtonState(); }
     virtual float getRange() { return getMax() - getMin(); }
-    virtual float getValue() { return value; }
+    virtual float getValue() const { return value; }
     virtual void setValue(float v) { value = v; }
     virtual void setDefaultValue(float v) { vdef = v; }
     virtual void setVisible(bool b)
@@ -1383,7 +1408,7 @@ struct CControl : public CView, public CControlValueInterface
     }
 
     uint32_t tag;
-    virtual uint32_t getTag() { return tag; }
+    virtual uint32_t getTag() const { return tag; }
     virtual void setMax(float f) { vmax = f; }
     virtual float getMax() { return vmax; }
     void valueChanged() { UNIMPL; }
@@ -1542,7 +1567,6 @@ struct CTextLabel : public CControl
 
     CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
     {
-        std::cout << "TL OMD" << std::endl;
         return CViewBase::onMouseDown(where, buttons);
     }
 
@@ -1766,7 +1790,7 @@ template <typename T> inline void juceCViewConnector<T>::mouseDoubleClick(const 
     OKUNIMPL; // wanna do parent thing
     auto b = T::getBounds().getTopLeft();
     CPoint w(e.x + b.x, e.y + b.y);
-    auto bs = CButtonState() | kDoubleClick;
+    auto bs = CButtonState(e.mods) | kDoubleClick;
 
     auto r = viewCompanion->onMouseDown(w, CButtonState(bs));
     if (r == kMouseEventNotHandled)
