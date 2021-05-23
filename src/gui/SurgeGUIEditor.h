@@ -552,20 +552,21 @@ class SurgeGUIEditor : public EditorType,
     std::shared_ptr<VSTGUI::CCommandMenuItem>
     addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label, std::function<void()> op);
 
-    VSTGUI::COptionMenu *
+    juce::PopupMenu
     makeSmoothMenu(VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
 
-    VSTGUI::COptionMenu *makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
-    VSTGUI::COptionMenu *makeTuningMenu(VSTGUI::CRect &rect, bool showhelp);
-    VSTGUI::COptionMenu *makeZoomMenu(VSTGUI::CRect &rect, bool showhelp);
-    VSTGUI::COptionMenu *makeSkinMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeUserSettingsMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeDataMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeMidiMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeDevMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
+    juce::PopupMenu makeTuningMenu(VSTGUI::CRect &rect, bool showhelp);
+    juce::PopupMenu makeZoomMenu(VSTGUI::CRect &rect, bool showhelp);
+    juce::PopupMenu makeSkinMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeUserSettingsMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeDataMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeMidiMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeDevMenu(VSTGUI::CRect &rect);
     VSTGUI::COptionMenu *makeLfoMenu(VSTGUI::CRect &rect);
     VSTGUI::COptionMenu *makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
+
     bool scannedForMidiPresets = false;
 
     void resetSmoothing(ControllerModulationSource::SmoothingMode t);

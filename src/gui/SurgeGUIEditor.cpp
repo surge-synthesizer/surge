@@ -5117,10 +5117,7 @@ void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
     menuRect.offset(where.x, where.y);
     auto m = makeZoomMenu(menuRect, true);
 
-    frame->addView(m);
-    m->invalid();
-    m->popup();
-    frame->removeView(m, true);
+    m.showMenuAsync(juce::PopupMenu::Options());
 }
 
 void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
@@ -5129,10 +5126,7 @@ void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
     menuRect.offset(where.x, where.y);
     auto m = makeMpeMenu(menuRect, true);
 
-    frame->addView(m);
-    m->invalid();
-    m->popup();
-    frame->removeView(m, true);
+    m.showMenuAsync(juce::PopupMenu::Options());
 }
 void SurgeGUIEditor::showLfoMenu(VSTGUI::CPoint &where)
 {
@@ -5164,10 +5158,7 @@ void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
     menuRect.offset(where.x, where.y);
     auto m = makeTuningMenu(menuRect, true);
 
-    frame->addView(m);
-    m->invalid();
-    m->popup();
-    frame->removeView(m, true);
+    m.showMenuAsync(juce::PopupMenu::Options());
 }
 
 void SurgeGUIEditor::scaleFileDropped(std::string fn)
@@ -5287,94 +5278,64 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
 
 void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
-    COptionMenu *settingsMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                VSTGUI::COptionMenu::kNoDrawStyle |
-                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-    int eid = 0;
+    auto settingsMenu = juce::PopupMenu();
 
     auto mpeSubMenu = makeMpeMenu(menuRect, false);
-    settingsMenu->addEntry(mpeSubMenu, Surge::GUI::toOSCaseForMenu("MPE Options"));
-    eid++;
-    mpeSubMenu->forget();
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MPE Options"), mpeSubMenu);
 
     auto tuningSubMenu = makeTuningMenu(menuRect, false);
-    settingsMenu->addEntry(tuningSubMenu, "Tuning");
-    eid++;
-    tuningSubMenu->forget();
+    settingsMenu.addSubMenu("Tuning", tuningSubMenu);
 
     auto zoomMenu = makeZoomMenu(menuRect, false);
-    settingsMenu->addEntry(zoomMenu, "Zoom");
-    eid++;
-    zoomMenu->forget();
+    settingsMenu.addSubMenu("Zoom", zoomMenu);
 
     auto skinSubMenu = makeSkinMenu(menuRect);
-    settingsMenu->addEntry(skinSubMenu, "Skins");
-    eid++;
-    skinSubMenu->forget();
+    settingsMenu.addSubMenu("Skins", skinSubMenu);
 
     auto uiOptionsMenu = makeUserSettingsMenu(menuRect);
-    settingsMenu->addEntry(uiOptionsMenu, Surge::GUI::toOSCaseForMenu("User Settings"));
-    uiOptionsMenu->forget();
-    eid++;
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("User Settings"), uiOptionsMenu);
 
     auto dataSubMenu = makeDataMenu(menuRect);
-    settingsMenu->addEntry(dataSubMenu, Surge::GUI::toOSCaseForMenu("Data Folders"));
-    eid++;
-    dataSubMenu->forget();
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Data Folders"), dataSubMenu);
 
     auto midiSubMenu = makeMidiMenu(menuRect);
-    settingsMenu->addEntry(midiSubMenu, Surge::GUI::toOSCaseForMenu("MIDI Settings"));
-    eid++;
-    midiSubMenu->forget();
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MIDI Settings"), midiSubMenu);
 
     if (useDevMenu)
     {
         auto devSubMenu = makeDevMenu(menuRect);
-        settingsMenu->addEntry(devSubMenu, Surge::GUI::toOSCaseForMenu("Developer Options"));
-        eid++;
-        devSubMenu->forget();
+        settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Developer Options"), devSubMenu);
     }
 
-    settingsMenu->addSeparator(eid++);
+    settingsMenu.addSeparator();
 
-    addCallbackMenu(settingsMenu, Surge::GUI::toOSCaseForMenu("Reach the Developers..."), []() {
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Reach the Developers..."), []() {
         juce::URL("https://surge-synthesizer.github.io/feedback").launchInDefaultBrowser();
     });
-    eid++;
 
-    addCallbackMenu(settingsMenu, Surge::GUI::toOSCaseForMenu("Read the Code..."), []() {
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Read the Code..."), []() {
         juce::URL("https://github.com/surge-synthesizer/surge/").launchInDefaultBrowser();
     });
-    eid++;
 
-    addCallbackMenu(settingsMenu, Surge::GUI::toOSCaseForMenu("Download Additional Content..."),
-                    []() {
-                        juce::URL("https://github.com/surge-synthesizer/"
-                                  "surge-synthesizer.github.io/wiki/Additional-Content")
-                            .launchInDefaultBrowser();
-                    });
-    eid++;
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Download Additional Content..."), []() {
+        juce::URL("https://github.com/surge-synthesizer/"
+                  "surge-synthesizer.github.io/wiki/Additional-Content")
+            .launchInDefaultBrowser();
+    });
 
-    addCallbackMenu(settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
         juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
     });
-    eid++;
 
-    addCallbackMenu(settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Manual..."), []() {
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Manual..."), []() {
         juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
     });
-    eid++;
 
-    settingsMenu->addSeparator(eid++);
+    settingsMenu.addSeparator();
 
-    addCallbackMenu(settingsMenu, "About Surge", [this]() { this->showAboutBox(); });
-    eid++;
+    settingsMenu.addItem("About Surge", [this]() { this->showAboutBox(); });
 
-    frame->addView(settingsMenu);
-    settingsMenu->invalid();
-    settingsMenu->popup();
-    frame->removeView(settingsMenu, true);
+    settingsMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
 VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
@@ -5507,33 +5468,39 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     return lfoSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
 
-    COptionMenu *mpeSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
+    auto mpeSubMenu = juce::PopupMenu();
 
     auto hu = helpURLForSpecial("mpe-menu");
+
     if (hu != "" && showhelp)
     {
         auto lurl = fullyResolvedHelpURL(hu);
-        addCallbackMenu(mpeSubMenu, "[?] MPE",
-                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-        mpeSubMenu->addSeparator();
+
+        mpeSubMenu.addItem("[?] MPE", [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+        mpeSubMenu.addSeparator();
     }
 
     std::string endis = "Enable MPE";
+
     if (synth->mpeEnabled)
+    {
         endis = "Disable MPE";
-    addCallbackMenu(mpeSubMenu, endis.c_str(),
-                    [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
-    mpeSubMenu->addSeparator();
+    }
+
+    mpeSubMenu.addItem(endis.c_str(),
+                       [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
+
+    mpeSubMenu.addSeparator();
 
     std::ostringstream oss;
     oss << "Change MPE Pitch Bend Range (Current: " << synth->storage.mpePitchBendRange
         << " Semitones)";
-    addCallbackMenu(mpeSubMenu, Surge::GUI::toOSCaseForMenu(oss.str().c_str()), [this, menuRect]() {
-        // FIXME! This won't work on linux
+
+    mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss.str().c_str()), [this, menuRect]() {
+        // FIXME! This won't work on Linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
                           menuRect.getTopLeft(), [this](const std::string &c) {
@@ -5546,25 +5513,25 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool s
     int def = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                   Surge::Storage::MPEPitchBendRange, 48);
     oss2 << "Change Default MPE Pitch Bend Range (Current: " << def << " Semitones)";
-    addCallbackMenu(
-        mpeSubMenu, Surge::GUI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
-            // FIXME! This won't work on linux
-            const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-            promptForMiniEdit(
-                c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
-                menuRect.getTopLeft(), [this](const std::string &s) {
-                    int newVal = ::atoi(s.c_str());
-                    Surge::Storage::updateUserDefaultValue(
-                        &(this->synth->storage), Surge::Storage::MPEPitchBendRange, newVal);
-                    this->synth->storage.mpePitchBendRange = newVal;
-                });
-        });
 
-    auto men = makeSmoothMenu(menuRect, Surge::Storage::PitchSmoothingMode,
-                              (int)ControllerModulationSource::SmoothingMode::DIRECT,
-                              [this](auto md) { this->resetPitchSmoothing(md); });
-    mpeSubMenu->addEntry(men, Surge::GUI::toOSCaseForMenu("MPE Pitch Bend Smoothing"));
-    men->forget();
+    mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss2.str().c_str()), [this, menuRect]() {
+        // FIXME! This won't work on linux
+        const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
+        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
+                          menuRect.getTopLeft(), [this](const std::string &s) {
+                              int newVal = ::atoi(s.c_str());
+                              Surge::Storage::updateUserDefaultValue(
+                                  &(this->synth->storage), Surge::Storage::MPEPitchBendRange,
+                                  newVal);
+                              this->synth->storage.mpePitchBendRange = newVal;
+                          });
+    });
+
+    auto smoothMenu = makeSmoothMenu(menuRect, Surge::Storage::PitchSmoothingMode,
+                                     (int)ControllerModulationSource::SmoothingMode::DIRECT,
+                                     [this](auto md) { this->resetPitchSmoothing(md); });
+
+    mpeSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MPE Pitch Bend Smoothing"), smoothMenu);
 
     return mpeSubMenu;
 }
@@ -5608,22 +5575,20 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect &menu
     return monoSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
-    int tid = 0;
-    COptionMenu *tuningSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                 VSTGUI::COptionMenu::kNoDrawStyle |
-                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto tuningSubMenu = juce::PopupMenu();
 
     auto hu = helpURLForSpecial("tun-menu");
 
     if (hu != "" && showhelp)
     {
         auto lurl = fullyResolvedHelpURL(hu);
-        addCallbackMenu(tuningSubMenu, "[?] Tuning ",
-                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-        tid++;
-        tuningSubMenu->addSeparator();
+
+        tuningSubMenu.addItem("[?] Tuning ",
+                              [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+
+        tuningSubMenu.addSeparator();
     }
 
     bool isTuningEnabled = !synth->storage.isStandardTuning;
@@ -5642,58 +5607,44 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
         {
             tuningLabel += synth->storage.currentScale.description;
         }
-        auto curTuning =
-            std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(tuningLabel.c_str()));
-        curTuning->setEnabled(false);
-        tuningSubMenu->addEntry(curTuning);
-        tid++;
+
+        tuningSubMenu.addItem(tuningLabel, false, false, []() {});
     }
 
     if (isMappingEnabled)
     {
         auto mappingLabel = Surge::GUI::toOSCaseForMenu("Current Keyboard Mapping: ");
         mappingLabel += path_to_string(fs::path(synth->storage.currentMapping.name).stem());
-        auto curMapping =
-            std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(mappingLabel.c_str()));
-        curMapping->setEnabled(false);
-        tuningSubMenu->addEntry(curMapping);
-        tid++;
+
+        tuningSubMenu.addItem(mappingLabel, false, false, []() {});
     }
 
     if (isTuningEnabled || isMappingEnabled)
     {
-        tuningSubMenu->addSeparator();
-        tid++;
+        tuningSubMenu.addSeparator();
     }
 
-    auto st = addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
-                              [this]() {
-                                  this->synth->storage.retuneTo12TETScaleC261Mapping();
-                                  this->synth->refresh_editor = true;
-                              });
-    st->setEnabled(!this->synth->storage.isStandardTuning);
-    tid++;
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
+                          (!this->synth->storage.isStandardTuning), false, [this]() {
+                              this->synth->storage.retuneTo12TETScaleC261Mapping();
+                              this->synth->refresh_editor = true;
+                          });
 
-    st = addCallbackMenu(tuningSubMenu,
-                         Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"), [this]() {
-                             this->synth->storage.retuneTo12TETScale();
-                             this->synth->refresh_editor = true;
-                         });
-    st->setEnabled(!this->synth->storage.isStandardScale);
-    tid++;
-    auto kst = addCallbackMenu(tuningSubMenu,
-                               Surge::GUI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"),
-                               [this]() {
-                                   this->synth->storage.remapToConcertCKeyboard();
-                                   this->synth->refresh_editor = true;
-                               });
-    kst->setEnabled(!this->synth->storage.isStandardMapping);
-    tid++;
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
+                          (!this->synth->storage.isStandardScale), false, [this]() {
+                              this->synth->storage.retuneTo12TETScale();
+                              this->synth->refresh_editor = true;
+                          });
 
-    tuningSubMenu->addSeparator();
-    tid++;
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"),
+                          (!this->synth->storage.isStandardMapping), false, [this]() {
+                              this->synth->storage.remapToConcertCKeyboard();
+                              this->synth->refresh_editor = true;
+                          });
 
-    addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
+    tuningSubMenu.addSeparator();
+
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
         auto cb = [this](std::string sf) {
             std::string sfx = ".scl";
             if (sf.length() >= sfx.length())
@@ -5726,7 +5677,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
             Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
 
         juce::FileChooser c("Select SCL Scale", juce::File(scl_path), "*.scl");
+
         auto r = c.browseForFileToOpen();
+
         if (r)
         {
             auto res = c.getResult();
@@ -5734,60 +5687,56 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
             cb(rString);
         }
     });
-    tid++;
 
-    addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."),
-                    [this]() {
-                        auto cb = [this](std::string sf) {
-                            std::string sfx = ".kbm";
-                            if (sf.length() >= sfx.length())
-                            {
-                                if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                                {
-                                    synth->storage.reportError("Please select only .kbm files!",
-                                                               "Invalid Choice");
-                                    std::cout << "FILE is [" << sf << "]" << std::endl;
-                                    return;
-                                }
-                            }
-                            try
-                            {
-                                auto kb = Tunings::readKBMFile(sf);
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
+        auto cb = [this](std::string sf) {
+            std::string sfx = ".kbm";
+            if (sf.length() >= sfx.length())
+            {
+                if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
+                {
+                    synth->storage.reportError("Please select only .kbm files!", "Invalid Choice");
+                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                    return;
+                }
+            }
+            try
+            {
+                auto kb = Tunings::readKBMFile(sf);
 
-                                if (!this->synth->storage.remapToKeyboard(kb))
-                                {
-                                    synth->storage.reportError("This .kbm file is not valid!",
-                                                               "File Format Error");
-                                    return;
-                                }
+                if (!this->synth->storage.remapToKeyboard(kb))
+                {
+                    synth->storage.reportError("This .kbm file is not valid!", "File Format Error");
+                    return;
+                }
 
-                                this->synth->refresh_editor = true;
-                            }
-                            catch (Tunings::TuningError &e)
-                            {
-                                synth->storage.reportError(e.what(), "Loading Error");
-                            }
-                        };
+                this->synth->refresh_editor = true;
+            }
+            catch (Tunings::TuningError &e)
+            {
+                synth->storage.reportError(e.what(), "Loading Error");
+            }
+        };
 
-                        auto kbm_path = Surge::Storage::appendDirectory(
-                            this->synth->storage.datapath, "tuning-library", "KBM Concert Pitch");
-                        juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
-                        auto r = c.browseForFileToOpen();
-                        if (r)
-                        {
-                            auto res = c.getResult();
-                            auto rString = res.getFullPathName().toStdString();
-                            cb(rString);
-                        }
-                    });
-    tid++;
+        auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
+                                                        "tuning-library", "KBM Concert Pitch");
+        juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
+
+        auto r = c.browseForFileToOpen();
+
+        if (r)
+        {
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+            cb(rString);
+        }
+    });
 
     int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::MiddleC, 1);
     string middle_A = "A" + to_string(oct);
 
-    addCallbackMenu(
-        tuningSubMenu,
+    tuningSubMenu.addItem(
         Surge::GUI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
         [this, middle_A, menuRect]() {
             char ma[256];
@@ -5809,28 +5758,26 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                               });
         });
 
-    tuningSubMenu->addSeparator();
+    tuningSubMenu.addSeparator();
 
-    auto mod = addCallbackMenu(
-        tuningSubMenu, Surge::GUI::toOSCaseForMenu("Apply Tuning at MIDI Input"), [this]() {
+    tuningSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Apply Tuning at MIDI Input"), true,
+        (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY), [this]() {
             this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         });
-    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY);
-    tid++;
 
-    mod = addCallbackMenu(
-        tuningSubMenu, Surge::GUI::toOSCaseForMenu("Apply Tuning After Modulation"),
+    tuningSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Apply Tuning After Modulation"), true,
+        (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL),
         [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
-    mod->setChecked(synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL);
-    tid++;
 
-    tuningSubMenu->addSeparator();
+    tuningSubMenu.addSeparator();
 
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
     std::string txt = "Use ODDSound" + Surge::GUI::toOSCaseForMenu(" MTS-ESP (if Loaded in DAW)");
 
-    auto menuItem = addCallbackMenu(tuningSubMenu, txt, [this, tsMode]() {
+    tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
                                                !tsMode);
         if (tsMode)
@@ -5846,25 +5793,23 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
 
     if (tsMode && !this->synth->storage.oddsound_mts_client)
     {
-        addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"),
-                        [this]() { this->synth->storage.initialize_oddsound(); });
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"),
+                              [this]() { this->synth->storage.initialize_oddsound(); });
     }
-    menuItem->setChecked(tsMode);
 
     if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
     {
-        // a 'turn MTS off' menu
-        addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("Disconnect from MTS-ESP"),
-                        [this]() {
-                            auto q = this->synth->storage.oddsound_mts_client;
-                            this->synth->storage.oddsound_mts_active = false;
-                            this->synth->storage.oddsound_mts_client = nullptr;
-                            MTS_DeregisterClient(q);
-                        });
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Disconnect from MTS-ESP"), [this]() {
+            auto q = this->synth->storage.oddsound_mts_client;
+            this->synth->storage.oddsound_mts_active = false;
+            this->synth->storage.oddsound_mts_client = nullptr;
+            MTS_DeregisterClient(q);
+        });
 
-        // an MTS tuning toggle
-        auto mm = addCallbackMenu(
-            tuningSubMenu, Surge::GUI::toOSCaseForMenu("Query Tuning at Note On Only"), [this]() {
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Query Tuning at Note On Only"), true,
+            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
+            [this]() {
                 if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
                 {
                     this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
@@ -5874,63 +5819,51 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, boo
                     this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
                 }
             });
-        mm->setEnabled(true);
-        mm->setChecked(this->synth->storage.oddsoundRetuneMode ==
-                       SurgeStorage::RETUNE_NOTE_ON_ONLY);
 
-        // an 'MTS is on' disabled menu
-        mm = addCallbackMenu(tuningSubMenu, Surge::GUI::toOSCaseForMenu("MTS-ESP is Active"),
-                             []() {});
-        mm->setEnabled(false);
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("MTS-ESP is Active"), false, false,
+                              []() {});
 
-        // an 'MTS scale name' disabled menu
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
-        mm = addCallbackMenu(tuningSubMenu, mtsScale, []() {});
-        mm->setEnabled(false);
+
+        tuningSubMenu.addItem(mtsScale, false, false, []() {});
 
         return tuningSubMenu;
     }
 
-    tuningSubMenu->addSeparator();
+    tuningSubMenu.addSeparator();
 
-    tid++;
-    auto sct = addCallbackMenu(tuningSubMenu,
-                               Surge::GUI::toOSCaseForMenu("Show Current Tuning Information..."),
-                               [this]() { showHTML(this->tuningToHtml()); });
-    sct->setEnabled(!this->synth->storage.isStandardTuning);
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Current Tuning Information..."),
+                          (!this->synth->storage.isStandardTuning), false,
+                          [this]() { showHTML(this->tuningToHtml()); });
 
-    addCallbackMenu(
-        tuningSubMenu, Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
-            auto dpath =
-                Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
+        auto dpath =
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
 
-            juce::URL(juce::File(dpath)).launchInDefaultBrowser();
-        });
+        juce::URL(juce::File(dpath)).launchInDefaultBrowser();
+    });
 
     return tuningSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
-    COptionMenu *zoomSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
-
-    int zid = 0;
+    auto zoomSubMenu = juce::PopupMenu();
 
     auto hu = helpURLForSpecial("zoom-menu");
+
     if (hu != "" && showhelp)
     {
         auto lurl = fullyResolvedHelpURL(hu);
-        addCallbackMenu(zoomSubMenu, "[?] Zoom",
-                        [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-        zid++;
 
-        zoomSubMenu->addSeparator(zid++);
+        zoomSubMenu.addItem("[?] Zoom", [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+
+        zoomSubMenu.addSeparator();
     }
 
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     bool isFixed = false;
+
     if (currentSkin->hasFixedZooms())
     {
         isFixed = true;
@@ -5939,109 +5872,87 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool 
 
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
-        std::ostringstream lab;
-        lab << "Zoom to " << s << "%";
-        auto zcmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(lab.str()));
-        zcmd->setActions([this, s](CCommandMenuItem *m) { resizeWindow(s); });
-        zoomSubMenu->addEntry(zcmd);
-        if (s == zoomFactor)
-            zcmd->setChecked(true);
-        zid++;
+        std::string lab = "Zoom to " + std::to_string(s) + "%";
+
+        zoomSubMenu.addItem(lab, true, (s == zoomFactor), [this, s]() { resizeWindow(s); });
     }
-    zoomSubMenu->addSeparator(zid++);
+
+    zoomSubMenu.addSeparator();
 
     if (isFixed)
     {
         /*
-         * DO WE WANT SOMETHING LIKE THIS?
-        addCallbackMenu( zoomSubMenu, Surge::GUI::toOSCaseForMenu( "About fixed zoom skins..." ),
-                         [](){});
-                         */
+        DO WE WANT SOMETHING LIKE THIS?
+        zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu( "About fixed zoom skins..." ), []() {});
+        */
     }
     else
     {
         for (auto jog : {-25, -10, 10, 25}) // These are somewhat arbitrary reasonable defaults also
         {
-            std::ostringstream lab;
-            if (jog > 0)
-                lab << "Grow by " << jog << "%";
-            else
-                lab << "Shrink by " << -jog << "%";
+            std::string lab;
 
-            auto zcmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(lab.str()));
-            zcmd->setActions(
-                [this, jog](CCommandMenuItem *m) { resizeWindow(getZoomFactor() + jog); });
-            zoomSubMenu->addEntry(zcmd);
-            zid++;
+            if (jog > 0)
+            {
+                lab = "Grow by " + std::to_string(jog);
+            }
+            else
+            {
+                lab = "Shrink by " + std::to_string(-jog);
+            }
+
+            zoomSubMenu.addItem(lab + "%", [this, jog]() { resizeWindow(getZoomFactor() + jog); });
         }
 
-        zoomSubMenu->addSeparator(zid++);
+        zoomSubMenu.addSeparator();
 
-        auto biggestZ = std::make_shared<CCommandMenuItem>(
-            CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Zoom to Largest")));
-        biggestZ->setActions([this](CCommandMenuItem *m) {
-            int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5,
-                                                      90, // See comment in setZoomFactor
-                                                      getWindowSizeX(), getWindowSizeY());
+        zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Zoom to Largest"), [this]() {
+            // regarding that 90 value, see comment in setZoomFactor
+            int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5, 90, getWindowSizeX(),
+                                                      getWindowSizeY());
             resizeWindow(newZF);
         });
-        zoomSubMenu->addEntry(biggestZ);
-        zid++;
 
-        auto smallestZ = std::make_shared<CCommandMenuItem>(
-            CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Zoom to Smallest")));
-        smallestZ->setActions([this](CCommandMenuItem *m) { resizeWindow(minimumZoom); });
-        zoomSubMenu->addEntry(smallestZ);
-        zid++;
+        zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Zoom to Smallest"),
+                            [this]() { resizeWindow(minimumZoom); });
 
-        zoomSubMenu->addSeparator(zid++);
+        zoomSubMenu.addSeparator();
 
         auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                        Surge::Storage::DefaultZoom, zoomFactor);
-        std::ostringstream dss;
-        dss << "Zoom to Default (" << dzf << "%)";
-        auto todefaultZ = std::make_shared<CCommandMenuItem>(
-            CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu(dss.str().c_str())));
-        todefaultZ->setActions([this, dzf](CCommandMenuItem *m) { resizeWindow(dzf); });
-        zoomSubMenu->addEntry(todefaultZ);
-        zid++;
+
+        std::string dss = "Zoom to Default (" + std::to_string(dzf) + "%)";
+
+        zoomSubMenu.addItem(dss, [this, dzf]() { resizeWindow(dzf); });
     }
 
-    auto defaultZ = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Set Current Zoom Level as Default")));
-    defaultZ->setActions([this](CCommandMenuItem *m) {
+    zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Current Zoom Level as Default"), [this]() {
         Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom,
                                                zoomFactor);
     });
-    zoomSubMenu->addEntry(defaultZ);
-    zid++;
 
     if (!isFixed)
     {
-        addCallbackMenu(zoomSubMenu, Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."),
-                        [this, menuRect]() {
-                            char c[256];
-                            snprintf(c, 256, "%d", (int)zoomFactor);
-                            promptForMiniEdit(
-                                c, "Enter a default zoom level value:", "Set Default Zoom Level",
-                                menuRect.getTopLeft(), [this](const std::string &s) {
-                                    int newVal = ::atoi(s.c_str());
-                                    Surge::Storage::updateUserDefaultValue(
-                                        &(synth->storage), Surge::Storage::DefaultZoom, newVal);
-                                    resizeWindow(newVal);
-                                });
-                        });
-        zid++;
+        zoomSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."), [this, menuRect]() {
+                char c[256];
+                snprintf(c, 256, "%d", (int)zoomFactor);
+                promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level",
+                                  menuRect.getTopLeft(), [this](const std::string &s) {
+                                      int newVal = ::atoi(s.c_str());
+                                      Surge::Storage::updateUserDefaultValue(
+                                          &(synth->storage), Surge::Storage::DefaultZoom, newVal);
+                                      resizeWindow(newVal);
+                                  });
+            });
     }
 
     return zoomSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
 {
-    COptionMenu *uiOptionsMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                 VSTGUI::COptionMenu::kNoDrawStyle |
-                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto uiOptionsMenu = juce::PopupMenu();
 
 #if WINDOWS
 #define SUPPORTS_TOUCH_MENU 1
@@ -6057,266 +5968,229 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRec
 #endif
 
     // Mouse behavior submenu
-    int mid = 0;
-    COptionMenu *mouseSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                VSTGUI::COptionMenu::kNoDrawStyle |
-                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto mouseSubMenu = juce::PopupMenu();
 
     std::string mouseLegacy = "Legacy";
     std::string mouseSlow = "Slow";
     std::string mouseMedium = "Medium";
     std::string mouseExact = "Exact";
 
-    auto menuItem = addCallbackMenu(mouseSubMenu, mouseLegacy.c_str(), [this]() {
+    bool checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kLegacy;
+    bool enabled = !touchMode;
+
+    mouseSubMenu.addItem(mouseLegacy, enabled, checked, [this]() {
         CSurgeSlider::sliderMoveRateState = CSurgeSlider::kLegacy;
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                Surge::Storage::SliderMoveRateState,
                                                CSurgeSlider::sliderMoveRateState);
     });
-    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kLegacy));
-    menuItem->setEnabled(!touchMode);
-    mid++;
 
-    menuItem = addCallbackMenu(mouseSubMenu, mouseSlow.c_str(), [this]() {
+    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow;
+
+    mouseSubMenu.addItem(mouseSlow, enabled, checked, [this]() {
         CSurgeSlider::sliderMoveRateState = CSurgeSlider::kSlow;
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                Surge::Storage::SliderMoveRateState,
                                                CSurgeSlider::sliderMoveRateState);
     });
-    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow));
-    menuItem->setEnabled(!touchMode);
-    mid++;
 
-    menuItem = addCallbackMenu(mouseSubMenu, mouseMedium.c_str(), [this]() {
+    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium;
+
+    mouseSubMenu.addItem(mouseMedium, enabled, checked, [this]() {
         CSurgeSlider::sliderMoveRateState = CSurgeSlider::kMedium;
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                Surge::Storage::SliderMoveRateState,
                                                CSurgeSlider::sliderMoveRateState);
     });
-    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium));
-    menuItem->setEnabled(!touchMode);
-    mid++;
 
-    menuItem = addCallbackMenu(mouseSubMenu, mouseExact.c_str(), [this]() {
+    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact;
+
+    mouseSubMenu.addItem(mouseExact, enabled, checked, [this]() {
         CSurgeSlider::sliderMoveRateState = CSurgeSlider::kExact;
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                Surge::Storage::SliderMoveRateState,
                                                CSurgeSlider::sliderMoveRateState);
     });
-    menuItem->setChecked((CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact));
-    menuItem->setEnabled(!touchMode);
-    mid++;
 
-    mouseSubMenu->addSeparator(mid++);
+    mouseSubMenu.addSeparator();
 
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::ShowCursorWhileEditing, true);
 
-    menuItem = addCallbackMenu(
-        mouseSubMenu, Surge::GUI::toOSCaseForMenu("Show Cursor While Editing"), [this, tsMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::ShowCursorWhileEditing, !tsMode);
-        });
-    menuItem->setChecked(tsMode);
-    menuItem->setEnabled(!touchMode);
+    mouseSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Cursor While Editing"), enabled, tsMode,
+                         [this, tsMode]() {
+                             Surge::Storage::updateUserDefaultValue(
+                                 &(this->synth->storage), Surge::Storage::ShowCursorWhileEditing,
+                                 !tsMode);
+                         });
 
 #if SUPPORTS_TOUCH_MENU
-    mouseSubMenu->addSeparator();
-    menuItem = addCallbackMenu(
-        mouseSubMenu, Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), [this, touchMode]() {
+    mouseSubMenu.addSeparator();
+
+    mouseSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), true, touchMode, [this, touchMode]() {
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                    Surge::Storage::TouchMouseMode, !touchMode);
         });
-    menuItem->setChecked(touchMode);
 #endif
 
-    std::string mouseMenuName = Surge::GUI::toOSCaseForMenu("Mouse Behavior");
-
-    uiOptionsMenu->addEntry(mouseSubMenu, mouseMenuName.c_str());
-    mouseSubMenu->forget();
+    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Mouse Behavior"), mouseSubMenu);
 
     // patch defaults
-    COptionMenu *patchDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                VSTGUI::COptionMenu::kNoDrawStyle |
-                                                    VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto patchDefMenu = juce::PopupMenu();
 
-    auto pdItem = addCallbackMenu(
-        patchDefMenu, Surge::GUI::toOSCaseForMenu("Set Default Patch Author..."),
-        [this, menuRect]() {
-            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::DefaultPatchAuthor, "");
-            char txt[256];
-            txt[0] = 0;
-            if (Surge::Storage::isValidUTF8(s))
-                strxcpy(txt, s.c_str(), 256);
-            promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
-                              menuRect.getTopLeft(), [this](const std::string &s) {
-                                  Surge::Storage::updateUserDefaultValue(
-                                      &(this->synth->storage), Surge::Storage::DefaultPatchAuthor,
-                                      s);
-                              });
-        });
+    patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Patch Author..."), [this,
+                                                                                      menuRect]() {
+        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::DefaultPatchAuthor, "");
+        char txt[256];
+        txt[0] = 0;
+        if (Surge::Storage::isValidUTF8(s))
+            strxcpy(txt, s.c_str(), 256);
+        promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
+                          menuRect.getTopLeft(), [this](const std::string &s) {
+                              Surge::Storage::updateUserDefaultValue(
+                                  &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, s);
+                          });
+    });
 
-    pdItem = addCallbackMenu(
-        patchDefMenu, Surge::GUI::toOSCaseForMenu("Set Default Patch Comment..."),
-        [this, menuRect]() {
-            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::DefaultPatchComment, "");
-            char txt[256];
-            txt[0] = 0;
-            if (Surge::Storage::isValidUTF8(s))
-                strxcpy(txt, s.c_str(), 256);
-            promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
-                              menuRect.getTopLeft(), [this](const std::string &s) {
-                                  Surge::Storage::updateUserDefaultValue(
-                                      &(this->synth->storage), Surge::Storage::DefaultPatchComment,
-                                      s);
-                              });
-        });
+    patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Patch Comment..."), [this,
+                                                                                       menuRect]() {
+        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::DefaultPatchComment, "");
+        char txt[256];
+        txt[0] = 0;
+        if (Surge::Storage::isValidUTF8(s))
+            strxcpy(txt, s.c_str(), 256);
+        promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
+                          menuRect.getTopLeft(), [this](const std::string &s) {
+                              Surge::Storage::updateUserDefaultValue(
+                                  &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
+                          });
+    });
 
-    uiOptionsMenu->addEntry(patchDefMenu, Surge::GUI::toOSCaseForMenu("Patch Defaults"));
-    patchDefMenu->forget();
+    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Patch Defaults"), patchDefMenu);
 
-    auto *dispDefMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                        VSTGUI::COptionMenu::kNoDrawStyle |
-                                            VSTGUI::COptionMenu::kMultipleCheckStyle);
+    // value displays
+    auto dispDefMenu = juce::PopupMenu();
 
     // high precision value readouts
     bool precReadout = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, false);
 
-    menuItem = addCallbackMenu(
-        dispDefMenu, Surge::GUI::toOSCaseForMenu("High Precision Value Readouts"),
-        [this, precReadout]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, !precReadout);
-        });
-    menuItem->setChecked(precReadout);
+    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("High Precision Value Readouts"), true,
+                        precReadout, [this, precReadout]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::HighPrecisionReadouts,
+                                !precReadout);
+                        });
 
     // modulation value readout shows bounds
     bool modValues = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ModWindowShowsValues, false);
 
-    menuItem = addCallbackMenu(
-        dispDefMenu, Surge::GUI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"),
-        [this, modValues]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::ModWindowShowsValues, !modValues);
-        });
-    menuItem->setChecked(modValues);
+    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation Value Readout Shows Bounds"), true,
+                        modValues, [this, modValues]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::ModWindowShowsValues,
+                                !modValues);
+                        });
 
-    // lfoone. I think this is a display thing. But could be workflowalso?
     bool lfoone = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ShowGhostedLFOWaveReference, true);
 
-    menuItem = addCallbackMenu(
-        dispDefMenu, Surge::GUI::toOSCaseForMenu("Show Ghosted LFO Waveform Reference"),
-        [this, lfoone]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::ShowGhostedLFOWaveReference, !lfoone);
-            this->frame->invalid();
-        });
-    menuItem->setChecked(lfoone);
+    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Ghosted LFO Waveform Reference"), true,
+                        lfoone, [this, lfoone]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage),
+                                Surge::Storage::ShowGhostedLFOWaveReference, !lfoone);
+                            this->frame->invalid();
+                        });
 
     // Middle C submenu
-    COptionMenu *middleCSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                  VSTGUI::COptionMenu::kNoDrawStyle |
-                                                      VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto middleCSubMenu = juce::PopupMenu();
 
     auto mcValue =
         Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
 
-    auto mcItem = addCallbackMenu(middleCSubMenu, "C3", [this]() {
+    middleCSubMenu.addItem("C3", true, (mcValue == 2), [this]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 2);
         synth->refresh_editor = true;
     });
-    mcItem->setChecked(mcValue == 2);
 
-    mcItem = addCallbackMenu(middleCSubMenu, "C4", [this]() {
+    middleCSubMenu.addItem("C4", true, (mcValue == 1), [this]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
         synth->refresh_editor = true;
     });
-    mcItem->setChecked(mcValue == 1);
 
-    mcItem = addCallbackMenu(middleCSubMenu, "C5", [this]() {
+    middleCSubMenu.addItem("C5", true, (mcValue == 0), [this]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 0);
         synth->refresh_editor = true;
     });
-    mcItem->setChecked(mcValue == 0);
 
-    dispDefMenu->addEntry(middleCSubMenu, "Middle C");
-    middleCSubMenu->forget();
+    dispDefMenu.addSubMenu("Middle C", middleCSubMenu);
 
-    uiOptionsMenu->addEntry(dispDefMenu, Surge::GUI::toOSCaseForMenu("Value Displays"));
-    dispDefMenu->forget();
+    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Value Displays"), dispDefMenu);
 
-    auto *wfMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                   VSTGUI::COptionMenu::kNoDrawStyle |
-                                       VSTGUI::COptionMenu::kMultipleCheckStyle);
+    // workflow menu
+    auto wfMenu = juce::PopupMenu();
 
     // activate individual scene outputs
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::GUI::toOSCaseForMenu("Activate Individual Scene Outputs"), [this]() {
-            this->synth->activateExtraOutputs = !this->synth->activateExtraOutputs;
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::ActivateExtraOutputs,
-                                                   this->synth->activateExtraOutputs ? 1 : 0);
-        });
-    menuItem->setChecked(synth->activateExtraOutputs);
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Activate Individual Scene Outputs"), true,
+                   (synth->activateExtraOutputs), [this]() {
+                       this->synth->activateExtraOutputs = !this->synth->activateExtraOutputs;
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::ActivateExtraOutputs,
+                           this->synth->activateExtraOutputs ? 1 : 0);
+                   });
 
     bool msegSnapMem = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::RestoreMSEGSnapFromPatch, true);
 
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::GUI::toOSCaseForMenu("Load MSEG Snap State from Patch"),
-        [this, msegSnapMem]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::RestoreMSEGSnapFromPatch, !msegSnapMem);
-        });
-    menuItem->setChecked(msegSnapMem);
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Load MSEG Snap State from Patch"), true,
+                   msegSnapMem, [this, msegSnapMem]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RestoreMSEGSnapFromPatch,
+                           !msegSnapMem);
+                   });
 
     // remember tab positions per scene
     bool tabPosMem = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
 
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"),
-        [this, tabPosMem]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, !tabPosMem);
-        });
-    menuItem->setChecked(tabPosMem);
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"), true, tabPosMem,
+                   [this, tabPosMem]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene,
+                           !tabPosMem);
+                   });
 
     // wrap around browsing patches within current category
     bool patchJogWrap = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::PatchJogWraparound, true);
 
-    menuItem = addCallbackMenu(
-        wfMenu, Surge::GUI::toOSCaseForMenu("Previous/Next Patch Constrained to Current Category"),
-        [this, patchJogWrap]() {
+    wfMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Previous/Next Patch Constrained to Current Category"), true,
+        patchJogWrap, [this, patchJogWrap]() {
             Surge::Storage::updateUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, !patchJogWrap);
         });
-    menuItem->setChecked(patchJogWrap);
 
-    uiOptionsMenu->addEntry(wfMenu, Surge::GUI::toOSCaseForMenu("Workflow"));
-    wfMenu->forget();
+    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Workflow"), wfMenu);
 
     return uiOptionsMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 {
-    int tid = 0;
-    COptionMenu *skinSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto skinSubMenu = juce::PopupMenu();
 
     auto &db = Surge::GUI::SkinDB::get();
     bool hasTests = false;
 
     // TODO: Later allow nesting
     std::map<std::string, std::vector<Surge::GUI::SkinDB::Entry>> entryByCategory;
+
     for (auto &entry : db.getAvailableSkins())
     {
         entryByCategory[entry.category].push_back(entry);
@@ -6326,15 +6200,16 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     {
         auto addToThis = skinSubMenu;
         auto cat = pr.first;
+
         if (cat != "")
         {
-            addToThis = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                        VSTGUI::COptionMenu::kNoDrawStyle |
-                                            VSTGUI::COptionMenu::kMultipleCheckStyle);
+            addToThis = juce::PopupMenu();
         }
+
         for (auto &entry : pr.second)
         {
             auto dname = entry.displayName;
+
             if (useDevMenu)
             {
                 dname += " (";
@@ -6354,7 +6229,9 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 dname += PATH_SEPARATOR + entry.name + ")";
             }
 
-            auto cb = addCallbackMenu(addToThis, dname, [this, entry]() {
+            auto checked = entry.matchesSkin(currentSkin);
+
+            addToThis.addItem(dname, true, checked, [this, entry]() {
                 setupSkinFromEntry(entry);
                 this->synth->refresh_editor = true;
                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
@@ -6362,45 +6239,38 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                 Surge::Storage::updateUserDefaultValue(
                     &(this->synth->storage), Surge::Storage::DefaultSkinRootType, entry.rootType);
             });
-            cb->setChecked(entry.matchesSkin(currentSkin));
-            tid++;
         }
+
         if (cat != "")
         {
-            skinSubMenu->addEntry(addToThis, cat.c_str());
-            addToThis->forget();
+            skinSubMenu.addSubMenu(cat, addToThis);
         }
     }
-    skinSubMenu->addSeparator();
+
+    skinSubMenu.addSeparator();
 
     if (useDevMenu)
     {
         auto f5Value = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                            Surge::Storage::SkinReloadViaF5, 0);
 
-        auto valItem = addCallbackMenu(
-            skinSubMenu, Surge::GUI::toOSCaseForMenu("Use F5 To Reload Current Skin"),
-            [this, f5Value]() {
-                Surge::Storage::updateUserDefaultValue(
-                    &(this->synth->storage), Surge::Storage::SkinReloadViaF5, f5Value ? 0 : 1);
-            });
-        valItem->setChecked(f5Value == 1);
-
-        tid++;
+        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use F5 To Reload Current Skin"), true,
+                            (f5Value == 1), [this, f5Value]() {
+                                Surge::Storage::updateUserDefaultValue(
+                                    &(this->synth->storage), Surge::Storage::SkinReloadViaF5,
+                                    f5Value ? 0 : 1);
+                            });
 
         int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                         Surge::Storage::LayoutGridResolution, 16);
 
         auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
 
-        addCallbackMenu(skinSubMenu, Surge::GUI::toOSCaseForMenu(m),
-                        [this, pxres]() { this->showAboutBox(pxres); });
+        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu(m),
+                            [this, pxres]() { this->showAboutBox(pxres); });
 
-        tid++;
-
-        addCallbackMenu(
-            skinSubMenu, Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."),
-            [this, pxres]() {
+        skinSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."), [this, pxres]() {
                 this->promptForMiniEdit(
                     std::to_string(pxres), "Enter new resolution:", "Layout Grid Resolution",
                     CPoint(400, 400), [this](const std::string &s) {
@@ -6410,12 +6280,13 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
                     });
             });
 
-        skinSubMenu->addSeparator();
+        skinSubMenu.addSeparator();
     }
 
-    addCallbackMenu(skinSubMenu, Surge::GUI::toOSCaseForMenu("Reload Current Skin"), [this]() {
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reload Current Skin"), [this]() {
         this->bitmapStore.reset(new SurgeBitmaps());
         this->bitmapStore->setupBitmapsForFrame(frame);
+
         if (!this->currentSkin->reloadSkin(this->bitmapStore))
         {
             auto &db = Surge::GUI::SkinDB::get();
@@ -6430,9 +6301,8 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         reloadFromSkin();
         this->synth->refresh_editor = true;
     });
-    tid++;
 
-    addCallbackMenu(skinSubMenu, Surge::GUI::toOSCaseForMenu("Rescan Skins"), [this]() {
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan Skins"), [this]() {
         auto r = this->currentSkin->root;
         auto n = this->currentSkin->name;
 
@@ -6452,84 +6322,69 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         this->synth->refresh_editor = true;
     });
 
-    tid++;
-
-    skinSubMenu->addSeparator(tid++);
+    skinSubMenu.addSeparator();
 
     if (useDevMenu)
     {
-        addCallbackMenu(
-            skinSubMenu, Surge::GUI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
-                Surge::GUI::openFileOrFolder(this->currentSkin->root + this->currentSkin->name);
-            });
+        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
+            Surge::GUI::openFileOrFolder(this->currentSkin->root + this->currentSkin->name);
+        });
     }
     else
     {
-        addCallbackMenu(
-            skinSubMenu, Surge::GUI::toOSCaseForMenu("Install a New Skin..."), [this]() {
-                std::string skinspath =
-                    Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Skins");
-                // make it if it isn't there
-                fs::create_directories(string_to_path(skinspath));
-                Surge::GUI::openFileOrFolder(skinspath);
-            });
+        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Install a New Skin..."), [this]() {
+            std::string skinspath =
+                Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Skins");
+            // make it if it isn't there
+            fs::create_directories(string_to_path(skinspath));
+            Surge::GUI::openFileOrFolder(skinspath);
+        });
     }
-    tid++;
 
-    skinSubMenu->addSeparator();
+    skinSubMenu.addSeparator();
 
-    addCallbackMenu(skinSubMenu, Surge::GUI::toOSCaseForMenu("Show Skin Inspector..."),
-                    [this]() { showHTML(skinInspectorHtml()); });
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Skin Inspector..."),
+                        [this]() { showHTML(skinInspectorHtml()); });
 
-    tid++;
-
-    addCallbackMenu(skinSubMenu, Surge::GUI::toOSCaseForMenu("Skin Development Guide..."),
-                    []() { juce::URL("https://surge-synthesizer.github.io/skin-manual.html"); });
-
-    tid++;
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Development Guide..."), []() {
+        juce::URL("https://surge-synthesizer.github.io/skin-manual.html");
+    });
 
     return skinSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
 {
-    int did = 0;
-    COptionMenu *dataSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto dataSubMenu = juce::PopupMenu();
 
-    addCallbackMenu(dataSubMenu, Surge::GUI::toOSCaseForMenu("Open Factory Data Folder..."),
-                    [this]() { Surge::GUI::openFileOrFolder(this->synth->storage.datapath); });
-    did++;
+    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Data Folder..."),
+                        [this]() { Surge::GUI::openFileOrFolder(this->synth->storage.datapath); });
 
-    addCallbackMenu(dataSubMenu, Surge::GUI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
+    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
         // make it if it isn't there
         fs::create_directories(string_to_path(this->synth->storage.userDataPath));
         Surge::GUI::openFileOrFolder(this->synth->storage.userDataPath);
     });
-    did++;
 
-    addCallbackMenu(dataSubMenu, Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."),
-                    [this]() {
-                        auto cb = [this](std::string f) {
-                            // FIXME - check if f is a path
-                            this->synth->storage.userDataPath = f;
-                            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                                   Surge::Storage::UserDataPath, f);
-                            this->synth->storage.refresh_wtlist();
-                            this->synth->storage.refresh_patchlist();
-                        };
-                        /*
-                         * TODO: Implement JUCE directory picker
-                        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-                        "", "", cb, true, true);
-                                                                      */
-                    });
-    did++;
+    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
+        auto cb = [this](std::string f) {
+            // FIXME - check if f is a path
+            this->synth->storage.userDataPath = f;
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::UserDataPath, f);
+            this->synth->storage.refresh_wtlist();
+            this->synth->storage.refresh_patchlist();
+        };
+        /*
+         * TODO: Implement JUCE directory picker
+        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
+        "", "", cb, true, true);
+                                                      */
+    });
 
-    dataSubMenu->addSeparator(did++);
+    dataSubMenu.addSeparator();
 
-    addCallbackMenu(dataSubMenu, Surge::GUI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
+    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan All Data Folders"), [this]() {
         this->synth->storage.refresh_wtlist();
         this->synth->storage.refresh_patchlist();
         this->scannedForMidiPresets = false;
@@ -6545,6 +6400,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
 
         // So go find the skin
         auto e = db.getEntryByRootAndName(r, n);
+
         if (e.isJust())
         {
             setupSkinFromEntry(e.fromJust());
@@ -6565,77 +6421,71 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
 // key is the key given to getUserDefaultValue,
 // default is a value to default to,
 // setSmooth is a function called to set the smoothing value
-VSTGUI::COptionMenu *SurgeGUIEditor::makeSmoothMenu(
+juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
     VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
     std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth)
 {
-    COptionMenu *smoothMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                              VSTGUI::COptionMenu::kNoDrawStyle |
-                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto smoothMenu = juce::PopupMenu();
 
     int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
 
-    auto asmt = [this, smoothMenu, smoothing,
+    auto asmt = [this, &smoothMenu, smoothing,
                  setSmooth](const char *label, ControllerModulationSource::SmoothingMode md) {
-        auto me = addCallbackMenu(smoothMenu, label, [setSmooth, md]() { setSmooth(md); });
-        me->setChecked(smoothing == md);
+        smoothMenu.addItem(label, true, (smoothing == md), [setSmooth, md]() { setSmooth(md); });
     };
+
     asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
     asmt("Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP);
     asmt("Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP);
     asmt("Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE);
     asmt("No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT);
+
     return smoothMenu;
 };
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
 {
-    COptionMenu *midiSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto midiSubMenu = juce::PopupMenu();
 
     auto smen = makeSmoothMenu(menuRect, Surge::Storage::SmoothingMode,
                                (int)ControllerModulationSource::SmoothingMode::LEGACY,
                                [this](auto md) { this->resetSmoothing(md); });
-    midiSubMenu->addEntry(smen, Surge::GUI::toOSCaseForMenu("Controller Smoothing"));
-    smen->forget();
+    midiSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Controller Smoothing"), smen);
 
-    auto mmom = makeMonoModeOptionsMenu(menuRect, true);
-    midiSubMenu->addEntry(mmom, Surge::GUI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
-    mmom->forget();
-    midiSubMenu->addSeparator();
+    // TODO: include this after going through the parameter RMB context menu forest!
+    // auto mmom = makeMonoModeOptionsMenu(menuRect, true);
+    // midiSubMenu->addEntry(mmom, Surge::GUI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
 
-    addCallbackMenu(midiSubMenu, Surge::GUI::toOSCaseForMenu("Save MIDI Mapping As..."),
-                    [this, menuRect]() {
-                        this->scannedForMidiPresets = false; // force a rescan
-                        char msn[256];
-                        msn[0] = 0;
-                        promptForMiniEdit(msn, "MIDI Mapping Name", "Save MIDI Mapping",
-                                          menuRect.getTopLeft(), [this](const std::string &s) {
-                                              this->synth->storage.storeMidiMappingToName(s);
-                                          });
-                    });
+    midiSubMenu.addSeparator();
 
-    auto menuItem = addCallbackMenu(
-        midiSubMenu, Surge::GUI::toOSCaseForMenu("Set Current MIDI Mapping as Default"),
+    midiSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save MIDI Mapping As..."), [this, menuRect]() {
+        this->scannedForMidiPresets = false; // force a rescan
+        char msn[256];
+        msn[0] = 0;
+        promptForMiniEdit(
+            msn, "MIDI Mapping Name", "Save MIDI Mapping", menuRect.getTopLeft(),
+            [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); });
+    });
+
+    midiSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Set Current MIDI Mapping as Default"),
         [this]() { this->synth->storage.write_midi_controllers_to_user_default(); });
 
-    addCallbackMenu(
-        midiSubMenu, Surge::GUI::toOSCaseForMenu("Clear Current MIDI Mapping"), [this]() {
-            int n = n_global_params + n_scene_params;
+    midiSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Current MIDI Mapping"), [this]() {
+        int n = n_global_params + n_scene_params;
 
-            for (int i = 0; i < n; i++)
-            {
-                this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
-                if (i > n_global_params)
-                    this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
-            }
-        });
+        for (int i = 0; i < n; i++)
+        {
+            this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
+            if (i > n_global_params)
+                this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
+        }
+    });
 
-    midiSubMenu->addSeparator();
+    midiSubMenu.addSeparator();
 
-    addCallbackMenu(midiSubMenu, Surge::GUI::toOSCaseForMenu("Show Current MIDI Mapping..."),
-                    [this]() { showHTML(this->midiMappingToHtml()); });
+    midiSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Current MIDI Mapping..."),
+                        [this]() { showHTML(this->midiMappingToHtml()); });
 
     if (!scannedForMidiPresets)
     {
@@ -6644,15 +6494,17 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
     }
 
     bool gotOne = false;
+
     for (const auto &p : synth->storage.userMidiMappingsXMLByName)
     {
         if (!gotOne)
         {
             gotOne = true;
-            midiSubMenu->addSeparator();
+            midiSubMenu.addSeparator();
         }
-        addCallbackMenu(midiSubMenu, p.first,
-                        [this, p] { this->synth->storage.loadMidiMappingByName(p.first); });
+
+        midiSubMenu.addItem(p.first,
+                            [this, p] { this->synth->storage.loadMidiMappingByName(p.first); });
     }
 
     return midiSubMenu;
@@ -6722,27 +6574,18 @@ void SurgeGUIEditor::reloadFromSkin()
     }
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
 {
-    int tid = 0;
-
-    COptionMenu *devSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                              VSTGUI::COptionMenu::kNoDrawStyle |
-                                                  VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto devSubMenu = juce::PopupMenu();
 
 #if WINDOWS
-    static bool consoleState;
-
-    auto conItem = addCallbackMenu(devSubMenu, Surge::GUI::toOSCaseForMenu("Show Debug Console..."),
-                                   []() { consoleState = Surge::Debug::toggleConsole(); });
-    conItem->setChecked(consoleState);
-    tid++;
+    devSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Debug Console..."),
+                       []() { Surge::Debug::toggleConsole(); });
 #endif
 
 #ifdef INSTRUMENT_UI
-    addCallbackMenu(devSubMenu, Surge::GUI::toOSCaseForMenu("Show UI Instrumentation..."),
-                    []() { Surge::Debug::report(); });
-    tid++;
+    devSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show UI Instrumentation..."),
+                       []() { Surge::Debug::report(); });
 #endif
 
     return devSubMenu;
