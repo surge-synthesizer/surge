@@ -47,7 +47,8 @@ namespace Surge
 namespace Widgets
 {
 struct Switch;
-}
+struct VerticalLabel;
+} // namespace Widgets
 } // namespace Surge
 
 struct SGEDropAdapter;
@@ -491,11 +492,12 @@ class SurgeGUIEditor : public EditorType,
             {
                 juceSkinComponents[id].release();
                 juceSkinComponents.erase(id);
-                hsw = std::unique_ptr<Surge::Widgets::Switch>{pq};
+                hsw = std::unique_ptr<T>{pq};
             }
             else
             {
                 jassert(false);
+                hsw = std::make_unique<T>();
             }
         }
         else
@@ -506,7 +508,7 @@ class SurgeGUIEditor : public EditorType,
     }
 
   private:
-    VSTGUI::CTextLabel *lfoNameLabel = nullptr;
+    std::unique_ptr<Surge::Widgets::VerticalLabel> lfoNameLabel;
     VSTGUI::CTextLabel *fxPresetLabel = nullptr;
 
   public:
