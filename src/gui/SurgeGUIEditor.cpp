@@ -26,7 +26,6 @@
 #include "CEffectSettings.h"
 #include "CSurgeVuMeter.h"
 #include "CMenuAsSlider.h"
-#include "CEffectLabel.h"
 #include "CTextButtonWithHover.h"
 #include "CAboutBox.h"
 #include "SurgeBitmaps.h"
@@ -43,6 +42,7 @@
 #include "ModulationEditor.h"
 #include "LuaEditors.h"
 
+#include "widgets/EffectLabel.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 
@@ -1246,10 +1246,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     vr.right += 5;
                     vr.offset(5, -12);
                     vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
-                    CEffectLabel *lb = new CEffectLabel(vr);
-                    lb->setLabel(label);
-                    lb->setSkin(currentSkin, bitmapStore);
-                    frame->addView(lb);
+                    if (!effectLabels[i])
+                    {
+                        effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
+                    }
+                    effectLabels[i]->setBounds(vr.asJuceIntRect());
+                    effectLabels[i]->setLabel(label);
+                    effectLabels[i]->setSkin(currentSkin, bitmapStore);
+                    frame->juceComponent()->addAndMakeVisible(*effectLabels[i]);
+                }
+                else
+                {
+                    effectLabels[i].reset(nullptr);
                 }
             }
         }

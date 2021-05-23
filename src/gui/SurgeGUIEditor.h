@@ -48,6 +48,7 @@ namespace Widgets
 {
 struct Switch;
 struct VerticalLabel;
+struct EffectLabel;
 } // namespace Widgets
 } // namespace Surge
 
@@ -478,6 +479,8 @@ class SurgeGUIEditor : public EditorType,
     /*
      * This is the JUCE component management
      */
+    std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, 15> effectLabels;
+
     std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, std::unique_ptr<juce::Component>>
         juceSkinComponents;
     template <typename T>
