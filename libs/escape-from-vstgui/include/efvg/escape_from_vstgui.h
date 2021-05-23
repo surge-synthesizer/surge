@@ -305,10 +305,9 @@ struct CRect
         UNIMPL;
         return r;
     }
-    bool rectOverlap(const CRect &r)
+    bool rectOverlap(const CRect &rect)
     {
-        UNIMPL;
-        return false;
+        return right >= rect.left && left <= rect.right && bottom >= rect.top && top <= rect.bottom;
     }
     inline void setHeight(float h) { bottom = top + h; }
     inline void setWidth(float h) { right = left + h; }

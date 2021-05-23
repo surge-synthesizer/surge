@@ -1,11 +1,8 @@
 #pragma once
 
 #include "resource.h"
-#if ESCAPE_FROM_VSTGUI
+#include <JuceHeader.h>
 #include "efvg/escape_from_vstgui.h"
-#else
-#include "vstgui/vstgui.h"
-#endif
 #include <map>
 #include <atomic>
 #include <algorithm>
@@ -24,12 +21,16 @@ class SurgeBitmaps
     void setPhysicalZoomFactor(int pzf);
 
     CScalableBitmap *getBitmap(int id);
-    CScalableBitmap *getBitmapByPath(std::string filename);
-    CScalableBitmap *getBitmapByStringID(std::string id);
+    CScalableBitmap *getBitmapByPath(const std::string &filename);
+    CScalableBitmap *getBitmapByStringID(const std::string &id);
 
-    CScalableBitmap *loadBitmapByPath(std::string filename);
-    CScalableBitmap *loadBitmapByPathForID(std::string filename, int id);
-    CScalableBitmap *loadBitmapByPathForStringID(std::string filename, std::string id);
+    juce::Drawable *getDrawable(int id);
+    juce::Drawable *getDrawableByPath(const std::string &filename);
+    juce::Drawable *getDrawableByStringID(const std::string &id);
+
+    CScalableBitmap *loadBitmapByPath(const std::string &filename);
+    CScalableBitmap *loadBitmapByPathForID(const std::string &filename, int id);
+    CScalableBitmap *loadBitmapByPathForStringID(const std::string &filename, std::string id);
 
     enum StringResourceType
     {

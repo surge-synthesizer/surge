@@ -49,6 +49,7 @@ namespace Widgets
 struct Switch;
 struct VerticalLabel;
 struct EffectLabel;
+struct VuMeter;
 } // namespace Widgets
 } // namespace Surge
 
@@ -428,7 +429,7 @@ class SurgeGUIEditor : public EditorType,
     void toggleAlternateFor(VSTGUI::CControl *c);
 
   private:
-    VSTGUI::CControl *vu[16];
+    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
     VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
