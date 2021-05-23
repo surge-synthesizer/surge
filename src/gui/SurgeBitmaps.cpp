@@ -126,21 +126,21 @@ void SurgeBitmaps::addEntry(int id, VSTGUI::CFrame *f)
 
 CScalableBitmap *SurgeBitmaps::getBitmap(int id) { return bitmap_registry.at(id); }
 
-CScalableBitmap *SurgeBitmaps::getBitmapByPath(std::string path)
+CScalableBitmap *SurgeBitmaps::getBitmapByPath(const std::string &path)
 {
     if (bitmap_file_registry.find(path) == bitmap_file_registry.end())
         return nullptr;
     return bitmap_file_registry.at(path);
 }
 
-CScalableBitmap *SurgeBitmaps::getBitmapByStringID(std::string id)
+CScalableBitmap *SurgeBitmaps::getBitmapByStringID(const std::string &id)
 {
     if (bitmap_stringid_registry.find(id) == bitmap_stringid_registry.end())
         return nullptr;
     return bitmap_stringid_registry[id];
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPath(std::string path)
+CScalableBitmap *SurgeBitmaps::loadBitmapByPath(const std::string &path)
 {
     if (bitmap_file_registry.find(path) != bitmap_file_registry.end())
     {
@@ -150,7 +150,7 @@ CScalableBitmap *SurgeBitmaps::loadBitmapByPath(std::string path)
     return bitmap_file_registry[path];
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPathForID(std::string path, int id)
+CScalableBitmap *SurgeBitmaps::loadBitmapByPathForID(const std::string &path, int id)
 {
     if (bitmap_registry.find(id) != bitmap_registry.end())
     {
@@ -160,7 +160,7 @@ CScalableBitmap *SurgeBitmaps::loadBitmapByPathForID(std::string path, int id)
     return bitmap_registry[id];
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPathForStringID(std::string path, std::string id)
+CScalableBitmap *SurgeBitmaps::loadBitmapByPathForStringID(const std::string &path, std::string id)
 {
     if (bitmap_stringid_registry.find(id) != bitmap_stringid_registry.end())
     {
@@ -178,4 +178,28 @@ void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
         pair.second->setPhysicalZoomFactor(pzf);
     for (auto pair : bitmap_stringid_registry)
         pair.second->setPhysicalZoomFactor(pzf);
+}
+
+juce::Drawable *SurgeBitmaps::getDrawable(int id)
+{
+    auto b = getBitmap(id);
+    if (b)
+        return b->drawable.get();
+    return nullptr;
+}
+
+juce::Drawable *SurgeBitmaps::getDrawableByPath(const std::string &filename)
+{
+    auto b = getBitmapByPath(filename);
+    if (b)
+        return b->drawable.get();
+    return nullptr;
+}
+
+juce::Drawable *SurgeBitmaps::getDrawableByStringID(const std::string &id)
+{
+    auto b = getBitmapByStringID(id);
+    if (b)
+        return b->drawable.get();
+    return nullptr;
 }

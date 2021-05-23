@@ -349,7 +349,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CSnapshotMenu.cpp
   src/gui/CSurgeHyperlink.cpp
   src/gui/CSurgeSlider.cpp
-  src/gui/CSurgeVuMeter.cpp
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/LuaEditors.cpp
@@ -368,6 +367,7 @@ set(SURGE_GUI_SOURCES
   src/gui/UIInstrumentation.cpp
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
+  src/gui/widgets/VuMeter.cpp
         )
 
 # Includes and Compiler Flags

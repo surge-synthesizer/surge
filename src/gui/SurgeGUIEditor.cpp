@@ -24,7 +24,6 @@
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
 #include "CEffectSettings.h"
-#include "CSurgeVuMeter.h"
 #include "CMenuAsSlider.h"
 #include "CTextButtonWithHover.h"
 #include "CAboutBox.h"
@@ -45,6 +44,7 @@
 #include "widgets/EffectLabel.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
+#include "widgets/VuMeter.h"
 
 #include <iostream>
 #include <iomanip>
@@ -166,22 +166,6 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
         0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
     splitpointControl = 0;
     clear_infoview_countdown = -1;
-    vu[0] = 0;
-    vu[1] = 0;
-    vu[2] = 0;
-    vu[3] = 0;
-    vu[4] = 0;
-    vu[5] = 0;
-    vu[6] = 0;
-    vu[7] = 0;
-    vu[8] = 0;
-    vu[9] = 0;
-    vu[10] = 0;
-    vu[11] = 0;
-    vu[12] = 0;
-    vu[13] = 0;
-    vu[14] = 0;
-    vu[15] = 0;
     lfodisplay = 0;
     fxmenu = 0;
     for (int i = 0; i < n_fx_slots; ++i)
@@ -480,9 +464,9 @@ void SurgeGUIEditor::idle()
             vuInvalid = true;
             vu[0]->setValue(synth->vu_peak[0]);
         }
-        if (synth->vu_peak[1] != ((CSurgeVuMeter *)vu[0])->getValueR())
+        if (synth->vu_peak[1] != vu[0]->getValueR())
         {
-            ((CSurgeVuMeter *)vu[0])->setValueR(synth->vu_peak[1]);
+            vu[0]->setValueR(synth->vu_peak[1]);
             vuInvalid = true;
         }
         if (vuInvalid)
@@ -500,13 +484,12 @@ void SurgeGUIEditor::idle()
 
                 // check so it doesn't overlap with the infowindow
                 CRect iw = ((CParameterTooltip *)infowindow)->getViewSize();
-                CRect vur = vu[i + 1]->getViewSize();
+                CRect vur = vu[i + 1]->getBounds();
 
                 if (!((CParameterTooltip *)infowindow)->isVisible() || !vur.rectOverlap(iw))
                 {
                     vu[i + 1]->setValue(synth->fx[current_fx]->vu[(i << 1)]);
-                    ((CSurgeVuMeter *)vu[i + 1])
-                        ->setValueR(synth->fx[current_fx]->vu[(i << 1) + 1]);
+                    vu[i + 1]->setValueR(synth->fx[current_fx]->vu[(i << 1) + 1]);
                     vu[i + 1]->invalid();
                 }
             }
@@ -1227,10 +1210,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     CRect vr(fxRect); // FIXME (vurect);
                     vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
                     vr.offset(0, -14);
-                    vu[i + 1] = new CSurgeVuMeter(vr, this);
-                    ((CSurgeVuMeter *)vu[i + 1])->setSkin(currentSkin, bitmapStore);
-                    ((CSurgeVuMeter *)vu[i + 1])->setType(t);
-                    frame->addView(vu[i + 1]);
+                    if (!vu[i + 1])
+                    {
+                        vu[i + 1] = std::make_unique<Surge::Widgets::VuMeter>();
+                    }
+                    vu[i + 1]->setBounds(vr.asJuceIntRect());
+                    vu[i + 1]->setSkin(currentSkin, bitmapStore);
+                    vu[i + 1]->setType(t);
+                    frame->juceComponent()->addAndMakeVisible(*vu[i + 1]);
                 }
                 else
                 {
@@ -1436,10 +1423,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
         { // main vu-meter
-            vu[0] = new CSurgeVuMeter(skinCtrl->getRect(), this);
-            ((CSurgeVuMeter *)vu[0])->setSkin(currentSkin, bitmapStore);
-            ((CSurgeVuMeter *)vu[0])->setType(vut_vu_stereo);
-            frame->addView(vu[0]);
+            vu[0] = componentForSkinSession<Surge::Widgets::VuMeter>(skinCtrl->sessionid);
+            vu[0]->setBounds(skinCtrl->getRect().asJuceIntRect());
+            vu[0]->setSkin(currentSkin, bitmapStore);
+            vu[0]->setType(vut_vu_stereo);
+            frame->juceComponent()->addAndMakeVisible(*vu[0]);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
@@ -1740,6 +1728,7 @@ void SurgeGUIEditor::close_editor()
     editor_open = false;
     lfodisplay = 0;
     frame->removeAll(true);
+    frame->juceComponent()->removeAllChildren();
     setzero(param);
 }
 
