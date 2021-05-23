@@ -336,7 +336,6 @@ set(SURGE_GENERATED_SOURCES
 
 set(SURGE_GUI_SOURCES
   src/gui/CAboutBox.cpp
-  src/gui/CEffectLabel.h
   src/gui/CEffectSettings.cpp
   src/gui/CHSwitch2.cpp
   src/gui/CLFOGui.cpp

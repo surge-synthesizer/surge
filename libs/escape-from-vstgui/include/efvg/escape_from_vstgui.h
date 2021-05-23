@@ -393,6 +393,8 @@ struct CColor
         return red == that.red && green == that.green && blue == that.blue && alpha == that.alpha;
     }
     juce::Colour asJuceColour() const { return juce::Colour(red, green, blue, alpha); }
+
+    operator juce::Colour() const { return asJuceColour(); }
     uint8_t red, green, blue, alpha;
 };
 
