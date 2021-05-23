@@ -17,11 +17,9 @@
 #include "resource.h"
 #include "CSurgeSlider.h"
 #include "CHSwitch2.h"
-#include "widgets/Switch.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
 #include "COscillatorDisplay.h"
-#include "CVerticalLabel.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
@@ -44,6 +42,9 @@
 #include "ModulatorPresetManager.h"
 #include "ModulationEditor.h"
 #include "LuaEditors.h"
+
+#include "widgets/Switch.h"
+#include "widgets/VerticalLabel.h"
 
 #include <iostream>
 #include <iomanip>
@@ -1377,13 +1378,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL:
         {
             // Room for improvement, obviously
-            lfoNameLabel = new CVerticalLabel(skinCtrl->getRect(), "");
-            lfoNameLabel->setTransparency(true);
+            lfoNameLabel =
+                componentForSkinSession<Surge::Widgets::VerticalLabel>(skinCtrl->sessionid);
+            frame->juceComponent()->addAndMakeVisible(*lfoNameLabel);
+            lfoNameLabel->setBounds(skinCtrl->getRect().asJuceIntRect());
             lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, kBoldFace));
-            lfoNameLabel->setFontColor(currentSkin->getColor(Colors::LFO::Title::Text));
-            lfoNameLabel->setHoriAlign(kCenterText);
-            frame->addView(lfoNameLabel);
-
+            lfoNameLabel->setFontColour(
+                currentSkin->getColor(Colors::LFO::Title::Text).asJuceColour());
             break;
         }
 
@@ -8294,7 +8295,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     // update the LFO title label
     std::string modname = modulatorName(modsource_editor[current_scene], true);
     lfoNameLabel->setText(modname.c_str());
-    lfoNameLabel->invalid();
+    lfoNameLabel->repaint();
 
     // And now we have dynamic labels really anything
     frame->invalid();
