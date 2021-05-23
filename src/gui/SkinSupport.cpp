@@ -1280,5 +1280,12 @@ void Surge::GUI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
     c->parentResolved = true;
 }
 
+Skin::Control::Control()
+{
+    // I assume this is only called from UI thread so is single threaded, thus
+    static sessionid_t sidc = 1;
+    sessionid = sidc++;
+}
+
 } // namespace GUI
 } // namespace Surge
