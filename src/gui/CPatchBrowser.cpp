@@ -36,6 +36,7 @@ void CPatchBrowser::draw(CDrawContext *dc)
     cat.left += 3;
     cat.right = cat.left + 150;
     cat.setHeight(pbrowser.getHeight() / 2);
+
     if (skin->getVersion() >= 2)
     {
         cat.offset(0, (pbrowser.getHeight() / 2) - 1);
@@ -53,6 +54,7 @@ void CPatchBrowser::draw(CDrawContext *dc)
         cat.offset(0, 1);
         auth.offset(0, -1);
     }
+
     // debug draws
     // dc->drawRect(pbrowser);
     // dc->drawRect(cat);
@@ -82,7 +84,6 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
 
     auto contextMenu = juce::PopupMenu();
-
     int main_e = 0;
     // if RMB is down, only show the current category
     bool single_category = button & (kRButton | kControl), has_3rdparty = false;
@@ -111,9 +112,9 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 if (_stricmp(storage->patch_category[c].name.c_str(), "Init") == 0)
                 {
                     rightMouseCategory = c;
-                    ;
                 }
             }
+
             if (rightMouseCategory < 0)
             {
                 rightMouseCategory = storage->patchCategoryOrdering[0];
@@ -122,10 +123,12 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
         // get just the category name and not the path leading to it
         std::string menuName = storage->patch_category[rightMouseCategory].name;
+
         if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
         {
             menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
         }
+
         std::transform(menuName.begin(), menuName.end(), menuName.begin(), ::toupper);
 
         contextMenu.addSectionHeader("PATCHES (" + menuName + ")");
@@ -187,6 +190,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     auto initAction = [this]() {
         int i = 0;
+
         for (auto p : storage->patch_list)
         {
             if (p.name == "Init Saw" && storage->patch_category[p.category].name == "Templates")
@@ -194,34 +198,46 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 loadPatch(i);
                 break;
             }
+
             ++i;
         }
     };
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
 
     contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
         if (sge)
+        {
             sge->showPatchBrowserDialog();
+        }
     });
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch List"),
                         [this]() { this->storage->refresh_patchlist(); });
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {
         juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
         auto r = c.browseForFileToOpen();
+
         if (r)
         {
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
             auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
             if (sge)
+            {
                 sge->queuePatchFileLoad(rString);
+            }
         }
     });
 
     contextMenu.addSeparator();
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."),
                         [this]() { Surge::GUI::openFileOrFolder(this->storage->userDataPath); });
 
@@ -239,13 +255,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu.addSeparator();
 
     auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
+
     if (sge)
     {
         auto hu = sge->helpURLForSpecial("patch-browser");
+
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
             auto ca = [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); };
+
             contextMenu.addItem("[?] Patch Browser", ca);
         }
     }
@@ -277,6 +296,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
     // Go through the whole patch list in alphabetical order and filter
     // out only the patches that belong to the current category.
     vector<int> ctge;
+
     for (auto p : storage->patchOrdering)
     {
         if (storage->patch_list[p].category == c)
@@ -312,6 +332,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
             name = storage->patch_list[p].name;
 
             bool thisCheck = false;
+
             if (p == current_patch)
             {
                 thisCheck = true;
@@ -336,14 +357,19 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
         {
             // this isn't the best approach but it works
             int idx = 0;
+
             for (auto &cc : storage->patch_category)
             {
                 if (cc.name == childcat.name && cc.internalid == childcat.internalid)
+                {
                     break;
+                }
+
                 idx++;
             }
 
             bool checkedKid = populatePatchMenuForCategory(idx, *subMenu, false, main_e, false);
+
             if (checkedKid)
             {
                 amIChecked = true;
@@ -352,6 +378,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         // get just the category name and not the path leading to it
         string menuName = storage->patch_category[c].name;
+
         if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
         {
             menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
@@ -368,17 +395,12 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         if (!single_category)
         {
-            contextMenu.addSubMenu(name, *subMenu);
-
-#if 0
-            if (c == current_category || amIChecked)
-            {
-                entry->setChecked(true);
-            }
-#endif
+            contextMenu.addSubMenu(name, *subMenu, true, nullptr, amIChecked);
         }
+
         main_e++;
     }
+
     return amIChecked;
 }
 
