@@ -5354,9 +5354,8 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 
     auto lfoSubMenu = juce::PopupMenu();
 
-    lfoSubMenu.addItem("[?] LFO Presets", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); }),
-
-        lfoSubMenu.addSeparator();
+    lfoSubMenu.addItem("[?] LFO Presets", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    lfoSubMenu.addSeparator();
 
     lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId,
                                                                                 what]() {
@@ -5371,49 +5370,18 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     });
 
     auto presetCategories = Surge::ModulatorPreset::getPresets(&(synth->storage));
-
     if (!presetCategories.empty())
     {
         lfoSubMenu.addSeparator();
     }
 
-    std::unordered_map<std::string, std::pair<std::unique_ptr<juce::PopupMenu>, bool>> subMenuMaps;
-
-    for (auto const &cat : presetCategories)
-    {
-        subMenuMaps[cat.path] = std::make_pair(std::make_unique<juce::PopupMenu>(), false);
-    }
-
-    for (auto const &cat : presetCategories)
-    {
-        juce::PopupMenu *catSubMenu;
-        if (subMenuMaps.find(cat.path) == subMenuMaps.end())
+    std::function<void(juce::PopupMenu & m, const Surge::ModulatorPreset::Category &cat)>
+        recurseCat;
+    recurseCat = [this, currentLfoId, presetCategories,
+                  &recurseCat](juce::PopupMenu &m, const Surge::ModulatorPreset::Category &cat) {
+        for (const auto &p : cat.presets)
         {
-            if (cat.path.empty())
-            {
-                catSubMenu = &lfoSubMenu;
-            }
-            else
-            {
-                // should never happen
-                continue;
-            }
-        }
-        else
-        {
-            catSubMenu = subMenuMaps[cat.path].first.get();
-        }
-
-        if (catSubMenu->getNumItems() > 0 && cat.presets.size() > 0)
-        {
-            catSubMenu->addSeparator();
-        }
-
-        for (auto const &p : cat.presets)
-        {
-            auto pname = p.name;
-
-            catSubMenu->addItem(pname, [this, p, currentLfoId]() {
+            auto action = [this, p, currentLfoId]() {
                 Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage),
                                                        current_scene, currentLfoId);
 
@@ -5433,39 +5401,35 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                 }
 
                 this->synth->refresh_editor = true;
-            });
+            };
+            m.addItem(p.name, action);
         }
-    }
-
-    for (auto it = presetCategories.rbegin(); it != presetCategories.rend(); it++)
-    {
-        const auto &cat = *it;
-
-        if (subMenuMaps.find(cat.path) == subMenuMaps.end())
+        bool haveD = false;
+        for (const auto &sc : presetCategories)
         {
-            jassert(false);
-            // should never happen
-            continue;
-        }
-
-        auto catSubMenu = subMenuMaps[cat.path].first.get();
-        auto parentMenu = &lfoSubMenu;
-
-        if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
-        {
-            parentMenu = subMenuMaps[cat.parentPath].first.get();
-
-            if (!subMenuMaps[cat.parentPath].second)
+            if (sc.parentPath == cat.path)
             {
-                subMenuMaps[cat.parentPath].second = true;
+                if (!haveD)
+                    m.addSeparator();
+                haveD = true;
+                juce::PopupMenu subMenu;
+                recurseCat(subMenu, sc);
+                m.addSubMenu(sc.name, subMenu);
             }
         }
+    };
 
-        parentMenu->addSubMenu(cat.name, *catSubMenu);
+    for (auto tlc : presetCategories)
+    {
+        if (tlc.parentPath.empty())
+        {
+            juce::PopupMenu sm;
+            recurseCat(sm, tlc);
+            lfoSubMenu.addSubMenu(tlc.name, sm);
+        }
     }
 
     lfoSubMenu.addSeparator();
-
     lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan Presets"),
                        []() { Surge::ModulatorPreset::forcePresetRescan(); });
 
