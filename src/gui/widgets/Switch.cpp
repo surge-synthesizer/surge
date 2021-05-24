@@ -29,17 +29,20 @@ void Switch::paint(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState gs(g);
     auto y = value > 0.5 ? -getLocalBounds().getHeight() : 0;
+
     if (isMultiIntegerValued())
+    {
         y = -getIntegerValue() * getLocalBounds().getHeight();
+    }
+
     auto t = juce::AffineTransform().translated(0, y);
     g.reduceClipRegion(getLocalBounds());
+
+    switchD->draw(g, 1.0, t);
+
     if (isHovered && hoverSwitchD)
     {
         hoverSwitchD->draw(g, 1.0, t);
-    }
-    else
-    {
-        switchD->draw(g, 1.0, t);
     }
 }
 
@@ -61,23 +64,24 @@ void Switch::mouseDown(const juce::MouseEvent &event)
         {
             setValueDirection(1);
         }
+
         notifyValueChanged();
     }
     else
     {
         if (!getUnValueClickable())
         {
-            if (value > 0.5)
-                value = 0;
-            else
-                value = 1;
+            value = (value > 0.5) ? 0 : 1;
+
             notifyValueChanged();
         }
     }
 }
 
 void Switch::mouseEnter(const juce::MouseEvent &event) { isHovered = true; }
+
 void Switch::mouseExit(const juce::MouseEvent &event) { isHovered = false; }
+
 void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel)
 {
     int mul = wheelHelper.accumulate(wheel);
@@ -93,8 +97,11 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
         {
             auto ov = value;
             value = mul > 0 ? 1 : 0;
+
             if (ov != value)
+            {
                 notifyValueChanged();
+            }
         }
     }
 }
