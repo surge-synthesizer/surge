@@ -92,8 +92,8 @@ class CPatchBrowser : public VSTGUI::CControl, public Surge::GUI::SkinConsumingC
      * recursively builds the nested patch menu. In the event that one of my children is checked,
      * return true so I too can be checked. otherwise, return false.
      */
-    bool populatePatchMenuForCategory(int index, VSTGUI::COptionMenu *contextMenu,
-                                      bool single_category, int &main_e, bool rootCall);
+    bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
+                                      int &main_e, bool rootCall);
 
     CLASS_METHODS(CPatchBrowser, VSTGUI::CControl)
 };
