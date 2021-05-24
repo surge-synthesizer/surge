@@ -6187,12 +6187,13 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     for (auto pr : entryByCategory)
     {
-        auto addToThis = skinSubMenu;
+        auto catMen = juce::PopupMenu();
+        auto addToThis = &skinSubMenu;
         auto cat = pr.first;
 
         if (cat != "")
         {
-            addToThis = juce::PopupMenu();
+            addToThis = &catMen;
         }
 
         for (auto &entry : pr.second)
@@ -6220,7 +6221,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
             auto checked = entry.matchesSkin(currentSkin);
 
-            addToThis.addItem(dname, true, checked, [this, entry]() {
+            addToThis->addItem(dname, true, checked, [this, entry]() {
                 setupSkinFromEntry(entry);
                 this->synth->refresh_editor = true;
                 Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
@@ -6232,7 +6233,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
         if (cat != "")
         {
-            skinSubMenu.addSubMenu(cat, addToThis);
+            skinSubMenu.addSubMenu(cat, *addToThis);
         }
     }
 
