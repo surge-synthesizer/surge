@@ -62,27 +62,19 @@ class CSnapshotMenu : public VSTGUI::CControl, public Surge::GUI::SkinConsumingC
         return true;
     }
 
+    juce::PopupMenu menu;
     bool isHovered = false;
     int selectedIdx = -1;
     std::string selectedName = "";
-    VSTGUI::COptionMenu *menu = nullptr;
-    void initializeMenu()
-    {
-        if (menu)
-            menu->forget();
-
-        menu = new VSTGUI::COptionMenu(getViewSize(), listener, getTag(), 0);
-        menu->remember();
-    }
 
   protected:
-    VSTGUI::COptionMenu *populateSubmenuFromTypeElement(TiXmlElement *typeElement,
-                                                        VSTGUI::COptionMenu *parent, int &main,
-                                                        int &sub, const long &max_sub, int &idx);
-    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu,
+    void populateSubmenuFromTypeElement(TiXmlElement *typeElement, juce::PopupMenu &parent,
+                                        int &idx, bool isTopLevel = false);
+    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, juce::PopupMenu &subMenu,
                                        int &idx)
     {
     }
+    virtual void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) {}
     SurgeStorage *storage = nullptr;
     char mtype[16] = {0};
     std::map<int, int> firstSnapshotByType;
@@ -134,7 +126,7 @@ class CFxMenu : public CSnapshotMenu
     virtual void populate() override;
 
   protected:
-    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, VSTGUI::COptionMenu *subMenu,
+    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, juce::PopupMenu &subMenu,
                                        int &idx) override;
     FxStorage *fx = nullptr, *fxbuffer = nullptr;
     static std::vector<float>
@@ -168,6 +160,8 @@ class CFxMenu : public CSnapshotMenu
             }
         }
     };
+
+    void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) override;
 
     static std::unordered_map<int, std::vector<UserPreset>> userPresets; // from type to presets
 

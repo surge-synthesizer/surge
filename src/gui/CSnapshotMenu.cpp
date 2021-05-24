@@ -27,13 +27,7 @@ CSnapshotMenu::CSnapshotMenu(const CRect &size, IControlListener *listener, long
     this->storage = storage;
     this->listenerNotForParent = listener;
 }
-CSnapshotMenu::~CSnapshotMenu()
-{
-    if (menu)
-    {
-        menu->forget();
-    }
-}
+CSnapshotMenu::~CSnapshotMenu() {}
 
 CMouseEventResult CSnapshotMenu::onMouseDown(CPoint &where, const CButtonState &button)
 {
@@ -42,8 +36,8 @@ CMouseEventResult CSnapshotMenu::onMouseDown(CPoint &where, const CButtonState &
         listenerNotForParent->controlModifierClicked(this, button);
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
-    if (menu)
-        menu->popup();
+
+    menu.showMenuAsync(juce::PopupMenu::Options());
 
     return kMouseEventHandled;
 }
@@ -54,12 +48,8 @@ bool CSnapshotMenu::canSave() { return false; }
 
 void CSnapshotMenu::populate()
 {
-    int main = 0, sub = 0;
-    const long max_main = 128, max_sub = 256;
-
     int idx = 0;
     TiXmlElement *sect = storage->getSnapshotSection(mtype);
-    initializeMenu();
 
     if (sect)
     {
@@ -69,26 +59,14 @@ void CSnapshotMenu::populate()
         {
             if (type->Value() && strcmp(type->Value(), "type") == 0)
             {
-                auto sm = populateSubmenuFromTypeElement(type, menu, main, sub, max_sub, idx);
-
-                if (sm)
-                {
-                    addToTopLevelTypeMenu(type, sm, idx);
-                    sm->forget();
-                }
+                populateSubmenuFromTypeElement(type, menu, idx, true);
             }
             else if (type->Value() && strcmp(type->Value(), "separator") == 0)
             {
-                menu->addSeparator();
+                menu.addSeparator();
             }
 
             type = type->NextSiblingElement();
-            main++;
-
-            if (main >= max_main)
-            {
-                break;
-            }
         }
     }
     maxIdx = idx;
@@ -150,10 +128,8 @@ bool CSnapshotMenu::loadSnapshotByIndex(int idx)
     return false;
 }
 
-VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type,
-                                                                   VSTGUI::COptionMenu *parent,
-                                                                   int &main, int &sub,
-                                                                   const long &max_sub, int &idx)
+void CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement *type, juce::PopupMenu &parent,
+                                                   int &idx, bool isTop)
 {
     /*
     ** Begin by grabbing all the snapshot elements
@@ -161,9 +137,14 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     std::string txt;
     int type_id = 0;
     type->Attribute("i", &type_id);
-    sub = 0;
-    COptionMenu *subMenu = new COptionMenu(getViewSize(), 0, main, 0);
-    subMenu->setNbItemsPerColumn(20);
+    int sub = 0;
+
+    juce::PopupMenu subMenu;
+
+    if (isTop)
+    {
+        setMenuStartHeader(type, subMenu);
+    }
     TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
     while (snapshot)
     {
@@ -179,23 +160,19 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
 
         if (firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end())
             firstSnapshotByType[snapshotTypeID] = idx;
-        auto actionItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(txt.c_str()));
-        auto action = [this, snapshot, snapshotTypeID, idx](CCommandMenuItem *item) {
+
+        auto action = [this, snapshot, snapshotTypeID, idx]() {
             this->selectedIdx = idx;
             this->loadSnapshot(snapshotTypeID, snapshot, idx);
             if (this->listenerNotForParent)
                 this->listenerNotForParent->valueChanged(this);
         };
         loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
+        subMenu.addItem(txt, action);
         idx++;
-
-        actionItem->setActions(action, nullptr);
-        subMenu->addEntry(actionItem);
 
         snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
         sub++;
-        if (sub >= max_sub)
-            break;
     }
 
     /*
@@ -204,10 +181,13 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
     TiXmlElement *subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
     while (subType)
     {
-        auto res = populateSubmenuFromTypeElement(subType, subMenu, main, sub, max_sub, idx);
-        if (res)
-            res->forget();
+        populateSubmenuFromTypeElement(subType, subMenu, idx);
         subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
+    }
+
+    if (isTop)
+    {
+        addToTopLevelTypeMenu(type, subMenu, idx);
     }
 
     /*
@@ -217,18 +197,14 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
 
     if (sub)
     {
-        parent->addEntry(subMenu, txt.c_str());
+        parent.addSubMenu(txt, subMenu);
     }
     else
     {
-        subMenu->remember(); // Annoynace from vstgui port. Fix this later
-
-        auto actionItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(txt.c_str()));
-
         if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
             firstSnapshotByType[type_id] = idx;
 
-        auto action = [this, type_id, type, idx](CCommandMenuItem *item) {
+        auto action = [this, type_id, type, idx]() {
             this->selectedIdx = 0;
             this->loadSnapshot(type_id, type, idx);
             if (this->listenerNotForParent)
@@ -236,18 +212,8 @@ VSTGUI::COptionMenu *CSnapshotMenu::populateSubmenuFromTypeElement(TiXmlElement 
         };
 
         loadArgsByIndex.push_back(std::make_pair(type_id, type));
+        parent.addItem(txt, action);
         idx++;
-        actionItem->setActions(action, nullptr);
-        parent->addEntry(actionItem);
-    }
-
-    // subMenu->forget();
-    if (sub)
-        return subMenu; // OK to return forgoten since it has lifetime of parent
-    else
-    {
-        subMenu->forget();
-        return nullptr;
     }
 }
 
@@ -726,37 +692,24 @@ void CFxMenu::populate()
     ** Add copy/paste/save
     */
 
-    menu->addSeparator();
+    menu.addSeparator();
+    menu.addItem("Copy", [this]() { this->copyFX(); });
+    menu.addItem("Paste", [this]() { this->pasteFX(); });
 
-    auto copyItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("Copy"));
-    auto copy = [this](CCommandMenuItem *item) { this->copyFX(); };
-    copyItem->setActions(copy, nullptr);
-    menu->addEntry(copyItem);
-
-    auto pasteItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("Paste"));
-    auto paste = [this](CCommandMenuItem *item) { this->pasteFX(); };
-    pasteItem->setActions(paste, nullptr);
-    menu->addEntry(pasteItem);
-
-    menu->addSeparator();
+    menu.addSeparator();
 
     if (fx->type.val.i != fxt_off)
     {
-        auto saveItem = std::make_shared<CCommandMenuItem>(
-            CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Save FX Preset")));
-        saveItem->setActions([this](CCommandMenuItem *item) { this->saveFX(); });
-        menu->addEntry(saveItem);
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset"), [this]() { this->saveFX(); });
     }
 
-    auto rescanItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List")));
-    rescanItem->setActions([this](CCommandMenuItem *item) {
+    auto rsA = [this]() {
         scanForUserPresets = true;
         auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
         if (sge)
             sge->queueRebuildUI();
-    });
-    menu->addEntry(rescanItem);
+    };
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
 }
 
 void CFxMenu::copyFX()
@@ -989,9 +942,9 @@ void CFxMenu::loadUserPreset(const UserPreset &p)
     }
 }
 
-void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *subMenu, int &idx)
+void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu, int &idx)
 {
-    if (!type || !subMenu)
+    if (!type)
         return;
 
     int type_id = 0;
@@ -1000,17 +953,23 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, VSTGUI::COptionMenu *sub
     if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
         return;
 
-    auto factory_add = subMenu->addEntry("FACTORY PRESETS", 0);
-    factory_add->setEnabled(0);
-
-    auto user_add = subMenu->addEntry("USER PRESETS");
-    user_add->setEnabled(0);
+    subMenu.addSectionHeader("User Presets");
 
     for (auto &ps : userPresets[type_id])
     {
         auto fxName = ps.name;
-        auto i = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(fxName.c_str()));
-        i->setActions([this, ps](CCommandMenuItem *item) { this->loadUserPreset(ps); });
-        subMenu->addEntry(i);
+        subMenu.addItem(fxName, [this, ps]() { this->loadUserPreset(ps); });
     }
+}
+void CFxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
+{
+    if (!type)
+        return;
+
+    int type_id = 0;
+    type->Attribute("i", &type_id);
+
+    if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+        return;
+    subMenu.addSectionHeader("Factory Presets");
 }
