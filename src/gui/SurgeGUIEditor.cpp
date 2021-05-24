@@ -5327,17 +5327,27 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 {
     int currentLfoId = modsource_editor[current_scene] - ms_lfo1;
-
     int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
-    std::string what = "LFO";
-    if (lt_mseg == shapev)
+    std::string what;
+
+    switch (shapev)
+    {
+    case lt_mseg:
         what = "MSEG";
-    if (lt_stepseq == shapev)
+        break;
+    case lt_stepseq:
         what = "Step Seq";
-    if (lt_envelope == shapev)
+        break;
+    case lt_envelope:
         what = "Envelope";
-    if (lt_formula == shapev)
+        break;
+    case lt_formula:
         what = "Formula";
+        break;
+    default:
+        what = "LFO";
+        break;
+    }
 
     auto msurl = SurgeGUIEditor::helpURLForSpecial("lfo-presets");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
