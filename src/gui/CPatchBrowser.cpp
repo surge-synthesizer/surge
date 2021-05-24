@@ -81,10 +81,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
-    CRect menurect(0, 0, 0, 0);
-    menurect.offset(where.x, where.y);
-    COptionMenu *contextMenu =
-        new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
+    auto contextMenu = juce::PopupMenu();
 
     int main_e = 0;
     // if RMB is down, only show the current category
@@ -131,7 +128,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         }
         std::transform(menuName.begin(), menuName.end(), menuName.begin(), ::toupper);
 
-        contextMenu->addSectionHeader("PATCHES (" + menuName + ")");
+        contextMenu.addSectionHeader("PATCHES (" + menuName + ")");
 
         populatePatchMenuForCategory(rightMouseCategory, contextMenu, single_category, main_e,
                                      false);
@@ -140,7 +137,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     {
         if (patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
-            contextMenu->addSectionHeader("FACTORY PATCHES");
+            contextMenu.addSectionHeader("FACTORY PATCHES");
         }
 
         for (int i = 0; i < patch_cat_size; i++)
@@ -162,8 +159,8 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                         txt = "USER PATCHES";
                     }
 
-                    contextMenu->addColumnBreak();
-                    contextMenu->addSectionHeader(txt);
+                    contextMenu.addColumnBreak();
+                    contextMenu.addSectionHeader(txt);
                 }
 
                 // Remap index to the corresponding category in alphabetical order.
@@ -185,12 +182,10 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         }
     }
 
-    contextMenu->addColumnBreak();
-    contextMenu->addSectionHeader("FUNCTIONS");
+    contextMenu.addColumnBreak();
+    contextMenu.addSectionHeader("FUNCTIONS");
 
-    auto initItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Initialize Patch")));
-    auto initAction = [this](CCommandMenuItem *item) {
+    auto initAction = [this]() {
         int i = 0;
         for (auto p : storage->patch_list)
         {
@@ -202,29 +197,18 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
             ++i;
         }
     };
-    initItem->setActions(initAction, nullptr);
-    contextMenu->addEntry(initItem);
-    contextMenu->addSeparator();
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
 
-    auto pdbF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Patch Database...")));
-    pdbF->setActions([this](CCommandMenuItem *item) {
+    contextMenu.addSeparator();
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
         if (sge)
             sge->showPatchBrowserDialog();
     });
-    contextMenu->addEntry(pdbF);
-    contextMenu->addSeparator();
-
-    auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh Patch List")));
-    auto refreshAction = [this](CCommandMenuItem *item) { this->storage->refresh_patchlist(); };
-    refreshItem->setActions(refreshAction, nullptr);
-    contextMenu->addEntry(refreshItem);
-
-    auto loadF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Load Patch from File...")));
-    loadF->setActions([this](CCommandMenuItem *item) {
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch List"),
+                        [this]() { this->storage->refresh_patchlist(); });
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {
         juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
         auto r = c.browseForFileToOpen();
         if (r)
@@ -236,36 +220,23 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 sge->queuePatchFileLoad(rString);
         }
     });
-    contextMenu->addEntry(loadF);
 
-    contextMenu->addSeparator();
+    contextMenu.addSeparator();
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."),
+                        [this]() { Surge::GUI::openFileOrFolder(this->storage->userDataPath); });
 
-    auto showU = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open User Patches Folder...")));
-    showU->setActions([this](CCommandMenuItem *item) {
-        Surge::GUI::openFileOrFolder(this->storage->userDataPath);
-    });
-    contextMenu->addEntry(showU);
-
-    auto showF = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder...")));
-    showF->setActions([this](CCommandMenuItem *item) {
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder..."), [this]() {
         Surge::GUI::openFileOrFolder(
             Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
     });
-    contextMenu->addEntry(showF);
 
-    auto show3 = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder...")));
-    show3->setActions([this](CCommandMenuItem *item) {
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
-    });
-    contextMenu->addEntry(show3);
+    contextMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder..."), [this]() {
+            Surge::GUI::openFileOrFolder(
+                Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
+        });
 
-    contextMenu->addSeparator();
-
-    contextMenu->cleanupSeparators(false);
+    contextMenu.addSeparator();
 
     auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
     if (sge)
@@ -274,59 +245,16 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto hi =
-                std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("[?] Patch Browser"));
-            auto ca = [lurl](CCommandMenuItem *i) { juce::URL(lurl).launchInDefaultBrowser(); };
-            hi->setActions(ca, nullptr);
-            contextMenu->addEntry(hi);
+            auto ca = [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); };
+            contextMenu.addItem("[?] Patch Browser", ca);
         }
     }
 
-    if (sge)
-    {
-        /*
-         * So why are we doing this? Well idle updates (like automation of something
-         * that causes a rebuild) can rebuild the UI under us, but also, since the menu
-         * sends a message to the synth to queue a rebuild, it is possible that the load,
-         * process and rebuild could happen *before* popup returns. So imagine
-         *
-         * addView
-         * popup() [frees the ui queue so the idle is running again
-         *     - click menu
-         *     - set patchid queue
-         *     - audio loads the patch
-         *     - idle queue runs (normally this happens after popup closes)
-         *     - UI rebuilds
-         * popup returns
-         * remove self from frame - but hey I've been GCed by that rebuild
-         * splat
-         *
-         * in the normal course of course you get
-         *
-         * addView
-         * popup()
-         *      - click menu
-         *      - patch id queue
-         * close()
-         * idle runs after close
-         *
-         * but not every time. So on slower boxes sometimes (and only sometimes)
-         * the menu would crash. Solve this by having the idle skipped while the
-         * menu is open.
-         */
-        sge->pause_idle_updates = true;
-
-        getFrame()->addView(contextMenu); // add to frame
-        contextMenu->setDirty();
-        contextMenu->popup();
-        getFrame()->removeView(contextMenu, true); // remove from frame and forget
-
-        sge->pause_idle_updates = false;
-    }
+    contextMenu.showMenuAsync(juce::PopupMenu::Options());
     return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
-bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu,
+bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
                                                  bool single_category, int &main_e, bool rootCall)
 {
     bool amIChecked = false;
@@ -363,16 +291,16 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
     for (int subc = 0; subc < n_subc; subc++)
     {
         string name;
-        COptionMenu *subMenu;
+        juce::PopupMenu availMenu;
+        juce::PopupMenu *subMenu;
 
         if (single_category)
         {
-            subMenu = contextMenu;
+            subMenu = &contextMenu;
         }
         else
         {
-            subMenu = new COptionMenu(getViewSize(), nullptr, main_e, 0, 0,
-                                      COptionMenu::kMultipleCheckStyle);
+            subMenu = &availMenu;
         }
 
         int sub = 0;
@@ -383,18 +311,14 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
 
             name = storage->patch_list[p].name;
 
-            auto actionItem =
-                std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name.c_str()));
-            auto action = [this, p](CCommandMenuItem *item) { this->loadPatch(p); };
-
+            bool thisCheck = false;
             if (p == current_patch)
             {
-                actionItem->setChecked(true);
+                thisCheck = true;
                 amIChecked = true;
             }
 
-            actionItem->setActions(action, nullptr);
-            subMenu->addEntry(actionItem);
+            subMenu->addItem(name, true, thisCheck, [this, p]() { this->loadPatch(p); });
             sub++;
 
             if (sub != 0 && sub % 32 == 0)
@@ -419,7 +343,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
                 idx++;
             }
 
-            bool checkedKid = populatePatchMenuForCategory(idx, subMenu, false, main_e, false);
+            bool checkedKid = populatePatchMenuForCategory(idx, *subMenu, false, main_e, false);
             if (checkedKid)
             {
                 amIChecked = true;
@@ -444,14 +368,14 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, COptionMenu *contextMenu
 
         if (!single_category)
         {
-            auto entry = contextMenu->addEntry(subMenu, name.c_str());
+            contextMenu.addSubMenu(name, *subMenu);
 
+#if 0
             if (c == current_category || amIChecked)
             {
                 entry->setChecked(true);
             }
-
-            subMenu->forget(); // Important, so that the refcounter gets it right
+#endif
         }
         main_e++;
     }

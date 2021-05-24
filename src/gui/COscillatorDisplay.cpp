@@ -1021,31 +1021,23 @@ void COscillatorDisplay::openCustomEditor()
 
             if (buttons & kRButton)
             {
-                auto contextMenu = new COptionMenu(CRect(where, CPoint(0, 0)), 0, 0, 0, 0,
-                                                   COptionMenu::kMultipleCheckStyle);
+                auto contextMenu = juce::PopupMenu();
 
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc("[?] Alias Osc Additive Options"));
-                    contextMenu->addEntry(actionItem);
-                    contextMenu->addSeparator();
+                    contextMenu.addItem("[?] Alias Osc Additive Options", []() {});
+                    contextMenu.addSeparator();
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Sine")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Sine", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Triangle")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] =
@@ -1054,52 +1046,40 @@ void COscillatorDisplay::openCustomEditor()
                                 disp->oscdata->extraConfig.data[qq] *= -1.f;
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Triangle", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Sawtooth")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Sawtooth", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Square")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Square", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Random")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] = disp->storage->rand_pm1();
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Random", action);
                 }
 
-                contextMenu->addSeparator();
+                contextMenu.addSeparator();
 
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Absolute")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             if (disp->oscdata->extraConfig.data[qq] < 0)
@@ -1108,26 +1088,20 @@ void COscillatorDisplay::openCustomEditor()
                             }
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Absolute", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Invert")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                         {
                             disp->oscdata->extraConfig.data[qq] =
                                 -disp->oscdata->extraConfig.data[qq];
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Invert", action);
                 }
                 {
-                    auto actionItem = std::make_shared<CCommandMenuItem>(
-                        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Reverse")));
-                    auto action = [this](CCommandMenuItem *item) {
+                    auto action = [this]() {
                         float pdata[AliasOscillator::n_additive_partials];
 
                         for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
@@ -1140,17 +1114,10 @@ void COscillatorDisplay::openCustomEditor()
                             disp->oscdata->extraConfig.data[15 - qq] = pdata[qq];
                         }
                     };
-                    actionItem->setActions(action, nullptr);
-                    contextMenu->addEntry(actionItem);
+                    contextMenu.addItem("Reverse", action);
                 }
 
-                disp->getFrame()->addView(contextMenu); // add to frame
-                contextMenu->setDirty();
-                contextMenu->popup();
-
-                // getFrame()->looseFocus(pContext);
-
-                disp->getFrame()->removeView(contextMenu, true); // remove from frame and forget
+                contextMenu.showMenuAsync(juce::PopupMenu::Options());
                 return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
             }
 
