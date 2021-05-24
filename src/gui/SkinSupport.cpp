@@ -1287,5 +1287,36 @@ Skin::Control::Control()
     sessionid = sidc++;
 }
 
+std::array<juce::Drawable *, 3>
+Skin::standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> b)
+{
+    auto csb = backgroundBitmapForControl(c, b);
+    return standardHoverAndHoverOnForCSB(csb, c, b);
+}
+std::array<juce::Drawable *, 3> Skin::standardHoverAndHoverOnForIDB(int id,
+                                                                    std::shared_ptr<SurgeBitmaps> b)
+{
+    auto csb = b->getBitmap(id);
+    return standardHoverAndHoverOnForCSB(csb, nullptr, b);
+}
+std::array<juce::Drawable *, 3> Skin::standardHoverAndHoverOnForCSB(CScalableBitmap *csb,
+                                                                    Skin::Control::ptr_t c,
+                                                                    std::shared_ptr<SurgeBitmaps> b)
+{
+    std::array<juce::Drawable *, 3> res;
+    res[0] = csb->drawable.get();
+
+    auto hoverBmp =
+        hoverBitmapOverlayForBackgroundBitmap(c, csb, b, Surge::GUI::Skin::HoverType::HOVER);
+
+    res[1] = hoverBmp ? hoverBmp->drawable.get() : nullptr;
+
+    auto hoverOnBmp = hoverBitmapOverlayForBackgroundBitmap(
+        c, csb, b, Surge::GUI::Skin::HoverType::HOVER_OVER_ON);
+
+    res[2] = hoverOnBmp ? hoverOnBmp->drawable.get() : nullptr;
+    return res;
+}
+
 } // namespace GUI
 } // namespace Surge

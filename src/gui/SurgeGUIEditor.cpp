@@ -16,7 +16,6 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 #include "CSurgeSlider.h"
-#include "CHSwitch2.h"
 #include "CParameterTooltip.h"
 #include "CPatchBrowser.h"
 #include "COscillatorDisplay.h"
@@ -42,6 +41,7 @@
 #include "LuaEditors.h"
 
 #include "widgets/EffectLabel.h"
+#include "widgets/MultiSwitch.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
@@ -1993,9 +1993,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
             // Assume vertical alignment of the scene buttons
             int a = limit_range((int)((2 * (where.y - r.top)) / r.getHeight()), 0, n_scenes);
 
-            if (auto aschsw = dynamic_cast<CHSwitch2 *>(control))
+            if (auto aschsw = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
             {
-                if (aschsw->columns == n_scenes)
+                if (aschsw->getColumns() == n_scenes)
                 {
                     // We are horizontal due to skins or whatever so
                     a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, n_scenes);
@@ -4736,11 +4736,11 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     /*
                     ** See the comment in the constructor of ct_scenemode above
                     */
-                    auto cs2 = dynamic_cast<CHSwitch2 *>(control);
+                    auto cs2 = dynamic_cast<Surge::Widgets::MultiSwitch *>(control);
                     auto im = 0;
                     if (cs2)
                     {
-                        im = cs2->getIValue();
+                        im = cs2->getIntegerValue();
                         if (im == 3)
                             im = 2;
                         else if (im == 2)
@@ -7681,9 +7681,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         rect.offset(skinCtrl->x, skinCtrl->y);
 
         // Make this a function on skin
-        auto bmp = currentSkin->backgroundBitmapForControl(skinCtrl, bitmapStore);
+        auto drawables = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
 
-        if (bmp)
+        if (std::get<0>(drawables))
         {
             // Special case that scene select parameter is "odd"
             if (p && p->ctrltype == ct_scenesel)
@@ -7696,9 +7696,22 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAME_OFFSET, "0");
             auto drgb = currentSkin->propertyValue(skinCtrl,
                                                    Surge::Skin::Component::DRAGGABLE_HSWITCH, "1");
-            auto hsw = new CHSwitch2(rect, this, tag, std::atoi(frames.c_str()), skinCtrl->h,
-                                     std::atoi(rows.c_str()), std::atoi(cols.c_str()), bmp,
-                                     CPoint(0, 0), std::atoi(drgb.c_str()));
+            auto hsw = componentForSkinSession<Surge::Widgets::MultiSwitch>(skinCtrl->sessionid);
+            hsw->setRows(std::atoi(rows.c_str()));
+            hsw->setColumns(std::atoi(cols.c_str()));
+            hsw->setTag(tag);
+            hsw->addListener(this);
+            hsw->setDraggable(std::atoi(drgb.c_str()));
+            hsw->setHeightOfOneImage(skinCtrl->h);
+            hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
+
+            hsw->setSwitchDrawable(std::get<0>(drawables));
+            hsw->setHoverSwitchDrawable(std::get<1>(drawables));
+            hsw->setHoverOnSwitchDrawable(std::get<2>(drawables));
+
+            hsw->setBounds(rect.asJuceIntRect());
+            hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+
             if (p)
             {
                 auto fval = p->get_value_f01();
@@ -7721,15 +7734,18 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 }
                 hsw->setValue(fval);
             }
-            hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
-            hsw->setMouseableArea(rect);
-            hsw->frameOffset = std::atoi(frameoffset.c_str());
 
-            frame->addView(hsw);
+            frame->juceComponent()->addAndMakeVisible(*hsw);
+
+            juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
+
             if (paramIndex >= 0)
-                nonmod_param[paramIndex] = hsw;
+                nonmod_param[paramIndex] = dynamic_cast<CControlValueInterface *>(
+                    juceSkinComponents[skinCtrl->sessionid].get());
 
-            return hsw;
+            return dynamic_cast<CControlValueInterface *>(
+                juceSkinComponents[skinCtrl->sessionid].get());
+            ;
         }
         else
         {
@@ -7739,8 +7755,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
     if (skinCtrl->ultimateparentclassname == "CSwitchControl")
     {
         CRect rect(CPoint(skinCtrl->x, skinCtrl->y), CPoint(skinCtrl->w, skinCtrl->h));
-        auto bmp = currentSkin->backgroundBitmapForControl(skinCtrl, bitmapStore);
-        if (bmp)
+        auto drawables = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
+
+        if (std::get<0>(drawables))
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
             frame->juceComponent()->addAndMakeVisible(*hsw);
@@ -7750,12 +7767,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setTag(tag);
             hsw->addListener(this);
 
-            auto hoverBmp = currentSkin->hoverBitmapOverlayForBackgroundBitmap(
-                skinCtrl, dynamic_cast<CScalableBitmap *>(bmp), bitmapStore,
-                Surge::GUI::Skin::HoverType::HOVER);
-            hsw->setSwitchDrawable(bmp->drawable.get());
-            if (hoverBmp)
-                hsw->setHoverSwitchDrawable(hoverBmp->drawable.get());
+            hsw->setSwitchDrawable(std::get<0>(drawables));
+            hsw->setHoverSwitchDrawable(std::get<1>(drawables));
 
             if (paramIndex >= 0)
                 nonmod_param[paramIndex] = hsw.get();

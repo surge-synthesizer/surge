@@ -80,24 +80,10 @@ void Switch::mouseEnter(const juce::MouseEvent &event) { isHovered = true; }
 void Switch::mouseExit(const juce::MouseEvent &event) { isHovered = false; }
 void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel)
 {
-    auto d = wheel.deltaY;
-    accumWheel += d;
-    // This is callibrated to be reasonable on a mac but I'm still not sure of the units
-    //  On my MBP I get deltas which are 0.0019 all the time.
-    float accumLimit = 0.08; // anticipate we will split this by OS
+    int mul = wheelHelper.accumulate(wheel);
 
-    if (accumWheel > accumLimit || accumWheel < -accumLimit)
+    if (mul != 0)
     {
-        int mul = 1;
-        if (accumWheel > 0)
-        {
-            mul = -1;
-        }
-
-        if (wheel.isReversed)
-        {
-            mul = mul * -1;
-        }
         if (isMultiIntegerValued())
         {
             setValueDirection(mul);
@@ -110,8 +96,6 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
             if (ov != value)
                 notifyValueChanged();
         }
-
-        accumWheel = 0;
     }
 }
 
