@@ -565,7 +565,7 @@ class SurgeGUIEditor : public EditorType,
     juce::PopupMenu makeDataMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeMidiMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeDevMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeLfoMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeLfoMenu(VSTGUI::CRect &rect);
     VSTGUI::COptionMenu *makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
 
     bool scannedForMidiPresets = false;

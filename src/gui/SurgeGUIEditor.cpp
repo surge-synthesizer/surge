@@ -5123,10 +5123,7 @@ void SurgeGUIEditor::showLfoMenu(VSTGUI::CPoint &where)
     menuRect.offset(where.x, where.y);
     auto m = makeLfoMenu(menuRect);
 
-    frame->addView(m);
-    m->invalid();
-    m->popup();
-    frame->removeView(m, true);
+    m.showMenuAsync(juce::PopupMenu::Options());
 }
 
 void SurgeGUIEditor::toggleTuning()
@@ -5327,69 +5324,87 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
     settingsMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 {
     int currentLfoId = modsource_editor[current_scene] - ms_lfo1;
-
     int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
-    std::string what = "LFO";
-    if (lt_mseg == shapev)
+    std::string what;
+
+    switch (shapev)
+    {
+    case lt_mseg:
         what = "MSEG";
-    if (lt_stepseq == shapev)
+        break;
+    case lt_stepseq:
         what = "Step Seq";
-    if (lt_envelope == shapev)
+        break;
+    case lt_envelope:
         what = "Envelope";
-    if (lt_formula == shapev)
+        break;
+    case lt_formula:
         what = "Formula";
+        break;
+    default:
+        what = "LFO";
+        break;
+    }
 
     auto msurl = SurgeGUIEditor::helpURLForSpecial("lfo-presets");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    COptionMenu *lfoSubMenu =
-        new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-    addCallbackMenu(lfoSubMenu, "[?] LFO Presets",
-                    [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); }),
+    auto lfoSubMenu = juce::PopupMenu();
 
-        lfoSubMenu->addSeparator();
+    lfoSubMenu.addItem("[?] LFO Presets", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); }),
 
-    addCallbackMenu(lfoSubMenu, Surge::GUI::toOSCaseForMenu("Save " + what + " As..."),
-                    [this, currentLfoId, what]() {
-                        // Prompt for a name
-                        promptForMiniEdit("preset", "Enter the name for " + what + " preset:",
-                                          what + " Preset Name", CPoint(-1, -1),
-                                          [this, currentLfoId](const std::string &s) {
-                                              Surge::ModulatorPreset::savePresetToUser(
-                                                  string_to_path(s), &(this->synth->storage),
-                                                  current_scene, currentLfoId);
-                                          });
-                        // and save
-                    });
+        lfoSubMenu.addSeparator();
+
+    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId,
+                                                                                what]() {
+        // Prompt for a name
+        promptForMiniEdit(
+            "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
+            CPoint(-1, -1), [this, currentLfoId](const std::string &s) {
+                Surge::ModulatorPreset::savePresetToUser(string_to_path(s), &(this->synth->storage),
+                                                         current_scene, currentLfoId);
+            });
+        // and save
+    });
 
     auto presetCategories = Surge::ModulatorPreset::getPresets(&(synth->storage));
 
     if (!presetCategories.empty())
-        lfoSubMenu->addSeparator();
+    {
+        lfoSubMenu.addSeparator();
+    }
 
-    std::unordered_map<std::string, std::pair<COptionMenu *, bool>> subMenuMaps;
-    subMenuMaps[""] = std::make_pair(lfoSubMenu, true);
+    std::unordered_map<std::string, std::pair<std::unique_ptr<juce::PopupMenu>, bool>> subMenuMaps;
+
     for (auto const &cat : presetCategories)
     {
-        COptionMenu *catSubMenu =
-            new COptionMenu(menuRect, 0, 0, 0, 0, VSTGUI::COptionMenu::kNoDrawStyle);
-        subMenuMaps[cat.path] = std::make_pair(catSubMenu, false);
+        subMenuMaps[cat.path] = std::make_pair(std::make_unique<juce::PopupMenu>(), false);
     }
 
     for (auto const &cat : presetCategories)
     {
+        juce::PopupMenu *catSubMenu;
         if (subMenuMaps.find(cat.path) == subMenuMaps.end())
         {
-            // should never happen
-            continue;
+            if (cat.path.empty())
+            {
+                catSubMenu = &lfoSubMenu;
+            }
+            else
+            {
+                // should never happen
+                continue;
+            }
+        }
+        else
+        {
+            catSubMenu = subMenuMaps[cat.path].first.get();
         }
 
-        auto catSubMenu = subMenuMaps[cat.path].first;
-
-        if (catSubMenu->getNbEntries() > 0 && cat.presets.size() > 0)
+        if (catSubMenu->getNumItems() > 0 && cat.presets.size() > 0)
         {
             catSubMenu->addSeparator();
         }
@@ -5398,7 +5413,7 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         {
             auto pname = p.name;
 
-            addCallbackMenu(catSubMenu, pname, [this, p, currentLfoId]() {
+            catSubMenu->addItem(pname, [this, p, currentLfoId]() {
                 Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage),
                                                        current_scene, currentLfoId);
 
@@ -5410,8 +5425,11 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
                 if (isAnyOverlayPresent(MSEG_EDITOR))
                 {
                     closeMSEGEditor();
+
                     if (newshape == lt_mseg)
+                    {
                         showMSEGEditor();
+                    }
                 }
 
                 this->synth->refresh_editor = true;
@@ -5419,41 +5437,38 @@ VSTGUI::COptionMenu *SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         }
     }
 
-    /*
-     * With the escape menu hack need to add in child firstr order; this is
-     * sorted by string path so go backwards
-     */
     for (auto it = presetCategories.rbegin(); it != presetCategories.rend(); it++)
     {
         const auto &cat = *it;
 
         if (subMenuMaps.find(cat.path) == subMenuMaps.end())
         {
+            jassert(false);
             // should never happen
             continue;
         }
-        auto catSubMenu = subMenuMaps[cat.path].first;
 
-        auto parentMenu = lfoSubMenu;
+        auto catSubMenu = subMenuMaps[cat.path].first.get();
+        auto parentMenu = &lfoSubMenu;
+
         if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
         {
-            parentMenu = subMenuMaps[cat.parentPath].first;
+            parentMenu = subMenuMaps[cat.parentPath].first.get();
+
             if (!subMenuMaps[cat.parentPath].second)
             {
                 subMenuMaps[cat.parentPath].second = true;
             }
         }
 
-        auto catname = cat.name;
-
-        parentMenu->addEntry(catSubMenu, catname.c_str());
-        catSubMenu->forget();
+        parentMenu->addSubMenu(cat.name, *catSubMenu);
     }
 
-    lfoSubMenu->addSeparator();
+    lfoSubMenu.addSeparator();
 
-    addCallbackMenu(lfoSubMenu, Surge::GUI::toOSCaseForMenu("Rescan Presets"),
-                    []() { Surge::ModulatorPreset::forcePresetRescan(); });
+    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan Presets"),
+                       []() { Surge::ModulatorPreset::forcePresetRescan(); });
+
     return lfoSubMenu;
 }
 
