@@ -97,7 +97,7 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
     {
         int sel = coordinateToSelection(event.x, event.y);
         hoverSelection = sel;
-        setValue((float)sel / (rows * columns - 1));
+        setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
         notifyValueChanged();
     }
 }

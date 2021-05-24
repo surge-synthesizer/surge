@@ -54,7 +54,7 @@ class CScalableBitmap : public VSTGUI::CBitmap
     */
     void setExtraScaleFactor(int a) { extraScaleFactor = a; }
 
-    int resourceID;
+    int resourceID = -1;
     std::string fname;
 
   private:
