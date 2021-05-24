@@ -5367,35 +5367,43 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         lfoSubMenu.addSeparator();
     }
 
-    std::unordered_map<std::string, std::pair<juce::PopupMenu, bool>> subMenuMaps;
-    subMenuMaps[""] = std::make_pair(lfoSubMenu, true);
+    std::unordered_map<std::string, std::pair<std::unique_ptr<juce::PopupMenu>, bool>> subMenuMaps;
 
     for (auto const &cat : presetCategories)
     {
-        auto catSubMenu = juce::PopupMenu();
-        subMenuMaps[cat.path] = std::make_pair(catSubMenu, false);
+        subMenuMaps[cat.path] = std::make_pair(std::make_unique<juce::PopupMenu>(), false);
     }
 
     for (auto const &cat : presetCategories)
     {
+        juce::PopupMenu *catSubMenu;
         if (subMenuMaps.find(cat.path) == subMenuMaps.end())
         {
-            // should never happen
-            continue;
+            if (cat.path.empty())
+            {
+                catSubMenu = &lfoSubMenu;
+            }
+            else
+            {
+                // should never happen
+                continue;
+            }
+        }
+        else
+        {
+            catSubMenu = subMenuMaps[cat.path].first.get();
         }
 
-        auto catSubMenu = subMenuMaps[cat.path].first;
-
-        if (catSubMenu.getNumItems() > 0 && cat.presets.size() > 0)
+        if (catSubMenu->getNumItems() > 0 && cat.presets.size() > 0)
         {
-            catSubMenu.addSeparator();
+            catSubMenu->addSeparator();
         }
 
         for (auto const &p : cat.presets)
         {
             auto pname = p.name;
 
-            catSubMenu.addItem(pname, [this, p, currentLfoId]() {
+            catSubMenu->addItem(pname, [this, p, currentLfoId]() {
                 Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage),
                                                        current_scene, currentLfoId);
 
@@ -5419,26 +5427,23 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
         }
     }
 
-    /*
-     * With the escape menu hack need to add in child firstr order; this is
-     * sorted by string path so go backwards
-     */
     for (auto it = presetCategories.rbegin(); it != presetCategories.rend(); it++)
     {
         const auto &cat = *it;
 
         if (subMenuMaps.find(cat.path) == subMenuMaps.end())
         {
+            jassert(false);
             // should never happen
             continue;
         }
 
-        auto catSubMenu = subMenuMaps[cat.path].first;
-        auto parentMenu = lfoSubMenu;
+        auto catSubMenu = subMenuMaps[cat.path].first.get();
+        auto parentMenu = &lfoSubMenu;
 
         if (subMenuMaps.find(cat.parentPath) != subMenuMaps.end())
         {
-            parentMenu = subMenuMaps[cat.parentPath].first;
+            parentMenu = subMenuMaps[cat.parentPath].first.get();
 
             if (!subMenuMaps[cat.parentPath].second)
             {
@@ -5446,7 +5451,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
             }
         }
 
-        parentMenu.addSubMenu(cat.name, catSubMenu);
+        parentMenu->addSubMenu(cat.name, *catSubMenu);
     }
 
     lfoSubMenu.addSeparator();
