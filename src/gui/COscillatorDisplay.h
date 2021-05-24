@@ -134,8 +134,8 @@ class COscillatorDisplay : public VSTGUI::CControl,
 #endif
 
   protected:
-    void populateMenu(VSTGUI::COptionMenu *m, int selectedItem);
-    bool populateMenuForCategory(VSTGUI::COptionMenu *parent, int categoryId, int selectedItem);
+    void populateMenu(juce::PopupMenu &m, int selectedItem);
+    bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
 
     OscillatorStorage *oscdata;
     SurgeStorage *storage;

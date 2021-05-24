@@ -570,41 +570,31 @@ CMouseEventResult COscillatorDisplay::onMouseDown(CPoint &where, const CButtonSt
         }
         else if (rmenu.pointInside(where))
         {
-            CRect menurect(0, 0, 0, 0);
-            menurect.offset(where.x, where.y);
-            COptionMenu *contextMenu =
-                new COptionMenu(menurect, 0, 0, 0, 0, COptionMenu::kMultipleCheckStyle);
-
+            juce::PopupMenu contextMenu;
             populateMenu(contextMenu, id);
-
-            getFrame()->addView(contextMenu); // add to frame
-            contextMenu->setDirty();
-            contextMenu->popup();
-            // getFrame()->looseFocus(pContext);
-
-            getFrame()->removeView(contextMenu, true); // remove from frame and forget
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
         }
     }
     return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
-void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem)
+void COscillatorDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem)
 {
     int idx = 0;
 
-    contextMenu->addSectionHeader("FACTORY WAVETABLES");
+    contextMenu.addSectionHeader("FACTORY WAVETABLES");
 
     for (auto c : storage->wtCategoryOrdering)
     {
         if (idx == storage->firstThirdPartyWTCategory)
         {
-            contextMenu->addSectionHeader("3RD PARTY WAVETABLES");
+            contextMenu.addSectionHeader("3RD PARTY WAVETABLES");
         }
 
         if (idx == storage->firstUserWTCategory &&
             storage->firstUserWTCategory != storage->wt_category.size())
         {
-            contextMenu->addSectionHeader("USER WAVETABLES");
+            contextMenu.addSectionHeader("USER WAVETABLES");
         }
 
         idx++;
@@ -619,29 +609,20 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
         }
     }
 
-    contextMenu->addSeparator();
-    auto wtformItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Wavetable Editor...")));
-    auto owts = [this](CCommandMenuItem *item) {
+    contextMenu.addSeparator();
+    auto owts = [this]() {
         auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
         if (sge)
             sge->showWavetableScripter();
     };
-    wtformItem->setActions(owts, nullptr);
-    contextMenu->addEntry(wtformItem);
 
-    contextMenu->addSeparator();
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Editor..."), owts);
+    contextMenu.addSeparator();
 
-    auto refreshItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List")));
-    auto refresh = [this](CCommandMenuItem *item) { this->storage->refresh_wtlist(); };
-    refreshItem->setActions(refresh, nullptr);
-    contextMenu->addEntry(refreshItem);
+    auto refresh = [this]() { this->storage->refresh_wtlist(); };
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List"), refresh);
 
-    auto renameItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Change Wavetable Display Name...")));
-
-    auto rnaction = [this](CCommandMenuItem *item) {
+    auto rnaction = [this]() {
         char c[256];
         strncpy(c, this->oscdata->wavetable_display_name, 256);
         auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
@@ -655,20 +636,14 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
                 });
         }
     };
-    renameItem->setActions(rnaction, nullptr);
-    contextMenu->addEntry(renameItem);
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Change Wavetable Display Name..."), rnaction);
 
-    contextMenu->addSeparator();
+    contextMenu.addSeparator();
 
-    auto actionItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Load Wavetable from File...")));
-    auto action = [this](CCommandMenuItem *item) { this->loadWavetableFromFile(); };
-    actionItem->setActions(action, nullptr);
-    contextMenu->addEntry(actionItem);
+    auto action = [this]() { this->loadWavetableFromFile(); };
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Wavetable from File..."), action);
 
-    auto exportItem = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Save Wavetable to File...")));
-    auto exportAction = [this](CCommandMenuItem *item) {
+    auto exportAction = [this]() {
         int oscNum = this->osc_in_scene;
         int scene = this->scene;
 
@@ -682,16 +657,13 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
                                               message);
         }
     };
-    exportItem->setActions(exportAction, nullptr);
-    contextMenu->addEntry(exportItem);
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Save Wavetable to File..."), exportAction);
 
-    auto omi = std::make_shared<CCommandMenuItem>(
-        CCommandMenuItem::Desc(Surge::GUI::toOSCaseForMenu("Open Exported Wavetables Folder...")));
-    omi->setActions([this](CCommandMenuItem *i) {
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->storage->userDataPath, "Exported Wavetables"));
-    });
-    contextMenu->addEntry(omi);
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Exported Wavetables Folder..."),
+                        [this]() {
+                            Surge::GUI::openFileOrFolder(Surge::Storage::appendDirectory(
+                                this->storage->userDataPath, "Exported Wavetables"));
+                        });
 
     auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
     if (sge)
@@ -700,22 +672,18 @@ void COscillatorDisplay::populateMenu(COptionMenu *contextMenu, int selectedItem
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto hi = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc("[?] Wavetables"));
-            auto ca = [lurl](CCommandMenuItem *i) { juce::URL(lurl).launchInDefaultBrowser(); };
-            hi->setActions(ca, nullptr);
-            contextMenu->addSeparator();
-            contextMenu->addEntry(hi);
+            auto ca = [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); };
+            contextMenu.addSeparator();
+            contextMenu.addItem("[?] Wavetables", ca);
         }
     }
 }
 
-bool COscillatorDisplay::populateMenuForCategory(COptionMenu *contextMenu, int categoryId,
+bool COscillatorDisplay::populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId,
                                                  int selectedItem)
 {
     char name[NAMECHARS];
-    COptionMenu *subMenu =
-        new COptionMenu(getViewSize(), 0, categoryId, 0, 0, COptionMenu::kMultipleCheckStyle);
-    subMenu->setNbItemsPerColumn(32);
+    juce::PopupMenu subMenu;
     int sub = 0;
 
     PatchCategory cat = storage->wt_category[categoryId];
@@ -725,13 +693,10 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu *contextMenu, int c
         if (storage->wt_list[p].category == categoryId)
         {
             sprintf(name, "%s", storage->wt_list[p].name.c_str());
-            auto actionItem = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name));
-            auto action = [this, p](CCommandMenuItem *item) { this->loadWavetable(p); };
+            auto action = [this, p]() { this->loadWavetable(p); };
 
-            if (p == selectedItem)
-                actionItem->setChecked(true);
-            actionItem->setActions(action, nullptr);
-            subMenu->addEntry(actionItem);
+            bool checked = (p == selectedItem);
+            subMenu.addItem(name, true, checked, action);
 
             sub++;
         }
@@ -772,15 +737,16 @@ bool COscillatorDisplay::populateMenuForCategory(COptionMenu *contextMenu, int c
         strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
     }
 
-    auto submenuItem = contextMenu->addEntry(subMenu, name);
+    contextMenu.addSubMenu(name, subMenu);
 
+#if 0
     if (selected || (selectedItem >= 0 && storage->wt_list[selectedItem].category == categoryId))
     {
         selected = true;
         submenuItem->setChecked(true);
     }
+#endif
 
-    subMenu->forget(); // Important, so that the refcounter gets right
     return selected;
 }
 

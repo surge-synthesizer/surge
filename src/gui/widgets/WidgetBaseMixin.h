@@ -36,7 +36,7 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
     VSTGUI::CRect getControlViewSize() override { return VSTGUI::CRect(asT()->getBounds()); }
 
     VSTGUI::CCoord getControlHeight() override { return asT()->getHeight(); }
-    uint32_t tag;
+    uint32_t tag{0};
     void setTag(uint32_t t) { tag = t; }
     uint32_t getTag() const override { return tag; }
 
