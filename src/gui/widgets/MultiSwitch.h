@@ -13,72 +13,71 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_XT_SWITCH_H
-#define SURGE_XT_SWITCH_H
+#ifndef SURGE_XT_MULTISWITCH_H
+#define SURGE_XT_MULTISWITCH_H
 
 #include <JuceHeader.h>
+#include <SurgeJUCEHelpers.h>
 #include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
-#include "SurgeJUCEHelpers.h"
 
 namespace Surge
 {
 namespace Widgets
 {
 /*
- * Switch is a class which encompasses two functions
- * 1: A Binary Switch (on off) and
- * 2: A multi-select switch with wheel directionality
- *
- * We use it for things like unipolar, mute, and filer subtype
- *
- * The rough contract is:
+ * MultiSwitch (f.k.a CHSwitch2 in VSTGUI land) takes a
+ * glyph with rows and columns to allow multiple selection
  */
-struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
+struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 {
-    Switch();
-    ~Switch();
+    MultiSwitch();
+    ~MultiSwitch();
 
-    bool iit{false};
-    bool isMultiIntegerValued() const { return iit; };
-    void setIsMultiIntegerValued(bool b) { iit = b; };
+    int rows{0}, columns{0}, heightOfOneImage{0}, frameOffset{0};
+    int getRows() const { return rows; }
+    int getColumns() const { return columns; }
+    void setRows(int x) { rows = x; }
+    void setColumns(int x) { columns = x; }
+    void setHeightOfOneImage(int h) { heightOfOneImage = h; }
+    void setFrameOffset(int h) { frameOffset = h; }
 
-    int iv{0}, im{1};
-    void setIntegerValue(int i) { iv = i; }
-    void setIntegerMax(int i) { im = i; }
-    int getIntegerValue() const { return iv; }
-    int getIntegerMaxValue() const { return im; }
-
-    bool uvc{false};
-    void setUnValueClickable(bool b) { uvc = b; }
-    bool getUnValueClickable() const { return uvc; }
-
-    int vd{0};
-    int getValueDirection() const { return vd; }
-    void setValueDirection(int v) { vd = v; }
-    void clearValueDirection() { vd = 0; }
+    int valueToOff(float v)
+    {
+        return (int)(frameOffset + ((v * (float)(rows * columns - 1) + 0.5f)));
+    }
+    int coordinateToSelection(int x, int y);
+    float coordinateToValue(int x, int y);
 
     float value{0};
     float getValue() const override { return value; }
+    int getIntegerValue() const { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
     void setValue(float f) override { value = f; }
     void valueChanged() override;
+
+    bool draggable{false};
+    void setDraggable(bool d) { draggable = d; }
 
     void paint(juce::Graphics &g) override;
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+    void mouseMove(const juce::MouseEvent &event) override;
+    void mouseDrag(const juce::MouseEvent &event) override;
 
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
 
     bool isHovered{false};
+    int hoverSelection{0};
 
-    juce::Drawable *switchD{nullptr}, *hoverSwitchD{nullptr};
+    juce::Drawable *switchD{nullptr}, *hoverSwitchD{nullptr}, *hoverOnSwitchD{nullptr};
     void setSwitchDrawable(juce::Drawable *d) { switchD = d; }
     void setHoverSwitchDrawable(juce::Drawable *d) { hoverSwitchD = d; }
+    void setHoverOnSwitchDrawable(juce::Drawable *d) { hoverOnSwitchD = d; }
 };
 } // namespace Widgets
 } // namespace Surge
-#endif // SURGE_XT_SWITCH_H
+#endif // SURGE_XT_MULTISWITCH_H

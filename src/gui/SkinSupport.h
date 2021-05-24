@@ -343,6 +343,14 @@ class Skin
     hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBitmap *b,
                                           std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t);
 
+    std::array<juce::Drawable *, 3>
+    standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> b);
+    std::array<juce::Drawable *, 3> standardHoverAndHoverOnForIDB(int id,
+                                                                  std::shared_ptr<SurgeBitmaps> b);
+    std::array<juce::Drawable *, 3> standardHoverAndHoverOnForCSB(CScalableBitmap *csb,
+                                                                  Skin::Control::ptr_t c,
+                                                                  std::shared_ptr<SurgeBitmaps> b);
+
     std::vector<Skin::Control::ptr_t> getLabels() const
     {
         std::vector<Skin::Control::ptr_t> labels;

@@ -337,7 +337,6 @@ set(SURGE_GENERATED_SOURCES
 set(SURGE_GUI_SOURCES
   src/gui/CAboutBox.cpp
   src/gui/CEffectSettings.cpp
-  src/gui/CHSwitch2.cpp
   src/gui/CLFOGui.cpp
   src/gui/CMenuAsSlider.cpp
   src/gui/CModulationSourceButton.cpp
@@ -365,6 +364,8 @@ set(SURGE_GUI_SOURCES
   src/gui/SurgeGUIUtils.cpp
   src/gui/SurgeJUCELookAndFeel.cpp
   src/gui/UIInstrumentation.cpp
+
+  src/gui/widgets/MultiSwitch.cpp
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
   src/gui/widgets/VuMeter.cpp

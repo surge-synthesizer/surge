@@ -22,11 +22,12 @@
 #include "CNumberField.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
-#include "CHSwitch2.h"
-#include "widgets/Switch.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include "CursorControlGuard.h"
+
+#include "widgets/MultiSwitch.h"
+#include "widgets/Switch.h"
 
 // FIXME when you get cursor hiding working
 #define DISABLE_CURSOR_HIDING 1
@@ -79,6 +80,7 @@ struct MSEGControlRegion : public CViewContainer,
     }
 
     std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
+    std::unique_ptr<Surge::Widgets::MultiSwitch> loopMode, editMode, movementMode;
 
     MSEGStorage *ms = nullptr;
     MSEGEditor::State *eds = nullptr;
@@ -2761,13 +2763,26 @@ void MSEGControlRegion::rebuild()
 
         // button
         auto btnrect = CRect(CPoint(marginPos, ypos - 1), CPoint(btnWidth, buttonHeight));
-        auto mw = new CHSwitch2(btnrect, this, tag_segment_movement_mode, 3, buttonHeight, 1, 3,
-                                associatedBitmapStore->getBitmap(IDB_MSEG_MOVEMENT_MODE),
-                                CPoint(0, 0), true);
-        mw->setSkin(skin, associatedBitmapStore);
-        addView(mw);
-        mw->setValue(canvas->timeEditMode / 2.f);
 
+        jassert(!movementMode);
+        movementMode = std::make_unique<Surge::Widgets::MultiSwitch>();
+        movementMode->setBounds(btnrect.asJuceIntRect());
+        movementMode->addListener(this);
+        movementMode->setTag(tag_segment_movement_mode);
+        movementMode->setHeightOfOneImage(buttonHeight);
+        movementMode->setRows(1);
+        movementMode->setColumns(3);
+        movementMode->setDraggable(true);
+        movementMode->setSkin(skin, associatedBitmapStore);
+
+        auto dbl =
+            skin->standardHoverAndHoverOnForIDB(IDB_MSEG_MOVEMENT_MODE, associatedBitmapStore);
+        movementMode->setSwitchDrawable(std::get<0>(dbl));
+        movementMode->setHoverSwitchDrawable(std::get<1>(dbl));
+        movementMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
+
+        movementMode->setValue(canvas->timeEditMode / 2.f);
+        juceComponent()->addAndMakeVisible(*movementMode);
         // this value centers the loop mode and snap sections against the MSEG editor width
         // if more controls are to be added to that center section, reduce this value
         xpos += 173;
@@ -2791,12 +2806,25 @@ void MSEGControlRegion::rebuild()
 
         // button
         auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
-        auto ew =
-            new CHSwitch2(btnrect, this, tag_edit_mode, 2, buttonHeight, 1, 2,
-                          associatedBitmapStore->getBitmap(IDB_MSEG_EDIT_MODE), CPoint(0, 0), true);
-        ew->setSkin(skin, associatedBitmapStore);
-        addView(ew);
-        ew->setValue(ms->editMode);
+
+        jassert(!editMode);
+        editMode = std::make_unique<Surge::Widgets::MultiSwitch>();
+        editMode->setBounds(btnrect.asJuceIntRect());
+        editMode->addListener(this);
+        editMode->setTag(tag_edit_mode);
+        editMode->setHeightOfOneImage(buttonHeight);
+        editMode->setRows(1);
+        editMode->setColumns(2);
+        editMode->setDraggable(true);
+        editMode->setSkin(skin, associatedBitmapStore);
+
+        auto dbl = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_EDIT_MODE, associatedBitmapStore);
+        editMode->setSwitchDrawable(std::get<0>(dbl));
+        editMode->setHoverSwitchDrawable(std::get<1>(dbl));
+        editMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
+
+        editMode->setValue(ms->editMode);
+        juceComponent()->addAndMakeVisible(*editMode);
 
         xpos += segWidth;
     }
@@ -2819,12 +2847,24 @@ void MSEGControlRegion::rebuild()
 
         // button
         auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
-        auto lw =
-            new CHSwitch2(btnrect, this, tag_loop_mode, 3, buttonHeight, 1, 3,
-                          associatedBitmapStore->getBitmap(IDB_MSEG_LOOP_MODE), CPoint(0, 0), true);
-        lw->setSkin(skin, associatedBitmapStore);
-        addView(lw);
-        lw->setValue((ms->loopMode - 1) / 2.f);
+        jassert(!loopMode);
+        loopMode = std::make_unique<Surge::Widgets::MultiSwitch>();
+        loopMode->setBounds(btnrect.asJuceIntRect());
+        loopMode->addListener(this);
+        loopMode->setTag(tag_loop_mode);
+        loopMode->setHeightOfOneImage(buttonHeight);
+        loopMode->setRows(1);
+        loopMode->setColumns(3);
+        loopMode->setDraggable(true);
+        loopMode->setSkin(skin, associatedBitmapStore);
+
+        auto dbl = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_LOOP_MODE, associatedBitmapStore);
+        loopMode->setSwitchDrawable(std::get<0>(dbl));
+        loopMode->setHoverSwitchDrawable(std::get<1>(dbl));
+        loopMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
+
+        loopMode->setValue((ms->loopMode - 1) / 2);
+        juceComponent()->addAndMakeVisible(*loopMode);
 
         xpos += segWidth;
     }
