@@ -28,8 +28,9 @@
 #include "SkinSupport.h"
 #include "SkinColors.h"
 
+#include "overlays/MSEGEditor.h"
+
 #include <vector>
-#include "MSEGEditor.h"
 #include <thread>
 #include <atomic>
 

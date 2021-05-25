@@ -347,10 +347,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CSurgeSlider.cpp
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
-  src/gui/LuaEditors.cpp
-  src/gui/ModulationEditor.cpp
-  src/gui/MSEGEditor.cpp
-  src/gui/PatchDBViewer.cpp
   src/gui/RuntimeFont.cpp
   src/gui/SkinFontLoader.cpp
   src/gui/SkinImageMaps.h
@@ -362,7 +358,12 @@ set(SURGE_GUI_SOURCES
   src/gui/SurgeJUCELookAndFeel.cpp
   src/gui/UIInstrumentation.cpp
 
-  src/gui/widgets/AboutScreen.cpp
+  src/gui/overlays/AboutScreen.cpp
+  src/gui/overlays/LuaEditors.cpp
+  src/gui/overlays/ModulationEditor.cpp
+  src/gui/overlays/MSEGEditor.cpp
+  src/gui/overlays/PatchDBViewer.cpp
+
   src/gui/widgets/MultiSwitch.cpp
   src/gui/widgets/PatchSelector.cpp
   src/gui/widgets/Switch.cpp
