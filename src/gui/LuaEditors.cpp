@@ -27,31 +27,29 @@ struct EditorColors
     {
         auto cs = comp->getColourScheme();
 
-        cs.set("Bracket", skin->getColor(Colors::FormulaEditor::Lua::Bracket).asJuceColour());
-        cs.set("Comment", skin->getColor(Colors::FormulaEditor::Lua::Comment).asJuceColour());
-        cs.set("Error", skin->getColor(Colors::FormulaEditor::Lua::Error).asJuceColour());
-        cs.set("Float", skin->getColor(Colors::FormulaEditor::Lua::Number).asJuceColour());
-        cs.set("Integer", skin->getColor(Colors::FormulaEditor::Lua::Number).asJuceColour());
-        cs.set("Identifier", skin->getColor(Colors::FormulaEditor::Lua::Identifier).asJuceColour());
-        cs.set("Keyword", skin->getColor(Colors::FormulaEditor::Lua::Keyword).asJuceColour());
-        cs.set("Operator",
-               skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
-        cs.set("Punctuation",
-               skin->getColor(Colors::FormulaEditor::Lua::Interpunction).asJuceColour());
-        cs.set("String", skin->getColor(Colors::FormulaEditor::Lua::String).asJuceColour());
+        cs.set("Bracket", skin->getColor(Colors::FormulaEditor::Lua::Bracket));
+        cs.set("Comment", skin->getColor(Colors::FormulaEditor::Lua::Comment));
+        cs.set("Error", skin->getColor(Colors::FormulaEditor::Lua::Error));
+        cs.set("Float", skin->getColor(Colors::FormulaEditor::Lua::Number));
+        cs.set("Integer", skin->getColor(Colors::FormulaEditor::Lua::Number));
+        cs.set("Identifier", skin->getColor(Colors::FormulaEditor::Lua::Identifier));
+        cs.set("Keyword", skin->getColor(Colors::FormulaEditor::Lua::Keyword));
+        cs.set("Operator", skin->getColor(Colors::FormulaEditor::Lua::Interpunction));
+        cs.set("Punctuation", skin->getColor(Colors::FormulaEditor::Lua::Interpunction));
+        cs.set("String", skin->getColor(Colors::FormulaEditor::Lua::String));
 
         comp->setColourScheme(cs);
 
         comp->setColour(juce::CodeEditorComponent::backgroundColourId,
-                        skin->getColor(Colors::FormulaEditor::Background).asJuceColour());
+                        skin->getColor(Colors::FormulaEditor::Background));
         comp->setColour(juce::CodeEditorComponent::highlightColourId,
-                        skin->getColor(Colors::FormulaEditor::Highlight).asJuceColour());
+                        skin->getColor(Colors::FormulaEditor::Highlight));
         comp->setColour(juce::CodeEditorComponent::defaultTextColourId,
-                        skin->getColor(Colors::FormulaEditor::Text).asJuceColour());
+                        skin->getColor(Colors::FormulaEditor::Text));
         comp->setColour(juce::CodeEditorComponent::lineNumberBackgroundId,
-                        skin->getColor(Colors::FormulaEditor::LineNumBackground).asJuceColour());
+                        skin->getColor(Colors::FormulaEditor::LineNumBackground));
         comp->setColour(juce::CodeEditorComponent::lineNumberTextId,
-                        skin->getColor(Colors::FormulaEditor::LineNumText).asJuceColour());
+                        skin->getColor(Colors::FormulaEditor::LineNumText));
 
         comp->retokenise(0, -1);
     }
@@ -109,6 +107,8 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         return Component::keyPressed(key);
     }
 }
+
+void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                FormulaModulatorStorage *fs,

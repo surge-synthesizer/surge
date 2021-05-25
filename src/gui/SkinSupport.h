@@ -393,7 +393,7 @@ class Skin
         } Type;
 
         Type type;
-        ColorStore() : type(COLOR), color(VSTGUI::kBlackCColor) {}
+        ColorStore() : type(COLOR), color(juce::Colours::black) {}
         ColorStore(VSTGUI::CColor c) : type(COLOR), color(c) {}
         ColorStore(std::string a) : type(ALIAS), alias(a) {}
         ColorStore(std::string a, Type t) : type(t), alias(a) {}

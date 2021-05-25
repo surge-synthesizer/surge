@@ -24,7 +24,7 @@ struct Color
     static std::vector<Color> getAllColors();
 
     std::string name;
-    int r, g, b, a;
+    uint8_t r, g, b, a;
 };
 } // namespace Skin
 } // namespace Surge

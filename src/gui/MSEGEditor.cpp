@@ -3012,7 +3012,7 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
         Surge::MSEG::createInitVoiceMSEG(ms);
     }
     setSkin(skin, b);
-    setBackgroundColor(kRedCColor);
+    setBackgroundColor(juce::Colours::red);
     addView(new MSEGMainEd(getViewSize(), storage, lfodata, ms, eds, skin, b));
 }
 
