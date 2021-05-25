@@ -46,9 +46,10 @@ namespace Surge
 {
 namespace Widgets
 {
+struct AboutScreen;
+struct EffectLabel;
 struct Switch;
 struct VerticalLabel;
-struct EffectLabel;
 struct VuMeter;
 } // namespace Widgets
 } // namespace Surge
@@ -405,8 +406,8 @@ class SurgeGUIEditor : public EditorType,
                                       int percentageOfScreenAvailable, float baseW, float baseH);
 
   public:
-    void showAboutBox(int devModeGrid = -1);
-    void hideAboutBox();
+    void showAboutScreen(int devModeGrid = -1);
+    void hideAboutScreen();
 
     void showMidiLearnOverlay(const VSTGUI::CRect &r);
     void hideMidiLearnOverlay();
@@ -433,7 +434,8 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CControl *infowindow, *patchname, *ccfxconf = nullptr;
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
-    CAboutBox *aboutbox = nullptr;
+    std::unique_ptr<Surge::Widgets::AboutScreen> aboutScreen;
+
     CMidiLearnOverlay *midiLearnOverlay = nullptr;
     VSTGUI::CTextEdit *patchName = nullptr;
     VSTGUI::CTextEdit *patchCategory = nullptr;

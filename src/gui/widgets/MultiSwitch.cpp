@@ -68,6 +68,9 @@ int MultiSwitch::coordinateToSelection(int x, int y)
 
 float MultiSwitch::coordinateToValue(int x, int y)
 {
+    if (rows * columns <= 1)
+        return 0;
+
     return 1.f * coordinateToSelection(x, y) / (rows * columns - 1);
 }
 
