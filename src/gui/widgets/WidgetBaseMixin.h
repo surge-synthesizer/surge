@@ -18,7 +18,7 @@
 
 #include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
-#include <set>
+#include <unordered_set>
 
 namespace Surge
 {
@@ -40,7 +40,7 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
     void setTag(uint32_t t) { tag = t; }
     uint32_t getTag() const override { return tag; }
 
-    std::set<VSTGUI::IControlListener *> listeners;
+    std::unordered_set<VSTGUI::IControlListener *> listeners;
     void addListener(VSTGUI::IControlListener *t) { listeners.insert(t); }
     void notifyValueChanged()
     {
@@ -52,6 +52,17 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         VSTGUI::CButtonState bs(k);
         for (auto t : listeners)
             t->controlModifierClicked(this, bs);
+    }
+
+    template <typename U> U *firstListenerOfType()
+    {
+        for (auto u : listeners)
+        {
+            auto q = dynamic_cast<U *>(u);
+            if (q)
+                return q;
+        }
+        return nullptr;
     }
 };
 } // namespace Widgets
