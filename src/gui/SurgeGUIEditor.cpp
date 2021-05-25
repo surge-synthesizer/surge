@@ -173,7 +173,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
         fxPresetName[i] = "";
     }
 
-    _effect = effect;
+    _synth = effect;
     _userdata = userdata;
     this->synth = synth;
 
@@ -4912,7 +4912,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControlValueInterface *control)
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        _effect->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+        _synth->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
 }
 
@@ -4924,7 +4924,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControlValueInterface *control)
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        _effect->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+        _synth->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
 
     if (((CParameterTooltip *)infowindow)->isVisible())
@@ -6487,6 +6487,25 @@ void SurgeGUIEditor::reloadFromSkin()
         patchCreator->setText(pauth);
         patchComment->setText(pcom);
     }
+
+    // adjust JUCE look and feel colors
+    auto setJUCEColour = [this](int id, juce::Colour x) {
+        _synth->getLookAndFeel().setColour(id, x);
+    };
+
+    setJUCEColour(juce::DocumentWindow::backgroundColourId, juce::Colour(48, 48, 48));
+    setJUCEColour(juce::TextButton::buttonColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::TextEditor::backgroundColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::ScrollBar::thumbColourId, juce::Colour(212, 212, 212));
+    setJUCEColour(juce::ScrollBar::trackColourId, juce::Colour(128, 128, 128));
+    setJUCEColour(juce::Slider::thumbColourId, juce::Colour(212, 212, 212));
+    setJUCEColour(juce::Slider::trackColourId, juce::Colour(128, 128, 128));
+    setJUCEColour(juce::Slider::backgroundColourId, juce::Colour(0x15FFFFFF));
+    setJUCEColour(juce::ComboBox::backgroundColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::PopupMenu::backgroundColourId, juce::Colour(48, 48, 48));
+    setJUCEColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(96, 96, 96));
 }
 
 juce::PopupMenu SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
