@@ -39,6 +39,8 @@
 #include "ModulationEditor.h"
 #include "LuaEditors.h"
 
+#include "SurgeSynthEditor.h"
+
 #include "widgets/AboutScreen.h"
 #include "widgets/EffectLabel.h"
 #include "widgets/MultiSwitch.h"
@@ -115,8 +117,7 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
     return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q);
 }
 
-SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *synth, void *userdata)
-    : super(effect)
+SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) : super(jEd)
 {
     synth->storage.addErrorListener(this);
     synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
@@ -173,8 +174,7 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
         fxPresetName[i] = "";
     }
 
-    _synth = effect;
-    _userdata = userdata;
+    juceEditor = jEd;
     this->synth = synth;
 
     minimumZoom = 50;
@@ -4912,7 +4912,7 @@ void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControlValueInterface *control)
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        _synth->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+        juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
 }
 
@@ -4924,7 +4924,7 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControlValueInterface *control)
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        _synth->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+        juceEditor->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
 
     if (((CParameterTooltip *)infowindow)->isVisible())
@@ -6490,7 +6490,7 @@ void SurgeGUIEditor::reloadFromSkin()
 
     // adjust JUCE look and feel colors
     auto setJUCEColour = [this](int id, juce::Colour x) {
-        _synth->getLookAndFeel().setColour(id, x);
+        juceEditor->getLookAndFeel().setColour(id, x);
     };
 
     setJUCEColour(juce::DocumentWindow::backgroundColourId, juce::Colour(48, 48, 48));
