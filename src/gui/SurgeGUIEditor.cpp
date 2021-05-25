@@ -15,6 +15,7 @@
 
 #include "SurgeGUIEditor.h"
 #include "resource.h"
+
 #include "CSurgeSlider.h"
 #include "CParameterTooltip.h"
 #include "COscillatorDisplay.h"
@@ -27,6 +28,7 @@
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
+
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
@@ -35,12 +37,15 @@
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
-#include "ModulationEditor.h"
-#include "LuaEditors.h"
 
 #include "SurgeSynthEditor.h"
 
-#include "widgets/AboutScreen.h"
+#include "overlays/AboutScreen.h"
+#include "overlays/LuaEditors.h"
+#include "overlays/MSEGEditor.h"
+#include "overlays/ModulationEditor.h"
+#include "overlays/PatchDBViewer.h"
+
 #include "widgets/EffectLabel.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/PatchSelector.h"
@@ -55,7 +60,6 @@
 #include <numeric>
 #include <unordered_map>
 #include <codecvt>
-#include "MSEGEditor.h"
 #include "version.h"
 #include "ModernOscillator.h"
 #include "libMTSClient.h"
@@ -67,8 +71,6 @@ const int yofs = 10;
 
 using namespace VSTGUI;
 using namespace std;
-
-#include "PatchDBViewer.h"
 
 enum special_tags
 {

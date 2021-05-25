@@ -18,7 +18,6 @@
 #include "SurgeGUIUtils.h"
 #include "resource.h"
 #include "DSPUtils.h"
-#include "MouseCursorControl.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeStorage.h"
