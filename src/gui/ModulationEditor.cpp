@@ -70,9 +70,9 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
             auto dat = mod->rows[row];
 
-            g.setColour(juce::Colour(50, 50, 50));
+            g.setColour(juce::Colour(48, 48, 48));
             if (mod->rows[row].modNum % 2)
-                g.setColour(juce::Colour(75, 75, 90));
+                g.setColour(juce::Colour(32, 32, 32));
             g.fillRect(r);
 
             auto er = r.expanded(-1);
@@ -170,9 +170,9 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             auto r = getBounds().withTrimmedLeft(15);
 
-            g.setColour(juce::Colour(50, 50, 50));
+            g.setColour(juce::Colour(48, 48, 48));
             if (mod->rows[row].modNum % 2)
-                g.setColour(juce::Colour(75, 75, 90));
+                g.setColour(juce::Colour(32, 32, 32));
 
             auto dat = mod->rows[row];
 

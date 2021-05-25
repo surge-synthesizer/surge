@@ -545,7 +545,7 @@ class SurgeGUIEditor : public EditorType,
   private:
     float blinktimer = 0;
     bool blinkstate = false;
-    PARENT_PLUGIN_TYPE *_effect = nullptr;
+    PARENT_PLUGIN_TYPE *_synth = nullptr;
     void *_userdata = nullptr;
     int firstIdleCountdown = 0;
 

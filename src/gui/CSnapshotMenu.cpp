@@ -951,8 +951,11 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu
     type->Attribute("i", &type_id);
 
     if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+    {
         return;
+    }
 
+    subMenu.addColumnBreak();
     subMenu.addSectionHeader("User Presets");
 
     for (auto &ps : userPresets[type_id])
@@ -970,6 +973,9 @@ void CFxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
     type->Attribute("i", &type_id);
 
     if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+    {
         return;
+    }
+
     subMenu.addSectionHeader("Factory Presets");
 }
