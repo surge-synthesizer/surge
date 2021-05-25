@@ -1376,8 +1376,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             frame->juceComponent()->addAndMakeVisible(*lfoNameLabel);
             lfoNameLabel->setBounds(skinCtrl->getRect().asJuceIntRect());
             lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, kBoldFace));
-            lfoNameLabel->setFontColour(
-                currentSkin->getColor(Colors::LFO::Title::Text).asJuceColour());
+            lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
             break;
         }
 
@@ -1585,9 +1584,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             auto coln =
                 currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_COLOR, "#FF0000");
-            auto col = currentSkin->getColor(coln, kRedCColor);
+            auto col = currentSkin->getColor(coln, juce::Colours::red);
 
-            auto dcol = VSTGUI::CColor(255, 255, 255, 0);
+            auto dcol = VSTGUI::CColor(255, 255, 255).withAlpha((uint8_t)0);
             auto bgcoln = currentSkin->propertyValue(l, Surge::Skin::Component::BACKGROUND_COLOR,
                                                      "#FFFFFF00");
             auto bgcol = currentSkin->getColor(bgcoln, dcol);
@@ -1632,8 +1631,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
     auto dl = std::string("D ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
     auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), dl.c_str());
     lb->setTransparency(false);
-    lb->setBackColor(kRedCColor);
-    lb->setFontColor(kWhiteCColor);
+    lb->setBackColor(juce::Colours::red);
+    lb->setFontColor(juce::Colours::white);
     lb->setFont(Surge::GUI::getFontManager()->displayFont);
     lb->setHoriAlign(VSTGUI::kCenterText);
     lb->setAntialias(true);
@@ -6719,7 +6718,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c,
     {
         if (!p->can_setvalue_from_string())
         {
-            typeinValue->setFontColor(VSTGUI::kRedCColor);
+            typeinValue->setFontColor(juce::Colours::red);
             typeinValue->setText("Not available");
         }
     }

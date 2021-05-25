@@ -269,7 +269,7 @@ void CNumberField::draw(CDrawContext *pContext)
     auto hoverColorName = skin->propertyValue(skinControl, Surge::Skin::Component::TEXT_HOVER_COLOR,
                                               Colors::NumberField::TextHover.name);
 
-    auto fontColor = kRedCColor;
+    auto fontColor = juce::Colours::red;
     if (hovered)
         fontColor = skin->getColor(hoverColorName);
     else
@@ -296,7 +296,7 @@ void CNumberField::draw(CDrawContext *pContext)
 
     if (!(bg || hoverBg))
     {
-        pContext->setFrameColor(kRedCColor);
+        pContext->setFrameColor(juce::Colours::red);
         pContext->setFillColor(VSTGUI::CColor(100, 100, 200));
         pContext->drawRect(getViewSize(), kDrawFilledAndStroked);
     }

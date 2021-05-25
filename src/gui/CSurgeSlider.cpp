@@ -233,7 +233,7 @@ void CSurgeSlider::draw(CDrawContext *dc)
             else
                 dc->setFontColor(skin->getColor(Colors::Slider::Label::Dark));
             dc->setFont(labfont);
-            dc->setFrameColor(kRedCColor);
+            dc->setFrameColor(juce::Colours::red);
 
             // final x, y offset set from the skin
             trect.offset(text_hoffset, text_voffset);
@@ -279,8 +279,8 @@ void CSurgeSlider::draw(CDrawContext *dc)
         CColor ColBar = skin->getColor(Colors::Slider::Modulation::Positive);
         CColor ColBarNeg = skin->getColor(Colors::Slider::Modulation::Negative);
 
-        ColBar.alpha = (int)(slider_alpha * 255.f);
-        ColBarNeg.alpha = (int)(slider_alpha * 255.f);
+        ColBar = ColBar.withAlpha((uint8_t)(slider_alpha * 255.f));
+        ColBarNeg = ColBarNeg.withAlpha((uint8_t)(slider_alpha * 255.f));
 
         // We want modval + value to be bound by -1 and 1. So:
         float modup = modval;

@@ -624,7 +624,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             else
             {
                 c.second.type = ColorStore::COLOR;
-                c.second.color = VSTGUI::kRedCColor;
+                c.second.color = juce::Colours::red;
             }
         }
     }
@@ -968,20 +968,20 @@ VSTGUI::CColor Skin::colorFromHexString(const std::string &val) const
     sscanf(val.c_str() + 1, "%x", &rgb);
 
     auto l = strlen(val.c_str() + 1);
-    int a = 255;
+    uint8_t a = 255;
     if (l > 6)
     {
         a = rgb % 256;
         rgb = rgb >> 8;
     }
 
-    int b = rgb % 256;
+    uint8_t b = rgb % 256;
     rgb = rgb >> 8;
 
-    int g = rgb % 256;
+    uint8_t g = rgb % 256;
     rgb = rgb >> 8;
 
-    int r = rgb % 256;
+    uint8_t r = rgb % 256;
 
     return VSTGUI::CColor(r, g, b, a);
 }
@@ -1026,7 +1026,7 @@ VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor &def,
         case ColorStore::ALIAS:
             return getColor(c.alias, def, noLoops);
         case ColorStore::UNRESOLVED_ALIAS: // This should never occur
-            return VSTGUI::kRedCColor;
+            return juce::Colours::red;
         }
     }
 

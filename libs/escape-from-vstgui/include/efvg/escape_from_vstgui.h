@@ -241,7 +241,7 @@ typedef const char *UTF8String; // I know I know
 
 struct CFrame;
 struct CBitmap;
-struct CColor;
+typedef juce::Colour CColor;
 struct COptionMenu;
 
 typedef float CCoord;
@@ -378,25 +378,6 @@ struct CRect
     }
 };
 
-struct CColor
-{
-    constexpr CColor() : red(0), green(0), blue(0), alpha(255) {}
-    constexpr CColor(uint8_t r, uint8_t g, uint8_t b) : red(r), green(g), blue(b), alpha(255) {}
-    constexpr CColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-        : red(r), green(g), blue(b), alpha(a)
-    {
-    }
-
-    bool operator==(const CColor &that)
-    {
-        return red == that.red && green == that.green && blue == that.blue && alpha == that.alpha;
-    }
-    juce::Colour asJuceColour() const { return juce::Colour(red, green, blue, alpha); }
-
-    operator juce::Colour() const { return asJuceColour(); }
-    uint8_t red, green, blue, alpha;
-};
-
 struct CGradient : public Internal::FakeRefcount
 {
     std::unique_ptr<juce::ColourGradient> grad;
@@ -410,14 +391,8 @@ struct CGradient : public Internal::FakeRefcount
         res->remember();
         return res;
     };
-    void addColorStop(float pos, const CColor &c) { grad->addColour(pos, c.asJuceColour()); }
+    void addColorStop(float pos, const CColor &c) { grad->addColour(pos, c); }
 };
-
-constexpr const CColor kBlueCColor = CColor(0, 0, 255);
-constexpr const CColor kWhiteCColor = CColor(255, 255, 255);
-constexpr const CColor kRedCColor = CColor(255, 0, 0);
-constexpr const CColor kBlackCColor = CColor(0, 0, 0);
-constexpr const CColor kTransparentCColor = CColor(0, 0, 0, 0);
 
 enum CDrawModeFlags : uint32_t
 {
@@ -668,16 +643,16 @@ struct CDrawContext
 
     juce::Colour fillColor = juce::Colour(255, 0, 0), frameColor = juce::Colour(255, 0, 0),
                  fontColor = juce::Colour(255, 0, 0);
-    void setFontColor(const CColor &c) { fontColor = c.asJuceColour(); }
+    void setFontColor(const CColor &c) { fontColor = c; }
     CColor getFontColor()
     {
         UNIMPL;
         return CColor();
     }
 
-    void setFillColor(const CColor &c) { fillColor = c.asJuceColour(); }
+    void setFillColor(const CColor &c) { fillColor = c; }
 
-    void setFrameColor(const CColor &c) { frameColor = c.asJuceColour(); }
+    void setFrameColor(const CColor &c) { frameColor = c; }
 
     void drawRect(const CRect &r, CDrawStyle s = kDrawStroked)
     {
@@ -1530,7 +1505,7 @@ struct CTextLabel : public CControl
     {
         CControl::setBackColor(v);
         if (lab)
-            lab->setColour(juce::Label::backgroundColourId, v.asJuceColour());
+            lab->setColour(juce::Label::backgroundColourId, v);
     }
 
     void setHoriAlign(CHoriTxtAlign v) override
@@ -1576,7 +1551,7 @@ struct CTextLabel : public CControl
         CControl::setFontColor(v);
         if (lab)
         {
-            lab->setColour(juce::Label::ColourIds::textColourId, v.asJuceColour());
+            lab->setColour(juce::Label::ColourIds::textColourId, v);
         }
     }
 

@@ -529,7 +529,7 @@ void CLFOGui::draw(CDrawContext *dc)
                     tf.transform(ep);
                     dc->setLineWidth(0.5);
                     if (l % tsNum == 0)
-                        dc->setFrameColor(VSTGUI::kBlackCColor);
+                        dc->setFrameColor(juce::Colours::black);
                     else
                         // small ticks for the ruler
                         dc->setFrameColor(skin->getColor(Colors::LFO::Waveform::Ruler::SmallTicks));
@@ -591,7 +591,7 @@ void CLFOGui::draw(CDrawContext *dc)
             CPoint sp(xp, valScale * 0.9), ep(xp, valScale * 0.1);
             tf.transform(sp);
             tf.transform(ep);
-            dc->setFrameColor(kRedCColor);
+            dc->setFrameColor(juce::Colours::red);
             dc->drawLine(sp, ep);
         }
         dc->restoreGlobalState();
@@ -601,7 +601,7 @@ void CLFOGui::draw(CDrawContext *dc)
         edpath->forget();
     }
 
-    CColor cshadow = {0x5d, 0x5d, 0x5d, 0xff};
+    CColor cshadow = {0x5d, 0x5d, 0x5d};
     CColor cselected = skin->getColor(Colors::LFO::Type::SelectedBackground);
 
     dc->setFrameColor(cshadow);
@@ -866,9 +866,9 @@ void CLFOGui::drawStepSeq(VSTGUI::CDrawContext *dc, VSTGUI::CRect &maindisp,
             if (lfodata->rate.deactivated &&
                 (int)(lfodata->start_phase.val.f * n_stepseqsteps) % n_stepseqsteps == i)
             {
-                auto scolor = CColor(std::min(255, (int)(valuecolor.red * 1.3)),
-                                     std::min(255, (int)(valuecolor.green * 1.3)),
-                                     std::min(255, (int)(valuecolor.blue * 1.3)));
+                auto scolor = CColor(std::min(255, (int)(valuecolor.getRed() * 1.3)),
+                                     std::min(255, (int)(valuecolor.getGreen() * 1.3)),
+                                     std::min(255, (int)(valuecolor.getBlue() * 1.3)));
                 valuecolor = skin->getColor(Colors::LFO::StepSeq::Step::FillDeactivated);
             }
 

@@ -496,7 +496,9 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     {
         auto skincol = currentSkin->getColor(c);
         htmls << "<tr><td>" << c.name << "</td>" << htmlBlob(c.r, c.g, c.b, c.a)
-              << htmlBlob(skincol.red, skincol.green, skincol.blue, skincol.alpha) << "</tr>\n";
+              << htmlBlob(skincol.getRed(), skincol.getGreen(), skincol.getBlue(),
+                          skincol.getAlpha())
+              << "</tr>\n";
     }
     htmls << "</table>";
     endSection();

@@ -328,7 +328,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
         dc->setLineWidth(1.3);
         dc->setDrawMode(VSTGUI::kAntiAliasing);
         if (c == 1)
-            dc->setFrameColor(VSTGUI::CColor(100, 100, 180, 0xFF));
+            dc->setFrameColor(VSTGUI::CColor(100, 100, 180));
         else
             dc->setFrameColor(skin->getColor(Colors::Osc::Display::Wave));
 
@@ -465,7 +465,7 @@ void COscillatorDisplay::draw(CDrawContext *dc)
             }
             dc->drawRect(rnext, kDrawFilledAndStroked);
         }
-        dc->setFrameColor(kBlackCColor);
+        dc->setFrameColor(juce::Colours::black);
 
         dc->saveGlobalState();
 

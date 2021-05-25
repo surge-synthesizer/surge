@@ -49,6 +49,7 @@ class CodeEditorContainerWithApply : public juce::Component,
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
 
+    void paint(juce::Graphics &g) override;
     SurgeGUIEditor *editor;
     SurgeStorage *storage;
 
