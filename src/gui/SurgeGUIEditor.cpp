@@ -25,7 +25,6 @@
 #include "CEffectSettings.h"
 #include "CMenuAsSlider.h"
 #include "CTextButtonWithHover.h"
-#include "CAboutBox.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 #include "CNumberField.h"
@@ -40,6 +39,7 @@
 #include "ModulationEditor.h"
 #include "LuaEditors.h"
 
+#include "widgets/AboutScreen.h"
 #include "widgets/EffectLabel.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/Switch.h"
@@ -137,7 +137,6 @@ SurgeGUIEditor::SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *syn
     patchname = 0;
     blinktimer = 0.f;
     blinkstate = false;
-    aboutbox = nullptr;
     midiLearnOverlay = nullptr;
     patchCountdown = -1;
 
@@ -5267,7 +5266,7 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     settingsMenu.addSeparator();
 
-    settingsMenu.addItem("About Surge", [this]() { this->showAboutBox(); });
+    settingsMenu.addItem("About Surge", [this]() { this->showAboutScreen(); });
 
     settingsMenu.showMenuAsync(juce::PopupMenu::Options());
 }
@@ -6183,7 +6182,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
         auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
 
         skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu(m),
-                            [this, pxres]() { this->showAboutBox(pxres); });
+                            [this, pxres]() { this->showAboutScreen(pxres); });
 
         skinSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."), [this, pxres]() {
@@ -8285,23 +8284,40 @@ void SurgeGUIEditor::repushAutomationFor(Parameter *p)
     synth->sendParameterAutomation(id, synth->getParameter01(id));
 }
 
-void SurgeGUIEditor::showAboutBox(int devModeGrid)
+void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 {
+    aboutScreen = std::make_unique<Surge::Widgets::AboutScreen>();
+    aboutScreen->setEditor(this);
+    aboutScreen->setHostProgram(synth->hostProgram);
+    aboutScreen->setWrapperType(synth->juceWrapperType);
+    aboutScreen->setStorage(&(this->synth->storage));
+    aboutScreen->setSkin(currentSkin, bitmapStore);
+
+    aboutScreen->populateData();
+
+    aboutScreen->setBounds(frame->juceComponent()->getLocalBounds());
+    frame->juceComponent()->addAndMakeVisible(*aboutScreen);
+
+    /*
     CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
     aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram,
                              synth->juceWrapperType, currentSkin, bitmapStore, devModeGrid);
     aboutbox->setVisible(true);
     getFrame()->addView(aboutbox);
+     */
 }
 
-void SurgeGUIEditor::hideAboutBox()
+void SurgeGUIEditor::hideAboutScreen()
 {
+    frame->juceComponent()->removeChildComponent(aboutScreen.get());
+    /*
     if (aboutbox)
     {
         aboutbox->setVisible(false);
         removeFromFrame.push_back(aboutbox);
         aboutbox = nullptr;
     }
+     */
 }
 
 void SurgeGUIEditor::showMidiLearnOverlay(const VSTGUI::CRect &r)
