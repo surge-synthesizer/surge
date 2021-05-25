@@ -39,7 +39,6 @@ class SurgeSynthEditor;
 class CSurgeSlider;
 class CModulationSourceButton;
 class CAboutBox;
-class CMidiLearnOverlay;
 
 namespace Surge
 {
@@ -435,7 +434,8 @@ class SurgeGUIEditor : public EditorType,
                                    *statusZoom = nullptr;
     std::unique_ptr<Surge::Widgets::AboutScreen> aboutScreen;
 
-    CMidiLearnOverlay *midiLearnOverlay = nullptr;
+    std::unique_ptr<juce::Drawable> midiLearnOverlay;
+
     VSTGUI::CTextEdit *patchName = nullptr;
     VSTGUI::CTextEdit *patchCategory = nullptr;
     VSTGUI::CTextEdit *patchCreator = nullptr;

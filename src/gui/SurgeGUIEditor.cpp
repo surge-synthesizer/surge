@@ -57,7 +57,6 @@
 #include <codecvt>
 #include "MSEGEditor.h"
 #include "version.h"
-#include "CMidiLearnOverlay.h"
 #include "ModernOscillator.h"
 #include "libMTSClient.h"
 
@@ -8329,33 +8328,21 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 void SurgeGUIEditor::hideAboutScreen()
 {
     frame->juceComponent()->removeChildComponent(aboutScreen.get());
-    /*
-    if (aboutbox)
-    {
-        aboutbox->setVisible(false);
-        removeFromFrame.push_back(aboutbox);
-        aboutbox = nullptr;
-    }
-     */
 }
 
 void SurgeGUIEditor::showMidiLearnOverlay(const VSTGUI::CRect &r)
 {
-    if (midiLearnOverlay)
-        hideMidiLearnOverlay();
-
-    midiLearnOverlay = new CMidiLearnOverlay(r, bitmapStore);
-    midiLearnOverlay->setVisible(true);
-    getFrame()->addView(midiLearnOverlay);
+    midiLearnOverlay = bitmapStore->getDrawable(IDB_MIDI_LEARN)->createCopy();
+    midiLearnOverlay->setInterceptsMouseClicks(false, false);
+    midiLearnOverlay->setBounds(r.asJuceIntRect());
+    getFrame()->juceComponent()->addAndMakeVisible(midiLearnOverlay.get());
 }
 
 void SurgeGUIEditor::hideMidiLearnOverlay()
 {
     if (midiLearnOverlay)
     {
-        midiLearnOverlay->setVisible(false);
-        removeFromFrame.push_back(midiLearnOverlay);
-        midiLearnOverlay = nullptr;
+        getFrame()->juceComponent()->removeChildComponent(midiLearnOverlay.get());
     }
 }
 
