@@ -438,7 +438,10 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint &where, const CButto
         click_is_editpart =
             loc.x >= (size.getWidth() - 14); // click area for show LFO parameters arrow
         event_is_drag = false;
-        if (listener)
+        // this if is a bodge because the Dont Need thing isn't working which we will fix when we
+        // rewrite this
+        if (listener && !(buttons & (kAlt | kRButton | kMButton | kButton4 | kButton5 | kShift |
+                                     kControl | kApple | kDoubleClick)))
             listener->valueChanged(this);
     }
 

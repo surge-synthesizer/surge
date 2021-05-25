@@ -553,6 +553,14 @@ class SurgeGUIEditor : public EditorType,
     std::shared_ptr<VSTGUI::CCommandMenuItem>
     addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label, std::function<void()> op);
 
+    /*
+     * Why have this? To avoid rewrites when porting from COptionMenu signature
+     */
+    void addCallbackMenu(juce::PopupMenu &menu, const std::string &label, std::function<void()> op)
+    {
+        menu.addItem(label, op);
+    }
+
     juce::PopupMenu
     makeSmoothMenu(VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);

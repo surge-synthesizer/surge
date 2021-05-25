@@ -2042,16 +2042,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
         if (button & kRButton)
         {
             CModulationSourceButton *cms = (CModulationSourceButton *)control;
-            CRect menuRect;
-            CPoint where;
-            frame->getCurrentMouseLocation(where);
-            frame->localToFrame(where);
-
-            menuRect.offset(where.x, where.y);
-            COptionMenu *contextMenu = new COptionMenu(
-                menuRect, 0, 0, 0, 0,
-                VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
-            int eid = 0;
+            juce::PopupMenu contextMenu;
 
             std::string hu;
             if (modsource >= ms_ctrl1 && modsource <= ms_ctrl8)
@@ -2090,28 +2081,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     std::string hs = std::string("[?] ") + (char *)modsource_names[idOn];
                     addCallbackMenu(contextMenu, hs,
                                     [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-                    eid++;
                 }
                 else
                 {
-                    contextMenu->addEntry((char *)modsource_names[idOn], eid++);
+                    contextMenu.addItem(modsource_names[idOn], []() {});
                 }
 
                 bool activeMod = (cms->state & 3) == 2;
                 std::string offLab = "Switch to ";
                 offLab += modsource_names[idOff];
 
-                auto mi = addCallbackMenu(contextMenu, offLab, [this, modsource, cms]() {
+                contextMenu.addItem(offLab, !activeMod, false, [this, modsource, cms]() {
                     cms->setUseAlternate(!cms->useAlternate);
                     modsource_is_alternate[modsource] = cms->useAlternate;
                     this->refresh_mod();
                 });
-
-                if (activeMod)
-                {
-                    mi->setEnabled(false);
-                }
-                eid++;
             }
             else
             {
@@ -2121,15 +2105,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     std::string hs = std::string("[?] ") + modulatorName(modsource, false);
                     addCallbackMenu(contextMenu, hs,
                                     [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-                    eid++;
                 }
                 else
                 {
-                    contextMenu->addEntry((char *)modulatorName(modsource, false).c_str(), eid++);
+                    contextMenu.addItem(modulatorName(modsource, false), []() {});
                 }
             }
 
-            contextMenu->addSeparator();
+            contextMenu.addSeparator();
             addCallbackMenu(contextMenu, Surge::GUI::toOSCaseForMenu("Modulation Editor"),
                             [this]() {
                                 if (!isAnyOverlayPresent(MODULATION_EDITOR))
@@ -2196,12 +2179,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                         if (first_destination)
                         {
-                            contextMenu->addSeparator(eid++);
+                            contextMenu.addSeparator();
                             first_destination = false;
                         }
 
                         addCallbackMenu(contextMenu, tmptxt, clearOp);
-                        eid++;
                     }
                 }
 
@@ -2285,13 +2267,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                         if (first_destination)
                         {
-                            contextMenu->addSeparator(eid++);
+                            contextMenu.addSeparator();
                             first_destination = false;
                         }
 
                         addCallbackMenu(contextMenu, tmptxt, clearOp);
-                        eid++;
-
                         n_md++;
                     }
                 }
@@ -2306,28 +2286,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     clearLab = Surge::GUI::toOSCaseForMenu("Clear All ") + modName +
                                Surge::GUI::toOSCaseForMenu(" Routings");
 
-                    addCallbackMenu(
-                        contextMenu, clearLab, [this, n_total_md, thisms, control, bvf]() {
-                            for (int md = 1; md < n_total_md; md++)
-                                synth->clearModulation(md, thisms);
-                            refresh_mod();
+                    addCallbackMenu(contextMenu, clearLab, [this, n_total_md, thisms, control]() {
+                        for (int md = 1; md < n_total_md; md++)
+                            synth->clearModulation(md, thisms);
+                        refresh_mod();
 
-                            // Also blank out the name and rebuild the UI
-                            if (within_range(ms_ctrl1, thisms, ms_ctrl1 + n_customcontrollers - 1))
-                            {
-                                int ccid = thisms - ms_ctrl1;
+                        // Also blank out the name and rebuild the UI
+                        if (within_range(ms_ctrl1, thisms, ms_ctrl1 + n_customcontrollers - 1))
+                        {
+                            int ccid = thisms - ms_ctrl1;
 
-                                synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
-                                synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-                                ((CModulationSourceButton *)control)
-                                    ->setlabel(
-                                        synth->storage.getPatch().CustomControllerLabel[ccid]);
-                            }
-                            if (bvf)
-                                bvf->invalid();
-                            synth->updateDisplay();
-                        });
-                    eid++;
+                            synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                            synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                            ((CModulationSourceButton *)control)
+                                ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                        }
+                        if (control->asBaseViewFunctions())
+                            control->asBaseViewFunctions()->invalid();
+                        synth->updateDisplay();
+                    });
                 }
             }
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
@@ -2344,7 +2321,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                 .scene[current_scene]
                                 .modsources[modsource]);
 
-                contextMenu->addSeparator(eid++);
+                contextMenu.addSeparator();
                 char vtxt[1024];
                 snprintf(vtxt, 1024, "%s: %.*f %%",
                          Surge::GUI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2),
@@ -2352,35 +2329,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                 addCallbackMenu(contextMenu, vtxt, [this, bvf, modsource]() {
                     promptForUserValueEntry(nullptr, bvf, modsource);
                 });
-                eid++;
 
-                contextMenu->addSeparator(eid++);
+                contextMenu.addSeparator();
 
                 char txt[TXT_SIZE];
 
                 // Construct submenus for explicit controller mapping
-                COptionMenu *midiSub = new COptionMenu(
-                    menuRect, 0, 0, 0, 0,
-                    VSTGUI::COptionMenu::kNoDrawStyle | VSTGUI::COptionMenu::kMultipleCheckStyle);
-                COptionMenu *currentSub = nullptr;
+                juce::PopupMenu midiSub;
+                juce::PopupMenu currentSub;
+                bool firstSub = true;
 
                 bool isChecked = false;
                 for (int subs = 0; subs < 7; ++subs)
                 {
-                    if (currentSub)
+                    if (!firstSub)
                     {
                         char name[16];
                         snprintf(name, 16, "CC %d ... %d", (subs - 1) * 20,
                                  min(((subs - 1) * 20) + 20, 128) - 1);
-                        auto added_to_menu = midiSub->addEntry(currentSub, name);
-                        added_to_menu->setChecked(isChecked);
+                        midiSub.addSubMenu(name, currentSub, true, nullptr, isChecked);
 
-                        currentSub->forget();
-                        currentSub = nullptr;
+                        currentSub = juce::PopupMenu();
                     }
-                    currentSub = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                                 VSTGUI::COptionMenu::kNoDrawStyle |
-                                                     VSTGUI::COptionMenu::kMultipleCheckStyle);
 
                     isChecked = false;
 
@@ -2405,39 +2375,26 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                         snprintf(name, 128, "CC %d (%s) %s", mc, midicc_names[mc],
                                  (disabled == 1 ? "- RESERVED" : ""));
 
-                        auto cmd = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(name));
-
-                        cmd->setActions([this, ccid, mc](CCommandMenuItem *men) {
-                            synth->storage.controllers[ccid] = mc;
-                        });
-
-                        auto added = currentSub->addEntry(cmd);
-                        added->setEnabled(!disabled);
-
+                        bool thisIsChecked = false;
                         if (synth->storage.controllers[ccid] == mc)
                         {
-                            added->setChecked();
+                            thisIsChecked = true;
                             isChecked = true;
                         }
+
+                        currentSub.addItem(name, true, thisIsChecked, [this, ccid, mc]() {
+                            synth->storage.controllers[ccid] = mc;
+                        });
                     }
                 }
 
-                if (currentSub)
-                {
-                    int subs = 7;
-                    char name[16];
-                    snprintf(name, 16, "CC %d ... %d", (subs - 1) * 20,
-                             min(((subs - 1) * 20) + 20, 128) - 1);
-                    auto added_to_menu = midiSub->addEntry(currentSub, name);
-                    added_to_menu->setChecked(isChecked);
+                int subs = 7;
+                char name[16];
+                snprintf(name, 16, "CC %d ... %d", (subs - 1) * 20,
+                         min(((subs - 1) * 20) + 20, 128) - 1);
+                midiSub.addSubMenu(name, currentSub, true, nullptr, isChecked);
 
-                    currentSub->forget();
-                    currentSub = nullptr;
-                }
-
-                contextMenu->addEntry(midiSub, Surge::GUI::toOSCaseForMenu("Assign Macro To..."));
-
-                eid++;
+                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign Macro To..."), midiSub);
 
                 if (synth->learn_custom > -1 && synth->learn_custom == ccid)
                     cancellearn = true;
@@ -2457,7 +2414,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                         synth->learn_custom = ccid;
                                     }
                                 });
-                eid++;
 
                 if (synth->storage.controllers[ccid] >= 0)
                 {
@@ -2468,46 +2424,44 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                     Surge::GUI::toOSCaseForMenu(txt) +
                                         midicc_names[synth->storage.controllers[ccid]] + ")",
                                     [this, ccid]() { synth->storage.controllers[ccid] = -1; });
-                    eid++;
                 }
 
-                contextMenu->addSeparator(eid++);
+                contextMenu.addSeparator();
 
-                auto bp = addCallbackMenu(contextMenu, Surge::GUI::toOSCaseForMenu("Bipolar Mode"),
-                                          [this, control, ccid]() {
-                                              bool bp = !synth->storage.getPatch()
-                                                             .scene[current_scene]
-                                                             .modsources[ms_ctrl1 + ccid]
-                                                             ->is_bipolar();
-                                              synth->storage.getPatch()
-                                                  .scene[current_scene]
-                                                  .modsources[ms_ctrl1 + ccid]
-                                                  ->set_bipolar(bp);
+                bool ibp = synth->storage.getPatch()
+                               .scene[current_scene]
+                               .modsources[ms_ctrl1 + ccid]
+                               ->is_bipolar();
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Bipolar Mode"), true, ibp,
+                                    [this, control, ccid]() {
+                                        bool bp = !synth->storage.getPatch()
+                                                       .scene[current_scene]
+                                                       .modsources[ms_ctrl1 + ccid]
+                                                       ->is_bipolar();
+                                        synth->storage.getPatch()
+                                            .scene[current_scene]
+                                            .modsources[ms_ctrl1 + ccid]
+                                            ->set_bipolar(bp);
 
-                                              float f = synth->storage.getPatch()
-                                                            .scene[current_scene]
-                                                            .modsources[ms_ctrl1 + ccid]
-                                                            ->get_output01();
-                                              control->setValue(f);
-                                              ((CModulationSourceButton *)control)->setBipolar(bp);
-                                              refresh_mod();
-                                          });
-                bp->setChecked(synth->storage.getPatch()
-                                   .scene[current_scene]
-                                   .modsources[ms_ctrl1 + ccid]
-                                   ->is_bipolar());
-                eid++;
+                                        float f = synth->storage.getPatch()
+                                                      .scene[current_scene]
+                                                      .modsources[ms_ctrl1 + ccid]
+                                                      ->get_output01();
+                                        control->setValue(f);
+                                        ((CModulationSourceButton *)control)->setBipolar(bp);
+                                        refresh_mod();
+                                    });
 
                 addCallbackMenu(
                     contextMenu, Surge::GUI::toOSCaseForMenu("Rename Macro..."),
-                    [this, control, bvf, ccid, menuRect]() {
+                    [this, control, ccid]() {
                         std::string pval = synth->storage.getPatch().CustomControllerLabel[ccid];
                         if (pval == "-")
                             pval = "";
                         promptForMiniEdit(
                             pval, "Enter a new name for the macro:", "Rename Macro",
-                            menuRect.getTopLeft(),
-                            [this, control, bvf, ccid](const std::string &s) {
+                            control->asBaseViewFunctions()->getControlViewSize().getTopLeft(),
+                            [this, control, ccid](const std::string &s) {
                                 auto useS = s;
                                 if (useS == "")
                                     useS = "-";
@@ -2519,27 +2473,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                     ->setlabel(
                                         synth->storage.getPatch().CustomControllerLabel[ccid]);
 
-                                if (bvf)
-                                    bvf->invalid();
+                                if (control && control->asBaseViewFunctions())
+                                    control->asBaseViewFunctions()->invalid();
                                 synth->refresh_editor = true;
                                 // synth->updateDisplay();
                             });
                     });
-                eid++;
-                midiSub->forget();
             }
 
             int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
 
             if (lfo_id >= 0)
             {
-                contextMenu->addSeparator(eid++);
+                contextMenu.addSeparator();
                 addCallbackMenu(contextMenu, "Copy", [this, sc, lfo_id]() {
                     if (lfo_id >= 0)
                         synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
                     mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
                 });
-                eid++;
 
                 if (synth->storage.get_clipboard_type() == cp_lfo)
                 {
@@ -2549,14 +2500,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                         msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
                         queue_refresh = true;
                     });
-                    eid++;
                 }
             }
-            frame->addView(contextMenu); // add to frame
-            contextMenu->invalid();
-            contextMenu->popup();
-            frame->removeView(contextMenu, true); // remove from frame and forget
 
+            // FIXME: This one shouldn't be async yet since the macro can get swept underneath us
+            contextMenu.showMenu(juce::PopupMenu::Options());
             return 1;
         }
         return 0;
@@ -5438,7 +5386,6 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
 
 juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhelp)
 {
-
     auto mpeSubMenu = juce::PopupMenu();
 
     auto hu = helpURLForSpecial("mpe-menu");
