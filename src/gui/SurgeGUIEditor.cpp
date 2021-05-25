@@ -17,7 +17,6 @@
 #include "resource.h"
 #include "CSurgeSlider.h"
 #include "CParameterTooltip.h"
-#include "CPatchBrowser.h"
 #include "COscillatorDisplay.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
@@ -44,6 +43,7 @@
 #include "widgets/AboutScreen.h"
 #include "widgets/EffectLabel.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/PatchSelector.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
@@ -134,7 +134,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
 #endif
     frame = 0;
 
-    patchname = 0;
     blinktimer = 0.f;
     blinkstate = false;
     midiLearnOverlay = nullptr;
@@ -397,9 +396,9 @@ void SurgeGUIEditor::idle()
         }
 
         bool patchChanged = false;
-        if (patchname)
+        if (patchSelector)
         {
-            patchChanged = ((CPatchBrowser *)patchname)->sel_id != synth->patchid;
+            patchChanged = patchSelector->sel_id != synth->patchid;
         }
 
         if (statusMPE)
@@ -446,13 +445,13 @@ void SurgeGUIEditor::idle()
 
                 openOrRecreateEditor();
             }
-            if (patchname)
+            if (patchSelector)
             {
-                ((CPatchBrowser *)patchname)->sel_id = synth->patchid;
-                ((CPatchBrowser *)patchname)->setLabel(synth->storage.getPatch().name);
-                ((CPatchBrowser *)patchname)->setCategory(synth->storage.getPatch().category);
-                ((CPatchBrowser *)patchname)->setAuthor(synth->storage.getPatch().author);
-                patchname->invalid();
+                patchSelector->sel_id = synth->patchid;
+                patchSelector->setLabel(synth->storage.getPatch().name);
+                patchSelector->setCategory(synth->storage.getPatch().category);
+                patchSelector->setAuthor(synth->storage.getPatch().author);
+                patchSelector->repaint();
             }
         }
 
@@ -1393,14 +1392,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
         {
-            patchname =
-                new CPatchBrowser(skinCtrl->getRect(), this, tag_patchname, &synth->storage);
-            ((CPatchBrowser *)patchname)->setSkin(currentSkin, bitmapStore);
-            ((CPatchBrowser *)patchname)->setLabel(synth->storage.getPatch().name);
-            ((CPatchBrowser *)patchname)->setCategory(synth->storage.getPatch().category);
-            ((CPatchBrowser *)patchname)->setIDs(synth->current_category_id, synth->patchid);
-            ((CPatchBrowser *)patchname)->setAuthor(synth->storage.getPatch().author);
-            frame->addView(patchname);
+            patchSelector =
+                componentForSkinSession<Surge::Widgets::PatchSelector>(skinCtrl->sessionid);
+            patchSelector->addListener(this);
+            patchSelector->setStorage(&(this->synth->storage));
+            patchSelector->setTag(tag_patchname);
+            patchSelector->setSkin(currentSkin, bitmapStore);
+            patchSelector->setLabel(synth->storage.getPatch().name);
+            patchSelector->setCategory(synth->storage.getPatch().category);
+            patchSelector->setIDs(synth->current_category_id, synth->patchid);
+            patchSelector->setAuthor(synth->storage.getPatch().author);
+            patchSelector->setBounds(skinCtrl->getRect().asJuceIntRect());
+
+            frame->juceComponent()->addAndMakeVisible(*patchSelector);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
@@ -1759,7 +1763,6 @@ bool SurgeGUIEditor::open(void *parent)
         zoomInvalid = true;
     }
 
-    // HEREHERE
     auto *des = &(synth->storage.getPatch().dawExtraState);
 
     if (des->isPopulated && des->editor.isMSEGOpen)
@@ -4187,10 +4190,13 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     break;
     case tag_patchname:
     {
-        int id = ((CPatchBrowser *)control)->enqueue_sel_id;
-        // synth->load_patch(id);
-        enqueuePatchId = id;
-        flushEnqueuedPatchId();
+        auto psc = dynamic_cast<Surge::Widgets::PatchSelector *>(control);
+        if (psc)
+        {
+            int id = psc->enqueue_sel_id;
+            enqueuePatchId = id;
+            flushEnqueuedPatchId();
+        }
         return;
     }
     break;

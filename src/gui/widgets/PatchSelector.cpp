@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -13,80 +13,80 @@
 ** open source in September 2018.
 */
 
-#include "SurgeGUIEditor.h"
-#include "CPatchBrowser.h"
-#include "SkinColors.h"
+#include "PatchSelector.h"
+#include "SurgeStorage.h"
 #include "SurgeGUIUtils.h"
-
-#include <vector>
-#include <algorithm>
+#include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 
-using namespace VSTGUI;
-using namespace std;
-
-// 32 + header
-const int maxMenuItemsPerColumn = 33;
-
-void CPatchBrowser::draw(CDrawContext *dc)
+namespace Surge
 {
-    CRect pbrowser = getViewSize();
-    CRect cat(pbrowser), auth(pbrowser);
+namespace Widgets
+{
+PatchSelector::PatchSelector() = default;
+PatchSelector::~PatchSelector() = default;
 
-    cat.left += 3;
-    cat.right = cat.left + 150;
-    cat.setHeight(pbrowser.getHeight() / 2);
+void PatchSelector::paint(juce::Graphics &g)
+{
+    auto pbrowser = getLocalBounds();
+
+    auto cat = getLocalBounds().withTrimmedLeft(3).withWidth(150).withHeight(getHeight() * 0.5);
+    auto auth = getLocalBounds();
 
     if (skin->getVersion() >= 2)
     {
-        cat.offset(0, (pbrowser.getHeight() / 2) - 1);
-
-        auth.right -= 3;
-        auth.left = auth.right - 150;
-        auth.top = cat.top;
-        auth.bottom = cat.bottom;
+        cat = cat.translated(0, getHeight() * 0.5);
+        auth = auth.withTrimmedRight(3)
+                   .withWidth(150)
+                   .translated(getWidth() - 150 - 3, 0)
+                   .withTop(cat.getY())
+                   .withHeight(cat.getHeight());
     }
     else
     {
         auth = cat;
-        auth.offset(0, pbrowser.getHeight() / 2);
+        auth = auth.translated(0, pbrowser.getHeight() / 2);
 
-        cat.offset(0, 1);
-        auth.offset(0, -1);
+        cat = cat.translated(0, 1);
+        auth = auth.translated(0, -1);
     }
 
-    // debug draws
-    // dc->drawRect(pbrowser);
-    // dc->drawRect(cat);
-    // dc->drawRect(auth);
+#if DEBUG_PATCH_AREAS
+    g.setColour(juce::Colours::red);
+    g.drawRect(pbrowser);
+    g.drawRect(cat);
+    g.drawRect(auth);
+#endif
 
     // patch browser text color
-    dc->setFontColor(skin->getColor(Colors::PatchBrowser::Text));
+    g.setColour(skin->getColor(Colors::PatchBrowser::Text));
 
     // patch name
-    dc->setFont(Surge::GUI::getFontManager()->patchNameFont);
-    dc->drawString(pname.c_str(), pbrowser, kCenterText, true);
+    g.setFont(Surge::GUI::getFontManager()->patchNameFont);
+    g.drawText(pname.c_str(), pbrowser, juce::Justification::centred);
 
     // category/author name
-    dc->setFont(Surge::GUI::getFontManager()->displayFont);
-    dc->drawString(category.c_str(), cat, kLeftText, true);
-    dc->drawString(author.c_str(), auth, skin->getVersion() >= 2 ? kRightText : kLeftText, true);
-
-    setDirty(false);
+    g.setFont(Surge::GUI::getFontManager()->displayFont);
+    g.drawText(category, cat, juce::Justification::centredLeft);
+    g.drawText(author, auth,
+               skin->getVersion() >= 2 ? juce::Justification::centredRight
+                                       : juce::Justification::centredLeft);
 }
 
-CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &button)
+void PatchSelector::mouseDown(const juce::MouseEvent &e)
 {
-    if (listener && (button & (kMButton | kButton4 | kButton5)))
+    if (e.mods.isMiddleButtonDown())
     {
-        listener->controlModifierClicked(this, button);
-        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        notifyControlModifierClicked(e.mods);
+        return;
     }
 
     auto contextMenu = juce::PopupMenu();
     int main_e = 0;
     // if RMB is down, only show the current category
-    bool single_category = button & (kRButton | kControl), has_3rdparty = false;
+    bool single_category =
+        e.mods.isRightButtonDown() || e.mods.isCtrlDown() || e.mods.isCommandDown();
+    bool has_3rdparty = false;
     int last_category = current_category;
     int root_count = 0, usercat_pos = 0, col_breakpoint = 0;
     auto patch_cat_size = storage->patch_category.size();
@@ -104,7 +104,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         {
             if (storage->patchCategoryOrdering.size() == 0)
             {
-                return kMouseEventHandled;
+                return;
             }
 
             for (auto c : storage->patchCategoryOrdering)
@@ -124,7 +124,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         // get just the category name and not the path leading to it
         std::string menuName = storage->patch_category[rightMouseCategory].name;
 
-        if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+        if (menuName.find_last_of(PATH_SEPARATOR) != std::string::npos)
         {
             menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
         }
@@ -150,7 +150,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
                 if (!single_category &&
                     (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory))
                 {
-                    string txt;
+                    std::string txt;
 
                     if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
                     {
@@ -208,7 +208,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
-        auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
 
         if (sge)
         {
@@ -227,7 +227,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
         {
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
-            auto sge = dynamic_cast<SurgeGUIEditor *>(listener);
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
 
             if (sge)
             {
@@ -254,7 +254,7 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
 
     contextMenu.addSeparator();
 
-    auto *sge = dynamic_cast<SurgeGUIEditor *>(listener);
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     if (sge)
     {
@@ -270,10 +270,9 @@ CMouseEventResult CPatchBrowser::onMouseDown(CPoint &where, const CButtonState &
     }
 
     contextMenu.showMenuAsync(juce::PopupMenu::Options());
-    return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
-bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
+bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
                                                  bool single_category, int &main_e, bool rootCall)
 {
     bool amIChecked = false;
@@ -295,7 +294,7 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
     // Go through the whole patch list in alphabetical order and filter
     // out only the patches that belong to the current category.
-    vector<int> ctge;
+    std::vector<int> ctge;
 
     for (auto p : storage->patchOrdering)
     {
@@ -306,11 +305,11 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
     }
 
     // Divide categories with more entries than splitcount into subcategories f.ex. bass (1, 2) etc
-    int n_subc = 1 + (max(2, (int)ctge.size()) - 1) / splitcount;
+    int n_subc = 1 + (std::max(2, (int)ctge.size()) - 1) / splitcount;
 
     for (int subc = 0; subc < n_subc; subc++)
     {
-        string name;
+        std::string name;
         juce::PopupMenu availMenu;
         juce::PopupMenu *subMenu;
 
@@ -325,7 +324,8 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         int sub = 0;
 
-        for (int i = subc * splitcount; i < min((subc + 1) * splitcount, (int)ctge.size()); i++)
+        for (int i = subc * splitcount; i < std::min((subc + 1) * splitcount, (int)ctge.size());
+             i++)
         {
             int p = ctge[i];
 
@@ -377,9 +377,9 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
         }
 
         // get just the category name and not the path leading to it
-        string menuName = storage->patch_category[c].name;
+        std::string menuName = storage->patch_category[c].name;
 
-        if (menuName.find_last_of(PATH_SEPARATOR) != string::npos)
+        if (menuName.find_last_of(PATH_SEPARATOR) != std::string::npos)
         {
             menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
         }
@@ -404,11 +404,14 @@ bool CPatchBrowser::populatePatchMenuForCategory(int c, juce::PopupMenu &context
     return amIChecked;
 }
 
-void CPatchBrowser::loadPatch(int id)
+void PatchSelector::loadPatch(int id)
 {
-    if (listener && (id >= 0))
+    if (id >= 0)
     {
         enqueue_sel_id = id;
-        listener->valueChanged(this);
+        notifyValueChanged();
     }
 }
+
+} // namespace Widgets
+} // namespace Surge

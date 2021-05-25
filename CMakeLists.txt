@@ -342,7 +342,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CNumberField.cpp
   src/gui/COscillatorDisplay.cpp
   src/gui/CParameterTooltip.h
-  src/gui/CPatchBrowser.cpp
   src/gui/CScalableBitmap.cpp
   src/gui/CSnapshotMenu.cpp
   src/gui/CSurgeSlider.cpp
@@ -365,6 +364,7 @@ set(SURGE_GUI_SOURCES
 
   src/gui/widgets/AboutScreen.cpp
   src/gui/widgets/MultiSwitch.cpp
+  src/gui/widgets/PatchSelector.cpp
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
   src/gui/widgets/VuMeter.cpp
