@@ -33,9 +33,8 @@
 #include <thread>
 #include <atomic>
 
-#include "SurgeSynthEditor.h"
 typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
-#define PARENT_PLUGIN_TYPE SurgeSynthEditor
+class SurgeSynthEditor;
 
 class CSurgeSlider;
 class CModulationSourceButton;
@@ -65,7 +64,7 @@ class SurgeGUIEditor : public EditorType,
     using super = EditorType;
 
   public:
-    SurgeGUIEditor(PARENT_PLUGIN_TYPE *effect, SurgeSynthesizer *synth, void *userdata = nullptr);
+    SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
     virtual ~SurgeGUIEditor();
 
     std::atomic<int> errorItemCount{0};
@@ -545,8 +544,7 @@ class SurgeGUIEditor : public EditorType,
   private:
     float blinktimer = 0;
     bool blinkstate = false;
-    PARENT_PLUGIN_TYPE *_synth = nullptr;
-    void *_userdata = nullptr;
+    SurgeSynthEditor *juceEditor{nullptr};
     int firstIdleCountdown = 0;
 
     /*
