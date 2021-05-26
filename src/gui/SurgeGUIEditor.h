@@ -47,6 +47,7 @@ namespace Widgets
 {
 struct AboutScreen;
 struct EffectLabel;
+struct ParameterInfowindow;
 struct PatchSelector;
 struct Switch;
 struct VerticalLabel;
@@ -432,8 +433,9 @@ class SurgeGUIEditor : public EditorType,
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
+    std::unique_ptr<Surge::Widgets::ParameterInfowindow> infowindow;
 
-    VSTGUI::CControl *infowindow, *ccfxconf = nullptr;
+    VSTGUI::CControl *ccfxconf = nullptr;
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
     std::unique_ptr<Surge::Widgets::AboutScreen> aboutScreen;
