@@ -17,7 +17,6 @@
 #include "resource.h"
 
 #include "CSurgeSlider.h"
-#include "CParameterTooltip.h"
 #include "COscillatorDisplay.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
@@ -48,6 +47,7 @@
 
 #include "widgets/EffectLabel.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/ParameterInfowindow.h"
 #include "widgets/PatchSelector.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
@@ -204,6 +204,9 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
     auto des = &(synth->storage.getPatch().dawExtraState);
     if (des->isPopulated)
         loadFromDAWExtraState(synth);
+
+    infowindow = std::make_unique<Surge::Widgets::ParameterInfowindow>();
+    infowindow->setVisible(false);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -476,21 +479,9 @@ void SurgeGUIEditor::idle()
             assert(i + 1 < Effect::KNumVuSlots);
             if (vu[i + 1] && synth->fx[current_fx])
             {
-                // there's seems to be a bug here that overwrites either this or the vu-pointer
-                // try to catch it earlier to retrieve more info
-
-                // assert(!((int)vu[i+1] & 0xffff0000));
-
-                // check so it doesn't overlap with the infowindow
-                CRect iw = ((CParameterTooltip *)infowindow)->getViewSize();
-                CRect vur = vu[i + 1]->getBounds();
-
-                if (!((CParameterTooltip *)infowindow)->isVisible() || !vur.rectOverlap(iw))
-                {
-                    vu[i + 1]->setValue(synth->fx[current_fx]->vu[(i << 1)]);
-                    vu[i + 1]->setValueR(synth->fx[current_fx]->vu[(i << 1) + 1]);
-                    vu[i + 1]->invalid();
-                }
+                vu[i + 1]->setValue(synth->fx[current_fx]->vu[(i << 1)]);
+                vu[i + 1]->setValueR(synth->fx[current_fx]->vu[(i << 1) + 1]);
+                vu[i + 1]->repaint();
             }
         }
 
@@ -748,15 +739,10 @@ void SurgeGUIEditor::idle()
             }
         }
         clear_infoview_countdown += clear_infoview_peridle;
-        if (clear_infoview_countdown == 0)
+        if (clear_infoview_countdown == 0 && infowindow)
         {
-            ((CParameterTooltip *)infowindow)->Hide();
-            // infowindow->getViewSize();
-            // ctnvg       frame->redrawRect(drawContext,r);
+            infowindow->setVisible(false);
         }
-
-        // frame->update(&drawContext);
-        // frame->idle();
     }
 
 #if BUILD_IS_DEBUG
@@ -800,11 +786,9 @@ void SurgeGUIEditor::toggle_mod_editing()
         mod_editor = !mod_editor;
         refresh_mod();
 
-        auto iw = dynamic_cast<CParameterTooltip *>(infowindow);
-
-        if (iw && iw->isVisible())
+        if (infowindow && infowindow->isVisible())
         {
-            iw->Hide();
+            infowindow->setVisible(false);
         }
     }
 }
@@ -1549,12 +1533,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
+    // Make sure the infowindow is here
+    infowindow->setVisible(false);
+    frame->juceComponent()->addAndMakeVisible(infowindow.get());
+
     int menuX = 844, menuY = 550, menuW = 50, menuH = 15;
     CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
-
-    infowindow = new CParameterTooltip(CRect(0, 0, 0, 0));
-    ((CParameterTooltip *)infowindow)->setSkin(currentSkin);
-    frame->addView(infowindow);
 
     // Mouse behavior
     if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
@@ -4283,6 +4267,13 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
         menuRect.offset(where.x, where.y);
 
+        // settings is a special case since it uses value here.
+        if (auto msc = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
+        {
+            msc->isHovered = false;
+            msc->repaint();
+        }
+
         useDevMenu = false;
         showSettingsMenu(menuRect);
     }
@@ -4617,9 +4608,10 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
             if ((p->ctrlstyle & kNoPopup))
             {
-                auto iw = dynamic_cast<CParameterTooltip *>(infowindow);
-                if (iw && iw->isVisible())
-                    iw->Hide();
+                if (infowindow && infowindow->isVisible())
+                {
+                    infowindow->setVisible(false);
+                }
             }
 
             if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
@@ -4656,13 +4648,13 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                                                    Parameter::InfoWindow, &mss);
                 if (mss.val != "")
                 {
-                    ((CParameterTooltip *)infowindow)->setLabel(pname, pdisp);
-                    ((CParameterTooltip *)infowindow)->setMDIWS(mss);
+                    infowindow->setLabels(pname, pdisp);
+                    infowindow->setMDIWS(mss);
                 }
                 else
                 {
-                    ((CParameterTooltip *)infowindow)->setLabel(pname, pdisp);
-                    ((CParameterTooltip *)infowindow)->clearMDIWS();
+                    infowindow->setLabels(pname, pdisp);
+                    infowindow->clearMDIWS();
                 }
                 modulate = true;
 
@@ -4746,8 +4738,8 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     synth->getParameterDisplay(ptagid, pdisp);
                     char pdispalt[256];
                     synth->getParameterDisplayAlt(ptagid, pdispalt);
-                    ((CParameterTooltip *)infowindow)->setLabel(0, pdisp, pdispalt);
-                    ((CParameterTooltip *)infowindow)->clearMDIWS();
+                    infowindow->setLabels("", pdisp, pdispalt);
+                    infowindow->clearMDIWS();
                     if (p->ctrltype == ct_polymode)
                         modulate = true;
                 }
@@ -4933,11 +4925,11 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControlValueInterface *control)
         juceEditor->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
 
-    if (((CParameterTooltip *)infowindow)->isVisible())
+    if (infowindow->isVisible())
     {
         auto cs = dynamic_cast<CSurgeSlider *>(control);
         if (cs == nullptr || cs->hasBeenDraggedDuringMouseGesture)
-            ((CParameterTooltip *)infowindow)->Hide();
+            infowindow->setVisible(false);
         else
         {
             clear_infoview_countdown = 15;
@@ -4955,76 +4947,23 @@ void SurgeGUIEditor::draw_infowindow(int ptag, BaseViewFunctions *control, bool 
     if (buttons && forceMB)
         return; // don't draw via CC if MB is down
 
-    // A heuristic
-    auto ml = ((CParameterTooltip *)infowindow)->getMaxLabelLen();
-    auto iff = 148;
-    // This is just empirical. It would be lovely to use the actual string width but that needs a
-    // draw context of for these to be TextLabels so we can call sizeToFit
-    if (ml > 24)
-        iff += (ml - 24) * 5;
-
     auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                          Surge::Storage::ModWindowShowsValues, 0);
 
-    ((CParameterTooltip *)infowindow)->setExtendedMDIWS(modValues);
-    CRect r(0, 0, iff, 18);
-    if (modulate)
-    {
-        int hasMDIWS = ((CParameterTooltip *)infowindow)->hasMDIWS();
-        r.bottom += (hasMDIWS & modValues ? 36 : 18);
-        if (modValues)
-            r.right += 20;
-    }
-
-    CRect r2 = control->getControlViewSize();
-
-    // OK this is a heuristic to stop deform overpainting and stuff
-    if (r2.bottom > getWindowSizeY() - r.getHeight() - 2)
-    {
-        // stick myself on top please
-        r.offset((r2.left / 150) * 150, r2.top - r.getHeight() - 2);
-    }
-    else
-    {
-        r.offset((r2.left / 150) * 150, r2.bottom);
-    }
-
-    if (r.bottom > getWindowSizeY() - 2)
-    {
-        int ao = (getWindowSizeY() - 2 - r.bottom);
-        r.offset(0, ao);
-    }
-
-    if (r.right > getWindowSizeX() - 2)
-    {
-        int ao = (getWindowSizeX() - 2 - r.right);
-        r.offset(ao, 0);
-    }
-
-    if (r.left < 0)
-    {
-        int ao = 2 - r.left;
-        r.offset(ao, 0);
-    }
-
-    if (r.top < 0)
-    {
-        int ao = 2 - r.top;
-        r.offset(0, ao);
-    }
+    infowindow->setExtendedMDIWS(modValues);
 
     if (buttons || forceMB)
     {
         // make sure an infowindow doesn't appear twice
-        if (((CParameterTooltip *)infowindow)->isVisible())
+        if (infowindow->isVisible())
         {
-            ((CParameterTooltip *)infowindow)->Hide();
-            ((CParameterTooltip *)infowindow)->invalid();
+            infowindow->setVisible(false);
         }
 
-        ((CParameterTooltip *)infowindow)->setViewSize(r);
-        ((CParameterTooltip *)infowindow)->Show();
-        infowindow->invalid();
+        infowindow->setBoundsToAccompany(control->getControlViewSize().asJuceIntRect(),
+                                         getFrame()->juceComponent()->getLocalBounds());
+        infowindow->setVisible(true);
+        infowindow->repaint();
         // on Linux the infoview closes too soon
 #if LINUX
         clear_infoview_countdown = 100;
@@ -5034,8 +4973,9 @@ void SurgeGUIEditor::draw_infowindow(int ptag, BaseViewFunctions *control, bool 
     }
     else
     {
-        ((CParameterTooltip *)infowindow)->Hide();
-        frame->invalidRect(r);
+        auto b = infowindow->getBounds();
+        infowindow->setVisible(false);
+        frame->juceComponent()->repaint(b);
     }
 }
 
@@ -6438,6 +6378,8 @@ void SurgeGUIEditor::reloadFromSkin()
 
     float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
     bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
+
+    infowindow->setSkin(currentSkin, bitmapStore);
 
     auto bg = currentSkin->customBackgroundImage();
 

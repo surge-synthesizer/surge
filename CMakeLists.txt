@@ -341,7 +341,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CModulationSourceButton.cpp
   src/gui/CNumberField.cpp
   src/gui/COscillatorDisplay.cpp
-  src/gui/CParameterTooltip.h
   src/gui/CScalableBitmap.cpp
   src/gui/CSnapshotMenu.cpp
   src/gui/CSurgeSlider.cpp
@@ -365,6 +364,7 @@ set(SURGE_GUI_SOURCES
   src/gui/overlays/PatchDBViewer.cpp
 
   src/gui/widgets/MultiSwitch.cpp
+  src/gui/widgets/ParameterInfowindow.cpp
   src/gui/widgets/PatchSelector.cpp
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
@@ -738,6 +738,8 @@ if( BUILD_SURGE_EFFECTS_BANK )
 
           JUCE_DISPLAY_SPLASH_SCREEN=0
           JUCE_REPORT_APP_USAGE=0
+
+          JUCE_COREGRAPHICS_DRAW_ASYNC=1
 
           JUCE_ALSA=1
           JUCE_JACK=1
