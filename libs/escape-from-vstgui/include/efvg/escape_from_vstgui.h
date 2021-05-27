@@ -45,8 +45,8 @@
 #define DUNIMPL                                                                                    \
     std::cout << "  - efvg unimplemented : " << __func__ << " at " << __FILE__ << ":" << __LINE__  \
               << std::endl;
-//#define UNIMPL void(0);
-#define UNIMPL DUNIMPL
+#define UNIMPL void(0);
+//#define UNIMPL DUNIMPL
 #define UNIMPL_STACK DUNIMPL EscapeNS::Internal::printStack(__func__);
 #define OKUNIMPL void(0);
 
@@ -271,8 +271,8 @@ struct CRect
     CRect() = default;
     CRect(juce::Rectangle<int> rect)
     {
-        top = rect.getX();
-        left = rect.getY();
+        left = rect.getX();
+        top = rect.getY();
         right = left + rect.getWidth();
         bottom = top + rect.getHeight();
     }
@@ -1379,7 +1379,7 @@ struct CControl : public CView, public CControlValueInterface
     virtual void setMouseEnabled(bool) { UNIMPL; }
     virtual bool getMouseEnabled()
     {
-        UNIMPL;
+        OKUNIMPL;
         return true;
     }
 

@@ -1,5 +1,7 @@
 #include "CModulationSourceButton.h"
-#include "CSurgeSlider.h"
+
+#include "widgets/ModulatableControlInterface.h"
+
 #include "globals.h"
 #include "SurgeGUIUtils.h"
 #include "ModulationSource.h"
@@ -417,12 +419,12 @@ CMouseEventResult CModulationSourceButton::onMouseUp(CPoint &where, const CButto
                 }
             }
 
-            auto s = dynamic_cast<CSurgeSlider *>(v);
+            auto s = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(v);
             if (s)
             {
                 // See comment above when state is set to maybeswap
                 if (buttons & kControl)
-                    sge->openModTypeinOnDrop(getTag(), s, s->getTag());
+                    sge->openModTypeinOnDrop(getTag(), s, s->asControlValueInterface()->getTag());
             }
         }
 

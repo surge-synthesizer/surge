@@ -324,7 +324,7 @@ Connector level_noise =
     Connector("mixer.level_noise", 100, 38).asVertical().asWhite().inParent("mixer.panel");
 
 Connector level_prefiltergain =
-    Connector("mixer.level_prefiltergain", 120, 37).asVertical().asWhite().inParent("mixer.panel");
+    Connector("mixer.level_prefiltergain", 120, 38).asVertical().asWhite().inParent("mixer.panel");
 } // namespace Mixer
 
 namespace Filter

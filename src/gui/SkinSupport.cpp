@@ -1124,6 +1124,23 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBit
     return nullptr;
 }
 
+std::string Surge::GUI::Skin::hoverImageIdForResource(const int resource, HoverType t)
+{
+    std::ostringstream sid;
+    switch (t)
+    {
+    case HOVER:
+        sid << defaultImageIDPrefix << "hover" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    case HOVER_OVER_ON:
+        sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    }
+    return sid.str();
+}
+
 void Surge::GUI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &c, int version)
 {
     x = c.payload->posx;
