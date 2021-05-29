@@ -29,6 +29,7 @@
 #include "SkinColors.h"
 
 #include "overlays/MSEGEditor.h"
+#include "widgets/ModulatableControlInterface.h"
 
 #include <vector>
 #include <thread>
@@ -37,7 +38,6 @@
 typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
 class SurgeSynthEditor;
 
-class CSurgeSlider;
 class CModulationSourceButton;
 class CAboutBox;
 
@@ -47,6 +47,7 @@ namespace Widgets
 {
 struct AboutScreen;
 struct EffectLabel;
+struct ModulatableControlInterface;
 struct ParameterInfowindow;
 struct PatchSelector;
 struct Switch;
@@ -127,7 +128,7 @@ class SurgeGUIEditor : public EditorType,
 
     void effectSettingsBackgroundClick(int whichScene);
 
-    void setDisabledForParameter(Parameter *p, CSurgeSlider *s);
+    void setDisabledForParameter(Parameter *p, Surge::Widgets::ModulatableControlInterface *s);
     void showSettingsMenu(VSTGUI::CRect &menuRect);
 
     static bool fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q);
@@ -266,7 +267,7 @@ class SurgeGUIEditor : public EditorType,
     std::string tuningToHtml();
 
     void swapControllers(int t1, int t2);
-    void openModTypeinOnDrop(int ms, VSTGUI::CControl *sl, int tgt);
+    void openModTypeinOnDrop(int ms, Surge::Widgets::ModulatableControlInterface *sl, int tgt);
 
     void queueRebuildUI()
     {
@@ -534,7 +535,7 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CControl *splitpointControl = nullptr;
 
     static const int n_paramslots = 1024;
-    VSTGUI::CControl *param[n_paramslots] = {};
+    Surge::Widgets::ModulatableControlInterface *param[n_paramslots] = {};
     VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
     CModulationSourceButton *gui_modsrc[n_modsources] = {};
     VSTGUI::CControl *metaparam[n_customcontrollers] = {};

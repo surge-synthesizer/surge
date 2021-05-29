@@ -25,7 +25,7 @@ namespace Surge
 {
 namespace ParamConfig
 {
-enum Style
+enum Orientation
 {
     kHorizontal = 1U << 0U,
     kVertical = 1U << 1U

@@ -10,6 +10,9 @@ template <typename T> inline T limit_range(const T &x, const T &low, const T &hi
 #endif
 }
 
+template <typename T> inline T limit01(const T &x) { return limit_range(x, (T)0, (T)1); }
+template <typename T> inline T limitpm1(const T &x) { return limit_range(x, (T)-1, (T)1); }
+
 void hardclip_block(float *x, unsigned int nquads);
 void hardclip_block8(float *x, unsigned int nquads);
 void softclip_block(float *in, unsigned int nquads);

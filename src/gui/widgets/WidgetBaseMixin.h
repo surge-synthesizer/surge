@@ -54,6 +54,26 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             t->controlModifierClicked(this, bs);
     }
 
+    void notifyControlModifierDoubleClicked(const juce::ModifierKeys &k)
+    {
+        VSTGUI::CButtonState bs(k);
+        bs = bs | VSTGUI::kDoubleClick;
+        for (auto t : listeners)
+            t->controlModifierClicked(this, bs);
+    }
+
+    void notifyBeginEdit()
+    {
+        for (auto t : listeners)
+            t->controlBeginEdit(this);
+    }
+
+    void notifyEndEdit()
+    {
+        for (auto t : listeners)
+            t->controlEndEdit(this);
+    }
+
     template <typename U> U *firstListenerOfType()
     {
         for (auto u : listeners)

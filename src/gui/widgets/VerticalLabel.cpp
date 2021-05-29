@@ -30,7 +30,10 @@ void VerticalLabel::paint(juce::Graphics &g)
     float totalHeight = 0;
     for (auto &c : text)
     {
-        if (c == ' ')
+        if (c == '-')
+        {
+        }
+        else if (c == ' ')
         {
             totalHeight += charHeight * 0.5;
         }
@@ -47,18 +50,20 @@ void VerticalLabel::paint(juce::Graphics &g)
     g.setColour(fontColour);
     for (auto &c : text)
     {
+        if (c == '-')
+            continue;
+
+        auto h = charHeight;
+
         if (c == ' ')
         {
-            currY += charHeight * 0.5;
+            h = charHeight * 0.5;
         }
-        else
-        {
-            char str[2];
-            str[0] = c;
-            str[1] = 0;
-            g.drawText(str, mx - 10, currY, 20, charHeight, juce::Justification::centredTop);
-            currY += charHeight;
-        }
+        char str[2];
+        str[0] = c;
+        str[1] = 0;
+        g.drawText(str, mx - 10, currY, 20, charHeight * 0.5, juce::Justification::centred);
+        currY += h;
     }
 }
 

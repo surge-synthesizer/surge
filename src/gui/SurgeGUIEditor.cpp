@@ -16,7 +16,6 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
-#include "CSurgeSlider.h"
 #include "COscillatorDisplay.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
@@ -46,6 +45,7 @@
 #include "overlays/PatchDBViewer.h"
 
 #include "widgets/EffectLabel.h"
+#include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/PatchSelector.h"
@@ -509,8 +509,12 @@ void SurgeGUIEditor::idle()
                       clear_infoview_countdown = 40;
                       }*/
 
-                    param[j]->setValue(synth->refresh_ctrl_queue_value[i]);
-                    frame->invalidRect(param[j]->getViewSize());
+                    param[j]->asControlValueInterface()->setValue(
+                        synth->refresh_ctrl_queue_value[i]);
+                    frame->invalidRect(param[j]
+                                           ->asControlValueInterface()
+                                           ->asBaseViewFunctions()
+                                           ->getControlViewSize());
                     // oscdisplay->invalid();
 
                     if (oscdisplay)
@@ -565,8 +569,11 @@ void SurgeGUIEditor::idle()
             {
                 SurgeSynthesizer::ID jid;
                 if (synth->fromSynthSideId(j, jid))
-                    param[j]->setValue(synth->getParameter01(jid));
-                frame->invalidRect(param[j]->getViewSize());
+                    param[j]->asControlValueInterface()->setValue(synth->getParameter01(jid));
+                frame->invalidRect(param[j]
+                                       ->asControlValueInterface()
+                                       ->asBaseViewFunctions()
+                                       ->getControlViewSize());
 
                 if (oscdisplay)
                 {
@@ -651,15 +658,13 @@ void SurgeGUIEditor::idle()
 
                     for (int i = 0; i < n_paramslots; i++)
                     {
-                        if (param[i] && (resetMap.find(param[i]->getTag()) != resetMap.end()))
+                        if (param[i] &&
+                            (resetMap.find(param[i]->asControlValueInterface()->getTag()) !=
+                             resetMap.end()))
                         {
-                            auto css = dynamic_cast<CSurgeSlider *>(param[i]);
-
-                            if (css)
-                            {
-                                css->disabled = resetMap[param[i]->getTag()];
-                                css->invalid();
-                            }
+                            param[i]->setDeactivated(
+                                resetMap[param[i]->asControlValueInterface()->getTag()]);
+                            param[i]->asJuceComponent()->repaint();
                         }
                     }
                 }
@@ -806,19 +811,21 @@ void SurgeGUIEditor::refresh_mod()
     {
         if (param[i])
         {
-            auto *s = dynamic_cast<CSurgeSlider *>(param[i]);
-            if (s)
+            auto s = param[i];
+
+            if (s->getIsValidToModulate())
             {
-                if (s->is_mod)
-                {
-                    s->setModMode(mod_editor ? 1 : 0);
-                    s->setModPresent(synth->isModDestUsed(i));
-                    s->setModCurrent(synth->isActiveModulation(i, thisms),
-                                     synth->isBipolarModulation(thisms));
-                }
+                s->setIsEditingModulation(mod_editor);
+                s->setModulationState(synth->isModDestUsed(i),
+                                      synth->isActiveModulation(i, thisms));
+                s->setIsModulationBipolar(synth->isBipolarModulation(thisms));
                 s->setModValue(synth->getModulation(i, thisms));
-                s->invalid();
             }
+            else
+            {
+                s->setIsEditingModulation(false);
+            }
+            s->asJuceComponent()->repaint();
         }
     }
 #if OSC_MOD_ANIMATION
@@ -1001,11 +1008,12 @@ CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
     return r;
 }
 
-void SurgeGUIEditor::setDisabledForParameter(Parameter *p, CSurgeSlider *s)
+void SurgeGUIEditor::setDisabledForParameter(Parameter *p,
+                                             Surge::Widgets::ModulatableControlInterface *s)
 {
     if (p->id == synth->storage.getPatch().scene[current_scene].fm_depth.id)
     {
-        s->disabled = !(synth->storage.getPatch().scene[current_scene].fm_switch.val.i);
+        s->setDeactivated(!(synth->storage.getPatch().scene[current_scene].fm_switch.val.i));
     }
 }
 
@@ -1485,7 +1493,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 uiidToSliderLabel[p->ui_identifier] = p->get_name();
                 if (p->id == synth->learn_param)
                 {
-                    showMidiLearnOverlay(param[p->id]->getViewSize());
+                    showMidiLearnOverlay(param[p->id]
+                                             ->asControlValueInterface()
+                                             ->asBaseViewFunctions()
+                                             ->getControlViewSize());
                 }
             }
         }
@@ -1496,8 +1507,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
     if (synth->storage.getPatch().scene[current_scene].f2_link_resonance.val.b)
     {
         i = synth->storage.getPatch().scene[current_scene].filterunit[1].resonance.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
-            ((CSurgeSlider *)param[i])->disabled = true;
+        if (param[i])
+            param[i]->setDeactivated(true);
+    }
+    else
+    {
+        i = synth->storage.getPatch().scene[current_scene].filterunit[1].resonance.id;
+        if (param[i])
+            param[i]->setDeactivated(false);
     }
 
     // feedback control
@@ -1505,14 +1522,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
         fc_serial1)
     {
         i = synth->storage.getPatch().scene[current_scene].feedback.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
+        bool curr = param[i]->getDeactivated();
+        param[i]->setDeactivated(true);
+        if (!curr)
         {
-            bool curr = ((CSurgeSlider *)param[i])->disabled;
-            ((CSurgeSlider *)param[i])->disabled = true;
-            if (!curr)
-            {
-                param[i]->invalid();
-            }
+            param[i]->asJuceComponent()->repaint();
         }
     }
 
@@ -1522,13 +1536,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
         (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i != fc_wide))
     {
         i = synth->storage.getPatch().scene[current_scene].width.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
+        if (param[i])
         {
-            bool curr = ((CSurgeSlider *)param[i])->disabled;
-            ((CSurgeSlider *)param[i])->disabled = true;
+            bool curr = param[i]->getDeactivated();
+            param[i]->setDeactivated(true);
             if (!curr)
             {
-                param[i]->invalid();
+                param[i]->asJuceComponent()->repaint();
             }
         }
     }
@@ -1541,10 +1555,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
     CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
 
     // Mouse behavior
-    if (CSurgeSlider::sliderMoveRateState == CSurgeSlider::kUnInitialized)
-        CSurgeSlider::sliderMoveRateState =
-            (CSurgeSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
-                &(synth->storage), Surge::Storage::SliderMoveRateState, (int)CSurgeSlider::kLegacy);
+    if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
+        Surge::Widgets::ModulatableSlider::kUnInitialized)
+        Surge::Widgets::ModulatableSlider::sliderMoveRateState =
+            (Surge::Widgets::ModulatableSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
+                &(synth->storage), Surge::Storage::SliderMoveRateState,
+                (int)Surge::Widgets::ModulatableSlider::kLegacy);
 
     /*
     ** Skin Labels
@@ -2922,23 +2938,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                 // if(p->can_temposync() || p->can_extend_range()) contextMenu->addSeparator(eid++);
                 if (p->can_temposync())
                 {
-                    auto r = addCallbackMenu(contextMenu, Surge::GUI::toOSCaseForMenu("Tempo Sync"),
-                                             [this, p, control]() {
-                                                 p->temposync = !p->temposync;
-                                                 if (p->temposync)
-                                                     p->bound_value();
-                                                 else if (control)
-                                                     p->set_value_f01(control->getValue());
+                    auto r = addCallbackMenu(
+                        contextMenu, Surge::GUI::toOSCaseForMenu("Tempo Sync"),
+                        [this, p, control]() {
+                            p->temposync = !p->temposync;
+                            if (p->temposync)
+                                p->bound_value();
+                            else if (control)
+                                p->set_value_f01(control->getValue());
 
-                                                 if (this->lfodisplay)
-                                                     this->lfodisplay->invalid();
-                                                 auto *css = dynamic_cast<CSurgeSlider *>(control);
-                                                 if (css)
-                                                 {
-                                                     css->setTempoSync(p->temposync);
-                                                     css->invalid();
-                                                 }
-                                             });
+                            if (this->lfodisplay)
+                                this->lfodisplay->invalid();
+                            auto *css = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
+                                control);
+                            if (css)
+                            {
+                                css->setTempoSync(p->temposync);
+                                css->asJuceComponent()->repaint();
+                            }
+                        });
                     if (p->temposync)
                         r->setChecked(true);
                     eid++;
@@ -3790,12 +3808,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     thisms = (modsources)cms->alternateId;
 
                 synth->clearModulation(ptag, thisms);
-                ((CSurgeSlider *)control)->setModValue(synth->getModulation(p->id, thisms));
-                ((CSurgeSlider *)control)->setModPresent(synth->isModDestUsed(p->id));
-                ((CSurgeSlider *)control)
-                    ->setModCurrent(synth->isActiveModulation(p->id, thisms),
-                                    synth->isBipolarModulation(thisms));
-                // control->setGhostValue(p->get_value_f01());
+                auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+                jassert(ctrms);
+                if (ctrms)
+                {
+                    ctrms->setModValue(synth->getModulation(p->id, thisms));
+                    ctrms->setModulationState(synth->isModDestUsed(p->id),
+                                              synth->isActiveModulation(p->id, thisms));
+                    ctrms->setIsModulationBipolar(synth->isBipolarModulation(thisms));
+                }
                 oscdisplay->invalid();
                 return 0;
             }
@@ -4614,8 +4635,8 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 }
             }
 
-            if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) &&
-                dynamic_cast<CSurgeSlider *>(control) != nullptr)
+            auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+            if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) && mci)
             {
                 modsources thisms = modsource;
                 if (gui_modsrc[modsource])
@@ -4625,7 +4646,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                         thisms = (modsources)cms->alternateId;
                 }
                 bool quantize_mod = frame->getCurrentMouseButtons() & kControl;
-                float mv = ((CSurgeSlider *)control)->getModValue();
+                float mv = mci->getModValue();
                 if (quantize_mod)
                 {
                     mv = p->quantize_modulation(mv);
@@ -4633,10 +4654,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 }
 
                 synth->setModulation(ptag, thisms, mv);
-                ((CSurgeSlider *)control)->setModPresent(synth->isModDestUsed(p->id));
-                ((CSurgeSlider *)control)
-                    ->setModCurrent(synth->isActiveModulation(p->id, thisms),
-                                    synth->isBipolarModulation(thisms));
+                mci->setModulationState(synth->isModDestUsed(p->id),
+                                        synth->isActiveModulation(p->id, thisms));
+                mci->setIsModulationBipolar(synth->isBipolarModulation(thisms));
 
                 SurgeSynthesizer::ID ptagid;
                 if (synth->fromSynthSideId(ptag, ptagid))
@@ -4730,8 +4750,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 {
                     synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
 
-                    if (dynamic_cast<CSurgeSlider *>(control) != nullptr)
-                        ((CSurgeSlider *)control)->SetQuantitizedDispValue(p->get_value_f01());
+                    auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+                    if (mci)
+                        mci->setQuantitizedDisplayValue(p->get_value_f01());
                     else if (bvf)
                         bvf->invalid();
                     synth->getParameterName(ptagid, pname);
@@ -4809,34 +4830,33 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     {
         // FM depth control
         int i = synth->storage.getPatch().scene[current_scene].fm_depth.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
-            ((CSurgeSlider *)param[i])->disabled =
-                (synth->storage.getPatch().scene[current_scene].fm_switch.val.i == fm_off);
+        param[i]->setDeactivated(
+            (synth->storage.getPatch().scene[current_scene].fm_switch.val.i == fm_off));
 
-        param[i]->invalid();
+        param[i]->asJuceComponent()->repaint();
     }
 
     if (tag == filterblock_tag)
     {
         // pan2 control
         int i = synth->storage.getPatch().scene[current_scene].width.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
-            ((CSurgeSlider *)param[i])->disabled =
+        if (param[i])
+            param[i]->setDeactivated(
                 (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
                  fc_stereo) &&
                 (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
-                 fc_wide);
+                 fc_wide));
 
-        param[i]->invalid();
+        param[i]->asJuceComponent()->repaint();
 
         // feedback control
         i = synth->storage.getPatch().scene[current_scene].feedback.id;
-        if (param[i] && dynamic_cast<CSurgeSlider *>(param[i]) != nullptr)
-            ((CSurgeSlider *)param[i])->disabled =
+        if (param[i])
+            param[i]->setDeactivated(
                 (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i ==
-                 fc_serial1);
+                 fc_serial1));
 
-        param[i]->invalid();
+        param[i]->asJuceComponent()->repaint();
     }
 
     if (tag == fxbypass_tag) // still do the normal operation, that's why it's outside the
@@ -4927,12 +4947,15 @@ void SurgeGUIEditor::controlEndEdit(VSTGUI::CControlValueInterface *control)
 
     if (infowindow->isVisible())
     {
-        auto cs = dynamic_cast<CSurgeSlider *>(control);
-        if (cs == nullptr || cs->hasBeenDraggedDuringMouseGesture)
-            infowindow->setVisible(false);
-        else
+        auto cs = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+        if (!cs || cs->getEditTypeWas() == Surge::Widgets::ModulatableControlInterface::WHEEL ||
+            cs->getEditTypeWas() == Surge::Widgets::ModulatableControlInterface::DOUBLECLICK)
         {
             clear_infoview_countdown = 15;
+        }
+        else
+        {
+            infowindow->setVisible(false);
         }
     }
 }
@@ -5835,41 +5858,49 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
     std::string mouseMedium = "Medium";
     std::string mouseExact = "Exact";
 
-    bool checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kLegacy;
+    bool checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
+                   Surge::Widgets::ModulatableSlider::kLegacy;
     bool enabled = !touchMode;
 
     mouseSubMenu.addItem(mouseLegacy, enabled, checked, [this]() {
-        CSurgeSlider::sliderMoveRateState = CSurgeSlider::kLegacy;
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::SliderMoveRateState,
-                                               CSurgeSlider::sliderMoveRateState);
+        Surge::Widgets::ModulatableSlider::sliderMoveRateState =
+            Surge::Widgets::ModulatableSlider::kLegacy;
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::SliderMoveRateState,
+            Surge::Widgets::ModulatableSlider::sliderMoveRateState);
     });
 
-    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kSlow;
+    checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
+              Surge::Widgets::ModulatableSlider::kSlow;
 
     mouseSubMenu.addItem(mouseSlow, enabled, checked, [this]() {
-        CSurgeSlider::sliderMoveRateState = CSurgeSlider::kSlow;
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::SliderMoveRateState,
-                                               CSurgeSlider::sliderMoveRateState);
+        Surge::Widgets::ModulatableSlider::sliderMoveRateState =
+            Surge::Widgets::ModulatableSlider::kSlow;
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::SliderMoveRateState,
+            Surge::Widgets::ModulatableSlider::sliderMoveRateState);
     });
 
-    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kMedium;
+    checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
+              Surge::Widgets::ModulatableSlider::kMedium;
 
     mouseSubMenu.addItem(mouseMedium, enabled, checked, [this]() {
-        CSurgeSlider::sliderMoveRateState = CSurgeSlider::kMedium;
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::SliderMoveRateState,
-                                               CSurgeSlider::sliderMoveRateState);
+        Surge::Widgets::ModulatableSlider::sliderMoveRateState =
+            Surge::Widgets::ModulatableSlider::kMedium;
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::SliderMoveRateState,
+            Surge::Widgets::ModulatableSlider::sliderMoveRateState);
     });
 
-    checked = CSurgeSlider::sliderMoveRateState == CSurgeSlider::kExact;
+    checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
+              Surge::Widgets::ModulatableSlider::kExact;
 
     mouseSubMenu.addItem(mouseExact, enabled, checked, [this]() {
-        CSurgeSlider::sliderMoveRateState = CSurgeSlider::kExact;
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::SliderMoveRateState,
-                                               CSurgeSlider::sliderMoveRateState);
+        Surge::Widgets::ModulatableSlider::sliderMoveRateState =
+            Surge::Widgets::ModulatableSlider::kExact;
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::SliderMoveRateState,
+            Surge::Widgets::ModulatableSlider::sliderMoveRateState);
     });
 
     mouseSubMenu.addSeparator();
@@ -7239,13 +7270,14 @@ void SurgeGUIEditor::swapControllers(int t1, int t2)
     synth->swapMetaControllers(t1 - tag_mod_source0 - ms_ctrl1, t2 - tag_mod_source0 - ms_ctrl1);
 }
 
-void SurgeGUIEditor::openModTypeinOnDrop(int modt, CControl *sl, int slidertag)
+void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableControlInterface *sl,
+                                         int slidertag)
 {
     auto p = synth->storage.getPatch().param_ptr[slidertag - start_paramtags];
     int ms = modt - tag_mod_source0;
 
     if (synth->isValidModulation(p->id, (modsources)ms))
-        promptForUserValueEntry(p, sl, ms);
+        promptForUserValueEntry(p, sl->asControlValueInterface()->asBaseViewFunctions(), ms);
 }
 
 void SurgeGUIEditor::resetSmoothing(ControllerModulationSource::SmoothingMode t)
@@ -7463,7 +7495,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
-        if (p->is_discrete_selection())
+        if (false && p->is_discrete_selection())
         {
             loc.offset(2, 4);
             auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,
@@ -7482,22 +7514,41 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             if (p->can_deactivate())
                 hs->setDeactivated(p->deactivated);
 
-            param[paramIndex] = hs;
+            std::cout << "FIXME - we probably have to resolve this in conjunction" << std::endl;
+            // param[paramIndex] = hs;
             return hs;
         }
         else
         {
             p->ctrlstyle = p->ctrlstyle & ~kNoPopup;
         }
-        bool is_mod = p && synth->isValidModulation(p->id, modsource);
 
-        auto hs = new CSurgeSlider(loc, style, this, tag, is_mod, bitmapStore, &(synth->storage));
+        auto hs = componentForSkinSession<Surge::Widgets::ModulatableSlider>(skinCtrl->sessionid);
+
+        hs->setIsValidToModulate(p && synth->isValidModulation(p->id, modsource));
+
+        int styleW = (style & Surge::ParamConfig::kHorizontal) ? 140 : 22;
+        int styleH = (style & Surge::ParamConfig::kHorizontal) ? 26 : 84;
+        hs->setOrientation((style & Surge::ParamConfig::kHorizontal)
+                               ? Surge::ParamConfig::kHorizontal
+                               : Surge::ParamConfig::kVertical);
+        hs->setIsSemitone(style & kSemitone);
+        hs->setIsLightStyle(style & kWhite);
+        hs->setIsMiniVertical(style & kMini);
+
+        hs->setBounds(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs, styleW, styleH);
+        hs->setTag(tag);
+        hs->addListener(this);
+        hs->setStorage(&(this->synth->storage));
         hs->setSkin(currentSkin, bitmapStore, skinCtrl);
         hs->setMoveRate(p->moverate);
 
         if (p->can_temposync())
             hs->setTempoSync(p->temposync);
+        else
+            hs->setTempoSync(false);
         hs->setValue(p->get_value_f01());
+        hs->setQuantitizedDisplayValue(hs->getValue());
 
         if (p->supportsDynamicName() && p->dynamicName)
         {
@@ -7508,65 +7559,69 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hs->setLabel(p->get_name());
         }
 
-        hs->setBipolarFunction([p]() { return p->is_bipolar(); });
-        hs->setModPresent(synth->isModDestUsed(p->id));
-        hs->setDefaultValue(p->get_default_value_f01());
-        hs->font_style = Surge::GUI::Skin::setFontStyleProperty(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal"));
+        hs->setBipolarFn([p]() { return p->is_bipolar(); });
+        hs->setFontStyle(Surge::GUI::Skin::setFontStyleProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal")));
 
-        hs->text_align = Surge::GUI::Skin::setTextAlignProperty(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right"));
+        hs->setTextAlign(Surge::GUI::Skin::setTextAlignProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right")));
 
-        // CSurgeSlider is using labfont = Surge::GUI::getFontManager()->displayFont, which is
+        // Control is using labfont = Surge::GUI::getFontManager()->displayFont, which is
         // currently 9 pt in size
         // TODO: Pull the default font size from some central location at a later date
-        hs->font_size = std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());
+        hs->setFont(Surge::GUI::getFontManager()->displayFont);
 
-        hs->text_hoffset = std::atoi(
+        hs->setFontSize(std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str()));
+
+        hs->setTextHOffset(std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
-                .c_str());
+                .c_str()));
 
-        hs->text_voffset = std::atoi(
+        hs->setTextVOffset(std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
-                .c_str());
+                .c_str()));
 
+        hs->setDeactivated(false);
         hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
 
         auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
         if (ff.size() > 0)
         {
+#if 0
             if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
                 hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(hs->font_size));
+#endif
+            jassert(false);
         }
 
         if (p->valtype == vt_int || p->valtype == vt_bool)
         {
-            hs->isStepped = true;
-            hs->intRange = p->val_max.i - p->val_min.i;
+            hs->setIsStepped(true);
+            hs->setIntStepRange(p->val_max.i - p->val_min.i);
         }
         else
         {
-            hs->isStepped = false;
+            hs->setIsStepped(false);
         }
 
-        setDisabledForParameter(p, hs);
+        setDisabledForParameter(p, hs.get());
 
+        hs->setIsEditingModulation(mod_editor);
+        hs->setModulationState(synth->isModDestUsed(p->id),
+                               synth->isActiveModulation(p->id, modsource));
         if (synth->isValidModulation(p->id, modsource))
         {
-            hs->setModMode(mod_editor ? 1 : 0);
             hs->setModValue(synth->getModulation(p->id, modsource));
-            hs->setModCurrent(synth->isActiveModulation(p->id, modsource),
-                              synth->isBipolarModulation(modsource));
+            hs->setIsModulationBipolar(synth->isBipolarModulation(modsource));
         }
-        else
-        {
-            // Even if current modsource isn't modulating me, something else may be
-        }
-        frame->addView(hs);
-        if (paramIndex >= 0)
-            param[paramIndex] = hs;
-        return hs;
+
+        param[p->id] = hs.get();
+        frame->juceComponent()->addAndMakeVisible(*hs);
+        juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
+
+        return dynamic_cast<CControlValueInterface *>(
+            juceSkinComponents[skinCtrl->sessionid].get());
     }
     if (skinCtrl->ultimateparentclassname == "CHSwitch2")
     {

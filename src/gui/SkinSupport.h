@@ -339,6 +339,7 @@ class Skin
         HOVER_OVER_ON,
     } HoverType;
 
+    std::string hoverImageIdForResource(const int resource, HoverType t);
     CScalableBitmap *
     hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBitmap *b,
                                           std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t);
