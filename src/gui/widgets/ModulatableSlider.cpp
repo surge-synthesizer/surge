@@ -17,6 +17,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeBitmaps.h"
 #include "basic_dsp.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -76,7 +77,7 @@ void ModulatableSlider::updateLocationState()
         handleX0 = 0;
         handleY0 = 9;
 
-        handleCX = 7.5;
+        handleCX = 6;
         handleMX = handleCX;
         barNMX = handleMX;
         modHandleX = 24;
@@ -155,9 +156,10 @@ void ModulatableSlider::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
 
         g.addTransform(trayPosition);
-        // FIXME skin colors
-        g.setColour(juce::Colours::red);
-        g.drawLine(barNMX, barNMY, handleMX, handleMY, 2);
+        g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
+        g.drawLine(handleCX, handleCY, handleMX, handleMY, 2);
+        g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
+        g.drawLine(handleCX, handleCY, barNMX, barNMY, 2);
     }
     // Draw the label
     if (drawLabel)
@@ -352,12 +354,28 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    if (!Surge::GUI::showCursor(storage))
+    {
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+    }
+
     valueOnMouseDown = value;
     modValueOnMouseDown = modValue;
     editTypeWas = NOEDIT;
 }
 void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 {
+    if (!Surge::GUI::showCursor(storage))
+    {
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+        updateLocationState();
+        auto p = juce::Point<float>(handleCX, handleCY);
+        if (isEditingModulation)
+            p = juce::Point<float>(handleMX, handleMY);
+        p = localPointToGlobal(p);
+        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+    }
+
     if (editTypeWas != DRAG)
         return;
 
