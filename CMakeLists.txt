@@ -335,7 +335,6 @@ set(SURGE_GENERATED_SOURCES
   )
 
 set(SURGE_GUI_SOURCES
-  src/gui/CEffectSettings.cpp
   src/gui/CLFOGui.cpp
   src/gui/CMenuAsSlider.cpp
   src/gui/CModulationSourceButton.cpp
@@ -362,6 +361,7 @@ set(SURGE_GUI_SOURCES
   src/gui/overlays/MSEGEditor.cpp
   src/gui/overlays/PatchDBViewer.cpp
 
+  src/gui/widgets/EffectChooser.cpp
   src/gui/widgets/MultiSwitch.cpp
   src/gui/widgets/ModulatableSlider.cpp
   src/gui/widgets/ParameterInfowindow.cpp
