@@ -20,7 +20,6 @@
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
-#include "CEffectSettings.h"
 #include "CMenuAsSlider.h"
 #include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
@@ -45,6 +44,7 @@
 #include "overlays/PatchDBViewer.h"
 
 #include "widgets/EffectLabel.h"
+#include "widgets/EffectChooser.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/ParameterInfowindow.h"
@@ -1403,17 +1403,24 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
         {
-            CEffectSettings *fc = new CEffectSettings(skinCtrl->getRect(), this, tag_fx_select,
-                                                      current_fx, bitmapStore);
+            auto fc = componentForSkinSession<Surge::Widgets::EffectChooser>(skinCtrl->sessionid);
+            fc->addListener(this);
+            fc->setBounds(skinCtrl->getRect().asJuceIntRect());
+            fc->setTag(tag_fx_select);
             fc->setSkin(currentSkin, bitmapStore);
-            ccfxconf = fc;
-            for (int i = 0; i < n_fx_slots; i++)
+            fc->setBackgroundDrawable(bitmapStore->getDrawable(IDB_FX_GRID));
+            fc->setCurrentEffect(current_fx);
+
+            for (int fxi = 0; fxi < n_fx_slots; fxi++)
             {
-                fc->set_type(i, synth->storage.getPatch().fx[i].type.val.i);
+                fc->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
             }
-            fc->set_bypass(synth->storage.getPatch().fx_bypass.val.i);
-            fc->set_disable(synth->storage.getPatch().fx_disable.val.i);
-            frame->addView(fc);
+            fc->setBypass(synth->storage.getPatch().fx_bypass.val.i);
+            fc->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
+
+            frame->juceComponent()->addAndMakeVisible(*fc);
+
+            effectChooser = std::move(fc);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
@@ -1644,28 +1651,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     lb->setAntialias(true);
     frame->addView(lb);
     debugLabel = lb;
-
-    struct TestC : public juce::Component
-    {
-        ~TestC() {}
-        juce::Colour bg = juce::Colour(255, 0, 255);
-        void paint(juce::Graphics &g) override
-        {
-            g.fillAll(bg);
-            g.setColour(juce::Colour(255, 255, 255));
-            g.drawText("JUCE BUILD", getLocalBounds(), juce::Justification::centred);
-        }
-        void mouseDown(const juce::MouseEvent &e) override
-        {
-            auto q = rand() % 255;
-            bg = juce::Colour(255, q, 255 - q);
-            repaint();
-        }
-    };
-    auto pt = std::make_unique<TestC>();
-    frame->juceComponent()->addAndMakeVisible(*pt);
-    pt->setBounds(150, 2, 100, 10);
-    frame->takeOwnership(std::move(pt));
 #endif
     for (auto el : editorOverlay)
     {
@@ -4320,13 +4305,16 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     break;
     case tag_fx_select:
     {
-        auto fxc = ((CEffectSettings *)control);
-        int d = fxc->get_disable();
+        auto fxc = dynamic_cast<Surge::Widgets::EffectChooser *>(control);
+        if (!fxc)
+            return;
+
+        int d = fxc->getDeactivatedBitmask();
         synth->fx_suspend_bitmask = synth->storage.getPatch().fx_disable.val.i ^ d;
         synth->storage.getPatch().fx_disable.val.i = d;
-        fxc->set_disable(d);
+        fxc->setDeactivatedBitmask(d);
 
-        int nfx = fxc->get_current();
+        int nfx = fxc->getCurrentEffect();
         if (current_fx != nfx)
         {
             current_fx = nfx;
@@ -4862,10 +4850,10 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     if (tag == fxbypass_tag) // still do the normal operation, that's why it's outside the
                              // switch-statement
     {
-        if (ccfxconf)
+        if (effectChooser)
         {
-            ((CEffectSettings *)ccfxconf)->set_bypass(synth->storage.getPatch().fx_bypass.val.i);
-            ccfxconf->invalid();
+            effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
+            effectChooser->repaint();
         }
 
         switch (synth->storage.getPatch().fx_bypass.val.i)
@@ -4996,9 +4984,12 @@ void SurgeGUIEditor::draw_infowindow(int ptag, BaseViewFunctions *control, bool 
     }
     else
     {
-        auto b = infowindow->getBounds();
-        infowindow->setVisible(false);
-        frame->juceComponent()->repaint(b);
+        if (infowindow->isVisible())
+        {
+            auto b = infowindow->getBounds();
+            infowindow->setVisible(false);
+            frame->juceComponent()->repaint(b);
+        }
     }
 }
 
@@ -7784,13 +7775,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             return slfo;
         }
     }
-
-#if 0 // DEBUG_JUCE_XT_LEAK_STUFF
-    if (skinCtrl->ultimateparentclassname == "CFXMenu")
-        return nullptr;
-    if (skinCtrl->ultimateparentclassname == "COSCMenu")
-        return nullptr;
-#endif
 
     if (skinCtrl->ultimateparentclassname == "COSCMenu")
     {

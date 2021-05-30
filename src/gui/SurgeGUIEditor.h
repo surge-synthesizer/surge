@@ -46,6 +46,7 @@ namespace Surge
 namespace Widgets
 {
 struct AboutScreen;
+struct EffectChooser;
 struct EffectLabel;
 struct ModulatableControlInterface;
 struct ParameterInfowindow;
@@ -436,7 +437,8 @@ class SurgeGUIEditor : public EditorType,
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::ParameterInfowindow> infowindow;
 
-    VSTGUI::CControl *ccfxconf = nullptr;
+    std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
+
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
     std::unique_ptr<Surge::Widgets::AboutScreen> aboutScreen;

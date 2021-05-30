@@ -340,7 +340,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     {
         value = limit01(valueOnMouseDown + dMouse * distance);
     }
-    std::cout << "DRAG NVC " << distance << std::endl;
+
     notifyValueChanged();
     repaint();
 }
