@@ -5128,7 +5128,15 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
     zoomFactor = std::max(zf, 25.f);
     if (currentSkin && resizeWindow)
-        parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
+    {
+        int yExtra = 0;
+        if (parentEd->processor.wrapperType ==
+            juce::AudioProcessor::WrapperType::wrapperType_Standalone)
+        {
+            yExtra = SurgeSynthEditor::extraYSpaceForStandalone;
+        }
+        parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
+    }
     parentEd->setScaleFactor(zoomFactor * 0.01);
 }
 

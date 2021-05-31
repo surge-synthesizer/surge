@@ -2108,17 +2108,6 @@ struct JuceVSTGUIEditorAdapter : public JuceVSTGUIEditorAdapterBase
     juce::AudioProcessorEditor *parentEd;
 };
 
-struct JuceVSTGUIEditorAdapterConcreteTestOnly : public JuceVSTGUIEditorAdapter
-{
-    JuceVSTGUIEditorAdapterConcreteTestOnly(juce::AudioProcessorEditor *parentEd)
-        : JuceVSTGUIEditorAdapter(parentEd)
-    {
-    }
-    bool open(void *parent) override { return true; }
-    void close() override {}
-    void controlBeginEdit(VSTGUI::CControl *p) override {}
-    void controlEndEdit(VSTGUI::CControl *p) override {}
-};
 } // namespace EscapeFromVSTGUI
 
 #endif // SURGE_ESCAPE_FROM_VSTGUI_H

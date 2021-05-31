@@ -84,6 +84,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     surge->hostProgram = juce::PluginHostType().getHostDescription();
     surge->juceWrapperType = getWrapperTypeDescription(wrapperType);
 
+    midiKeyboardState.addListener(this);
+
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
 
@@ -138,6 +140,7 @@ void SurgeSynthProcessor::changeProgramName(int index, const String &newName) {}
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     surge->setSamplerate(sr);
+    surge->audio_processing_active = true;
 }
 
 void SurgeSynthProcessor::releaseResources()
@@ -185,7 +188,7 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
     }
     else
     {
-        surge->time_data.tempo = 120;
+        surge->time_data.tempo = standaloneTempo;
         surge->time_data.timeSigNumerator = 4;
         surge->time_data.timeSigDenominator = 4;
         surge->resetStateFromTimeData();
@@ -195,6 +198,8 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
     {
         MidiMessage m = it.getMessage();
         const int ch = m.getChannel() - 1;
+        juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+        midiKeyboardState.processNextMidiEvent(m);
 
         if (m.isNoteOn())
         {
@@ -228,6 +233,15 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         {
             // std::cout << "Ignoring message " << std::endl;
         }
+    }
+
+    midiR rec;
+    while (midiFromGUI.pop(rec))
+    {
+        if (rec.on)
+            surge->playNote(rec.ch, rec.note, rec.vel, 0);
+        else
+            surge->releaseNote(rec.ch, rec.note, rec.vel);
     }
 
     // Make sure we have a main output
@@ -374,6 +388,20 @@ std::string SurgeSynthProcessor::paramClumpName(int clumpid)
         return "Scene B LFOs";
     }
     return "";
+}
+
+void SurgeSynthProcessor::handleNoteOn(MidiKeyboardState *source, int midiChannel,
+                                       int midiNoteNumber, float velocity)
+{
+    if (!isAddingFromMidi)
+        midiFromGUI.push(midiR(midiChannel, midiNoteNumber, velocity, true));
+}
+
+void SurgeSynthProcessor::handleNoteOff(MidiKeyboardState *source, int midiChannel,
+                                        int midiNoteNumber, float velocity)
+{
+    if (!isAddingFromMidi)
+        midiFromGUI.push(midiR(midiChannel, midiNoteNumber, velocity, false));
 }
 
 //==============================================================================
