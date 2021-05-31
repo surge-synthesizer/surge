@@ -510,7 +510,9 @@ class SurgeGUIEditor : public EditorType,
             }
             else
             {
-                jassert(false);
+                // This happens if a control switches types - like, say,
+                // a slider goes to a menu so delete the old one
+                juceSkinComponents.erase(id);
                 hsw = std::make_unique<T>();
             }
         }
