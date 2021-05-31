@@ -368,12 +368,15 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
     if (!Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-        updateLocationState();
-        auto p = juce::Point<float>(handleCX, handleCY);
-        if (isEditingModulation)
-            p = juce::Point<float>(handleMX, handleMY);
-        p = localPointToGlobal(p);
-        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        if (editTypeWas == DRAG)
+        {
+            updateLocationState();
+            auto p = juce::Point<float>(handleCX, handleCY);
+            if (isEditingModulation)
+                p = juce::Point<float>(handleMX, handleMY);
+            p = localPointToGlobal(p);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
     }
 
     if (editTypeWas != DRAG)
@@ -395,6 +398,7 @@ void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
     editTypeWas = DOUBLECLICK;
     notifyBeginEdit();
     notifyControlModifierDoubleClicked(event.mods);
+    notifyValueChanged();
     notifyEndEdit();
     repaint();
 }
