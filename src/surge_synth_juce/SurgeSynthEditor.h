@@ -31,6 +31,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     SurgeSynthEditor(SurgeSynthProcessor &);
     ~SurgeSynthEditor();
 
+    static constexpr int extraYSpaceForStandalone = 50;
+
     //==============================================================================
     void paint(juce::Graphics &) override;
     void resized() override;
@@ -55,6 +57,11 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     };
     void idle();
     std::unique_ptr<IdleTimer> idleTimer;
+
+    bool drawExtendedControls{false};
+    std::unique_ptr<juce::MidiKeyboardComponent> keyboard;
+    std::unique_ptr<juce::Label> tempoLabel;
+    std::unique_ptr<juce::TextEditor> tempoTypein;
 
     /* Drag and drop */
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
