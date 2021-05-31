@@ -156,6 +156,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
 
     if (hasDragged)
     {
+        setMouseCursor(juce::MouseCursor::NormalCursor);
         for (int i = 0; i < n_fx_slots; ++i)
         {
             auto r = getEffectRectangle(i);
@@ -187,7 +188,13 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
 void EffectChooser::mouseDrag(const juce::MouseEvent &event)
 {
     if (event.getDistanceFromDragStart() > 0)
+    {
+        if (!hasDragged)
+        {
+            setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+        }
         hasDragged = true;
+    }
 
     dragX = event.getDistanceFromDragStartX();
     dragY = event.getDistanceFromDragStartY();
