@@ -21,42 +21,52 @@
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : AudioProcessorEditor(&p), processor(p), EscapeFromVSTGUI::JuceVSTGUIEditorAdapter(this)
 {
-    drawExtendedControls = (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
-
     surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
+    adapter = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
 
     int yExtra = 0;
+    keyboard = std::make_unique<juce::MidiKeyboardComponent>(
+        processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
+    auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
+                                                       Surge::Storage::MiddleC, 1);
+
+    keyboard->setOctaveForMiddleC(3 + mcValue);
+    keyboard->setLowestVisibleKey(60 - 30);
+    tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
+    tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
+    tempoTypein->setText(std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
+    tempoTypein->onReturnKey = [this]() {
+        // this is thread sloppy
+        float newT = std::atof(tempoTypein->getText().toRawUTF8());
+        processor.standaloneTempo = newT;
+    };
+    tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
+
+    addChildComponent(*keyboard);
+    addChildComponent(*tempoLabel);
+    addChildComponent(*tempoTypein);
+    drawExtendedControls = adapter->getShowVirtualKeyboard();
+    bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
     if (drawExtendedControls)
     {
-        yExtra = extraYSpaceForStandalone;
-        keyboard = std::make_unique<juce::MidiKeyboardComponent>(
-            processor.midiKeyboardState,
-            juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
-        auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
-                                                           Surge::Storage::MiddleC, 1);
+        keyboard->setVisible(true);
+        tempoLabel->setVisible(addTempo);
+        tempoTypein->setVisible(addTempo);
+        yExtra = extraYSpaceForVirtualKeyboard;
+    }
+    else
+    {
+        keyboard->setVisible(false);
+        tempoLabel->setVisible(false);
+        tempoTypein->setVisible(false);
 
-        keyboard->setOctaveForMiddleC(3 + mcValue);
-        keyboard->setLowestVisibleKey(60 - 30);
-        addAndMakeVisible(*keyboard);
-
-        tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
-        addAndMakeVisible(*tempoLabel);
-        tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
-        tempoTypein->setText(std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
-        tempoTypein->onReturnKey = [this]() {
-            // this is thread sloppy
-            float newT = std::atof(tempoTypein->getText().toRawUTF8());
-            processor.standaloneTempo = newT;
-        };
-        tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
-        addAndMakeVisible(*tempoTypein);
+        yExtra = 0;
     }
 
     setSize(BASE_WINDOW_SIZE_X, BASE_WINDOW_SIZE_Y + yExtra);
     setResizable(true, false); // For now
 
-    adapter = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
     adapter->open(nullptr);
 
     idleTimer = std::make_unique<IdleTimer>(this);
@@ -85,17 +95,28 @@ void SurgeSynthEditor::idle() { adapter->idle(); }
 
 void SurgeSynthEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    drawExtendedControls = adapter->getShowVirtualKeyboard();
+    bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
     if (drawExtendedControls)
     {
-        auto y = getHeight() - extraYSpaceForStandalone;
-        auto x = 90;
-        keyboard->setBounds(x, y, getWidth() - x, extraYSpaceForStandalone);
-
-        tempoLabel->setBounds(3, y + 3, x - 6, extraYSpaceForStandalone / 2 - 3);
-        tempoTypein->setBounds(3, y + 3 + extraYSpaceForStandalone / 2, x - 6,
-                               extraYSpaceForStandalone / 2 - 6);
+        auto y = getHeight() - extraYSpaceForVirtualKeyboard;
+        auto x = addTempo ? 90 : 0;
+        keyboard->setBounds(x, y, getWidth() - x, extraYSpaceForVirtualKeyboard);
+        keyboard->setVisible(true);
+        tempoLabel->setVisible(addTempo);
+        tempoTypein->setVisible(addTempo);
+        if (addTempo)
+        {
+            tempoLabel->setBounds(3, y + 3, x - 6, extraYSpaceForVirtualKeyboard / 2 - 3);
+            tempoTypein->setBounds(3, y + 3 + extraYSpaceForVirtualKeyboard / 2, x - 6,
+                                   extraYSpaceForVirtualKeyboard / 2 - 6);
+        }
+    }
+    else
+    {
+        keyboard->setVisible(false);
+        tempoLabel->setVisible(false);
+        tempoTypein->setVisible(false);
     }
 }
 
