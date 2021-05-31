@@ -31,7 +31,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     SurgeSynthEditor(SurgeSynthProcessor &);
     ~SurgeSynthEditor();
 
-    static constexpr int extraYSpaceForStandalone = 50;
+    static constexpr int extraYSpaceForVirtualKeyboard = 50;
 
     //==============================================================================
     void paint(juce::Graphics &) override;

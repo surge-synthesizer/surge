@@ -585,6 +585,11 @@ class SurgeGUIEditor : public EditorType,
     juce::PopupMenu makeLfoMenu(VSTGUI::CRect &rect);
     VSTGUI::COptionMenu *makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
 
+  public:
+    bool getShowVirtualKeyboard();
+    void setShowVirtualKeyboard(bool b);
+
+  private:
     bool scannedForMidiPresets = false;
 
     void resetSmoothing(ControllerModulationSource::SmoothingMode t);

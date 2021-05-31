@@ -117,6 +117,11 @@ void initMaps()
             case LayoutGridResolution:
                 r = "layoutGridResolution";
                 break;
+            case ShowVirtualKeyboard_Plugin:
+                r = "showVirtualKeyboardPlugin";
+                break;
+            case ShowVirtualKeyboard_Standalone:
+                r = "showVirtualKeyboardStandalone";
             case nKeys:
                 break;
             }

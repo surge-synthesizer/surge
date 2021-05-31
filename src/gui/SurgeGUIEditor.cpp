@@ -5130,10 +5130,9 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     if (currentSkin && resizeWindow)
     {
         int yExtra = 0;
-        if (parentEd->processor.wrapperType ==
-            juce::AudioProcessor::WrapperType::wrapperType_Standalone)
+        if (getShowVirtualKeyboard())
         {
-            yExtra = SurgeSynthEditor::extraYSpaceForStandalone;
+            yExtra = SurgeSynthEditor::extraYSpaceForVirtualKeyboard;
         }
         parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
     }
@@ -6044,17 +6043,6 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                            !msegSnapMem);
                    });
 
-    // remember tab positions per scene
-    bool tabPosMem = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"), true, tabPosMem,
-                   [this, tabPosMem]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene,
-                           !tabPosMem);
-                   });
-
     // wrap around browsing patches within current category
     bool patchJogWrap = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::PatchJogWraparound, true);
@@ -6066,9 +6054,49 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, !patchJogWrap);
         });
 
+    // remember tab positions per scene
+    bool tabPosMem = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"), true, tabPosMem,
+                   [this, tabPosMem]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene,
+                           !tabPosMem);
+                   });
+
+    bool showVirtualKeyboard = getShowVirtualKeyboard();
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
+                   [this, showVirtualKeyboard]() {
+                       setShowVirtualKeyboard(!showVirtualKeyboard);
+                       resizeWindow(zoomFactor);
+                   });
+
     uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Workflow"), wfMenu);
 
     return uiOptionsMenu;
+}
+
+bool SurgeGUIEditor::getShowVirtualKeyboard()
+{
+    auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
+    bool defaultVal = false;
+    if (parentEd->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::ShowVirtualKeyboard_Standalone;
+        defaultVal = false;
+    }
+    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
+}
+
+void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
+{
+    auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
+    if (parentEd->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::ShowVirtualKeyboard_Standalone;
+    }
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
 }
 
 juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
