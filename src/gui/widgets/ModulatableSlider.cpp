@@ -82,10 +82,10 @@ void ModulatableSlider::updateLocationState()
         barNMX = handleMX;
         modHandleX = 24;
 
-        handleCY = quantizedDisplayValue * range + handleY0;
+        handleCY = (1 - quantizedDisplayValue) * range + handleY0;
         // When modulating and this is relevant, value == QDV always
-        handleMY = limit01(value + modValue) * range + handleY0;
-        barNMY = limit01(value - modValue) * range + handleY0;
+        handleMY = limit01(1 - (value + modValue)) * range + handleY0;
+        barNMY = limit01(1 - (value - modValue)) * range + handleY0;
         labelRect = juce::Rectangle<int>();
         handleSize = juce::Rectangle<int>().withWidth(15).withHeight(20);
     }
@@ -302,7 +302,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 {
     int distance = event.getDistanceFromDragStartX();
     if (orientation == ParamConfig::kVertical)
-        distance = event.getDistanceFromDragStartY();
+        distance = -event.getDistanceFromDragStartY();
 
     if (distance == 0 && editTypeWas == NOEDIT)
         return;
