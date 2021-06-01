@@ -16,7 +16,6 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
-#include "COscillatorDisplay.h"
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
@@ -47,6 +46,7 @@
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/OscillatorWaveformDisplay.h"
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/PatchSelector.h"
 #include "widgets/Switch.h"
@@ -366,9 +366,9 @@ void SurgeGUIEditor::idle()
                 .scene[current_scene]
                 .osc[current_osc[current_scene]]
                 .wt.refresh_display = false;
-            if (oscdisplay)
+            if (oscWaveform)
             {
-                oscdisplay->invalid();
+                oscWaveform->repaint();
             }
         }
 
@@ -517,9 +517,9 @@ void SurgeGUIEditor::idle()
                                            ->getControlViewSize());
                     // oscdisplay->invalid();
 
-                    if (oscdisplay)
+                    if (oscWaveform)
                     {
-                        ((COscillatorDisplay *)oscdisplay)->invalidateIfIdIsInRange(j);
+                        oscWaveform->repaintIfIdIsInRange(j);
                     }
 
                     if (lfodisplay)
@@ -575,9 +575,9 @@ void SurgeGUIEditor::idle()
                                        ->asBaseViewFunctions()
                                        ->getControlViewSize());
 
-                if (oscdisplay)
+                if (oscWaveform)
                 {
-                    ((COscillatorDisplay *)oscdisplay)->invalidateIfIdIsInRange(j);
+                    oscWaveform->repaintIfIdIsInRange(j);
                 }
 
                 if (lfodisplay)
@@ -1271,15 +1271,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
         case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_DISPLAY:
         {
-            auto od = new COscillatorDisplay(
-                CRect(CPoint(skinCtrl->x, skinCtrl->y), CPoint(skinCtrl->w, skinCtrl->h)), this,
-                &synth->storage.getPatch()
-                     .scene[synth->storage.getPatch().scene_active.val.i]
-                     .osc[current_osc[current_scene]],
-                &synth->storage);
-            od->setSkin(currentSkin, bitmapStore);
-            frame->addView(od);
-            oscdisplay = od;
+            if (!oscWaveform)
+            {
+                oscWaveform = std::make_unique<Surge::Widgets::OscillatorWaveformDisplay>();
+            }
+            oscWaveform->setBounds(skinCtrl->getRect().asJuceIntRect());
+            oscWaveform->setSkin(currentSkin, bitmapStore);
+            oscWaveform->setStorage(&(synth->storage));
+            oscWaveform->setOscStorage(&(synth->storage.getPatch()
+                                             .scene[synth->storage.getPatch().scene_active.val.i]
+                                             .osc[current_osc[current_scene]]));
+            oscWaveform->setSurgeGUIEditor(this);
+            frame->juceComponent()->addAndMakeVisible(*oscWaveform);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
@@ -3802,7 +3805,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                               synth->isActiveModulation(p->id, thisms));
                     ctrms->setIsModulationBipolar(synth->isBipolarModulation(thisms));
                 }
-                oscdisplay->invalid();
+                oscWaveform->repaint();
                 return 0;
             }
             else
@@ -3841,8 +3844,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                 {
                     p->set_value_f01(p->get_default_value_f01());
                     control->setValue(p->get_value_f01());
-                    if (oscdisplay && (p->ctrlgroup == cg_OSC))
-                        oscdisplay->invalid();
+                    if (oscWaveform && (p->ctrlgroup == cg_OSC))
+                        oscWaveform->repaint();
                     if (lfodisplay && (p->ctrlgroup == cg_LFO))
                         lfodisplay->invalid();
                     if (bvf)
@@ -4766,9 +4769,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     draw_infowindow(ptag, bvf, modulate);
                 }
 
-                if (oscdisplay && ((p->ctrlgroup == cg_OSC) || (p->ctrltype == ct_character)))
+                if (oscWaveform && ((p->ctrlgroup == cg_OSC) || (p->ctrltype == ct_character)))
                 {
-                    oscdisplay->invalid();
+                    oscWaveform->repaint();
                 }
                 if (lfodisplay && (p->ctrlgroup == cg_LFO))
                 {

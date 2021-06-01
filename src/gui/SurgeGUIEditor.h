@@ -49,6 +49,7 @@ struct AboutScreen;
 struct EffectChooser;
 struct EffectLabel;
 struct ModulatableControlInterface;
+struct OscillatorWaveformDisplay;
 struct ParameterInfowindow;
 struct PatchSelector;
 struct Switch;
@@ -534,8 +535,8 @@ class SurgeGUIEditor : public EditorType,
     Parameter *typeinEditTarget = nullptr;
     int typeinModSource = -1;
 
+    std::unique_ptr<Surge::Widgets::OscillatorWaveformDisplay> oscWaveform;
     VSTGUI::CControl *polydisp = nullptr;
-    VSTGUI::CControl *oscdisplay = nullptr;
     VSTGUI::CControl *splitpointControl = nullptr;
 
     static const int n_paramslots = 1024;

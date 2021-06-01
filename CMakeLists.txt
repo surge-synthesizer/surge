@@ -338,7 +338,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CLFOGui.cpp
   src/gui/CModulationSourceButton.cpp
   src/gui/CNumberField.cpp
-  src/gui/COscillatorDisplay.cpp
   src/gui/CScalableBitmap.cpp
   src/gui/CSnapshotMenu.cpp
   src/gui/CTextButtonWithHover.cpp
@@ -364,6 +363,7 @@ set(SURGE_GUI_SOURCES
   src/gui/widgets/MenuForDiscreteParams.cpp
   src/gui/widgets/MultiSwitch.cpp
   src/gui/widgets/ModulatableSlider.cpp
+  src/gui/widgets/OscillatorWaveformDisplay.cpp
   src/gui/widgets/ParameterInfowindow.cpp
   src/gui/widgets/PatchSelector.cpp
   src/gui/widgets/Switch.cpp
