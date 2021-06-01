@@ -20,7 +20,6 @@
 #include "CModulationSourceButton.h"
 #include "CSnapshotMenu.h"
 #include "CLFOGui.h"
-#include "CMenuAsSlider.h"
 #include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
@@ -45,6 +44,7 @@
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
+#include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/ParameterInfowindow.h"
@@ -1898,9 +1898,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
     std::vector<std::string> clearControlTargetNames;
 
-    auto cmensl = dynamic_cast<CMenuAsSlider *>(control);
+    auto cmensl = dynamic_cast<Surge::Widgets::MenuForDiscreteParams *>(control);
 
-    if (cmensl && cmensl->deactivated)
+    if (cmensl && cmensl->getDeactivated())
         return 0;
 
     if (button & kRButton)
@@ -7522,28 +7522,39 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
-        if (false && p->is_discrete_selection())
+        if (p->is_discrete_selection())
         {
             loc.offset(2, 4);
-            auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,
-                                        &(synth->storage));
+            auto hs =
+                componentForSkinSession<Surge::Widgets::MenuForDiscreteParams>(skinCtrl->sessionid);
 
-            auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
-            if (parm && parm->supportsTotalIndexOrdering())
-                hs->intOrdering = parm->totalIndexOrdering();
-
+            /*auto hs = new CMenuAsSlider(loc, this, p->id + start_paramtags, bitmapStore,
+                                        &(synth->storage));*/
+            hs->setTag(p->id + start_paramtags);
+            hs->addListener(this);
+            hs->setStorage(&(synth->storage));
+            hs->setBounds(loc.x, loc.y, 133, 22);
             hs->setSkin(currentSkin, bitmapStore);
             hs->setValue(p->get_value_f01());
             hs->setMinMax(p->val_min.i, p->val_max.i);
             hs->setLabel(p->get_name());
             p->ctrlstyle = p->ctrlstyle | kNoPopup;
-            frame->addView(hs);
             if (p->can_deactivate())
                 hs->setDeactivated(p->deactivated);
 
-            std::cout << "FIXME - we probably have to resolve this in conjunction" << std::endl;
-            // param[paramIndex] = hs;
-            return hs;
+            auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
+            if (parm && parm->supportsTotalIndexOrdering())
+                hs->setIntOrdering(parm->totalIndexOrdering());
+
+            auto dbls = currentSkin->standardHoverAndHoverOnForIDB(IDB_MENU_AS_SLIDER, bitmapStore);
+            hs->setBackgroundDrawable(dbls[0]);
+            hs->setHoverBackgroundDrawable(dbls[1]);
+            param[p->id] = hs.get();
+            frame->juceComponent()->addAndMakeVisible(*hs);
+            juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
+
+            return dynamic_cast<CControlValueInterface *>(
+                juceSkinComponents[skinCtrl->sessionid].get());
         }
         else
         {
@@ -7923,18 +7934,38 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             return nullptr;
 
         auto rect = skinCtrl->getRect();
-        auto hsw = new CMenuAsSlider(rect.getTopLeft(), rect.getSize(), this,
-                                     p->id + start_paramtags, bitmapStore, &(synth->storage));
+        auto hsw =
+            componentForSkinSession<Surge::Widgets::MenuForDiscreteParams>(skinCtrl->sessionid);
+        hsw->addListener(this);
+        hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+        hsw->setTag(p->id + start_paramtags);
+        hsw->setStorage(&(synth->storage));
+        hsw->setBounds(rect.asJuceIntRect());
+        hsw->setValue(p->get_value_f01());
+        p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
         if (parm && parm->supportsTotalIndexOrdering())
-            hsw->intOrdering = parm->totalIndexOrdering();
+            hsw->setIntOrdering(parm->totalIndexOrdering());
 
         hsw->setMinMax(0, n_fu_types - 1);
-        hsw->setMouseableArea(rect);
         hsw->setLabel(p->get_name());
         hsw->setDeactivated(false);
-        hsw->setBackgroundID(IDB_FILTER_MENU);
+
+        auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
+        if (pv.isJust())
+        {
+            hsw->setBackgroundDrawable(bitmapStore->getDrawableByStringID(pv.fromJust()));
+            jassert(false); // hover
+        }
+        else
+        {
+            hsw->setBackgroundDrawable(bitmapStore->getDrawable(IDB_FILTER_MENU));
+            auto id =
+                currentSkin->hoverImageIdForResource(IDB_FILTER_MENU, Surge::GUI::Skin::HOVER);
+            auto bhov = bitmapStore->getDrawableByStringID(id);
+            hsw->setHoverBackgroundDrawable(bhov);
+        }
 
         bool activeGlyph = true;
         if (currentSkin->getVersion() >= 2)
@@ -7945,68 +7976,51 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 activeGlyph = false;
         }
 
-        hsw->setFilterMode(true);
+        hsw->setGlyphMode(true);
 
         if (activeGlyph)
         {
             for (int i = 0; i < n_fu_types; i++)
-                hsw->glyphIndexMap.push_back(
-                    std::make_pair(fut_glyph_index[i][0], fut_glyph_index[i][1]));
-            if (currentSkin->getVersion() == 1)
+                hsw->addGlyphIndexMapEntry(fut_glyph_index[i][0], fut_glyph_index[i][1]);
+
+            auto glpc = currentSkin->propertyValue(skinCtrl,
+                                                   Surge::Skin::Component::GLYPH_PLACEMENT, "left");
+            auto glw = std::atoi(
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_W, "18")
+                    .c_str());
+            auto glh = std::atoi(
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_H, "18")
+                    .c_str());
+            auto gli =
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_IMAGE, "");
+            auto glih =
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_HOVER_IMAGE, "");
+
+            // These are the V1 hardcoded defaults
+            if (glw == 18 && glh == 18 && glpc == "left" && gli == "")
             {
                 auto drr = rect;
                 drr.right = drr.left + 18;
-                hsw->setDragRegion(drr);
-                hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
+                hsw->setDragRegion(drr.asJuceIntRect());
+                hsw->setDragGlyph(bitmapStore->getDrawable(IDB_FILTER_ICONS), 18);
+                hsw->setDragGlyphHover(
+                    bitmapStore->getDrawableByStringID(currentSkin->hoverImageIdForResource(
+                        IDB_FILTER_ICONS, Surge::GUI::Skin::HOVER)));
+            }
+            else
+            {
+                jassert(false);
+                // hsw->setGlyphSettings(gli, glih, glpc, glw, glh);
             }
         }
 
-        p->ctrlstyle = p->ctrlstyle | kNoPopup;
+        frame->juceComponent()->addAndMakeVisible(*hsw);
+        nonmod_param[paramIndex] = hsw.get();
 
-        hsw->setValue(p->get_value_f01());
-        hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+        juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
 
-        if (currentSkin->getVersion() > 1)
-        {
-            if (activeGlyph)
-            {
-                auto glpc = currentSkin->propertyValue(
-                    skinCtrl, Surge::Skin::Component::GLYPH_PLACEMENT, "left");
-                auto glw = std::atoi(
-                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_W, "18")
-                        .c_str());
-                auto glh = std::atoi(
-                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_H, "18")
-                        .c_str());
-                auto gli =
-                    currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLYPH_IMAGE, "");
-                auto glih = currentSkin->propertyValue(
-                    skinCtrl, Surge::Skin::Component::GLYPH_HOVER_IMAGE, "");
-
-                // These are the V1 hardcoded defaults
-                if (glw == 18 && glh == 18 && glpc == "left" && gli == "")
-                {
-                    auto drr = rect;
-                    drr.right = drr.left + 18;
-                    hsw->setDragRegion(drr);
-                    hsw->setDragGlyph(IDB_FILTER_ICONS, 18);
-                }
-                else
-                {
-                    hsw->setGlyphSettings(gli, glih, glpc, glw, glh);
-                }
-            }
-
-            auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
-            if (pv.isJust())
-            {
-                hsw->setBackgroundBitmapResource(pv.fromJust());
-            }
-        }
-
-        frame->addView(hsw);
-        nonmod_param[paramIndex] = hsw;
-        return hsw;
+        return dynamic_cast<CControlValueInterface *>(
+            juceSkinComponents[skinCtrl->sessionid].get());
     }
     if (skinCtrl->ultimateparentclassname != Surge::GUI::NoneClassName)
         std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname

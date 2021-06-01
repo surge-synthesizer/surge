@@ -47,9 +47,11 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         for (auto t : listeners)
             t->valueChanged(this);
     }
-    void notifyControlModifierClicked(const juce::ModifierKeys &k)
+    void notifyControlModifierClicked(const juce::ModifierKeys &k, bool addRMB = false)
     {
         VSTGUI::CButtonState bs(k);
+        if (addRMB)
+            bs = bs | VSTGUI::kRButton;
         for (auto t : listeners)
             t->controlModifierClicked(this, bs);
     }
