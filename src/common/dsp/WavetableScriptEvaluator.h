@@ -41,7 +41,8 @@ namespace WavetableScript
  * not at the evaluation or synthesis time. As such I expect you call it from
  * one thread at a time and just you know generally be careful.
  */
-std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame);
+std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame,
+                                         int nFrames);
 
 /*
  * Generate all the data required to call BuildWT. The wavdata here is data you

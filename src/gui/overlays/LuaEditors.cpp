@@ -258,7 +258,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     currentFrame = std::make_unique<juce::Slider>("currF");
     currentFrame->setSliderStyle(juce::Slider::LinearVertical);
     currentFrame->setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-    currentFrame->setMinAndMaxValues(0.0, 10.0);
+    currentFrame->setRange(0.0, 10.0);
     currentFrame->addListener(this);
     addAndMakeVisible(currentFrame.get());
 }
@@ -315,7 +315,7 @@ void WavetableEquationEditor::rerenderFromUIState()
         respt *= 2;
 
     renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
-        mainDocument->getAllContent().toStdString(), respt, cfr);
+        mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
     renderer->frameNumber = cfr;
     renderer->repaint();
 }
