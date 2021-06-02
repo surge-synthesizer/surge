@@ -20,7 +20,8 @@ namespace Surge
 {
 namespace WavetableScript
 {
-std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame)
+std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame,
+                                         int nFrames)
 {
 #if !HAS_LUAJIT
     auto res = std::vector<float>();
@@ -44,9 +45,13 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
     {
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
         /*
-         * Alright so we want the stack to be an array of 0...1 and a frame
-         * Right now the stack is just our generation function so
+         * Alright so we want the stack to be the config table which
+         * contains the xs, contains n, contains ntables, etc.. so
          */
+        lua_createtable(L, 0, 10);
+
+        // xs is an array of the x locations in phase space
+        lua_pushstring(L, "xs");
         lua_createtable(L, resolution, 0);
         double dp = 1.0 / (resolution - 1);
         for (auto i = 0; i < resolution; ++i)
@@ -55,8 +60,18 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
             lua_pushnumber(L, i * dp);
             lua_settable(L, -3);
         }
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "n");
         lua_pushinteger(L, frame);
-        auto pcr = lua_pcall(L, 2, 1, 0);
+        lua_settable(L, -3);
+
+        lua_pushstring(L, "nTables");
+        lua_pushinteger(L, nFrames);
+        lua_settable(L, -3);
+
+        // So stack is now the table and the function
+        auto pcr = lua_pcall(L, 1, 1, 0);
         if (pcr == LUA_OK)
         {
             if (lua_istable(L, -1))
@@ -99,22 +114,22 @@ bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_h
 
     for (int i = 0; i < frames; ++i)
     {
-        auto v = evaluateScriptAtFrame(eqn, resolution, i);
+        auto v = evaluateScriptAtFrame(eqn, resolution, i, frames);
         memcpy(&(wd[i * resolution]), &(v[0]), resolution * sizeof(float));
     }
     return true;
 }
 std::string defaultWavetableFormula()
 {
-    return R"FN(function generate(xs,n)
+    return R"FN(function generate(config)
 --- This function was inserted as a guide, since the wavetable editor in this patch/oscillator has no
 --- generator function. The function takes an array of x values (xs) and a frame number (n) and
 --- generates the result as the n-th frame. The sample below generates a Fourier sine to saw
 --- which, remember, is: sum 2 / pi n * sin n x
     res = {}
-    for i,x in ipairs(xs) do
+    for i,x in ipairs(config.xs) do
         lv = 0
-        for q = 1,(n+1) do
+        for q = 1,(config.n+1) do
             lv = lv + 2 * sin ( q * x * 2 * pi ) / ( pi * q )
         end
         res[i] = lv

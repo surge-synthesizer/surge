@@ -8255,7 +8255,7 @@ void SurgeGUIEditor::showWavetableScripter()
     c->takeOwnership(std::move(pt));
 
     addEditorOverlay(c, "Wavetable Editor", FORMULA_EDITOR, CPoint(px, py), false, true,
-                     [this]() {});
+                     [this]() { frame->juceComponent()->repaint(); });
 }
 
 void SurgeGUIEditor::closeWavetableScripter()
