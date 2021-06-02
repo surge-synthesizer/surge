@@ -344,12 +344,14 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     }
 
     notifyValueChanged();
+    updateInfowindowContents(isEditingModulation);
     repaint();
 }
 void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 {
     if (event.mods.isPopupMenu())
     {
+        editTypeWas = NOEDIT;
         notifyControlModifierClicked(event.mods);
         return;
     }
@@ -362,9 +364,12 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
     valueOnMouseDown = value;
     modValueOnMouseDown = modValue;
     editTypeWas = NOEDIT;
+    showInfowindow(isEditingModulation);
 }
 void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 {
+    hideInfowindow();
+
     if (!Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
@@ -380,7 +385,10 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
     }
 
     if (editTypeWas != DRAG)
+    {
+        editTypeWas = NOEDIT;
         return;
+    }
 
     if (event.mods.isAltDown())
     {
@@ -392,14 +400,19 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
     }
 
     notifyEndEdit();
+    updateInfowindowContents(isEditingModulation);
+    editTypeWas = NOEDIT;
 }
 void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
 {
     editTypeWas = DOUBLECLICK;
+
     notifyBeginEdit();
     notifyControlModifierDoubleClicked(event.mods);
     notifyValueChanged();
     notifyEndEdit();
+
+    updateInfowindowContents(isEditingModulation);
     repaint();
 }
 void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
@@ -412,6 +425,7 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
     if (delta == 0)
         return;
 
+    showInfowindowSelfDismiss(isEditingModulation);
     float speed = 1.2;
     if (event.mods.isShiftDown())
         speed = .12;

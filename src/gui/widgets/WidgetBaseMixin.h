@@ -20,6 +20,8 @@
 #include "SkinSupport.h"
 #include <unordered_set>
 
+class SurgeGUIEditor;
+
 namespace Surge
 {
 namespace Widgets
@@ -74,6 +76,38 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
     {
         for (auto t : listeners)
             t->controlEndEdit(this);
+    }
+
+    void showInfowindow(bool isEditingModulation)
+    {
+        auto l = asT()->getBounds();
+        auto t = getTag();
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->showInfowindow(t, l, isEditingModulation);
+    }
+
+    void showInfowindowSelfDismiss(bool isEditingModulation)
+    {
+        auto l = asT()->getBounds();
+        auto t = getTag();
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->showInfowindowSelfDismiss(t, l, isEditingModulation);
+    }
+
+    void updateInfowindowContents(bool isEditingModulation)
+    {
+        auto t = getTag();
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->updateInfowindowContents(t, isEditingModulation);
+    }
+    void hideInfowindow()
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->hideInfowindow();
     }
 
     template <typename U> U *firstListenerOfType()

@@ -151,8 +151,6 @@ class SurgeGUIEditor : public EditorType,
     int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0, filterblock_tag = 0, fmconfig_tag = 0;
     double lastTempo = 0;
     int lastTSNum = 0, lastTSDen = 0;
-    void draw_infowindow(int ptag, VSTGUI::BaseViewFunctions *control, bool modulate,
-                         bool forceMB = false);
     void adjustSize(float &width, float &height) const;
 
     struct patchdata
@@ -436,8 +434,18 @@ class SurgeGUIEditor : public EditorType,
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
-    std::unique_ptr<Surge::Widgets::ParameterInfowindow> infowindow;
 
+    /* Infowindow members and functions */
+    std::unique_ptr<Surge::Widgets::ParameterInfowindow> paramInfowindow;
+
+  public:
+    void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
+    void showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
+    void updateInfowindowContents(int ptag, bool isModulated);
+    void hideInfowindow();
+    void idleInfowindow();
+
+  private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
@@ -547,10 +555,8 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CControl *lfodisplay = nullptr;
     Surge::Widgets::Switch *filtersubtype[2] = {};
     VSTGUI::CControl *fxmenu = nullptr;
-    int clear_infoview_countdown = 0;
 
   public:
-    int clear_infoview_peridle = -1;
     bool useDevMenu = false;
 
   private:

@@ -63,6 +63,21 @@ struct ParameterInfowindow : public juce::Component, public Surge::GUI::SkinCons
     bool hasMDIWS() { return hasModDisInf; }
     void clearMDIWS() { hasModDisInf = false; }
     int getMaxLabelLen() { return 30; }
+
+    int countdownHide{-1}, countdownFade{-1}, countdownFadeIn{-1};
+    static constexpr int fadeOutOver{10}, fadeInOver{4};
+    void setCountdownToHide(int c)
+    {
+        countdownHide = c;
+        countdownFade = -1;
+    }
+    void startFadein()
+    {
+        if (countdownFadeIn < 0 && !isVisible())
+            countdownFadeIn = fadeInOver;
+    }
+    void doHide();
+    void idle();
 };
 } // namespace Widgets
 } // namespace Surge

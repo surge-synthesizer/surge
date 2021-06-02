@@ -29,6 +29,18 @@ ParameterInfowindow::~ParameterInfowindow() = default;
 
 void ParameterInfowindow::paint(juce::Graphics &g)
 {
+    // Save state since I want to set an overall alpha
+    juce::Graphics::ScopedSaveState gs(g);
+    float opacity = 1.f;
+    if (countdownFade >= 0)
+    {
+        opacity = 1.f * countdownFade / fadeOutOver;
+    }
+    if (countdownFadeIn >= 0)
+    {
+        opacity = 1.f * (fadeInOver - countdownFadeIn) / fadeInOver;
+    }
+
     auto frameCol = skin->getColor(Colors::InfoWindow::Border);
     auto bgCol = skin->getColor(Colors::InfoWindow::Background);
 
@@ -38,11 +50,15 @@ void ParameterInfowindow::paint(juce::Graphics &g)
     auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive);
     auto mnValCol = skin->getColor(Colors::InfoWindow::Modulation::ValueNegative);
 
-    g.fillAll(bgCol);
+    g.setColour(bgCol);
+    g.setOpacity(opacity);
+    g.fillRect(getLocalBounds());
     g.setColour(frameCol);
+    g.setOpacity(opacity);
     g.drawRect(getLocalBounds());
 
     g.setColour(txtCol);
+    g.setOpacity(opacity);
     g.setFont(font);
 
     if (name.empty())
@@ -146,63 +162,44 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
     }
 
     setBounds(r);
-#if 0
-// A heuristic
-    auto ml = infowindow->getMaxLabelLen();
-    auto iff = 148;
-    // This is just empirical. It would be lovely to use the actual string width but that needs a
-    // draw context of for these to be TextLabels so we can call sizeToFit
-    if (ml > 24)
-        iff += (ml - 24) * 5;
+}
 
+void ParameterInfowindow::doHide()
+{
+    countdownHide = -1;
+    countdownFade = fadeOutOver;
+}
 
-    CRect r(0, 0, iff, 18);
-    if (modulate)
+void ParameterInfowindow::idle()
+{
+    if (countdownHide < 0 && countdownFade < 0 && countdownFadeIn < 0)
+        return;
+
+    if (countdownHide == 0)
     {
-        int hasMDIWS = infowindow->hasMDIWS();
-        r.bottom += (hasMDIWS & modValues ? 36 : 18);
-        if (modValues)
-            r.right += 20;
+        doHide();
+    }
+    if (countdownHide > 0)
+    {
+        countdownHide--;
     }
 
-    CRect r2 = control->getControlViewSize();
-
-    // OK this is a heuristic to stop deform overpainting and stuff
-    if (r2.bottom > getWindowSizeY() - r.getHeight() - 2)
+    if (countdownFade == 0)
     {
-        // stick myself on top please
-        r.offset((r2.left / 150) * 150, r2.top - r.getHeight() - 2);
+        setVisible(false);
+        countdownFade = -1;
     }
-    else
+    if (countdownFade > 0)
     {
-        r.offset((r2.left / 150) * 150, r2.bottom);
+        countdownFade--;
+        repaint();
     }
 
-    if (r.bottom > getWindowSizeY() - 2)
+    if (countdownFadeIn >= 0)
     {
-        int ao = (getWindowSizeY() - 2 - r.bottom);
-        r.offset(0, ao);
+        countdownFadeIn--;
+        repaint();
     }
-
-    if (r.right > getWindowSizeX() - 2)
-    {
-        int ao = (getWindowSizeX() - 2 - r.right);
-        r.offset(ao, 0);
-    }
-
-    if (r.left < 0)
-    {
-        int ao = 2 - r.left;
-        r.offset(ao, 0);
-    }
-
-    if (r.top < 0)
-    {
-        int ao = 2 - r.top;
-        r.offset(0, ao);
-    }
-
-#endif
 }
 } // namespace Widgets
 } // namespace Surge
