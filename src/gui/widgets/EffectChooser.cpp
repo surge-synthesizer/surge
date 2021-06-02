@@ -14,7 +14,6 @@
 ** open source in September 2018.
 */
 
-#include "EffectChooser.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
 
@@ -41,8 +40,11 @@ void EffectChooser::paint(juce::Graphics &g)
         g.drawText("Can't do V1 yet", getLocalBounds(), juce::Justification::centred);
         return;
     }
+
     if (bg)
+    {
         bg->draw(g, 1.0);
+    }
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
 
@@ -72,8 +74,6 @@ void EffectChooser::paint(juce::Graphics &g)
         g.setColour(frm);
         g.drawRect(r);
 
-        auto fxname = fx_type_shortnames[fxTypes[i]];
-
         drawSlotText(g, r, txt, fxTypes[i]);
     }
 
@@ -93,8 +93,8 @@ void EffectChooser::paint(juce::Graphics &g)
     }
 }
 
-void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> r,
-                                 const juce::Colour txtcol, int fxid)
+void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r,
+                                 const juce::Colour &txtcol, int fxid)
 {
     auto fxname = fx_type_shortnames[fxid];
 

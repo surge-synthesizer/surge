@@ -34,7 +34,7 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     ~EffectChooser();
     void paint(juce::Graphics &g) override;
 
-    void drawSlotText(juce::Graphics &g, const juce::Rectangle<int> r, const juce::Colour txtcol,
+    void drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r, const juce::Colour &txtcol,
                       int fxid);
 
     /*
