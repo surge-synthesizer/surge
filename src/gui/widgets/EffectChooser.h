@@ -34,6 +34,9 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     ~EffectChooser();
     void paint(juce::Graphics &g) override;
 
+    void drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r, const juce::Colour &txtcol,
+                      int fxid);
+
     /*
      * These aren't used but are part of the interface. The callback casts.
      */

@@ -1,3 +1,4 @@
+#include "EffectChooser.h"
 /*
 ** Surge Synthesizer is Free and Open Source Software
 **
@@ -13,7 +14,6 @@
 ** open source in September 2018.
 */
 
-#include "EffectChooser.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
 
@@ -40,8 +40,11 @@ void EffectChooser::paint(juce::Graphics &g)
         g.drawText("Can't do V1 yet", getLocalBounds(), juce::Justification::centred);
         return;
     }
+
     if (bg)
+    {
         bg->draw(g, 1.0);
+    }
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
 
@@ -70,8 +73,8 @@ void EffectChooser::paint(juce::Graphics &g)
         g.fillRect(r);
         g.setColour(frm);
         g.drawRect(r);
-        g.setColour(txt);
-        g.drawText(fx_type_shortnames[fxTypes[i]], r, juce::Justification::centred);
+
+        drawSlotText(g, r, txt, fxTypes[i]);
     }
 
     if (hasDragged && currentClicked >= 0)
@@ -85,8 +88,28 @@ void EffectChooser::paint(juce::Graphics &g)
         g.fillRect(r);
         g.setColour(frm);
         g.drawRect(r);
-        g.setColour(txt);
-        g.drawText(fx_type_shortnames[fxTypes[currentClicked]], r, juce::Justification::centred);
+
+        drawSlotText(g, r, txt, fxTypes[currentClicked]);
+    }
+}
+
+void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r,
+                                 const juce::Colour &txtcol, int fxid)
+{
+    auto fxname = fx_type_shortnames[fxid];
+
+    g.setColour(txtcol);
+
+    if (strcmp(fxname, "OFF") == 0)
+    {
+        auto center = r.getCentre();
+        auto line = juce::Rectangle<float>(center.x - 2, center.y, 6, 1);
+
+        g.drawRect(line);
+    }
+    else
+    {
+        g.drawText(fx_type_shortnames[fxid], r, juce::Justification::centred);
     }
 }
 
