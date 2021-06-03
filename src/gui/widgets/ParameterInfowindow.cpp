@@ -32,6 +32,7 @@ void ParameterInfowindow::paint(juce::Graphics &g)
     // Save state since I want to set an overall alpha
     juce::Graphics::ScopedSaveState gs(g);
     float opacity = 1.f;
+
     if (countdownFade >= 0)
     {
         opacity = 1.f * countdownFade / fadeOutOver;
@@ -43,7 +44,6 @@ void ParameterInfowindow::paint(juce::Graphics &g)
 
     auto frameCol = skin->getColor(Colors::InfoWindow::Border);
     auto bgCol = skin->getColor(Colors::InfoWindow::Background);
-
     auto txtCol = skin->getColor(Colors::InfoWindow::Text);
     auto mpCol = skin->getColor(Colors::InfoWindow::Modulation::Positive);
     auto mnCol = skin->getColor(Colors::InfoWindow::Modulation::Negative);
@@ -65,6 +65,7 @@ void ParameterInfowindow::paint(juce::Graphics &g)
     {
         // We are not in a modulation mode. So display is |alt .... disp|
         auto r = getLocalBounds().reduced(3, 1);
+
         g.drawText(display, r, juce::Justification::centredRight);
         g.drawText(displayAlt, r, juce::Justification::centredLeft);
     }
@@ -83,8 +84,12 @@ void ParameterInfowindow::paint(juce::Graphics &g)
 
             // val with changes
             auto valalign = juce::Justification::centred;
+
             if (mdiws.dvalminus.size() == 0 && mdiws.valminus.size() == 0)
+            {
                 valalign = juce::Justification::centredLeft;
+            }
+
             g.drawText(mdiws.val, rm, valalign);
             g.setColour(mpCol);
             g.setOpacity(opacity);
@@ -106,6 +111,7 @@ void ParameterInfowindow::paint(juce::Graphics &g)
             auto ro = getLocalBounds().reduced(3, 1);
             auto rt = ro.withTrimmedBottom(ro.getHeight() / 2);
             auto rb = ro.withTrimmedTop(ro.getHeight() / 2);
+
             g.drawText(name, rt, juce::Justification::centredLeft);
             g.drawText(display, rb, juce::Justification::centredLeft);
         }
@@ -117,6 +123,7 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
 {
     int desiredHeight = font.getHeight() + 5;
     int desiredWidth = 141;
+
     if (name.empty())
     {
         auto sl1 = font.getStringWidth(display);
@@ -127,6 +134,7 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
     else
     {
         int lheight = 0;
+
         if (hasExt && hasModDisInf)
         {
             lheight = font.getHeight() * 3 + 11;
@@ -144,13 +152,15 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
             desiredWidth = std::max(std::max(sln, sl1) + 8, desiredWidth);
             lheight = font.getHeight() * 2 + 9;
         }
+
         desiredHeight = std::max(desiredHeight, lheight);
     }
+
     auto r = juce::Rectangle<int>(0, 0, desiredWidth, desiredHeight)
                  .withX(controlRect.getX())
                  .withY(controlRect.getY() + controlRect.getHeight());
 
-    // OK so now we are well sized. The only question is are we inside
+    // OK so now we are well sized. The only question is are we inside?
     if (!parentRect.contains(r))
     {
         auto h = r.getHeight(), w = r.getWidth();
@@ -177,12 +187,15 @@ void ParameterInfowindow::doHide()
 void ParameterInfowindow::idle()
 {
     if (countdownHide < 0 && countdownFade < 0 && countdownFadeIn < 0)
+    {
         return;
+    }
 
     if (countdownHide == 0)
     {
         doHide();
     }
+
     if (countdownHide > 0)
     {
         countdownHide--;
@@ -193,6 +206,7 @@ void ParameterInfowindow::idle()
         setVisible(false);
         countdownFade = -1;
     }
+
     if (countdownFade > 0)
     {
         countdownFade--;
