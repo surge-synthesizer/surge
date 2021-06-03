@@ -370,9 +370,16 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 {
     /*
      * Why "soon" and not "now"? Well JUCE will deliver me a mouse up as first step
-     * of a double click...
+     * of a double click... but if ive dragged im not in a doubleclick
      */
-    hideInfowindowSoon();
+    if (editTypeWas == DRAG)
+    {
+        hideInfowindowNow();
+    }
+    else
+    {
+        hideInfowindowSoon();
+    }
 
     if (!Surge::GUI::showCursor(storage))
     {
