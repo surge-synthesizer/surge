@@ -349,6 +349,8 @@ set(SURGE_GUI_SOURCES
   src/gui/SurgeBitmaps.cpp
   src/gui/SurgeGUIEditor.cpp
   src/gui/SurgeGUIEditorHtmlGenerators.cpp
+  src/gui/SurgeGUIEditorInfowindow.cpp
+  src/gui/SurgeGUIEditorValueCallbacks.cpp
   src/gui/SurgeGUIUtils.cpp
   src/gui/SurgeJUCELookAndFeel.cpp
   src/gui/UIInstrumentation.cpp
