@@ -421,25 +421,47 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
     patch_loaded = true;
     refresh_editor = true;
 
-    if (patchid < 0)
+    /*
+    ** new patch just loaded so I look up and set the current category and patch.
+    ** This is used to draw checkmarks in the menu. If for some reason we don't
+    ** find one, nothing will break
+    */
+    int inferredPatchId = -1;
+    int cnt = storage.patch_list.size();
+    string name = storage.getPatch().name;
+    string cat = storage.getPatch().category;
+    for (int p = 0; p < cnt; ++p)
     {
-        /*
-        ** new patch just loaded so I look up and set the current category and patch.
-        ** This is used to draw checkmarks in the menu. If for some reason we don't
-        ** find one, nothing will break
-        */
-        int cnt = storage.patch_list.size();
-        string name = storage.getPatch().name;
-        string cat = storage.getPatch().category;
-        for (int p = 0; p < cnt; ++p)
+        if (storage.patch_list[p].name == name &&
+            storage.patch_category[storage.patch_list[p].category].name == cat)
         {
-            if (storage.patch_list[p].name == name &&
-                storage.patch_category[storage.patch_list[p].category].name == cat)
-            {
-                current_category_id = storage.patch_list[p].category;
-                patchid = p;
-                break;
-            }
+            current_category_id = storage.patch_list[p].category;
+            inferredPatchId = p;
+            break;
+        }
+    }
+
+    if (inferredPatchId >= 0 && inferredPatchId != patchid)
+    {
+        // If the patchid is out of range or if it is the default overrule
+        if (patchid < 0 && patchid >= storage.patch_list.size())
+        {
+            patchid = inferredPatchId;
+        }
+        else if (storage.patch_list[patchid].name == storage.initPatchName &&
+                 storage.patch_category[storage.patch_list[patchid].category].name ==
+                     storage.initPatchCategory)
+        {
+            patchid = inferredPatchId;
+        }
+        else
+        {
+            /*
+             * I don't see how this could ever happen. Punt.
+             */
+            storage.reportError("Loading patch couldn't infer patch name. Please tell devs.",
+                                "Software Error");
+            patchid = inferredPatchId;
         }
     }
 }

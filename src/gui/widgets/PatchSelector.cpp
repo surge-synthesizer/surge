@@ -18,6 +18,7 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
+#include "UserDefaults.h"
 
 namespace Surge
 {
@@ -193,7 +194,8 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
         for (auto p : storage->patch_list)
         {
-            if (p.name == "Init Saw" && storage->patch_category[p.category].name == "Templates")
+            if (p.name == storage->initPatchName &&
+                storage->patch_category[p.category].name == storage->initPatchCategory)
             {
                 loadPatch(i);
                 break;
@@ -204,6 +206,14 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     };
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set This Patch As Initial Patch"), [this]() {
+        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
+                                               storage->patch_list[current_patch].name);
+
+        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
+                                               storage->patch_category[current_category].name);
+    });
 
     contextMenu.addSeparator();
 

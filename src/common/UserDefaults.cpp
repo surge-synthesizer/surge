@@ -122,6 +122,13 @@ void initMaps()
                 break;
             case ShowVirtualKeyboard_Standalone:
                 r = "showVirtualKeyboardStandalone";
+                break;
+            case InitialPatchName:
+                r = "initialPatchName";
+                break;
+            case InitialPatchCategory:
+                r = "initialPatchCategory";
+                break;
             case nKeys:
                 break;
             }

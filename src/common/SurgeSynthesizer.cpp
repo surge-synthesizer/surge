@@ -229,7 +229,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
     int pid = 0;
     for (auto p : storage.patch_list)
     {
-        if (p.name == "Init Saw" && storage.patch_category[p.category].name == "Templates")
+        if (p.name == storage.initPatchName &&
+            storage.patch_category[p.category].name == storage.initPatchCategory)
         {
             patchid_queue = pid;
             break;

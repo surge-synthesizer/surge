@@ -936,6 +936,8 @@ class alignas(16) SurgeStorage
         };
     }
 
+    std::string initPatchName{"Init Saw"}, initPatchCategory{"Templates"};
+
     static constexpr int tuning_table_size = 512;
     float table_pitch alignas(16)[tuning_table_size];
     float table_pitch_inv alignas(16)[tuning_table_size];
