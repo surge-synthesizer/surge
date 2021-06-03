@@ -126,6 +126,7 @@ class Skin
     static bool setAllCapsProperty(std::string propertyValue);
     static int setFontStyleProperty(std::string propertyValue);
     static VSTGUI::CHoriTxtAlign setTextAlignProperty(std::string propertyValue);
+    static juce::Justification setJuceTextAlignProperty(std::string propertyValue);
 
     std::string root;
     std::string name;

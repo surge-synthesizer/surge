@@ -371,6 +371,7 @@ set(SURGE_GUI_SOURCES
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
   src/gui/widgets/VuMeter.cpp
+  src/gui/widgets/XMLConfiguredMenus.cpp
         )
 
 # Includes and Compiler Flags

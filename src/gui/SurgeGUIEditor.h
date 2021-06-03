@@ -55,6 +55,9 @@ struct PatchSelector;
 struct Switch;
 struct VerticalLabel;
 struct VuMeter;
+
+struct OscillatorMenu;
+struct FxMenu;
 } // namespace Widgets
 } // namespace Surge
 
@@ -434,6 +437,8 @@ class SurgeGUIEditor : public EditorType,
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
+    std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
+    std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
 
     /* Infowindow members and functions */
     std::unique_ptr<Surge::Widgets::ParameterInfowindow> paramInfowindow;
