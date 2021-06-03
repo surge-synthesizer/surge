@@ -76,7 +76,7 @@ struct ParameterInfowindow : public juce::Component, public Surge::GUI::SkinCons
         if (countdownFadeIn < 0 && !isVisible())
             countdownFadeIn = fadeInOver;
     }
-    void doHide();
+    void doHide(int afterIdles = -1);
     void idle();
 };
 } // namespace Widgets

@@ -103,11 +103,18 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         if (sge)
             sge->updateInfowindowContents(t, isEditingModulation);
     }
-    void hideInfowindow()
+    void hideInfowindowNow()
     {
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         if (sge)
-            sge->hideInfowindow();
+            sge->hideInfowindowNow();
+    }
+
+    void hideInfowindowSoon()
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->hideInfowindowSoon();
     }
 
     template <typename U> U *firstListenerOfType()

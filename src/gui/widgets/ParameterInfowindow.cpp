@@ -178,10 +178,18 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
     setBounds(r);
 }
 
-void ParameterInfowindow::doHide()
+void ParameterInfowindow::doHide(int afterIdles)
 {
-    countdownHide = -1;
-    countdownFade = fadeOutOver;
+    if (afterIdles > 0)
+    {
+        countdownHide = afterIdles;
+        countdownFade = -1;
+    }
+    else
+    {
+        countdownHide = -1;
+        countdownFade = fadeOutOver;
+    }
 }
 
 void ParameterInfowindow::idle()
