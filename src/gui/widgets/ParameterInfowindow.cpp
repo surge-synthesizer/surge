@@ -87,13 +87,17 @@ void ParameterInfowindow::paint(juce::Graphics &g)
                 valalign = juce::Justification::centredLeft;
             g.drawText(mdiws.val, rm, valalign);
             g.setColour(mpCol);
+            g.setOpacity(opacity);
             g.drawText(mdiws.dvalplus, rm, juce::Justification::centredRight);
             g.setColour(mnCol);
+            g.setOpacity(opacity);
             g.drawText(mdiws.dvalminus, rm, juce::Justification::centredLeft);
 
             g.setColour(mpValCol);
+            g.setOpacity(opacity);
             g.drawText(mdiws.valplus, rb, juce::Justification::centredRight);
             g.setColour(mnValCol);
+            g.setOpacity(opacity);
             g.drawText(mdiws.valminus, rb, juce::Justification::centredLeft);
         }
         else
