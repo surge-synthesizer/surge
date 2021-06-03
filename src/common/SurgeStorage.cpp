@@ -644,6 +644,11 @@ bailOnPortable:
         oddsound_mts_client = nullptr;
         oddsound_mts_active = false;
     }
+
+    initPatchName =
+        Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
+    initPatchCategory = Surge::Storage::getUserDefaultValue(
+        this, Surge::Storage::InitialPatchCategory, "Templates");
 }
 
 void SurgeStorage::initializePatchDb()
