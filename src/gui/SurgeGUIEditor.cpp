@@ -2810,6 +2810,22 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                           });
     });
 
+    patchDefMenu.addSeparator();
+
+    auto catCurId =
+        &(this->synth->storage).patch_category[patchSelector->getCurrentCategoryId()].name;
+    auto patchCurId = &(this->synth->storage).patch_list[patchSelector->getCurrentPatchId()].name;
+
+    patchDefMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"),
+        [this, catCurId, patchCurId]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::InitialPatchName, *patchCurId);
+
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::InitialPatchCategory, *catCurId);
+        });
+
     uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Patch Defaults"), patchDefMenu);
 
     // value displays

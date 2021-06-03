@@ -65,7 +65,7 @@ struct ParameterInfowindow : public juce::Component, public Surge::GUI::SkinCons
     int getMaxLabelLen() { return 30; }
 
     int countdownHide{-1}, countdownFade{-1}, countdownFadeIn{-1};
-    static constexpr int fadeOutOver{10}, fadeInOver{4};
+    static constexpr int fadeOutOver{3}, fadeInOver{3};
     void setCountdownToHide(int c)
     {
         countdownHide = c;

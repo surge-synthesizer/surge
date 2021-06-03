@@ -1,3 +1,4 @@
+#include "PatchSelector.h"
 /*
 ** Surge Synthesizer is Free and Open Source Software
 **
@@ -207,7 +208,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set This Patch As Initial Patch"), [this]() {
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"), [this]() {
         Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
                                                storage->patch_list[current_patch].name);
 
@@ -422,6 +423,10 @@ void PatchSelector::loadPatch(int id)
         notifyValueChanged();
     }
 }
+
+const int PatchSelector::getCurrentPatchId() { return current_patch; }
+
+const int PatchSelector::getCurrentCategoryId() { return current_category; }
 
 } // namespace Widgets
 } // namespace Surge
