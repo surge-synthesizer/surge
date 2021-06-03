@@ -424,9 +424,9 @@ void PatchSelector::loadPatch(int id)
     }
 }
 
-const int PatchSelector::getCurrentPatchId() { return current_patch; }
+int PatchSelector::getCurrentPatchId() const { return current_patch; }
 
-const int PatchSelector::getCurrentCategoryId() { return current_category; }
+int PatchSelector::getCurrentCategoryId() const { return current_category; }
 
 } // namespace Widgets
 } // namespace Surge

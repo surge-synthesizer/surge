@@ -82,8 +82,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     void loadPatch(int id);
     int sel_id = 0, enqueue_sel_id = 0;
 
-    const int getCurrentPatchId();
-    const int getCurrentCategoryId();
+    int getCurrentPatchId() const;
+    int getCurrentCategoryId() const;
 
   protected:
     std::string pname;
