@@ -71,7 +71,7 @@ void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
     auto p = synth->storage.getPatch().param_ptr[pid];
     if ((p->ctrlstyle & kNoPopup))
     {
-        hideInfowindow();
+        hideInfowindowNow();
         return;
     }
 
@@ -89,7 +89,7 @@ void SurgeGUIEditor::showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> re
     auto p = synth->storage.getPatch().param_ptr[pid];
     if ((p->ctrlstyle & kNoPopup))
     {
-        hideInfowindow();
+        hideInfowindowNow();
         return;
     }
 
@@ -100,7 +100,9 @@ void SurgeGUIEditor::showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> re
     paramInfowindow->setVisible(true);
 }
 
-void SurgeGUIEditor::hideInfowindow() { paramInfowindow->doHide(); }
+void SurgeGUIEditor::hideInfowindowNow() { paramInfowindow->doHide(); }
+
+void SurgeGUIEditor::hideInfowindowSoon() { paramInfowindow->doHide(5); }
 
 void SurgeGUIEditor::idleInfowindow() { paramInfowindow->idle(); }
 

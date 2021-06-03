@@ -442,7 +442,8 @@ class SurgeGUIEditor : public EditorType,
     void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void updateInfowindowContents(int ptag, bool isModulated);
-    void hideInfowindow();
+    void hideInfowindowNow();
+    void hideInfowindowSoon();
     void idleInfowindow();
 
   private:

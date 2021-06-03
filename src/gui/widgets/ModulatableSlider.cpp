@@ -368,7 +368,11 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 }
 void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 {
-    hideInfowindow();
+    /*
+     * Why "soon" and not "now"? Well JUCE will deliver me a mouse up as first step
+     * of a double click...
+     */
+    hideInfowindowSoon();
 
     if (!Surge::GUI::showCursor(storage))
     {
@@ -413,6 +417,7 @@ void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
     notifyEndEdit();
 
     updateInfowindowContents(isEditingModulation);
+    showInfowindowSelfDismiss(isEditingModulation);
     repaint();
 }
 void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
