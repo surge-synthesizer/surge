@@ -16,6 +16,7 @@
 #include "SurgeSynthFlavorExtensions.h"
 #include "SurgeJUCELookAndFeel.h"
 #include "RuntimeFont.h"
+#include <version.h>
 
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
@@ -117,6 +118,19 @@ void SurgeSynthEditor::resized()
         keyboard->setVisible(false);
         tempoLabel->setVisible(false);
         tempoTypein->setVisible(false);
+    }
+}
+
+void SurgeSynthEditor::parentHierarchyChanged()
+{
+    for (auto *p = getParentComponent(); p != nullptr; p = p->getParentComponent())
+    {
+        if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
+        {
+            std::ostringstream oss;
+            oss << "Surge XT - " << Surge::Build::FullVersionStr;
+            dw->setName(oss.str());
+        }
     }
 }
 
