@@ -157,6 +157,7 @@ add_subdirectory(libs/tinyxml)
 add_subdirectory(libs/escape-from-vstgui)
 add_subdirectory(libs/oddsound-mts)
 add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
+add_subdirectory(libs/tuning-library EXCLUDE_FROM_ALL)
 add_subdirectory(libs/sqlite-3.23.3)
 
 juce_add_binary_data(surge-shared-binary
@@ -179,6 +180,7 @@ target_link_libraries(surge-shared PUBLIC
   surge::oddsound-mts
   samplerate
   surge-shared-binary
+  tuning-library
 )
 
 if( NOT LINUX_ARM_CROSSCOMPILE )
@@ -379,7 +381,6 @@ set(SURGE_GUI_SOURCES
 set(SURGE_COMMON_INCLUDES
   libs/
   libs/strnatcmp
-  libs/tuning-library/include
 
   src/common
   src/common/dsp
