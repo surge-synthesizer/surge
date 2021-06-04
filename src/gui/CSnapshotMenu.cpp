@@ -230,8 +230,11 @@ CFxMenu::CFxMenu(const CRect &size, IControlListener *listener, long tag, SurgeS
     this->fxbuffer = fxbuffer;
     this->slot = slot;
     selectedName = "";
+
     populate();
 }
+
+CFxMenu::~CFxMenu() {}
 
 void CFxMenu::draw(CDrawContext *dc)
 {
@@ -394,150 +397,12 @@ void CFxMenu::saveSnapshot(TiXmlElement *e, const char *name)
     }
 }
 
-bool CFxMenu::scanForUserPresets = true;
-std::unordered_map<int, std::vector<CFxMenu::UserPreset>> CFxMenu::userPresets;
-
-void CFxMenu::rescanUserPresets()
-{
-    userPresets.clear();
-    scanForUserPresets = false;
-
-    auto ud = storage->userFXPath;
-
-    std::vector<fs::path> sfxfiles;
-
-    std::deque<fs::path> workStack;
-    workStack.push_back(fs::path(ud));
-
-    try
-    {
-        while (!workStack.empty())
-        {
-            auto top = workStack.front();
-            workStack.pop_front();
-            if (fs::is_directory(top))
-            {
-                for (auto &d : fs::directory_iterator(top))
-                {
-                    if (fs::is_directory(d))
-                    {
-                        workStack.push_back(d);
-                    }
-                    else if (path_to_string(d.path().extension()) == ".srgfx")
-                    {
-                        sfxfiles.push_back(d.path());
-                    }
-                }
-            }
-        }
-    }
-    catch (const fs::filesystem_error &e)
-    {
-        std::ostringstream oss;
-        oss << "Experienced file system error when scanning user FX. " << e.what();
-
-        if (storage)
-            storage->reportError(oss.str(), "FileSystem Error");
-    }
-
-    for (const auto &f : sfxfiles)
-    {
-        {
-            UserPreset preset;
-            preset.file = path_to_string(f);
-            TiXmlDocument d;
-            int t;
-
-            if (!d.LoadFile(f))
-                goto badPreset;
-
-            auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
-
-            if (!r)
-                goto badPreset;
-
-            auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
-
-            if (!s)
-                goto badPreset;
-
-            if (!s->Attribute("name"))
-                goto badPreset;
-
-            preset.name = s->Attribute("name");
-
-            if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
-                goto badPreset;
-
-            preset.type = t;
-
-            for (int i = 0; i < n_fx_params; ++i)
-            {
-                double fl;
-                std::string p = "p";
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
-                {
-                    preset.p[i] = fl;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
-                        TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.ts[i] = true;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(),
-                                            &fl) == TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.er[i] = true;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deactivated").c_str(),
-                                            &fl) == TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.da[i] = true;
-                }
-            }
-
-            if (userPresets.find(preset.type) == userPresets.end())
-            {
-                userPresets[preset.type] = std::vector<UserPreset>();
-            }
-
-            userPresets[preset.type].push_back(preset);
-        }
-
-    badPreset:;
-    }
-
-    for (auto &a : userPresets)
-    {
-        std::sort(a.second.begin(), a.second.end(), [](UserPreset a, UserPreset b) {
-            if (a.type == b.type)
-            {
-                return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
-            }
-            else
-            {
-                return a.type < b.type;
-            }
-        });
-    }
-}
-
 void CFxMenu::populate()
 {
     /*
     ** Are there user presets
     */
-    if (scanForUserPresets || true) // for now
-    {
-        rescanUserPresets();
-    }
+    Surge::FxUserPreset::forcePresetRescan(storage);
 
     CSnapshotMenu::populate();
 
@@ -557,7 +422,7 @@ void CFxMenu::populate()
     }
 
     auto rsA = [this]() {
-        scanForUserPresets = true;
+        Surge::FxUserPreset::forcePresetRescan(this->storage);
         auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
         if (sge)
             sge->queueRebuildUI();
@@ -565,91 +430,17 @@ void CFxMenu::populate()
     menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
 }
 
+Surge::FxClipboard::Clipboard CFxMenu::fxClipboard;
+
 void CFxMenu::copyFX()
 {
-    /*
-    ** This is a junky implementation until I figure out save and load which will require me to
-    *stream this
-    */
-    if (fxCopyPaste.size() == 0)
-    {
-        fxCopyPaste.resize(n_fx_params * 4 + 1); // type then (val; ts; extend; deact)
-    }
-
-    fxCopyPaste[0] = fx->type.val.i;
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        int vp = i * 4 + 1;
-        int tp = i * 4 + 2;
-        int xp = i * 4 + 3;
-        int dp = i * 4 + 4;
-
-        switch (fx->p[i].valtype)
-        {
-        case vt_float:
-            fxCopyPaste[vp] = fx->p[i].val.f;
-            break;
-        case vt_int:
-            fxCopyPaste[vp] = fx->p[i].val.i;
-            break;
-        }
-
-        fxCopyPaste[tp] = fx->p[i].temposync;
-        fxCopyPaste[xp] = fx->p[i].extend_range;
-        fxCopyPaste[dp] = fx->p[i].deactivated;
-    }
+    Surge::FxClipboard::copyFx(storage, fx, fxClipboard);
     memcpy((void *)fxbuffer, (void *)fx, sizeof(FxStorage));
 }
 
 void CFxMenu::pasteFX()
 {
-    if (fxCopyPaste.size() == 0)
-    {
-        return;
-    }
-
-    fxbuffer->type.val.i = (int)fxCopyPaste[0];
-
-    Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
-    if (t_fx)
-    {
-        t_fx->init_ctrltypes();
-        t_fx->init_default_values();
-        delete t_fx;
-    }
-
-    for (int i = 0; i < n_fx_params; i++)
-    {
-        int vp = i * 4 + 1;
-        int tp = i * 4 + 2;
-        int xp = i * 4 + 3;
-        int dp = i * 4 + 4;
-
-        switch (fxbuffer->p[i].valtype)
-        {
-        case vt_float:
-        {
-            fxbuffer->p[i].val.f = fxCopyPaste[vp];
-            if (fxbuffer->p[i].val.f < fxbuffer->p[i].val_min.f)
-            {
-                fxbuffer->p[i].val.f = fxbuffer->p[i].val_min.f;
-            }
-            if (fxbuffer->p[i].val.f > fxbuffer->p[i].val_max.f)
-            {
-                fxbuffer->p[i].val.f = fxbuffer->p[i].val_max.f;
-            }
-        }
-        break;
-        case vt_int:
-            fxbuffer->p[i].val.i = (int)fxCopyPaste[vp];
-            break;
-        default:
-            break;
-        }
-        fxbuffer->p[i].temposync = (int)fxCopyPaste[tp];
-        fxbuffer->p[i].extend_range = (int)fxCopyPaste[xp];
-        fxbuffer->p[i].deactivated = (int)fxCopyPaste[dp];
-    }
+    Surge::FxClipboard::pasteFx(storage, fxbuffer, fxClipboard);
 
     selectedName = std::string("Copied ") + fx_type_names[fxbuffer->type.val.i];
 
@@ -663,128 +454,18 @@ void CFxMenu::saveFX()
     if (sge)
     {
         sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
-                               CPoint(-1, -1), [this](const std::string &s) { this->saveFXIn(s); });
+                               CPoint(-1, -1), [this](const std::string &s) {
+                                   Surge::FxUserPreset::saveFxIn(this->storage, fx, s);
+                                   auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
+                                   if (sge)
+                                       sge->queueRebuildUI();
+                               });
     }
 }
-void CFxMenu::saveFXIn(const std::string &s)
+
+void CFxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
 {
-    char fxName[TXT_SIZE];
-    fxName[0] = 0;
-    strxcpy(fxName, s.c_str(), TXT_SIZE);
-
-    if (strlen(fxName) == 0)
-    {
-        return;
-    }
-
-    if (!Surge::Storage::isValidName(fxName))
-    {
-        return;
-    }
-
-    int ti = fx->type.val.i;
-
-    std::ostringstream oss;
-    oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
-
-    auto pn = oss.str();
-    fs::create_directories(string_to_path(pn));
-
-    auto fn = pn + fxName + ".srgfx";
-    std::ofstream pfile(fn, std::ios::out);
-    if (!pfile.is_open())
-    {
-        storage->reportError(std::string("Unable to open FX preset file '") + fn + "' for writing!",
-                             "Error");
-        return;
-    }
-
-    // this used to say streaming_versio before (was a typo)
-    // make sure both variants are checked when checking sv in the future on patch load
-    pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
-
-    // take care of 5 special XML characters
-    std::string fxNameSub(fxName);
-    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
-    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
-    Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
-    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
-    Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
-
-    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
-
-    pfile << "     type=\"" << fx->type.val.i << "\"\n";
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        if (fx->p[i].ctrltype != ct_none)
-        {
-            switch (fx->p[i].valtype)
-            {
-            case vt_float:
-                pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
-                break;
-            case vt_int:
-                pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
-                break;
-            }
-
-            if (fx->p[i].can_temposync() && fx->p[i].temposync)
-            {
-                pfile << "     p" << i << "_temposync=\"1\"\n";
-            }
-            if (fx->p[i].can_extend_range() && fx->p[i].extend_range)
-            {
-                pfile << "     p" << i << "_extend_range=\"1\"\n";
-            }
-            if (fx->p[i].can_deactivate() && fx->p[i].deactivated)
-            {
-                pfile << "     p" << i << "_deactivated=\"1\"\n";
-            }
-        }
-    }
-
-    pfile << "  />\n";
-    pfile << "</single-fx>\n";
-    pfile.close();
-
-    scanForUserPresets = true;
-    auto *sge = dynamic_cast<SurgeGUIEditor *>(listenerNotForParent);
-    if (sge)
-        sge->queueRebuildUI();
-}
-
-void CFxMenu::loadUserPreset(const UserPreset &p)
-{
-    fxbuffer->type.val.i = p.type;
-
-    Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
-
-    if (t_fx)
-    {
-        t_fx->init_ctrltypes();
-        t_fx->init_default_values();
-        delete t_fx;
-    }
-
-    for (int i = 0; i < n_fx_params; i++)
-    {
-        switch (fxbuffer->p[i].valtype)
-        {
-        case vt_float:
-        {
-            fxbuffer->p[i].val.f = p.p[i];
-        }
-        break;
-        case vt_int:
-            fxbuffer->p[i].val.i = (int)p.p[i];
-            break;
-        default:
-            break;
-        }
-        fxbuffer->p[i].temposync = (int)p.ts[i];
-        fxbuffer->p[i].extend_range = (int)p.er[i];
-        fxbuffer->p[i].deactivated = (int)p.da[i];
-    }
+    Surge::FxUserPreset::loadPresetOnto(p, storage, fxbuffer);
 
     selectedIdx = -1;
     selectedName = p.name;
@@ -803,7 +484,9 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu
     int type_id = 0;
     type->Attribute("i", &type_id);
 
-    if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+    auto ps = Surge::FxUserPreset::getPresetsForSingleType(type_id);
+
+    if (ps.empty())
     {
         return;
     }
@@ -811,10 +494,10 @@ void CFxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu
     subMenu.addColumnBreak();
     subMenu.addSectionHeader("User Presets");
 
-    for (auto &ps : userPresets[type_id])
+    for (auto &pst : ps)
     {
-        auto fxName = ps.name;
-        subMenu.addItem(fxName, [this, ps]() { this->loadUserPreset(ps); });
+        auto fxName = pst.name;
+        subMenu.addItem(fxName, [this, pst]() { this->loadUserPreset(pst); });
     }
 }
 void CFxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
@@ -825,7 +508,7 @@ void CFxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
     int type_id = 0;
     type->Attribute("i", &type_id);
 
-    if (userPresets.find(type_id) == userPresets.end() || userPresets[type_id].size() == 0)
+    if (!Surge::FxUserPreset::hasPresetsForSingleType(type_id))
     {
         return;
     }

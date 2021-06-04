@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
+#include "FxPresetAndClipboardManager.h"
 
 class CSnapshotMenu : public VSTGUI::CControl, public Surge::GUI::SkinConsumingComponent
 {
@@ -91,6 +92,7 @@ class CFxMenu : public CSnapshotMenu
   public:
     CFxMenu(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
             SurgeStorage *storage, FxStorage *fx, FxStorage *fxbuffer, int slot);
+    ~CFxMenu();
     virtual void draw(VSTGUI::CDrawContext *dc) override;
     virtual bool canSave() override { return true; }
     virtual void loadSnapshot(int type, TiXmlElement *e, int idx) override;
@@ -105,44 +107,15 @@ class CFxMenu : public CSnapshotMenu
         fxCopyPaste; // OK this is a crap data structure for now. See the code.
     int slot = 0;
 
+    static Surge::FxClipboard::Clipboard fxClipboard;
     void copyFX();
     void pasteFX();
     void saveFX();
-    void saveFXIn(const std::string &s);
-
-    // We know this runs on the UI thread to populate always so we can use a static for user presets
-    struct UserPreset
-    {
-        std::string file;
-        std::string name;
-        int type;
-        float p[n_fx_params];
-        bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
-
-        UserPreset()
-        {
-            type = 0;
-
-            for (int i = 0; i < n_fx_params; ++i)
-            {
-                p[i] = 0.0;
-                ts[i] = false;
-                er[i] = false;
-                da[i] = false;
-            }
-        }
-    };
 
     void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) override;
 
-    static std::unordered_map<int, std::vector<UserPreset>> userPresets; // from type to presets
-
-  public:
-    static bool scanForUserPresets;
-
   protected:
-    void rescanUserPresets();
-    void loadUserPreset(const UserPreset &p);
+    void loadUserPreset(const Surge::FxUserPreset::Preset &p);
 
     bool triedToLoadBmp = false;
     CScalableBitmap *pBackground, *pBackgroundHover;

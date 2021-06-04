@@ -309,6 +309,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/WavetableScriptEvaluator.cpp
   src/common/CPUFeatures.cpp
   src/common/DebugHelpers.cpp
+        src/common/FxPresetAndClipboardManager.cpp
   src/common/LuaSupport.cpp
   src/common/ModulatorPresetManager.cpp
   src/common/Parameter.cpp
