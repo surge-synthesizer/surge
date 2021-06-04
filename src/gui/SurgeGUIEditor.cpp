@@ -54,6 +54,7 @@
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
+#include "widgets/XMLConfiguredMenus.h"
 
 #include <iostream>
 #include <iomanip>
@@ -4693,6 +4694,38 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
     if (skinCtrl->ultimateparentclassname == "COSCMenu")
     {
+        if (!oscMenu)
+            oscMenu = std::make_unique<Surge::Widgets::OscillatorMenu>();
+        oscMenu->setTag(tag_osc_menu);
+        oscMenu->addListener(this);
+        oscMenu->setStorage(&(synth->storage));
+        oscMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
+        oscMenu->setBackgroundDrawable(bitmapStore->getDrawable(IDB_OSC_MENU));
+        auto id = currentSkin->hoverImageIdForResource(IDB_OSC_MENU, Surge::GUI::Skin::HOVER);
+        auto bhov = bitmapStore->getDrawableByStringID(id);
+        oscMenu->setHoverBackgroundDrawable(bhov);
+        oscMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
+        oscMenu->setOscillatorStorage(
+            &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]]);
+        oscMenu->populate();
+
+        oscMenu->text_allcaps = Surge::GUI::Skin::setAllCapsProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALL_CAPS, "false"));
+        oscMenu->font_style = Surge::GUI::Skin::setFontStyleProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal"));
+        oscMenu->text_align = Surge::GUI::Skin::setJuceTextAlignProperty(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "center"));
+        oscMenu->font_size = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "8").c_str());
+        oscMenu->text_hoffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
+                .c_str());
+        oscMenu->text_voffset = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
+                .c_str());
+        frame->juceComponent()->addAndMakeVisible(*oscMenu);
+        return oscMenu.get();
+#if 0
         CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
         rect.offset(skinCtrl->x, skinCtrl->y);
         auto hsw = new COscMenu(
@@ -4703,20 +4736,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hsw->setSkin(currentSkin, bitmapStore);
         hsw->setMouseableArea(rect);
 
-        hsw->text_allcaps = Surge::GUI::Skin::setAllCapsProperty(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALL_CAPS, "false"));
-        hsw->font_style = Surge::GUI::Skin::setFontStyleProperty(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal"));
-        hsw->text_align = Surge::GUI::Skin::setTextAlignProperty(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "center"));
-        hsw->font_size = std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "8").c_str());
-        hsw->text_hoffset = std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
-                .c_str());
-        hsw->text_voffset = std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
-                .c_str());
+
 
         if (p)
             hsw->setValue(p->get_value_f01());
@@ -4725,6 +4745,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         frame->addView(hsw);
         return hsw;
+#endif
     }
     if (skinCtrl->ultimateparentclassname == "CFXMenu")
     {

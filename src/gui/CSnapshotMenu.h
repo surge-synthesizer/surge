@@ -86,34 +86,6 @@ class CSnapshotMenu : public VSTGUI::CControl, public Surge::GUI::SkinConsumingC
     VSTGUI::IControlListener *listenerNotForParent;
 };
 
-class COscMenu : public CSnapshotMenu
-{
-  public:
-    COscMenu(const VSTGUI::CRect &size, VSTGUI::IControlListener *listener, long tag,
-             SurgeStorage *storage, OscillatorStorage *osc, std::shared_ptr<SurgeBitmaps>);
-    virtual void draw(VSTGUI::CDrawContext *dc) override;
-    virtual void loadSnapshot(int type, TiXmlElement *e, int idx) override;
-
-    virtual bool onWheel(const VSTGUI::CPoint &where, const float &distance,
-                         const VSTGUI::CButtonState &buttons) override;
-
-    bool text_allcaps = true;
-    int text_hoffset = 0;
-    int text_voffset = 0;
-    int font_size = 8;
-    int font_style;
-    VSTGUI::CHoriTxtAlign text_align;
-
-  protected:
-    OscillatorStorage *osc = nullptr;
-    SurgeStorage *storage = nullptr;
-    VSTGUI::CBitmap *bmp = nullptr, *hoverBmp = nullptr;
-    bool attemptedHoverLoad = false;
-    float accumWheel = 0;
-
-    CLASS_METHODS(COscMenu, VSTGUI::CControl)
-};
-
 class CFxMenu : public CSnapshotMenu
 {
   public:

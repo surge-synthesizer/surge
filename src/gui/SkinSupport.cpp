@@ -766,6 +766,26 @@ VSTGUI::CHoriTxtAlign Skin::setTextAlignProperty(std::string propertyValue)
     }
 }
 
+juce::Justification Skin::setJuceTextAlignProperty(std::string propertyValue)
+{
+    // make the property value not case sensitive
+    std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    if (propertyValue == "center")
+    {
+        return juce::Justification::centred;
+    }
+    else if (propertyValue == "right")
+    {
+        return juce::Justification::centredRight;
+    }
+    else
+    {
+        return juce::Justification::centredLeft;
+    }
+}
+
 bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *controlsxml, bool toplevel)
 {
     // I know I am gross for copying these
