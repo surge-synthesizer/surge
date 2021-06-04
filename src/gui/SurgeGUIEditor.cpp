@@ -3176,8 +3176,9 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
         this->synth->storage.refresh_wtlist();
         this->synth->storage.refresh_patchlist();
         this->scannedForMidiPresets = false;
-        CFxMenu::scanForUserPresets =
-            true; // that's annoying now I see it side by side. But you know.
+
+        Surge::FxUserPreset::forcePresetRescan(&(this->synth->storage));
+        Surge::ModulatorPreset::forcePresetRescan();
 
         // Rescan for skins
         auto r = this->currentSkin->root;
