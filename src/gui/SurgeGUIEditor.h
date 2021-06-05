@@ -593,7 +593,10 @@ class SurgeGUIEditor : public EditorType,
     juce::PopupMenu makeTuningMenu(VSTGUI::CRect &rect, bool showhelp);
     juce::PopupMenu makeZoomMenu(VSTGUI::CRect &rect, bool showhelp);
     juce::PopupMenu makeSkinMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeUserSettingsMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeMouseBehaviorMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makePatchDefaultsMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeValueDisplaysMenu(VSTGUI::CRect &rect);
+    juce::PopupMenu makeWorkflowMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeDataMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeMidiMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeDevMenu(VSTGUI::CRect &rect);
