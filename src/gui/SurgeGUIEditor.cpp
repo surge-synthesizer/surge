@@ -2033,29 +2033,46 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 {
     auto settingsMenu = juce::PopupMenu();
 
-    auto mpeSubMenu = makeMpeMenu(menuRect, false);
-    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MPE Options"), mpeSubMenu);
-
-    auto tuningSubMenu = makeTuningMenu(menuRect, false);
-    settingsMenu.addSubMenu("Tuning", tuningSubMenu);
-
     auto zoomMenu = makeZoomMenu(menuRect, false);
     settingsMenu.addSubMenu("Zoom", zoomMenu);
 
     auto skinSubMenu = makeSkinMenu(menuRect);
     settingsMenu.addSubMenu("Skins", skinSubMenu);
 
-    auto uiOptionsMenu = makeUserSettingsMenu(menuRect);
-    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("User Settings"), uiOptionsMenu);
+    auto valueDispMenu = makeValueDisplaysMenu(menuRect);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Value Displays"), valueDispMenu);
+
+    settingsMenu.addSeparator();
 
     auto dataSubMenu = makeDataMenu(menuRect);
     settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Data Folders"), dataSubMenu);
 
+    auto mouseMenu = makeMouseBehaviorMenu(menuRect);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Mouse Behavior"), mouseMenu);
+
+    auto patchDefMenu = makePatchDefaultsMenu(menuRect);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Patch Defaults"), patchDefMenu);
+
+    auto wfMenu = makeWorkflowMenu(menuRect);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Workflow"), wfMenu);
+
+    settingsMenu.addSeparator();
+
+    auto mpeSubMenu = makeMpeMenu(menuRect, false);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MPE Settings"), mpeSubMenu);
+
     auto midiSubMenu = makeMidiMenu(menuRect);
     settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MIDI Settings"), midiSubMenu);
 
+    auto tuningSubMenu = makeTuningMenu(menuRect, false);
+    settingsMenu.addSubMenu("Tuning", tuningSubMenu);
+
+    settingsMenu.addSeparator();
+
     if (useDevMenu)
     {
+        settingsMenu.addSeparator();
+
         auto devSubMenu = makeDevMenu(menuRect);
         settingsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Developer Options"), devSubMenu);
     }
@@ -2684,15 +2701,12 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showh
     return zoomSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(VSTGUI::CRect &menuRect)
 {
-    auto uiOptionsMenu = juce::PopupMenu();
-
     bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                          Surge::Storage::TouchMouseMode, false);
 
-    // Mouse behavior submenu
-    auto mouseSubMenu = juce::PopupMenu();
+    auto mouseMenu = juce::PopupMenu();
 
     std::string mouseLegacy = "Legacy";
     std::string mouseSlow = "Slow";
@@ -2703,7 +2717,7 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                    Surge::Widgets::ModulatableSlider::kLegacy;
     bool enabled = !touchMode;
 
-    mouseSubMenu.addItem(mouseLegacy, enabled, checked, [this]() {
+    mouseMenu.addItem(mouseLegacy, enabled, checked, [this]() {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             Surge::Widgets::ModulatableSlider::kLegacy;
         Surge::Storage::updateUserDefaultValue(
@@ -2714,7 +2728,7 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
     checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
               Surge::Widgets::ModulatableSlider::kSlow;
 
-    mouseSubMenu.addItem(mouseSlow, enabled, checked, [this]() {
+    mouseMenu.addItem(mouseSlow, enabled, checked, [this]() {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             Surge::Widgets::ModulatableSlider::kSlow;
         Surge::Storage::updateUserDefaultValue(
@@ -2725,7 +2739,7 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
     checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
               Surge::Widgets::ModulatableSlider::kMedium;
 
-    mouseSubMenu.addItem(mouseMedium, enabled, checked, [this]() {
+    mouseMenu.addItem(mouseMedium, enabled, checked, [this]() {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             Surge::Widgets::ModulatableSlider::kMedium;
         Surge::Storage::updateUserDefaultValue(
@@ -2736,7 +2750,7 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
     checked = Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
               Surge::Widgets::ModulatableSlider::kExact;
 
-    mouseSubMenu.addItem(mouseExact, enabled, checked, [this]() {
+    mouseMenu.addItem(mouseExact, enabled, checked, [this]() {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             Surge::Widgets::ModulatableSlider::kExact;
         Surge::Storage::updateUserDefaultValue(
@@ -2744,29 +2758,31 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
             Surge::Widgets::ModulatableSlider::sliderMoveRateState);
     });
 
-    mouseSubMenu.addSeparator();
+    mouseMenu.addSeparator();
 
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::ShowCursorWhileEditing, true);
 
-    mouseSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Cursor While Editing"), enabled, tsMode,
-                         [this, tsMode]() {
-                             Surge::Storage::updateUserDefaultValue(
-                                 &(this->synth->storage), Surge::Storage::ShowCursorWhileEditing,
-                                 !tsMode);
-                         });
+    mouseMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Cursor While Editing"), enabled, tsMode,
+                      [this, tsMode]() {
+                          Surge::Storage::updateUserDefaultValue(
+                              &(this->synth->storage), Surge::Storage::ShowCursorWhileEditing,
+                              !tsMode);
+                      });
 
-    mouseSubMenu.addSeparator();
+    mouseMenu.addSeparator();
 
-    mouseSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), true, touchMode, [this, touchMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::TouchMouseMode, !touchMode);
-        });
+    mouseMenu.addItem(Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), true, touchMode,
+                      [this, touchMode]() {
+                          Surge::Storage::updateUserDefaultValue(
+                              &(this->synth->storage), Surge::Storage::TouchMouseMode, !touchMode);
+                      });
 
-    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Mouse Behavior"), mouseSubMenu);
+    return mouseMenu;
+}
 
-    // patch defaults
+juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(VSTGUI::CRect &menuRect)
+{
     auto patchDefMenu = juce::PopupMenu();
 
     patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Patch Author..."), [this,
@@ -2815,12 +2831,13 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                                                    Surge::Storage::InitialPatchCategory, *catCurId);
         });
 
-    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Patch Defaults"), patchDefMenu);
+    return patchDefMenu;
+}
 
-    // value displays
+juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(VSTGUI::CRect &menuRect)
+{
     auto dispDefMenu = juce::PopupMenu();
 
-    // high precision value readouts
     bool precReadout = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, false);
 
@@ -2876,9 +2893,11 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
 
     dispDefMenu.addSubMenu("Middle C", middleCSubMenu);
 
-    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Value Displays"), dispDefMenu);
+    return dispDefMenu;
+}
 
-    // workflow menu
+juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(VSTGUI::CRect &menuRect)
+{
     auto wfMenu = juce::PopupMenu();
 
     // activate individual scene outputs
@@ -2923,15 +2942,14 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                    });
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
+
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
                    [this, showVirtualKeyboard]() {
                        setShowVirtualKeyboard(!showVirtualKeyboard);
                        resizeWindow(zoomFactor);
                    });
 
-    uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Workflow"), wfMenu);
-
-    return uiOptionsMenu;
+    return wfMenu;
 }
 
 bool SurgeGUIEditor::getShowVirtualKeyboard()
