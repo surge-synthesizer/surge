@@ -342,7 +342,6 @@ set(SURGE_GUI_SOURCES
   src/gui/CModulationSourceButton.cpp
   src/gui/CNumberField.cpp
   src/gui/CScalableBitmap.cpp
-  src/gui/CSnapshotMenu.cpp
   src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/RuntimeFont.cpp
