@@ -21,7 +21,6 @@
 #include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
-#include "CNumberField.h"
 
 #include "UserDefaults.h"
 #include "SkinSupport.h"
@@ -47,6 +46,7 @@
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/NumberField.h"
 #include "widgets/OscillatorWaveformDisplay.h"
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/PatchSelector.h"
@@ -357,11 +357,12 @@ void SurgeGUIEditor::idle()
 
         if (polydisp)
         {
-            CNumberField *cnpd = static_cast<CNumberField *>(polydisp);
-            int prior = cnpd->getPoly();
-            cnpd->setPoly(synth->polydisplay);
+            int prior = polydisp->getPlayingVoiceCount();
             if (prior != synth->polydisplay)
-                cnpd->invalid();
+            {
+                polydisp->setPlayingVoiceCount(synth->polydisplay);
+                polydisp->repaint();
+            }
         }
 
         bool patchChanged = false;
@@ -4764,20 +4765,38 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
     if (skinCtrl->ultimateparentclassname == "CNumberField")
     {
-        CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        rect.offset(skinCtrl->x, skinCtrl->y);
-        CNumberField *pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
+        auto pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
+        // CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+        // rect.offset(skinCtrl->x, skinCtrl->y);
+        // CNumberField *pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
+        pbd->addListener(this);
         pbd->setSkin(currentSkin, bitmapStore, skinCtrl);
-        pbd->setMouseableArea(rect);
+        pbd->setTag(tag);
+        pbd->setStorage(&synth->storage);
+
+        auto images = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
+        pbd->setBackgroundDrawable(images[0]);
+        pbd->setHoverBackgroundDrawable(images[1]);
 
         // TODO extra from properties
-        auto nfcm = currentSkin->propertyValue(
-            skinCtrl, Surge::Skin::Component::NUMBERFIELD_CONTROLMODE, std::to_string(cm_none));
-        pbd->setControlMode(std::atoi(nfcm.c_str()));
-
+        auto nfcm =
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::NUMBERFIELD_CONTROLMODE,
+                                       std::to_string(Surge::Skin::Parameters::NONE));
+        pbd->setControlMode(
+            (Surge::Skin::Parameters::NumberfieldControlModes)std::atoi(nfcm.c_str()));
         pbd->setValue(p->get_value_f01());
-        frame->addView(pbd);
-        nonmod_param[paramIndex] = pbd;
+        pbd->setBounds(skinCtrl->getRect().asJuceIntRect());
+
+        auto colorName = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_COLOR,
+                                                    Colors::NumberField::Text.name);
+        auto hoverColorName =
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOVER_COLOR,
+                                       Colors::NumberField::TextHover.name);
+        pbd->setTextColour(currentSkin->getColor(colorName));
+        pbd->setHoverTextColour(currentSkin->getColor(hoverColorName));
+
+        frame->juceComponent()->addAndMakeVisible(*pbd);
+        nonmod_param[paramIndex] = pbd.get();
 
         if (p && p->ctrltype == ct_midikey_or_channel)
         {
@@ -4787,13 +4806,13 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             {
             case sm_single:
             case sm_dual:
-                pbd->setControlMode(cm_none);
+                pbd->setControlMode(Surge::Skin::Parameters::NONE);
                 break;
             case sm_split:
-                pbd->setControlMode(cm_notename);
+                pbd->setControlMode(Surge::Skin::Parameters::NOTENAME);
                 break;
             case sm_chsplit:
-                pbd->setControlMode(cm_midichannel_from_127);
+                pbd->setControlMode(Surge::Skin::Parameters::MIDICHANNEL_FROM_127);
                 break;
             }
         }
@@ -4802,15 +4821,20 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         switch (p->ctrltype)
         {
         case ct_polylimit:
-            polydisp = pbd;
+            polydisp = std::move(pbd);
+            return polydisp.get();
             break;
         case ct_midikey_or_channel:
-            splitpointControl = pbd;
+            splitpointControl = std::move(pbd);
+            return splitpointControl.get();
             break;
         default:
+            juceSkinComponents[skinCtrl->sessionid] = std::move(pbd);
+            return dynamic_cast<CControlValueInterface *>(
+                juceSkinComponents[skinCtrl->sessionid].get());
             break;
         }
-        return pbd;
+        return nullptr;
     }
     if (skinCtrl->ultimateparentclassname == "FilterSelector")
     {

@@ -19,7 +19,6 @@
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
-#include "CNumberField.h"
 #include "CScalableBitmap.h"
 #include "SurgeBitmaps.h"
 #include "SurgeGUIEditor.h"
@@ -27,6 +26,7 @@
 #include "CursorControlGuard.h"
 
 #include "widgets/MultiSwitch.h"
+#include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 
 // FIXME when you get cursor hiding working
@@ -81,6 +81,7 @@ struct MSEGControlRegion : public CViewContainer,
 
     std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
     std::unique_ptr<Surge::Widgets::MultiSwitch> loopMode, editMode, movementMode;
+    std::unique_ptr<Surge::Widgets::NumberField> hSnapSize, vSnapSize;
 
     MSEGStorage *ms = nullptr;
     MSEGEditor::State *eds = nullptr;
@@ -2580,22 +2581,20 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
     }
     case tag_vertical_value:
     {
-        auto fv = 1.f / std::max(1, static_cast<CNumberField *>(p)->getIntValue());
+        auto fv = 1.f / std::max(1, vSnapSize->getIntValue());
         ms->vSnapDefault = fv;
         if (ms->vSnap > 0)
             ms->vSnap = ms->vSnapDefault;
         canvas->invalid();
-
         break;
     }
     case tag_horizontal_value:
     {
-        auto fv = 1.f / std::max(1, static_cast<CNumberField *>(p)->getIntValue());
+        auto fv = 1.f / std::max(1, hSnapSize->getIntValue());
         ms->hSnapDefault = fv;
         if (ms->hSnap > 0)
             ms->hSnap = ms->hSnapDefault;
         canvas->invalid();
-
         break;
     }
     default:
@@ -2903,27 +2902,21 @@ void MSEGControlRegion::rebuild()
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
 
-        /*
-         * CNF responds to skin objects and we are not skin driven here. We could do two things
-         * 1. Add a lot of ifs to CNF
-         * 2. Make a proxy skin control
-         * I choose 2.
-         */
-        auto hsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
-        auto cnfSkinCtrl = std::make_shared<Surge::GUI::Skin::Control>();
-        cnfSkinCtrl->defaultComponent = Surge::Skin::Components::NumberField;
-        cnfSkinCtrl->allprops["bg_id"] = std::to_string(IDB_MSEG_SNAPVALUE_NUMFIELD);
-        cnfSkinCtrl->allprops["text_color"] = Colors::MSEGEditor::NumberField::Text.name;
-        cnfSkinCtrl->allprops["text_color.hover"] = Colors::MSEGEditor::NumberField::TextHover.name;
-
-        auto *hnf =
-            new CNumberField(hsrect, this, tag_horizontal_value, nullptr /*, ref to storage?*/);
-        hnf->setControlMode(cm_mseg_snap_h);
-        hnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
-        hnf->setMouseableArea(hsrect);
-        hnf->setIntValue(round(1.f / ms->hSnapDefault));
-
-        addView(hnf);
+        hSnapSize = std::make_unique<Surge::Widgets::NumberField>();
+        hSnapSize->setControlMode(Surge::Skin::Parameters::MSEG_SNAP_H);
+        hSnapSize->addListener(this);
+        hSnapSize->setTag(tag_horizontal_value);
+        hSnapSize->setStorage(storage);
+        hSnapSize->setSkin(skin, associatedBitmapStore);
+        hSnapSize->setIntValue(round(1.f / ms->hSnapDefault));
+        hSnapSize->setBounds(xpos + 52 + margin, ypos, editWidth, numfieldHeight);
+        auto images =
+            skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD, associatedBitmapStore);
+        hSnapSize->setBackgroundDrawable(images[0]);
+        hSnapSize->setHoverBackgroundDrawable(images[1]);
+        hSnapSize->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+        hSnapSize->setHoverTextColour(skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+        juceComponent()->addAndMakeVisible(*hSnapSize);
 
         xpos += segWidth;
 
@@ -2942,15 +2935,21 @@ void MSEGControlRegion::rebuild()
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
 
-        auto vsrect = CRect(CPoint(xpos + 52 + margin, ypos), CPoint(editWidth, numfieldHeight));
-        auto *vnf =
-            new CNumberField(vsrect, this, tag_vertical_value, nullptr /*, ref to storage?*/);
-        vnf->setControlMode(cm_mseg_snap_v);
-        vnf->setSkin(skin, associatedBitmapStore, cnfSkinCtrl);
-        vnf->setMouseableArea(vsrect);
-        vnf->setIntValue(round(1.f / ms->vSnapDefault));
-
-        addView(vnf);
+        vSnapSize = std::make_unique<Surge::Widgets::NumberField>();
+        vSnapSize->setTag(tag_vertical_value);
+        vSnapSize->setControlMode(Surge::Skin::Parameters::MSEG_SNAP_V);
+        vSnapSize->addListener(this);
+        vSnapSize->setStorage(storage);
+        vSnapSize->setSkin(skin, associatedBitmapStore);
+        vSnapSize->setIntValue(round(1.f / ms->vSnapDefault));
+        vSnapSize->setBounds(xpos + 52 + margin, ypos, editWidth, numfieldHeight);
+        images =
+            skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD, associatedBitmapStore);
+        vSnapSize->setBackgroundDrawable(images[0]);
+        vSnapSize->setHoverBackgroundDrawable(images[1]);
+        vSnapSize->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+        vSnapSize->setHoverTextColour(skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+        juceComponent()->addAndMakeVisible(*vSnapSize);
     }
 }
 

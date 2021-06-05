@@ -257,7 +257,7 @@ void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
     {
         auto sc = sge->current_scene;
         int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
-        if (dir > 0)
+        if (dir < 0)
         {
             currentIdx = currentIdx + 1;
             if (currentIdx >= maxIdx)
@@ -273,7 +273,7 @@ void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
             }
             repaint();
         }
-        else if (dir < 0)
+        else if (dir > 0)
         {
             currentIdx = currentIdx - 1;
             if (currentIdx < 0)

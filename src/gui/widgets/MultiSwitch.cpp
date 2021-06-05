@@ -123,6 +123,11 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
         return;
 
     int dir = wheelHelper.accumulate(wheel);
+    // Veritcally aligned switches have higher values at the bottom
+    if (rows > 1)
+    {
+        dir = -dir;
+    }
     if (dir != 0)
     {
         auto iv = limit_range(getIntegerValue() + dir, 0, rows * columns - 1);

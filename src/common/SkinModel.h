@@ -91,6 +91,21 @@ namespace Surge
 namespace Skin
 {
 
+namespace Parameters
+{
+
+enum NumberfieldControlModes
+{
+    NONE = 0,
+    POLY_COUNT,
+    PB_DEPTH,
+    NOTENAME,
+    MIDICHANNEL_FROM_127,
+    MSEG_SNAP_H,
+    MSEG_SNAP_V
+};
+}
+
 struct Component
 {
     /*
