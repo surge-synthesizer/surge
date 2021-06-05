@@ -17,12 +17,16 @@
 #define SURGE_XT_XMLCONFIGUREDMENUS_H
 
 #include <JuceHeader.h>
+
+#include <utility>
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
+#include "FxPresetAndClipboardManager.h"
 
 class SurgeStorage;
 class SurgeGUIEditor;
 class OscillatorStorage;
+class FxStorage;
 
 namespace Surge
 {
@@ -45,6 +49,7 @@ struct XMLMenuPopulator
     void setStorage(SurgeStorage *s) { storage = s; }
 
     int selectedIdx;
+    std::string selectedName;
 
     juce::PopupMenu menu;
 
@@ -58,7 +63,25 @@ struct XMLMenuPopulator
 
     char mtype[16] = {0};
     std::map<int, int> firstSnapshotByType;
-    std::vector<std::pair<int, TiXmlElement *>> loadArgsByIndex;
+
+    struct LoadArg
+    {
+        LoadArg(int i, TiXmlElement *e) : type(i), el(e), actionType(XML) {}
+        LoadArg(int i, std::function<void()> f)
+            : type(i), callback(std::move(f)), actionType(LAMBDA)
+        {
+        }
+        int type{-1};
+        TiXmlElement *el{nullptr};
+        std::function<void()> callback{[]() {}};
+        enum Type
+        {
+            NONE,
+            XML,
+            LAMBDA
+        } actionType{NONE};
+    };
+    std::vector<LoadArg> loadArgsByIndex;
     int maxIdx;
 };
 
@@ -69,8 +92,8 @@ struct OscillatorMenu : public juce::Component,
     OscillatorMenu();
     void loadSnapshot(int type, TiXmlElement *e, int idx) override;
 
-    virtual VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; };
-    virtual VSTGUI::IControlListener *getControlListener() override
+    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; };
+    VSTGUI::IControlListener *getControlListener() override
     {
         return firstListenerOfType<VSTGUI::IControlListener>();
     };
@@ -105,7 +128,52 @@ struct OscillatorMenu : public juce::Component,
 
 struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBaseMixin<FxMenu>
 {
-    void paint(juce::Graphics &g) override { g.fillAll(juce::Colours::orchid); }
+    FxMenu();
+
+    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; };
+    VSTGUI::IControlListener *getControlListener() override
+    {
+        return firstListenerOfType<VSTGUI::IControlListener>();
+    };
+
+    float getValue() const override { return 0; }
+    void setValue(float f) override {}
+    void valueChanged() override {}
+
+    void mouseDown(const juce::MouseEvent &event) override;
+
+    void mouseEnter(const juce::MouseEvent &event) override;
+    void mouseExit(const juce::MouseEvent &event) override;
+
+    bool isHovered{false};
+    Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
+
+    void paint(juce::Graphics &g) override;
+
+    void loadSnapshot(int type, TiXmlElement *e, int idx) override;
+    void populate() override;
+
+    void addToTopLevelTypeMenu(TiXmlElement *typeElement, juce::PopupMenu &subMenu,
+                               int &idx) override;
+    FxStorage *fx{nullptr}, *fxbuffer{nullptr};
+    void setFxStorage(FxStorage *s) { fx = s; }
+    void setFxBuffer(FxStorage *s) { fxbuffer = s; }
+
+    int current_fx;
+    void setCurrentFx(int i) { current_fx = i; }
+
+    static Surge::FxClipboard::Clipboard fxClipboard;
+    void copyFX();
+    void pasteFX();
+    void saveFX();
+
+    void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) override;
+
+    void loadUserPreset(const Surge::FxUserPreset::Preset &p);
+
+    juce::Drawable *bg{}, *bgHover{};
+    void setBackgroundDrawable(juce::Drawable *b) { bg = b; };
+    void setHoverBackgroundDrawable(juce::Drawable *bgh) { bgHover = bgh; }
 };
 } // namespace Widgets
 } // namespace Surge

@@ -16,6 +16,7 @@
 #include "XMLConfiguredMenus.h"
 #include "SurgeStorage.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 
 namespace Surge
@@ -146,7 +147,8 @@ void XMLMenuPopulator::populateSubmenuFromTypeElement(TiXmlElement *type, juce::
             if (this->getControlListener())
                 this->getControlListener()->valueChanged(asControlValueInterface());
         };
-        loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
+        // loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
+        loadArgsByIndex.emplace_back(snapshotTypeID, snapshot);
         subMenu.addItem(txt, action);
         idx++;
 
@@ -190,7 +192,7 @@ void XMLMenuPopulator::populateSubmenuFromTypeElement(TiXmlElement *type, juce::
                 this->getControlListener()->valueChanged(asControlValueInterface());
         };
 
-        loadArgsByIndex.push_back(std::make_pair(type_id, type));
+        loadArgsByIndex.emplace_back(type_id, type);
         parent.addItem(txt, action);
         idx++;
     }
@@ -255,22 +257,36 @@ void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
     {
         auto sc = sge->current_scene;
         int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
-        if (dir < 0)
+        if (dir > 0)
         {
             currentIdx = currentIdx + 1;
             if (currentIdx >= maxIdx)
                 currentIdx = 0;
             auto args = loadArgsByIndex[currentIdx];
-            loadSnapshot(args.first, args.second, currentIdx);
+            if (args.actionType == XMLMenuPopulator::LoadArg::XML)
+            {
+                loadSnapshot(args.type, args.el, currentIdx);
+            }
+            else
+            {
+                jassert(false);
+            }
             repaint();
         }
-        else if (dir > 0)
+        else if (dir < 0)
         {
             currentIdx = currentIdx - 1;
             if (currentIdx < 0)
                 currentIdx = maxIdx - 1;
             auto args = loadArgsByIndex[currentIdx];
-            loadSnapshot(args.first, args.second, currentIdx);
+            if (args.actionType == XMLMenuPopulator::LoadArg::XML)
+            {
+                loadSnapshot(args.type, args.el, currentIdx);
+            }
+            else
+            {
+                jassert(false);
+            }
             repaint();
         }
     }
@@ -286,5 +302,209 @@ void OscillatorMenu::mouseExit(const juce::MouseEvent &event)
     isHovered = false;
     repaint();
 }
+
+FxMenu::FxMenu() { strcpy(mtype, "fx"); }
+
+void FxMenu::paint(juce::Graphics &g)
+{
+    if (bg)
+        bg->draw(g, 1.0);
+    if (isHovered && bgHover)
+        bgHover->draw(g, 1.0);
+
+    auto fgc = skin->getColor(Colors::Effect::Menu::Text);
+    if (isHovered)
+        fgc = skin->getColor(Colors::Effect::Menu::TextHover);
+
+    g.setFont(Surge::GUI::getFontManager()->displayFont);
+    g.setColour(fgc);
+    auto r = getLocalBounds().reduced(2).withTrimmedLeft(4).withTrimmedRight(12);
+    g.drawText(fxslot_names[current_fx], r, juce::Justification::centredLeft);
+    g.drawText(fx_type_names[fx->type.val.i], r, juce::Justification::centredRight);
+}
+
+void FxMenu::mouseDown(const juce::MouseEvent &event)
+{
+    menu.showMenuAsync(juce::PopupMenu::Options());
+    isHovered = false;
+    repaint();
+}
+
+void FxMenu::mouseEnter(const juce::MouseEvent &event)
+{
+    isHovered = true;
+    repaint();
+}
+
+void FxMenu::mouseExit(const juce::MouseEvent &event)
+{
+    isHovered = false;
+    repaint();
+}
+
+void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
+{
+    if (!type)
+        fxbuffer->type.val.i = type;
+
+    if (e)
+    {
+        fxbuffer->type.val.i = type;
+        // storage->patch.update_controls();
+        selectedName = e->Attribute("name");
+
+        Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
+        if (t_fx)
+        {
+            t_fx->init_ctrltypes();
+            t_fx->init_default_values();
+            delete t_fx;
+        }
+
+        for (int i = 0; i < n_fx_params; i++)
+        {
+            double d;
+            int j;
+            char lbl[TXT_SIZE], sublbl[TXT_SIZE];
+            snprintf(lbl, TXT_SIZE, "p%i", i);
+            if (fxbuffer->p[i].valtype == vt_float)
+            {
+                if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                    fxbuffer->p[i].set_storage_value((float)d);
+            }
+            else
+            {
+                if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    fxbuffer->p[i].set_storage_value(j);
+            }
+
+            snprintf(sublbl, TXT_SIZE, "p%i_temposync", i);
+            fxbuffer->p[i].temposync =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
+            fxbuffer->p[i].extend_range =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
+            fxbuffer->p[i].deactivated =
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+        }
+    }
+}
+
+void FxMenu::populate()
+{
+    /*
+    ** Are there user presets
+    */
+    Surge::FxUserPreset::forcePresetRescan(storage);
+
+    XMLMenuPopulator::populate();
+
+    /*
+    ** Add copy/paste/save
+    */
+
+    menu.addSeparator();
+    menu.addItem("Copy", [this]() { this->copyFX(); });
+    menu.addItem("Paste", [this]() { this->pasteFX(); });
+
+    menu.addSeparator();
+
+    if (fx->type.val.i != fxt_off)
+    {
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset"), [this]() { this->saveFX(); });
+    }
+
+    auto rsA = [this]() {
+        Surge::FxUserPreset::forcePresetRescan(this->storage);
+        auto *sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->queueRebuildUI();
+    };
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
+}
+
+Surge::FxClipboard::Clipboard FxMenu::fxClipboard;
+
+void FxMenu::copyFX()
+{
+    Surge::FxClipboard::copyFx(storage, fx, fxClipboard);
+    memcpy((void *)fxbuffer, (void *)fx, sizeof(FxStorage));
+}
+
+void FxMenu::pasteFX()
+{
+    Surge::FxClipboard::pasteFx(storage, fxbuffer, fxClipboard);
+
+    selectedName = std::string("Copied ") + fx_type_names[fxbuffer->type.val.i];
+
+    notifyValueChanged();
+}
+
+void FxMenu::saveFX()
+{
+    auto *sge = firstListenerOfType<SurgeGUIEditor>();
+    if (sge)
+    {
+        sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
+                               VSTGUI::CPoint(-1, -1), [this](const std::string &s) {
+                                   Surge::FxUserPreset::saveFxIn(this->storage, fx, s);
+                                   auto *sge = firstListenerOfType<SurgeGUIEditor>();
+                                   if (sge)
+                                       sge->queueRebuildUI();
+                               });
+    }
+}
+
+void FxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
+{
+    Surge::FxUserPreset::loadPresetOnto(p, storage, fxbuffer);
+
+    selectedIdx = -1;
+    selectedName = p.name;
+
+    notifyValueChanged();
+}
+
+void FxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu, int &idx)
+{
+    if (!type)
+        return;
+
+    int type_id = 0;
+    type->Attribute("i", &type_id);
+
+    auto ps = Surge::FxUserPreset::getPresetsForSingleType(type_id);
+
+    if (ps.empty())
+    {
+        return;
+    }
+
+    subMenu.addColumnBreak();
+    subMenu.addSectionHeader("User Presets");
+
+    for (auto &pst : ps)
+    {
+        auto fxName = pst.name;
+        subMenu.addItem(fxName, [this, pst]() { this->loadUserPreset(pst); });
+    }
+}
+void FxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
+{
+    if (!type)
+        return;
+
+    int type_id = 0;
+    type->Attribute("i", &type_id);
+
+    if (!Surge::FxUserPreset::hasPresetsForSingleType(type_id))
+    {
+        return;
+    }
+
+    subMenu.addSectionHeader("Factory Presets");
+}
+
 } // namespace Widgets
 } // namespace Surge

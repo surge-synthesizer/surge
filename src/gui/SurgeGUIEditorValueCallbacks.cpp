@@ -19,7 +19,6 @@
 
 #include "CModulationSourceButton.h"
 #include "CLFOGui.h"
-#include "CSnapshotMenu.h"
 #include "CNumberField.h"
 #include "ModernOscillator.h"
 
@@ -30,6 +29,7 @@
 #include "widgets/Switch.h"
 #include "widgets/PatchSelector.h"
 #include "widgets/ParameterInfowindow.h"
+#include "widgets/XMLConfiguredMenus.h"
 
 using namespace VSTGUI;
 
@@ -2422,22 +2422,21 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     break;
     case tag_mp_jogfx:
     {
-        CFxMenu *fxm = dynamic_cast<CFxMenu *>(fxmenu);
-        auto jog = [this, fxm](int byThis) {
-            this->selectedFX[this->current_fx] =
-                std::max(this->selectedFX[this->current_fx] + byThis, -1);
-            if (!fxm->loadSnapshotByIndex(this->selectedFX[this->current_fx]))
-            {
-                // Try and go back to 0. This is the wrong behavior for negative jog
-                this->selectedFX[this->current_fx] = 0;
-                fxm->loadSnapshotByIndex(0);
-            }
-        };
-
-        if (fxm)
+        if (fxMenu)
         {
-            if (fxm->selectedIdx >= 0 && fxm->selectedIdx != selectedFX[current_fx])
-                selectedFX[current_fx] = fxm->selectedIdx;
+            auto jog = [this](int byThis) {
+                this->selectedFX[this->current_fx] =
+                    std::max(this->selectedFX[this->current_fx] + byThis, -1);
+                if (!fxMenu->loadSnapshotByIndex(this->selectedFX[this->current_fx]))
+                {
+                    // Try and go back to 0. This is the wrong behavior for negative jog
+                    this->selectedFX[this->current_fx] = 0;
+                    fxMenu->loadSnapshotByIndex(0);
+                }
+            };
+
+            if (fxMenu->selectedIdx >= 0 && fxMenu->selectedIdx != selectedFX[current_fx])
+                selectedFX[current_fx] = fxMenu->selectedIdx;
 
             if (control->getValue() > 0.5f)
             {
@@ -2450,8 +2449,8 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
             if (fxPresetLabel)
             {
-                fxPresetLabel->setText(fxm->selectedName.c_str());
-                fxPresetName[this->current_fx] = fxm->selectedName;
+                fxPresetLabel->setText(fxMenu->selectedName.c_str(), juce::dontSendNotification);
+                fxPresetName[this->current_fx] = fxMenu->selectedName;
             }
         }
         else
@@ -2536,16 +2535,15 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         synth->fx_reload[current_fx & 7] = true;
         synth->processThreadunsafeOperations();
 
-        CFxMenu *fxm = dynamic_cast<CFxMenu *>(fxmenu);
-        if (fxm && fxm->selectedIdx >= 0)
+        if (fxMenu && fxMenu->selectedIdx >= 0)
         {
-            selectedFX[current_fx] = fxm->selectedIdx;
-            fxPresetName[current_fx] = fxm->selectedName;
+            selectedFX[current_fx] = fxMenu->selectedIdx;
+            fxPresetName[current_fx] = fxMenu->selectedName;
         }
         else if (fxPresetLabel)
         {
-            fxPresetLabel->setText(fxm->selectedName.c_str());
-            fxPresetName[this->current_fx] = fxm->selectedName;
+            fxPresetLabel->setText(fxMenu->selectedName.c_str(), juce::dontSendNotification);
+            fxPresetName[this->current_fx] = fxMenu->selectedName;
         }
 
         return;

@@ -17,7 +17,6 @@
 #include "resource.h"
 
 #include "CModulationSourceButton.h"
-#include "CSnapshotMenu.h"
 #include "CLFOGui.h"
 #include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
@@ -1325,12 +1324,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
         {
             // Room for improvement, obviously
-            fxPresetLabel = new CTextLabel(skinCtrl->getRect(), "Preset");
-            fxPresetLabel->setFontColor(currentSkin->getColor(Colors::Effect::Preset::Name));
-            fxPresetLabel->setTransparency(true);
+            if (!fxPresetLabel)
+            {
+                fxPresetLabel = std::make_unique<juce::Label>("FxPreset label");
+            }
+
+            fxPresetLabel->setColour(juce::Label::textColourId,
+                                     currentSkin->getColor(Colors::Effect::Preset::Name));
             fxPresetLabel->setFont(Surge::GUI::getFontManager()->displayFont);
-            fxPresetLabel->setHoriAlign(kRightText);
-            frame->addView(fxPresetLabel);
+            fxPresetLabel->setJustificationType(juce::Justification::centredRight);
+
+            fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
+
+            frame->juceComponent()->addAndMakeVisible(*fxPresetLabel);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
@@ -4726,45 +4732,46 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 .c_str());
         frame->juceComponent()->addAndMakeVisible(*oscMenu);
         return oscMenu.get();
-#if 0
-        CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        rect.offset(skinCtrl->x, skinCtrl->y);
-        auto hsw = new COscMenu(
-            rect, this, tag_osc_menu, &synth->storage,
-            &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]],
-            bitmapStore);
-
-        hsw->setSkin(currentSkin, bitmapStore);
-        hsw->setMouseableArea(rect);
-
-
-
-        if (p)
-            hsw->setValue(p->get_value_f01());
-        // TODO: This was not on before skinnification. Why?
-        // if( paramIndex >= 0 ) nonmod_param[paramIndex] = hsw;
-
-        frame->addView(hsw);
-        return hsw;
-#endif
     }
     if (skinCtrl->ultimateparentclassname == "CFXMenu")
     {
-        CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        rect.offset(skinCtrl->x, skinCtrl->y);
-        // CControl *m = new
-        // CFxMenu(rect,this,tag_fx_menu,&synth->storage,&synth->storage.getPatch().fx[current_fx],current_fx);
-        CControl *m = new CFxMenu(rect, this, tag_fx_menu, &synth->storage,
-                                  &synth->storage.getPatch().fx[current_fx],
-                                  &synth->fxsync[current_fx], current_fx);
-        m->setMouseableArea(rect);
-        ((CFxMenu *)m)->setSkin(currentSkin, bitmapStore);
-        ((CFxMenu *)m)->selectedIdx = this->selectedFX[current_fx];
-        fxPresetLabel->setText(this->fxPresetName[current_fx].c_str());
-        m->setValue(p->get_value_f01());
-        frame->addView(m);
-        fxmenu = m;
-        return m;
+        if (!fxMenu)
+            fxMenu = std::make_unique<Surge::Widgets::FxMenu>();
+        fxMenu->setTag(tag_fx_menu);
+        fxMenu->addListener(this);
+        fxMenu->setStorage(&(synth->storage));
+        fxMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
+        fxMenu->setBackgroundDrawable(bitmapStore->getDrawable(IDB_MENU_AS_SLIDER));
+        auto id = currentSkin->hoverImageIdForResource(IDB_MENU_AS_SLIDER, Surge::GUI::Skin::HOVER);
+        auto bhov = bitmapStore->getDrawableByStringID(id);
+        fxMenu->setHoverBackgroundDrawable(bhov);
+        fxMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
+        fxMenu->setFxStorage(&synth->storage.getPatch().fx[current_fx]);
+        fxMenu->setFxBuffer(&synth->fxsync[current_fx]);
+        fxMenu->setCurrentFx(current_fx);
+        fxMenu->selectedIdx = selectedFX[current_fx];
+        // TODO set the fxs fxb, cfx
+
+        fxMenu->populate();
+        frame->juceComponent()->addAndMakeVisible(*fxMenu);
+        return fxMenu.get();
+        /* CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
+         rect.offset(skinCtrl->x, skinCtrl->y);
+         // CControl *m = new
+         //
+         xxxMenu(rect,this,tag_fx_menu,&synth->storage,&synth->storage.getPatch().fx[current_fx],current_fx);
+         CControl *m = new xxxMenu(rect, this, tag_fx_menu, &synth->storage,
+                                   &synth->storage.getPatch().fx[current_fx],
+                                   &synth->fxsync[current_fx], current_fx);
+         m->setMouseableArea(rect);
+         ((xxxMenu *)m)->setSkin(currentSkin, bitmapStore);
+         ((xxxMenu *)m)->selectedIdx = this->selectedFX[current_fx];
+         fxPresetLabel->setText(this->fxPresetName[current_fx].c_str());
+         m->setValue(p->get_value_f01());
+         frame->addView(m);
+         fxmenu = m;
+         return m;
+         */
     }
 
     if (skinCtrl->ultimateparentclassname == "CNumberField")

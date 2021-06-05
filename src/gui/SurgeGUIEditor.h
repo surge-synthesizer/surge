@@ -540,7 +540,7 @@ class SurgeGUIEditor : public EditorType,
 
   private:
     std::unique_ptr<Surge::Widgets::VerticalLabel> lfoNameLabel;
-    VSTGUI::CTextLabel *fxPresetLabel = nullptr;
+    std::unique_ptr<juce::Label> fxPresetLabel;
 
   public:
     std::string modulatorName(int ms, bool forButton);
