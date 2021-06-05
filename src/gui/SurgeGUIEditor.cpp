@@ -2688,18 +2688,8 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
 {
     auto uiOptionsMenu = juce::PopupMenu();
 
-#if WINDOWS
-#define SUPPORTS_TOUCH_MENU 1
-#else
-#define SUPPORTS_TOUCH_MENU 0
-#endif
-
-#if SUPPORTS_TOUCH_MENU
     bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                          Surge::Storage::TouchMouseMode, false);
-#else
-    bool touchMode = false;
-#endif
 
     // Mouse behavior submenu
     auto mouseSubMenu = juce::PopupMenu();
@@ -2766,7 +2756,6 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
                                  !tsMode);
                          });
 
-#if SUPPORTS_TOUCH_MENU
     mouseSubMenu.addSeparator();
 
     mouseSubMenu.addItem(
@@ -2774,7 +2763,6 @@ juce::PopupMenu SurgeGUIEditor::makeUserSettingsMenu(VSTGUI::CRect &menuRect)
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                    Surge::Storage::TouchMouseMode, !touchMode);
         });
-#endif
 
     uiOptionsMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Mouse Behavior"), mouseSubMenu);
 
