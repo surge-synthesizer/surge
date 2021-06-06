@@ -17,7 +17,7 @@
 #define SURGE_XT_LOCKFREESTACK_H
 
 #include <JuceHeader.h>
-#include "LockFreeStack.h"
+#include <array>
 
 template <typename T, int qSize = 4096> class LockFreeStack
 {
@@ -50,7 +50,7 @@ template <typename T, int qSize = 4096> class LockFreeStack
         return ret;
     }
     juce::AbstractFifo af;
-    T dq[qSize];
+    std::array<T, qSize> dq;
 };
 
 #endif // SURGE_XT_LOCKFREESTACK_H
