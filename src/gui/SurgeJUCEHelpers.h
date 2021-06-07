@@ -28,7 +28,7 @@ struct WheelAccumulationHelper
 
     int accumulate(const juce::MouseWheelDetails &wheel, bool X = true, bool Y = true)
     {
-        accum += X * wheel.deltaX - ( wheel.isReversed ? 1 : -1 ) * Y * wheel.deltaY;
+        accum += X * wheel.deltaX - (wheel.isReversed ? 1 : -1) * Y * wheel.deltaY;
         // This is calibrated to be reasonable on a Mac but I'm still not sure of the units
         // On my MBP I get deltas which are 0.0019 all the time.
 
