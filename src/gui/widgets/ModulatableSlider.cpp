@@ -215,6 +215,7 @@ void ModulatableSlider::paint(juce::Graphics &g)
         pHandle->draw(g, activationOpacity, t);
     }
 }
+
 void ModulatableSlider::onSkinChanged()
 {
     if (orientation == ParamConfig::kHorizontal)
@@ -280,6 +281,7 @@ void ModulatableSlider::onSkinChanged()
             Surge::GUI::Skin::HoverType::HOVER);
 #endif
 }
+
 void ModulatableSlider::mouseEnter(const juce::MouseEvent &event)
 {
     isHovered = true;
@@ -289,6 +291,7 @@ void ModulatableSlider::mouseEnter(const juce::MouseEvent &event)
         sge->sliderHoverStart(getTag());
     }
 }
+
 void ModulatableSlider::mouseExit(const juce::MouseEvent &event)
 {
     isHovered = false;
@@ -298,6 +301,7 @@ void ModulatableSlider::mouseExit(const juce::MouseEvent &event)
         sge->sliderHoverEnd(getTag());
     }
 }
+
 void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 {
     int distance = event.getDistanceFromDragStartX();
@@ -347,6 +351,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     updateInfowindowContents(isEditingModulation);
     repaint();
 }
+
 void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 {
     if (event.mods.isPopupMenu())
@@ -366,6 +371,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
     editTypeWas = NOEDIT;
     showInfowindow(isEditingModulation);
 }
+
 void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 {
     /*
@@ -414,6 +420,7 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
     updateInfowindowContents(isEditingModulation);
     editTypeWas = NOEDIT;
 }
+
 void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
 {
     editTypeWas = DOUBLECLICK;
@@ -427,29 +434,43 @@ void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
     showInfowindowSelfDismiss(isEditingModulation);
     repaint();
 }
+
 void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
                                        const juce::MouseWheelDetails &wheel)
 {
     /*
-     * If I choose based on horiz/vert it only works ontrackpads so just add
+     * If I choose based on horiz/vert it only works on trackpads, so just add
      */
-    float delta = (wheel.isReversed ? 1 : -1) * wheel.deltaX - wheel.deltaY;
+    float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
+
     if (delta == 0)
+    {
         return;
+    }
 
     showInfowindowSelfDismiss(isEditingModulation);
+
     float speed = 1.2;
+
     if (event.mods.isShiftDown())
+    {
         speed = .12;
+    }
 
     delta *= speed;
 
     editTypeWas = WHEEL;
     notifyBeginEdit();
+
     if (isEditingModulation)
+    {
         modValue = limitpm1(modValue + delta);
+    }
     else
+    {
         value = limit01(value + delta);
+    }
+
     notifyValueChanged();
     notifyEndEdit();
     repaint();
