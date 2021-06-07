@@ -148,6 +148,7 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {
     int dir = wheelAccumulationHelper.accumulate(wheel);
+
     if (dir != 0)
     {
         changeBy(dir);
