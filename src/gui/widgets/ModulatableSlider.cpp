@@ -77,7 +77,7 @@ void ModulatableSlider::updateLocationState()
         handleX0 = 0;
         handleY0 = 9;
 
-        handleCX = 6;
+        handleCX = 7;
         handleMX = handleCX;
         barNMX = handleMX;
         modHandleX = 24;
@@ -103,7 +103,7 @@ void ModulatableSlider::updateLocationState()
         handleMX = range * limit01(value + modValue) + handleX0;
         barNMX = range * limit01(value - modValue) + handleX0;
 
-        handleCY = 7;
+        handleCY = 6;
         handleMY = handleCY;
         barNMY = handleMY;
         modHandleX = 28;

@@ -194,7 +194,7 @@ void MenuForDiscreteParams::mouseWheelMove(const juce::MouseEvent &e,
     if (dir != 0)
     {
         notifyBeginEdit();
-        setValue(nextValueInOrder(value, dir));
+        setValue(nextValueInOrder(value, -dir));
         notifyValueChanged();
         notifyEndEdit();
         repaint();

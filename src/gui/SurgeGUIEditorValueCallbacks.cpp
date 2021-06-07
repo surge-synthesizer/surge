@@ -19,12 +19,12 @@
 
 #include "CModulationSourceButton.h"
 #include "CLFOGui.h"
-#include "CNumberField.h"
 #include "ModernOscillator.h"
 
 #include "widgets/EffectChooser.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/MenuForDiscreteParams.h"
+#include "widgets/NumberField.h"
 #include "widgets/OscillatorWaveformDisplay.h"
 #include "widgets/Switch.h"
 #include "widgets/PatchSelector.h"
@@ -2881,24 +2881,25 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     /*
                     ** Now I also need to toggle the split key state
                     */
-                    auto nf = dynamic_cast<CNumberField *>(splitpointControl);
-                    if (nf)
+                    if (splitpointControl)
                     {
-                        int cm = nf->getControlMode();
-                        if (im == sm_chsplit && cm != cm_midichannel_from_127)
+                        int cm = splitpointControl->getControlMode();
+                        if (im == sm_chsplit && cm != Surge::Skin::Parameters::MIDICHANNEL_FROM_127)
                         {
-                            nf->setControlMode(cm_midichannel_from_127);
-                            nf->invalid();
+                            splitpointControl->setControlMode(
+                                Surge::Skin::Parameters::MIDICHANNEL_FROM_127);
+                            splitpointControl->repaint();
                         }
-                        else if (im == sm_split && cm != cm_notename)
+                        else if (im == sm_split && cm != Surge::Skin::Parameters::NOTENAME)
                         {
-                            nf->setControlMode(cm_notename);
-                            nf->invalid();
+                            splitpointControl->setControlMode(Surge::Skin::Parameters::NOTENAME);
+                            splitpointControl->repaint();
                         }
-                        else if ((im == sm_single || im == sm_dual) && cm != cm_none)
+                        else if ((im == sm_single || im == sm_dual) &&
+                                 cm != Surge::Skin::Parameters::NONE)
                         {
-                            nf->setControlMode(cm_none);
-                            nf->invalid();
+                            splitpointControl->setControlMode(Surge::Skin::Parameters::NONE);
+                            splitpointControl->repaint();
                         }
                     }
                 }
