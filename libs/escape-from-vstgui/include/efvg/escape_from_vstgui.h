@@ -116,6 +116,7 @@ inline std::unordered_map<FakeRefcount *, DebugAllocRecord> *getAllocMap()
 struct RefActivity
 {
     int creates = 0, deletes = 0;
+    std::map<std::string, int> createsByType;
 };
 inline RefActivity *getRefActivity()
 {
@@ -178,6 +179,9 @@ struct FakeRefcount
         {
             if (!alwaysLeak)
             {
+#if DEBUG_EFVG_MEMORY
+                getRefActivity()->createsByType[typeid(*this).name()]++;
+#endif
                 delete this;
             }
             else
@@ -201,6 +205,10 @@ inline void showMemoryOutstanding()
 {
     std::cout << "EscapeFromVSTGUI Memory Check:\n   - Total activity : Create="
               << getRefActivity()->creates << " Delete=" << getRefActivity()->deletes << std::endl;
+    for (auto &p : getRefActivity()->createsByType)
+    {
+        std::cout << "  | " << p.first << " -> " << p.second << std::endl;
+    }
     for (auto &p : *(getAllocMap()))
     {
         if (p.first->doDebug)

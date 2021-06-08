@@ -31,6 +31,8 @@
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/XMLConfiguredMenus.h"
 
+#include "overlays/TypeinParamEditor.h"
+
 using namespace VSTGUI;
 
 void decode_controllerid(char *txt, int id)
@@ -2162,14 +2164,10 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
     long tag = control->getTag();
 
-    if (typeinDialog != nullptr && tag != tag_value_typein)
+    if (typeinParamEditor->isVisible())
     {
-        typeinDialog->setVisible(false);
-        removeFromFrame.push_back(typeinDialog);
-        typeinDialog = nullptr;
-        typeinResetCounter = -1;
-        typeinEditTarget = nullptr;
-        typeinMode = Inactive;
+        typeinParamEditor->setVisible(false);
+        frame->juceComponent()->removeChildComponent(typeinParamEditor.get());
     }
 
     if (tag == tag_status_zoom)
@@ -2691,108 +2689,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         }
     }
     break;
-    case tag_miniedit_ok:
-    case tag_miniedit_cancel:
-    {
-        if (minieditOverlay != nullptr)
-        {
-            if (minieditTypein)
-            {
-                auto q = minieditTypein->getText().getString();
-                if (tag == tag_miniedit_ok)
-                {
-                    minieditOverlayDone(q.c_str());
-                }
-                minieditTypein->looseFocus();
-            }
-            minieditOverlay->setVisible(false);
-            removeFromFrame.push_back(minieditOverlay);
-            minieditOverlay = nullptr;
-        }
-    }
-    break;
-    case tag_value_typein:
-    {
-        if (typeinDialog && typeinMode != Inactive)
-        {
-            std::string t = typeinValue->getText().getString();
-            bool isInvalid = false;
-            if (typeinMode == Param && typeinEditTarget && typeinModSource > 0)
-            {
-                bool valid = false;
-                auto mv = typeinEditTarget->calculate_modulation_value_from_string(t, valid);
-
-                if (!valid)
-                {
-                    isInvalid = true;
-                }
-                else
-                {
-                    synth->setModulation(typeinEditTarget->id, (modsources)typeinModSource, mv);
-                    synth->refresh_editor = true;
-
-                    typeinDialog->setVisible(false);
-                    removeFromFrame.push_back(typeinDialog);
-                    typeinDialog = nullptr;
-                    typeinResetCounter = -1;
-                    typeinEditTarget = nullptr;
-                    typeinMode = Inactive;
-                }
-            }
-            else if (typeinMode == Param && typeinEditTarget &&
-                     typeinEditTarget->set_value_from_string(t))
-            {
-                repushAutomationFor(typeinEditTarget);
-                isInvalid = false;
-                synth->refresh_editor = true;
-                typeinDialog->setVisible(false);
-                removeFromFrame.push_back(typeinDialog);
-                typeinDialog = nullptr;
-                typeinResetCounter = -1;
-                typeinEditTarget = nullptr;
-                typeinMode = Inactive;
-            }
-            else if (typeinMode == Control)
-            {
-                auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
-                                .scene[current_scene]
-                                .modsources[typeinModSource]);
-                bool bp = cms->is_bipolar();
-                float val = std::atof(t.c_str()) / 100.0;
-                if ((bp && val >= -1 && val <= 1) || (val >= 0 && val <= 1))
-                {
-                    cms->output = val;
-                    cms->target = val;
-                    // This doesn't seem to work so hammer away
-                    if (typeinEditControl)
-                    {
-                        typeinEditControl->invalid();
-                    }
-                    synth->refresh_editor = true;
-                }
-                else
-                {
-                    isInvalid = true;
-                }
-            }
-            else
-            {
-                isInvalid = true;
-            }
-
-            if (isInvalid)
-            {
-                auto l = typeinLabel->getText().getString();
-                promptForUserValueEntry(typeinEditTarget, typeinEditControl, typeinModSource);
-                typeinResetCounter = 20;
-                typeinResetLabel = l;
-                typeinLabel->setText("Invalid Entry");
-                typeinValue->setText(t.c_str());
-                typeinLabel->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Error));
-            }
-        }
-    }
-    break;
     default:
     {
         int ptag = tag - start_paramtags;
@@ -3045,4 +2941,52 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
             break;
         }
     }
+}
+
+bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s)
+{
+    if (p && p->set_value_from_string(s))
+    {
+        repushAutomationFor(p);
+        synth->refresh_editor = true;
+        return true;
+    }
+
+    return false;
+}
+bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources ms,
+                                                      const std::string &s)
+{
+    if (!p || ms == 0)
+        return false;
+
+    bool valid = false;
+    auto mv = p->calculate_modulation_value_from_string(s, valid);
+
+    if (!valid)
+    {
+        return false;
+    }
+    else
+    {
+        synth->setModulation(p->id, ms, mv);
+        synth->refresh_editor = true;
+    }
+    return true;
+}
+bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
+{
+    auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
+                    .scene[current_scene]
+                    .modsources[ms]);
+    bool bp = cms->is_bipolar();
+    float val = std::atof(s.c_str()) / 100.0;
+    if ((bp && val >= -1 && val <= 1) || (val >= 0 && val <= 1))
+    {
+        cms->output = val;
+        cms->target = val;
+        synth->refresh_editor = true;
+        return true;
+    }
+    return false;
 }

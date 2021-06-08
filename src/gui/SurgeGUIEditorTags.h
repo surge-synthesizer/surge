@@ -40,9 +40,6 @@ enum SurgeGUIEditorTags
     tag_mp_jogfx,
     tag_value_typein,
     tag_editor_overlay_close,
-    tag_miniedit_ok,
-    tag_miniedit_cancel,
-
     tag_status_mpe,
     tag_status_zoom,
     tag_status_tune,

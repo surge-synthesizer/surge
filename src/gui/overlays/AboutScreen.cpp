@@ -22,7 +22,7 @@
 
 namespace Surge
 {
-namespace Widgets
+namespace Overlays
 {
 struct NoUrlHyperlinkButton : public juce::HyperlinkButton
 {
@@ -252,5 +252,5 @@ void AboutScreen::mouseUp(const juce::MouseEvent &e)
 
 void AboutScreen::onSkinChanged() { logo = associatedBitmapStore->getDrawable(IDB_ABOUT_BG); }
 
-} // namespace Widgets
+} // namespace Overlays
 } // namespace Surge

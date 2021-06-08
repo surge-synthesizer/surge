@@ -37,9 +37,11 @@
 
 #include "overlays/AboutScreen.h"
 #include "overlays/LuaEditors.h"
+#include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/ModulationEditor.h"
 #include "overlays/PatchDBViewer.h"
+#include "overlays/TypeinParamEditor.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -170,6 +172,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
 
     paramInfowindow = std::make_unique<Surge::Widgets::ParameterInfowindow>();
     paramInfowindow->setVisible(false);
+
+    typeinParamEditor = std::make_unique<Surge::Overlays::TypeinParamEditor>();
+    typeinParamEditor->setVisible(false);
+    typeinParamEditor->setSurgeGUIEditor(this);
+
+    miniEdit = std::make_unique<Surge::Overlays::MiniEdit>();
+    miniEdit->setVisible(false);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -333,17 +342,6 @@ void SurgeGUIEditor::idle()
             if (oscWaveform)
             {
                 oscWaveform->repaint();
-            }
-        }
-
-        if (typeinResetCounter > 0)
-        {
-            typeinResetCounter--;
-            if (typeinResetCounter <= 0 && typeinDialog)
-            {
-                typeinLabel->setText(typeinResetLabel.c_str());
-                typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Light));
-                typeinLabel->invalid();
             }
         }
 
@@ -1044,8 +1042,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     polydisp = nullptr;
     lfodisplay = nullptr;
     fxmenu = nullptr;
-    typeinDialog = nullptr;
-    minieditOverlay = nullptr;
     msegEditSwitch = nullptr;
     lfoNameLabel = nullptr;
     midiLearnOverlay = nullptr;
@@ -1510,7 +1506,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
-    // Make sure the infowindow is here
+    // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
     frame->juceComponent()->addChildComponent(*paramInfowindow);
 
@@ -3458,59 +3454,33 @@ void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
 
 void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c, int ms)
 {
-    jassert(c);
 
-    if (typeinDialog)
+    if (typeinParamEditor->isVisible())
     {
-        typeinDialog->setVisible(false);
-        removeFromFrame.push_back(typeinDialog);
-        typeinDialog = nullptr;
-        typeinResetCounter = -1;
+        typeinParamEditor->setVisible(false);
+    }
+
+    typeinParamEditor->setSkin(currentSkin, bitmapStore);
+
+    bool ismod = p && ms > 0;
+
+    jassert(c);
+    if (p)
+    {
+        if (!p->can_setvalue_from_string())
+        {
+            return;
+        }
     }
 
     if (p)
     {
-        typeinMode = Param;
+        typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Param);
     }
     else
     {
-        typeinMode = Control;
+        typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Control);
     }
-
-    bool ismod = p && ms > 0;
-    int boxht = 56;
-    auto cp = c->getControlViewSize();
-
-    if (ismod)
-        boxht += 22;
-
-    CRect typeinSize(cp.left, cp.top - boxht, cp.left + 120, cp.top - boxht + boxht);
-
-    if (cp.top - boxht < 0)
-    {
-        typeinSize = CRect(cp.left, cp.top + c->getControlHeight(), cp.left + 120,
-                           cp.top + c->getControlHeight() + boxht);
-    }
-
-    typeinModSource = ms;
-    typeinEditControl = dynamic_cast<CControl *>(c);
-    if (typeinEditControl == nullptr)
-    {
-        jassert(false);
-    }
-    typeinResetCounter = -1;
-
-    typeinDialog = new CViewContainer(typeinSize);
-    typeinDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
-    typeinDialog->setVisible(false);
-    frame->addView(typeinDialog);
-
-    CRect innerSize(0, 0, typeinSize.getWidth(), typeinSize.getHeight());
-    innerSize.inset(1, 1);
-    auto inner = new CViewContainer(innerSize);
-    CColor bggr = currentSkin->getColor(Colors::Dialog::Background);
-    inner->setBackgroundColor(bggr);
-    typeinDialog->addView(inner);
 
     std::string lab = "";
     if (p)
@@ -3532,11 +3502,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c,
         lab = modulatorName(ms, false);
     }
 
-    typeinLabel = new CTextLabel(CRect(2, 2, 114, 14), lab.c_str());
-    typeinLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
-    typeinLabel->setTransparency(true);
-    typeinLabel->setFont(Surge::GUI::getFontManager()->displayFont);
-    inner->addView(typeinLabel);
+    typeinParamEditor->setMainLabel(lab);
 
     char txt[256];
     char ptext[1024], ptext2[1024];
@@ -3570,54 +3536,26 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c,
         sprintf(ptext, "current: %s", txt);
     }
 
+    typeinParamEditor->setValueLabels(ptext, ptext2);
+    typeinParamEditor->setEditableText(txt);
+
     if (ismod)
     {
         std::string mls = std::string("by ") + (char *)modulatorName(ms, true).c_str();
-        auto ml = new CTextLabel(CRect(2, 10, 114, 27), mls.c_str());
-        ml->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
-        ml->setTransparency(true);
-        ml->setFont(Surge::GUI::getFontManager()->displayFont);
-        inner->addView(ml);
+        typeinParamEditor->setModByLabel(mls);
     }
 
-    typeinPriorValueLabel = new CTextLabel(CRect(2, 29 - (ismod ? 0 : 23), 116, 36 + ismod), ptext);
-    typeinPriorValueLabel->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
-    typeinPriorValueLabel->setTransparency(true);
-    typeinPriorValueLabel->setFont(Surge::GUI::getFontManager()->displayFont);
-    inner->addView(typeinPriorValueLabel);
+    typeinParamEditor->setEditedParam(p);
+    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms);
 
-    if (ismod)
+    if (frame->juceComponent()->getIndexOfChildComponent(typeinParamEditor.get()) < 0)
     {
-        auto sl = new CTextLabel(CRect(2, 29 + 9, 116, 36 + 13), ptext2);
-        sl->setFontColor(currentSkin->getColor(Colors::Slider::Label::Dark));
-        sl->setTransparency(true);
-        sl->setFont(Surge::GUI::getFontManager()->displayFont);
-        inner->addView(sl);
+        frame->juceComponent()->addAndMakeVisible(*typeinParamEditor);
     }
-
-    typeinValue = new CTextEdit(CRect(4, 31 + (ismod ? 22 : 0), 114, 50 + (ismod ? 22 : 0)), this,
-                                tag_value_typein, txt);
-    typeinValue->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-    typeinValue->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-
-    // fix the text selection rectangle background overhanging the borders on Windows
-#if WINDOWS
-    typeinValue->setTextInset(CPoint(3, 0));
-#endif
-
-    if (p)
-    {
-        if (!p->can_setvalue_from_string())
-        {
-            typeinValue->setFontColor(juce::Colours::red);
-            typeinValue->setText("Not available");
-        }
-    }
-
-    inner->addView(typeinValue);
-    typeinEditTarget = p;
-    typeinDialog->setVisible(true);
-    typeinValue->takeFocus();
+    typeinParamEditor->setBoundsToAccompany(c->getControlViewSize().asJuceIntRect(),
+                                            frame->juceComponent()->getBounds());
+    typeinParamEditor->setVisible(true);
+    typeinParamEditor->grabFocus();
 }
 
 std::string SurgeGUIEditor::modulatorName(int i, bool button)
@@ -4023,156 +3961,17 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
                                        const std::string &title, const VSTGUI::CPoint &iwhere,
                                        std::function<void(const std::string &)> onOK)
 {
-    auto fs = CRect(0, 0, getWindowSizeX(), getWindowSizeY());
-    minieditOverlay = new CViewContainer(fs);
-    minieditOverlay->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
-    minieditOverlay->setVisible(true);
-    frame->addView(minieditOverlay);
-
-    auto where = iwhere;
-    if (where.x < 0 || where.y < 0)
+    miniEdit->setSkin(currentSkin, bitmapStore);
+    if (frame->juceComponent()->getIndexOfChildComponent(miniEdit.get()) < 0)
     {
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
+        frame->juceComponent()->addChildComponent(*miniEdit);
     }
-
-    int wd = 160;
-    int ht = 80;
-
-    // We want to center the text on where. The 0.4 just 'feels better' than 0.5
-    where = where.offset(-wd * 0.4, -ht * 0.5);
-
-    auto rr = CRect(CPoint(where.x - fs.left, where.y - fs.top), CPoint(wd, ht));
-
-    if (rr.top < 0)
-        rr = rr.offset(0, 10 - rr.top);
-    if (rr.bottom > fs.getHeight())
-
-        rr.offset(0, -rr.bottom + fs.getHeight() - 10);
-    if (rr.left < 0)
-        rr = rr.offset(10 - rr.left, 0);
-    if (rr.right > fs.getWidth())
-
-        rr.offset(-rr.right + fs.getWidth() - 10, 0);
-
-    auto fnt = Surge::GUI::getFontManager()->getLatoAtSize(11);
-    auto fnts = Surge::GUI::getFontManager()->getLatoAtSize(9);
-    auto fntt = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
-
-    auto window = new CViewContainer(rr);
-    window->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
-    window->setVisible(true);
-    minieditOverlay->addView(window);
-
-    auto titlebar = new CViewContainer(CRect(0, 0, wd, 18));
-    titlebar->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
-    titlebar->setVisible(true);
-    window->addView(titlebar);
-
-    auto titlerect = CRect(CPoint(0, 0), CPoint(wd, 16));
-    auto titletxt = new CTextLabel(titlerect, title.c_str());
-    titletxt->setTransparency(true);
-    titletxt->setFontColor(currentSkin->getColor(Colors::Dialog::Titlebar::Text));
-    titletxt->setFont(fntt);
-    titlebar->addView(titletxt);
-
-    auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
-    auto icon = new CViewContainer(iconrect);
-    icon->setBackground(bitmapStore->getBitmap(IDB_SURGE_ICON));
-    icon->setVisible(true);
-    titlebar->addView(icon);
-
-    auto bgrect = CRect(CPoint(1, 18), CPoint(wd - 2, ht - 19));
-    auto bg = new CViewContainer(bgrect);
-    bg->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));
-    bg->setVisible(true);
-    window->addView(bg);
-
-    auto msgrect = CRect(CPoint(0, 2), CPoint(wd, 14));
-    msgrect.inset(5, 0);
-    auto msgtxt = new CTextLabel(msgrect, prompt.c_str());
-    msgtxt->setTransparency(true);
-    msgtxt->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    msgtxt->setFont(fnts);
-    msgtxt->setHoriAlign(kLeftText);
-    bg->addView(msgtxt);
-
-    auto mer = CRect(CPoint(0, 18), CPoint(wd - 2, 22));
-    mer.inset(4, 2);
-    minieditTypein = new CTextEdit(mer, this, tag_miniedit_ok, value.c_str());
-    minieditTypein->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-    minieditTypein->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-    minieditTypein->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-    minieditTypein->setFont(fnt);
-#if WINDOWS
-    minieditTypein->setTextInset(CPoint(3, 0));
-#endif
-    bg->addView(minieditTypein);
-    minieditTypein->takeFocus();
-
-    minieditOverlayDone = onOK;
-
-    int bw = 44;
-    auto b1r = CRect(CPoint(wd - (bw * 2) - 9, bgrect.bottom - 36), CPoint(bw, 13));
-    auto b2r = CRect(CPoint(wd - bw - 6, bgrect.bottom - 36), CPoint(bw, 13));
-
-    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
-    auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
-    auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
-
-    auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
-    auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
-    auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
-
-    auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
-    auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
-    auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
-
-    VSTGUI::CGradient::ColorStopMap csm;
-    VSTGUI::CGradient *cg = VSTGUI::CGradient::create(csm);
-    cg->addColorStop(0, btnbg);
-
-    VSTGUI::CGradient::ColorStopMap hovcsm;
-    VSTGUI::CGradient *hovcg = VSTGUI::CGradient::create(hovcsm);
-    hovcg->addColorStop(0, hovbtnbg);
-
-    VSTGUI::CGradient::ColorStopMap presscsm;
-    VSTGUI::CGradient *presscg = VSTGUI::CGradient::create(presscsm);
-    presscg->addColorStop(0, pressbtnbg);
-
-    auto cb = new CTextButtonWithHover(b1r, this, tag_miniedit_cancel, "Cancel");
-    cb->setVisible(true);
-    cb->setFont(fnts);
-    cb->setGradient(cg);
-    cb->setFrameColor(btnborder);
-    cb->setTextColor(btntext);
-    cb->setHoverGradient(hovcg);
-    cb->setHoverFrameColor(hovbtnborder);
-    cb->setHoverTextColor(hovbtntext);
-    cb->setGradientHighlighted(presscg);
-    cb->setFrameColorHighlighted(pressbtnborder);
-    cb->setTextColorHighlighted(pressbtntext);
-    cb->setRoundRadius(CCoord(3.f));
-    bg->addView(cb);
-
-    auto kb = new CTextButtonWithHover(b2r, this, tag_miniedit_ok, "OK");
-    kb->setVisible(true);
-    kb->setFont(fnts);
-    kb->setGradient(cg);
-    kb->setFrameColor(btnborder);
-    kb->setTextColor(btntext);
-    kb->setHoverGradient(hovcg);
-    kb->setHoverFrameColor(hovbtnborder);
-    kb->setHoverTextColor(hovbtntext);
-    kb->setGradientHighlighted(presscg);
-    kb->setFrameColorHighlighted(pressbtnborder);
-    kb->setTextColorHighlighted(pressbtntext);
-    kb->setRoundRadius(CCoord(3.f));
-    bg->addView(kb);
-
-    presscg->forget();
-    hovcg->forget();
-    cg->forget();
+    miniEdit->setTitle(title);
+    miniEdit->setLabel(prompt);
+    miniEdit->setValue(value);
+    miniEdit->callback = std::move(onOK);
+    miniEdit->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    miniEdit->setVisible(true);
 }
 
 void SurgeGUIEditor::swapControllers(int t1, int t2)
@@ -5269,7 +5068,7 @@ void SurgeGUIEditor::repushAutomationFor(Parameter *p)
 
 void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 {
-    aboutScreen = std::make_unique<Surge::Widgets::AboutScreen>();
+    aboutScreen = std::make_unique<Surge::Overlays::AboutScreen>();
     aboutScreen->setEditor(this);
     aboutScreen->setHostProgram(synth->hostProgram);
     aboutScreen->setWrapperType(synth->juceWrapperType);
