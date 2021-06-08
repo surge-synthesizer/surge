@@ -563,6 +563,9 @@ struct AliasAdditiveEditor : public juce::Component
     void paint(juce::Graphics &g) override
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
+
+        float const halfHeight = getHeight() / 2.f;
+
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
             auto v = limitpm1(oscdata->extraConfig.data[i]);
@@ -571,13 +574,14 @@ struct AliasAdditiveEditor : public juce::Component
             sliders[i] = p;
 
             auto bar = p;
+
             if (v < 0)
             {
-                bar = p.withTop(getHeight() / 2).withBottom(getHeight() / 2 * (1 - v));
+                bar = p.withTop(halfHeight).withBottom(halfHeight * (1 - v));
             }
             else
             {
-                bar = p.withBottom(getHeight() / 2).withTop(getHeight() / 2 * (1 - v));
+                bar = p.withBottom(halfHeight).withTop(halfHeight * (1 - v));
             }
 
             g.setColour(skin->getColor(Colors::Osc::Display::Wave));
@@ -585,6 +589,8 @@ struct AliasAdditiveEditor : public juce::Component
             g.setColour(skin->getColor(Colors::Osc::Display::Bounds));
             g.drawRect(sliders[i]);
         }
+
+        g.drawLine(0.f, halfHeight, getWidth(), halfHeight);
     }
 
     void mouseDown(const juce::MouseEvent &event) override
@@ -701,12 +707,55 @@ struct AliasAdditiveEditor : public juce::Component
             contextMenu.showMenuAsync(juce::PopupMenu::Options());
             return;
         }
+
+        if (event.mods.isLeftButtonDown())
+        {
+            int clickedSlider = -1;
+
+            for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
+            {
+                if (sliders[i].contains(event.position))
+                {
+                    clickedSlider = i;
+                }
+            }
+
+            if (clickedSlider >= 0)
+            {
+                auto d = (-1.f * event.position.y / getHeight() + 0.5) * 2 *
+                         (!event.mods.isCommandDown());
+                oscdata->extraConfig.data[clickedSlider] = limitpm1(d);
+
+                repaint();
+            }
+        }
+    }
+
+    void mouseDoubleClick(const juce::MouseEvent &event) override
+    {
+        int clickedSlider = -1;
+
+        for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
+        {
+            if (sliders[i].contains(event.position))
+            {
+                clickedSlider = i;
+            }
+        }
+
+        if (clickedSlider >= 0)
+        {
+            oscdata->extraConfig.data[clickedSlider] = 0.f;
+
+            repaint();
+        }
     }
 
     void mouseDrag(const juce::MouseEvent &event) override
     {
 
         int draggedSlider = -1;
+
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
             if (sliders[i].contains(event.position))
@@ -714,9 +763,56 @@ struct AliasAdditiveEditor : public juce::Component
                 draggedSlider = i;
             }
         }
+
         if (draggedSlider >= 0)
         {
-            auto d = (-1.f * event.position.y / getHeight() + 0.5) * 2;
+            auto d =
+                (-1.f * event.position.y / getHeight() + 0.5) * 2 * (!event.mods.isCommandDown());
+            oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
+
+            repaint();
+        }
+    }
+
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        /*
+         * If I choose based on horiz/vert it only works on trackpads, so just add
+         */
+        float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
+
+        if (delta == 0)
+        {
+            return;
+        }
+
+#if MAC
+        float speed = 1.2;
+#else
+        float speed = 0.42666;
+#endif
+
+        if (event.mods.isShiftDown())
+        {
+            speed /= 10.f;
+        }
+
+        delta *= speed;
+
+        int draggedSlider = -1;
+
+        for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
+        {
+            if (sliders[i].contains(event.position))
+            {
+                draggedSlider = i;
+            }
+        }
+
+        if (draggedSlider >= 0)
+        {
+            auto d = oscdata->extraConfig.data[draggedSlider] + delta;
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
             repaint();
         }
