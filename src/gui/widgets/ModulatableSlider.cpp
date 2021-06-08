@@ -450,11 +450,15 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
 
     showInfowindowSelfDismiss(isEditingModulation);
 
+#if MAC
     float speed = 1.2;
+#else
+    float speed = 0.42666;
+#endif
 
     if (event.mods.isShiftDown())
     {
-        speed = .12;
+        speed /= 10.f;
     }
 
     delta *= speed;
@@ -472,6 +476,7 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
     }
 
     notifyValueChanged();
+    updateInfowindowContents(isEditingModulation);
     notifyEndEdit();
     repaint();
 }
