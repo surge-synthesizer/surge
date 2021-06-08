@@ -564,7 +564,7 @@ struct AliasAdditiveEditor : public juce::Component
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
 
-        float const halfHeight = getHeight() / 2.f;
+        float halfHeight = getHeight() / 2.f;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
