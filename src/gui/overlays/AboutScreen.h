@@ -24,7 +24,7 @@ class SurgeStorage;
 
 namespace Surge
 {
-namespace Widgets
+namespace Overlays
 {
 struct AboutScreen : public juce::Component,
                      public Surge::GUI::SkinConsumingComponent,
@@ -66,7 +66,7 @@ struct AboutScreen : public juce::Component,
 
     juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.8f)};
 };
-} // namespace Widgets
+} // namespace Overlays
 } // namespace Surge
 
 #endif // SURGE_XT_ABOUTSCREEN_H

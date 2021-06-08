@@ -497,10 +497,14 @@ class SkinConsumingComponent
     virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b) { setSkin(s, b, nullptr); }
     virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b, Skin::Control::ptr_t c)
     {
+        bool changed = (skin != s) || (associatedBitmapStore != b) || (skinControl != c);
         skin = s;
         associatedBitmapStore = b;
         skinControl = c;
-        onSkinChanged();
+        if (changed)
+        {
+            onSkinChanged();
+        }
     }
 
     virtual void onSkinChanged() {}

@@ -45,7 +45,6 @@ namespace Surge
 {
 namespace Widgets
 {
-struct AboutScreen;
 struct EffectChooser;
 struct EffectLabel;
 struct ModulatableControlInterface;
@@ -60,6 +59,13 @@ struct VuMeter;
 struct OscillatorMenu;
 struct FxMenu;
 } // namespace Widgets
+
+namespace Overlays
+{
+struct AboutScreen;
+struct TypeinParamEditor;
+struct MiniEdit;
+} // namespace Overlays
 } // namespace Surge
 
 struct SGEDropAdapter;
@@ -457,7 +463,7 @@ class SurgeGUIEditor : public EditorType,
 
     VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
-    std::unique_ptr<Surge::Widgets::AboutScreen> aboutScreen;
+    std::unique_ptr<Surge::Overlays::AboutScreen> aboutScreen;
 
     std::unique_ptr<juce::Drawable> midiLearnOverlay;
 
@@ -471,18 +477,20 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CTextLabel *debugLabel = nullptr;
 #endif
 
+#if 0
     VSTGUI::CViewContainer *typeinDialog = nullptr;
     VSTGUI::CTextEdit *typeinValue = nullptr;
     VSTGUI::CTextLabel *typeinLabel = nullptr;
     VSTGUI::CTextLabel *typeinPriorValueLabel = nullptr;
     VSTGUI::CControl *typeinEditControl = nullptr;
+#endif
+    std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
+    bool setParameterFromString(Parameter *p, const std::string &s);
+    bool setParameterModulationFromString(Parameter *p, modsources ms, const std::string &s);
+    bool setControlFromString(modsources ms, const std::string &s);
+    friend struct Surge::Overlays::TypeinParamEditor;
+
     VSTGUI::CControlValueInterface *msegEditSwitch = nullptr;
-    enum TypeInMode
-    {
-        Inactive,
-        Param,
-        Control
-    } typeinMode = Inactive;
     std::vector<VSTGUI::CView *> removeFromFrame;
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
@@ -493,9 +501,7 @@ class SurgeGUIEditor : public EditorType,
         editorOverlayContentsWeakReference;
     std::unordered_map<VSTGUI::CViewContainer *, std::function<void()>> editorOverlayOnClose;
 
-    VSTGUI::CViewContainer *minieditOverlay = nullptr;
-    VSTGUI::CTextEdit *minieditTypein = nullptr;
-    std::function<void(const char *)> minieditOverlayDone = [](const char *) {};
+    std::unique_ptr<Surge::Overlays::MiniEdit> miniEdit;
 
   public:
     std::string editorOverlayTagAtClose; // FIXME what is this?
