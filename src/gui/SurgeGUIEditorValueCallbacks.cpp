@@ -17,13 +17,13 @@
 #include "SurgeGUIEditorTags.h"
 #include "SurgeGUIUtils.h"
 
-#include "CModulationSourceButton.h"
 #include "CLFOGui.h"
 #include "ModernOscillator.h"
 
 #include "widgets/EffectChooser.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/MenuForDiscreteParams.h"
+#include "widgets/ModulationSourceButton.h"
 #include "widgets/NumberField.h"
 #include "widgets/OscillatorWaveformDisplay.h"
 #include "widgets/Switch.h"
@@ -265,7 +265,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
         if (button & kRButton)
         {
-            CModulationSourceButton *cms = (CModulationSourceButton *)control;
+            auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
             juce::PopupMenu contextMenu;
 
             std::string hu;
@@ -287,12 +287,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                 hu = helpURLForSpecial("other-modbutton");
             }
 
-            if (cms->hasAlternate)
+            if (cms->getHasAlternate())
             {
                 int idOn = modsource;
-                int idOff = cms->alternateId;
+                int idOff = cms->getAlternate();
 
-                if (cms->useAlternate)
+                if (cms->getUseAlternate())
                 {
                     auto t = idOn;
                     idOn = idOff;
@@ -311,13 +311,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     contextMenu.addItem(modsource_names[idOn], []() {});
                 }
 
-                bool activeMod = (cms->state & 3) == 2;
+                bool activeMod = ((cms->getState() & 3) == 2);
                 std::string offLab = "Switch to ";
                 offLab += modsource_names[idOff];
 
                 contextMenu.addItem(offLab, !activeMod, false, [this, modsource, cms]() {
-                    cms->setUseAlternate(!cms->useAlternate);
-                    modsource_is_alternate[modsource] = cms->useAlternate;
+                    cms->setUseAlternate(!cms->getUseAlternate());
+                    modsource_is_alternate[modsource] = cms->getUseAlternate();
                     this->refresh_mod();
                 });
             }
@@ -357,9 +357,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
             // why...
             std::vector<modsources> possibleSources;
             possibleSources.push_back(modsource);
-            if (cms->hasAlternate)
+            if (cms->getHasAlternate())
             {
-                possibleSources.push_back((modsources)(cms->alternateId));
+                possibleSources.push_back((modsources)(cms->getAlternate()));
             }
 
             for (auto thisms : possibleSources)
@@ -480,8 +480,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                 strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
                                         newName.c_str(), 15);
                                 synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
-                                ((CModulationSourceButton *)control)
-                                    ->setlabel(
+                                auto msb =
+                                    dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                                if (msb)
+                                    msb->setLabel(
                                         synth->storage.getPatch().CustomControllerLabel[ccid]);
                                 if (bvf)
                                     bvf->invalid();
@@ -522,8 +524,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                             synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
                             synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-                            ((CModulationSourceButton *)control)
-                                ->setlabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+                            auto msb =
+                                dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                            if (msb)
+                                msb->setLabel(
+                                    synth->storage.getPatch().CustomControllerLabel[ccid]);
                         }
                         if (control->asBaseViewFunctions())
                             control->asBaseViewFunctions()->invalid();
@@ -656,25 +661,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                .scene[current_scene]
                                .modsources[ms_ctrl1 + ccid]
                                ->is_bipolar();
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Bipolar Mode"), true, ibp,
-                                    [this, control, ccid]() {
-                                        bool bp = !synth->storage.getPatch()
-                                                       .scene[current_scene]
-                                                       .modsources[ms_ctrl1 + ccid]
-                                                       ->is_bipolar();
-                                        synth->storage.getPatch()
-                                            .scene[current_scene]
-                                            .modsources[ms_ctrl1 + ccid]
-                                            ->set_bipolar(bp);
+                contextMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu("Bipolar Mode"), true, ibp,
+                    [this, control, ccid]() {
+                        bool bp = !synth->storage.getPatch()
+                                       .scene[current_scene]
+                                       .modsources[ms_ctrl1 + ccid]
+                                       ->is_bipolar();
+                        synth->storage.getPatch()
+                            .scene[current_scene]
+                            .modsources[ms_ctrl1 + ccid]
+                            ->set_bipolar(bp);
 
-                                        float f = synth->storage.getPatch()
-                                                      .scene[current_scene]
-                                                      .modsources[ms_ctrl1 + ccid]
-                                                      ->get_output01();
-                                        control->setValue(f);
-                                        ((CModulationSourceButton *)control)->setBipolar(bp);
-                                        refresh_mod();
-                                    });
+                        float f = synth->storage.getPatch()
+                                      .scene[current_scene]
+                                      .modsources[ms_ctrl1 + ccid]
+                                      ->get_output01();
+                        control->setValue(f);
+                        auto msb = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                        if (msb)
+                            msb->setBipolar(bp);
+                        refresh_mod();
+                    });
 
                 addCallbackMenu(
                     contextMenu, Surge::GUI::toOSCaseForMenu("Rename Macro..."),
@@ -693,8 +701,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                         useS.c_str(), 16);
                                 synth->storage.getPatch().CustomControllerLabel[ccid][15] =
                                     0; // to be sure
-                                ((CModulationSourceButton *)control)
-                                    ->setlabel(
+                                auto msb =
+                                    dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                                if (msb)
+                                    msb->setLabel(
                                         synth->storage.getPatch().CustomControllerLabel[ccid]);
 
                                 if (control && control->asBaseViewFunctions())
@@ -2024,10 +2034,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
         {
             if (synth->isValidModulation(ptag, modsource) && mod_editor)
             {
-                CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
-                auto thisms = modsource;
-                if (cms && cms->hasAlternate && cms->useAlternate)
-                    thisms = (modsources)cms->alternateId;
+                auto *cms = gui_modsrc[modsource].get();
+                modsources thisms = modsource;
+                if (cms->getHasAlternate() && cms->getUseAlternate())
+                    thisms = cms->getAlternate();
 
                 synth->clearModulation(ptag, thisms);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
@@ -2040,6 +2050,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     ctrms->setIsModulationBipolar(synth->isBipolarModulation(thisms));
                 }
                 oscWaveform->repaint();
+
                 return 0;
             }
             else
@@ -2228,7 +2239,8 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
     if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
     {
-        if (((CModulationSourceButton *)control)->event_is_drag)
+        auto cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+        if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::DRAG_VALUE)
         {
             int t = (tag - tag_mod_source0);
             ((ControllerModulationSource *)synth->storage.getPatch()
@@ -2245,13 +2257,10 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         }
         else
         {
-            CModulationSourceButton *cms = (CModulationSourceButton *)control;
-            int state = cms->get_state();
+            int state = cms->getState();
             modsources newsource = (modsources)(tag - tag_mod_source0);
             long buttons = 0; // context->getMouseButtons(); // temp fix vstgui 3.5
-            bool ciep =
-                ((CModulationSourceButton *)control)->click_is_editpart && (newsource >= ms_lfo1);
-            if (!ciep)
+            if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK)
             {
                 switch (state & 3)
                 {
@@ -2312,7 +2321,6 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 }
             }
         }
-
         return;
     }
 
@@ -2712,9 +2720,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 modsources thisms = modsource;
                 if (gui_modsrc[modsource])
                 {
-                    CModulationSourceButton *cms = (CModulationSourceButton *)gui_modsrc[modsource];
-                    if (cms->hasAlternate && cms->useAlternate)
-                        thisms = (modsources)cms->alternateId;
+                    auto cms = gui_modsrc[modsource].get();
+                    if (cms->getHasAlternate() && cms->getUseAlternate())
+                        thisms = cms->getAlternate();
                 }
                 bool quantize_mod = frame->getCurrentMouseButtons() & kControl;
                 float mv = mci->getModValue();
@@ -2748,8 +2756,8 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     {
                         strxcpy(lbl, p->get_name(), 15);
                         synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
-                        ((CModulationSourceButton *)gui_modsrc[modsource])->setlabel(lbl);
-                        ((CModulationSourceButton *)gui_modsrc[modsource])->invalid();
+                        gui_modsrc[modsource]->setLabel(lbl);
+                        gui_modsrc[modsource]->repaint();
                     }
                 }
             }

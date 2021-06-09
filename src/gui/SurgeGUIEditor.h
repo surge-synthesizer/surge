@@ -38,15 +38,13 @@
 typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
 class SurgeSynthEditor;
 
-class CModulationSourceButton;
-class CAboutBox;
-
 namespace Surge
 {
 namespace Widgets
 {
 struct EffectChooser;
 struct EffectLabel;
+struct ModulationSourceButton;
 struct ModulatableControlInterface;
 struct NumberField;
 struct OscillatorWaveformDisplay;
@@ -474,16 +472,9 @@ class SurgeGUIEditor : public EditorType,
     VSTGUI::CCheckBox *patchTuning = nullptr;
     VSTGUI::CTextLabel *patchTuningLabel = nullptr;
 #if BUILD_IS_DEBUG
-    VSTGUI::CTextLabel *debugLabel = nullptr;
+    std::unique_ptr<juce::Label> debugLabel;
 #endif
 
-#if 0
-    VSTGUI::CViewContainer *typeinDialog = nullptr;
-    VSTGUI::CTextEdit *typeinValue = nullptr;
-    VSTGUI::CTextLabel *typeinLabel = nullptr;
-    VSTGUI::CTextLabel *typeinPriorValueLabel = nullptr;
-    VSTGUI::CControl *typeinEditControl = nullptr;
-#endif
     std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
     bool setParameterFromString(Parameter *p, const std::string &s);
     bool setParameterModulationFromString(Parameter *p, modsources ms, const std::string &s);
@@ -563,7 +554,7 @@ class SurgeGUIEditor : public EditorType,
     static const int n_paramslots = 1024;
     Surge::Widgets::ModulatableControlInterface *param[n_paramslots] = {};
     VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
-    CModulationSourceButton *gui_modsrc[n_modsources] = {};
+    std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
     VSTGUI::CControl *metaparam[n_customcontrollers] = {};
     VSTGUI::CControl *lfodisplay = nullptr;
     Surge::Widgets::Switch *filtersubtype[2] = {};

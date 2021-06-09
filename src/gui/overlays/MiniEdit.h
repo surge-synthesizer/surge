@@ -25,14 +25,14 @@ namespace Overlays
 {
 struct MiniEdit : public juce::Component,
                   public Surge::GUI::SkinConsumingComponent,
-                  public juce::Button::Listener
+                  public juce::Button::Listener,
+                  public juce::TextEditor::Listener
 {
     MiniEdit();
     ~MiniEdit();
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
-    void mouseDown(const juce::MouseEvent &e) override { setVisible(false); }
-
+    void visibilityChanged() override;
     std::string title, label;
     void setTitle(const std::string t) { title = t; }
     void setLabel(const std::string t) { label = t; }
@@ -45,6 +45,10 @@ struct MiniEdit : public juce::Component,
     std::unique_ptr<juce::TextEditor> typein;
     std::unique_ptr<juce::TextButton> okButton;
     std::unique_ptr<juce::TextButton> cancelButton;
+
+    void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
+    void grabFocus() { typein->grabKeyboardFocus(); }
 };
 } // namespace Overlays
 } // namespace Surge

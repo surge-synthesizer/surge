@@ -86,6 +86,9 @@ void ModulatableSlider::updateLocationState()
         // When modulating and this is relevant, value == QDV always
         handleMY = limit01(1 - (value + modValue)) * range + handleY0;
         barNMY = limit01(1 - (value - modValue)) * range + handleY0;
+        if (!isModulationBipolar)
+            barNMY = handleMY;
+
         labelRect = juce::Rectangle<int>();
         handleSize = juce::Rectangle<int>().withWidth(15).withHeight(20);
     }
@@ -102,6 +105,8 @@ void ModulatableSlider::updateLocationState()
         handleCX = range * quantizedDisplayValue + handleX0;
         handleMX = range * limit01(value + modValue) + handleX0;
         barNMX = range * limit01(value - modValue) + handleX0;
+        if (!isModulationBipolar)
+            barNMX = handleMX;
 
         handleCY = 6;
         handleMY = handleCY;

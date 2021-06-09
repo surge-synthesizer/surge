@@ -16,7 +16,6 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
-#include "CModulationSourceButton.h"
 #include "CLFOGui.h"
 #include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
@@ -46,6 +45,7 @@
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
 #include "widgets/MenuForDiscreteParams.h"
+#include "widgets/ModulationSourceButton.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
@@ -311,9 +311,9 @@ void SurgeGUIEditor::idle()
                 for (int i = 1; i < n_modsources; i++)
                 {
                     if (gui_modsrc[i])
-                        ((CModulationSourceButton *)gui_modsrc[i])
-                            ->update_rt_vals(synth->isActiveModulation(ptag, (modsources)i), 0,
-                                             synth->isModsourceUsed((modsources)i));
+                        gui_modsrc[i]->update_rt_vals(
+                            synth->isActiveModulation(ptag, (modsources)i), 0,
+                            synth->isModsourceUsed((modsources)i));
                 }
                 synth->storage.modRoutingMutex.unlock();
             }
@@ -324,8 +324,7 @@ void SurgeGUIEditor::idle()
             for (int i = 1; i < n_modsources; i++)
             {
                 if (gui_modsrc[i])
-                    ((CModulationSourceButton *)gui_modsrc[i])
-                        ->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
+                    gui_modsrc[i]->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
             }
             synth->storage.modRoutingMutex.unlock();
         }
@@ -746,11 +745,13 @@ void SurgeGUIEditor::toggle_mod_editing()
 
 void SurgeGUIEditor::refresh_mod()
 {
-    CModulationSourceButton *cms = gui_modsrc[modsource];
+    auto *cms = gui_modsrc[modsource].get();
+    if (!cms)
+        return;
 
     modsources thisms = modsource;
-    if (cms->hasAlternate && cms->useAlternate)
-        thisms = (modsources)cms->alternateId;
+    if (cms->getHasAlternate() && cms->getUseAlternate())
+        thisms = cms->getAlternate();
 
     synth->storage.modRoutingMutex.lock();
     for (int i = 0; i < n_paramslots; i++)
@@ -805,15 +806,15 @@ void SurgeGUIEditor::refresh_mod()
         if (gui_modsrc[i])
         {
             // this could change if I cleared the last one
-            gui_modsrc[i]->used = synth->isModsourceUsed((modsources)i);
-            gui_modsrc[i]->state = state;
+            gui_modsrc[i]->setUsed(synth->isModsourceUsed((modsources)i));
+            gui_modsrc[i]->setState(state);
 
             if (i < ms_ctrl1 || i > ms_ctrl8)
             {
                 auto mn = modulatorName(i, true);
-                gui_modsrc[i]->setlabel(mn.c_str());
+                gui_modsrc[i]->setLabel(mn.c_str());
             }
-            gui_modsrc[i]->invalid();
+            gui_modsrc[i]->repaint();
         }
     }
 }
@@ -1070,18 +1071,25 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if (ms == modsource_editor[current_scene])
                 state |= 4;
 
-            gui_modsrc[ms] = new CModulationSourceButton(r, this, tag_mod_source0 + ms, state, ms,
-                                                         bitmapStore, &(synth->storage));
+            if (!gui_modsrc[ms])
+            {
+                gui_modsrc[ms] = std::make_unique<Surge::Widgets::ModulationSourceButton>();
+            }
+            gui_modsrc[ms]->setModSource(ms);
+            gui_modsrc[ms]->setBounds(r.asJuceIntRect());
+            gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
+            gui_modsrc[ms]->addListener(this);
+            gui_modsrc[ms]->setSkin(currentSkin, bitmapStore);
+            gui_modsrc[ms]->setStorage(&(synth->storage));
 
-            gui_modsrc[ms]->setSkin(currentSkin);
             gui_modsrc[ms]->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
 
             if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
             {
                 // std::cout << synth->learn_custom << std::endl;
-                gui_modsrc[ms]->setlabel(
+                gui_modsrc[ms]->setLabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
-                gui_modsrc[ms]->set_ismeta(true);
+                gui_modsrc[ms]->setIsMeta(true);
                 gui_modsrc[ms]->setBipolar(
                     synth->storage.getPatch().scene[current_scene].modsources[ms]->is_bipolar());
                 gui_modsrc[ms]->setValue(((ControllerModulationSource *)synth->storage.getPatch()
@@ -1091,7 +1099,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
             else
             {
-                gui_modsrc[ms]->setlabel(modulatorName(ms, true).c_str());
+                gui_modsrc[ms]->setLabel(modulatorName(ms, true).c_str());
 
                 if (ms == ms_random_bipolar)
                 {
@@ -1108,24 +1116,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 }
             }
 
-            frame->addView(gui_modsrc[ms]);
+            frame->juceComponent()->addAndMakeVisible(*gui_modsrc[ms]);
             if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
             }
         }
     }
-
-    /*// Comments
-      {
-      CRect CommentsRect(6 + 150*4,528, getWindowSizeX(), getWindowSizeY());
-      CTextLabel *Comments = new
-      CTextLabel(CommentsRect,synth->storage.getPatch().comment.c_str());
-      Comments->setTransparency(true);
-      Comments->setFont(displayFont);
-      Comments->setHoriAlign(kMultiLineCenterText);
-      frame->addView(Comments);
-      }*/
 
     // fx vu-meters & labels. This is all a bit hacky still
     {
@@ -1593,16 +1590,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
      *
      * UPDATE: Might as well keep a reference to the object though so we can touch it in idle
      */
-    auto dl = std::string("D ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
-    auto lb = new CTextLabel(CRect(CPoint(310, 39), CPoint(195, 15)), dl.c_str());
-    lb->setTransparency(false);
-    lb->setBackColor(juce::Colours::red);
-    lb->setFontColor(juce::Colours::white);
-    lb->setFont(Surge::GUI::getFontManager()->displayFont);
-    lb->setHoriAlign(VSTGUI::kCenterText);
-    lb->setAntialias(true);
-    frame->addView(lb);
-    debugLabel = lb;
+    auto dl = std::string("Debug ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
+    if (!debugLabel)
+    {
+        debugLabel = std::make_unique<juce::Label>("debugLabel");
+    }
+    debugLabel->setBounds(310, 39, 195, 15);
+    debugLabel->setText(dl, juce::dontSendNotification);
+    debugLabel->setColour(juce::Label::backgroundColourId,
+                          juce::Colours::red.withAlpha((float)0.8));
+    debugLabel->setColour(juce::Label::textColourId, juce::Colours::white);
+    debugLabel->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+    debugLabel->setJustificationType(juce::Justification::centred);
+    frame->juceComponent()->addAndMakeVisible(*debugLabel);
+
 #endif
     for (auto el : editorOverlay)
     {
@@ -3454,7 +3455,6 @@ void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
 
 void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, BaseViewFunctions *c, int ms)
 {
-
     if (typeinParamEditor->isVisible())
     {
         typeinParamEditor->setVisible(false);
@@ -3747,10 +3747,9 @@ void SurgeGUIEditor::sliderHoverStart(int tag)
         modsources ms = (modsources)k;
         if (synth->isActiveModulation(ptag, ms))
         {
-            auto gms = dynamic_cast<CModulationSourceButton *>(gui_modsrc[k]);
-            if (gms)
+            if (gui_modsrc[k])
             {
-                gms->setSecondaryHover(true);
+                gui_modsrc[k]->setSecondaryHover(true);
             }
         }
     };
@@ -3759,10 +3758,9 @@ void SurgeGUIEditor::sliderHoverEnd(int tag)
 {
     for (int k = 1; k < n_modsources; k++)
     {
-        auto gms = dynamic_cast<CModulationSourceButton *>(gui_modsrc[k]);
-        if (gms)
+        if (gui_modsrc[k])
         {
-            gms->setSecondaryHover(false);
+            gui_modsrc[k]->setSecondaryHover(false);
         }
     }
 }
@@ -3972,6 +3970,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->callback = std::move(onOK);
     miniEdit->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     miniEdit->setVisible(true);
+    miniEdit->grabFocus();
 }
 
 void SurgeGUIEditor::swapControllers(int t1, int t2)
@@ -5112,12 +5111,12 @@ void SurgeGUIEditor::hideMidiLearnOverlay()
 
 void SurgeGUIEditor::toggleAlternateFor(VSTGUI::CControl *c)
 {
-    auto cms = dynamic_cast<CModulationSourceButton *>(c);
+    auto cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(c);
     if (cms)
     {
         modsource = (modsources)(cms->getTag() - tag_mod_source0);
-        cms->setUseAlternate(!cms->useAlternate);
-        modsource_is_alternate[modsource] = cms->useAlternate;
+        cms->setUseAlternate(!cms->getUseAlternate());
+        modsource_is_alternate[modsource] = cms->getUseAlternate();
         this->refresh_mod();
     }
 }
