@@ -53,7 +53,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             g.fillAll(juce::Colour(30, 30, 30));
             auto r = getBounds().expanded(-1);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, VSTGUI::kBoldFace));
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
             g.setColour(juce::Colour(255, 255, 255));
             g.drawText(mod->rows[row].hLab, r, juce::Justification::left);
         }

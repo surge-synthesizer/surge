@@ -722,7 +722,7 @@ bool Skin::setAllCapsProperty(std::string propertyValue)
     }
 }
 
-int Skin::setFontStyleProperty(std::string propertyValue)
+juce::Font::FontStyleFlags Skin::setFontStyleProperty(std::string propertyValue)
 {
     // make the property value not case sensitive
     std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
