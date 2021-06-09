@@ -122,7 +122,9 @@ struct OscillatorMenu : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     bool text_allcaps{false};
-    int font_style{0}, font_size{8}, text_hoffset{0}, text_voffset{0};
+    juce::Font::FontStyleFlags font_style{juce::Font::plain};
+
+    int font_size{8}, text_hoffset{0}, text_voffset{0};
     juce::Justification text_align{juce::Justification::centred};
 };
 

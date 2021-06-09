@@ -1,5 +1,6 @@
 #pragma once
 
+#include <JuceHeader.h>
 #include <efvg/escape_from_vstgui.h>
 
 namespace Surge
@@ -12,7 +13,9 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     DefaultFonts();
     ~DefaultFonts();
     // Fix (or expand) this signature to not couple to VSTGUI
-    juce::Font getLatoAtSize(float size, int style = VSTGUI::kNormalFace) const;
+    juce::Font
+    getLatoAtSize(float size,
+                  juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;
     juce::Font getFiraMonoAtSize(float size) const;
 
     juce::Font displayFont;

@@ -1313,7 +1313,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 componentForSkinSession<Surge::Widgets::VerticalLabel>(skinCtrl->sessionid);
             frame->juceComponent()->addAndMakeVisible(*lfoNameLabel);
             lfoNameLabel->setBounds(skinCtrl->getRect().asJuceIntRect());
-            lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, kBoldFace));
+            lfoNameLabel->setFont(
+                Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
             break;
         }
@@ -3833,7 +3834,7 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
     else
         containerSize.moveTo(CPoint(0, 0));
 
-    auto headerFont = Surge::GUI::getFontManager()->getLatoAtSize(9, kBoldFace);
+    auto headerFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
     auto btnFont = Surge::GUI::getFontManager()->getLatoAtSize(8);
 
     auto outerc = new CViewContainer(containerSize);

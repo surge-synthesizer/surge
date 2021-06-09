@@ -43,9 +43,9 @@ DefaultFonts::DefaultFonts()
 
 DefaultFonts::~DefaultFonts(){};
 
-juce::Font DefaultFonts::getLatoAtSize(float size, int style) const
+juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
-    return juce::Font(latoRegularTypeface).withPointHeight(size);
+    return juce::Font(latoRegularTypeface).withPointHeight(size).withStyle(style);
 }
 
 juce::Font DefaultFonts::getFiraMonoAtSize(float size) const
