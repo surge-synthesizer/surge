@@ -109,7 +109,7 @@
     <color id="dialog.button.pressed.border" value="black"/>
     <color id="dialog.button.pressed.text" value="black"/>
 
-    <color id="dialog.textfield.focus" value="red"/>
+    <color id="dialog.textfield.focus" value="black"/>
     <color id="dialog.textfield.border" value="bordergray"/>
     <color id="dialog.textfield.background" value="#2E2E2E"/>
     <color id="dialog.textfield.text" value="lightgray"/>

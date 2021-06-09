@@ -26,6 +26,9 @@ TypeinParamEditor::TypeinParamEditor()
     textEd = std::make_unique<juce::TextEditor>("typeinParamEditor");
     textEd->addListener(this);
     textEd->setSelectAllWhenFocused(true);
+    textEd->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+    textEd->setIndents(4, (textEd->getHeight() - textEd->getTextHeight()) / 2);
+    textEd->setJustification(juce::Justification::centred);
     addAndMakeVisible(*textEd);
 }
 
@@ -37,10 +40,12 @@ void TypeinParamEditor::paint(juce::Graphics &g)
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
     g.setColour(skin->getColor(Colors::Slider::Label::Dark));
+
     auto r = getLocalBounds().translated(0, 2).withHeight(14);
     g.drawText(mainLabel, r, juce::Justification::centred);
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+
     if (isMod)
     {
         r = r.translated(0, 12);
@@ -48,10 +53,11 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     }
 
     r = r.translated(0, 12);
+
     if (wasInputInvalid)
     {
         g.setColour(juce::Colours::red);
-        g.drawText("Input out of range", r, juce::Justification::centred);
+        g.drawText("Input out of range!", r, juce::Justification::centred);
     }
     else
     {
@@ -74,6 +80,7 @@ void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &control
     auto r = juce::Rectangle<int>(0, 0, 144, ht)
                  .withX(controlRect.getX())
                  .withY(controlRect.getY() - ht);
+
     if (!parentRect.contains(r))
     {
         r = r.withTop(controlRect.getBottom());
@@ -84,6 +91,7 @@ void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &control
 
     setBounds(r);
 }
+
 void TypeinParamEditor::onSkinChanged()
 {
     textEd->setColour(juce::TextEditor::backgroundColourId,
@@ -93,6 +101,9 @@ void TypeinParamEditor::onSkinChanged()
                       skin->getColor(Colors::Dialog::Entry::Focus));
     textEd->setColour(juce::TextEditor::outlineColourId,
                       skin->getColor(Colors::Dialog::Entry::Border));
+    textEd->setColour(juce::TextEditor::focusedOutlineColourId,
+                      skin->getColor(Colors::Dialog::Entry::Border));
+
     repaint();
 }
 void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
