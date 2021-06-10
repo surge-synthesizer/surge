@@ -41,6 +41,7 @@
 #include "overlays/ModulationEditor.h"
 #include "overlays/PatchDBViewer.h"
 #include "overlays/TypeinParamEditor.h"
+#include "overlays/OverlayWrapper.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -3768,7 +3769,7 @@ void SurgeGUIEditor::sliderHoverEnd(int tag)
 
 void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 {
-    if (editorOverlay.size() == 0)
+    if (editorOverlay.size() == 0 && juceOverlays.empty())
         return;
 
     auto newO = editorOverlay;
@@ -3792,6 +3793,15 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
         }
     }
     editorOverlay = newO;
+
+    if (juceOverlays.find(ofType) != juceOverlays.end())
+    {
+        if (juceOverlays[ofType])
+        {
+            frame->juceComponent()->removeChildComponent(juceOverlays[ofType].get());
+        }
+        juceOverlays.erase(ofType);
+    }
 }
 
 void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
@@ -3934,6 +3944,28 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
     editorOverlayOnClose[editorOverlayC] = onClose;
     editorOverlayContentsWeakReference[editorOverlayC] = c;
     editorOverlayContentsWeakReference[editorOverlayC] = c;
+}
+
+void SurgeGUIEditor::addJuceEditorOverlay(
+    std::unique_ptr<juce::Component> c,
+    std::string editorTitle, // A window display title - whatever you want
+    OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
+    const juce::Rectangle<int> &containerSize, std::function<void()> onClose)
+{
+    auto ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
+    ol->setBounds(containerSize);
+    ol->setTitle(editorTitle);
+    ol->setSkin(currentSkin, bitmapStore);
+    ol->setSurgeGUIEditor(this);
+    ol->setIcon(bitmapStore->getDrawable(IDB_SURGE_ICON));
+    ol->addAndTakeOwnership(std::move(c));
+
+    ol->setCloseOverlay([this, editorTag, onClose]() {
+        this->dismissEditorOfType(editorTag);
+        onClose();
+    });
+    frame->juceComponent()->addAndMakeVisible(*ol);
+    juceOverlays[editorTag] = std::move(ol);
 }
 
 std::string SurgeGUIEditor::getDisplayForTag(long tag)
@@ -4897,12 +4929,9 @@ void SurgeGUIEditor::toggleMSEGEditor()
 
 void SurgeGUIEditor::showPatchBrowserDialog()
 {
-    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(750, 450)));
-    auto pt = std::make_unique<PatchDBViewer>(this, &(this->synth->storage));
-    c->juceComponent()->addAndMakeVisible(*pt);
-    pt->setBounds(0, 0, 750, 450);
-    c->takeOwnership(std::move(pt));
-    addEditorOverlay(c, "Patch Browser", PATCH_BROWSER, CPoint(50, 50), false, true, [this]() {});
+    auto pt = std::make_unique<Surge::Overlays::PatchDBViewer>(this, &(this->synth->storage));
+    addJuceEditorOverlay(std::move(pt), "Patch Browser", PATCH_BROWSER,
+                         juce::Rectangle<int>(50, 50, 750, 450));
 }
 
 void SurgeGUIEditor::closePatchBrowserDialog()
@@ -4915,13 +4944,9 @@ void SurgeGUIEditor::closePatchBrowserDialog()
 
 void SurgeGUIEditor::showModulationEditorDialog()
 {
-    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(750, 450)));
-    auto pt = std::make_unique<ModulationEditor>(this, this->synth);
-    c->juceComponent()->addAndMakeVisible(*pt);
-    pt->setBounds(0, 0, 750, 450);
-    c->takeOwnership(std::move(pt));
-    addEditorOverlay(c, "Modulation Overview", MODULATION_EDITOR, CPoint(50, 50), false, true,
-                     [this]() {});
+    auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
+    addJuceEditorOverlay(std::move(pt), "Modulation Overview", MODULATION_EDITOR,
+                         juce::Rectangle<int>(50, 50, 750, 450));
 }
 
 void SurgeGUIEditor::closeModulationEditorDialog()
@@ -4939,19 +4964,15 @@ void SurgeGUIEditor::showFormulaEditorDialog()
     auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
-    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h)));
     auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
     auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
 
-    auto pt =
-        std::make_unique<FormulaModulatorEditor>(this, &(this->synth->storage), fs, currentSkin);
-    pt->setBounds(0, 0, skinCtrl->w, skinCtrl->h);
+    auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
+        this, &(this->synth->storage), fs, currentSkin);
     pt->setSkin(currentSkin, bitmapStore);
-    c->juceComponent()->addAndMakeVisible(*pt);
-    c->takeOwnership(std::move(pt));
 
-    addEditorOverlay(c, "Formula Editor", FORMULA_EDITOR, CPoint(skinCtrl->x, skinCtrl->y), false,
-                     true, [this]() {});
+    addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR,
+                         skinCtrl->getRect().asJuceIntRect(), [this]() {});
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
@@ -4967,18 +4988,16 @@ void SurgeGUIEditor::showWavetableScripter()
     int w = 800, h = 520;
     auto px = (getWindowSizeX() - w) / 2;
     auto py = (getWindowSizeY() - h) / 2;
-    auto *c = new CViewContainer(CRect(CPoint(0, 0), CPoint(w, h)));
+    auto r = juce::Rectangle<int>(px, py, w, h);
+
     auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
-    auto pt =
-        std::make_unique<WavetableEquationEditor>(this, &(this->synth->storage), os, currentSkin);
-    pt->setBounds(0, 0, w, h);
+    auto pt = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
+        this, &(this->synth->storage), os, currentSkin);
     pt->setSkin(currentSkin, bitmapStore);
-    c->juceComponent()->addAndMakeVisible(*pt);
-    c->takeOwnership(std::move(pt));
 
-    addEditorOverlay(c, "Wavetable Editor", FORMULA_EDITOR, CPoint(px, py), false, true,
-                     [this]() { frame->juceComponent()->repaint(); });
+    addJuceEditorOverlay(std::move(pt), "Wavetable Editor", WAVETABLESCRIPTING_EDITOR, r,
+                         [this]() { frame->juceComponent()->repaint(); });
 }
 
 void SurgeGUIEditor::closeWavetableScripter()

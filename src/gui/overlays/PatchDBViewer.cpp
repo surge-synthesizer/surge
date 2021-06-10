@@ -18,6 +18,10 @@
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 
+namespace Surge
+{
+namespace Overlays
+{
 class PatchDBSQLTableModel : public juce::TableListBoxModel
 {
   public:
@@ -118,3 +122,16 @@ void PatchDBViewer::executeQuery()
     table->updateContent();
 }
 void PatchDBViewer::textEditorTextChanged(juce::TextEditor &editor) { executeQuery(); }
+
+void PatchDBViewer::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
+void PatchDBViewer::resized()
+{
+    if (nameTypein)
+        nameTypein->setBounds(10, 10, 400, 30);
+
+    if (table)
+        table->setBounds(2, 50, getWidth() - 4, getHeight() - 52);
+}
+
+} // namespace Overlays
+} // namespace Surge

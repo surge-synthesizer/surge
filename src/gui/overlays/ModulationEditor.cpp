@@ -19,6 +19,10 @@
 #include "RuntimeFont.h"
 #include <sstream>
 
+namespace Surge
+{
+namespace Overlays
+{
 struct ModulationListBoxModel : public juce::ListBoxModel
 {
     struct Datum
@@ -347,20 +351,20 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     : ed(ed), synth(s), juce::Component("Modulation Editor")
 {
-    setSize(750, 450); // FIXME
-
     listBoxModel = std::make_unique<ModulationListBoxModel>(this);
     listBox = std::make_unique<juce::ListBox>("Mod Editor List", listBoxModel.get());
     listBox->setBounds(5, 5, 740, 440);
     listBox->setRowHeight(18);
     addAndMakeVisible(*listBox);
-
-    /*textBox = std::make_unique<juce::TextEditor>("Mod editor text box");
-    textBox->setMultiLine(true, false);
-    textBox->setBounds(5, 355, 740, 90);
-    textBox->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-    addAndMakeVisible(*textBox);
-    textBox->setText(listBoxModel->debugRows);*/
 }
 
+void ModulationEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
+void ModulationEditor::resized()
+{
+    if (listBox)
+        listBox->setBounds(2, 2, getWidth() - 4, getHeight() - 4);
+}
 ModulationEditor::~ModulationEditor() = default;
+
+} // namespace Overlays
+} // namespace Surge

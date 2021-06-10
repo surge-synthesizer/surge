@@ -19,8 +19,13 @@
 #include <JuceHeader.h>
 #include "SurgeStorage.h"
 
-class PatchDBSQLTableModel;
 class SurgeGUIEditor;
+
+namespace Surge
+{
+namespace Overlays
+{
+class PatchDBSQLTableModel;
 
 class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
 {
@@ -30,6 +35,10 @@ class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
     void createElements();
     void executeQuery();
 
+    void paint(juce::Graphics &g) override;
+
+    void resized() override;
+
     void textEditorTextChanged(juce::TextEditor &editor) override;
     std::unique_ptr<juce::TextEditor> nameTypein;
     std::unique_ptr<juce::TableListBox> table;
@@ -38,5 +47,8 @@ class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
     SurgeStorage *storage;
     SurgeGUIEditor *editor;
 };
+
+} // namespace Overlays
+} // namespace Surge
 
 #endif // SURGE_PATCHDBVIEWER_H

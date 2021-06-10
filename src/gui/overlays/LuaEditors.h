@@ -26,6 +26,11 @@
 
 class SurgeGUIEditor;
 
+namespace Surge
+{
+namespace Overlays
+{
+
 /*
  * This is a base class that provides you an apply button, an editor, a document
  * a tokenizer, etc... which you need to layout with yoru other components by
@@ -104,5 +109,8 @@ class WavetableEquationEditor : public CodeEditorContainerWithApply,
 
     OscillatorStorage *osc;
 };
+
+} // namespace Overlays
+} // namespace Surge
 
 #endif // SURGE_XT_LUAEDITORS_H
