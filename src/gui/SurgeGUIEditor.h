@@ -29,6 +29,7 @@
 #include "SkinColors.h"
 
 #include "overlays/MSEGEditor.h"
+#include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
 #include "widgets/ModulatableControlInterface.h"
 
 #include <vector>
@@ -63,6 +64,8 @@ namespace Overlays
 struct AboutScreen;
 struct TypeinParamEditor;
 struct MiniEdit;
+
+struct OverlayWrapper;
 } // namespace Overlays
 } // namespace Surge
 
@@ -327,6 +330,15 @@ class SurgeGUIEditor : public EditorType,
         OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
         const VSTGUI::CPoint &topleft = VSTGUI::CPoint(0, 0), bool modalOverlay = true,
         bool hasCloseButton = true, std::function<void()> onClose = []() {});
+
+    // I will be handed a pointer I need to keep around you know.
+    void addJuceEditorOverlay(
+        std::unique_ptr<juce::Component> c,
+        std::string editorTitle, // A window display title - whatever you want
+        OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
+        const juce::Rectangle<int> &containerBounds, std::function<void()> onClose = []() {});
+    std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
+
     void dismissEditorOfType(OverlayTags ofType);
     OverlayTags topmostEditorTag()
     {
@@ -341,6 +353,10 @@ class SurgeGUIEditor : public EditorType,
             if (el.first == tag)
                 return true;
         }
+
+        if (juceOverlays.find(tag) != juceOverlays.end() && juceOverlays[tag])
+            return true;
+
         return false;
     }
 

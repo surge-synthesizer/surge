@@ -20,6 +20,10 @@
 #include "SkinColors.h"
 #include "WavetableScriptEvaluator.h"
 
+namespace Surge
+{
+namespace Overlays
+{
 struct EditorColors
 {
     static void setColorsFromSkin(juce::CodeEditorComponent *comp,
@@ -352,3 +356,6 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
     }
     CodeEditorContainerWithApply::buttonClicked(button);
 }
+
+} // namespace Overlays
+} // namespace Surge

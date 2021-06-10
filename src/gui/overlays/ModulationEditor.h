@@ -21,6 +21,10 @@
 class SurgeGUIEditor;
 class SurgeSynthesizer;
 
+namespace Surge
+{
+namespace Overlays
+{
 class ModulationListBoxModel;
 
 class ModulationEditor : public juce::Component
@@ -34,6 +38,12 @@ class ModulationEditor : public juce::Component
     std::unique_ptr<juce::TextEditor> textBox;
     SurgeGUIEditor *ed;
     SurgeSynthesizer *synth;
+
+    void paint(juce::Graphics &g) override;
+    void resized() override;
 };
+
+} // namespace Overlays
+} // namespace Surge
 
 #endif // SURGE_XT_MODULATIONEDITOR_H
