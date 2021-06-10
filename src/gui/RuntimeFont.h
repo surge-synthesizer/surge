@@ -12,7 +12,6 @@ struct DefaultFonts : public juce::DeletedAtShutdown
 {
     DefaultFonts();
     ~DefaultFonts();
-    // Fix (or expand) this signature to not couple to VSTGUI
     juce::Font
     getLatoAtSize(float size,
                   juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;

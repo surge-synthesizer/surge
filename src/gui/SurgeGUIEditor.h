@@ -70,8 +70,6 @@ struct PatchStoreDialog;
 } // namespace Overlays
 } // namespace Surge
 
-struct SGEDropAdapter;
-
 class SurgeGUIEditor : public EditorType,
                        public VSTGUI::IControlListener,
                        public VSTGUI::IKeyboardHook,
@@ -278,6 +276,8 @@ class SurgeGUIEditor : public EditorType,
     void mappingFileDropped(std::string fn);
     std::string tuningToHtml();
 
+    void modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
+                                  const juce::Point<int> &);
     void swapControllers(int t1, int t2);
     void openModTypeinOnDrop(int ms, Surge::Widgets::ModulatableControlInterface *sl, int tgt);
 
@@ -398,13 +398,6 @@ class SurgeGUIEditor : public EditorType,
     MSEGEditor::State mostRecentCopiedMSEGState;
 
     int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
-
-    bool hasIdleRun = false;
-    VSTGUI::CPoint resizeToOnIdle = VSTGUI::CPoint(-1, -1);
-
-  private:
-    SGEDropAdapter *dropAdapter = nullptr;
-    friend class SGEDropAdapter;
 
   public:
     bool canDropTarget(const std::string &fname); // these come as const char* from vstgui

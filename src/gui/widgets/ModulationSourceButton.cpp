@@ -18,6 +18,7 @@
 #include "SkinSupport.h"
 #include "SurgeBitmaps.h"
 #include "basic_dsp.h"
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -226,6 +227,9 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
     }
     if (mouseMode == DRAG_COMPONENT_HAPPEN)
     {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        auto q = event.position.translated(getBounds().getX(), getBounds().getY());
+        sge->modSourceButtonDroppedAt(this, q.toInt());
         setBounds(mouseDownBounds);
     }
     if (mouseMode == DRAG_VALUE)

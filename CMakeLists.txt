@@ -556,7 +556,6 @@ if( BUILD_HEADLESS )
     ${SURGE_OS_SOURCES}
     ${SURGE_GENERATED_SOURCES}
     src/headless/main.cpp
-    src/headless/LinkFixesHeadless.cpp
     src/headless/HeadlessUtils.cpp
     src/headless/Player.cpp
     src/headless/UnitTests.cpp

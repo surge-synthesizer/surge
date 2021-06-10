@@ -574,7 +574,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
             auto p = g.second.props;
             auto id = p["id"];
             auto val = p["value"];
-            auto r = VSTGUI::CColor();
+            auto r = juce::Colour();
             if (val[0] == '#')
             {
                 colors[id] = ColorStore(colorFromHexString(val));
@@ -982,7 +982,7 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
     return true;
 }
 
-VSTGUI::CColor Skin::colorFromHexString(const std::string &val) const
+juce::Colour Skin::colorFromHexString(const std::string &val) const
 {
     uint32_t rgb;
     sscanf(val.c_str() + 1, "%x", &rgb);
@@ -1003,7 +1003,7 @@ VSTGUI::CColor Skin::colorFromHexString(const std::string &val) const
 
     uint8_t r = rgb % 256;
 
-    return VSTGUI::CColor(r, g, b, a);
+    return juce::Colour(r, g, b, a);
 }
 
 bool Skin::hasColor(const std::string &iid) const
@@ -1015,8 +1015,8 @@ bool Skin::hasColor(const std::string &iid) const
     return colors.find(id) != colors.end();
 }
 
-VSTGUI::CColor Skin::getColor(const std::string &iid, const VSTGUI::CColor &def,
-                              std::unordered_set<std::string> noLoops) const
+juce::Colour Skin::getColor(const std::string &iid, const juce::Colour &def,
+                            std::unordered_set<std::string> noLoops) const
 {
     auto id = iid;
     if (id[0] == '$')
