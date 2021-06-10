@@ -25,7 +25,10 @@ namespace Overlays
 MiniEdit::MiniEdit()
 {
     typein = std::make_unique<juce::TextEditor>("minieditTypein");
-    typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    typein->setJustification(juce::Justification::centred);
+    typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+    typein->setSelectAllWhenFocused(true);
+    typein->addListener(this);
     addAndMakeVisible(*typein);
 
     okButton = std::make_unique<juce::TextButton>("minieditOK");
@@ -82,7 +85,17 @@ void MiniEdit::paint(juce::Graphics &g)
     g.drawRect(fullRect);
 }
 
-void MiniEdit::onSkinChanged() { repaint(); }
+void MiniEdit::onSkinChanged()
+{
+    typein->setColour(juce::TextEditor::backgroundColourId,
+                      skin->getColor(Colors::Dialog::Entry::Background));
+    typein->setColour(juce::TextEditor::textColourId, skin->getColor(Colors::Dialog::Entry::Text));
+    typein->setColour(juce::TextEditor::highlightColourId,
+                      skin->getColor(Colors::Dialog::Entry::Focus));
+    typein->setColour(juce::TextEditor::outlineColourId,
+                      skin->getColor(Colors::Dialog::Entry::Border));
+    repaint();
+}
 void MiniEdit::resized()
 {
     auto fullRect = getDisplayRegion();
@@ -93,6 +106,7 @@ void MiniEdit::resized()
                          .withTrimmedLeft(2 * mg)
                          .withTrimmedRight(2 * mg);
     typein->setBounds(typeinBox);
+    typein->setIndents(4, (typein->getHeight() - typein->getTextHeight()) / 2);
 
     auto buttonRow = fullRect.translated(0, 3 * eh + mg * 3)
                          .withHeight(eh)
@@ -103,6 +117,9 @@ void MiniEdit::resized()
 
     okButton->setBounds(okRect);
     cancelButton->setBounds(canRect);
+
+    if (isVisible())
+        grabFocus();
 }
 void MiniEdit::buttonClicked(juce::Button *button)
 {
@@ -112,5 +129,16 @@ void MiniEdit::buttonClicked(juce::Button *button)
     }
     setVisible(false);
 }
+void MiniEdit::visibilityChanged()
+{
+    if (isVisible())
+        grabFocus();
+}
+void MiniEdit::textEditorReturnKeyPressed(juce::TextEditor &editor)
+{
+    callback(typein->getText().toStdString());
+    setVisible(false);
+}
+void MiniEdit::textEditorEscapeKeyPressed(juce::TextEditor &editor) { setVisible(false); }
 } // namespace Overlays
 } // namespace Surge
