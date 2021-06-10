@@ -106,6 +106,13 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
 }
 void NumberField::mouseDown(const juce::MouseEvent &event)
 {
+    mouseMode = NONE;
+    if (event.mods.isPopupMenu())
+    {
+        notifyControlModifierClicked(event.mods);
+        return;
+    }
+    mouseMode = DRAG;
     if (!Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
@@ -132,12 +139,16 @@ void NumberField::mouseDrag(const juce::MouseEvent &event)
 }
 void NumberField::mouseUp(const juce::MouseEvent &event)
 {
-    if (!Surge::GUI::showCursor(storage))
+    if (mouseMode == DRAG)
     {
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-        auto p = localPointToGlobal(mouseDownOrigin);
-        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            auto p = localPointToGlobal(mouseDownOrigin);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
     }
+    mouseMode = NONE;
 }
 void NumberField::mouseDoubleClick(const juce::MouseEvent &event)
 {

@@ -66,6 +66,13 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
     void setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n);
     Surge::Skin::Parameters::NumberfieldControlModes getControlMode() const { return controlMode; }
 
+    enum MouseMode
+    {
+        NONE,
+        RMB,
+        DRAG
+    } mouseMode{NONE};
+
     juce::Drawable *bg{nullptr}, *bgHover{nullptr};
     void setBackgroundDrawable(juce::Drawable *b) { bg = b; };
     void setHoverBackgroundDrawable(juce::Drawable *bgh) { bgHover = bgh; }

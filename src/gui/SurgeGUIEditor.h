@@ -66,6 +66,7 @@ struct TypeinParamEditor;
 struct MiniEdit;
 
 struct OverlayWrapper;
+struct PatchStoreDialog;
 } // namespace Overlays
 } // namespace Surge
 
@@ -336,7 +337,8 @@ class SurgeGUIEditor : public EditorType,
         std::unique_ptr<juce::Component> c,
         std::string editorTitle, // A window display title - whatever you want
         OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
-        const juce::Rectangle<int> &containerBounds, std::function<void()> onClose = []() {});
+        const juce::Rectangle<int> &containerBounds, bool showCloseButton = true,
+        std::function<void()> onClose = []() {});
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
 
     void dismissEditorOfType(OverlayTags ofType);
@@ -481,12 +483,6 @@ class SurgeGUIEditor : public EditorType,
 
     std::unique_ptr<juce::Drawable> midiLearnOverlay;
 
-    VSTGUI::CTextEdit *patchName = nullptr;
-    VSTGUI::CTextEdit *patchCategory = nullptr;
-    VSTGUI::CTextEdit *patchCreator = nullptr;
-    VSTGUI::CTextEdit *patchComment = nullptr;
-    VSTGUI::CCheckBox *patchTuning = nullptr;
-    VSTGUI::CTextLabel *patchTuningLabel = nullptr;
 #if BUILD_IS_DEBUG
     std::unique_ptr<juce::Label> debugLabel;
 #endif
@@ -496,6 +492,7 @@ class SurgeGUIEditor : public EditorType,
     bool setParameterModulationFromString(Parameter *p, modsources ms, const std::string &s);
     bool setControlFromString(modsources ms, const std::string &s);
     friend struct Surge::Overlays::TypeinParamEditor;
+    friend struct Surge::Overlays::PatchStoreDialog;
 
     VSTGUI::CControlValueInterface *msegEditSwitch = nullptr;
     std::vector<VSTGUI::CView *> removeFromFrame;

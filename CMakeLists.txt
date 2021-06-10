@@ -362,6 +362,7 @@ set(SURGE_GUI_SOURCES
   src/gui/overlays/PatchDBViewer.cpp
   src/gui/overlays/TypeinParamEditor.cpp
   src/gui/overlays/OverlayWrapper.cpp
+  src/gui/overlays/PatchStoreDialog.cpp
 
   src/gui/widgets/EffectChooser.cpp
   src/gui/widgets/MenuForDiscreteParams.cpp

@@ -56,7 +56,10 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
                                  .withLeft(getWidth() - buttonWidth)
                                  .translated(-2, 2);
 
-    closeButton->setBounds(closeButtonBounds);
+    if (showCloseButton)
+        closeButton->setBounds(closeButtonBounds);
+    else
+        closeButton->setVisible(false);
     addAndMakeVisible(*primaryChild);
 }
 

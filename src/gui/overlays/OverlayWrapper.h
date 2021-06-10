@@ -49,6 +49,9 @@ struct OverlayWrapper : public juce::Component,
     juce::Drawable *icon{nullptr};
     void setIcon(juce::Drawable *d) { icon = d; }
 
+    bool showCloseButton{true};
+    void setShowCloseButton(bool b) { showCloseButton = b; }
+
     std::function<void()> closeOverlay = []() {};
     void setCloseOverlay(std::function<void()> f) { closeOverlay = std::move(f); }
 };

@@ -90,8 +90,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
     }
 
     // In these cases just move along with success. RMB does nothing on these switches
-    if (tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store ||
-        tag == tag_store_cancel || tag == tag_store_ok)
+    if (tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store)
         return 1;
 
     if (tag == tag_lfo_menu)
@@ -2557,115 +2556,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     break;
     case tag_store:
     {
-        patchdata p;
-
-        p.name = synth->storage.getPatch().name;
-        p.category = synth->storage.getPatch().category;
-        p.author = synth->storage.getPatch().author;
-        p.comments = synth->storage.getPatch().comment;
-
-        auto defaultAuthor = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, "");
-        auto defaultComment = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::DefaultPatchComment, "");
-        auto oldAuthor = std::string("");
-
-        if (!Surge::Storage::isValidUTF8(defaultAuthor))
-        {
-            defaultAuthor = "";
-        }
-        if (!Surge::Storage::isValidUTF8(defaultComment))
-        {
-            defaultComment = "";
-        }
-
-        if (p.author == "" && defaultAuthor != "")
-        {
-            p.author = defaultAuthor;
-        }
-
-        if (p.author != "" && defaultAuthor != "")
-        {
-            if (_stricmp(p.author.c_str(), defaultAuthor.c_str()))
-            {
-                oldAuthor = p.author;
-                p.author = defaultAuthor;
-            }
-        }
-
-        if (p.comments == "" && defaultComment != "")
-        {
-            p.comments = defaultComment;
-        }
-
-        if (oldAuthor != "")
-        {
-            if (p.comments == "")
-                p.comments += "Original patch by " + oldAuthor;
-            else
-                p.comments += " (Original patch by " + oldAuthor + ")";
-        }
-
         showStorePatchDialog();
-
-        patchName->setText(p.name.c_str());
-        patchCategory->setText(p.category.c_str());
-        patchCreator->setText(p.author.c_str());
-        patchComment->setText(p.comments.c_str());
-    }
-    break;
-    case tag_store_ok:
-    {
-        // prevent duplicate execution of savePatch() by detecting if the Store Patch dialog is
-        // displayed or not
-        // FIXME: baconpaul will know a better and more correct way to fix this
-        if (isAnyOverlayPresent(STORE_PATCH))
-        {
-            synth->storage.getPatch().name = patchName->getText();
-            synth->storage.getPatch().author = patchCreator->getText();
-            synth->storage.getPatch().category = patchCategory->getText();
-            synth->storage.getPatch().comment = patchComment->getText();
-
-            synth->storage.getPatch().patchTuning.tuningStoredInPatch =
-                patchTuning->getValue() > 0.5;
-            if (synth->storage.getPatch().patchTuning.tuningStoredInPatch)
-            {
-                if (synth->storage.isStandardScale)
-                {
-                    synth->storage.getPatch().patchTuning.scaleContents = "";
-                }
-                else
-                {
-                    synth->storage.getPatch().patchTuning.scaleContents =
-                        synth->storage.currentScale.rawText;
-                }
-                if (synth->storage.isStandardMapping)
-                {
-                    synth->storage.getPatch().patchTuning.mappingContents = "";
-                }
-                else
-                {
-                    synth->storage.getPatch().patchTuning.mappingContents =
-                        synth->storage.currentMapping.rawText;
-                    synth->storage.getPatch().patchTuning.mappingName =
-                        synth->storage.currentMapping.name;
-                }
-            }
-
-            // Ignore whatever comes from the DAW
-            synth->storage.getPatch().dawExtraState.isPopulated = false;
-
-            synth->savePatch();
-
-            closeStorePatchDialog();
-            frame->invalid();
-        }
-    }
-    break;
-    case tag_store_cancel:
-    {
-        closeStorePatchDialog();
-        frame->invalid();
     }
     break;
     case tag_editor_overlay_close:
