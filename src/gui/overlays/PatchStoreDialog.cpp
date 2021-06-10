@@ -27,7 +27,7 @@ PatchStoreDialog::PatchStoreDialog()
     auto makeEd = [this](const std::string &n) {
         auto ed = std::make_unique<juce::TextEditor>(n);
         ed->setJustification(juce::Justification::centredLeft);
-        ed->setSelectAllWhenFocused(true);
+        // ed->setSelectAllWhenFocused(true);
 
         addAndMakeVisible(*ed);
         return std::move(ed);
