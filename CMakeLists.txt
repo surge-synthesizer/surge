@@ -340,7 +340,6 @@ set(SURGE_GENERATED_SOURCES
 set(SURGE_GUI_SOURCES
   src/gui/CLFOGui.cpp
   src/gui/CScalableBitmap.cpp
-  src/gui/CTextButtonWithHover.cpp
   src/gui/CursorControlGuard.cpp
   src/gui/RuntimeFont.cpp
   src/gui/SkinFontLoader.cpp

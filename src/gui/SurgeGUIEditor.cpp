@@ -17,7 +17,6 @@
 #include "resource.h"
 
 #include "CLFOGui.h"
-#include "CTextButtonWithHover.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 
@@ -3898,19 +3897,12 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         csz.inset(2, 3);
         csz.top--;
         csz.bottom += 1;
-        auto b = new CTextButtonWithHover(csz, this, tag_editor_overlay_close, "X");
+        auto b = new CTextButton(csz, this, tag_editor_overlay_close, "X");
         b->setVisible(true);
         b->setFont(btnFont);
         b->setGradient(cg);
         b->setFrameColor(btnborder);
         b->setTextColor(btntext);
-        b->setHoverGradient(hovcg);
-        b->setHoverFrameColor(hovbtnborder);
-        b->setHoverTextColor(hovbtntext);
-        b->setGradientHighlighted(presscg);
-        b->setHoverGradientHighlighted(presscg);
-        b->setFrameColorHighlighted(pressbtnborder);
-        b->setTextColorHighlighted(pressbtntext);
         b->setRoundRadius(CCoord(3.f));
 
         presscg->forget();
@@ -4160,31 +4152,19 @@ void SurgeGUIEditor::makeStorePatchDialog()
     patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
 
     auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
-    auto cb = new CTextButtonWithHover(b1r, this, tag_store_cancel, "Cancel");
+    auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
     cb->setFont(Surge::GUI::getFontManager()->aboutFont);
     cb->setGradient(cg);
     cb->setFrameColor(btnborder);
     cb->setTextColor(btntext);
-    cb->setHoverGradient(hovcg);
-    cb->setHoverFrameColor(hovbtnborder);
-    cb->setHoverTextColor(hovbtntext);
-    cb->setGradientHighlighted(presscg);
-    cb->setFrameColorHighlighted(pressbtnborder);
-    cb->setTextColorHighlighted(pressbtntext);
     cb->setRoundRadius(CCoord(3.f));
 
     auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
-    auto kb = new CTextButtonWithHover(b2r, this, tag_store_ok, "OK");
+    auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
     kb->setFont(Surge::GUI::getFontManager()->aboutFont);
     kb->setGradient(cg);
     kb->setFrameColor(btnborder);
     kb->setTextColor(btntext);
-    kb->setHoverGradient(hovcg);
-    kb->setHoverFrameColor(hovbtnborder);
-    kb->setHoverTextColor(hovbtntext);
-    kb->setGradientHighlighted(presscg);
-    kb->setFrameColorHighlighted(pressbtnborder);
-    kb->setTextColorHighlighted(pressbtntext);
     kb->setRoundRadius(CCoord(3.f));
 
     cg->forget();
