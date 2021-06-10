@@ -14,15 +14,7 @@
 #include "DebugHelpers.h"
 #include "globals.h"
 
-#if ESCAPE_FROM_VSTGUI
 #include "efvg/escape_from_vstgui.h"
-#else
-#include "vstgui/lib/ccolor.h"
-#include "vstgui/lib/crect.h"
-#include "vstgui/lib/cpoint.h"
-#include "vstgui/lib/cdrawdefs.h"
-#include "vstgui/lib/cfont.h"
-#endif
 
 #include "SkinModel.h"
 #include "SkinColors.h"
@@ -206,37 +198,37 @@ class Skin
     };
 
     bool hasColor(const std::string &id) const;
-    VSTGUI::CColor
-    getColor(const std::string &id, const VSTGUI::CColor &def,
+    juce::Colour
+    getColor(const std::string &id, const juce::Colour &def,
              std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const;
-    VSTGUI::CColor
+    juce::Colour
     getColor(const std::string &id, const Surge::Skin::Color &def,
              std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
     {
-        return getColor(id, VSTGUI::CColor(def.r, def.g, def.b, def.a), noLoops);
+        return getColor(id, juce::Colour(def.r, def.g, def.b, def.a), noLoops);
     }
 
-    VSTGUI::CColor getColor(const std::string &id)
+    juce::Colour getColor(const std::string &id)
     {
         return getColor(id, Surge::Skin::Color::colorByName(id));
     }
 
-    VSTGUI::CColor colorFromHexString(const std::string &hex) const;
+    juce::Colour colorFromHexString(const std::string &hex) const;
 
   private:
-    VSTGUI::CColor
-    getColor(const Surge::Skin::Color &id, const VSTGUI::CColor &def,
+    juce::Colour
+    getColor(const Surge::Skin::Color &id, const juce::Colour &def,
              std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
     {
         return getColor(id.name, def, noLoops);
     }
 
   public:
-    VSTGUI::CColor
+    juce::Colour
     getColor(const Surge::Skin::Color &id,
              std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const
     {
-        return getColor(id, VSTGUI::CColor(id.r, id.g, id.b, id.a), noLoops);
+        return getColor(id, juce::Colour(id.r, id.g, id.b, id.a), noLoops);
     }
 
     bool hasColor(const Surge::Skin::Color &col) const { return hasColor(col.name); }
@@ -384,7 +376,7 @@ class Skin
 
     struct ColorStore
     {
-        VSTGUI::CColor color;
+        juce::Colour color;
         std::string alias;
 
         typedef enum
@@ -396,7 +388,7 @@ class Skin
 
         Type type;
         ColorStore() : type(COLOR), color(juce::Colours::black) {}
-        ColorStore(VSTGUI::CColor c) : type(COLOR), color(c) {}
+        ColorStore(juce::Colour c) : type(COLOR), color(c) {}
         ColorStore(std::string a) : type(ALIAS), alias(a) {}
         ColorStore(std::string a, Type t) : type(t), alias(a) {}
     };

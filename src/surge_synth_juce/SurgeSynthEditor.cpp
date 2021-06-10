@@ -189,31 +189,3 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
     par->endChangeGesture();
 }
-
-namespace Surge
-{
-namespace GUI
-{
-
-/*
-** Return the backing scale factor. This is the scale factor which maps a phyiscal
-** pixel to a logical pixel. It is in units that a high density display (so 4 physical
-** pixels in a single pixel square) would have a backing scale factor of 2.0.
-**
-** We retain this value as a float and do not scale it by 100, like we do with
-** user specified scales, to better match the OS API
-*/
-float getDisplayBackingScaleFactor(VSTGUI::CFrame *) { return 2; }
-
-/*
-** Return the screen dimensions of the best screen containing this frame. If the
-** frame is not valid or has not yet been shown or so on, return a screen of
-** size 0x0 at position 0,0.
-*/
-VSTGUI::CRect getScreenDimensions(VSTGUI::CFrame *)
-{
-    return VSTGUI::CRect(VSTGUI::CPoint(0, 0), VSTGUI::CPoint(1400, 700));
-}
-} // namespace GUI
-
-} // namespace Surge

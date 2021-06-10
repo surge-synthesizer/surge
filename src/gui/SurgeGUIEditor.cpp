@@ -232,7 +232,6 @@ void SurgeGUIEditor::idle()
            runct = 0;
         }
           */
-        hasIdleRun = true;
         if (firstIdleCountdown)
         {
             // Linux VST3 in JUCE Hosts (maybe others?) sets up the run loop out of order, it seems
@@ -1550,7 +1549,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_COLOR, "#FF0000");
             auto col = currentSkin->getColor(coln, juce::Colours::red);
 
-            auto dcol = VSTGUI::CColor(255, 255, 255).withAlpha((uint8_t)0);
+            auto dcol = juce::Colour(255, 255, 255).withAlpha((uint8_t)0);
             auto bgcoln = currentSkin->propertyValue(l, Surge::Skin::Component::BACKGROUND_COLOR,
                                                      "#FFFFFF00");
             auto bgcol = currentSkin->getColor(bgcoln, dcol);
@@ -1724,7 +1723,6 @@ void SurgeGUIEditor::close()
         editorOverlayTagAtClose = el.first;
     }
     super::close();
-    hasIdleRun = false;
     firstIdleCountdown = 0;
 }
 
@@ -3866,18 +3864,6 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
         auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
 
-        VSTGUI::CGradient::ColorStopMap csm;
-        VSTGUI::CGradient *cg = VSTGUI::CGradient::create(csm);
-        cg->addColorStop(0, btnbg);
-
-        VSTGUI::CGradient::ColorStopMap hovcsm;
-        VSTGUI::CGradient *hovcg = VSTGUI::CGradient::create(hovcsm);
-        hovcg->addColorStop(0, hovbtnbg);
-
-        VSTGUI::CGradient::ColorStopMap presscsm;
-        VSTGUI::CGradient *presscg = VSTGUI::CGradient::create(presscsm);
-        presscg->addColorStop(0, pressbtnbg);
-
         csz.left = csz.right - buttonwidth;
         csz.inset(2, 3);
         csz.top--;
@@ -3885,14 +3871,9 @@ void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
         auto b = new CTextButton(csz, this, tag_editor_overlay_close, "X");
         b->setVisible(true);
         b->setFont(btnFont);
-        b->setGradient(cg);
         b->setFrameColor(btnborder);
         b->setTextColor(btntext);
         b->setRoundRadius(CCoord(3.f));
-
-        presscg->forget();
-        hovcg->forget();
-        cg->forget();
 
         innerc->addView(b);
     }
@@ -3984,6 +3965,33 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
+void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
+                                              const juce::Point<int> &pt)
+{
+    // We need to do this search vs componentAt because componentAt will return self since I am
+    // there being dropped
+    juce::Component *target = nullptr;
+    for (auto kid : frame->juceComponent()->getChildren())
+    {
+        if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
+        {
+            target = kid;
+            // break;
+        }
+    }
+    if (!target)
+        return;
+    auto tMSB = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(target);
+    auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(target);
+    if (msb->isMeta && tMSB && tMSB->isMeta)
+    {
+        swapControllers(msb->getTag(), tMSB->getTag());
+    }
+    else if (tMCI)
+    {
+        openModTypeinOnDrop(msb->getTag(), tMCI, tMCI->asControlValueInterface()->getTag());
+    }
+}
 void SurgeGUIEditor::swapControllers(int t1, int t2)
 {
     synth->swapMetaControllers(t1 - tag_mod_source0 - ms_ctrl1, t2 - tag_mod_source0 - ms_ctrl1);
@@ -4078,161 +4086,6 @@ void SurgeGUIEditor::makeStorePatchDialog()
 
     addJuceEditorOverlay(std::move(pb), "Store Patch", STORE_PATCH,
                          skinCtrl->getRect().asJuceIntRect(), false);
-
-#if 0
-
-    // TODO: add skin connectors for all Store Patch dialog widgets
-    // let's have fixed dialog size for now, once TODO is done use the commented out line instead
-    CRect dialogSize(CPoint(0, 0), CPoint(390, 143));
-    // CRect dialogSize(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h));
-
-    auto saveDialog = new CViewContainer(dialogSize);
-    saveDialog->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Background));
-
-    auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
-    auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
-    auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
-
-    auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
-    auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
-    auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
-
-    auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
-    auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
-    auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
-
-    VSTGUI::CGradient::ColorStopMap csm;
-    VSTGUI::CGradient *cg = VSTGUI::CGradient::create(csm);
-    cg->addColorStop(0, btnbg);
-
-    VSTGUI::CGradient::ColorStopMap hovcsm;
-    VSTGUI::CGradient *hovcg = VSTGUI::CGradient::create(hovcsm);
-    hovcg->addColorStop(0, hovbtnbg);
-
-    VSTGUI::CGradient::ColorStopMap presscsm;
-    VSTGUI::CGradient *presscg = VSTGUI::CGradient::create(presscsm);
-    presscg->addColorStop(0, pressbtnbg);
-
-    auto fnt = Surge::GUI::getFontManager()->getLatoAtSize(11);
-
-    auto label = CRect(CPoint(10, 10), CPoint(47, 19));
-    auto pnamelbl = new CTextLabel(label, "Name");
-    pnamelbl->setTransparency(true);
-    pnamelbl->setFont(fnt);
-    pnamelbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    pnamelbl->setHoriAlign(kRightText);
-
-    label.offset(0, 24);
-    auto pcatlbl = new CTextLabel(label, "Category");
-    pcatlbl->setTransparency(true);
-    pcatlbl->setFont(fnt);
-    pcatlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    pcatlbl->setHoriAlign(kRightText);
-
-    label.offset(0, 24);
-    auto pauthlbl = new CTextLabel(label, "Author");
-    pauthlbl->setTransparency(true);
-    pauthlbl->setFont(fnt);
-    pauthlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    pauthlbl->setHoriAlign(kRightText);
-
-    label.offset(0, 24);
-    auto pcomlbl = new CTextLabel(label, "Comment");
-    pcomlbl->setTransparency(true);
-    pcomlbl->setFont(fnt);
-    pcomlbl->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    pcomlbl->setHoriAlign(kRightText);
-
-    patchName = new CTextEdit(CRect(CPoint(67, 10), CPoint(309, 19)), this, tag_store_name);
-    patchCategory = new CTextEdit(CRect(CPoint(67, 34), CPoint(309, 19)), this, tag_store_category);
-    patchCreator = new CTextEdit(CRect(CPoint(67, 58), CPoint(309, 19)), this, tag_store_creator);
-    patchComment = new CTextEdit(CRect(CPoint(67, 82), CPoint(309, 19)), this, tag_store_comments);
-    patchTuning = new CCheckBox(CRect(CPoint(67, 111), CPoint(200, 20)), this, tag_store_tuning,
-                                "Save With Tuning");
-    patchTuning->setFont(fnt);
-    patchTuning->setFontColor(currentSkin->getColor(Colors::Dialog::Label::Text));
-    patchTuning->setBoxFrameColor(currentSkin->getColor(Colors::Dialog::Checkbox::Border));
-    patchTuning->setBoxFillColor(currentSkin->getColor(Colors::Dialog::Checkbox::Background));
-    patchTuning->setCheckMarkColor(currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
-    patchTuning->sizeToFit();
-    patchTuning->setValue(0);
-    patchTuning->setMouseEnabled(true);
-    patchTuning->setVisible(!synth->storage.isStandardTuning);
-
-    // fix the text selection rectangle background overhanging the borders on Windows
-#if WINDOWS
-    patchName->setTextInset(CPoint(3, 0));
-    patchCategory->setTextInset(CPoint(3, 0));
-    patchCreator->setTextInset(CPoint(3, 0));
-    patchComment->setTextInset(CPoint(3, 0));
-#endif
-
-    /*
-     * There is, apparently, a bug in VSTGui that focus events don't fire reliably on some mac
-     * hosts. This leads to the odd behaviour when you click out of a box that in some hosts - Logic
-     * Pro for instance - there is no looseFocus event and so the value doesn't update. We could fix
-     * that a variety of ways I imagine, but since we don't really mind the value being updated as
-     * we go, we can just set the editors to immediate and correct the problem.
-     *
-     * See GitHub Issue #231 for an explanation of the behaviour without these changes as of Jan
-     * 2019.
-     */
-    patchName->setImmediateTextChange(true);
-    patchCategory->setImmediateTextChange(true);
-    patchCreator->setImmediateTextChange(true);
-    patchComment->setImmediateTextChange(true);
-
-    patchName->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-    patchCategory->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-    patchCreator->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-    patchComment->setBackColor(currentSkin->getColor(Colors::Dialog::Entry::Background));
-
-    patchName->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-    patchCategory->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-    patchCreator->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-    patchComment->setFontColor(currentSkin->getColor(Colors::Dialog::Entry::Text));
-
-    patchName->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-    patchCategory->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-    patchCreator->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-    patchComment->setFrameColor(currentSkin->getColor(Colors::Dialog::Entry::Border));
-
-    auto b1r = CRect(CPoint(266, 111), CPoint(50, 20));
-    auto cb = new CTextButton(b1r, this, tag_store_cancel, "Cancel");
-    cb->setFont(Surge::GUI::getFontManager()->aboutFont);
-    cb->setGradient(cg);
-    cb->setFrameColor(btnborder);
-    cb->setTextColor(btntext);
-    cb->setRoundRadius(CCoord(3.f));
-
-    auto b2r = CRect(CPoint(326, 111), CPoint(50, 20));
-    auto kb = new CTextButton(b2r, this, tag_store_ok, "OK");
-    kb->setFont(Surge::GUI::getFontManager()->aboutFont);
-    kb->setGradient(cg);
-    kb->setFrameColor(btnborder);
-    kb->setTextColor(btntext);
-    kb->setRoundRadius(CCoord(3.f));
-
-    cg->forget();
-    presscg->forget();
-    hovcg->forget();
-
-    saveDialog->addView(pnamelbl);
-    saveDialog->addView(pcatlbl);
-    saveDialog->addView(pauthlbl);
-    saveDialog->addView(pcomlbl);
-    saveDialog->addView(patchName);
-    saveDialog->addView(patchCategory);
-    saveDialog->addView(patchCreator);
-    saveDialog->addView(patchComment);
-    saveDialog->addView(patchTuning);
-    saveDialog->addView(patchTuningLabel);
-    saveDialog->addView(cb);
-    saveDialog->addView(kb);
-
-    addEditorOverlay(saveDialog, "Store Patch", STORE_PATCH, CPoint(skinCtrl->x, skinCtrl->y),
-                     false, false, [this]() {});
-#endif
 }
 
 VSTGUI::CControlValueInterface *
