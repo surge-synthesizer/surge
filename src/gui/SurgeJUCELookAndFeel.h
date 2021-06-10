@@ -22,6 +22,8 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4
 {
   public:
     void drawLabel(juce::Graphics &graphics, juce::Label &label) override;
+    void drawTextEditorOutline(juce::Graphics &graphics, int width, int height,
+                               juce::TextEditor &editor) override;
 };
 
 #endif // SURGE_XT_SURGEJUCELOOKANDFEEL_H

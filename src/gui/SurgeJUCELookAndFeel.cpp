@@ -18,3 +18,24 @@ void SurgeJUCELookAndFeel::drawLabel(juce::Graphics &graphics, juce::Label &labe
 {
     LookAndFeel_V4::drawLabel(graphics, label);
 }
+void SurgeJUCELookAndFeel::drawTextEditorOutline(juce::Graphics &g, int width, int height,
+                                                 juce::TextEditor &textEditor)
+{
+    if (dynamic_cast<juce::AlertWindow *>(textEditor.getParentComponent()) == nullptr)
+    {
+        if (textEditor.isEnabled())
+        {
+            if (textEditor.hasKeyboardFocus(true) && !textEditor.isReadOnly())
+            {
+                g.setColour(textEditor.findColour(juce::TextEditor::focusedOutlineColourId));
+                // This is the only change from V4; use a 1 rather than 2 here
+                g.drawRect(0, 0, width, height, 1);
+            }
+            else
+            {
+                g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
+                g.drawRect(0, 0, width, height);
+            }
+        }
+    }
+}

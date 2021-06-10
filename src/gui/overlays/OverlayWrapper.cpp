@@ -32,7 +32,7 @@ void OverlayWrapper::paint(juce::Graphics &g)
 {
     g.fillAll(skin->getColor(Colors::Dialog::Titlebar::Background));
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(11, juce::Font::bold));
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     g.drawText(title, getLocalBounds().withHeight(titlebarSize + margin),
                juce::Justification::centred);
     if (icon)
