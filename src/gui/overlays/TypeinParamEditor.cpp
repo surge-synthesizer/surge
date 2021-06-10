@@ -83,7 +83,7 @@ void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &control
 
     if (!parentRect.contains(r))
     {
-        r = r.withTop(controlRect.getBottom());
+        r = r.withY(controlRect.getBottom());
     }
 
     auto ter = juce::Rectangle<int>(0, ht - 22, 144, 22).reduced(2);

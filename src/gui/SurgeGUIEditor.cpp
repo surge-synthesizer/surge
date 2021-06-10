@@ -41,6 +41,7 @@
 #include "overlays/PatchDBViewer.h"
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/OverlayWrapper.h"
+#include "overlays/PatchStoreDialog.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -3359,22 +3360,6 @@ void SurgeGUIEditor::reloadFromSkin()
         showMSEGEditor();
     }
 
-    // update Store Patch dialog if opened
-    if (isAnyOverlayPresent(STORE_PATCH))
-    {
-        auto pname = patchName->getText();
-        auto pcat = patchCategory->getText();
-        auto pauth = patchCreator->getText();
-        auto pcom = patchComment->getText();
-
-        showStorePatchDialog();
-
-        patchName->setText(pname);
-        patchCategory->setText(pcat);
-        patchCreator->setText(pauth);
-        patchComment->setText(pcom);
-    }
-
     // adjust JUCE look and feel colors
     auto setJUCEColour = [this](int id, juce::Colour x) {
         juceEditor->getLookAndFeel().setColour(id, x);
@@ -3942,7 +3927,7 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     std::unique_ptr<juce::Component> c,
     std::string editorTitle, // A window display title - whatever you want
     OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
-    const juce::Rectangle<int> &containerSize, std::function<void()> onClose)
+    const juce::Rectangle<int> &containerSize, bool showCloseButton, std::function<void()> onClose)
 {
     auto ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
     ol->setBounds(containerSize);
@@ -3950,12 +3935,13 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);
     ol->setIcon(bitmapStore->getDrawable(IDB_SURGE_ICON));
-    ol->addAndTakeOwnership(std::move(c));
-
+    ol->setShowCloseButton(showCloseButton);
     ol->setCloseOverlay([this, editorTag, onClose]() {
         this->dismissEditorOfType(editorTag);
         onClose();
     });
+
+    ol->addAndTakeOwnership(std::move(c));
     frame->juceComponent()->addAndMakeVisible(*ol);
     juceOverlays[editorTag] = std::move(ol);
 }
@@ -4034,6 +4020,66 @@ void SurgeGUIEditor::makeStorePatchDialog()
     auto npc = Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG;
     auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+    std::string name = synth->storage.getPatch().name;
+    std::string category = synth->storage.getPatch().category;
+    std::string author = synth->storage.getPatch().author;
+    std::string comments = synth->storage.getPatch().comment;
+
+    auto defaultAuthor = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, "");
+    auto defaultComment = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::DefaultPatchComment, "");
+    auto oldAuthor = std::string("");
+
+    if (!Surge::Storage::isValidUTF8(defaultAuthor))
+    {
+        defaultAuthor = "";
+    }
+    if (!Surge::Storage::isValidUTF8(defaultComment))
+    {
+        defaultComment = "";
+    }
+
+    if (author == "" && defaultAuthor != "")
+    {
+        author = defaultAuthor;
+    }
+
+    if (author != "" && defaultAuthor != "")
+    {
+        if (_stricmp(author.c_str(), defaultAuthor.c_str()))
+        {
+            oldAuthor = author;
+            author = defaultAuthor;
+        }
+    }
+
+    if (comments == "" && defaultComment != "")
+    {
+        comments = defaultComment;
+    }
+
+    if (oldAuthor != "")
+    {
+        if (comments == "")
+            comments += "Original patch by " + oldAuthor;
+        else
+            comments += " (Original patch by " + oldAuthor + ")";
+    }
+
+    auto pb = std::make_unique<Surge::Overlays::PatchStoreDialog>();
+    pb->setSkin(currentSkin);
+    pb->setName(name);
+    pb->setAuthor(author);
+    pb->setCategory(category);
+    pb->setComment(comments);
+    pb->setSurgeGUIEditor(this);
+
+    addJuceEditorOverlay(std::move(pb), "Store Patch", STORE_PATCH,
+                         skinCtrl->getRect().asJuceIntRect(), false);
+
+#if 0
 
     // TODO: add skin connectors for all Store Patch dialog widgets
     // let's have fixed dialog size for now, once TODO is done use the commented out line instead
@@ -4186,6 +4232,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
 
     addEditorOverlay(saveDialog, "Store Patch", STORE_PATCH, CPoint(skinCtrl->x, skinCtrl->y),
                      false, false, [this]() {});
+#endif
 }
 
 VSTGUI::CControlValueInterface *
@@ -4874,16 +4921,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     frame->invalid();
 }
 
-void SurgeGUIEditor::closeStorePatchDialog()
-{
-    dismissEditorOfType(STORE_PATCH);
-
-    // Have to update all that state too for the newly orphaned items
-    patchName = nullptr;
-    patchCategory = nullptr;
-    patchCreator = nullptr;
-    patchComment = nullptr;
-}
+void SurgeGUIEditor::closeStorePatchDialog() { dismissEditorOfType(STORE_PATCH); }
 
 void SurgeGUIEditor::showStorePatchDialog() { makeStorePatchDialog(); }
 
@@ -4952,7 +4990,7 @@ void SurgeGUIEditor::showFormulaEditorDialog()
     pt->setSkin(currentSkin, bitmapStore);
 
     addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR,
-                         skinCtrl->getRect().asJuceIntRect(), [this]() {});
+                         skinCtrl->getRect().asJuceIntRect(), true, [this]() {});
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
@@ -4976,7 +5014,7 @@ void SurgeGUIEditor::showWavetableScripter()
         this, &(this->synth->storage), os, currentSkin);
     pt->setSkin(currentSkin, bitmapStore);
 
-    addJuceEditorOverlay(std::move(pt), "Wavetable Editor", WAVETABLESCRIPTING_EDITOR, r,
+    addJuceEditorOverlay(std::move(pt), "Wavetable Editor", WAVETABLESCRIPTING_EDITOR, r, true,
                          [this]() { frame->juceComponent()->repaint(); });
 }
 
