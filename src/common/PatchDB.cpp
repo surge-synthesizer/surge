@@ -420,6 +420,12 @@ CREATE TABLE PatchFeature (
 
         uint8_t *d = contents.data();
         auto *fxp = (fxChunkSetCustom *)d;
+        if ((vt_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
+            (vt_read_int32BE(fxp->fxMagic) != 'FPCh') || (vt_read_int32BE(fxp->fxID) != 'cjs3'))
+        {
+            std::cout << "Not a surge patch; bailing" << std::endl;
+            return;
+        }
         // FIXME - checks for CcnK and stuff
 
         auto phd = d + sizeof(fxChunkSetCustom);
