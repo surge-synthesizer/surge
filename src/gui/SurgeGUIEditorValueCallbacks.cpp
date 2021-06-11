@@ -17,6 +17,8 @@
 #include "SurgeGUIEditorTags.h"
 #include "SurgeGUIUtils.h"
 
+#include "SurgeSynthEditor.h"
+
 #include "CLFOGui.h"
 #include "ModernOscillator.h"
 
@@ -2020,6 +2022,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_18DBFS; });
                 hcmen->setChecked(synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_18DBFS);
                 eid++;
+            }
+
+            auto jpm = juceEditor->hostMenuFor(p);
+
+            if (jpm.getNumItems() > 0)
+            {
+                contextMenu->addSeparator();
+
+                juce::PopupMenu::MenuItemIterator iterator(jpm);
+                while (iterator.next())
+                {
+                    contextMenu->addEntry(iterator.getItem());
+                }
             }
 
             frame->addView(contextMenu); // add to frame
