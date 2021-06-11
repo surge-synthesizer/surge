@@ -35,6 +35,9 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 #if SURGE_JUCE_ACCESSIBLE
               << "  - Accessiblity : Enabled\n"
 #endif
+#if SURGE_JUCE_HOST_CONTEXT
+              << "  - JUCE Host Context Support Enabled\n"
+#endif
               << "  - CPU          : " << Surge::CPUFeatures::cpuBrand() << std::endl;
 
     surge = std::make_unique<SurgeSynthesizer>(this);

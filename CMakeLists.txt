@@ -653,6 +653,14 @@ else()
   message( STATUS "No JUCE Accessibility Support in this version" )
 endif()
 
+set(SURGE_JUCE_HOST_CONTEXT FALSE)
+if(EXISTS ${SURGE_JUCE_LOCATION}/modules/juce_audio_processors/processors/juce_AudioProcessorEditorHostContext.h )
+  set(SURGE_JUCE_HOST_CONTEXT TRUE)
+  message( STATUS "Including JUCE Host Context Support")
+else()
+  message( STATUS "No JUCE Host Context Support in this version" )
+endif()
+
 
 set(JUCE_ASIO_SUPPORT FALSE)
 if( BUILD_USING_MY_ASIO_LICENSE )
@@ -885,6 +893,12 @@ if( BUILD_SURGE_XT )
     set( SURGE_JUCE_ACCESSIBLE_DEFINE 0)
   endif()
 
+  if (${SURGE_JUCE_HOST_CONTEXT})
+    set( SURGE_JUCE_HOST_CONTEXT_DEFINE 1)
+  else()
+    set( SURGE_JUCE_HOST_CONTEXT_DEFINE 0)
+  endif()
+
   target_compile_definitions(surge-xt PUBLIC
           JUCE_ALLOW_STATIC_NULL_VARIABLES=0
           JUCE_STRICT_REFCOUNTEDPOINTER=1
@@ -906,6 +920,7 @@ if( BUILD_SURGE_XT )
           JUCE_CATCH_UNHANDLED_EXCEPTIONS=$<IF:$<CONFIG:DEBUG>,1,0>
 
           SURGE_JUCE_ACCESSIBLE=${SURGE_JUCE_ACCESSIBLE_DEFINE}
+          SURGE_JUCE_HOST_CONTEXT=${SURGE_JUCE_HOST_CONTEXT_DEFINE}
 
           TARGET_JUCE_SYNTH=1
           TARGET_HEADLESS=1

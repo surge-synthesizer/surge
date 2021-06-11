@@ -1884,6 +1884,7 @@ struct COptionMenu : public CControl
             COLBK,
             SECT,
             CUSTOM,
+            POPUPMENUITEM,
             ROOT
         } type = ROOT;
 
@@ -1894,6 +1895,7 @@ struct COptionMenu : public CControl
         std::vector<MenuNode> children;
         // std::unique_ptr<juce::PopupMenu::CustomComponent> customComponent;
         juce::PopupMenu::CustomComponent *customComponent;
+        juce::PopupMenu::Item externalItem;
         bool checked = false;
         bool enabled = true;
     } rootNode;
@@ -1962,6 +1964,17 @@ struct COptionMenu : public CControl
         res->nodeIndex = rootNode.children.size() - 1;
         return res;
     }
+    std::shared_ptr<CMenuItem> addEntry(const juce::PopupMenu::Item &compPtr)
+    {
+        auto q = MenuNode{MenuNode::POPUPMENUITEM};
+        q.externalItem = compPtr;
+        rootNode.children.push_back(q);
+
+        auto res = std::make_shared<CMenuItem>();
+        res->weakPtr = this;
+        res->nodeIndex = rootNode.children.size() - 1;
+        return res;
+    }
     std::shared_ptr<CMenuItem> addEntry(COptionMenu *m, const char *nm)
     {
         return addEntry(m, std::string(nm));
@@ -2018,11 +2031,16 @@ struct COptionMenu : public CControl
                 m.addSectionHeader(k.label);
                 break;
             case MenuNode::CUSTOM:
+            {
                 auto rr = std::unique_ptr<juce::PopupMenu::CustomComponent>(k.customComponent);
                 static int cid = 1000;
                 m.addCustomItem(cid, std::move(rr));
                 customCallbacks[cid] = k.op;
                 cid++;
+                break;
+            }
+            case MenuNode::POPUPMENUITEM:
+                m.addItem(k.externalItem);
                 break;
             }
             ct++;

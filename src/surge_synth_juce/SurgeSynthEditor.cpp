@@ -189,3 +189,15 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
     par->endChangeGesture();
 }
+
+juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
+{
+    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+#if SURGE_JUCE_HOST_CONTEXT
+    if (auto *c = getHostContext())
+        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
+            return menuInfo->getEquivalentPopupMenu();
+#endif
+
+    return juce::PopupMenu();
+}

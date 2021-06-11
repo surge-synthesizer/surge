@@ -68,6 +68,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
     void filesDropped(const juce::StringArray &files, int, int) override;
 
+    juce::PopupMenu hostMenuFor(Parameter *p);
+
   private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
