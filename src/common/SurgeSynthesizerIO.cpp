@@ -459,8 +459,15 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
             /*
              * I don't see how this could ever happen. Punt.
              */
-            storage.reportError("Loading patch couldn't infer patch name. Please tell devs.",
-                                "Software Error");
+            std::ostringstream oss;
+            oss << "Error infering patch id. Prior patchid was " << patchid << " inferred id is "
+                << inferredPatchId << "."
+                << "patch_list[patchid].name/cat = '" << storage.patch_list[patchid].name << "'/'"
+                << storage.patch_list[patchid].name << "' and initPatchNameCat are '"
+                << storage.initPatchName << "'/'" << storage.initPatchCategory << "'. Please "
+                << "share this error with Surge devs.";
+            std::cout << oss.str() << std::endl;
+            storage.reportError(oss.str(), "Software Error");
             patchid = inferredPatchId;
         }
     }
