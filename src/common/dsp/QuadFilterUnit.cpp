@@ -10,6 +10,7 @@
 #include "filters/DiodeLadder.h"
 #include "filters/NonlinearFeedback.h"
 #include "filters/NonlinearStates.h"
+#include "filters/ThreelerFilter.h"
 
 __m128 SVFLP12Aquad(QuadFilterUnitState *__restrict f, __m128 in)
 {
@@ -850,6 +851,9 @@ FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
     case fut_resonancewarp_bp:
     case fut_resonancewarp_ap:
         return NonlinearStatesFilter::process;
+        break;
+    case fut_threeler:
+        return ThreelerFilter::process;
         break;
     case fut_none:
     case n_fu_types:
