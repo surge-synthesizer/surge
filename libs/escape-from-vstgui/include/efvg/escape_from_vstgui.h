@@ -258,6 +258,7 @@ struct CPoint
     CPoint() : x(0), y(0) {}
     CPoint(float x, float y) : x(x), y(y) {}
     CPoint(const juce::Point<float> &p) : x(p.x), y(p.y) {}
+    CPoint(const juce::Point<int> &p) : x(p.x), y(p.y) {}
     float x, y;
 
     bool operator==(const CPoint &that) const { return (x == that.x && y == that.y); }
@@ -271,6 +272,7 @@ struct CPoint
     }
 
     operator juce::Point<float>() const { return juce::Point<float>(x, y); }
+    operator juce::Point<int>() const { return juce::Point<int>(x, y); }
 };
 
 struct CRect

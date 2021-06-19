@@ -133,7 +133,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
         0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
     splitpointControl = 0;
     lfodisplay = 0;
-    fxmenu = 0;
     for (int i = 0; i < n_fx_slots; ++i)
     {
         selectedFX[i] = -1;
@@ -1042,7 +1041,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     */
     polydisp = nullptr;
     lfodisplay = nullptr;
-    fxmenu = nullptr;
     msegEditSwitch = nullptr;
     lfoNameLabel = nullptr;
     midiLearnOverlay = nullptr;
@@ -3786,124 +3784,6 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
     }
 }
 
-void SurgeGUIEditor::addEditorOverlay(VSTGUI::CView *c, std::string editorTitle,
-                                      OverlayTags editorTag, const VSTGUI::CPoint &topLeft,
-                                      bool modalOverlay, bool hasCloseButton,
-                                      std::function<void()> onClose)
-{
-    dismissEditorOfType(editorTag);
-
-    const int header = 18;
-    const int buttonwidth = 18;
-
-    if (!c)
-        return;
-
-    auto vs = c->getViewSize();
-
-    // add a solid outline thing which is bigger than the control with the title to that
-    auto containerSize = vs;
-    containerSize.top -= header;
-
-    if (!modalOverlay)
-        containerSize.offset(-containerSize.left + topLeft.x, -containerSize.top + topLeft.y);
-
-    auto fs = CRect(0, 0, getWindowSizeX(), getWindowSizeY());
-
-    if (!modalOverlay)
-        fs = containerSize;
-
-    // add a screen size transparent thing into the editorOverlay
-    auto editorOverlayC = new CViewContainer(fs);
-    editorOverlayC->setBackgroundColor(currentSkin->getColor(Colors::Overlay::Background));
-    editorOverlayC->setVisible(true);
-    frame->addView(editorOverlayC);
-
-    if (modalOverlay)
-        containerSize = containerSize.centerInside(fs);
-    else
-        containerSize.moveTo(CPoint(0, 0));
-
-    auto headerFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
-    auto btnFont = Surge::GUI::getFontManager()->getLatoAtSize(8);
-
-    auto outerc = new CViewContainer(containerSize);
-    outerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Border));
-    editorOverlayC->addView(outerc);
-
-    auto csz = containerSize;
-    csz.bottom = csz.top + header;
-    auto innerc = new CViewContainer(csz);
-    innerc->setBackgroundColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
-    editorOverlayC->addView(innerc);
-
-    auto tl = new CTextLabel(csz, editorTitle.c_str());
-    tl->setBackColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
-    tl->setFrameColor(currentSkin->getColor(Colors::Dialog::Titlebar::Background));
-    tl->setFontColor(currentSkin->getColor(Colors::Dialog::Titlebar::Text));
-    tl->setFont(headerFont);
-    innerc->addView(tl);
-
-    auto iconrect = CRect(CPoint(3, 2), CPoint(15, 15));
-    auto icon = new CViewContainer(iconrect);
-    icon->setBackground(bitmapStore->getBitmap(IDB_SURGE_ICON));
-    icon->setVisible(true);
-    innerc->addView(icon);
-
-    if (hasCloseButton)
-    {
-        auto btnbg = currentSkin->getColor(Colors::Dialog::Button::Background);
-        auto btnborder = currentSkin->getColor(Colors::Dialog::Button::Border);
-        auto btntext = currentSkin->getColor(Colors::Dialog::Button::Text);
-
-        auto hovbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundHover);
-        auto hovbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderHover);
-        auto hovbtntext = currentSkin->getColor(Colors::Dialog::Button::TextHover);
-
-        auto pressbtnbg = currentSkin->getColor(Colors::Dialog::Button::BackgroundPressed);
-        auto pressbtnborder = currentSkin->getColor(Colors::Dialog::Button::BorderPressed);
-        auto pressbtntext = currentSkin->getColor(Colors::Dialog::Button::TextPressed);
-
-        csz.left = csz.right - buttonwidth;
-        csz.inset(2, 3);
-        csz.top--;
-        csz.bottom += 1;
-        auto b = new CTextButton(csz, this, tag_editor_overlay_close, "X");
-        b->setVisible(true);
-        b->setFont(btnFont);
-        b->setFrameColor(btnborder);
-        b->setTextColor(btntext);
-        b->setRoundRadius(CCoord(3.f));
-
-        innerc->addView(b);
-    }
-
-    // add the control inside that in an outline
-    if (modalOverlay)
-    {
-        containerSize = vs;
-        containerSize.top -= header;
-        containerSize = containerSize.centerInside(fs);
-        containerSize.top += header;
-        containerSize.inset(3, 3);
-    }
-    else
-    {
-        containerSize = vs.moveTo(0, header).inset(2, 0);
-        containerSize.bottom -= 2;
-    }
-
-    c->setViewSize(containerSize);
-    c->setMouseableArea(containerSize); // sigh
-    editorOverlayC->addView(c);
-
-    // save the onClose function
-    editorOverlay.push_back(std::make_pair(editorTag, editorOverlayC));
-    editorOverlayOnClose[editorOverlayC] = onClose;
-    editorOverlayContentsWeakReference[editorOverlayC] = c;
-    editorOverlayContentsWeakReference[editorOverlayC] = c;
-}
-
 void SurgeGUIEditor::addJuceEditorOverlay(
     std::unique_ptr<juce::Component> c,
     std::string editorTitle, // A window display title - whatever you want
@@ -4473,31 +4353,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->populate();
         frame->juceComponent()->addAndMakeVisible(*fxMenu);
         return fxMenu.get();
-        /* CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-         rect.offset(skinCtrl->x, skinCtrl->y);
-         // CControl *m = new
-         //
-         xxxMenu(rect,this,tag_fx_menu,&synth->storage,&synth->storage.getPatch().fx[current_fx],current_fx);
-         CControl *m = new xxxMenu(rect, this, tag_fx_menu, &synth->storage,
-                                   &synth->storage.getPatch().fx[current_fx],
-                                   &synth->fxsync[current_fx], current_fx);
-         m->setMouseableArea(rect);
-         ((xxxMenu *)m)->setSkin(currentSkin, bitmapStore);
-         ((xxxMenu *)m)->selectedIdx = this->selectedFX[current_fx];
-         fxPresetLabel->setText(this->fxPresetName[current_fx].c_str());
-         m->setValue(p->get_value_f01());
-         frame->addView(m);
-         fxmenu = m;
-         return m;
-         */
     }
 
     if (skinCtrl->ultimateparentclassname == "CNumberField")
     {
         auto pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
-        // CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        // rect.offset(skinCtrl->x, skinCtrl->y);
-        // CNumberField *pbd = new CNumberField(rect, this, tag, nullptr, &(synth->storage));
         pbd->addListener(this);
         pbd->setSkin(currentSkin, bitmapStore, skinCtrl);
         pbd->setTag(tag);
@@ -4921,10 +4781,9 @@ void SurgeGUIEditor::showMSEGEditor()
 
     auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
     auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-    auto mse = new MSEGEditor(&(synth->storage), lfodata, ms, &msegEditState[current_scene][lfo_id],
-                              currentSkin, bitmapStore);
-    auto vs = mse->getViewSize().getWidth();
-    float xp = (currentSkin->getWindowSizeX() - (vs + 8)) * 0.5;
+    auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(&(synth->storage), lfodata, ms,
+                                                             &msegEditState[current_scene][lfo_id],
+                                                             currentSkin, bitmapStore);
 
     std::string title = modsource_names[modsource_editor[current_scene]];
     title += " Editor";
@@ -4934,14 +4793,14 @@ void SurgeGUIEditor::showMSEGEditor()
     auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
-    addEditorOverlay(mse, title, MSEG_EDITOR, CPoint(skinCtrl->x, skinCtrl->y), false, true,
-                     [this]() {
-                         if (msegEditSwitch)
-                         {
-                             msegEditSwitch->setValue(0.0);
-                             msegEditSwitch->asBaseViewFunctions()->invalid();
-                         }
-                     });
+    addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect().asJuceIntRect(),
+                         true, [this]() {
+                             if (msegEditSwitch)
+                             {
+                                 msegEditSwitch->setValue(0.0);
+                                 msegEditSwitch->asBaseViewFunctions()->invalid();
+                             }
+                         });
 
     if (msegEditSwitch)
     {

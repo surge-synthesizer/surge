@@ -325,13 +325,6 @@ class SurgeGUIEditor : public EditorType,
         WAVETABLESCRIPTING_EDITOR,
     };
 
-    void addEditorOverlay(
-        VSTGUI::CView *c,
-        std::string editorTitle, // A window display title - whatever you want
-        OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
-        const VSTGUI::CPoint &topleft = VSTGUI::CPoint(0, 0), bool modalOverlay = true,
-        bool hasCloseButton = true, std::function<void()> onClose = []() {});
-
     // I will be handed a pointer I need to keep around you know.
     void addJuceEditorOverlay(
         std::unique_ptr<juce::Component> c,
@@ -394,8 +387,8 @@ class SurgeGUIEditor : public EditorType,
     int msegIsOpenFor = -1, msegIsOpenInScene = -1;
     bool showMSEGEditorOnNextIdleOrOpen = false;
 
-    MSEGEditor::State msegEditState[n_scenes][n_lfos];
-    MSEGEditor::State mostRecentCopiedMSEGState;
+    Surge::Overlays::MSEGEditor::State msegEditState[n_scenes][n_lfos];
+    Surge::Overlays::MSEGEditor::State mostRecentCopiedMSEGState;
 
     int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
 
@@ -492,7 +485,7 @@ class SurgeGUIEditor : public EditorType,
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
 
-    // Data structures for a list of overlays and associated data witht hem
+    // FIXME - these can all go now
     std::vector<std::pair<OverlayTags, VSTGUI::CViewContainer *>> editorOverlay;
     std::unordered_map<VSTGUI::CViewContainer *, VSTGUI::CView *>
         editorOverlayContentsWeakReference;
@@ -561,10 +554,8 @@ class SurgeGUIEditor : public EditorType,
     Surge::Widgets::ModulatableControlInterface *param[n_paramslots] = {};
     VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
     std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
-    VSTGUI::CControl *metaparam[n_customcontrollers] = {};
     VSTGUI::CControl *lfodisplay = nullptr;
     Surge::Widgets::Switch *filtersubtype[2] = {};
-    VSTGUI::CControl *fxmenu = nullptr;
 
   public:
     bool useDevMenu = false;

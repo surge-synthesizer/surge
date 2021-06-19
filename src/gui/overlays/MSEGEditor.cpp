@@ -23,27 +23,27 @@
 #include "SurgeBitmaps.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
-#include "CursorControlGuard.h"
 
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 
-// FIXME when you get cursor hiding working
-#define DISABLE_CURSOR_HIDING 1
-
 using namespace VSTGUI;
 
+namespace Surge
+{
+namespace Overlays
+{
 struct MSEGCanvas;
 
-struct MSEGControlRegion : public CViewContainer,
+struct MSEGControlRegion : public juce::Component,
                            public Surge::GUI::SkinConsumingComponent,
                            public VSTGUI::IControlListener
 {
     MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos,
                       MSEGStorage *ms, MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
                       std::shared_ptr<SurgeBitmaps> b)
-        : CViewContainer(size)
+        : juce::Component("MSEG Control Region")
     {
         setSkin(skin, b);
         this->ms = ms;
@@ -51,7 +51,6 @@ struct MSEGControlRegion : public CViewContainer,
         this->lfodata = lfos;
         this->canvas = c;
         this->storage = storage;
-        setBackgroundColor(skin->getColor(Colors::MSEGEditor::Panel));
         rebuild();
     };
 
@@ -68,20 +67,15 @@ struct MSEGControlRegion : public CViewContainer,
     };
 
     void rebuild();
-    virtual void valueChanged(CControlValueInterface *p) override;
-    virtual int32_t controlModifierClicked(CControlValueInterface *pControl,
-                                           CButtonState button) override;
+    void valueChanged(CControlValueInterface *p) override;
+    int32_t controlModifierClicked(CControlValueInterface *pControl, CButtonState button) override;
 
-    virtual void draw(CDrawContext *dc) override
-    {
-        auto r = getViewSize();
-        dc->setFillColor(skin->getColor(Colors::MSEGEditor::Panel));
-        dc->drawRect(r, kDrawFilled);
-    }
+    void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
     std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
     std::unique_ptr<Surge::Widgets::MultiSwitch> loopMode, editMode, movementMode;
     std::unique_ptr<Surge::Widgets::NumberField> hSnapSize, vSnapSize;
+    std::vector<std::unique_ptr<juce::Label>> labels;
 
     MSEGStorage *ms = nullptr;
     MSEGEditor::State *eds = nullptr;
@@ -90,14 +84,12 @@ struct MSEGControlRegion : public CViewContainer,
     SurgeStorage *storage = nullptr;
 };
 
-struct MSEGCanvas : public CControl,
-                    public Surge::GUI::SkinConsumingComponent,
-                    public Surge::GUI::CursorControlAdapter<MSEGCanvas>
+struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     MSEGCanvas(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
                MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
                std::shared_ptr<SurgeBitmaps> b)
-        : CControl(size), Surge::GUI::CursorControlAdapter<MSEGCanvas>(nullptr)
+        : juce::Component("MSEG Canvas")
     {
         setSkin(skin, b);
         this->storage = storage;
@@ -105,9 +97,8 @@ struct MSEGCanvas : public CControl,
         this->eds = eds;
         this->lfodata = lfodata;
         Surge::MSEG::rebuildCache(ms);
-        handleBmp = b->getBitmap(IDB_MSEG_NODES);
+        handleDrawable = b->getDrawable(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
-        setMouseableArea(getViewSize());
     };
 
     /*
@@ -164,40 +155,35 @@ struct MSEGCanvas : public CControl,
         return ms->axisWidth;
     }
 
-    inline CRect getDrawArea()
+    inline juce::Rectangle<int> getDrawArea()
     {
-        auto vs = getViewSize();
-        auto drawArea = vs.inset(drawInsertX, drawInsertY);
-        drawArea.bottom -= axisSpaceY;
-        drawArea.left += axisSpaceX;
-        drawArea.top += 5;
+        auto drawArea = getLocalBounds()
+                            .reduced(drawInsertX, drawInsertY)
+                            .withTrimmedBottom(axisSpaceY)
+                            .withTrimmedLeft(axisSpaceX)
+                            .withTrimmedTop(5);
         return drawArea;
     }
 
-    inline CRect getHAxisArea()
+    inline juce::Rectangle<int> getHAxisArea()
     {
-        auto vs = getViewSize();
-        auto drawArea = vs.inset(drawInsertX, drawInsertY);
-        drawArea.top = drawArea.bottom - axisSpaceY;
-        drawArea.left += axisSpaceX;
+        auto drawArea = getLocalBounds().reduced(drawInsertX, drawInsertY);
+        drawArea = drawArea.withTop(drawArea.getBottom() - axisSpaceY).withTrimmedLeft(axisSpaceX);
         return drawArea;
     }
 
     // Stretch all the way to the bottom
-    inline CRect getHAxisDoubleClickArea()
+    inline juce::Rectangle<int> getHAxisDoubleClickArea()
     {
-        auto r = getHAxisArea();
-        auto v = getViewSize();
-        r.bottom = v.bottom;
-        return r;
+        return getHAxisArea().withBottom(getLocalBounds().getBottom());
     }
 
-    inline CRect getVAxisArea()
+    inline juce::Rectangle<int> getVAxisArea()
     {
-        auto vs = getViewSize();
-        auto drawArea = vs.inset(drawInsertX, drawInsertY);
-        drawArea.right = drawArea.left + axisSpaceX;
-        drawArea.bottom -= axisSpaceY;
+        auto drawArea = getLocalBounds()
+                            .reduced(drawInsertX, drawInsertY)
+                            .withWidth(axisSpaceX)
+                            .withTrimmedBottom(axisSpaceY);
         return drawArea;
     }
 
@@ -205,9 +191,9 @@ struct MSEGCanvas : public CControl,
     {
         auto drawArea = getDrawArea();
         float vscale = drawArea.getHeight();
-        return [vscale, drawArea](float vp) {
-            auto v = 1 - (vp + 1) * 0.5;
-            return v * vscale + drawArea.top;
+        return [vscale, drawArea](float vp) -> float {
+            float v = 1 - (vp + 1) * 0.5;
+            return v * vscale + drawArea.getY();
         };
     }
 
@@ -215,8 +201,8 @@ struct MSEGCanvas : public CControl,
     {
         auto drawArea = getDrawArea();
         float vscale = drawArea.getHeight();
-        return [vscale, drawArea](float vx) {
-            auto v = (vx - drawArea.top) / vscale;
+        return [vscale, drawArea](float vx) -> float {
+            auto v = (vx - drawArea.getY()) / vscale;
             auto vp = (1 - v) * 2 - 1;
             return vp;
         };
@@ -228,7 +214,7 @@ struct MSEGCanvas : public CControl,
         float maxt = drawDuration();
         float tscale = 1.f * drawArea.getWidth() / maxt;
         return [tscale, drawArea, this](float t) {
-            return (t - ms->axisStart) * tscale + drawArea.left;
+            return (t - ms->axisStart) * tscale + drawArea.getX();
         };
     }
 
@@ -241,7 +227,7 @@ struct MSEGCanvas : public CControl,
         // So px = t * tscale + drawarea;
         // So t = ( px - drawarea ) / tscale;
         return [tscale, drawArea, this](float px) {
-            return (px - drawArea.left) / tscale + ms->axisStart;
+            return (px - drawArea.getX()) / tscale + ms->axisStart;
         };
     }
 
@@ -278,13 +264,13 @@ struct MSEGCanvas : public CControl,
         {
             hSnapO = c->ms->hSnap;
             vSnapO = c->ms->vSnap;
-            c->invalid();
+            c->repaint();
         }
         ~SnapGuard()
         {
             c->ms->hSnap = hSnapO;
             c->ms->vSnap = vSnapO;
-            c->invalid();
+            c->repaint();
         }
         MSEGCanvas *c;
         float hSnapO, vSnapO;
@@ -300,7 +286,7 @@ struct MSEGCanvas : public CControl,
 
     const int loopMarkerWidth = 7, loopMarkerHeight = 15;
 
-    void recalcHotZones(const CPoint &where)
+    void recalcHotZones(const juce::Point<int> &where)
     {
         hotzones.clear();
 
@@ -352,7 +338,7 @@ struct MSEGCanvas : public CControl,
                     {
                         Surge::MSEG::setLoopStart(ms, seg);
                         modelChanged();
-                        invalid();
+                        repaint();
                     }
                     loopDragTime = t;
                     loopDragIsStart = true;
@@ -362,11 +348,11 @@ struct MSEGCanvas : public CControl,
                         loopDragEnd = 0;
                 };
 
-                hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.top + 1),
+                hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.getY() + 1),
                                         CPoint(loopMarkerWidth, loopMarkerHeight));
                 hs.zoneSubType = hotzone::LOOP_START;
 
-                he.rect = VSTGUI::CRect(CPoint(pxe - loopMarkerWidth + 0.5, haxisArea.top + 1),
+                he.rect = VSTGUI::CRect(CPoint(pxe - loopMarkerWidth + 0.5, haxisArea.getY() + 1),
                                         CPoint(loopMarkerWidth, loopMarkerHeight));
                 he.zoneSubType = hotzone::LOOP_END;
 
@@ -392,7 +378,7 @@ struct MSEGCanvas : public CControl,
                     {
                         Surge::MSEG::setLoopEnd(ms, seg);
                         modelChanged();
-                        invalid();
+                        repaint();
                     }
                     loopDragTime = t;
                     loopDragIsStart = false;
@@ -412,7 +398,7 @@ struct MSEGCanvas : public CControl,
             auto t0 = tpx(ms->segmentStart[i]);
             auto t1 = tpx(ms->segmentEnd[i]);
 
-            auto segrec = CRect(t0, drawArea.top, t1, drawArea.bottom);
+            auto segrec = CRect(t0, drawArea.getY(), t1, drawArea.getBottom());
 
             // Now add the mousable zones
             auto &s = ms->segments[i];
@@ -422,7 +408,7 @@ struct MSEGCanvas : public CControl,
                 h.rect = CRect(t - handleRadius, valpx(v) - handleRadius, t + handleRadius,
                                valpx(v) + handleRadius);
                 h.type = hotzone::Type::MOUSABLE_NODE;
-                if (h.rect.pointInside(where))
+                if (h.rect.pointInside(CPoint(where.getX(), where.getY())))
                     h.active = true;
                 h.onDrag = onDrag;
                 h.associatedSegment = i;
@@ -522,7 +508,7 @@ struct MSEGCanvas : public CControl,
                 h.rect =
                     CRect(t - handleRadius, v - handleRadius, t + handleRadius, v + handleRadius);
                 h.type = hotzone::Type::MOUSABLE_NODE;
-                if (h.rect.pointInside(where))
+                if (h.rect.pointInside(CPoint(where.getX(), where.getY())))
                     h.active = true;
 
                 h.useDrawRect = false;
@@ -649,9 +635,9 @@ struct MSEGCanvas : public CControl,
                         // Don't allow endpoint time adjust in LFO mode
                         if (this->ms->editMode == MSEGStorage::ENVELOPE)
                         {
-                            if (!this->getViewSize().pointInside(where))
+                            if (!this->getLocalBounds().contains(where))
                             {
-                                auto howFar = where.x - this->getViewSize().right;
+                                auto howFar = where.x - this->getLocalBounds().getRight();
                                 if (howFar > 0)
                                     dx *= howFar * 0.1; // this is really just a speedup as our axes
                                                         // shrinks. Just a fudge
@@ -666,34 +652,37 @@ struct MSEGCanvas : public CControl,
         }
     }
 
-    void drawLoopDragMarker(CDrawContext *dc, CColor markerColor, hotzone::ZoneSubType subtype,
-                            const CRect &rect)
+    // vertical grid thinning
+    const int gridMaxVSteps = 10;
+
+    void drawLoopDragMarker(juce::Graphics &g, CColor markerColor, hotzone::ZoneSubType subtype,
+                            const CRect &rectC)
     {
         auto ha = getHAxisArea();
+        auto rect = rectC.asJuceFloatRect();
         auto height = rect.getHeight();
-        auto start = rect.right;
-        auto end = rect.left;
-        auto top = rect.top;
-        VSTGUI::CDrawContext::PointList pl;
+        auto start = rect.getRight();
+        auto end = rect.getX();
+        auto top = rect.getY();
 
         if (subtype == hotzone::LOOP_START)
         {
             std::swap(start, end);
         }
 
-        pl.push_back(CPoint(start, top));
-        pl.push_back(CPoint(start, top + height));
-        pl.push_back(CPoint(end, top + height));
+        juce::Path p;
+        p.startNewSubPath(start, top);
+        p.lineTo(start, top + height);
+        p.lineTo(end, top + height);
+        p.closeSubPath();
 
-        dc->setFillColor(markerColor);
-        dc->drawPolygon(pl, kDrawFilled);
+        g.setColour(markerColor);
+        g.fillPath(p);
 
-        dc->setFrameColor(markerColor);
-        dc->setLineWidth(1);
-        dc->drawLine(CPoint(start, top), CPoint(start, top + height));
+        g.drawLine(start, top, start, top + height, 1);
     }
 
-    void drawLoopDragMarker(CDrawContext *dc, CColor markerColor, hotzone::ZoneSubType subtype,
+    void drawLoopDragMarker(juce::Graphics &g, CColor markerColor, hotzone::ZoneSubType subtype,
                             float time)
     {
         auto tpx = timeToPx();
@@ -706,7 +695,7 @@ struct MSEGCanvas : public CControl,
             start -= loopMarkerWidth;
 
             /* this -1 is because we offset half a px to the left in our rect */
-            if (start < ha.left - 1 || start + loopMarkerWidth > ha.right)
+            if (start < ha.getX() - 1 || start + loopMarkerWidth > ha.getRight())
             {
                 hide = true;
             }
@@ -714,7 +703,7 @@ struct MSEGCanvas : public CControl,
         else
         {
             /* this -1 is because we offset half a px to the left in our rect */
-            if (start < ha.left - 1 || start + loopMarkerWidth > ha.right)
+            if (start < ha.getX() - 1 || start + loopMarkerWidth > ha.getRight())
             {
                 hide = true;
             }
@@ -723,15 +712,12 @@ struct MSEGCanvas : public CControl,
         if (!hide)
         {
             drawLoopDragMarker(
-                dc, markerColor, subtype,
-                CRect(CPoint(start, ha.top), CPoint(loopMarkerWidth, loopMarkerHeight)));
+                g, markerColor, subtype,
+                CRect(CPoint(start, ha.getY()), CPoint(loopMarkerWidth, loopMarkerHeight)));
         }
     }
 
-    // vertical grid thinning
-    const int gridMaxVSteps = 10;
-
-    inline void drawAxis(CDrawContext *dc)
+    inline void drawAxis(juce::Graphics &g)
     {
         auto primaryFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
         auto secondaryFont = Surge::GUI::getFontManager()->getLatoAtSize(7);
@@ -745,18 +731,18 @@ struct MSEGCanvas : public CControl,
         {
             int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
             int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-            float pxs = limit_range((float)tpx(ms->segmentStart[ls]), (float)haxisArea.left,
-                                    (float)haxisArea.right);
-            float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.left,
-                                    (float)haxisArea.right);
+            float pxs = limit_range((float)tpx(ms->segmentStart[ls]), (float)haxisArea.getX(),
+                                    (float)haxisArea.getRight());
+            float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.getX(),
+                                    (float)haxisArea.getRight());
 
-            auto r = VSTGUI::CRect(pxs, haxisArea.top, pxe, haxisArea.top + 15);
+            auto r = VSTGUI::CRect(pxs, haxisArea.getY(), pxe, haxisArea.getY() + 15);
 
             // draw the loop region start to end
             if (!(ms->loop_start == ms->loop_end + 1))
             {
-                dc->setFillColor(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
-                dc->drawRect(r, kDrawFilled);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
+                g.fillRect(r.asJuceFloatRect());
             }
 
             auto mcolor = skin->getColor(Colors::MSEGEditor::Loop::Marker);
@@ -764,19 +750,19 @@ struct MSEGCanvas : public CControl,
             // draw loop markers
             if (loopDragTime < 0 || !loopDragIsStart)
             {
-                drawLoopDragMarker(dc, mcolor, hotzone::LOOP_START,
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_START,
                                    ms->segmentStart[ms->loop_start]);
             }
 
             if (loopDragTime < 0 || loopDragIsStart)
             {
-                drawLoopDragMarker(dc, mcolor, hotzone::LOOP_END, ms->segmentEnd[ms->loop_end]);
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_END, ms->segmentEnd[ms->loop_end]);
             }
 
             // loop marker when dragged
             if (loopDragTime >= 0)
             {
-                drawLoopDragMarker(dc, mcolor,
+                drawLoopDragMarker(g, mcolor,
                                    (loopDragIsStart ? hotzone::LOOP_START : hotzone::LOOP_END),
                                    loopDragTime);
             }
@@ -795,21 +781,25 @@ struct MSEGCanvas : public CControl,
             if (!(c & TickDrawStyle::kNoLabel))
             {
 
+                auto sw = 0.f;
+
                 if (fmod(t, 1.f) == 0.f)
                 {
-                    dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
-                    dc->setFont(primaryFont);
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+                    g.setFont(primaryFont);
                     snprintf(txt, 16, "%d", int(t));
+                    sw = primaryFont.getStringWidthFloat(txt);
                 }
                 else
                 {
-                    dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-                    dc->setFont(secondaryFont);
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+                    g.setFont(secondaryFont);
                     snprintf(txt, 16, "%5.2f", t);
+                    sw = secondaryFont.getStringWidthFloat(txt);
                 }
 
-                auto sw = dc->getStringWidth(txt);
-                dc->drawString(txt, CPoint(px - (sw / 2), haxisArea.top + yofs));
+                g.drawText(txt, px - (sw / 2), haxisArea.getY(), sw, yofs,
+                           juce::Justification::centred);
             }
         }
 
@@ -817,15 +807,15 @@ struct MSEGCanvas : public CControl,
         auto vaxisArea = getVAxisArea();
         auto valpx = valToPx();
 
-        dc->setLineWidth(1.5);
+        vaxisArea = vaxisArea.expanded(1, 0);
 
-        vaxisArea.offset(-1, 0);
+        g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Line));
+        auto s = vaxisArea.getTopRight();
+        auto b = vaxisArea.getBottomRight().translated(0, 4);
+        g.drawLine(s.getX(), s.getY(), b.getX(), b.getY(), 1);
 
-        dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
-        dc->drawLine(vaxisArea.getTopRight(), vaxisArea.getBottomRight().offset(0, 4));
-
-        dc->setFont(primaryFont);
-        dc->setFontColor(skin->getColor(Colors::MSEGEditor::Axis::Text));
+        g.setFont(primaryFont);
+        g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
 
         updateVTicks();
 
@@ -842,18 +832,12 @@ struct MSEGCanvas : public CControl,
 
             if (off == 0)
             {
-                dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Axis::Line));
+                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Line));
             }
             else
             {
-                dc->setLineWidth(1.f);
-                dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
-
-                if (std::get<0>(vp) !=
-                    -1.f) // don't draw the tick at -1 ever, this is covered in draw()
-                {
-                    dc->drawLine(CPoint(vaxisArea.left + off, p), CPoint(vaxisArea.right - 1.f, p));
-                }
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+                g.drawLine(vaxisArea.getX() + off, p, vaxisArea.getRight() - 1.f, p);
             }
 
             if (off == 0)
@@ -867,18 +851,23 @@ struct MSEGCanvas : public CControl,
                     value = -value;
                 }
 
+                snprintf(txt, 16, "%5.1f", value);
+
                 if (value == 1.f)
                 {
-                    ypos = 10;
+                    g.drawText(txt, vaxisArea.getX() - 3, p, vaxisArea.getWidth(), 12,
+                               juce::Justification::topRight);
                 }
-
-                if (value == -1.f)
+                else if (value == -1.f)
                 {
-                    ypos = -3;
+                    g.drawText(txt, vaxisArea.getX() - 3, p - 12, vaxisArea.getWidth(), 12,
+                               juce::Justification::bottomRight);
                 }
-
-                snprintf(txt, 16, "%5.1f", value);
-                dc->drawString(txt, CPoint(vaxisArea.left - 3, p + ypos));
+                else
+                {
+                    g.drawText(txt, vaxisArea.getX() - 3, p - 6, vaxisArea.getWidth(), 12,
+                               juce::Justification::centredRight);
+                }
             }
         }
     }
@@ -1027,24 +1016,19 @@ struct MSEGCanvas : public CControl,
         }
     }
 
-    virtual void draw(CDrawContext *dc) override
+    virtual void paint(juce::Graphics &g) override
     {
+        g.fillAll(juce::Colours::orchid);
         auto uni = lfodata->unipolar.val.b;
-        auto vs = getViewSize();
+        auto vs = getLocalBounds();
 
         if (ms->axisWidth < 0 || ms->axisStart < 0)
             zoomToFull();
 
         if (hotzones.empty())
-            recalcHotZones(CPoint(vs.left, vs.top));
+            recalcHotZones(CPoint(vs.getX(), vs.getY()));
 
-        dc->setFillColor(skin->getColor(Colors::MSEGEditor::Background));
-        dc->drawRect(vs, kDrawFilled);
-
-        // we want to draw the background rectangle always filling the area without smearing
-        // so draw the rect first then set AA drawing mode
-        dc->setDrawMode(kAntiAliasing | kNonIntegralMode);
-
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
         auto drawArea = getDrawArea();
         float maxt = drawDuration();
 
@@ -1063,58 +1047,53 @@ struct MSEGCanvas : public CControl,
             float pxs = tpx(ms->segmentStart[ls]);
             float pxe = tpx(ms->segmentEnd[le]);
 
-            if (!(pxs > drawArea.right || pxe < drawArea.left))
+            if (!(pxs > drawArea.getRight() || pxe < drawArea.getX()))
             {
                 auto oldpxs = pxs, oldpxe = pxe;
-                pxs = std::max(drawArea.left, (double)pxs);
-                pxe = std::min(drawArea.right, (double)pxe);
+                pxs = std::max(drawArea.getX(), (int)pxs);
+                pxe = std::min(drawArea.getRight(), (int)pxe);
 
-                auto loopRect = CRect(pxs - 0.5, drawArea.top, pxe, drawArea.bottom);
+                auto loopRect = CRect(pxs - 0.5, drawArea.getY(), pxe, drawArea.getBottom());
                 auto cf = skin->getColor(Colors::MSEGEditor::Loop::RegionFill);
 
-                dc->setFillColor(cf);
-                dc->setFrameColor(cf);
-                dc->drawRect(loopRect, kDrawFilled);
+                g.setColour(cf);
+                g.fillRect(loopRect.asJuceFloatRect());
 
                 auto cb = skin->getColor(Colors::MSEGEditor::Loop::RegionBorder);
+                g.setColour(cb);
 
-                dc->setFrameColor(cb);
-                dc->setLineWidth(1.f);
-
-                if (oldpxe > drawArea.left && oldpxe <= drawArea.right)
+                if (oldpxe > drawArea.getX() && oldpxe <= drawArea.getRight())
                 {
-                    dc->drawLine(CPoint(pxe - 0.5, drawArea.top),
-                                 CPoint(pxe - 0.5, drawArea.bottom));
+                    g.drawLine(pxe - 0.5, drawArea.getY(), pxe - 0.5, drawArea.getBottom(), 1);
                 }
-                if (oldpxs >= drawArea.left && oldpxs < drawArea.right)
+                if (oldpxs >= drawArea.getX() && oldpxs < drawArea.getRight())
                 {
-                    dc->drawLine(CPoint(pxs - 0.5, drawArea.top),
-                                 CPoint(pxs - 0.5, drawArea.bottom));
+                    g.drawLine(pxs - 0.5, drawArea.getY(), pxs - 0.5, drawArea.getBottom(), 1);
                 }
             }
         }
 
         Surge::MSEG::EvaluatorState es, esdf;
-        es.seed(
-            8675309); // This is different from the number in LFOMS::assign in draw mode on purpose
+        // This is different from the number in LFOMS::assign in draw mode on purpose
+        es.seed(8675309);
         esdf.seed(8675309);
 
-        CGraphicsPath *path = dc->createGraphicsPath();
-        CGraphicsPath *highlightPath = dc->createGraphicsPath();
-        CGraphicsPath *defpath = dc->createGraphicsPath();
-        CGraphicsPath *fillpath = dc->createGraphicsPath();
+        auto path = juce::Path();
+        auto highlightPath = juce::Path();
+        auto defpath = juce::Path();
+        auto fillpath = juce::Path();
 
         float pathScale = 1.0;
 
         auto xdisp = drawArea;
-        float yOff = drawArea.top;
+        float yOff = drawArea.getY();
 
-        auto beginP = [yOff, pathScale](CGraphicsPath *p, CCoord x, CCoord y) {
-            p->beginSubpath(pathScale * x, pathScale * (y - yOff));
+        auto beginP = [yOff, pathScale](juce::Path &p, CCoord x, CCoord y) {
+            p.startNewSubPath(pathScale * x, pathScale * (y - yOff));
         };
 
-        auto addP = [yOff, pathScale](CGraphicsPath *p, CCoord x, CCoord y) {
-            p->addLine(pathScale * x, pathScale * (y - yOff));
+        auto addP = [yOff, pathScale](juce::Path &p, CCoord x, CCoord y) {
+            p.lineTo(pathScale * x, pathScale * (y - yOff));
         };
 
         bool hlpathUsed = false;
@@ -1127,7 +1106,7 @@ struct MSEGCanvas : public CControl,
 
         for (int q = 0; q <= drawArea.getWidth(); ++q)
         {
-            float up = pxt(q + drawArea.left);
+            float up = pxt(q + drawArea.getX());
             int i = q;
             if (!drawnLast)
             {
@@ -1214,37 +1193,34 @@ struct MSEGCanvas : public CControl,
         }
 
         int uniLimit = 0;
-        auto tfpath = CGraphicsTransform()
-                          .scale(1.0 / pathScale, 1.0 / pathScale)
-                          .translate(drawArea.left, drawArea.top);
-
-        VSTGUI::CGradient::ColorStopMap csm;
-        VSTGUI::CGradient *cg = VSTGUI::CGradient::create(csm);
-
-        cg->addColorStop(0, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
-        if (uni)
-        {
-            uniLimit = -1;
-            cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
-        }
-        else
-        {
-            cg->addColorStop(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
-            cg->addColorStop(1, skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
-        }
-
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
         addP(fillpath, uniLimit, pathFirstY);
 
-        dc->fillLinearGradient(fillpath, *cg, CPoint(0, 0), CPoint(0, valpx(-1)), false, &tfpath);
-        fillpath->forget();
-        if (cg)
+        auto tfpath = juce::AffineTransform()
+                          .scaled(1.0 / pathScale, 1.0 / pathScale)
+                          .translated(drawArea.getX(), drawArea.getY());
+
+        juce::ColourGradient cg;
+        if (uni)
         {
-            cg->forget();
+            cg = juce::ColourGradient::vertical(
+                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                skin->getColor(Colors::MSEGEditor::GradientFill::EndColor), drawArea);
+        }
+        else
+        {
+            cg = juce::ColourGradient::vertical(
+                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
+            cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
         }
 
-        dc->setLineWidth(1);
+        {
+            juce::Graphics::ScopedSaveState gs(g);
+            g.setGradientFill(cg);
+            g.fillPath(fillpath, tfpath);
+        }
 
         // draw vertical grid
         auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
@@ -1263,26 +1239,23 @@ struct MSEGCanvas : public CControl,
 
             if (c & TickDrawStyle::kHighlight)
             {
-                dc->setFrameColor(primaryGridColor);
+                g.setColour(primaryGridColor);
             }
             else
             {
-                dc->setFrameColor(secondaryVGridColor);
+                g.setColour(secondaryVGridColor);
             }
 
             float pxa = px - linewidth * 0.5;
 
-            if (pxa < drawArea.left || pxa > drawArea.right)
+            if (pxa < drawArea.getX() || pxa > drawArea.getRight())
                 continue;
 
             if (t > 0.1)
             {
-                dc->setLineWidth(linewidth);
-                dc->drawLine(CPoint(pxa, drawArea.top), CPoint(pxa, drawArea.bottom + ticklen));
+                g.drawLine(pxa, drawArea.getY(), pxa, drawArea.getBottom() + ticklen, linewidth);
             }
         }
-
-        dc->setLineWidth(1);
 
         updateVTicks();
 
@@ -1291,40 +1264,29 @@ struct MSEGCanvas : public CControl,
             float val = std::get<0>(vp);
             float v = valpx(val);
             int ticklen = 0;
-
+            auto sp = juce::PathStrokeType(1.0);
             if (std::get<2>(vp))
             {
-                dc->setFrameColor(primaryGridColor);
-                dc->setLineStyle(kLineSolid);
+                g.setColour(primaryGridColor);
 
                 if (val != 0.f && !uni)
                     ticklen = 20;
             }
             else
             {
-                dc->setFrameColor(secondaryHGridColor);
-#if FIX_DASKES
-                CCoord dashes[] = {2, 5};
-                dc->setLineStyle(
-                    CLineStyle(CLineStyle::kLineCapButt, CLineStyle::kLineJoinMiter, 0, 2, dashes));
-#else
+                g.setColour(secondaryHGridColor);
+
                 static bool warned = false;
                 if (!warned)
                 {
+                    // juce::PathstrokeType::createDashedPath basically
                     std::cout << "FIXME: Dashed Lines " << __FILE__ << __LINE__ << std::endl;
                     warned = true;
                 }
-#endif
             }
 
-#if FIX_DASHES
-            if (!(val == -1.f &&
-                  dc->getLineStyle() !=
-                      kLineSolid)) // make sure never to draw a dashed line at the bottom
-            {
-                dc->drawLine(CPoint(drawArea.left - ticklen, v), CPoint(drawArea.right, v));
-            }
-#endif
+            //  if (val != -1.f)
+            g.drawLine(drawArea.getX() - ticklen, v, drawArea.getRight(), v);
         }
 
         // draw hover loop markers
@@ -1341,13 +1303,13 @@ struct MSEGCanvas : public CControl,
                 if (h.zoneSubType == hotzone::LOOP_START)
                 {
                     // my left edge is off the right or my left edge is off the left
-                    if (h.rect.left > drawArea.right + 1 || h.rect.left < drawArea.left - 1)
+                    if (h.rect.left > drawArea.getRight() + 1 || h.rect.left < drawArea.getX() - 1)
                         continue;
                 }
                 else if (h.zoneSubType == hotzone::LOOP_END)
                 {
                     // my right edge is off the right or left
-                    if (h.rect.right > drawArea.right + 1 || h.rect.right <= drawArea.left)
+                    if (h.rect.right > drawArea.getRight() + 1 || h.rect.right <= drawArea.getX())
                         continue;
                 }
 
@@ -1359,42 +1321,32 @@ struct MSEGCanvas : public CControl,
                     auto hr = h.rect;
                     hr.offset(0, -1);
 
-                    drawLoopDragMarker(dc, c, h.zoneSubType, hr);
+                    g.setColour(juce::Colours::red);
+                    g.fillRect(hr);
+                    drawLoopDragMarker(g, c, h.zoneSubType, hr);
                 }
             }
         }
 
-        // Draw the axes here after the gradient fill and gridlines
-        drawAxis(dc);
-        dc->setLineStyle(
-            CLineStyle(VSTGUI::CLineStyle::kLineCapButt, VSTGUI::CLineStyle::kLineJoinBevel));
+        drawAxis(g);
 
         // draw segment curve
-        dc->setLineWidth(0.75 * pathScale);
-        dc->setFrameColor(skin->getColor(Colors::MSEGEditor::DeformCurve));
-        dc->drawGraphicsPath(defpath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
+        auto strokeStyle = juce::PathStrokeType(0.75 * pathScale, juce::PathStrokeType::beveled,
+                                                juce::PathStrokeType::butt);
+        g.setColour(skin->getColor(Colors::MSEGEditor::DeformCurve));
+        g.strokePath(defpath, strokeStyle, tfpath);
 
-        dc->setLineWidth(1.0 * pathScale);
-        dc->setFrameColor(skin->getColor(Colors::MSEGEditor::Curve));
-        dc->drawGraphicsPath(path, VSTGUI::CDrawContext::PathDrawMode::kPathStroked, &tfpath);
-
-        // hovered segment curve is slightly thicker
-        dc->setLineWidth(1.5 * pathScale);
+        strokeStyle = juce::PathStrokeType(1.0 * pathScale, juce::PathStrokeType::beveled,
+                                           juce::PathStrokeType::butt);
+        g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+        g.strokePath(path, strokeStyle, tfpath);
 
         if (hlpathUsed)
         {
-            dc->setFrameColor(skin->getColor(Colors::MSEGEditor::CurveHighlight));
-            dc->drawGraphicsPath(highlightPath, VSTGUI::CDrawContext::PathDrawMode::kPathStroked,
-                                 &tfpath);
-        }
-
-        path->forget();
-        defpath->forget();
-        highlightPath->forget();
-
-        if (!inDrag)
-        {
-            getFrame()->setCursor(kCursorDefault);
+            strokeStyle = juce::PathStrokeType(1.5 * pathScale, juce::PathStrokeType::beveled,
+                                               juce::PathStrokeType::butt);
+            g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight));
+            g.strokePath(highlightPath, strokeStyle, tfpath);
         }
 
         for (const auto &h : hotzones)
@@ -1413,35 +1365,7 @@ struct MSEGCanvas : public CControl,
                 if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                     offx = 1;
 
-                if (h.active || h.dragging)
-                {
-                    if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
-                    {
-                        auto nextCursor = VSTGUI::kCursorDefault;
-                        if (h.active || h.dragging)
-                        {
-                            switch (h.segmentDirection)
-                            {
-                            case hotzone::VERTICAL_ONLY:
-                                nextCursor = kCursorVSize;
-                                break;
-                            case hotzone::HORIZONTAL_ONLY:
-                                nextCursor = kCursorHSize;
-                                break;
-                            case hotzone::BOTH_DIRECTIONS:
-                                nextCursor = kCursorSizeAll;
-                                break;
-                            }
-
-                            getFrame()->setCursor(nextCursor);
-                        }
-                    }
-
-                    if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
-                        getFrame()->setCursor(kCursorSizeAll);
-                }
-
-                if (handleBmp)
+                if (handleDrawable)
                 {
                     auto r = h.rect;
 
@@ -1450,14 +1374,23 @@ struct MSEGCanvas : public CControl,
 
                     int cx = r.getCenter().x;
 
-                    if (cx >= drawArea.left && cx <= drawArea.right)
-                        handleBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
+                    if (cx >= drawArea.getX() && cx <= drawArea.getRight())
+                    {
+                        juce::Graphics::ScopedSaveState gs(g);
+                        g.reduceClipRegion(r.asJuceIntRect());
+                        auto at = juce::AffineTransform()
+                                      .translated(-offx * sz, -offy * sz)
+                                      .translated(r.getTopLeft());
+                        handleDrawable->draw(g, 1.0, at);
+                        //  handleBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
+                    }
                 }
             }
         }
     }
 
-    CPoint mouseDownOrigin, cursorHideOrigin, lastPanZoomMousePos;
+    juce::Point<int> mouseDownOrigin, lastPanZoomMousePos, cursorHideOrigin;
+
     bool cursorResetPosition = false;
     bool inDrag = false;
     bool inDrawDrag = false;
@@ -1469,16 +1402,17 @@ struct MSEGCanvas : public CControl,
     } mouseDownInitiation = NOT_MOUSE_DOWN;
     bool cursorHideEnqueued = false;
 
-    virtual CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
+    void mouseDown(const juce::MouseEvent &e) override
     {
-        mouseDownInitiation = (getDrawArea().pointInside(where) ? MOUSE_DOWN_IN_DRAW_AREA
-                                                                : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
-        if (buttons & kRButton)
+        mouseDownInitiation =
+            (getDrawArea().contains(e.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
+                                                        : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
+        if (e.mods.isPopupMenu())
         {
             auto da = getDrawArea();
-            if (da.pointInside(where))
+            if (da.contains(e.position.toInt()))
             {
-                openPopup(where);
+                openPopup(e.position);
             }
             else
             {
@@ -1488,91 +1422,14 @@ struct MSEGCanvas : public CControl,
                  */
                 for (auto h : hotzones)
                 {
-                    if (h.rect.pointInside(where))
+                    if (h.rect.pointInside(e.position))
                     {
-                        openPopup(where);
+                        openPopup(e.position);
                     }
                 }
             }
-            return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+            return;
         }
-        if (buttons & kDoubleClick)
-        {
-            auto ha = getHAxisDoubleClickArea();
-            if (ha.pointInside(where))
-            {
-                zoomToFull();
-                return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
-            }
-
-            auto da = getDrawArea();
-
-            if (da.pointInside(where))
-            {
-                auto tf = pxToTime();
-                auto t = tf(where.x);
-                auto pv = pxToVal();
-                auto v = pv(where.y);
-
-                // Check if I'm on a hotzoneo
-                for (auto &h : hotzones)
-                {
-                    if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
-                    {
-                        switch (h.zoneSubType)
-                        {
-                        case hotzone::SEGMENT_ENDPOINT:
-                        {
-
-                            if (buttons & kShift && h.associatedSegment >= 0)
-                            {
-                                Surge::MSEG::deleteSegment(ms,
-                                                           ms->segmentStart[h.associatedSegment]);
-                            }
-                            else
-                            {
-                                Surge::MSEG::unsplitSegment(ms, t);
-                            }
-                            modelChanged();
-                            return kMouseEventHandled;
-                        }
-                        case hotzone::SEGMENT_CONTROL:
-                        {
-                            // Reset the controlpoint to duration half value middle
-                            Surge::MSEG::resetControlPoint(ms, t);
-                            modelChanged();
-                            return kMouseEventHandled;
-                        }
-                        case hotzone::LOOP_START:
-                        case hotzone::LOOP_END:
-                            // FIXME : Implement this
-                            break;
-                        }
-                    }
-                }
-
-                if (t < ms->totalDuration)
-                {
-                    if (buttons & kShift)
-                    {
-                        Surge::MSEG::deleteSegment(ms, t);
-                    }
-                    else
-                    {
-                        Surge::MSEG::splitSegment(ms, t, v);
-                    }
-                    modelChanged();
-                    return kMouseEventHandled;
-                }
-                else
-                {
-                    Surge::MSEG::extendTo(ms, t, v);
-                    modelChanged();
-                    return kMouseEventHandled;
-                }
-            }
-        }
-
         for (auto &s : ms->segments)
         {
             s.dragv0 = s.v0;
@@ -1581,6 +1438,7 @@ struct MSEGCanvas : public CControl,
             s.dragDuration = s.duration;
         }
 
+        auto where = e.position;
         if (timeEditMode == DRAW)
         {
             // Allow us to initiate drags on control points in draw mode
@@ -1599,12 +1457,13 @@ struct MSEGCanvas : public CControl,
                 /*
                  * Only initiate draws in the draw area allowing the axis to still pan and zoom
                  */
-                if (da.pointInside(where) && !((buttons & kShift) || (buttons & kMButton)))
+                if (da.contains(where.toInt()) &&
+                    !(e.mods.isShiftDown() || e.mods.isMiddleButtonDown()))
                 {
                     /*
                      * Activate temporary snap but in draw mode, do vSnap only
                      */
-                    bool a = buttons & kAlt;
+                    bool a = e.mods.isAltDown();
                     if (a)
                     {
                         snapGuard = std::make_shared<SnapGuard>(this);
@@ -1612,13 +1471,13 @@ struct MSEGCanvas : public CControl,
                             ms->vSnap = ms->vSnapDefault;
                     }
                     inDrawDrag = true;
-                    return kMouseEventHandled;
+                    return;
                 }
             }
         }
 
-        mouseDownOrigin = where;
-        lastPanZoomMousePos = where;
+        mouseDownOrigin = where.toInt();
+        lastPanZoomMousePos = where.toInt();
         inDrag = true;
         bool gotHZ = false;
         for (auto &h : hotzones)
@@ -1626,19 +1485,21 @@ struct MSEGCanvas : public CControl,
             if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
             {
                 gotHZ = true;
-                cursorHideEnqueued = true;
-                cursorHideOrigin = where;
-                cursorResetPosition = true;
+                hideCursor(where.toInt());
                 h.active = true;
                 h.dragging = true;
-                invalid();
+                repaint();
 
                 /*
                  * Activate temporary snap. Note this is also handled similarly in
                  * onMouseMoved so if you change ctrl/alt here change it there too
                  */
-                bool c = buttons & kControl;
-                bool a = buttons & kAlt;
+                bool c = e.mods.isCtrlDown();
+#if MAC
+                c = e.mods.isCommandDown();
+#endif
+
+                bool a = e.mods.isAltDown();
                 if (c || a)
                 {
                     snapGuard = std::make_shared<SnapGuard>(this);
@@ -1653,38 +1514,112 @@ struct MSEGCanvas : public CControl,
             if (h.rect.pointInside(where) && h.type == hotzone::LOOPMARKER)
             {
                 gotHZ = true;
-                cursorHideEnqueued = true;
-                cursorHideOrigin = where;
-                cursorResetPosition = false;
+                hideCursor(where.toInt());
                 h.active = true;
                 h.dragging = true;
-                invalid();
+                repaint();
             }
         }
 
         if (!gotHZ)
         {
-#if !DISABLE_CURSOR_HIDING
             // Lin doesn't cursor hide so this hand is bad there
-            getFrame()->setCursor(kCursorHand);
-#endif
-            cursorHideEnqueued = true;
-            cursorHideOrigin = where;
-            cursorResetPosition = true;
+            setMouseCursor(juce::MouseCursor::DraggingHandCursor);
         }
-        return kMouseEventHandled;
+        return;
     }
 
-    virtual CMouseEventResult onMouseUp(CPoint &where, const CButtonState &buttons) override
+    void mouseDoubleClick(const juce::MouseEvent &event) override
     {
+        auto ha = getHAxisDoubleClickArea();
+        auto where = event.position.toInt();
+        if (ha.contains(where))
+        {
+            zoomToFull();
+            return;
+        }
+
+        auto da = getDrawArea();
+
+        if (da.contains(where))
+        {
+            auto tf = pxToTime();
+            auto t = tf(where.x);
+            auto pv = pxToVal();
+            auto v = pv(where.y);
+
+            // Check if I'm on a hotzoneo
+            for (auto &h : hotzones)
+            {
+                if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
+                {
+                    switch (h.zoneSubType)
+                    {
+                    case hotzone::SEGMENT_ENDPOINT:
+                    {
+
+                        if (event.mods.isShiftDown() && h.associatedSegment >= 0)
+                        {
+                            Surge::MSEG::deleteSegment(ms, ms->segmentStart[h.associatedSegment]);
+                        }
+                        else
+                        {
+                            Surge::MSEG::unsplitSegment(ms, t);
+                        }
+                        modelChanged();
+                        return;
+                    }
+                    case hotzone::SEGMENT_CONTROL:
+                    {
+                        // Reset the controlpoint to duration half value middle
+                        Surge::MSEG::resetControlPoint(ms, t);
+                        modelChanged();
+                        return;
+                    }
+                    case hotzone::LOOP_START:
+                    case hotzone::LOOP_END:
+                        // FIXME : Implement this
+                        break;
+                    }
+                }
+            }
+
+            if (t < ms->totalDuration)
+            {
+                if (event.mods.isShiftDown())
+                {
+                    Surge::MSEG::deleteSegment(ms, t);
+                }
+                else
+                {
+                    Surge::MSEG::splitSegment(ms, t, v);
+                }
+                modelChanged();
+                return;
+            }
+            else
+            {
+                Surge::MSEG::extendTo(ms, t, v);
+                modelChanged();
+                return;
+            }
+        }
+        guaranteeCursorShown();
+    }
+
+    void mouseUp(const juce::MouseEvent &e) override
+    {
+        auto where = e.position.toInt();
+
         mouseDownInitiation = NOT_MOUSE_DOWN;
-        getFrame()->setCursor(kCursorDefault);
+
+        setMouseCursor(juce::MouseCursor::NormalCursor);
         inDrag = false;
         inDrawDrag = false;
         if (loopDragTime >= 0)
         {
             loopDragTime = -1;
-            invalid();
+            repaint();
         }
 
         for (auto &h : hotzones)
@@ -1695,46 +1630,71 @@ struct MSEGCanvas : public CControl,
                 {
                     if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
                     {
-                        setCursorLocation(h.rect.getCenter());
+                        showCursorAt(h.rect.getCenter());
                     }
                     if (h.zoneSubType == hotzone::SEGMENT_CONTROL && !h.useDrawRect)
                     {
-                        setCursorLocation(h.rect.getCenter());
+                        showCursorAt(h.rect.getCenter());
                     }
                 }
                 if (h.type == hotzone::LOOPMARKER)
                 {
-                    setCursorLocation(h.rect.getCenter());
+                    showCursorAt(h.rect.getCenter());
                 }
             }
             h.dragging = false;
         }
         snapGuard = nullptr;
-        endCursorHide();
-        cursorHideEnqueued = false;
+        guaranteeCursorShown();
 
-        return kMouseEventHandled;
+        return;
     }
 
-    CMouseEventResult onMouseExited(CPoint &where, const CButtonState &buttons) override
+    void showCursorAt(const CPoint &w) { cursorHideOrigin = w; }
+
+    void guaranteeCursorShown()
+    {
+        if (!Surge::GUI::showCursor(storage) && cursorHidden)
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            auto h = localPointToGlobal(cursorHideOrigin);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(h.toFloat());
+            cursorHidden = false;
+        }
+    }
+
+    bool cursorHidden = false;
+    void hideCursor(const juce::Point<int> &w)
+    {
+        cursorHideOrigin = w;
+        if (!Surge::GUI::showCursor(storage))
+        {
+            cursorHidden = true;
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+    }
+
+    void mouseExit(const juce::MouseEvent &e) override
     {
         hoveredSegment = -1;
-        invalid();
-        return kMouseEventHandled;
+        repaint();
+        return;
     }
-    virtual bool magnify(CPoint &where, float amount) override
+    void mouseMagnify(const juce::MouseEvent &event, float scaleFactor) override
     {
-        zoom(where, amount, 0);
-        return true;
+        auto pii = event.position.toInt();
+        zoom(pii, -(1.f - scaleFactor) * 4);
+        return;
     }
 
-    virtual CMouseEventResult onMouseMoved(CPoint &where, const CButtonState &buttons) override
+    void mouseMove(const juce::MouseEvent &event) override
     {
         auto tf = pxToTime();
-        auto t = tf(where.x);
+        auto t = tf(event.position.getX());
         auto da = getDrawArea();
+        auto where = event.position.toInt();
 
-        if (da.pointInside(where) && mouseDownInitiation != MOUSE_DOWN_OUTSIDE_DRAW_AREA)
+        if (da.contains(where))
         {
             auto ohs = hoveredSegment;
             if (t < 0)
@@ -1750,302 +1710,178 @@ struct MSEGCanvas : public CControl,
                 hoveredSegment = Surge::MSEG::timeToSegment(ms, t);
             }
             if (hoveredSegment != ohs)
-                invalid();
+                repaint();
         }
         else
         {
-            hoveredSegment = -1;
-            invalid();
+            if (hoveredSegment >= 0)
+            {
+                hoveredSegment = -1;
+                repaint();
+            }
         }
 
-        if (inDrawDrag)
+        bool reset = false;
+        for (const auto &h : hotzones)
         {
-            // Activate temporary snap in vdirection only
-            bool a = buttons & kAlt;
-            if (a)
+            if (!h.rect.pointInside(event.position))
+                continue;
+
+            reset = true;
+            if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
             {
-                bool wasSnapGuard = true;
-                if (!snapGuard)
+                auto nextCursor = juce::MouseCursor::NormalCursor;
+                switch (h.segmentDirection)
                 {
-                    wasSnapGuard = false;
-                    snapGuard = std::make_shared<SnapGuard>(this);
+                case hotzone::VERTICAL_ONLY:
+                    nextCursor = juce::MouseCursor::UpDownResizeCursor;
+                    break;
+                case hotzone::HORIZONTAL_ONLY:
+                    nextCursor = juce::MouseCursor::LeftRightResizeCursor;
+                    break;
+                case hotzone::BOTH_DIRECTIONS:
+                    nextCursor = juce::MouseCursor::UpDownLeftRightResizeCursor;
+                    break;
                 }
 
-                if (a)
-                    ms->vSnap = ms->vSnapDefault;
-                else if (wasSnapGuard)
-                    ms->vSnap = snapGuard->vSnapO;
-            }
-            else if (!a && snapGuard)
-            {
-                snapGuard = nullptr;
+                setMouseCursor(nextCursor);
             }
 
-            auto tf = pxToTime();
-            auto t = tf(where.x);
-            auto pv = pxToVal();
-            auto v = limit_range(pv(where.y), -1.f, 1.f);
-
-            if (ms->vSnap > 0)
-            {
-                v = limit_range(round(v / ms->vSnap) * ms->vSnap, -1.f, 1.f);
-            }
-
-            int seg = Surge::MSEG::timeToSegment(this->ms, t);
-
-            if (seg >= 0 && seg < ms->n_activeSegments &&
-                t <= ms->totalDuration + MSEGStorage::minimumDuration)
-            {
-                bool ch = false;
-                // OK are we near the endpoint of that segment
-                if (t - ms->segmentStart[seg] <
-                    std::max(ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration))
-                {
-                    ms->segments[seg].v0 = v;
-                    ch = true;
-                }
-                else if (ms->segmentEnd[seg] - t <
-                         std::max(ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration))
-                {
-                    int nx = seg + 1;
-                    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
-                    {
-                        if (nx == ms->n_activeSegments)
-                            ms->segments[seg].nv1 = v;
-                        else
-                            ms->segments[nx].v0 = v;
-                    }
-                    else
-                    {
-                        if (nx >= ms->n_activeSegments)
-                            nx = 0;
-                        ms->segments[nx].v0 = v;
-                    }
-                    ch = true;
-                }
-                if (ch)
-                {
-                    modelChanged(seg);
-                }
-            }
-
-            return kMouseEventHandled;
+            if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                setMouseCursor(juce::MouseCursor::UpDownLeftRightResizeCursor);
         }
 
-        bool flip = false;
+        if (!reset)
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+    }
+    void mouseDrag(const juce::MouseEvent &event) override
+    {
+        bool gotOne = false;
+        int idx = 0;
+        bool foundDrag = false;
+        auto where = event.position.toInt();
+        hotzone dragThis;
         for (auto &h : hotzones)
         {
             if (h.dragging)
             {
-                if (h.associatedSegment >= 0)
-                    hoveredSegment = h.associatedSegment;
-                continue;
+                dragThis = h;
+                foundDrag = true;
+                break;
             }
+            idx++;
+        }
+        if (foundDrag)
+        {
+            auto h = dragThis;
 
-            if (h.rect.pointInside(where))
+            gotOne = true;
+            // FIXME replace with distance APIs
+            float dragX = where.getX() - mouseDownOrigin.x;
+            float dragY = where.getY() - mouseDownOrigin.y;
+            if (event.mods.isShiftDown())
             {
-                if (!h.active)
-                {
-                    h.active = true;
-                    flip = true;
-                }
+                dragX *= 0.2;
+                dragY *= 0.2;
+            }
+            h.onDrag(dragX, dragY, CPoint(where.getX(), where.getY()));
 
-                if (h.associatedSegment >= 0)
-                    hoveredSegment = h.associatedSegment;
-            }
-            else
-            {
-                if (h.active)
-                {
-                    h.active = false;
-                    flip = true;
-                }
-            }
+            hoveredSegment = h.associatedSegment;
+            mouseDownOrigin = where;
+            modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
         }
 
-        if (flip)
-            invalid();
-
-        if (inDrag)
+        if (gotOne)
         {
-            bool gotOne = false;
-            int idx = 0;
-            bool foundDrag = false;
-            hotzone dragThis;
-            for (auto &h : hotzones)
+            Surge::MSEG::rebuildCache(ms);
+            recalcHotZones(where);
+            hotzones[idx].dragging = true;
+            repaint();
+        }
+        else if (event.mods.isLeftButtonDown() || event.mods.isMiddleButtonDown())
+        {
+            float x = where.x - mouseDownOrigin.x;
+            float y = where.y - mouseDownOrigin.y;
+            float r = sqrt(x * x + y * y);
+            if (r > 3)
             {
-                if (h.dragging)
+                if (fabs(x) > fabs(y))
                 {
-                    dragThis = h;
-                    foundDrag = true;
-                    break;
-                }
-                idx++;
-            }
-            if (foundDrag)
-            {
-                auto h = dragThis;
-
-                if (cursorHideEnqueued)
-                {
-                    startCursorHide(cursorHideOrigin);
-                    cursorHideEnqueued = false;
-                }
-                gotOne = true;
-                float dragX = where.x - mouseDownOrigin.x;
-                float dragY = where.y - mouseDownOrigin.y;
-                if (buttons & kShift)
-                {
-                    dragX *= 0.2;
-                    dragY *= 0.2;
-                }
-                h.onDrag(dragX, dragY, where);
-#if !DISABLE_CURSOR_HIDING
-                float dx = where.x - cursorHideOrigin.x;
-                float dy = where.y - cursorHideOrigin.y;
-                if (dx * dx + dy * dy > 100 && cursorResetPosition)
-                {
-                    resetToShowLocation();
-                    mouseDownOrigin = cursorHideOrigin;
+                    float dx = where.x - lastPanZoomMousePos.x;
+                    float panScale = 1.0 / getDrawArea().getWidth();
+                    pan(where, -dx * panScale);
                 }
                 else
                 {
-                    mouseDownOrigin = where;
+                    float dy = where.y - lastPanZoomMousePos.y;
+                    float zoomScale = 2. / getDrawArea().getHeight();
+                    zoom(where, -dy * zoomScale);
                 }
-#else
+
+                lastPanZoomMousePos = where;
                 mouseDownOrigin = where;
-#endif
-                modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
-            }
-
-            if (gotOne)
-            {
-                Surge::MSEG::rebuildCache(ms);
-                recalcHotZones(where);
-                hotzones[idx].dragging = true;
-                invalid();
-            }
-            else if (buttons & kLButton || buttons & kMButton)
-            {
-                // This means we are a pan or zoom gesture
-                if (cursorHideEnqueued)
-                {
-                    startCursorHide(cursorHideOrigin);
-                    cursorHideEnqueued = false;
-                }
-
-                float x = where.x - mouseDownOrigin.x;
-                float y = where.y - mouseDownOrigin.y;
-                float r = sqrt(x * x + y * y);
-                if (r > 3)
-                {
-                    if (fabs(x) > fabs(y))
-                    {
-                        float dx = where.x - lastPanZoomMousePos.x;
-                        float panScale = 1.0 / getDrawArea().getWidth();
-                        pan(where, -dx * panScale, buttons);
-                    }
-                    else
-                    {
-                        float dy = where.y - lastPanZoomMousePos.y;
-                        float zoomScale = 2. / getDrawArea().getHeight();
-                        zoom(where, -dy * zoomScale, buttons);
-                    }
-
-                    lastPanZoomMousePos = where;
-#if !LINUX
-                    float dx = where.x - cursorHideOrigin.x;
-                    float dy = where.y - cursorHideOrigin.y;
-                    if (dx * dx + dy * dy > 100 && cursorResetPosition)
-                    {
-                        resetToShowLocation();
-                        mouseDownOrigin = cursorHideOrigin;
-                        lastPanZoomMousePos = cursorHideOrigin;
-                    }
-                    else
-                    {
-                        mouseDownOrigin = where;
-                    }
-#else
-                    mouseDownOrigin = where;
-#endif
-                }
-            }
-
-            /*
-             * Activate temporary snap. Note this is also checked in onMouseDown
-             * so if you change ctrl/alt here change it there too
-             */
-            bool c = buttons & kControl;
-            bool a = buttons & kAlt;
-            if ((c || a))
-            {
-                bool wasSnapGuard = true;
-                if (!snapGuard)
-                {
-                    wasSnapGuard = false;
-                    snapGuard = std::make_shared<SnapGuard>(this);
-                }
-                if (c)
-                    ms->hSnap = ms->hSnapDefault;
-                else if (wasSnapGuard)
-                    ms->hSnap = snapGuard->hSnapO;
-
-                if (a)
-                    ms->vSnap = ms->vSnapDefault;
-                else if (wasSnapGuard)
-                    ms->vSnap = snapGuard->vSnapO;
-            }
-            else if (!(c || a) && snapGuard)
-            {
-                snapGuard = nullptr;
             }
         }
 
-        return kMouseEventHandled;
-    }
-
-    int wheelAxisCount = 0;
-    virtual bool onWheel(const CPoint &where, const CMouseWheelAxis &axis, const float &distance,
-                         const CButtonState &buttons) override
-    {
-        // fixmes - most recent
-        if (axis == CMouseWheelAxis::kMouseWheelAxisY)
-        {
-            wheelAxisCount++;
-        }
-        else
-        {
-            wheelAxisCount--;
-        }
-        wheelAxisCount = limit_range(wheelAxisCount, -3, 3);
-        if (wheelAxisCount <= -2)
-        {
-            panWheel(where, distance, buttons);
-        }
-        else
-        {
-            zoomWheel(where, distance, buttons);
-        }
-        return true;
-    }
-
-    float lastZoomDir = 0;
-
-    void zoomWheel(const CPoint &where, float amount, const CButtonState &buttons)
-    {
+        /*
+         * Activate temporary snap. Note this is also checked in onMouseDown
+         * so if you change ctrl/alt here change it there too
+         */
+        bool c = event.mods.isCtrlDown();
 #if MAC
-        if ((lastZoomDir < 0 && amount > 0) || (lastZoomDir > 0 && amount < 0))
-        {
-            lastZoomDir = amount;
-            return;
-        }
-        lastZoomDir = amount;
+        c = event.mods.isCommandDown();
 #endif
-        zoom(where, amount * 0.1, buttons);
+
+        bool a = event.mods.isAltDown();
+        if ((c || a))
+        {
+            bool wasSnapGuard = true;
+            if (!snapGuard)
+            {
+                wasSnapGuard = false;
+                snapGuard = std::make_shared<SnapGuard>(this);
+            }
+            if (c)
+                ms->hSnap = ms->hSnapDefault;
+            else if (wasSnapGuard)
+                ms->hSnap = snapGuard->hSnapO;
+
+            if (a)
+                ms->vSnap = ms->vSnapDefault;
+            else if (wasSnapGuard)
+                ms->vSnap = snapGuard->vSnapO;
+        }
+        else if (!(c || a) && snapGuard)
+        {
+            snapGuard = nullptr;
+        }
     }
 
-    void zoom(const CPoint &where, float amount, const CButtonState &buttons)
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        if (wheel.isInertial)
+            return;
+        auto where = event.position.toInt();
+        if (wheel.deltaX == 0 && wheel.deltaY == 0)
+            return;
+
+        float wheelFac = 1.0;
+#if WINDOWS || LINUX
+        wheelFac = 1.0; // configure speed for other mice
+#endif
+
+        if (fabs(wheel.deltaX) > fabs(wheel.deltaY))
+        {
+            pan(where, -wheelFac * wheel.deltaX);
+        }
+        else
+        {
+            zoom(where, (wheel.isReversed ? -1 : 1) * wheelFac * 1.3 * wheel.deltaY);
+        }
+    }
+
+    void zoom(const juce::Point<int> &where, float amount)
     {
         if (fabs(amount) < 1e-4)
             return;
@@ -2065,10 +1901,10 @@ struct MSEGCanvas : public CControl,
            // So px = t * tscale + drawarea;
            // So t = ( px - drawarea ) / tscale;
            return [tscale, drawArea, this ](float px) {
-             return (px - drawArea.left) / tscale + ms->axisStart;
+             return (px - drawArea.getX()) / tscale + ms->axisStart;
            };
 
-         * so we want ms->axisStart to mean that (where.x - drawArea.left ) * drawDuration() /
+         * so we want ms->axisStart to mean that (where.x - drawArea.getX() ) * drawDuration() /
          drawArea.width + as to be constant
          *
          * t = (WX-DAL) * DD / DAW + AS
@@ -2078,14 +1914,14 @@ struct MSEGCanvas : public CControl,
         auto DD = drawDuration();
         auto DA = getDrawArea();
         auto DAW = DA.getWidth();
-        auto DAL = DA.left;
+        auto DAL = DA.getX();
         auto WX = where.x;
-        ms->axisStart = std::max(t - (WX - DAL) * DD / DAW, 0.);
+        ms->axisStart = std::max(t - (WX - DAL) * DD / DAW, 0.f);
         applyZoomPanConstraints();
 
         // BOOKMARK
         recalcHotZones(where);
-        invalid();
+        repaint();
         // std::cout << "ZOOM by " << amount <<  " AT " << where.x << " " << t << std::endl;
     }
 
@@ -2099,23 +1935,7 @@ struct MSEGCanvas : public CControl,
         modelChanged(0, false);
     }
 
-    // On the mac I get occasional jutters where you get ---+--- or what not
-    float lastPanDir = 0;
-
-    void panWheel(const CPoint &where, float amount, const CButtonState &buttons)
-    {
-#if MAC
-        if ((lastPanDir < 0 && amount > 0) || (lastPanDir > 0 && amount < 0))
-        {
-            lastPanDir = amount;
-            return;
-        }
-        lastPanDir = amount;
-#endif
-        pan(where, amount * 0.1, buttons);
-    }
-
-    void pan(const CPoint &where, float amount, const CButtonState &buttons)
+    void pan(const CPoint &where, float amount)
     {
         // std::cout << "PAN " << ms->axisStart << " " << ms->axisWidth << std::endl;
         ms->axisStart += ms->axisWidth * amount;
@@ -2123,7 +1943,7 @@ struct MSEGCanvas : public CControl,
         applyZoomPanConstraints();
 
         recalcHotZones(where);
-        invalid();
+        repaint();
     }
 
     // see if it can be done in a cleaner way
@@ -2446,8 +2266,11 @@ struct MSEGCanvas : public CControl,
         applyZoomPanConstraints(activeSegment, specialEndpoint);
         recalcHotZones(mouseDownOrigin); // FIXME
         // Do this more heavy handed version
-        getFrame()->invalid();
-        // invalid();
+        auto c = getParentComponent();
+        while (c && c->getParentComponent())
+            c = c->getParentComponent();
+        if (c)
+            c->repaint();
     }
 
     static constexpr int longestMSEG = 128;
@@ -2519,9 +2342,7 @@ struct MSEGCanvas : public CControl,
     float loopDragTime = -1, loopDragEnd = -1;
     bool loopDragIsStart = false;
 
-    CScalableBitmap *handleBmp;
-
-    CLASS_METHODS(MSEGCanvas, CControl);
+    juce::Drawable *handleDrawable{nullptr};
 };
 
 void MSEGControlRegion::valueChanged(CControlValueInterface *p)
@@ -2538,10 +2359,13 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
         Surge::MSEG::modifyEditMode(this->ms, editMode);
 
         // zoom to fit
-        canvas->ms->axisStart = 0.f;
-        canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
+        if (canvas)
+        {
+            canvas->ms->axisStart = 0.f;
+            canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
 
-        canvas->modelChanged(0, false);
+            canvas->modelChanged(0, false);
+        }
 
         break;
     }
@@ -2549,7 +2373,8 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
     {
         int m = floor((val * 2) + 0.1) + 1;
         ms->loopMode = (MSEGStorage::LoopMode)m;
-        canvas->modelChanged();
+        if (canvas)
+            canvas->modelChanged();
 
         break;
     }
@@ -2559,23 +2384,28 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
 
         eds->timeEditMode = m;
 
-        canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
-        canvas->recalcHotZones(CPoint(0, 0));
-        canvas->invalid();
+        if (canvas)
+        {
+            canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
+            canvas->recalcHotZones(CPoint(0, 0));
+            canvas->repaint();
+        }
 
         break;
     }
     case tag_horizontal_snap:
     {
         ms->hSnap = (val < 0.5) ? 0.f : ms->hSnap = ms->hSnapDefault;
-        canvas->invalid();
+        if (canvas)
+            canvas->repaint();
 
         break;
     }
     case tag_vertical_snap:
     {
         ms->vSnap = (val < 0.5) ? 0.f : ms->vSnap = ms->vSnapDefault;
-        canvas->invalid();
+        if (canvas)
+            canvas->repaint();
 
         break;
     }
@@ -2585,7 +2415,8 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
         ms->vSnapDefault = fv;
         if (ms->vSnap > 0)
             ms->vSnap = ms->vSnapDefault;
-        canvas->invalid();
+        if (canvas)
+            canvas->repaint();
         break;
     }
     case tag_horizontal_value:
@@ -2594,7 +2425,8 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
         ms->hSnapDefault = fv;
         if (ms->hSnap > 0)
             ms->hSnap = ms->hSnapDefault;
-        canvas->invalid();
+        if (canvas)
+            canvas->repaint();
         break;
     }
     default:
@@ -2704,8 +2536,8 @@ int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pContr
                                     auto iv = dynamic_cast<VSTGUI::BaseViewFunctions *>(pControl);
                                     if (iv)
                                         iv->invalid();
-                                    canvas->invalid();
-                                    invalid();
+                                    canvas->repaint();
+                                    repaint();
                                 });
         }
         else
@@ -2730,12 +2562,13 @@ int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pContr
 
 void MSEGControlRegion::rebuild()
 {
-    removeAll();
+    removeAllChildren();
+    labels.clear();
 
     auto labelFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
     auto editFont = Surge::GUI::getFontManager()->getLatoAtSize(9);
 
-    int height = getViewSize().getHeight();
+    int height = getHeight();
     int margin = 2;
     int labelHeight = 12;
     int buttonHeight = 14;
@@ -2750,13 +2583,13 @@ void MSEGControlRegion::rebuild()
         int ypos = 1;
 
         // label
-        auto mml = new CTextLabel(CRect(CPoint(marginPos, ypos), CPoint(btnWidth, labelHeight)),
-                                  "Movement Mode");
-        mml->setTransparency(true);
+        auto mml = std::make_unique<juce::Label>();
+        mml->setText("Movement Mode", juce::dontSendNotification);
         mml->setFont(labelFont);
-        mml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
-        mml->setHoriAlign(kLeftText);
-        addView(mml);
+        mml->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        mml->setBounds(marginPos, ypos, btnWidth, labelHeight);
+        addAndMakeVisible(*mml);
+        labels.push_back(std::move(mml));
 
         ypos += margin + labelHeight;
 
@@ -2780,8 +2613,9 @@ void MSEGControlRegion::rebuild()
         movementMode->setHoverSwitchDrawable(std::get<1>(dbl));
         movementMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
-        movementMode->setValue(canvas->timeEditMode / 2.f);
-        juceComponent()->addAndMakeVisible(*movementMode);
+        if (canvas)
+            movementMode->setValue(canvas->timeEditMode / 2.f);
+        addAndMakeVisible(*movementMode);
         // this value centers the loop mode and snap sections against the MSEG editor width
         // if more controls are to be added to that center section, reduce this value
         xpos += 173;
@@ -2793,13 +2627,13 @@ void MSEGControlRegion::rebuild()
         int btnWidth = 90;
         int ypos = 1;
 
-        auto eml =
-            new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Edit Mode");
-        eml->setFont(labelFont);
-        eml->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
-        eml->setTransparency(true);
-        eml->setHoriAlign(kLeftText);
-        addView(eml);
+        auto mml = std::make_unique<juce::Label>();
+        mml->setText("Edit Mode", juce::dontSendNotification);
+        mml->setFont(labelFont);
+        mml->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        mml->setBounds(xpos, ypos, segWidth, labelHeight);
+        addAndMakeVisible(*mml);
+        labels.push_back(std::move(mml));
 
         ypos += margin + labelHeight;
 
@@ -2823,7 +2657,7 @@ void MSEGControlRegion::rebuild()
         editMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         editMode->setValue(ms->editMode);
-        juceComponent()->addAndMakeVisible(*editMode);
+        addAndMakeVisible(*editMode);
 
         xpos += segWidth;
     }
@@ -2834,13 +2668,13 @@ void MSEGControlRegion::rebuild()
         int btnWidth = 94;
         int ypos = 1;
 
-        auto lpl =
-            new CTextLabel(CRect(CPoint(xpos, ypos), CPoint(segWidth, labelHeight)), "Loop Mode");
-        lpl->setFont(labelFont);
-        lpl->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
-        lpl->setTransparency(true);
-        lpl->setHoriAlign(kLeftText);
-        addView(lpl);
+        auto mml = std::make_unique<juce::Label>();
+        mml->setText("Loop Mode", juce::dontSendNotification);
+        mml->setFont(labelFont);
+        mml->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        mml->setBounds(xpos, ypos, segWidth, labelHeight);
+        addAndMakeVisible(*mml);
+        labels.push_back(std::move(mml));
 
         ypos += margin + labelHeight;
 
@@ -2863,7 +2697,7 @@ void MSEGControlRegion::rebuild()
         loopMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         loopMode->setValue((ms->loopMode - 1) / 2);
-        juceComponent()->addAndMakeVisible(*loopMode);
+        addAndMakeVisible(*loopMode);
 
         xpos += segWidth;
     }
@@ -2876,13 +2710,13 @@ void MSEGControlRegion::rebuild()
         int ypos = 1;
         char svt[256];
 
-        auto snapC = new CTextLabel(
-            CRect(CPoint(xpos, ypos), CPoint(segWidth * 2 - 5, labelHeight)), "Snap To Grid");
-        snapC->setTransparency(true);
-        snapC->setFont(labelFont);
-        snapC->setFontColor(skin->getColor(Colors::MSEGEditor::Text));
-        snapC->setHoriAlign(kLeftText);
-        addView(snapC);
+        auto mml = std::make_unique<juce::Label>();
+        mml->setText("Snap to Grid", juce::dontSendNotification);
+        mml->setFont(labelFont);
+        mml->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        mml->setBounds(xpos, ypos, segWidth * 2 - 5, labelHeight);
+        addAndMakeVisible(*mml);
+        labels.push_back(std::move(mml));
 
         ypos += margin + labelHeight;
 
@@ -2898,7 +2732,7 @@ void MSEGControlRegion::rebuild()
             nullptr, dynamic_cast<CScalableBitmap *>(hsbmp), associatedBitmapStore,
             Surge::GUI::Skin::HoverType::HOVER);
         hSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
-        juceComponent()->addAndMakeVisible(*hSnapButton);
+        addAndMakeVisible(*hSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
 
@@ -2916,7 +2750,7 @@ void MSEGControlRegion::rebuild()
         hSnapSize->setHoverBackgroundDrawable(images[1]);
         hSnapSize->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
         hSnapSize->setHoverTextColour(skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
-        juceComponent()->addAndMakeVisible(*hSnapSize);
+        addAndMakeVisible(*hSnapSize);
 
         xpos += segWidth;
 
@@ -2931,7 +2765,7 @@ void MSEGControlRegion::rebuild()
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
         vSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
-        juceComponent()->addAndMakeVisible(*vSnapButton);
+        addAndMakeVisible(*vSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
 
@@ -2949,80 +2783,58 @@ void MSEGControlRegion::rebuild()
         vSnapSize->setHoverBackgroundDrawable(images[1]);
         vSnapSize->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
         vSnapSize->setHoverTextColour(skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
-        juceComponent()->addAndMakeVisible(*vSnapSize);
+        addAndMakeVisible(*vSnapSize);
     }
 }
 
-struct MSEGMainEd : public CViewContainer
-{
-
-    MSEGMainEd(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
-               MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-               std::shared_ptr<SurgeBitmaps> bmp)
-        : CViewContainer(size)
-    {
-        this->ms = ms;
-        this->skin = skin;
-
-        int controlHeight = 35;
-
-        auto msegCanv = new MSEGCanvas(
-            CRect(CPoint(0, 0), CPoint(size.getWidth(), size.getHeight() - controlHeight)), storage,
-            lfodata, ms, eds, skin, bmp);
-
-        auto msegControl = new MSEGControlRegion(CRect(CPoint(0, size.getHeight() - controlHeight),
-                                                       CPoint(size.getWidth(), controlHeight)),
-                                                 msegCanv, storage, lfodata, ms, eds, skin, bmp);
-
-        msegCanv->controlregion = msegControl;
-        msegControl->canvas = msegCanv;
-
-        addView(msegCanv);
-        addView(msegControl);
-    }
-
-    void forceRefresh()
-    {
-        for (auto i = 0; i < getNbViews(); ++i)
-        {
-            auto cv = dynamic_cast<MSEGCanvas *>(getView(i));
-            if (cv)
-                cv->modelChanged();
-        }
-    }
-
-    Surge::GUI::Skin::ptr_t skin;
-    MSEGStorage *ms;
-};
-
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b)
-    : CViewContainer(CRect(0, 0, 1, 1))
+                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp)
+    : juce::Component("MSEG Editor")
 {
-    auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
-    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-    auto skinCtrl = skin->getOrCreateControlForConnector(conn);
-
-    setViewSize(CRect(CPoint(0, 0), CPoint(skinCtrl->w, skinCtrl->h)));
-
     // Leave these in for now
     if (ms->n_activeSegments <= 0) // This is an error state! Compensate
     {
         Surge::MSEG::createInitVoiceMSEG(ms);
     }
-    setSkin(skin, b);
-    setBackgroundColor(juce::Colours::red);
-    addView(new MSEGMainEd(getViewSize(), storage, lfodata, ms, eds, skin, b));
+    setSkin(skin, bmp);
+
+    canvas = std::make_unique<MSEGCanvas>(CRect(CPoint(0, 0), CPoint(200, 180)), storage, lfodata,
+                                          ms, eds, skin, bmp);
+    controls = std::make_unique<MSEGControlRegion>(CRect(CPoint(0, 400), CPoint(200, 35)), nullptr,
+                                                   storage, lfodata, ms, eds, skin, bmp);
+
+    addAndMakeVisible(*controls);
+    addAndMakeVisible(*canvas);
+
+    canvas->controlregion = controls.get();
+    controls->canvas = canvas.get();
 }
 
 MSEGEditor::~MSEGEditor() = default;
 
 void MSEGEditor::forceRefresh()
 {
-    for (auto i = 0; i < getNbViews(); ++i)
+    for (auto *kid : getChildren())
     {
-        auto ed = dynamic_cast<MSEGMainEd *>(getView(i));
+        auto ed = dynamic_cast<MSEGCanvas *>(kid);
         if (ed)
-            ed->forceRefresh();
+            ed->modelChanged();
     }
 }
+
+void MSEGEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::orchid); }
+
+void MSEGEditor::resized()
+{
+    int controlHeight = 35;
+    auto r = getLocalBounds();
+    auto cvr = r.withTrimmedBottom(controlHeight);
+    auto ctr = r.withTop(cvr.getBottom());
+
+    canvas->setBounds(cvr);
+    controls->setBounds(ctr);
+    // mained setbounds
+}
+
+} // namespace Overlays
+} // namespace Surge

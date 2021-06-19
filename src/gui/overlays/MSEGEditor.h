@@ -14,11 +14,19 @@
 */
 
 #pragma once
+#include <JuceHeader.h>
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 #include "RefreshableOverlay.h"
 
-struct MSEGEditor : public VSTGUI::CViewContainer,
+namespace Surge
+{
+namespace Overlays
+{
+struct MSEGControlRegion;
+struct MSEGCanvas;
+
+struct MSEGEditor : public juce::Component,
                     public Surge::GUI::SkinConsumingComponent,
                     public RefreshableOverlay
 {
@@ -35,5 +43,13 @@ struct MSEGEditor : public VSTGUI::CViewContainer,
     MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
                Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
     ~MSEGEditor();
-    void forceRefresh();
+    void forceRefresh() override;
+
+    void resized() override;
+    void paint(juce::Graphics &g) override;
+
+    std::unique_ptr<MSEGControlRegion> controls;
+    std::unique_ptr<MSEGCanvas> canvas;
 };
+} // namespace Overlays
+} // namespace Surge
