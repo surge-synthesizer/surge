@@ -1321,7 +1321,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     auto hr = h.rect;
                     hr.offset(0, -1);
 
-                    g.setColour(juce::Colours::red);
+                    g.setColour(c);
                     g.fillRect(hr);
                     drawLoopDragMarker(g, c, h.zoneSubType, hr);
                 }

@@ -16,7 +16,6 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
-#include "CLFOGui.h"
 #include "SurgeBitmaps.h"
 #include "CScalableBitmap.h"
 
@@ -45,6 +44,7 @@
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
+#include "widgets/LFOAndStepDisplay.h"
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulationSourceButton.h"
 #include "widgets/ModulatableSlider.h"
@@ -132,7 +132,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
     polydisp =
         0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
     splitpointControl = 0;
-    lfodisplay = 0;
     for (int i = 0; i < n_fx_slots; ++i)
     {
         selectedFX[i] = -1;
@@ -465,9 +464,9 @@ void SurgeGUIEditor::idle()
                         oscWaveform->repaintIfIdIsInRange(j);
                     }
 
-                    if (lfodisplay)
+                    if (lfoDisplay)
                     {
-                        ((CLFOGui *)lfodisplay)->invalidateIfIdIsInRange(j);
+                        lfoDisplay->invalidateIfIdIsInRange(j);
                     }
                 }
             }
@@ -479,12 +478,11 @@ void SurgeGUIEditor::idle()
             lastTempo = synth->time_data.tempo;
             lastTSNum = synth->time_data.timeSigNumerator;
             lastTSDen = synth->time_data.timeSigDenominator;
-            if (lfodisplay)
+            if (lfoDisplay)
             {
-                ((CLFOGui *)lfodisplay)
-                    ->setTimeSignature(synth->time_data.timeSigNumerator,
-                                       synth->time_data.timeSigDenominator);
-                ((CLFOGui *)lfodisplay)->invalidateIfAnythingIsTemposynced();
+                lfoDisplay->setTimeSignature(synth->time_data.timeSigNumerator,
+                                             synth->time_data.timeSigDenominator);
+                lfoDisplay->invalidateIfAnythingIsTemposynced();
             }
         }
 
@@ -523,9 +521,9 @@ void SurgeGUIEditor::idle()
                     oscWaveform->repaintIfIdIsInRange(j);
                 }
 
-                if (lfodisplay)
+                if (lfoDisplay)
                 {
-                    ((CLFOGui *)lfodisplay)->invalidateIfIdIsInRange(j);
+                    lfoDisplay->invalidateIfIdIsInRange(j);
                 }
             }
             else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
@@ -1029,7 +1027,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     ** There are a collection of member states we need to reset
     */
     polydisp = nullptr;
-    lfodisplay = nullptr;
     msegEditSwitch = nullptr;
     lfoNameLabel = nullptr;
     midiLearnOverlay = nullptr;
@@ -1655,7 +1652,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
 void SurgeGUIEditor::close_editor()
 {
     editor_open = false;
-    lfodisplay = 0;
     frame->removeAll(true);
     frame->juceComponent()->removeAllChildren();
     setzero(param);
@@ -4265,17 +4261,24 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         int lfo_id = p->ctrlgroup_entry - ms_lfo1;
         if ((lfo_id >= 0) && (lfo_id < n_lfos))
         {
-            CLFOGui *slfo = new CLFOGui(
-                rect, lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1), this, p->id + start_paramtags,
-                &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], &synth->storage,
-                &synth->storage.getPatch().stepsequences[current_scene][lfo_id],
-                &synth->storage.getPatch().msegs[current_scene][lfo_id],
-                &synth->storage.getPatch().formulamods[current_scene][lfo_id], bitmapStore);
-            slfo->setSkin(currentSkin, bitmapStore, skinCtrl);
-            lfodisplay = slfo;
-            frame->addView(slfo);
-            nonmod_param[paramIndex] = slfo;
-            return slfo;
+            lfoDisplay =
+                componentForSkinSession<Surge::Widgets::LFOAndStepDisplay>(skinCtrl->sessionid);
+            lfoDisplay->setBounds(skinCtrl->getRect().asJuceIntRect());
+            lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
+            lfoDisplay->setTag(p->id + start_paramtags);
+            lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
+            lfoDisplay->setStorage(&synth->storage);
+            lfoDisplay->setStepSequencerStorage(
+                &synth->storage.getPatch().stepsequences[current_scene][lfo_id]);
+            lfoDisplay->setMSEGStorage(&synth->storage.getPatch().msegs[current_scene][lfo_id]);
+            lfoDisplay->setFormulaStorage(
+                &synth->storage.getPatch().formulamods[current_scene][lfo_id]);
+            lfoDisplay->setCanEditEnvelopes(lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1));
+
+            lfoDisplay->addListener(this);
+            frame->juceComponent()->addAndMakeVisible(*lfoDisplay);
+            nonmod_param[paramIndex] = lfoDisplay.get();
+            return lfoDisplay.get();
         }
     }
 
@@ -4841,17 +4844,6 @@ void SurgeGUIEditor::hideMidiLearnOverlay()
     }
 }
 
-void SurgeGUIEditor::toggleAlternateFor(VSTGUI::CControl *c)
-{
-    auto cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(c);
-    if (cms)
-    {
-        modsource = (modsources)(cms->getTag() - tag_mod_source0);
-        cms->setUseAlternate(!cms->getUseAlternate());
-        modsource_is_alternate[modsource] = cms->getUseAlternate();
-        this->refresh_mod();
-    }
-}
 void SurgeGUIEditor::onSurgeError(const string &msg, const string &title)
 {
     std::lock_guard<std::mutex> g(errorItemsMutex);
