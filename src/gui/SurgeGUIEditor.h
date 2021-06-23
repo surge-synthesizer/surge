@@ -566,20 +566,6 @@ class SurgeGUIEditor : public EditorType,
     SurgeSynthEditor *juceEditor{nullptr};
     int firstIdleCountdown = 0;
 
-    /*
-    ** Utility Function
-    */
-    std::shared_ptr<VSTGUI::CCommandMenuItem>
-    addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label, std::function<void()> op);
-
-    /*
-     * Why have this? To avoid rewrites when porting from COptionMenu signature
-     */
-    void addCallbackMenu(juce::PopupMenu &menu, const std::string &label, std::function<void()> op)
-    {
-        menu.addItem(label, op);
-    }
-
     juce::PopupMenu
     makeSmoothMenu(VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
@@ -596,7 +582,7 @@ class SurgeGUIEditor : public EditorType,
     juce::PopupMenu makeMidiMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeDevMenu(VSTGUI::CRect &rect);
     juce::PopupMenu makeLfoMenu(VSTGUI::CRect &rect);
-    VSTGUI::COptionMenu *makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
+    juce::PopupMenu makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
 
   public:
     bool getShowVirtualKeyboard();

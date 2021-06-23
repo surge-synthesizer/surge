@@ -2289,41 +2289,44 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhe
     return mpeSubMenu;
 }
 
-VSTGUI::COptionMenu *SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect &menuRect,
-                                                             bool updateDefaults)
+juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect &menuRect,
+                                                        bool updateDefaults)
 {
-    COptionMenu *monoSubMenu = new COptionMenu(menuRect, 0, 0, 0, 0,
-                                               VSTGUI::COptionMenu::kNoDrawStyle |
-                                                   VSTGUI::COptionMenu::kMultipleCheckStyle);
+    auto monoSubMenu = juce::PopupMenu();
 
     auto mode = synth->storage.monoPedalMode;
+
     if (updateDefaults)
+    {
         mode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(
             &(this->synth->storage), Surge::Storage::MonoPedalMode, (int)HOLD_ALL_NOTES);
+    }
 
-    auto cb = addCallbackMenu(
-        monoSubMenu,
-        Surge::GUI::toOSCaseForMenu("Sustain Pedal Holds All Notes (No Note Off Retrigger)"),
-        [this, updateDefaults]() {
+    bool isChecked = (mode == HOLD_ALL_NOTES);
+
+    monoSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Sustain Pedal Holds All Notes (No Note Off Retrigger)"), true,
+        isChecked, [this, updateDefaults]() {
             this->synth->storage.monoPedalMode = HOLD_ALL_NOTES;
             if (updateDefaults)
+            {
                 Surge::Storage::updateUserDefaultValue(
                     &(this->synth->storage), Surge::Storage::MonoPedalMode, (int)HOLD_ALL_NOTES);
+            }
         });
-    if (mode == HOLD_ALL_NOTES)
-        cb->setChecked(true);
 
-    cb = addCallbackMenu(monoSubMenu,
-                         Surge::GUI::toOSCaseForMenu("Sustain Pedal Allows Note Off Retrigger"),
-                         [this, updateDefaults]() {
-                             this->synth->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
-                             if (updateDefaults)
-                                 Surge::Storage::updateUserDefaultValue(
-                                     &(this->synth->storage), Surge::Storage::MonoPedalMode,
-                                     (int)RELEASE_IF_OTHERS_HELD);
-                         });
-    if (mode == RELEASE_IF_OTHERS_HELD)
-        cb->setChecked(true);
+    isChecked = (mode == RELEASE_IF_OTHERS_HELD);
+
+    monoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Sustain Pedal Allows Note Off Retrigger"),
+                        true, isChecked, [this, updateDefaults]() {
+                            this->synth->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
+                            if (updateDefaults)
+                            {
+                                Surge::Storage::updateUserDefaultValue(
+                                    &(this->synth->storage), Surge::Storage::MonoPedalMode,
+                                    (int)RELEASE_IF_OTHERS_HELD);
+                            }
+                        });
 
     return monoSubMenu;
 }
@@ -3417,16 +3420,6 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
         result = zoomLow;
 
     return result;
-}
-
-std::shared_ptr<VSTGUI::CCommandMenuItem>
-SurgeGUIEditor::addCallbackMenu(VSTGUI::COptionMenu *toThis, std::string label,
-                                std::function<void()> op)
-{
-    auto menu = std::make_shared<CCommandMenuItem>(CCommandMenuItem::Desc(label.c_str()));
-    menu->setActions([op](CCommandMenuItem *m) { op(); });
-    toThis->addEntry(menu);
-    return menu;
 }
 
 void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
