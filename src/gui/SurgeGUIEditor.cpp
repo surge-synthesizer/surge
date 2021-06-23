@@ -151,15 +151,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
     setZoomFactor(initialZoomFactor);
     zoomInvalid = (initialZoomFactor != 100);
 
-    /*
-    ** See the comment in SurgeParamConfig.h
-    */
-    if ((int)Surge::ParamConfig::kHorizontal != (int)VSTGUI::CSlider::kHorizontal ||
-        (int)Surge::ParamConfig::kVertical != (int)VSTGUI::CSlider::kVertical)
-    {
-        throw std::runtime_error("Software Error: Param Mismatch");
-    }
-
     for (int i = 0; i < n_modsources; ++i)
         modsource_is_alternate[i] = false;
 
