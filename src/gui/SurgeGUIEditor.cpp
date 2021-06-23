@@ -456,10 +456,8 @@ void SurgeGUIEditor::idle()
 
                     param[j]->asControlValueInterface()->setValue(
                         synth->refresh_ctrl_queue_value[i]);
-                    frame->invalidRect(param[j]
-                                           ->asControlValueInterface()
-                                           ->asBaseViewFunctions()
-                                           ->getControlViewSize());
+                    param[j]->setQuantitizedDisplayValue(synth->refresh_ctrl_queue_value[i]);
+                    param[j]->asJuceComponent()->repaint();
                     // oscdisplay->invalid();
 
                     if (oscWaveform)
@@ -514,11 +512,11 @@ void SurgeGUIEditor::idle()
             {
                 SurgeSynthesizer::ID jid;
                 if (synth->fromSynthSideId(j, jid))
+                {
                     param[j]->asControlValueInterface()->setValue(synth->getParameter01(jid));
-                frame->invalidRect(param[j]
-                                       ->asControlValueInterface()
-                                       ->asBaseViewFunctions()
-                                       ->getControlViewSize());
+                    param[j]->setQuantitizedDisplayValue(synth->getParameter01(jid));
+                    param[j]->asJuceComponent()->repaint();
+                }
 
                 if (oscWaveform)
                 {
