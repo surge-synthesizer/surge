@@ -34,7 +34,11 @@ struct ModulationSourceButton : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     float value{0};
-    void setValue(float v) override { value = v; }
+    void setValue(float v) override
+    {
+        value = v;
+        repaint();
+    }
     float getValue() const override { return value; }
     void valueChanged() override {}
 
@@ -95,7 +99,7 @@ struct ModulationSourceButton : public juce::Component,
         }
     }
 
-    static constexpr int splitHeight = 16;
+    static constexpr int splitHeight = 14;
 
     juce::Drawable *arrow{nullptr};
 
@@ -112,6 +116,7 @@ struct ModulationSourceButton : public juce::Component,
     juce::Rectangle<int> mouseDownBounds;
     float valAtMouseDown{0};
     void mouseDown(const juce::MouseEvent &event) override;
+    void mouseDoubleClick(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
