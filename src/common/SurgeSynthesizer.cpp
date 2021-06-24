@@ -3870,11 +3870,11 @@ void SurgeSynthesizer::setupActivateExtraOutputs()
 
 void SurgeSynthesizer::swapMetaControllers(int c1, int c2)
 {
-    char nt[20];
-    strxcpy(nt, storage.getPatch().CustomControllerLabel[c1], 16);
+    char nt[CUSTOM_CONTROLLER_LABEL_SIZE + 4];
+    strxcpy(nt, storage.getPatch().CustomControllerLabel[c1], CUSTOM_CONTROLLER_LABEL_SIZE);
     strxcpy(storage.getPatch().CustomControllerLabel[c1],
-            storage.getPatch().CustomControllerLabel[c2], 16);
-    strxcpy(storage.getPatch().CustomControllerLabel[c2], nt, 16);
+            storage.getPatch().CustomControllerLabel[c2], CUSTOM_CONTROLLER_LABEL_SIZE);
+    strxcpy(storage.getPatch().CustomControllerLabel[c2], nt, CUSTOM_CONTROLLER_LABEL_SIZE);
 
     storage.modRoutingMutex.lock();
 

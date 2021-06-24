@@ -832,7 +832,7 @@ class SurgePatch
     // metadata
     std::string name, category, author, comment;
     // metaparameters
-#define CUSTOM_CONTROLLER_LABEL_SIZE 16
+#define CUSTOM_CONTROLLER_LABEL_SIZE 20
     char CustomControllerLabel[n_customcontrollers][CUSTOM_CONTROLLER_LABEL_SIZE];
 
     int streamingRevision;
