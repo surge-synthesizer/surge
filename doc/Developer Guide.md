@@ -115,7 +115,7 @@ use this to make sure your diffs are formatted properly. Here's how:
 * install `clang-format` and `git-clang-format`. On macOS this can be done with
   `brew install clang-format`. On Linux and Windows it is left as an exercise to the reader.
   If you complete that exercise, please update this doc!
-* Develop and so on as you normally would following the prescription in our [git howto](git-howto.md)
+* Develop and so on as you normally would following the prescription in our [git howto](How%20to%20Git.md)
 * Format the code at one of two development points:
   * Before you commit, but after you add, do a `git clang-format` and it will correct your code
   * Add a series of commits on your branch (because you are on branch of course to develop)
@@ -198,7 +198,7 @@ and look at the output with Open.
 
 ### Linux
 
-You can get a very clean debugging environment using Carla and Surge where you can
+You can get a very clean debugging environment using [Carla](https://github.com/falkTX/Carla) and Surge where you can
 play notes using an on-screen keyboard and route them to the VST2 with `stdout` visible.
 Everything here is documented for Ubuntu 18.04 LTS. Different packages have different
 things of course.
@@ -206,12 +206,12 @@ things of course.
 To do that, you first need to install a bunch of JACK code:
 
 ```
-sudo apt-get install jack
+sudo apt-get install jackd
 sudo apt-get install jack-keyboard
-sudo apt-get install ajmidid
+sudo apt-get install a2jmidid
 ```
 
-Then run `jac` and `ajmidid` in separate terminals:
+Then run `jackd` and `a2jmidid` in separate terminals:
 
 ```
 jackd -d alsa -X alsa_midi
@@ -220,18 +220,23 @@ a2jmidid -e
 
 Now start Surge with `carla-single`:
 
+*TODO: This example is outdated.* 
+*If you can make it work using VST3 and a current Carla version, please update the following line:* 
+
 ```
 ~/Carla_2.0-RC3-linux64/carla/carla-bridge-native vst2 ./target/vst2/Release/Surge.so  '(none)' '0'
 ```
 
-and then in a fourth keyboard, start `jack-keyboard`. The Connect To option should have
+and then in a fourth terminal, start `jack-keyboard`. The Connect To option should have
 Surge as an endpoint. Pick it and you can play the GUI keyboard and hear and watch the
 `stdout` go by.
+
+With Surge XT you can now also run the standalone version from a terminal and use the built-in virtual keyboard to get a similar experience.
 
 To run `valgrind`:
 
 ```
-./build-linux.sh build --project=headless
+cmake --build build --config Debug --target surge-headless -j4
 valgrind --leak-check=yes build/surge-headless
 ```
 
