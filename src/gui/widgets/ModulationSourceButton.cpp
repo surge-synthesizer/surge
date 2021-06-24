@@ -161,14 +161,14 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         auto bottomRect = fillRect.withTrimmedTop(splitHeight - 2);
 
         // macro slider value fill
-        auto valRect = bottomRect;
+        auto valRect = bottomRect.toFloat();
         valRect.reduce(1, 1);
-        
-        //printf("Initial valRect || X: %d Y: %d, W: %d H: %d\n",valRect.getX(), valRect.getY(), valRect.getWidth(), valRect.getHeight());
+
+        auto sliderWidth = valRect.getWidth();
 
         // current value
-        auto valPoint = value * (valRect.getWidth() - 2);
-        
+        auto valPoint = value * sliderWidth;
+
         // macro slider background
         g.setColour(skin->getColor(Colors::ModSource::Macro::Background));
         g.fillRect(valRect);
@@ -181,30 +181,31 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         {
             auto bipolarCenter = valRect.getCentreX();
 
-            if (valPoint <= bipolarCenter)
+            if (valPoint + 2 <= bipolarCenter)
             {
-                valRect = valRect.withLeft(valPoint).withRight(bipolarCenter);
+                valRect = valRect.withLeft(valPoint + 2).withRight(bipolarCenter + 1);
             }
             else
             {
-                valRect = valRect.withLeft(bipolarCenter).withRight(valPoint);
+                valRect = valRect.withLeft(bipolarCenter).withRight(valPoint + 2);
             }
         }
         else
         {
+            // make it so that the slider doesn't draw over its frame, but within it
             valRect.setX(2);
             valRect.setWidth(valPoint);
         }
-
-        //printf("VP: %.3f || X: %d Y: %d, W: %d H: %d\n", valPoint, valRect.getX(), valRect.getY(), valRect.getWidth(), valRect.getHeight());
 
         // draw macro slider value fill
         g.setColour(skin->getColor(Colors::ModSource::Macro::Fill));
         g.fillRect(valRect);
 
         // draw current value notch
+        valPoint = (valPoint == sliderWidth) ? sliderWidth - 1 : valPoint;
+
         g.setColour(skin->getColor(Colors::ModSource::Macro::CurrentValue));
-        //g.fillRect(juce::Rectangle<float>(2 + valPoint, valRect.getY(), 1, valRect.getHeight()));
+        g.fillRect(juce::Rectangle<float>(2 + valPoint, valRect.getY(), 1, valRect.getHeight()));
 
         // draw modbutton frame
         g.setColour(FrameCol);
@@ -271,7 +272,7 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         auto topRect = getLocalBounds().withHeight(splitHeight);
 
         // TODO: double-click to rename macro?
-        //if (topRect.contains(event.position.toInt()))
+        // if (topRect.contains(event.position.toInt()))
         //{
         //    return;
         //}
