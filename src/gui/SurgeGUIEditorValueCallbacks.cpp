@@ -466,7 +466,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                             {
                                 if (strncmp(synth->storage.getPatch().CustomControllerLabel[ccid],
                                             synth->storage.getPatch().param_ptr[md]->get_name(),
-                                            15) == 0)
+                                            CUSTOM_CONTROLLER_LABEL_SIZE - 1) == 0)
                                 {
                                     // So my modulator is named after my short name. I haven't been
                                     // renamed. So I want to reset at least to "-" unless someone is
@@ -505,8 +505,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                             {
                                 // And this is where we apply the name refresh, of course.
                                 strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
-                                        newName.c_str(), 15);
-                                synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
+                                        newName.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+                                synth->storage.getPatch()
+                                    .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] =
+                                    0;
                                 auto msb =
                                     dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
 
@@ -744,8 +746,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                 }
 
                                 strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
-                                        useS.c_str(), 16);
-                                synth->storage.getPatch().CustomControllerLabel[ccid][15] =
+                                        useS.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+                                synth->storage.getPatch()
+                                    .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] =
                                     0; // to be sure
 
                                 auto msb =
@@ -2632,8 +2635,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
 
                     if ((lbl[0] == '-') && !lbl[1])
                     {
-                        strxcpy(lbl, p->get_name(), 15);
-                        synth->storage.getPatch().CustomControllerLabel[ccid][15] = 0;
+                        strxcpy(lbl, p->get_name(), CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+                        synth->storage.getPatch()
+                            .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] = 0;
                         gui_modsrc[modsource]->setLabel(lbl);
                         gui_modsrc[modsource]->repaint();
                     }
