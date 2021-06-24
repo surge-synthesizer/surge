@@ -34,6 +34,7 @@ struct ModulationSourceButton : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     float value{0};
+
     void setValue(float v) override
     {
         value = v;
@@ -57,24 +58,30 @@ struct ModulationSourceButton : public juce::Component,
     bool hasAlternate{false}, useAlternate{false};
     modsources alternateSource{ms_original};
     std::string alternateLabel;
+
     void setAlternate(modsources alt, const std::string &s)
     {
         alternateSource = alt;
         alternateLabel = s;
         hasAlternate = true;
     }
+
     modsources getAlternate() { return alternateSource; }
     bool getHasAlternate() { return hasAlternate; }
     void setUseAlternate(bool b) { useAlternate = b; }
     bool getUseAlternate() const { return useAlternate; }
 
     bool isUsed{false};
+
     void setUsed(bool b) { isUsed = b; }
+
     int state{0};
+
     void setState(int s) { state = s; }
     int getState() const { return state; }
 
     bool secondaryHoverActive{false};
+
     void setSecondaryHover(bool b)
     {
         bool os = secondaryHoverActive;
@@ -84,12 +91,14 @@ struct ModulationSourceButton : public juce::Component,
     }
 
     bool isHovered{false};
+
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
     void onSkinChanged() override;
 
     bool isTinted;
+
     void update_rt_vals(bool t, int, bool)
     {
         if (t != isTinted)
@@ -98,6 +107,8 @@ struct ModulationSourceButton : public juce::Component,
             repaint();
         }
     }
+
+    bool everDragged{false};
 
     static constexpr int splitHeight = 14;
 

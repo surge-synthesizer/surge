@@ -226,6 +226,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
 void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 {
     mouseMode = CLICK;
+    everDragged = false;
 
     if (event.mods.isPopupMenu())
     {
@@ -282,7 +283,6 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         frameRect.reduce(1, 1);
         auto bottomRect = frameRect.withTrimmedTop(splitHeight - 2);
 
-        // TODO: make double-click reset more reliable, cursor hiding is cramping us up here
         if (bottomRect.contains(event.position.toInt()))
         {
             value = isBipolar ? 0.5f : 0.f;
@@ -327,7 +327,7 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
         setBounds(mouseDownBounds);
     }
 
-    if (mouseMode == DRAG_VALUE)
+    if (mouseMode == DRAG_VALUE && everDragged == true)
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         auto p = juce::Point<float>(value * getWidth(), 20);
@@ -371,6 +371,7 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     toFront(false);
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
+    everDragged = true;
 }
 
 void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
