@@ -38,7 +38,7 @@ struct MSEGCanvas;
 
 struct MSEGControlRegion : public juce::Component,
                            public Surge::GUI::SkinConsumingComponent,
-                           public VSTGUI::IControlListener
+                           public Surge::GUI::IComponentTagValue::Listener
 {
     MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos,
                       MSEGStorage *ms, MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
@@ -67,8 +67,10 @@ struct MSEGControlRegion : public juce::Component,
     };
 
     void rebuild();
-    void valueChanged(CControlValueInterface *p) override;
-    int32_t controlModifierClicked(CControlValueInterface *pControl, CButtonState button) override;
+    void valueChanged(Surge::GUI::IComponentTagValue *p) override;
+    int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                   const juce::ModifierKeys &button,
+                                   bool isDoubleClickEvent) override;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
@@ -2345,7 +2347,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     juce::Drawable *handleDrawable{nullptr};
 };
 
-void MSEGControlRegion::valueChanged(CControlValueInterface *p)
+void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
 {
     auto tag = p->getTag();
     auto val = p->getValue();
@@ -2434,8 +2436,9 @@ void MSEGControlRegion::valueChanged(CControlValueInterface *p)
     }
 }
 
-int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pControl,
-                                                  CButtonState button)
+int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                                  const juce::ModifierKeys &button,
+                                                  bool isDoubleClick)
 {
     int tag = pControl->getTag();
 
@@ -2532,10 +2535,9 @@ int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pContr
             contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value: ") + onOff,
                                 [pControl, val, this]() {
                                     pControl->setValue(val);
-                                    pControl->valueChanged();
-                                    auto iv = dynamic_cast<VSTGUI::BaseViewFunctions *>(pControl);
+                                    auto iv = pControl->asJuceComponent();
                                     if (iv)
-                                        iv->invalid();
+                                        iv->repaint();
                                     canvas->repaint();
                                     repaint();
                                 });
@@ -2545,14 +2547,13 @@ int32_t MSEGControlRegion::controlModifierClicked(CControlValueInterface *pContr
             for (auto op : options)
             {
                 auto val = op.second;
-                contextMenu.addItem(
-                    op.first, true, (val == pControl->getValue()), [val, pControl]() {
-                        pControl->setValue(val);
-                        auto iv = dynamic_cast<VSTGUI::BaseViewFunctions *>(pControl);
-                        if (iv)
-                            iv->invalid();
-                        pControl->valueChanged();
-                    });
+                contextMenu.addItem(op.first, true, (val == pControl->getValue()),
+                                    [val, pControl]() {
+                                        pControl->setValue(val);
+                                        auto iv = pControl->asJuceComponent();
+                                        if (iv)
+                                            iv->repaint();
+                                    });
             }
         }
         contextMenu.showMenuAsync(juce::PopupMenu::Options());

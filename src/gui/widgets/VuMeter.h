@@ -35,8 +35,6 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void setValueR(float f) { vR = f; }
     float getValueR() const { return vR; }
 
-    void valueChanged() override {}
-
     int vu_type{vut_off};
     void setType(int t) { vu_type = t; };
 

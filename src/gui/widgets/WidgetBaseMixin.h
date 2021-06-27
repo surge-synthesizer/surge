@@ -19,6 +19,7 @@
 #include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
 #include <unordered_set>
+#include "SurgeGUICallbackInterfaces.h"
 
 class SurgeGUIEditor;
 
@@ -28,22 +29,16 @@ namespace Widgets
 {
 template <typename T>
 struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
-                         public VSTGUI::BaseViewFunctions,
-                         public VSTGUI::CControlValueInterface
+                         public Surge::GUI::IComponentTagValue
 {
     inline T *asT() { return static_cast<T *>(this); }
 
-    void invalid() override { asT()->repaint(); }
-
-    VSTGUI::CRect getControlViewSize() override { return VSTGUI::CRect(asT()->getBounds()); }
-
-    VSTGUI::CCoord getControlHeight() override { return asT()->getHeight(); }
     uint32_t tag{0};
     void setTag(uint32_t t) { tag = t; }
     uint32_t getTag() const override { return tag; }
 
-    std::unordered_set<VSTGUI::IControlListener *> listeners;
-    void addListener(VSTGUI::IControlListener *t) { listeners.insert(t); }
+    std::unordered_set<Surge::GUI::IComponentTagValue::Listener *> listeners;
+    void addListener(Surge::GUI::IComponentTagValue::Listener *t) { listeners.insert(t); }
     void notifyValueChanged()
     {
         for (auto t : listeners)
@@ -51,19 +46,19 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
     }
     void notifyControlModifierClicked(const juce::ModifierKeys &k, bool addRMB = false)
     {
-        VSTGUI::CButtonState bs(k);
+        auto kCopy = k;
         if (addRMB)
-            bs = bs | VSTGUI::kRButton;
+        {
+            kCopy = juce::ModifierKeys(k.getRawFlags() | juce::ModifierKeys::rightButtonModifier);
+        }
         for (auto t : listeners)
-            t->controlModifierClicked(this, bs);
+            t->controlModifierClicked(this, kCopy, false);
     }
 
     void notifyControlModifierDoubleClicked(const juce::ModifierKeys &k)
     {
-        VSTGUI::CButtonState bs(k);
-        bs = bs | VSTGUI::kDoubleClick;
         for (auto t : listeners)
-            t->controlModifierClicked(this, bs);
+            t->controlModifierClicked(this, k, true);
     }
 
     void notifyBeginEdit()

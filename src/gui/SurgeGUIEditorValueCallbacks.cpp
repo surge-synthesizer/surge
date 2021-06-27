@@ -56,8 +56,14 @@ void decode_controllerid(char *txt, int id)
     };
 }
 
-int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, CButtonState button)
+int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *control,
+                                               const juce::ModifierKeys &buttonJ,
+                                               bool isDoubleClickEvent)
 {
+    VSTGUI::CButtonState button(buttonJ);
+    if (isDoubleClickEvent)
+        button = button | kDoubleClick;
+
     if (!synth)
     {
         return 0;
@@ -80,15 +86,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
     }
 
     CRect viewSize;
-    auto bvf = dynamic_cast<BaseViewFunctions *>(control);
+    auto bvf = control->asJuceComponent();
     if (bvf)
     {
-        viewSize = bvf->getControlViewSize();
+        viewSize = bvf->getBounds();
     }
     else
     {
         jassert(false);
-        std::cout << "WARNING: Control not castable to BaseViewFunctions.\n"
+        std::cout << "WARNING: Control not castable to IBaseView.\n"
                   << "Is your JUCE-only inheritance hierarchy missing the tag class?" << std::endl;
     }
 
@@ -499,7 +505,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                             if (bvf)
                             {
-                                bvf->invalid();
+                                bvf->repaint();
                             }
 
                             if (resetName)
@@ -521,7 +527,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                                 if (bvf)
                                 {
-                                    bvf->invalid();
+                                    bvf->repaint();
                                 }
 
                                 synth->updateDisplay();
@@ -572,8 +578,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                 msb->setLabel(
                                     synth->storage.getPatch().CustomControllerLabel[ccid]);
                         }
-                        if (control->asBaseViewFunctions())
-                            control->asBaseViewFunctions()->invalid();
+                        if (control->asJuceComponent())
+                            control->asJuceComponent()->repaint();
                         synth->updateDisplay();
                     });
                 }
@@ -737,7 +743,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                         promptForMiniEdit(
                             pval, "Enter a new name for the macro:", "Rename Macro",
-                            control->asBaseViewFunctions()->getControlViewSize().getTopLeft(),
+                            control->asJuceComponent()->getBounds().getTopLeft(),
                             [this, control, ccid](const std::string &s) {
                                 auto useS = s;
 
@@ -761,9 +767,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                         synth->storage.getPatch().CustomControllerLabel[ccid]);
                                 }
 
-                                if (control && control->asBaseViewFunctions())
+                                if (control && control->asJuceComponent())
                                 {
-                                    control->asBaseViewFunctions()->invalid();
+                                    control->asJuceComponent()->repaint();
                                 }
 
                                 synth->refresh_editor = true;
@@ -2038,7 +2044,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                         control->setValue(p->get_value_f01());
                     }
                     if (bvf)
-                        bvf->invalid();
+                        bvf->repaint();
                     return 0;
                 }
                 default:
@@ -2050,7 +2056,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     if (lfoDisplay && (p->ctrlgroup == cg_LFO))
                         lfoDisplay->repaint();
                     if (bvf)
-                        bvf->invalid();
+                        bvf->repaint();
                     return 0;
                 }
                 }
@@ -2104,7 +2110,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
     return 0;
 }
 
-void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
+void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 {
     if (!frame)
     {
@@ -2117,15 +2123,15 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     }
 
     CRect viewSize;
-    auto bvf = dynamic_cast<BaseViewFunctions *>(control);
+    auto bvf = control->asJuceComponent();
     if (bvf)
     {
-        viewSize = bvf->getControlViewSize();
+        viewSize = bvf->getBounds();
     }
     else
     {
         jassert(false);
-        std::cout << "WARNING: Control not castable to a BaseViewFunctions.\n"
+        std::cout << "WARNING: Control not castable to a IBaseView.\n"
                   << "Is your JUCE-only inheritance hierarchy missing the tag class?" << std::endl;
     }
 
@@ -2134,7 +2140,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
     if (typeinParamEditor->isVisible())
     {
         typeinParamEditor->setVisible(false);
-        frame->juceComponent()->removeChildComponent(typeinParamEditor.get());
+        frame->removeChildComponent(typeinParamEditor.get());
     }
 
     if (tag == tag_status_zoom)
@@ -2306,7 +2312,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 csc->setIntegerValue(a + 1);
         }
         if (bvf)
-            bvf->invalid();
+            bvf->repaint();
         synth->switch_toggled_queued = true;
         return;
     }
@@ -2645,7 +2651,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     if (mci)
                         mci->setQuantitizedDisplayValue(p->get_value_f01());
                     else if (bvf)
-                        bvf->invalid();
+                        bvf->repaint();
                     synth->getParameterName(ptagid, pname);
                     synth->getParameterDisplay(ptagid, pdisp);
                     char pdispalt[256];
@@ -2709,7 +2715,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         else
             ((Surge::Widgets::Switch *)filtersubtype[idx])->setIntegerValue(a + 1);
 
-        filtersubtype[idx]->invalid();
+        filtersubtype[idx]->repaint();
     }
 
     if (tag == fmconfig_tag)

@@ -94,9 +94,8 @@ struct ModulatableSlider : public juce::Component,
         value = f;
         repaint();
     }
-    void valueChanged() override {}
 
-    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; }
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; }
     juce::Component *asJuceComponent() override { return this; }
 
     void onSkinChanged() override;

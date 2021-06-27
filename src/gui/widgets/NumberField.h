@@ -41,7 +41,6 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         repaint();
     }
     float getValue() const override { return value; }
-    void valueChanged() override {}
     int getIntValue() const { return iValue; }
     void setIntValue(int v)
     {

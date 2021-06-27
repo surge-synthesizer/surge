@@ -521,52 +521,9 @@ struct OnRemovedHandler
 
 // Clena this up obviously
 
-struct BaseViewFunctions
-{
-    virtual void invalid() = 0;
-    virtual CRect getControlViewSize() = 0;
-    virtual CCoord getControlHeight() = 0;
-};
-
 struct CMouseWheelAxis
 {
 };
-
-struct CControlValueInterface
-{
-    virtual uint32_t getTag() const = 0;
-    virtual float getValue() const = 0;
-    virtual void setValue(float) = 0;
-    virtual void valueChanged() = 0;
-
-    BaseViewFunctions *asBaseViewFunctions()
-    {
-        auto r = dynamic_cast<BaseViewFunctions *>(this);
-        if (r)
-            return r;
-        jassert(false);
-        return nullptr;
-    }
-};
-
-struct IControlListener
-{
-    virtual void valueChanged(CControlValueInterface *p) = 0;
-    virtual int32_t controlModifierClicked(CControlValueInterface *p, CButtonState s)
-    {
-        return false;
-    }
-
-    virtual void controlBeginEdit(CControlValueInterface *control){};
-    virtual void controlEndEdit(CControlValueInterface *control){};
-};
-
-struct IKeyboardHook
-{
-    virtual int32_t onKeyDown(const VstKeyCode &code, CFrame *frame) = 0;
-    virtual int32_t onKeyUp(const VstKeyCode &code, CFrame *frame) = 0;
-};
-
 #define CLASS_METHODS(a, b)
 } // namespace EscapeNS
 

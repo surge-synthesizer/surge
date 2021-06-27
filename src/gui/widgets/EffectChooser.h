@@ -50,7 +50,6 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
         jassert(false);
         value = f;
     }
-    void valueChanged() override { jassert(false); }
     float value{0.f};
 
     void setCurrentEffect(int c) { currentEffect = c; }

@@ -38,8 +38,8 @@ namespace Widgets
  */
 struct XMLMenuPopulator
 {
-    virtual VSTGUI::CControlValueInterface *asControlValueInterface() = 0;
-    virtual VSTGUI::IControlListener *getControlListener() = 0;
+    virtual Surge::GUI::IComponentTagValue *asControlValueInterface() = 0;
+    virtual Surge::GUI::IComponentTagValue::Listener *getControlListener() = 0;
 
     virtual void populate();
     virtual void loadSnapshot(int type, TiXmlElement *e, int idx){};
@@ -92,15 +92,14 @@ struct OscillatorMenu : public juce::Component,
     OscillatorMenu();
     void loadSnapshot(int type, TiXmlElement *e, int idx) override;
 
-    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; };
-    VSTGUI::IControlListener *getControlListener() override
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; };
+    Surge::GUI::IComponentTagValue::Listener *getControlListener() override
     {
-        return firstListenerOfType<VSTGUI::IControlListener>();
+        return firstListenerOfType<Surge::GUI::IComponentTagValue::Listener>();
     };
 
     float getValue() const override { return 0; }
     void setValue(float f) override {}
-    void valueChanged() override {}
 
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
@@ -132,15 +131,14 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
 {
     FxMenu();
 
-    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; };
-    VSTGUI::IControlListener *getControlListener() override
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; };
+    Surge::GUI::IComponentTagValue::Listener *getControlListener() override
     {
-        return firstListenerOfType<VSTGUI::IControlListener>();
+        return firstListenerOfType<Surge::GUI::IComponentTagValue::Listener>();
     };
 
     float getValue() const override { return 0; }
     void setValue(float f) override {}
-    void valueChanged() override {}
 
     void mouseDown(const juce::MouseEvent &event) override;
 

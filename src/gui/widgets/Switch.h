@@ -62,7 +62,6 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
     float value{0};
     float getValue() const override { return value; }
     void setValue(float f) override { value = f; }
-    void valueChanged() override;
 
     void paint(juce::Graphics &g) override;
     void mouseDown(const juce::MouseEvent &event) override;

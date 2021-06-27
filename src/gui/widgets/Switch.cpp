@@ -23,8 +23,6 @@ namespace Widgets
 Switch::Switch() { setRepaintsOnMouseActivity(true); }
 Switch::~Switch() = default;
 
-void Switch::valueChanged() { jassert(false); }
-
 void Switch::paint(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState gs(g);
