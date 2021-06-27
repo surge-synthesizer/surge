@@ -1077,17 +1077,54 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
         }
     }
 
+    if (isMSEG() && sge)
+    {
+        sge->toggleMSEGEditor();
+    }
+
+    if (isFormula() && sge)
+    {
+        sge->toggleFormulaEditorDialog();
+    }
+
     if (isStepSequencer())
     {
         dragMode = NONE;
         if (ss_shift_left.contains(event.position))
         {
-            std::cout << "SHIFT LEFT" << std::endl;
+            float t = ss->steps[0];
+            for (int i = 0; i < (n_stepseqsteps - 1); i++)
+            {
+                ss->steps[i] = ss->steps[i + 1];
+                assert((i >= 0) && (i < n_stepseqsteps));
+            }
+            ss->steps[n_stepseqsteps - 1] = t;
+            ss->trigmask = (((ss->trigmask & 0x000000000000fffe) >> 1) |
+                            (((ss->trigmask & 1) << 15) & 0xffff)) |
+                           (((ss->trigmask & 0x00000000fffe0000) >> 1) |
+                            (((ss->trigmask & 0x10000) << 15) & 0xffff0000)) |
+                           (((ss->trigmask & 0x0000fffe00000000) >> 1) |
+                            (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
+
+            repaint();
             return;
         }
         if (ss_shift_right.contains(event.position))
         {
-            std::cout << "SHIFT RIGHT" << std::endl;
+            float t = ss->steps[n_stepseqsteps - 1];
+            for (int i = (n_stepseqsteps - 2); i >= 0; i--)
+            {
+                ss->steps[i + 1] = ss->steps[i];
+                assert((i >= 0) && (i < n_stepseqsteps));
+            }
+            ss->steps[0] = t;
+            ss->trigmask = (((ss->trigmask & 0x0000000000007fff) << 1) |
+                            (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff)) |
+                           (((ss->trigmask & 0x000000007fff0000) << 1) |
+                            (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000)) |
+                           (((ss->trigmask & 0x00007fff00000000) << 1) |
+                            (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
+            repaint();
             return;
         }
         if (loopStartRect.contains(event.position))
@@ -1391,6 +1428,20 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
     repaint();
 }
 
+void LFOAndStepDisplay::mouseDoubleClick(const juce::MouseEvent &event)
+{
+    if (isStepSequencer())
+    {
+        for (int i = 0; i < n_stepseqsteps; ++i)
+        {
+            if (steprect[i].contains(event.position))
+            {
+                ss->steps[i] = 0.f;
+                repaint();
+            }
+        }
+    }
+}
 void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
                                        const juce::MouseWheelDetails &wheel)
 {
