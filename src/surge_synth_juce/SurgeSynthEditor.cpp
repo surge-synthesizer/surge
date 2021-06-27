@@ -19,8 +19,7 @@
 #include <version.h>
 
 //==============================================================================
-SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
-    : AudioProcessorEditor(&p), processor(p), EscapeFromVSTGUI::JuceVSTGUIEditorAdapter(this)
+SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEditor(&p), processor(p)
 {
     surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());

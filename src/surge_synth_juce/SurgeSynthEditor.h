@@ -10,8 +10,6 @@
 
 #pragma once
 
-#include "efvg/escape_from_vstgui.h"
-
 #include <JuceHeader.h>
 
 #include "SurgeSynthProcessor.h"
@@ -24,7 +22,6 @@ class SurgeJUCELookAndFeel;
  */
 class SurgeSynthEditor : public juce::AudioProcessorEditor,
                          public juce::AsyncUpdater,
-                         public EscapeFromVSTGUI::JuceVSTGUIEditorAdapter,
                          public juce::FileDragAndDropTarget
 {
   public:
@@ -70,14 +67,14 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     juce::PopupMenu hostMenuFor(Parameter *p);
 
+    friend class SurgeGUIEditor;
+
   private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SurgeSynthProcessor &processor;
 
     std::unique_ptr<SurgeGUIEditor> adapter;
-
-    std::unique_ptr<VSTGUI::CFrame> vstguiFrame;
     std::unique_ptr<juce::Drawable> logo;
 
     std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;

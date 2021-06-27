@@ -23,6 +23,7 @@
 
 #include "widgets/EffectChooser.h"
 #include "widgets/LFOAndStepDisplay.h"
+#include "widgets/MainFrame.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulationSourceButton.h"
@@ -1382,7 +1383,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
 
                                                         if (frame)
                                                         {
-                                                            frame->invalid();
+                                                            frame->repaint();
                                                         }
                                                     });
                             }
@@ -2515,35 +2516,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         showStorePatchDialog();
     }
     break;
-    case tag_editor_overlay_close:
-    {
-        // So can I find an editor overlay parent
-        auto *p = dynamic_cast<CView *>(control);
-        if (!p)
-        {
-            // If you hit this it means you are closing a juce-overlay and somethign is wrong
-            jassert(false);
-        }
-        auto tagToNuke = NO_EDITOR;
-        while (p)
-        {
-            p = p->getParentView();
-            for (auto el : editorOverlay)
-            {
-                if (el.second == p)
-                {
-                    tagToNuke = el.first;
-                    p = nullptr;
-                    break;
-                }
-            }
-        }
-        if (tagToNuke != NO_EDITOR)
-        {
-            dismissEditorOfType(tagToNuke);
-        }
-    }
-    break;
+
     default:
     {
         int ptag = tag - start_paramtags;
@@ -2552,7 +2525,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
         {
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
             if (p->is_nonlocal_on_change())
-                frame->invalid();
+                frame->repaint();
 
             char pname[256], pdisp[128], txt[128];
             bool modulate = false;
@@ -2571,7 +2544,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     if (cms->getHasAlternate() && cms->getUseAlternate())
                         thisms = cms->getAlternate();
                 }
-                bool quantize_mod = frame->getCurrentMouseButtons() & kControl;
+                bool quantize_mod = juce::ModifierKeys::currentModifiers.isCtrlDown();
                 float mv = mci->getModValue();
                 if (quantize_mod)
                 {
@@ -2656,7 +2629,7 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                     }
                 }
 
-                bool force_integer = frame->getCurrentMouseButtons() & kControl;
+                bool force_integer = juce::ModifierKeys::currentModifiers.isCtrlDown();
                 SurgeSynthesizer::ID ptagid;
                 synth->fromSynthSideId(ptag, ptagid);
                 if (synth->setParameter01(ptagid, val, false, force_integer))
@@ -2699,9 +2672,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 {
                     lfoDisplay->repaint();
                 }
-                for (auto el : editorOverlay)
+                for (auto &el : juceOverlays)
                 {
-                    el.second->invalid();
+                    el.second->repaint();
                 }
             }
             if (p->ctrltype == ct_filtertype)

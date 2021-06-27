@@ -16,8 +16,7 @@
 #include <JuceHeader.h>
 #include "CScalableBitmap.h"
 
-CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame *f)
-    : VSTGUI::CBitmap(d)
+CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d) : VSTGUI::CBitmap(d)
 {
     if (d.u.type == VSTGUI::CResourceDescription::kIntegerType)
     {
@@ -32,7 +31,7 @@ CScalableBitmap::CScalableBitmap(VSTGUI::CResourceDescription d, VSTGUI::CFrame 
     }
 }
 
-CScalableBitmap::CScalableBitmap(std::string fname, VSTGUI::CFrame *f)
+CScalableBitmap::CScalableBitmap(std::string fname)
     : VSTGUI::CBitmap(VSTGUI::CResourceDescription(0))
 {
     this->fname = fname;
@@ -101,5 +100,5 @@ void CScalableBitmap::resolvePNGForZoomLevel(int zoomLevel)
         return;
 
     pngZooms[zoomLevel].second =
-        std::move(std::make_unique<CScalableBitmap>(pngZooms[zoomLevel].first.c_str(), nullptr));
+        std::move(std::make_unique<CScalableBitmap>(pngZooms[zoomLevel].first.c_str()));
 }
