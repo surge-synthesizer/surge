@@ -19,10 +19,10 @@
 
 #include "SurgeSynthEditor.h"
 
-#include "CLFOGui.h"
 #include "ModernOscillator.h"
 
 #include "widgets/EffectChooser.h"
+#include "widgets/LFOAndStepDisplay.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulationSourceButton.h"
@@ -836,25 +836,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
             return 1;
         }
 
-        bool blockForLFO = false;
-
-        if (p->ctrltype == ct_lfotype)
-        {
-            blockForLFO = true;
-            auto *clfo = dynamic_cast<CLFOGui *>(control);
-
-            if (clfo)
-            {
-                CPoint where;
-                frame->getCurrentMouseLocation(where);
-                frame->localToFrame(where);
-
-                blockForLFO = !clfo->insideTypeSelector(where);
-            }
-        }
-
         // all the RMB context menus
-        if ((button & kRButton) && !blockForLFO)
+        if (button & kRButton)
         {
             CRect menuRect;
             CPoint where;
@@ -864,20 +847,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
             menuRect.offset(where.x, where.y);
 
             auto contextMenu = juce::PopupMenu();
-
-            // FIXME - only fail at this once
-            /* if( bitmapStore->getBitmapByPath( synth->storage.datapath +
-            "skins/shared/help-24.svg" ) == nullptr )
-            {
-               std::cout << "LOADING BMP" << std::endl;
-               bitmapStore->loadBitmapByPath( synth->storage.datapath + "skins/shared/help-24.svg"
-            );
-            }
-            auto helpbmp = bitmapStore->getBitmapByPath( synth->storage.datapath +
-            "skins/shared/help-24.svg" ); std::cout << "HELPBMP is " << helpbmp << std::endl; */
-            // auto pp = IPlatformBitmap::createFromPath( (synth->storage.datapath +
-            // "skins/shared/help-14.png" ).c_str() ); auto helpbmp = new CBitmap( pp );
-
             std::string helpurl = helpURLFor(p);
 
             if (helpurl == "")
@@ -1249,11 +1218,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                                 p->set_value_f01(control->getValue());
                             }
 
-                            if (this->lfodisplay)
-                            {
-                                this->lfodisplay->invalid();
-                            }
-
+                            if (this->lfoDisplay)
+                                this->lfoDisplay->repaint();
                             auto *css = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
                                 control);
 
@@ -2080,8 +2046,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(CControlValueInterface *control, 
                     control->setValue(p->get_value_f01());
                     if (oscWaveform && (p->ctrlgroup == cg_OSC))
                         oscWaveform->repaint();
-                    if (lfodisplay && (p->ctrlgroup == cg_LFO))
-                        lfodisplay->invalid();
+                    if (lfoDisplay && (p->ctrlgroup == cg_LFO))
+                        lfoDisplay->repaint();
                     if (bvf)
                         bvf->invalid();
                     return 0;
@@ -2729,9 +2695,9 @@ void SurgeGUIEditor::valueChanged(CControlValueInterface *control)
                 {
                     oscWaveform->repaint();
                 }
-                if (lfodisplay && (p->ctrlgroup == cg_LFO))
+                if (lfoDisplay && (p->ctrlgroup == cg_LFO))
                 {
-                    lfodisplay->invalid();
+                    lfoDisplay->repaint();
                 }
                 for (auto el : editorOverlay)
                 {

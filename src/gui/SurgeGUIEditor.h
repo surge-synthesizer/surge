@@ -45,6 +45,7 @@ namespace Widgets
 {
 struct EffectChooser;
 struct EffectLabel;
+struct LFOAndStepDisplay;
 struct ModulationSourceButton;
 struct ModulatableControlInterface;
 struct NumberField;
@@ -440,9 +441,6 @@ class SurgeGUIEditor : public EditorType,
   private:
     bool modsource_is_alternate[n_modsources];
 
-  public:
-    void toggleAlternateFor(VSTGUI::CControl *c);
-
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
@@ -554,7 +552,9 @@ class SurgeGUIEditor : public EditorType,
     Surge::Widgets::ModulatableControlInterface *param[n_paramslots] = {};
     VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
     std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
-    VSTGUI::CControl *lfodisplay = nullptr;
+    std::unique_ptr<Surge::Widgets::LFOAndStepDisplay> lfoDisplay;
+
+    // VSTGUI::CControl *lfodisplay = nullptr;
     Surge::Widgets::Switch *filtersubtype[2] = {};
 
   public:

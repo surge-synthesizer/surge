@@ -373,7 +373,7 @@ enum lfo_type
 
 const char lt_names[n_lfo_types][32] = {
     "Sine",          "Triangle", "Square",         "Sawtooth", "Noise",
-    "Sample & Hold", "Envelope", "Step Sequencer", "MSEG",     "Function (work in progress!)",
+    "Sample & Hold", "Envelope", "Step Sequencer", "MSEG",     "Formula",
 };
 
 const int lt_num_deforms[n_lfo_types] = {
