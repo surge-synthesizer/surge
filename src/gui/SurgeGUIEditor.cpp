@@ -285,39 +285,6 @@ void SurgeGUIEditor::idle()
             showMSEGEditorOnNextIdleOrOpen = false;
         }
 
-        /*static CDrawContext drawContext
-          (frame, NULL, systemWindow);*/
-        // CDrawContext *drawContext = frame->createDrawContext();
-
-        CView *v = frame->getFocusView();
-        if (v && dynamic_cast<CControl *>(v) != nullptr)
-        {
-            int ptag = ((CControl *)v)->getTag() - start_paramtags;
-            if (ptag >= 0)
-            {
-                synth->storage.modRoutingMutex.lock();
-
-                for (int i = 1; i < n_modsources; i++)
-                {
-                    if (gui_modsrc[i])
-                        gui_modsrc[i]->update_rt_vals(
-                            synth->isActiveModulation(ptag, (modsources)i), 0,
-                            synth->isModsourceUsed((modsources)i));
-                }
-                synth->storage.modRoutingMutex.unlock();
-            }
-        }
-        else
-        {
-            synth->storage.modRoutingMutex.lock();
-            for (int i = 1; i < n_modsources; i++)
-            {
-                if (gui_modsrc[i])
-                    gui_modsrc[i]->update_rt_vals(false, 0, synth->isModsourceUsed((modsources)i));
-            }
-            synth->storage.modRoutingMutex.unlock();
-        }
-
         if (synth->storage.getPatch()
                 .scene[current_scene]
                 .osc[current_osc[current_scene]]
@@ -332,14 +299,6 @@ void SurgeGUIEditor::idle()
                 oscWaveform->repaint();
             }
         }
-
-#if OSC_MOD_ANIMATION
-        if (mod_editor && oscdisplay)
-        {
-            ((COscillatorDisplay *)oscdisplay)->tickModTime();
-            oscdisplay->invalid();
-        }
-#endif
 
         if (polydisp)
         {
@@ -950,6 +909,7 @@ void SurgeGUIEditor::setDisabledForParameter(Parameter *p,
     }
 }
 
+#if PORTED_TO_JUCE
 class LastChanceEventCapture : public CControl
 {
   public:
@@ -992,6 +952,7 @@ class LastChanceEventCapture : public CControl
     SurgeGUIEditor *editor = nullptr;
     CLASS_METHODS(LastChanceEventCapture, CControl);
 };
+#endif
 
 void SurgeGUIEditor::openOrRecreateEditor()
 {
@@ -1542,9 +1503,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 currentSkin->propertyValue(l, Surge::Skin::Component::FRAME_COLOR, "#FFFFFF00");
             auto frcol = currentSkin->getColor(frcoln, dcol);
 
-            auto lb = new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)),
-                                     mtext.fromJust().c_str());
-            lb->setTransparency((bgcol == dcol && frcol == dcol));
+            auto lb = componentForSkinSession<juce::Label>(l->sessionid);
+            jassert(false);
+#if PORTED_TO_JUCE
             lb->setHoriAlign(txtalign);
 
             lb->setFontColor(col);
@@ -1552,18 +1513,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lb->setFrameColor(frcol);
 
             frame->addView(lb);
+#endif
         }
         else
         {
             auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
             if (image.isJust())
             {
-                auto bmp = bitmapStore->getBitmapByStringID(image.fromJust());
+                auto bmp = bitmapStore->getDrawableByStringID(image.fromJust());
                 if (bmp)
                 {
-                    auto lb =
-                        new CTextLabel(CRect(CPoint(l->x, l->y), CPoint(l->w, l->h)), nullptr, bmp);
-                    frame->addView(lb);
+                    jassert(false);
+#if PORTED_TO_JUCE
+                    // layout and add
+#endif
                 }
             }
         }
@@ -1628,24 +1591,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     editor_open = true;
     queue_refresh = false;
 
-    /* When we rebuild, the onMouseEntered event is not re-sent to the new component by VSTGui;
-     * Maybe this is a bug in VSTG? But it screws up our hover states so force an onMouseEntered
-     * if we are over a coponent
-     */
-    CPoint tr;
-    frame->getCurrentMouseLocation(tr);
-
-    // OK to *find* the component we need to look in transformed coordinates
-    CPoint ttr = tr;
-    frame->getTransform().transform(ttr);
-    auto v = frame->getViewAt(ttr);
-
-    if (v)
-    {
-        // but to *hover* the component we need to do it in 100-scale coordinates
-        v->onMouseEntered(tr, 0);
-    }
-
     frame->invalid();
 }
 
@@ -1659,8 +1604,6 @@ void SurgeGUIEditor::close_editor()
 
 bool SurgeGUIEditor::open(void *parent)
 {
-    super::open(parent);
-
     int platformType = 0;
     float fzf = getZoomFactor() / 100.0;
     CRect wsize(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
@@ -1705,7 +1648,6 @@ void SurgeGUIEditor::close()
         f();
         editorOverlayTagAtClose = el.first;
     }
-    super::close();
     firstIdleCountdown = 0;
 }
 
@@ -1771,43 +1713,6 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
 
     fxGridMenu.showMenuAsync(juce::PopupMenu::Options());
 }
-//------------------------------------------------------------------------------------------------
-
-void SurgeGUIEditor::beginEdit(long tag)
-{
-    if (tag < start_paramtags)
-    {
-        return;
-    }
-
-    int synthidx = tag - start_paramtags;
-    SurgeSynthesizer::ID did;
-
-    if (synth->fromSynthSideId(synthidx, did))
-    {
-        super::beginEdit(did.getDawSideId());
-    }
-}
-
-//------------------------------------------------------------------------------------------------
-
-void SurgeGUIEditor::endEdit(long tag)
-{
-    if (tag < start_paramtags)
-    {
-        return;
-    }
-
-    int synthidx = tag - start_paramtags;
-    SurgeSynthesizer::ID did;
-
-    if (synth->fromSynthSideId(synthidx, did))
-    {
-        super::endEdit(did.getDawSideId());
-    }
-}
-
-//------------------------------------------------------------------------------------------------
 
 void SurgeGUIEditor::controlBeginEdit(VSTGUI::CControlValueInterface *control)
 {
@@ -4813,14 +4718,6 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 
     aboutScreen->setBounds(frame->juceComponent()->getLocalBounds());
     frame->juceComponent()->addAndMakeVisible(*aboutScreen);
-
-    /*
-    CRect wsize(0, 0, getWindowSizeX(), getWindowSizeY());
-    aboutbox = new CAboutBox(wsize, this, &(synth->storage), synth->hostProgram,
-                             synth->juceWrapperType, currentSkin, bitmapStore, devModeGrid);
-    aboutbox->setVisible(true);
-    getFrame()->addView(aboutbox);
-     */
 }
 
 void SurgeGUIEditor::hideAboutScreen()

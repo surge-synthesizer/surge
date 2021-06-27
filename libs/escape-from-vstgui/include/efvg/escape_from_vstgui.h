@@ -403,20 +403,6 @@ struct CGradient : public Internal::FakeRefcount
     void addColorStop(float pos, const CColor &c) { grad->addColour(pos, c); }
 };
 
-enum CDrawModeFlags : uint32_t
-{
-    kAliasing = 0,
-    kAntiAliasing = 1,
-    kNonIntegralMode = 0xF000000
-};
-
-enum CDrawStyle : uint32_t
-{
-    kDrawStroked = 0,
-    kDrawFilled,
-    kDrawFilledAndStroked
-};
-
 enum CMouseEventResult
 {
     kMouseEventNotImplemented = 0,
@@ -431,32 +417,6 @@ enum CHoriTxtAlign
     kLeftText = 0,
     kCenterText,
     kRightText
-};
-
-enum CCursorType
-{
-    /** arrow cursor */
-    kCursorDefault = 0,
-    /** wait cursor */
-    kCursorWait,
-    /** horizontal size cursor */
-    kCursorHSize,
-    /** vertical size cursor */
-    kCursorVSize,
-    /** size all cursor */
-    kCursorSizeAll,
-    /** northeast and southwest size cursor */
-    kCursorNESWSize,
-    /** northwest and southeast size cursor */
-    kCursorNWSESize,
-    /** copy cursor (mainly for drag&drop operations) */
-    kCursorCopy,
-    /** not allowed cursor (mainly for drag&drop operations) */
-    kCursorNotAllowed,
-    /** hand cursor */
-    kCursorHand,
-    /** i beam cursor */
-    kCursorIBeam,
 };
 
 enum CButton
@@ -507,272 +467,10 @@ struct CButtonState
     int getButtonState() const { return state; }
 };
 
-enum CMouseWheelAxis
-{
-    kMouseWheelAxisX,
-    kMouseWheelAxisY
-};
-
-struct CLineStyle
-{
-    enum LineCap
-    {
-        kLineCapButt = 0,
-        kLineCapRound,
-        kLineCapSquare
-    };
-
-    enum LineJoin
-    {
-        kLineJoinMiter = 0,
-        kLineJoinRound,
-        kLineJoinBevel
-    };
-    constexpr CLineStyle() {}
-    constexpr CLineStyle(const LineCap c, const LineJoin j, int a = 0, int b = 0, bool cb = false)
-    {
-    }
-};
-
-constexpr CLineStyle kLineSolid;
-
-struct CDrawMode
-{
-    CDrawMode() = default;
-    CDrawMode(const CDrawModeFlags &f) { OKUNIMPL; }
-    CDrawMode(uint32_t x) { OKUNIMPL; }
-};
-
-struct CGraphicsTransform
-{
-    juce::AffineTransform juceT;
-    CGraphicsTransform(const juce::AffineTransform &t) : juceT(t) {}
-
-    CGraphicsTransform() {}
-    CGraphicsTransform scale(float sx, float sy)
-    {
-        return CGraphicsTransform(juceT.scaled(sx, sy));
-    }
-    CGraphicsTransform translate(float dx, float dy)
-    {
-        return CGraphicsTransform(juceT.translated(dx, dy));
-    }
-    CGraphicsTransform inverse() { return CGraphicsTransform(juceT.inverted()); }
-
-    CRect transform(CRect &r)
-    {
-        auto jr = r.asJuceFloatRect();
-        auto tl = jr.getTopLeft();
-        auto br = jr.getBottomRight();
-
-        juceT.transformPoint(tl.x, tl.y);
-        juceT.transformPoint(br.x, br.y);
-
-        r = CRect(tl.x, tl.y, br.x, br.y);
-        return r;
-    }
-    CPoint transform(CPoint &r)
-    {
-        float x = r.x;
-        float y = r.y;
-        juceT.transformPoint(x, y);
-        r.x = x;
-        r.y = y;
-        return CPoint(x, y);
-    }
-};
-
-struct CGraphicsPath : public Internal::FakeRefcount
-{
-    juce::Path path;
-    void beginSubpath(float x, float y) { path.startNewSubPath(x, y); }
-    void addLine(float x, float y) { path.lineTo(x, y); }
-};
-
 struct CDrawContext
 {
-    typedef std::vector<CPoint> PointList;
-    enum PathDrawMode
-    {
-        kPathFilled = 1,
-        kPathStroked = 2
-    };
-
     juce::Graphics &g;
     explicit CDrawContext(juce::Graphics &g) : g(g) {}
-
-    void setLineStyle(const CLineStyle &s) { OKUNIMPL; }
-    void setDrawMode(uint32_t m) { OKUNIMPL; }
-    void setDrawMode(const CDrawMode &m) { OKUNIMPL; }
-    CDrawMode getDrawMode()
-    {
-        OKUNIMPL;
-        return CDrawMode();
-    }
-    float getStringWidth(const std::string &s) { return font.getStringWidth(s); }
-    void fillLinearGradient(CGraphicsPath *p, const CGradient &cg, const CPoint &, const CPoint &,
-                            bool, CGraphicsTransform *tf)
-    {
-        g.setGradientFill(*(cg.grad));
-        g.fillPath(p->path, tf->juceT);
-    }
-
-    struct Transform
-    {
-        juce::Graphics *g = nullptr;
-        Transform(CDrawContext &dc, CGraphicsTransform &tf)
-        {
-            dc.g.saveState();
-            dc.g.addTransform(tf.juceT);
-            g = &(dc.g);
-        }
-        ~Transform() { g->restoreState(); }
-    };
-
-    void saveGlobalState() { g.saveState(); }
-
-    void restoreGlobalState() { g.restoreState(); }
-
-    void getClipRect(CRect &r) const { UNIMPL; }
-    void setClipRect(const CRect &r) { g.reduceClipRegion(r.asJuceIntRect()); }
-
-    float lineWidth = 1;
-    void setLineWidth(float w) { lineWidth = w; }
-    float getLineWidth() { return lineWidth; }
-
-    juce::Colour fillColor = juce::Colour(255, 0, 0), frameColor = juce::Colour(255, 0, 0),
-                 fontColor = juce::Colour(255, 0, 0);
-    void setFontColor(const CColor &c) { fontColor = c; }
-    CColor getFontColor()
-    {
-        UNIMPL;
-        return CColor();
-    }
-
-    void setFillColor(const CColor &c) { fillColor = c; }
-
-    void setFrameColor(const CColor &c) { frameColor = c; }
-
-    void drawRect(const CRect &r, CDrawStyle s = kDrawStroked)
-    {
-        switch (s)
-        {
-        case kDrawFilled:
-        {
-            g.setColour(fillColor);
-            g.fillRect(r.asJuceFloatRect());
-            break;
-        }
-        case kDrawStroked:
-        {
-            g.setColour(frameColor);
-            g.drawRect(r.asJuceFloatRect());
-            break;
-        }
-        case kDrawFilledAndStroked:
-        {
-            g.setColour(fillColor);
-            g.fillRect(r.asJuceFloatRect());
-            g.setColour(frameColor);
-            g.drawRect(r.asJuceFloatRect());
-        }
-        }
-    }
-
-    void drawPolygon(const std::vector<CPoint> &l, CDrawStyle s)
-    {
-        juce::Path path;
-        bool started = false;
-        for (auto &p : l)
-        {
-            if (!started)
-                path.startNewSubPath(p);
-            else
-                path.lineTo(p);
-            started = true;
-        }
-        path.closeSubPath();
-        if (s == kDrawFilled || s == kDrawFilledAndStroked)
-        {
-            g.setColour(fillColor);
-            g.fillPath(path);
-        }
-        if (s == kDrawFilledAndStroked || s == kDrawStroked)
-        {
-            UNIMPL;
-        }
-    }
-
-    CGraphicsPath *createRoundRectGraphicsPath(const CRect &r, float radius)
-    {
-        auto ct = new CGraphicsPath();
-        ct->path.addRoundedRectangle(r.left, r.top, r.getWidth(), r.getHeight(), radius);
-        ct->remember();
-        return ct;
-    }
-
-    void drawGraphicsPath(CGraphicsPath *p, int style, CGraphicsTransform *tf = nullptr)
-    {
-        g.setColour(frameColor);
-        if (tf)
-        {
-            g.strokePath(p->path, juce::PathStrokeType(1.0), tf->juceT);
-        }
-        else
-        {
-            g.strokePath(p->path, juce::PathStrokeType(1.0));
-        }
-    }
-    void drawLine(const CPoint &start, const CPoint &end)
-    {
-        g.setColour(frameColor);
-        g.drawLine(start.x, start.y, end.x, end.y);
-    }
-
-    juce::Font font;
-    void setFont(juce::Font f) { font = f; }
-    juce::Font getFont() { return font; }
-
-    void drawString(const char *t, const CRect &r, int align = kLeftText, bool = true)
-    {
-        auto al = juce::Justification::centredLeft;
-        if (align == kCenterText)
-            al = juce::Justification::centred;
-        if (align == kRightText)
-            al = juce::Justification::centredRight;
-
-        g.setFont(font);
-        g.setColour(fontColor);
-        g.drawText(juce::CharPointer_UTF8(t), r, al);
-    }
-    void drawString(const char *c, const CPoint &p, int = 0, bool = true)
-    {
-        OKUNIMPL;
-        auto w = font.getStringWidth(juce::CharPointer_UTF8(c));
-        auto h = font.getHeight();
-        auto r = CRect(CPoint(p.x, p.y - h), CPoint(w, h));
-        drawString(c, r);
-    }
-    void drawEllipse(const CRect &r, const CDrawStyle &s)
-    {
-        if (s == kDrawFilled || s == kDrawFilledAndStroked)
-        {
-            g.setColour(fillColor);
-            g.fillEllipse(r);
-        }
-        if (s == kDrawStroked || s == kDrawFilledAndStroked)
-        {
-            g.setColour(frameColor);
-            g.drawEllipse(r, lineWidth);
-        }
-    }
-
-    CGraphicsPath *createGraphicsPath()
-    {
-        auto res = new CGraphicsPath();
-        res->remember();
-        return res;
-    }
 };
 
 struct CResourceDescription
@@ -866,6 +564,10 @@ struct BaseViewFunctions
     virtual void invalid() = 0;
     virtual CRect getControlViewSize() = 0;
     virtual CCoord getControlHeight() = 0;
+};
+
+struct CMouseWheelAxis
+{
 };
 
 struct CViewBase : public Internal::FakeRefcount, public BaseViewFunctions
@@ -1165,8 +867,7 @@ struct CViewContainer : public CView
         }
         else if (!transparent)
         {
-            dc->setFillColor(bgcol);
-            dc->drawRect(getViewSize(), kDrawFilled);
+            dc->g.fillAll(bgcol);
         }
         else
         {
@@ -1212,47 +913,7 @@ struct CFrame : public CViewContainer
     ~CFrame() = default;
 
     void draw(CDrawContext *dc) override { CViewContainer::draw(dc); }
-    void setCursor(CCursorType c)
-    {
-        auto ct = juce::MouseCursor::StandardCursorType::NormalCursor;
-        switch (c)
-        {
-        case kCursorDefault:
-            break;
-        case kCursorWait:
-            ct = juce::MouseCursor::StandardCursorType::WaitCursor;
-            break;
-        case kCursorHSize:
-            ct = juce::MouseCursor::StandardCursorType::LeftRightResizeCursor;
-            break;
-        case kCursorVSize:
-            ct = juce::MouseCursor::StandardCursorType::UpDownResizeCursor;
-            break;
-        case kCursorSizeAll:
-            ct = juce::MouseCursor::StandardCursorType::UpDownLeftRightResizeCursor;
-            break;
-        case kCursorNESWSize:
-            ct = juce::MouseCursor::StandardCursorType::TopLeftCornerResizeCursor;
-            break;
-        case kCursorNWSESize:
-            ct = juce::MouseCursor::StandardCursorType::TopRightCornerResizeCursor;
-            break;
-        case kCursorCopy:
-            ct = juce::MouseCursor::StandardCursorType::CopyingCursor;
-            break;
-        case kCursorHand:
-            ct = juce::MouseCursor::StandardCursorType::PointingHandCursor;
-            break;
-        case kCursorIBeam:
-            ct = juce::MouseCursor::StandardCursorType::IBeamCursor;
-            break;
-        case kCursorNotAllowed: // what is this?
-            ct = juce::MouseCursor::StandardCursorType::CrosshairCursor;
-            break;
-        }
 
-        ed->getJuceEditor()->setMouseCursor(juce::MouseCursor(ct));
-    }
     void invalid() override
     {
         for (auto v : views)
@@ -1269,7 +930,6 @@ struct CFrame : public CViewContainer
     void localToFrame(CRect &r) { UNIMPL; }
     void localToFrame(CPoint &p) { UNIMPL; };
     void setZoom(float z) { OKUNIMPL; }
-    CGraphicsTransform getTransform() { return CGraphicsTransform(); }
     void getPosition(float &x, float &y)
     {
         auto b = juceComponent()->getScreenPosition();
@@ -1319,223 +979,6 @@ struct IKeyboardHook
 {
     virtual int32_t onKeyDown(const VstKeyCode &code, CFrame *frame) = 0;
     virtual int32_t onKeyUp(const VstKeyCode &code, CFrame *frame) = 0;
-};
-
-struct CControl : public CView, public CControlValueInterface
-{
-    CControl(const CRect &r, IControlListener *l = nullptr, int32_t tag = 0, CBitmap *bg = nullptr)
-        : CView(r), listener(l), tag(tag)
-    {
-        juceComponent()->setBounds(r.asJuceIntRect());
-        setBackground(bg);
-    }
-    ~CControl()
-    {
-        if (mGradient)
-            mGradient->forget();
-        if (mGradientHL)
-            mGradientHL->forget();
-        /* if (bg)
-            bg->forget();
-            It seems that is not the semantic of CControl!
-            */
-    }
-
-    virtual void looseFocus() { UNIMPL; }
-    virtual void takeFocus() { UNIMPL; }
-    CButtonState getMouseButtons() { return CButtonState(); }
-    virtual float getRange() { return getMax() - getMin(); }
-    virtual float getValue() const { return value; }
-    virtual void setValue(float v) { value = v; }
-    virtual void setDefaultValue(float v) { vdef = v; }
-    virtual void setVisible(bool b)
-    {
-        if (juceComponent())
-            juceComponent()->setVisible(b);
-    }
-    virtual void setMouseEnabled(bool) { UNIMPL; }
-    virtual bool getMouseEnabled()
-    {
-        OKUNIMPL;
-        return true;
-    }
-
-    uint32_t tag;
-    virtual uint32_t getTag() const { return tag; }
-    virtual void setMax(float f) { vmax = f; }
-    virtual float getMax() { return vmax; }
-    void valueChanged() { UNIMPL; }
-    virtual void setMin(float f) { vmin = f; }
-    virtual float getMin() { return vmin; }
-    virtual void bounceValue()
-    {
-        if (value < getMin())
-            value = getMin();
-        if (value > getMax())
-            value = getMax();
-    }
-
-    virtual void beginEdit()
-    {
-        if (listener)
-            listener->controlBeginEdit(this);
-    }
-
-    virtual void endEdit()
-    {
-
-        if (listener)
-            listener->controlEndEdit(this);
-    }
-
-    COLPAIR(BackColor);
-
-    CBitmap *bg = nullptr;
-    void setBackground(CBitmap *b)
-    {
-        // This order in case b == bg
-        if (b)
-            b->remember();
-        if (bg)
-            bg->forget();
-
-        bg = b;
-    }
-    CBitmap *getBackground() { return bg; }
-
-    GSPAIR(Font, const juce::Font &, juce::Font, juce::Font());
-
-    COLPAIR(FontColor);
-    GSPAIR(Transparency, bool, bool, false);
-    GSPAIR(HoriAlign, CHoriTxtAlign, CHoriTxtAlign, CHoriTxtAlign::kLeftText);
-    COLPAIR(FrameColor);
-    COLPAIR(TextColorHighlighted);
-    COLPAIR(FrameColorHighlighted);
-
-    CGradient *mGradient = nullptr;
-    CGradient *getGradient() const { return mGradient; }
-    virtual void setGradient(CGradient *g)
-    {
-        if (g)
-            g->remember();
-        if (mGradient)
-            mGradient->forget();
-        mGradient = g;
-    }
-
-    CGradient *mGradientHL = nullptr;
-    CGradient *getGradientHighlighted() const { return mGradientHL; }
-    virtual void setGradientHighlighted(CGradient *g)
-    {
-        if (g)
-            g->remember();
-        if (mGradientHL)
-            mGradientHL->forget();
-        mGradientHL = g;
-    }
-
-    COLPAIR(FillColor);
-    COLPAIR(TextColor);
-    COLPAIR(BackgroundColor);
-
-    float value = 0.f;
-    float vmax = 1.f;
-    float vmin = 0.f;
-    float vdef = 0.f;
-    bool editing = false;
-    IControlListener *listener = nullptr;
-};
-
-struct OfCourseItHasAStringType
-{
-    OfCourseItHasAStringType(const char *x) : s(x) {}
-    OfCourseItHasAStringType(const std::string &q) : s(q) {}
-    operator std::string() const { return s; }
-
-    std::string getString() const { return s; }
-
-    std::string s;
-};
-
-struct CTextLabel : public CControl
-{
-    CTextLabel(const CRect &r, const char *s, CBitmap *bg = nullptr) : CControl(r)
-    {
-        if (bg)
-        {
-            img = std::make_unique<juceCViewConnector<juce::Component>>();
-            img->setBounds(r.asJuceIntRect());
-            img->addAndMakeVisible(*(bg->drawable.get()));
-            img->setViewCompanion(this);
-        }
-        else
-        {
-            lab = std::make_unique<juceCViewConnector<juce::Label>>();
-            lab->setText(juce::CharPointer_UTF8(s), juce::dontSendNotification);
-            lab->setBounds(r.asJuceIntRect());
-            lab->setViewCompanion(this);
-            lab->setJustificationType(juce::Justification::centred);
-        }
-    }
-
-    void setBackColor(const CColor &v) override
-    {
-        CControl::setBackColor(v);
-        if (lab)
-            lab->setColour(juce::Label::backgroundColourId, v);
-    }
-
-    void setHoriAlign(CHoriTxtAlign v) override
-    {
-        CControl::setHoriAlign(v);
-        if (lab)
-        {
-            switch (v)
-            {
-            case kRightText:
-                lab->setJustificationType(juce::Justification::centredRight);
-                break;
-            case kLeftText:
-                lab->setJustificationType(juce::Justification::centredLeft);
-                break;
-            case kCenterText:
-                lab->setJustificationType(juce::Justification::centred);
-                break;
-            }
-        }
-    }
-    void setFont(const juce::Font &v) override
-    {
-        if (lab)
-            lab->setFont(v);
-
-        CControl::setFont(v);
-    }
-    juce::Component *juceComponent() override
-    {
-        if (lab)
-            return lab.get();
-        return img.get();
-    }
-
-    CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
-    {
-        return CViewBase::onMouseDown(where, buttons);
-    }
-
-    void setFontColor(const CColor &v) override
-    {
-        CControl::setFontColor(v);
-        if (lab)
-        {
-            lab->setColour(juce::Label::ColourIds::textColourId, v);
-        }
-    }
-
-    void setAntialias(bool b) { OKUNIMPL; }
-    GSPAIR(Text, const OfCourseItHasAStringType &, OfCourseItHasAStringType, "");
-    std::unique_ptr<juceCViewConnector<juce::Label>> lab;
-    std::unique_ptr<juceCViewConnector<juce::Component>> img;
 };
 
 template <typename T> inline juceCViewConnector<T>::~juceCViewConnector() {}
@@ -1655,29 +1098,7 @@ template <typename T>
 inline void juceCViewConnector<T>::mouseWheelMove(const juce::MouseEvent &e,
                                                   const juce::MouseWheelDetails &wheel)
 {
-    if (viewCompanion->supportsJuceNativeWheel())
-    {
-        viewCompanion->mouseWheelMove(e, wheel);
-    }
-    auto b = T::getBounds().getTopLeft();
-    CPoint w(e.x + b.x, e.y + b.y);
-
-    OKUNIMPL;
-    float mouseScaleFactor = 3;
-
-    auto r = viewCompanion->onWheel(w, kMouseWheelAxisX, -mouseScaleFactor * wheel.deltaX,
-                                    CButtonState()) ||
-             viewCompanion->onWheel(w, kMouseWheelAxisY, mouseScaleFactor * wheel.deltaY,
-                                    CButtonState());
-
-    if (!r)
-    {
-        r = viewCompanion->onWheel(w, mouseScaleFactor * wheel.deltaY, CButtonState());
-    }
-    if (!r)
-    {
-        T::mouseWheelMove(e, wheel);
-    }
+    jassert(false);
 }
 template <typename T>
 inline void juceCViewConnector<T>::mouseMagnify(const juce::MouseEvent &event, float scaleFactor)
@@ -1702,13 +1123,6 @@ struct JuceVSTGUIEditorAdapter : public JuceVSTGUIEditorAdapterBase
 {
     JuceVSTGUIEditorAdapter(juce::AudioProcessorEditor *parentEd) : parentEd(parentEd) {}
     virtual ~JuceVSTGUIEditorAdapter() = default;
-    virtual bool open(void *parent) { return true; };
-    virtual void close(){};
-    virtual void controlBeginEdit(VSTGUI::CControl *p){};
-    virtual void controlEndEdit(VSTGUI::CControl *p){};
-    virtual void beginEdit(int32_t id) {}
-    virtual void endEdit(int32_t id) {}
-
     juce::AudioProcessorEditor *getJuceEditor() { return parentEd; }
 
     VSTGUI::CRect rect;

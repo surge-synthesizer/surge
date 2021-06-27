@@ -94,14 +94,11 @@ class SurgeGUIEditor : public EditorType,
     bool queue_refresh;
     virtual void toggle_mod_editing();
 
-    virtual void beginEdit(long index);
-    virtual void endEdit(long index);
-
     static long applyParameterOffset(long index);
     static long unapplyParameterOffset(long index);
 
-    bool open(void *parent) override;
-    void close() override;
+    bool open(void *parent);
+    void close();
 
     bool pause_idle_updates = false;
     int enqueuePatchId = -1;
