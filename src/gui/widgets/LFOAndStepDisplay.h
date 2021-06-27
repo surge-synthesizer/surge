@@ -38,6 +38,8 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void valueChanged() override {}
 
     bool isStepSequencer() { return lfodata->shape.val.i == lt_stepseq; }
+    bool isMSEG() { return lfodata->shape.val.i == lt_mseg; }
+    bool isFormula() { return lfodata->shape.val.i == lt_formula; }
     bool isUnipolar() { return lfodata->unipolar.val.b; }
     void invalidateIfIdIsInRange(int j) {}
     void invalidateIfAnythingIsTemposynced()
@@ -85,6 +87,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
+    void mouseDoubleClick(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
 
