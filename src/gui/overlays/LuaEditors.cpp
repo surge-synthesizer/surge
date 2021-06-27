@@ -143,7 +143,7 @@ void FormulaModulatorEditor::applyCode()
 {
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     applyButton->setEnabled(false);
-    editor->invalidateFrame();
+    editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
 }
 
@@ -305,7 +305,7 @@ void WavetableEquationEditor::applyCode()
     applyButton->setEnabled(false);
     rerenderFromUIState();
 
-    editor->invalidateFrame();
+    editor->repaintFrame();
 }
 
 void WavetableEquationEditor::rerenderFromUIState()
@@ -350,7 +350,7 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
         storage->waveTableDataMutex.unlock();
 
         delete[] wd;
-        editor->invalidateFrame();
+        editor->repaintFrame();
 
         return;
     }

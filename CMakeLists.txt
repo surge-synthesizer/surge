@@ -364,6 +364,7 @@ set(SURGE_GUI_SOURCES
 
   src/gui/widgets/EffectChooser.cpp
   src/gui/widgets/LFOAndStepDisplay.cpp
+  src/gui/widgets/MainFrame.cpp
   src/gui/widgets/MenuForDiscreteParams.cpp
   src/gui/widgets/MultiSwitch.cpp
   src/gui/widgets/ModulationSourceButton.cpp

@@ -36,7 +36,6 @@
 #include <thread>
 #include <atomic>
 
-typedef EscapeFromVSTGUI::JuceVSTGUIEditorAdapter EditorType;
 class SurgeSynthEditor;
 
 namespace Surge
@@ -56,6 +55,8 @@ struct Switch;
 struct VerticalLabel;
 struct VuMeter;
 
+struct MainFrame;
+
 struct OscillatorMenu;
 struct FxMenu;
 } // namespace Widgets
@@ -71,17 +72,16 @@ struct PatchStoreDialog;
 } // namespace Overlays
 } // namespace Surge
 
-class SurgeGUIEditor : public EditorType,
-                       public VSTGUI::IControlListener,
+class SurgeGUIEditor : public VSTGUI::IControlListener,
                        public VSTGUI::IKeyboardHook,
                        public SurgeStorage::ErrorListener
 {
-  private:
-    using super = EditorType;
-
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
     virtual ~SurgeGUIEditor();
+
+    std::unique_ptr<Surge::Widgets::MainFrame> frame;
+    Surge::Widgets::MainFrame *getFrame() { return frame.get(); }
 
     std::atomic<int> errorItemCount{0};
     std::vector<std::pair<std::string, std::string>> errorItems;
@@ -306,7 +306,7 @@ class SurgeGUIEditor : public EditorType,
     int getWindowSizeX() const { return wsx; }
     int getWindowSizeY() const { return wsy; }
 
-    void invalidateFrame() const { frame->invalid(); }
+    void repaintFrame();
     /*
      * We have an enumerated set of overlay tags which we can push
      * to the UI. You *have* to give a new overlay type a tag in
@@ -335,18 +335,13 @@ class SurgeGUIEditor : public EditorType,
     void dismissEditorOfType(OverlayTags ofType);
     OverlayTags topmostEditorTag()
     {
-        if (!editorOverlay.size())
-            return NO_EDITOR;
-        return editorOverlay.back().first;
+        static bool warnTET = false;
+        jassert(warnTET);
+        warnTET = true;
+        return NO_EDITOR;
     }
     bool isAnyOverlayPresent(OverlayTags tag)
     {
-        for (auto el : editorOverlay)
-        {
-            if (el.first == tag)
-                return true;
-        }
-
         if (juceOverlays.find(tag) != juceOverlays.end() && juceOverlays[tag])
             return true;
 
@@ -474,17 +469,11 @@ class SurgeGUIEditor : public EditorType,
     bool setControlFromString(modsources ms, const std::string &s);
     friend struct Surge::Overlays::TypeinParamEditor;
     friend struct Surge::Overlays::PatchStoreDialog;
+    friend struct Surge::Widgets::MainFrame;
 
     VSTGUI::CControlValueInterface *msegEditSwitch = nullptr;
-    std::vector<VSTGUI::CView *> removeFromFrame;
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
-
-    // FIXME - these can all go now
-    std::vector<std::pair<OverlayTags, VSTGUI::CViewContainer *>> editorOverlay;
-    std::unordered_map<VSTGUI::CViewContainer *, VSTGUI::CView *>
-        editorOverlayContentsWeakReference;
-    std::unordered_map<VSTGUI::CViewContainer *, std::function<void()>> editorOverlayOnClose;
 
     std::unique_ptr<Surge::Overlays::MiniEdit> miniEdit;
 

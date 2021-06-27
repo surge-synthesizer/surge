@@ -45,6 +45,7 @@
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
 #include "widgets/LFOAndStepDisplay.h"
+#include "widgets/MainFrame.h"
 #include "widgets/MenuForDiscreteParams.h"
 #include "widgets/ModulationSourceButton.h"
 #include "widgets/ModulatableSlider.h"
@@ -85,7 +86,7 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
     return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q);
 }
 
-SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) : super(jEd)
+SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
     synth->storage.addErrorListener(this);
     synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
@@ -119,12 +120,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth) :
         // dawExtraState zoomFactor wins defaultZoom
         initialZoomFactor = instanceZoomFactor;
     }
-
-    rect.left = 0;
-    rect.top = 0;
-
-    rect.right = getWindowSizeX();
-    rect.bottom = getWindowSizeY();
 
     editor_open = false;
     queue_refresh = false;
@@ -177,12 +172,6 @@ SurgeGUIEditor::~SurgeGUIEditor()
     auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
     populateDawExtraState(synth); // If I must die, leave my state for future generations
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
-    if (frame)
-    {
-        frame->close();
-    }
-
-    frame->forget();
     synth->storage.removeErrorListener(this);
 }
 
@@ -228,20 +217,12 @@ void SurgeGUIEditor::idle()
             // isFirstIdle = false;
             firstIdleCountdown--;
 
-            frame->invalid();
+            frame->repaint();
         }
         if (synth->learn_param < 0 && synth->learn_custom < 0 && midiLearnOverlay != nullptr)
         {
             hideMidiLearnOverlay();
         }
-        for (auto c : removeFromFrame)
-        {
-            if (frame->isChild(c))
-            {
-                frame->removeView(c);
-            }
-        }
-        removeFromFrame.clear();
 
         {
             bool expected = true;
@@ -450,7 +431,7 @@ void SurgeGUIEditor::idle()
         {
             refreshIndices.resize(n_total_params);
             std::iota(std::begin(refreshIndices), std::end(refreshIndices), 0);
-            frame->invalid();
+            frame->repaint();
         }
         else
         {
@@ -776,7 +757,7 @@ int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
                                                     Surge::Storage::SkinReloadViaF5, 0))
             {
                 bitmapStore.reset(new SurgeBitmaps());
-                bitmapStore->setupBitmapsForFrame(frame);
+                bitmapStore->setupBuiltinBitmaps(frame);
 
                 if (!currentSkin->reloadSkin(bitmapStore))
                 {
@@ -909,51 +890,6 @@ void SurgeGUIEditor::setDisabledForParameter(Parameter *p,
     }
 }
 
-#if PORTED_TO_JUCE
-class LastChanceEventCapture : public CControl
-{
-  public:
-    LastChanceEventCapture(const CPoint &sz, SurgeGUIEditor *ed)
-        : CControl(CRect(CPoint(0, 0), sz)), editor(ed)
-    {
-    }
-    void draw(CDrawContext *pContext) override { return; }
-
-    CMouseEventResult onMouseDown(CPoint &where, const CButtonState &buttons) override
-    {
-        if (buttons & (kMButton | kButton4 | kButton5))
-        {
-            if (editor)
-            {
-                editor->toggle_mod_editing();
-            }
-
-            return kMouseEventHandled;
-        }
-
-        if (buttons & kRButton)
-        {
-            if (editor)
-            {
-                CRect menuRect;
-                menuRect.offset(where.x, where.y);
-
-                editor->useDevMenu = false;
-                editor->showSettingsMenu(menuRect);
-            }
-
-            return kMouseEventHandled;
-        }
-
-        return kMouseEventNotHandled;
-    }
-
-  private:
-    SurgeGUIEditor *editor = nullptr;
-    CLASS_METHODS(LastChanceEventCapture, CControl);
-};
-#endif
-
 void SurgeGUIEditor::openOrRecreateEditor()
 {
 #ifdef INSTRUMENT_UI
@@ -963,18 +899,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
         return;
     assert(frame);
 
-    removeFromFrame.clear();
-
     editorOverlayTagAtClose = "";
     if (editor_open)
     {
         editorOverlayTagAtClose = topmostEditorTag();
-        for (auto el : editorOverlay)
-        {
-            el.second->remember();
-            frame->removeView(el.second);
-        }
-
         close_editor();
     }
     CPoint nopoint(0, 0);
@@ -1553,20 +1481,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     frame->juceComponent()->addAndMakeVisible(*debugLabel);
 
 #endif
-    for (auto el : editorOverlay)
-    {
-        frame->addView(el.second);
-        auto contents = editorOverlayContentsWeakReference[el.second];
-
-        /*
-         * This is a hack for 1.8 which we have to clean up in 1.9 when we do #3223
-         */
-        auto mse = dynamic_cast<RefreshableOverlay *>(contents);
-        if (mse)
-        {
-            mse->forceRefresh();
-        }
-    }
 
     if (showMSEGEditorOnNextIdleOrOpen)
     {
@@ -1591,14 +1505,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
     editor_open = true;
     queue_refresh = false;
 
-    frame->invalid();
+    frame->repaint();
 }
 
 void SurgeGUIEditor::close_editor()
 {
     editor_open = false;
-    frame->removeAll(true);
-    frame->juceComponent()->removeAllChildren();
+    frame->removeAllChildren();
     setzero(param);
 }
 
@@ -1608,18 +1521,17 @@ bool SurgeGUIEditor::open(void *parent)
     float fzf = getZoomFactor() / 100.0;
     CRect wsize(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
 
-    CFrame *nframe = new CFrame(wsize, this);
-
-    nframe->remember();
+    frame = std::make_unique<Surge::Widgets::MainFrame>();
+    frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
+    frame->setSurgeGUIEditor(this);
+    juceEditor->addAndMakeVisible(*frame);
+    /*
+     * SET UP JUCE EDITOR BETTER
+     */
 
     bitmapStore.reset(new SurgeBitmaps());
-    bitmapStore->setupBitmapsForFrame(nframe);
+    bitmapStore->setupBuiltinBitmaps();
     currentSkin->reloadSkin(bitmapStore);
-    nframe->setZoom(fzf);
-
-    frame = nframe;
-
-    frame->open(parent, platformType);
 
     reloadFromSkin();
     openOrRecreateEditor();
@@ -1641,13 +1553,6 @@ bool SurgeGUIEditor::open(void *parent)
 void SurgeGUIEditor::close()
 {
     populateDawExtraState(synth);
-    for (auto el : editorOverlay)
-    {
-        frame->removeView(el.second);
-        auto f = editorOverlayOnClose[el.second];
-        f();
-        editorOverlayTagAtClose = el.first;
-    }
     firstIdleCountdown = 0;
 }
 
@@ -1879,9 +1784,9 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
         {
             yExtra = SurgeSynthEditor::extraYSpaceForVirtualKeyboard;
         }
-        parentEd->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
+        juceEditor->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
     }
-    parentEd->setScaleFactor(zoomFactor * 0.01);
+    juceEditor->setScaleFactor(zoomFactor * 0.01);
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
@@ -2762,7 +2667,7 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(VSTGUI::CRect &menuRect)
                             Surge::Storage::updateUserDefaultValue(
                                 &(this->synth->storage),
                                 Surge::Storage::ShowGhostedLFOWaveReference, !lfoone);
-                            this->frame->invalid();
+                            this->frame->repaint();
                         });
 
     // Middle C submenu
@@ -2851,7 +2756,7 @@ bool SurgeGUIEditor::getShowVirtualKeyboard()
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
     bool defaultVal = false;
-    if (parentEd->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
         defaultVal = false;
@@ -2862,7 +2767,7 @@ bool SurgeGUIEditor::getShowVirtualKeyboard()
 void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
-    if (parentEd->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
     }
@@ -2974,7 +2879,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
 
     skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reload Current Skin"), [this]() {
         this->bitmapStore.reset(new SurgeBitmaps());
-        this->bitmapStore->setupBitmapsForFrame(frame);
+        this->bitmapStore->setupBuiltinBitmaps();
 
         if (!this->currentSkin->reloadSkin(this->bitmapStore))
         {
@@ -3214,22 +3119,14 @@ void SurgeGUIEditor::reloadFromSkin()
 
     if (bg != "")
     {
-        CScalableBitmap *cbm = bitmapStore->getBitmapByStringID(bg);
-        if (cbm)
-        {
-            cbm->setExtraScaleFactor(getZoomFactor());
-            frame->setBackground(cbm);
-        }
+        auto *cbm = bitmapStore->getDrawableByStringID(bg);
+        frame->setBackground(cbm);
     }
     else
     {
-        CScalableBitmap *cbm = bitmapStore->getBitmap(IDB_MAIN_BG);
-        cbm->setExtraScaleFactor(getZoomFactor());
+        auto *cbm = bitmapStore->getDrawable(IDB_MAIN_BG);
         frame->setBackground(cbm);
     }
-
-    auto c = currentSkin->getColor(Colors::Dialog::Entry::Focus);
-    frame->setFocusColor(c);
 
     wsx = currentSkin->getWindowSizeX();
     wsy = currentSkin->getWindowSizeY();
@@ -3237,9 +3134,6 @@ void SurgeGUIEditor::reloadFromSkin()
     float sf = 1;
 
     frame->setSize(wsx * sf, wsy * sf);
-
-    rect.right = wsx * sf;
-    rect.bottom = wsy * sf;
 
     setZoomFactor(getZoomFactor(), true);
 
@@ -3588,7 +3482,7 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     auto s = db.getSkin(entry);
     this->currentSkin = s;
     this->bitmapStore.reset(new SurgeBitmaps());
-    this->bitmapStore->setupBitmapsForFrame(frame);
+    this->bitmapStore->setupBuiltinBitmaps();
     if (!this->currentSkin->reloadSkin(this->bitmapStore))
     {
         std::ostringstream oss;
@@ -3632,30 +3526,8 @@ void SurgeGUIEditor::sliderHoverEnd(int tag)
 
 void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 {
-    if (editorOverlay.size() == 0 && juceOverlays.empty())
+    if (juceOverlays.empty())
         return;
-
-    auto newO = editorOverlay;
-    newO.clear();
-    for (auto el : editorOverlay)
-    {
-        if (el.first == ofType)
-        {
-            el.second->setVisible(false);
-            auto f = editorOverlayOnClose[el.second];
-            f();
-
-            editorOverlayOnClose.erase(el.second);
-            editorOverlayContentsWeakReference.erase(el.second);
-
-            removeFromFrame.push_back(el.second);
-        }
-        else
-        {
-            newO.push_back(el);
-        }
-    }
-    editorOverlay = newO;
 
     if (juceOverlays.find(ofType) != juceOverlays.end())
     {
@@ -4521,7 +4393,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     lfoNameLabel->repaint();
 
     // And now we have dynamic labels really anything
-    frame->invalid();
+    frame->repaint();
 }
 
 void SurgeGUIEditor::closeStorePatchDialog() { dismissEditorOfType(STORE_PATCH); }

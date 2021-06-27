@@ -18,51 +18,7 @@
 #include "SurgeGUIEditorTags.h"
 
 #include "widgets/ParameterInfowindow.h"
-
-#if 0
-void SurgeGUIEditor::draw_infowindow(int ptag, VSTGUI::BaseViewFunctions *control, bool modulate,
-                                     bool forceMB)
-{
-    long buttons = 1; // context?context->getMouseButtons():1;
-
-    if (buttons && forceMB)
-        return; // don't draw via CC if MB is down
-
-    auto modValues = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                         Surge::Storage::ModWindowShowsValues, 0);
-
-    infowindow->setExtendedMDIWS(modValues);
-
-    if (buttons || forceMB)
-    {
-        // make sure an infowindow doesn't appear twice
-        if (infowindow->isVisible())
-        {
-            infowindow->setVisible(false);
-        }
-
-        infowindow->setBoundsToAccompany(control->getControlViewSize().asJuceIntRect(),
-                                         getFrame()->juceComponent()->getLocalBounds());
-        infowindow->setVisible(true);
-        infowindow->repaint();
-        // on Linux the infoview closes too soon
-#if LINUX
-        clear_infoview_countdown = 100;
-#else
-        clear_infoview_countdown = 40;
-#endif
-    }
-    else
-    {
-        if (infowindow->isVisible())
-        {
-            auto b = infowindow->getBounds();
-            infowindow->setVisible(false);
-            frame->juceComponent()->repaint(b);
-        }
-    }
-}
-#endif
+#include "widgets/MainFrame.h"
 
 void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
                                     bool isEditingModulation)
@@ -150,3 +106,5 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
         paramInfowindow->clearMDIWS();
     }
 }
+
+void SurgeGUIEditor::repaintFrame() { frame->repaint(); }
