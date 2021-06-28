@@ -115,40 +115,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     if (tag == tag_lfo_menu)
     {
         control->setValue(0);
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showLfoMenu(where);
         return 1;
     }
 
     if (tag == tag_status_zoom)
     {
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showZoomMenu(where);
         return 1;
     }
 
     if (tag == tag_status_mpe)
     {
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showMPEMenu(where);
         return 1;
     }
 
     if (tag == tag_status_tune)
     {
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showTuningMenu(where);
         return 1;
     }
@@ -166,28 +154,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         if (tag == tag_settingsmenu)
         {
-            CRect r = viewSize;
-            CRect menuRect;
-            CPoint where;
-            frame->getCurrentMouseLocation(where);
-            frame->localToFrame(where);
-
-            menuRect.offset(where.x, where.y);
-
-            useDevMenu = true;
-            showSettingsMenu(menuRect);
+            showSettingsMenu(juce::Point<int>{});
             return 1;
         }
 
         if (tag == tag_osc_select)
         {
-            CRect r = viewSize;
+            auto r = control->asJuceComponent()->getBounds();
+            auto where =
+                frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
 
-            CPoint where;
-            frame->getCurrentMouseLocation(where);
-            frame->localToFrame(where);
-
-            int a = limit_range((int)((3 * (where.x - r.left)) / r.getWidth()), 0, 2);
+            int a = limit_range((int)((3 * (where.x - r.getX())) / r.getWidth()), 0, 2);
 
             auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("osc-select");
@@ -223,32 +200,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 });
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
+            contextMenu.showMenuAsync(optionsForPosition(cwhere));
 
             return 1;
         }
 
         if (tag == tag_scene_select)
         {
-            CRect r = viewSize;
-            CRect menuRect;
-            CPoint where;
-            frame->getCurrentMouseLocation(where);
-            frame->localToFrame(where);
-
+            auto where =
+                frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto r = control->asJuceComponent()->getBounds();
             // Assume vertical alignment of the scene buttons
-            int a = limit_range((int)((2 * (where.y - r.top)) / r.getHeight()), 0, n_scenes);
+            int a = limit_range((int)((2 * (where.y - r.getY())) / r.getHeight()), 0, n_scenes);
 
             if (auto aschsw = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
             {
                 if (aschsw->getColumns() == n_scenes)
                 {
                     // We are horizontal due to skins or whatever so
-                    a = limit_range((int)((2 * (where.x - r.left)) / r.getWidth()), 0, n_scenes);
+                    a = limit_range((int)((2 * (where.x - r.getX())) / r.getWidth()), 0, n_scenes);
                 }
             }
-
-            menuRect.offset(where.x, where.y);
 
             auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("scene-select");
@@ -277,7 +250,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     queue_refresh = true;
                                 });
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
+            contextMenu.showMenuAsync(optionsForPosition(cwhere));
 
             return 1;
         }
@@ -846,12 +820,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         // all the RMB context menus
         if (button & kRButton)
         {
-            CRect menuRect;
-            CPoint where;
-            frame->getCurrentMouseLocation(where);
-            frame->localToFrame(where);
-
-            menuRect.offset(where.x, where.y);
+            juce::Point<int> menuRect{};
 
             auto contextMenu = juce::PopupMenu();
             std::string helpurl = helpURLFor(p);
@@ -2146,10 +2115,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_status_zoom)
     {
         control->setValue(0);
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showZoomMenu(where);
         return;
     }
@@ -2157,9 +2123,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_lfo_menu)
     {
         control->setValue(0);
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
+        juce::Point<int> where{};
 
         showLfoMenu(where);
         return;
@@ -2429,23 +2393,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_settingsmenu:
     {
-        CRect r = viewSize;
-        CRect menuRect;
-        CPoint where;
-        frame->getCurrentMouseLocation(where);
-        frame->localToFrame(where);
-
-        menuRect.offset(where.x, where.y);
+        juce::Point<int> menuPoint;
 
         // settings is a special case since it uses value here.
         if (auto msc = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
         {
             msc->isHovered = false;
             msc->repaint();
+            menuPoint = msc->getBounds().getTopLeft();
         }
 
         useDevMenu = false;
-        showSettingsMenu(menuRect);
+        showSettingsMenu(menuPoint);
     }
     break;
     case tag_osc_select:

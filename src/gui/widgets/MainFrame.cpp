@@ -31,8 +31,7 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
     if (event.mods.isPopupMenu())
     {
         editor->useDevMenu = false;
-        auto r = VSTGUI::CRect();
-        editor->showSettingsMenu(r);
+        editor->showSettingsMenu(juce::Point<int>{});
     }
 }
 } // namespace Widgets

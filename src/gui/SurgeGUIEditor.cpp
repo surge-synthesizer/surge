@@ -1657,30 +1657,32 @@ void SurgeGUIEditor::toggleMPE()
         statusMPE->asJuceComponent()->repaint();
     }
 }
-void SurgeGUIEditor::showZoomMenu(VSTGUI::CPoint &where)
-{
-    CRect menuRect;
-    menuRect.offset(where.x, where.y);
-    auto m = makeZoomMenu(menuRect, true);
 
-    m.showMenuAsync(juce::PopupMenu::Options());
+juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<int> &where)
+{
+    auto o = juce::PopupMenu::Options();
+    if (where.x > 0 && where.y > 0)
+    {
+        auto r = juce::Rectangle<int>().withPosition(frame->localPointToGlobal(where));
+        o = o.withTargetScreenArea(r);
+    }
+    return o;
+}
+void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where)
+{
+    auto m = makeZoomMenu(where, true);
+    m.showMenuAsync(optionsForPosition(where));
 }
 
-void SurgeGUIEditor::showMPEMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where)
 {
-    CRect menuRect;
-    menuRect.offset(where.x, where.y);
-    auto m = makeMpeMenu(menuRect, true);
-
-    m.showMenuAsync(juce::PopupMenu::Options());
+    auto m = makeMpeMenu(where, true);
+    m.showMenuAsync(optionsForPosition(where));
 }
-void SurgeGUIEditor::showLfoMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where)
 {
-    CRect menuRect;
-    menuRect.offset(where.x, where.y);
-    auto m = makeLfoMenu(menuRect);
-
-    m.showMenuAsync(juce::PopupMenu::Options());
+    auto m = makeLfoMenu(where);
+    m.showMenuAsync(optionsForPosition(where));
 }
 
 void SurgeGUIEditor::toggleTuning()
@@ -1695,13 +1697,11 @@ void SurgeGUIEditor::toggleTuning()
 
     this->synth->refresh_editor = true;
 }
-void SurgeGUIEditor::showTuningMenu(VSTGUI::CPoint &where)
+void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where)
 {
-    CRect menuRect;
-    menuRect.offset(where.x, where.y);
-    auto m = makeTuningMenu(menuRect, true);
+    auto m = makeTuningMenu(where, true);
 
-    m.showMenuAsync(juce::PopupMenu::Options());
+    m.showMenuAsync(optionsForPosition(where));
 }
 
 void SurgeGUIEditor::scaleFileDropped(std::string fn)
@@ -1826,7 +1826,7 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
 #endif
 }
 
-void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
+void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &menuRect)
 {
     auto settingsMenu = juce::PopupMenu();
 
@@ -1902,10 +1902,10 @@ void SurgeGUIEditor::showSettingsMenu(CRect &menuRect)
 
     settingsMenu.addItem("About Surge", [this]() { this->showAboutScreen(); });
 
-    settingsMenu.showMenuAsync(juce::PopupMenu::Options());
+    settingsMenu.showMenuAsync(optionsForPosition(menuRect));
 }
 
-juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &menuRect)
 {
     int currentLfoId = modsource_editor[current_scene] - ms_lfo1;
     int shapev = synth->storage.getPatch().scene[current_scene].lfo[currentLfoId].shape.val.i;
@@ -2017,7 +2017,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(VSTGUI::CRect &menuRect)
     return lfoSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &menuRect, bool showhelp)
 {
     auto mpeSubMenu = juce::PopupMenu();
 
@@ -2050,8 +2050,8 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhe
     mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss.str().c_str()), [this, menuRect]() {
         // FIXME! This won't work on Linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range",
-                          menuRect.getTopLeft(), [this](const std::string &c) {
+        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range", menuRect,
+                          [this](const std::string &c) {
                               int newVal = ::atoi(c.c_str());
                               this->synth->storage.mpePitchBendRange = newVal;
                           });
@@ -2066,7 +2066,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhe
         // FIXME! This won't work on linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
-                          menuRect.getTopLeft(), [this](const std::string &s) {
+                          menuRect, [this](const std::string &s) {
                               int newVal = ::atoi(s.c_str());
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::MPEPitchBendRange,
@@ -2084,7 +2084,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(VSTGUI::CRect &menuRect, bool showhe
     return mpeSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect &menuRect,
+juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(const juce::Point<int> &menuRect,
                                                         bool updateDefaults)
 {
     auto monoSubMenu = juce::PopupMenu();
@@ -2126,7 +2126,7 @@ juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(VSTGUI::CRect &menuRect,
     return monoSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &menuRect, bool showhelp)
 {
     auto tuningSubMenu = juce::PopupMenu();
 
@@ -2295,7 +2295,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, bool sho
 
             char c[256];
             snprintf(c, 256, "440.0");
-            promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma, menuRect.getTopLeft(),
+            promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma, menuRect,
                               [this](const std::string &s) {
                                   float freq = ::atof(s.c_str());
                                   auto kb = Tunings::tuneA69To(freq);
@@ -2397,7 +2397,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(VSTGUI::CRect &menuRect, bool sho
     return tuningSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showhelp)
+juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &menuRect, bool showhelp)
 {
     auto zoomSubMenu = juce::PopupMenu();
 
@@ -2489,7 +2489,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showh
                 char c[256];
                 snprintf(c, 256, "%d", (int)zoomFactor);
                 promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level",
-                                  menuRect.getTopLeft(), [this](const std::string &s) {
+                                  menuRect, [this](const std::string &s) {
                                       int newVal = ::atoi(s.c_str());
                                       Surge::Storage::updateUserDefaultValue(
                                           &(synth->storage), Surge::Storage::DefaultZoom, newVal);
@@ -2501,7 +2501,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(VSTGUI::CRect &menuRect, bool showh
     return zoomSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &menuRect)
 {
     bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                          Surge::Storage::TouchMouseMode, false);
@@ -2581,7 +2581,7 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(VSTGUI::CRect &menuRect)
     return mouseMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &menuRect)
 {
     auto patchDefMenu = juce::PopupMenu();
 
@@ -2594,7 +2594,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(VSTGUI::CRect &menuRect)
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
         promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
-                          menuRect.getTopLeft(), [this](const std::string &s) {
+                          menuRect, [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, s);
                           });
@@ -2609,7 +2609,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(VSTGUI::CRect &menuRect)
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
         promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
-                          menuRect.getTopLeft(), [this](const std::string &s) {
+                          menuRect, [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
                           });
@@ -2634,7 +2634,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(VSTGUI::CRect &menuRect)
     return patchDefMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &menuRect)
 {
     auto dispDefMenu = juce::PopupMenu();
 
@@ -2696,7 +2696,7 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(VSTGUI::CRect &menuRect)
     return dispDefMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &menuRect)
 {
     auto wfMenu = juce::PopupMenu();
 
@@ -2774,7 +2774,7 @@ void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
 }
 
-juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &menuRect)
 {
     auto skinSubMenu = juce::PopupMenu();
 
@@ -2947,7 +2947,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(VSTGUI::CRect &menuRect)
     return skinSubMenu;
 }
 
-juce::PopupMenu SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &menuRect)
 {
     auto dataSubMenu = juce::PopupMenu();
 
@@ -3017,7 +3017,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(VSTGUI::CRect &menuRect)
 // default is a value to default to,
 // setSmooth is a function called to set the smoothing value
 juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
-    VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
+    const juce::Point<int> &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
     std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth)
 {
     auto smoothMenu = juce::PopupMenu();
@@ -3038,7 +3038,7 @@ juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
     return smoothMenu;
 };
 
-juce::PopupMenu SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &menuRect)
 {
     auto midiSubMenu = juce::PopupMenu();
 
@@ -3058,7 +3058,7 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(VSTGUI::CRect &menuRect)
         char msn[256];
         msn[0] = 0;
         promptForMiniEdit(
-            msn, "MIDI Mapping Name", "Save MIDI Mapping", menuRect.getTopLeft(),
+            msn, "MIDI Mapping Name", "Save MIDI Mapping", menuRect,
             [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); });
     });
 
@@ -3163,7 +3163,7 @@ void SurgeGUIEditor::reloadFromSkin()
     setJUCEColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(96, 96, 96));
 }
 
-juce::PopupMenu SurgeGUIEditor::makeDevMenu(VSTGUI::CRect &menuRect)
+juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &menuRect)
 {
     auto devSubMenu = juce::PopupMenu();
 
