@@ -16,8 +16,8 @@
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
-#include "SurgeBitmaps.h"
-#include "CScalableBitmap.h"
+#include "SurgeImageStore.h"
+#include "SurgeImage.h"
 
 #include "UserDefaults.h"
 #include "SkinSupport.h"
@@ -1028,9 +1028,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
                 if (label)
                 {
-                    auto vr =
-                        fxRect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, 12).translated(
-                            0, yofs * synth->fx[current_fx]->group_label_ypos(i));
+                    auto vr = fxRect.withTrimmedTop(-1)
+                                  .withTrimmedRight(-5)
+                                  .translated(5, -12)
+                                  .translated(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
                     if (!effectLabels[i])
                     {
                         effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
@@ -1226,7 +1227,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fc->setBounds(skinCtrl->getRect());
             fc->setTag(tag_fx_select);
             fc->setSkin(currentSkin, bitmapStore);
-            fc->setBackgroundDrawable(bitmapStore->getDrawable(IDB_FX_GRID));
+            fc->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID)->getDrawable());
             fc->setCurrentEffect(current_fx);
 
             for (int fxi = 0; fxi < n_fx_slots; fxi++)
@@ -1438,7 +1439,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
             if (image.isJust())
             {
-                auto bmp = bitmapStore->getDrawableByStringID(image.fromJust());
+                auto bmp = bitmapStore->getImageByStringID(image.fromJust())->getDrawable();
                 if (bmp)
                 {
                     jassert(false);
@@ -1518,7 +1519,7 @@ bool SurgeGUIEditor::open(void *parent)
      * SET UP JUCE EDITOR BETTER
      */
 
-    bitmapStore.reset(new SurgeBitmaps());
+    bitmapStore.reset(new SurgeImageStore());
     bitmapStore->setupBuiltinBitmaps();
     currentSkin->reloadSkin(bitmapStore);
 
@@ -2866,7 +2867,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &menuRect)
     }
 
     skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reload Current Skin"), [this]() {
-        this->bitmapStore.reset(new SurgeBitmaps());
+        this->bitmapStore.reset(new SurgeImageStore());
         this->bitmapStore->setupBuiltinBitmaps();
 
         if (!this->currentSkin->reloadSkin(this->bitmapStore))
@@ -3107,12 +3108,12 @@ void SurgeGUIEditor::reloadFromSkin()
 
     if (bg != "")
     {
-        auto *cbm = bitmapStore->getDrawableByStringID(bg);
+        auto *cbm = bitmapStore->getImageByStringID(bg)->getDrawable();
         frame->setBackground(cbm);
     }
     else
     {
-        auto *cbm = bitmapStore->getDrawable(IDB_MAIN_BG);
+        auto *cbm = bitmapStore->getImage(IDB_MAIN_BG)->getDrawable();
         frame->setBackground(cbm);
     }
 
@@ -3467,7 +3468,7 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     auto &db = Surge::GUI::SkinDB::get();
     auto s = db.getSkin(entry);
     this->currentSkin = s;
-    this->bitmapStore.reset(new SurgeBitmaps());
+    this->bitmapStore.reset(new SurgeImageStore());
     this->bitmapStore->setupBuiltinBitmaps();
     if (!this->currentSkin->reloadSkin(this->bitmapStore))
     {
@@ -3536,7 +3537,7 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     ol->setTitle(editorTitle);
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);
-    ol->setIcon(bitmapStore->getDrawable(IDB_SURGE_ICON));
+    ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON)->getDrawable());
     ol->setShowCloseButton(showCloseButton);
     ol->setCloseOverlay([this, editorTag, onClose]() {
         this->dismissEditorOfType(editorTag);
@@ -4051,9 +4052,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         oscMenu->addListener(this);
         oscMenu->setStorage(&(synth->storage));
         oscMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
-        oscMenu->setBackgroundDrawable(bitmapStore->getDrawable(IDB_OSC_MENU));
+        oscMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_OSC_MENU)->getDrawable());
         auto id = currentSkin->hoverImageIdForResource(IDB_OSC_MENU, Surge::GUI::Skin::HOVER);
-        auto bhov = bitmapStore->getDrawableByStringID(id);
+        auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
         oscMenu->setHoverBackgroundDrawable(bhov);
         oscMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         oscMenu->setOscillatorStorage(
@@ -4085,9 +4086,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->addListener(this);
         fxMenu->setStorage(&(synth->storage));
         fxMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
-        fxMenu->setBackgroundDrawable(bitmapStore->getDrawable(IDB_MENU_AS_SLIDER));
+        fxMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_MENU_AS_SLIDER)->getDrawable());
         auto id = currentSkin->hoverImageIdForResource(IDB_MENU_AS_SLIDER, Surge::GUI::Skin::HOVER);
-        auto bhov = bitmapStore->getDrawableByStringID(id);
+        auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
         fxMenu->setHoverBackgroundDrawable(bhov);
         fxMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         fxMenu->setFxStorage(&synth->storage.getPatch().fx[current_fx]);
@@ -4199,15 +4200,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
         if (pv.isJust())
         {
-            hsw->setBackgroundDrawable(bitmapStore->getDrawableByStringID(pv.fromJust()));
+            hsw->setBackgroundDrawable(
+                bitmapStore->getImageByStringID(pv.fromJust())->getDrawable());
             jassert(false); // hover
         }
         else
         {
-            hsw->setBackgroundDrawable(bitmapStore->getDrawable(IDB_FILTER_MENU));
+            hsw->setBackgroundDrawable(bitmapStore->getImage(IDB_FILTER_MENU)->getDrawable());
             auto id =
                 currentSkin->hoverImageIdForResource(IDB_FILTER_MENU, Surge::GUI::Skin::HOVER);
-            auto bhov = bitmapStore->getDrawableByStringID(id);
+            auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
             hsw->setHoverBackgroundDrawable(bhov);
         }
 
@@ -4246,10 +4248,12 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 auto drr = rect.withWidth(18);
 
                 hsw->setDragRegion(drr);
-                hsw->setDragGlyph(bitmapStore->getDrawable(IDB_FILTER_ICONS), 18);
+                hsw->setDragGlyph(bitmapStore->getImage(IDB_FILTER_ICONS)->getDrawable(), 18);
                 hsw->setDragGlyphHover(
-                    bitmapStore->getDrawableByStringID(currentSkin->hoverImageIdForResource(
-                        IDB_FILTER_ICONS, Surge::GUI::Skin::HOVER)));
+                    bitmapStore
+                        ->getImageByStringID(currentSkin->hoverImageIdForResource(
+                            IDB_FILTER_ICONS, Surge::GUI::Skin::HOVER))
+                        ->getDrawable());
             }
             else
             {
@@ -4579,7 +4583,7 @@ void SurgeGUIEditor::hideAboutScreen() { frame->removeChildComponent(aboutScreen
 
 void SurgeGUIEditor::showMidiLearnOverlay(const juce::Rectangle<int> &r)
 {
-    midiLearnOverlay = bitmapStore->getDrawable(IDB_MIDI_LEARN)->createCopy();
+    midiLearnOverlay = bitmapStore->getImage(IDB_MIDI_LEARN)->getDrawable()->createCopy();
     midiLearnOverlay->setInterceptsMouseClicks(false, false);
     midiLearnOverlay->setBounds(r);
     frame->addAndMakeVisible(midiLearnOverlay.get());

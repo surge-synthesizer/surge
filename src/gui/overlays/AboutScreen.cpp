@@ -19,6 +19,7 @@
 #include "CPUFeatures.h"
 #include "version.h"
 #include "RuntimeFont.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {
@@ -250,7 +251,10 @@ void AboutScreen::mouseUp(const juce::MouseEvent &e)
         editor->hideAboutScreen();
 }
 
-void AboutScreen::onSkinChanged() { logo = associatedBitmapStore->getDrawable(IDB_ABOUT_BG); }
+void AboutScreen::onSkinChanged()
+{
+    logo = associatedBitmapStore->getImage(IDB_ABOUT_BG)->getDrawable();
+}
 
 } // namespace Overlays
 } // namespace Surge

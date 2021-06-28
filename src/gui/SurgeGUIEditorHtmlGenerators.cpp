@@ -617,12 +617,12 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     startSection("loadedImages", "Runtime Loaded Images");
     {
         htmls << "<ul>\n";
-        auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeBitmaps::STRINGID);
+        auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::STRINGID);
         for (auto v : r1)
         {
             htmls << "<li>" << v << "</li>\n";
         }
-        auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeBitmaps::PATH);
+        auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::PATH);
         for (auto v : r2)
         {
             htmls << "<li>" << v << "</li>\n";

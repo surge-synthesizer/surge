@@ -2402,7 +2402,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         {
             msc->isHovered = false;
             msc->repaint();
-            menuPoint = msc->getBounds().getTopLeft();
+            menuPoint = msc->getBounds().getTopRight();
         }
 
         useDevMenu = false;

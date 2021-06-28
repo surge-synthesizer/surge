@@ -1,33 +1,33 @@
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 
-#include "CScalableBitmap.h"
+#include "SurgeImage.h"
 #include <iostream>
 #include <cassert>
 
 using namespace VSTGUI;
 
-std::atomic<int> SurgeBitmaps::instances(0);
-SurgeBitmaps::SurgeBitmaps()
+std::atomic<int> SurgeImageStore::instances(0);
+SurgeImageStore::SurgeImageStore()
 {
     instances++;
 #ifdef INSTRUMENT_UI
-    Surge::Debug::record("SurgeBitmaps::SurgeBitmaps");
+    Surge::Debug::record("SurgeImageStore::SurgeImageStore");
 #endif
 
-    // std::cout << "Constructing a SurgeBitmaps; Instances is " << instances << std::endl;
+    // std::cout << "Constructing a SurgeImageStore; Instances is " << instances << std::endl;
 }
 
-SurgeBitmaps::~SurgeBitmaps()
+SurgeImageStore::~SurgeImageStore()
 {
 #ifdef INSTRUMENT_UI
-    Surge::Debug::record("SurgeBitmaps::~SurgeBitmaps");
+    Surge::Debug::record("SurgeImageStore::SurgeImageStoreore");
 #endif
     clearAllLoadedBitmaps();
     instances--;
-    // std::cout << "Destroying a SurgeBitmaps; Instances is " << instances << std::endl;
+    // std::cout << "Destroying a SurgeImageStore; Instances is " << instances << std::endl;
 }
 
-void SurgeBitmaps::clearAllLoadedBitmaps()
+void SurgeImageStore::clearAllLoadedBitmaps()
 {
     for (auto pair : bitmap_registry)
     {
@@ -46,7 +46,7 @@ void SurgeBitmaps::clearAllLoadedBitmaps()
     bitmap_stringid_registry.clear();
 }
 
-void SurgeBitmaps::setupBuiltinBitmaps()
+void SurgeImageStore::setupBuiltinBitmaps()
 {
     addEntry(IDB_MAIN_BG);
     addEntry(IDB_FILTER_SUBTYPE);
@@ -114,62 +114,86 @@ void SurgeBitmaps::setupBuiltinBitmaps()
     // == /SVG == Do not remove this comment
 }
 
-void SurgeBitmaps::addEntry(int id)
+void SurgeImageStore::addEntry(int id)
 {
     assert(bitmap_registry.find(id) == bitmap_registry.end());
 
-    CScalableBitmap *bitmap = new CScalableBitmap(VSTGUI::CResourceDescription(id));
+    SurgeImage *bitmap = new SurgeImage(id);
 
     bitmap_registry[id] = bitmap;
 }
 
-CScalableBitmap *SurgeBitmaps::getBitmap(int id) { return bitmap_registry.at(id); }
+SurgeImage *SurgeImageStore::getImage(int id) { return bitmap_registry.at(id); }
 
-CScalableBitmap *SurgeBitmaps::getBitmapByPath(const std::string &path)
+SurgeImage *SurgeImageStore::getImageByPath(const std::string &filename)
 {
-    if (bitmap_file_registry.find(path) == bitmap_file_registry.end())
+    if (bitmap_file_registry.find(filename) == bitmap_file_registry.end())
         return nullptr;
-    return bitmap_file_registry.at(path);
+    return bitmap_file_registry.at(filename);
 }
 
-CScalableBitmap *SurgeBitmaps::getBitmapByStringID(const std::string &id)
+SurgeImage *SurgeImageStore::getImageByStringID(const std::string &id)
 {
     if (bitmap_stringid_registry.find(id) == bitmap_stringid_registry.end())
         return nullptr;
     return bitmap_stringid_registry[id];
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPath(const std::string &path)
+juce::Drawable *SurgeImageStore::getDrawable(int id)
 {
-    if (bitmap_file_registry.find(path) != bitmap_file_registry.end())
-    {
-        delete bitmap_file_registry[path];
-    }
-    bitmap_file_registry[path] = new CScalableBitmap(path);
-    return bitmap_file_registry[path];
+    auto r = getImage(id);
+    if (r)
+        return r->getDrawable();
+    return nullptr;
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPathForID(const std::string &path, int id)
+juce::Drawable *SurgeImageStore::getDrawableByPath(const std::string &filename)
+{
+    auto r = getImageByPath(filename);
+    if (r)
+        return r->getDrawable();
+    return nullptr;
+}
+
+juce::Drawable *SurgeImageStore::getDrawableByStringID(const std::string &id)
+{
+    auto r = getImageByStringID(id);
+    if (r)
+        return r->getDrawable();
+    return nullptr;
+}
+
+SurgeImage *SurgeImageStore::loadImageByPath(const std::string &filename)
+{
+    if (bitmap_file_registry.find(filename) != bitmap_file_registry.end())
+    {
+        delete bitmap_file_registry[filename];
+    }
+    bitmap_file_registry[filename] = new SurgeImage(filename);
+    return bitmap_file_registry[filename];
+}
+
+SurgeImage *SurgeImageStore::loadImageByPathForID(const std::string &filename, int id)
 {
     if (bitmap_registry.find(id) != bitmap_registry.end())
     {
         delete bitmap_registry[id];
     }
-    bitmap_registry[id] = new CScalableBitmap(path);
+    bitmap_registry[id] = new SurgeImage(filename);
     return bitmap_registry[id];
 }
 
-CScalableBitmap *SurgeBitmaps::loadBitmapByPathForStringID(const std::string &path, std::string id)
+SurgeImage *SurgeImageStore::loadImageByPathForStringID(const std::string &filename, std::string id)
 {
     if (bitmap_stringid_registry.find(id) != bitmap_stringid_registry.end())
     {
         delete bitmap_stringid_registry[id];
     }
-    bitmap_stringid_registry[id] = new CScalableBitmap(path);
+    bitmap_stringid_registry[id] = new SurgeImage(filename);
     return bitmap_stringid_registry[id];
 }
 
-void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
+void SurgeImageStore::setPhysicalZoomFactor(int pzf)
 {
     for (auto pair : bitmap_registry)
         pair.second->setPhysicalZoomFactor(pzf);
@@ -177,28 +201,4 @@ void SurgeBitmaps::setPhysicalZoomFactor(int pzf)
         pair.second->setPhysicalZoomFactor(pzf);
     for (auto pair : bitmap_stringid_registry)
         pair.second->setPhysicalZoomFactor(pzf);
-}
-
-juce::Drawable *SurgeBitmaps::getDrawable(int id)
-{
-    auto b = getBitmap(id);
-    if (b)
-        return b->drawable.get();
-    return nullptr;
-}
-
-juce::Drawable *SurgeBitmaps::getDrawableByPath(const std::string &filename)
-{
-    auto b = getBitmapByPath(filename);
-    if (b)
-        return b->drawable.get();
-    return nullptr;
-}
-
-juce::Drawable *SurgeBitmaps::getDrawableByStringID(const std::string &id)
-{
-    auto b = getBitmapByStringID(id);
-    if (b)
-        return b->drawable.get();
-    return nullptr;
 }

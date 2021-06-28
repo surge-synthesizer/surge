@@ -23,7 +23,7 @@
 
 #include "efvg/escape_from_vstgui.h"
 #include "SurgeStorage.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 
 #include "SurgeSynthesizer.h"
 
@@ -433,7 +433,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::string fxPresetName[8];
 
   public:
-    std::shared_ptr<SurgeBitmaps> bitmapStore = nullptr;
+    std::shared_ptr<SurgeImageStore> bitmapStore = nullptr;
 
   private:
     bool modsource_is_alternate[n_modsources];

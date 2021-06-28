@@ -14,8 +14,9 @@
 */
 
 #include "VuMeter.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "basic_dsp.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

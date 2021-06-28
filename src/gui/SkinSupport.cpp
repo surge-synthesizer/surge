@@ -4,10 +4,10 @@
 
 #include "SkinSupport.h"
 #include "SurgeStorage.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "UserDefaults.h"
 #include "UIInstrumentation.h"
-#include "CScalableBitmap.h"
+#include "SurgeImage.h"
 
 #include "filesystem/import.h"
 
@@ -245,7 +245,7 @@ Skin::~Skin()
 #define TINYXML_SAFE_TO_ELEMENT(expr) ((expr) ? (expr)->ToElement() : NULL)
 #endif
 
-bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
+bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
 {
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("Skin::reloadSkin");
@@ -451,13 +451,13 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                         if ((xtn == ".svg" || xtn == ".png") &&
                             (imageAllowedIds.find(idx) != imageAllowedIds.end()))
                         {
-                            bitmapStore->loadBitmapByPathForID(pathStr, idx);
+                            bitmapStore->loadImageByPathForID(pathStr, idx);
                         }
                     }
                     else
                     {
                         std::string id = defaultImageIDPrefix + path_to_string(d.filename());
-                        bitmapStore->loadBitmapByPathForStringID(pathStr, id);
+                        bitmapStore->loadImageByPathForStringID(pathStr, id);
                     }
                 }
             }
@@ -486,15 +486,15 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                 if (id.size() > 0)
                 {
                     if (imageStringToId.find(id) != imageStringToId.end())
-                        bitmapStore->loadBitmapByPathForID(resourceName(res), imageStringToId[id]);
+                        bitmapStore->loadImageByPathForID(resourceName(res), imageStringToId[id]);
                     else
                     {
-                        bitmapStore->loadBitmapByPathForStringID(resourceName(res), id);
+                        bitmapStore->loadImageByPathForStringID(resourceName(res), id);
                     }
                 }
                 else
                 {
-                    bitmapStore->loadBitmapByPath(resourceName(res));
+                    bitmapStore->loadImageByPath(resourceName(res));
                 }
             }
         }
@@ -513,7 +513,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                 bool validKids = true;
                 auto kids = g.second.children;
                 // Go find the 100 one first
-                CScalableBitmap *bm = nullptr;
+                SurgeImage *bm = nullptr;
                 for (auto k : kids)
                 {
                     if (k.second.find("zoom-level") == k.second.end() ||
@@ -530,11 +530,11 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore)
                     {
                         auto res = k.second["resource"];
                         if (imageStringToId.find(id) != imageStringToId.end())
-                            bm = bitmapStore->loadBitmapByPathForID(resourceName(res),
-                                                                    imageStringToId[id]);
+                            bm = bitmapStore->loadImageByPathForID(resourceName(res),
+                                                                   imageStringToId[id]);
                         else
                         {
-                            bm = bitmapStore->loadBitmapByPathForStringID(resourceName(res), id);
+                            bm = bitmapStore->loadImageByPathForStringID(resourceName(res), id);
                         }
                     }
                 }
@@ -1057,10 +1057,10 @@ juce::Colour Skin::getColor(const std::string &iid, const juce::Colour &def,
     return def;
 }
 
-CScalableBitmap *Skin::backgroundBitmapForControl(Skin::Control::ptr_t c,
-                                                  std::shared_ptr<SurgeBitmaps> bitmapStore)
+SurgeImage *Skin::backgroundBitmapForControl(Skin::Control::ptr_t c,
+                                             std::shared_ptr<SurgeImageStore> bitmapStore)
 {
-    CScalableBitmap *bmp = nullptr;
+    SurgeImage *bmp = nullptr;
 
     auto ms = propertyValue(c, Surge::Skin::Component::Properties::BACKGROUND);
     if (ms.isJust())
@@ -1068,22 +1068,23 @@ CScalableBitmap *Skin::backgroundBitmapForControl(Skin::Control::ptr_t c,
         auto msAsInt = std::atoi(ms.fromJust().c_str());
         if (imageAllowedIds.find(msAsInt) != imageAllowedIds.end())
         {
-            bmp = bitmapStore->getBitmap(std::atoi(ms.fromJust().c_str()));
+            bmp = bitmapStore->getImage(std::atoi(ms.fromJust().c_str()));
         }
         else
         {
-            bmp = bitmapStore->getBitmapByStringID(ms.fromJust());
+            bmp = bitmapStore->getImageByStringID(ms.fromJust());
             if (!bmp)
-                bmp = bitmapStore->loadBitmapByPathForStringID(resourceName(ms.fromJust()),
-                                                               ms.fromJust());
+                bmp = bitmapStore->loadImageByPathForStringID(resourceName(ms.fromJust()),
+                                                              ms.fromJust());
         }
     }
     return bmp;
 }
 
-CScalableBitmap *
-Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBitmap *b,
-                                            std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t)
+SurgeImage *
+Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *b,
+                                            std::shared_ptr<SurgeImageStore> bitmapStore,
+                                            HoverType t)
 {
     if (!bitmapStore.get())
     {
@@ -1118,7 +1119,7 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBit
                 sid << defaultImageIDPrefix << "hoverOn" << ftr;
                 break;
             }
-            auto bmp = bitmapStore->getBitmapByStringID(sid.str());
+            auto bmp = bitmapStore->getImageByStringID(sid.str());
             if (bmp)
                 return bmp;
         }
@@ -1136,7 +1137,7 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBit
                 << b->resourceID << ".svg";
             break;
         }
-        auto bmp = bitmapStore->getBitmapByStringID(sid.str());
+        auto bmp = bitmapStore->getImageByStringID(sid.str());
         if (bmp)
             return bmp;
     }
@@ -1325,33 +1326,33 @@ Skin::Control::Control()
 }
 
 std::array<juce::Drawable *, 3>
-Skin::standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> b)
+Skin::standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeImageStore> b)
 {
     auto csb = backgroundBitmapForControl(c, b);
     return standardHoverAndHoverOnForCSB(csb, c, b);
 }
-std::array<juce::Drawable *, 3> Skin::standardHoverAndHoverOnForIDB(int id,
-                                                                    std::shared_ptr<SurgeBitmaps> b)
+std::array<juce::Drawable *, 3>
+Skin::standardHoverAndHoverOnForIDB(int id, std::shared_ptr<SurgeImageStore> b)
 {
-    auto csb = b->getBitmap(id);
+    auto csb = b->getImage(id);
     return standardHoverAndHoverOnForCSB(csb, nullptr, b);
 }
-std::array<juce::Drawable *, 3> Skin::standardHoverAndHoverOnForCSB(CScalableBitmap *csb,
-                                                                    Skin::Control::ptr_t c,
-                                                                    std::shared_ptr<SurgeBitmaps> b)
+std::array<juce::Drawable *, 3>
+Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb, Skin::Control::ptr_t c,
+                                    std::shared_ptr<SurgeImageStore> b)
 {
     std::array<juce::Drawable *, 3> res;
-    res[0] = csb->drawable.get();
+    res[0] = csb->getDrawable();
 
     auto hoverBmp =
         hoverBitmapOverlayForBackgroundBitmap(c, csb, b, Surge::GUI::Skin::HoverType::HOVER);
 
-    res[1] = hoverBmp ? hoverBmp->drawable.get() : nullptr;
+    res[1] = hoverBmp ? hoverBmp->getDrawable() : nullptr;
 
     auto hoverOnBmp = hoverBitmapOverlayForBackgroundBitmap(
         c, csb, b, Surge::GUI::Skin::HoverType::HOVER_OVER_ON);
 
-    res[2] = hoverOnBmp ? hoverOnBmp->drawable.get() : nullptr;
+    res[2] = hoverOnBmp ? hoverOnBmp->getDrawable() : nullptr;
     return res;
 }
 
