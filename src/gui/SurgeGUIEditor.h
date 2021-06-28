@@ -142,7 +142,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void effectSettingsBackgroundClick(int whichScene);
 
     void setDisabledForParameter(Parameter *p, Surge::Widgets::ModulatableControlInterface *s);
-    void showSettingsMenu(VSTGUI::CRect &menuRect);
+    void showSettingsMenu(const juce::Point<int> &menuRect);
 
     static bool fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q);
     // If n_scenes > 2, then this initialization and the modsource_editor one below will need to
@@ -264,10 +264,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
     ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
     */
-    void showMPEMenu(VSTGUI::CPoint &where);
-    void showTuningMenu(VSTGUI::CPoint &where);
-    void showZoomMenu(VSTGUI::CPoint &where);
-    void showLfoMenu(VSTGUI::CPoint &menuRect);
+    void showMPEMenu(const juce::Point<int> &where);
+    void showTuningMenu(const juce::Point<int> &where);
+    void showZoomMenu(const juce::Point<int> &where);
+    void showLfoMenu(const juce::Point<int> &menuRect);
+
+    juce::PopupMenu::Options optionsForPosition(const juce::Point<int> &where);
 
     void showHTML(const std::string &s);
 
@@ -556,22 +558,23 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int firstIdleCountdown = 0;
 
     juce::PopupMenu
-    makeSmoothMenu(VSTGUI::CRect &menuRect, const Surge::Storage::DefaultKey &key, int defaultValue,
+    makeSmoothMenu(const juce::Point<int> &menuRect, const Surge::Storage::DefaultKey &key,
+                   int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
 
-    juce::PopupMenu makeMpeMenu(VSTGUI::CRect &rect, bool showhelp);
-    juce::PopupMenu makeTuningMenu(VSTGUI::CRect &rect, bool showhelp);
-    juce::PopupMenu makeZoomMenu(VSTGUI::CRect &rect, bool showhelp);
-    juce::PopupMenu makeSkinMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeMouseBehaviorMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makePatchDefaultsMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeValueDisplaysMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeWorkflowMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeDataMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeMidiMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeDevMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeLfoMenu(VSTGUI::CRect &rect);
-    juce::PopupMenu makeMonoModeOptionsMenu(VSTGUI::CRect &rect, bool updateDefaults);
+    juce::PopupMenu makeMpeMenu(const juce::Point<int> &rect, bool showhelp);
+    juce::PopupMenu makeTuningMenu(const juce::Point<int> &rect, bool showhelp);
+    juce::PopupMenu makeZoomMenu(const juce::Point<int> &rect, bool showhelp);
+    juce::PopupMenu makeSkinMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeMouseBehaviorMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makePatchDefaultsMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeValueDisplaysMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeWorkflowMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeDataMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeMidiMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeDevMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
 
   public:
     bool getShowVirtualKeyboard();

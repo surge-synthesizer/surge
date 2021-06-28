@@ -44,25 +44,6 @@ struct MainFrame : public juce::Component
     }
 
     void mouseDown(const juce::MouseEvent &event) override;
-
-    /*
-     * Kill these before I'm done
-     */
-    void localToFrame(VSTGUI::CPoint &p) { UNIMPL; };
-    void setZoom(float z) { OKUNIMPL; }
-    void getPosition(float &x, float &y)
-    {
-        auto b = getScreenPosition();
-        x = b.x;
-        y = b.y;
-    }
-    void getCurrentMouseLocation(VSTGUI::CPoint &w)
-    {
-        auto pq = juce::Desktop::getInstance().getMainMouseSource().getScreenPosition();
-        auto b = getLocalPoint(nullptr, pq);
-        w.x = b.x;
-        w.y = b.y;
-    }
 };
 } // namespace Widgets
 } // namespace Surge
