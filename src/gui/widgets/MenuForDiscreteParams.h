@@ -42,13 +42,12 @@ struct MenuForDiscreteParams : public juce::Component,
     MenuForDiscreteParams();
     ~MenuForDiscreteParams() override;
 
-    VSTGUI::CControlValueInterface *asControlValueInterface() override { return this; }
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; }
     juce::Component *asJuceComponent() override { return this; }
 
     float value{0.f};
     void setValue(float v) override { value = v; }
     float getValue() const override { return value; }
-    void valueChanged() override {}
 
     int iMin{0}, iMax{1};
     void setMinMax(int n, int x)

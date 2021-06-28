@@ -19,6 +19,8 @@
 
 #include <JuceHeader.h>
 
+#include "SurgeGUICallbackInterfaces.h"
+
 #include "efvg/escape_from_vstgui.h"
 #include "SurgeStorage.h"
 #include "SurgeBitmaps.h"
@@ -72,8 +74,7 @@ struct PatchStoreDialog;
 } // namespace Overlays
 } // namespace Surge
 
-class SurgeGUIEditor : public VSTGUI::IControlListener,
-                       public VSTGUI::IKeyboardHook,
+class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener
 {
   public:
@@ -81,7 +82,6 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
     virtual ~SurgeGUIEditor();
 
     std::unique_ptr<Surge::Widgets::MainFrame> frame;
-    Surge::Widgets::MainFrame *getFrame() { return frame.get(); }
 
     std::atomic<int> errorItemCount{0};
     std::vector<std::pair<std::string, std::string>> errorItems;
@@ -116,21 +116,24 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
     }
 
   protected:
+#if PORTED_TO_JUCE
     int32_t onKeyDown(const VstKeyCode &code,
                       VSTGUI::CFrame *frame) override; ///< should return 1 if no further key down
                                                        ///< processing should apply, otherwise -1
     int32_t onKeyUp(const VstKeyCode &code,
                     VSTGUI::CFrame *frame) override; ///< should return 1 if no further key up
                                                      ///< processing should apply, otherwise -1
+#endif
 
     virtual void setParameter(long index, float value);
 
     // listener class
-    void valueChanged(VSTGUI::CControlValueInterface *control) override;
-    int32_t controlModifierClicked(VSTGUI::CControlValueInterface *pControl,
-                                   VSTGUI::CButtonState button) override;
-    void controlBeginEdit(VSTGUI::CControlValueInterface *pControl) override;
-    void controlEndEdit(VSTGUI::CControlValueInterface *pControl) override;
+    void valueChanged(Surge::GUI::IComponentTagValue *control) override;
+    int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                   const juce::ModifierKeys &button,
+                                   bool isDoubleClickEvent) override;
+    void controlBeginEdit(Surge::GUI::IComponentTagValue *pControl) override;
+    void controlEndEdit(Surge::GUI::IComponentTagValue *pControl) override;
 
   public:
     void refresh_mod();
@@ -453,7 +456,7 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
-    VSTGUI::CControlValueInterface *statusMPE = nullptr, *statusTune = nullptr,
+    Surge::GUI::IComponentTagValue *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr;
     std::unique_ptr<Surge::Overlays::AboutScreen> aboutScreen;
 
@@ -471,7 +474,7 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
     friend struct Surge::Overlays::PatchStoreDialog;
     friend struct Surge::Widgets::MainFrame;
 
-    VSTGUI::CControlValueInterface *msegEditSwitch = nullptr;
+    Surge::GUI::IComponentTagValue *msegEditSwitch = nullptr;
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
 
@@ -536,7 +539,7 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
 
     static const int n_paramslots = 1024;
     Surge::Widgets::ModulatableControlInterface *param[n_paramslots] = {};
-    VSTGUI::CControlValueInterface *nonmod_param[n_paramslots] = {};
+    Surge::GUI::IComponentTagValue *nonmod_param[n_paramslots] = {};
     std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
     std::unique_ptr<Surge::Widgets::LFOAndStepDisplay> lfoDisplay;
 
@@ -588,8 +591,7 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
     static std::string fullyResolvedHelpURL(std::string helpurl);
 
   private:
-    void promptForUserValueEntry(Parameter *p, VSTGUI::BaseViewFunctions *c,
-                                 int modulationSource = -1);
+    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modulationSource = -1);
 
     /*
     ** Skin support
@@ -597,7 +599,7 @@ class SurgeGUIEditor : public VSTGUI::IControlListener,
     Surge::GUI::Skin::ptr_t currentSkin;
     void setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry);
     void reloadFromSkin();
-    VSTGUI::CControlValueInterface *
+    Surge::GUI::IComponentTagValue *
     layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl, long tag,
                            int paramIndex = -1, Parameter *p = nullptr, int style = 0);
 

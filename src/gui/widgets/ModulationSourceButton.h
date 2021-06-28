@@ -41,7 +41,6 @@ struct ModulationSourceButton : public juce::Component,
         repaint();
     }
     float getValue() const override { return value; }
-    void valueChanged() override {}
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }

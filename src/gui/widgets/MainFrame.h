@@ -27,7 +27,6 @@ namespace Widgets
 {
 struct MainFrame : public juce::Component
 {
-    juce::Component *juceComponent() { return this; }
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
 
@@ -53,14 +52,14 @@ struct MainFrame : public juce::Component
     void setZoom(float z) { OKUNIMPL; }
     void getPosition(float &x, float &y)
     {
-        auto b = juceComponent()->getScreenPosition();
+        auto b = getScreenPosition();
         x = b.x;
         y = b.y;
     }
     void getCurrentMouseLocation(VSTGUI::CPoint &w)
     {
         auto pq = juce::Desktop::getInstance().getMainMouseSource().getScreenPosition();
-        auto b = juceComponent()->getLocalPoint(nullptr, pq);
+        auto b = getLocalPoint(nullptr, pq);
         w.x = b.x;
         w.y = b.y;
     }

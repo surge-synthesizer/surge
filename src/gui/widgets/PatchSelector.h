@@ -35,7 +35,6 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
     float getValue() const override { return 0; }
     void setValue(float f) override {}
-    void valueChanged() override {}
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }

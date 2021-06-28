@@ -24,8 +24,6 @@ namespace Widgets
 MultiSwitch::MultiSwitch() { setRepaintsOnMouseActivity(true); }
 MultiSwitch::~MultiSwitch() = default;
 
-void MultiSwitch::valueChanged() { jassert(false); }
-
 void MultiSwitch::paint(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState gs(g);

@@ -32,7 +32,7 @@ void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
     }
 
     updateInfowindowContents(ptag, isEditingModulation);
-    paramInfowindow->setBoundsToAccompany(relativeTo, frame->juceComponent()->getBounds());
+    paramInfowindow->setBoundsToAccompany(relativeTo, frame->getBounds());
     paramInfowindow->setCountdownToHide(-1);
     paramInfowindow->startFadein();
     paramInfowindow->setVisible(true);
@@ -50,7 +50,7 @@ void SurgeGUIEditor::showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> re
     }
 
     updateInfowindowContents(ptag, isEditingModulation);
-    paramInfowindow->setBoundsToAccompany(relativeTo, frame->juceComponent()->getBounds());
+    paramInfowindow->setBoundsToAccompany(relativeTo, frame->getBounds());
     paramInfowindow->setCountdownToHide(60);
     paramInfowindow->startFadein();
     paramInfowindow->setVisible(true);

@@ -35,7 +35,6 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     float value;
     float getValue() const override { return value; }
     void setValue(float v) override { value = v; }
-    void valueChanged() override {}
 
     bool isStepSequencer() { return lfodata->shape.val.i == lt_stepseq; }
     bool isMSEG() { return lfodata->shape.val.i == lt_mseg; }

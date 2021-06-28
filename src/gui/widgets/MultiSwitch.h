@@ -54,7 +54,6 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     float getValue() const override { return value; }
     int getIntegerValue() const { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
     void setValue(float f) override { value = f; }
-    void valueChanged() override;
 
     bool draggable{false};
     void setDraggable(bool d) { draggable = d; }

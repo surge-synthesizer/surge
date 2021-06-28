@@ -30,7 +30,7 @@ namespace Widgets
 struct ModulatableControlInterface
 {
     // there is a general assumption that these won't return nullptr.
-    virtual VSTGUI::CControlValueInterface *asControlValueInterface() = 0;
+    virtual Surge::GUI::IComponentTagValue *asControlValueInterface() = 0;
     virtual juce::Component *asJuceComponent() = 0;
 
     /*
