@@ -15,8 +15,9 @@
 
 #include "MiniEdit.h"
 #include "SkinModel.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "RuntimeFont.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {
@@ -66,7 +67,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     g.drawText(title, tbRect, juce::Justification::centred);
 
-    auto d = associatedBitmapStore->getDrawable(IDB_SURGE_ICON);
+    auto d = associatedBitmapStore->getImage(IDB_SURGE_ICON)->getDrawable();
     if (d)
     {
         d->drawAt(g, fullRect.getX(), fullRect.getY(), 1.0);

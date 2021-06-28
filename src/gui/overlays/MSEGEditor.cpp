@@ -19,8 +19,8 @@
 #include "DebugHelpers.h"
 #include "SkinColors.h"
 #include "basic_dsp.h" // for limit_range
-#include "CScalableBitmap.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImage.h"
+#include "SurgeImageStore.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 
@@ -42,7 +42,7 @@ struct MSEGControlRegion : public juce::Component,
 {
     MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos,
                       MSEGStorage *ms, MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-                      std::shared_ptr<SurgeBitmaps> b)
+                      std::shared_ptr<SurgeImageStore> b)
         : juce::Component("MSEG Control Region")
     {
         setSkin(skin, b);
@@ -90,7 +90,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 {
     MSEGCanvas(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
                MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-               std::shared_ptr<SurgeBitmaps> b)
+               std::shared_ptr<SurgeImageStore> b)
         : juce::Component("MSEG Canvas")
     {
         setSkin(skin, b);
@@ -99,7 +99,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         this->eds = eds;
         this->lfodata = lfodata;
         Surge::MSEG::rebuildCache(ms);
-        handleDrawable = b->getDrawable(IDB_MSEG_NODES);
+        handleDrawable = b->getImage(IDB_MSEG_NODES)->getDrawable();
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
     };
 
@@ -657,8 +657,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     // vertical grid thinning
     const int gridMaxVSteps = 10;
 
-    void drawLoopDragMarker(juce::Graphics &g, CColor markerColor, hotzone::ZoneSubType subtype,
-                            const CRect &rectC)
+    void drawLoopDragMarker(juce::Graphics &g, juce::Colour markerColor,
+                            hotzone::ZoneSubType subtype, const CRect &rectC)
     {
         auto ha = getHAxisArea();
         auto rect = rectC.asJuceFloatRect();
@@ -684,8 +684,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         g.drawLine(start, top, start, top + height, 1);
     }
 
-    void drawLoopDragMarker(juce::Graphics &g, CColor markerColor, hotzone::ZoneSubType subtype,
-                            float time)
+    void drawLoopDragMarker(juce::Graphics &g, juce::Colour markerColor,
+                            hotzone::ZoneSubType subtype, float time)
     {
         auto tpx = timeToPx();
         auto ha = getHAxisArea();
@@ -2727,12 +2727,12 @@ void MSEGControlRegion::rebuild()
         hSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
         hSnapButton->setTag(tag_horizontal_snap);
         hSnapButton->setValue(ms->hSnap < 0.001 ? 0 : 1);
-        auto hsbmp = associatedBitmapStore->getBitmap(IDB_MSEG_HORIZONTAL_SNAP);
-        hSnapButton->setSwitchDrawable(hsbmp->drawable.get());
+        auto hsbmp = associatedBitmapStore->getImage(IDB_MSEG_HORIZONTAL_SNAP);
+        hSnapButton->setSwitchDrawable(hsbmp->getDrawable());
         auto hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
-            nullptr, dynamic_cast<CScalableBitmap *>(hsbmp), associatedBitmapStore,
+            nullptr, dynamic_cast<SurgeImage *>(hsbmp), associatedBitmapStore,
             Surge::GUI::Skin::HoverType::HOVER);
-        hSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
+        hSnapButton->setHoverSwitchDrawable(hoverBmp->getDrawable());
         addAndMakeVisible(*hSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
@@ -2761,11 +2761,11 @@ void MSEGControlRegion::rebuild()
         vSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
         vSnapButton->setTag(tag_vertical_snap);
         vSnapButton->setValue(ms->vSnap < 0.001 ? 0 : 1);
-        auto vsbmp = associatedBitmapStore->getBitmap(IDB_MSEG_VERTICAL_SNAP);
-        vSnapButton->setSwitchDrawable(vsbmp->drawable.get());
+        auto vsbmp = associatedBitmapStore->getImage(IDB_MSEG_VERTICAL_SNAP);
+        vSnapButton->setSwitchDrawable(vsbmp->getDrawable());
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
-        vSnapButton->setHoverSwitchDrawable(hoverBmp->drawable.get());
+        vSnapButton->setHoverSwitchDrawable(hoverBmp->getDrawable());
         addAndMakeVisible(*vSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
@@ -2789,7 +2789,7 @@ void MSEGControlRegion::rebuild()
 }
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> bmp)
+                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp)
     : juce::Component("MSEG Editor")
 {
     // Leave these in for now

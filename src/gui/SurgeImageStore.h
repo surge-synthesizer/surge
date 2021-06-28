@@ -8,29 +8,29 @@
 #include <algorithm>
 #include <cctype>
 
-class CScalableBitmap;
+class SurgeImage;
 
-class SurgeBitmaps
+class SurgeImageStore
 {
   public:
-    SurgeBitmaps();
-    virtual ~SurgeBitmaps();
+    SurgeImageStore();
+    virtual ~SurgeImageStore();
     void clearAllLoadedBitmaps(); // Call very carefully.
 
     void setupBuiltinBitmaps();
     void setPhysicalZoomFactor(int pzf);
 
-    CScalableBitmap *getBitmap(int id);
-    CScalableBitmap *getBitmapByPath(const std::string &filename);
-    CScalableBitmap *getBitmapByStringID(const std::string &id);
+    SurgeImage *getImage(int id);
+    SurgeImage *getImageByPath(const std::string &filename);
+    SurgeImage *getImageByStringID(const std::string &id);
 
     juce::Drawable *getDrawable(int id);
     juce::Drawable *getDrawableByPath(const std::string &filename);
     juce::Drawable *getDrawableByStringID(const std::string &id);
 
-    CScalableBitmap *loadBitmapByPath(const std::string &filename);
-    CScalableBitmap *loadBitmapByPathForID(const std::string &filename, int id);
-    CScalableBitmap *loadBitmapByPathForStringID(const std::string &filename, std::string id);
+    SurgeImage *loadImageByPath(const std::string &filename);
+    SurgeImage *loadImageByPathForID(const std::string &filename, int id);
+    SurgeImage *loadImageByPathForStringID(const std::string &filename, std::string id);
 
     enum StringResourceType
     {
@@ -57,8 +57,8 @@ class SurgeBitmaps
 
     void addEntry(int id);
     // I own and am responsible for deleting these
-    std::map<int, CScalableBitmap *> bitmap_registry;
-    std::map<std::string, CScalableBitmap *> bitmap_file_registry;
+    std::map<int, SurgeImage *> bitmap_registry;
+    std::map<std::string, SurgeImage *> bitmap_file_registry;
 
     struct cicomp
     {
@@ -73,5 +73,5 @@ class SurgeBitmaps
             return al < bl;
         }
     };
-    std::map<std::string, CScalableBitmap *, cicomp> bitmap_stringid_registry;
+    std::map<std::string, SurgeImage *, cicomp> bitmap_stringid_registry;
 };

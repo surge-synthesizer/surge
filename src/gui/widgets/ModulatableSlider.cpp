@@ -15,9 +15,10 @@
 
 #include "ModulatableSlider.h"
 #include "SurgeGUIEditor.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "basic_dsp.h"
 #include "SurgeGUIUtils.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

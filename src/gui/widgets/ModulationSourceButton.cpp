@@ -16,9 +16,10 @@
 #include "ModulationSourceButton.h"
 #include "RuntimeFont.h"
 #include "SkinSupport.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "basic_dsp.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

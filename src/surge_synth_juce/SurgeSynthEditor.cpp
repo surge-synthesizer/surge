@@ -10,8 +10,8 @@
 
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
-#include "SurgeBitmaps.h"
-#include "CScalableBitmap.h"
+#include "SurgeImageStore.h"
+#include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeSynthFlavorExtensions.h"
 #include "SurgeJUCELookAndFeel.h"
@@ -82,9 +82,6 @@ SurgeSynthEditor::~SurgeSynthEditor()
     if (adapter->bitmapStore)
         adapter->bitmapStore->clearAllLoadedBitmaps();
     adapter.reset(nullptr);
-#if DEBUG_EFVG_MEMORY
-    EscapeNS::Internal::showMemoryOutstanding();
-#endif
 }
 
 void SurgeSynthEditor::handleAsyncUpdate() {}
@@ -133,11 +130,7 @@ void SurgeSynthEditor::parentHierarchyChanged()
     }
 }
 
-void SurgeSynthEditor::IdleTimer::timerCallback()
-{
-    VSTGUI::efvgIdle();
-    ed->idle();
-}
+void SurgeSynthEditor::IdleTimer::timerCallback() { ed->idle(); }
 
 void SurgeSynthEditor::populateForStreaming(SurgeSynthesizer *s)
 {

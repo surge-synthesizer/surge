@@ -30,8 +30,8 @@
 */
 
 class SurgeStorage;
-class SurgeBitmaps;
-class CScalableBitmap;
+class SurgeImageStore;
+class SurgeImage;
 class TiXmlElement;
 
 #if !ESCAPE_FROM_VSTGUI
@@ -104,7 +104,7 @@ class Skin
     Skin(const std::string &root, const std::string &name);
     ~Skin();
 
-    bool reloadSkin(std::shared_ptr<SurgeBitmaps> bitmapStore);
+    bool reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore);
 
     std::string resourceName(const std::string &relativeName)
     {
@@ -320,8 +320,8 @@ class Skin
 
     bool hasFixedZooms() const { return zooms.size() != 0; }
     std::vector<int> getFixedZooms() const { return zooms; }
-    CScalableBitmap *backgroundBitmapForControl(Skin::Control::ptr_t c,
-                                                std::shared_ptr<SurgeBitmaps> bitmapStore);
+    SurgeImage *backgroundBitmapForControl(Skin::Control::ptr_t c,
+                                           std::shared_ptr<SurgeImageStore> bitmapStore);
 
     typedef enum
     {
@@ -330,17 +330,17 @@ class Skin
     } HoverType;
 
     std::string hoverImageIdForResource(const int resource, HoverType t);
-    CScalableBitmap *
-    hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, CScalableBitmap *b,
-                                          std::shared_ptr<SurgeBitmaps> bitmapStore, HoverType t);
+    SurgeImage *hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *b,
+                                                      std::shared_ptr<SurgeImageStore> bitmapStore,
+                                                      HoverType t);
 
     std::array<juce::Drawable *, 3>
-    standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeBitmaps> b);
-    std::array<juce::Drawable *, 3> standardHoverAndHoverOnForIDB(int id,
-                                                                  std::shared_ptr<SurgeBitmaps> b);
-    std::array<juce::Drawable *, 3> standardHoverAndHoverOnForCSB(CScalableBitmap *csb,
-                                                                  Skin::Control::ptr_t c,
-                                                                  std::shared_ptr<SurgeBitmaps> b);
+    standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeImageStore> b);
+    std::array<juce::Drawable *, 3>
+    standardHoverAndHoverOnForIDB(int id, std::shared_ptr<SurgeImageStore> b);
+    std::array<juce::Drawable *, 3>
+    standardHoverAndHoverOnForCSB(SurgeImage *csb, Skin::Control::ptr_t c,
+                                  std::shared_ptr<SurgeImageStore> b);
 
     std::vector<Skin::Control::ptr_t> getLabels() const
     {
@@ -483,8 +483,11 @@ class SkinConsumingComponent
   public:
     virtual ~SkinConsumingComponent() {}
     virtual void setSkin(Skin::ptr_t s) { setSkin(s, nullptr, nullptr); }
-    virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b) { setSkin(s, b, nullptr); }
-    virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeBitmaps> b, Skin::Control::ptr_t c)
+    virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeImageStore> b)
+    {
+        setSkin(s, b, nullptr);
+    }
+    virtual void setSkin(Skin::ptr_t s, std::shared_ptr<SurgeImageStore> b, Skin::Control::ptr_t c)
     {
         bool changed = (skin != s) || (associatedBitmapStore != b) || (skinControl != c);
         skin = s;
@@ -501,7 +504,7 @@ class SkinConsumingComponent
   protected:
     Skin::ptr_t skin = nullptr;
     Skin::Control::ptr_t skinControl = nullptr;
-    std::shared_ptr<SurgeBitmaps> associatedBitmapStore = nullptr;
+    std::shared_ptr<SurgeImageStore> associatedBitmapStore = nullptr;
 };
 } // namespace GUI
 } // namespace Surge

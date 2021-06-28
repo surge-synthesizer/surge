@@ -14,7 +14,7 @@
 */
 
 #include "LFOAndStepDisplay.h"
-#include "SurgeBitmaps.h"
+#include "SurgeImageStore.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include <chrono>

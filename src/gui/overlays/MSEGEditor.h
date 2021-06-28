@@ -41,7 +41,7 @@ struct MSEGEditor : public juce::Component,
         int timeEditMode = 0;
     };
     MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeBitmaps> b);
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b);
     ~MSEGEditor();
     void forceRefresh() override;
 

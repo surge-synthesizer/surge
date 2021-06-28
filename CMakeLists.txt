@@ -339,12 +339,12 @@ set(SURGE_GENERATED_SOURCES
   )
 
 set(SURGE_GUI_SOURCES
-  src/gui/CScalableBitmap.cpp
+        src/gui/SurgeImage.cpp
   src/gui/RuntimeFont.cpp
   src/gui/SkinFontLoader.cpp
   src/gui/SkinImageMaps.h
   src/gui/SkinSupport.cpp
-  src/gui/SurgeBitmaps.cpp
+        src/gui/SurgeImageStore.cpp
   src/gui/SurgeGUIEditor.cpp
   src/gui/SurgeGUIEditorHtmlGenerators.cpp
   src/gui/SurgeGUIEditorInfowindow.cpp
