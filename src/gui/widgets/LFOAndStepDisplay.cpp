@@ -501,7 +501,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     {
 #if SHOW_RELEASE_TIMES
         float xp = msegReleaseAt / drawnTime * valScale;
-        CPoint sp(xp, valScale * 0.9), ep(xp, valScale * 0.1);
+        was a vstgui Point sp(xp, valScale * 0.9), ep(xp, valScale * 0.1);
         tf.transform(sp);
         tf.transform(ep);
         dc->setFrameColor(juce::Colours::red);

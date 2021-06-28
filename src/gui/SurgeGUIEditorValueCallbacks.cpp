@@ -85,7 +85,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 1;
     }
 
-    CRect viewSize;
+    juce::Rectangle<int> viewSize;
     auto bvf = control->asJuceComponent();
     if (bvf)
     {
@@ -655,7 +655,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         }
                                         else
                                         {
-                                            showMidiLearnOverlay(viewSize);
+                                            showMidiLearnOverlay(
+                                                control->asJuceComponent()->getBounds());
                                             synth->learn_custom = ccid;
                                         }
                                     });
@@ -1659,7 +1660,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(learnTag),
-                                    [this, cancellearn, viewSize, p] {
+                                    [this, control, cancellearn, viewSize, p] {
                                         if (cancellearn)
                                         {
                                             hideMidiLearnOverlay();
@@ -1667,7 +1668,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         }
                                         else
                                         {
-                                            showMidiLearnOverlay(viewSize);
+                                            showMidiLearnOverlay(
+                                                control->asJuceComponent()->getBounds());
                                             synth->learn_param = p->id;
                                         }
                                     });
@@ -2091,7 +2093,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         return;
     }
 
-    CRect viewSize;
+    juce::Rectangle<int> viewSize;
     auto bvf = control->asJuceComponent();
     if (bvf)
     {

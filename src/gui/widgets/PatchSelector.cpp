@@ -280,7 +280,10 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         }
     }
 
-    contextMenu.showMenuAsync(juce::PopupMenu::Options());
+    auto o = juce::PopupMenu::Options();
+    if (sge)
+        o = sge->optionsForPosition(getBounds().getBottomLeft());
+    contextMenu.showMenuAsync(o);
 }
 
 bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
