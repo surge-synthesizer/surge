@@ -273,6 +273,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/filters/NonlinearFeedback.cpp
   src/common/dsp/filters/NonlinearStates.cpp
   src/common/dsp/filters/OBXDFilter.cpp
+  src/common/dsp/filters/ThreelerFilter.cpp
   src/common/dsp/filters/VectorizedSVFilter.cpp
   src/common/dsp/filters/VintageLadders.cpp
   src/common/dsp/oscillators/AliasOscillator.cpp

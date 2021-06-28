@@ -107,6 +107,7 @@ enum fu_type
     fut_resonancewarp_n,
     fut_resonancewarp_bp,
     fut_resonancewarp_ap,
+    fut_threeler,
     n_fu_types,
 };
 
@@ -150,6 +151,7 @@ const char fut_names[n_fu_types][32] = {
     "N Res Warp",        // fut_resonancewarp_n
     "BP Res Warp",       // fut_resonancewarp_bp
     "FX Res Warp AP",    // fut_resonancewarp_ap
+    "FX Threeler",       // fut_threeler
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -189,6 +191,7 @@ const char fut_menu_names[n_fu_types][32] = {
     "Resonance Warp", // N
     "Resonance Warp", // BP
     "Resonance Warp Allpass",
+    "Threeler",
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -258,6 +261,19 @@ const char fut_nlf_saturators[4][16] = {
     "Sine",
 };
 
+const char fut_threeler_subtypes[4][32] = {
+    "Low -> Low -> Low",
+    "Low -> High -> Low",
+    "High -> Low -> High",
+    "High -> High -> High",
+};
+
+const char fut_threeler_output_stage[4][16]{
+    "First",
+    "Second",
+    "Third",
+};
+
 const int fut_subcount[n_fu_types] = {
     0,  // fut_none
     3,  // fut_lp12
@@ -292,6 +308,7 @@ const int fut_subcount[n_fu_types] = {
     8,  // fut_resonancewarp_n
     8,  // fut_resonancewarp_bp
     8,  // fut_resonancewarp_ap
+    12, // fut_threeler
 };
 
 enum fu_subtype
@@ -349,6 +366,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         p(fut_comb_pos, "Effect");
         p(fut_comb_neg, "Effect");
         p(fut_SNH, "Effect");
+        p(fut_threeler, "Effect");
 
         int c = 0;
         for (auto e : mapping)
@@ -425,4 +443,5 @@ const int fut_glyph_index[n_fu_types][2] = {
     {4, nrow},  // fut_resonancewarp_n
     {4, bprow}, // fut_resonancewarp_bp
     {0, fxrow}, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
+    {0, fxrow}, // fut_threeler (also temporarily set to just use the regular AP glyph)
 };
