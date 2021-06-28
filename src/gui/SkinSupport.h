@@ -177,10 +177,7 @@ class Skin
             return oss.str();
         }
 
-        VSTGUI::CRect getRect() const
-        {
-            return VSTGUI::CRect(VSTGUI::CPoint(x, y), VSTGUI::CPoint(w, h));
-        }
+        juce::Rectangle<int> getRect() const { return juce::Rectangle<int>(x, y, w, h); }
         void copyFromConnector(const Surge::Skin::Connector &c, int skinVersion);
     };
 

@@ -833,7 +833,7 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
     }
 }
 
-CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
+juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
 {
     bool isMacro = isCustomController(entry);
     int gridX = modsource_grid_xy[entry][0];
@@ -855,13 +855,13 @@ CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
 
     if (skinCtrl->classname == Surge::GUI::NoneClassName && currentSkin->getVersion() >= 2)
     {
-        return CRect();
+        return juce::Rectangle<int>();
     }
 
-    CRect r(CPoint(skinCtrl->x, skinCtrl->y), CPoint(width - 1, 14));
+    auto r = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, width - 1, 14);
 
     if (isMacro)
-        r.bottom += 8;
+        r = r.withTrimmedBottom(-8);
 
     int offsetX = 1;
 
@@ -878,7 +878,7 @@ CRect SurgeGUIEditor::positionForModulationGrid(modsources entry)
         offsetX += width;
     }
 
-    r.offset(offsetX, (8 * gridY));
+    r = r.translated(offsetX, 8 * gridY);
 
     return r;
 }
@@ -907,10 +907,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
         editorOverlayTagAtClose = topmostEditorTag();
         close_editor();
     }
-    CPoint nopoint(0, 0);
-    CPoint sz(getWindowSizeX(), getWindowSizeY());
-    // auto lcb = new LastChanceEventCapture(sz, this);
-    // frame->addView(lcb);
 
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
 
@@ -937,7 +933,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             modsources ms = (modsources)k;
 
-            CRect r = positionForModulationGrid(ms);
+            auto r = positionForModulationGrid(ms);
 
             int state = 0;
 
@@ -951,7 +947,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 gui_modsrc[ms] = std::make_unique<Surge::Widgets::ModulationSourceButton>();
             }
             gui_modsrc[ms]->setModSource(ms);
-            gui_modsrc[ms]->setBounds(r.asJuceIntRect());
+            gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
             gui_modsrc[ms]->addListener(this);
             gui_modsrc[ms]->setSkin(currentSkin, bitmapStore);
@@ -1006,20 +1002,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
         if (synth->fx[current_fx])
         {
             auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
-            CRect fxRect = CRect(CPoint(fxpp->x, fxpp->y), CPoint(123, 13));
+            auto fxRect = juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
             for (int i = 0; i < 15; i++)
             {
                 int t = synth->fx[current_fx]->vu_type(i);
                 if (t)
                 {
-                    CRect vr(fxRect); // FIXME (vurect);
-                    vr.offset(6, yofs * synth->fx[current_fx]->vu_ypos(i));
-                    vr.offset(0, -14);
+                    auto vr = fxRect.translated(6, yofs * synth->fx[current_fx]->vu_ypos(i))
+                                  .translated(0, -14);
                     if (!vu[i + 1])
                     {
                         vu[i + 1] = std::make_unique<Surge::Widgets::VuMeter>();
                     }
-                    vu[i + 1]->setBounds(vr.asJuceIntRect());
+                    vu[i + 1]->setBounds(vr);
                     vu[i + 1]->setSkin(currentSkin, bitmapStore);
                     vu[i + 1]->setType(t);
                     frame->addAndMakeVisible(*vu[i + 1]);
@@ -1033,16 +1028,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
                 if (label)
                 {
-                    CRect vr(fxRect); // (vurect);
-                    vr.top += 1;
-                    vr.right += 5;
-                    vr.offset(5, -12);
-                    vr.offset(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
+                    auto vr =
+                        fxRect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, 12).translated(
+                            0, yofs * synth->fx[current_fx]->group_label_ypos(i));
                     if (!effectLabels[i])
                     {
                         effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
                     }
-                    effectLabels[i]->setBounds(vr.asJuceIntRect());
+                    effectLabels[i]->setBounds(vr);
                     effectLabels[i]->setLabel(label);
                     effectLabels[i]->setSkin(currentSkin, bitmapStore);
                     frame->addAndMakeVisible(*effectLabels[i]);
@@ -1089,7 +1082,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 oscWaveform = std::make_unique<Surge::Widgets::OscillatorWaveformDisplay>();
             }
-            oscWaveform->setBounds(skinCtrl->getRect().asJuceIntRect());
+            oscWaveform->setBounds(skinCtrl->getRect());
             oscWaveform->setSkin(currentSkin, bitmapStore);
             oscWaveform->setStorage(&(synth->storage));
             oscWaveform->setOscStorage(&(synth->storage.getPatch()
@@ -1184,7 +1177,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lfoNameLabel =
                 componentForSkinSession<Surge::Widgets::VerticalLabel>(skinCtrl->sessionid);
             frame->addAndMakeVisible(*lfoNameLabel);
-            lfoNameLabel->setBounds(skinCtrl->getRect().asJuceIntRect());
+            lfoNameLabel->setBounds(skinCtrl->getRect());
             lfoNameLabel->setFont(
                 Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
@@ -1221,7 +1214,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setCategory(synth->storage.getPatch().category);
             patchSelector->setIDs(synth->current_category_id, synth->patchid);
             patchSelector->setAuthor(synth->storage.getPatch().author);
-            patchSelector->setBounds(skinCtrl->getRect().asJuceIntRect());
+            patchSelector->setBounds(skinCtrl->getRect());
 
             frame->addAndMakeVisible(*patchSelector);
             break;
@@ -1230,7 +1223,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             auto fc = componentForSkinSession<Surge::Widgets::EffectChooser>(skinCtrl->sessionid);
             fc->addListener(this);
-            fc->setBounds(skinCtrl->getRect().asJuceIntRect());
+            fc->setBounds(skinCtrl->getRect());
             fc->setTag(tag_fx_select);
             fc->setSkin(currentSkin, bitmapStore);
             fc->setBackgroundDrawable(bitmapStore->getDrawable(IDB_FX_GRID));
@@ -1251,7 +1244,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
         { // main vu-meter
             vu[0] = componentForSkinSession<Surge::Widgets::VuMeter>(skinCtrl->sessionid);
-            vu[0]->setBounds(skinCtrl->getRect().asJuceIntRect());
+            vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
             vu[0]->setType(vut_vu_stereo);
             frame->addAndMakeVisible(*vu[0]);
@@ -1380,9 +1373,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
     frame->addChildComponent(*paramInfowindow);
-
-    int menuX = 844, menuY = 550, menuW = 50, menuH = 15;
-    CRect menurect(menuX, menuY, menuX + menuW, menuY + menuH);
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
@@ -1519,7 +1509,6 @@ bool SurgeGUIEditor::open(void *parent)
 {
     int platformType = 0;
     float fzf = getZoomFactor() / 100.0;
-    CRect wsize(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
 
     frame = std::make_unique<Surge::Widgets::MainFrame>();
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
@@ -1737,8 +1726,7 @@ bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
     return true;
 #endif
 
-    auto screenDim =
-        CRect(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea);
+    auto screenDim = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea;
 
     float baseW = getWindowSizeX();
     float baseH = getWindowSizeY();
@@ -1943,7 +1931,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &menuRect)
         // Prompt for a name
         promptForMiniEdit(
             "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
-            CPoint(-1, -1), [this, currentLfoId](const std::string &s) {
+            juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
                 Surge::ModulatorPreset::savePresetToUser(string_to_path(s), &(this->synth->storage),
                                                          current_scene, currentLfoId);
             });
@@ -2867,7 +2855,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &menuRect)
             Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."), [this, pxres]() {
                 this->promptForMiniEdit(
                     std::to_string(pxres), "Enter new resolution:", "Layout Grid Resolution",
-                    CPoint(400, 400), [this](const std::string &s) {
+                    juce::Point<int>{400, 400}, [this](const std::string &s) {
                         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                                Surge::Storage::LayoutGridResolution,
                                                                std::atoi(s.c_str()));
@@ -3189,8 +3177,7 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
 {
     // Here is a very crude implementation
     int result = zoomHigh;
-    CRect screenDim =
-        CRect(juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea);
+    auto screenDim = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea;
     float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;
     float sy = screenDim.getHeight() * percentageOfScreenAvailable / 100.0;
 
@@ -3582,7 +3569,7 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag)
 }
 
 void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::string &prompt,
-                                       const std::string &title, const VSTGUI::CPoint &iwhere,
+                                       const std::string &title, const juce::Point<int> &iwhere,
                                        std::function<void(const std::string &)> onOK)
 {
     miniEdit->setSkin(currentSkin, bitmapStore);
@@ -3718,8 +3705,7 @@ void SurgeGUIEditor::makeStorePatchDialog()
     pb->setComment(comments);
     pb->setSurgeGUIEditor(this);
 
-    addJuceEditorOverlay(std::move(pb), "Store Patch", STORE_PATCH,
-                         skinCtrl->getRect().asJuceIntRect(), false);
+    addJuceEditorOverlay(std::move(pb), "Store Patch", STORE_PATCH, skinCtrl->getRect(), false);
 }
 
 Surge::GUI::IComponentTagValue *
@@ -3748,11 +3734,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             return nullptr;
         }
 
-        CPoint loc(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
+        auto loc = juce::Point<int>(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
         if (p->is_discrete_selection())
         {
-            loc.offset(2, 4);
+            loc = loc.translated(2, 4);
             auto hs =
                 componentForSkinSession<Surge::Widgets::MenuForDiscreteParams>(skinCtrl->sessionid);
 
@@ -3891,8 +3877,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
     }
     if (skinCtrl->ultimateparentclassname == "CHSwitch2")
     {
-        CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        rect.offset(skinCtrl->x, skinCtrl->y);
+        auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
 
         // Make this a function on skin
         auto drawables = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
@@ -3923,7 +3908,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
             hsw->setHoverOnSwitchDrawable(std::get<2>(drawables));
 
-            hsw->setBounds(rect.asJuceIntRect());
+            hsw->setBounds(rect);
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
 
             if (p)
@@ -3968,7 +3953,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
     }
     if (skinCtrl->ultimateparentclassname == "CSwitchControl")
     {
-        CRect rect(CPoint(skinCtrl->x, skinCtrl->y), CPoint(skinCtrl->w, skinCtrl->h));
+        auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         auto drawables = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
 
         if (std::get<0>(drawables))
@@ -3977,7 +3962,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             frame->addAndMakeVisible(*hsw);
 
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
-            hsw->setBounds(rect.asJuceIntRect());
+            hsw->setBounds(rect);
             hsw->setTag(tag);
             hsw->addListener(this);
 
@@ -4032,14 +4017,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             // FIXME - warning?
         }
-        CRect rect(0, 0, skinCtrl->w, skinCtrl->h);
-        rect.offset(skinCtrl->x, skinCtrl->y);
+        auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
+
         int lfo_id = p->ctrlgroup_entry - ms_lfo1;
         if ((lfo_id >= 0) && (lfo_id < n_lfos))
         {
             lfoDisplay =
                 componentForSkinSession<Surge::Widgets::LFOAndStepDisplay>(skinCtrl->sessionid);
-            lfoDisplay->setBounds(skinCtrl->getRect().asJuceIntRect());
+            lfoDisplay->setBounds(skinCtrl->getRect());
             lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
             lfoDisplay->setTag(p->id + start_paramtags);
             lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
@@ -4135,7 +4120,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         pbd->setControlMode(
             (Surge::Skin::Parameters::NumberfieldControlModes)std::atoi(nfcm.c_str()));
         pbd->setValue(p->get_value_f01());
-        pbd->setBounds(skinCtrl->getRect().asJuceIntRect());
+        pbd->setBounds(skinCtrl->getRect());
 
         auto colorName = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_COLOR,
                                                     Colors::NumberField::Text.name);
@@ -4199,7 +4184,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
         hsw->setTag(p->id + start_paramtags);
         hsw->setStorage(&(synth->storage));
-        hsw->setBounds(rect.asJuceIntRect());
+        hsw->setBounds(rect);
         hsw->setValue(p->get_value_f01());
         p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
@@ -4258,9 +4243,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             // These are the V1 hardcoded defaults
             if (glw == 18 && glh == 18 && glpc == "left" && gli == "")
             {
-                auto drr = rect;
-                drr.right = drr.left + 18;
-                hsw->setDragRegion(drr.asJuceIntRect());
+                auto drr = rect.withWidth(18);
+
+                hsw->setDragRegion(drr);
                 hsw->setDragGlyph(bitmapStore->getDrawable(IDB_FILTER_ICONS), 18);
                 hsw->setDragGlyphHover(
                     bitmapStore->getDrawableByStringID(currentSkin->hoverImageIdForResource(
@@ -4463,8 +4448,8 @@ void SurgeGUIEditor::showFormulaEditorDialog()
         this, &(this->synth->storage), fs, currentSkin);
     pt->setSkin(currentSkin, bitmapStore);
 
-    addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR,
-                         skinCtrl->getRect().asJuceIntRect(), true, [this]() {});
+    addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,
+                         [this]() {});
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
@@ -4554,14 +4539,13 @@ void SurgeGUIEditor::showMSEGEditor()
     auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
-    addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect().asJuceIntRect(),
-                         true, [this]() {
-                             if (msegEditSwitch)
-                             {
-                                 msegEditSwitch->setValue(0.0);
-                                 msegEditSwitch->asJuceComponent()->repaint();
-                             }
-                         });
+    addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect(), true, [this]() {
+        if (msegEditSwitch)
+        {
+            msegEditSwitch->setValue(0.0);
+            msegEditSwitch->asJuceComponent()->repaint();
+        }
+    });
 
     if (msegEditSwitch)
     {
@@ -4593,11 +4577,11 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 
 void SurgeGUIEditor::hideAboutScreen() { frame->removeChildComponent(aboutScreen.get()); }
 
-void SurgeGUIEditor::showMidiLearnOverlay(const VSTGUI::CRect &r)
+void SurgeGUIEditor::showMidiLearnOverlay(const juce::Rectangle<int> &r)
 {
     midiLearnOverlay = bitmapStore->getDrawable(IDB_MIDI_LEARN)->createCopy();
     midiLearnOverlay->setInterceptsMouseClicks(false, false);
-    midiLearnOverlay->setBounds(r.asJuceIntRect());
+    midiLearnOverlay->setBounds(r);
     frame->addAndMakeVisible(midiLearnOverlay.get());
 }
 

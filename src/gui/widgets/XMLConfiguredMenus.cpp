@@ -447,7 +447,7 @@ void FxMenu::saveFX()
     if (sge)
     {
         sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
-                               VSTGUI::CPoint(-1, -1), [this](const std::string &s) {
+                               juce::Point<int>{}, [this](const std::string &s) {
                                    Surge::FxUserPreset::saveFxIn(this->storage, fx, s);
                                    auto *sge = firstListenerOfType<SurgeGUIEditor>();
                                    if (sge)

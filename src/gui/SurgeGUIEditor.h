@@ -395,7 +395,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool onDrop(const std::string &fname);
 
   private:
-    VSTGUI::CRect positionForModulationGrid(modsources entry);
+    juce::Rectangle<int> positionForModulationGrid(modsources entry);
 
     int wsx = BASE_WINDOW_SIZE_X;
     int wsy = BASE_WINDOW_SIZE_Y;
@@ -421,7 +421,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showAboutScreen(int devModeGrid = -1);
     void hideAboutScreen();
 
-    void showMidiLearnOverlay(const VSTGUI::CRect &r);
+    void showMidiLearnOverlay(const juce::Rectangle<int> &r);
     void hideMidiLearnOverlay();
 
   private:
@@ -485,7 +485,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     std::string editorOverlayTagAtClose; // FIXME what is this?
     void promptForMiniEdit(const std::string &value, const std::string &prompt,
-                           const std::string &title, const VSTGUI::CPoint &where,
+                           const std::string &title, const juce::Point<int> &where,
                            std::function<void(const std::string &)> onOK);
 
     /*
