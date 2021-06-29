@@ -335,6 +335,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         const juce::Rectangle<int> &containerBounds, bool showCloseButton = true,
         std::function<void()> onClose = []() {});
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
+    std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
 
     void dismissEditorOfType(OverlayTags ofType);
     OverlayTags topmostEditorTag()
