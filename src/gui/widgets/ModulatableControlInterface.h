@@ -171,7 +171,7 @@ struct ModulatableControlInterface
     juce::Font font;
     virtual void setFont(juce::Font f) { font = f; }
     virtual void setFontStyle(int x) {}
-    virtual void setTextAlign(int x) {}
+    virtual void setTextAlign(juce::Justification x) {}
     virtual void setFontSize(int s) {}
     virtual void setTextHOffset(int x) {}
     virtual void setTextVOffset(int x) {}

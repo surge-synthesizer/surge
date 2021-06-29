@@ -75,7 +75,6 @@
 
 const int yofs = 10;
 
-using namespace VSTGUI;
 using namespace std;
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
@@ -1400,7 +1399,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         if (mtext.isJust())
         {
-            VSTGUI::CHoriTxtAlign txtalign = Surge::GUI::Skin::setTextAlignProperty(
+            auto txtalign = Surge::GUI::Skin::setJuceTextAlignProperty(
                 currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_ALIGN, "left"));
 
             auto fs = currentSkin->propertyValue(l, Surge::Skin::Component::FONT_SIZE, "12");
@@ -3816,7 +3815,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setFontStyle(Surge::GUI::Skin::setFontStyleProperty(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_STYLE, "normal")));
 
-        hs->setTextAlign(Surge::GUI::Skin::setTextAlignProperty(
+        hs->setTextAlign(Surge::GUI::Skin::setJuceTextAlignProperty(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right")));
 
         // Control is using labfont = Surge::GUI::getFontManager()->displayFont, which is

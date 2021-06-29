@@ -4,8 +4,6 @@
 #include <iostream>
 #include <cassert>
 
-using namespace VSTGUI;
-
 std::atomic<int> SurgeImageStore::instances(0);
 SurgeImageStore::SurgeImageStore()
 {

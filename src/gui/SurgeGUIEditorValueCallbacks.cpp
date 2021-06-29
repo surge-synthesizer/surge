@@ -36,8 +36,6 @@
 
 #include "overlays/TypeinParamEditor.h"
 
-using namespace VSTGUI;
-
 void decode_controllerid(char *txt, int id)
 {
     int type = (id & 0xffff0000) >> 16;
@@ -57,13 +55,9 @@ void decode_controllerid(char *txt, int id)
 }
 
 int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *control,
-                                               const juce::ModifierKeys &buttonJ,
+                                               const juce::ModifierKeys &button,
                                                bool isDoubleClickEvent)
 {
-    VSTGUI::CButtonState button(buttonJ);
-    if (isDoubleClickEvent)
-        button = button | kDoubleClick;
-
     if (!synth)
     {
         return 0;
@@ -79,7 +73,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
-    if (button & (kMButton | kButton4 | kButton5))
+    if (button.isMiddleButtonDown())
     {
         toggle_mod_editing();
         return 1;
@@ -100,7 +94,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     long tag = control->getTag();
 
-    if ((button & kControl) && (tag == tag_mp_patch || tag == tag_mp_category))
+    if (button.isCtrlDown() && (tag == tag_mp_patch || tag == tag_mp_category))
     {
         synth->selectRandomPatch();
         return 1;
@@ -150,7 +144,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
-    if (button & kRButton)
+    if (button.isRightButtonDown())
     {
         if (tag == tag_settingsmenu)
         {
@@ -261,7 +255,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         modsources modsource = (modsources)(tag - tag_mod_source0);
 
-        if (button & kRButton)
+        if (button.isRightButtonDown())
         {
             auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
             juce::PopupMenu contextMenu;
@@ -793,7 +787,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
-    if (!(button & (kDoubleClick | kRButton | kControl)))
+    if (!(button.isRightButtonDown() || button.isCtrlDown() || isDoubleClickEvent))
     {
         return 0;
     }
@@ -819,7 +813,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
 
         // all the RMB context menus
-        if (button & kRButton)
+        if (button.isRightButtonDown())
         {
             juce::Point<int> menuRect{};
 
@@ -1963,7 +1957,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             return 1;
         }
         // reset to default value
-        else if (button & kDoubleClick)
+        else if (isDoubleClickEvent)
         {
             if (synth->isValidModulation(ptag, modsource) && mod_editor)
             {
@@ -2001,7 +1995,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 case ct_freq_audible_with_tunability:
                 case ct_freq_audible_with_very_low_lowerbound:
                 {
-                    if (p->extend_range || button & VSTGUI::CButton::kAlt)
+                    if (p->extend_range || button.isAltDown())
                     {
                         auto kr = this->synth->storage.getPatch()
                                       .scene[current_scene]
@@ -2034,7 +2028,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
         // exclusive mute/solo in the mixer
-        else if (button & kControl)
+        else if (button.isCtrlDown())
         {
             if (p->ctrltype == ct_bool_mute)
             {
@@ -2187,7 +2181,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         {
             int state = cms->getState();
             modsources newsource = (modsources)(tag - tag_mod_source0);
-            long buttons = 0; // context->getMouseButtons(); // temp fix vstgui 3.5
+
             if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK)
             {
                 switch (state & 3)
@@ -2214,7 +2208,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 };
             }
 
-            if (isLFO(newsource) && !(buttons & kShift))
+            if (isLFO(newsource))
             {
                 if (modsource_editor[current_scene] != newsource)
                 {
