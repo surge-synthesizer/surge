@@ -199,6 +199,7 @@ void SurgeGUIEditor::idle()
     if (editor_open && frame && !synth->halt_engine)
     {
         idleInfowindow();
+        juceDeleteOnIdle.clear();
         /*
          * USEFUL for testing stress patch changes
          *
@@ -3520,6 +3521,7 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
         if (juceOverlays[ofType])
         {
             frame->removeChildComponent(juceOverlays[ofType].get());
+            juceDeleteOnIdle.push_back(std::move(juceOverlays[ofType]));
         }
         juceOverlays.erase(ofType);
     }
