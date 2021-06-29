@@ -19,7 +19,6 @@
 #include <JuceHeader.h>
 #include <array>
 #include "SurgeStorage.h"
-#include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"

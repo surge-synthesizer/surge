@@ -154,7 +154,7 @@ add_subdirectory(libs/catch2)
 add_subdirectory(libs/eurorack)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
-add_subdirectory(libs/escape-from-vstgui)
+message(STATUS "Escape *was* possible!" )
 add_subdirectory(libs/oddsound-mts)
 add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
 add_subdirectory(libs/tuning-library EXCLUDE_FROM_ALL)
@@ -990,8 +990,6 @@ if( BUILD_SURGE_XT )
           juce::juce_audio_processors
           juce::juce_audio_plugin_client
 
-          escape-from-vstgui
-
           surge-xt-binary
           )
 
@@ -1302,7 +1300,7 @@ add_custom_target(code-quality-pipeline-checks)
 add_dependencies(code-quality-pipeline-checks download-extra-content)
 
 # Coming in 1.9: CLang Format checks and others
-set(CLANG_FORMAT_DIRS libs/escape-from-vstgui src)
+set(CLANG_FORMAT_DIRS src)
 set(CLANG_FORMAT_EXTS cpp h)
 foreach(dir ${CLANG_FORMAT_DIRS})
   foreach(ext ${CLANG_FORMAT_EXTS})

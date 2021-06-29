@@ -1,7 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include <efvg/escape_from_vstgui.h>
 
 namespace Surge
 {

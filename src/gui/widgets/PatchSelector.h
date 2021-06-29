@@ -17,7 +17,6 @@
 #define SURGE_XT_PATCHSELECTOR_H
 
 #include <JuceHeader.h>
-#include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"

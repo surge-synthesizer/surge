@@ -16,7 +16,7 @@
 #ifndef SURGE_XT_WIDGETBASEMIXIN_H
 #define SURGE_XT_WIDGETBASEMIXIN_H
 
-#include "efvg/escape_from_vstgui.h"
+#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include <unordered_set>
 #include "SurgeGUICallbackInterfaces.h"

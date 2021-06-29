@@ -4,11 +4,7 @@
  * A utility wrapper around loading and drawables and stuff
  */
 
-#if ESCAPE_FROM_VSTGUI
-#include "efvg/escape_from_vstgui.h"
-#else
-#include "vstgui/vstgui.h"
-#endif
+#include <JuceHeader.h>
 
 #include <vector>
 #include <map>
