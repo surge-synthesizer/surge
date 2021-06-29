@@ -2,7 +2,6 @@
 
 #include "resource.h"
 #include <JuceHeader.h>
-#include "efvg/escape_from_vstgui.h"
 #include <map>
 #include <atomic>
 #include <algorithm>

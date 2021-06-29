@@ -18,7 +18,6 @@
 
 #include <JuceHeader.h>
 #include <SurgeJUCEHelpers.h>
-#include "efvg/escape_from_vstgui.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 

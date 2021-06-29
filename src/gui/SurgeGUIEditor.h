@@ -21,7 +21,6 @@
 
 #include "SurgeGUICallbackInterfaces.h"
 
-#include "efvg/escape_from_vstgui.h"
 #include "SurgeStorage.h"
 #include "SurgeImageStore.h"
 

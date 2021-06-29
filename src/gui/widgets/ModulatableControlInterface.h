@@ -17,7 +17,6 @@
 #define SURGE_XT_MODULATABLECONTROLINTERFACE_H
 
 #include <JuceHeader.h>
-#include "efvg/escape_from_vstgui.h"
 
 namespace Surge
 {
