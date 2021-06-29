@@ -28,8 +28,6 @@
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 
-using namespace VSTGUI;
-
 namespace Surge
 {
 namespace Overlays
@@ -40,8 +38,8 @@ struct MSEGControlRegion : public juce::Component,
                            public Surge::GUI::SkinConsumingComponent,
                            public Surge::GUI::IComponentTagValue::Listener
 {
-    MSEGControlRegion(const CRect &size, MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos,
-                      MSEGStorage *ms, MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
+    MSEGControlRegion(MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms,
+                      MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
                       std::shared_ptr<SurgeImageStore> b)
         : juce::Component("MSEG Control Region")
     {
@@ -88,9 +86,8 @@ struct MSEGControlRegion : public juce::Component,
 
 struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
-    MSEGCanvas(const CRect &size, SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms,
-               MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-               std::shared_ptr<SurgeImageStore> b)
+    MSEGCanvas(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds,
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b)
         : juce::Component("MSEG Canvas")
     {
         setSkin(skin, b);
@@ -109,8 +106,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     */
     struct hotzone
     {
-        CRect rect;
-        CRect drawRect;
+        juce::Rectangle<float> rect;
+        juce::Rectangle<float> drawRect;
         bool useDrawRect = false;
         int associatedSegment;
         bool specialEndpoint =
@@ -140,7 +137,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             HORIZONTAL_ONLY,
             BOTH_DIRECTIONS
         } segmentDirection = VERTICAL_ONLY;
-        std::function<void(float, float, const CPoint &)> onDrag;
+        std::function<void(float, float, const juce::Point<float> &)> onDrag;
     };
 
     std::vector<hotzone> hotzones;
@@ -321,7 +318,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             if (this->ms->editMode != MSEGStorage::LFO)
             {
-                hs.onDrag = [pxt, this](float x, float y, const CPoint &w) {
+                hs.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
                     t = limit_range(t, 0.f, ms->segmentStart[ms->n_activeSegments - 1]);
 
@@ -350,15 +347,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         loopDragEnd = 0;
                 };
 
-                hs.rect = VSTGUI::CRect(CPoint(pxs - 0.5, haxisArea.getY() + 1),
-                                        CPoint(loopMarkerWidth, loopMarkerHeight));
+                hs.rect = juce::Rectangle<float>(pxs - 0.5, haxisArea.getY() + 1, loopMarkerWidth,
+                                                 loopMarkerHeight);
                 hs.zoneSubType = hotzone::LOOP_START;
 
-                he.rect = VSTGUI::CRect(CPoint(pxe - loopMarkerWidth + 0.5, haxisArea.getY() + 1),
-                                        CPoint(loopMarkerWidth, loopMarkerHeight));
+                he.rect = juce::Rectangle<float>(pxe - loopMarkerWidth + 0.5, haxisArea.getY() + 1,
+                                                 loopMarkerWidth, loopMarkerHeight);
                 he.zoneSubType = hotzone::LOOP_END;
 
-                he.onDrag = [pxt, this](float x, float y, const CPoint &w) {
+                he.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
                     t = limit_range(t, ms->segmentEnd[0], ms->totalDuration);
                     auto seg = Surge::MSEG::timeToSegment(this->ms, t);
@@ -400,23 +397,26 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto t0 = tpx(ms->segmentStart[i]);
             auto t1 = tpx(ms->segmentEnd[i]);
 
-            auto segrec = CRect(t0, drawArea.getY(), t1, drawArea.getBottom());
+            auto segrec = juce::Rectangle<float>(juce::Point<float>(t0, drawArea.getY()),
+                                                 juce::Point<float>(t1, drawArea.getBottom()));
 
             // Now add the mousable zones
             auto &s = ms->segments[i];
-            auto rectForPoint = [&](float t, float v, hotzone::ZoneSubType mt,
-                                    std::function<void(float, float, const CPoint &)> onDrag) {
-                auto h = hotzone();
-                h.rect = CRect(t - handleRadius, valpx(v) - handleRadius, t + handleRadius,
-                               valpx(v) + handleRadius);
-                h.type = hotzone::Type::MOUSABLE_NODE;
-                if (h.rect.pointInside(CPoint(where.getX(), where.getY())))
-                    h.active = true;
-                h.onDrag = onDrag;
-                h.associatedSegment = i;
-                h.zoneSubType = mt;
-                hotzones.push_back(h);
-            };
+            auto rectForPoint =
+                [&](float t, float v, hotzone::ZoneSubType mt,
+                    std::function<void(float, float, const juce::Point<float> &)> onDrag) {
+                    auto h = hotzone();
+                    h.rect = juce::Rectangle<float>(
+                        juce::Point<float>(t - handleRadius, valpx(v) - handleRadius),
+                        juce::Point<float>(t + handleRadius, valpx(v) + handleRadius));
+                    h.type = hotzone::Type::MOUSABLE_NODE;
+                    if (h.rect.contains(where.getX(), where.getY()))
+                        h.active = true;
+                    h.onDrag = onDrag;
+                    h.associatedSegment = i;
+                    h.zoneSubType = mt;
+                    hotzones.push_back(h);
+                };
 
             auto timeConstraint = [&](int prior, float dx) {
                 switch (this->timeEditMode)
@@ -439,7 +439,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             // We get a mousable point at the start of the line
             rectForPoint(t0, s.v0, hotzone::SEGMENT_ENDPOINT,
                          [i, this, vscale, tscale, timeConstraint,
-                          unipolarFactor](float dx, float dy, const CPoint &where) {
+                          unipolarFactor](float dx, float dy, const juce::Point<float> &where) {
                              adjustValue(i, false, -2 * dy / vscale, ms->vSnap * unipolarFactor);
 
                              if (i != 0)
@@ -508,9 +508,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 float v = valpx(vLocation);
                 auto h = hotzone();
                 h.rect =
-                    CRect(t - handleRadius, v - handleRadius, t + handleRadius, v + handleRadius);
+                    juce::Rectangle<float>(juce::Point<float>(t - handleRadius, v - handleRadius),
+                                           juce::Point<float>(t + handleRadius, v + handleRadius));
                 h.type = hotzone::Type::MOUSABLE_NODE;
-                if (h.rect.pointInside(CPoint(where.getX(), where.getY())))
+                if (h.rect.contains(where.getX(), where.getY()))
                     h.active = true;
 
                 h.useDrawRect = false;
@@ -521,8 +522,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     float t = tpx(0.5 * ms->segments[i].duration + ms->segmentStart[i]);
                     float v = valpx(0.5 * (ms->segments[i].nv1 + ms->segments[i].v0));
-                    h.drawRect = CRect(t - handleRadius, v - handleRadius, t + handleRadius,
-                                       v + handleRadius);
+                    h.drawRect = juce::Rectangle<float>(
+                        juce::Point<float>(t - handleRadius, v - handleRadius),
+                        juce::Point<float>(t + handleRadius, v + handleRadius));
                     h.rect = h.drawRect;
                     h.useDrawRect = true;
                 }
@@ -532,7 +534,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 h.onDrag = [this, i, tscale, vscale, verticalMotion, horizontalMotion,
                             verticalScaleByValues, segdt,
-                            segdx](float dx, float dy, const CPoint &where) {
+                            segdx](float dx, float dy, const juce::Point<float> &where) {
                     if (verticalMotion)
                     {
                         float dv = 0;
@@ -609,7 +611,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         .nv1, /* which is [0].v0 in lock mode only */
                     hotzone::SEGMENT_ENDPOINT,
                     [this, vscale, tscale, unipolarFactor](float dx, float dy,
-                                                           const CPoint &where) {
+                                                           const juce::Point<float> &where) {
                         if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
                         {
                             float d = -2 * dy / vscale;
@@ -637,7 +639,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         // Don't allow endpoint time adjust in LFO mode
                         if (this->ms->editMode == MSEGStorage::ENVELOPE)
                         {
-                            if (!this->getLocalBounds().contains(where))
+                            if (!this->getLocalBounds().contains(where.toInt()))
                             {
                                 auto howFar = where.x - this->getLocalBounds().getRight();
                                 if (howFar > 0)
@@ -658,10 +660,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     const int gridMaxVSteps = 10;
 
     void drawLoopDragMarker(juce::Graphics &g, juce::Colour markerColor,
-                            hotzone::ZoneSubType subtype, const CRect &rectC)
+                            hotzone::ZoneSubType subtype, const juce::Rectangle<float> &rect)
     {
         auto ha = getHAxisArea();
-        auto rect = rectC.asJuceFloatRect();
         auto height = rect.getHeight();
         auto start = rect.getRight();
         auto end = rect.getX();
@@ -715,7 +716,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             drawLoopDragMarker(
                 g, markerColor, subtype,
-                CRect(CPoint(start, ha.getY()), CPoint(loopMarkerWidth, loopMarkerHeight)));
+                juce::Rectangle<float>(start, ha.getY(), loopMarkerWidth, loopMarkerHeight));
         }
     }
 
@@ -738,13 +739,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.getX(),
                                     (float)haxisArea.getRight());
 
-            auto r = VSTGUI::CRect(pxs, haxisArea.getY(), pxe, haxisArea.getY() + 15);
+            auto r = juce::Rectangle<float>(juce::Point<float>(pxs, haxisArea.getY()),
+                                            juce::Point<float>(pxe, haxisArea.getY() + 15));
 
             // draw the loop region start to end
             if (!(ms->loop_start == ms->loop_end + 1))
             {
                 g.setColour(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
-                g.fillRect(r.asJuceFloatRect());
+                g.fillRect(r);
             }
 
             auto mcolor = skin->getColor(Colors::MSEGEditor::Loop::Marker);
@@ -1028,7 +1030,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             zoomToFull();
 
         if (hotzones.empty())
-            recalcHotZones(CPoint(vs.getX(), vs.getY()));
+            recalcHotZones(juce::Point<int>(vs.getX(), vs.getY()));
 
         g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
         auto drawArea = getDrawArea();
@@ -1055,11 +1057,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 pxs = std::max(drawArea.getX(), (int)pxs);
                 pxe = std::min(drawArea.getRight(), (int)pxe);
 
-                auto loopRect = CRect(pxs - 0.5, drawArea.getY(), pxe, drawArea.getBottom());
+                auto loopRect =
+                    juce::Rectangle<float>(juce::Point<float>(pxs - 0.5, drawArea.getY()),
+                                           juce::Point<float>(pxe, drawArea.getBottom()));
                 auto cf = skin->getColor(Colors::MSEGEditor::Loop::RegionFill);
 
                 g.setColour(cf);
-                g.fillRect(loopRect.asJuceFloatRect());
+                g.fillRect(loopRect);
 
                 auto cb = skin->getColor(Colors::MSEGEditor::Loop::RegionBorder);
                 g.setColour(cb);
@@ -1090,11 +1094,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto xdisp = drawArea;
         float yOff = drawArea.getY();
 
-        auto beginP = [yOff, pathScale](juce::Path &p, CCoord x, CCoord y) {
+        auto beginP = [yOff, pathScale](juce::Path &p, float x, float y) {
             p.startNewSubPath(pathScale * x, pathScale * (y - yOff));
         };
 
-        auto addP = [yOff, pathScale](juce::Path &p, CCoord x, CCoord y) {
+        auto addP = [yOff, pathScale](juce::Path &p, float x, float y) {
             p.lineTo(pathScale * x, pathScale * (y - yOff));
         };
 
@@ -1305,13 +1309,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 if (h.zoneSubType == hotzone::LOOP_START)
                 {
                     // my left edge is off the right or my left edge is off the left
-                    if (h.rect.left > drawArea.getRight() + 1 || h.rect.left < drawArea.getX() - 1)
+                    if (h.rect.getX() > drawArea.getRight() + 1 ||
+                        h.rect.getX() < drawArea.getX() - 1)
                         continue;
                 }
                 else if (h.zoneSubType == hotzone::LOOP_END)
                 {
                     // my right edge is off the right or left
-                    if (h.rect.right > drawArea.getRight() + 1 || h.rect.right <= drawArea.getX())
+                    if (h.rect.getRight() > drawArea.getRight() + 1 ||
+                        h.rect.getRight() <= drawArea.getX())
                         continue;
                 }
 
@@ -1320,8 +1326,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     auto c = skin->getColor(Colors::MSEGEditor::Loop::Marker);
 
-                    auto hr = h.rect;
-                    hr.offset(0, -1);
+                    auto hr = h.rect.translated(0, -1);
 
                     g.setColour(c);
                     g.fillRect(hr);
@@ -1374,17 +1379,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     if (h.useDrawRect)
                         r = h.drawRect;
 
-                    int cx = r.getCenter().x;
+                    int cx = r.getCentreX();
 
                     if (cx >= drawArea.getX() && cx <= drawArea.getRight())
                     {
                         juce::Graphics::ScopedSaveState gs(g);
-                        g.reduceClipRegion(r.asJuceIntRect());
+                        g.reduceClipRegion(r.toNearestIntEdges());
                         auto at = juce::AffineTransform()
                                       .translated(-offx * sz, -offy * sz)
                                       .translated(r.getTopLeft());
                         handleDrawable->draw(g, 1.0, at);
-                        //  handleBmp->draw(dc, r, CPoint(offx * sz, offy * sz), 0xFF);
                     }
                 }
             }
@@ -1424,7 +1428,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                  */
                 for (auto h : hotzones)
                 {
-                    if (h.rect.pointInside(e.position))
+                    if (h.rect.contains(e.position))
                     {
                         openPopup(e.position);
                     }
@@ -1447,7 +1451,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             bool amOverControl = false;
             for (auto &h : hotzones)
             {
-                if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE &&
+                if (h.rect.contains(where) && h.type == hotzone::MOUSABLE_NODE &&
                     h.zoneSubType == hotzone::SEGMENT_CONTROL)
                 {
                     amOverControl = true;
@@ -1484,7 +1488,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         bool gotHZ = false;
         for (auto &h : hotzones)
         {
-            if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
+            if (h.rect.contains(where) && h.type == hotzone::MOUSABLE_NODE)
             {
                 gotHZ = true;
                 hideCursor(where.toInt());
@@ -1513,7 +1517,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 break;
             }
 
-            if (h.rect.pointInside(where) && h.type == hotzone::LOOPMARKER)
+            if (h.rect.contains(where) && h.type == hotzone::LOOPMARKER)
             {
                 gotHZ = true;
                 hideCursor(where.toInt());
@@ -1553,7 +1557,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             // Check if I'm on a hotzoneo
             for (auto &h : hotzones)
             {
-                if (h.rect.pointInside(where) && h.type == hotzone::MOUSABLE_NODE)
+                if (h.rect.contains(where.toFloat()) && h.type == hotzone::MOUSABLE_NODE)
                 {
                     switch (h.zoneSubType)
                     {
@@ -1632,16 +1636,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     if (h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
                     {
-                        showCursorAt(h.rect.getCenter());
+                        showCursorAt(h.rect.getCentre());
                     }
                     if (h.zoneSubType == hotzone::SEGMENT_CONTROL && !h.useDrawRect)
                     {
-                        showCursorAt(h.rect.getCenter());
+                        showCursorAt(h.rect.getCentre());
                     }
                 }
                 if (h.type == hotzone::LOOPMARKER)
                 {
-                    showCursorAt(h.rect.getCenter());
+                    showCursorAt(h.rect.getCentre());
                 }
             }
             h.dragging = false;
@@ -1652,7 +1656,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         return;
     }
 
-    void showCursorAt(const CPoint &w) { cursorHideOrigin = w; }
+    void showCursorAt(const juce::Point<float> &w) { cursorHideOrigin = w.toInt(); }
+    void showCursorAt(const juce::Point<int> &w) { cursorHideOrigin = w; }
 
     void guaranteeCursorShown()
     {
@@ -1726,7 +1731,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         bool reset = false;
         for (const auto &h : hotzones)
         {
-            if (!h.rect.pointInside(event.position))
+            if (!h.rect.contains(event.position))
                 continue;
 
             reset = true;
@@ -1786,7 +1791,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 dragX *= 0.2;
                 dragY *= 0.2;
             }
-            h.onDrag(dragX, dragY, CPoint(where.getX(), where.getY()));
+            h.onDrag(dragX, dragY, juce::Point<float>(where.getX(), where.getY()));
 
             hoveredSegment = h.associatedSegment;
             mouseDownOrigin = where;
@@ -1811,13 +1816,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     float dx = where.x - lastPanZoomMousePos.x;
                     float panScale = 1.0 / getDrawArea().getWidth();
-                    pan(where, -dx * panScale);
+                    pan(where.toFloat(), -dx * panScale);
                 }
                 else
                 {
                     float dy = where.y - lastPanZoomMousePos.y;
                     float zoomScale = 2. / getDrawArea().getHeight();
-                    zoom(where, -dy * zoomScale);
+                    zoom(where.toInt(), -dy * zoomScale);
                 }
 
                 lastPanZoomMousePos = where;
@@ -1875,7 +1880,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         if (fabs(wheel.deltaX) > fabs(wheel.deltaY))
         {
-            pan(where, -wheelFac * wheel.deltaX);
+            pan(where.toFloat(), -wheelFac * wheel.deltaX);
         }
         else
         {
@@ -1937,14 +1942,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         modelChanged(0, false);
     }
 
-    void pan(const CPoint &where, float amount)
+    void pan(const juce::Point<float> &where, float amount)
     {
         // std::cout << "PAN " << ms->axisStart << " " << ms->axisWidth << std::endl;
         ms->axisStart += ms->axisWidth * amount;
         ms->axisStart = std::max(ms->axisStart, 0.f);
         applyZoomPanConstraints();
 
-        recalcHotZones(where);
+        recalcHotZones(where.toInt());
         repaint();
     }
 
@@ -1953,7 +1958,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     // because new LFOs will need to be appended at the end of the list of modsources
     bool isSceneMSEG() const { return lfodata->shape.ctrlgroup_entry >= ms_slfo1; }
 
-    void openPopup(const VSTGUI::CPoint &iw)
+    void openPopup(const juce::Point<float> &iw)
     {
         auto contextMenu = juce::PopupMenu();
 
@@ -2389,7 +2394,7 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         if (canvas)
         {
             canvas->timeEditMode = (MSEGCanvas::TimeEdit)m;
-            canvas->recalcHotZones(CPoint(0, 0));
+            canvas->recalcHotZones(juce::Point<int>(0, 0));
             canvas->repaint();
         }
 
@@ -2595,11 +2600,11 @@ void MSEGControlRegion::rebuild()
         ypos += margin + labelHeight;
 
         // button
-        auto btnrect = CRect(CPoint(marginPos, ypos - 1), CPoint(btnWidth, buttonHeight));
+        auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
 
         jassert(!movementMode);
         movementMode = std::make_unique<Surge::Widgets::MultiSwitch>();
-        movementMode->setBounds(btnrect.asJuceIntRect());
+        movementMode->setBounds(btnrect);
         movementMode->addListener(this);
         movementMode->setTag(tag_segment_movement_mode);
         movementMode->setHeightOfOneImage(buttonHeight);
@@ -2639,11 +2644,11 @@ void MSEGControlRegion::rebuild()
         ypos += margin + labelHeight;
 
         // button
-        auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
+        auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, btnWidth, buttonHeight);
 
         jassert(!editMode);
         editMode = std::make_unique<Surge::Widgets::MultiSwitch>();
-        editMode->setBounds(btnrect.asJuceIntRect());
+        editMode->setBounds(btnrect);
         editMode->addListener(this);
         editMode->setTag(tag_edit_mode);
         editMode->setHeightOfOneImage(buttonHeight);
@@ -2680,10 +2685,10 @@ void MSEGControlRegion::rebuild()
         ypos += margin + labelHeight;
 
         // button
-        auto btnrect = CRect(CPoint(xpos, ypos - 1), CPoint(btnWidth, buttonHeight));
+        auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, btnWidth, buttonHeight);
         jassert(!loopMode);
         loopMode = std::make_unique<Surge::Widgets::MultiSwitch>();
-        loopMode->setBounds(btnrect.asJuceIntRect());
+        loopMode->setBounds(btnrect);
         loopMode->addListener(this);
         loopMode->setTag(tag_loop_mode);
         loopMode->setHeightOfOneImage(buttonHeight);
@@ -2799,10 +2804,8 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
     }
     setSkin(skin, bmp);
 
-    canvas = std::make_unique<MSEGCanvas>(CRect(CPoint(0, 0), CPoint(200, 180)), storage, lfodata,
-                                          ms, eds, skin, bmp);
-    controls = std::make_unique<MSEGControlRegion>(CRect(CPoint(0, 400), CPoint(200, 35)), nullptr,
-                                                   storage, lfodata, ms, eds, skin, bmp);
+    canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp);
+    controls = std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp);
 
     addAndMakeVisible(*controls);
     addAndMakeVisible(*canvas);

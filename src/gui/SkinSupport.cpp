@@ -746,26 +746,6 @@ juce::Font::FontStyleFlags Skin::setFontStyleProperty(std::string propertyValue)
     }
 }
 
-VSTGUI::CHoriTxtAlign Skin::setTextAlignProperty(std::string propertyValue)
-{
-    // make the property value not case sensitive
-    std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-
-    if (propertyValue == "center")
-    {
-        return VSTGUI::kCenterText;
-    }
-    else if (propertyValue == "right")
-    {
-        return VSTGUI::kRightText;
-    }
-    else
-    {
-        return VSTGUI::kLeftText;
-    }
-}
-
 juce::Justification Skin::setJuceTextAlignProperty(std::string propertyValue)
 {
     // make the property value not case sensitive
