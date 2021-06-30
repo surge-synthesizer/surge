@@ -275,6 +275,7 @@
         <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000" />
         <type i="14" name="Ambience">
             <snapshot name="Bright Ambience" p0="21" p1="0.2" p2="0.2" p3="0" p4="0.5" />
+            <snapshot name="Chamber" p0="54" p1="0.35" p2="0.35" p3="0.35" p4="0.35" p5="0.35" />
             <snapshot name="Galactic" p0="49" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1" />
             <snapshot name="Infinity" p0="50" p1="1" p2="0" p3="0.4" p4="1" />
             <snapshot name="MatrixVerb" p0="51" p1="1" p2="0" p3="0" p4="0" p5="0.5" p6="0.5" p7="1" />

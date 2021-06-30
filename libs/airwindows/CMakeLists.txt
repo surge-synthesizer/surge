@@ -31,6 +31,8 @@ add_library(${PROJECT_NAME}
   src/Capacitor.cpp
   src/Capacitor.h
   src/CapacitorProc.cpp
+  src/Chamber.cpp
+  src/ChamberProc.cpp
   src/Cojones.cpp
   src/Cojones.h
   src/CojonesProc.cpp
