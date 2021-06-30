@@ -1227,7 +1227,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fc->setBounds(skinCtrl->getRect());
             fc->setTag(tag_fx_select);
             fc->setSkin(currentSkin, bitmapStore);
-            fc->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID)->getDrawable());
+            fc->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID));
             fc->setCurrentEffect(current_fx);
 
             for (int fxi = 0; fxi < n_fx_slots; fxi++)
@@ -1439,7 +1439,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
             if (image.isJust())
             {
-                auto bmp = bitmapStore->getImageByStringID(image.fromJust())->getDrawable();
+                auto bmp = bitmapStore->getImageByStringID(image.fromJust());
                 if (bmp)
                 {
                     jassert(false);
@@ -1776,6 +1776,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
         juceEditor->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
     }
     juceEditor->setScaleFactor(zoomFactor * 0.01);
+    setBitmapZoomFactor(zoomFactor);
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
@@ -3108,12 +3109,12 @@ void SurgeGUIEditor::reloadFromSkin()
 
     if (bg != "")
     {
-        auto *cbm = bitmapStore->getImageByStringID(bg)->getDrawable();
+        auto *cbm = bitmapStore->getImageByStringID(bg);
         frame->setBackground(cbm);
     }
     else
     {
-        auto *cbm = bitmapStore->getImage(IDB_MAIN_BG)->getDrawable();
+        auto *cbm = bitmapStore->getImage(IDB_MAIN_BG);
         frame->setBackground(cbm);
     }
 
@@ -3538,7 +3539,7 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     ol->setTitle(editorTitle);
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);
-    ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON)->getDrawable());
+    ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON));
     ol->setShowCloseButton(showCloseButton);
     ol->setCloseOverlay([this, editorTag, onClose]() {
         this->dismissEditorOfType(editorTag);
@@ -4053,9 +4054,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         oscMenu->addListener(this);
         oscMenu->setStorage(&(synth->storage));
         oscMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
-        oscMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_OSC_MENU)->getDrawable());
+        oscMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_OSC_MENU));
         auto id = currentSkin->hoverImageIdForResource(IDB_OSC_MENU, Surge::GUI::Skin::HOVER);
-        auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
+        auto bhov = bitmapStore->getImageByStringID(id);
         oscMenu->setHoverBackgroundDrawable(bhov);
         oscMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         oscMenu->setOscillatorStorage(
@@ -4087,9 +4088,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->addListener(this);
         fxMenu->setStorage(&(synth->storage));
         fxMenu->setSkin(currentSkin, bitmapStore, skinCtrl);
-        fxMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_MENU_AS_SLIDER)->getDrawable());
+        fxMenu->setBackgroundDrawable(bitmapStore->getImage(IDB_MENU_AS_SLIDER));
         auto id = currentSkin->hoverImageIdForResource(IDB_MENU_AS_SLIDER, Surge::GUI::Skin::HOVER);
-        auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
+        auto bhov = bitmapStore->getImageByStringID(id);
         fxMenu->setHoverBackgroundDrawable(bhov);
         fxMenu->setBounds(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         fxMenu->setFxStorage(&synth->storage.getPatch().fx[current_fx]);
@@ -4201,16 +4202,15 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
         if (pv.isJust())
         {
-            hsw->setBackgroundDrawable(
-                bitmapStore->getImageByStringID(pv.fromJust())->getDrawable());
+            hsw->setBackgroundDrawable(bitmapStore->getImageByStringID(pv.fromJust()));
             jassert(false); // hover
         }
         else
         {
-            hsw->setBackgroundDrawable(bitmapStore->getImage(IDB_FILTER_MENU)->getDrawable());
+            hsw->setBackgroundDrawable(bitmapStore->getImage(IDB_FILTER_MENU));
             auto id =
                 currentSkin->hoverImageIdForResource(IDB_FILTER_MENU, Surge::GUI::Skin::HOVER);
-            auto bhov = bitmapStore->getImageByStringID(id)->getDrawable();
+            auto bhov = bitmapStore->getImageByStringID(id);
             hsw->setHoverBackgroundDrawable(bhov);
         }
 
@@ -4249,12 +4249,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 auto drr = rect.withWidth(18);
 
                 hsw->setDragRegion(drr);
-                hsw->setDragGlyph(bitmapStore->getImage(IDB_FILTER_ICONS)->getDrawable(), 18);
+                hsw->setDragGlyph(bitmapStore->getImage(IDB_FILTER_ICONS), 18);
                 hsw->setDragGlyphHover(
-                    bitmapStore
-                        ->getImageByStringID(currentSkin->hoverImageIdForResource(
-                            IDB_FILTER_ICONS, Surge::GUI::Skin::HOVER))
-                        ->getDrawable());
+                    bitmapStore->getImageByStringID(currentSkin->hoverImageIdForResource(
+                        IDB_FILTER_ICONS, Surge::GUI::Skin::HOVER)));
             }
             else
             {
@@ -4584,7 +4582,7 @@ void SurgeGUIEditor::hideAboutScreen() { frame->removeChildComponent(aboutScreen
 
 void SurgeGUIEditor::showMidiLearnOverlay(const juce::Rectangle<int> &r)
 {
-    midiLearnOverlay = bitmapStore->getImage(IDB_MIDI_LEARN)->getDrawable()->createCopy();
+    midiLearnOverlay = bitmapStore->getImage(IDB_MIDI_LEARN)->createCopy();
     midiLearnOverlay->setInterceptsMouseClicks(false, false);
     midiLearnOverlay->setBounds(r);
     frame->addAndMakeVisible(midiLearnOverlay.get());

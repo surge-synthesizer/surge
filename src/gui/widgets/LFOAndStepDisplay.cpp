@@ -15,6 +15,7 @@
 
 #include "LFOAndStepDisplay.h"
 #include "SurgeImageStore.h"
+#include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include <chrono>

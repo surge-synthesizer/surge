@@ -17,6 +17,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

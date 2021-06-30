@@ -17,6 +17,7 @@
 #define SURGE_XT_MAINFRAME_H
 
 #include <JuceHeader.h>
+#include "SurgeImage.h"
 
 class SurgeGUIEditor;
 
@@ -29,8 +30,8 @@ struct MainFrame : public juce::Component
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
 
-    juce::Drawable *bg{nullptr};
-    void setBackground(juce::Drawable *d)
+    SurgeImage *bg{nullptr};
+    void setBackground(SurgeImage *d)
     {
         bg = d;
         repaint();

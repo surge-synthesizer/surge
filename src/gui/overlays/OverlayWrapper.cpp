@@ -15,6 +15,7 @@
 
 #include "OverlayWrapper.h"
 #include "RuntimeFont.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

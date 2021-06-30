@@ -1305,34 +1305,34 @@ Skin::Control::Control()
     sessionid = sidc++;
 }
 
-std::array<juce::Drawable *, 3>
+std::array<SurgeImage *, 3>
 Skin::standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeImageStore> b)
 {
     auto csb = backgroundBitmapForControl(c, b);
     return standardHoverAndHoverOnForCSB(csb, c, b);
 }
-std::array<juce::Drawable *, 3>
-Skin::standardHoverAndHoverOnForIDB(int id, std::shared_ptr<SurgeImageStore> b)
+std::array<SurgeImage *, 3> Skin::standardHoverAndHoverOnForIDB(int id,
+                                                                std::shared_ptr<SurgeImageStore> b)
 {
     auto csb = b->getImage(id);
     return standardHoverAndHoverOnForCSB(csb, nullptr, b);
 }
-std::array<juce::Drawable *, 3>
-Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb, Skin::Control::ptr_t c,
-                                    std::shared_ptr<SurgeImageStore> b)
+std::array<SurgeImage *, 3> Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb,
+                                                                Skin::Control::ptr_t c,
+                                                                std::shared_ptr<SurgeImageStore> b)
 {
-    std::array<juce::Drawable *, 3> res;
-    res[0] = csb->getDrawable();
+    std::array<SurgeImage *, 3> res;
+    res[0] = csb;
 
     auto hoverBmp =
         hoverBitmapOverlayForBackgroundBitmap(c, csb, b, Surge::GUI::Skin::HoverType::HOVER);
 
-    res[1] = hoverBmp ? hoverBmp->getDrawable() : nullptr;
+    res[1] = hoverBmp ? hoverBmp : nullptr;
 
     auto hoverOnBmp = hoverBitmapOverlayForBackgroundBitmap(
         c, csb, b, Surge::GUI::Skin::HoverType::HOVER_OVER_ON);
 
-    res[2] = hoverOnBmp ? hoverOnBmp->getDrawable() : nullptr;
+    res[2] = hoverOnBmp ? hoverOnBmp : nullptr;
     return res;
 }
 

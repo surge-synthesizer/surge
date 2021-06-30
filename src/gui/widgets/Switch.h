@@ -21,6 +21,8 @@
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
 
+class SurgeImage;
+
 namespace Surge
 {
 namespace Widgets
@@ -73,9 +75,9 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
 
     bool isHovered{false};
 
-    juce::Drawable *switchD{nullptr}, *hoverSwitchD{nullptr};
-    void setSwitchDrawable(juce::Drawable *d) { switchD = d; }
-    void setHoverSwitchDrawable(juce::Drawable *d) { hoverSwitchD = d; }
+    SurgeImage *switchD{nullptr}, *hoverSwitchD{nullptr};
+    void setSwitchDrawable(SurgeImage *d) { switchD = d; }
+    void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
 };
 } // namespace Widgets
 } // namespace Surge

@@ -20,6 +20,7 @@
 #include "SkinSupport.h"
 
 class SurgeGUIEditor;
+class SurgeImage;
 
 namespace Surge
 {
@@ -46,8 +47,8 @@ struct OverlayWrapper : public juce::Component,
     std::unique_ptr<juce::TextButton> closeButton;
     void buttonClicked(juce::Button *button) override;
 
-    juce::Drawable *icon{nullptr};
-    void setIcon(juce::Drawable *d) { icon = d; }
+    SurgeImage *icon{nullptr};
+    void setIcon(SurgeImage *d) { icon = d; }
 
     bool showCloseButton{true};
     void setShowCloseButton(bool b) { showCloseButton = b; }

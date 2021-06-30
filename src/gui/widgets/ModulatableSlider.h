@@ -100,7 +100,7 @@ struct ModulatableSlider : public juce::Component,
 
     void onSkinChanged() override;
 
-    juce::Drawable *pTray, *pHandle, *pHandleHover, *pTempoSyncHandle, *pTempoSyncHoverHandle;
+    SurgeImage *pTray, *pHandle, *pHandleHover, *pTempoSyncHandle, *pTempoSyncHoverHandle;
 
   private:
     // I know right Here I am using private!

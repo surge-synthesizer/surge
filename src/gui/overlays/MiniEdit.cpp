@@ -67,7 +67,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     g.drawText(title, tbRect, juce::Justification::centred);
 
-    auto d = associatedBitmapStore->getImage(IDB_SURGE_ICON)->getDrawable();
+    auto d = associatedBitmapStore->getImage(IDB_SURGE_ICON);
     if (d)
     {
         d->drawAt(g, fullRect.getX(), fullRect.getY(), 1.0);

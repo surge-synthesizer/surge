@@ -25,6 +25,7 @@ SurgeImage::SurgeImage(int rid)
     if (bd)
     {
         drawable = juce::Drawable::createFromImageData(bd, bds);
+        currentDrawable = drawable.get();
     }
 }
 
@@ -32,11 +33,34 @@ SurgeImage::SurgeImage(std::string fname)
 {
     this->fname = fname;
     drawable = juce::Drawable::createFromImageFile(juce::File(fname));
+    currentDrawable = drawable.get();
 }
 
 SurgeImage::~SurgeImage() = default;
 
-void SurgeImage::setPhysicalZoomFactor(int zoomFactor) { currentPhysicalZoomFactor = zoomFactor; }
+void SurgeImage::setPhysicalZoomFactor(int zoomFactor)
+{
+    resolvePNGForZoomLevel(zoomFactor);
+    currentPhysicalZoomFactor = zoomFactor;
+    if (pngZooms.size() > 0)
+    {
+        currentDrawable = drawable.get();
+        adjustForScale = false;
+        for (auto &p : pngZooms)
+        {
+            if (p.first <= currentPhysicalZoomFactor && p.second.second)
+            {
+                currentDrawable = p.second.second->drawable.get();
+                adjustForScale = true;
+                resolvedZoomFactor = p.first;
+            }
+        }
+    }
+    else
+    {
+        adjustForScale = false;
+    }
+}
 
 void SurgeImage::addPNGForZoomLevel(std::string fname, int zoomLevel)
 {
@@ -52,4 +76,16 @@ void SurgeImage::resolvePNGForZoomLevel(int zoomLevel)
 
     pngZooms[zoomLevel].second =
         std::move(std::make_unique<SurgeImage>(pngZooms[zoomLevel].first.c_str()));
+}
+
+juce::Drawable *SurgeImage::internalDrawableResolved() const { return currentDrawable; }
+
+juce::AffineTransform SurgeImage::scaleAdjustmentTransform() const
+{
+    auto res = juce::AffineTransform();
+    if (adjustForScale)
+    {
+        res = res.scaled(100.0 / resolvedZoomFactor);
+    }
+    return res;
 }

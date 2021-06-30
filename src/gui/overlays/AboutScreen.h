@@ -53,7 +53,7 @@ struct AboutScreen : public juce::Component,
     void buttonClicked(juce::Button *button) override;
 
     void onSkinChanged() override;
-    juce::Drawable *logo{nullptr};
+    SurgeImage *logo{nullptr};
     int logoW{555}, logoH{179};
 
     // label, value, url

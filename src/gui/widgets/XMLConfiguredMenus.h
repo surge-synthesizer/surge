@@ -25,6 +25,7 @@
 
 class SurgeStorage;
 class SurgeGUIEditor;
+class SurgeImage;
 class OscillatorStorage;
 class FxStorage;
 
@@ -114,9 +115,9 @@ struct OscillatorMenu : public juce::Component,
     OscillatorStorage *osc{nullptr};
     void setOscillatorStorage(OscillatorStorage *o) { osc = o; }
 
-    juce::Drawable *bg{}, *bgHover{};
-    void setBackgroundDrawable(juce::Drawable *b) { bg = b; };
-    void setHoverBackgroundDrawable(juce::Drawable *bgh) { bgHover = bgh; }
+    SurgeImage *bg{}, *bgHover{};
+    void setBackgroundDrawable(SurgeImage *b) { bg = b; };
+    void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
 
     void paint(juce::Graphics &g) override;
 
@@ -171,9 +172,9 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
 
     void loadUserPreset(const Surge::FxUserPreset::Preset &p);
 
-    juce::Drawable *bg{}, *bgHover{};
-    void setBackgroundDrawable(juce::Drawable *b) { bg = b; };
-    void setHoverBackgroundDrawable(juce::Drawable *bgh) { bgHover = bgh; }
+    SurgeImage *bg{}, *bgHover{};
+    void setBackgroundDrawable(SurgeImage *b) { bg = b; };
+    void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
 };
 } // namespace Widgets
 } // namespace Surge
