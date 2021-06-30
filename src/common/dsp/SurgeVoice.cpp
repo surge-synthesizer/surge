@@ -1135,6 +1135,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
                     case fut_resonancewarp_n:
                     case fut_resonancewarp_bp:
                     case fut_resonancewarp_ap:
+                    case fut_threeler:
                         Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
                         break;
                     default:
