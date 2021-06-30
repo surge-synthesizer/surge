@@ -109,7 +109,7 @@ void VuMeter::paint(juce::Graphics &g)
 
 void VuMeter::onSkinChanged()
 {
-    hVuBars = associatedBitmapStore->getDrawable(IDB_VUMETER_BARS);
+    hVuBars = associatedBitmapStore->getImage(IDB_VUMETER_BARS);
     jassert(hVuBars);
 }
 } // namespace Widgets

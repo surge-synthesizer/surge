@@ -137,30 +137,6 @@ SurgeImage *SurgeImageStore::getImageByStringID(const std::string &id)
     return bitmap_stringid_registry[id];
 }
 
-juce::Drawable *SurgeImageStore::getDrawable(int id)
-{
-    auto r = getImage(id);
-    if (r)
-        return r->getDrawable();
-    return nullptr;
-}
-
-juce::Drawable *SurgeImageStore::getDrawableByPath(const std::string &filename)
-{
-    auto r = getImageByPath(filename);
-    if (r)
-        return r->getDrawable();
-    return nullptr;
-}
-
-juce::Drawable *SurgeImageStore::getDrawableByStringID(const std::string &id)
-{
-    auto r = getImageByStringID(id);
-    if (r)
-        return r->getDrawable();
-    return nullptr;
-}
-
 SurgeImage *SurgeImageStore::loadImageByPath(const std::string &filename)
 {
     if (bitmap_file_registry.find(filename) != bitmap_file_registry.end())

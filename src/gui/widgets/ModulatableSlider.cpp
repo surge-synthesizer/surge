@@ -226,27 +226,26 @@ void ModulatableSlider::onSkinChanged()
 {
     if (orientation == ParamConfig::kHorizontal)
     {
-        pTray = associatedBitmapStore->getDrawable(IDB_SLIDER_HORIZ_BG);
-        pHandle = associatedBitmapStore->getDrawable(IDB_SLIDER_HORIZ_HANDLE);
-        pHandleHover = associatedBitmapStore->getDrawableByStringID(
+        pTray = associatedBitmapStore->getImage(IDB_SLIDER_HORIZ_BG);
+        pHandle = associatedBitmapStore->getImage(IDB_SLIDER_HORIZ_HANDLE);
+        pHandleHover = associatedBitmapStore->getImageByStringID(
             skin->hoverImageIdForResource(IDB_SLIDER_HORIZ_HANDLE, GUI::Skin::HOVER));
         jassert(pHandleHover);
         pTempoSyncHandle =
-            associatedBitmapStore->getDrawableByStringID("TEMPOSYNC_HORIZONTAL_OVERLAY");
+            associatedBitmapStore->getImageByStringID("TEMPOSYNC_HORIZONTAL_OVERLAY");
         pTempoSyncHoverHandle =
-            associatedBitmapStore->getDrawableByStringID("TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY");
+            associatedBitmapStore->getImageByStringID("TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY");
     }
     else
     {
-        pTray = associatedBitmapStore->getDrawable(IDB_SLIDER_VERT_BG);
-        pHandle = associatedBitmapStore->getDrawable(IDB_SLIDER_VERT_HANDLE);
-        pHandleHover = associatedBitmapStore->getDrawableByStringID(
+        pTray = associatedBitmapStore->getImage(IDB_SLIDER_VERT_BG);
+        pHandle = associatedBitmapStore->getImage(IDB_SLIDER_VERT_HANDLE);
+        pHandleHover = associatedBitmapStore->getImageByStringID(
             skin->hoverImageIdForResource(IDB_SLIDER_VERT_HANDLE, GUI::Skin::HOVER));
 
-        pTempoSyncHandle =
-            associatedBitmapStore->getDrawableByStringID("TEMPOSYNC_VERTICAL_OVERLAY");
+        pTempoSyncHandle = associatedBitmapStore->getImageByStringID("TEMPOSYNC_VERTICAL_OVERLAY");
         pTempoSyncHoverHandle =
-            associatedBitmapStore->getDrawableByStringID("TEMPOSYNC_VERTICAL_HOVER_OVERLAY");
+            associatedBitmapStore->getImageByStringID("TEMPOSYNC_VERTICAL_HOVER_OVERLAY");
     }
 
     if (skinControl.get())
@@ -254,29 +253,29 @@ void ModulatableSlider::onSkinChanged()
         auto htr = skin->propertyValue(skinControl, Surge::Skin::Component::SLIDER_TRAY);
         if (htr.isJust())
         {
-            pTray = associatedBitmapStore->getDrawableByStringID(htr.fromJust());
+            pTray = associatedBitmapStore->getImageByStringID(htr.fromJust());
         }
         auto hi = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_IMAGE);
         if (hi.isJust())
         {
-            pHandle = associatedBitmapStore->getDrawableByStringID(hi.fromJust());
+            pHandle = associatedBitmapStore->getImageByStringID(hi.fromJust());
         }
         auto ho = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_HOVER_IMAGE);
         if (ho.isJust())
         {
-            pHandleHover = associatedBitmapStore->getDrawableByStringID(ho.fromJust());
+            pHandleHover = associatedBitmapStore->getImageByStringID(ho.fromJust());
         }
         auto ht = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_TEMPOSYNC_IMAGE);
         if (ht.isJust())
         {
-            pTempoSyncHandle = associatedBitmapStore->getDrawableByStringID(ht.fromJust());
+            pTempoSyncHandle = associatedBitmapStore->getImageByStringID(ht.fromJust());
         }
 
         auto hth =
             skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_TEMPOSYNC_HOVER_IMAGE);
         if (hth.isJust())
         {
-            pTempoSyncHoverHandle = associatedBitmapStore->getDrawableByStringID(hth.fromJust());
+            pTempoSyncHoverHandle = associatedBitmapStore->getImageByStringID(hth.fromJust());
         }
     }
 

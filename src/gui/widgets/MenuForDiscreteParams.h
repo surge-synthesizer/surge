@@ -23,6 +23,7 @@
 #include "SurgeJUCEHelpers.h"
 #include <vector>
 
+class SurgeImage;
 class SurgeStorage;
 
 namespace Surge
@@ -64,7 +65,7 @@ struct MenuForDiscreteParams : public juce::Component,
     std::vector<std::pair<int, int>> gli;
     void addGlyphIndexMapEntry(int a, int b) { gli.emplace_back(a, b); }
 
-    juce::Drawable *dragGlyph{nullptr}, *dragGlyphHover{nullptr};
+    SurgeImage *dragGlyph{nullptr}, *dragGlyphHover{nullptr};
     int dragGlyphBoxSize{0};
     enum GlyphLocation
     {
@@ -73,20 +74,20 @@ struct MenuForDiscreteParams : public juce::Component,
         LEFT,
         RIGHT
     } glyphLocation = LEFT;
-    void setDragGlyph(juce::Drawable *d, int boxSize)
+    void setDragGlyph(SurgeImage *d, int boxSize)
     {
         dragGlyph = d;
         dragGlyphBoxSize = boxSize;
     }
-    void setDragGlyphHover(juce::Drawable *d) { dragGlyphHover = d; }
+    void setDragGlyphHover(SurgeImage *d) { dragGlyphHover = d; }
     juce::Rectangle<float> glyphPosition;
 
     void setGlyphMode(bool b) { glyphMode = b; }
     bool glyphMode{false};
 
-    void setBackgroundDrawable(juce::Drawable *d) { bg = d; }
-    void setHoverBackgroundDrawable(juce::Drawable *d) { bghover = d; }
-    juce::Drawable *bg{nullptr}, *bghover{nullptr};
+    void setBackgroundDrawable(SurgeImage *d) { bg = d; }
+    void setHoverBackgroundDrawable(SurgeImage *d) { bghover = d; }
+    SurgeImage *bg{nullptr}, *bghover{nullptr};
 
     void paint(juce::Graphics &g) override;
     bool isHovered{false};

@@ -23,10 +23,6 @@ class SurgeImageStore
     SurgeImage *getImageByPath(const std::string &filename);
     SurgeImage *getImageByStringID(const std::string &id);
 
-    juce::Drawable *getDrawable(int id);
-    juce::Drawable *getDrawableByPath(const std::string &filename);
-    juce::Drawable *getDrawableByStringID(const std::string &id);
-
     SurgeImage *loadImageByPath(const std::string &filename);
     SurgeImage *loadImageByPathForID(const std::string &filename, int id);
     SurgeImage *loadImageByPathForStringID(const std::string &filename, std::string id);

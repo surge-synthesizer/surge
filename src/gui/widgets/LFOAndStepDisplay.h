@@ -109,7 +109,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
 
     void onSkinChanged() override;
 
-    juce::Drawable *typeImg{nullptr}, *typeImgHover{nullptr}, *typeImgHoverOn{nullptr};
+    SurgeImage *typeImg{nullptr}, *typeImgHover{nullptr}, *typeImgHoverOn{nullptr};
 
     const static int margin = 2;
     const static int margin2 = 7;

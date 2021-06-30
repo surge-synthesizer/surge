@@ -111,7 +111,7 @@ struct ModulationSourceButton : public juce::Component,
 
     static constexpr int splitHeight = 14;
 
-    juce::Drawable *arrow{nullptr};
+    SurgeImage *arrow{nullptr};
 
     enum MouseState
     {

@@ -310,7 +310,7 @@ void ModulationSourceButton::mouseExit(const juce::MouseEvent &event)
 
 void ModulationSourceButton::onSkinChanged()
 {
-    arrow = associatedBitmapStore->getDrawable(IDB_MODSOURCE_SHOW_LFO);
+    arrow = associatedBitmapStore->getImage(IDB_MODSOURCE_SHOW_LFO);
 }
 
 void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)

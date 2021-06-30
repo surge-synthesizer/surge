@@ -14,6 +14,7 @@
 */
 
 #include "Switch.h"
+#include "SurgeImage.h"
 
 namespace Surge
 {

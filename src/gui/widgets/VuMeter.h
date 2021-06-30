@@ -19,6 +19,8 @@
 #include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
 
+class SurgeImage;
+
 namespace Surge
 {
 namespace Widgets
@@ -41,7 +43,7 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void paint(juce::Graphics &g) override;
 
     void onSkinChanged() override;
-    juce::Drawable *hVuBars;
+    SurgeImage *hVuBars;
 };
 } // namespace Widgets
 } // namespace Surge

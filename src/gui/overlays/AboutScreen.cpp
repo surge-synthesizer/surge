@@ -251,10 +251,7 @@ void AboutScreen::mouseUp(const juce::MouseEvent &e)
         editor->hideAboutScreen();
 }
 
-void AboutScreen::onSkinChanged()
-{
-    logo = associatedBitmapStore->getImage(IDB_ABOUT_BG)->getDrawable();
-}
+void AboutScreen::onSkinChanged() { logo = associatedBitmapStore->getImage(IDB_ABOUT_BG); }
 
 } // namespace Overlays
 } // namespace Surge

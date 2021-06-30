@@ -20,6 +20,7 @@
 #include "SkinModel.h"
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
+#include "SurgeImage.h"
 
 class SurgeStorage;
 
@@ -73,9 +74,9 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         DRAG
     } mouseMode{NONE};
 
-    juce::Drawable *bg{nullptr}, *bgHover{nullptr};
-    void setBackgroundDrawable(juce::Drawable *b) { bg = b; };
-    void setHoverBackgroundDrawable(juce::Drawable *bgh) { bgHover = bgh; }
+    SurgeImage *bg{nullptr}, *bgHover{nullptr};
+    void setBackgroundDrawable(SurgeImage *b) { bg = b; };
+    void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
 
     juce::Point<float> mouseDownOrigin;
     float lastDistanceChecked{0};

@@ -79,8 +79,8 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     int getDeactivatedBitmask() const { return deactivatedBitmask; }
     int deactivatedBitmask{0};
 
-    juce::Drawable *bg{nullptr};
-    void setBackgroundDrawable(juce::Drawable *b) { bg = b; }
+    SurgeImage *bg{nullptr};
+    void setBackgroundDrawable(SurgeImage *b) { bg = b; }
 
     juce::Rectangle<int> getSceneRectangle(int sceneNo);
     juce::Rectangle<int> getEffectRectangle(int fx);

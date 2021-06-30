@@ -96,7 +96,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         this->eds = eds;
         this->lfodata = lfodata;
         Surge::MSEG::rebuildCache(ms);
-        handleDrawable = b->getImage(IDB_MSEG_NODES)->getDrawable();
+        handleDrawable = b->getImage(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
     };
 
@@ -2349,7 +2349,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     float loopDragTime = -1, loopDragEnd = -1;
     bool loopDragIsStart = false;
 
-    juce::Drawable *handleDrawable{nullptr};
+    SurgeImage *handleDrawable{nullptr};
 };
 
 void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
@@ -2733,11 +2733,11 @@ void MSEGControlRegion::rebuild()
         hSnapButton->setTag(tag_horizontal_snap);
         hSnapButton->setValue(ms->hSnap < 0.001 ? 0 : 1);
         auto hsbmp = associatedBitmapStore->getImage(IDB_MSEG_HORIZONTAL_SNAP);
-        hSnapButton->setSwitchDrawable(hsbmp->getDrawable());
+        hSnapButton->setSwitchDrawable(hsbmp);
         auto hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, dynamic_cast<SurgeImage *>(hsbmp), associatedBitmapStore,
             Surge::GUI::Skin::HoverType::HOVER);
-        hSnapButton->setHoverSwitchDrawable(hoverBmp->getDrawable());
+        hSnapButton->setHoverSwitchDrawable(hoverBmp);
         addAndMakeVisible(*hSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
@@ -2767,10 +2767,10 @@ void MSEGControlRegion::rebuild()
         vSnapButton->setTag(tag_vertical_snap);
         vSnapButton->setValue(ms->vSnap < 0.001 ? 0 : 1);
         auto vsbmp = associatedBitmapStore->getImage(IDB_MSEG_VERTICAL_SNAP);
-        vSnapButton->setSwitchDrawable(vsbmp->getDrawable());
+        vSnapButton->setSwitchDrawable(vsbmp);
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
-        vSnapButton->setHoverSwitchDrawable(hoverBmp->getDrawable());
+        vSnapButton->setHoverSwitchDrawable(hoverBmp);
         addAndMakeVisible(*vSnapButton);
 
         snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));

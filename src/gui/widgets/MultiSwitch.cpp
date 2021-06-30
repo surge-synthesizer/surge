@@ -14,6 +14,7 @@
 */
 
 #include "MultiSwitch.h"
+#include "SurgeImage.h"
 #include "basic_dsp.h"
 
 namespace Surge

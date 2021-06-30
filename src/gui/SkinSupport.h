@@ -333,13 +333,13 @@ class Skin
                                                       std::shared_ptr<SurgeImageStore> bitmapStore,
                                                       HoverType t);
 
-    std::array<juce::Drawable *, 3>
+    std::array<SurgeImage *, 3>
     standardHoverAndHoverOnForControl(Skin::Control::ptr_t c, std::shared_ptr<SurgeImageStore> b);
-    std::array<juce::Drawable *, 3>
-    standardHoverAndHoverOnForIDB(int id, std::shared_ptr<SurgeImageStore> b);
-    std::array<juce::Drawable *, 3>
-    standardHoverAndHoverOnForCSB(SurgeImage *csb, Skin::Control::ptr_t c,
-                                  std::shared_ptr<SurgeImageStore> b);
+    std::array<SurgeImage *, 3> standardHoverAndHoverOnForIDB(int id,
+                                                              std::shared_ptr<SurgeImageStore> b);
+    std::array<SurgeImage *, 3> standardHoverAndHoverOnForCSB(SurgeImage *csb,
+                                                              Skin::Control::ptr_t c,
+                                                              std::shared_ptr<SurgeImageStore> b);
 
     std::vector<Skin::Control::ptr_t> getLabels() const
     {

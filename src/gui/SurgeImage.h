@@ -26,18 +26,39 @@ class SurgeImage
     int resourceID = -1;
     std::string fname;
 
-    juce::Drawable *getDrawable() const
+    void draw(juce::Graphics &g, float opacity,
+              const juce::AffineTransform &transform = juce::AffineTransform()) const
     {
-        if (drawable)
-            return drawable.get();
-        return nullptr;
+        juce::Graphics::ScopedSaveState gs(g);
+        g.addTransform(scaleAdjustmentTransform());
+        internalDrawableResolved()->draw(g, opacity, transform);
+    }
+    void drawAt(juce::Graphics &g, float x, float y, float opacity) const
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+        g.addTransform(scaleAdjustmentTransform());
+        internalDrawableResolved()->drawAt(g, x, y, opacity);
+    }
+    void drawWithin(juce::Graphics &g, juce::Rectangle<float> destArea,
+                    juce::RectanglePlacement placement, float opacity) const
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+        g.addTransform(scaleAdjustmentTransform());
+        internalDrawableResolved()->drawWithin(g, destArea, placement, opacity);
+    }
+
+    std::unique_ptr<juce::Drawable> createCopy()
+    {
+        return internalDrawableResolved()->createCopy();
     }
 
   private:
-    static std::atomic<int> instances;
+    juce::Drawable *internalDrawableResolved() const;
+    juce::AffineTransform scaleAdjustmentTransform() const;
 
-    int lastSeenZoom, bestFitScaleGroup;
-    int extraScaleFactor;
+    static std::atomic<int> instances;
+    bool adjustForScale{false};
+    int resolvedZoomFactor{100};
 
     /*
      * The zoom 100 bitmap and optional higher resolution bitmaps for zooms
@@ -47,4 +68,5 @@ class SurgeImage
     int currentPhysicalZoomFactor;
 
     std::unique_ptr<juce::Drawable> drawable;
+    juce::Drawable *currentDrawable{nullptr};
 };

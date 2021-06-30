@@ -21,6 +21,8 @@
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 
+class SurgeImage;
+
 namespace Surge
 {
 namespace Widgets
@@ -71,10 +73,10 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     bool isHovered{false};
     int hoverSelection{0};
 
-    juce::Drawable *switchD{nullptr}, *hoverSwitchD{nullptr}, *hoverOnSwitchD{nullptr};
-    void setSwitchDrawable(juce::Drawable *d) { switchD = d; }
-    void setHoverSwitchDrawable(juce::Drawable *d) { hoverSwitchD = d; }
-    void setHoverOnSwitchDrawable(juce::Drawable *d) { hoverOnSwitchD = d; }
+    SurgeImage *switchD{nullptr}, *hoverSwitchD{nullptr}, *hoverOnSwitchD{nullptr};
+    void setSwitchDrawable(SurgeImage *d) { switchD = d; }
+    void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
+    void setHoverOnSwitchDrawable(SurgeImage *d) { hoverOnSwitchD = d; }
 };
 } // namespace Widgets
 } // namespace Surge
