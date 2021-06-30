@@ -8,6 +8,7 @@
 #include "BussColors4.h"
 #include "ButterComp2.h"
 #include "Capacitor.h"
+#include "Chamber.h"
 #include "Cojones.h"
 #include "Compresaturator.h"
 #include "CrunchyGrooveWear.h"
@@ -163,6 +164,8 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<Verbity::Verbity>, id++, 265, gnAmbience, "Verbity" );
 
    reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 440, gnStereo, "Triple Spread" );
+
+   reg.emplace_back(create<Chamber::Chamber>, id++, 223, gnAmbience, "Chamber" );
    return reg;
 }
 
