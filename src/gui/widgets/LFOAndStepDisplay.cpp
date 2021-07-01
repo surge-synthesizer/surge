@@ -17,6 +17,7 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 #include <chrono>
 
@@ -66,7 +67,7 @@ void LFOAndStepDisplay::paint(juce::Graphics &g)
 void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<int> &within)
 {
     TimeB mainTimer("-- paintWaveform");
-    auto mainPanel = within.withTrimmedLeft(4);
+    auto mainPanel = within.withTrimmedLeft(19 - margin).withTrimmedRight(margin);
     auto pathPanel = mainPanel.withTrimmedTop(0).withTrimmedBottom(0);
     // g.setColour(juce::Colours::blue);
     // g.drawRect(mainPanel, 1);
@@ -457,7 +458,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     // lower ruler calculation
     // find time delta
     int maxNumLabels = 5;
-    std::vector<float> timeDeltas = {0.5, 1.0, 2.5, 5.0, 10.0};
+    std::vector<float> timeDeltas = {0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0};
     auto currDelta = timeDeltas.begin();
     while (currDelta != timeDeltas.end() && (drawnTime / *currDelta) > maxNumLabels)
     {
@@ -482,9 +483,11 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
         float tv = delta * l;
         if (fabs(roundf(tv) - tv) < 0.05)
             snprintf(txt, TXT_SIZE, "%d s", (int)round(delta * l));
+        else if (delta < 0.1)
+            snprintf(txt, TXT_SIZE, "%.2f s", delta * l);
         else
             snprintf(txt, TXT_SIZE, "%.1f s", delta * l);
-        g.drawText(txt, tp.x, tp.y, 20, 10, juce::Justification::topRight);
+        g.drawText(txt, tp.x, tp.y, 30, 10, juce::Justification::topRight);
 
         auto sp = juce::Point<float>(xp, valScale * 0.95).transformedBy(at);
         auto ep = juce::Point<float>(xp, valScale * 0.9).transformedBy(at);
@@ -513,10 +516,6 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
 
 void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<int> &mainPanel)
 {
-    auto ssbg = skin->getColor(Colors::LFO::StepSeq::Background);
-    g.setColour(ssbg);
-    g.fillRect(mainPanel);
-
     auto shadowcol = skin->getColor(Colors::LFO::StepSeq::ColumnShadow);
     auto stepMarker = skin->getColor(Colors::LFO::StepSeq::Step::Fill);
     auto disStepMarker = skin->getColor(Colors::LFO::StepSeq::Step::FillOutside);
@@ -1080,7 +1079,10 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 
     if (isMSEG() && sge)
     {
-        sge->toggleMSEGEditor();
+        if (event.mods.isPopupMenu())
+            showMSEGPopupMenu();
+        else
+            sge->toggleMSEGEditor();
     }
 
     if (isFormula() && sge)
@@ -1138,21 +1140,21 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
             dragMode = LOOP_END;
             return;
         }
-        if (event.mods.isRightButtonDown())
-        {
-            dragMode = ARROW;
-            arrowStart = event.position;
-            arrowEnd = event.position;
-
-            return;
-        }
 
         for (auto r : steprect)
         {
             if (r.contains(event.position))
             {
-                dragMode = VALUES;
-                return;
+                if (event.mods.isRightButtonDown())
+                {
+                    dragMode = ARROW;
+                    arrowStart = event.position;
+                    arrowEnd = event.position;
+                }
+                else
+                {
+                    dragMode = VALUES;
+                }
             }
         }
         for (int i = 0; i < n_stepseqsteps; ++i)
@@ -1477,6 +1479,68 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
             repaint();
         }
     }
+}
+
+void LFOAndStepDisplay::showMSEGPopupMenu()
+{
+    auto contextMenu = juce::PopupMenu();
+
+    auto msurl =
+        storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+    contextMenu.addItem("[?] MSEG Segment", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+
+    contextMenu.addSeparator();
+
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (!sge)
+        return;
+
+    std::string openname = (sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                               ? "Close MSEG Editor"
+                               : "Open MSEG Editor";
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
+        if (sge)
+            sge->toggleMSEGEditor();
+    });
+
+    contextMenu.addSeparator();
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true,
+                        ms->loopMode == MSEGStorage::ONESHOT, [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            repaint();
+                        });
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true,
+                        ms->loopMode == MSEGStorage::LOOP, [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            repaint();
+                        });
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true,
+                        ms->loopMode == MSEGStorage::GATED_LOOP, [this, sge]() {
+                            ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                            {
+                                sge->closeMSEGEditor();
+                                sge->showMSEGEditor();
+                            }
+                            repaint();
+                        });
+
+    contextMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
 } // namespace Widgets
