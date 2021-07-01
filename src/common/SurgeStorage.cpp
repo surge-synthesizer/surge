@@ -1855,7 +1855,7 @@ float glide_log(float x)
 
 bool SurgeStorage::resetToCurrentScaleAndMapping()
 {
-    currentTuning = Tunings::Tuning(currentScale, currentMapping);
+    currentTuning = Tunings::Tuning(currentScale, currentMapping).withSkippedNotesInterpolated();
 
     auto t = currentTuning;
 
