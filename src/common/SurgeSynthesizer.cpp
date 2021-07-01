@@ -344,6 +344,14 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         }
     }
 
+    if (!storage.isStandardTuning)
+    {
+        if (!storage.currentTuning.isMidiNoteMapped(key))
+        {
+            return;
+        }
+    }
+
     // For split/dual
     // MIDI Channel 1 plays the split/dual
     // MIDI Channel 2 plays A
