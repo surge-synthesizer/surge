@@ -109,17 +109,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     patchCountdown = -1;
 
     mod_editor = false;
-
-    // init the size of the plugin
-    initialZoomFactor =
-        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 100);
-    int instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
-    if (instanceZoomFactor > 0)
-    {
-        // dawExtraState zoomFactor wins defaultZoom
-        initialZoomFactor = instanceZoomFactor;
-    }
-
     editor_open = false;
     queue_refresh = false;
     memset(param, 0, n_paramslots * sizeof(void *));
@@ -140,14 +129,52 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     minimumZoom = 100; // See github issue #628
 #endif
 
-    zoom_callback = [](SurgeGUIEditor *f, bool) {};
-    setZoomFactor(initialZoomFactor);
-    zoomInvalid = (initialZoomFactor != 100);
-
     for (int i = 0; i < n_modsources; ++i)
         modsource_is_alternate[i] = false;
 
     currentSkin = Surge::GUI::SkinDB::get().defaultSkin(&(this->synth->storage));
+
+    // init the size of the plugin
+    initialZoomFactor =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
+    if (initialZoomFactor == 0)
+    {
+        float baseW = getWindowSizeX();
+        float baseH = getWindowSizeY();
+
+        int maxScreenUsage = 70;
+
+        auto correctedZf =
+            findLargestFittingZoomBetween(100.0, 250.0, 25, maxScreenUsage, baseW, baseH);
+
+        /*
+         * If there's nothing, probably a fresh install but may be no default. So be careful if
+         * we have constrained zooms.
+         */
+        if (currentSkin->hasFixedZooms())
+        {
+            int zz = 100;
+            for (auto z : currentSkin->getFixedZooms())
+            {
+                if (z <= correctedZf)
+                    zz = z;
+            }
+            correctedZf = zz;
+        }
+
+        initialZoomFactor = correctedZf;
+    }
+    int instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
+    if (instanceZoomFactor > 0)
+    {
+        // dawExtraState zoomFactor wins defaultZoom
+        initialZoomFactor = instanceZoomFactor;
+    }
+
+    zoom_callback = [](SurgeGUIEditor *f, bool) {};
+    setZoomFactor(initialZoomFactor);
+    zoomInvalid = (initialZoomFactor != 100);
+
     reloadFromSkin();
 
     auto des = &(synth->storage.getPatch().dawExtraState);
