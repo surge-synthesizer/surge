@@ -18,7 +18,7 @@
 AppId={#MyID}
 AppName="{#MyAppName} {#MyAppVersion}"
 AppVersion={#MyAppVersion}
-AppVerName={#MyAppName} (32-bit) by {#MyAppPublisher}
+AppVerName={#MyAppName} (32-bit)
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
