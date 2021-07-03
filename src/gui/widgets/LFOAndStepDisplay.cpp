@@ -369,7 +369,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
         auto secondsPerBeat = 1 / beatsPerSecond;
         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
 
-        int nBeats = drawnTime * beatsPerSecond / denFactor;
+        int nBeats = std::max(drawnTime * beatsPerSecond / denFactor, 1.0);
 
         auto measureLen = deltaBeat * tsNum;
         int everyMeasure = 1;
@@ -614,8 +614,8 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
             // draw the midpoint line
             if (!isUnipolar())
             {
-                auto cy = rstep.getCentreY() - 1;
-                auto fr = rstep.withTop(cy).withHeight(1.f);
+                auto cy = rstep.toFloat().getCentreY() - 0.5;
+                auto fr = rstep.toFloat().withTop(cy).withHeight(1.f);
                 fillr(fr, shadowcol);
             }
             // Now draw the value
@@ -786,12 +786,12 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
     tlfo->attack();
     auto boxo = rect_steps;
 
-    int minSamples = (1 << 3) * boxo.getWidth();
+    int minSamples = (1 << 4) * boxo.getWidth();
     int totalSamples = std::max((int)minSamples, (int)(totalSampleTime * samplerate / BLOCK_SIZE));
     float cycleSamples = cyclesec * samplerate / BLOCK_SIZE;
 
     // OK so lets assume we want about 1000 pixels worth tops in
-    int averagingWindow = (int)(totalSamples / 1000.0) + 1;
+    int averagingWindow = (int)(totalSamples / 2000.0) + 1;
 
     float valScale = 100.0;
     int susCountdown = -1;
@@ -1229,6 +1229,13 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     if (!isStepSequencer())
         return;
 
+    if (dragMode != NONE && event.getDistanceFromDragStart() > 0)
+    {
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+    }
     switch (dragMode)
     {
     case NONE:
@@ -1342,6 +1349,13 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 
 void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
 {
+    if (event.mouseWasDraggedSinceMouseDown())
+    {
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+        }
+    }
     if (dragMode == ARROW)
     {
         auto rmStepStart = arrowStart;
