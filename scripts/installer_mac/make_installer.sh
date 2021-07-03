@@ -77,17 +77,17 @@ if [[ -d $INDIR/$FXAU ]]; then
 fi
 
 if [[ -d $INDIR/$APP ]]; then
-    build_flavor "APP" "$APP" "com.surge-synth-team.surge-xt.app.pkg" "/Applications"
+    build_flavor "APP" "$APP" "com.surge-synth-team.surge-xt.app.pkg" "/tmp/SXT"
 fi
 
 if [[ -d $INDIR/$FXAPP ]]; then
-    build_flavor "FXAPP" "$FXAPP" "com.surge-synth-team.surge-xt-fx.app.pkg" "/Applications"
+    build_flavor "FXAPP" "$FXAPP" "com.surge-synth-team.surge-xt-fx.app.pkg" "/tmp/SXT"
 fi
 
 # Build the resources pagkage
 RSRCS=${SOURCEDIR}/resources/data
 echo --- BUILDING Resources pkg ---
-pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
 
 echo --- Sub Packages Created ---
 ls -l "${TMPDIR}"
