@@ -369,7 +369,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
         auto secondsPerBeat = 1 / beatsPerSecond;
         auto deltaBeat = secondsPerBeat / drawnTime * valScale * denFactor;
 
-        int nBeats = std::max(drawnTime * beatsPerSecond / denFactor, 1.0);
+        int nBeats = std::max(ceil(drawnTime * beatsPerSecond / denFactor), 1.0);
 
         auto measureLen = deltaBeat * tsNum;
         int everyMeasure = 1;
@@ -380,11 +380,11 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             everyMeasure *= 2;
         }
 
-        for (auto l = 0; l < nBeats; ++l)
+        for (auto l = 0; l <= nBeats; ++l)
         {
             auto xp = deltaBeat * l;
 
-            if (l % (tsNum * everyMeasure) == 0)
+            if (l % (tsNum * everyMeasure) == 0 || nBeats <= tsDen)
             {
                 auto soff = 0.0;
                 if (l > 10)
@@ -401,7 +401,12 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
                 sp = sp.transformedBy(at);
                 ep = ep.transformedBy(at);
                 // ticks for major beats
-                g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::Ticks));
+                if (l % tsNum == 0)
+                    g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::Ticks));
+                else
+                    // small ticks for the ruler for nbeats case
+                    g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::SmallTicks));
+
                 g.drawLine(sp.getX(), sp.getY(), ep.getX(), ep.getY(), 1.0);
 
                 char s[TXT_SIZE];
@@ -487,7 +492,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             snprintf(txt, TXT_SIZE, "%.2f s", delta * l);
         else
             snprintf(txt, TXT_SIZE, "%.1f s", delta * l);
-        g.drawText(txt, tp.x, tp.y, 30, 10, juce::Justification::topRight);
+        g.drawText(txt, tp.x, tp.y, 30, 10, juce::Justification::topLeft);
 
         auto sp = juce::Point<float>(xp, valScale * 0.95).transformedBy(at);
         auto ep = juce::Point<float>(xp, valScale * 0.9).transformedBy(at);
