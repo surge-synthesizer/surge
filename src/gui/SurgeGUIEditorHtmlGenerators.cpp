@@ -160,7 +160,7 @@ std::string SurgeGUIEditor::tuningToHtml()
 <p>
         <table>
           <tr>
-            <th colspan=2>MIDI Note</th><th>Scale Position</th><th>Frequency</th>
+            <th colspan=2>MIDI Note</th><th>Scale Position</th><th>Frequency</th><th>Log Frequency / C0</th>
           </tr>
 
 )HTML";
@@ -183,17 +183,19 @@ std::string SurgeGUIEditor::tuningToHtml()
         htmls << "<tr " << rowstyle << ">" << tdopen << i << " ("
               << get_notename(notename, i, oct_offset) << ")</td>\n";
 
-        auto tn = i - synth->storage.scaleConstantNote();
-        if (!synth->storage.isStandardMapping)
+        if (synth->storage.currentTuning.isMidiNoteMapped(i))
         {
-            tn = i - synth->storage.currentMapping.middleNote;
-        }
-        while (tn < 0)
-            tn += synth->storage.currentScale.count;
+            auto tn = synth->storage.currentTuning.scalePositionForMidiNote(i);
+            auto p = synth->storage.currentTuning.frequencyForMidiNote(i);
+            auto lp = synth->storage.currentTuning.logScaledFrequencyForMidiNote(i);
 
-        auto p = synth->storage.note_to_pitch(i);
-        htmls << "<td class=\"cnt\">" << (tn % synth->storage.currentScale.count + 1)
-              << "</td><td class=\"cnt\">" << 8.175798915 * p << " Hz</td>";
+            htmls << "<td class=\"cnt\">" << tn << "</td><td class=\"cnt\">" << p << " Hz</td>"
+                  << "</td><td class=\"cnt\">" << lp << "</td>";
+        }
+        else
+        {
+            htmls << "<td class=\"cnt\" colspan=3>Unmapped Note</td>";
+        }
         htmls << "</tr>\n";
     }
 
