@@ -3222,9 +3222,11 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
     return result;
 }
 
-void SurgeGUIEditor::forceautomationchangefor(Parameter *p)
+void SurgeGUIEditor::broadcastPluginAutomationChangeFor(Parameter *p)
 {
-    std::cout << "FIXME - REMOVE THIS" << __func__ << std::endl;
+    juceEditor->beginParameterEdit(p);
+    repushAutomationFor(p);
+    juceEditor->endParameterEdit(p);
 }
 //------------------------------------------------------------------------------------------------
 

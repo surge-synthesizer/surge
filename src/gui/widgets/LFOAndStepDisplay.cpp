@@ -1069,7 +1069,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 auto prior = lfodata->shape.val.i;
                 lfodata->shape.val.i = i;
                 sge->refresh_mod();
-                sge->forceautomationchangefor(&(lfodata->shape));
+                sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
                 repaint();
                 sge->lfoShapeChanged(prior, i);
             }
