@@ -136,7 +136,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     void refresh_mod();
-    void forceautomationchangefor(Parameter *p);
+    void broadcastPluginAutomationChangeFor(Parameter *p);
 
     void effectSettingsBackgroundClick(int whichScene);
 
