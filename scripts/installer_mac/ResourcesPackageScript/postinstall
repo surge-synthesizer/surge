@@ -1,4 +1,8 @@
 #!/bin/bash
-rsync -r --delete "/tmp/Surge XT" /Library/Application\ Support/
-chown -R $USER:staff "/Library/Application\ Support/Surge XT"
-rm -rf "/tmp/Surge XT"
+rsync -r --delete "/tmp/SXT/Surge XT" /Library/Application\ Support/
+rsync -r --delete "/tmp/SXT/Surge XT.app" /Applications
+rsync -r --delete "/tmp/SXT/Surge XT Effects.app" /Applications
+chown -R $USER:staff "/Library/Application Support/Surge XT"
+chown -R $USER:staff "/Applications/Surge XT.app"
+chown -R $USER:staff "/Applications/Surge XT Effects.app"
+rm -rf "/tmp/SXT"
