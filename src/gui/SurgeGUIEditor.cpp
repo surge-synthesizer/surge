@@ -1644,6 +1644,15 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
     {
         juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
+    else if (tag_mod_source0 + ms_ctrl1 <= tag &&
+             tag_mod_source0 + ms_ctrl1 + n_customcontrollers > tag)
+    {
+        juceEditor->beginMacroEdit(tag - tag_mod_source0 - ms_ctrl1);
+    }
+    else
+    {
+        jassert(false);
+    }
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1655,6 +1664,15 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
         juceEditor->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
+    }
+    else if (tag_mod_source0 + ms_ctrl1 <= tag &&
+             tag_mod_source0 + ms_ctrl1 + n_customcontrollers > tag)
+    {
+        juceEditor->endMacroEdit(tag - tag_mod_source0 - ms_ctrl1);
+    }
+    else
+    {
+        jassert(false);
     }
 }
 

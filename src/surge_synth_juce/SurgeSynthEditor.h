@@ -46,6 +46,9 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void beginParameterEdit(Parameter *p);
     void endParameterEdit(Parameter *p);
 
+    void beginMacroEdit(long macroNum);
+    void endMacroEdit(long macroNum);
+
     struct IdleTimer : juce::Timer
     {
         IdleTimer(SurgeSynthEditor *ed) : ed(ed) {}

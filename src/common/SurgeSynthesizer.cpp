@@ -2763,6 +2763,17 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
     return true;
 }
 
+float SurgeSynthesizer::getMacroParameter01(long macroNum)
+{
+    return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01();
+}
+
+void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
+{
+    ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum])
+        ->set_target01(val, true);
+}
+
 float SurgeSynthesizer::getParameter01(long index)
 {
     if (index < 0)

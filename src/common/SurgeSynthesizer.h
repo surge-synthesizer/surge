@@ -63,6 +63,7 @@ class alignas(16) SurgeSynthesizer
     struct PluginLayer
     {
         virtual void surgeParameterUpdated(const ID &, float) = 0;
+        virtual void surgeMacroUpdated(long macroNum, float) = 0;
     };
     SurgeSynthesizer(PluginLayer *parent, std::string suppliedDataPath = "");
     virtual ~SurgeSynthesizer();
@@ -226,6 +227,9 @@ class alignas(16) SurgeSynthesizer
     {
         return setParameter01(index.getSynthSideId(), value, external, force_integer);
     }
+
+    void setMacroParameter01(long macroNum, float val);
+    float getMacroParameter01(long macroNum);
 
     bool getParameterIsBoolean(const ID &index);
 

@@ -43,6 +43,16 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     surge = std::make_unique<SurgeSynthesizer>(this);
     surge->storage.initializePatchDb(); // In the UI branch we want the patch DB running
 
+    auto parent = std::make_unique<AudioProcessorParameterGroup>("Root", "Root", "|");
+    auto macroG = std::make_unique<AudioProcessorParameterGroup>("macros", "Macros", "|");
+    for (int mn = 0; mn < n_customcontrollers; ++mn)
+    {
+        auto nm = std::make_unique<SurgeMacroToJuceParamAdapter>(surge.get(), mn);
+        macrosById.push_back(nm.get());
+        macroG->addChild(std::move(nm));
+    }
+    parent->addChild(std::move(macroG));
+
     std::map<unsigned int, std::vector<std::unique_ptr<juce::AudioProcessorParameter>>> parByGroup;
     for (auto par : surge->storage.getPatch().param_ptr)
     {
@@ -55,7 +65,6 @@ SurgeSynthProcessor::SurgeSynthProcessor()
             parByGroup[pm.clump].push_back(std::move(sja));
         }
     }
-    auto parent = std::make_unique<AudioProcessorParameterGroup>();
     for (auto &cv : parByGroup)
     {
         auto clump = cv.first;
@@ -353,6 +362,13 @@ void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)
 {
     auto spar = paramsByID[id];
+    if (spar)
+        spar->setValueNotifyingHost(f);
+}
+
+void SurgeSynthProcessor::surgeMacroUpdated(const long id, float f)
+{
+    auto spar = macrosById[id];
     if (spar)
         spar->setValueNotifyingHost(f);
 }

@@ -92,6 +92,37 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
     Parameter *p;
 };
 
+struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
+{
+    explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
+        : s(s), macroNum(macroNum),
+          range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+                                       std::string("macro_") + std::to_string(macroNum),
+                                       std::string("C: ") + std::to_string(macroNum), "")
+    {
+        setValueNotifyingHost(getValue());
+    }
+
+    // Oh this is all incorrect of course
+    float getValue() const override { return s->getMacroParameter01(macroNum); }
+    float getValueForText(const juce::String &text) const override
+    {
+        auto tf = std::atof(text.toRawUTF8());
+        return std::max(std::min(tf, 1.0), 0.0);
+    }
+    float getDefaultValue() const override { return 0.0; /* FIXME */ }
+    void setValue(float f) override
+    {
+        if (f != getValue())
+            s->setMacroParameter01(macroNum, f);
+    }
+
+    const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
+    juce::NormalisableRange<float> range;
+    SurgeSynthesizer *s;
+    long macroNum;
+};
+
 class SurgeSynthProcessor : public juce::AudioProcessor,
                             public SurgeSynthesizer::PluginLayer,
                             public juce::MidiKeyboardState::Listener
@@ -148,9 +179,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float value) override;
+    void surgeMacroUpdated(long macroNum, float d) override;
 
     std::unique_ptr<SurgeSynthesizer> surge;
     std::unordered_map<SurgeSynthesizer::ID, SurgeParamToJuceParamAdapter *> paramsByID;
+    std::vector<SurgeMacroToJuceParamAdapter *> macrosById;
 
     std::string paramClumpName(int clumpid);
     juce::MidiKeyboardState midiKeyboardState;

@@ -2169,12 +2169,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                  .scene[current_scene]
                  .modsources[t])
                 ->set_target01(control->getValue(), false);
-
-            SurgeSynthesizer::ID tid;
-            if (synth->fromSynthSideId(t + metaparam_offset - ms_ctrl1, tid))
-            {
-                synth->sendParameterAutomation(tid, control->getValue());
-            }
+            synth->getParent()->surgeMacroUpdated(t - ms_ctrl1, control->getValue());
             return;
         }
         else
