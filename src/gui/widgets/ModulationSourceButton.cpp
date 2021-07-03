@@ -247,6 +247,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
         if (bottomRect.contains(event.position.toInt()))
         {
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+            notifyBeginEdit();
             mouseMode = DRAG_VALUE;
             valAtMouseDown = value;
             return;
@@ -288,7 +289,9 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         {
             value = isBipolar ? 0.5f : 0.f;
 
+            notifyBeginEdit();
             notifyValueChanged();
+            notifyEndEdit();
             repaint();
 
             return;
@@ -328,12 +331,13 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
         setBounds(mouseDownBounds);
     }
 
-    if (mouseMode == DRAG_VALUE && everDragged == true)
+    if (mouseMode == DRAG_VALUE)
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         auto p = juce::Point<float>(value * getWidth(), 20);
         p = localPointToGlobal(p);
         juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        notifyEndEdit();
     }
 
     mouseMode = NONE;

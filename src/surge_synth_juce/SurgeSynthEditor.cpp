@@ -182,6 +182,18 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     par->endChangeGesture();
 }
 
+void SurgeSynthEditor::beginMacroEdit(long macroNum)
+{
+    auto par = processor.macrosById[macroNum];
+    par->beginChangeGesture();
+}
+
+void SurgeSynthEditor::endMacroEdit(long macroNum)
+{
+    auto par = processor.macrosById[macroNum];
+    par->endChangeGesture();
+}
+
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
