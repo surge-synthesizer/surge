@@ -30,6 +30,9 @@ std::string NumberField::valueToDisplay() const
     std::ostringstream oss;
     switch (controlMode)
     {
+    case Skin::Parameters::NONE:
+        oss << "-";
+        break;
     case Skin::Parameters::MIDICHANNEL_FROM_127:
     {
         int mc = iValue / 8 + 1;

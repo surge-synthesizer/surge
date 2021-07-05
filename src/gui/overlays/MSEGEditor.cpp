@@ -802,8 +802,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     sw = secondaryFont.getStringWidthFloat(txt);
                 }
 
-                g.drawText(txt, px - (sw / 2), haxisArea.getY(), sw, yofs,
-                           juce::Justification::centred);
+                g.drawText(txt, px - (sw / 2), haxisArea.getY() + 2, sw, yofs,
+                           juce::Justification::centredBottom);
             }
         }
 
@@ -822,6 +822,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
 
         updateVTicks();
+
+        auto uni = lfodata->unipolar.val.b;
 
         for (auto vp : vTicks)
         {
@@ -862,7 +864,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     g.drawText(txt, vaxisArea.getX() - 3, p, vaxisArea.getWidth(), 12,
                                juce::Justification::topRight);
                 }
-                else if (value == -1.f)
+                else if (value == -1.f || (value == 0.f && uni))
                 {
                     g.drawText(txt, vaxisArea.getX() - 3, p - 12, vaxisArea.getWidth(), 12,
                                juce::Justification::bottomRight);
@@ -1198,7 +1200,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             drawnLast = up > ms->totalDuration;
         }
 
-        int uniLimit = 0;
+        int uniLimit = uni ? -1 : 0;
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
         addP(fillpath, uniLimit, pathFirstY);
@@ -1208,6 +1210,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                           .translated(drawArea.getX(), drawArea.getY());
 
         juce::ColourGradient cg;
+
         if (uni)
         {
             cg = juce::ColourGradient::vertical(
@@ -1271,11 +1274,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             float v = valpx(val);
             int ticklen = 0;
             auto sp = juce::PathStrokeType(1.0);
+
             if (std::get<2>(vp))
             {
                 g.setColour(primaryGridColor);
 
-                if (val != 0.f && !uni)
+                if (val != 0.f)
                     ticklen = 20;
 
                 //  if (val != -1.f)
@@ -1285,13 +1289,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 g.setColour(secondaryHGridColor);
 
-                float dashLength[2] = {4.f, 3.f}; // 4 px dash 3 px gap. Can be any even size
-                // if you change the '2' below in createDashed
+                float dashLength[2] = {2.f, 5.f}; // 2 px dash 5 px gap
+                // Can be any even size if you change the '2' below in createDashedStroke
                 auto dotted = juce::Path();
                 auto markerLine = juce::Path();
                 markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
                 markerLine.lineTo(drawArea.getRight(), v);
-                auto st = juce::PathStrokeType(1.0, juce::PathStrokeType::beveled,
+                auto st = juce::PathStrokeType(0.5, juce::PathStrokeType::beveled,
                                                juce::PathStrokeType::butt);
                 st.createDashedStroke(dotted, markerLine, dashLength, 2);
                 g.strokePath(dotted, st);
