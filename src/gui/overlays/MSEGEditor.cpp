@@ -1277,22 +1277,25 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 if (val != 0.f && !uni)
                     ticklen = 20;
+
+                //  if (val != -1.f)
+                g.drawLine(drawArea.getX() - ticklen, v, drawArea.getRight(), v);
             }
             else
             {
                 g.setColour(secondaryHGridColor);
 
-                static bool warned = false;
-                if (!warned)
-                {
-                    // juce::PathstrokeType::createDashedPath basically
-                    std::cout << "FIXME: Dashed Lines " << __FILE__ << __LINE__ << std::endl;
-                    warned = true;
-                }
+                float dashLength[2] = {4.f, 3.f}; // 4 px dash 3 px gap. Can be any even size
+                // if you change the '2' below in createDashed
+                auto dotted = juce::Path();
+                auto markerLine = juce::Path();
+                markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
+                markerLine.lineTo(drawArea.getRight(), v);
+                auto st = juce::PathStrokeType(1.0, juce::PathStrokeType::beveled,
+                                               juce::PathStrokeType::butt);
+                st.createDashedStroke(dotted, markerLine, dashLength, 2);
+                g.strokePath(dotted, st);
             }
-
-            //  if (val != -1.f)
-            g.drawLine(drawArea.getX() - ticklen, v, drawArea.getRight(), v);
         }
 
         // draw hover loop markers
