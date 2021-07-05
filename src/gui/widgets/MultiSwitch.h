@@ -66,6 +66,8 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
 
+    void endHover() override;
+
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;

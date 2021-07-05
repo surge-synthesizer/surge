@@ -195,7 +195,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere));
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                      [control](int i) { control->endHover(); });
 
             return 1;
         }
@@ -245,7 +246,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere));
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                      [control](int i) { control->endHover(); });
 
             return 1;
         }
@@ -775,7 +777,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             // FIXME: This one shouldn't be async yet since the macro can get swept underneath us
             contextMenu.showMenu(juce::PopupMenu::Options());
-
+            control->endHover();
             return 1;
         }
 
@@ -1952,7 +1954,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                      [control](int i) { control->endHover(); });
 
             return 1;
         }

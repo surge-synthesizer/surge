@@ -101,6 +101,11 @@ struct MenuForDiscreteParams : public juce::Component,
         isHovered = false;
         repaint();
     }
+    void endHover() override
+    {
+        isHovered = false;
+        repaint();
+    }
     juce::Point<int> mouseDownOrigin;
     bool isDraggingGlyph{false};
     float lastDragDistance{0};

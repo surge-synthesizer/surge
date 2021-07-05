@@ -93,6 +93,7 @@ struct ModulationSourceButton : public juce::Component,
 
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+    void endHover() override;
 
     void onSkinChanged() override;
 

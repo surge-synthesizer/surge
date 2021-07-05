@@ -77,8 +77,6 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 {
     if (event.mods.isPopupMenu())
     {
-        isHovered = false;
-        repaint();
         notifyControlModifierClicked(event.mods);
         return;
     }
@@ -114,7 +112,12 @@ void MultiSwitch::mouseEnter(const juce::MouseEvent &event)
     hoverSelection = coordinateToSelection(event.x, event.y);
     isHovered = true;
 }
-void MultiSwitch::mouseExit(const juce::MouseEvent &event) { isHovered = false; }
+void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }
+void MultiSwitch::endHover()
+{
+    isHovered = false;
+    repaint();
+}
 void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {

@@ -26,6 +26,8 @@ struct IComponentTagValue
     virtual float getValue() const = 0;
     virtual void setValue(float) = 0;
 
+    virtual void endHover() {}
+
     juce::Component *asJuceComponent()
     {
         auto r = dynamic_cast<juce::Component *>(this);

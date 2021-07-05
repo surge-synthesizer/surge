@@ -297,7 +297,9 @@ void ModulatableSlider::mouseEnter(const juce::MouseEvent &event)
     }
 }
 
-void ModulatableSlider::mouseExit(const juce::MouseEvent &event)
+void ModulatableSlider::mouseExit(const juce::MouseEvent &event) { endHover(); }
+
+void ModulatableSlider::endHover()
 {
     isHovered = false;
     auto sge = firstListenerOfType<SurgeGUIEditor>();
@@ -305,6 +307,7 @@ void ModulatableSlider::mouseExit(const juce::MouseEvent &event)
     {
         sge->sliderHoverEnd(getTag());
     }
+    repaint();
 }
 
 void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
