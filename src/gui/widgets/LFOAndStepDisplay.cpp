@@ -1231,6 +1231,30 @@ void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
 
 void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 {
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    for (int i = 0; i < n_lfo_types; ++i)
+    {
+        if (shaperect[i].contains(event.position.toInt()))
+        {
+            if (event.mods.isPopupMenu())
+            {
+                notifyControlModifierClicked(event.mods);
+                return;
+            }
+            if (i != lfodata->shape.val.i)
+            {
+                auto prior = lfodata->shape.val.i;
+                lfodata->shape.val.i = i;
+                sge->refresh_mod();
+                sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
+                repaint();
+                sge->lfoShapeChanged(prior, i);
+            }
+            return;
+        }
+    }
+
     if (!isStepSequencer())
         return;
 
