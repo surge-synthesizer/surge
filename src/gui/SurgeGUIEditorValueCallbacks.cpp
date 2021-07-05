@@ -2220,7 +2220,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         }
                     }
 
+                    bool hadExtendedOverlay = false;
                     if (isAnyOverlayPresent(MSEG_EDITOR))
+                    {
+                        closeMSEGEditor();
+                        hadExtendedOverlay = true;
+                    }
+                    if (isAnyOverlayPresent(FORMULA_EDITOR))
+                    {
+                        closeFormulaEditorDialog();
+                        hadExtendedOverlay = true;
+                    }
+                    if (hadExtendedOverlay)
                     {
                         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource -
                                                                                        ms_lfo1]);
@@ -2228,9 +2239,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         {
                             showMSEGEditor();
                         }
-                        else
+                        if (ld->shape.val.i == lt_formula)
                         {
-                            closeMSEGEditor();
+                            showFormulaEditorDialog();
                         }
                     }
 

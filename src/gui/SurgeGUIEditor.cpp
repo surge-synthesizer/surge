@@ -1500,6 +1500,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
 #endif
 
+    for (const auto &el : juceOverlays)
+    {
+        frame->addAndMakeVisible(*(el.second));
+    }
+
     if (showMSEGEditorOnNextIdleOrOpen)
     {
         showMSEGEditor();
@@ -4389,6 +4394,8 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
+    std::cout << "lfoShapeChanged" << prior << " " << curr << std::endl;
+
     if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
         curr == lt_formula)
     {
@@ -4399,26 +4406,29 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         }
     }
 
-    if (curr == lt_mseg && isAnyOverlayPresent(MSEG_EDITOR))
+    bool hadExtendedEditor = false;
+    if (isAnyOverlayPresent(MSEG_EDITOR))
     {
-        // We have the MSEGEditor open and have swapped to the MSEG here
-        showMSEGEditor();
-    }
-    else if (prior == lt_mseg && curr != lt_mseg && isAnyOverlayPresent(MSEG_EDITOR))
-    {
-        // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
         closeMSEGEditor();
+        hadExtendedEditor = true;
     }
-
-    if (curr == lt_formula && isAnyOverlayPresent(FORMULA_EDITOR))
+    if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
-        // We have the MSEGEditor open and have swapped to the MSEG here
-        showFormulaEditorDialog();
-    }
-    else if (prior == lt_formula && curr != lt_formula && isAnyOverlayPresent(FORMULA_EDITOR))
-    {
-        // We can choose to not do this too; if we do we are editing an MSEG which isn't used though
         closeFormulaEditorDialog();
+        hadExtendedEditor = true;
+    }
+    std::cout << _D(prior) << _D(curr) << _D(hadExtendedEditor) << std::endl;
+
+    if (hadExtendedEditor)
+    {
+        if (curr == lt_mseg)
+        {
+            showMSEGEditor();
+        }
+        if (curr == lt_formula)
+        {
+            showFormulaEditorDialog();
+        }
     }
 
     // update the LFO title label
