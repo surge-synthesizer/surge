@@ -244,9 +244,10 @@ void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 
 void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
 {
-    menu.showMenuAsync(juce::PopupMenu::Options());
-    isHovered = false;
-    repaint();
+    menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) {
+        isHovered = false;
+        repaint();
+    });
 }
 
 void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
@@ -326,9 +327,10 @@ void FxMenu::paint(juce::Graphics &g)
 
 void FxMenu::mouseDown(const juce::MouseEvent &event)
 {
-    menu.showMenuAsync(juce::PopupMenu::Options());
-    isHovered = false;
-    repaint();
+    menu.showMenuAsync(juce::PopupMenu::Options(), [this](int i) {
+        isHovered = false;
+        repaint();
+    });
 }
 
 void FxMenu::mouseEnter(const juce::MouseEvent &event)
