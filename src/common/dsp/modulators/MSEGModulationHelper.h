@@ -20,13 +20,14 @@ struct EvaluatorState
     int lastEval = -1;
     float lastOutput = 0;
     float msegState[6] = {0};
-    bool released = false, retrigger_FEG = false, retrigger_AEG = false, has_wrapped = false;
+    bool released = false, retrigger_FEG = false, retrigger_AEG = false, has_triggered = false;
     enum LoopState
     {
         PLAYING,
         RELEASING
     } loopState = PLAYING;
     double releaseStartPhase;
+    double timeAlongSegment;
     float releaseStartValue;
     std::minstd_rand gen;
     std::uniform_real_distribution<float> urd;
@@ -40,8 +41,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, float deform, MSEGStorage *
 ** Edit and Utility functions. After the call to all of these you will want to rebuild cache
 */
 int timeToSegment(MSEGStorage *ms, double t); // these are double to deal with very long phases
-int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &timeAlongSegment,
-                  EvaluatorState *es = nullptr);
+int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &timeAlongSegment);
 void changeTypeAt(MSEGStorage *ms, float t, MSEGStorage::segment::Type type);
 void insertAfter(MSEGStorage *ms, float t);
 void insertBefore(MSEGStorage *ms, float t);

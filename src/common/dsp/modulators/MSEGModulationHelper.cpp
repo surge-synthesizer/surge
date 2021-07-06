@@ -114,6 +114,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         return df;
     }
 
+    es->has_triggered = false;
     es->retrigger_FEG = false;
     es->retrigger_AEG = false;
 
@@ -191,18 +192,24 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         }
     }
 
+    // detect if we have wrapped around when looping a single segment, see github issue #4546
+    if (timeAlongSegment < es->timeAlongSegment)
+    {
+        es->has_triggered = true;
+    }
+
     // std::cout << up << " " << idx << std::endl;
 
     auto r = ms->segments[idx];
     bool segInit = false;
 
-    if (idx != es->lastEval || es->has_wrapped)
+    if (idx != es->lastEval || es->has_triggered)
     {
         segInit = true;
         es->lastEval = idx;
         es->retrigger_FEG = ms->segments[idx].retriggerFEG;
         es->retrigger_AEG = ms->segments[idx].retriggerAEG;
-        es->has_wrapped = false;
+        es->has_triggered = false;
     }
 
     if (!ms->segments[idx].useDeform)
@@ -697,6 +704,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
     // std::cout << _D(timeAlongSegment) << _D(r.type) << _D(r.duration) << _D(lv0) << std::endl;
 
+    es->timeAlongSegment = timeAlongSegment;
+
     res = limit_range(res, -1.f, 1.f);
     es->lastOutput = res;
 
@@ -709,7 +718,7 @@ int timeToSegment(MSEGStorage *ms, double t)
     return timeToSegment(ms, t, true, x);
 }
 
-int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlongSegment, EvaluatorState *es)
+int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlongSegment)
 {
     if (ms->totalDuration < MSEGStorage::minimumDuration)
     {
@@ -783,21 +792,10 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
             if (nt < 0)
             {
                 nt += ms->durationLoopStartToLoopEnd;
-
             }
 
             // and we need to offset it by the starting point
             nt += ms->segmentStart[ls];
-
-            printf("%.10f\n", nt);
-
-            if (nt > 1.f)
-            {
-                if (es)
-                {
-                    es->has_wrapped = true;
-                }
-            }
 
             for (int i = 0; i < ms->n_activeSegments; ++i)
                 if (nt >= ms->segmentStart[i] && nt <= ms->segmentEnd[i])
