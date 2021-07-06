@@ -225,20 +225,20 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
                 susCountdown--;
             }
 
-            val += tlfo->output;
+            val += tlfo->get_output(0);
             if (tFullWave)
             {
-                auto v = tFullWave->output;
+                auto v = tFullWave->get_output(0);
                 minwval = std::min(v, minwval);
                 maxwval = std::max(v, maxwval);
                 wval += v;
             }
             if (s == 0)
-                firstval = tlfo->output;
+                firstval = tlfo->get_output(0);
             if (s == averagingWindow - 1)
-                lastval = tlfo->output;
-            minval = std::min(tlfo->output, minval);
-            maxval = std::max(tlfo->output, maxval);
+                lastval = tlfo->get_output(0);
+            minval = std::min(tlfo->get_output(0), minval);
+            maxval = std::max(tlfo->get_output(0), maxval);
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
         }
         val = val / averagingWindow;
@@ -827,13 +827,13 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
                 susCountdown--;
             }
 
-            val += tlfo->output;
+            val += tlfo->get_output(0);
             if (s == 0)
-                firstval = tlfo->output;
+                firstval = tlfo->get_output(0);
             if (s == averagingWindow - 1)
-                lastval = tlfo->output;
-            minval = std::min(tlfo->output, minval);
-            maxval = std::max(tlfo->output, maxval);
+                lastval = tlfo->get_output(0);
+            minval = std::min(tlfo->get_output(0), minval);
+            maxval = std::max(tlfo->get_output(0), maxval);
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
         }
         val = val / averagingWindow;

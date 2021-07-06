@@ -3362,7 +3362,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                         .scene[current_scene]
                         .modsources[ms]);
-        sprintf(txt, "%.*f %%", (detailedMode ? 6 : 2), 100.0 * cms->get_output());
+        sprintf(txt, "%.*f %%", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
         sprintf(ptext, "current: %s", txt);
     }
 

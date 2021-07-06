@@ -2765,7 +2765,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
 
 float SurgeSynthesizer::getMacroParameter01(long macroNum)
 {
-    return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01();
+    return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01(0);
 }
 
 void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
@@ -2782,7 +2782,7 @@ float SurgeSynthesizer::getParameter01(long index)
         return storage.getPatch()
             .scene[0]
             .modsources[ms_ctrl1 + index - metaparam_offset]
-            ->get_output01();
+            ->get_output01(0);
     if (index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
@@ -2800,7 +2800,7 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text)
                  100.f * storage.getPatch()
                              .scene[0]
                              .modsources[ms_ctrl1 + index - metaparam_offset]
-                             ->get_output());
+                             ->get_output(0));
     }
     else
         snprintf(text, TXT_SIZE, "-");
@@ -2830,7 +2830,7 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x)
                  100.f * storage.getPatch()
                              .scene[0]
                              .modsources[ms_ctrl1 + index - metaparam_offset]
-                             ->get_output());
+                             ->get_output(0));
     }
     else
         snprintf(text, TXT_SIZE, "-");
@@ -3004,7 +3004,7 @@ float SurgeSynthesizer::getParameter(long index)
         return storage.getPatch()
             .scene[0]
             .modsources[ms_ctrl1 + index - metaparam_offset]
-            ->get_output();
+            ->get_output(0);
     if (index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
@@ -3186,7 +3186,7 @@ void SurgeSynthesizer::processControl()
             ControllerModulationSource *mc = &mControlInterpolator[i];
             bool cont = mc->process_block_until_close(0.001f);
             int id = mc->id;
-            storage.getPatch().param_ptr[id]->set_value_f01(mc->output);
+            storage.getPatch().param_ptr[id]->set_value_f01(mc->get_output(0));
             if (!cont)
             {
                 mControlInterpolatorUsed[i] = false;
@@ -3255,7 +3255,7 @@ void SurgeSynthesizer::processControl()
                     int dst_id = storage.getPatch().scene[s].modulation_scene[i].destination_id;
                     float depth = storage.getPatch().scene[s].modulation_scene[i].depth;
                     storage.getPatch().scenedata[s][dst_id].f +=
-                        depth * storage.getPatch().scene[s].modsources[src_id]->output *
+                        depth * storage.getPatch().scene[s].modsources[src_id]->get_output(0) *
                         (1.0 - storage.getPatch().scene[s].modulation_scene[i].muted);
                 }
             }
@@ -3274,7 +3274,7 @@ void SurgeSynthesizer::processControl()
         int dst_id = storage.getPatch().modulation_global[i].destination_id;
         float depth = storage.getPatch().modulation_global[i].depth;
         storage.getPatch().globaldata[dst_id].f +=
-            depth * storage.getPatch().scene[0].modsources[src_id]->output *
+            depth * storage.getPatch().scene[0].modsources[src_id]->get_output(0) *
             (1 - storage.getPatch().modulation_global[i].muted);
     }
 

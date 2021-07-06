@@ -275,11 +275,15 @@ class ModulationSource
     virtual void attack(){};
     virtual void release(){};
     virtual void reset(){};
-    virtual float get_output() { return output; }
-    virtual float get_output01() { return output; }
+    virtual float get_output(int which) { return output; }
+    virtual float get_output01(int which) { return output; }
+    virtual void set_output(int which, float f) { output = f; }
     virtual bool per_voice() { return false; }
     virtual bool is_bipolar() { return false; }
     virtual void set_bipolar(bool b) {}
+    virtual int get_num_outputs() { return 1; }
+
+  protected:
     float output;
 };
 
@@ -336,7 +340,7 @@ class ControllerModulationSource : public ModulationSource
             changed = true;
     }
 
-    virtual float get_output01() override
+    virtual float get_output01(int i) override
     {
         if (bipolar)
             return 0.5f + 0.5f * output;
