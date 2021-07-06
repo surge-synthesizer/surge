@@ -148,6 +148,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         if (tag == tag_settingsmenu)
         {
+            useDevMenu = true;
             showSettingsMenu(juce::Point<int>{}, control);
             return 1;
         }
