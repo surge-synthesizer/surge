@@ -102,6 +102,11 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         setMouseCursor(juce::MouseCursor::NormalCursor);
         repaint();
     }
+    void endHover() override
+    {
+        isHover = false;
+        repaint();
+    }
 
     juce::Colour textColour, textHoverColour;
     void setTextColour(juce::Colour c)

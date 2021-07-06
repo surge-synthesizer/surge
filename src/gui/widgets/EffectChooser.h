@@ -68,6 +68,11 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
         mouseMove(event);
     }
     void mouseExit(const juce::MouseEvent &event) override { isHovered = false; }
+    void endHover() override
+    {
+        isHovered = false;
+        repaint();
+    }
     // State for mouse events
     bool isHovered{false}, hasDragged{false};
     int currentHover{-1}, currentClicked{-1};

@@ -68,6 +68,11 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+    void endHover() override
+    {
+        isHovered = false;
+        repaint();
+    }
 
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,

@@ -305,7 +305,9 @@ void ModulationSourceButton::mouseEnter(const juce::MouseEvent &event)
     repaint();
 }
 
-void ModulationSourceButton::mouseExit(const juce::MouseEvent &event)
+void ModulationSourceButton::mouseExit(const juce::MouseEvent &event) { endHover(); }
+
+void ModulationSourceButton::endHover()
 {
     isHovered = false;
     repaint();
