@@ -148,7 +148,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         if (tag == tag_settingsmenu)
         {
-            showSettingsMenu(juce::Point<int>{});
+            showSettingsMenu(juce::Point<int>{}, control);
             return 1;
         }
 
@@ -2399,17 +2399,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     case tag_settingsmenu:
     {
         juce::Point<int> menuPoint;
-
-        // settings is a special case since it uses value here.
-        if (auto msc = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
-        {
-            msc->isHovered = false;
-            msc->repaint();
-            menuPoint = msc->getBounds().getTopRight();
-        }
-
         useDevMenu = false;
-        showSettingsMenu(menuPoint);
+        showSettingsMenu(menuPoint, control);
     }
     break;
     case tag_osc_select:
