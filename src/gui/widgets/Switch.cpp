@@ -49,8 +49,6 @@ void Switch::mouseDown(const juce::MouseEvent &event)
 {
     if (event.mods.isPopupMenu())
     {
-        isHovered = false;
-        repaint();
         notifyControlModifierClicked(event.mods);
         return;
     }
@@ -81,7 +79,7 @@ void Switch::mouseDown(const juce::MouseEvent &event)
 
 void Switch::mouseEnter(const juce::MouseEvent &event) { isHovered = true; }
 
-void Switch::mouseExit(const juce::MouseEvent &event) { isHovered = false; }
+void Switch::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
 void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel)
 {

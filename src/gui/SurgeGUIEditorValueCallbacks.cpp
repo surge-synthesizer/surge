@@ -110,28 +110,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         control->setValue(0);
         juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
-        showLfoMenu(where);
+        showLfoMenu(where, control);
         return 1;
     }
 
     if (tag == tag_status_zoom)
     {
         juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
-        showZoomMenu(where);
+        showZoomMenu(where, control);
         return 1;
     }
 
     if (tag == tag_status_mpe)
     {
         juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
-        showMPEMenu(where);
+        showMPEMenu(where, control);
         return 1;
     }
 
     if (tag == tag_status_tune)
     {
         juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
-        showTuningMenu(where);
+        showTuningMenu(where, control);
         return 1;
     }
 
@@ -2115,7 +2115,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         control->setValue(0);
         juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
-        showZoomMenu(where);
+        showZoomMenu(where, control);
         return;
     }
 
@@ -2124,7 +2124,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         control->setValue(0);
         juce::Point<int> where{};
 
-        showLfoMenu(where);
+        showLfoMenu(where, control);
         return;
     }
 

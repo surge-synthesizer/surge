@@ -1708,21 +1708,33 @@ juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<in
     }
     return o;
 }
-void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where)
+void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
+                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeZoomMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where));
+    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+        if (launchFrom)
+            launchFrom->endHover();
+    });
 }
 
-void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where)
+void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where,
+                                 Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeMpeMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where));
+    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+        if (launchFrom)
+            launchFrom->endHover();
+    });
 }
-void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where)
+void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
+                                 Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeLfoMenu(where);
-    m.showMenuAsync(optionsForPosition(where));
+    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+        if (launchFrom)
+            launchFrom->endHover();
+    });
 }
 
 void SurgeGUIEditor::toggleTuning()
@@ -1737,11 +1749,15 @@ void SurgeGUIEditor::toggleTuning()
 
     this->synth->refresh_editor = true;
 }
-void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where)
+void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
+                                    Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeTuningMenu(where, true);
 
-    m.showMenuAsync(optionsForPosition(where));
+    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+        if (launchFrom)
+            launchFrom->endHover();
+    });
 }
 
 void SurgeGUIEditor::scaleFileDropped(std::string fn)

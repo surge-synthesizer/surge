@@ -263,10 +263,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
     ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
     */
-    void showMPEMenu(const juce::Point<int> &where);
-    void showTuningMenu(const juce::Point<int> &where);
-    void showZoomMenu(const juce::Point<int> &where);
-    void showLfoMenu(const juce::Point<int> &menuRect);
+    void showMPEMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
+    void showTuningMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
+    void showZoomMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
+    void showLfoMenu(const juce::Point<int> &menuRect, Surge::GUI::IComponentTagValue *launchFrom);
 
     juce::PopupMenu::Options optionsForPosition(const juce::Point<int> &where);
 
