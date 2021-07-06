@@ -784,14 +784,20 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
             {
                 nt += ms->durationLoopStartToLoopEnd;
 
+            }
+
+            // and we need to offset it by the starting point
+            nt += ms->segmentStart[ls];
+
+            printf("%.10f\n", nt);
+
+            if (nt > 1.f)
+            {
                 if (es)
                 {
                     es->has_wrapped = true;
                 }
             }
-
-            // and we need to offset it by the starting point
-            nt += ms->segmentStart[ls];
 
             for (int i = 0; i < ms->n_activeSegments; ++i)
                 if (nt >= ms->segmentStart[i] && nt <= ms->segmentEnd[i])
