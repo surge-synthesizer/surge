@@ -148,7 +148,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         idx = timeToSegment(ms, up,
                             forceOneShot || ms->loopMode == MSEGStorage::ONESHOT ||
                                 ms->editMode == MSEGStorage::LFO,
-                            timeAlongSegment, es);
+                            timeAlongSegment);
 
         if (idx < 0 || idx >= ms->n_activeSegments)
         {
