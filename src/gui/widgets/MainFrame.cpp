@@ -23,15 +23,19 @@ namespace Widgets
 void MainFrame::mouseDown(const juce::MouseEvent &event)
 {
     if (!editor)
+    {
         return;
+    }
+
     if (event.mods.isMiddleButtonDown())
     {
         editor->toggle_mod_editing();
     }
+
     if (event.mods.isPopupMenu())
     {
         editor->useDevMenu = false;
-        editor->showSettingsMenu(juce::Point<int>{});
+        editor->showSettingsMenu(juce::Point<int>{}, nullptr);
     }
 }
 } // namespace Widgets

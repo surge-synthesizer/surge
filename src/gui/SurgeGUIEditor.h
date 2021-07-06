@@ -141,7 +141,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void effectSettingsBackgroundClick(int whichScene);
 
     void setDisabledForParameter(Parameter *p, Surge::Widgets::ModulatableControlInterface *s);
-    void showSettingsMenu(const juce::Point<int> &menuRect);
+    void showSettingsMenu(const juce::Point<int> &where,
+                          Surge::GUI::IComponentTagValue *launchFrom);
 
     static bool fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q);
     // If n_scenes > 2, then this initialization and the modsource_editor one below will need to
@@ -266,7 +267,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showMPEMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
     void showTuningMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
     void showZoomMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
-    void showLfoMenu(const juce::Point<int> &menuRect, Surge::GUI::IComponentTagValue *launchFrom);
+    void showLfoMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
 
     juce::PopupMenu::Options optionsForPosition(const juce::Point<int> &where);
 
@@ -558,7 +559,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int firstIdleCountdown = 0;
 
     juce::PopupMenu
-    makeSmoothMenu(const juce::Point<int> &menuRect, const Surge::Storage::DefaultKey &key,
+    makeSmoothMenu(const juce::Point<int> &where, const Surge::Storage::DefaultKey &key,
                    int defaultValue,
                    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
 
