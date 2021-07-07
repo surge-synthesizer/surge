@@ -1589,6 +1589,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         channelState[channel].nrpn_last = false;
         return;
     case 120: // all sound off
+    {
         bool doAllSoundOff = true;
 
         // make sure we only do All Sound Off over the global MPE channel
@@ -1604,7 +1605,9 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         }
 
         return;
+    }
     case 123: // all notes off
+    {
         bool doAllNotesOff = true;
 
         // make sure we only do All Notes Off over the global MPE channel
@@ -1641,6 +1644,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         }
 
         return;
+    }
     };
 
     int cc_encoded = cc;
