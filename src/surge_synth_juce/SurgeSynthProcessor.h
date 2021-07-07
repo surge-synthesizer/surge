@@ -35,6 +35,12 @@ struct SurgeParamToJuceInfo
         s->getParameterName(s->idForParameter(p), txt);
         return juce::String(txt);
     }
+
+    static juce::String getMacroName(SurgeSynthesizer *s, int macro)
+    {
+        juce::String res = s->storage.getPatch().CustomControllerLabel[macro];
+        return res;
+    }
 };
 
 /*
@@ -51,6 +57,12 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
     }
 
     // Oh this is all incorrect of course
+    juce::String getName(int i) const override
+    {
+        juce::String res = SurgeParamToJuceInfo::getParameterName(s, p);
+        res = res.substring(0, i);
+        return res;
+    }
     float getValue() const override { return s->getParameter01(s->idForParameter(p)); }
     float getDefaultValue() const override { return 0.0; /* FIXME */ }
     void setValue(float f) override
@@ -104,6 +116,14 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
     }
 
     // Oh this is all incorrect of course
+    juce::String getName(int i) const override
+    {
+        juce::String res = "C" + std::to_string(macroNum) + ": ";
+        res += SurgeParamToJuceInfo::getMacroName(s, macroNum);
+
+        res = res.substring(0, i);
+        return res;
+    }
     float getValue() const override { return s->getMacroParameter01(macroNum); }
     float getValueForText(const juce::String &text) const override
     {
@@ -193,6 +213,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     std::vector<int> presetOrderToPatchList;
     int blockPos = 0;
+
+    int checkNamesEvery = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)
 };
