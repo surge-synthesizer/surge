@@ -370,7 +370,7 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
-    if (event.getDistanceFromDragStart() < 2)
+    if (event.getDistanceFromDragStart() < 4)
     {
         return;
     }
