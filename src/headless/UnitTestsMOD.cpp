@@ -90,10 +90,10 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             }
 
             adsr->process_block();
-            res.push_back(std::make_pair((float)t, adsr->output));
+            res.push_back(std::make_pair((float)t, adsr->get_output(0)));
             if (false && i > 270 && i < 290)
-                std::cout << i << " " << t << " " << adsr->output << " " << adsr->getEnvState()
-                          << std::endl;
+                std::cout << i << " " << t << " " << adsr->get_output(0) << " "
+                          << adsr->getEnvState() << std::endl;
         }
         return res;
     };
@@ -736,7 +736,7 @@ TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
         float p = -1000;
         for (int64_t i = 0; i < 10000000; ++i)
         {
-            if (lfo->output > p)
+            if (lfo->get_output(0) > p)
             {
                 double time = i * dsamplerate_inv * BLOCK_SIZE;
                 double beats = time * bpm / 60;
@@ -744,7 +744,7 @@ TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
                 double drift = fabs(beats * 2 - bt2);
                 // std::cout << time / 60.0 <<  " " << drift << std::endl;
             }
-            p = lfo->output;
+            p = lfo->get_output(0);
             lfo->process_block();
         }
     }
@@ -758,18 +758,18 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
         ControllerModulationSource a(ControllerModulationSource::SmoothingMode::LEGACY);
         a.init(0.5f);
-        REQUIRE(a.output == 0.5f);
+        REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
         a.set_target(t);
-        float priorO = a.output;
+        float priorO = a.get_output(0);
         float dO = 100000;
         for (int i = 0; i < 100; ++i)
         {
             a.process_block();
-            REQUIRE(t - a.output < t - priorO);
-            REQUIRE(a.output - priorO < dO);
-            dO = a.output - priorO;
-            priorO = a.output;
+            REQUIRE(t - a.get_output(0) < t - priorO);
+            REQUIRE(a.get_output(0) - priorO < dO);
+            dO = a.get_output(0) - priorO;
+            priorO = a.get_output(0);
         }
     }
 
@@ -780,20 +780,20 @@ TEST_CASE("CModulationSources", "[mod]")
 
         ControllerModulationSource a(ControllerModulationSource::SmoothingMode::FAST_EXP);
         a.init(0.5f);
-        REQUIRE(a.output == 0.5f);
+        REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
         a.set_target(t);
-        float priorO = a.output;
+        float priorO = a.get_output(0);
         float dO = 100000;
         for (int i = 0; i < 200; ++i)
         {
             a.process_block();
-            REQUIRE(t - a.output <= t - priorO);
-            REQUIRE(((a.output == t) || (a.output - priorO < dO)));
-            dO = a.output - priorO;
-            priorO = a.output;
+            REQUIRE(t - a.get_output(0) <= t - priorO);
+            REQUIRE(((a.get_output(0) == t) || (a.get_output(0) - priorO < dO)));
+            dO = a.get_output(0) - priorO;
+            priorO = a.get_output(0);
         }
-        REQUIRE(a.output == t);
+        REQUIRE(a.get_output(0) == t);
     }
 
     SECTION("Slow Exp Mode gets there eventually")
@@ -803,16 +803,16 @@ TEST_CASE("CModulationSources", "[mod]")
 
         ControllerModulationSource a(ControllerModulationSource::SmoothingMode::SLOW_EXP);
         a.init(0.5f);
-        REQUIRE(a.output == 0.5f);
+        REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
         a.set_target(t);
         int idx = 0;
-        while (a.output != t && idx < 10000)
+        while (a.get_output(0) != t && idx < 10000)
         {
             a.process_block();
             idx++;
         }
-        REQUIRE(a.output == t);
+        REQUIRE(a.get_output(0) == t);
         REQUIRE(idx < 1000);
     }
 
@@ -831,7 +831,7 @@ TEST_CASE("CModulationSources", "[mod]")
             {
                 a.process_block();
             }
-            REQUIRE(a.output == r);
+            REQUIRE(a.get_output(0) == r);
         }
     }
 
@@ -847,7 +847,7 @@ TEST_CASE("CModulationSources", "[mod]")
             float r = rand() / ((float)RAND_MAX);
             a.set_target(r);
             a.process_block();
-            REQUIRE(a.output == r);
+            REQUIRE(a.get_output(0) == r);
         }
     }
 }
@@ -931,12 +931,12 @@ TEST_CASE("KeyTrack in Play Modes", "[mod]")
             };
             auto checkModes = [](std::shared_ptr<SurgeSynthesizer> surge, float low, float high,
                                  float latest) {
-                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_lowest_key]->output ==
-                        low);
-                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_highest_key]->output ==
-                        high);
-                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_latest_key]->output ==
-                        latest);
+                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_lowest_key]->get_output(
+                            0) == low);
+                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_highest_key]->get_output(
+                            0) == high);
+                REQUIRE(surge->storage.getPatch().scene[0].modsources[ms_latest_key]->get_output(
+                            0) == latest);
                 return true;
             };
             DYNAMIC_SECTION("KeyTrack Test mode=" << m << " mpe=" << mp)
@@ -1006,9 +1006,9 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
         for (auto v : surge->voices[0])
             if (v->state.gate)
             {
-                REQUIRE(v->modsources[ms_highest_key]->output * 12 + 60 == high);
-                REQUIRE(v->modsources[ms_latest_key]->output * 12 + 60 == latest);
-                REQUIRE(v->modsources[ms_lowest_key]->output * 12 + 60 == low);
+                REQUIRE(v->modsources[ms_highest_key]->get_output(0) * 12 + 60 == high);
+                REQUIRE(v->modsources[ms_latest_key]->get_output(0) * 12 + 60 == latest);
+                REQUIRE(v->modsources[ms_lowest_key]->get_output(0) * 12 + 60 == low);
             }
     };
 
@@ -1194,9 +1194,9 @@ TEST_CASE("High Low Latest with splits", "[mod]")
         for (auto v : surge->voices[sc])
             if (v->state.gate)
             {
-                REQUIRE(v->modsources[ms_highest_key]->output * 12 + 60 == high);
-                REQUIRE(v->modsources[ms_latest_key]->output * 12 + 60 == latest);
-                REQUIRE(v->modsources[ms_lowest_key]->output * 12 + 60 == low);
+                REQUIRE(v->modsources[ms_highest_key]->get_output(0) * 12 + 60 == high);
+                REQUIRE(v->modsources[ms_latest_key]->get_output(0) * 12 + 60 == latest);
+                REQUIRE(v->modsources[ms_lowest_key]->get_output(0) * 12 + 60 == low);
             }
     };
     for (auto mpemode : {true, false})

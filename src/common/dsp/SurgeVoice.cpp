@@ -40,7 +40,7 @@ inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
 float SurgeVoiceState::getPitch(SurgeStorage *storage)
 {
-    float mpeBend = mpePitchBend.output * mpePitchBendRange;
+    float mpeBend = mpePitchBend.get_output(0) * mpePitchBendRange;
     /*
     ** For this commented out section, see the comment on MPE global pitch bend in
     *SurgeSynthesizer::pitchBend
@@ -179,9 +179,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     modsources[ms_keytrack] = &keytrackSource;
     modsources[ms_polyaftertouch] = &polyAftertouchSource;
 
-    velocitySource.output = state.fvel;
-    releaseVelocitySource.output = state.freleasevel;
-    keytrackSource.output = 0;
+    velocitySource.set_output(0, state.fvel);
+    releaseVelocitySource.set_output(0, state.freleasevel);
+    keytrackSource.set_output(0, 0.f);
 
     ampEGSource.init(storage, &scene->adsr[0], localcopy, &state);
     filterEGSource.init(storage, &scene->adsr[1], localcopy, &state);
@@ -210,16 +210,16 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     /*
     ** We want to snap the rnd and alt
     */
-    rndUni.output = oscene->modsources[ms_random_unipolar]->output;
+    rndUni.set_output(0, oscene->modsources[ms_random_unipolar]->get_output(0));
     modsources[ms_random_unipolar] = &rndUni;
 
-    rndBi.output = oscene->modsources[ms_random_bipolar]->output;
+    rndBi.set_output(0, oscene->modsources[ms_random_bipolar]->get_output(0));
     modsources[ms_random_bipolar] = &rndBi;
 
-    altUni.output = oscene->modsources[ms_alternate_unipolar]->output;
+    altUni.set_output(0, oscene->modsources[ms_alternate_unipolar]->get_output(0));
     modsources[ms_alternate_unipolar] = &altUni;
 
-    altBi.output = oscene->modsources[ms_alternate_bipolar]->output;
+    altBi.set_output(0, oscene->modsources[ms_alternate_bipolar]->get_output(0));
     modsources[ms_alternate_bipolar] = &altBi;
 
     id_cfa = scene->filterunit[0].cutoff.param_id_in_scene;
@@ -312,7 +312,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 void SurgeVoice::switch_toggled()
 {
     update_portamento();
-    float pb = modsources[ms_pitchbend]->output;
+    float pb = modsources[ms_pitchbend]->get_output(0);
     if (pb > 0)
         pb *= (float)scene->pbrange_up.val.i;
     else
@@ -323,8 +323,8 @@ void SurgeVoice::switch_toggled()
     state.scenepbpitch = pb;
     state.pitch = state.pkey + state.scenepbpitch;
 
-    modsources[ms_keytrack]->output =
-        (state.pitch - (float)scene->keytrack_root.val.i) * (1.0f / 12.0f);
+    modsources[ms_keytrack]->set_output(0, (state.pitch - (float)scene->keytrack_root.val.i) *
+                                               (1.0f / 12.0f));
 
     /*
      * Since we have updated the keytrack output here we need to re-update the localcopy modulators
@@ -338,7 +338,8 @@ void SurgeVoice::switch_toggled()
         float depth = iter->depth;
         if (modsources[src_id] && src_id == ms_keytrack)
         {
-            localcopy[dst_id].f += depth * modsources[ms_keytrack]->output * (1 - iter->muted);
+            localcopy[dst_id].f +=
+                depth * modsources[ms_keytrack]->get_output(0) * (1 - iter->muted);
         }
         iter++;
     }
@@ -446,7 +447,7 @@ void SurgeVoice::release()
         lfo[i].release();
 
     state.gate = false;
-    releaseVelocitySource.output = state.releasevelocity / 127.0f;
+    releaseVelocitySource.set_output(0, state.releasevelocity / 127.0f);
 }
 
 void SurgeVoice::uber_release()
@@ -568,7 +569,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
         if (modsources[src_id])
         {
-            localcopy[dst_id].f += depth * modsources[src_id]->output * (1.0 - iter->muted);
+            localcopy[dst_id].f += depth * modsources[src_id]->get_output(0) * (1.0 - iter->muted);
         }
         iter++;
     }
@@ -590,7 +591,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
                 if (dst_id >= 0 && dst_id < n_scene_params)
                 {
                     float depth = iter->depth;
-                    localcopy[dst_id].f += depth * modsources[src_id]->output * (1.0 - iter->muted);
+                    localcopy[dst_id].f +=
+                        depth * modsources[src_id]->get_output(0) * (1.0 - iter->muted);
                 }
             }
             iter++;
@@ -613,7 +615,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     {
         // When not in MPE mode, channel aftertouch is already smoothed at scene level.
         // Do not smooth it again, force the output to the current value.
-        monoAftertouchSource.output = state.voiceChannelState->pressure;
+        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure);
         // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
     }
 
@@ -625,7 +627,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         ((ADSRModulationSource *)modsources[ms_filtereg])->retrigger();
     }
 
-    float pb = modsources[ms_pitchbend]->output;
+    float pb = modsources[ms_pitchbend]->get_output(0);
     if (pb > 0)
         pb *= (float)scene->pbrange_up.val.i;
     else
@@ -640,8 +642,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     state.pitch = state.pkey + state.scenepbpitch;
 
     // I didn't change this for octaveSize, I think rightly
-    modsources[ms_keytrack]->output =
-        (state.pitch - (float)scene->keytrack_root.val.i) * (1.0f / 12.0f);
+    modsources[ms_keytrack]->set_output(0, (state.pitch - (float)scene->keytrack_root.val.i) *
+                                               (1.0f / 12.0f));
 
     if (scene->modsource_doprocess[ms_polyaftertouch])
     {
@@ -1011,7 +1013,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
     // HERE
     float Drive = db_to_linear(scene->wsunit.drive.get_extended(localcopy[id_drive].f));
     float Gain = db_to_linear(localcopy[id_vca].f + localcopy[id_vcavel].f * (1.f - state.fvel)) *
-                 modsources[ms_ampeg]->output;
+                 modsources[ms_ampeg]->get_output(0);
     float FB = scene->feedback.get_extended(localcopy[id_feedback].f);
 
     if (Q)
@@ -1046,7 +1048,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
         Q->FU[3].active[e] = 0xffffffff;
 
         float keytrack = state.pitch - (float)scene->keytrack_root.val.i;
-        float fenv = modsources[ms_filtereg]->output;
+        float fenv = modsources[ms_filtereg]->get_output(0);
         float cutoffA =
             localcopy[id_cfa].f + localcopy[id_kta].f * keytrack + localcopy[id_emoda].f * fenv;
         float cutoffB =

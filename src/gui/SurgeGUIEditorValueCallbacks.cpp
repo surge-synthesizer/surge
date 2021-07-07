@@ -573,7 +573,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 char vtxt[1024];
                 snprintf(vtxt, 1024, "%s: %.*f %%",
                          Surge::GUI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2),
-                         100 * cms->get_output());
+                         100 * cms->get_output(0));
                 contextMenu.addItem(vtxt, [this, bvf, modsource]() {
                     promptForUserValueEntry(nullptr, bvf, modsource);
                 });
@@ -691,7 +691,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         float f = synth->storage.getPatch()
                                       .scene[current_scene]
                                       .modsources[ms_ctrl1 + ccid]
-                                      ->get_output01();
+                                      ->get_output01(0);
                         control->setValue(f);
 
                         auto msb = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
@@ -2774,7 +2774,7 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
     float val = std::atof(s.c_str()) / 100.0;
     if ((bp && val >= -1 && val <= 1) || (val >= 0 && val <= 1))
     {
-        cms->output = val;
+        cms->set_output(0, val);
         cms->target = val;
         synth->refresh_editor = true;
         return true;
