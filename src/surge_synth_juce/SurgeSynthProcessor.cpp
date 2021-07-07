@@ -322,6 +322,15 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
 
         blockPos = (blockPos + 1) & (BLOCK_SIZE - 1);
     }
+
+    if (checkNamesEvery++ > 10)
+    {
+        checkNamesEvery = 0;
+        if (std::atomic_exchange(&parameterNameUpdated, false))
+        {
+            updateHostDisplay();
+        }
+    }
 }
 
 //==============================================================================

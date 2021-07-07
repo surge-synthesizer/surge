@@ -729,6 +729,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->storage.getPatch()
                                     .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] =
                                     0; // to be sure
+                                parameterNameUpdated = true;
 
                                 auto msb =
                                     dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
