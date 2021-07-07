@@ -239,7 +239,9 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         }
         else if (m.isProgramChange())
         {
-            // Implement program change in XT
+            // apparently this is not enough to actually execute SurgeSynthesizer::programChange
+            // for whatever reason!
+            surge->programChange(ch, m.getProgramChangeNumber());
         }
         else
         {
