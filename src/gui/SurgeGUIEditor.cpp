@@ -1154,16 +1154,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE:
         {
-            // FIXME - drag and drop onto this?
             statusTune = layoutComponentForSkin(skinCtrl, tag_status_tune);
             auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
-            statusTune->setValue(synth->storage.isStandardTuning ? hasmts : 1);
-
-            auto csc = dynamic_cast<Surge::Widgets::Switch *>(statusTune);
-            if (csc && synth->storage.isStandardTuning)
-            {
-                csc->setUnValueClickable(!synth->storage.isToggledToCache);
-            }
+            statusTune->setValue(synth->storage.isStandardTuning ? hasmts
+                                                                 : synth->storage.isToggledToCache);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM:
