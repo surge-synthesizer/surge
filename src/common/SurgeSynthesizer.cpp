@@ -31,6 +31,7 @@
 #include "Effect.h"
 
 #include <thread>
+#include <set>
 #include "libMTSClient.h"
 
 using namespace std;
@@ -1588,8 +1589,62 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         channelState[channel].nrpn_last = false;
         return;
     case 120: // all sound off
-    case 123: // all notes off
+    {
+        bool doAllSoundOff = true;
+
+        // make sure we only do All Sound Off over the global MPE channel
+        if (mpeEnabled && channel != 0)
+        {
+            doAllSoundOff = false;
+        }
+
+        if (doAllSoundOff)
+        {
+            releaseScene(0);
+            releaseScene(1);
+        }
+
         return;
+    }
+    case 123: // all notes off
+    {
+        bool doAllNotesOff = true;
+
+        // make sure we only do All Notes Off over the global MPE channel
+        if (mpeEnabled && channel != 0)
+        {
+            doAllNotesOff = false;
+        }
+
+        if (doAllNotesOff)
+        {
+            std::set<int> heldNotes;
+
+            for (int sc = 0; sc < n_scenes; sc++)
+            {
+                for (int key = 0; key < 128; key++)
+                {
+                    if (midiKeyPressedForScene[sc][key])
+                    {
+                        heldNotes.insert(key);
+                    }
+                }
+            }
+
+            for (auto n : heldNotes)
+            {
+                for (int ch = 0; ch < 16; ch++)
+                {
+                    if (channelState[ch].keyState[n].keystate > 0)
+                    {
+                        releaseNote(ch, n, 0);
+                    }
+                }
+            }
+        }
+
+        return;
+    }
     };
 
     int cc_encoded = cc;
