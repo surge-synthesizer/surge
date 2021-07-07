@@ -211,7 +211,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
 
 void EffectChooser::mouseDrag(const juce::MouseEvent &event)
 {
-    if (event.getDistanceFromDragStart() > 0)
+    if (event.getDistanceFromDragStart() > 2)
     {
         if (!hasDragged)
         {
