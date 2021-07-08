@@ -88,9 +88,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     // if RMB is down, only show the current category
     bool single_category =
         e.mods.isRightButtonDown() || e.mods.isCtrlDown() || e.mods.isCommandDown();
-    bool has_3rdparty = false;
     int last_category = current_category;
-    int root_count = 0, usercat_pos = 0, col_breakpoint = 0;
     auto patch_cat_size = storage->patch_category.size();
 
     if (single_category)
@@ -147,43 +145,27 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
         for (int i = 0; i < patch_cat_size; i++)
         {
-            if ((!single_category) || (i == last_category))
+            if (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory)
             {
-                if (!single_category &&
-                    (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory))
+                std::string txt;
+
+                if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
                 {
-                    std::string txt;
-
-                    if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
-                    {
-                        has_3rdparty = true;
-                        txt = "THIRD PARTY PATCHES";
-                    }
-                    else
-                    {
-                        txt = "USER PATCHES";
-                    }
-
-                    contextMenu.addColumnBreak();
-                    contextMenu.addSectionHeader(txt);
+                    txt = "THIRD PARTY PATCHES";
+                }
+                else
+                {
+                    txt = "USER PATCHES";
                 }
 
-                // Remap index to the corresponding category in alphabetical order.
-                int c = storage->patchCategoryOrdering[i];
-
-                // find at which position the first user category root folder shows up
-                if (storage->patch_category[i].isRoot)
-                {
-                    root_count++;
-
-                    if (i == storage->firstUserCategory)
-                    {
-                        usercat_pos = root_count;
-                    }
-                }
-
-                populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
+                contextMenu.addColumnBreak();
+                contextMenu.addSectionHeader(txt);
             }
+
+            // remap index to the corresponding category in alphabetical order.
+            int c = storage->patchCategoryOrdering[i];
+
+            populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
         }
     }
 
@@ -226,6 +208,8 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
             sge->showPatchBrowserDialog();
         }
     });
+
+    contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch List"),
                         [this]() { this->storage->refresh_patchlist(); });

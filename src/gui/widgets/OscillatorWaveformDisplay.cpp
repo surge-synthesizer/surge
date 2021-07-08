@@ -339,13 +339,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                                               message);
         }
     };
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Save Wavetable to File..."), exportAction);
-
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Exported Wavetables Folder..."),
-                        [this]() {
-                            Surge::GUI::openFileOrFolder(Surge::Storage::appendDirectory(
-                                this->storage->userDataPath, "Exported Wavetables"));
-                        });
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Export Wavetable to File..."), exportAction);
 
     if (sge)
     {

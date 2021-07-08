@@ -489,7 +489,8 @@ void SurgeSynthesizer::savePatch()
     if (storage.getPatch().category.empty())
         storage.getPatch().category = "Default";
 
-    fs::path savepath = string_to_path(getUserPatchDirectory());
+    fs::path savepath =
+        string_to_path(getUserPatchDirectory() + PATH_SEPARATOR + "Patches" + PATH_SEPARATOR);
 
     try
     {

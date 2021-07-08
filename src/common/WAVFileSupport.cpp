@@ -469,7 +469,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 {
     std::string path;
-    path = Surge::Storage::appendDirectory(userDataPath, "Exported Wavetables");
+    path = Surge::Storage::appendDirectory(userDataPath, "Wavetables", "Exported");
     fs::create_directories(string_to_path(path));
 
     auto fnamePre = fbase + ".wav";
