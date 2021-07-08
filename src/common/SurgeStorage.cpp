@@ -446,7 +446,7 @@ bailOnPortable:
         if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
         {
             fs::path path(documentsFolder);
-            path /= L"Surge";
+            path /= L"Surge XT";
             userDataPath = path_to_string(path);
         }
     }
@@ -465,9 +465,9 @@ bailOnPortable:
     // append separator if not present
     datapath = Surge::Storage::appendDirectory(datapath, std::string());
 
-    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
+    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FX Presets");
 
-    userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
+    userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDI Mappings");
 
     /*
     const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
@@ -508,7 +508,7 @@ bailOnPortable:
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
-    // WindowWT is a WaveTable which now has a constructor so don't do this
+    // WindowWT is a Wavetable which now has a constructor so don't do this
     // memset(&WindowWT, 0, sizeof(WindowWT));
     if (loadWtAndPatch &&
         !load_wt_wt_mem(SurgeCoreBinary::windows_wt, SurgeCoreBinary::windows_wtSize, &WindowWT))
@@ -715,7 +715,7 @@ void SurgeStorage::refresh_patchlist()
 
     refreshPatchlistAddDir(false, "patches_3rdparty");
     firstUserCategory = patch_category.size();
-    refreshPatchlistAddDir(true, "");
+    refreshPatchlistAddDir(true, "Patches");
 
     patchOrdering = std::vector<int>(patch_list.size());
     std::iota(patchOrdering.begin(), patchOrdering.end(), 0);
@@ -945,7 +945,7 @@ void SurgeStorage::refresh_wtlist()
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
     firstUserWTCategory = wt_category.size();
-    refresh_wtlistAddDir(true, "");
+    refresh_wtlistAddDir(true, "Wavetables");
 
     wtCategoryOrdering = std::vector<int>(wt_category.size());
     std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
