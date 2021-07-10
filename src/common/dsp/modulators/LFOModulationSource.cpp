@@ -304,11 +304,17 @@ void LFOModulationSource::attack()
             if (step >= ss->loop_start)
                 step = ss->loop_end + 1;
         }
+
+        // make sure we don't blow out ratemult with modulation
+        auto shuffle_val =
+            limit_range(-1.99f, 1.99f, lfo->start_phase.get_extended(localcopy[startphase].f));
+
         shuffle_id = (shuffle_id + 1) & 1;
+
         if (shuffle_id)
-            ratemult = 1.f / max(0.01f, 1.f - 0.5f * lfo->start_phase.val.f);
+            ratemult = 1.f / (1.f - 0.5f * shuffle_val);
         else
-            ratemult = 1.f / (1.f + 0.5f * lfo->start_phase.val.f);
+            ratemult = 1.f / (1.f + 0.5f * shuffle_val);
 
         wf_history[0] = ss->steps[step & (n_stepseqsteps - 1)];
     }
@@ -571,20 +577,29 @@ void LFOModulationSource::process_block()
                 retrigger_FEG = true;
                 retrigger_AEG = true;
             }
+
             if (ss->trigmask & (UINT64_C(1) << (16 + step)))
             {
                 retrigger_FEG = true;
             }
+
             if (ss->trigmask & (UINT64_C(1) << (32 + step)))
             {
                 retrigger_AEG = true;
             }
+
             step++;
+
+            // make sure we don't blow out ratemult with modulation
+            auto shuffle_val =
+                limit_range(-1.99f, 1.99f, lfo->start_phase.get_extended(localcopy[startphase].f));
+
             shuffle_id = (shuffle_id + 1) & 1;
+
             if (shuffle_id)
-                ratemult = 1.f / max(0.01f, 1.f - 0.5f * lfo->start_phase.val.f);
+                ratemult = 1.f / (1.f - 0.5f * shuffle_val);
             else
-                ratemult = 1.f / (1.f + 0.5f * lfo->start_phase.val.f);
+                ratemult = 1.f / (1.f + 0.5f * shuffle_val);
 
             if (ss->loop_end >= ss->loop_start)
             {
@@ -596,10 +611,12 @@ void LFOModulationSource::process_block()
                 if (step >= ss->loop_start)
                     step = ss->loop_end + 1;
             }
+
             wf_history[3] = wf_history[2];
             wf_history[2] = wf_history[1];
             wf_history[1] = wf_history[0];
             wf_history[0] = ss->steps[step & (n_stepseqsteps - 1)];
+
             break;
         };
     }
