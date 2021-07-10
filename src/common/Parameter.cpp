@@ -267,6 +267,7 @@ bool Parameter::can_extend_range()
     case ct_osc_feedback:
     case ct_osc_feedback_negative:
     case ct_lfoamplitude:
+    case ct_lfophaseshuffle:
     case ct_fmratio:
     case ct_reson_res_extendable:
     case ct_freq_audible_with_tunability:
@@ -371,6 +372,7 @@ bool Parameter::is_bipolar()
         res = true;
         break;
     case ct_lfoamplitude:
+    case ct_lfophaseshuffle:
         if (extend_range)
             res = true;
         break;
@@ -933,6 +935,12 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_default.f = 1;
         break;
+    case ct_lfophaseshuffle:
+        val_min.f = 0;
+        val_max.f = 1;
+        valtype = vt_float;
+        val_default.f = 0;
+        break;
     case ct_modern_trimix:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
@@ -1216,6 +1224,7 @@ void Parameter::set_type(int ctrltype)
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
     case ct_lfoamplitude:
+    case ct_lfophaseshuffle:
     case ct_reson_res_extendable:
     case ct_modern_trimix:
     case ct_alias_mask:
@@ -1501,6 +1510,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_osc_feedback_negative:
         case ct_detuning:
         case ct_lfoamplitude:
+        case ct_lfophaseshuffle:
         case ct_airwindows_param:
         case ct_airwindows_param_bipolar:
         case ct_lfodeform:
@@ -1739,6 +1749,8 @@ bool Parameter::supportsDynamicName()
     switch (ctrltype)
     {
     case ct_modern_trimix:
+    case ct_lfoamplitude:
+    case ct_lfophaseshuffle:
     case ct_percent:
     case ct_percent_bipolar:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
@@ -1845,6 +1857,11 @@ float Parameter::get_extended(float f)
             val_min.f = 21.23265f; // 1500 Hz
             return f;
         }
+        case ct_lfophaseshuffle:
+        {
+            val_default.f = 0.f;
+            return f;
+        }
         default:
         {
             return f;
@@ -1882,6 +1899,11 @@ float Parameter::get_extended(float f)
         return 4.f * f;
     case ct_lfoamplitude:
         return (2.f * f) - 1.f;
+    case ct_lfophaseshuffle:
+    {
+        val_default.f = 0.5f;
+        return (2.f * f) - 1.f;
+    }
     case ct_fmratio:
     {
         if (f > 16)
@@ -3693,6 +3715,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_lforate:
     case ct_lforate_deactivatable:
     case ct_lfoamplitude:
+    case ct_lfophaseshuffle:
     case ct_lfodeform:
     case ct_detuning:
     case ct_oscspread:

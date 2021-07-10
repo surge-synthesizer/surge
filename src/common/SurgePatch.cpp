@@ -400,10 +400,11 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 p_id.next(), id_s++, label, "Rate", ct_lforate_deactivatable,
                 Surge::Skin::LFO::rate, sc_id, cg_LFO, ms_lfo1 + l, true, sceasy, false));
             snprintf(label, LABEL_SIZE, "lfo%i_phase", l);
-            a->push_back(scene[sc].lfo[l].start_phase.assign(
-                p_id.next(), id_s++, label, "Phase / Shuffle", ct_percent, Surge::Skin::LFO::phase,
-                // Surge::Skin::LfoSection::phase,
-                sc_id, cg_LFO, ms_lfo1 + l, true));
+            a->push_back(scene[sc].lfo[l].start_phase.assign(p_id.next(), id_s++, label,
+                                                             "Phase / Shuffle", ct_lfophaseshuffle,
+                                                             Surge::Skin::LFO::phase,
+                                                             // Surge::Skin::LfoSection::phase,
+                                                             sc_id, cg_LFO, ms_lfo1 + l, true));
             snprintf(label, LABEL_SIZE, "lfo%i_magnitude", l);
             a->push_back(scene[sc].lfo[l].magnitude.assign(
                 p_id.next(), id_s++, label, "Amplitude", ct_lfoamplitude,
