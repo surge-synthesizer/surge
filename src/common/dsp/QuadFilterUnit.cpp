@@ -714,6 +714,66 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
     return x;
 }
 
+__m128 HALF_RECT_SOFT(__m128 x, __m128 drive)
+{
+    static const auto m1 = _mm_set1_ps(-1.0f);
+    static const auto p1 = _mm_set1_ps(1.0f);
+    static const auto p05 = _mm_set1_ps(0.5f);
+    static const auto p2 = _mm_set1_ps(2.f);
+
+    auto rect = _mm_mul_ps(_mm_sub_ps(abs_ps(x), p05), p2);
+    return TANH(rect, drive);
+}
+
+template <__m128 (*K)(__m128)> __m128 CHEBY_CORE(__m128 x, __m128 drive)
+{
+    static const auto m1 = _mm_set1_ps(-1.0f);
+    static const auto p1 = _mm_set1_ps(1.0f);
+
+    auto bound = K(_mm_max_ps(_mm_min_ps(x, p1), m1));
+    return TANH(bound, drive);
+}
+
+__m128 cheb2_kernel(__m128 x) // 2 x^2 - 1
+{
+    static const auto m1 = _mm_set1_ps(1);
+    static const auto m2 = _mm_set1_ps(2);
+    return _mm_sub_ps(_mm_mul_ps(m2, _mm_mul_ps(x, x)), m1);
+}
+
+__m128 cheb3_kernel(__m128 x) // 4 x^3 - 3 x
+{
+    static const auto m4 = _mm_set1_ps(4);
+    static const auto m3 = _mm_set1_ps(3);
+    auto x2 = _mm_mul_ps(x, x);
+    auto v4x2m3 = _mm_sub_ps(_mm_mul_ps(m4, x2), m3);
+    return _mm_mul_ps(v4x2m3, x);
+}
+
+__m128 cheb4_kernel(__m128 x) // 8 x^4 - 8 x^2 + 1
+{
+    static const auto m1 = _mm_set1_ps(1);
+    static const auto m8 = _mm_set1_ps(8);
+    auto x2 = _mm_mul_ps(x, x);
+    auto x4mx2 = _mm_mul_ps(x2, _mm_sub_ps(x2, m1)); // x^2 * ( x^2 - 1)
+    return _mm_add_ps(_mm_mul_ps(m8, x4mx2), m1);
+}
+
+__m128 cheb5_kernel(__m128 x) // 16 x^5 - 20 x^3 + 5 x
+{
+    static const auto m16 = _mm_set1_ps(16);
+    static const auto mn20 = _mm_set1_ps(-20);
+    static const auto m5 = _mm_set1_ps(5);
+
+    auto x2 = _mm_mul_ps(x, x);
+    auto x3 = _mm_mul_ps(x2, x);
+    auto x5 = _mm_mul_ps(x3, x2);
+    auto t1 = _mm_mul_ps(m16, x5);
+    auto t2 = _mm_mul_ps(mn20, x3);
+    auto t3 = _mm_mul_ps(m5, x);
+    return _mm_add_ps(t1, _mm_add_ps(t2, t3));
+}
+
 FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype)
 {
     // Force compiler to error out if I miss one
@@ -876,6 +936,16 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return SINUS_SSE2;
     case wst_digital:
         return DIGI_SSE2;
+    case wst_rectify:
+        return HALF_RECT_SOFT;
+    case wst_cheby2:
+        return CHEBY_CORE<cheb2_kernel>;
+    case wst_cheby3:
+        return CHEBY_CORE<cheb3_kernel>;
+    case wst_cheby4:
+        return CHEBY_CORE<cheb4_kernel>;
+    case wst_cheby5:
+        return CHEBY_CORE<cheb5_kernel>;
     }
     return 0;
 }

@@ -206,7 +206,7 @@ struct Component
 namespace Components
 {
 extern Component None, Slider, HSwitch2, Switch, FilterSelector, LFODisplay, OscMenu, FxMenu,
-    NumberField, VuMeter, Custom, Group, Label;
+    NumberField, VuMeter, Custom, Group, Label, WaveShaperSelector;
 }
 
 struct Connector

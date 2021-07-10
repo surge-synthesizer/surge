@@ -445,3 +445,80 @@ const int fut_glyph_index[n_fu_types][2] = {
     {0, fxrow}, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
     {0, fxrow}, // fut_threeler (also temporarily set to just use the regular AP glyph)
 };
+
+enum ws_type
+{
+    wst_none = 0,
+    wst_soft,
+    wst_hard,
+    wst_asym,
+    wst_sine,
+    wst_digital,
+    wst_rectify,
+    wst_cheby2,
+    wst_cheby3,
+    wst_cheby4,
+    wst_cheby5,
+
+    n_ws_types,
+};
+
+const char wst_names[n_ws_types][16] = {
+    "Off",           "Soft",        "Hard",        "Asymmetric",  "Sine",       "Digital",
+    "1/2 Rectifier", "Chebyshev 2", "Chebyshev 3", "Chebyshev 4", "Chebyshev 5"};
+
+const char wst_ui_names[n_ws_types][16] = {"Off",     "Soft",   "Hard",   "Asym",   "Sine",  "Digi",
+                                           "1/2 Rct", "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5"};
+
+struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
+{
+    std::vector<std::pair<int, std::string>> mapping;
+    std::unordered_map<int, int> inverseMapping;
+    void p(int i, std::string s) { mapping.emplace_back(i, s); }
+    WaveShaperSelectorMapper()
+    {
+        // Obviously improve this
+        p(wst_none, "");
+
+        p(wst_soft, "Saturation");
+        p(wst_hard, "Saturation");
+        p(wst_asym, "Saturation");
+
+        p(wst_sine, "Effect");
+        p(wst_digital, "Effect");
+
+        p(wst_rectify, "Harmonic");
+        p(wst_cheby2, "Harmonic");
+        p(wst_cheby3, "Harmonic");
+        p(wst_cheby4, "Harmonic");
+        p(wst_cheby5, "Harmonic");
+
+        int c = 0;
+        for (auto e : mapping)
+            inverseMapping[e.first] = c++;
+
+        if (mapping.size() != n_ws_types)
+            std::cout << "BAD MAPPING TYPES" << std::endl;
+    }
+
+    int remapStreamedIndexToDisplayIndex(int i) override { return inverseMapping[i]; }
+    std::string nameAtStreamedIndex(int i) override { return wst_names[i]; }
+    bool hasGroupNames() override { return true; };
+
+    std::string groupNameAtStreamedIndex(int i) override
+    {
+        return mapping[inverseMapping[i]].second;
+    }
+
+    bool sortGroupNames() override { return false; }
+    bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
+
+    bool supportsTotalIndexOrdering() override { return true; }
+    const std::vector<int> totalIndexOrdering() override
+    {
+        auto res = std::vector<int>();
+        for (auto m : mapping)
+            res.push_back(m.first);
+        return res;
+    }
+};

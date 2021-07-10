@@ -317,7 +317,7 @@
     <control ui_identifier="filter.keytrack_2" y="301"/>
     <control ui_identifier="filter.highpass" y="301"/>
     <control ui_identifier="filter.waveshaper_drive" y="301"/>
-    <control ui_identifier="filter.waveshaper_type" x="388" y="311"/>
+    <control ui_identifier="filter.waveshaper_type" x="384" y="311"/>
 
     <!-- FEG -->
     <control ui_identifier="feg.panel" y="266"/>

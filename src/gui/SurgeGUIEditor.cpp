@@ -57,6 +57,7 @@
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
+#include "widgets/WaveShaperSelector.h"
 #include "widgets/XMLConfiguredMenus.h"
 
 #include <iostream>
@@ -4336,6 +4337,32 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 // hsw->setGlyphSettings(gli, glih, glpc, glw, glh);
             }
         }
+
+        frame->addAndMakeVisible(*hsw);
+        nonmod_param[paramIndex] = hsw.get();
+
+        juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
+
+        return dynamic_cast<Surge::GUI::IComponentTagValue *>(
+            juceSkinComponents[skinCtrl->sessionid].get());
+    }
+    if (skinCtrl->ultimateparentclassname == "WaveShaperSelector")
+    {
+        // Obviously exposing this widget as a controllable widget would be better
+        if (!p)
+            return nullptr;
+
+        auto rect = skinCtrl->getRect();
+        auto hsw = componentForSkinSession<Surge::Widgets::WaveShaperSelector>(skinCtrl->sessionid);
+        hsw->addListener(this);
+        hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
+        hsw->setTag(p->id + start_paramtags);
+        hsw->setBounds(rect);
+        hsw->setValue(p->get_value_f01());
+
+        auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
+        if (parm && parm->supportsTotalIndexOrdering())
+            hsw->setIntOrdering(parm->totalIndexOrdering());
 
         frame->addAndMakeVisible(*hsw);
         nonmod_param[paramIndex] = hsw.get();

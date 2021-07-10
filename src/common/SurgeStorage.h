@@ -394,22 +394,6 @@ const int lt_num_deforms[n_lfo_types] = {
  */
 #include "FilterConfiguration.h"
 
-enum ws_type
-{
-    wst_none = 0,
-    wst_soft,
-    wst_hard,
-    wst_asym,
-    wst_sine,
-    wst_digital,
-
-    n_ws_types,
-};
-
-const char wst_names[n_ws_types][16] = {
-    "Off", "Soft", "Hard", "Asymmetric", "Sine", "Digital",
-};
-
 extern float waveshapers alignas(16)[n_ws_types][1024];
 
 enum env_mode
@@ -849,6 +833,7 @@ class SurgePatch
     bool correctlyTuneCombFilter = true;
 
     FilterSelectorMapper patchFilterSelectorMapper;
+    WaveShaperSelectorMapper patchWaveshaperSelectorMapper;
 };
 
 struct Patch

@@ -140,6 +140,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedData
         {
             scene.filterunit[i].type.set_user_data(&patch.patchFilterSelectorMapper);
         }
+        scene.wsunit.type.set_user_data(&patch.patchWaveshaperSelectorMapper);
 
         scene.filterblock_configuration.val.i = fc_wide;
 
