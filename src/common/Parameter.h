@@ -177,6 +177,7 @@ enum ctrltypes
     ct_alias_bits,
     ct_tape_microns,
     ct_tape_speed,
+    ct_lfophaseshuffle,
     num_ctrltypes,
 };
 
