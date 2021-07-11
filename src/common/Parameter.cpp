@@ -464,6 +464,7 @@ void Parameter::set_user_data(ParamUserData *ud)
     case ct_airwindows_fx:
     case ct_filtertype:
     case ct_alias_wave:
+    case ct_wstype:
         if (dynamic_cast<ParameterDiscreteIndexRemapper *>(ud))
         {
             user_data = ud;

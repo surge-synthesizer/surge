@@ -1705,6 +1705,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                             max(0, fut_subcount[sc.filterunit[u].type.val.i] - 1));
             sc.filterunit[u].type.set_user_data(&patchFilterSelectorMapper);
         }
+        sc.wsunit.type.set_user_data(&patchWaveshaperSelectorMapper);
     }
 
     /*
