@@ -42,6 +42,7 @@ void WaveShaperSelector::resized()
 void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 {
     lastDragDistance = 0;
+    everDragged = false;
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
@@ -49,13 +50,17 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 
     if (buttonM.toFloat().contains(event.position))
     {
+        notifyBeginEdit();
         setValue(nextValueInOrder(value, -1));
         notifyValueChanged();
+        notifyEndEdit();
     }
     if (buttonP.toFloat().contains(event.position))
     {
+        notifyBeginEdit();
         setValue(nextValueInOrder(value, +1));
         notifyValueChanged();
+        notifyEndEdit();
     }
 }
 
@@ -64,6 +69,11 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
     auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
     if (fabs(d - lastDragDistance) > 10)
     {
+        if (!everDragged)
+        {
+            notifyBeginEdit();
+            everDragged = true;
+        }
         int inc = 1;
         if (d - lastDragDistance < 0)
         {
@@ -77,6 +87,14 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
+void WaveShaperSelector::mouseUp(const juce::MouseEvent &e)
+{
+    if (everDragged)
+    {
+        notifyEndEdit();
+    }
+    everDragged = false;
+}
 void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &w)
 {
     int dir = wheelAccumulationHelper.accumulate(w, false, true);

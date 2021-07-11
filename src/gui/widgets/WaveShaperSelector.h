@@ -32,9 +32,11 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     void resized() override;
 
     void mouseDown(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
 
     float lastDragDistance{0};
+    bool everDragged{false};
 
     std::vector<int> intOrdering;
     void setIntOrdering(const std::vector<int> &io) { intOrdering = io; }
