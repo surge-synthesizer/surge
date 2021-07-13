@@ -68,7 +68,7 @@ struct ModulatableSlider : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     bool isHovered{false};
-    float valueOnMouseDown{0.f}, modValueOnMouseDown{0.f};
+    float valueOnMouseDown{0.f}, modValueOnMouseDown{0.f}, lastDistance{0.f};
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
