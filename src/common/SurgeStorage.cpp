@@ -268,15 +268,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         if (lstat == 0 && (linfo.st_mtime > rinfo.st_mtime || rstat != 0))
             datapath = localpath; // use the local
         else
-            datapath = rootpath; // else use the root. If both are missing we will blow up later.
+            datapath = rootpath; // else use the root. If both are missing we will blow up later
     }
     else
     {
         datapath = suppliedDataPath;
     }
 
-    // ~/Documents/Surge in full name
-    sprintf(path, "%s/Documents/Surge", homePath);
+    // ~/Documents/Surge XT in full name
+    sprintf(path, "%s/Documents/Surge XT", homePath);
     userDataPath = path;
 #elif LINUX
     if (!hasSuppliedDataPath)
@@ -326,8 +326,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         if (buildOverrideDataPath)
         {
             datapath = std::string(buildOverrideDataPath);
-            std::cout << "WARNING: Surge Overriding DataPath to " << datapath << std::endl;
-            std::cout << "         Only use this in build pipelines please" << std::endl;
+            std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
+            std::cout << "         Only use this in build pipelines please!" << std::endl;
         }
     }
     else
@@ -337,15 +337,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     /*
     ** See the discussion in github issue #930. Basically
-    ** if ~/Documents/Surge exists use that
-    ** else if ~/.Surge exists use that
-    ** else if ~/.Documents exists, use ~/Documents/Surge
-    ** else use ~/.Surge
+    ** if ~/Documents/Surge XT exists use that
+    ** else if ~/.Surge XT exists use that
+    ** else if ~/.Documents exists, use ~/Documents/Surge XT
+    ** else use ~/.Surge XT
     ** Compensating for whether your distro makes you a ~/Documents or not
     */
 
-    std::string documentsSurge = std::string(homePath) + "/Documents/Surge";
-    std::string dotSurge = std::string(homePath) + "/.Surge";
+    std::string documentsSurge = std::string(homePath) + "/Documents/Surge XT";
+    std::string dotSurge = std::string(homePath) + "/.Surge XT";
     std::string documents = std::string(homePath) + "/Documents/";
 
     if (fs::is_directory(string_to_path(documentsSurge)))
@@ -364,8 +364,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         userDataPath = dotSurge;
     }
-    // std::cout << "DataPath is " << datapath << std::endl;
-    // std::cout << "UserDataPath is " << userDataPath << std::endl;
+    // std::cout << "Data path is " << datapath << std::endl;
+    // std::cout << "User data path is " << userDataPath << std::endl;
 
 #elif WINDOWS
 #if TARGET_RACK
@@ -435,10 +435,10 @@ bailOnPortable:
         }
     }
 
-    // Portable - first check for dllPath\\SurgeUserData
-    if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeUserData"))
+    // Portable - first check for dllPath\\SurgeXTUserData
+    if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeXTUserData"))
     {
-        userDataPath = path_to_string(dllPath / L"SurgeUserData");
+        userDataPath = path_to_string(dllPath / L"SurgeXTUserData");
     }
     else
     {
@@ -487,8 +487,8 @@ bailOnPortable:
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
         reportError("Cannot parse 'configuration.xml' in path '" + datapath +
-                        "'. Please reinstall surge.",
-                    "Surge is not properly installed.");
+                        "'. Please reinstall Surge!",
+                    "Surge Incorrectly Installed");
     }
 
     load_midi_controllers();
@@ -515,9 +515,8 @@ bailOnPortable:
     {
         WindowWT.size = 0;
         std::ostringstream oss;
-        oss << "Unable to load 'windows.wt'. from memory. "
-            << "This is a usually fatal internal software error in Surge XT which should"
-            << " never occur!";
+        oss << "Unable to load 'windows.wt' from memory. "
+            << "This is a fatal internal software error which should never occur!";
         reportError(oss.str(), "Surge Resources Loading Error");
     }
 
