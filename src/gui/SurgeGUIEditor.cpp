@@ -3806,7 +3806,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxbypass_tag = tag;
     }
     // Basically put this in a function
-    if (skinCtrl->ultimateparentclassname == "CSurgeSlider")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::Slider)
     {
         if (!p)
         {
@@ -3955,7 +3955,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
-    if (skinCtrl->ultimateparentclassname == "CHSwitch2")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::MultiSwitch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
 
@@ -4031,7 +4031,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             std::cout << "Can't get a CHSwitch2 BG" << std::endl;
         }
     }
-    if (skinCtrl->ultimateparentclassname == "CSwitchControl")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::Switch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
         auto drawables = currentSkin->standardHoverAndHoverOnForControl(skinCtrl, bitmapStore);
@@ -4089,7 +4089,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 juceSkinComponents[skinCtrl->sessionid].get());
         }
     }
-    if (skinCtrl->ultimateparentclassname == "CLFOGui")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::LFODisplay)
     {
         if (!p)
             return nullptr;
@@ -4123,7 +4123,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
     }
 
-    if (skinCtrl->ultimateparentclassname == "COSCMenu")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::OscMenu)
     {
         if (!oscMenu)
             oscMenu = std::make_unique<Surge::Widgets::OscillatorMenu>();
@@ -4157,7 +4157,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         frame->addAndMakeVisible(*oscMenu);
         return oscMenu.get();
     }
-    if (skinCtrl->ultimateparentclassname == "CFXMenu")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::FxMenu)
     {
         if (!fxMenu)
             fxMenu = std::make_unique<Surge::Widgets::FxMenu>();
@@ -4181,7 +4181,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return fxMenu.get();
     }
 
-    if (skinCtrl->ultimateparentclassname == "CNumberField")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::NumberField)
     {
         auto pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
         pbd->addListener(this);
@@ -4251,7 +4251,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         return nullptr;
     }
-    if (skinCtrl->ultimateparentclassname == "FilterSelector")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::FilterSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
         if (!p)
@@ -4346,7 +4346,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
-    if (skinCtrl->ultimateparentclassname == "WaveShaperSelector")
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::WaveShaperSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
         if (!p)

@@ -32,10 +32,11 @@ namespace Skin
 
 namespace Components
 {
-Component None = Component("UNKNOWN");
+Component None = Component("UNKNOWN").withAlias("None");
 
-Component HSwitch2 =
+Component MultiSwitch =
     Component("CHSwitch2")
+        .withAlias("MultiSwitch")
         .withProperty(Component::ROWS, {"rows"}, {"Number of rows in the switch"})
         .withProperty(Component::COLUMNS, {"cols", "columns"}, {"Number of columns in the switch"})
         .withProperty(
@@ -58,6 +59,7 @@ Component HSwitch2 =
 
 Component Slider =
     Component("CSurgeSlider")
+        .withAlias("Slider")
         .withProperty(Component::SLIDER_TRAY, {"slider_tray", "handle_tray"},
                       {"Background image of the slider, contains the slider tray/groove only"})
         .withProperty(Component::HANDLE_IMAGE, {"handle_image"}, {"Slider handle image"})
@@ -82,6 +84,7 @@ Component Slider =
                       {"Hides the parameter name label"});
 
 Component Switch = Component("CSwitchControl")
+                       .withAlias("Switch")
                        .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
                                      {"Base image of the switch"});
 
@@ -105,10 +108,11 @@ Component FilterSelector =
         .withProperty(Component::GLYPH_W, {"glyph_w"}, {"Width of one glyph frame in pixels"})
         .withProperty(Component::GLYPH_H, {"glyph_h"}, {"Height of one glyph frame in pixels"});
 
-Component LFODisplay = Component("CLFOGui");
+Component LFODisplay = Component("CLFOGui").withAlias("LFODisplay");
 
 Component OscMenu =
     Component("COSCMenu")
+        .withAlias("OscMenu")
         .withProperty(Component::FONT_SIZE, {"font_size"}, {"Font size in points, integer only"})
         .withProperty(Component::FONT_STYLE, {"font_style"},
                       {"Valid values: normal, bold, italic, underline, strikethrough"})
@@ -120,10 +124,11 @@ Component OscMenu =
         .withProperty(Component::TEXT_VOFFSET, {"text_voffset"},
                       {"Vertical offset of oscillator menu text label, integer only"});
 
-Component FxMenu = Component("CFXMenu");
+Component FxMenu = Component("CFXMenu").withAlias("FxMenu");
 
 Component NumberField =
     Component("CNumberField")
+        .withAlias("NumberField")
         .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
                       {"Base image of the numberfield"})
         .withProperty(Component::NUMBERFIELD_CONTROLMODE, {"numberfield_controlmode"},
@@ -134,7 +139,7 @@ Component NumberField =
         .withProperty(Component::TEXT_HOVER_COLOR, {"text_color.hover"},
                       {"Valid color formats are #RRGGBB, #RRGGBBAA, and named colors"});
 
-Component VuMeter = Component("CVuMeter");
+Component VuMeter = Component("CVuMeter").withAlias("VuMeter");
 
 Component Custom = Component("--CUSTOM--");
 
@@ -173,14 +178,14 @@ Component WaveShaperSelector = Component("WaveShaperSelector");
 
 namespace Global
 {
-Connector active_scene = Connector("global.active_scene", 7, 12, 40, 42, Components::HSwitch2)
+Connector active_scene = Connector("global.active_scene", 7, 12, 40, 42, Components::MultiSwitch)
                              .withHSwitch2Properties(IDB_SCENE_SELECT, 2, 2, 1);
-Connector scene_mode = Connector("global.scene_mode", 54, 12, 40, 42, Components::HSwitch2)
+Connector scene_mode = Connector("global.scene_mode", 54, 12, 40, 42, Components::MultiSwitch)
                            .withHSwitch2Properties(IDB_SCENE_MODE, 4, 4, 1);
 Connector fx_disable = Connector("global.fx_disable", 0, 0);
-Connector fx_bypass = Connector("global.fx_bypass", 607, 12, 135, 27, Components::HSwitch2)
+Connector fx_bypass = Connector("global.fx_bypass", 607, 12, 135, 27, Components::MultiSwitch)
                           .withHSwitch2Properties(IDB_FX_GLOBAL_BYPASS, 4, 1, 4);
-Connector character = Connector("global.character", 607, 42, 135, 12, Components::HSwitch2)
+Connector character = Connector("global.character", 607, 42, 135, 12, Components::MultiSwitch)
                           .withHSwitch2Properties(IDB_OSC_CHARACTER, 3, 1, 3);
 Connector master_volume = Connector("global.volume", 756, 29);
 
@@ -215,16 +220,16 @@ Connector pbrange_up =
         .withBackground(IDB_NUMFIELD_PITCHBEND)
         .withProperty(Component::TEXT_COLOR, "scene.pbrange.text")
         .withProperty(Component::TEXT_HOVER_COLOR, "scene.pbrange.text.hover");
-Connector playmode = Connector("scene.playmode", 239, 87, 50, 47, Components::HSwitch2)
+Connector playmode = Connector("scene.playmode", 239, 87, 50, 47, Components::MultiSwitch)
                          .withHSwitch2Properties(IDB_PLAY_MODE, 6, 6, 1);
 Connector drift = Connector("scene.drift", 156, 141).asHorizontal().asWhite();
 Connector noise_color = Connector("scene.noise_color", 156, 162).asHorizontal().asWhite();
 
-Connector fmrouting = Connector("scene.fmrouting", 309, 83, 134, 52, Components::HSwitch2)
+Connector fmrouting = Connector("scene.fmrouting", 309, 83, 134, 52, Components::MultiSwitch)
                           .withHSwitch2Properties(IDB_OSC_FM_ROUTING, 4, 1, 4);
 Connector fmdepth = Connector("scene.fmdepth", 306, 152).asHorizontal().asWhite();
 
-Connector octave = Connector("scene.octave", 202, 194, 96, 18, Components::HSwitch2)
+Connector octave = Connector("scene.octave", 202, 194, 96, 18, Components::MultiSwitch)
                        .withHSwitch2Properties(IDB_SCENE_OCTAVE, 7, 1, 7);
 Connector pitch = Connector("scene.pitch", 156, 212).asHorizontal();
 Connector portatime = Connector("scene.portamento", 156, 234).asHorizontal();
@@ -256,7 +261,7 @@ Connector gain = Connector("scene.gain", 719, 301).asVertical().asWhite();
 namespace Osc
 {
 Connector osc_select =
-    Connector("osc.select", 66, 69, 75, 13, Components::HSwitch2, Connector::OSCILLATOR_SELECT)
+    Connector("osc.select", 66, 69, 75, 13, Components::MultiSwitch, Connector::OSCILLATOR_SELECT)
         .withHSwitch2Properties(IDB_OSC_SELECT, 3, 1, 3);
 Connector osc_display =
     Connector("osc.display", 4, 81, 141, 99, Components::Custom, Connector::OSCILLATOR_DISPLAY);
@@ -266,7 +271,7 @@ Connector keytrack =
 Connector retrigger = Connector("osc.retrigger", 51, 180, 45, 9, Components::Switch)
                           .withBackground(IDB_OSC_RETRIGGER);
 
-Connector octave = Connector("osc.octave", 0, 194, 96, 18, Components::HSwitch2)
+Connector octave = Connector("osc.octave", 0, 194, 96, 18, Components::MultiSwitch)
                        .withHSwitch2Properties(IDB_OSC_OCTAVE, 7, 1, 7);
 Connector osc_type = Connector("osc.type", 96, 194, 49, 18, Components::OscMenu)
                          .withProperty(Component::FONT_SIZE, 8)
@@ -335,7 +340,7 @@ Connector level_prefiltergain =
 
 namespace Filter
 {
-Connector config = Connector("filter.config", 455, 83, 134, 52, Components::HSwitch2)
+Connector config = Connector("filter.config", 455, 83, 134, 52, Components::MultiSwitch)
                        .withHSwitch2Properties(IDB_FILTER_CONFIG, 8, 1, 8);
 Connector feedback = Connector("filter.feedback", 457, 152).asHorizontal().asWhite();
 
@@ -378,18 +383,18 @@ namespace FEG
 {
 // If we never refer to it by type we can just construct it and don't need it in extern list
 Connector feg_panel = Connector("feg.panel", 459, 267, Components::Group);
-Connector mode = Connector("feg.mode", 93, 0, 34, 18, Components::HSwitch2)
+Connector mode = Connector("feg.mode", 93, 0, 34, 18, Components::MultiSwitch)
                      .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1)
                      .inParent("feg.panel");
 
-Connector attack_shape = Connector("feg.attack_shape", 4, 1, 20, 16, Components::HSwitch2)
+Connector attack_shape = Connector("feg.attack_shape", 4, 1, 20, 16, Components::MultiSwitch)
                              .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                              .inParent("feg.panel");
-Connector decay_shape = Connector("feg.decay_shape", 24, 1, 20, 16, Components::HSwitch2)
+Connector decay_shape = Connector("feg.decay_shape", 24, 1, 20, 16, Components::MultiSwitch)
                             .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                             .withProperty(Component::FRAME_OFFSET, 3)
                             .inParent("feg.panel");
-Connector release_shape = Connector("feg.release_shape", 65, 1, 20, 16, Components::HSwitch2)
+Connector release_shape = Connector("feg.release_shape", 65, 1, 20, 16, Components::MultiSwitch)
                               .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                               .withProperty(Component::FRAME_OFFSET, 6)
                               .inParent("feg.panel");
@@ -403,20 +408,20 @@ Connector release = Connector("feg.release", 60, 34).asVertical().asWhite().inPa
 namespace AEG
 {
 Connector aeg_panel = Connector("aeg.panel", 609, 267, Components::Group);
-Connector mode = Connector("aeg.mode", 93, 0, 34, 18, Components::HSwitch2)
+Connector mode = Connector("aeg.mode", 93, 0, 34, 18, Components::MultiSwitch)
                      .withHSwitch2Properties(IDB_ENV_MODE, 2, 2, 1)
                      .inParent("aeg.panel");
 
-Connector attack_shape = Connector("aeg.attack_shape", 4, 1, 20, 16, Components::HSwitch2)
+Connector attack_shape = Connector("aeg.attack_shape", 4, 1, 20, 16, Components::MultiSwitch)
                              .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                              .inParent("aeg.panel");
 ;
-Connector decay_shape = Connector("aeg.decay_shape", 24, 1, 20, 16, Components::HSwitch2)
+Connector decay_shape = Connector("aeg.decay_shape", 24, 1, 20, 16, Components::MultiSwitch)
                             .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                             .withProperty(Component::FRAME_OFFSET, 3)
                             .inParent("aeg.panel");
 ;
-Connector release_shape = Connector("aeg.release_shape", 65, 1, 20, 16, Components::HSwitch2)
+Connector release_shape = Connector("aeg.release_shape", 65, 1, 20, 16, Components::MultiSwitch)
                               .withHSwitch2Properties(IDB_ENV_SHAPE, 3, 1, 3)
                               .withProperty(Component::FRAME_OFFSET, 6)
                               .inParent("aeg.panel");
@@ -472,7 +477,7 @@ Connector phase = Connector("lfo.phase", 0, 21).asHorizontal().inParent("lfo.mai
 Connector deform = Connector("lfo.deform", 0, 42).asHorizontal().inParent("lfo.main.panel");
 Connector amplitude = Connector("lfo.amplitude", 0, 63).asHorizontal().inParent("lfo.main.panel");
 
-Connector trigger_mode = Connector("lfo.trigger_mode", 172, 484, 51, 39, Components::HSwitch2)
+Connector trigger_mode = Connector("lfo.trigger_mode", 172, 484, 51, 39, Components::MultiSwitch)
                              .withHSwitch2Properties(IDB_LFO_TRIGGER_MODE, 3, 3, 1);
 Connector unipolar = Connector("lfo.unipolar", 172, 546, 51, 14, Components::Switch)
                          .withBackground(IDB_LFO_UNIPOLAR);
@@ -501,10 +506,10 @@ Connector release = Connector("lfo.release", 100, 0).inParent("lfo.envelope.pane
  */
 namespace OtherControls
 {
-Connector surge_menu =
-    Connector("controls.surge_menu", 844, 550, 50, 15, Components::HSwitch2, Connector::SURGE_MENU)
-        .withProperty(Component::BACKGROUND, IDB_MAIN_MENU)
-        .withProperty(Component::DRAGGABLE_HSWITCH, false);
+Connector surge_menu = Connector("controls.surge_menu", 844, 550, 50, 15, Components::MultiSwitch,
+                                 Connector::SURGE_MENU)
+                           .withProperty(Component::BACKGROUND, IDB_MAIN_MENU)
+                           .withProperty(Component::DRAGGABLE_HSWITCH, false);
 
 Connector patch_browser = Connector("controls.patch_browser", 157, 12, 390, 28, Components::Custom,
                                     Connector::PATCH_BROWSER);
@@ -512,10 +517,10 @@ Connector patch_category_jog =
     Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
 Connector patch_jog =
     Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
-Connector patch_store =
-    Connector("controls.patch.store", 510, 42, 37, 12, Components::HSwitch2, Connector::STORE_PATCH)
-        .withHSwitch2Properties(IDB_STORE_PATCH, 1, 1, 1)
-        .withProperty(Component::DRAGGABLE_HSWITCH, false);
+Connector patch_store = Connector("controls.patch.store", 510, 42, 37, 12, Components::MultiSwitch,
+                                  Connector::STORE_PATCH)
+                            .withHSwitch2Properties(IDB_STORE_PATCH, 1, 1, 1)
+                            .withProperty(Component::DRAGGABLE_HSWITCH, false);
 
 Connector status_panel = Connector("controls.status.panel", 562, 12, Components::Group);
 Connector status_mpe =

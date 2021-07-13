@@ -155,6 +155,7 @@ class Skin
         Type type;
         std::string classname;
         std::string ultimateparentclassname;
+
         props_t allprops;
 
         bool parentResolved = false;
