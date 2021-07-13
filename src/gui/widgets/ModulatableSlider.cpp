@@ -319,6 +319,9 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     if (distance == 0 && editTypeWas == NOEDIT)
         return;
 
+    float dDistance = distance - lastDistance;
+    lastDistance = distance;
+
     if (editTypeWas == NOEDIT)
     {
         notifyBeginEdit();
@@ -348,11 +351,13 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 
     if (isEditingModulation)
     {
-        modValue = limitpm1(modValueOnMouseDown + dMouse * distance);
+        modValue = modValue + dMouse * dDistance;
+        modValue = limitpm1(modValue);
     }
     else
     {
-        value = limit01(valueOnMouseDown + dMouse * distance);
+        value = value + dMouse * dDistance;
+        value = limit01(value);
     }
 
     notifyValueChanged();
@@ -376,6 +381,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 
     valueOnMouseDown = value;
     modValueOnMouseDown = modValue;
+    lastDistance = 0.f;
     editTypeWas = NOEDIT;
     showInfowindow(isEditingModulation);
 }
