@@ -1010,3 +1010,45 @@ TEST_CASE("BasicDSP", "[dsp]")
         REQUIRE(limit_range(6, 2, 5) == 5);
     }
 }
+
+TEST_CASE("Wavehaper LUT", "[dsp]")
+{
+    SECTION("ASYM_SSE2")
+    {
+        // need to do this to init tables only
+        auto surge = Surge::Headless::createSurge(44100);
+
+        auto wst = GetQFPtrWaveshaper(wst_asym);
+        auto shafted_tanh = [](double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); };
+
+        /*
+         * asym:
+         * for (int i = 0; i < 1024; i++)
+         *  {
+         *    double x = ((double)i - 512.0) * mult; // mult = 1/32
+         *    waveshapers[wst_asym][i] = (float)shafted_tanh(x + 0.5) - shafted_tanh(0.5);
+         *
+         * output is i = x * 32 + 512 then interp
+         */
+        for (float x = -8; x < 8; x += 0.07)
+        {
+            auto d = _mm_set1_ps(1.0);
+            float out alignas(16)[4], inv alignas(16)[4];
+            auto in = _mm_set_ps(x, x + 0.01, x + 0.03, x + 0.05);
+            _mm_store_ps(inv, in);
+
+            auto r = wst(in, d);
+            _mm_store_ps(out, r);
+
+            // sinus has functional form sin((i-512) * PI/512)
+            // or i = 256 x + 512
+            for (int q = 0; q < 4; ++q)
+            {
+                float i = (inv[q] * 32 + 512);
+                float v = shafted_tanh(x + 0.5) - shafted_tanh(0.5);
+                INFO(inv[q] << " " << i << " " << v);
+                REQUIRE(out[q] == Approx(v).margin(0.1));
+            }
+        }
+    }
+}
