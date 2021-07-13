@@ -657,6 +657,19 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
                 break;
             }
         }
+        if (c->defaultComponent.payload->internalClassname != c->ultimateparentclassname)
+        {
+            if (c->defaultComponent.hasAlias(c->ultimateparentclassname))
+            {
+                c->ultimateparentclassname = c->defaultComponent.payload->internalClassname;
+            }
+            else
+            {
+                FIXMEERROR << "Ultimate Parent Class " << c->ultimateparentclassname
+                           << " does not resolve to an internal class" << std::endl;
+                return false;
+            }
+        }
 
         if (getVersion() >= 2)
         {
@@ -1174,7 +1187,7 @@ void Surge::GUI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &
             classname = "CSurgeSlider";
             ultimateparentclassname = "CSurgeSlider";
         }
-        else if (dc == Surge::Skin::Components::HSwitch2)
+        else if (dc == Surge::Skin::Components::MultiSwitch)
         {
             classname = "CHSwitch2";
             ultimateparentclassname = "CHSwitch2";

@@ -174,6 +174,7 @@ struct Component
         std::unordered_map<Properties, std::string> propertyDocString;
         std::unordered_set<Properties> hasPropertySet;
         std::string internalClassname;
+        std::unordered_set<std::string> aliases;
     };
     std::shared_ptr<Payload> payload;
 
@@ -188,6 +189,17 @@ struct Component
         payload->propertyDocString[p] = s;
         payload->hasPropertySet.insert(p);
         return *this;
+    }
+
+    Component &withAlias(const std::string &s)
+    {
+        payload->aliases.insert(s);
+        return *this;
+    }
+
+    bool hasAlias(const std::string &s)
+    {
+        return payload->aliases.find(s) != payload->aliases.end();
     }
 
     bool hasProperty(Properties p)
@@ -205,7 +217,7 @@ struct Component
 
 namespace Components
 {
-extern Component None, Slider, HSwitch2, Switch, FilterSelector, LFODisplay, OscMenu, FxMenu,
+extern Component None, Slider, MultiSwitch, Switch, FilterSelector, LFODisplay, OscMenu, FxMenu,
     NumberField, VuMeter, Custom, Group, Label, WaveShaperSelector;
 }
 

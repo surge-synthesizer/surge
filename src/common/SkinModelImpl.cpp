@@ -76,6 +76,7 @@ Component::Component(const std::string &internalClassname) noexcept
     payload = std::make_shared<Payload>();
     payload->id = componentidbase++;
     payload->internalClassname = internalClassname;
+    payload->aliases.insert(internalClassname);
     guaranteeMap();
     registeredComponents->insert(std::make_pair(payload->id, payload));
     withProperty(Properties::X, {"x"}, "X position of the widget");
@@ -232,7 +233,7 @@ Connector &Connector::asMixerMute() noexcept
 }
 Connector &Connector::asMixerRoute() noexcept
 {
-    payload->defaultComponent = Components::HSwitch2;
+    payload->defaultComponent = Components::MultiSwitch;
     payload->w = 22;
     payload->h = 15;
     return withHSwitch2Properties(IDB_MIXER_OSC_ROUTING, 3, 1, 3);
@@ -240,7 +241,7 @@ Connector &Connector::asMixerRoute() noexcept
 
 Connector &Connector::asJogPlusMinus() noexcept
 {
-    payload->defaultComponent = Components::HSwitch2;
+    payload->defaultComponent = Components::MultiSwitch;
     payload->w = 32;
     payload->h = 12;
     return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2)

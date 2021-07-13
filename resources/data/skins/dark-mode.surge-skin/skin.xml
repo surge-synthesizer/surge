@@ -208,9 +208,9 @@
   </globals>
 
   <component-classes>
-    <class name="mod-hslider" parent="CSurgeSlider" handle_image="mod-norm-h" handle_hover_image="mod-hover-h" handle_temposync_image="mod-ts-h"/>
-    <class name="mod-vslider" parent="CSurgeSlider" handle_image="mod-norm-v" handle_hover_image="mod-hover-v" handle_temposync_image="mod-ts-v"/>
-    <class name="def-hslider" parent="CSurgeSlider" handle_image="def-norm-h" handle_hover_image="def-hover-h" handle_temposync_image="def-ts-h"/>
+    <class name="mod-hslider" parent="Slider" handle_image="mod-norm-h" handle_hover_image="mod-hover-h" handle_temposync_image="mod-ts-h"/>
+    <class name="mod-vslider" parent="Slider" handle_image="mod-norm-v" handle_hover_image="mod-hover-v" handle_temposync_image="mod-ts-v"/>
+    <class name="def-hslider" parent="Slider" handle_image="def-norm-h" handle_hover_image="def-hover-h" handle_temposync_image="def-ts-h"/>
   </component-classes>
 
   <controls>
