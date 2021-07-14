@@ -95,8 +95,8 @@ jobs:
         imageName: 'ubuntu-20.04'
         isLinux: True
         needsLV2: True
-        cmakeArguments: "-DCMAKE_BUILD_TYPE=Debug -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
-        cmakeConfig: "Debug"
+        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
+        cmakeConfig: "Release"
         cmakeTarget: "surge-xt_LV2"
 
   pool:
