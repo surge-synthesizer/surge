@@ -43,13 +43,13 @@ void decode_controllerid(char *txt, int id)
     switch (type)
     {
     case 1:
-        snprintf(txt, TXT_SIZE, "NRPN %i", num);
+        snprintf(txt, 16, "NRPN %8i", num);
         break;
     case 2:
-        snprintf(txt, TXT_SIZE, "RPN %i", num);
+        snprintf(txt, 16, "RPN %8i", num);
         break;
     default:
-        snprintf(txt, TXT_SIZE, "CC %i", num);
+        snprintf(txt, 16, "CC %8i", num);
         break;
     };
 }
