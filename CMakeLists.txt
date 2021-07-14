@@ -1122,8 +1122,8 @@ if( UNIX AND NOT APPLE )
           COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_deb.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           )
 
-add_custom_target(surge-xt-rpm)
-add_dependencies(surge-xt-rpm surge-staged-assets)
+  add_custom_target(surge-xt-rpm)
+  add_dependencies(surge-xt-rpm surge-staged-assets)
 
   add_custom_command(TARGET surge-xt-rpm
           POST_BUILD
@@ -1185,6 +1185,54 @@ if( UNIX AND NOT APPLE)
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/data/ DESTINATION share/surge-xt)
 endif()
 
+if (APPLE)
+  message( STATUS "Validate me! Please!" )
+  add_custom_target(stage-pluginval)
+  add_custom_command(TARGET stage-pluginval
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND cmake -E make_directory pluginval
+          COMMAND curl -L "https://github.com/Tracktion/pluginval/releases/download/latest_release/pluginval_macOS.zip" -o pluginval/pluginval.zip
+          COMMAND cd pluginval && unzip -o pluginval.zip
+          )
+  add_custom_target(surge-xt-pluginval-vst3)
+  add_dependencies(surge-xt-pluginval-vst3 surge-xt_VST3)
+  add_dependencies(surge-xt-pluginval-vst3 stage-pluginval)
+  add_custom_command(TARGET surge-xt-pluginval-vst3
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND pluginval/pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "." --validate "${SURGE_FX_OUTPUT_DIR}/VST3/Surge XT.vst3" || exit 1
+          )
+
+  add_custom_target(surge-xt-pluginval-au)
+  add_dependencies(surge-xt-pluginval-au surge-xt_AU)
+  add_dependencies(surge-xt-pluginval-au stage-pluginval)
+  add_custom_command(TARGET surge-xt-pluginval-au
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND pluginval/pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "." --validate "${SURGE_XT_OUTPUT_DIR}/AU/Surge XT.component" || exit 1
+          )
+
+  add_custom_target(surge-fx-pluginval-vst3)
+  add_dependencies(surge-fx-pluginval-vst3 surge-fx_VST3)
+  add_dependencies(surge-fx-pluginval-vst3 stage-pluginval)
+  add_custom_command(TARGET surge-fx-pluginval-vst3
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND pluginval/pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "." --validate "${SURGE_FX_OUTPUT_DIR}/VST3/${SURGE_FX_PRODUCT_NAME}.vst3" || exit 1
+          )
+
+  add_custom_target(surge-fx-pluginval-au)
+  add_dependencies(surge-fx-pluginval-au surge-fx_AU)
+  add_dependencies(surge-fx-pluginval-au stage-pluginval)
+  add_custom_command(TARGET surge-fx-pluginval-au
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND pluginval/pluginval.app/Contents/MacOS/pluginval --validate-in-process --output-dir "." --validate "${SURGE_FX_OUTPUT_DIR}/AU/${SURGE_FX_PRODUCT_NAME}.component" || exit 1
+          )
+
+
+endif()
 
 if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   message( STATUS "Building Surge Python bindings with pybind11" )
