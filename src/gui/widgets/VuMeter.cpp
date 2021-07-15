@@ -42,14 +42,14 @@ void VuMeter::paint(juce::Graphics &g)
     bool stereo = false;
     switch (vu_type)
     {
-    case vut_vu:
+    case ParamConfig::vut_vu:
         offi = 0;
         break;
-    case vut_vu_stereo:
+    case ParamConfig::vut_vu_stereo:
         stereo = true;
         offi = 1;
         break;
-    case vut_gain_reduction:
+    case ParamConfig::vut_gain_reduction:
         offi = 2;
         break;
     default:
@@ -77,7 +77,7 @@ void VuMeter::paint(juce::Graphics &g)
         return powf(x, 0.3333333333f);
     };
 
-    if (vu_type == vut_gain_reduction)
+    if (vu_type == ParamConfig::vut_gain_reduction)
     {
         float occludeTo = std::min((scale(vL) * (w - 1)) - zerodb, 0.f); // Strictly negative
         auto dG = getLocalBounds().reduced(1, 1).withTrimmedRight(-occludeTo);

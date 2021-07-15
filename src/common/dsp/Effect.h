@@ -40,7 +40,7 @@ class alignas(16) Effect
     // No matter what path is used to reload (whether created anew or what not) this is called after
     // the loading state of an item has changed
     virtual void updateAfterReload(){};
-    virtual int vu_type(int id) { return 0; };
+    virtual Surge::ParamConfig::VUType vu_type(int id) { return Surge::ParamConfig::vut_off; };
     virtual int vu_ypos(int id) { return id; }; // in 'half-hslider' heights
     virtual const char *group_label(int id) { return 0; };
     virtual int group_label_ypos(int id) { return 0; };
