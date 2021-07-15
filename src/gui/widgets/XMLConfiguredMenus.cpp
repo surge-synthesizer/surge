@@ -25,11 +25,8 @@ namespace Surge
 namespace Widgets
 {
 
-void XMLMenuPopulator::populate()
+void XMLMenuPopulator::scanXMLPresets()
 {
-    menu = juce::PopupMenu();
-
-    int idx = 0;
     TiXmlElement *sect = storage->getSnapshotSection(mtype);
 
     if (sect)
@@ -40,163 +37,238 @@ void XMLMenuPopulator::populate()
         {
             if (type->Value() && strcmp(type->Value(), "type") == 0)
             {
-                populateSubmenuFromTypeElement(type, menu, idx, true);
+                scanXMLPresetForType(type, std::vector<std::string>());
             }
             else if (type->Value() && strcmp(type->Value(), "separator") == 0)
             {
-                menu.addSeparator();
+                Item sep;
+                sep.isSeparator = true;
+                allPresets.push_back(sep);
             }
 
             type = type->NextSiblingElement();
         }
     }
-    maxIdx = idx;
 }
 
-bool XMLMenuPopulator::loadSnapshotByIndex(int idx)
+void XMLMenuPopulator::scanXMLPresetForType(TiXmlElement *type,
+                                            const std::vector<std::string> &path)
 {
-    int cidx = 0;
-    // This isn't that efficient but you know
-    TiXmlElement *sect = storage->getSnapshotSection(mtype);
-    if (sect)
-    {
-        std::queue<TiXmlElement *> typeD;
-        typeD.push(TINYXML_SAFE_TO_ELEMENT(sect->FirstChild("type")));
-        while (!typeD.empty())
-        {
-            auto type = typeD.front();
-            typeD.pop();
-            int type_id = 0;
-            type->Attribute("i", &type_id);
-            TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
-            while (snapshot)
-            {
-                int snapshotTypeID = type_id, tmpI = 0;
-                if (snapshot->Attribute("i", &tmpI) != nullptr)
-                {
-                    snapshotTypeID = tmpI;
-                }
+    if (!(type->Value() && strcmp(type->Value(), "type") == 0))
+        return;
 
-                if (cidx == idx)
-                {
-                    selectedIdx = cidx;
-                    loadSnapshot(snapshotTypeID, snapshot, cidx);
-                    if (getControlListener())
-                        getControlListener()->valueChanged(asControlValueInterface());
-                    return true;
-                }
-                snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
-                cidx++;
-            }
-
-            auto subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
-            while (subType)
-            {
-                typeD.push(subType);
-                subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
-            }
-
-            auto next = TINYXML_SAFE_TO_ELEMENT(type->NextSibling("type"));
-            if (next)
-                typeD.push(next);
-        }
-    }
-    if (idx < 0 && cidx + idx > 0)
-    {
-        // I've gone off the end
-        return (loadSnapshotByIndex(cidx + idx));
-    }
-    return false;
-}
-
-void XMLMenuPopulator::populateSubmenuFromTypeElement(TiXmlElement *type, juce::PopupMenu &parent,
-                                                      int &idx, bool isTop)
-{
+    auto n = type->Attribute("name");
+    if (!n)
+        return;
     /*
-    ** Begin by grabbing all the snapshot elements
-    */
-    std::string txt;
-    int type_id = 0;
-    type->Attribute("i", &type_id);
-    int sub = 0;
+     * OK we have two cases. If it is a type on its own then it is an entry in path.
+     * If it has children, then the children are snapshots and are entries in my named path
+     */
 
-    juce::PopupMenu subMenu;
-
-    if (isTop)
+    if (type->NoChildren())
     {
-        setMenuStartHeader(type, subMenu);
-    }
-    TiXmlElement *snapshot = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("snapshot"));
-    while (snapshot)
-    {
-        txt = snapshot->Attribute("name");
-
-        int snapshotTypeID = type_id;
-        int tmpI;
-
-        if (snapshot->Attribute("i", &tmpI) != nullptr)
-        {
-            snapshotTypeID = tmpI;
-        }
-
-        if (firstSnapshotByType.find(snapshotTypeID) == firstSnapshotByType.end())
-            firstSnapshotByType[snapshotTypeID] = idx;
-
-        auto action = [this, snapshot, snapshotTypeID, idx]() {
-            this->selectedIdx = idx;
-            this->loadSnapshot(snapshotTypeID, snapshot, idx);
-            if (this->getControlListener())
-                this->getControlListener()->valueChanged(asControlValueInterface());
-        };
-        // loadArgsByIndex.push_back(std::make_pair(snapshotTypeID, snapshot));
-        loadArgsByIndex.emplace_back(snapshotTypeID, snapshot);
-        subMenu.addItem(txt, action);
-        idx++;
-
-        snapshot = TINYXML_SAFE_TO_ELEMENT(snapshot->NextSibling("snapshot"));
-        sub++;
-    }
-
-    /*
-    ** Next see if we have any subordinate types
-    */
-    TiXmlElement *subType = TINYXML_SAFE_TO_ELEMENT(type->FirstChild("type"));
-    while (subType)
-    {
-        populateSubmenuFromTypeElement(subType, subMenu, idx);
-        subType = TINYXML_SAFE_TO_ELEMENT(subType->NextSibling("type"));
-    }
-
-    if (isTop)
-    {
-        addToTopLevelTypeMenu(type, subMenu, idx);
-    }
-
-    /*
-    ** Then add myself to parent
-    */
-    txt = type->Attribute("name");
-
-    if (sub)
-    {
-        parent.addSubMenu(txt, subMenu);
+        Item it;
+        it.xmlElement = type;
+        it.pathElements = path;
+        it.name = n;
+        int t = 0;
+        if (type->QueryIntAttribute("i", &t) == TIXML_SUCCESS)
+            it.itemType = t;
+        allPresets.push_back(it);
     }
     else
     {
-        if (firstSnapshotByType.find(type_id) == firstSnapshotByType.end())
-            firstSnapshotByType[type_id] = idx;
+        auto p = path;
+        p.push_back(n);
+        int t = 0;
+        if (type->QueryIntAttribute("i", &t) != TIXML_SUCCESS)
+        {
+            // ERROR
+            jassert(false);
+            std::cout << "INTERNAL MENU ERROR" << std::endl;
+            return;
+        }
+        auto kid = type->FirstChildElement();
+        while (kid)
+        {
+            std::string kval = kid->Value();
+            if (kval == "type")
+            {
+                scanXMLPresetForType(kid, p);
+            }
+            else if (kval == "snapshot")
+            {
+                Item it;
+                it.xmlElement = kid;
+                it.pathElements = p;
+                it.itemType = t;
+                auto kn = kid->Attribute("name");
+                it.name = kn ? kn : "-ERROR-";
+                allPresets.push_back(it);
+            }
+            else
+            {
+                std::cout << "Wuh? " << kval << std::endl;
+            }
+            kid = kid->NextSiblingElement();
+        }
+    }
+}
 
-        auto action = [this, type_id, type, idx]() {
-            this->selectedIdx = 0;
-            this->loadSnapshot(type_id, type, idx);
-            if (this->getControlListener())
-                this->getControlListener()->valueChanged(asControlValueInterface());
-        };
+void XMLMenuPopulator::populate()
+{
+    /*
+     * New scanners
+     */
+    allPresets.clear();
+    scanXMLPresets();
+    scanExtraPresets();
 
-        loadArgsByIndex.emplace_back(type_id, type);
-        parent.addItem(txt, action);
+    struct Tree
+    {
+        enum
+        {
+            SEP,
+            FACPS,
+            USPS,
+            FOLD
+        } type;
+        ~Tree()
+        {
+            for (auto c : children)
+                delete c;
+        }
+        std::string name;
+        std::vector<std::string> fullPath;
+        int idx = -1;
+        int depth = 0;
+        Tree *parent{nullptr};
+        std::vector<Tree *> children;
+        bool hasUser{false};
+        bool hasFac{false};
+        void addByPath(const Item &i, int idx, int depth = 0)
+        {
+            if (i.pathElements.size() == depth)
+            {
+                auto t = new Tree();
+                t->name = i.name;
+                t->idx = idx;
+                t->fullPath = i.pathElements;
+                t->parent = this;
+                t->depth = depth;
+                t->type = i.isSeparator ? SEP : (i.isUser ? USPS : FACPS);
+                children.push_back(t);
+            }
+            else
+            {
+                Tree *addToThis = nullptr;
+                for (auto c : children)
+                {
+                    if (c->type == FOLD && c->name == i.pathElements[depth])
+                    {
+                        addToThis = c;
+                    }
+                }
+                if (!addToThis)
+                {
+                    addToThis = new Tree();
+                    addToThis->name = i.pathElements[depth];
+                    addToThis->fullPath = std::vector<std::string>(
+                        i.pathElements.begin(), i.pathElements.begin() + depth + 1);
+                    addToThis->type = FOLD;
+                    addToThis->parent = this;
+                    addToThis->depth = depth + 1;
+                    children.push_back(addToThis);
+                }
+                addToThis->addByPath(i, idx, depth + 1);
+            }
+        }
+
+        void updateFacUserFlag()
+        {
+            hasFac = false;
+            hasUser = false;
+            for (auto c : children)
+            {
+                switch (c->type)
+                {
+                case FOLD:
+                {
+                    c->updateFacUserFlag();
+                    hasFac |= c->hasFac;
+                    hasUser |= c->hasUser;
+                }
+                break;
+                case FACPS:
+                    hasFac = true;
+                    break;
+                case USPS:
+                    hasUser = true;
+                    break;
+                case SEP:
+                    break;
+                }
+            }
+        }
+
+        void buildJuceMenu(juce::PopupMenu &m, XMLMenuPopulator *host)
+        {
+            bool inFac = true;
+            if (depth == 1 && hasFac && hasUser)
+            {
+                m.addSectionHeader("FACTORY PRESETS");
+            }
+            for (auto c : children)
+            {
+                switch (c->type)
+                {
+                case FACPS:
+                {
+                    auto idx = c->idx;
+                    m.addItem(c->name, [host, idx]() { host->loadByIndex(idx); });
+                }
+                break;
+                case USPS:
+                {
+                    if (inFac && depth == 1 && hasFac && hasUser)
+                    {
+                        inFac = false;
+                        m.addColumnBreak();
+                        m.addSectionHeader("USER PRESETS");
+                    }
+                    auto idx = c->idx;
+                    m.addItem(c->name, [host, idx]() { host->loadByIndex(idx); });
+                }
+                break;
+                case SEP:
+                {
+                    m.addSeparator();
+                }
+                break;
+                case FOLD:
+                {
+                    auto subM = juce::PopupMenu();
+                    c->buildJuceMenu(subM, host);
+                    m.addSubMenu(c->name, subM);
+                }
+                break;
+                }
+            }
+        }
+    };
+
+    auto rootTree = std::make_unique<Tree>();
+    int idx = 0;
+    for (const auto &p : allPresets)
+    {
+        rootTree->addByPath(p, idx);
         idx++;
     }
+    rootTree->updateFacUserFlag();
+    menu = juce::PopupMenu();
+    rootTree->buildJuceMenu(menu, this);
+
+    maxIdx = allPresets.size();
 }
 
 OscillatorMenu::OscillatorMenu() { strcpy(mtype, "osc"); }
@@ -254,43 +326,10 @@ void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
                                     const juce::MouseWheelDetails &wheel)
 {
     int dir = wheelAccumulationHelper.accumulate(wheel, false, true);
-    auto sge = firstListenerOfType<SurgeGUIEditor>();
-    if (sge && dir != 0)
+
+    if (dir != 0)
     {
-        auto sc = sge->current_scene;
-        int currentIdx = sge->oscilatorMenuIndex[sc][sge->current_osc[sc]];
-        if (dir < 0)
-        {
-            currentIdx = currentIdx + 1;
-            if (currentIdx >= maxIdx)
-                currentIdx = 0;
-            auto args = loadArgsByIndex[currentIdx];
-            if (args.actionType == XMLMenuPopulator::LoadArg::XML)
-            {
-                loadSnapshot(args.type, args.el, currentIdx);
-            }
-            else
-            {
-                jassert(false);
-            }
-            repaint();
-        }
-        else if (dir > 0)
-        {
-            currentIdx = currentIdx - 1;
-            if (currentIdx < 0)
-                currentIdx = maxIdx - 1;
-            auto args = loadArgsByIndex[currentIdx];
-            if (args.actionType == XMLMenuPopulator::LoadArg::XML)
-            {
-                loadSnapshot(args.type, args.el, currentIdx);
-            }
-            else
-            {
-                jassert(false);
-            }
-            repaint();
-        }
+        jogBy(-dir);
     }
 }
 void OscillatorMenu::mouseEnter(const juce::MouseEvent &event)
@@ -469,44 +508,69 @@ void FxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
     notifyValueChanged();
 }
 
-void FxMenu::addToTopLevelTypeMenu(TiXmlElement *type, juce::PopupMenu &subMenu, int &idx)
+void FxMenu::scanExtraPresets()
 {
-    if (!type)
-        return;
-
-    int type_id = 0;
-    type->Attribute("i", &type_id);
-
-    auto ps = Surge::FxUserPreset::getPresetsForSingleType(type_id);
-
-    if (ps.empty())
+    Surge::FxUserPreset::forcePresetRescan(storage);
+    for (const auto &tp : Surge::FxUserPreset::getPresetsByType())
     {
-        return;
-    }
+        // So lets run all presets until we find the first item with type tp.first
+        auto alit = allPresets.begin();
+        while (alit->itemType != tp.first && alit != allPresets.end())
+            alit++;
+        std::vector<std::string> rootPath;
+        rootPath.push_back(alit->pathElements[0]);
 
-    subMenu.addColumnBreak();
-    subMenu.addSectionHeader("User Presets");
+        while (alit != allPresets.end() && alit->itemType == tp.first)
+            alit++;
 
-    for (auto &pst : ps)
-    {
-        auto fxName = pst.name;
-        subMenu.addItem(fxName, [this, pst]() { this->loadUserPreset(pst); });
+        // OK so alit now points at the end of the list
+        alit = allPresets.insert(alit, tp.second.size(), Item());
+
+        // OK so insert 'size' into all presets at the end of the position of the type
+
+        for (const auto ps : tp.second)
+        {
+            alit->itemType = tp.first;
+            alit->name = ps.name;
+            alit->isUser = true;
+            alit->path = string_to_path(ps.file);
+            auto thisPath = rootPath;
+            for (const auto &q : ps.subPath)
+                thisPath.push_back(path_to_string(q));
+
+            alit->pathElements = thisPath;
+            alit->hasFxUserPreset = true;
+            alit->fxPreset = ps;
+            alit++;
+        }
     }
 }
-void FxMenu::setMenuStartHeader(TiXmlElement *type, juce::PopupMenu &subMenu)
+
+void FxMenu::loadByIndex(int index)
 {
-    if (!type)
-        return;
-
-    int type_id = 0;
-    type->Attribute("i", &type_id);
-
-    if (!Surge::FxUserPreset::hasPresetsForSingleType(type_id))
+    auto q = allPresets[index];
+    if (q.xmlElement)
     {
-        return;
+        loadSnapshot(q.itemType, q.xmlElement, index);
     }
+    else
+    {
+        loadUserPreset(q.fxPreset);
+    }
+    selectedIdx = index;
+    if (getControlListener())
+        getControlListener()->valueChanged(asControlValueInterface());
+    repaint();
+}
 
-    subMenu.addSectionHeader("Factory Presets");
+void FxMenu::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel)
+{
+    int dir = wheelAccumulationHelper.accumulate(wheel, false, true);
+
+    if (dir != 0)
+    {
+        jogBy(-dir);
+    }
 }
 
 } // namespace Widgets
