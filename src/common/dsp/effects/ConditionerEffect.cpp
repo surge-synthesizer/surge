@@ -163,18 +163,18 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     vu[5] = max(vu[5], get_absmax(dataR, BLOCK_SIZE_QUAD));
 }
 
-int ConditionerEffect::vu_type(int id)
+Surge::ParamConfig::VUType ConditionerEffect::vu_type(int id)
 {
     switch (id)
     {
     case 0:
-        return vut_vu_stereo;
+        return Surge::ParamConfig::vut_vu_stereo;
     case 1:
-        return vut_gain_reduction;
+        return Surge::ParamConfig::vut_gain_reduction;
     case 2:
-        return vut_vu_stereo;
+        return Surge::ParamConfig::vut_vu_stereo;
     }
-    return 0;
+    return Surge::ParamConfig::vut_off;
 }
 
 int ConditionerEffect::vu_ypos(int id)

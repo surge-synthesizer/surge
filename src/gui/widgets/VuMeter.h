@@ -37,8 +37,8 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void setValueR(float f) { vR = f; }
     float getValueR() const { return vR; }
 
-    int vu_type{vut_off};
-    void setType(int t) { vu_type = t; };
+    Surge::ParamConfig::VUType vu_type{Surge::ParamConfig::vut_off};
+    void setType(Surge::ParamConfig::VUType t) { vu_type = t; };
 
     void paint(juce::Graphics &g) override;
 

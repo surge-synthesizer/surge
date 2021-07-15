@@ -41,7 +41,7 @@ class ConditionerEffect : public Effect
     void setvars(bool init);
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
-    virtual int vu_type(int id) override;
+    virtual Surge::ParamConfig::VUType vu_type(int id) override;
     virtual int vu_ypos(int id) override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;

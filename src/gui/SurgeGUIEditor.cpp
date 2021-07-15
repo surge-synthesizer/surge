@@ -77,6 +77,7 @@
 const int yofs = 10;
 
 using namespace std;
+using namespace Surge::ParamConfig;
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 
@@ -1033,7 +1034,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto fxRect = juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
             for (int i = 0; i < 15; i++)
             {
-                int t = synth->fx[current_fx]->vu_type(i);
+                auto t = synth->fx[current_fx]->vu_type(i);
                 if (t)
                 {
                     auto vr = fxRect.translated(6, yofs * synth->fx[current_fx]->vu_ypos(i))
@@ -1269,7 +1270,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             vu[0] = componentForSkinSession<Surge::Widgets::VuMeter>(skinCtrl->sessionid);
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
-            vu[0]->setType(vut_vu_stereo);
+            vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
             frame->addAndMakeVisible(*vu[0]);
             break;
         }
@@ -3832,7 +3833,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hs->setValue(p->get_value_f01());
             hs->setMinMax(p->val_min.i, p->val_max.i);
             hs->setLabel(p->get_name());
-            p->ctrlstyle = p->ctrlstyle | kNoPopup;
+            p->ctrlstyle = p->ctrlstyle | Surge::ParamConfig::kNoPopup;
             if (p->can_deactivate())
                 hs->setDeactivated(p->deactivated);
 

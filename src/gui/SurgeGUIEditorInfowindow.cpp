@@ -25,7 +25,7 @@ void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
 {
     auto pid = ptag - start_paramtags;
     auto p = synth->storage.getPatch().param_ptr[pid];
-    if ((p->ctrlstyle & kNoPopup))
+    if ((p->ctrlstyle & Surge::ParamConfig::kNoPopup))
     {
         hideInfowindowNow();
         return;
@@ -43,7 +43,7 @@ void SurgeGUIEditor::showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> re
 {
     auto pid = ptag - start_paramtags;
     auto p = synth->storage.getPatch().param_ptr[pid];
-    if ((p->ctrlstyle & kNoPopup))
+    if ((p->ctrlstyle & Surge::ParamConfig::kNoPopup))
     {
         hideInfowindowNow();
         return;

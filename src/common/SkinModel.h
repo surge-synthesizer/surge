@@ -286,7 +286,7 @@ struct Connector
 
     Connector &asVertical() noexcept { return withControlStyle(Surge::ParamConfig::kVertical); }
     Connector &asHorizontal() noexcept { return withControlStyle(Surge::ParamConfig::kHorizontal); }
-    Connector &asWhite() noexcept { return withControlStyle(kWhite); }
+    Connector &asWhite() noexcept { return withControlStyle(Surge::ParamConfig::kWhite); }
 
     Connector &asMixerSolo() noexcept;
     Connector &asMixerMute() noexcept;
