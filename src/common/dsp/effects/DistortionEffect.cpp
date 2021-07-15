@@ -33,7 +33,6 @@ void DistortionEffect::init()
 
 void DistortionEffect::setvars(bool init)
 {
-
     if (init)
     {
         float pregain = fxdata->p[dist_preeq_gain].get_extended(fxdata->p[dist_preeq_gain].val.f);
@@ -43,8 +42,9 @@ void DistortionEffect::setvars(bool init)
                            fxdata->p[dist_preeq_bw].val.f, pregain);
         band2.coeff_peakEQ(band2.calc_omega(fxdata->p[dist_posteq_freq].val.f / 12.f),
                            fxdata->p[dist_posteq_bw].val.f, postgain);
-        drive.set_target(0.f);
-        outgain.set_target(0.f);
+        auto dE = db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
+        drive.set_target_smoothed(dE);
+        outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
     }
     else
     {
@@ -112,7 +112,7 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
             if (useSSEShaper)
             {
-                float sb[4];
+                float sb alignas(16)[4];
                 auto dInv = 1.f / dNow;
 
                 sb[0] = L * dInv;
