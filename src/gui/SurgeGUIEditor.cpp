@@ -1221,6 +1221,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fxPresetLabel->setJustificationType(juce::Justification::centredRight);
 
             fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
+            fxPresetLabel->setBounds(skinCtrl->getRect());
 
             frame->addAndMakeVisible(*fxPresetLabel);
             break;
