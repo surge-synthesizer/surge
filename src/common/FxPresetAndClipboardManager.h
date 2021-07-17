@@ -30,7 +30,8 @@ struct Preset
 {
     std::string file;
     std::string name;
-    int type;
+    fs::path subPath{};
+    int type{-1};
     float p[n_fx_params];
     bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
 

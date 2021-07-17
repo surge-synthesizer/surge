@@ -75,6 +75,7 @@ void forcePresetRescan(SurgeStorage *storage)
         {
             Preset preset;
             preset.file = path_to_string(f);
+
             TiXmlDocument d;
             int t;
 
@@ -100,6 +101,20 @@ void forcePresetRescan(SurgeStorage *storage)
                 goto badPreset;
 
             preset.type = t;
+
+            auto rpath = f.lexically_relative(string_to_path(storage->userFXPath)).parent_path();
+
+            auto startCatPath = rpath.begin();
+            if (*(startCatPath) == fx_type_names[t])
+            {
+                startCatPath++;
+            }
+
+            while (startCatPath != rpath.end())
+            {
+                preset.subPath /= *startCatPath;
+                startCatPath++;
+            }
 
             for (int i = 0; i < n_fx_params; ++i)
             {

@@ -44,46 +44,70 @@ struct XMLMenuPopulator
 
     virtual void populate();
     virtual void loadSnapshot(int type, TiXmlElement *e, int idx){};
-    virtual bool loadSnapshotByIndex(int idx);
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
-    int selectedIdx;
+    int selectedIdx{0};
     std::string selectedName;
 
     juce::PopupMenu menu;
 
-    void populateSubmenuFromTypeElement(TiXmlElement *typeElement, juce::PopupMenu &parent,
-                                        int &idx, bool isTopLevel = false);
-    virtual void addToTopLevelTypeMenu(TiXmlElement *typeElement, juce::PopupMenu &subMenu,
-                                       int &idx)
+    /*
+     * New Data Structures for Presets and what not
+     */
+    void scanXMLPresets();
+    void scanXMLPresetForType(TiXmlElement *typeElement, const std::vector<std::string> &path);
+    struct Item
     {
-    }
-    virtual void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) {}
+        std::vector<std::string> pathElements;
+        std::string name;
+        TiXmlElement *xmlElement{nullptr};
+        int itemType{0};
+        fs::path path{};
+        bool isUser{false};
+        bool isSeparator{false};
 
-    char mtype[16] = {0};
-    std::map<int, int> firstSnapshotByType;
-
-    struct LoadArg
-    {
-        LoadArg(int i, TiXmlElement *e) : type(i), el(e), actionType(XML) {}
-        LoadArg(int i, std::function<void()> f)
-            : type(i), callback(std::move(f)), actionType(LAMBDA)
-        {
-        }
-        int type{-1};
-        TiXmlElement *el{nullptr};
-        std::function<void()> callback{[]() {}};
-        enum Type
-        {
-            NONE,
-            XML,
-            LAMBDA
-        } actionType{NONE};
+        /*
+         * I knwo this isn't very generalized and I could template it and subclass
+         * and use this for N other controls. But I wont
+         */
+        Surge::FxUserPreset::Preset fxPreset;
+        bool hasFxUserPreset{false};
     };
-    std::vector<LoadArg> loadArgsByIndex;
+    virtual void scanExtraPresets() {}
+    std::vector<Item> allPresets;
+    virtual void loadByIndex(int idx)
+    {
+        auto q = allPresets[idx];
+        if (q.xmlElement)
+        {
+            loadSnapshot(q.itemType, q.xmlElement, idx);
+            selectedIdx = idx;
+            if (getControlListener())
+                getControlListener()->valueChanged(asControlValueInterface());
+        }
+        selectedIdx = idx;
+    }
+
+    void jogBy(int dir)
+    {
+        if (dir == 0)
+            return;
+        auto idx = selectedIdx;
+        do
+        {
+            idx += dir;
+            if (idx < 0)
+                idx = allPresets.size() - 1;
+
+            if (idx >= (int)allPresets.size())
+                idx = 0;
+        } while (allPresets[idx].isSeparator);
+        loadByIndex(idx);
+    }
     int maxIdx;
+    char mtype[64];
 };
 
 struct OscillatorMenu : public juce::Component,
@@ -141,21 +165,24 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     float getValue() const override { return 0; }
     void setValue(float f) override {}
 
+    void scanExtraPresets() override;
+
     void mouseDown(const juce::MouseEvent &event) override;
 
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
-    bool isHovered{false};
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override;
+
+    bool isHovered{false};
 
     void paint(juce::Graphics &g) override;
 
     void loadSnapshot(int type, TiXmlElement *e, int idx) override;
     void populate() override;
 
-    void addToTopLevelTypeMenu(TiXmlElement *typeElement, juce::PopupMenu &subMenu,
-                               int &idx) override;
     FxStorage *fx{nullptr}, *fxbuffer{nullptr};
     void setFxStorage(FxStorage *s) { fx = s; }
     void setFxBuffer(FxStorage *s) { fxbuffer = s; }
@@ -168,8 +195,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void pasteFX();
     void saveFX();
 
-    void setMenuStartHeader(TiXmlElement *typeElement, juce::PopupMenu &subMenu) override;
-
+    void loadByIndex(int index) override;
     void loadUserPreset(const Surge::FxUserPreset::Preset &p);
 
     SurgeImage *bg{}, *bgHover{};

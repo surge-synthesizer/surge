@@ -2363,28 +2363,17 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         if (fxMenu)
         {
-            auto jog = [this](int byThis) {
-                this->selectedFX[this->current_fx] =
-                    std::max(this->selectedFX[this->current_fx] + byThis, -1);
-                if (!fxMenu->loadSnapshotByIndex(this->selectedFX[this->current_fx]))
-                {
-                    // Try and go back to 0. This is the wrong behavior for negative jog
-                    this->selectedFX[this->current_fx] = 0;
-                    fxMenu->loadSnapshotByIndex(0);
-                }
-            };
-
-            if (fxMenu->selectedIdx >= 0 && fxMenu->selectedIdx != selectedFX[current_fx])
-                selectedFX[current_fx] = fxMenu->selectedIdx;
-
             if (control->getValue() > 0.5f)
             {
-                jog(+1);
+                fxMenu->jogBy(1);
             }
             else
             {
-                jog(-1);
+                fxMenu->jogBy(-1);
             }
+
+            if (fxMenu->selectedIdx >= 0 && fxMenu->selectedIdx != selectedFX[current_fx])
+                selectedFX[current_fx] = fxMenu->selectedIdx;
 
             if (fxPresetLabel)
             {
