@@ -114,22 +114,35 @@ bool SurgeSynthProcessor::isMidiEffect() const { return false; }
 
 double SurgeSynthProcessor::getTailLengthSeconds() const { return 2.0; }
 
-int SurgeSynthProcessor::getNumPrograms() { return surge->storage.patch_list.size() + 1; }
+#undef SURGE_JUCE_PRESETS
+
+int SurgeSynthProcessor::getNumPrograms()
+{
+#ifdef SURGE_JUCE_PRESETS
+    return surge->storage.patch_list.size() + 1;
+#else
+    return 1;
+#endif
+}
 
 int SurgeSynthProcessor::getCurrentProgram()
 {
-    if (surge->patchid < 0 || surge->patchid > surge->storage.patch_list.size())
-        return 0;
-
-    return surge->patchid + 1;
+#ifdef SURGE_JUCE_PRESETS
+    return juceSidePresetId;
+#else
+    return 0;
+#endif
 }
 
 void SurgeSynthProcessor::setCurrentProgram(int index)
 {
+#ifdef SURGE_JUCE_PRESETS
     if (index > 0 && index <= presetOrderToPatchList.size())
     {
+        juceSidePresetId = index;
         surge->patchid_queue = presetOrderToPatchList[index - 1];
     }
+#endif
 }
 
 const String SurgeSynthProcessor::getProgramName(int index)
