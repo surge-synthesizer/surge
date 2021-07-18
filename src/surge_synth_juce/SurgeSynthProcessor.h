@@ -212,6 +212,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     std::vector<SurgeParamToJuceParamAdapter *> paramAdapters;
 
     std::vector<int> presetOrderToPatchList;
+    int juceSidePresetId{0};
+
     int blockPos = 0;
 
     int checkNamesEvery = 0;
