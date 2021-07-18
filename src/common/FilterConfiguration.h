@@ -360,13 +360,15 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         p(fut_cutoffwarp_n, "Notch");
         p(fut_resonancewarp_n, "Notch");
 
+        p(fut_threeler, "Multi");
+
         p(fut_apf, "Effect");
         p(fut_cutoffwarp_ap, "Effect");
         p(fut_resonancewarp_ap, "Effect");
         p(fut_comb_pos, "Effect");
         p(fut_comb_neg, "Effect");
         p(fut_SNH, "Effect");
-        p(fut_threeler, "Effect");
+
 
         int c = 0;
         for (auto e : mapping)
