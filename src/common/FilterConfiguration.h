@@ -369,7 +369,6 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         p(fut_comb_neg, "Effect");
         p(fut_SNH, "Effect");
 
-
         int c = 0;
         for (auto e : mapping)
             inverseMapping[e.first] = c++;
