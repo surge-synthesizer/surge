@@ -196,7 +196,14 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
         return;
     }
 
-    if (!Surge::Storage::isValidName(fxName))
+    /*
+     * OK so lets see if there's a path separator in the string
+     */
+    auto sp = string_to_path(s);
+    auto spp = sp.parent_path();
+    auto fnp = sp.filename();
+
+    if (!Surge::Storage::isValidName(path_to_string(fnp)))
     {
         return;
     }
@@ -205,11 +212,16 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
 
     std::ostringstream oss;
     oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
+    auto storagePath = string_to_path(oss.str());
 
-    auto pn = oss.str();
-    fs::create_directories(string_to_path(pn));
+    if (!spp.empty())
+        storagePath /= spp;
 
-    auto fn = pn + fxName + ".srgfx";
+    auto outputPath = storagePath / string_to_path(path_to_string(fnp) + ".srgfx");
+
+    fs::create_directories(storagePath);
+
+    auto fn = path_to_string(outputPath);
     std::ofstream pfile(fn, std::ios::out);
     if (!pfile.is_open())
     {
@@ -223,7 +235,7 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
     pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
 
     // take care of 5 special XML characters
-    std::string fxNameSub(fxName);
+    std::string fxNameSub(path_to_string(fnp));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
