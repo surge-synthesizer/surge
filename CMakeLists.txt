@@ -17,7 +17,9 @@ if(NOT BUILD_TESTING)
   set(BUILD_TESTING "False" CACHE STRING "" FORCE)
 endif()
 
-project(Surge-XT VERSION 1.0.0.0 LANGUAGES C CXX ASM)
+project(Surge-XT VERSION 0.9.0 LANGUAGES C CXX ASM)
+
+message( STATUS "Its Surge-XT Folks! Version is ${PROJECT_VERSION}" )
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 if(APPLE)
