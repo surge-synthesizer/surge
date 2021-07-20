@@ -305,6 +305,13 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
         FIXMEERROR << "Skin version '" << version << "' is lower than 1. Why?" << std::endl;
         return false;
     }
+    if (version == 1)
+    {
+        FIXMEERROR << "Surge XT no longer supports Version 1 skins. Please make the "
+                   << "(relatively minor) set of changes to bring this skin to version 2"
+                   << std::endl;
+        return false;
+    }
 
     auto globalsxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("globals"));
     auto componentclassesxml = TINYXML_SAFE_TO_ELEMENT(surgeskin->FirstChild("component-classes"));
@@ -1180,94 +1187,16 @@ void Surge::GUI::Skin::Control::copyFromConnector(const Surge::Skin::Connector &
 
     auto dc = c.payload->defaultComponent;
 
-    if (version == 1)
+    // There used to be a version 1 handling here which we stripped in XT
+    classname = dc.payload->internalClassname;
+    ultimateparentclassname = dc.payload->internalClassname;
+    for (auto const &propNamePair : dc.payload->propertyNamesMap)
     {
-        if (dc == Surge::Skin::Components::Slider)
+        if (c.payload->properties.find(propNamePair.first) != c.payload->properties.end())
         {
-            classname = "CSurgeSlider";
-            ultimateparentclassname = "CSurgeSlider";
-        }
-        else if (dc == Surge::Skin::Components::MultiSwitch)
-        {
-            classname = "CHSwitch2";
-            ultimateparentclassname = "CHSwitch2";
-            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
-            transferPropertyIf(Surge::Skin::Component::ROWS, "rows");
-            transferPropertyIf(Surge::Skin::Component::COLUMNS, "columns");
-            transferPropertyIf(Surge::Skin::Component::FRAMES, "frames");
-            transferPropertyIf(Surge::Skin::Component::FRAME_OFFSET, "frame_offset");
-            transferPropertyIf(Surge::Skin::Component::DRAGGABLE_HSWITCH, "draggable");
-        }
-        else if (dc == Surge::Skin::Components::Switch)
-        {
-            classname = "CSwitchControl";
-            ultimateparentclassname = "CSwitchControl";
-            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
-        }
-        else if (dc == Surge::Skin::Components::NumberField)
-        {
-            classname = "CNumberField";
-            ultimateparentclassname = "CNumberField";
-            transferPropertyIf(Surge::Skin::Component::NUMBERFIELD_CONTROLMODE,
-                               "numberfield_controlmode");
-            transferPropertyIf(Surge::Skin::Component::BACKGROUND, "bg_id");
-            transferPropertyIf(Surge::Skin::Component::TEXT_COLOR, "text_color");
-            transferPropertyIf(Surge::Skin::Component::TEXT_HOVER_COLOR, "text_color.hover");
-        }
-
-        else if (dc == Surge::Skin::Components::Slider)
-        {
-            classname = "CSurgeSlider";
-            ultimateparentclassname = "CSurgeSlider";
-        }
-        else if (dc == Surge::Skin::Components::LFODisplay)
-        {
-            classname = "CLFOGui";
-            ultimateparentclassname = "CLFOGui";
-        }
-        else if (dc == Surge::Skin::Components::OscMenu)
-        {
-            classname = "COSCMenu";
-            ultimateparentclassname = "COSCMenu";
-        }
-        else if (dc == Surge::Skin::Components::FxMenu)
-        {
-            classname = "CFXMenu";
-            ultimateparentclassname = "CFXMenu";
-        }
-        else if (dc == Surge::Skin::Components::VuMeter)
-        {
-            classname = "CVUMeter";
-            ultimateparentclassname = "CVUMeter";
-        }
-        else if (dc == Surge::Skin::Components::Group)
-        {
-            classname = "--GROUP--";
-            ultimateparentclassname = "--GROUP--";
-        }
-        else if (dc == Surge::Skin::Components::Custom)
-        {
-            classname = "--CUSTOM--";
-            ultimateparentclassname = "--CUSTOM--";
-        }
-        else if (dc == Surge::Skin::Components::FilterSelector)
-        {
-            classname = "FilterSelector";
-            ultimateparentclassname = "FilterSelector";
-        }
-    }
-    else
-    {
-        classname = dc.payload->internalClassname;
-        ultimateparentclassname = dc.payload->internalClassname;
-        for (auto const &propNamePair : dc.payload->propertyNamesMap)
-        {
-            if (c.payload->properties.find(propNamePair.first) != c.payload->properties.end())
+            for (auto const &tt : propNamePair.second)
             {
-                for (auto const &tt : propNamePair.second)
-                {
-                    this->allprops[tt] = c.payload->properties[propNamePair.first];
-                }
+                this->allprops[tt] = c.payload->properties[propNamePair.first];
             }
         }
     }
