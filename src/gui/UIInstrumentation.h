@@ -13,7 +13,7 @@ namespace Debug
 /*
 ** Just count how many times we hit this function
 */
-void record(std::string tag);
+void record(const std::string &tag);
 
 /*
 ** Pop up the timing report in a browser
@@ -29,7 +29,7 @@ void report();
 */
 struct TimeThisBlock
 {
-    TimeThisBlock(std::string tag);
+    TimeThisBlock(const std::string Ytag);
     ~TimeThisBlock();
     std::string tag;
     std::chrono::time_point<std::chrono::high_resolution_clock> start;

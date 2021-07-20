@@ -3758,9 +3758,12 @@ bool Parameter::can_setvalue_from_string()
     return false;
 }
 
-bool Parameter::set_value_from_string(std::string s) { return set_value_from_string_onto(s, val); }
+bool Parameter::set_value_from_string(const std::string &s)
+{
+    return set_value_from_string_onto(s, val);
+}
 
-bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
+bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis)
 {
     const char *c = s.c_str();
 
@@ -3811,13 +3814,14 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
                 int neg = 1;
 
                 // convert string to lowercase
-                std::for_each(s.begin(), s.end(),
+                auto lowerS = s;
+                std::for_each(lowerS.begin(), lowerS.end(),
                               [](char &c) { c = ::tolower(static_cast<unsigned char>(c)); });
 
                 // find the unmodified note
                 for (int i = 0; i < 7; i++)
                 {
-                    n = s.find(notes[i]);
+                    n = lowerS.find(notes[i]);
                     if (n != std::string::npos)
                     {
                         val = pitches[i];
@@ -3827,31 +3831,32 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
 
                 // check if the following character is sharp or flat, adjust val if so
                 n++;
-                if ((m = s.find("#", n, 1)) != std::string::npos)
+                if ((m = lowerS.find("#", n, 1)) != std::string::npos)
                 {
                     val += 1;
                     n++;
                 }
-                else if ((m = s.find("b", n, 1)) != std::string::npos)
+                else if ((m = lowerS.find("b", n, 1)) != std::string::npos)
                 {
                     val -= 1;
                     n++;
                 }
 
                 // if neither note modifiers are found, check for minus
-                if ((m = s.find("-", n, 1)) != std::string::npos)
+                if ((m = lowerS.find("-", n, 1)) != std::string::npos)
                 {
                     neg = -1;
                     n++;
                 }
 
                 // finally, octave number
-                s = s.substr(n, s.length() - n); // trim the fat to the left of current char
+                auto q = lowerS.substr(n, lowerS.length() -
+                                              n); // trim the fat to the left of current char
 
                 int oct;
                 try
                 {
-                    oct = std::stoi(s);
+                    oct = std::stoi(q);
                 }
                 catch (std::invalid_argument const &)
                 {
@@ -3873,7 +3878,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
 
         if (ni >= val_min.i && ni <= val_max.i)
         {
-            onto.i = ni;
+            ontoThis.i = ni;
             return true;
         }
 
@@ -3895,7 +3900,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
             float f;
             if (ef->stringToValue(this, c, f))
             {
-                onto.f = limit_range(f, val_min.f, val_max.f);
+                ontoThis.f = limit_range(f, val_min.f, val_max.f);
                 return true;
             }
         }
@@ -3921,7 +3926,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
             return false;
         }
 
-        onto.f = res;
+        ontoThis.f = res;
         return true;
 
         break;
@@ -3980,7 +3985,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
         {
             return false;
         }
-        onto.f = res;
+        ontoThis.f = res;
         return true;
         break;
     }
@@ -4004,7 +4009,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
             return false;
         }
 
-        onto.f = nv;
+        ontoThis.f = nv;
         return true;
     }
     break;
@@ -4018,7 +4023,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
         {
             return false;
         }
-        onto.f = nv;
+        ontoThis.f = nv;
         return true;
     }
     break;
@@ -4029,7 +4034,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
             float uv = std::atof(c) / 440.f;
             float n = log2(uv) * 12 + 69;
             float bpv = (n - 69) / 69.f;
-            onto.f = bpv * 16 + 16;
+            ontoThis.f = bpv * 16 + 16;
         }
         else
         {
@@ -4071,7 +4076,7 @@ bool Parameter::set_value_from_string_onto(std::string s, pdata &onto)
                     nv = (nv - 1) * 16.f / 31.f + 16;
                 }
             }
-            onto.f = nv;
+            ontoThis.f = nv;
         }
     }
     break;

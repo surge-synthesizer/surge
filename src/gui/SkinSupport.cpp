@@ -719,9 +719,10 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     return true;
 }
 
-bool Skin::setAllCapsProperty(std::string propertyValue)
+bool Skin::setAllCapsProperty(const std::string &propertyValueA)
 {
     // make the property value not case sensitive
+    auto propertyValue = propertyValueA;
     std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
@@ -735,9 +736,10 @@ bool Skin::setAllCapsProperty(std::string propertyValue)
     }
 }
 
-juce::Font::FontStyleFlags Skin::setFontStyleProperty(std::string propertyValue)
+juce::Font::FontStyleFlags Skin::setFontStyleProperty(const std::string &propertyValueA)
 {
     // make the property value not case sensitive
+    auto propertyValue = propertyValueA;
     std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 
@@ -759,9 +761,10 @@ juce::Font::FontStyleFlags Skin::setFontStyleProperty(std::string propertyValue)
     }
 }
 
-juce::Justification Skin::setJuceTextAlignProperty(std::string propertyValue)
+juce::Justification Skin::setJuceTextAlignProperty(const std::string &propertyValueA)
 {
     // make the property value not case sensitive
+    auto propertyValue = propertyValueA;
     std::transform(propertyValue.begin(), propertyValue.end(), propertyValue.begin(),
                    [](unsigned char c) { return std::tolower(c); });
 

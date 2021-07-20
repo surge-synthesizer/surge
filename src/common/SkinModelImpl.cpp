@@ -277,12 +277,13 @@ std::vector<Connector> Connector::connectorsByComponentType(const Component &c)
     return res;
 }
 
-Color::Color(std::string name, int r, int g, int b) : name(name), r(r), g(g), b(b), a(255)
+Color::Color(const std::string &name, int r, int g, int b) : name(name), r(r), g(g), b(b), a(255)
 {
     guaranteeMap();
     colMap->insert(std::make_pair(name, *this));
 }
-Color::Color(std::string name, int r, int g, int b, int a) : name(name), r(r), g(g), b(b), a(a)
+Color::Color(const std::string &name, int r, int g, int b, int a)
+    : name(name), r(r), g(g), b(b), a(a)
 {
     guaranteeMap();
     colMap->insert(std::make_pair(name, *this));

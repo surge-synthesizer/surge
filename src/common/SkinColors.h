@@ -17,8 +17,8 @@ namespace Skin
 {
 struct Color
 {
-    Color(std::string name, int r, int g, int b);
-    Color(std::string name, int r, int g, int b, int a);
+    Color(const std::string &name, int r, int g, int b);
+    Color(const std::string &name, int r, int g, int b, int a);
 
     static Color colorByName(const std::string &name);
     static std::vector<Color> getAllColors();

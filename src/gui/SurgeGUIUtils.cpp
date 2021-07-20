@@ -8,16 +8,19 @@ namespace Surge
 namespace GUI
 {
 
-std::string toOSCaseForMenu(std::string menuName)
+std::string toOSCaseForMenu(const std::string &imenuName)
 {
 #if WINDOWS
+    auto menuName = imenuName;
     for (auto i = 1; i < menuName.length() - 1; ++i)
         if (!(isupper(menuName[i]) && (isupper(menuName[i + 1]) || !isalpha(menuName[i + 1]))))
         {
             menuName[i] = std::tolower(menuName[i]);
         }
-#endif
     return menuName;
+#else
+    return imenuName;
+#endif
 }
 
 bool showCursor(SurgeStorage *storage)

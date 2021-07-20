@@ -115,9 +115,9 @@ class Skin
 #endif
     }
 
-    static bool setAllCapsProperty(std::string propertyValue);
-    static juce::Font::FontStyleFlags setFontStyleProperty(std::string propertyValue);
-    static juce::Justification setJuceTextAlignProperty(std::string propertyValue);
+    static bool setAllCapsProperty(const std::string &propertyValue);
+    static juce::Font::FontStyleFlags setFontStyleProperty(const std::string &propertyValue);
+    static juce::Justification setJuceTextAlignProperty(const std::string &propertyValue);
 
     std::string root;
     std::string name;
@@ -385,9 +385,9 @@ class Skin
 
         Type type;
         ColorStore() : type(COLOR), color(juce::Colours::black) {}
-        ColorStore(juce::Colour c) : type(COLOR), color(c) {}
-        ColorStore(std::string a) : type(ALIAS), alias(a) {}
-        ColorStore(std::string a, Type t) : type(t), alias(a) {}
+        ColorStore(const juce::Colour &c) : type(COLOR), color(c) {}
+        ColorStore(const std::string &a) : type(ALIAS), alias(a) {}
+        ColorStore(const std::string &a, Type t) : type(t), alias(a) {}
     };
     std::unordered_map<std::string, ColorStore> colors;
     std::unordered_map<std::string, int> imageStringToId;
