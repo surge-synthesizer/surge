@@ -325,7 +325,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
 {
     std::vector<std::pair<int, std::string>> mapping;
     std::unordered_map<int, int> inverseMapping;
-    void p(int i, std::string s) { mapping.push_back(std::make_pair(i, s)); }
+    void p(int i, const std::string &s) { mapping.push_back(std::make_pair(i, s)); }
     FilterSelectorMapper()
     {
         p(fut_none, "");
@@ -475,7 +475,7 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
     std::vector<std::pair<int, std::string>> mapping;
     std::unordered_map<int, int> inverseMapping;
-    void p(int i, std::string s) { mapping.emplace_back(i, s); }
+    void p(int i, const std::string &s) { mapping.emplace_back(i, s); }
     WaveShaperSelectorMapper()
     {
         // Obviously improve this

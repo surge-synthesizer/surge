@@ -1765,7 +1765,7 @@ void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
     });
 }
 
-void SurgeGUIEditor::scaleFileDropped(std::string fn)
+void SurgeGUIEditor::scaleFileDropped(const string &fn)
 {
     try
     {
@@ -1778,7 +1778,7 @@ void SurgeGUIEditor::scaleFileDropped(std::string fn)
     }
 }
 
-void SurgeGUIEditor::mappingFileDropped(std::string fn)
+void SurgeGUIEditor::mappingFileDropped(const string &fn)
 {
     try
     {
@@ -3517,23 +3517,23 @@ std::string SurgeGUIEditor::helpURLFor(Parameter *p)
     return "";
 }
 
-std::string SurgeGUIEditor::helpURLForSpecial(std::string key)
+std::string SurgeGUIEditor::helpURLForSpecial(const string &special)
 {
     auto storage = &(synth->storage);
-    return helpURLForSpecial(storage, key);
+    return helpURLForSpecial(storage, special);
 }
 
-std::string SurgeGUIEditor::helpURLForSpecial(SurgeStorage *storage, std::string key)
+std::string SurgeGUIEditor::helpURLForSpecial(SurgeStorage *storage, const std::string &special)
 {
-    if (storage->helpURL_specials.find(key) != storage->helpURL_specials.end())
+    if (storage->helpURL_specials.find(special) != storage->helpURL_specials.end())
     {
-        auto r = storage->helpURL_specials[key];
+        auto r = storage->helpURL_specials[special];
         if (r != "")
             return r;
     }
     return "";
 }
-std::string SurgeGUIEditor::fullyResolvedHelpURL(std::string helpurl)
+std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
 {
     std::string lurl = helpurl;
     if (helpurl[0] == '#')

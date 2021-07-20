@@ -65,7 +65,7 @@ class alignas(16) SurgeSynthesizer
         virtual void surgeParameterUpdated(const ID &, float) = 0;
         virtual void surgeMacroUpdated(long macroNum, float) = 0;
     };
-    SurgeSynthesizer(PluginLayer *parent, std::string suppliedDataPath = "");
+    SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath = "");
     virtual ~SurgeSynthesizer();
     void playNote(char channel, char key, char velocity, char detune);
     void releaseNote(char channel, char key, char velocity);

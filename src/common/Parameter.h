@@ -413,8 +413,8 @@ class Parameter
     float value_to_normalized(float value);
     float get_default_value_f01();
     void set_value_f01(float v, bool force_integer = false);
-    bool set_value_from_string(std::string s);
-    bool set_value_from_string_onto(std::string s, pdata &ontoThis);
+    bool set_value_from_string(const std::string &s);
+    bool set_value_from_string_onto(const std::string &s, pdata &ontoThis);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate

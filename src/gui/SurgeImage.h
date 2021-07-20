@@ -16,10 +16,10 @@ class SurgeImage
 {
   public:
     SurgeImage(int resourceId);
-    SurgeImage(std::string fname);
+    SurgeImage(const std::string &fname);
     ~SurgeImage();
 
-    void addPNGForZoomLevel(std::string fname, int zoomLevel);
+    void addPNGForZoomLevel(const std::string &fname, int zoomLevel);
     void resolvePNGForZoomLevel(int zoomLevel);
     void setPhysicalZoomFactor(int zoomFactor);
 

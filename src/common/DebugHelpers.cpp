@@ -80,7 +80,7 @@ void Surge::Debug::stackTraceToStdout(int depth)
 }
 
 static std::atomic<int> lcdepth(0);
-Surge::Debug::LifeCycleToConsole::LifeCycleToConsole(std::string st) : s(st)
+Surge::Debug::LifeCycleToConsole::LifeCycleToConsole(const std::string &st) : s(st)
 {
     lcdepth++;
     for (int i = 0; i < lcdepth; ++i)

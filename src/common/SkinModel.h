@@ -294,7 +294,7 @@ struct Connector
 
     Connector &asJogPlusMinus() noexcept;
 
-    Connector &withProperty(Component::Properties p, std::string v)
+    Connector &withProperty(Component::Properties p, const std::string &v)
     {
         payload->properties[p] = v;
         return *this;

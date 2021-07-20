@@ -30,7 +30,7 @@ void stackTraceToStdout(int depth = -1); // no-op on Windows; shows stack trace 
 
 struct LifeCycleToConsole
 { // simple class which printfs in ctor and dtor
-    LifeCycleToConsole(std::string s);
+    LifeCycleToConsole(const std::string &s);
     ~LifeCycleToConsole();
     std::string s;
 };

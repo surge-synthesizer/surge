@@ -15,7 +15,7 @@ namespace Debug
 {
 std::unordered_map<std::string, std::atomic<int>> records;
 
-void record(std::string tag) { records[tag]++; }
+void record(const std::string &tag) { records[tag]++; }
 void report()
 {
     std::ostringstream oss;
@@ -34,7 +34,7 @@ void report()
     Surge::UserInteractions::showHTML(oss.str());
 }
 
-TimeThisBlock::TimeThisBlock(std::string i) : tag(i)
+TimeThisBlock::TimeThisBlock(const std::string &i) : tag(i)
 {
     start = std::chrono::high_resolution_clock::now();
 }

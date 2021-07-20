@@ -29,7 +29,7 @@ SurgeImage::SurgeImage(int rid)
     }
 }
 
-SurgeImage::SurgeImage(std::string fname)
+SurgeImage::SurgeImage(const std::string &fname)
 {
     this->fname = fname;
     drawable = juce::Drawable::createFromImageFile(juce::File(fname));
@@ -62,7 +62,7 @@ void SurgeImage::setPhysicalZoomFactor(int zoomFactor)
     }
 }
 
-void SurgeImage::addPNGForZoomLevel(std::string fname, int zoomLevel)
+void SurgeImage::addPNGForZoomLevel(const std::string &fname, int zoomLevel)
 {
     pngZooms[zoomLevel] = std::make_pair(fname, nullptr);
 }

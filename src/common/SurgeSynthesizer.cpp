@@ -36,7 +36,7 @@
 
 using namespace std;
 
-SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, std::string suppliedDataPath)
+SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
     : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
       halfbandB(6, true), halfbandIN(6, true)
 {

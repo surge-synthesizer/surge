@@ -8,7 +8,7 @@ namespace Surge
 {
 namespace GUI
 {
-std::string toOSCaseForMenu(std::string menuName);
+std::string toOSCaseForMenu(const std::string &menuName);
 
 extern bool showCursor(SurgeStorage *storage);
 

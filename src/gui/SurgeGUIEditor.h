@@ -275,8 +275,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void toggleMPE();
     void toggleTuning();
-    void scaleFileDropped(std::string fn);
-    void mappingFileDropped(std::string fn);
+    void scaleFileDropped(const std::string &fn);
+    void mappingFileDropped(const std::string &fn);
     std::string tuningToHtml();
 
     void modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
@@ -356,7 +356,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::string getDisplayForTag(long tag);
 
-    void queuePatchFileLoad(std::string file)
+    void queuePatchFileLoad(const std::string &file)
     {
         strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
         synth->has_patchid_file = true;
@@ -589,10 +589,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     std::string helpURLFor(Parameter *p); // this requires internal state so doesn't have statics
-    std::string helpURLForSpecial(std::string special); // these can be either this way or static
+    std::string
+    helpURLForSpecial(const std::string &special); // these can be either this way or static
 
-    static std::string helpURLForSpecial(SurgeStorage *, std::string special);
-    static std::string fullyResolvedHelpURL(std::string helpurl);
+    static std::string helpURLForSpecial(SurgeStorage *storage, const std::string &special);
+    static std::string fullyResolvedHelpURL(const std::string &helpurl);
 
   private:
     void promptForUserValueEntry(Parameter *p, juce::Component *c, int modulationSource = -1);
