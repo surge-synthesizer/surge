@@ -157,7 +157,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void releaseResources() override;
 
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
-
+    bool canRemoveBusValue = false;
+    bool canRemoveBus(bool isInput) const override { return canRemoveBusValue; }
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
 
     //==============================================================================
