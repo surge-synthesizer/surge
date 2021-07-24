@@ -18,6 +18,7 @@
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
+#include "QuadFilterUnit.h"
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
@@ -26,6 +27,7 @@ class RotarySpeakerEffect : public Effect
 {
   public:
     lipol_ps width alignas(16), mix alignas(16);
+    QuadFilterWaveshaperState wsState alignas(16);
 
     RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~RotarySpeakerEffect();

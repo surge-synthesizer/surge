@@ -49,7 +49,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(d.wsLPF, d.Drive);
+                x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
@@ -87,7 +87,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(d.wsLPF, d.Drive);
+                x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
@@ -127,7 +127,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(d.wsLPF, d.Drive);
+                x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
@@ -176,7 +176,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(d.wsLPF, d.Drive);
+                x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             d.Gain = _mm_add_ps(d.Gain, d.dGain);
@@ -202,7 +202,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(d.wsLPF, d.Drive);
+                x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (B)
@@ -245,7 +245,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             {
                 d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(_mm_and_ps(mask, d.wsLPF), d.Drive);
+                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, d.wsLPF), d.Drive);
             }
 
             d.Gain = _mm_add_ps(d.Gain, d.dGain);
@@ -273,8 +273,8 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             if (WS)
             {
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(_mm_and_ps(mask, x), d.Drive);
-                y = g.WSptr(_mm_and_ps(mask, y), d.Drive);
+                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, x), d.Drive);
+                y = g.WSptr(&d.WSS[1], _mm_and_ps(mask, y), d.Drive);
             }
 
             d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
@@ -314,8 +314,8 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             if (WS)
             {
                 d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(_mm_and_ps(mask, x), d.Drive);
-                y = g.WSptr(_mm_and_ps(mask, y), d.Drive);
+                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, x), d.Drive);
+                y = g.WSptr(&d.WSS[1], _mm_and_ps(mask, y), d.Drive);
             }
 
             if (A || WS)

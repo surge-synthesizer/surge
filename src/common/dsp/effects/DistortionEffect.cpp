@@ -29,6 +29,9 @@ void DistortionEffect::init()
     bi = 0.f;
     L = 0.f;
     R = 0.f;
+
+    for (int i = 0; i < n_waveshaper_registers; ++i)
+        wsState.R[i] = _mm_setzero_ps();
 }
 
 void DistortionEffect::setvars(bool init)
@@ -118,7 +121,7 @@ void DistortionEffect::process(float *dataL, float *dataR)
                 sb[0] = L * dInv;
                 sb[1] = R * dInv;
                 auto lr128 = _mm_load_ps(sb);
-                auto wsres = wsop(lr128, _mm_set1_ps(dNow));
+                auto wsres = wsop(&wsState, lr128, _mm_set1_ps(dNow));
                 _mm_store_ps(sb, wsres);
                 L = sb[0];
                 R = sb[1];
