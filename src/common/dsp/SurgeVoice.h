@@ -157,6 +157,10 @@ class alignas(16) SurgeVoice
             unsigned int WP;
             int type, subtype; // used for comparison with the last run
         } FU[4];
+        struct
+        {
+            float R[n_waveshaper_registers];
+        } WS[2];
     } FBP;
     FilterCoefficientMaker CM[2];
 

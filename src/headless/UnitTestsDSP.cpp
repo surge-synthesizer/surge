@@ -1020,6 +1020,9 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
 
         auto wst = GetQFPtrWaveshaper(wst_asym);
         auto shafted_tanh = [](double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); };
+        QuadFilterWaveshaperState qss;
+        for (int i = 0; i < n_waveshaper_registers; ++i)
+            qss.R[i] = _mm_setzero_ps();
 
         /*
          * asym:
@@ -1037,7 +1040,7 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
             auto in = _mm_set_ps(x, x + 0.01, x + 0.03, x + 0.05);
             _mm_store_ps(inv, in);
 
-            auto r = wst(in, d);
+            auto r = wst(&qss, in, d);
             _mm_store_ps(out, r);
 
             // sinus has functional form sin((i-512) * PI/512)

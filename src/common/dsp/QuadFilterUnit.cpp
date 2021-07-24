@@ -584,14 +584,14 @@ __m128 COMBquad_SSE2(QuadFilterUnitState *__restrict f, __m128 in)
     return _mm_add_ps(_mm_mul_ps(f->C[3], DBRead), _mm_mul_ps(f->C[2], in));
 }
 
-__m128 CLIP(__m128 in, __m128 drive)
+__m128 CLIP(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     const __m128 x_min = _mm_set1_ps(-1.0f);
     const __m128 x_max = _mm_set1_ps(1.0f);
     return _mm_max_ps(_mm_min_ps(_mm_mul_ps(in, drive), x_max), x_min);
 }
 
-__m128 DIGI_SSE2(__m128 in, __m128 drive)
+__m128 DIGI_SSE2(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     // v1.2: return (double)((int)((double)(x*p0inv*16.f+1.0)))*p0*0.0625f;
     const __m128 m16 = _mm_set1_ps(16.f);
@@ -604,12 +604,11 @@ __m128 DIGI_SSE2(__m128 in, __m128 drive)
     return _mm_mul_ps(drive, _mm_mul_ps(m16inv, _mm_sub_ps(_mm_cvtepi32_ps(a), mofs)));
 }
 
-__m128 TANH(__m128 in, __m128 drive)
+__m128 TANH(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     // Closer to ideal than TANH0
     // y = x * ( 27 + x * x ) / ( 27 + 9 * x * x );
     // y = clip(y)
-
     const __m128 m9 = _mm_set1_ps(9.f);
     const __m128 m27 = _mm_set1_ps(27.f);
 
@@ -624,7 +623,7 @@ __m128 TANH(__m128 in, __m128 drive)
     return _mm_max_ps(_mm_min_ps(y, y_max), y_min);
 }
 
-__m128 SINUS_SSE2(__m128 in, __m128 drive)
+__m128 SINUS_SSE2(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     const __m128 one = _mm_set1_ps(1.f);
     const __m128 m256 = _mm_set1_ps(256.f);
@@ -669,7 +668,7 @@ __m128 SINUS_SSE2(__m128 in, __m128 drive)
     return x;
 }
 
-__m128 ASYM_SSE2(__m128 in, __m128 drive)
+__m128 ASYM_SSE2(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     const __m128 one = _mm_set1_ps(1.f);
     const __m128 m32 = _mm_set1_ps(32.f);
@@ -715,7 +714,7 @@ __m128 ASYM_SSE2(__m128 in, __m128 drive)
 }
 
 template <int xRes, int xCenter, int size>
-__m128 WS_LUT(const float *table, __m128 in, __m128 drive)
+__m128 WS_LUT(QuadFilterWaveshaperState *__restrict s, const float *table, __m128 in, __m128 drive)
 {
     const __m128 one = _mm_set1_ps(1.f);
     const __m128 m32 = _mm_set1_ps(xRes);
@@ -759,7 +758,7 @@ __m128 WS_LUT(const float *table, __m128 in, __m128 drive)
 
     return x;
 }
-__m128 HALF_RECT_SOFT(__m128 x, __m128 drive)
+__m128 HALF_RECT_SOFT(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static const auto m1 = _mm_set1_ps(-1.0f);
     static const auto p1 = _mm_set1_ps(1.0f);
@@ -767,16 +766,17 @@ __m128 HALF_RECT_SOFT(__m128 x, __m128 drive)
     static const auto p2 = _mm_set1_ps(2.f);
 
     auto rect = _mm_mul_ps(_mm_sub_ps(abs_ps(x), p05), p2);
-    return TANH(rect, drive);
+    return TANH(s, rect, drive);
 }
 
-template <__m128 (*K)(__m128)> __m128 CHEBY_CORE(__m128 x, __m128 drive)
+template <__m128 (*K)(__m128)>
+__m128 CHEBY_CORE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static const auto m1 = _mm_set1_ps(-1.0f);
     static const auto p1 = _mm_set1_ps(1.0f);
 
     auto bound = K(_mm_max_ps(_mm_min_ps(x, p1), m1));
-    return TANH(bound, drive);
+    return TANH(s, bound, drive);
 }
 
 __m128 cheb2_kernel(__m128 x) // 2 x^2 - 1
@@ -977,7 +977,9 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return CLIP;
     case wst_asym:
         // return ASYM_SSE2;
-        return [](auto a, auto b) { return WS_LUT<32, 512, 0x3ff>(waveshapers[wst_asym], a, b); };
+        return [](QuadFilterWaveshaperState *__restrict s, auto a, auto b) {
+            return WS_LUT<32, 512, 0x3ff>(s, waveshapers[wst_asym], a, b);
+        };
     case wst_sine:
         return SINUS_SSE2;
     case wst_digital:

@@ -102,7 +102,8 @@
 
 struct QuadFilterChainState
 {
-    QuadFilterUnitState FU[4];
+    QuadFilterUnitState FU[4];        // 2 filters left and righ
+    QuadFilterWaveshaperState WSS[2]; // 1 shaper left and right
 
     __m128 Gain, FB, Mix1, Mix2, Drive;
     __m128 dGain, dFB, dMix1, dMix2, dDrive;

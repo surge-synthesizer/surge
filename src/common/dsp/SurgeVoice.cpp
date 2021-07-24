@@ -1016,6 +1016,14 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
                  modsources[ms_ampeg]->get_output(0);
     float FB = scene->feedback.get_extended(localcopy[id_feedback].f);
 
+    if (!Q)
+    {
+        // We need to initalize the waveshaper registers
+        for (int c = 0; c < 2; ++c)
+            for (int i = 0; i < n_waveshaper_registers; ++i)
+                FBP.WS[c].R[i] = 0.f;
+    }
+
     if (Q)
     {
         set1f(Q->Gain, e, FBP.Gain);
@@ -1028,6 +1036,14 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
         set1f(Q->dMix1, e, (FMix1 - FBP.Mix1) * BLOCK_SIZE_OS_INV);
         set1f(Q->Mix2, e, FBP.Mix2);
         set1f(Q->dMix2, e, (FMix2 - FBP.Mix2) * BLOCK_SIZE_OS_INV);
+
+        for (int c = 0; c < 2; ++c)
+        {
+            for (int i = 0; i < n_waveshaper_registers; ++i)
+            {
+                set1f(Q->WSS[c].R[i], e, FBP.WS[c].R[i]);
+            }
+        }
     }
 
     FBP.Gain = Gain;
@@ -1173,6 +1189,13 @@ void SurgeVoice::GetQFB()
                     FBP.FU[u + 2].R[i] = get1f(fbq->FU[u + 2].R[i], fbqi);
                 }
             }
+        }
+    }
+    for (int c = 0; c < 2; ++c)
+    {
+        for (int i = 0; i < n_waveshaper_registers; ++i)
+        {
+            FBP.WS[c].R[i] = get1f(fbq->WSS[c].R[i], fbqi);
         }
     }
     FBP.FBlineL = get1f(fbq->FBlineL, fbqi);

@@ -38,6 +38,9 @@ void RotarySpeakerEffect::setvars(bool init)
         drive.instantize();
         width.instantize();
         mix.instantize();
+
+        for (int i = 0; i < n_waveshaper_registers; ++i)
+            wsState.R[i] = _mm_setzero_ps();
     }
 }
 
@@ -263,7 +266,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
             if (useSSEShaper)
             {
                 auto inp = _mm_set1_ps(0.5 * (dataL[k] + dataR[k]));
-                auto wsres = wsop(inp, _mm_set1_ps(drive_factor));
+                auto wsres = wsop(&wsState, inp, _mm_set1_ps(drive_factor));
                 float r[4];
                 _mm_store_ps(r, wsres);
                 input = r[0] * gain_tweak; // ws + 1 to start on wst_soft

@@ -3,6 +3,7 @@
 #include "globals.h"
 
 const int n_filter_registers = 16;
+const int n_waveshaper_registers = 4;
 
 struct alignas(16) QuadFilterUnitState
 {
@@ -13,8 +14,13 @@ struct alignas(16) QuadFilterUnitState
     int WP[4];     // comb write position
 };
 
+struct alignas(16) QuadFilterWaveshaperState
+{
+    __m128 R[n_waveshaper_registers];
+};
+
 typedef __m128 (*FilterUnitQFPtr)(QuadFilterUnitState *__restrict, __m128 in);
-typedef __m128 (*WaveshaperQFPtr)(__m128 in, __m128 drive);
+typedef __m128 (*WaveshaperQFPtr)(QuadFilterWaveshaperState *__restrict, __m128 in, __m128 drive);
 
 FilterUnitQFPtr GetQFPtrFilterUnit(int type, int subtype);
 WaveshaperQFPtr GetQFPtrWaveshaper(int type);
