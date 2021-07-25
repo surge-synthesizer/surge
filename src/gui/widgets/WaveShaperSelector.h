@@ -15,25 +15,30 @@ namespace Surge
 {
 namespace Widgets
 {
+struct WaveShaperAnalysisWidget;
 struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveShaperSelector>
 {
+    WaveShaperSelector();
+    ~WaveShaperSelector();
     void paint(juce::Graphics &g) override;
 
     float value;
     int iValue;
     float getValue() const override { return value; }
-    void setValue(float f) override
-    {
-        value = f;
-        iValue = Parameter::intUnscaledFromFloat(value, n_ws_types - 1, 0);
-        repaint();
-    }
+    void setValue(float f) override;
+
+    void toggleAnalysis();
+    void closeAnalysis();
+    void openAnalysis();
+    std::unique_ptr<WaveShaperAnalysisWidget> analysisWidget;
 
     void resized() override;
 
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
+
+    void parentHierarchyChanged() override;
 
     float lastDragDistance{0};
     bool everDragged{false};
@@ -45,7 +50,7 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
     float nextValueInOrder(float v, int inc);
 
-    juce::Rectangle<int> buttonM, buttonP, waveArea;
+    juce::Rectangle<int> buttonM, buttonP, buttonA, waveArea;
 
     static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
 };
