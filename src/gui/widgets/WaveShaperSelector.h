@@ -45,7 +45,9 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
     float nextValueInOrder(float v, int inc);
 
-    juce::Rectangle<int> buttonM, buttonP;
+    juce::Rectangle<int> buttonM, buttonP, waveArea;
+
+    static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
 };
 
 } // namespace Widgets
