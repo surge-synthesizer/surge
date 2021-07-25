@@ -4,13 +4,54 @@
 
 #include "WaveShaperSelector.h"
 #include "RuntimeFont.h"
+#include "QuadFilterUnit.h"
 
 namespace Surge
 {
 namespace Widgets
 {
+std::array<std::vector<std::pair<float, float>>, n_ws_types> WaveShaperSelector::wsCurves;
+
 void WaveShaperSelector::paint(juce::Graphics &g)
 {
+    if (wsCurves[iValue].empty())
+    {
+        /*
+         * The waveshapers are re-entrant as long as they have a unique state pointer
+         */
+        auto drive = _mm_set1_ps(1.f);
+        float xs alignas(16)[4], vals alignas(16)[4];
+        auto wsop = GetQFPtrWaveshaper(iValue);
+        QuadFilterWaveshaperState s;
+        float dx = 0.05;
+        for (float x = -2; x <= 2; x += 4 * dx)
+        {
+            if (wsop)
+            {
+                for (int i = 0; i < n_waveshaper_registers; ++i)
+                    s.R[i] = _mm_setzero_ps();
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    vals[i] = x + i * dx;
+                }
+                auto in = _mm_load_ps(vals);
+                auto r = wsop(&s, in, drive);
+                _mm_store_ps(vals, r);
+                for (int i = 0; i < 4; ++i)
+                {
+                    wsCurves[iValue].emplace_back(x + i * dx, vals[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 4; ++i)
+                {
+                    wsCurves[iValue].emplace_back(x + i * dx, 0.f);
+                }
+            }
+        }
+    }
     g.fillAll(juce::Colours::black);
     g.setColour(juce::Colours::white);
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
@@ -30,6 +71,35 @@ void WaveShaperSelector::paint(juce::Graphics &g)
     g.drawText("+", buttonP, juce::Justification::centred);
     g.setColour(juce::Colours::lightgrey);
     g.drawRect(buttonP);
+
+    // So the wave is in -2,2 in x and -1,1 in y
+    juce::Path curvePath;
+    bool f = true;
+    for (const auto &el : wsCurves[iValue])
+    {
+        if (f)
+        {
+            curvePath.startNewSubPath(el.first, el.second);
+        }
+        else
+        {
+            curvePath.lineTo(el.first, el.second);
+        }
+        f = false;
+    }
+    // Now what's the transform? Well
+    auto xf = juce::AffineTransform()
+                  .translated(2, -1.2)
+                  .scaled(0.25, -0.4)
+                  .scaled(waveArea.getWidth(), waveArea.getHeight())
+                  .translated(waveArea.getX(), waveArea.getY());
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+
+        g.reduceClipRegion(waveArea);
+        g.setColour(juce::Colours::white);
+        g.strokePath(curvePath, juce::PathStrokeType{1.5}, xf);
+    }
 }
 
 void WaveShaperSelector::resized()
@@ -37,6 +107,7 @@ void WaveShaperSelector::resized()
     auto b = getLocalBounds().withY(getHeight() - 12).withHeight(12);
     buttonM = b.withTrimmedRight(getWidth() / 2);
     buttonP = b.withTrimmedLeft(getWidth() / 2);
+    waveArea = getLocalBounds().withTrimmedTop(12).withTrimmedBottom(12);
 }
 
 void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
