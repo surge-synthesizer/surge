@@ -758,15 +758,51 @@ __m128 WS_LUT(QuadFilterWaveshaperState *__restrict s, const float *table, __m12
 
     return x;
 }
-__m128 HALF_RECT_SOFT(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+
+__m128 DIODE_SIM(__m128 v)
+{
+    static constexpr float vlf = 0.1, vbf = -0.05;
+    static const auto vb = _mm_set1_ps(vbf), vl = _mm_set1_ps(vlf), z = _mm_setzero_ps();
+
+    auto vLessVb = _mm_cmplt_ps(v, vb);
+    auto vBetweelVlVb = _mm_andnot_ps(vLessVb, _mm_cmplt_ps(v, vl)); // !A && B
+    auto vAboveVl = _mm_cmpge_ps(v, vl);
+
+    static const auto betweenDen = _mm_set1_ps(0.5f / (vlf - vbf)), vlvb = _mm_set1_ps(vlf - vbf),
+                      aboveConstant = _mm_set1_ps(0.5f * (vlf - vbf) * (vlf - vbf) / (vlf - vbf));
+    auto vvb = _mm_sub_ps(v, vb);
+    auto vlvbVal = _mm_mul_ps(_mm_mul_ps(vvb, vvb), betweenDen);
+    auto vaboveVal = _mm_add_ps(_mm_sub_ps(v, vl), aboveConstant);
+    auto r = _mm_add_ps(
+        z, _mm_add_ps(_mm_and_ps(vBetweelVlVb, vlvbVal), _mm_and_ps(vAboveVl, vaboveVal)));
+    return r;
+}
+
+__m128 FULL_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static const auto m1 = _mm_set1_ps(-1.0f);
-    static const auto p1 = _mm_set1_ps(1.0f);
-    static const auto p05 = _mm_set1_ps(0.5f);
-    static const auto p2 = _mm_set1_ps(2.f);
 
-    auto rect = _mm_mul_ps(_mm_sub_ps(abs_ps(x), p05), p2);
-    return TANH(s, rect, drive);
+    // auto aps = abs_ps(x);
+    x = CLIP(s, x, drive);
+    auto aps = DIODE_SIM(x);
+    auto apn = DIODE_SIM(_mm_mul_ps(x, m1));
+    return _mm_add_ps(aps, apn);
+}
+
+__m128 POS_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    // auto aps = abs_ps(x);
+    x = CLIP(s, x, drive);
+    return DIODE_SIM(x);
+}
+
+__m128 NEG_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    static const auto m1 = _mm_set1_ps(-1.0f);
+
+    // auto aps = abs_ps(x);
+    x = CLIP(s, x, drive);
+    return DIODE_SIM(_mm_mul_ps(x, m1));
 }
 
 template <__m128 (*K)(__m128)>
@@ -984,8 +1020,6 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return SINUS_SSE2;
     case wst_digital:
         return DIGI_SSE2;
-    case wst_rectify:
-        return HALF_RECT_SOFT;
     case wst_cheby2:
         return CHEBY_CORE<cheb2_kernel>;
     case wst_cheby3:
@@ -994,6 +1028,12 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return CHEBY_CORE<cheb4_kernel>;
     case wst_cheby5:
         return CHEBY_CORE<cheb5_kernel>;
+    case wst_fwrectify:
+        return FULL_WAVE;
+    case wst_poswav:
+        return POS_WAVE;
+    case wst_negwav:
+        return NEG_WAVE;
     }
     return 0;
 }
