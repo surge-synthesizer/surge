@@ -230,7 +230,6 @@ void ModulatableSlider::onSkinChanged()
         pHandle = associatedBitmapStore->getImage(IDB_SLIDER_HORIZ_HANDLE);
         pHandleHover = associatedBitmapStore->getImageByStringID(
             skin->hoverImageIdForResource(IDB_SLIDER_HORIZ_HANDLE, GUI::Skin::HOVER));
-        jassert(pHandleHover);
         pTempoSyncHandle =
             associatedBitmapStore->getImageByStringID("TEMPOSYNC_HORIZONTAL_OVERLAY");
         pTempoSyncHoverHandle =

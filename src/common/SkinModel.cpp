@@ -32,7 +32,7 @@ namespace Skin
 
 namespace Components
 {
-Component None = Component("UNKNOWN").withAlias("None");
+Component None = Component("NONE").withAlias("None").withAlias("none");
 
 Component MultiSwitch =
     Component("CHSwitch2")
