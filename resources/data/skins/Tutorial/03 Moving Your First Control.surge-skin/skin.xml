@@ -6,7 +6,7 @@ panels by default, allowing you to move groups of items.
 Moving an item in the skin engine is as simple as finding its ID and then re-setting the X and Y
 location in the skin XML document. We show a few examples here.
 [doc]-->
-<surge-skin name="03 Moving your First Control" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="03 Moving your First Control" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
   </globals>
   <component-classes>

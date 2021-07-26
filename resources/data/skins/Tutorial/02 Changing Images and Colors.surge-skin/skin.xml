@@ -28,7 +28,7 @@ feel.
 
 
 [doc]-->
-<surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <!--[doc]
     We can pick an arbitrary element and just recolor it with a hex code. Here we recolor the oscillator

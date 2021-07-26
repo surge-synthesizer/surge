@@ -34,14 +34,7 @@ class SurgeImageStore;
 class SurgeImage;
 class TiXmlElement;
 
-#if !ESCAPE_FROM_VSTGUI
-namespace VSTGUI
-{
-class CFrame;
-}
-#endif
-
-#define FIXMEERROR SkinDB::get().errorStream
+#define FIXMEERROR SkinDB::get()->errorStream
 
 namespace Surge
 {
@@ -400,10 +393,10 @@ class Skin
                              bool topLevel = true);
 };
 
-class SkinDB
+class SkinDB : public juce::DeletedAtShutdown
 {
   public:
-    static SkinDB &get();
+    static SkinDB *get();
 
     struct Entry
     {

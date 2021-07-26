@@ -134,7 +134,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     for (int i = 0; i < n_modsources; ++i)
         modsource_is_alternate[i] = false;
 
-    currentSkin = Surge::GUI::SkinDB::get().defaultSkin(&(this->synth->storage));
+    currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
 
     // init the size of the plugin
     initialZoomFactor =
@@ -1447,16 +1447,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto frcol = currentSkin->getColor(frcoln, dcol);
 
             auto lb = componentForSkinSession<juce::Label>(l->sessionid);
-            jassert(false);
-#if PORTED_TO_JUCE
-            lb->setHoriAlign(txtalign);
+            lb->setColour(juce::Label::textColourId, col);
+            lb->setColour(juce::Label::backgroundColourId, bgcol);
+            lb->setBounds(l->getRect());
+            lb->setText(mtext.fromJust(), juce::dontSendNotification);
 
-            lb->setFontColor(col);
-            lb->setBackColor(bgcol);
-            lb->setFrameColor(frcol);
-
-            frame->addView(lb);
-#endif
+            frame->addAndMakeVisible(*lb);
+            juceSkinComponents[l->sessionid] = std::move(lb);
         }
         else
         {
@@ -1466,10 +1463,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 auto bmp = bitmapStore->getImageByStringID(image.fromJust());
                 if (bmp)
                 {
-                    jassert(false);
-#if PORTED_TO_JUCE
-                    // layout and add
-#endif
+                    auto r = l->getRect();
+                    auto db = bmp->getDrawableButUseWithCaution();
+                    db->setBounds(r);
+                    frame->addAndMakeVisible(db);
                 }
             }
         }
@@ -2845,13 +2842,13 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 {
     auto skinSubMenu = juce::PopupMenu();
 
-    auto &db = Surge::GUI::SkinDB::get();
+    auto db = Surge::GUI::SkinDB::get();
     bool hasTests = false;
 
     // TODO: Later allow nesting
     std::map<std::string, std::vector<Surge::GUI::SkinDB::Entry>> entryByCategory;
 
-    for (auto &entry : db.getAvailableSkins())
+    for (auto &entry : db->getAvailableSkins())
     {
         entryByCategory[entry.category].push_back(entry);
     }
@@ -2950,11 +2947,11 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
         if (!this->currentSkin->reloadSkin(this->bitmapStore))
         {
-            auto &db = Surge::GUI::SkinDB::get();
+            auto *db = Surge::GUI::SkinDB::get();
             auto msg = std::string("Unable to load skin! Reverting the skin to "
                                    "Surge Classic.\n\nSkin error:\n") +
-                       db.getAndResetErrorString();
-            this->currentSkin = db.defaultSkin(&(this->synth->storage));
+                       db->getAndResetErrorString();
+            this->currentSkin = db->defaultSkin(&(this->synth->storage));
             this->currentSkin->reloadSkin(this->bitmapStore);
             synth->storage.reportError(msg, "Skin Loading Error");
         }
@@ -2967,18 +2964,18 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         auto r = this->currentSkin->root;
         auto n = this->currentSkin->name;
 
-        auto &db = Surge::GUI::SkinDB::get();
-        db.rescanForSkins(&(this->synth->storage));
+        auto *db = Surge::GUI::SkinDB::get();
+        db->rescanForSkins(&(this->synth->storage));
 
         // So go find the skin
-        auto e = db.getEntryByRootAndName(r, n);
+        auto e = db->getEntryByRootAndName(r, n);
         if (e.isJust())
         {
             setupSkinFromEntry(e.fromJust());
         }
         else
         {
-            setupSkinFromEntry(db.getDefaultSkinEntry());
+            setupSkinFromEntry(db->getDefaultSkinEntry());
         }
         this->synth->refresh_editor = true;
     });
@@ -3057,11 +3054,11 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         auto r = this->currentSkin->root;
         auto n = this->currentSkin->name;
 
-        auto &db = Surge::GUI::SkinDB::get();
-        db.rescanForSkins(&(this->synth->storage));
+        auto *db = Surge::GUI::SkinDB::get();
+        db->rescanForSkins(&(this->synth->storage));
 
         // So go find the skin
-        auto e = db.getEntryByRootAndName(r, n);
+        auto e = db->getEntryByRootAndName(r, n);
 
         if (e.isJust())
         {
@@ -3069,7 +3066,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         }
         else
         {
-            setupSkinFromEntry(db.getDefaultSkinEntry());
+            setupSkinFromEntry(db->getDefaultSkinEntry());
         }
 
         // Will need to rebuild the FX menu also so...
@@ -3545,8 +3542,8 @@ std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
 
 void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
 {
-    auto &db = Surge::GUI::SkinDB::get();
-    auto s = db.getSkin(entry);
+    auto *db = Surge::GUI::SkinDB::get();
+    auto s = db->getSkin(entry);
     this->currentSkin = s;
     this->bitmapStore.reset(new SurgeImageStore());
     this->bitmapStore->setupBuiltinBitmaps();
@@ -3555,10 +3552,10 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
         std::ostringstream oss;
         oss << "Unable to load " << entry.root << entry.name
             << " skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
-            << db.getAndResetErrorString();
+            << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
-        this->currentSkin = db.defaultSkin(&(this->synth->storage));
+        this->currentSkin = db->defaultSkin(&(this->synth->storage));
         this->currentSkin->reloadSkin(this->bitmapStore);
         synth->storage.reportError(msg, "Skin Loading Error");
     }
@@ -3920,13 +3917,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
 
         auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
+        auto fs = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());
         if (ff.size() > 0)
         {
-#if 0
             if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
-                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(hs->font_size));
-#endif
-            jassert(false);
+                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(fs));
+        }
+        else if (fs > 0)
+        {
+            hs->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fs));
         }
 
         if (p->valtype == vt_int || p->valtype == vt_bool)

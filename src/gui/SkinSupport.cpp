@@ -25,9 +25,12 @@ const std::string NoneClassName = "none";
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
 std::ostringstream SkinDB::errorStream;
 
-SkinDB &Surge::GUI::SkinDB::get()
+SkinDB *Surge::GUI::SkinDB::get()
 {
-    static SkinDB instance;
+    static SkinDB *instance{nullptr};
+    if (!instance)
+        instance = new SkinDB();
+
     return instance;
 }
 
@@ -238,7 +241,6 @@ Skin::~Skin()
     Surge::Debug::record("Skin::~Skin");
 #endif
     instances--;
-    // std::cout << "Destroying a skin " << _D(instances) << std::endl;
 }
 
 #if !defined(TINYXML_SAFE_TO_ELEMENT)
@@ -640,6 +642,9 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     for (auto &c : controls)
     {
         c->ultimateparentclassname = c->classname;
+        if (c->defaultComponent == Surge::Skin::Components::Label)
+            continue;
+
         while (componentClasses.find(c->ultimateparentclassname) != componentClasses.end())
         {
             auto comp = componentClasses[c->ultimateparentclassname];
@@ -672,9 +677,27 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
             }
             else
             {
-                FIXMEERROR << "Ultimate Parent Class " << c->ultimateparentclassname
-                           << " does not resolve to an internal class" << std::endl;
-                return false;
+                // I must have changed my class. Can I find the class I became?
+                bool found = false;
+                for (auto id : Surge::Skin::Component::allComponentIds())
+                {
+                    auto comp = Surge::Skin::Component::componentById(id);
+                    if (comp.payload->internalClassname == c->ultimateparentclassname ||
+                        comp.hasAlias(c->ultimateparentclassname))
+                    {
+                        found = true;
+                        c->defaultComponent = comp;
+                    }
+                }
+
+                if (!found)
+                {
+                    FIXMEERROR << "Ultimate Parent Class '" << c->ultimateparentclassname
+                               << "' does not resolve to an internal class and thinks it is '"
+                               << c->defaultComponent.payload->internalClassname << "'"
+                               << std::endl;
+                    return false;
+                }
             }
         }
 

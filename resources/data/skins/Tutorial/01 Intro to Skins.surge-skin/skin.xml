@@ -32,7 +32,7 @@
  shared in later tutorials. If you load this skin, you will get a UI with correct layout and functionality but no hover
  images (some built in controls will display hover; more on that later).
 [doc]-->
-<surge-skin name="01 Intro to Skins" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="1">
+<surge-skin name="01 Intro to Skins" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
   </globals>
   <component-classes>

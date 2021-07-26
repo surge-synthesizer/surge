@@ -52,6 +52,12 @@ class SurgeImage
         return internalDrawableResolved()->createCopy();
     }
 
+    /*
+     * I provide direct access to the drawable but be careful. Things like
+     * changing zoom or skins can invalidate the pointer returned from here.
+     */
+    juce::Drawable *getDrawableButUseWithCaution() { return internalDrawableResolved(); }
+
   private:
     juce::Drawable *internalDrawableResolved() const;
     juce::AffineTransform scaleAdjustmentTransform() const;
