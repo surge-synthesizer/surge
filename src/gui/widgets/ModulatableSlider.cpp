@@ -71,7 +71,7 @@ void ModulatableSlider::updateLocationState()
     if (orientation == ParamConfig::kVertical)
     {
         trayPosition = juce::AffineTransform().translated(2, 2);
-        trayw = 17;
+        trayw = 16;
         trayh = 75;
         range = isMiniVertical ? 39 : 56;
 
@@ -195,7 +195,7 @@ void ModulatableSlider::paint(juce::Graphics &g)
         auto moveTo = juce::AffineTransform().translated(q.getTopLeft());
         auto t = juce::AffineTransform().translated(-1, -1);
         g.addTransform(moveTo);
-        g.reduceClipRegion(handleSize);
+        g.reduceClipRegion(handleSize.expanded(2));
         pHandle->draw(g, activationOpacity, t);
 
         if (isHovered && pHandleHover)
@@ -311,9 +311,10 @@ void ModulatableSlider::endHover()
 
 void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 {
-    int distance = event.getDistanceFromDragStartX();
+    auto p = event.getMouseDownPosition();
+    float distance = event.position.getX() - p.getX();
     if (orientation == ParamConfig::kVertical)
-        distance = -event.getDistanceFromDragStartY();
+        distance = -(event.position.getY() - p.getY());
 
     if (distance == 0 && editTypeWas == NOEDIT)
         return;
