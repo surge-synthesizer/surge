@@ -455,21 +455,28 @@ enum ws_type
     wst_asym,
     wst_sine,
     wst_digital,
-    wst_rectify,
+
+    // XT waves start here
     wst_cheby2,
     wst_cheby3,
     wst_cheby4,
     wst_cheby5,
 
+    wst_fwrectify,
+    wst_poswav,
+    wst_negwav,
+
     n_ws_types,
 };
 
 const char wst_names[n_ws_types][16] = {
-    "Off",           "Soft",        "Hard",        "Asymmetric",  "Sine",       "Digital",
-    "1/2 Rectifier", "Chebyshev 2", "Chebyshev 3", "Chebyshev 4", "Chebyshev 5"};
+    "Off",           "Soft",          "Hard",         "Asymmetric",  "Sine",
+    "Digital",       "Chebyshev 2",   "Chebyshev 3",  "Chebyshev 4", "Chebyshev 5",
+    "Abs Full Wave", "Positive Wave", "Negative Wave"};
 
-const char wst_ui_names[n_ws_types][16] = {"Off",     "Soft",   "Hard",   "Asym",   "Sine",  "Digi",
-                                           "1/2 Rct", "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5"};
+const char wst_ui_names[n_ws_types][16] = {"Off",  "Soft",   "Hard",   "Asym",   "Sine",
+                                           "Digi", "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5",
+                                           "Abs",  "Pos",    "Neg"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -488,11 +495,14 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_sine, "Effect");
         p(wst_digital, "Effect");
 
-        p(wst_rectify, "Harmonic");
         p(wst_cheby2, "Harmonic");
         p(wst_cheby3, "Harmonic");
         p(wst_cheby4, "Harmonic");
         p(wst_cheby5, "Harmonic");
+
+        p(wst_fwrectify, "Rectify");
+        p(wst_poswav, "Rectify");
+        p(wst_negwav, "Rectify");
 
         int c = 0;
         for (auto e : mapping)

@@ -201,7 +201,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             {
                 for (int i = 0; i < 4; ++i)
                 {
-                    wsCurves[iValue].emplace_back(x + i * dx, 0.f);
+                    wsCurves[iValue].emplace_back(x + i * dx, x + i * dx);
                 }
             }
         }
@@ -258,8 +258,11 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
 
         g.reduceClipRegion(waveArea);
-        g.setColour(juce::Colours::white);
-        g.strokePath(curvePath, juce::PathStrokeType{1.5}, xf);
+        if (iValue == wst_none)
+            g.setColour(juce::Colours::lightgrey);
+        else
+            g.setColour(juce::Colours::white);
+        g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.5f : 1.5f}, xf);
     }
 }
 
