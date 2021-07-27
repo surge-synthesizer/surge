@@ -466,17 +466,23 @@ enum ws_type
     wst_poswav,
     wst_negwav,
 
+    wst_singlefold,
+    wst_dualfold,
+    wst_westfold,
+
     n_ws_types,
 };
 
 const char wst_names[n_ws_types][16] = {
-    "Off",           "Soft",          "Hard",         "Asymmetric",  "Sine",
-    "Digital",       "Chebyshev 2",   "Chebyshev 3",  "Chebyshev 4", "Chebyshev 5",
-    "Abs Full Wave", "Positive Wave", "Negative Wave"};
+    "Off",           "Soft",        "Hard",          "Asymmetric",
+    "Sine",          "Digital",     "Chebyshev 2",   "Chebyshev 3",
+    "Chebyshev 4",   "Chebyshev 5", "Abs Full Wave", "Positive Wave",
+    "Negative Wave", "Single Fold", "Double Fold",   "WestCoast Fold",
+};
 
-const char wst_ui_names[n_ws_types][16] = {"Off",  "Soft",   "Hard",   "Asym",   "Sine",
-                                           "Digi", "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5",
-                                           "Abs",  "Pos",    "Neg"};
+const char wst_ui_names[n_ws_types][16] = {"Off",    "Soft",   "Hard",   "Asym",   "Sine", "Digi",
+                                           "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5", "Abs",  "Pos",
+                                           "Neg",    "1Fold",  "2Fold",  "WstFold"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -503,6 +509,10 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_fwrectify, "Rectify");
         p(wst_poswav, "Rectify");
         p(wst_negwav, "Rectify");
+
+        p(wst_singlefold, "Folders");
+        p(wst_dualfold, "Folders");
+        p(wst_westfold, "Folders");
 
         int c = 0;
         for (auto e : mapping)

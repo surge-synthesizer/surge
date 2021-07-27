@@ -35,6 +35,7 @@ enum lag_entries
 inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline void set1i(__m128 &m, int e, int i) { *((int *)&m + e) = i; }
+inline void set1ui(__m128 &m, int e, unsigned int i) { *((unsigned int *)&m + e) = i; }
 
 inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
@@ -1042,6 +1043,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
             {
                 set1f(Q->WSS[c].R[i], e, FBP.WS[c].R[i]);
             }
+            set1ui(Q->WSS[c].init, e, 0xFFFFFFFF);
         }
     }
 
