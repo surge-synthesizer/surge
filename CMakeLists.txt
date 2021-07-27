@@ -309,6 +309,7 @@ set(SURGE_SHARED_SOURCES
   src/common/dsp/SurgeVoice.cpp
   src/common/dsp/QuadFilterChain.cpp
   src/common/dsp/QuadFilterUnit.cpp
+  src/common/dsp/QuadFilterWaveshapers.cpp
   src/common/dsp/SurgeVoiceState.h
   src/common/dsp/Wavetable.cpp
   src/common/dsp/WavetableScriptEvaluator.cpp
