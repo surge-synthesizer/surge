@@ -110,12 +110,13 @@ struct WaveShaperAnalysisWidget : public juce::Component
             auto d1 = _mm_loadu_ps(ampLevs.data());
             auto d2 = _mm_loadu_ps(ampLevs.data() + 4);
 
-            // FIXME - get this when we deal with init
             QuadFilterWaveshaperState ws1, ws2;
+            float R[4];
+            initializeWaveshaperRegister(wstype, R);
             for (int i = 0; i < n_waveshaper_registers; ++i)
             {
-                ws1.R[i] = _mm_setzero_ps();
-                ws2.R[i] = _mm_setzero_ps();
+                ws1.R[i] = _mm_set1_ps(R[i]);
+                ws2.R[i] = _mm_set1_ps(R[i]);
             }
 
             auto wsop = GetQFPtrWaveshaper(wstype);
@@ -130,7 +131,7 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 if (wsop)
                 {
                     ov1 = wsop(&ws1, ivs, d1);
-                    ov2 = wsop(&ws1, ivs, d2);
+                    ov2 = wsop(&ws2, ivs, d2);
                 }
                 float r alignas(16)[8];
                 _mm_store_ps(r, ov1);
