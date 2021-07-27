@@ -144,8 +144,12 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
 };
 
 class SurgeSynthProcessor : public juce::AudioProcessor,
+#if SURGE_JUCE_VST3_EXTENSIONS
+                            public juce::VST3ClientExtensions,
+#endif
                             public SurgeSynthesizer::PluginLayer,
                             public juce::MidiKeyboardState::Listener
+
 {
   public:
     //==============================================================================
@@ -208,6 +212,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     std::string paramClumpName(int clumpid);
     juce::MidiKeyboardState midiKeyboardState;
+
+#if SURGE_JUCE_VST3_EXTENSIONS
+    bool getPluginHasMainInput() const override { return false; }
+#endif
 
   private:
     std::vector<SurgeParamToJuceParamAdapter *> paramAdapters;
