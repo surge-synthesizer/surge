@@ -241,14 +241,17 @@ __m128 cheb5_kernel(__m128 x) // 16 x^5 - 20 x^3 + 5 x
     return _mm_add_ps(t1, _mm_add_ps(t2, t3));
 }
 
-template <__m128 F(__m128), __m128 adF(__m128), int xR, int aR>
+/*
+ * Given a function which is from x -> (F, adF) and two registers, do the ADAA
+ */
+template <void FandADF(__m128, __m128 &, __m128 &), int xR, int aR>
 __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
 {
     auto xPrior = s->R[xR];
     auto adPrior = s->R[aR];
 
-    auto f = F(x);
-    auto ad = adF(x);
+    __m128 f, ad;
+    FandADF(x, f, ad);
 
     auto dx = _mm_sub_ps(x, xPrior);
     auto dad = _mm_sub_ps(ad, adPrior);
@@ -267,66 +270,67 @@ __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
     return r;
 }
 
-__m128 posrect_kernel(__m128 x) // x > 0 ? x : 0
+void posrect_kernel(__m128 x, __m128 &f, __m128 &adF)
 {
-    auto gz = _mm_cmpge_ps(x, _mm_setzero_ps());
-    return _mm_and_ps(gz, x);
-}
-
-__m128 posrect_ad_kernel(__m128 x) // x > 0 ? x^2/2 : 0
-{
+    /*
+     * F   : x > 0 ? x : 0
+     * adF : x > 0 ? x^2/2 : 0
+     *
+     * observe that adF = F^2/2 in all cases
+     */
     static const auto p5 = _mm_set1_ps(0.5f);
-    auto x2o2 = _mm_mul_ps(p5, _mm_mul_ps(x, x));
     auto gz = _mm_cmpge_ps(x, _mm_setzero_ps());
-    return _mm_and_ps(gz, x2o2);
+    f = _mm_and_ps(gz, x);
+    adF = _mm_mul_ps(p5, _mm_mul_ps(f, f));
 }
 
 template <int R1, int R2>
 __m128 ADAA_POS_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     x = CLIP(s, x, drive);
-    return ADAA<posrect_kernel, posrect_ad_kernel, R1, R2>(s, x);
+    return ADAA<posrect_kernel, R1, R2>(s, x);
 }
 
-__m128 negrect_kernel(__m128 x) // x < 0 ? x : 0
+void negrect_kernel(__m128 x, __m128 &f, __m128 &adF)
 {
-    auto gz = _mm_cmple_ps(x, _mm_setzero_ps());
-    return _mm_and_ps(gz, x);
-}
-
-__m128 negrect_ad_kernel(__m128 x) // x < 0 ? x^2/2 : 0
-{
+    /*
+     * F   : x < 0 ? x : 0
+     * adF : x < 0 ? x^2/2 : 0
+     *
+     * observe that adF = F^2/2 in all cases
+     */
     static const auto p5 = _mm_set1_ps(0.5f);
-    auto x2o2 = _mm_mul_ps(p5, _mm_mul_ps(x, x));
     auto gz = _mm_cmple_ps(x, _mm_setzero_ps());
-    return _mm_and_ps(gz, x2o2);
+    f = _mm_and_ps(gz, x);
+    adF = _mm_mul_ps(p5, _mm_mul_ps(f, f));
 }
 
 template <int R1, int R2>
 __m128 ADAA_NEG_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     x = CLIP(s, x, drive);
-    return ADAA<negrect_kernel, negrect_ad_kernel, R1, R2>(s, x);
+    return ADAA<negrect_kernel, R1, R2>(s, x);
 }
 
-__m128 fw_kernel(__m128 x) // x > 0 ? x : -x
+void fwrect_kernel(__m128 x, __m128 &F, __m128 &adF)
 {
+    /*
+     * F   : x > 0 ? x : -x  = sgn(x) * x
+     * adF : x > 0 ? x^2 / 2 : -x^2 / 2 = sgn(x) * x^2 / 2
+     */
+    static const auto p1 = _mm_set1_ps(1.f);
+    static const auto p05 = _mm_set1_ps(0.5f);
     auto gz = _mm_cmpge_ps(x, _mm_setzero_ps());
-    return _mm_sub_ps(_mm_and_ps(gz, x), _mm_andnot_ps(gz, x));
-}
+    auto sgn = _mm_sub_ps(_mm_and_ps(gz, p1), _mm_andnot_ps(gz, p1));
 
-__m128 fw_ad_kernel(__m128 x) // x > 0 ? x^2/2 : -x^2/2
-{
-    static const auto p5 = _mm_set1_ps(0.5f);
-    auto x2o2 = _mm_mul_ps(p5, _mm_mul_ps(x, x));
-    auto gz = _mm_cmpge_ps(x, _mm_setzero_ps());
-    return _mm_sub_ps(_mm_and_ps(gz, x2o2), _mm_andnot_ps(gz, x2o2));
+    F = _mm_mul_ps(sgn, x);
+    adF = _mm_mul_ps(F, _mm_mul_ps(x, p05)); // sgn * x * x * 0.5
 }
 
 __m128 ADAA_FULL_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     x = CLIP(s, x, drive);
-    return ADAA<fw_kernel, fw_ad_kernel, 0, 1>(s, x);
+    return ADAA<fwrect_kernel, 0, 1>(s, x);
 }
 
 WaveshaperQFPtr GetQFPtrWaveshaper(int type)
