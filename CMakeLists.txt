@@ -666,6 +666,14 @@ else()
   message( STATUS "No JUCE Host Context Support in this version" )
 endif()
 
+set(SURGE_JUCE_VST3_EXTENSIONS FALSE)
+if(EXISTS ${SURGE_JUCE_LOCATION}/modules/juce_audio_processors/utilities/juce_VST3ClientExtensions.h )
+  set(SURGE_JUCE_VST3_EXTENSIONS TRUE)
+  message( STATUS "Including JUCE VST3 Client Extensions")
+else()
+  message( STATUS "No JUCE VST3 Client Extensions" )
+endif()
+
 
 set(JUCE_ASIO_SUPPORT FALSE)
 if( BUILD_USING_MY_ASIO_LICENSE )
@@ -906,6 +914,13 @@ if( BUILD_SURGE_XT )
     set( SURGE_JUCE_HOST_CONTEXT_DEFINE 0)
   endif()
 
+  if (${SURGE_JUCE_VST3_EXTENSIONS})
+    set( SURGE_JUCE_VST3_EXTENSIONS 1)
+  else()
+    set( SURGE_JUCE_VST3_EXTENSIONS 0)
+  endif()
+
+
   target_compile_definitions(surge-xt PUBLIC
           JUCE_ALLOW_STATIC_NULL_VARIABLES=0
           JUCE_STRICT_REFCOUNTEDPOINTER=1
@@ -930,6 +945,7 @@ if( BUILD_SURGE_XT )
 
           SURGE_JUCE_ACCESSIBLE=${SURGE_JUCE_ACCESSIBLE_DEFINE}
           SURGE_JUCE_HOST_CONTEXT=${SURGE_JUCE_HOST_CONTEXT_DEFINE}
+          SURGE_JUCE_VST3_EXTENSIONS=${SURGE_JUCE_VST3_EXTENSIONS}
 
           TARGET_JUCE_SYNTH=1
           TARGET_HEADLESS=1
