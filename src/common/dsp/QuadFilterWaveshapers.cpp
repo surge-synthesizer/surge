@@ -420,6 +420,21 @@ void dualFoldADAA(__m128 x, __m128 &f, __m128 &adf)
     folder.evaluate(x, f, adf);
 }
 
+void westCoastFoldADAA(__m128 x, __m128 &f, __m128 &adf)
+{
+    // Factors based on
+    // DAFx-17 DAFX-194 Virtual Analog Buchla 259 Wavefolder
+    // by Sequeda, Pontynen, Valimaki and Parker
+    static auto folder = FolderADAA<12>(
+        {-5, -1.0919091909190919, -0.815881588158816, -0.5986598659865987, -0.3598359835983597,
+         -0.11981198119811971, 0.11981198119811971, 0.3598359835983597, 0.5986598659865987,
+         0.8158815881588157, 1.0919091909190919, 5},
+        {1, -0.679765619488133, 0.5309659972270625, -0.6255506631744251, 0.5991799179917987,
+         -0.5990599059905986, 0.5990599059905986, -0.5991799179917987, 0.6255506631744251,
+         -0.5309659972270642, 0.679765619488133, -1});
+    folder.evaluate(x, f, adf);
+}
+
 template <void F(__m128, __m128 &, __m128 &)>
 __m128 WAVEFOLDER(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
@@ -462,6 +477,8 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return WAVEFOLDER<singleFoldADAA>;
     case wst_dualfold:
         return WAVEFOLDER<dualFoldADAA>;
+    case wst_westfold:
+        return WAVEFOLDER<westCoastFoldADAA>;
     }
     return 0;
 }
