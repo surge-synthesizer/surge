@@ -15,6 +15,7 @@
 
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
+#include "DebugHelpers.h"
 
 __m128 CLIP(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
@@ -259,6 +260,7 @@ __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
     const static auto tolF = 0.0001;
     const static auto tol = _mm_set1_ps(tolF), ntol = _mm_set1_ps(-tolF);
     auto ltt = _mm_and_ps(_mm_cmplt_ps(dx, tol), _mm_cmpgt_ps(dx, ntol)); // dx < tol && dx > -tol
+    ltt = _mm_or_ps(ltt, s->init);
     auto dxDiv = _mm_rcp_ps(_mm_add_ps(_mm_and_ps(ltt, tol), _mm_andnot_ps(ltt, dx)));
 
     auto fFromAD = _mm_mul_ps(dad, dxDiv);
@@ -266,6 +268,7 @@ __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
 
     s->R[xR] = x;
     s->R[aR] = ad;
+    s->init = _mm_setzero_ps();
 
     return r;
 }
@@ -333,6 +336,97 @@ __m128 ADAA_FULL_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 
     return ADAA<fwrect_kernel, 0, 1>(s, x);
 }
 
+template <int pts> struct FolderADAA
+{
+    FolderADAA(std::initializer_list<float> xi, std::initializer_list<float> yi)
+    {
+        auto xiv = xi.begin();
+        auto yiv = yi.begin();
+        for (int i = 0; i < pts; ++i)
+        {
+            xs[i] = *xiv;
+            ys[i] = *yiv;
+
+            xiv++;
+            yiv++;
+        }
+
+        slopes[pts - 1] = 0;
+        dxs[pts - 1] = 0;
+
+        intercepts[0] = -xs[0] * ys[0];
+        for (int i = 0; i < pts - 1; ++i)
+        {
+            dxs[i] = xs[i + 1] - xs[i];
+            slopes[i] = (ys[i + 1] - ys[i]) / dxs[i];
+            auto vLeft = slopes[i] * dxs[i] * dxs[i] / 2 + ys[i] * xs[i + 1] + intercepts[i];
+            auto vRight = ys[i + 1] * xs[i + 1];
+            intercepts[i + 1] = -vRight + vLeft;
+        }
+
+        for (int i = 0; i < pts; ++i)
+        {
+            xS[i] = _mm_set1_ps(xs[i]);
+            yS[i] = _mm_set1_ps(ys[i]);
+            mS[i] = _mm_set1_ps(slopes[i]);
+            cS[i] = _mm_set1_ps(intercepts[i]);
+        }
+    }
+
+    inline void evaluate(__m128 x, __m128 &f, __m128 &adf)
+    {
+        static const auto p05 = _mm_set1_ps(0.5f);
+        __m128 rangeMask[pts - 1], val[pts - 1], adVal[pts - 1];
+
+        for (int i = 0; i < pts - 1; ++i)
+        {
+            rangeMask[i] = _mm_and_ps(_mm_cmpge_ps(x, xS[i]), _mm_cmplt_ps(x, xS[i + 1]));
+            auto ox = _mm_sub_ps(x, xS[i]);
+            val[i] = _mm_add_ps(_mm_mul_ps(mS[i], ox), yS[i]);
+            adVal[i] = _mm_add_ps(_mm_mul_ps(_mm_mul_ps(ox, ox), _mm_mul_ps(mS[i], p05)),
+                                  _mm_add_ps(_mm_mul_ps(yS[i], x), cS[i]));
+#if DEBUG_WITH_PRINT
+            if (rangeMask[i][0] != 0)
+                std::cout << _D(x[0]) << _D(rangeMask[i][0]) << _D(xS[i][0]) << _D(xS[i + 1][0])
+                          << _D(ox[0]) << _D(cS[i][0]) << _D(mS[i][0]) << _D(yS[i][0])
+                          << _D(val[i][0]) << _D(adVal[i][0]) << std::endl;
+#endif
+        }
+        auto res = _mm_and_ps(rangeMask[0], val[0]);
+        auto adres = _mm_and_ps(rangeMask[0], adVal[0]);
+        for (int i = 1; i < pts - 1; ++i)
+        {
+            res = _mm_add_ps(res, _mm_and_ps(rangeMask[i], val[i]));
+            adres = _mm_add_ps(adres, _mm_and_ps(rangeMask[i], adVal[i]));
+        }
+        f = res;
+        adf = adres;
+    }
+    float xs[pts], ys[pts], dxs[pts], slopes[pts], intercepts[pts];
+
+    __m128 xS[pts], yS[pts], dxS[pts], mS[pts], cS[pts];
+};
+
+void singleFoldADAA(__m128 x, __m128 &f, __m128 &adf)
+{
+    static auto folder = FolderADAA<4>({-10, -0.7, 0.7, 10}, {-1, 1, -1, 1});
+    folder.evaluate(x, f, adf);
+}
+
+void dualFoldADAA(__m128 x, __m128 &f, __m128 &adf)
+{
+    static auto folder =
+        FolderADAA<8>({-10, -3, -1, -0.3, 0.3, 1, 3, 10}, {-1, -0.9, 1, -1, 1, -1, 0.9, 1});
+    folder.evaluate(x, f, adf);
+}
+
+template <void F(__m128, __m128 &, __m128 &)>
+__m128 WAVEFOLDER(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    x = _mm_mul_ps(x, drive);
+    return ADAA<F, 0, 1>(s, x);
+}
+
 WaveshaperQFPtr GetQFPtrWaveshaper(int type)
 {
     switch (type)
@@ -364,6 +458,10 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return ADAA_POS_WAVE<0, 1>;
     case wst_negwav:
         return ADAA_NEG_WAVE<0, 1>;
+    case wst_singlefold:
+        return WAVEFOLDER<singleFoldADAA>;
+    case wst_dualfold:
+        return WAVEFOLDER<dualFoldADAA>;
     }
     return 0;
 }

@@ -41,6 +41,7 @@ enum QFUSubtypeMasks : int32_t
 struct alignas(16) QuadFilterWaveshaperState
 {
     __m128 R[n_waveshaper_registers];
+    __m128 init;
 };
 typedef __m128 (*WaveshaperQFPtr)(QuadFilterWaveshaperState *__restrict, __m128 in, __m128 drive);
 WaveshaperQFPtr GetQFPtrWaveshaper(int type);

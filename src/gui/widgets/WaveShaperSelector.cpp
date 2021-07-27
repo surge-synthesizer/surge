@@ -73,7 +73,8 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 g.setColour(juce::Colours::white);
             else
             {
-                g.setColour(juce::Colour(0xFF * (c + 11) / 20, 0x90 * (c + 11) / 20, 0));
+                g.setColour(juce::Colour(0xFF * (c + 11) / (11 + n_db_levs + 1),
+                                         0x90 * (c + 11) / (11 + n_db_levs + 1), 0));
             }
             {
                 juce::Graphics::ScopedSaveState gs(g);
@@ -147,7 +148,7 @@ struct WaveShaperAnalysisWidget : public juce::Component
     }
     ws_type wstype{wst_none};
 
-    static constexpr int n_db_levs = 8, npts = 128;
+    static constexpr int n_db_levs = 8 /* this 8 as 2 sses is kinda hardcoded above */, npts = 128;
     static std::array<float, n_db_levs> ampLevs, dbLevs;
 
     typedef std::vector<std::pair<float, float>> curve_t;
@@ -155,7 +156,7 @@ struct WaveShaperAnalysisWidget : public juce::Component
 };
 
 std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::dbLevs{
-    -24, -12, 0, 6, 8, 12, 18, 24};
+    -12, 0, 6, 12, 18, 24, 36, 48};
 std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::ampLevs{
     0, 0, 0, 0, 0, 0, 0, 0};
 std::array<std::vector<std::pair<float, float>>, n_ws_types> WaveShaperSelector::wsCurves;
@@ -176,34 +177,36 @@ void WaveShaperSelector::paint(juce::Graphics &g)
          */
         auto drive = _mm_set1_ps(1.f);
         float xs alignas(16)[4], vals alignas(16)[4];
+
+        for (int i = 0; i < 4; ++i)
+        {
+            xs[i] = 0.f;
+            vals[0] = 0.f;
+        }
         auto wsop = GetQFPtrWaveshaper(iValue);
         QuadFilterWaveshaperState s;
+        float R alignas(16)[4];
+        initializeWaveshaperRegister(iValue, R);
+        for (int i = 0; i < 4; ++i)
+            s.R[i] = _mm_load_ps(R);
+
         float dx = 0.05;
-        for (float x = -2; x <= 2; x += 4 * dx)
+        // Give a few warmup pixels for the ADAAs
+        for (float x = -2 - 3 * dx; x <= 2; x += dx)
         {
             if (wsop)
             {
-                for (int i = 0; i < n_waveshaper_registers; ++i)
-                    s.R[i] = _mm_setzero_ps();
-
-                for (int i = 0; i < 4; ++i)
-                {
-                    vals[i] = x + i * dx;
-                }
+                vals[0] = x;
                 auto in = _mm_load_ps(vals);
                 auto r = wsop(&s, in, drive);
                 _mm_store_ps(vals, r);
-                for (int i = 0; i < 4; ++i)
-                {
-                    wsCurves[iValue].emplace_back(x + i * dx, vals[i]);
-                }
+                if (x >= -2)
+                    wsCurves[iValue].emplace_back(x, vals[0]);
             }
             else
             {
-                for (int i = 0; i < 4; ++i)
-                {
-                    wsCurves[iValue].emplace_back(x + i * dx, x + i * dx);
-                }
+                if (x >= -2)
+                    wsCurves[iValue].emplace_back(x, x);
             }
         }
     }
@@ -453,7 +456,7 @@ void WaveShaperSelector::openAnalysis()
         return;
     analysisWidget = std::make_unique<WaveShaperAnalysisWidget>();
     analysisWidget->setWST((ws_type)iValue);
-    auto b = getBoundsInParent().translated(-250, 0).withWidth(250).withHeight(125);
+    auto b = getBoundsInParent().translated(-250, 0).withWidth(250).withHeight(155);
     analysisWidget->setBounds(b);
     getParentComponent()->addAndMakeVisible(*analysisWidget);
     repaint();
