@@ -6,13 +6,14 @@
 #include "RuntimeFont.h"
 #include "QuadFilterUnit.h"
 #include "DSPUtils.h"
+#include <iostream>
 
 namespace Surge
 {
 namespace Widgets
 {
 
-struct WaveShaperAnalysisWidget : public juce::Component
+struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::Listener
 {
     WaveShaperAnalysisWidget()
     {
@@ -24,14 +25,36 @@ struct WaveShaperAnalysisWidget : public juce::Component
                     powf(2.f, dbLevs[i] / 18.f); // db_to_amp(dbLevs[i]); db_to_amp is limited. Why?
             }
         }
+        std::cout << "Make a tryit slider" << std::endl;
+        tryitSlider = std::make_unique<juce::Slider>();
+        tryitSlider->setSliderStyle(juce::Slider::LinearVertical);
+        tryitSlider->setRange(-0.5, 1.0);
+        tryitSlider->setValue(0.0);
+        tryitSlider->addListener(this);
+        addAndMakeVisible(*tryitSlider);
     }
+    void resized() override { tryitSlider->setBounds(0, 2, 20, getHeight() - 4); }
     void paint(juce::Graphics &g) override
     {
+        if (sliderDrivenCurve.empty())
+            recalcFromSlider();
+
         g.fillAll(juce::Colour(10, 10, 20));
         g.setColour(juce::Colours::lightgrey);
         g.drawRect(getLocalBounds());
 
-        // Draw original last
+        // OK so this path is in x=0,1 y=-1,1
+        const auto sideOne = 26.0, sideTwo = 44.0;
+        auto xf = juce::AffineTransform()
+                      .translated(0, -1.0)
+                      .scaled(1, -0.5)
+                      .scaled(getWidth(), getHeight())
+                      .translated(sideOne, 2)
+                      .scaled((getWidth() - sideOne - sideTwo) / getWidth(),
+                              (getHeight() - 4.0) / getHeight());
+
+        auto re = juce::Rectangle<float>{0, -1, 1, 2}.transformedBy(xf);
+
         for (int c = n_db_levs; c >= 0; --c)
         {
             juce::Path p;
@@ -50,17 +73,6 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 }
             }
 
-            // OK so this path is in x=0,1 y=-1,1
-            auto xf =
-                juce::AffineTransform()
-                    .translated(0, -1.0)
-                    .scaled(1, -0.5)
-                    .scaled(getWidth(), getHeight())
-                    .translated(2, 2)
-                    .scaled((getWidth() - 48.0) / getWidth(), (getHeight() - 4.0) / getHeight());
-
-            auto re = juce::Rectangle<float>{0, -1, 1, 2}.transformedBy(xf);
-
             if (c == n_db_levs)
             {
                 g.setColour(juce::Colour(10, 10, 20));
@@ -73,8 +85,9 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 g.setColour(juce::Colours::white);
             else
             {
-                g.setColour(juce::Colour(0xFF * (c + 11) / (11 + n_db_levs + 1),
-                                         0x90 * (c + 11) / (11 + n_db_levs + 1), 0));
+                g.setColour(juce::Colour(0x50 * (c + 11) / (11 + n_db_levs + 1),
+                                         0x50 * (c + 11) / (11 + n_db_levs + 1),
+                                         0x50 * (c + 11) / (11 + n_db_levs + 1)));
             }
             {
                 juce::Graphics::ScopedSaveState gs(g);
@@ -98,7 +111,86 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 g.drawText(wst_ui_names[wstype], tx, juce::Justification::centredLeft);
             }
         }
+
+        // Finally draw the slider driven path
+        if (wstype != wst_none)
+        {
+            juce::Path p;
+            for (int i = 0; i < npts; ++i)
+            {
+                if (i == 0)
+                {
+                    p.startNewSubPath(sliderDrivenCurve[i].first, sliderDrivenCurve[i].second);
+                }
+                else
+                {
+                    p.lineTo(sliderDrivenCurve[i].first, sliderDrivenCurve[i].second);
+                }
+            }
+            {
+                juce::Graphics::ScopedSaveState gs(g);
+                g.reduceClipRegion(re.toNearestIntEdges());
+                g.setColour(juce::Colours::yellow);
+                g.strokePath(p, juce::PathStrokeType(1.3), xf);
+            }
+
+            auto c = n_db_levs;
+            auto xpos = re.getRight() + 3;
+            auto ypos = re.getY() + (c + 3) * 12;
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            auto tx = juce::Rectangle<float>{xpos, ypos, 50, 12};
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(2) << sliderDb << " dB";
+            g.setColour(juce::Colours::yellow);
+            g.drawText(oss.str().c_str(), tx, juce::Justification::centredLeft);
+        }
     }
+
+    void sliderValueChanged(juce::Slider *slider) override
+    {
+        recalcFromSlider();
+        repaint();
+    }
+
+    void recalcFromSlider()
+    {
+        if (wstype == wst_none)
+            return;
+
+        sliderDrivenCurve.clear();
+        float dx = 1.f / (npts - 1);
+
+        QuadFilterWaveshaperState wss;
+        float R[4];
+        initializeWaveshaperRegister(wstype, R);
+        for (int i = 0; i < n_waveshaper_registers; ++i)
+        {
+            wss.R[i] = _mm_set1_ps(R[i]);
+        }
+
+        auto wsop = GetQFPtrWaveshaper(wstype);
+
+        sliderDb = tryitSlider->getValue() * 48;
+        auto amp = powf(2.f, sliderDb / 18.f);
+        auto d1 = _mm_set1_ps(amp);
+
+        for (int i = 0; i < npts; i++)
+        {
+            float x = i * dx;
+            float inval = std::sin(x * 4.0 * M_PI);
+            auto ivs = _mm_set1_ps(inval);
+            auto ov1 = ivs;
+            if (wsop)
+            {
+                ov1 = wsop(&wss, ivs, d1);
+            }
+            float r alignas(16)[8];
+            _mm_store_ps(r, ov1);
+
+            sliderDrivenCurve.emplace_back(x, r[0]);
+        }
+    }
+
     void setWST(ws_type w)
     {
         wstype = w;
@@ -145,14 +237,19 @@ struct WaveShaperAnalysisWidget : public juce::Component
                 }
             }
         }
+        recalcFromSlider();
     }
     ws_type wstype{wst_none};
+    std::unique_ptr<juce::Slider> tryitSlider;
 
     static constexpr int n_db_levs = 8 /* this 8 as 2 sses is kinda hardcoded above */, npts = 128;
     static std::array<float, n_db_levs> ampLevs, dbLevs;
 
     typedef std::vector<std::pair<float, float>> curve_t;
     static std::array<std::array<curve_t, n_db_levs + 1>, n_ws_types> responseCurves;
+
+    curve_t sliderDrivenCurve;
+    float sliderDb;
 };
 
 std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::dbLevs{
@@ -456,7 +553,7 @@ void WaveShaperSelector::openAnalysis()
         return;
     analysisWidget = std::make_unique<WaveShaperAnalysisWidget>();
     analysisWidget->setWST((ws_type)iValue);
-    auto b = getBoundsInParent().translated(-250, 0).withWidth(250).withHeight(155);
+    auto b = getBoundsInParent().translated(-270, 0).withWidth(270).withHeight(155);
     analysisWidget->setBounds(b);
     getParentComponent()->addAndMakeVisible(*analysisWidget);
     repaint();
