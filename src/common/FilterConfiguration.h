@@ -479,23 +479,49 @@ enum ws_type
     wst_addsaw3,
     wst_addsqr3,
 
+    wst_fuzz,
+    wst_fuzzsoft,
+    wst_fuzzheavy,
+    wst_fuzzctr,
+
     n_ws_types,
 };
 
-const char wst_names[n_ws_types][16] = {
-    "Off",           "Soft",           "Hard",          "Asymmetric",
-    "Sine",          "Digital",        "Soft Harm 2",   "Soft Harm 3",
-    "Soft Harm 4",   "Soft Harm 5",    "Abs Full Wave", "Positive Wave",
-    "Negative Wave", "Single Fold",    "Double Fold",   "WestCoast Fold",
-    "Additive 1+2",  "Additive 1+3",   "Additive 1+4",  "Additive 1+5",
-    "Additive 1234", "Additive Saw 3", "Additive Sqr 3"
+const char wst_names[n_ws_types][16] = {"Off",
+                                        "Soft",
+                                        "Hard",
+                                        "Asymmetric",
+                                        "Sine",
+                                        "Digital",
+                                        "Soft Harm 2",
+                                        "Soft Harm 3",
+                                        "Soft Harm 4",
+                                        "Soft Harm 5",
+                                        "Abs Full Wave",
+                                        "Positive Wave",
+                                        "Negative Wave",
+                                        "Single Fold",
+                                        "Double Fold",
+                                        "WestCoast Fold",
+                                        "Additive 1+2",
+                                        "Additive 1+3",
+                                        "Additive 1+4",
+                                        "Additive 1+5",
+                                        "Additive 1234",
+                                        "Additive Saw 3",
+                                        "Additive Sqr 3",
+
+                                        "Fuzz",
+                                        "Fuzz SoftClip",
+                                        "Heavy Fuzz",
+                                        "Fuzz Center"
 
 };
 
-const char wst_ui_names[n_ws_types][16] = {"Off",    "Soft",   "Hard",   "Asym",    "Sine", "Digi",
-                                           "Harm 2", "Harm 3", "Harm 4", "Harm 5",  "Abs",  "Pos",
-                                           "Neg",    "1Fold",  "2Fold",  "WstFold", "+12",  "+13",
-                                           "+14",    "+15",    "+12345", "+Saw3",   "+Sqr3"};
+const char wst_ui_names[n_ws_types][16] = {
+    "Off",    "Soft", "Hard",   "Asym",  "Sine",  "Digi",  "Harm 2",  "Harm 3", "Harm 4",
+    "Harm 5", "Abs",  "Pos",    "Neg",   "1Fold", "2Fold", "WstFold", "+12",    "+13",
+    "+14",    "+15",  "+12345", "+Saw3", "+Sqr3", "Fuzz",  "FzSft",   "FzHvy",  "FzCtr"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -534,6 +560,11 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_singlefold, "Folders");
         p(wst_dualfold, "Folders");
         p(wst_westfold, "Folders");
+
+        p(wst_fuzz, "Fuzz");
+        p(wst_fuzzsoft, "Fuzz");
+        p(wst_fuzzheavy, "Fuzz");
+        p(wst_fuzzctr, "Fuzz");
 
         int c = 0;
         for (auto e : mapping)
