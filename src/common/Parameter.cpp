@@ -393,6 +393,7 @@ bool Parameter::is_discrete_selection()
     switch (ctrltype)
     {
     case ct_sinefmlegacy:
+    case ct_sineoscmode:
     case ct_wt2window:
     case ct_airwindows_fx:
     case ct_flangermode:

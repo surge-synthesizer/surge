@@ -242,6 +242,91 @@ __m128 cheb5_kernel(__m128 x) // 16 x^5 - 20 x^3 + 5 x
     return _mm_add_ps(t1, _mm_add_ps(t2, t3));
 }
 
+// Implement sum_n w_i T_i
+template <int len> struct ChebSeries
+{
+    ChebSeries(const std::initializer_list<float> &f)
+    {
+        auto q = f.begin();
+        auto idx = 0;
+        for (int i = 0; i < len; ++i)
+            weights[i] = _mm_setzero_ps();
+        while (idx < len && q != f.end())
+        {
+            weights[idx] = _mm_set1_ps(*q);
+            ++idx;
+            ++q;
+        }
+    }
+    __m128 weights[len];
+    __m128 eval(__m128 x) const // x bound on 0,1
+    {
+        static const auto p2 = _mm_set1_ps(2.0);
+        auto Tm1 = _mm_set1_ps(1.0);
+        auto Tn = x;
+        auto res = _mm_add_ps(weights[0], _mm_mul_ps(weights[1], x));
+        for (int idx = 2; idx < len; ++idx)
+        {
+            auto nxt = _mm_sub_ps(_mm_mul_ps(_mm_mul_ps(p2, Tn), x), Tm1);
+            Tm1 = Tn;
+            Tn = nxt;
+            res = _mm_add_ps(res, _mm_mul_ps(weights[idx], Tn));
+        }
+        return res;
+    }
+};
+
+__m128 Plus12(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const auto ser = ChebSeries<3>({0, 0.5, 0.5});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 Plus13(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const auto ser = ChebSeries<4>({0, 0.5, 0, 0.5});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 Plus14(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const auto ser = ChebSeries<5>({0, 0.5, 0, 0, 0.5});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 Plus15(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const auto ser = ChebSeries<6>({0, 0.5, 0, 0, 0, 0.5});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 Plus12345(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const auto ser = ChebSeries<6>({0, 0.2, 0.2, 0.2, 0.2, 0.2});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 PlusSaw3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const float fac = 0.9f / (1.f + 0.5 + 0.25);
+    static const auto ser = ChebSeries<4>({0, -fac, fac * 0.5f, -fac * 0.25f});
+    static const auto scale = _mm_set1_ps(-0.66); // flip direction
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
+__m128 PlusSqr3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
+{
+    static const float fac = 0.9f / (1.f - 0.25 + 1.0 / 16.0);
+    static const auto ser = ChebSeries<6>({0, fac, 0, -fac * 0.25f, 0, fac / 16.f});
+    static const auto scale = _mm_set1_ps(0.66);
+    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+}
+
 /*
  * Given a function which is from x -> (F, adF) and two registers, do the ADAA
  */
@@ -479,6 +564,20 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return WAVEFOLDER<dualFoldADAA>;
     case wst_westfold:
         return WAVEFOLDER<westCoastFoldADAA>;
+    case wst_add12:
+        return Plus12;
+    case wst_add13:
+        return Plus13;
+    case wst_add14:
+        return Plus14;
+    case wst_add15:
+        return Plus15;
+    case wst_add12345:
+        return Plus12345;
+    case wst_addsaw3:
+        return PlusSaw3;
+    case wst_addsqr3:
+        return PlusSqr3;
     }
     return 0;
 }

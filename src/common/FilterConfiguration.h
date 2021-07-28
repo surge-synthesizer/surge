@@ -470,19 +470,32 @@ enum ws_type
     wst_dualfold,
     wst_westfold,
 
+    // additive harmonics
+    wst_add12,
+    wst_add13,
+    wst_add14,
+    wst_add15,
+    wst_add12345,
+    wst_addsaw3,
+    wst_addsqr3,
+
     n_ws_types,
 };
 
 const char wst_names[n_ws_types][16] = {
-    "Off",           "Soft",        "Hard",          "Asymmetric",
-    "Sine",          "Digital",     "Chebyshev 2",   "Chebyshev 3",
-    "Chebyshev 4",   "Chebyshev 5", "Abs Full Wave", "Positive Wave",
-    "Negative Wave", "Single Fold", "Double Fold",   "WestCoast Fold",
+    "Off",           "Soft",           "Hard",          "Asymmetric",
+    "Sine",          "Digital",        "Soft Harm 2",   "Soft Harm 3",
+    "Soft Harm 4",   "Soft Harm 5",    "Abs Full Wave", "Positive Wave",
+    "Negative Wave", "Single Fold",    "Double Fold",   "WestCoast Fold",
+    "Additive 1+2",  "Additive 1+3",   "Additive 1+4",  "Additive 1+5",
+    "Additive 1234", "Additive Saw 3", "Additive Sqr 3"
+
 };
 
-const char wst_ui_names[n_ws_types][16] = {"Off",    "Soft",   "Hard",   "Asym",   "Sine", "Digi",
-                                           "Cheb 2", "Cheb 3", "Cheb 4", "Cheb 5", "Abs",  "Pos",
-                                           "Neg",    "1Fold",  "2Fold",  "WstFold"};
+const char wst_ui_names[n_ws_types][16] = {"Off",    "Soft",   "Hard",   "Asym",    "Sine", "Digi",
+                                           "Harm 2", "Harm 3", "Harm 4", "Harm 5",  "Abs",  "Pos",
+                                           "Neg",    "1Fold",  "2Fold",  "WstFold", "+12",  "+13",
+                                           "+14",    "+15",    "+12345", "+Saw3",   "+Sqr3"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -505,6 +518,14 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_cheby3, "Harmonic");
         p(wst_cheby4, "Harmonic");
         p(wst_cheby5, "Harmonic");
+
+        p(wst_add12, "Harmonic");
+        p(wst_add13, "Harmonic");
+        p(wst_add14, "Harmonic");
+        p(wst_add15, "Harmonic");
+        p(wst_add12345, "Harmonic");
+        p(wst_addsaw3, "Harmonic");
+        p(wst_addsqr3, "Harmonic");
 
         p(wst_fwrectify, "Rectify");
         p(wst_poswav, "Rectify");
