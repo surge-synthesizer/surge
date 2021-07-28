@@ -16,6 +16,7 @@
 #include "QuadFilterUnit.h"
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
+#include <random>
 
 __m128 CLIP(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
@@ -190,6 +191,94 @@ __m128 WS_LUT(QuadFilterWaveshaperState *__restrict s, const float *table, __m12
     x = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, a), ws), _mm_mul_ps(a, wsn));
 
     return x;
+}
+
+// Given a table of size N+1, N a power of 2, representing data between -1 and 1, interp
+template <int N> __m128 WS_PM1_LUT(const float *table, __m128 in)
+{
+    static const __m128 one = _mm_set1_ps(1.f);
+    static const __m128 dx = _mm_set1_ps(N / 2.f);
+    static const __m128 oodx = _mm_set1_ps(2.f / N);
+    static const __m128 ctr = _mm_set1_ps(N / 2.f);
+    static const __m128 UB = _mm_set1_ps(N - 1.f);
+    static const __m128 zero = _mm_setzero_ps();
+
+    auto x = _mm_add_ps(_mm_mul_ps(in, dx), ctr);
+    auto e = _mm_cvtps_epi32(_mm_max_ps(_mm_min_ps(x, UB), zero));
+    auto a = _mm_cvtepi32_ps(e);
+    auto frac = _mm_sub_ps(x, a);
+    e = _mm_packs_epi32(e, e);
+
+    // on PC write to memory & back as XMM -> GPR is slow on K8
+    short e4 alignas(16)[8];
+    _mm_store_si128((__m128i *)&e4, e);
+
+    __m128 ws1 = _mm_load_ss(&table[e4[0]]);
+    __m128 ws2 = _mm_load_ss(&table[e4[1]]);
+    __m128 ws3 = _mm_load_ss(&table[e4[2]]);
+    __m128 ws4 = _mm_load_ss(&table[e4[3]]);
+    __m128 ws = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
+    ws1 = _mm_load_ss(&table[(e4[0] + 1)]);
+    ws2 = _mm_load_ss(&table[(e4[1] + 1)]);
+    ws3 = _mm_load_ss(&table[(e4[2] + 1)]);
+    ws4 = _mm_load_ss(&table[(e4[3] + 1)]);
+    __m128 wsn = _mm_movelh_ps(_mm_unpacklo_ps(ws1, ws2), _mm_unpacklo_ps(ws3, ws4));
+
+    auto res = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, frac), ws), _mm_mul_ps(frac, wsn));
+
+    return res;
+}
+
+template <int NP, float F(const float)> struct LUTBase
+{
+    static constexpr int N = NP;
+    static constexpr float dx = 2.0 / N;
+    float data[N + 1];
+
+    LUTBase()
+    {
+        for (int i = 0; i < N + 1; ++i)
+        {
+            float x = i * dx - 1.0;
+            data[i] = F(x);
+        }
+    }
+};
+
+template <int scale> float FuzzTable(const float x)
+{
+    static auto gen = std::minstd_rand(2112);
+    static const float range = 0.1 * scale;
+    static auto dist = std::uniform_real_distribution<float>(-range, range);
+
+    auto xadj = x * (1 - range) + dist(gen);
+    return xadj;
+}
+
+template <int scale, __m128 C(QuadFilterWaveshaperState *__restrict, __m128, __m128)>
+__m128 Fuzz(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    static LUTBase<1024, FuzzTable<scale>> table;
+    return WS_PM1_LUT<1024>(table.data, C(s, x, drive));
+}
+
+float FuzzCtrTable(const float x)
+{
+    static auto gen = std::minstd_rand(2112);
+    static const float range = 0.1;
+    static const float b = 20;
+
+    static auto dist = std::uniform_real_distribution<float>(-1.0, 1.0);
+
+    auto g = exp(-x * x * b);
+    auto xadj = x + g * dist(gen);
+    return xadj;
+}
+
+__m128 FuzzCtr(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    static LUTBase<2048, FuzzCtrTable> table;
+    return WS_PM1_LUT<2048>(table.data, TANH(s, x, drive));
 }
 
 template <__m128 (*K)(__m128)>
@@ -578,6 +667,14 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return PlusSaw3;
     case wst_addsqr3:
         return PlusSqr3;
+    case wst_fuzz:
+        return Fuzz<1, CLIP>;
+    case wst_fuzzsoft:
+        return Fuzz<1, TANH>;
+    case wst_fuzzheavy:
+        return Fuzz<3, CLIP>;
+    case wst_fuzzctr:
+        return FuzzCtr;
     }
     return 0;
 }
