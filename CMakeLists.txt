@@ -935,6 +935,8 @@ if( BUILD_SURGE_XT )
 
           JUCE_MODAL_LOOPS_PERMITTED=1
 
+          JUCE_COREGRAPHICS_DRAW_ASYNC=1
+
           JUCE_ALSA=1
           JUCE_JACK=1
 
