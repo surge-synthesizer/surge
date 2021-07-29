@@ -132,6 +132,8 @@ struct ModulationSourceButton : public juce::Component,
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };
 } // namespace Widgets
 } // namespace Surge

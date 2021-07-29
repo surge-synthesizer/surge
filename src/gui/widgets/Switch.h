@@ -83,6 +83,8 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
     SurgeImage *switchD{nullptr}, *hoverSwitchD{nullptr};
     void setSwitchDrawable(SurgeImage *d) { switchD = d; }
     void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Switch);
 };
 } // namespace Widgets
 } // namespace Surge

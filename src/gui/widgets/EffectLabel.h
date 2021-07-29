@@ -47,6 +47,8 @@ struct EffectLabel : public juce::Component, public Surge::GUI::SkinConsumingCom
         g.setFont(Surge::GUI::getFontManager()->displayFont);
         g.drawText(label, getLocalBounds(), juce::Justification::centredLeft);
     }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectLabel);
 };
 } // namespace Widgets
 } // namespace Surge

@@ -27,6 +27,7 @@ namespace Widgets
 {
 struct MainFrame : public juce::Component
 {
+    MainFrame() : juce::Component() {}
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
 
@@ -44,6 +45,8 @@ struct MainFrame : public juce::Component
     }
 
     void mouseDown(const juce::MouseEvent &event) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainFrame);
 };
 } // namespace Widgets
 } // namespace Surge

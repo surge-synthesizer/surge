@@ -53,6 +53,8 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     juce::Rectangle<int> buttonM, buttonP, buttonA, waveArea;
 
     static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveShaperSelector);
 };
 
 } // namespace Widgets

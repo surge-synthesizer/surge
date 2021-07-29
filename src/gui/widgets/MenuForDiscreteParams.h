@@ -120,6 +120,8 @@ struct MenuForDiscreteParams : public juce::Component,
     void setStorage(SurgeStorage *s) { storage = s; }
 
     float nextValueInOrder(float v, int inc);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuForDiscreteParams);
 };
 } // namespace Widgets
 } // namespace Surge

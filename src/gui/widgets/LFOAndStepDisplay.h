@@ -125,6 +125,8 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     juce::Rectangle<float> ss_shift_left, ss_shift_right;
     int lfoTypeHover{-1};
     int ss_shift_hover{-1};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };
 } // namespace Widgets
 } // namespace Surge

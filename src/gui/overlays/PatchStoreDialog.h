@@ -48,6 +48,8 @@ struct PatchStoreDialog : public juce::Component,
     std::unique_ptr<juce::TextButton> okButton, cancelButton;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchStoreDialog);
 };
 } // namespace Overlays
 } // namespace Surge

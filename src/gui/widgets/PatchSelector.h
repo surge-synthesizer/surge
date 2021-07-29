@@ -97,6 +97,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
      */
     bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
                                       int &main_e, bool rootCall);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelector);
 };
 } // namespace Widgets
 } // namespace Surge

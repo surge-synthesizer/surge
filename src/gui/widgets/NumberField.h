@@ -30,6 +30,8 @@ namespace Widgets
 {
 struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
 {
+    NumberField() : juce::Component(), WidgetBaseMixin<NumberField>() {}
+
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
@@ -119,6 +121,8 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         textHoverColour = c;
         repaint();
     }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NumberField);
 };
 
 } // namespace Widgets

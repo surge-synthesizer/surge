@@ -65,6 +65,8 @@ struct AboutScreen : public juce::Component,
     std::unique_ptr<juce::Button> copyButton;
 
     juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.8f)};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutScreen);
 };
 } // namespace Overlays
 } // namespace Surge

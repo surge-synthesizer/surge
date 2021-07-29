@@ -82,6 +82,8 @@ struct TypeinParamEditor : public juce::Component,
     // Text editor listener methods
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TypeinParamEditor);
 };
 } // namespace Overlays
 } // namespace Surge

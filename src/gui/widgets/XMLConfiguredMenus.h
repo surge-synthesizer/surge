@@ -150,6 +150,8 @@ struct OscillatorMenu : public juce::Component,
 
     int font_size{8}, text_hoffset{0}, text_voffset{0};
     juce::Justification text_align{juce::Justification::centred};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorMenu);
 };
 
 struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBaseMixin<FxMenu>
@@ -201,6 +203,8 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     SurgeImage *bg{}, *bgHover{};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };
     void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FxMenu);
 };
 } // namespace Widgets
 } // namespace Surge

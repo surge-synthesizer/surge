@@ -59,6 +59,8 @@ class CodeEditorContainerWithApply : public juce::Component,
     SurgeStorage *storage;
 
     virtual void applyCode() = 0;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CodeEditorContainerWithApply);
 };
 
 class FormulaModulatorEditor : public CodeEditorContainerWithApply
@@ -73,6 +75,8 @@ class FormulaModulatorEditor : public CodeEditorContainerWithApply
     void applyCode() override;
 
     FormulaModulatorStorage *formulastorage;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 
 class WavetablePreviewComponent;
@@ -108,6 +112,8 @@ class WavetableEquationEditor : public CodeEditorContainerWithApply,
     void buttonClicked(juce::Button *button) override;
 
     OscillatorStorage *osc;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableEquationEditor);
 };
 
 } // namespace Overlays
