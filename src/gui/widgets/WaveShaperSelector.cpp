@@ -167,6 +167,7 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
         {
             wss.R[i] = _mm_set1_ps(R[i]);
         }
+        wss.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
 
         auto wsop = GetQFPtrWaveshaper(wstype);
 
@@ -211,6 +212,9 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                 ws1.R[i] = _mm_set1_ps(R[i]);
                 ws2.R[i] = _mm_set1_ps(R[i]);
             }
+
+            ws1.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
+            ws2.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
 
             auto wsop = GetQFPtrWaveshaper(wstype);
 
@@ -286,6 +290,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         initializeWaveshaperRegister(iValue, R);
         for (int i = 0; i < 4; ++i)
             s.R[i] = _mm_load_ps(R);
+        s.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps());
 
         float dx = 0.05;
         // Give a few warmup pixels for the ADAAs
@@ -296,6 +301,10 @@ void WaveShaperSelector::paint(juce::Graphics &g)
                 vals[0] = x;
                 auto in = _mm_load_ps(vals);
                 auto r = wsop(&s, in, drive);
+                for (int i = 0; i < 4; ++i)
+                    s.R[i] = _mm_load_ps(R);
+                s.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps());
+
                 _mm_store_ps(vals, r);
                 if (x >= -2)
                     wsCurves[iValue].emplace_back(x, vals[0]);

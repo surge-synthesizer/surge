@@ -193,6 +193,19 @@ __m128 WS_LUT(QuadFilterWaveshaperState *__restrict s, const float *table, __m12
     return x;
 }
 
+template <int R1, int R2> inline __m128 dcBlock(QuadFilterWaveshaperState *__restrict s, __m128 x)
+{
+    // https://www.dsprelated.com/freebooks/filters/DC_Blocker.html
+    // y_n = x_n - x_n-1 + R y_n-1
+    const auto fac = _mm_set1_ps(0.9999);
+    auto dx = _mm_sub_ps(x, s->R[0]);
+    auto filtval = _mm_add_ps(dx, _mm_mul_ps(fac, s->R[1]));
+    s->R[R1] = x;
+    s->R[R2] = filtval;
+    s->init = _mm_setzero_ps();
+    return filtval;
+}
+
 // Given a table of size N+1, N a power of 2, representing data between -1 and 1, interp
 template <int N> __m128 WS_PM1_LUT(const float *table, __m128 in)
 {
@@ -259,7 +272,7 @@ template <int scale, __m128 C(QuadFilterWaveshaperState *__restrict, __m128, __m
 __m128 Fuzz(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static LUTBase<1024, FuzzTable<scale>> table;
-    return WS_PM1_LUT<1024>(table.data, C(s, x, drive));
+    return dcBlock<0, 1>(s, WS_PM1_LUT<1024>(table.data, C(s, x, drive)));
 }
 
 float FuzzCtrTable(const float x)
@@ -278,16 +291,21 @@ float FuzzCtrTable(const float x)
 __m128 FuzzCtr(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static LUTBase<2048, FuzzCtrTable> table;
-    return WS_PM1_LUT<2048>(table.data, TANH(s, x, drive));
+    return dcBlock<0, 1>(s, WS_PM1_LUT<2048>(table.data, TANH(s, x, drive)));
 }
 
-template <__m128 (*K)(__m128)>
+template <__m128 (*K)(__m128), bool useDCBlock>
 __m128 CHEBY_CORE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     static const auto m1 = _mm_set1_ps(-1.0f);
     static const auto p1 = _mm_set1_ps(1.0f);
 
     auto bound = K(_mm_max_ps(_mm_min_ps(x, p1), m1));
+
+    if (useDCBlock)
+    {
+        bound = dcBlock<0, 1>(s, bound);
+    }
     return TANH(s, bound, drive);
 }
 
@@ -369,7 +387,7 @@ __m128 Plus12(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     static const auto ser = ChebSeries<3>({0, 0.5, 0.5});
     static const auto scale = _mm_set1_ps(0.66);
-    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+    return dcBlock<0, 1>(s, ser.eval(TANH(s, _mm_mul_ps(in, scale), drive)));
 }
 
 __m128 Plus13(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
@@ -383,7 +401,7 @@ __m128 Plus14(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
     static const auto ser = ChebSeries<5>({0, 0.5, 0, 0, 0.5});
     static const auto scale = _mm_set1_ps(0.66);
-    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+    return dcBlock<0, 1>(s, ser.eval(TANH(s, _mm_mul_ps(in, scale), drive)));
 }
 
 __m128 Plus15(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
@@ -397,7 +415,7 @@ __m128 Plus12345(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 driv
 {
     static const auto ser = ChebSeries<6>({0, 0.2, 0.2, 0.2, 0.2, 0.2});
     static const auto scale = _mm_set1_ps(0.66);
-    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+    return dcBlock<0, 1>(s, ser.eval(TANH(s, _mm_mul_ps(in, scale), drive)));
 }
 
 __m128 PlusSaw3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
@@ -405,7 +423,7 @@ __m128 PlusSaw3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive
     static const float fac = 0.9f / (1.f + 0.5 + 0.25);
     static const auto ser = ChebSeries<4>({0, -fac, fac * 0.5f, -fac * 0.25f});
     static const auto scale = _mm_set1_ps(-0.66); // flip direction
-    return ser.eval(TANH(s, _mm_mul_ps(in, scale), drive));
+    return dcBlock<0, 1>(s, ser.eval(TANH(s, _mm_mul_ps(in, scale), drive)));
 }
 
 __m128 PlusSqr3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
@@ -634,13 +652,13 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
     case wst_digital:
         return DIGI_SSE2;
     case wst_cheby2:
-        return CHEBY_CORE<cheb2_kernel>;
+        return CHEBY_CORE<cheb2_kernel, true>;
     case wst_cheby3:
-        return CHEBY_CORE<cheb3_kernel>;
+        return CHEBY_CORE<cheb3_kernel, false>;
     case wst_cheby4:
-        return CHEBY_CORE<cheb4_kernel>;
+        return CHEBY_CORE<cheb4_kernel, true>;
     case wst_cheby5:
-        return CHEBY_CORE<cheb5_kernel>;
+        return CHEBY_CORE<cheb5_kernel, false>;
     case wst_fwrectify:
         return ADAA_FULL_WAVE;
     case wst_poswav:
