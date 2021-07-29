@@ -307,6 +307,7 @@ bool Parameter::can_deactivate()
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
     case ct_envtime_linkable_delay:
+    case ct_tape_drive:
     case ct_tape_speed:
         return true;
     }
@@ -328,6 +329,7 @@ bool Parameter::has_deformoptions()
     case ct_lfodeform:
     case ct_modern_trimix:
     case ct_alias_mask:
+    case ct_tape_drive:
         return true;
     default:
         break;
@@ -1178,6 +1180,13 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0.5f;
         break;
 
+    case ct_tape_drive:
+        val_min.f = 0;
+        val_max.f = 1;
+        valtype = vt_float;
+        val_default.f = 0;
+        break;
+
     case ct_tape_microns:
         valtype = vt_float;
         val_min.f = 0.f;
@@ -1230,6 +1239,7 @@ void Parameter::set_type(int ctrltype)
     case ct_reson_res_extendable:
     case ct_modern_trimix:
     case ct_alias_mask:
+    case ct_tape_drive:
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         displayInfo.scale = 100;
@@ -1518,6 +1528,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_lfodeform:
         case ct_reson_res_extendable:
         case ct_modern_trimix:
+        case ct_tape_drive:
         {
             val.f = floor(val.f * 100) / 100.0;
             break;
@@ -1757,6 +1768,7 @@ bool Parameter::supportsDynamicName()
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
     case ct_percent_deactivatable:
+    case ct_tape_drive:
         return true;
     default:
         break;
@@ -3749,6 +3761,7 @@ bool Parameter::can_setvalue_from_string()
     case ct_ensemble_clockrate:
     case ct_alias_mask:
     case ct_alias_bits:
+    case ct_tape_drive:
     case ct_tape_microns:
     case ct_tape_speed:
     {

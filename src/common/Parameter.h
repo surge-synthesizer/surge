@@ -175,6 +175,7 @@ enum ctrltypes
     ct_alias_wave,
     ct_alias_mask,
     ct_alias_bits,
+    ct_tape_drive,
     ct_tape_microns,
     ct_tape_speed,
     ct_lfophaseshuffle,
