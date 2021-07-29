@@ -103,8 +103,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
 #endif
-    frame = 0;
-
     blinktimer = 0.f;
     blinkstate = false;
     midiLearnOverlay = nullptr;
@@ -114,9 +112,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     editor_open = false;
     queue_refresh = false;
     memset(param, 0, n_paramslots * sizeof(void *));
-    polydisp =
-        0; // FIXME - when changing skins and rebuilding we need to reset these state variables too
-    splitpointControl = 0;
     for (int i = 0; i < n_fx_slots; ++i)
     {
         selectedFX[i] = -1;
