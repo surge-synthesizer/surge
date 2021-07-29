@@ -198,8 +198,8 @@ template <int R1, int R2> inline __m128 dcBlock(QuadFilterWaveshaperState *__res
     // https://www.dsprelated.com/freebooks/filters/DC_Blocker.html
     // y_n = x_n - x_n-1 + R y_n-1
     const auto fac = _mm_set1_ps(0.9999);
-    auto dx = _mm_sub_ps(x, s->R[0]);
-    auto filtval = _mm_add_ps(dx, _mm_mul_ps(fac, s->R[1]));
+    auto dx = _mm_sub_ps(x, s->R[R1]);
+    auto filtval = _mm_add_ps(dx, _mm_mul_ps(fac, s->R[R2]));
     s->R[R1] = x;
     s->R[R2] = filtval;
     s->init = _mm_setzero_ps();
@@ -436,8 +436,10 @@ __m128 PlusSqr3(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive
 
 /*
  * Given a function which is from x -> (F, adF) and two registers, do the ADAA
+ * Set updateInit to false if you are going to wrap this in a dcBlocker (which
+ * resets init itself) or other init adjusting function.
  */
-template <void FandADF(__m128, __m128 &, __m128 &), int xR, int aR>
+template <void FandADF(__m128, __m128 &, __m128 &), int xR, int aR, bool updateInit = true>
 __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
 {
     auto xPrior = s->R[xR];
@@ -460,7 +462,10 @@ __m128 ADAA(QuadFilterWaveshaperState *__restrict s, __m128 x)
 
     s->R[xR] = x;
     s->R[aR] = ad;
-    s->init = _mm_setzero_ps();
+    if (updateInit)
+    {
+        s->init = _mm_setzero_ps();
+    }
 
     return r;
 }
@@ -526,6 +531,27 @@ __m128 ADAA_FULL_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 
 {
     x = CLIP(s, x, drive);
     return ADAA<fwrect_kernel, 0, 1>(s, x);
+}
+
+void softrect_kernel(__m128 x, __m128 &F, __m128 &adF)
+{
+    /*
+     * F   : x > 0 ? 2x-1 : -2x - 1   = 2 * ( sgn(x) * x ) - 1
+     * adF : x > 0 ? x^2-x : -x^2 - x = sgn(x) * x^2 - x
+     */
+    static const auto p2 = _mm_set1_ps(2.f);
+    static const auto p1 = _mm_set1_ps(1.f);
+    static const auto p05 = _mm_set1_ps(0.5f);
+    auto gz = _mm_cmpge_ps(x, _mm_setzero_ps());
+    auto sgn = _mm_sub_ps(_mm_and_ps(gz, p1), _mm_andnot_ps(gz, p1));
+
+    F = _mm_sub_ps(_mm_mul_ps(p2, _mm_mul_ps(sgn, x)), p1);
+    adF = _mm_sub_ps(_mm_mul_ps(sgn, _mm_mul_ps(x, x)), x);
+}
+
+__m128 ADAA_SOFTRECT_WAVE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    return TANH(s, dcBlock<2, 3>(s, ADAA<softrect_kernel, 0, 1, false>(s, x)), drive);
 }
 
 template <int pts> struct FolderADAA
@@ -661,6 +687,8 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return CHEBY_CORE<cheb5_kernel, false>;
     case wst_fwrectify:
         return ADAA_FULL_WAVE;
+    case wst_softrect:
+        return ADAA_SOFTRECT_WAVE;
     case wst_poswav:
         return ADAA_POS_WAVE<0, 1>;
     case wst_negwav:
