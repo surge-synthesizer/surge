@@ -55,6 +55,8 @@ struct OverlayWrapper : public juce::Component,
 
     std::function<void()> closeOverlay = []() {};
     void setCloseOverlay(std::function<void()> f) { closeOverlay = std::move(f); }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
 };
 } // namespace Overlays
 } // namespace Surge

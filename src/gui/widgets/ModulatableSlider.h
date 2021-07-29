@@ -134,6 +134,8 @@ struct ModulatableSlider : public juce::Component,
     juce::Rectangle<int> handleSize;
     // Where do we position the tray relative to local bounds?
     juce::AffineTransform trayPosition;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulatableSlider);
 };
 } // namespace Widgets
 } // namespace Surge

@@ -46,6 +46,8 @@ class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
 
     SurgeStorage *storage;
     SurgeGUIEditor *editor;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBViewer);
 };
 
 } // namespace Overlays

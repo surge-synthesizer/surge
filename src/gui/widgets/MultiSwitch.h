@@ -79,6 +79,8 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     void setSwitchDrawable(SurgeImage *d) { switchD = d; }
     void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
     void setHoverOnSwitchDrawable(SurgeImage *d) { hoverOnSwitchD = d; }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitch);
 };
 } // namespace Widgets
 } // namespace Surge

@@ -44,6 +44,8 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
 
     void onSkinChanged() override;
     SurgeImage *hVuBars;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VuMeter);
 };
 } // namespace Widgets
 } // namespace Surge

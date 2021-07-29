@@ -41,6 +41,8 @@ class ModulationEditor : public juce::Component
 
     void paint(juce::Graphics &g) override;
     void resized() override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationEditor);
 };
 
 } // namespace Overlays

@@ -53,6 +53,8 @@ struct VerticalLabel : public juce::Component
         fontColour = f;
         repaint();
     }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VerticalLabel);
 };
 } // namespace Widgets
 } // namespace Surge
