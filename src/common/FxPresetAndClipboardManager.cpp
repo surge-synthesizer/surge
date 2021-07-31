@@ -146,6 +146,12 @@ void forcePresetRescan(SurgeStorage *storage)
                 {
                     preset.da[i] = true;
                 }
+
+                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deform_type").c_str(),
+                                            &fl) == TIXML_SUCCESS)
+                {
+                    preset.dt[i] = (int)fl;
+                }
             }
 
             if (scannedPresets.find(preset.type) == scannedPresets.end())
@@ -271,6 +277,11 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
             {
                 pfile << "     p" << i << "_deactivated=\"1\"\n";
             }
+
+            if (fx->p[i].has_deformoptions())
+            {
+                pfile << "     p" << i << "_deform_type=\"" << fx->p[i].deform_type << "\"\n";
+            }
         }
     }
 
@@ -312,6 +323,9 @@ void loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
         fxbuffer->p[i].temposync = (int)p.ts[i];
         fxbuffer->p[i].extend_range = (int)p.er[i];
         fxbuffer->p[i].deactivated = (int)p.da[i];
+
+        if (p.dt[i] >= 0) // only set deform type if it could be read from the xml
+            fxbuffer->p[i].deform_type = p.dt[i];
     }
 }
 } // namespace FxUserPreset
@@ -323,14 +337,15 @@ Clipboard::Clipboard() {}
 void copyFx(SurgeStorage *storage, FxStorage *fx, Clipboard &cb)
 {
     cb.fxCopyPaste.clear();
-    cb.fxCopyPaste.resize(n_fx_params * 4 + 1); // type then (val; ts; extend; deact)
+    cb.fxCopyPaste.resize(n_fx_params * 5 + 1); // type then (val; deform; ts; extend; deact)
     cb.fxCopyPaste[0] = fx->type.val.i;
     for (int i = 0; i < n_fx_params; ++i)
     {
-        int vp = i * 4 + 1;
-        int tp = i * 4 + 2;
-        int xp = i * 4 + 3;
-        int dp = i * 4 + 4;
+        int vp = i * 5 + 1;
+        int tp = i * 5 + 2;
+        int xp = i * 5 + 3;
+        int dp = i * 5 + 4;
+        int dt = i * 5 + 5;
 
         switch (fx->p[i].valtype)
         {
@@ -345,6 +360,9 @@ void copyFx(SurgeStorage *storage, FxStorage *fx, Clipboard &cb)
         cb.fxCopyPaste[tp] = fx->p[i].temposync;
         cb.fxCopyPaste[xp] = fx->p[i].extend_range;
         cb.fxCopyPaste[dp] = fx->p[i].deactivated;
+
+        if (fx->p[i].has_deformoptions())
+            cb.fxCopyPaste[dt] = fx->p[i].deform_type;
     }
 }
 
@@ -365,10 +383,11 @@ void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
 
     for (int i = 0; i < n_fx_params; i++)
     {
-        int vp = i * 4 + 1;
-        int tp = i * 4 + 2;
-        int xp = i * 4 + 3;
-        int dp = i * 4 + 4;
+        int vp = i * 5 + 1;
+        int tp = i * 5 + 2;
+        int xp = i * 5 + 3;
+        int dp = i * 5 + 4;
+        int dt = i * 5 + 5;
 
         switch (fxbuffer->p[i].valtype)
         {
@@ -394,6 +413,9 @@ void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
         fxbuffer->p[i].temposync = (int)cb.fxCopyPaste[tp];
         fxbuffer->p[i].extend_range = (int)cb.fxCopyPaste[xp];
         fxbuffer->p[i].deactivated = (int)cb.fxCopyPaste[dp];
+
+        if (fxbuffer->p[i].has_deformoptions())
+            fxbuffer->p[i].deform_type = (int)cb.fxCopyPaste[dt];
     }
 
     cb.fxCopyPaste.clear();

@@ -262,6 +262,7 @@ void TapeEffect::init_default_values()
 {
     fxdata->p[tape_drive].val.f = 0.85f;
     fxdata->p[tape_drive].deactivated = false;
+    fxdata->p[tape_drive].deform_type = SolverType::NR4;
     fxdata->p[tape_saturation].val.f = 0.5f;
     fxdata->p[tape_bias].val.f = 0.5f;
     fxdata->p[tape_tone].val.f = 0.0f;
