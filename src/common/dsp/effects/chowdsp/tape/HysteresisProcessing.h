@@ -7,6 +7,15 @@
 namespace chowdsp
 {
 
+enum SolverType
+{
+    RK2 = 0,
+    RK4,
+    NR4,
+    NR8,
+    NUM_SOLVERS
+};
+
 /*
     Hysteresis processing for a model of an analog tape machine.
     For more information on the DSP happening here, see:
@@ -23,10 +32,29 @@ class HysteresisProcessing
     void cook(float drive, float width, float sat);
 
     /* Process a single sample */
-    inline double process(double H) noexcept
+    template <SolverType solverType> inline double process(double H) noexcept
     {
         double H_d = deriv(H, H_n1, H_d_n1);
-        double M = NRSolver(H, H_d);
+
+        double M;
+        switch (solverType)
+        {
+        case RK2:
+            M = RK2Solver(H, H_d);
+            break;
+        case RK4:
+            M = RK4Solver(H, H_d);
+            break;
+        case NR4:
+            M = NRSolver<4>(H, H_d);
+            break;
+        case NR8:
+            M = NRSolver<8>(H, H_d);
+            break;
+        default:
+            M = 0.0;
+            break;
+        }
 
         // check for instability
         bool illCondition = std::isnan(M) || M > upperLim;
@@ -48,27 +76,18 @@ class HysteresisProcessing
 
     inline double langevin(double x) const noexcept // Langevin function
     {
-        if (!nearZero)
-            return (coth) - (1.0 / x);
-        else
-            return x / 3.0;
+        return !nearZero ? (coth) - (1.0 / x) : x / 3.0;
     }
 
     inline double langevinD(double x) const noexcept // Derivative of Langevin function
     {
-        if (!nearZero)
-            return (1.0 / (x * x)) - (coth * coth) + 1.0;
-        else
-            return ONE_THIRD;
+        return !nearZero ? (1.0 / (x * x)) - (coth * coth) + 1.0 : ONE_THIRD;
     }
 
     inline double langevinD2(double x) const noexcept // 2nd derivative of Langevin function
     {
-        if (!nearZero)
-            return 2.0 * coth * (coth * coth - 1.0) - (2.0 / (x * x * x));
-        else
-            return NEG_TWO_OVER_15 * x;
-        ;
+        return !nearZero ? 2.0 * coth * (coth * coth - 1.0) - (2.0 / (x * x * x))
+                         : NEG_TWO_OVER_15 * x;
     }
 
     inline double deriv(double x_n, double x_n1,
@@ -116,31 +135,42 @@ class HysteresisProcessing
         return H_d * (f1_p + f2_p) / f3 - dMdt * f3_p / f3;
     }
 
+    inline double RK2Solver(double H, double H_d) noexcept
+    {
+        const double k1 = T * hysteresisFunc(M_n1, H_n1, H_d_n1);
+        const double k2 =
+            T * hysteresisFunc(M_n1 + (k1 / 2.0), (H + H_n1) / 2.0, (H_d + H_d_n1) / 2.0);
+
+        return M_n1 + k2;
+    }
+
+    double RK4Solver(double H, double H_d) noexcept
+    {
+        const double H_1_2 = (H + H_n1) / 2.0;
+        const double H_d_1_2 = (H_d + H_d_n1) / 2.0;
+
+        const double k1 = T * hysteresisFunc(M_n1, H_n1, H_d_n1);
+        const double k2 = T * hysteresisFunc(M_n1 + (k1 / 2.0), H_1_2, H_d_1_2);
+        const double k3 = T * hysteresisFunc(M_n1 + (k2 / 2.0), H_1_2, H_d_1_2);
+        const double k4 = T * hysteresisFunc(M_n1 + k3, H, H_d);
+
+        return M_n1 + k1 / 6.0 + k2 / 3.0 + k3 / 3.0 + k4 / 6.0;
+    }
+
     // newton-raphson solvers
-    inline double NRSolver(double H, double H_d) noexcept
+    template <int nIterations> inline double NRSolver(double H, double H_d) noexcept
     {
         double M = M_n1;
         const double last_dMdt = hysteresisFunc(M_n1, H_n1, H_d_n1);
 
         double dMdt, dMdtPrime, deltaNR;
-
-        // loop #1
-        dMdt = hysteresisFunc(M, H, H_d);
-        dMdtPrime = hysteresisFuncPrime(H_d, dMdt);
-        deltaNR = (M - M_n1 - Talpha * (dMdt + last_dMdt)) / (1.0 - Talpha * dMdtPrime);
-        M -= deltaNR;
-
-        // loop #2
-        dMdt = hysteresisFunc(M, H, H_d);
-        dMdtPrime = hysteresisFuncPrime(H_d, dMdt);
-        deltaNR = (M - M_n1 - Talpha * (dMdt + last_dMdt)) / (1.0 - Talpha * dMdtPrime);
-        M -= deltaNR;
-
-        // loop #3
-        dMdt = hysteresisFunc(M, H, H_d);
-        dMdtPrime = hysteresisFuncPrime(H_d, dMdt);
-        deltaNR = (M - M_n1 - Talpha * (dMdt + last_dMdt)) / (1.0 - Talpha * dMdtPrime);
-        M -= deltaNR;
+        for (int i = 0; i < nIterations; ++i)
+        {
+            dMdt = hysteresisFunc(M, H, H_d);
+            dMdtPrime = hysteresisFuncPrime(H_d, dMdt);
+            deltaNR = (M - M_n1 - Talpha * (dMdt + last_dMdt)) / (1.0 - Talpha * dMdtPrime);
+            M -= deltaNR;
+        }
 
         return M;
     }

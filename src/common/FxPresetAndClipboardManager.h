@@ -34,6 +34,7 @@ struct Preset
     int type{-1};
     float p[n_fx_params];
     bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
+    int dt[n_fx_params];
 
     Preset()
     {
@@ -45,6 +46,7 @@ struct Preset
             ts[i] = false;
             er[i] = false;
             da[i] = false;
+            dt[i] = -1;
         }
     }
 };

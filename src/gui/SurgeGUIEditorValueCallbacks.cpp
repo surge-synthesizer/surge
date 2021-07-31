@@ -1448,6 +1448,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_tape_drive:
+                    {
+                        contextMenu.addSeparator();
+
+                        juce::StringArray tapeHysteresisModes{"RK2", "RK4", "NR4", "NR8"};
+                        for (int i = 0; i < tapeHysteresisModes.size(); ++i)
+                        {
+                            bool isChecked = p->deform_type == i;
+                            contextMenu.addItem(
+                                "Hysteresis Mode: " + tapeHysteresisModes[i].toStdString(), true,
+                                isChecked, [this, p, i]() { p->deform_type = i; });
+                        }
+
+                        contextMenu.addSeparator();
+
+                        break;
+                    }
                     default:
                     {
                         break;

@@ -39,32 +39,61 @@ void HysteresisProcessor::set_params(float driveVal, float satVal, float biasVal
     makeup.setTargetValue(makeupVal);
 }
 
+void HysteresisProcessor::set_solver(int newSolver) { solver = static_cast<SolverType>(newSolver); }
+
 void HysteresisProcessor::process_block(float *dataL, float *dataR)
 {
     bool needsSmoothing = drive.isSmoothing() || width.isSmoothing() || sat.isSmoothing();
 
     os.upsample(dataL, dataR);
 
-    if (needsSmoothing)
-        process_internal_smooth(os.leftUp, os.rightUp, os.getUpBlockSize());
-    else
-        process_internal(os.leftUp, os.rightUp, os.getUpBlockSize());
+    switch (solver)
+    {
+    case RK2:
+        if (needsSmoothing)
+            process_internal_smooth<RK2>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        else
+            process_internal<RK2>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        break;
+    case RK4:
+        if (needsSmoothing)
+            process_internal_smooth<RK4>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        else
+            process_internal<RK4>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        break;
+    case NR4:
+        if (needsSmoothing)
+            process_internal_smooth<NR4>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        else
+            process_internal<NR4>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        break;
+    case NR8:
+        if (needsSmoothing)
+            process_internal_smooth<NR8>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        else
+            process_internal<NR8>(os.leftUp, os.rightUp, os.getUpBlockSize());
+        break;
+    default:
+        break;
+    }
 
     os.downsample(dataL, dataR);
 
     dc_blocker.process_block(dataL, dataR);
 }
 
+template <SolverType solverType>
 void HysteresisProcessor::process_internal(float *dataL, float *dataR, const int numSamples)
 {
     for (int samp = 0; samp < numSamples; samp++)
     {
         auto curMakeup = makeup.getNextValue();
-        dataL[samp] = (float)hProcs[0].process((double)dataL[samp]) * curMakeup;
-        dataR[samp] = (float)hProcs[1].process((double)dataR[samp]) * curMakeup;
+        dataL[samp] = (float)hProcs[0].process<solverType>((double)dataL[samp]) * curMakeup;
+        dataR[samp] = (float)hProcs[1].process<solverType>((double)dataR[samp]) * curMakeup;
     }
 }
 
+template <SolverType solverType>
 void HysteresisProcessor::process_internal_smooth(float *dataL, float *dataR, const int numSamples)
 {
     for (int samp = 0; samp < numSamples; samp++)
@@ -77,8 +106,8 @@ void HysteresisProcessor::process_internal_smooth(float *dataL, float *dataR, co
         hProcs[0].cook(curDrive, curWidth, curSat);
         hProcs[1].cook(curDrive, curWidth, curSat);
 
-        dataL[samp] = (float)hProcs[0].process((double)dataL[samp]) * curMakeup;
-        dataR[samp] = (float)hProcs[1].process((double)dataR[samp]) * curMakeup;
+        dataL[samp] = (float)hProcs[0].process<solverType>((double)dataL[samp]) * curMakeup;
+        dataR[samp] = (float)hProcs[1].process<solverType>((double)dataR[samp]) * curMakeup;
     }
 }
 
