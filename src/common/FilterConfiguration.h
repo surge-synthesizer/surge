@@ -484,6 +484,21 @@ enum ws_type
     wst_fuzzsoft,
     wst_fuzzheavy,
     wst_fuzzctr,
+    wst_fuzzsoftedge,
+
+    wst_sinpx,
+    wst_sin2xpb,
+    wst_sin3xpb,
+    wst_sin7xpb,
+    wst_sin10xpb,
+
+    wst_2cyc,
+    wst_7cyc,
+    wst_10cyc,
+
+    wst_2cycbound,
+    wst_7cycbound,
+    wst_10cycbound,
 
     n_ws_types,
 };
@@ -495,14 +510,17 @@ const char wst_names[n_ws_types][16] = {
     "Double Fold",   "WestCoast Fold", "Additive 1+2",   "Additive 1+3",   "Additive 1+4",
     "Additive 1+5",  "Additive 1234",  "Additive Saw 3", "Additive Sqr 3",
 
-    "Fuzz",          "Fuzz SoftClip",  "Heavy Fuzz",     "Fuzz Center"
+    "Fuzz",          "Fuzz SoftClip",  "Heavy Fuzz",     "Fuzz Center",    "Fuzz SoftEdge",
 
-};
+    "Sin+X",         "Sin 2X + X",     "Sin 3X + X",     "Sin 7X + X",     "Sin 10X + X",
+    "2 Cycle",       "7 Cycle",        "10 Cycle",       "2 Cycle Bound",  "7 Cycle Bound",
+    "10 Cycle Bound"};
 
 const char wst_ui_names[n_ws_types][16] = {
-    "Off", "Soft",   "Hard",  "Asym",  "Sine",  "Digi",  "Harm 2",  "Harm 3", "Harm 4", "Harm 5",
-    "Abs", "Pos",    "Neg",   "SRect", "1Fold", "2Fold", "WstFold", "+12",    "+13",    "+14",
-    "+15", "+12345", "+Saw3", "+Sqr3", "Fuzz",  "FzSft", "FzHvy",   "FzCtr"};
+    "Off",   "Soft",   "Hard",  "Asym",   "Sine",  "Digi",  "Harm 2",  "Harm 3", "Harm 4", "Harm 5",
+    "Abs",   "Pos",    "Neg",   "SRect",  "1Fold", "2Fold", "WstFold", "+12",    "+13",    "+14",
+    "+15",   "+12345", "+Saw3", "+Sqr3",  "Fuzz",  "FzSft", "FzHvy",   "FzCtr",  "FzEdg",  "Sin+X",
+    "S2X+X", "S3X+X",  "S7X+X", "S10X+X", "2Cyc",  "7Cyc",  "10Cyc",   "2CycB",  "7CycB",  "10CyB"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -545,8 +563,21 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 
         p(wst_fuzz, "Fuzz");
         p(wst_fuzzsoft, "Fuzz");
+        p(wst_fuzzsoftedge, "Fuzz");
         p(wst_fuzzheavy, "Fuzz");
         p(wst_fuzzctr, "Fuzz");
+
+        p(wst_sinpx, "Trigonometric");
+        p(wst_sin2xpb, "Trigonometric");
+        p(wst_sin3xpb, "Trigonometric");
+        p(wst_sin7xpb, "Trigonometric");
+        p(wst_sin10xpb, "Trigonometric");
+        p(wst_2cyc, "Trigonometric");
+        p(wst_7cyc, "Trigonometric");
+        p(wst_10cyc, "Trigonometric");
+        p(wst_2cycbound, "Trigonometric");
+        p(wst_7cycbound, "Trigonometric");
+        p(wst_10cycbound, "Trigonometric");
 
         int c = 0;
         for (auto e : mapping)
