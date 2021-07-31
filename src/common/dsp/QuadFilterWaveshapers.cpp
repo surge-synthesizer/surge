@@ -17,6 +17,7 @@
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
 #include <random>
+#include <cmath>
 
 __m128 CLIP(QuadFilterWaveshaperState *__restrict s, __m128 in, __m128 drive)
 {
@@ -288,11 +289,47 @@ float FuzzCtrTable(const float x)
     return xadj;
 }
 
-__m128 FuzzCtr(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+float FuzzEdgeTable(const float x)
 {
-    static LUTBase<2048, FuzzCtrTable> table;
-    return dcBlock<0, 1>(s, WS_PM1_LUT<2048>(table.data, TANH(s, x, drive)));
+    static auto gen = std::minstd_rand(2112);
+    static const float range = 0.1;
+    static const float b = 20;
+
+    static auto dist = std::uniform_real_distribution<float>(-1.0, 1.0);
+
+    auto g = x * x * x * x;
+    auto xadj = 0.85 * x + 0.15 * g * dist(gen);
+    return xadj;
 }
+
+float SinPlusX(const float x) { return x - std::sin(x * M_PI); }
+
+template <int T> float SinNXPlusXBound(const float x)
+{
+    auto z = 1 - fabs(x);
+    auto r = z * std::sin(x * M_PI * T);
+    return r + x;
+}
+
+template <int T> float SinNX(const float x) { return std::sin(x * M_PI * T); }
+
+template <int T> float SinNXBound(const float x)
+{
+    auto z = 1 - fabs(x);
+    auto r = z * std::sin(x * M_PI * T);
+    return r;
+}
+
+template <float F(float), int N,
+          __m128 C(QuadFilterWaveshaperState *__restrict, __m128, __m128) = CLIP, bool block = true>
+__m128 TableEval(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    static LUTBase<N, F> table;
+    if (block)
+        return dcBlock<0, 1>(s, WS_PM1_LUT<N>(table.data, C(s, x, drive)));
+    else
+        return WS_PM1_LUT<N>(table.data, C(s, x, drive));
+};
 
 template <__m128 (*K)(__m128), bool useDCBlock>
 __m128 CHEBY_CORE(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
@@ -714,13 +751,40 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
     case wst_addsqr3:
         return PlusSqr3;
     case wst_fuzz:
-        return Fuzz<1, CLIP>;
+        return TableEval<FuzzTable<1>, 1024>;
     case wst_fuzzsoft:
-        return Fuzz<1, TANH>;
+        return TableEval<FuzzTable<1>, 1024, TANH>;
     case wst_fuzzheavy:
-        return Fuzz<3, CLIP>;
+        return TableEval<FuzzTable<3>, 1024>;
     case wst_fuzzctr:
-        return FuzzCtr;
+        return TableEval<FuzzCtrTable, 2048, TANH>;
+    case wst_fuzzsoftedge:
+        return TableEval<FuzzEdgeTable, 2048, TANH>;
+
+    case wst_sinpx:
+        return TableEval<SinPlusX, 1024, CLIP, false>;
+
+    case wst_sin2xpb:
+        return TableEval<SinNXPlusXBound<2>, 2048, CLIP, false>;
+    case wst_sin3xpb:
+        return TableEval<SinNXPlusXBound<3>, 2048, CLIP, false>;
+    case wst_sin7xpb:
+        return TableEval<SinNXPlusXBound<7>, 2048, CLIP, false>;
+    case wst_sin10xpb:
+        return TableEval<SinNXPlusXBound<10>, 2048, CLIP, false>;
+
+    case wst_2cyc:
+        return TableEval<SinNX<2>, 2048, CLIP, false>;
+    case wst_7cyc:
+        return TableEval<SinNX<7>, 2048, CLIP, false>;
+    case wst_10cyc:
+        return TableEval<SinNX<10>, 2048, CLIP, false>;
+    case wst_2cycbound:
+        return TableEval<SinNXBound<2>, 2048, CLIP, false>;
+    case wst_7cycbound:
+        return TableEval<SinNXBound<7>, 2048, CLIP, false>;
+    case wst_10cycbound:
+        return TableEval<SinNXBound<10>, 2048, CLIP, false>;
     }
     return 0;
 }
