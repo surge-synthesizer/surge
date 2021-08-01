@@ -20,6 +20,7 @@
 #include <deque>
 #include <condition_variable>
 #include "filesystem/import.h"
+#include <iostream>
 
 class SurgeStorage;
 
@@ -30,10 +31,10 @@ namespace PatchStorage
 struct PatchDB
 {
     struct workerS;
-    struct record
+    struct patchRecord
     {
-        record(int i, const std::string &f, const std::string &c, const std::string &n,
-               const std::string &a)
+        patchRecord(int i, const std::string &f, const std::string &c, const std::string &n,
+                    const std::string &a)
             : id(i), file(f), cat(c), name(n), author(a)
         {
         }
@@ -44,6 +45,24 @@ struct PatchDB
         std::string author;
     };
 
+    enum CatType
+    {
+        FACTORY,
+        THIRD_PARTY,
+        USER
+    };
+
+    struct catRecord
+    {
+        int id;
+        std::string name;
+        std::string leaf_name;
+        int parentid;
+        bool isroot;
+        bool isleaf; // you can be a root and a leaf both if you have no children at top lev
+        CatType type;
+    };
+
     explicit PatchDB(SurgeStorage *);
     ~PatchDB();
 
@@ -52,11 +71,20 @@ struct PatchDB
     SurgeStorage *storage;
 
     std::unique_ptr<workerS> worker;
+
     void considerFXPForLoad(const fs::path &fxp, const std::string &name,
-                            const std::string &catName) const;
+                            const std::string &catName, const CatType type) const;
+
+    void addRootCategory(const std::string &name, CatType type);
+    void addSubCategory(const std::string &name, const std::string &parent, CatType type);
 
     // This is a temporary API point
-    std::vector<record> rawQueryForNameLike(const std::string &nameLikeThis);
+    std::vector<patchRecord> rawQueryForNameLike(const std::string &nameLikeThis);
+    std::vector<catRecord> rootCategoriesForType(const CatType t);
+    std::vector<catRecord> childCategoriesOf(int catId);
+
+  private:
+    std::vector<catRecord> internalCategories(int arg, const std::string &query);
 };
 
 } // namespace PatchStorage

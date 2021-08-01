@@ -654,9 +654,46 @@ bailOnPortable:
 void SurgeStorage::initializePatchDb()
 {
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
+
+    auto catToType = [this](int q) {
+        auto t = Surge::PatchStorage::PatchDB::CatType::FACTORY;
+        if (q >= firstThirdPartyCategory)
+            t = Surge::PatchStorage::PatchDB::CatType::THIRD_PARTY;
+        if (q >= firstUserCategory)
+            t = Surge::PatchStorage::PatchDB::CatType::USER;
+        return t;
+    };
+
+    std::function<void(const PatchCategory &me, const PatchCategory &parent)> recAdd;
+    recAdd = [&recAdd, &catToType, this](const PatchCategory &me, const PatchCategory &parent) {
+        if (me.numberOfPatchesInCategoryAndChildren <= 0)
+            return;
+
+        auto t = catToType(me.internalid);
+        patchDB->addSubCategory(me.name, parent.name, t);
+        for (auto k : me.children)
+        {
+            recAdd(k, me);
+        }
+    };
+    for (auto c : patch_category)
+    {
+        if (c.isRoot && c.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            auto t = catToType(c.internalid);
+            patchDB->addRootCategory(c.name, t);
+
+            for (auto k : c.children)
+            {
+                recAdd(k, c);
+            }
+        }
+    }
+
     for (auto p : patch_list)
     {
-        patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name);
+        auto t = catToType(p.category);
+        patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name, t);
     }
 }
 
