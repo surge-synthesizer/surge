@@ -26,6 +26,7 @@ namespace Surge
 namespace Overlays
 {
 class PatchDBSQLTableModel;
+class PatchDBSQLTreeViewItem;
 
 class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
 {
@@ -46,6 +47,9 @@ class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
 
     SurgeStorage *storage;
     SurgeGUIEditor *editor;
+
+    std::unique_ptr<juce::TreeView> treeView;
+    std::unique_ptr<PatchDBSQLTreeViewItem> treeRoot;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBViewer);
 };

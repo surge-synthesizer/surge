@@ -25,9 +25,157 @@ namespace Surge
 {
 namespace PatchStorage
 {
+
+namespace SQL
+{
+struct Exception : public std::runtime_error
+{
+    explicit Exception(sqlite3 *h) : std::runtime_error(sqlite3_errmsg(h)), rc(sqlite3_errcode(h))
+    {
+    }
+    Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc) {}
+    const char *what() const noexcept override
+    {
+        static char msg[1024];
+        snprintf(msg, 1024, "SQL Error[%d]: %s", rc, std::runtime_error::what());
+        return msg;
+    }
+    int rc;
+};
+
+void Exec(sqlite3 *h, const std::string &statement)
+{
+    char *emsg;
+    auto rc = sqlite3_exec(h, statement.c_str(), nullptr, nullptr, &emsg);
+    if (rc != SQLITE_OK)
+    {
+        std::string sm = emsg;
+        sqlite3_free(emsg);
+        throw Exception(rc, sm);
+    }
+}
+
+/*
+ * A little class to make prepared statements less clumsy
+ */
+struct Statement
+{
+    Statement(sqlite3 *h, const std::string &statement) : h(h)
+    {
+        auto rc = sqlite3_prepare_v2(h, statement.c_str(), -1, &s, nullptr);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+    ~Statement() noexcept(false)
+    {
+        if (s)
+            if (sqlite3_finalize(s) != SQLITE_OK)
+                throw Exception(h);
+    }
+
+    int col_int(int c) const { return sqlite3_column_int(s, c); }
+    int64_t col_int64(int c) const { return sqlite3_column_int64(s, c); }
+    const char *col_charstar(int c) const
+    {
+        return reinterpret_cast<const char *>(sqlite3_column_text(s, c));
+    }
+    std::string col_str(int c) const { return col_charstar(c); }
+
+    void bind(int c, const std::string &val)
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in bind");
+
+        auto rc = sqlite3_bind_text(s, c, val.c_str(), val.length(), SQLITE_STATIC);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+
+    void bind(int c, int val)
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in bind");
+
+        auto rc = sqlite3_bind_int(s, c, val);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+
+    void bindi64(int c, int64_t val)
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in bind");
+
+        auto rc = sqlite3_bind_int64(s, c, val);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+
+    void clearBindings()
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in bind");
+
+        auto rc = sqlite3_clear_bindings(s);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+
+    void reset()
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in bind");
+
+        auto rc = sqlite3_reset(s);
+        if (rc != SQLITE_OK)
+            throw Exception(h);
+    }
+
+    bool step() const
+    {
+        if (!s)
+            throw Exception(-1, "Statement not initialized in step");
+
+        auto rc = sqlite3_step(s);
+        if (rc == SQLITE_ROW)
+            return true;
+        if (rc == SQLITE_DONE)
+            return false;
+        throw Exception(h);
+    }
+
+    sqlite3_stmt *s{nullptr};
+    sqlite3 *h;
+};
+
+/*
+ * RAII on transactions
+ */
+struct TxnGuard
+{
+    explicit TxnGuard(sqlite3 *e) : d(e)
+    {
+        auto rc = sqlite3_exec(d, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+        if (rc != SQLITE_OK)
+        {
+            throw Exception(d);
+        }
+    }
+    ~TxnGuard() noexcept(false)
+    {
+        auto rc = sqlite3_exec(d, "END TRANSACTION", nullptr, nullptr, nullptr);
+        if (rc != SQLITE_OK)
+        {
+            throw Exception(d);
+        }
+    }
+    sqlite3 *d;
+};
+} // namespace SQL
+
 struct PatchDB::workerS
 {
-    static constexpr const char *schema_version = "2"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "3"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -36,6 +184,7 @@ struct PatchDB::workerS
 DROP TABLE IF EXISTS "Patches";
 DROP TABLE IF EXISTS "PatchFeature";
 DROP TABLE IF EXISTS "Version";
+DROP TABLE IF EXISTS "Category";
 CREATE TABLE "Version" (
     id integer primary key,
     schema_version varchar(256)
@@ -44,7 +193,8 @@ CREATE TABLE "Patches" (
       id integer primary key,
       path varchar(2048),
       name varchar(256),
-      category varchar(256),
+      category varchar(2048),
+      category_type int,
       last_write_time big int
 );
 CREATE TABLE PatchFeature (
@@ -54,17 +204,63 @@ CREATE TABLE PatchFeature (
       featurre_group int,
       feature_ivalue int,
       feature_svalue varchar(64)
+);
+CREATE TABLE Category (
+      id integer primary key,
+      name varchar(2048),
+      leaf_name varchar(256),
+      isroot int,
+      type int,
+      parent_id int
 )
     )SQL";
 
-    struct txnGuard
+    struct EnQAble
     {
-        explicit txnGuard(sqlite3 *e) : d(e)
+        virtual ~EnQAble() = default;
+        virtual void go(workerS &) = 0;
+    };
+
+    struct EnQPatch : public EnQAble
+    {
+        EnQPatch(const fs::path &p, const std::string &n, const std::string &cn, const CatType t)
+            : path(p), name(n), catname(cn), type(t)
         {
-            sqlite3_exec(d, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
         }
-        ~txnGuard() { sqlite3_exec(d, "END TRANSACTION", nullptr, nullptr, nullptr); }
-        sqlite3 *d;
+        fs::path path;
+        std::string name;
+        std::string catname;
+        CatType type;
+
+        void go(workerS &w) override { w.parseFXPIntoDB(*this); }
+    };
+
+    struct EnQCategory : public EnQAble
+    {
+        std::string name;
+        std::string leafname;
+        std::string parentname;
+        CatType type;
+        bool isroot;
+
+        EnQCategory(const std::string &name, CatType t)
+            : isroot(true), name(name), leafname(name), parentname(""), type(t)
+        {
+        }
+        EnQCategory(const std::string &name, const std::string &parent, CatType t)
+            : isroot(false), name(name), parentname(parent), type(t)
+        {
+            auto q = fs::path(name);
+            auto l = q.filename();
+            leafname = path_to_string(l); // FIXME
+        }
+        void go(workerS &w) override
+        {
+            if (isroot)
+                w.addRootCategory(name, type);
+            else
+                w.addChildCategory(name, leafname, parentname, type);
+        }
     };
 
     explicit workerS(SurgeStorage *storage) : storage(storage)
@@ -84,28 +280,21 @@ CREATE TABLE PatchFeature (
                 << sqlite3_errmsg(dbh) << "'.";
             storage->reportError(oss.str(), "Surge Patch Database Error");
             dbh = nullptr;
+            return;
         }
 
         /*
          * OK check my version
          */
         bool rebuild = true;
-        char *emsg;
+        try
+        {
+            auto st = SQL::Statement(dbh, "SELECT * FROM Version");
 
-        sqlite3_stmt *qs;
-        auto rc = sqlite3_prepare_v2(dbh, "SELECT * FROM Version", -1, &qs, nullptr);
-        // FIXME - error handling everywhere of course
-        if (rc != SQLITE_OK)
-        {
-            std::cout << "        : No VERSION table. Rebuilding database" << std::endl;
-            rebuild = true;
-        }
-        else
-        {
-            while (sqlite3_step(qs) == SQLITE_ROW)
+            while (st.step())
             {
-                int id = sqlite3_column_int(qs, 0);
-                auto ver = reinterpret_cast<const char *>(sqlite3_column_text(qs, 1));
+                int id = st.col_int(0);
+                auto ver = st.col_charstar(1);
                 std::cout << "        : schema check. DBVersion='" << ver << "' SchemaVersion='"
                           << schema_version << "'" << std::endl;
                 if (strcmp(ver, schema_version) == 0)
@@ -115,31 +304,31 @@ CREATE TABLE PatchFeature (
                 }
             }
         }
+        catch (const SQL::Exception &e)
+        {
+            rebuild = true;
+            /*
+             * In this case, we choose to not report the error since it means
+             * that we just need to rebuild everything
+             */
+            // storage->reportError(e.what(), "SQLLite3 Startup Error");
+        }
 
-        sqlite3_finalize(qs);
-
+        char *emsg;
         if (rebuild)
         {
             std::cout << "        : Schema missing or mismatched. Dropping and Rebuilding Database."
                       << std::endl;
-
-            auto res = sqlite3_exec(dbh, setup_sql, nullptr, nullptr, &emsg);
-            if (res != SQLITE_OK)
+            try
             {
-                std::ostringstream oss;
-                oss << "Error creating SQL database: " << emsg;
-                storage->reportError(oss.str(), "PatchDB Error");
-                sqlite3_free(emsg);
+                SQL::Exec(dbh, setup_sql);
+                auto versql = std::string("INSERT INTO VERSION (\"schema_version\") VALUES (\"") +
+                              schema_version + "\")";
+                SQL::Exec(dbh, versql);
             }
-            auto versql = std::string("INSERT INTO VERSION (\"schema_version\") VALUES (\"") +
-                          schema_version + "\")";
-            res = sqlite3_exec(dbh, versql.c_str(), nullptr, nullptr, &emsg);
-            if (res != SQLITE_OK)
+            catch (const SQL::Exception &e)
             {
-                std::ostringstream oss;
-                oss << "Error writing SQL Schema Version: " << emsg;
-                storage->reportError(oss.str(), "PatchDB Error");
-                sqlite3_free(emsg);
+                storage->reportError(e.what(), "PatchDB Setup Error");
             }
         }
         qThread = std::thread([this]() { this->loadQueueFunction(); });
@@ -212,7 +401,7 @@ CREATE TABLE PatchFeature (
         static constexpr auto transChunkSize = 10; // How many FXP to load in a single txn
         while (keepRunning)
         {
-            std::vector<std::tuple<fs::path, std::string, std::string>> doThis;
+            std::vector<EnQAble *> doThis;
             {
                 std::unique_lock<std::mutex> lk(qLock);
 
@@ -231,163 +420,102 @@ CREATE TABLE PatchFeature (
                 }
             }
             {
-                txnGuard tg(dbh);
-                for (const auto &p : doThis)
-                    parseFXPIntoDB(p);
+                SQL::TxnGuard tg(dbh);
+
+                for (auto *p : doThis)
+                {
+                    p->go(*this);
+                    delete p;
+                }
             }
         }
     }
 
-    sqlite3_stmt *insertStmt = nullptr, *insfeatureStmt = nullptr, *checkExistsStmt = nullptr,
-                 *dropIdStmt = nullptr;
-
-    void parseFXPIntoDB(const std::tuple<fs::path, std::string, std::string> &p)
+    void parseFXPIntoDB(const EnQPatch &p)
     {
-        if (!fs::exists(std::get<0>(p)))
+        sqlite3_stmt *insertStmt = nullptr, *insfeatureStmt = nullptr, *dropIdStmt = nullptr;
+
+        if (!fs::exists(p.path))
         {
-            std::cout << "    - Warning: Non existent " << path_to_string(std::get<0>(p))
-                      << std::endl;
+            std::cout << "    - Warning: Non existent " << path_to_string(p.path) << std::endl;
             return;
         }
         // Check with
-        auto qtime = fs::last_write_time(std::get<0>(p));
+        auto qtime = fs::last_write_time(p.path);
         int64_t qtimeInt =
             std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
 
-        if (checkExistsStmt == nullptr)
-        {
-            auto rc = sqlite3_prepare_v2(
-                dbh, "SELECT id, last_write_time from Patches WHERE Patches.Path LIKE ?1;", -1,
-                &checkExistsStmt, nullptr);
-            if (rc != SQLITE_OK)
-            {
-                checkExistsStmt = nullptr;
-                return;
-            }
-        }
         bool patchLoaded = false;
         std::vector<int> dropIds;
-
+        try
         {
-            auto s = path_to_string(std::get<0>(p));
-            auto rc = sqlite3_bind_text(checkExistsStmt, 1, s.c_str(), s.length(), SQLITE_STATIC);
-            if (rc != SQLITE_OK)
+            auto exists = SQL::Statement(
+                dbh, "SELECT id, last_write_time from Patches WHERE Patches.Path LIKE ?1");
+            auto s = path_to_string(p.path);
+            exists.bind(1, s);
+
+            while (exists.step())
             {
-                std::cout << "COULD NOT BIND" << std::endl;
-            }
-            bool first = true;
-            while (sqlite3_step(checkExistsStmt) == SQLITE_ROW)
-            {
-                auto id = sqlite3_column_int(checkExistsStmt, 0);
-                auto t = sqlite3_column_int64(checkExistsStmt, 1);
+                auto id = exists.col_int(0);
+                auto t = exists.col_int64(1);
                 if (t < qtimeInt || (t == qtimeInt && patchLoaded))
                 {
                     dropIds.push_back(id);
                 }
                 if (t >= qtimeInt)
                     patchLoaded = true;
-                first = false;
             }
-            rc = sqlite3_clear_bindings(checkExistsStmt);
-            if (rc != SQLITE_OK)
-                std::cout << "Cant Clear Check" << std::endl;
-            rc = sqlite3_reset(checkExistsStmt);
-            if (rc != SQLITE_OK)
-                std::cout << "Cant Reset Check" << std::endl;
-        }
 
-        if (dropIdStmt == nullptr)
-        {
-            auto rc = sqlite3_prepare_v2(
-                dbh, "DELETE FROM Patches WHERE ID=?1; DELETE FROM PatchFeature WHERE ID=?1", -1,
-                &dropIdStmt, nullptr);
-            if (rc != SQLITE_OK)
+            if (!dropIds.empty())
             {
-                dropIdStmt = nullptr;
-                std::cout << "Can't build dropStatement" << std::endl;
+                auto drop = SQL::Statement(
+                    dbh, "DELETE FROM Patches WHERE ID=?1; DELETE FROM PatchFeature WHERE ID=?1");
+                for (auto did : dropIds)
+                {
+                    drop.bindi64(1, did);
+                    while (drop.step())
+                    {
+                    }
+                    drop.clearBindings();
+                    drop.reset();
+                }
             }
         }
-
-        if (dropIdStmt)
+        catch (const SQL::Exception &e)
         {
-            for (auto did : dropIds)
-            {
-                auto rc = sqlite3_bind_int64(dropIdStmt, 1, did);
-                if (rc != SQLITE_OK)
-                {
-                    std::cout << "COULD NOT BIND DID 1" << std::endl;
-                }
-                /*rc = sqlite3_bind_int(dropIdStmt, 2, did);
-                if (rc != SQLITE_OK)
-                {
-                    std::cout << "COULD NOT BIND DID 2" << std::endl;
-                }*/
-                while (sqlite3_step(dropIdStmt) == SQLITE_ROW)
-                {
-                }
-                rc = sqlite3_clear_bindings(dropIdStmt);
-                if (rc != SQLITE_OK)
-                    std::cout << "Cant Clear Check" << std::endl;
-                rc = sqlite3_reset(dropIdStmt);
-            }
+            storage->reportError(e.what(), "PatchDB - Load Check");
+            return;
         }
 
         if (patchLoaded)
             return;
 
-        std::cout << "        - Loading '" << path_to_string(std::get<0>(p)) << "'" << std::endl;
+        std::cout << "        - Loading '" << path_to_string(p.path) << "'" << std::endl;
 
-        // Oh so much to fix here, but lets start with error handling
-        if (insertStmt == nullptr)
+        int64_t patchid = -1;
+        try
         {
-            auto rc = sqlite3_prepare_v2(
-                dbh,
-                "INSERT INTO PATCHES ( \"path\", \"name\", \"category\", \"last_write_time\" ) "
-                "VALUES ( ?1, ?2, ?3, ?4 )",
-                -1, &insertStmt, nullptr);
-            if (rc != SQLITE_OK)
-            {
-                insertStmt = nullptr;
-                return;
-            }
-        }
+            auto ins = SQL::Statement(dbh, "INSERT INTO PATCHES ( \"path\", \"name\", "
+                                           "\"category\", \"category_type\", \"last_write_time\" ) "
+                                           "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
+            ins.bind(1, path_to_string(p.path));
+            ins.bind(2, p.name);
+            ins.bind(3, p.catname);
+            ins.bind(4, (int)p.type);
+            ins.bindi64(5, qtimeInt);
 
-        if (!insertStmt)
+            ins.step();
+
+            // No real need to encapsulate this
+            patchid = sqlite3_last_insert_rowid(dbh);
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Insert Patch");
             return;
-        auto s = path_to_string(std::get<0>(p));
-        auto rc = sqlite3_bind_text(insertStmt, 1, s.c_str(), s.length() + 1, SQLITE_STATIC);
-        if (rc != SQLITE_OK)
-            std::cout << "BAD BIND 1" << std::endl;
-
-        auto s2 = std::get<1>(p);
-        rc = sqlite3_bind_text(insertStmt, 2, s2.c_str(), s2.length() + 1, SQLITE_STATIC);
-        if (rc != SQLITE_OK)
-            std::cout << "BAD BIND 2" << std::endl;
-
-        auto s3 = std::get<2>(p);
-        rc = sqlite3_bind_text(insertStmt, 3, s3.c_str(), s3.length() + 1, SQLITE_STATIC);
-        if (rc != SQLITE_OK)
-            std::cout << "BAD BIND 3" << std::endl;
-
-        sqlite3_bind_int64(insertStmt, 4, qtimeInt);
-
-        rc = sqlite3_step(insertStmt);
-        if (rc != SQLITE_DONE)
-            std::cout << "BAD STEP" << std::endl;
-
-        rc = sqlite3_clear_bindings(insertStmt);
-        rc = sqlite3_reset(insertStmt);
-
-        if (rc != SQLITE_OK)
-        {
-            std::cout << "SPLAT" << std::endl;
         }
 
-        // Great now get its id
-        auto patchid = sqlite3_last_insert_rowid(dbh);
-        // std::cout << patchid << " " << s2 << std::endl;
-
-        std::ifstream stream(std::get<0>(p), std::ios::in | std::ios::binary);
+        std::ifstream stream(p.path, std::ios::in | std::ios::binary);
         std::vector<uint8_t> contents((std::istreambuf_iterator<char>(stream)),
                                       std::istreambuf_iterator<char>());
 
@@ -426,7 +554,6 @@ CREATE TABLE PatchFeature (
             std::cout << "Not a surge patch; bailing" << std::endl;
             return;
         }
-        // FIXME - checks for CcnK and stuff
 
         auto phd = d + sizeof(fxChunkSetCustom);
         auto *ph = (patch_header *)phd;
@@ -434,46 +561,111 @@ CREATE TABLE PatchFeature (
 
         auto xd = phd + sizeof(patch_header);
         std::string xml(xd, xd + xmlSz);
-        // std::cout << xml << std::endl;
 
-        if (insfeatureStmt == nullptr)
+        try
         {
-            rc = sqlite3_prepare_v2(dbh,
-                                    "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
-                                    "\"feature_ivalue\", \"feature_svalue\" ) "
-                                    "VALUES ( ?1, ?2, ?3, ?4 )",
-                                    -1, &insfeatureStmt, nullptr);
+            auto ins = SQL::Statement(dbh, "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
+                                           "\"feature_ivalue\", \"feature_svalue\" ) "
+                                           "VALUES ( ?1, ?2, ?3, ?4 )");
+            auto feat = extractFeaturesFromXML(xml);
+            for (auto f : feat)
+            {
+                ins.bindi64(1, patchid);
+                ins.bind(2, std::get<0>(f));
+                ins.bind(3, std::get<2>(f));
+                ins.bind(4, std::get<3>(f));
+
+                ins.step();
+
+                ins.clearBindings();
+                ins.reset();
+            }
         }
-        auto feat = extractFeaturesFromXML(xml);
-        for (auto f : feat)
+        catch (const SQL::Exception &e)
         {
-            sqlite3_bind_int(insfeatureStmt, 1, patchid);
-            auto sf = std::get<0>(f);
-            sqlite3_bind_text(insfeatureStmt, 2, sf.c_str(), sf.length(), SQLITE_STATIC);
-            sqlite3_bind_int(insfeatureStmt, 3, std::get<2>(f));
-
-            auto ss = std::get<3>(f);
-            sqlite3_bind_text(insfeatureStmt, 4, ss.c_str(), ss.length(), SQLITE_STATIC);
-
-            rc = sqlite3_step(insfeatureStmt);
-            if (rc != SQLITE_DONE)
-                std::cout << "BAD FEATURE STEP" << std::endl;
-
-            rc = sqlite3_clear_bindings(insfeatureStmt);
-            rc = sqlite3_reset(insfeatureStmt);
+            storage->reportError(e.what(), "PatchDB - FXP Features");
+            return;
         }
     }
 
-    /*
-     * Call this from any thread
-     */
-    void enqueuePath(const std::tuple<fs::path, std::string, std::string> &p)
+    void addRootCategory(const std::string &name, CatType type)
     {
+        // Check if it is there
+        try
         {
-            std::lock_guard<std::mutex> g(qLock);
-            pathQ.push_back(p);
+            auto there =
+                SQL::Statement(dbh, "SELECT COUNT(id) from Category WHERE Category.name LIKE ?1 "
+                                    "AND Category.type = ?2 AND Category.isroot = 1");
+            there.bind(1, name);
+            there.bind(2, (int)type);
+            there.step();
+            auto count = there.col_int(0);
+            if (count > 0)
+                return;
         }
-        qCV.notify_all();
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Category Query");
+        }
+
+        try
+        {
+            auto add = SQL::Statement(dbh, "INSERT INTO Category ( \"name\", \"leaf_name\", "
+                                           "\"isroot\", \"type\", \"parent_id\" ) "
+                                           "VALUES ( ?1, ?1, 1, ?2, -1 )");
+            add.bind(1, name);
+            add.bind(2, (int)type);
+            add.step();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Category Root Insert");
+        }
+    }
+
+    void addChildCategory(const std::string &name, const std::string &leafname,
+                          const std::string &parentName, CatType type)
+    {
+        try
+        {
+            auto there =
+                SQL::Statement(dbh, "SELECT COUNT(id) from Category WHERE Category.name LIKE ?1 "
+                                    "AND Category.type = ?2 AND Category.isroot = 0");
+            there.bind(1, name);
+            there.bind(2, (int)type);
+            there.step();
+            auto count = there.col_int(0);
+            if (count > 0)
+                return;
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Category Query");
+        }
+
+        try
+        {
+            int parentId = -1;
+            auto par = SQL::Statement(
+                dbh, "SELECT id from Category WHERE Category.name LIKE ?1 AND Category.type = ?2");
+            par.bind(1, parentName);
+            par.bind(2, (int)type);
+            if (par.step())
+                parentId = par.col_int(0);
+
+            auto add = SQL::Statement(dbh, "INSERT INTO Category ( \"name\", \"leaf_name\", "
+                                           "\"isroot\", \"type\", \"parent_id\" ) "
+                                           "VALUES ( ?1, ?2, 0, ?3, ?4 )");
+            add.bind(1, name);
+            add.bind(2, leafname);
+            add.bind(3, (int)type);
+            add.bind(4, parentId);
+            add.step();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Category Root Insert");
+        }
     }
 
     // FIXME for now I am coding this with a locked vector but probably a
@@ -481,8 +673,20 @@ CREATE TABLE PatchFeature (
     std::thread qThread;
     std::mutex qLock;
     std::condition_variable qCV;
-    std::deque<std::tuple<fs::path, std::string, std::string>> pathQ;
+    std::deque<EnQAble *> pathQ;
     std::atomic<bool> keepRunning{true};
+
+    /*
+     * Call this from any thread
+     */
+    void enqueueWorkItem(EnQAble *p)
+    {
+        {
+            std::lock_guard<std::mutex> g(qLock);
+            pathQ.push_back(p);
+        }
+        qCV.notify_all();
+    }
 
     sqlite3 *dbh;
     SurgeStorage *storage;
@@ -494,52 +698,109 @@ PatchDB::~PatchDB() = default;
 void PatchDB::initialize() { worker = std::make_unique<workerS>(storage); }
 
 void PatchDB::considerFXPForLoad(const fs::path &fxp, const std::string &name,
-                                 const std::string &catName) const
+                                 const std::string &catName, const CatType type) const
 {
-    worker->enqueuePath(std::make_tuple(fxp, name, catName));
+    worker->enqueueWorkItem(new workerS::EnQPatch(fxp, name, catName, type));
+}
+
+void PatchDB::addRootCategory(const std::string &name, CatType type)
+{
+    worker->enqueueWorkItem(new workerS::EnQCategory(name, type));
+}
+void PatchDB::addSubCategory(const std::string &name, const std::string &parent, CatType type)
+{
+    worker->enqueueWorkItem(new workerS::EnQCategory(name, parent, type));
 }
 
 // FIXME - push to worker perhaps?
-std::vector<PatchDB::record> PatchDB::rawQueryForNameLike(const std::string &nameLikeThisP)
+std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string &nameLikeThisP)
 {
-    std::vector<PatchDB::record> res;
+    std::vector<PatchDB::patchRecord> res;
 
     // FIXME - cache this by pushing it to the worker
     std::string query = "select p.id, p.path, p.category, p.name, pf.feature_svalue from Patches "
                         "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
-                        "'AUTHOR' and p.name LIKE ?";
-    sqlite3_stmt *qs;
-    auto rc = sqlite3_prepare_v2(worker->dbh, query.c_str(), -1, &qs, nullptr);
-    // FIXME - error handling everywhere of course
-    if (rc != SQLITE_OK)
+                        "'AUTHOR' and p.name LIKE ? ORDER BY p.category_type, p.category, p.name";
+
+    try
     {
-        std::ostringstream oss;
-        oss << "An error occured opening querying for '" << nameLikeThisP << "'. The error was '"
-            << sqlite3_errmsg(worker->dbh) << "'.";
-        storage->reportError(oss.str(), "Surge Patch Database Error");
-        return res;
+        auto q = SQL::Statement(worker->dbh, query);
+        std::string nameLikeThis = "%" + nameLikeThisP + "%";
+        q.bind(1, nameLikeThis);
+
+        while (q.step())
+        {
+            int id = q.col_int(0);
+            auto path = q.col_str(1);
+            auto cat = q.col_str(2);
+            auto name = q.col_str(3);
+            auto auth = q.col_str(4);
+            res.emplace_back(id, path, cat, name, auth);
+        }
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
     }
 
-    std::string nameLikeThis = "%" + nameLikeThisP + "%";
-    if (sqlite3_bind_text(qs, 1, nameLikeThis.c_str(), nameLikeThis.length() + 1, SQLITE_STATIC) !=
-        SQLITE_OK)
+    return res;
+}
+
+std::vector<PatchDB::catRecord> PatchDB::rootCategoriesForType(const CatType t)
+{
+    std::string query = "select c.id, c.name, c.leaf_name, c.isroot, c.type from Category "
+                        "as c where c.isroot = 1 and c.type = ?";
+    return internalCategories((int)t, query);
+}
+
+std::vector<PatchDB::catRecord> PatchDB::childCategoriesOf(int catId)
+{
+    // FIXME - cache this by pushing it to the worker
+    std::string query = "select c.id, c.name, c.leaf_name, c.isroot, c.type from Category "
+                        "as c where c.parent_id = ?";
+    return internalCategories((int)catId, query);
+}
+
+std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::string &query)
+{
+    std::vector<PatchDB::catRecord> res;
+
+    try
     {
-        std::cout << "Can't bind" << std::endl;
-        return res;
+        auto q = SQL::Statement(worker->dbh, query);
+        q.bind(1, t);
+
+        while (q.step())
+        {
+            auto cr = catRecord();
+            cr.id = q.col_int(0);
+            cr.name = q.col_str(1);
+            cr.leaf_name = q.col_str(2);
+            cr.isroot = q.col_int(3);
+            cr.type = (CatType)q.col_int(4);
+            cr.isleaf = false;
+
+            res.push_back(cr);
+        }
+
+        auto par = SQL::Statement(worker->dbh,
+                                  "select COUNT(id) from category where category.parent_id = ?");
+        for (auto &cr : res)
+        {
+            par.bind(1, cr.id);
+            if (par.step())
+            {
+                cr.isleaf = (par.col_int(0) == 0);
+            }
+            par.clearBindings();
+            par.reset();
+        }
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - Loading Categories");
     }
 
-    int maxrows = 0;
-    while (sqlite3_step(qs) == SQLITE_ROW)
-    {
-        int id = sqlite3_column_int(qs, 0);
-        auto path = reinterpret_cast<const char *>(sqlite3_column_text(qs, 1));
-        auto cat = reinterpret_cast<const char *>(sqlite3_column_text(qs, 2));
-        auto name = reinterpret_cast<const char *>(sqlite3_column_text(qs, 3));
-        auto auth = reinterpret_cast<const char *>(sqlite3_column_text(qs, 4));
-        res.emplace_back(id, path, cat, name, auth);
-    }
-
-    sqlite3_finalize(qs);
     return res;
 }
 

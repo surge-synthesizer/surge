@@ -4515,8 +4515,17 @@ void SurgeGUIEditor::toggleMSEGEditor()
 void SurgeGUIEditor::showPatchBrowserDialog()
 {
     auto pt = std::make_unique<Surge::Overlays::PatchDBViewer>(this, &(this->synth->storage));
+
+    auto npc = Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER;
+    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+    auto yPos = skinCtrl->y + skinCtrl->h - 1;
+    auto xBuf = 25;
+    auto w = getWindowSizeX() - xBuf * 2;
+    auto h = getWindowSizeY() - yPos - xBuf;
+
     addJuceEditorOverlay(std::move(pt), "Patch Browser", PATCH_BROWSER,
-                         juce::Rectangle<int>(50, 50, 750, 450));
+                         juce::Rectangle<int>(xBuf, yPos, w, h));
 }
 
 void SurgeGUIEditor::closePatchBrowserDialog()
@@ -4524,6 +4533,18 @@ void SurgeGUIEditor::closePatchBrowserDialog()
     if (isAnyOverlayPresent(PATCH_BROWSER))
     {
         dismissEditorOfType(PATCH_BROWSER);
+    }
+}
+
+void SurgeGUIEditor::togglePatchBrowserDialog()
+{
+    if (isAnyOverlayPresent(PATCH_BROWSER))
+    {
+        closePatchBrowserDialog();
+    }
+    else
+    {
+        showPatchBrowserDialog();
     }
 }
 

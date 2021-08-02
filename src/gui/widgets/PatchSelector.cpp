@@ -83,6 +83,17 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         return;
     }
 
+    if (e.mods.isShiftDown())
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        if (sge)
+        {
+            sge->togglePatchBrowserDialog();
+        }
+        return;
+    }
+
     auto contextMenu = juce::PopupMenu();
     int main_e = 0;
     // if RMB is down, only show the current category

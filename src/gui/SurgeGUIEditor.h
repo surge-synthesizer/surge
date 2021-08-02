@@ -367,6 +367,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void closePatchBrowserDialog();
     void showPatchBrowserDialog();
+    void togglePatchBrowserDialog();
 
     void closeModulationEditorDialog();
     void showModulationEditorDialog();
