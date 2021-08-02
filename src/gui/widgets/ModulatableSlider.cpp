@@ -494,5 +494,84 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
     notifyEndEdit();
     repaint();
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+
+struct ModulatableSliderAH : public juce::AccessibilityHandler
+{
+    struct MSValue : public juce::AccessibilityValueInterface
+    {
+        explicit MSValue(ModulatableSlider *s) : slider(s) {}
+
+        ModulatableSlider *slider;
+
+        bool isReadOnly() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return false;
+        }
+        double getCurrentValue() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return slider->getValue();
+        }
+        void setValue(double newValue) override
+        {
+            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
+            slider->setValue(newValue);
+            slider->setQuantitizedDisplayValue(newValue);
+            slider->repaint();
+        }
+        virtual juce::String getCurrentValueAsString() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return std::to_string(slider->getValue());
+        }
+        virtual void setValueAsString(const juce::String &newValue) override
+        {
+            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
+            setValue(newValue.getDoubleValue());
+        }
+        AccessibleValueRange getRange() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return {{0, 1}, 0.01};
+        }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSValue);
+    };
+
+    explicit ModulatableSliderAH(ModulatableSlider *s)
+        : slider(s), juce::AccessibilityHandler(
+                         *s, juce::AccessibilityRole::slider,
+                         juce::AccessibilityActions().addAction(
+                             juce::AccessibilityActionType::showMenu,
+                             [this]() { this->showMenu(); }),
+                         AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+    {
+    }
+    void resetToDefault()
+    {
+        slider->notifyControlModifierDoubleClicked(juce::ModifierKeys());
+        slider->setQuantitizedDisplayValue(slider->getValue());
+        slider->repaint();
+    }
+
+    void showMenu()
+    {
+        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+        slider->notifyControlModifierClicked(m);
+    }
+
+    ModulatableSlider *slider;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulatableSliderAH);
+};
+
+std::unique_ptr<juce::AccessibilityHandler> ModulatableSlider::createAccessibilityHandler()
+{
+    return std::make_unique<ModulatableSliderAH>(this);
+}
+#endif
+
 } // namespace Widgets
 } // namespace Surge
