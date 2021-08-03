@@ -3997,6 +3997,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 char txt[TXT_SIZE];
                 synth->getParameterName(synth->idForParameter(p), txt);
                 hsw->setTitle(txt);
+                hsw->setDescription("Select");
             }
 #endif
 
