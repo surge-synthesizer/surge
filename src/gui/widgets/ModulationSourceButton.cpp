@@ -25,7 +25,12 @@ namespace Surge
 {
 namespace Widgets
 {
-ModulationSourceButton::ModulationSourceButton() {}
+ModulationSourceButton::ModulationSourceButton()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    setDescription("Modulator");
+#endif
+}
 void ModulationSourceButton::paint(juce::Graphics &g)
 {
     /*

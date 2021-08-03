@@ -72,6 +72,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void loadWavetableFromFile();
     void populateMenu(juce::PopupMenu &m, int selectedItem);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
+    void showWavetableMenu();
 
     bool isCustomEditorHovered{false}, isJogRHovered{false}, isJogLHovered{false},
         isWtNameHovered{false};
@@ -82,6 +83,10 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void dismissCustomEditor();
     void drawEditorBox(juce::Graphics &g, const std::string &s);
     std::unique_ptr<juce::Component> customEditor;
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };

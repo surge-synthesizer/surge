@@ -450,6 +450,17 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
         strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
     }
 }
+void OscillatorWaveformDisplay::showWavetableMenu()
+{
+    bool usesWT = uses_wavetabledata(oscdata->type.val.i);
+    if (usesWT)
+    {
+        int id = oscdata->wt.current_id;
+        juce::PopupMenu menu;
+        populateMenu(menu, id);
+        menu.showMenuAsync(juce::PopupMenu::Options());
+    }
+}
 void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event)
 {
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
@@ -882,6 +893,28 @@ void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
     isWtNameHovered = false;
     repaint();
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+struct OscWFAH : public juce::AccessibilityHandler
+{
+    explicit OscWFAH(OscillatorWaveformDisplay *s)
+        : od(s), juce::AccessibilityHandler(
+                     *s, juce::AccessibilityRole::button,
+                     juce::AccessibilityActions().addAction(juce::AccessibilityActionType::showMenu,
+                                                            [this]() { this->showMenu(); }))
+    {
+    }
+    void showMenu() { od->showWavetableMenu(); }
+
+    OscillatorWaveformDisplay *od;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscWFAH);
+};
+std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
+{
+    return std::make_unique<OscWFAH>(this);
+}
+
+#endif
 
 } // namespace Widgets
 } // namespace Surge

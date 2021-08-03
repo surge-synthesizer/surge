@@ -46,7 +46,13 @@ struct ModulationSourceButton : public juce::Component,
     void setStorage(SurgeStorage *s) { storage = s; }
 
     std::string label;
-    void setLabel(const std::string &s) { label = s; }
+    void setLabel(const std::string &s)
+    {
+        label = s;
+#if SURGE_JUCE_ACCESSIBLE
+        setTitle(label);
+#endif
+    }
 
     modsources modSource;
     void setModSource(modsources ms) { modSource = ms; }
@@ -67,7 +73,20 @@ struct ModulationSourceButton : public juce::Component,
 
     modsources getAlternate() { return alternateSource; }
     bool getHasAlternate() { return hasAlternate; }
-    void setUseAlternate(bool b) { useAlternate = b; }
+    void setUseAlternate(bool b)
+    {
+        useAlternate = b;
+#if SURGE_JUCE_ACCESSIBLE
+        if (useAlternate)
+        {
+            setTitle(alternateLabel);
+        }
+        else
+        {
+            setTitle(label);
+        }
+#endif
+    }
     bool getUseAlternate() const { return useAlternate; }
 
     bool isUsed{false};

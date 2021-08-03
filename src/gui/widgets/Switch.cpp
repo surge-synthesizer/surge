@@ -21,7 +21,13 @@ namespace Surge
 namespace Widgets
 {
 
-Switch::Switch() { setRepaintsOnMouseActivity(true); }
+Switch::Switch()
+{
+    setRepaintsOnMouseActivity(true);
+#if SURGE_JUCE_ACCESSIBLE
+    setDescription("Switch");
+#endif
+}
 Switch::~Switch() = default;
 
 void Switch::paint(juce::Graphics &g)
@@ -104,6 +110,54 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
         }
     }
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+struct SwitchAH : public juce::AccessibilityHandler
+{
+    explicit SwitchAH(Switch *s)
+        : mswitch(s), juce::AccessibilityHandler(
+                          *s,
+                          s->isMultiIntegerValued() ? juce::AccessibilityRole::button
+                                                    : juce::AccessibilityRole::toggleButton,
+                          juce::AccessibilityActions()
+                              .addAction(juce::AccessibilityActionType::showMenu,
+                                         [this]() { this->showMenu(); })
+                              .addAction(juce::AccessibilityActionType::press,
+                                         [this]() { this->press(); }))
+    {
+    }
+    void press()
+    {
+        if (mswitch->isMultiIntegerValued())
+        {
+            mswitch->setValueDirection(1);
+            mswitch->notifyValueChanged();
+        }
+        else
+        {
+            if (!mswitch->getUnValueClickable())
+            {
+                auto value = (mswitch->getValue() > 0.5) ? 0 : 1;
+                mswitch->setValue(value);
+                mswitch->notifyValueChanged();
+            }
+        }
+    }
+    void showMenu()
+    {
+        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+        mswitch->notifyControlModifierClicked(m);
+    }
+
+    Switch *mswitch;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SwitchAH);
+};
+
+std::unique_ptr<juce::AccessibilityHandler> Switch::createAccessibilityHandler()
+{
+    return std::make_unique<SwitchAH>(this);
+}
+#endif
 
 } // namespace Widgets
 } // namespace Surge
