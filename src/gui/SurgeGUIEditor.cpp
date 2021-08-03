@@ -3869,6 +3869,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setSkin(currentSkin, bitmapStore, skinCtrl);
         hs->setMoveRate(p->moverate);
 
+#if SURGE_JUCE_ACCESSIBLE
+        if (p)
+        {
+            char txt[TXT_SIZE];
+            synth->getParameterName(synth->idForParameter(p), txt);
+            hs->setTitle(txt);
+            hs->setDescription("Adjust");
+        }
+#endif
+
         if (p->can_temposync())
             hs->setTempoSync(p->temposync);
         else
@@ -3981,6 +3991,15 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setHeightOfOneImage(skinCtrl->h);
             hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
 
+#if SURGE_JUCE_ACCESSIBLE
+            if (p)
+            {
+                char txt[TXT_SIZE];
+                synth->getParameterName(synth->idForParameter(p), txt);
+                hsw->setTitle(txt);
+            }
+#endif
+
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
             hsw->setHoverOnSwitchDrawable(std::get<2>(drawables));
@@ -4046,6 +4065,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
 
+#if SURGE_JUCE_ACCESSIBLE
+            if (p)
+            {
+                char txt[TXT_SIZE];
+                synth->getParameterName(synth->idForParameter(p), txt);
+                hsw->setTitle(txt);
+            }
+#endif
             if (paramIndex >= 0)
                 nonmod_param[paramIndex] = hsw.get();
             if (p)
