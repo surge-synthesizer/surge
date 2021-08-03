@@ -138,5 +138,75 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
     }
 }
 
+#if SURGE_JUCE_ACCESSIBLE
+
+struct MultiSwitchAH : public juce::AccessibilityHandler
+{
+    struct MSValue : public juce::AccessibilityValueInterface
+    {
+        explicit MSValue(MultiSwitch *s) : mswitch(s) {}
+
+        MultiSwitch *mswitch;
+
+        bool isReadOnly() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return false;
+        }
+        double getCurrentValue() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return mswitch->getIntegerValue();
+        }
+        void setValue(double newValue) override
+        {
+            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
+            mswitch->setValue(newValue / (mswitch->rows * mswitch->columns - 1));
+            mswitch->repaint();
+        }
+        virtual juce::String getCurrentValueAsString() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return std::to_string(mswitch->getIntegerValue());
+        }
+        virtual void setValueAsString(const juce::String &newValue) override
+        {
+            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
+            setValue(newValue.getIntValue());
+        }
+        AccessibleValueRange getRange() const override
+        {
+            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            return {{0, (double)(mswitch->rows * mswitch->columns - 1)}, 1};
+        }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSValue);
+    };
+
+    explicit MultiSwitchAH(MultiSwitch *s)
+        : mswitch(s), juce::AccessibilityHandler(
+                          *s, juce::AccessibilityRole::radioButton,
+                          juce::AccessibilityActions().addAction(
+                              juce::AccessibilityActionType::showMenu,
+                              [this]() { this->showMenu(); }),
+                          juce::AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+    {
+    }
+    void showMenu()
+    {
+        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+        mswitch->notifyControlModifierClicked(m);
+    }
+
+    MultiSwitch *mswitch;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAH);
+};
+
+std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHandler()
+{
+    return std::make_unique<MultiSwitchAH>(this);
+}
+#endif
+
 } // namespace Widgets
 } // namespace Surge
