@@ -89,9 +89,8 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                 g.setColour(juce::Colours::white);
             else
             {
-                g.setColour(juce::Colour(40 + ((c - 1) * 20),
-                                         48 + ((c - 1) * 20),
-                                         56 + ((c - 1) * 20)));
+                g.setColour(
+                    juce::Colour(40 + ((c - 1) * 20), 48 + ((c - 1) * 20), 56 + ((c - 1) * 20)));
                 lineWidth = 0.65;
             }
 
@@ -270,8 +269,8 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
 
 std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::dbLevs{
     -48, -24, -12, 0, 12, 24, 48};
-std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::ampLevs{
-    0, 0, 0, 0, 0, 0, 0};
+std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::ampLevs{0, 0, 0, 0,
+                                                                                         0, 0, 0};
 std::array<std::vector<std::pair<float, float>>, n_ws_types> WaveShaperSelector::wsCurves;
 std::array<std::array<WaveShaperAnalysisWidget::curve_t, WaveShaperAnalysisWidget::n_db_levs + 1>,
            n_ws_types>
