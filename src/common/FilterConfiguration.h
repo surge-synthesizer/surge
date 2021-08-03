@@ -503,24 +503,24 @@ enum ws_type
     n_ws_types,
 };
 
-const char wst_names[n_ws_types][16] = {
+const char wst_names[n_ws_types][32] = {
     "Off",           "Soft",           "Hard",           "Asymmetric",     "Sine",
-    "Digital",       "Soft Harm 2",    "Soft Harm 3",    "Soft Harm 4",    "Soft Harm 5",
-    "Abs Full Wave", "Positive Wave",  "Negative Wave",  "Soft Rectified", "Single Fold",
-    "Double Fold",   "WestCoast Fold", "Additive 1+2",   "Additive 1+3",   "Additive 1+4",
-    "Additive 1+5",  "Additive 1234",  "Additive Saw 3", "Additive Sqr 3",
+    "Digital",       "Soft Harmonic 2",    "Soft Harmonic 3",    "Soft Harmonic 4",    "Soft Harmonic 5",
+    "Full Wave", "Half Wave Positive",  "Half Wave Negative",  "Soft Rectifier", "Single Fold",
+    "Double Fold",   "West Coast Fold", "Additive 1+2",   "Additive 1+3",   "Additive 1+4",
+    "Additive 1+5",  "Additive 12345",  "Additive Saw 3", "Additive Square 3",
 
-    "Fuzz",          "Fuzz SoftClip",  "Heavy Fuzz",     "Fuzz Center",    "Fuzz SoftEdge",
+    "Fuzz",          "Fuzz Soft Clip",  "Heavy Fuzz",     "Fuzz Center",    "Fuzz Soft Edge",
 
-    "Sin+X",         "Sin 2X + X",     "Sin 3X + X",     "Sin 7X + X",     "Sin 10X + X",
+    "Sin+x",         "Sin 2x + x",     "Sin 3x + x",     "Sin 7x + x",     "Sin 10x + x",
     "2 Cycle",       "7 Cycle",        "10 Cycle",       "2 Cycle Bound",  "7 Cycle Bound",
     "10 Cycle Bound"};
 
 const char wst_ui_names[n_ws_types][16] = {
-    "Off",   "Soft",   "Hard",  "Asym",   "Sine",  "Digi",  "Harm 2",  "Harm 3", "Harm 4", "Harm 5",
-    "Abs",   "Pos",    "Neg",   "SRect",  "1Fold", "2Fold", "WstFold", "+12",    "+13",    "+14",
-    "+15",   "+12345", "+Saw3", "+Sqr3",  "Fuzz",  "FzSft", "FzHvy",   "FzCtr",  "FzEdg",  "Sin+X",
-    "S2X+X", "S3X+X",  "S7X+X", "S10X+X", "2Cyc",  "7Cyc",  "10Cyc",   "2CycB",  "7CycB",  "10CyB"};
+    "Off",   "Soft",   "Hard",  "Asym",   "Sine",  "Digital",  "Harm 2",  "Harm 3", "Harm 4", "Harm 5",
+    "FullRect",   "HalfPos",    "HalfNeg",   "SoftRect",  "1Fold", "2Fold", "WCFold", "Add12",    "Add13",    "Add14",
+    "Add15",   "Add1-5", "AddSaw3", "AddSqr3",  "Fuzz",  "SoftFz", "HeavyFz",   "CenterFz",  "EdgeFz",  "Sin+x",
+    "Sin2x+x", "Sin3x+x",  "Sin7x+x", "Sin10x+x", "2Cycle",  "7Cycle",  "10Cycle",   "2CycleB",  "7CycleB",  "10CycleB"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -532,9 +532,9 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         // Obviously improve this
         p(wst_none, "");
 
-        p(wst_soft, "Saturation");
-        p(wst_hard, "Saturation");
-        p(wst_asym, "Saturation");
+        p(wst_soft, "Saturator");
+        p(wst_hard, "Saturator");
+        p(wst_asym, "Saturator");
 
         p(wst_sine, "Effect");
         p(wst_digital, "Effect");
@@ -552,20 +552,20 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_addsaw3, "Harmonic");
         p(wst_addsqr3, "Harmonic");
 
-        p(wst_fwrectify, "Rectify");
-        p(wst_poswav, "Rectify");
-        p(wst_negwav, "Rectify");
-        p(wst_softrect, "Rectify");
+        p(wst_fwrectify, "Rectifiers");
+        p(wst_poswav, "Rectifiers");
+        p(wst_negwav, "Rectifiers");
+        p(wst_softrect, "Rectifiers");
 
-        p(wst_singlefold, "Folders");
-        p(wst_dualfold, "Folders");
-        p(wst_westfold, "Folders");
+        p(wst_singlefold, "Wavefolder");
+        p(wst_dualfold, "Wavefolder");
+        p(wst_westfold, "Wavefolder");
 
         p(wst_fuzz, "Fuzz");
-        p(wst_fuzzsoft, "Fuzz");
-        p(wst_fuzzsoftedge, "Fuzz");
         p(wst_fuzzheavy, "Fuzz");
         p(wst_fuzzctr, "Fuzz");
+        p(wst_fuzzsoft, "Fuzz");
+        p(wst_fuzzsoftedge, "Fuzz");
 
         p(wst_sinpx, "Trigonometric");
         p(wst_sin2xpb, "Trigonometric");
