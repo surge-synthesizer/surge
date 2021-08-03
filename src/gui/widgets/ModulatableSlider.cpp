@@ -521,6 +521,7 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
             slider->setValue(newValue);
             slider->setQuantitizedDisplayValue(newValue);
             slider->repaint();
+            slider->notifyValueChanged();
         }
         virtual juce::String getCurrentValueAsString() const override
         {

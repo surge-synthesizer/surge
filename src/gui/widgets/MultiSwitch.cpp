@@ -163,6 +163,7 @@ struct MultiSwitchAH : public juce::AccessibilityHandler
             // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
             mswitch->setValue(newValue / (mswitch->rows * mswitch->columns - 1));
             mswitch->repaint();
+            mswitch->notifyValueChanged();
         }
         virtual juce::String getCurrentValueAsString() const override
         {
@@ -202,9 +203,31 @@ struct MultiSwitchAH : public juce::AccessibilityHandler
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAH);
 };
 
+struct MultiSwitchAHMenuOnly : public juce::AccessibilityHandler
+{
+    explicit MultiSwitchAHMenuOnly(MultiSwitch *s)
+        : mswitch(s), juce::AccessibilityHandler(
+                          *s, juce::AccessibilityRole::button,
+                          juce::AccessibilityActions().addAction(
+                              juce::AccessibilityActionType::press, [this]() { this->press(); }))
+    {
+    }
+    void press() { mswitch->notifyValueChanged(); }
+
+    MultiSwitch *mswitch;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAHMenuOnly);
+};
+
 std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHandler()
 {
-    return std::make_unique<MultiSwitchAH>(this);
+    if (rows * columns <= 1)
+    {
+        return std::make_unique<MultiSwitchAHMenuOnly>(this);
+    }
+    else
+    {
+        return std::make_unique<MultiSwitchAH>(this);
+    }
 }
 #endif
 

@@ -22,7 +22,12 @@ namespace Surge
 {
 namespace Widgets
 {
-VuMeter::VuMeter() = default;
+VuMeter::VuMeter()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    setTitle("VU Meter");
+#endif
+}
 VuMeter::~VuMeter() = default;
 
 void VuMeter::paint(juce::Graphics &g)
