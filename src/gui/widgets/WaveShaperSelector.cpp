@@ -28,7 +28,9 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
         std::cout << "Make a tryit slider" << std::endl;
         tryitSlider = std::make_unique<juce::Slider>();
         tryitSlider->setSliderStyle(juce::Slider::LinearVertical);
-        tryitSlider->setRange(-0.5, 1.0);
+        tryitSlider->setDoubleClickReturnValue(true, 0.f, juce::ModifierKeys::noModifiers);
+        tryitSlider->setSliderSnapsToMousePosition(false);
+        tryitSlider->setRange(-1.0, 1.0);
         tryitSlider->setValue(0.0);
         tryitSlider->addListener(this);
         addAndMakeVisible(*tryitSlider);
@@ -81,18 +83,21 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                 g.drawRect(re);
             }
 
+            float lineWidth = 1.25;
+
             if (c == 0)
                 g.setColour(juce::Colours::white);
             else
             {
-                g.setColour(juce::Colour(0x50 * (c + 11) / (11 + n_db_levs + 1),
-                                         0x50 * (c + 11) / (11 + n_db_levs + 1),
-                                         0x50 * (c + 11) / (11 + n_db_levs + 1)));
+                g.setColour(
+                    juce::Colour(40 + ((c - 1) * 20), 48 + ((c - 1) * 20), 56 + ((c - 1) * 20)));
+                lineWidth = 0.65;
             }
+
             {
                 juce::Graphics::ScopedSaveState gs(g);
                 g.reduceClipRegion(re.toNearestIntEdges());
-                g.strokePath(p, juce::PathStrokeType(1.0), xf);
+                g.strokePath(p, juce::PathStrokeType(lineWidth), xf);
             }
 
             auto xpos = re.getRight() + 3;
@@ -100,14 +105,18 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             auto tx = juce::Rectangle<float>{xpos, ypos, 50, 12};
             std::ostringstream oss;
+
             if (c == 0)
                 oss << "Signal";
             else
                 oss << dbLevs[c - 1] << "dB";
+
             g.drawText(oss.str().c_str(), tx, juce::Justification::centredLeft);
+
             if (c == 0)
             {
                 tx = tx.translated(0, -12);
+                g.setColour(juce::Colours::orange);
                 g.drawText(wst_ui_names[wstype], tx, juce::Justification::centredLeft);
             }
         }
@@ -127,21 +136,23 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                     p.lineTo(sliderDrivenCurve[i].first, sliderDrivenCurve[i].second);
                 }
             }
+
             {
                 juce::Graphics::ScopedSaveState gs(g);
                 g.reduceClipRegion(re.toNearestIntEdges());
-                g.setColour(juce::Colours::yellow);
-                g.strokePath(p, juce::PathStrokeType(1.3), xf);
+                g.setColour(juce::Colours::orange);
+                g.strokePath(p, juce::PathStrokeType(1.25), xf);
             }
 
             auto c = n_db_levs;
             auto xpos = re.getRight() + 3;
-            auto ypos = re.getY() + (c + 3) * 12;
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            auto ypos = re.getBottom() - 12;
             auto tx = juce::Rectangle<float>{xpos, ypos, 50, 12};
             std::ostringstream oss;
             oss << std::fixed << std::setprecision(2) << sliderDb << " dB";
-            g.setColour(juce::Colours::yellow);
+
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.setColour(juce::Colours::orange);
             g.drawText(oss.str().c_str(), tx, juce::Justification::centredLeft);
         }
     }
@@ -197,7 +208,7 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
         wstype = w;
         if (responseCurves[wstype][0].empty())
         {
-            // so the stragety is make a 128 point curve with a 2 sin oscillations in [0,1].
+            // so the strategy is make a 128 point curve with 2 sin oscillations in [0,1].
             // We can use the SSE on drive to populate over two calls
             float dx = 1.f / (npts - 1);
 
@@ -246,7 +257,7 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
     ws_type wstype{wst_none};
     std::unique_ptr<juce::Slider> tryitSlider;
 
-    static constexpr int n_db_levs = 8 /* this 8 as 2 sses is kinda hardcoded above */, npts = 128;
+    static constexpr int n_db_levs = 7, npts = 128;
     static std::array<float, n_db_levs> ampLevs, dbLevs;
 
     typedef std::vector<std::pair<float, float>> curve_t;
@@ -257,9 +268,9 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
 };
 
 std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::dbLevs{
-    -12, 0, 6, 12, 18, 24, 36, 48};
-std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::ampLevs{
-    0, 0, 0, 0, 0, 0, 0, 0};
+    -48, -24, -12, 0, 12, 24, 48};
+std::array<float, WaveShaperAnalysisWidget::n_db_levs> WaveShaperAnalysisWidget::ampLevs{0, 0, 0, 0,
+                                                                                         0, 0, 0};
 std::array<std::vector<std::pair<float, float>>, n_ws_types> WaveShaperSelector::wsCurves;
 std::array<std::array<WaveShaperAnalysisWidget::curve_t, WaveShaperAnalysisWidget::n_db_levs + 1>,
            n_ws_types>
@@ -284,15 +295,22 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             xs[i] = 0.f;
             vals[0] = 0.f;
         }
+
         auto wsop = GetQFPtrWaveshaper(iValue);
         QuadFilterWaveshaperState s;
         float R alignas(16)[4];
+
         initializeWaveshaperRegister(iValue, R);
+
         for (int i = 0; i < 4; ++i)
+        {
             s.R[i] = _mm_load_ps(R);
+        }
+
         s.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps());
 
         float dx = 0.05;
+
         // Give a few warmup pixels for the ADAAs
         for (float x = -2 - 3 * dx; x <= 2; x += dx)
         {
@@ -318,8 +336,9 @@ void WaveShaperSelector::paint(juce::Graphics &g)
     }
     g.fillAll(juce::Colours::black);
     g.setColour(juce::Colours::white);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-    g.drawText(wst_ui_names[iValue], getLocalBounds(), juce::Justification::centredTop);
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+    g.drawText(wst_ui_names[iValue], getLocalBounds().reduced(0, 1),
+               juce::Justification::centredTop);
     g.fillRect(0, 12, getWidth(), 1);
 
     g.setColour(juce::Colours::darkgrey);
@@ -346,6 +365,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
     // So the wave is in -2,2 in x and -1,1 in y
     juce::Path curvePath;
     bool f = true;
+
     for (const auto &el : wsCurves[iValue])
     {
         if (f)
@@ -356,11 +376,13 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         {
             curvePath.lineTo(el.first, el.second);
         }
+
         f = false;
     }
+
     // Now what's the transform? Well
     auto xf = juce::AffineTransform()
-                  .translated(2, -1.2)
+                  .translated(2, -1.3)
                   .scaled(0.25, -0.4)
                   .scaled(waveArea.getWidth(), waveArea.getHeight())
                   .translated(waveArea.getX(), waveArea.getY());
@@ -368,11 +390,13 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
 
         g.reduceClipRegion(waveArea);
+
         if (iValue == wst_none)
             g.setColour(juce::Colours::lightgrey);
         else
             g.setColour(juce::Colours::white);
-        g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.5f : 1.5f}, xf);
+
+        g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
     }
 }
 
@@ -402,6 +426,7 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 {
     lastDragDistance = 0;
     everDragged = false;
+
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
@@ -458,6 +483,7 @@ void WaveShaperSelector::mouseUp(const juce::MouseEvent &e)
     }
     everDragged = false;
 }
+
 void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &w)
 {
     int dir = wheelAccumulationHelper.accumulate(w, false, true);
@@ -535,6 +561,7 @@ float WaveShaperSelector::nextValueInOrder(float v, int inc)
 
     return r;
 }
+
 void WaveShaperSelector::parentHierarchyChanged() { closeAnalysis(); }
 
 void WaveShaperSelector::toggleAnalysis()
