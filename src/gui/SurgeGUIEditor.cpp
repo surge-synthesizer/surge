@@ -1286,7 +1286,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
 #if SURGE_JUCE_ACCESSIBLE
             patchSelector->setTitle("Patch Selector");
-            patchSelector->setDescription("Browse");
+            patchSelector->setDescription("Browse Patches");
 #endif
             frame->addAndMakeVisible(*patchSelector);
             break;

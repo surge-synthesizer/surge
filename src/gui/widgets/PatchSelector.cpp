@@ -93,12 +93,25 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         }
         return;
     }
-
-    auto contextMenu = juce::PopupMenu();
-    int main_e = 0;
     // if RMB is down, only show the current category
     bool single_category =
         e.mods.isRightButtonDown() || e.mods.isCtrlDown() || e.mods.isCommandDown();
+    showClassicMenu(single_category);
+}
+
+void PatchSelector::openPatchBrowser()
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        sge->showPatchBrowserDialog();
+    }
+}
+void PatchSelector::showClassicMenu(bool single_category)
+{
+    auto contextMenu = juce::PopupMenu();
+    int main_e = 0;
     bool has_3rdparty = false;
     int last_category = current_category;
     int root_count = 0, usercat_pos = 0, col_breakpoint = 0;
@@ -441,6 +454,54 @@ void PatchSelector::loadPatch(int id)
 int PatchSelector::getCurrentPatchId() const { return current_patch; }
 
 int PatchSelector::getCurrentCategoryId() const { return current_category; }
+
+#if SURGE_JUCE_ACCESSIBLE
+class PatchSelectorAH : public juce::AccessibilityHandler
+{
+  public:
+    explicit PatchSelectorAH(PatchSelector *sel)
+        : selector(sel), juce::AccessibilityHandler(
+                             *sel, juce::AccessibilityRole::label,
+                             juce::AccessibilityActions()
+                                 .addAction(juce::AccessibilityActionType::press,
+                                            [sel] { sel->openPatchBrowser(); })
+                                 .addAction(juce::AccessibilityActionType::showMenu,
+                                            [sel] { sel->showClassicMenu(); }),
+                             {std::make_unique<PatchSelectorValueInterface>(sel)})
+    {
+    }
+
+  private:
+    class PatchSelectorValueInterface : public juce::AccessibilityTextValueInterface
+    {
+      public:
+        explicit PatchSelectorValueInterface(PatchSelector *sel) : selector(sel) {}
+
+        bool isReadOnly() const override { return true; }
+        juce::String getCurrentValueAsString() const override
+        {
+            return selector->getPatchNameAccessibleValue();
+        }
+        void setValueAsString(const juce::String &) override {}
+
+      private:
+        PatchSelector *selector;
+
+        //==============================================================================
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelectorValueInterface)
+    };
+
+    PatchSelector *selector;
+
+    //==============================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelectorAH)
+};
+
+std::unique_ptr<juce::AccessibilityHandler> PatchSelector::createAccessibilityHandler()
+{
+    return std::make_unique<PatchSelectorAH>(this);
+}
+#endif
 
 } // namespace Widgets
 } // namespace Surge
