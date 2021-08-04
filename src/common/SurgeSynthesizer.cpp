@@ -2913,6 +2913,27 @@ void SurgeSynthesizer::getParameterName(long index, char *text)
         snprintf(text, TXT_SIZE, "-");
 }
 
+void SurgeSynthesizer::getParameterAccessibleName(long index, char *text)
+{
+    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
+    {
+        int scn = storage.getPatch().param_ptr[index]->scene;
+        // TODO: FIX SCENE ASSUMPTION
+        string sn[3] = {"", "Scene A ", "Scene B "};
+
+        snprintf(text, TXT_SIZE, "%s%s", sn[scn].c_str(),
+                 storage.getPatch().param_ptr[index]->get_full_name());
+    }
+    else if (index >= metaparam_offset)
+    {
+        int c = index - metaparam_offset;
+        snprintf(text, TXT_SIZE, "Macro %i: %s", c + 1,
+                 storage.getPatch().CustomControllerLabel[c]);
+    }
+    else
+        snprintf(text, TXT_SIZE, "-");
+}
+
 void SurgeSynthesizer::getParameterNameW(long index, wchar_t *ptr)
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))

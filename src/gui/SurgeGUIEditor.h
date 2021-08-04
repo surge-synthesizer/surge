@@ -387,6 +387,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int msegIsOpenFor = -1, msegIsOpenInScene = -1;
     bool showMSEGEditorOnNextIdleOrOpen = false;
 
+    void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
+                                                const std::string &action);
+
+    void setAccessibilityInformationByTitleAndAction(juce::Component *c, const std::string &title,
+                                                     const std::string &action);
+
     Surge::Overlays::MSEGEditor::State msegEditState[n_scenes][n_lfos];
     Surge::Overlays::MSEGEditor::State mostRecentCopiedMSEGState;
 
