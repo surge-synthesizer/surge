@@ -1011,7 +1011,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 }
             }
 
-            frame->addAndMakeVisible(*gui_modsrc[ms]);
+            frame->getModButtonLayer()->addAndMakeVisible(*gui_modsrc[ms]);
             if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
@@ -1237,6 +1237,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
             fxPresetLabel->setBounds(skinCtrl->getRect());
+            setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
 
             frame->addAndMakeVisible(*fxPresetLabel);
             break;
@@ -1550,6 +1551,7 @@ void SurgeGUIEditor::close_editor()
 {
     editor_open = false;
     frame->removeAllChildren();
+    frame->clearGroupLayers();
     setzero(param);
 }
 
@@ -3864,7 +3866,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hs->setBackgroundDrawable(dbls[0]);
             hs->setHoverBackgroundDrawable(dbls[1]);
             param[p->id] = hs.get();
-            frame->addAndMakeVisible(*hs);
+            frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
             juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
 
             return dynamic_cast<Surge::GUI::IComponentTagValue *>(
@@ -3974,7 +3976,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
 
         param[p->id] = hs.get();
-        frame->addAndMakeVisible(*hs);
+
+        frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
         juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
@@ -4041,7 +4044,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 hsw->setValue(fval);
             }
 
-            frame->addAndMakeVisible(*hsw);
+            if (p)
+            {
+                frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hsw);
+            }
+            else
+            {
+                frame->addAndMakeVisible(*hsw);
+            }
 
             juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
 
@@ -4066,7 +4076,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (std::get<0>(drawables))
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
-            frame->addAndMakeVisible(*hsw);
+            if (p)
+            {
+                frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hsw);
+            }
+            else
+            {
+                frame->addAndMakeVisible(*hsw);
+            }
 
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
             hsw->setBounds(rect);
@@ -4146,7 +4163,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setCanEditEnvelopes(lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1));
 
             lfoDisplay->addListener(this);
-            frame->addAndMakeVisible(*lfoDisplay);
+            frame->getControlGroupLayer(cg_LFO)->addAndMakeVisible(*lfoDisplay);
             nonmod_param[paramIndex] = lfoDisplay.get();
             return lfoDisplay.get();
         }
@@ -4183,7 +4200,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         oscMenu->text_voffset = std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
                 .c_str());
-        frame->addAndMakeVisible(*oscMenu);
+        frame->getControlGroupLayer(cg_OSC)->addAndMakeVisible(*oscMenu);
         return oscMenu.get();
     }
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FxMenu)
@@ -4206,7 +4223,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         // TODO set the fxs fxb, cfx
 
         fxMenu->populate();
-        frame->addAndMakeVisible(*fxMenu);
+        frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fxMenu);
         return fxMenu.get();
     }
 
@@ -4239,7 +4256,15 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         pbd->setTextColour(currentSkin->getColor(colorName));
         pbd->setHoverTextColour(currentSkin->getColor(hoverColorName));
 
-        frame->addAndMakeVisible(*pbd);
+        if (p)
+        {
+            setAccessibilityInformationByParameter(pbd.get(), p, "Set");
+            frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*pbd);
+        }
+        else
+        {
+            frame->addAndMakeVisible(*pbd);
+        }
         nonmod_param[paramIndex] = pbd.get();
 
         if (p && p->ctrltype == ct_midikey_or_channel)

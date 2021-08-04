@@ -25,7 +25,7 @@ namespace Widgets
 VuMeter::VuMeter()
 {
 #if SURGE_JUCE_ACCESSIBLE
-    setTitle("VU Meter");
+    setAccessible(false);
 #endif
 }
 VuMeter::~VuMeter() = default;

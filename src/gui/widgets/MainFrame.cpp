@@ -15,11 +15,21 @@
 
 #include "MainFrame.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUICallbackInterfaces.h"
 
 namespace Surge
 {
 namespace Widgets
 {
+MainFrame::MainFrame()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    setAccessible(true);
+    setDescription("Surge XT");
+    setTitle("Main Frame");
+#endif
+}
 void MainFrame::mouseDown(const juce::MouseEvent &event)
 {
     if (!editor)
@@ -38,5 +48,149 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
         editor->showSettingsMenu(juce::Point<int>{}, nullptr);
     }
 }
+
+juce::Component *MainFrame::getModButtonLayer()
+{
+    if (!modGroup)
+    {
+        modGroup = std::make_unique<juce::Component>();
+        modGroup->setBounds(getLocalBounds());
+        modGroup->setInterceptsMouseClicks(false, true);
+#if SURGE_JUCE_ACCESSIBLE
+        modGroup->setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+        modGroup->setAccessible(true);
+        modGroup->setTitle("Modulators");
+        modGroup->setDescription("Modulators");
+#endif
+        modGroup->getProperties().set("ControlGroup", (int)endCG + 1);
+    }
+
+    if (getIndexOfChildComponent(modGroup.get()) < 0)
+    {
+        addAndMakeVisible(*modGroup.get());
+    }
+
+    return modGroup.get();
+}
+juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
+{
+    if (!cgOverlays[cg])
+    {
+        auto ol = std::make_unique<juce::Component>();
+        ol->setBounds(getLocalBounds());
+        ol->setInterceptsMouseClicks(false, true);
+#if SURGE_JUCE_ACCESSIBLE
+        ol->setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+        ol->setAccessible(true);
+        auto t = "Group " + std::to_string((int)cg);
+        switch (cg)
+        {
+        case cg_GLOBAL:
+            t = "Global Controls";
+            break;
+        case cg_OSC:
+            t = "Oscillator Controls";
+            break;
+        case cg_MIX:
+            t = "Mixer Controls";
+            break;
+        case cg_FILTER:
+            t = "Filter Controls";
+            break;
+        case cg_ENV:
+            t = "Envelope Controls";
+            break;
+        case cg_LFO:
+            t = "LFO Controls";
+            break;
+        case cg_FX:
+            t = "FX Controls";
+            break;
+        default:
+            t = "Unknown Controls";
+            break;
+        }
+        ol->setDescription(t);
+        ol->setTitle(t);
+        ol->getProperties().set("ControlGroup", (int)cg);
+#endif
+        cgOverlays[cg] = std::move(ol);
+    }
+
+    if (getIndexOfChildComponent(cgOverlays[cg].get()) < 0)
+    {
+        addAndMakeVisible(*cgOverlays[cg]);
+    }
+
+    return cgOverlays[cg].get();
+}
+
+#if SURGE_JUCE_ACCESSIBLE
+struct mfKT : public juce::ComponentTraverser
+{
+    /*
+     * This is a crude implementation which just sorts all components
+     */
+    juce::Component *on{nullptr};
+    mfKT(juce::Component *c) : on(c) {}
+    juce::Component *getDefaultComponent(juce::Component *parentComponent) override
+    {
+        return nullptr;
+    }
+    juce::Component *getNextComponent(juce::Component *current) override { return nullptr; }
+    juce::Component *getPreviousComponent(juce::Component *current) override { return nullptr; }
+    std::vector<juce::Component *> getAllComponents(juce::Component *parentComponent) override
+    {
+        std::vector<juce::Component *> res;
+        for (auto c : on->getChildren())
+            res.push_back(c);
+        std::sort(res.begin(), res.end(), [this](auto a, auto b) { return lessThan(a, b); });
+        return res;
+    }
+
+    bool lessThan(const juce::Component *a, const juce::Component *b)
+    {
+        int acg = -1, bcg = -1;
+        auto ap = a->getProperties().getVarPointer("ControlGroup");
+        auto bp = b->getProperties().getVarPointer("ControlGroup");
+        if (ap)
+            acg = *ap;
+        if (bp)
+            bcg = *bp;
+
+        if (acg != bcg)
+            return acg < bcg;
+
+        auto at = dynamic_cast<const Surge::GUI::IComponentTagValue *>(a);
+        auto bt = dynamic_cast<const Surge::GUI::IComponentTagValue *>(b);
+
+        if (at && bt)
+            return at->getTag() < bt->getTag();
+
+        if (at && !bt)
+            return false;
+
+        if (!at && bt)
+            return true;
+
+#if SURGE_JUCE_ACCESSIBLE
+        auto cd = a->getDescription().compare(b->getDescription());
+        if (cd < 0)
+            return true;
+        if (cd > 0)
+            return false;
+#endif
+
+        // so what the hell else to do?
+        return a < b;
+    }
+};
+
+std::unique_ptr<juce::ComponentTraverser> MainFrame::createFocusTraverser()
+{
+    return std::make_unique<mfKT>(this);
+}
+#endif
+
 } // namespace Widgets
 } // namespace Surge

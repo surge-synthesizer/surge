@@ -19,6 +19,7 @@
 #include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
 #include "ModulationSource.h"
+#include <string>
 
 class SurgeStorage;
 
@@ -49,8 +50,19 @@ struct ModulationSourceButton : public juce::Component,
     void setLabel(const std::string &s)
     {
         label = s;
+        setAccessibleLabel(label);
+    }
+
+    void setAccessibleLabel(const std::string &s)
+    {
 #if SURGE_JUCE_ACCESSIBLE
+#if MAC
+        setDescription(std::string("Modulator ") + label);
         setTitle(label);
+#else
+        setDescription("Modulator");
+        setTitle(label);
+#endif
 #endif
     }
 
@@ -76,16 +88,14 @@ struct ModulationSourceButton : public juce::Component,
     void setUseAlternate(bool b)
     {
         useAlternate = b;
-#if SURGE_JUCE_ACCESSIBLE
         if (useAlternate)
         {
-            setTitle(alternateLabel);
+            setAccessibleLabel(alternateLabel);
         }
         else
         {
-            setTitle(label);
+            setAccessibleLabel(label);
         }
-#endif
     }
     bool getUseAlternate() const { return useAlternate; }
 

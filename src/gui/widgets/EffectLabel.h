@@ -27,7 +27,12 @@ namespace Widgets
 {
 struct EffectLabel : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
-    EffectLabel() = default;
+    EffectLabel()
+    {
+#if SURGE_JUCE_ACCESSIBLE
+        setAccessible(false); // the param full name contains what we need
+#endif
+    }
     ~EffectLabel() = default;
 
     std::string label;

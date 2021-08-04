@@ -37,9 +37,6 @@ struct VerticalLabel : public juce::Component
     void setText(const std::string &t)
     {
         text = t;
-#if SURGE_JUCE_ACCESSIBLE
-        setTitle(t);
-#endif
         repaint();
     }
 
