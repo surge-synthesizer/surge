@@ -75,6 +75,9 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     }
 
     void mouseDown(const juce::MouseEvent &event) override;
+    void showClassicMenu(bool singleCategory = false);
+    void openPatchBrowser();
+
     void paint(juce::Graphics &g) override;
 
     void loadPatch(int id);
@@ -82,6 +85,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
     int getCurrentPatchId() const;
     int getCurrentCategoryId() const;
+
+    std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
 
   protected:
     std::string pname;
@@ -98,6 +103,12 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
                                       int &main_e, bool rootCall);
 
+#if SURGE_JUCE_ACCESSIBLE
+  private:
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
+
+  protected:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelector);
 };
 } // namespace Widgets
