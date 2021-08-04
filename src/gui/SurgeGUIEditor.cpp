@@ -1115,70 +1115,51 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                              .osc[current_osc[current_scene]]));
             oscWaveform->setSurgeGUIEditor(this);
 
-#if SURGE_JUCE_ACCESSIBLE
-            oscWaveform->setTitle("Oscillator Waveform");
-            oscWaveform->setDescription("Show");
-#endif
+            setAccessibilityInformationByTitleAndAction(oscWaveform.get(), "Oscillator Waveform",
+                                                        "Display");
+
             frame->addAndMakeVisible(*oscWaveform);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_settingsmenu);
-#if SURGE_JUCE_ACCESSIBLE
-            q->asJuceComponent()->setTitle("Main Menu");
-            q->asJuceComponent()->setDescription("Open");
-#endif
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Main Menu", "Open");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_SELECT:
         {
             auto oscswitch = layoutComponentForSkin(skinCtrl, tag_osc_select);
             oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
-#if SURGE_JUCE_ACCESSIBLE
-            oscswitch->asJuceComponent()->setTitle("Oscillator Number");
-            oscswitch->asJuceComponent()->setDescription("Select");
-#endif
+            setAccessibilityInformationByTitleAndAction(oscswitch->asJuceComponent(),
+                                                        "Oscillator Number", "Select");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCHCATEGORY:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_category);
-#if SURGE_JUCE_ACCESSIBLE
-            q->asJuceComponent()->setTitle("Patch Category");
-            q->asJuceComponent()->setDescription("Jog");
-#endif
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch Category",
+                                                        "Jog");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_patch);
-#if SURGE_JUCE_ACCESSIBLE
-            q->asJuceComponent()->setTitle("Patch");
-            q->asJuceComponent()->setDescription("Jog");
-#endif
-
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch", "Jog");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
-#if SURGE_JUCE_ACCESSIBLE
-            q->asJuceComponent()->setTitle("FX Preset");
-            q->asJuceComponent()->setDescription("Jog");
-#endif
-
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "FX Preset", "Jog");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE:
         {
             statusMPE = layoutComponentForSkin(skinCtrl, tag_status_mpe);
             statusMPE->setValue(synth->mpeEnabled ? 1 : 0);
-
-#if SURGE_JUCE_ACCESSIBLE
-            statusMPE->asJuceComponent()->setTitle("MPE");
-            statusMPE->asJuceComponent()->setDescription("Configure");
-#endif
+            setAccessibilityInformationByTitleAndAction(statusMPE->asJuceComponent(), "MPE",
+                                                        "Configure");
 
             break;
         }
@@ -1188,28 +1169,21 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
             statusTune->setValue(synth->storage.isStandardTuning ? hasmts
                                                                  : synth->storage.isToggledToCache);
-#if SURGE_JUCE_ACCESSIBLE
-            statusTune->asJuceComponent()->setTitle("Tuning");
-            statusTune->asJuceComponent()->setDescription("Configure");
-#endif
+            setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Tune",
+                                                        "Configure");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM:
         {
             statusZoom = layoutComponentForSkin(skinCtrl, tag_status_zoom);
-#if SURGE_JUCE_ACCESSIBLE
-            statusZoom->asJuceComponent()->setTitle("Zoom");
-            statusZoom->asJuceComponent()->setDescription("Configure");
-#endif
+            setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Zoom",
+                                                        "Configure");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
-#if SURGE_JUCE_ACCESSIBLE
-            q->asJuceComponent()->setTitle("Patch Storage");
-            q->asJuceComponent()->setDescription("Store");
-#endif
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch", "Store");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
@@ -1232,10 +1206,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::LFO_MENU:
         {
             auto r = layoutComponentForSkin(skinCtrl, tag_lfo_menu);
-#if SURGE_JUCE_ACCESSIBLE
-            r->asJuceComponent()->setTitle("LFO Menu");
-            r->asJuceComponent()->setDescription("Open");
-#endif
+            setAccessibilityInformationByTitleAndAction(r->asJuceComponent(), "LFO Menu", "Open");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL:
@@ -1284,10 +1255,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setAuthor(synth->storage.getPatch().author);
             patchSelector->setBounds(skinCtrl->getRect());
 
-#if SURGE_JUCE_ACCESSIBLE
-            patchSelector->setTitle("Patch Selector");
-            patchSelector->setDescription("Browse Patches");
-#endif
+            setAccessibilityInformationByTitleAndAction(patchSelector.get(), "Patch Selector",
+                                                        "Browse");
+
             frame->addAndMakeVisible(*patchSelector);
             break;
         }
@@ -1310,10 +1280,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             frame->addAndMakeVisible(*fc);
 
-#if SURGE_JUCE_ACCESSIBLE
-            fc->setTitle("Effect Slots");
-            fc->setDescription("Select");
-#endif
+            setAccessibilityInformationByTitleAndAction(fc->asJuceComponent(), "Effect Slots",
+                                                        "Select");
+
             effectChooser = std::move(fc);
             break;
         }
@@ -3926,15 +3895,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setSkin(currentSkin, bitmapStore, skinCtrl);
         hs->setMoveRate(p->moverate);
 
-#if SURGE_JUCE_ACCESSIBLE
-        if (p)
-        {
-            char txt[TXT_SIZE];
-            synth->getParameterName(synth->idForParameter(p), txt);
-            hs->setTitle(txt);
-            hs->setDescription("Adjust");
-        }
-#endif
+        setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
 
         if (p->can_temposync())
             hs->setTempoSync(p->temposync);
@@ -4048,15 +4009,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setHeightOfOneImage(skinCtrl->h);
             hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
 
-#if SURGE_JUCE_ACCESSIBLE
-            if (p)
-            {
-                char txt[TXT_SIZE];
-                synth->getParameterName(synth->idForParameter(p), txt);
-                hsw->setTitle(txt);
-                hsw->setDescription("Select");
-            }
-#endif
+            setAccessibilityInformationByParameter(hsw.get(), p, "Select");
 
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
@@ -4123,14 +4076,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
 
-#if SURGE_JUCE_ACCESSIBLE
-            if (p)
-            {
-                char txt[TXT_SIZE];
-                synth->getParameterName(synth->idForParameter(p), txt);
-                hsw->setTitle(txt);
-            }
-#endif
+            setAccessibilityInformationByParameter(hsw.get(), p, "Toggle");
+
             if (paramIndex >= 0)
                 nonmod_param[paramIndex] = hsw.get();
             if (p)
@@ -4812,4 +4759,31 @@ void SurgeGUIEditor::onSurgeError(const string &msg, const string &title)
     std::lock_guard<std::mutex> g(errorItemsMutex);
     errorItems.emplace_back(msg, title);
     errorItemCount++;
+}
+
+void SurgeGUIEditor::setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
+                                                            const std::string &action)
+{
+    if (p)
+    {
+        char txt[TXT_SIZE];
+        synth->getParameterAccessibleName(synth->idForParameter(p), txt);
+        setAccessibilityInformationByTitleAndAction(c, txt, action);
+    }
+}
+
+void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component *c,
+                                                                 const std::string &title,
+                                                                 const std::string &action)
+{
+#if SURGE_JUCE_ACCESSIBLE
+#if MAC
+    c->setDescription(action + " " + title);
+    c->setTitle(title);
+#else
+    c->setDescription(action);
+    c->setTitle(title);
+#endif
+
+#endif
 }
