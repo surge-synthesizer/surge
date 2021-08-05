@@ -18,6 +18,7 @@
 
 #include <JuceHeader.h>
 #include "SurgeImage.h"
+#include "Parameter.h"
 
 class SurgeGUIEditor;
 
@@ -27,7 +28,7 @@ namespace Widgets
 {
 struct MainFrame : public juce::Component
 {
-    MainFrame() : juce::Component() {}
+    MainFrame();
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
 
@@ -44,7 +45,31 @@ struct MainFrame : public juce::Component
             bg->draw(g, 1.0);
     }
 
+    void resized() override
+    {
+        for (auto &c : cgOverlays)
+            if (c)
+                c->setBounds(getLocalBounds());
+    }
+
+    void clearGroupLayers()
+    {
+        modGroup.reset(nullptr);
+        for (auto &c : cgOverlays)
+            c.reset(nullptr);
+    }
+
+    juce::Component *getControlGroupLayer(ControlGroup cg);
+    juce::Component *getModButtonLayer();
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
+#endif
+
     void mouseDown(const juce::MouseEvent &event) override;
+
+    std::array<std::unique_ptr<juce::Component>, endCG> cgOverlays;
+    std::unique_ptr<juce::Component> modGroup;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainFrame);
 };
