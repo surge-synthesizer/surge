@@ -1332,7 +1332,7 @@ if( APPLE )
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           COMMAND echo "Installing local resources"
-          COMMAND rsync -r --delete "resources/data/" "\${HOME}/Library/Application Support/Surge XT/"
+          COMMAND rsync -r --delete "resources/data/" "$ENV{HOME}/Library/Application Support/Surge XT/"
   )
 
   add_custom_target( install-resources-global )
@@ -1351,8 +1351,8 @@ elseif( UNIX AND NOT APPLE )
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           COMMAND echo "Installing local resources into ~/.local/share/surge-xt"
-          COMMAND ${CMAKE_COMMAND} -E make_directory "\${HOME}/.local/share/surge-xt/"
-          COMMAND rsync -r --delete "resources/data/" "\${HOME}/.local/share/surge-xt/"
+          COMMAND ${CMAKE_COMMAND} -E make_directory "$ENV{HOME}/.local/share/surge-xt/"
+          COMMAND rsync -r --delete "resources/data/" "$ENV{HOME}/.local/share/surge-xt/"
   )
 
   add_custom_target( install-resources-global )
