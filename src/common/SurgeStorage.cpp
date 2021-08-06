@@ -529,6 +529,7 @@ bailOnPortable:
     twelveToneStandardMapping =
         Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::KeyboardMapping());
     isStandardTuning = true;
+    mapChannelToOctave = false;
     isToggledToCache = false;
     for (int q = 0; q < 3; ++q)
         togglePriorState[q] = false;

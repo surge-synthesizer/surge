@@ -322,7 +322,8 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
             break;
         }
     }
-    else if (storage.getPatch().scenemode.val.i == sm_single)
+    else if (storage.getPatch().scenemode.val.i == sm_single &&
+             !storage.getPatch().dawExtraState.mapChannelToOctave)
     {
         if (storage.getPatch().scene_active.val.i == 1)
             channelmask = 2;
@@ -3852,6 +3853,7 @@ void SurgeSynthesizer::populateDawExtraState()
         storage.getPatch().dawExtraState.mappingContents = "";
         storage.getPatch().dawExtraState.mappingName = "";
     }
+    storage.getPatch().dawExtraState.mapChannelToOctave = storage.mapChannelToOctave;
 
     int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
                                               // B will be duplicated on load)
@@ -3928,6 +3930,8 @@ void SurgeSynthesizer::loadFromDawExtraState()
     {
         storage.remapToConcertCKeyboard();
     }
+
+    storage.mapChannelToOctave = storage.getPatch().dawExtraState.mapChannelToOctave;
 
     int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
                                               // B will be duplicated on load)

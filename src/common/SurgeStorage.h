@@ -739,6 +739,8 @@ struct DAWExtraStateStorage
     std::string mappingContents = "";
     std::string mappingName = "";
 
+    bool mapChannelToOctave = false;
+
     std::unordered_map<int, int> midictrl_map;      // param -> midictrl
     std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
 
@@ -1066,6 +1068,8 @@ class alignas(16) SurgeStorage
     Tunings::Scale currentScale;
     Tunings::KeyboardMapping currentMapping;
     bool isStandardTuning = true, isStandardScale = true, isStandardMapping = true;
+
+    std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
 
     enum TuningApplicationMode
     {
