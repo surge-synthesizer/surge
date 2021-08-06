@@ -119,6 +119,8 @@ if(MSVC)
 
     # Build with Multiple Processes (Clang-cl builds use Ninja instead)
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
+    # Set source and executable charsets to UTF-8
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
   )
 endif()
 
@@ -633,6 +635,8 @@ if (DEFINED ENV{VST2SDK_DIR})
   juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
   set(SURGE_JUCE_FORMATS AU VST3 VST Standalone)
   message(STATUS "JUCE VST2 SDK Path is $ENV{VST2SDK_DIR}")
+  # VST2 headers are invalid UTF-8
+  add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
 else()
   set(SURGE_JUCE_FORMATS AU VST3 Standalone)
 endif()
