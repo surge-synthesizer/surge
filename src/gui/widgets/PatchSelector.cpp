@@ -65,7 +65,7 @@ void PatchSelector::paint(juce::Graphics &g)
 
     // patch name
     g.setFont(Surge::GUI::getFontManager()->patchNameFont);
-    g.drawText(pname.c_str(), pbrowser, juce::Justification::centred);
+    g.drawText(pname, pbrowser, juce::Justification::centred);
 
     // category/author name
     g.setFont(Surge::GUI::getFontManager()->displayFont);
