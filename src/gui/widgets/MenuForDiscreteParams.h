@@ -121,6 +121,10 @@ struct MenuForDiscreteParams : public juce::Component,
 
     float nextValueInOrder(float v, int inc);
 
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuForDiscreteParams);
 };
 } // namespace Widgets
