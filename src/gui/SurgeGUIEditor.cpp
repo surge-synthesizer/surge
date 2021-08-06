@@ -1118,7 +1118,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             setAccessibilityInformationByTitleAndAction(oscWaveform.get(), "Oscillator Waveform",
                                                         "Display");
 
-            frame->addAndMakeVisible(*oscWaveform);
+            frame->getControlGroupLayer(cg_OSC)->addAndMakeVisible(*oscWaveform);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
@@ -1138,14 +1138,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCHCATEGORY:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_category);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch Category",
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Patch Category",
                                                         "Jog");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_patch);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch", "Jog");
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Patch", "Jog");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
@@ -1176,19 +1176,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM:
         {
             statusZoom = layoutComponentForSkin(skinCtrl, tag_status_zoom);
-            setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Zoom",
+            setAccessibilityInformationByTitleAndAction(statusZoom->asJuceComponent(), "Zoom",
                                                         "Configure");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Patch", "Store");
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Save Patch",
+                                                        "Store");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
         {
             msegEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
+            setAccessibilityInformationByTitleAndAction(msegEditSwitch->asJuceComponent(),
+                                                        "Show MSEG Editor", "Show");
             auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
             jassert(msejc);
             msejc->setVisible(false);
@@ -1239,7 +1242,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fxPresetLabel->setBounds(skinCtrl->getRect());
             setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
 
-            frame->addAndMakeVisible(*fxPresetLabel);
+            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fxPresetLabel);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
@@ -1279,9 +1282,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fc->setBypass(synth->storage.getPatch().fx_bypass.val.i);
             fc->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 
-            frame->addAndMakeVisible(*fc);
+            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fc);
 
-            setAccessibilityInformationByTitleAndAction(fc->asJuceComponent(), "Effect Slots",
+            setAccessibilityInformationByTitleAndAction(fc->asJuceComponent(), "FX Slots",
                                                         "Select");
 
             effectChooser = std::move(fc);
@@ -1512,6 +1515,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
     debugLabel->setColour(juce::Label::textColourId, juce::Colours::white);
     debugLabel->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
     debugLabel->setJustificationType(juce::Justification::centred);
+#if SURGE_JUCE_ACCESSIBLE
+    debugLabel->setAccessible(false);
+#endif
+
     frame->addAndMakeVisible(*debugLabel);
 
 #endif
@@ -3865,6 +3872,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             auto dbls = currentSkin->standardHoverAndHoverOnForIDB(IDB_MENU_AS_SLIDER, bitmapStore);
             hs->setBackgroundDrawable(dbls[0]);
             hs->setHoverBackgroundDrawable(dbls[1]);
+            setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
             param[p->id] = hs.get();
             frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
             juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
@@ -4050,7 +4058,41 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
             else
             {
-                frame->addAndMakeVisible(*hsw);
+                auto cg = endCG;
+                bool addToGlobalControls = false;
+                switch (tag)
+                {
+                case tag_osc_select:
+                    cg = cg_OSC;
+                    break;
+                    /* keep these up top
+                case tag_mp_category:
+                case tag_mp_patch:
+                case tag_store:
+                    cg = endCG;
+                    addToGlobalControls = true;
+                    break; */
+                case tag_mp_jogfx:
+                    cg = cg_FX;
+                    break;
+
+                default:
+                    cg = endCG;
+                    break;
+                }
+                if (cg != endCG)
+                {
+                    frame->getControlGroupLayer(cg)->addAndMakeVisible(*hsw);
+                }
+                else if (addToGlobalControls)
+                {
+                    frame->getSynthControlsLayer()->addAndMakeVisible(*hsw);
+                }
+                else
+                {
+                    // Really just the main menu
+                    frame->addAndMakeVisible(*hsw);
+                }
             }
 
             juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
@@ -4082,7 +4124,23 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
             else
             {
-                frame->addAndMakeVisible(*hsw);
+                switch (tag)
+                {
+                case tag_status_mpe:
+                case tag_status_zoom:
+                case tag_status_tune:
+                    frame->getSynthControlsLayer()->addAndMakeVisible(*hsw);
+                    break;
+                case tag_mseg_edit:
+                case tag_lfo_menu:
+                    frame->getControlGroupLayer(cg_LFO)->addAndMakeVisible(*hsw);
+                    break;
+                default:
+                    std::cout << tag << std::endl;
+                    jassert(false);
+                    frame->addAndMakeVisible(*hsw);
+                    break;
+                }
             }
 
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
@@ -4322,6 +4380,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hsw->setValue(p->get_value_f01());
         p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
+        setAccessibilityInformationByParameter(hsw.get(), p, "Select");
+
         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
         if (parm && parm->supportsTotalIndexOrdering())
             hsw->setIntOrdering(parm->totalIndexOrdering());
@@ -4392,7 +4452,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
         }
 
-        frame->addAndMakeVisible(*hsw);
+        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
         nonmod_param[paramIndex] = hsw.get();
 
         juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
@@ -4418,7 +4478,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (parm && parm->supportsTotalIndexOrdering())
             hsw->setIntOrdering(parm->totalIndexOrdering());
 
-        frame->addAndMakeVisible(*hsw);
+        setAccessibilityInformationByParameter(hsw.get(), p, "Select");
+        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
         nonmod_param[paramIndex] = hsw.get();
 
         juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
@@ -4803,7 +4864,7 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
 {
 #if SURGE_JUCE_ACCESSIBLE
 #if MAC
-    c->setDescription(action + " " + title);
+    c->setDescription(title);
     c->setTitle(title);
 #else
     c->setDescription(action);

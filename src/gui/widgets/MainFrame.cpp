@@ -49,20 +49,55 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
     }
 }
 
+struct OverlayComponent : public juce::Component
+{
+#if SURGE_JUCE_ACCESSIBLE
+    OverlayComponent()
+    {
+        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+        setAccessible(true);
+    }
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
+    }
+#endif
+};
+
+juce::Component *MainFrame::getSynthControlsLayer()
+{
+    if (!synthControls)
+    {
+        synthControls = std::make_unique<OverlayComponent>();
+        synthControls->setBounds(getLocalBounds());
+        synthControls->setInterceptsMouseClicks(false, true);
+#if SURGE_JUCE_ACCESSIBLE
+        synthControls->setTitle("Surge Synth Controls");
+        synthControls->setDescription("Surge Synth Controls");
+#endif
+        synthControls->getProperties().set("ControlGroup", (int)12);
+    }
+
+    if (getIndexOfChildComponent(synthControls.get()) < 0)
+    {
+        addAndMakeVisible(*synthControls);
+    }
+
+    return synthControls.get();
+}
 juce::Component *MainFrame::getModButtonLayer()
 {
     if (!modGroup)
     {
-        modGroup = std::make_unique<juce::Component>();
+        modGroup = std::make_unique<OverlayComponent>();
         modGroup->setBounds(getLocalBounds());
         modGroup->setInterceptsMouseClicks(false, true);
 #if SURGE_JUCE_ACCESSIBLE
-        modGroup->setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-        modGroup->setAccessible(true);
         modGroup->setTitle("Modulators");
         modGroup->setDescription("Modulators");
 #endif
-        modGroup->getProperties().set("ControlGroup", (int)endCG + 1);
+        modGroup->getProperties().set("ControlGroup", (int)endCG + 2000);
     }
 
     if (getIndexOfChildComponent(modGroup.get()) < 0)
@@ -76,12 +111,10 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
 {
     if (!cgOverlays[cg])
     {
-        auto ol = std::make_unique<juce::Component>();
+        auto ol = std::make_unique<OverlayComponent>();
         ol->setBounds(getLocalBounds());
         ol->setInterceptsMouseClicks(false, true);
 #if SURGE_JUCE_ACCESSIBLE
-        ol->setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-        ol->setAccessible(true);
         auto t = "Group " + std::to_string((int)cg);
         switch (cg)
         {
@@ -112,7 +145,7 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
         }
         ol->setDescription(t);
         ol->setTitle(t);
-        ol->getProperties().set("ControlGroup", (int)cg);
+        ol->getProperties().set("ControlGroup", (int)cg + 1000);
 #endif
         cgOverlays[cg] = std::move(ol);
     }

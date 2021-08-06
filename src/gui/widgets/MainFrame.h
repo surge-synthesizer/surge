@@ -61,6 +61,7 @@ struct MainFrame : public juce::Component
 
     juce::Component *getControlGroupLayer(ControlGroup cg);
     juce::Component *getModButtonLayer();
+    juce::Component *getSynthControlsLayer();
 
 #if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
@@ -69,7 +70,7 @@ struct MainFrame : public juce::Component
     void mouseDown(const juce::MouseEvent &event) override;
 
     std::array<std::unique_ptr<juce::Component>, endCG> cgOverlays;
-    std::unique_ptr<juce::Component> modGroup;
+    std::unique_ptr<juce::Component> modGroup, synthControls;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainFrame);
 };

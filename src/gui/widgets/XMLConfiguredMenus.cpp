@@ -271,7 +271,14 @@ void XMLMenuPopulator::populate()
     maxIdx = allPresets.size();
 }
 
-OscillatorMenu::OscillatorMenu() { strcpy(mtype, "osc"); }
+OscillatorMenu::OscillatorMenu()
+{
+    strcpy(mtype, "osc");
+#if SURGE_JUCE_ACCESSIBLE
+    setDescription("Oscillator Type");
+    setTitle("Oscillator Type");
+#endif
+}
 
 void OscillatorMenu::paint(juce::Graphics &g)
 {
@@ -344,7 +351,14 @@ void OscillatorMenu::mouseExit(const juce::MouseEvent &event)
     repaint();
 }
 
-FxMenu::FxMenu() { strcpy(mtype, "fx"); }
+FxMenu::FxMenu()
+{
+    strcpy(mtype, "fx");
+#if SURGE_JUCE_ACCESSIBLE
+    setDescription("FX Type");
+    setTitle("FX Type");
+#endif
+}
 
 void FxMenu::paint(juce::Graphics &g)
 {
