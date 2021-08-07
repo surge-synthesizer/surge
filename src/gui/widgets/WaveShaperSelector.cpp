@@ -7,6 +7,7 @@
 #include "QuadFilterUnit.h"
 #include "DSPUtils.h"
 #include <iostream>
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -594,6 +595,31 @@ void WaveShaperSelector::openAnalysis()
     getParentComponent()->addAndMakeVisible(*analysisWidget);
     repaint();
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+
+template <> struct DiscreteAHRange<WaveShaperSelector>
+{
+    static int iMaxV(WaveShaperSelector *t) { return n_ws_types - 1; }
+    static int iMinV(WaveShaperSelector *t) { return 0; }
+};
+
+template <> struct DiscreteAHStringValue<WaveShaperSelector>
+{
+    static std::string stringValue(WaveShaperSelector *comp, double ahValue)
+    {
+        auto r = (int)std::round(ahValue);
+        if (r < 0 || r > n_ws_types - 1)
+            return "ERROR";
+        return wst_names[r];
+    }
+};
+
+std::unique_ptr<juce::AccessibilityHandler> WaveShaperSelector::createAccessibilityHandler()
+{
+    return std::make_unique<DiscreteAH<WaveShaperSelector>>(this);
+}
+#endif
 
 } // namespace Widgets
 } // namespace Surge

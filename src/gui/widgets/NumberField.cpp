@@ -19,6 +19,7 @@
 #include "UnitConversions.h"
 #include "basic_dsp.h"
 #include "SurgeGUIUtils.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -178,5 +179,12 @@ void NumberField::changeBy(int inc)
     notifyValueChanged();
     repaint();
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+std::unique_ptr<juce::AccessibilityHandler> NumberField::createAccessibilityHandler()
+{
+    return std::make_unique<DiscreteAH<NumberField>>(this);
+}
+#endif
 } // namespace Widgets
 } // namespace Surge

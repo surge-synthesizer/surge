@@ -3657,7 +3657,7 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     juceOverlays[editorTag] = std::move(ol);
 }
 
-std::string SurgeGUIEditor::getDisplayForTag(long tag)
+std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
 {
     if (tag < start_paramtags)
         return "Non-param tag";
@@ -3669,12 +3669,32 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag)
         if (p)
         {
             char txt[1024];
-            p->get_display(txt);
+            p->get_display(txt, external, f);
             return txt;
         }
     }
 
     return "Unknown";
+}
+
+float SurgeGUIEditor::getF01FromString(long tag, const std::string &s)
+{
+    if (tag < start_paramtags)
+        return 0.f;
+
+    int ptag = tag - start_paramtags;
+    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+    {
+        Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+        if (p)
+        {
+            pdata pd;
+            p->set_value_from_string_onto(s, pd);
+            return p->value_to_normalized(pd.f);
+        }
+    }
+
+    return 0.f;
 }
 
 void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::string &prompt,
@@ -4021,6 +4041,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
 
             setAccessibilityInformationByParameter(hsw.get(), p, "Select");
+            hsw->setupAccessibility();
 
             hsw->setSwitchDrawable(std::get<0>(drawables));
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));

@@ -17,6 +17,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeImage.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -315,5 +316,62 @@ void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colo
         }
     }
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+
+struct EffectChooserAH : public juce::AccessibilityHandler
+{
+    using T = EffectChooser;
+    struct ECAHValue : public juce::AccessibilityValueInterface
+    {
+        explicit ECAHValue(T *s) : comp(s) {}
+
+        T *comp;
+
+        bool isReadOnly() const override { return false; }
+        double getCurrentValue() const override { return comp->getCurrentEffect(); }
+        void setValue(double newValue) override
+        {
+            comp->setCurrentEffect(newValue);
+            comp->notifyValueChanged();
+            comp->repaint();
+        }
+        juce::String getCurrentValueAsString() const override
+        {
+            return fxslot_names[comp->getCurrentEffect()];
+        }
+        void setValueAsString(const juce::String &newValue) override
+        {
+            setValue(newValue.getDoubleValue());
+        }
+        AccessibleValueRange getRange() const override { return {{0.0, (double)n_fx_slots}, 1}; }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ECAHValue);
+    };
+
+    explicit EffectChooserAH(T *s)
+        : comp(s), juce::AccessibilityHandler(
+                       *s, juce::AccessibilityRole::slider,
+                       juce::AccessibilityActions().addAction(
+                           juce::AccessibilityActionType::showMenu, [this]() { this->showMenu(); }),
+                       AccessibilityHandler::Interfaces{std::make_unique<ECAHValue>(s)})
+    {
+    }
+
+    void showMenu()
+    {
+        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+        comp->notifyControlModifierClicked(m);
+    }
+
+    T *comp;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectChooserAH);
+};
+
+std::unique_ptr<juce::AccessibilityHandler> EffectChooser::createAccessibilityHandler()
+{
+    return std::make_unique<EffectChooserAH>(this);
+}
+#endif
 } // namespace Widgets
 } // namespace Surge

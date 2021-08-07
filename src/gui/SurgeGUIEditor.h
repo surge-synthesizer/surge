@@ -354,7 +354,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         return false;
     }
 
-    std::string getDisplayForTag(long tag);
+    std::string getDisplayForTag(long tag, bool external = false, float value = 0);
+    float getF01FromString(long tag, const std::string &s);
 
     void queuePatchFileLoad(const std::string &file)
     {

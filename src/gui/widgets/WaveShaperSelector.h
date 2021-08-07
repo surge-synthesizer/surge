@@ -54,6 +54,10 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
 
     static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
 
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveShaperSelector);
 };
 
