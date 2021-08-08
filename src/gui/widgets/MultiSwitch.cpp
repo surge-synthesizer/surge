@@ -196,6 +196,12 @@ void MultiSwitch::setupAccessibility()
     if (rows * columns <= 1) // i use an alternate handler below
         return;
 
+    if (selectionComponents.size() == rows * columns)
+    {
+        // Already done it!
+        return;
+    }
+
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
