@@ -293,7 +293,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
     int channelmask = channel;
 
     if ((channel == 0) || (channel > 2) || mpeEnabled ||
-        storage.getPatch().scenemode.val.i == sm_chsplit)
+        storage.getPatch().scenemode.val.i == sm_chsplit || storage.mapChannelToOctave)
     {
         switch (storage.getPatch().scenemode.val.i)
         {
@@ -322,8 +322,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
             break;
         }
     }
-    else if (storage.getPatch().scenemode.val.i == sm_single &&
-             !storage.getPatch().dawExtraState.mapChannelToOctave)
+    else if (storage.getPatch().scenemode.val.i == sm_single)
     {
         if (storage.getPatch().scene_active.val.i == 1)
             channelmask = 2;
