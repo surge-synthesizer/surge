@@ -16,6 +16,8 @@
 #include "MultiSwitch.h"
 #include "SurgeImage.h"
 #include "basic_dsp.h"
+#include "AccessibleHelpers.h"
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -140,67 +142,96 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
 
 #if SURGE_JUCE_ACCESSIBLE
 
-struct MultiSwitchAH : public juce::AccessibilityHandler
+struct MultiSwitchRadioButton : public juce::Component
 {
-    struct MSValue : public juce::AccessibilityValueInterface
+    MultiSwitchRadioButton(MultiSwitch *s, float value, const std::string &label)
+        : mswitch(s), val(value)
     {
-        explicit MSValue(MultiSwitch *s) : mswitch(s) {}
+        setDescription(label);
+        setTitle(label);
+        setInterceptsMouseClicks(false, false);
+    }
+    MultiSwitch *mswitch;
+    float val;
+
+    struct RBAH : public juce::AccessibilityHandler
+    {
+        explicit RBAH(MultiSwitchRadioButton *b, MultiSwitch *s)
+            : button(b), mswitch(s), juce::AccessibilityHandler(
+                                         *b, juce::AccessibilityRole::radioButton,
+                                         juce::AccessibilityActions()
+                                             .addAction(juce::AccessibilityActionType::press,
+                                                        [this]() { this->press(); })
+                                             .addAction(juce::AccessibilityActionType::showMenu,
+                                                        [this]() { this->showMenu(); }))
+        {
+        }
+        void press()
+        {
+            mswitch->notifyBeginEdit();
+            mswitch->setValue(button->val);
+            mswitch->notifyValueChanged();
+            mswitch->notifyEndEdit();
+            mswitch->repaint();
+        }
+        void showMenu()
+        {
+            auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+            mswitch->notifyControlModifierClicked(m);
+        }
 
         MultiSwitch *mswitch;
-
-        bool isReadOnly() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return false;
-        }
-        double getCurrentValue() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return mswitch->getIntegerValue();
-        }
-        void setValue(double newValue) override
-        {
-            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
-            mswitch->setValue(newValue / (mswitch->rows * mswitch->columns - 1));
-            mswitch->repaint();
-            mswitch->notifyValueChanged();
-        }
-        virtual juce::String getCurrentValueAsString() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return std::to_string(mswitch->getIntegerValue());
-        }
-        virtual void setValueAsString(const juce::String &newValue) override
-        {
-            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
-            setValue(newValue.getIntValue());
-        }
-        AccessibleValueRange getRange() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return {{0, (double)(mswitch->rows * mswitch->columns - 1)}, 1};
-        }
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSValue);
+        MultiSwitchRadioButton *button;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
     };
-
-    explicit MultiSwitchAH(MultiSwitch *s)
-        : mswitch(s), juce::AccessibilityHandler(
-                          *s, juce::AccessibilityRole::radioButton,
-                          juce::AccessibilityActions().addAction(
-                              juce::AccessibilityActionType::showMenu,
-                              [this]() { this->showMenu(); }),
-                          juce::AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler()
     {
+        return std::make_unique<RBAH>(this, mswitch);
     }
-    void showMenu()
-    {
-        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
-        mswitch->notifyControlModifierClicked(m);
-    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchRadioButton);
+};
 
-    MultiSwitch *mswitch;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAH);
+void MultiSwitch::setupAccessibility()
+{
+    if (rows * columns <= 1) // i use an alternate handler below
+        return;
+
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    jassert(sge);
+    if (!sge)
+        return;
+
+    float dr = getHeight() / rows;
+    float dc = getWidth() / columns;
+    int sel = 0;
+    for (int c = 0; c < columns; ++c)
+    {
+        for (int r = 0; r < rows; ++r)
+        {
+            float val = ((float)sel) / (rows * columns - 1);
+            auto title = sge->getDisplayForTag(getTag(), true, val);
+            sel++;
+
+            auto ac = std::make_unique<MultiSwitchRadioButton>(this, val, title);
+            ac->getProperties().set("ControlGroup", (int)(c * columns + rows));
+            ac->setBounds(juce::Rectangle<int>(c * dc, r * dr, dc, dr));
+            addAndMakeVisible(*ac);
+            selectionComponents.push_back(std::move(ac));
+        }
+    }
+}
+template <> struct DiscreteAHRange<MultiSwitch>
+{
+    static int iMaxV(MultiSwitch *t) { return t->rows * t->columns - 1; }
+    static int iMinV(MultiSwitch *t) { return 0; }
+};
+
+template <> struct DiscreteRO<MultiSwitch>
+{
+    static int isReadOnly(MultiSwitch *t) { return true; }
 };
 
 struct MultiSwitchAHMenuOnly : public juce::AccessibilityHandler
@@ -226,9 +257,11 @@ std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHand
     }
     else
     {
-        return std::make_unique<MultiSwitchAH>(this);
+        return std::make_unique<DiscreteAH<MultiSwitch, juce::AccessibilityRole::group>>(this);
     }
 }
+#else
+void MultiSwitch::setupAccessibility() {}
 #endif
 
 } // namespace Widgets

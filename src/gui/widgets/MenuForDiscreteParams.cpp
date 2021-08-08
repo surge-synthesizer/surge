@@ -18,6 +18,7 @@
 #include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -269,74 +270,9 @@ float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
 
 #if SURGE_JUCE_ACCESSIBLE
 
-struct MenuDiscAH : public juce::AccessibilityHandler
-{
-    struct MDValue : public juce::AccessibilityValueInterface
-    {
-        explicit MDValue(MenuForDiscreteParams *s) : menu(s) {}
-
-        MenuForDiscreteParams *menu;
-
-        bool isReadOnly() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return false;
-        }
-        double getCurrentValue() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            auto cv = Parameter::intUnscaledFromFloat(menu->getValue(), menu->iMax, menu->iMin);
-            return cv;
-        }
-        void setValue(double newValue) override
-        {
-            menu->notifyBeginEdit();
-            menu->setValue(Parameter::intScaledToFloat(newValue, menu->iMax, menu->iMin));
-            menu->notifyValueChanged();
-            menu->notifyEndEdit();
-            menu->repaint();
-        }
-        virtual juce::String getCurrentValueAsString() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return std::to_string(getCurrentValue());
-        }
-        virtual void setValueAsString(const juce::String &newValue) override
-        {
-            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
-            setValue(newValue.getDoubleValue());
-        }
-        AccessibleValueRange getRange() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return {{(double)menu->iMin, (double)menu->iMax}, 1};
-        }
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MDValue);
-    };
-
-    explicit MenuDiscAH(MenuForDiscreteParams *s)
-        : menu(s), juce::AccessibilityHandler(
-                       *s, juce::AccessibilityRole::slider,
-                       juce::AccessibilityActions().addAction(
-                           juce::AccessibilityActionType::showMenu, [this]() { this->showMenu(); }),
-                       AccessibilityHandler::Interfaces{std::make_unique<MDValue>(s)})
-    {
-    }
-
-    void showMenu()
-    {
-        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
-        menu->notifyControlModifierClicked(m);
-    }
-
-    MenuForDiscreteParams *menu;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuDiscAH);
-};
-
 std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessibilityHandler()
 {
-    return std::make_unique<MenuDiscAH>(this);
+    return std::make_unique<DiscreteAH<MenuForDiscreteParams>>(this);
 }
 #endif
 } // namespace Widgets

@@ -255,7 +255,7 @@ enum fxslot_positions
     fxslot_global2
 };
 
-const char fxslot_names[8][NAMECHARS] = {
+const char fxslot_names[n_fx_slots][NAMECHARS] = {
     "A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
     "Send FX 1",     "Send FX 2",     "Global FX 1",   "Global FX 2",
 };

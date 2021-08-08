@@ -114,6 +114,10 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     void getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colour &frcol,
                           juce::Colour &txtcol);
 
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectChooser);
 };
 } // namespace Widgets

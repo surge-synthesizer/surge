@@ -19,6 +19,7 @@
 #include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -351,6 +352,53 @@ void OscillatorMenu::mouseExit(const juce::MouseEvent &event)
     repaint();
 }
 
+#if SURGE_JUCE_ACCESSIBLE
+
+template <typename T> struct XMLValue
+{
+    static std::string value(T *comp) { return "ERROR"; }
+};
+
+template <> struct XMLValue<OscillatorMenu>
+{
+    static std::string value(OscillatorMenu *comp)
+    {
+        int ids = comp->osc->type.val.i;
+        return osc_type_names[ids];
+    }
+};
+
+template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
+{
+    struct XMLMenuTextValue : public juce::AccessibilityTextValueInterface
+    {
+        XMLMenuTextValue(T *c) : comp(c) {}
+        T *comp;
+
+        bool isReadOnly() const override { return true; }
+        juce::String getCurrentValueAsString() const override { return XMLValue<T>::value(comp); }
+        void setValueAsString(const juce::String &newValue) override{};
+    };
+
+    explicit XMLMenuAH(T *s)
+        : comp(s), juce::AccessibilityHandler(
+                       *s, juce::AccessibilityRole::button,
+                       juce::AccessibilityActions().addAction(
+                           juce::AccessibilityActionType::showMenu, [this]() { this->showMenu(); }),
+                       AccessibilityHandler::Interfaces{std::make_unique<XMLMenuTextValue>(s)})
+    {
+    }
+    void showMenu() { comp->menu.showMenuAsync(juce::PopupMenu::Options()); }
+
+    T *comp;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(XMLMenuAH);
+};
+std::unique_ptr<juce::AccessibilityHandler> OscillatorMenu::createAccessibilityHandler()
+{
+    return std::make_unique<XMLMenuAH<OscillatorMenu>>(this);
+}
+#endif
+
 FxMenu::FxMenu()
 {
     strcpy(mtype, "fx");
@@ -586,6 +634,25 @@ void FxMenu::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
         jogBy(-dir);
     }
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+
+template <> struct XMLValue<FxMenu>
+{
+    static std::string value(FxMenu *comp)
+    {
+        std::string r = fx_type_names[comp->fx->type.val.i];
+        r += " in ";
+        r += fxslot_names[comp->current_fx];
+        return r;
+    }
+};
+
+std::unique_ptr<juce::AccessibilityHandler> FxMenu::createAccessibilityHandler()
+{
+    return std::make_unique<XMLMenuAH<FxMenu>>(this);
+}
+#endif
 
 } // namespace Widgets
 } // namespace Surge

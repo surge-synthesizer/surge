@@ -151,6 +151,10 @@ struct OscillatorMenu : public juce::Component,
     int font_size{8}, text_hoffset{0}, text_voffset{0};
     juce::Justification text_align{juce::Justification::centred};
 
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorMenu);
 };
 
@@ -203,6 +207,10 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     SurgeImage *bg{}, *bgHover{};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };
     void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FxMenu);
 };

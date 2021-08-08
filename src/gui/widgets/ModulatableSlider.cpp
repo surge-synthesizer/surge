@@ -505,19 +505,10 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
 
         ModulatableSlider *slider;
 
-        bool isReadOnly() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return false;
-        }
-        double getCurrentValue() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return slider->getValue();
-        }
+        bool isReadOnly() const override { return false; }
+        double getCurrentValue() const override { return slider->getValue(); }
         void setValue(double newValue) override
         {
-            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
             slider->setValue(newValue);
             slider->setQuantitizedDisplayValue(newValue);
             slider->repaint();
@@ -525,19 +516,25 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
         }
         virtual juce::String getCurrentValueAsString() const override
         {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
+            auto sge = slider->firstListenerOfType<SurgeGUIEditor>();
+            if (sge)
+            {
+                return sge->getDisplayForTag(slider->getTag());
+            }
             return std::to_string(slider->getValue());
         }
         virtual void setValueAsString(const juce::String &newValue) override
         {
-            // std::cout << __func__  << " " << __LINE__ << _D(newValue) << std::endl;
+            auto sge = slider->firstListenerOfType<SurgeGUIEditor>();
+            if (sge)
+            {
+                float f = sge->getF01FromString(slider->getTag(), newValue.toStdString());
+                setValue(f);
+                return;
+            }
             setValue(newValue.getDoubleValue());
         }
-        AccessibleValueRange getRange() const override
-        {
-            // std::cout << __func__  << " " << __LINE__ << std::endl;
-            return {{0, 1}, 0.01};
-        }
+        AccessibleValueRange getRange() const override { return {{0, 1}, 0.01}; }
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSValue);
     };
