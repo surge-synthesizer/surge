@@ -16,8 +16,9 @@
 #ifndef SURGE_XT_VUMETER_H
 #define SURGE_XT_VUMETER_H
 
-#include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeImage;
 

@@ -13,7 +13,6 @@
 ** open source in September 2018.
 */
 
-#include <JuceHeader.h>
 #include <iostream>
 
 #include "SurgeSynthProcessor.h"

@@ -15,9 +15,9 @@
 //==============================================================================
 SurgefxAudioProcessor::SurgefxAudioProcessor()
     : AudioProcessor(BusesProperties()
-                         .withInput("Input", AudioChannelSet::stereo(), true)
-                         .withOutput("Output", AudioChannelSet::stereo(), true)
-                         .withInput("Sidechain", AudioChannelSet::stereo(), true))
+                         .withInput("Input", juce::AudioChannelSet::stereo(), true)
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+                         .withInput("Sidechain", juce::AudioChannelSet::stereo(), true))
 {
     effectNum = fxt_delay;
     storage.reset(new SurgeStorage());
@@ -35,13 +35,13 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         snprintf(lb, 256, "fx_parm_%d", i);
         snprintf(nm, 256, "FX Parameter %d", i);
 
-        addParameter(fxParams[i] =
-                         new AudioParameterFloat(lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
-                                                 fxstorage->p[fx_param_remap[i]].get_value_f01()));
+        addParameter(fxParams[i] = new juce::AudioParameterFloat(
+                         lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
+                         fxstorage->p[fx_param_remap[i]].get_value_f01()));
         fxBaseParams[i] = fxParams[i];
     }
-    addParameter(
-        fxType = new AudioParameterInt("fxtype", "FX Type", fxt_delay, n_fx_types - 1, effectNum));
+    addParameter(fxType = new juce::AudioParameterInt("fxtype", "FX Type", fxt_delay,
+                                                      n_fx_types - 1, effectNum));
     fxBaseParams[n_fx_params] = fxType;
 
     for (int i = 0; i < n_fx_params; ++i)
@@ -52,7 +52,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
         // if you change this 0xFF also change the divide in the setValueNotifyingHost in
         // setFXParamExtended etc
-        addParameter(fxParamFeatures[i] = new AudioParameterInt(lb, nm, 0, 0xFF, 0));
+        addParameter(fxParamFeatures[i] = new juce::AudioParameterInt(lb, nm, 0, 0xFF, 0));
         *(fxParamFeatures[i]) = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         fxBaseParams[i + n_fx_params + 1] = fxParamFeatures[i];
     }
@@ -76,7 +76,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 SurgefxAudioProcessor::~SurgefxAudioProcessor() {}
 
 //==============================================================================
-const String SurgefxAudioProcessor::getName() const { return JucePlugin_Name; }
+const juce::String SurgefxAudioProcessor::getName() const { return JucePlugin_Name; }
 
 bool SurgefxAudioProcessor::acceptsMidi() const { return false; }
 
@@ -96,9 +96,9 @@ int SurgefxAudioProcessor::getCurrentProgram() { return 0; }
 
 void SurgefxAudioProcessor::setCurrentProgram(int index) {}
 
-const String SurgefxAudioProcessor::getProgramName(int index) { return "Default"; }
+const juce::String SurgefxAudioProcessor::getProgramName(int index) { return "Default"; }
 
-void SurgefxAudioProcessor::changeProgramName(int index, const String &newName) {}
+void SurgefxAudioProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
@@ -117,17 +117,18 @@ bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) c
     // the sidechain can take any layout, the main bus needs to be the same on the input and output
     return layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet() &&
            !layouts.getMainInputChannelSet().isDisabled() &&
-           layouts.getMainInputChannelSet() == AudioChannelSet::stereo();
+           layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
 #define is_aligned(POINTER, BYTE_COUNT) (((uintptr_t)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
 
-void SurgefxAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
+void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                         juce::MidiBuffer &midiMessages)
 {
     if (resettingFx || !surge_effect)
         return;
 
-    ScopedNoDenormals noDenormals;
+    juce::ScopedNoDenormals noDenormals;
 
     if (surge_effect->checkHasInvalidatedUI())
     {
@@ -138,7 +139,7 @@ void SurgefxAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer 
     auto playhead = getPlayHead();
     if (playhead)
     {
-        AudioPlayHead::CurrentPositionInfo cp;
+        juce::AudioPlayHead::CurrentPositionInfo cp;
         playhead->getCurrentPosition(cp);
         thisBPM = cp.bpm;
     }
@@ -217,15 +218,15 @@ bool SurgefxAudioProcessor::hasEditor() const
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor *SurgefxAudioProcessor::createEditor()
+juce::AudioProcessorEditor *SurgefxAudioProcessor::createEditor()
 {
     return new SurgefxAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void SurgefxAudioProcessor::getStateInformation(MemoryBlock &destData)
+void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
-    std::unique_ptr<XmlElement> xml(new XmlElement("surgefx"));
+    std::unique_ptr<juce::XmlElement> xml(new juce::XmlElement("surgefx"));
     xml->setAttribute("streamingVersion", (int)1);
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -245,7 +246,7 @@ void SurgefxAudioProcessor::getStateInformation(MemoryBlock &destData)
 
 void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
-    std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
     if (xmlState.get() != nullptr)
     {
         if (xmlState->hasTagName("surgefx"))
@@ -426,4 +427,4 @@ void SurgefxAudioProcessor::setupStorageRanges(Parameter *start, Parameter *endI
 
 //==============================================================================
 // This creates new instances of the plugin..
-AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgefxAudioProcessor(); }
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgefxAudioProcessor(); }

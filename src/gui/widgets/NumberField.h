@@ -16,11 +16,12 @@
 #ifndef SURGE_XT_NUMBERFIELD_H
 #define SURGE_XT_NUMBERFIELD_H
 
-#include <JuceHeader.h>
 #include "SkinModel.h"
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
 #include "SurgeImage.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeStorage;
 

@@ -16,9 +16,10 @@
 #ifndef SURGE_XT_MAINFRAME_H
 #define SURGE_XT_MAINFRAME_H
 
-#include <JuceHeader.h>
 #include "SurgeImage.h"
 #include "Parameter.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeGUIEditor;
 

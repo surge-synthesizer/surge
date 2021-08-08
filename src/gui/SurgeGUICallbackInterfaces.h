@@ -16,6 +16,8 @@
 #ifndef SURGE_XT_SURGEGUICALLBACKINTERFACES_H
 #define SURGE_XT_SURGEGUICALLBACKINTERFACES_H
 
+#include "juce_gui_basics/juce_gui_basics.h"
+
 namespace Surge
 {
 namespace GUI

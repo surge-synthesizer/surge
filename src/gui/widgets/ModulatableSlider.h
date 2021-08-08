@@ -16,11 +16,12 @@
 #ifndef SURGE_XT_MODULATABLESLIDER_H
 #define SURGE_XT_MODULATABLESLIDER_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "ModulatableControlInterface.h"
 #include "SurgeJUCEHelpers.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeStorage;
 

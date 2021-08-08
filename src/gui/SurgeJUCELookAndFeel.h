@@ -16,7 +16,7 @@
 #ifndef SURGE_XT_SURGEJUCELOOKANDFEEL_H
 #define SURGE_XT_SURGEJUCELOOKANDFEEL_H
 
-#include <JuceHeader.h>
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4
 {

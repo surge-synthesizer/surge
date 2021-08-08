@@ -16,7 +16,7 @@
 #ifndef SURGE_XT_MODULATABLECONTROLINTERFACE_H
 #define SURGE_XT_MODULATABLECONTROLINTERFACE_H
 
-#include <JuceHeader.h>
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

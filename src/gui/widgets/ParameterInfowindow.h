@@ -16,9 +16,10 @@
 #ifndef SURGE_XT_PARAMETERINFOWINDOW_H
 #define SURGE_XT_PARAMETERINFOWINDOW_H
 
-#include <JuceHeader.h>
 #include "Parameter.h"
 #include "SkinSupport.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

@@ -16,9 +16,11 @@
 #ifndef SURGE_XT_MODULATIONSOURCEBUTTON_H
 #define SURGE_XT_MODULATIONSOURCEBUTTON_H
 
-#include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
 #include "ModulationSource.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
 #include <string>
 
 class SurgeStorage;

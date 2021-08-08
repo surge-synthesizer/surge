@@ -16,10 +16,12 @@
 #ifndef SURGE_XT_WIDGETBASEMIXIN_H
 #define SURGE_XT_WIDGETBASEMIXIN_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
-#include <unordered_set>
 #include "SurgeGUICallbackInterfaces.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
+#include <unordered_set>
 
 class SurgeGUIEditor;
 

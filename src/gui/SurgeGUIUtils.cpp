@@ -1,7 +1,8 @@
 #include "SurgeGUIUtils.h"
 
+#include "juce_core/juce_core.h"
+
 #include <cctype>
-#include <JuceHeader.h>
 
 namespace Surge
 {

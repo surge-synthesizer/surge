@@ -17,8 +17,6 @@
 
 #include "globals.h"
 
-#include <JuceHeader.h>
-
 #include "SurgeGUICallbackInterfaces.h"
 
 #include "SurgeStorage.h"
@@ -32,6 +30,8 @@
 #include "overlays/MSEGEditor.h"
 #include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
 #include "widgets/ModulatableControlInterface.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 #include <vector>
 #include <thread>

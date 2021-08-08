@@ -16,10 +16,10 @@
 #ifndef SURGE_XT_MULTISWITCH_H
 #define SURGE_XT_MULTISWITCH_H
 
-#include <JuceHeader.h>
-#include <SurgeJUCEHelpers.h>
-#include "SkinSupport.h"
+#include "SurgeJUCEHelpers.h"
 #include "WidgetBaseMixin.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeImage;
 

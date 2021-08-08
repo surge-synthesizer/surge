@@ -20,9 +20,10 @@
 #ifndef SURGE_XT_LUAEDITORS_H
 #define SURGE_XT_LUAEDITORS_H
 
-#include <JuceHeader.h>
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
+
+#include "juce_gui_extra/juce_gui_extra.h"
 
 class SurgeGUIEditor;
 

@@ -14,7 +14,7 @@
 #include "DebugHelpers.h"
 #include "globals.h"
 
-#include <JuceHeader.h>
+#include "juce_graphics/juce_graphics.h"
 
 #include "SkinModel.h"
 #include "SkinColors.h"
