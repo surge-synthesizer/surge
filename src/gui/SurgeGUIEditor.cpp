@@ -3027,11 +3027,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     else
     {
         skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Install a New Skin..."), [this]() {
-            std::string skinspath =
-                Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Skins");
-            // make it if it isn't there
-            fs::create_directories(string_to_path(skinspath));
-            Surge::GUI::openFileOrFolder(skinspath);
+            Surge::GUI::openFileOrFolder(this->synth->storage.userSkinsPath);
         });
     }
 

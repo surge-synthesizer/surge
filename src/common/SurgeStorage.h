@@ -962,6 +962,8 @@ class alignas(16) SurgeStorage
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);
 
+    void createUserDirectory();
+
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, std::string subdir);
     void refresh_patchlist();
@@ -1005,12 +1007,18 @@ class alignas(16) SurgeStorage
 
     std::string wtpath;
     std::string datapath;
-    std::string userDataPath;
     std::string userDefaultFilePath;
+    std::string userDataPath;
+    std::string userPatchesPath;
+    std::string userWavetablesPath;
+    std::string userModulatorSettingsPath;
     std::string userFXPath;
+    std::string userWavetablesExportPath;
+    std::string userSkinsPath;
+    std::string userMidiMappingsPath;
+
     std::string installedPath;
 
-    std::string userMidiMappingsPath;
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
     void rescanUserMidiMappings();
     void loadMidiMappingByName(std::string name);

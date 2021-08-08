@@ -175,7 +175,7 @@ struct TxnGuard
 
 struct PatchDB::workerS
 {
-    static constexpr const char *schema_version = "3"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "4"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -265,7 +265,6 @@ CREATE TABLE Category (
 
     explicit workerS(SurgeStorage *storage) : storage(storage)
     {
-        fs::create_directories(string_to_path(storage->userDataPath));
         auto dbname = storage->userDataPath + "/SurgePatches.db";
         auto flag = SQLITE_OPEN_FULLMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;

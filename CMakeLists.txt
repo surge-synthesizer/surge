@@ -169,6 +169,7 @@ juce_add_binary_data(surge-shared-binary
         HEADER_NAME SurgeCoreBinary.h
         SOURCES
         resources/data/configuration.xml
+        resources/surge-xt/README_UserArea.txt
         resources/data/windows.wt
         resources/data/paramdocumentation.xml)
 set_target_properties(surge-shared-binary PROPERTIES

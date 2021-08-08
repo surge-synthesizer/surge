@@ -268,15 +268,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         if (lstat == 0 && (linfo.st_mtime > rinfo.st_mtime || rstat != 0))
             datapath = localpath; // use the local
         else
-            datapath = rootpath; // else use the root. If both are missing we will blow up later.
+            datapath = rootpath; // else use the root. If both are missing we will blow up later
     }
     else
     {
         datapath = suppliedDataPath;
     }
 
-    // ~/Documents/Surge in full name
-    sprintf(path, "%s/Documents/Surge", homePath);
+    // ~/Documents/Surge XT in full name
+    sprintf(path, "%s/Documents/Surge XT", homePath);
     userDataPath = path;
 #elif LINUX
     if (!hasSuppliedDataPath)
@@ -326,8 +326,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         if (buildOverrideDataPath)
         {
             datapath = std::string(buildOverrideDataPath);
-            std::cout << "WARNING: Surge Overriding DataPath to " << datapath << std::endl;
-            std::cout << "         Only use this in build pipelines please" << std::endl;
+            std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
+            std::cout << "         Only use this in build pipelines please!" << std::endl;
         }
     }
     else
@@ -337,15 +337,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     /*
     ** See the discussion in github issue #930. Basically
-    ** if ~/Documents/Surge exists use that
-    ** else if ~/.Surge exists use that
-    ** else if ~/.Documents exists, use ~/Documents/Surge
-    ** else use ~/.Surge
+    ** if ~/Documents/Surge XT exists use that
+    ** else if ~/.Surge XT exists use that
+    ** else if ~/.Documents exists, use ~/Documents/Surge XT
+    ** else use ~/.Surge XT
     ** Compensating for whether your distro makes you a ~/Documents or not
     */
 
-    std::string documentsSurge = std::string(homePath) + "/Documents/Surge";
-    std::string dotSurge = std::string(homePath) + "/.Surge";
+    std::string documentsSurge = std::string(homePath) + "/Documents/Surge XT";
+    std::string dotSurge = std::string(homePath) + "/.Surge XT";
     std::string documents = std::string(homePath) + "/Documents/";
 
     if (fs::is_directory(string_to_path(documentsSurge)))
@@ -364,8 +364,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         userDataPath = dotSurge;
     }
-    // std::cout << "DataPath is " << datapath << std::endl;
-    // std::cout << "UserDataPath is " << userDataPath << std::endl;
+    // std::cout << "Data path is " << datapath << std::endl;
+    // std::cout << "User data path is " << userDataPath << std::endl;
 
 #elif WINDOWS
 #if TARGET_RACK
@@ -435,10 +435,10 @@ bailOnPortable:
         }
     }
 
-    // Portable - first check for dllPath\\SurgeUserData
-    if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeUserData"))
+    // Portable - first check for dllPath\\SurgeXTUserData
+    if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeXTUserData"))
     {
-        userDataPath = path_to_string(dllPath / L"SurgeUserData");
+        userDataPath = path_to_string(dllPath / L"SurgeXTUserData");
     }
     else
     {
@@ -446,7 +446,7 @@ bailOnPortable:
         if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
         {
             fs::path path(documentsFolder);
-            path /= L"Surge";
+            path /= L"Surge XT";
             userDataPath = path_to_string(path);
         }
     }
@@ -464,10 +464,14 @@ bailOnPortable:
 
     // append separator if not present
     datapath = Surge::Storage::appendDirectory(datapath, std::string());
-
-    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FXSettings");
-
-    userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDIMappings");
+    userPatchesPath = Surge::Storage::appendDirectory(userDataPath, "Patches");
+    userWavetablesPath = Surge::Storage::appendDirectory(userDataPath, "Wavetables");
+    userWavetablesExportPath = Surge::Storage::appendDirectory(userWavetablesPath, "Exported");
+    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FX Presets");
+    userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDI Mappings");
+    userModulatorSettingsPath = Surge::Storage::appendDirectory(userDataPath, "Modulator Presets");
+    userSkinsPath = Surge::Storage::appendDirectory(userDataPath, "Skins");
+    createUserDirectory();
 
     /*
     const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
@@ -487,8 +491,8 @@ bailOnPortable:
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
         reportError("Cannot parse 'configuration.xml' in path '" + datapath +
-                        "'. Please reinstall surge.",
-                    "Surge is not properly installed.");
+                        "'. Please reinstall Surge!",
+                    "Surge Incorrectly Installed");
     }
 
     load_midi_controllers();
@@ -508,16 +512,15 @@ bailOnPortable:
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
-    // WindowWT is a WaveTable which now has a constructor so don't do this
+    // WindowWT is a Wavetable which now has a constructor so don't do this
     // memset(&WindowWT, 0, sizeof(WindowWT));
     if (loadWtAndPatch &&
         !load_wt_wt_mem(SurgeCoreBinary::windows_wt, SurgeCoreBinary::windows_wtSize, &WindowWT))
     {
         WindowWT.size = 0;
         std::ostringstream oss;
-        oss << "Unable to load 'windows.wt'. from memory. "
-            << "This is a usually fatal internal software error in Surge XT which should"
-            << " never occur!";
+        oss << "Unable to load 'windows.wt' from memory. "
+            << "This is a fatal internal software error which should never occur!";
         reportError(oss.str(), "Surge Resources Loading Error");
     }
 
@@ -652,6 +655,40 @@ bailOnPortable:
         this, Surge::Storage::InitialPatchCategory, "Templates");
 }
 
+void SurgeStorage::createUserDirectory()
+{
+    auto p = string_to_path(userDataPath);
+    auto needToBuild = false;
+    if (!fs::is_directory(p))
+    {
+        needToBuild = true;
+    }
+
+    if (needToBuild)
+    {
+        try
+        {
+            for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
+                            userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
+                            userSkinsPath, userMidiMappingsPath})
+                fs::create_directories(string_to_path(s));
+
+            auto rd = std::string(SurgeCoreBinary::README_UserArea_txt,
+                                  SurgeCoreBinary::README_UserArea_txtSize) +
+                      "\n";
+            auto of =
+                std::ofstream(string_to_path(userDataPath) / "README.txt", std::ofstream::out);
+            if (of.is_open())
+                of << rd << std::endl;
+            of.close();
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            reportError(e.what(), "Unable to set up User Directory");
+        }
+    }
+}
+
 void SurgeStorage::initializePatchDb()
 {
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
@@ -715,7 +752,7 @@ void SurgeStorage::refresh_patchlist()
 
     refreshPatchlistAddDir(false, "patches_3rdparty");
     firstUserCategory = patch_category.size();
-    refreshPatchlistAddDir(true, "");
+    refreshPatchlistAddDir(true, "Patches");
 
     patchOrdering = std::vector<int>(patch_list.size());
     std::iota(patchOrdering.begin(), patchOrdering.end(), 0);
@@ -945,7 +982,7 @@ void SurgeStorage::refresh_wtlist()
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
     firstUserWTCategory = wt_category.size();
-    refresh_wtlistAddDir(true, "");
+    refresh_wtlistAddDir(true, "Wavetables");
 
     wtCategoryOrdering = std::vector<int>(wt_category.size());
     std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
