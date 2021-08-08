@@ -464,10 +464,14 @@ bailOnPortable:
 
     // append separator if not present
     datapath = Surge::Storage::appendDirectory(datapath, std::string());
-
+    userPatchesPath = Surge::Storage::appendDirectory(userDataPath, "Patches");
+    userWavetablesPath = Surge::Storage::appendDirectory(userDataPath, "Wavetables");
+    userWavetablesExportPath = Surge::Storage::appendDirectory(userWavetablesPath, "Exported");
     userFXPath = Surge::Storage::appendDirectory(userDataPath, "FX Presets");
-
     userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDI Mappings");
+    userModulatorSettingsPath = Surge::Storage::appendDirectory(userDataPath, "Modulator Presets");
+    userSkinsPath = Surge::Storage::appendDirectory(userDataPath, "Skins");
+    createUserDirectory();
 
     /*
     const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
@@ -649,6 +653,40 @@ bailOnPortable:
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
     initPatchCategory = Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::InitialPatchCategory, "Templates");
+}
+
+void SurgeStorage::createUserDirectory()
+{
+    auto p = string_to_path(userDataPath);
+    auto needToBuild = false;
+    if (!fs::is_directory(p))
+    {
+        needToBuild = true;
+    }
+
+    if (needToBuild)
+    {
+        try
+        {
+            for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
+                            userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
+                            userSkinsPath, userMidiMappingsPath})
+                fs::create_directories(string_to_path(s));
+
+            auto rd = std::string(SurgeCoreBinary::README_UserArea_txt,
+                                  SurgeCoreBinary::README_UserArea_txtSize) +
+                      "\n";
+            auto of =
+                std::ofstream(string_to_path(userDataPath) / "README.txt", std::ofstream::out);
+            if (of.is_open())
+                of << rd << std::endl;
+            of.close();
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            reportError(e.what(), "Unable to set up User Directory");
+        }
+    }
 }
 
 void SurgeStorage::initializePatchDb()

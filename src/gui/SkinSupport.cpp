@@ -89,7 +89,7 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
     availableSkins.clear();
 
     std::array<fs::path, 2> paths = {string_to_path(storage->datapath),
-                                     string_to_path(storage->userDataPath)};
+                                     string_to_path(storage->userSkinsPath)};
 
     for (auto &source : paths)
     {
