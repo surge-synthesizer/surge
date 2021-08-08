@@ -2403,6 +2403,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                               });
         });
 
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use MIDI Channel for Octave Shift"), true,
+                          (synth->storage.mapChannelToOctave), [this]() {
+                              this->synth->storage.mapChannelToOctave =
+                                  !(this->synth->storage.mapChannelToOctave);
+                          });
+
     tuningSubMenu.addSeparator();
 
     tuningSubMenu.addItem(

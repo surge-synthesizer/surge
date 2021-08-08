@@ -2095,6 +2095,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 }
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mapChannelToOctave"));
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.mapChannelToOctave = (ival != 0);
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("midictrl_map"));
             if (p)
             {
@@ -2559,6 +2565,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mpn("mappingName");
         mpn.SetAttribute("v", dawExtraState.mappingName.c_str());
         dawExtraXML.InsertEndChild(mpn);
+
+        // Revision 17 adds mapChannelToOctave
+        TiXmlElement mcto("mapChannelToOctave");
+        mcto.SetAttribute("v", (int)(storage->mapChannelToOctave));
+        dawExtraXML.InsertEndChild(mcto);
 
         /*
         ** Add the midi controls

@@ -568,6 +568,84 @@ TEST_CASE("An Octave is an Octave", "[tun]")
     }
 }
 
+TEST_CASE("Channel to Octave Mapping")
+{
+    SECTION("When disabled and no tuning applied, channel 2 is the same as channel 1")
+    {
+        auto surge = surgeOnSine();
+        float f1, f2;
+        for (int key = 0; key < 90; key++)
+        {
+            f1 = frequencyForNote(surge, key, 2, 0, 0);
+            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            REQUIRE(f2 == Approx(f1).margin(0.001));
+        }
+    }
+    SECTION("When enabled and no tuning applied, channel 2 is one octave higher than channel 1")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        float f1, f2;
+        for (int key = 0; key < 90; key++)
+        { // Limited range because frequencyForNote starts having trouble measuring high
+          // frequencies.
+            INFO("key is " << key);
+            f1 = frequencyForNote(surge, key, 2, 0, 0);
+            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
+        }
+    }
+    SECTION("When enabled and tuning applied, channel 2 is one octave higher than channel 1")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
+        surge->storage.retuneToScale(s);
+        float f1, f2;
+        for (int key = 0; key < 90; key++)
+        {
+            f1 = frequencyForNote(surge, key, 2, 0, 0);
+            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
+        }
+    }
+    SECTION("When enabled and no tuning applied, note 60 is mapped to the correct octaves in "
+            "different channels")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        float f1, f2;
+        for (int chanOff = -2; chanOff < 3; chanOff++)
+        { // Only checking reasonable octaves because frequencyForNote actually examines the
+          // waveform
+            INFO("chanOff is " << chanOff);
+            f1 = frequencyForNote(surge, 60, 2, 0, (chanOff + 16) % 16);
+            f2 = frequencyForNote(surge, 60, 2, 0, (chanOff + 1 + 16) % 16);
+            REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
+        }
+    }
+    SECTION("When enabled and tuning applied, note 60 is mapped to the correct octaves in "
+            "different channels")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
+        surge->storage.retuneToScale(s);
+        float f1, f2;
+        for (int chanOff = -2; chanOff < 3; chanOff++)
+        {
+            INFO("chanOff is " << chanOff);
+            f1 = frequencyForNote(surge, 60, 2, 0, (chanOff + 16) % 16);
+            f2 = frequencyForNote(surge, 60, 2, 0, (chanOff + 1 + 16) % 16);
+            REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
+        }
+    }
+}
+
 TEST_CASE("Non-Monotonic Tunings", "[tun]")
 {
     SECTION("SCL Non-monotonicity")

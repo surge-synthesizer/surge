@@ -58,7 +58,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         }
         auto rkey = keyRetuning;
 
-        return res + rkey;
+        res = res + rkey;
     }
     else if (!storage->isStandardTuning &&
              storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
@@ -68,12 +68,24 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
         float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
         float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
-        return (1.f - frac) * b0 + frac * b1;
+        res = (1.f - frac) * b0 + frac * b1;
     }
-    else
+
+    if (storage->mapChannelToOctave)
     {
-        return res;
+        float shift;
+        if (channel > 7)
+        {
+            shift = channel - 16;
+        }
+        else
+        {
+            shift = channel;
+        }
+        res += 12 * shift;
     }
+
+    return res;
 }
 
 SurgeVoice::SurgeVoice() {}
