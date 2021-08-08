@@ -345,7 +345,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
         break;
     case kLegacy:
     default:
-        dMouse *= legacyMoveRate;
+        dMouse *= 0.3 * legacyMoveRate;
         break;
     }
 
