@@ -4,7 +4,7 @@
  * A utility wrapper around loading and drawables and stuff
  */
 
-#include <JuceHeader.h>
+#include "juce_gui_basics/juce_gui_basics.h"
 
 #include <vector>
 #include <map>

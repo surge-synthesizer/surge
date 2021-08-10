@@ -16,9 +16,11 @@
 #ifndef SURGE_XT_EFFECTLABEL_H
 #define SURGE_XT_EFFECTLABEL_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include "RuntimeFont.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
 #include <string>
 
 namespace Surge

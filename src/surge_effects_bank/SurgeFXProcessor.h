@@ -10,10 +10,10 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "SurgeStorage.h"
-#include <functional>
 #include "Effect.h"
+
+#include "juce_audio_processors/juce_audio_processors.h"
 
 #if MAC
 #include <execinfo.h>
@@ -22,9 +22,9 @@
 //==============================================================================
 /**
  */
-class SurgefxAudioProcessor : public AudioProcessor,
-                              public AudioProcessorParameter::Listener,
-                              public AsyncUpdater
+class SurgefxAudioProcessor : public juce::AudioProcessor,
+                              public juce::AudioProcessorParameter::Listener,
+                              public juce::AsyncUpdater
 {
   public:
     //==============================================================================
@@ -37,14 +37,14 @@ class SurgefxAudioProcessor : public AudioProcessor,
 
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 
-    void processBlock(AudioBuffer<float> &, MidiBuffer &) override;
+    void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
 
     //==============================================================================
-    AudioProcessorEditor *createEditor() override;
+    juce::AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override;
 
     //==============================================================================
-    const String getName() const override;
+    const juce::String getName() const override;
 
     bool acceptsMidi() const override;
     bool producesMidi() const override;
@@ -55,11 +55,11 @@ class SurgefxAudioProcessor : public AudioProcessor,
     int getNumPrograms() override;
     int getCurrentProgram() override;
     void setCurrentProgram(int index) override;
-    const String getProgramName(int index) override;
-    void changeProgramName(int index, const String &newName) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String &newName) override;
 
     //==============================================================================
-    void getStateInformation(MemoryBlock &destData) override;
+    void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     int getEffectType() { return effectNum; }
@@ -247,12 +247,12 @@ class SurgefxAudioProcessor : public AudioProcessor,
 
   private:
     //==============================================================================
-    AudioProcessorParameter *fxBaseParams[2 * n_fx_params + 1];
+    juce::AudioProcessorParameter *fxBaseParams[2 * n_fx_params + 1];
 
     // These are just copyes of the pointer from above with the cast done to make the code look
     // nicer
-    AudioParameterFloat *fxParams[n_fx_params];
-    AudioParameterInt *fxType;
+    juce::AudioParameterFloat *fxParams[n_fx_params];
+    juce::AudioParameterInt *fxType;
 
     enum ParamFeatureFlags
     {
@@ -261,7 +261,7 @@ class SurgefxAudioProcessor : public AudioProcessor,
         kAbsolute = 1U << 2U,
         kDeactivated = 1U << 3U
     };
-    AudioParameterInt *fxParamFeatures[n_fx_params];
+    juce::AudioParameterInt *fxParamFeatures[n_fx_params];
 
     std::atomic<bool> changedParams[2 * n_fx_params + 1];
     std::atomic<float> changedParamsValue[2 * n_fx_params + 1];

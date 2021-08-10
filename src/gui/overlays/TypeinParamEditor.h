@@ -16,11 +16,12 @@
 #ifndef SURGE_XT_TYPEINPARAMEDITOR_H
 #define SURGE_XT_TYPEINPARAMEDITOR_H
 
-#include <JuceHeader.h>
 #include "Parameter.h"
 #include "SurgeStorage.h"
 #include "ModulationSource.h"
 #include "SkinSupport.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeGUIEditor;
 

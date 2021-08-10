@@ -16,8 +16,9 @@
 #ifndef SURGE_PATCHDBVIEWER_H
 #define SURGE_PATCHDBVIEWER_H
 
-#include <JuceHeader.h>
 #include "SurgeStorage.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeGUIEditor;
 

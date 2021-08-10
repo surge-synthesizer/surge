@@ -16,8 +16,9 @@
 #ifndef SURGE_XT_ABOUTSCREEN_H
 #define SURGE_XT_ABOUTSCREEN_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeGUIEditor;
 class SurgeStorage;

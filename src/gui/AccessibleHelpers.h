@@ -16,11 +16,12 @@
 #ifndef SURGE_XT_ACCESSIBLEHELPERS_H
 #define SURGE_XT_ACCESSIBLEHELPERS_H
 
-#include <JuceHeader.h>
+#if SURGE_JUCE_ACCESSIBLE
 #include "Parameter.h"
 #include "SurgeGUIEditor.h"
 
-#if SURGE_JUCE_ACCESSIBLE
+#include "juce_gui_basics/juce_gui_basics.h"
+
 namespace Surge
 {
 namespace Widgets

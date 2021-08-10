@@ -14,10 +14,11 @@
 */
 
 #pragma once
-#include <JuceHeader.h>
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 #include "RefreshableOverlay.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

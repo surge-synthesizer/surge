@@ -10,13 +10,12 @@
 
 #pragma once
 
-#include <JuceHeader.h>
-
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
 #include "LockFreeStack.h"
 
-#include <functional>
+#include "juce_audio_processors/juce_audio_processors.h"
+
 #include <unordered_map>
 
 #if MAC

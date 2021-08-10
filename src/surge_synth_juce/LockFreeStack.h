@@ -16,7 +16,8 @@
 #ifndef SURGE_XT_LOCKFREESTACK_H
 #define SURGE_XT_LOCKFREESTACK_H
 
-#include <JuceHeader.h>
+#include "juce_core/juce_core.h"
+
 #include <array>
 
 template <typename T, int qSize = 4096> class LockFreeStack

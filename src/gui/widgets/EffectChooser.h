@@ -16,12 +16,14 @@
 #ifndef SURGE_XT_EFFECTCHOOSER_H
 #define SURGE_XT_EFFECTCHOOSER_H
 
-#include <JuceHeader.h>
-#include <array>
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
+#include <array>
 
 namespace Surge
 {

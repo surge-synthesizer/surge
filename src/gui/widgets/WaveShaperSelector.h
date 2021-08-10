@@ -5,11 +5,12 @@
 #ifndef SURGE_XT_WAVESHAPERSELECTOR_H
 #define SURGE_XT_WAVESHAPERSELECTOR_H
 
-#include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
 #include "Parameter.h"
 #include "SurgeStorage.h"
 #include "SurgeJUCEHelpers.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

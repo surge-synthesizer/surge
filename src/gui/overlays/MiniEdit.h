@@ -16,8 +16,9 @@
 #ifndef SURGE_XT_MINIEDIT_H
 #define SURGE_XT_MINIEDIT_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

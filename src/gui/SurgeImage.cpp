@@ -13,8 +13,8 @@
 ** open source in September 2018.
 */
 
-#include <JuceHeader.h>
 #include "SurgeImage.h"
+#include "BinaryData.h"
 
 SurgeImage::SurgeImage(int rid)
 {

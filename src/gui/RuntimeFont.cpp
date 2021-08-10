@@ -14,7 +14,8 @@
 */
 
 #include "RuntimeFont.h"
-#include <JuceHeader.h>
+#include "BinaryData.h"
+
 #include <iostream>
 
 namespace Surge

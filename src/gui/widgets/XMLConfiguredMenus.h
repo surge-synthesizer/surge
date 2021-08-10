@@ -16,12 +16,13 @@
 #ifndef SURGE_XT_XMLCONFIGUREDMENUS_H
 #define SURGE_XT_XMLCONFIGUREDMENUS_H
 
-#include <JuceHeader.h>
-
-#include <utility>
 #include "WidgetBaseMixin.h"
 #include "SurgeJUCEHelpers.h"
 #include "FxPresetAndClipboardManager.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
+#include <utility>
 
 class SurgeStorage;
 class SurgeGUIEditor;

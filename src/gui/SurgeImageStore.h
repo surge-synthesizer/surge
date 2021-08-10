@@ -1,11 +1,12 @@
 #pragma once
 
 #include "resource.h"
-#include <JuceHeader.h>
+#include <string>
 #include <map>
 #include <atomic>
 #include <algorithm>
 #include <cctype>
+#include <vector>
 
 class SurgeImage;
 

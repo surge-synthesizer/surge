@@ -16,7 +16,8 @@
 #ifndef SURGE_XT_VERTICAL_LABEL_H
 #define SURGE_XT_VERTICAL_LABEL_H
 
-#include <JuceHeader.h>
+#include "juce_gui_basics/juce_gui_basics.h"
+
 #include <string>
 
 namespace Surge

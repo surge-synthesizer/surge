@@ -1,12 +1,14 @@
 // -*- mode: c++-mode -*-
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "version.h"
 
-class SurgeLookAndFeel : public LookAndFeel_V4
+#include "juce_gui_basics/juce_gui_basics.h"
+#include "BinaryData.h"
+
+class SurgeLookAndFeel : public juce::LookAndFeel_V4
 {
   private:
-    std::unique_ptr<Drawable> surgeLogo;
+    std::unique_ptr<juce::Drawable> surgeLogo;
 
   public:
     enum SurgeColourIds
@@ -47,13 +49,13 @@ class SurgeLookAndFeel : public LookAndFeel_V4
 
     SurgeLookAndFeel()
     {
-        Colour surgeGrayBg = Colour(205, 206, 212);
-        Colour surgeOrange = Colour(255, 144, 0);
-        Colour surgeBlue = Colour(18, 52, 99);
-        Colour white = Colour(255, 255, 255);
-        Colour black = Colour(0, 0, 0);
-        Colour surgeOrangeDark = Colour(101, 50, 3);
-        Colour surgeOrangeMedium = Colour(227, 112, 8);
+        juce::Colour surgeGrayBg = juce::Colour(205, 206, 212);
+        juce::Colour surgeOrange = juce::Colour(255, 144, 0);
+        juce::Colour surgeBlue = juce::Colour(18, 52, 99);
+        juce::Colour white = juce::Colour(255, 255, 255);
+        juce::Colour black = juce::Colour(0, 0, 0);
+        juce::Colour surgeOrangeDark = juce::Colour(101, 50, 3);
+        juce::Colour surgeOrangeMedium = juce::Colour(227, 112, 8);
 
         setColour(SurgeColourIds::componentBgStart,
                   surgeGrayBg.interpolatedWith(surgeOrangeMedium, 0.1));
@@ -86,13 +88,13 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         setColour(SurgeColourIds::paramDisabledEdge, juce::Colour(150, 150, 150));
         setColour(SurgeColourIds::paramDisplay, white);
 
-        surgeLogo = Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlue_svg,
-                                                  BinaryData::SurgeLogoOnlyBlue_svgSize);
+        surgeLogo = juce::Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlue_svg,
+                                                        BinaryData::SurgeLogoOnlyBlue_svgSize);
     }
 
-    virtual void drawRotarySlider(Graphics &g, int x, int y, int width, int height, float sliderPos,
-                                  float rotaryStartAngle, float rotaryEndAngle,
-                                  Slider &slider) override
+    virtual void drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height,
+                                  float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
+                                  juce::Slider &slider) override
     {
         auto fill = findColour(SurgeColourIds::knobBg);
         auto edge = findColour(SurgeColourIds::knobEdge);
@@ -111,14 +113,16 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         g.setColour(edge);
         g.drawEllipse(bounds, 1.0);
 
-        auto radius = jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
+        auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
         auto arcRadius = radius;
         auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
         auto thumbWidth = 5;
 
         juce::Point<float> thumbPoint(
-            bounds.getCentreX() + arcRadius * std::cos(toAngle - MathConstants<float>::halfPi),
-            bounds.getCentreY() + arcRadius * std::sin(toAngle - MathConstants<float>::halfPi));
+            bounds.getCentreX() +
+                arcRadius * std::cos(toAngle - juce::MathConstants<float>::halfPi),
+            bounds.getCentreY() +
+                arcRadius * std::sin(toAngle - juce::MathConstants<float>::halfPi));
 
         g.setColour(tick);
         g.fillEllipse(juce::Rectangle<float>(thumbWidth, thumbWidth).withCentre(thumbPoint));
@@ -128,11 +132,12 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         g.fillEllipse(
             juce::Rectangle<float>(thumbWidth, thumbWidth).withCentre(bounds.getCentre()));
 
-        auto l = Line<float>(thumbPoint, bounds.getCentre());
+        auto l = juce::Line<float>(thumbPoint, bounds.getCentre());
         g.drawLine(l, thumbWidth);
     }
 
-    virtual void drawButtonBackground(Graphics &g, Button &button, const Colour &backgroundColour,
+    virtual void drawButtonBackground(juce::Graphics &g, juce::Button &button,
+                                      const juce::Colour &backgroundColour,
                                       bool shouldDrawButtonAsHighlighted,
                                       bool shouldDrawButtonAsDown) override
     {
@@ -175,27 +180,29 @@ class SurgeLookAndFeel : public LookAndFeel_V4
         g.drawRoundedRectangle(bounds, 3, edgeThickness);
     }
 
-    virtual void drawButtonText(Graphics &g, TextButton &button, bool shouldDrawButtonAsHighlighted,
+    virtual void drawButtonText(juce::Graphics &g, juce::TextButton &button,
+                                bool shouldDrawButtonAsHighlighted,
                                 bool shouldDrawButtonAsDown) override
     {
-        button.setColour(TextButton::ColourIds::textColourOffId,
+        button.setColour(juce::TextButton::ColourIds::textColourOffId,
                          findColour(SurgeColourIds::fxButtonTextUnselected));
 
-        button.setColour(TextButton::ColourIds::textColourOnId,
+        button.setColour(juce::TextButton::ColourIds::textColourOnId,
                          findColour(SurgeColourIds::fxButtonTextSelected));
 
         LookAndFeel_V4::drawButtonText(g, button, shouldDrawButtonAsHighlighted,
                                        shouldDrawButtonAsDown);
     }
 
-    void paintComponentBackground(Graphics &g, int w, int h)
+    void paintComponentBackground(juce::Graphics &g, int w, int h)
     {
         int orangeHeight = 40;
 
         g.fillAll(findColour(SurgeColourIds::componentBgStart));
 
-        ColourGradient cg(findColour(SurgeColourIds::componentBgStart), 0, 0,
-                          findColour(SurgeColourIds::componentBgEnd), 0, h - orangeHeight, false);
+        juce::ColourGradient cg(findColour(SurgeColourIds::componentBgStart), 0, 0,
+                                findColour(SurgeColourIds::componentBgEnd), 0, h - orangeHeight,
+                                false);
         g.setGradientFill(cg);
         g.fillRect(0, 0, w, h - orangeHeight);
 
@@ -221,7 +228,7 @@ class SurgeLookAndFeel : public LookAndFeel_V4
     }
 };
 
-class SurgeFXParamDisplay : public Component
+class SurgeFXParamDisplay : public juce::Component
 {
   public:
     virtual void setGroup(std::string grp)
@@ -246,7 +253,7 @@ class SurgeFXParamDisplay : public Component
         repaint();
     }
 
-    virtual void paint(Graphics &g)
+    virtual void paint(juce::Graphics &g)
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
@@ -284,19 +291,19 @@ class SurgeFXParamDisplay : public Component
     bool appearsDeactivated = false;
 };
 
-class SurgeTempoSyncSwitch : public ToggleButton
+class SurgeTempoSyncSwitch : public juce::ToggleButton
 {
   public:
     void setOnOffImage(const char *onimgData, size_t onimgSize, const char *offimgData,
                        size_t offimgSize)
     {
-        onImg = Drawable::createFromImageData(onimgData, onimgSize);
-        offImg = Drawable::createFromImageData(offimgData, offimgSize);
+        onImg = juce::Drawable::createFromImageData(onimgData, onimgSize);
+        offImg = juce::Drawable::createFromImageData(offimgData, offimgSize);
     }
     std::unique_ptr<juce::Drawable> onImg, offImg;
 
   protected:
-    virtual void paintButton(Graphics &g, bool shouldDrawButtonAsHighlighted,
+    virtual void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
                              bool shouldDrawButtonAsDown) override
     {
         if (isEnabled() && onImg && offImg)

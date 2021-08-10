@@ -16,11 +16,13 @@
 #ifndef SURGE_XT_MENUASMODULATABLEINTERFACE_H
 #define SURGE_XT_MENUASMODULATABLEINTERFACE_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "ModulatableControlInterface.h"
 #include "SurgeJUCEHelpers.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
+
 #include <vector>
 
 class SurgeImage;

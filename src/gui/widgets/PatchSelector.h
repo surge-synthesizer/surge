@@ -16,10 +16,10 @@
 #ifndef SURGE_XT_PATCHSELECTOR_H
 #define SURGE_XT_PATCHSELECTOR_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
-#include "SurgeJUCEHelpers.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeStorage;
 

@@ -557,7 +557,7 @@ target_include_directories(surge-shared
         ${SURGE_COMMON_INCLUDES}
         ${OS_INCLUDE_DIRECTORIES}
         )
-target_compile_definitions(surge-shared PRIVATE ${OS_COMPILE_DEFINITIONS} )
+target_compile_definitions(surge-shared PUBLIC ${OS_COMPILE_DEFINITIONS} )
 
 if( BUILD_HEADLESS )
   add_executable(surge-headless
@@ -585,7 +585,6 @@ if( BUILD_HEADLESS )
   target_compile_definitions(surge-headless
     PRIVATE
     ${OS_COMPILE_DEFINITIONS}
-    TARGET_HEADLESS=1
     $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
 
@@ -745,8 +744,6 @@ if( BUILD_SURGE_EFFECTS_BANK )
           FORMATS ${SURGE_JUCE_FORMATS}
           )
 
-  juce_generate_juce_header( surge-fx )
-
   file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
           resources/surge_effects_bank/*.svg
           resources/surge_effects_bank/icons/*.svg
@@ -780,9 +777,6 @@ if( BUILD_SURGE_EFFECTS_BANK )
 
           JUCE_WASAPI=1
           JUCE_DIRECTSOUND=1
-
-          TARGET_HEADLESS=1
-
           )
 
   if (JUCE_ASIO_SUPPORT)
@@ -891,8 +885,6 @@ if( BUILD_SURGE_XT )
           FORMATS ${SURGE_JUCE_FORMATS}
           )
 
-  juce_generate_juce_header( surge-xt )
-
   file(GLOB SURGE_SYNTH_JUCE_RESOURCES_GLOB
           resources/classic-skin-svgs/*.svg
           resources/fonts/Lato*ttf
@@ -953,10 +945,6 @@ if( BUILD_SURGE_XT )
           SURGE_JUCE_ACCESSIBLE=${SURGE_JUCE_ACCESSIBLE_DEFINE}
           SURGE_JUCE_HOST_CONTEXT=${SURGE_JUCE_HOST_CONTEXT_DEFINE}
           SURGE_JUCE_VST3_EXTENSIONS=${SURGE_JUCE_VST3_EXTENSIONS}
-
-          TARGET_JUCE_SYNTH=1
-          TARGET_HEADLESS=1
-          TARGET_JUCE_UI=1
 
           $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
           )
@@ -1037,15 +1025,6 @@ if( BUILD_SURGE_XT )
       ${ASIOSDK_DIR}/common
       )
   endif()
-
-  target_compile_definitions(surge-xt PUBLIC ${OS_COMPILE_DEFINITIONS} DONT_SET_USING_JUCE_NAMESPACE=1)
-
-  target_compile_definitions(surge-xt_Standalone PUBLIC
-          TARGET_JUCE_SYNTH=1
-          TARGET_HEADLESS=1
-          TARGET_JUCE_UI=1)
-
-  # add_dependencies(surge-juce-pipeline-targets surge-xt_Standalone)
 
   get_target_property( SURGE_XT_OUTPUT_DIR surge-xt RUNTIME_OUTPUT_DIRECTORY )
 
@@ -1282,7 +1261,6 @@ if( ${BUILD_SURGE_PYTHON_BINDINGS} )
   target_compile_definitions(surgepy
           PRIVATE
           ${OS_COMPILE_DEFINITIONS}
-          TARGET_HEADLESS=1
           $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
           )
 

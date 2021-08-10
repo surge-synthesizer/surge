@@ -16,10 +16,11 @@
 #ifndef SURGE_XT_OSCILLATORWAVEFORMDISPLAY_H
 #define SURGE_XT_OSCILLATORWAVEFORMDISPLAY_H
 
-#include <JuceHeader.h>
 #include "SkinSupport.h"
 #include "Parameter.h"
 #include "SurgeStorage.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeStorage;
 class SurgeGUIEditor;

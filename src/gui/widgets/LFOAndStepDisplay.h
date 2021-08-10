@@ -16,9 +16,10 @@
 #ifndef SURGE_XT_LFOANDSTEPDISPLAY_H
 #define SURGE_XT_LFOANDSTEPDISPLAY_H
 
-#include <JuceHeader.h>
 #include "WidgetBaseMixin.h"
 #include "SurgeStorage.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {

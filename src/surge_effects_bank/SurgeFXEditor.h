@@ -10,21 +10,22 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "SurgeFXProcessor.h"
 #include "SurgeLookAndFeel.h"
+
+#include "juce_gui_basics/juce_gui_basics.h"
 
 //==============================================================================
 /**
  */
-class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
+class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::AsyncUpdater
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
     ~SurgefxAudioProcessorEditor();
 
     //==============================================================================
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
     void paramsChangedCallback();
@@ -42,14 +43,14 @@ class SurgefxAudioProcessorEditor : public AudioProcessorEditor, AsyncUpdater
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
 
-    Slider fxParamSliders[n_fx_params];
+    juce::Slider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
     SurgeTempoSyncSwitch fxExtended[n_fx_params];
     SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
 
-    TextButton
+    juce::TextButton
         selectType[n_fx_types]; // this had better match the list of fxnames in the constructor
     int typeByButtonIndex[n_fx_types];
 
