@@ -126,6 +126,17 @@ struct SwitchAH : public juce::AccessibilityHandler
                                          [this]() { this->press(); }))
     {
     }
+
+    juce::AccessibleState getCurrentState() const override
+    {
+        auto state = AccessibilityHandler::getCurrentState();
+        state = state.withCheckable();
+        if (mswitch->getValue() > 0.5)
+            state = state.withChecked();
+
+        return state;
+    }
+
     void press()
     {
         if (mswitch->isMultiIntegerValued())

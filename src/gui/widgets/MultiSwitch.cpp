@@ -144,15 +144,17 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
 
 struct MultiSwitchRadioButton : public juce::Component
 {
-    MultiSwitchRadioButton(MultiSwitch *s, float value, const std::string &label)
-        : mswitch(s), val(value)
+    MultiSwitchRadioButton(MultiSwitch *s, float value, int ival, const std::string &label)
+        : mswitch(s), val(value), ival(ival)
     {
         setDescription(label);
         setTitle(label);
         setInterceptsMouseClicks(false, false);
+        setAccessible(true);
     }
     MultiSwitch *mswitch;
     float val;
+    int ival;
 
     struct RBAH : public juce::AccessibilityHandler
     {
@@ -180,6 +182,16 @@ struct MultiSwitchRadioButton : public juce::Component
             mswitch->notifyControlModifierClicked(m);
         }
 
+        juce::AccessibleState getCurrentState() const override
+        {
+            auto state = AccessibilityHandler::getCurrentState();
+            state = state.withCheckable();
+            if (mswitch->getIntegerValue() == button->ival)
+                state = state.withChecked();
+
+            return state;
+        }
+
         MultiSwitch *mswitch;
         MultiSwitchRadioButton *button;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
@@ -196,14 +208,14 @@ void MultiSwitch::setupAccessibility()
     if (rows * columns <= 1) // i use an alternate handler below
         return;
 
-    if (selectionComponents.size() == rows * columns)
-    {
-        // Already done it!
-        return;
-    }
-
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+
+    if (selectionComponents.size() == rows * columns)
+    {
+        removeAllChildren();
+        selectionComponents.clear();
+    }
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
     jassert(sge);
@@ -219,9 +231,10 @@ void MultiSwitch::setupAccessibility()
         {
             float val = ((float)sel) / (rows * columns - 1);
             auto title = sge->getDisplayForTag(getTag(), true, val);
-            sel++;
 
-            auto ac = std::make_unique<MultiSwitchRadioButton>(this, val, title);
+            auto ac = std::make_unique<MultiSwitchRadioButton>(this, val, sel, title);
+
+            sel++;
             ac->getProperties().set("ControlGroup", (int)(c * columns + rows));
             ac->setBounds(juce::Rectangle<int>(c * dc, r * dr, dc, dr));
             addAndMakeVisible(*ac);
