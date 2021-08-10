@@ -270,6 +270,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
 PatchDBViewer::PatchDBViewer(SurgeGUIEditor *e, SurgeStorage *s)
     : editor(e), storage(s), juce::Component("PatchDB Viewer")
 {
+    storage->initializePatchDb();
     createElements();
 }
 PatchDBViewer::~PatchDBViewer() { treeView->setRootItem(nullptr); };
