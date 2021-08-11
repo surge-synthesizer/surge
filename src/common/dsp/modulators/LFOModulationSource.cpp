@@ -307,7 +307,7 @@ void LFOModulationSource::attack()
 
         // make sure we don't blow out ratemult with modulation
         auto shuffle_val =
-            limit_range(-1.99f, 1.99f, lfo->start_phase.get_extended(localcopy[startphase].f));
+            limit_range(lfo->start_phase.get_extended(localcopy[startphase].f), -1.99f, 1.99f);
 
         shuffle_id = (shuffle_id + 1) & 1;
 
@@ -592,7 +592,7 @@ void LFOModulationSource::process_block()
 
             // make sure we don't blow out ratemult with modulation
             auto shuffle_val =
-                limit_range(-1.99f, 1.99f, lfo->start_phase.get_extended(localcopy[startphase].f));
+                limit_range(lfo->start_phase.get_extended(localcopy[startphase].f), -1.99f, 1.99f);
 
             shuffle_id = (shuffle_id + 1) & 1;
 
