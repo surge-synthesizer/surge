@@ -27,6 +27,7 @@
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
+#include <set>
 
 namespace Surge
 {
@@ -1379,6 +1380,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                     offx = 1;
 
+                if (lassoSelector && lassoSelector->contains(h.associatedSegment))
+                    offy = 2;
+
                 if (handleDrawable)
                 {
                     auto r = h.rect;
@@ -1451,6 +1455,36 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             s.dragDuration = s.duration;
         }
 
+        if (e.mods.isShiftDown())
+        {
+            lasso = std::make_unique<juce::LassoComponent<MSEGLassoItem>>();
+            // FIX ME SKIN COLOR
+            lasso->setColour(juce::LassoComponent<MSEGLassoItem>::lassoFillColourId,
+                             juce::Colour(220, 220, 250).withAlpha(0.1f));
+            lassoSelector = std::make_unique<MSEGLassoSelector>(this);
+            addAndMakeVisible(*lasso);
+
+            repaint();
+            lasso->beginLasso(e, lassoSelector.get());
+            return;
+        }
+
+        if (lassoSelector)
+        {
+            bool clearLasso = true;
+            for (auto &h : hotzones)
+            {
+                if (h.rect.contains(e.position.toFloat()) && h.type == hotzone::MOUSABLE_NODE &&
+                    h.zoneSubType == hotzone::SEGMENT_ENDPOINT &&
+                    lassoSelector->contains(h.associatedSegment))
+                    clearLasso = false;
+            }
+            if (clearLasso)
+            {
+                lassoSelector.reset(nullptr);
+            }
+            repaint();
+        }
         auto where = e.position;
         if (timeEditMode == DRAW)
         {
@@ -1629,6 +1663,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         setMouseCursor(juce::MouseCursor::NormalCursor);
         inDrag = false;
         inDrawDrag = false;
+
+        if (lasso)
+        {
+            lasso->endLasso();
+            removeChildComponent(lasso.get());
+            lasso.reset(nullptr);
+            return;
+        }
+
         if (loopDragTime >= 0)
         {
             loopDragTime = -1;
@@ -1770,25 +1813,34 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     }
     void mouseDrag(const juce::MouseEvent &event) override
     {
+        if (lasso)
+        {
+            lasso->dragLasso(event);
+            return;
+        }
         bool gotOne = false;
-        int idx = 0;
+        int idx = 0, draggingIdx = -1;
         bool foundDrag = false;
         auto where = event.position.toInt();
-        hotzone dragThis;
+        std::set<int> modifyIndices;
         for (auto &h : hotzones)
         {
-            if (h.dragging)
+
+            if (h.dragging ||
+                (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                 h.type == hotzone::MOUSABLE_NODE && h.zoneSubType == hotzone::SEGMENT_ENDPOINT))
             {
-                dragThis = h;
+                modifyIndices.insert(idx);
                 foundDrag = true;
-                break;
             }
+            if (h.dragging)
+                draggingIdx = idx;
+
             idx++;
         }
+
         if (foundDrag)
         {
-            auto h = dragThis;
-
             gotOne = true;
             // FIXME replace with distance APIs
             float dragX = where.getX() - mouseDownOrigin.x;
@@ -1798,18 +1850,28 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 dragX *= 0.2;
                 dragY *= 0.2;
             }
-            h.onDrag(dragX, dragY, juce::Point<float>(where.getX(), where.getY()));
+            bool sep = false;
+            for (auto idx : modifyIndices)
+            {
+                hotzones[idx].onDrag(dragX, dragY, juce::Point<float>(where.getX(), where.getY()));
+                if (hotzones[idx].dragging)
+                {
+                    hoveredSegment = hotzones[idx].associatedSegment;
+                    sep = hotzones[idx].specialEndpoint;
+                }
+            }
+            modelChanged(hoveredSegment, sep, false); // HACK FIXME
 
-            hoveredSegment = h.associatedSegment;
             mouseDownOrigin = where;
-            modelChanged(h.associatedSegment, h.specialEndpoint); // HACK FIXME
         }
 
         if (gotOne)
         {
             Surge::MSEG::rebuildCache(ms);
             recalcHotZones(where);
-            hotzones[idx].dragging = true;
+            if (draggingIdx >= 0)
+                hotzones[draggingIdx].dragging = true;
+
             repaint();
         }
         else if (event.mods.isLeftButtonDown() || event.mods.isMiddleButtonDown())
@@ -2242,11 +2304,22 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             auto typeTo = [this, &contextMenu, t, tts](std::string n,
                                                        MSEGStorage::segment::Type type) {
-                contextMenu.addItem(n, true, (tts >= 0 && this->ms->segments[tts].type == type),
-                                    [this, t, type]() {
-                                        Surge::MSEG::changeTypeAt(this->ms, t, type);
-                                        modelChanged();
-                                    });
+                contextMenu.addItem(
+                    n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
+                        // ADJUST HERE HERE
+                        Surge::MSEG::changeTypeAt(this->ms, t, type);
+
+                        for (auto &h : hotzones)
+                        {
+                            if (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                                h.type == hotzone::MOUSABLE_NODE &&
+                                h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                            {
+                                this->ms->segments[h.associatedSegment].type = type;
+                            }
+                        }
+                        modelChanged();
+                    });
             };
 
             typeTo("Hold", MSEGStorage::segment::Type::HOLD);
@@ -2274,11 +2347,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
     }
 
-    void modelChanged(int activeSegment = -1, bool specialEndpoint = false)
+    void modelChanged(int activeSegment = -1, bool specialEndpoint = false, bool rchz = true)
     {
         Surge::MSEG::rebuildCache(ms);
         applyZoomPanConstraints(activeSegment, specialEndpoint);
-        recalcHotZones(mouseDownOrigin); // FIXME
+        if (rchz)
+            recalcHotZones(mouseDownOrigin); // FIXME
         // Do this more heavy handed version
         auto c = getParentComponent();
         while (c && c->getParentComponent())
@@ -2346,6 +2420,40 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
         ms->axisWidth = std::max(ms->axisWidth, 0.05f);
     }
+
+    using MSEGLassoItem = int;
+
+    struct MSEGLassoSelector : public juce::LassoSource<MSEGLassoItem>
+    {
+
+        MSEGLassoSelector(MSEGCanvas *c) : canvas(c), items() {}
+
+        void findLassoItemsInArea(juce::Array<MSEGLassoItem> &itemsFound,
+                                  const juce::Rectangle<int> &area) override
+        {
+            for (auto h : canvas->hotzones)
+            {
+                if (h.type == hotzone::MOUSABLE_NODE && h.zoneSubType == hotzone::SEGMENT_ENDPOINT)
+                {
+                    if (h.rect.toNearestInt().intersects(area))
+                        itemsFound.add(h.associatedSegment);
+                }
+            }
+        }
+        juce::SelectedItemSet<MSEGLassoItem> &getLassoSelection() override { return items; }
+
+        bool contains(int msegIndex) const
+        {
+            auto res = items.isSelected(msegIndex);
+            return res;
+        }
+        juce::SelectedItemSet<MSEGLassoItem> items;
+        MSEGCanvas *canvas;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSEGLassoSelector);
+    };
+    std::unique_ptr<juce::LassoComponent<MSEGLassoItem>> lasso;
+    std::unique_ptr<MSEGLassoSelector> lassoSelector;
 
     int hoveredSegment = -1;
     MSEGStorage *ms;
