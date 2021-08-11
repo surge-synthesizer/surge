@@ -41,7 +41,6 @@ SurgeSynthProcessor::SurgeSynthProcessor()
               << "  - CPU          : " << Surge::CPUFeatures::cpuBrand() << std::endl;
 
     surge = std::make_unique<SurgeSynthesizer>(this);
-    surge->storage.initializePatchDb(); // In the UI branch we want the patch DB running
 
     auto parent = std::make_unique<AudioProcessorParameterGroup>("Root", "Root", "|");
     auto macroG = std::make_unique<AudioProcessorParameterGroup>("macros", "Macros", "|");
@@ -147,6 +146,7 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
 
 const String SurgeSynthProcessor::getProgramName(int index)
 {
+#ifdef SURGE_JUCE_PRESETS
     if (index == 0)
         return "INIT OR DROPPED";
     index--;
@@ -157,6 +157,9 @@ const String SurgeSynthProcessor::getProgramName(int index)
     auto patch = surge->storage.patch_list[presetOrderToPatchList[index]];
     auto res = surge->storage.patch_category[patch.category].name + " / " + patch.name;
     return res;
+#else
+    return "";
+#endif
 }
 
 void SurgeSynthProcessor::changeProgramName(int index, const String &newName) {}

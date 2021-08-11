@@ -691,6 +691,9 @@ void SurgeStorage::createUserDirectory()
 
 void SurgeStorage::initializePatchDb()
 {
+    if (patchDB)
+        return;
+
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
 
     auto catToType = [this](int q) {

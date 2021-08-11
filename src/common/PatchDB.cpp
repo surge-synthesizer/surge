@@ -20,6 +20,7 @@
 #include <sstream>
 #include <iterator>
 #include "vt_dsp_endian.h"
+#include "DebugHelpers.h"
 
 namespace Surge
 {
@@ -32,6 +33,7 @@ struct Exception : public std::runtime_error
 {
     explicit Exception(sqlite3 *h) : std::runtime_error(sqlite3_errmsg(h)), rc(sqlite3_errcode(h))
     {
+        Surge::Debug::stackTraceToStdout();
     }
     Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc) {}
     const char *what() const noexcept override
@@ -60,17 +62,27 @@ void Exec(sqlite3 *h, const std::string &statement)
  */
 struct Statement
 {
+    bool prepared{false};
     Statement(sqlite3 *h, const std::string &statement) : h(h)
     {
         auto rc = sqlite3_prepare_v2(h, statement.c_str(), -1, &s, nullptr);
         if (rc != SQLITE_OK)
             throw Exception(h);
+        prepared = true;
     }
-    ~Statement() noexcept(false)
+    ~Statement()
+    {
+        if (prepared)
+        {
+            std::cout << "ERROR: Prepared Statement never Finalized" << std::endl;
+        }
+    }
+    void finalize()
     {
         if (s)
             if (sqlite3_finalize(s) != SQLITE_OK)
                 throw Exception(h);
+        prepared = false;
     }
 
     int col_int(int c) const { return sqlite3_column_int(s, c); }
@@ -153,6 +165,7 @@ struct Statement
  */
 struct TxnGuard
 {
+    bool open{false};
     explicit TxnGuard(sqlite3 *e) : d(e)
     {
         auto rc = sqlite3_exec(d, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
@@ -160,13 +173,23 @@ struct TxnGuard
         {
             throw Exception(d);
         }
+        open = true;
     }
-    ~TxnGuard() noexcept(false)
+
+    void end()
     {
         auto rc = sqlite3_exec(d, "END TRANSACTION", nullptr, nullptr, nullptr);
         if (rc != SQLITE_OK)
         {
             throw Exception(d);
+        }
+        open = false;
+    }
+    ~TxnGuard()
+    {
+        if (open)
+        {
+            auto rc = sqlite3_exec(d, "ROLLBACK TRANSACTION", nullptr, nullptr, nullptr);
         }
     }
     sqlite3 *d;
@@ -302,6 +325,8 @@ CREATE TABLE Category (
                     rebuild = false;
                 }
             }
+
+            st.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -419,12 +444,21 @@ CREATE TABLE Category (
                 }
             }
             {
-                SQL::TxnGuard tg(dbh);
-
-                for (auto *p : doThis)
+                try
                 {
-                    p->go(*this);
-                    delete p;
+                    SQL::TxnGuard tg(dbh);
+
+                    for (auto *p : doThis)
+                    {
+                        p->go(*this);
+                        delete p;
+                    }
+
+                    tg.end();
+                }
+                catch (SQL::Exception &e)
+                {
+                    storage->reportError(e.what(), "Patch DB");
                 }
             }
         }
@@ -465,6 +499,8 @@ CREATE TABLE Category (
                     patchLoaded = true;
             }
 
+            exists.finalize();
+
             if (!dropIds.empty())
             {
                 auto drop = SQL::Statement(
@@ -478,6 +514,8 @@ CREATE TABLE Category (
                     drop.clearBindings();
                     drop.reset();
                 }
+
+                drop.finalize();
             }
         }
         catch (const SQL::Exception &e)
@@ -507,6 +545,8 @@ CREATE TABLE Category (
 
             // No real need to encapsulate this
             patchid = sqlite3_last_insert_rowid(dbh);
+
+            ins.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -579,6 +619,8 @@ CREATE TABLE Category (
                 ins.clearBindings();
                 ins.reset();
             }
+
+            ins.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -601,6 +643,8 @@ CREATE TABLE Category (
             auto count = there.col_int(0);
             if (count > 0)
                 return;
+
+            there.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -615,6 +659,8 @@ CREATE TABLE Category (
             add.bind(1, name);
             add.bind(2, (int)type);
             add.step();
+
+            add.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -634,6 +680,9 @@ CREATE TABLE Category (
             there.bind(2, (int)type);
             there.step();
             auto count = there.col_int(0);
+
+            there.finalize();
+
             if (count > 0)
                 return;
         }
@@ -660,6 +709,8 @@ CREATE TABLE Category (
             add.bind(3, (int)type);
             add.bind(4, parentId);
             add.step();
+
+            add.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -736,6 +787,8 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
             auto auth = q.col_str(4);
             res.emplace_back(id, path, cat, name, auth);
         }
+
+        q.finalize();
     }
     catch (SQL::Exception &e)
     {
@@ -782,6 +835,8 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
             res.push_back(cr);
         }
 
+        q.finalize();
+
         auto par = SQL::Statement(worker->dbh,
                                   "select COUNT(id) from category where category.parent_id = ?");
         for (auto &cr : res)
@@ -794,6 +849,8 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
             par.clearBindings();
             par.reset();
         }
+
+        par.finalize();
     }
     catch (SQL::Exception &e)
     {
