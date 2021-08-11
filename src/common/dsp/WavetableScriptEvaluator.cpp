@@ -23,12 +23,6 @@ namespace WavetableScript
 std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame,
                                          int nFrames)
 {
-#if !HAS_LUAJIT
-    auto res = std::vector<float>();
-    for (auto i = 0; i < resolution; ++i)
-        res.push_back(0.f);
-    return res;
-#else
     static lua_State *L = nullptr;
     if (L == nullptr)
     {
@@ -100,7 +94,6 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
         lua_pop(L, 1);
     }
     return values;
-#endif
 }
 
 bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_header &wh,

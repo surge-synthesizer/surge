@@ -25,12 +25,8 @@
 #include <fstream>
 #endif
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
-
 #ifdef _WIN32
-//  Windows
+#include <intrin.h>
 #define cpuid(info, x) __cpuidex(info, x, 0)
 #else
 #if LINUX && !ARM_NEON

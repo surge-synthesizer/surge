@@ -18,39 +18,12 @@
 
 #include "SurgeStorage.h"
 #include "StringOps.h"
-
-#if HAS_FORMULA_MODULATOR
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#include "luajit.h"
-
-#include "lj_arch.h"
-}
-#endif
+#include "LuaSupport.h"
 
 namespace Surge
 {
 namespace Formula
 {
-#if !HAS_FORMULA_MODULATOR
-struct EvaluatorState
-{
-};
-bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display)
-{
-    return false;
-}
-
-float valueAt(int phaseIntPart, float phaseFracPart, float deform, FormulaModulatorStorage *fs,
-              EvaluatorState *state)
-{
-    return 0;
-}
-
-#else
 struct EvaluatorState
 {
     bool released;
@@ -86,7 +59,6 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
 
 void createInitFormula(FormulaModulatorStorage *fs);
 
-#endif
 } // namespace Formula
 } // namespace Surge
 #endif // SURGE_XT_FORMULAMODULATIONHELPER_H

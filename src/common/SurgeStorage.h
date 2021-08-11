@@ -664,10 +664,6 @@ struct MSEGStorage
     static constexpr float minimumDuration = 0.0;
 };
 
-#if HAS_LUAJIT
-#define HAS_FORMULA_MODULATOR 1
-#endif
-
 struct FormulaModulatorStorage
 {
     std::string formulaString = "";

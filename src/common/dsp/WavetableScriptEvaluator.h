@@ -20,18 +20,6 @@
 #include "StringOps.h"
 #include "Wavetable.h"
 
-#if HAS_LUAJIT
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#include "luajit.h"
-
-#include "lj_arch.h"
-}
-#endif
-
 namespace Surge
 {
 namespace WavetableScript
