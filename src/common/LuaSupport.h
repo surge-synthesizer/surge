@@ -24,7 +24,6 @@
 
 #include <string>
 
-#if HAS_LUAJIT
 extern "C"
 {
 #include "lua.h"
@@ -35,13 +34,10 @@ extern "C"
 #include "lj_arch.h"
 }
 
-#endif
-
 namespace Surge
 {
 namespace LuaSupport
 {
-#if HAS_LUAJIT
 
 /*
  * Given a string which is supposed to be valid lua defining a function
@@ -82,7 +78,6 @@ struct SGLD
     lua_State *L;
     int top;
 };
-#endif
 } // namespace LuaSupport
 } // namespace Surge
 

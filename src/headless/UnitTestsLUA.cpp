@@ -14,17 +14,6 @@
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
 
-#if HAS_LUAJIT
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#include "luajit.h"
-
-#include "lj_arch.h"
-}
-
 TEST_CASE("LUA Hello World", "[lua]")
 {
     SECTION("HW")
@@ -455,4 +444,3 @@ end
         }
     }
 }
-#endif

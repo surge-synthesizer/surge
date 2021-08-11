@@ -9,19 +9,17 @@ project(LuaJIT C ASM)
 
 #
 # OK so what the heck is this? Well this is a surge-specific thing to make it cross compile
-# for mac ARM because I couldn't figure out the original below in a cross compile context.
-# This isn't 'great' but it's not precisely terrible
+# a macOS universal lib. The CMake below doesn't understand CMAKE_OSX_ARCHITECTURES yet.
 #
-if( APPLE )
+
+if(APPLE AND NOT CMAKE_CROSSCOMPILING)
   message( STATUS "Custom build for macOSX of luajit in fat mode" )
   SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/LuaJIT)
-  SET(LUAJIT_BLD ${CMAKE_BINARY_DIR}/luajit)
-
+  SET(LUAJIT_BLD ${CMAKE_CURRENT_BINARY_DIR}/luajit)
 
   add_library(luajit-5.1 INTERFACE)
   target_link_libraries (luajit-5.1 INTERFACE ${LUAJIT_BLD}/bin/libluajit.a )
   target_include_directories(luajit-5.1 INTERFACE ${LUAJIT_DIR}/src)
-  target_compile_definitions(luajit-5.1 INTERFACE HAS_LUAJIT=1)
 
   if( NOT EXISTS ${LUAJIT_BLD} )
     message( STATUS "Building luajit at cmake time on macos right now" )
@@ -33,9 +31,81 @@ if( APPLE )
     file(GLOB_RECURSE LUACONTENTS "${LUAJIT_BLD}/bin/*")
     message( STATUS ${LUACONTENTS})
   endif()
-
-
 else()
+  include(CMakeParseArguments)
+  include(CheckCSourceCompiles)
+  include(CheckFunctionExists)
+  include(CheckLibraryExists)
+
+  # In cross builds, find a host compiler
+  if(CMAKE_CROSSCOMPILING)
+    set(LUAJIT_HOSTCCS gcc clang)
+    find_program(LUAJIT_HOSTCC NAMES ${LUAJIT_HOSTCCS})
+    if(NOT LUAJIT_HOSTCC)
+      string(REPLACE ";" ", " LUAJIT_HOSTCCS "${LUAJIT_HOSTCCS}")
+      message(FATAL_ERROR "${PROJECT_NAME}: No host compiler found, tried: ${LUAJIT_HOSTCCS}")
+    endif()
+    # LuaJIT requires host and target to have the same pointer size
+    math(EXPR LUAJIT_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
+    message(STATUS "${PROJECT_NAME}: Using host compiler ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS}")
+  endif()
+
+  # Add an executable that can run on the build host
+  function(luajit_add_host_executable name)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "COMPILE_DEFINITIONS;INCLUDE_DIRECTORIES;LIBS;SOURCES")
+    if(CMAKE_CROSSCOMPILING)
+      add_custom_target(${name} DEPENDS ${ARG_SOURCES})
+      list(FILTER ARG_SOURCES INCLUDE REGEX "\.c$")
+      if(APPLE)
+        list(APPEND ARG_COMPILE_DEFINITIONS LUAJIT_OS=LUAJIT_OS_OSX)
+      elseif(WIN32)
+        list(APPEND ARG_COMPILE_DEFINITIONS LUAJIT_OS=LUAJIT_OS_WINDOWS)
+      elseif(UNIX)
+        list(APPEND ARG_COMPILE_DEFINITIONS LUAJIT_OS=LUAJIT_OS_LINUX)
+      else()
+        list(APPEND ARG_COMPILE_DEFINITIONS LUAJIT_OS=LUAJIT_OS_OTHER)
+      endif()
+      list(TRANSFORM ARG_COMPILE_DEFINITIONS PREPEND -D)
+      list(TRANSFORM ARG_INCLUDE_DIRECTORIES PREPEND -I)
+      list(TRANSFORM ARG_LIBS PREPEND -l)
+      add_custom_command(TARGET ${name}
+        COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${name} ${ARG_COMPILE_DEFINITIONS} ${ARG_INCLUDE_DIRECTORIES} ${ARG_LIBS} ${ARG_SOURCES}
+      )
+    else()
+      add_executable(${name} ${ARG_SOURCES})
+      get_property(generatorIsMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+      if(NOT generatorIsMultiConfig)
+        set_target_properties(${name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)
+      endif()
+      target_compile_definitions(${name} PRIVATE ${ARG_COMPILE_DEFINITIONS})
+      target_include_directories(${name} PRIVATE ${ARG_INCLUDE_DIRECTORIES})
+      target_link_libraries(${name} PRIVATE ${ARG_LIBS})
+    endif()
+  endfunction()
+
+  # Check for a library on the build host
+  function(luajit_check_host_library_exists lib func variable)
+    if(CMAKE_CROSSCOMPILING)
+      if(DEFINED CACHE{${variable}})
+        return()
+      endif()
+      set(fname ${CMAKE_CURRENT_BINARY_DIR}/LuaJITCheckHostLibraryExists_${variable})
+      file(WRITE ${fname}.c "extern int ${func}(void); int main(void) { return ${func}(); }\n")
+      execute_process(COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${fname} -l${lib} ${fname}.c
+        RESULT_VARIABLE status
+        OUTPUT_QUIET
+        ERROR_QUIET
+      )
+      if(status AND NOT status EQUAL 0)
+        set(status 0)
+      else()
+        set(status 1)
+      endif()
+      set(${variable} ${status} CACHE INTERNAL "Have host library ${lib}")
+    else()
+      check_library_exists(${lib} ${func} "" ${variable})
+    endif()
+  endfunction()
 
   SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/LuaJIT)
 
@@ -51,12 +121,6 @@ else()
   IF(MSVC)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
   ENDIF()
-
-  # Various includes
-  INCLUDE(CheckLibraryExists)
-  INCLUDE(CheckFunctionExists)
-  INCLUDE(CheckCSourceCompiles)
-  INCLUDE(CheckTypeSize)
 
   # LuaJIT specIFic
   option(LUAJIT_DISABLE_FFI "Disable FFI." OFF)
@@ -94,9 +158,7 @@ else()
   ENDIF()
   ######
 
-
-  CHECK_TYPE_SIZE("void*" SIZEOF_VOID_P)
-  IF(SIZEOF_VOID_P EQUAL 8)
+  IF(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
     ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
   ENDIF()
 
@@ -175,9 +237,9 @@ else()
     MESSAGE(STATUS "LuaJIT target ${TARGET_LJARCH}")
   ENDIF()
 
-  FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/jit)
+  FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/jit)
   FILE(GLOB jit_files ${LUAJIT_DIR}/src/jit/*.lua)
-  FILE(COPY ${jit_files} DESTINATION ${CMAKE_BINARY_DIR}/jit)
+  FILE(COPY ${jit_files} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/jit)
 
   SET(DASM_ARCH ${TARGET_LJARCH})
   SET(DASM_FLAGS)
@@ -233,15 +295,19 @@ else()
     ENDIF()
   ENDIF()
 
-  add_executable(minilua ${LUAJIT_DIR}/src/host/minilua.c)
-  SET_TARGET_PROPERTIES(minilua PROPERTIES COMPILE_DEFINITIONS "${TARGET_ARCH}")
-  CHECK_LIBRARY_EXISTS(m sin "" MINILUA_USE_LIBM)
+  luajit_check_host_library_exists(m sin MINILUA_USE_LIBM)
   IF(MINILUA_USE_LIBM)
-    TARGET_LINK_LIBRARIES(minilua m)
-  endIF()
+    set(MINILUA_LIBS m)
+  ENDIF()
+  luajit_add_host_executable(minilua
+    SOURCES ${LUAJIT_DIR}/src/host/minilua.c
+    COMPILE_DEFINITIONS ${TARGET_ARCH}
+    INCLUDE_DIRECTORIES ${CMAKE_REQUIRED_INCLUDES}
+    LIBS ${MINILUA_LIBS}
+  )
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h
-    COMMAND minilua ${LUAJIT_DIR}/dynasm/dynasm.lua ${DASM_FLAGS} -o ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h ${LUAJIT_DIR}/src/vm_${DASM_ARCH}.dasc
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/minilua ${LUAJIT_DIR}/dynasm/dynasm.lua ${DASM_FLAGS} -o ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h ${LUAJIT_DIR}/src/vm_${DASM_ARCH}.dasc
     DEPENDS ${LUAJIT_DIR}/dynasm/dynasm.lua minilua
   )
 
@@ -270,12 +336,15 @@ else()
   list (APPEND SRC_BUILDVM ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h)
 
   ## GENERATE
-  ADD_EXECUTABLE(buildvm ${SRC_BUILDVM})
-  SET_TARGET_PROPERTIES(buildvm PROPERTIES COMPILE_DEFINITIONS "${TARGET_ARCH}")
+  luajit_add_host_executable(buildvm
+    SOURCES ${SRC_BUILDVM}
+    COMPILE_DEFINITIONS ${TARGET_ARCH}
+    INCLUDE_DIRECTORIES ${CMAKE_REQUIRED_INCLUDES}
+  )
 
   macro(add_buildvm_target _target _mode)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_target}
-      COMMAND buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
+      COMMAND ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS buildvm ${ARGN}
     )
@@ -331,7 +400,6 @@ else()
 
   target_link_libraries (luajit-5.1 ${LIBS} )
   target_include_directories(luajit-5.1 PUBLIC ${LUAJIT_DIR}/src)
-  target_compile_definitions(luajit-5.1 PUBLIC HAS_LUAJIT=1)
 
   IF(WIN32)
     add_executable(luajit ${LUAJIT_DIR}/src/luajit.c)
@@ -369,7 +437,7 @@ else()
         math(EXPR _stripped_file_length "${_luajit_file_length} - ${_luajit_source_dir_length} - 1")
         string(SUBSTRING ${file} ${_begin} ${_stripped_file_length} stripped_file)
 
-        SET(generated_file "${CMAKE_BINARY_DIR}/jitted_tmp/${stripped_file}_${luajit_target}_generated${CMAKE_C_OUTPUT_EXTENSION}")
+        SET(generated_file "${CMAKE_CURRENT_BINARY_DIR}/jitted_tmp/${stripped_file}_${luajit_target}_generated${CMAKE_C_OUTPUT_EXTENSION}")
 
         add_custom_command(
           OUTPUT ${generated_file}

@@ -90,7 +90,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
         -Wno-return-local-addr # squelch sqlite3 error: function may return address of local variable
     )
-    add_link_options("-Wl,-z,noexecstack" )
   endif()
 endif()
 
@@ -158,11 +157,14 @@ add_subdirectory(libs/catch2)
 add_subdirectory(libs/eurorack)
 add_subdirectory(libs/filesystem)
 add_subdirectory(libs/tinyxml)
-message(STATUS "Escape *was* possible!" )
 add_subdirectory(libs/oddsound-mts)
+if(MINGW)
+  set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
+endif()
 add_subdirectory(libs/libsamplerate EXCLUDE_FROM_ALL)
 add_subdirectory(libs/tuning-library EXCLUDE_FROM_ALL)
 add_subdirectory(libs/sqlite-3.23.3)
+add_subdirectory(libs/LuaJitLib)
 
 juce_add_binary_data(surge-shared-binary
         NAMESPACE SurgeCoreBinary
@@ -172,11 +174,9 @@ juce_add_binary_data(surge-shared-binary
         resources/surge-xt/README_UserArea.txt
         resources/data/windows.wt
         resources/data/paramdocumentation.xml)
-set_target_properties(surge-shared-binary PROPERTIES
-        POSITION_INDEPENDENT_CODE TRUE
-        )
 
 target_link_libraries(surge-shared PUBLIC
+  luajit-5.1
   surge::airwindows
   surge::eurorack
   surge::sqlite
@@ -187,11 +187,6 @@ target_link_libraries(surge-shared PUBLIC
   surge-shared-binary
   tuning-library
 )
-
-if( NOT LINUX_ARM_CROSSCOMPILE )
-  add_subdirectory(libs/LuaJitLib)
-  target_link_libraries(surge-shared PUBLIC luajit-5.1)
-endif()
 
 # We want to run this once alas, since JUCE needs it even though it is a byproduct of a phase to build the
 # JUCE Cmake file list.
