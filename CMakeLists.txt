@@ -172,6 +172,7 @@ juce_add_binary_data(surge-shared-binary
         SOURCES
         resources/data/configuration.xml
         resources/surge-xt/README_UserArea.txt
+        resources/surge-xt/memoryWavetable.wt
         resources/data/windows.wt
         resources/data/paramdocumentation.xml)
 
@@ -885,6 +886,7 @@ if( BUILD_SURGE_XT )
           resources/fonts/Lato*ttf
           resources/fonts/IndieFlower.ttf
           resources/fonts/FiraMono-Regular.ttf
+          resources/surge-xt/memory-skin.xml
           )
 
   juce_add_binary_data( surge-xt-binary

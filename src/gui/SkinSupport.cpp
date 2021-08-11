@@ -15,6 +15,7 @@
 #include <set>
 #include <iostream>
 #include <iomanip>
+#include "BinaryData.h"
 
 namespace Surge
 {
@@ -61,11 +62,11 @@ std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
     else
     {
         auto st = (Entry::RootType)(Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::DefaultSkinRootType, Entry::UNKNOWN));
+            storage, Surge::Storage::DefaultSkinRootType, UNKNOWN));
 
         for (auto e : availableSkins)
         {
-            if (e.name == uds && (e.rootType == st || st == Entry::UNKNOWN))
+            if (e.name == uds && (e.rootType == st || st == UNKNOWN))
                 return getSkin(e);
         }
         return getSkin(defaultSkinEntry);
@@ -76,7 +77,14 @@ std::shared_ptr<Skin> SkinDB::getSkin(const Entry &skinEntry)
 {
     if (skins.find(skinEntry) == skins.end())
     {
-        skins[skinEntry] = std::make_shared<Skin>(skinEntry.root, skinEntry.name);
+        if (skinEntry.rootType == MEMORY)
+        {
+            skins[skinEntry] = std::make_shared<Skin>(true);
+        }
+        else
+        {
+            skins[skinEntry] = std::make_shared<Skin>(skinEntry.root, skinEntry.name);
+        }
     }
     return skins[skinEntry];
 }
@@ -93,11 +101,11 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
 
     for (auto &source : paths)
     {
-        Entry::RootType rt = Entry::UNKNOWN;
+        Entry::RootType rt = UNKNOWN;
         if (path_to_string(source) == path_to_string(paths[0]))
-            rt = Entry::FACTORY;
+            rt = FACTORY;
         if (path_to_string(source) == path_to_string(paths[1]))
-            rt = Entry::USER;
+            rt = USER;
 
         std::vector<fs::path> alldirs;
         std::deque<fs::path> workStack;
@@ -153,8 +161,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
                     e.rootType = rt;
                     e.root = path;
                     e.name = lo + sep;
-                    if (e.name.find("default.surge-skin") != std::string::npos &&
-                        rt == Entry::FACTORY && defaultSkinEntry.name == "")
+                    if (e.name.find("default.surge-skin") != std::string::npos && rt == FACTORY &&
+                        defaultSkinEntry.name == "")
                     {
                         defaultSkinEntry = e;
                         foundDefaultSkinEntry = true;
@@ -166,13 +174,14 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
     }
     if (!foundDefaultSkinEntry)
     {
-        std::ostringstream oss;
-        oss << "Surge Classic skin was not located. This usually means Surge is incorrectly "
-               "installed or uses an incompatible "
-            << "set of resources. Surge looked in '" << storage->datapath << "' and '"
-            << storage->userDataPath << "'. "
-            << "Please reinstall Surge or remove incompatible resources.";
-        storage->reportError(oss.str(), "Skin Loading Error");
+        auto memSkin = Entry();
+        memSkin.rootType = MEMORY;
+        memSkin.name = "In Memory Default";
+        memSkin.displayName = "In Memory Default";
+        memSkin.category = "";
+        memSkin.root = "";
+        availableSkins.push_back(memSkin);
+        defaultSkinEntry = memSkin;
     }
 
     // Run over the skins parsing the name
@@ -235,6 +244,17 @@ Skin::Skin(const std::string &root, const std::string &name) : root(root), name(
     imageAllowedIds = allowedImageIds();
 }
 
+Skin::Skin(bool inMemory)
+{
+    if (!inMemory)
+        std::cout << "SOFTWARE ERROR" << std::endl;
+    instances++;
+    // std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
+    imageStringToId = createIdNameMap();
+    imageAllowedIds = allowedImageIds();
+    useInMemorySkin = true;
+}
+
 Skin::~Skin()
 {
 #ifdef INSTRUMENT_UI
@@ -255,17 +275,25 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
 #endif
     // std::cout << "Reloading skin " << _D(name) << std::endl;
     TiXmlDocument doc;
-    // Obviously fix this
-    doc.SetTabSize(4);
-
-    if (!doc.LoadFile(string_to_path(resourceName("skin.xml"))))
+    if (useInMemorySkin)
     {
-        FIXMEERROR << "Unable to load skin.xml resource '" << resourceName("skin.xml") << "'"
-                   << std::endl;
-        FIXMEERROR << "Unable to parse skin.xml\nError is:\n"
-                   << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column "
-                   << doc.ErrorCol() << std::endl;
-        return false;
+        auto memSkin = std::string(BinaryData::memoryskin_xml, BinaryData::memoryskin_xmlSize);
+        doc.Parse(memSkin.c_str());
+    }
+    else
+    {
+        // Obviously fix this
+        doc.SetTabSize(4);
+
+        if (!doc.LoadFile(string_to_path(resourceName("skin.xml"))))
+        {
+            FIXMEERROR << "Unable to load skin.xml resource '" << resourceName("skin.xml") << "'"
+                       << std::endl;
+            FIXMEERROR << "Unable to parse skin.xml\nError is:\n"
+                       << doc.ErrorDesc() << " at row " << doc.ErrorRow() << ", column "
+                       << doc.ErrorCol() << std::endl;
+            return false;
+        }
     }
 
     TiXmlElement *surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
