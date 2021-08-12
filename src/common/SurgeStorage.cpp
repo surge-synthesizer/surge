@@ -976,10 +976,12 @@ void SurgeStorage::refresh_wtlist()
 
     if (wt_category.size() == 0 || wt_list.size() == 0)
     {
+        /*
         std::ostringstream ss;
         ss << "Surge was unable to load wavetables from '" << datapath
            << "'. Please reinstall Surge!";
         reportError(ss.str(), "Surge Installation Error");
+         */
     }
 
     firstThirdPartyWTCategory = wt_category.size();
@@ -1106,6 +1108,15 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
 {
     wt->current_id = id;
     wt->queue_id = -1;
+    if (wt_list.empty() && id == 0)
+    {
+        load_wt_wt_mem(SurgeCoreBinary::memoryWavetable_wt, SurgeCoreBinary::memoryWavetable_wtSize,
+                       wt);
+        if (osc)
+            strncpy(osc->wavetable_display_name, "Sin to Saw", TXT_SIZE);
+
+        return;
+    }
     if (id < 0)
         return;
     if (id >= wt_list.size())

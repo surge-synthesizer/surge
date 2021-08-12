@@ -77,6 +77,14 @@ void loadTypefacesFromPath(const fs::path &p,
 extern const std::string NoneClassName;
 class SkinDB;
 
+enum RootType
+{
+    UNKNOWN,
+    FACTORY,
+    USER,
+    MEMORY
+};
+
 class Skin
 {
   public:
@@ -95,7 +103,10 @@ class Skin
     friend class SkinDB;
 
     Skin(const std::string &root, const std::string &name);
+    Skin(bool inMemory);
     ~Skin();
+
+    bool useInMemorySkin{false};
 
     bool reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore);
 
@@ -400,13 +411,9 @@ class SkinDB : public juce::DeletedAtShutdown
 
     struct Entry
     {
+        using RootType = Surge::GUI::RootType;
 
-        enum RootType
-        {
-            UNKNOWN,
-            FACTORY,
-            USER
-        } rootType = UNKNOWN;
+        RootType rootType = UNKNOWN;
 
         std::string root;
         std::string name;
