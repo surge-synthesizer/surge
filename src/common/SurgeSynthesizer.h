@@ -209,22 +209,6 @@ class alignas(16) SurgeSynthesizer
     {
         getParameterMeta(index.getSynthSideId(), pm);
     }
-    void getParameterNameW(const ID &index, wchar_t *ptr)
-    {
-        getParameterNameW(index.getSynthSideId(), ptr);
-    }
-    void getParameterShortNameW(const ID &index, wchar_t *ptr)
-    {
-        getParameterShortNameW(index.getSynthSideId(), ptr);
-    }
-    void getParameterUnitW(const ID &index, wchar_t *ptr)
-    {
-        getParameterUnitW(index.getSynthSideId(), ptr);
-    }
-    void getParameterStringW(const ID &index, float value, wchar_t *ptr)
-    {
-        getParameterStringW(index.getSynthSideId(), value, ptr);
-    }
     float getParameter01(const ID &index) { return getParameter01(index.getSynthSideId()); }
     bool setParameter01(const ID &index, float value, bool external = false,
                         bool force_integer = false)
@@ -267,16 +251,9 @@ class alignas(16) SurgeSynthesizer
     void getParameterName(long index, char *text);
     void getParameterAccessibleName(long index, char *text);
     void getParameterMeta(long index, parametermeta &pm);
-    void getParameterNameW(long index, wchar_t *ptr);
-    void getParameterShortNameW(long index, wchar_t *ptr);
-    void getParameterUnitW(long index, wchar_t *ptr);
-    void getParameterStringW(long index, float value, wchar_t *ptr);
-    //	unsigned int getParameterFlags (long index);
 
   public:
     void updateDisplay();
-    // bool setParameter (long index, float value);
-    //	float getParameter (long index);
     bool isValidModulation(long ptag, modsources modsource);
     bool isActiveModulation(long ptag, modsources modsource);
     bool isBipolarModulation(modsources modsources);

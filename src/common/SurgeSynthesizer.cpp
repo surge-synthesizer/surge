@@ -2934,100 +2934,6 @@ void SurgeSynthesizer::getParameterAccessibleName(long index, char *text)
         snprintf(text, TXT_SIZE, "-");
 }
 
-void SurgeSynthesizer::getParameterNameW(long index, wchar_t *ptr)
-{
-    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
-    {
-        int scn = storage.getPatch().param_ptr[index]->scene;
-        // TODO: FIX SCENE ASSUMPTION
-        char sn[3][3] = {"", "A ", "B "};
-        char pname[256];
-
-        snprintf(pname, 255, "%s%s", sn[scn], storage.getPatch().param_ptr[index]->get_full_name());
-
-        // the input is not wide so don't use %S
-        swprintf(ptr, 128, L"%s", pname);
-    }
-    else if (index >= metaparam_offset)
-    {
-        int c = index - metaparam_offset;
-        // For a reason I don't understand, on windows, we need to sprintf then swprinf just the
-        // short char to make just these names work. :shrug:
-        char wideHack[256];
-
-        if (c >= num_metaparameters)
-        {
-            snprintf(wideHack, 255, "Macro: ERROR");
-        }
-        else
-        {
-            snprintf(wideHack, 255, "Macro %d: %s", c + 1,
-                     storage.getPatch().CustomControllerLabel[c]);
-        }
-        swprintf(ptr, 128, L"%s", wideHack);
-    }
-    else
-    {
-        swprintf(ptr, 128, L"-");
-    }
-}
-
-void SurgeSynthesizer::getParameterShortNameW(long index, wchar_t *ptr)
-{
-    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
-    {
-        int scn = storage.getPatch().param_ptr[index]->scene;
-        // TODO: FIX SCENE ASSUMPTION
-        string sn[3] = {"", "A ", "B "};
-
-        swprintf(ptr, 128, L"%s%s", sn[scn].c_str(),
-                 storage.getPatch().param_ptr[index]->get_name());
-    }
-    else if (index >= metaparam_offset)
-    {
-        getParameterNameW(index, ptr);
-    }
-    else
-    {
-        swprintf(ptr, 128, L"-");
-    }
-}
-
-void SurgeSynthesizer::getParameterUnitW(long index, wchar_t *ptr)
-{
-    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
-    {
-        swprintf(ptr, 128, L"%s", storage.getPatch().param_ptr[index]->getUnit());
-    }
-    else
-    {
-        swprintf(ptr, 128, L"");
-    }
-}
-
-void SurgeSynthesizer::getParameterStringW(long index, float value, wchar_t *ptr)
-{
-    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
-    {
-        char text[128];
-        storage.getPatch().param_ptr[index]->get_display(text, true, value);
-
-        swprintf(ptr, 128, L"%s", text);
-    }
-    else if (index >= metaparam_offset)
-    {
-        // For a reason I don't understand, on windows, we need to sprintf then swprinf just the
-        // short char to make just these names work. :shrug:
-        char wideHack[256];
-        snprintf(wideHack, 256, "%.2f %%", 100.f * value);
-        swprintf(ptr, 128, L"%s", wideHack);
-    }
-    else
-    {
-        swprintf(ptr, 128, L"-");
-    }
-}
-
 void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm)
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
@@ -3064,14 +2970,6 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm)
         pm.clump = 1;
     }
 }
-/*unsigned int sub3_synth::getParameterFlags (long index)
-{
-        if (index<storage.getPatch().param_ptr.size())
-        {
-                return storage.getPatch().param_ptr[index]->ctrlstyle;
-        }
-        return 0;
-}*/
 
 float SurgeSynthesizer::getParameter(long index)
 {
