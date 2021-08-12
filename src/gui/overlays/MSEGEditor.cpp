@@ -425,8 +425,29 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 case DRAW:
                     break;
                 case SHIFT:
-                    Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx, ms->hSnap,
-                                                                  longestMSEG);
+                    if (lassoSelector)
+                    {
+                        bool isLast{true};
+                        for (auto si : lassoSelector->items)
+                        {
+                            isLast = isLast && si <= prior + 1;
+                        }
+                        if (isLast)
+                        {
+                            Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
+                                                                          ms->hSnap, longestMSEG);
+                        }
+                        else
+                        {
+                            Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx,
+                                                                             ms->hSnap);
+                        }
+                    }
+                    else
+                    {
+                        Surge::MSEG::adjustDurationShiftingSubsequent(this->ms, prior, dx,
+                                                                      ms->hSnap, longestMSEG);
+                    }
                     break;
                 case SINGLE:
                     Surge::MSEG::adjustDurationConstantTotalDuration(this->ms, prior, dx,
@@ -1475,7 +1496,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             for (auto &h : hotzones)
             {
                 if (h.rect.contains(e.position.toFloat()) && h.type == hotzone::MOUSABLE_NODE &&
-                    h.zoneSubType == hotzone::SEGMENT_ENDPOINT &&
+                    (h.zoneSubType == hotzone::SEGMENT_ENDPOINT ||
+                     h.zoneSubType == hotzone::SEGMENT_CONTROL) &&
                     lassoSelector->contains(h.associatedSegment))
                     clearLasso = false;
             }
@@ -1823,12 +1845,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         bool foundDrag = false;
         auto where = event.position.toInt();
         std::set<int> modifyIndices;
+        auto draggingType = hotzone::SEGMENT_ENDPOINT;
+        for (auto &h : hotzones)
+            if (h.dragging)
+                draggingType = h.zoneSubType;
+
         for (auto &h : hotzones)
         {
-
-            if (h.dragging ||
-                (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
-                 h.type == hotzone::MOUSABLE_NODE && h.zoneSubType == hotzone::SEGMENT_ENDPOINT))
+            if (h.dragging || (lassoSelector && lassoSelector->contains(h.associatedSegment) &&
+                               h.type == hotzone::MOUSABLE_NODE && h.zoneSubType == draggingType))
             {
                 modifyIndices.insert(idx);
                 foundDrag = true;
@@ -1851,6 +1876,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 dragY *= 0.2;
             }
             bool sep = false;
+            holdOffOnModelChanged = true;
             for (auto idx : modifyIndices)
             {
                 hotzones[idx].onDrag(dragX, dragY, juce::Point<float>(where.getX(), where.getY()));
@@ -1860,7 +1886,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     sep = hotzones[idx].specialEndpoint;
                 }
             }
-            modelChanged(hoveredSegment, sep, false); // HACK FIXME
+            holdOffOnModelChanged = false;
+            modelChanged(hoveredSegment, sep, false);
 
             mouseDownOrigin = where;
         }
@@ -2347,8 +2374,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
     }
 
+    bool holdOffOnModelChanged{false};
     void modelChanged(int activeSegment = -1, bool specialEndpoint = false, bool rchz = true)
     {
+        if (holdOffOnModelChanged)
+            return;
+
         Surge::MSEG::rebuildCache(ms);
         applyZoomPanConstraints(activeSegment, specialEndpoint);
         if (rchz)
@@ -2922,11 +2953,11 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
     canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp);
     controls = std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp);
 
-    addAndMakeVisible(*controls);
-    addAndMakeVisible(*canvas);
-
     canvas->controlregion = controls.get();
     controls->canvas = canvas.get();
+
+    addAndMakeVisible(*controls);
+    addAndMakeVisible(*canvas);
 }
 
 MSEGEditor::~MSEGEditor() = default;
