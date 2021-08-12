@@ -103,7 +103,6 @@ if(MSVC)
     /wd4267   # int and size_t
     /wd4018   # signed unsigned mismatch
     /wd4388   # signed unsigned mismatch in comparison
-    /wd4477   # blah blah wide strings after we made it work
     /wd4065   # standalone default in a switch with no case
     /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
 
