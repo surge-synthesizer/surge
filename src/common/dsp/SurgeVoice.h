@@ -177,7 +177,8 @@ class alignas(16) SurgeVoice
     int FMmode;
     float noisegenL[2], noisegenR[2];
 
-    std::unique_ptr<Oscillator> osc[3];
+    Oscillator *osc[n_oscs];
+    unsigned char oscbuffer alignas(16)[n_oscs][oscillator_buffer_size];
 
   public: // this is public, but only for the regtests
     std::array<ModulationSource *, n_modsources> modsources;

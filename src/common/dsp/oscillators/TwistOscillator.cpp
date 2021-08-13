@@ -269,13 +269,13 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
 TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                  pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
-#if SAMPLERATE_LANCZOS
-      ,
-      lancRes(48000, dsamplerate_os)
-#endif
 {
+#if SAMPLERATE_LANCZOS
+    lancRes = std::make_unique<LanczosResampler>(48000, dsamplerate_os);
+#endif
     voice = std::make_unique<plaits::Voice>();
-    alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, sizeof(shared_buffer));
+    shared_buffer = new char[16384];
+    alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, 16384);
     voice->Init(alloc.get());
     patch = std::make_unique<plaits::Patch>();
     mod = std::make_unique<plaits::Modulations>();
@@ -341,6 +341,9 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 }
 TwistOscillator::~TwistOscillator()
 {
+    if (shared_buffer)
+        delete[] shared_buffer;
+
     if (srcstate)
         srcstate = src_delete(srcstate);
 
@@ -432,7 +435,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
     carrover_size = 0;
 #else
     int total_generated =
-        required_blocks - lancRes.inputsRequiredToGenerateOutputs(required_blocks);
+        required_blocks - lancRes->inputsRequiredToGenerateOutputs(required_blocks);
 #endif
 
     bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
@@ -479,10 +482,10 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 #if SAMPLERATE_LANCZOS
         for (int i = 0; i < subblock; ++i)
         {
-            lancRes.push(poutput[i].out / 32768.f, poutput[i].aux / 32768.f);
+            lancRes->push(poutput[i].out / 32768.f, poutput[i].aux / 32768.f);
         }
         total_generated =
-            required_blocks - lancRes.inputsRequiredToGenerateOutputs(required_blocks);
+            required_blocks - lancRes->inputsRequiredToGenerateOutputs(required_blocks);
 #else
         for (int i = 0; i < subblock; ++i)
         {
@@ -533,12 +536,12 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 #if SAMPLERATE_LANCZOS
     if (throwaway)
     {
-        lancRes.advanceReadPointer(required_blocks);
+        lancRes->advanceReadPointer(required_blocks);
     }
     else
     {
         float tL[BLOCK_SIZE_OS], tR[BLOCK_SIZE_OS];
-        lancRes.populateNextBlockSizeOS(tL, tR);
+        lancRes->populateNextBlockSizeOS(tL, tR);
 
         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
         {
@@ -555,7 +558,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
             auxmix.process();
         }
     }
-    lancRes.renormalizePhases();
+    lancRes->renormalizePhases();
 #endif
 
     if (!throwaway && charFilt.doFilter)

@@ -80,6 +80,8 @@ std::string stringosc_excitation_name(int i)
     return "Unknown";
 }
 
+StringOscillator::~StringOscillator() = default;
+
 void StringOscillator::init(float pitch, bool is_display, bool nzi)
 {
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
@@ -141,7 +143,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
 
     for (int i = 0; i < 2; ++i)
     {
-        delayLine[i].clear();
+        delayLine[i]->clear();
         driftLFO[i].init(nzi);
     }
 
@@ -319,7 +321,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
 
         for (int t = 0; t < 2; ++t)
         {
-            delayLine[t].write(tone.v < 0 ? lpt[t] : hpt[t]);
+            delayLine[t]->write(tone.v < 0 ? lpt[t] : hpt[t]);
         }
     }
     lp.flush_sample_denormal();
@@ -327,7 +329,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
 
     for (int t = 0; t < 2; ++t)
     {
-        priorSample[t] = delayLine[t].buffer[(delayLine[t].wp - 1) & delayLine[t].comb_size];
+        priorSample[t] = delayLine[t]->buffer[(delayLine[t]->wp - 1) & delayLine[t]->comb_size];
     }
 
     charFilt.init(storage->getPatch().character.val.i);
@@ -448,8 +450,8 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
         dp2 = pitch_to_dphase(pitch2_t);
     }
 
-    pitchmult_inv = std::min(pitchmult_inv, (delayLine[0].comb_size - 100) * 1.0);
-    pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0].comb_size - 100) * 1.0);
+    pitchmult_inv = std::min(pitchmult_inv, (delayLine[0]->comb_size - 100) * 1.0);
+    pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0]->comb_size - 100) * 1.0);
 
     tap[0].newValue(pitchmult_inv);
     tap[1].newValue(pitchmult2_inv);
@@ -507,7 +509,7 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
             }
 
-            val[t] = delayLine[t].read(v);
+            val[t] = delayLine[t]->read(v);
             fbNoOutVal[t] = 0.f;
 
             // Add continuous excitation
@@ -599,7 +601,7 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 
             if (fabs(filtv) < 1e-16)
                 filtv = 0;
-            delayLine[t].write(filtv * feedback[t].v);
+            delayLine[t]->write(filtv * feedback[t].v);
         }
 
         float out = val[0] + t2level.v * (val[1] - val[0]);

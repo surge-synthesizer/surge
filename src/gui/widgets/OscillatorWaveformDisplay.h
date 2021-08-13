@@ -21,6 +21,7 @@
 #include "SurgeStorage.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "Oscillator.h"
 
 class SurgeStorage;
 class SurgeGUIEditor;
@@ -58,7 +59,8 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
 
     void repaintIfIdIsInRange(int id);
 
-    std::unique_ptr<::Oscillator> setupOscillator();
+    ::Oscillator *setupOscillator();
+    unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
 
     void paint(juce::Graphics &g) override;
 
