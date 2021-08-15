@@ -115,6 +115,9 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         }
     }
 
+    osc->~Oscillator();
+    osc = nullptr;
+
     auto yMargin = 2 * usesWT;
     auto h = getHeight() - usesWT * wtbheight - 2 * yMargin;
     auto xMargin = 2;
@@ -254,12 +257,12 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
     }
 }
 
-std::unique_ptr<::Oscillator> OscillatorWaveformDisplay::setupOscillator()
+::Oscillator *OscillatorWaveformDisplay::setupOscillator()
 {
     tp[oscdata->pitch.param_id_in_scene].f = 0;
     for (int i = 0; i < n_osc_params; i++)
         tp[oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
-    return std::unique_ptr<::Oscillator>(spawn_osc(oscdata->type.val.i, storage, oscdata, tp));
+    return spawn_osc(oscdata->type.val.i, storage, oscdata, tp, oscbuffer);
 }
 
 void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem)

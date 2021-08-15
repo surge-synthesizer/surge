@@ -766,7 +766,9 @@ void SurgePatch::update_controls(
             for (int i = 0; i < n_osc_params; i++)
                 sc.osc[osc].p[i].set_type(ct_none);
 
-            Oscillator *t_osc = spawn_osc(sc.osc[osc].type.val.i, nullptr, &sc.osc[osc], nullptr);
+            unsigned char mbuf alignas(16)[oscillator_buffer_size];
+            Oscillator *t_osc =
+                spawn_osc(sc.osc[osc].type.val.i, nullptr, &sc.osc[osc], nullptr, mbuf);
             if (t_osc)
             {
                 t_osc->init_ctrltypes(sn, osc);
@@ -778,7 +780,8 @@ void SurgePatch::update_controls(
                     t_osc->init_default_values();
                     t_osc->init_extra_config();
                 }
-                delete t_osc;
+                // delete t_osc;
+                t_osc->~Oscillator();
             }
         }
         sn++;

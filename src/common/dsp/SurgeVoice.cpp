@@ -362,7 +362,8 @@ void SurgeVoice::switch_toggled()
         if (osctype[i] != scene->osc[i].type.val.i)
         {
             bool nzid = scene->drift.extend_range;
-            osc[i].reset(spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy));
+            osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy,
+                               oscbuffer[i]);
             if (osc[i])
             {
                 osc[i]->init(state.pitch, false, nzid);
@@ -1220,7 +1221,8 @@ void SurgeVoice::freeAllocatedElements()
 {
     for (int i = 0; i < 3; ++i)
     {
-        osc[i].reset(nullptr);
+        osc[i]->~Oscillator();
+        osc[i] = nullptr;
         osctype[i] = -1;
     }
     for (int i = 0; i < n_lfos_voice; ++i)

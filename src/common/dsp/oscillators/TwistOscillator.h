@@ -83,7 +83,7 @@ class TwistOscillator : public Oscillator
     std::unique_ptr<plaits::Patch> patch;
     std::unique_ptr<plaits::Modulations> mod;
     std::unique_ptr<stmlib::BufferAllocator> alloc;
-    char shared_buffer[16834];
+    char *shared_buffer{nullptr};
 
     // Keep this here for now even if using lanczos since I'm using SRC for FM still
     SRC_STATE_tag *srcstate, *fmdownsamplestate;
@@ -91,7 +91,7 @@ class TwistOscillator : public Oscillator
     int fmwp, fmrp;
 
 #if SAMPLERATE_LANCZOS
-    LanczosResampler lancRes;
+    std::unique_ptr<LanczosResampler> lancRes;
 #endif
 
     float carryover[BLOCK_SIZE_OS][2];
