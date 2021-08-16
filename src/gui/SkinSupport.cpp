@@ -15,7 +15,7 @@
 #include <set>
 #include <iostream>
 #include <iomanip>
-#include "BinaryData.h"
+#include "SurgeXTBinary.h"
 
 namespace Surge
 {
@@ -277,7 +277,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     TiXmlDocument doc;
     if (useInMemorySkin)
     {
-        auto memSkin = std::string(BinaryData::memoryskin_xml, BinaryData::memoryskin_xmlSize);
+        auto memSkin =
+            std::string(SurgeXTBinary::memoryskin_xml, SurgeXTBinary::memoryskin_xmlSize);
         doc.Parse(memSkin.c_str());
     }
     else

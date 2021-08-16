@@ -166,14 +166,14 @@ add_subdirectory(libs/sqlite-3.23.3)
 add_subdirectory(libs/LuaJitLib)
 
 juce_add_binary_data(surge-shared-binary
-        NAMESPACE SurgeCoreBinary
-        HEADER_NAME SurgeCoreBinary.h
+        NAMESPACE SurgeSharedBinary
+        HEADER_NAME SurgeSharedBinary.h
         SOURCES
-        resources/data/configuration.xml
-        resources/surge-xt/README_UserArea.txt
-        resources/surge-xt/memoryWavetable.wt
-        resources/data/windows.wt
-        resources/data/paramdocumentation.xml)
+        resources/surge-shared/configuration.xml
+        resources/surge-shared/README_UserArea.txt
+        resources/surge-shared/memoryWavetable.wt
+        resources/surge-shared/windows.wt
+        resources/surge-shared/paramdocumentation.xml)
 
 target_link_libraries(surge-shared PUBLIC
   luajit-5.1
@@ -890,6 +890,9 @@ if( BUILD_SURGE_XT )
           )
 
   juce_add_binary_data( surge-xt-binary
+          NAMESPACE SurgeXTBinary
+          HEADER_NAME SurgeXTBinary.h
+
           SOURCES ${SURGE_SYNTH_JUCE_RESOURCES_GLOB}
           )
   set_target_properties(surge-xt-binary PROPERTIES
