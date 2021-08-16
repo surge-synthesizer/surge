@@ -255,20 +255,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         std::string rootpath = path;
         rootpath += "/Surge XT/";
 
-        struct stat linfo;
-        auto lxml = localpath + "configuration.xml";
-        int lstat = stat(lxml.c_str(), &linfo);
-
-        struct stat rinfo;
-        auto rxml = rootpath + "configuration.xml";
-        int rstat = stat(rxml.c_str(), &rinfo);
-
-        // if the local one is here, and either is newer than the root one, or the root one is
-        // missing
-        if (lstat == 0 && (linfo.st_mtime > rinfo.st_mtime || rstat != 0))
-            datapath = localpath; // use the local
-        else
-            datapath = rootpath; // else use the root. If both are missing we will blow up later
+        datapath = rootpath;
+        if (fs::is_directory(string_to_path(localpath)))
+            datapath = localpath;
     }
     else
     {
