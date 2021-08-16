@@ -1501,6 +1501,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     lassoSelector->contains(h.associatedSegment))
                     clearLasso = false;
             }
+
+            if (timeEditMode == DRAW)
+                clearLasso = false;
+
             if (clearLasso)
             {
                 lassoSelector.reset(nullptr);
@@ -1691,6 +1695,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             lasso->endLasso();
             removeChildComponent(lasso.get());
             lasso.reset(nullptr);
+
+            if (lassoSelector && lassoSelector->items.getNumSelected() == 0)
+            {
+                lassoSelector.reset(nullptr);
+            }
             return;
         }
 
@@ -1840,6 +1849,106 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             lasso->dragLasso(event);
             return;
         }
+
+        if (inDrawDrag)
+        {
+            // Activate temporary snap in vdirection only
+            bool a = event.mods.isAltDown();
+            if (a)
+            {
+                bool wasSnapGuard = true;
+                if (!snapGuard)
+                {
+                    wasSnapGuard = false;
+                    snapGuard = std::make_shared<SnapGuard>(this);
+                }
+
+                if (a)
+                    ms->vSnap = ms->vSnapDefault;
+                else if (wasSnapGuard)
+                    ms->vSnap = snapGuard->vSnapO;
+            }
+            else if (!a && snapGuard)
+            {
+                snapGuard = nullptr;
+            }
+
+            auto tf = pxToTime();
+            auto t = tf(event.position.x);
+            auto pv = pxToVal();
+            auto v = limit_range(pv(event.position.y), -1.f, 1.f);
+
+            if (ms->vSnap > 0)
+            {
+                v = limit_range(round(v / ms->vSnap) * ms->vSnap, -1.f, 1.f);
+            }
+
+            int seg = Surge::MSEG::timeToSegment(this->ms, t);
+
+            auto doAdjust = [this](int seg) {
+                if (lassoSelector && lassoSelector->items.getNumSelected() > 0)
+                    return lassoSelector->contains(seg);
+                else
+                    return true;
+            };
+
+            if (seg >= 0 && seg < ms->n_activeSegments &&
+                t <= ms->totalDuration + MSEGStorage::minimumDuration)
+            {
+                bool ch = false;
+                // OK are we near the endpoint of that segment
+                if (t - ms->segmentStart[seg] <
+                    std::max(ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration))
+                {
+                    if (doAdjust(seg))
+                    {
+                        ms->segments[seg].v0 = v;
+                        ch = true;
+                    }
+                }
+                else if (ms->segmentEnd[seg] - t <
+                         std::max(ms->totalDuration * 0.05, 0.1 * ms->segments[seg].duration))
+                {
+                    int nx = seg + 1;
+                    if (ms->endpointMode == MSEGStorage::EndpointMode::FREE)
+                    {
+                        if (nx == ms->n_activeSegments)
+                        {
+                            if (doAdjust(seg))
+                            {
+                                ms->segments[seg].nv1 = v;
+                                ch = true;
+                            }
+                        }
+                        else
+                        {
+                            if (doAdjust(nx))
+                            {
+                                ms->segments[nx].v0 = v;
+                                ch = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (nx >= ms->n_activeSegments)
+                            nx = 0;
+                        if (doAdjust(nx))
+                        {
+                            ms->segments[nx].v0 = v;
+                            ch = true;
+                        }
+                    }
+                }
+                if (ch)
+                {
+                    modelChanged(seg);
+                }
+            }
+
+            return;
+        }
+
         bool gotOne = false;
         int idx = 0, draggingIdx = -1;
         bool foundDrag = false;
