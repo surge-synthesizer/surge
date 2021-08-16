@@ -355,6 +355,7 @@ set(SURGE_GUI_SOURCES
   src/gui/UIInstrumentation.cpp
 
   src/gui/overlays/AboutScreen.cpp
+  src/gui/overlays/CoveringMessageOverlay.cpp
   src/gui/overlays/LuaEditors.cpp
   src/gui/overlays/MiniEdit.cpp
   src/gui/overlays/ModulationEditor.cpp

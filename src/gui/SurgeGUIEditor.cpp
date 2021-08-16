@@ -33,6 +33,7 @@
 #include "SurgeGUIEditorTags.h"
 
 #include "overlays/AboutScreen.h"
+#include "overlays/CoveringMessageOverlay.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
@@ -202,6 +203,31 @@ void SurgeGUIEditor::idle()
 {
     if (!synth)
         return;
+
+    if (noProcessingOverlay)
+    {
+        if (synth->processRunning == 0)
+        {
+            frame->removeChildComponent(noProcessingOverlay.get());
+            noProcessingOverlay.reset(nullptr);
+        }
+    }
+    else
+    {
+        if (processRunningCheckEvery++ > 3 || processRunningCheckEvery < 0)
+        {
+            synth->processRunning++;
+            if (synth->processRunning > 20)
+            {
+                noProcessingOverlay =
+                    std::make_unique<Surge::Overlays::AudioEngineNotRunningOverlay>();
+                noProcessingOverlay->setBounds(frame->getBounds());
+                frame->addAndMakeVisible(*noProcessingOverlay);
+                synth->processRunning = 1;
+            }
+            processRunningCheckEvery = 0;
+        }
+    }
 
     if (pause_idle_updates)
         return;
