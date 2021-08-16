@@ -22,7 +22,7 @@
 #include <queue>
 #include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
-#include "SurgeCoreBinary.h"
+#include "SurgeSharedBinary.h"
 
 #if MAC
 #include <cstdlib>
@@ -485,9 +485,9 @@ bailOnPortable:
     */
 
     // TIXML requires a newline at end.
-    auto cxmlData =
-        std::string(SurgeCoreBinary::configuration_xml, SurgeCoreBinary::configuration_xmlSize) +
-        "\n";
+    auto cxmlData = std::string(SurgeSharedBinary::configuration_xml,
+                                SurgeSharedBinary::configuration_xmlSize) +
+                    "\n";
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
         reportError("Cannot parse 'configuration.xml' in path '" + datapath +
@@ -514,8 +514,8 @@ bailOnPortable:
 
     // WindowWT is a Wavetable which now has a constructor so don't do this
     // memset(&WindowWT, 0, sizeof(WindowWT));
-    if (loadWtAndPatch &&
-        !load_wt_wt_mem(SurgeCoreBinary::windows_wt, SurgeCoreBinary::windows_wtSize, &WindowWT))
+    if (loadWtAndPatch && !load_wt_wt_mem(SurgeSharedBinary::windows_wt,
+                                          SurgeSharedBinary::windows_wtSize, &WindowWT))
     {
         WindowWT.size = 0;
         std::ostringstream oss;
@@ -540,8 +540,8 @@ bailOnPortable:
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
     {
-        auto pdData = std::string(SurgeCoreBinary::paramdocumentation_xml,
-                                  SurgeCoreBinary::paramdocumentation_xmlSize) +
+        auto pdData = std::string(SurgeSharedBinary::paramdocumentation_xml,
+                                  SurgeSharedBinary::paramdocumentation_xmlSize) +
                       "\n";
 
         TiXmlDocument doc;
@@ -673,8 +673,8 @@ void SurgeStorage::createUserDirectory()
                             userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(string_to_path(s));
 
-            auto rd = std::string(SurgeCoreBinary::README_UserArea_txt,
-                                  SurgeCoreBinary::README_UserArea_txtSize) +
+            auto rd = std::string(SurgeSharedBinary::README_UserArea_txt,
+                                  SurgeSharedBinary::README_UserArea_txtSize) +
                       "\n";
             auto of =
                 std::ofstream(string_to_path(userDataPath) / "README.txt", std::ofstream::out);
@@ -1110,8 +1110,8 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
     wt->queue_id = -1;
     if (wt_list.empty() && id == 0)
     {
-        load_wt_wt_mem(SurgeCoreBinary::memoryWavetable_wt, SurgeCoreBinary::memoryWavetable_wtSize,
-                       wt);
+        load_wt_wt_mem(SurgeSharedBinary::memoryWavetable_wt,
+                       SurgeSharedBinary::memoryWavetable_wtSize, wt);
         if (osc)
             strncpy(osc->wavetable_display_name, "Sin to Saw", TXT_SIZE);
 

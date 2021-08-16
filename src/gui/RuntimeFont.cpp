@@ -14,7 +14,7 @@
 */
 
 #include "RuntimeFont.h"
-#include "BinaryData.h"
+#include "SurgeXTBinary.h"
 
 #include <iostream>
 
@@ -27,15 +27,15 @@ DefaultFonts::DefaultFonts()
 {
 #define TEST_WITH_INDIE_FLOWER 0
 #if TEST_WITH_INDIE_FLOWER
-    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(BinaryData::IndieFlower_ttf,
-                                                                  BinaryData::IndieFlower_ttfSize);
+    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
+        SurgeXTBinary::IndieFlower_ttf, SurgeXTBinary::IndieFlower_ttfSize);
 #else
-    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(BinaryData::LatoRegular_ttf,
-                                                                  BinaryData::LatoRegular_ttfSize);
+    latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
+        SurgeXTBinary::LatoRegular_ttf, SurgeXTBinary::LatoRegular_ttfSize);
 #endif
 
     firaMonoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
-        BinaryData::FiraMonoRegular_ttf, BinaryData::FiraMonoRegular_ttfSize);
+        SurgeXTBinary::FiraMonoRegular_ttf, SurgeXTBinary::FiraMonoRegular_ttfSize);
     displayFont = getLatoAtSize(9);
     patchNameFont = getLatoAtSize(13);
     lfoTypeFont = getLatoAtSize(8);

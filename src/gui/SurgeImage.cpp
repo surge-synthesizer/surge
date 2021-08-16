@@ -14,14 +14,14 @@
 */
 
 #include "SurgeImage.h"
-#include "BinaryData.h"
+#include "SurgeXTBinary.h"
 
 SurgeImage::SurgeImage(int rid)
 {
     resourceID = rid;
     std::string fn = "bmp00" + std::to_string(rid) + "_svg";
     int bds;
-    auto bd = BinaryData::getNamedResource(fn.c_str(), bds);
+    auto bd = SurgeXTBinary::getNamedResource(fn.c_str(), bds);
     if (bd)
     {
         drawable = juce::Drawable::createFromImageData(bd, bds);
