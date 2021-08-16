@@ -441,6 +441,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int selectedFX[8];
     std::string fxPresetName[8];
 
+    int processRunningCheckEvery{0};
+    std::unique_ptr<juce::Component> noProcessingOverlay{nullptr};
+
   public:
     std::shared_ptr<SurgeImageStore> bitmapStore = nullptr;
 

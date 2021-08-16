@@ -137,6 +137,8 @@ class alignas(16) SurgeSynthesizer
                                                // // TODO: FIX SCENE ASSUMPTION!
     int64_t voiceCounter = 1L;
 
+    std::atomic<unsigned int> processRunning{0};
+
   public:
     /*
      * For more on this IFDEF see the comment in SurgeSynthesizerIDManagement.cpp
