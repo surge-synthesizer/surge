@@ -500,6 +500,9 @@ enum ws_type
     wst_7cycbound,
     wst_10cycbound,
 
+    wst_zamsat,
+    wst_ojd,
+
     n_ws_types,
 };
 
@@ -544,14 +547,17 @@ const char wst_names[n_ws_types][32] = {"Off",
                                         "10 Cycle",
                                         "2 Cycle Bound",
                                         "7 Cycle Bound",
-                                        "10 Cycle Bound"};
+                                        "10 Cycle Bound",
+                                        "ZamAudio Sat",
+                                        "OJD"};
 
 const char wst_ui_names[n_ws_types][16] = {
-    "Off",     "Soft",     "Hard",     "Asym",     "Sine",    "Digital",  "Harm 2",  "Harm 3",
-    "Harm 4",  "Harm 5",   "FullRect", "HalfPos",  "HalfNeg", "SoftRect", "1Fold",   "2Fold",
-    "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",   "Add1-5",   "AddSaw3", "AddSqr3",
-    "Fuzz",    "SoftFz",   "HeavyFz",  "CenterFz", "EdgeFz",  "Sin+x",    "Sin2x+x", "Sin3x+x",
-    "Sin7x+x", "Sin10x+x", "2Cycle",   "7Cycle",   "10Cycle", "2CycleB",  "7CycleB", "10CycleB"};
+    "Off",    "Soft",    "Hard",    "Asym",     "Sine",     "Digital",  "Harm 2",
+    "Harm 3", "Harm 4",  "Harm 5",  "FullRect", "HalfPos",  "HalfNeg",  "SoftRect",
+    "1Fold",  "2Fold",   "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",
+    "Add1-5", "AddSaw3", "AddSqr3", "Fuzz",     "SoftFz",   "HeavyFz",  "CenterFz",
+    "EdgeFz", "Sin+x",   "Sin2x+x", "Sin3x+x",  "Sin7x+x",  "Sin10x+x", "2Cycle",
+    "7Cycle", "10Cycle", "2CycleB", "7CycleB",  "10CycleB", "ZamSat",   "OJD"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -566,6 +572,8 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_soft, "Saturator");
         p(wst_hard, "Saturator");
         p(wst_asym, "Saturator");
+        p(wst_ojd, "Saturator");
+        p(wst_zamsat, "Saturator");
 
         p(wst_sine, "Effect");
         p(wst_digital, "Effect");
