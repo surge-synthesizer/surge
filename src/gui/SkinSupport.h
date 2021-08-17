@@ -234,6 +234,12 @@ class Skin
 
     bool hasColor(const Surge::Skin::Color &col) const { return hasColor(col.name); }
 
+    std::unordered_set<Control::sessionid_t> sessionIds;
+    bool containsControlWithSessionId(const Control::sessionid_t &sid)
+    {
+        return (sessionIds.find(sid) != sessionIds.end());
+    }
+
     Skin::Control::ptr_t controlForUIID(const std::string &ui_id) const
     {
         // FIXME don't be stupid like this of course
@@ -261,6 +267,7 @@ class Skin
             res->copyFromConnector(c, getVersion());
             // resolveBaseParentOffsets( res );
             controls.push_back(res);
+            sessionIds.insert(res->sessionid);
         }
         return res;
     }
