@@ -90,6 +90,7 @@ bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynt
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
+    assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
     synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
                                              SurgeStorage::OkCancel def) {
@@ -3902,6 +3903,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
     {
         fxbypass_tag = tag;
     }
+
+    assert(!p || (p->id < n_paramslots && p->id >= 0));
+
     // Basically put this in a function
     if (skinCtrl->defaultComponent == Surge::Skin::Components::Slider)
     {

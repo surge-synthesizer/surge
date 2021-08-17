@@ -128,7 +128,7 @@ struct ModulationSourceButton : public juce::Component,
 
     void onSkinChanged() override;
 
-    bool isTinted;
+    bool isTinted{false};
 
     void update_rt_vals(bool t, int, bool)
     {

@@ -343,7 +343,7 @@ class alignas(16) SurgeSynthesizer
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
     bool fx_reload_mod[n_fx_slots];
     std::array<std::vector<std::tuple<int, int, float>>, n_fx_slots> fxmodsync;
-    int fx_suspend_bitmask;
+    int32_t fx_suspend_bitmask;
 
     // hold pedal stuff
 

@@ -55,7 +55,7 @@ const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
 const int n_osc_params = 7;
 const int n_fx_params = 12;
-const int n_fx_slots = 8;
+const int n_fx_slots = 16;
 const int FIRipol_M = 256;
 const int FIRipol_M_bits = 8;
 const int FIRipol_N = 12;
@@ -89,7 +89,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                          add tuningApplicationMode to patch
 //                          add disable toggle to various low/high cut filters in various effects
 //                          add disable toggle to Phaser rate, and different waveform options
-// 16 -> 17 (XT 1.0 release) wavetable oscillator continuous morph toggle
+// 16 -> 17 (XT 1.0 release) wavetable oscillator continuous morph toggle, new wavetables, more FX
 
 const int ff_revision = 17;
 
@@ -104,7 +104,7 @@ extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
 
 const int n_scene_params = 271;
-const int n_global_params = 113;
+const int n_global_params = 9 + n_fx_slots * (n_fx_params + 1); // each param plus a type
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
 const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
@@ -252,12 +252,22 @@ enum fxslot_positions
     fxslot_send1,
     fxslot_send2,
     fxslot_global1,
-    fxslot_global2
+    fxslot_global2,
+    fxslot_ains3,
+    fxslot_ains4,
+    fxslot_bins3,
+    fxslot_bins4,
+    fxslot_send3,
+    fxslot_send4,
+    fxslot_global3,
+    fxslot_global4
 };
 
 const char fxslot_names[n_fx_slots][NAMECHARS] = {
     "A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
     "Send FX 1",     "Send FX 2",     "Global FX 1",   "Global FX 2",
+    "A Insert FX 3", "A Insert FX 4", "B Insert FX 3", "B Insert FX 4",
+    "Send FX 3",     "Send FX 4",     "Global FX 3",   "Global FX 4",
 };
 
 enum fx_type
@@ -547,7 +557,7 @@ struct SurgeSceneStorage
     Parameter polymode;
     Parameter portamento;
     Parameter volume, pan, width;
-    Parameter send_level[2];
+    Parameter send_level[2]; // fixme before XT1 when I do the sends
 
     FilterStorage filterunit[2];
     Parameter f2_cutoff_is_offset, f2_link_resonance;

@@ -724,22 +724,6 @@ void SurgePatch::copy_scenedata(pdata *d, int scene)
         // d[i].f = param_ptr[i+s]->val.f;
         d[i].i = param_ptr[i + s]->val.i;
     }
-
-    /*for(int i=0; i<(n_scene_params & 0xfff8); i+=8)
-    {
-            d[i].i = param_ptr[i+s]->val.i;
-            d[i+1].i = param_ptr[i+s+1]->val.i;
-            d[i+2].i = param_ptr[i+s+2]->val.i;
-            d[i+3].i = param_ptr[i+s+3]->val.i;
-            d[i+4].i = param_ptr[i+s+4]->val.i;
-            d[i+5].i = param_ptr[i+s+5]->val.i;
-            d[i+6].i = param_ptr[i+s+6]->val.i;
-            d[i+7].i = param_ptr[i+s+7]->val.i;
-    }
-    for(int i=(n_scene_params & 0xfff8); i<n_scene_params; i++)
-    {
-            d[i].i = param_ptr[i+s]->val.i;
-    }*/
 }
 
 void SurgePatch::copy_globaldata(pdata *d)
@@ -1164,7 +1148,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     for (int i = 0; i < n; i++)
     {
         if (!i)
+        {
             p = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild(param_ptr[i]->get_storage_name()));
+        }
         else
         {
             if (p)
