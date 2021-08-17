@@ -90,6 +90,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void mouseDoubleClick(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+    void mouseExit(const juce::MouseEvent &event) override;
 
     enum DragMode
     {

@@ -1207,6 +1207,13 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
         }
     }
 }
+
+void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
+{
+    lfoTypeHover = -1;
+    repaint();
+}
+
 void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
 {
     int nextHover = -1;
