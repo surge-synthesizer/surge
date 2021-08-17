@@ -1,6 +1,7 @@
 #include "DistortionEffect.h"
 #include <vembertech/halfratefilter.h>
 #include "QuadFilterUnit.h"
+#include "DebugHelpers.h"
 
 // feedback can get tricky with packed SSE
 
@@ -75,7 +76,14 @@ void DistortionEffect::process(float *dataL, float *dataR)
     auto dS = drive.get_target();
     auto dE = db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
     drive.set_target_smoothed(dE);
-    outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
+
+    float ringoutMul = 1.0;
+    if (ringout > ringout_time - ringout_end)
+    {
+        ringoutMul = limit01(1.f * (ringout_time - ringout - 1) / ringout_end);
+    }
+    outgain.set_target_smoothed(db_to_linear(*f[dist_gain]) * ringoutMul);
+
     float fb = *f[dist_feedback];
     int ws = *pdata_ival[dist_model];
     if (ws < 0 || ws >= n_ws_types)
@@ -87,7 +95,7 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
     drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-    bool useSSEShaper = (ws + wst_soft == wst_digital || ws + wst_soft == wst_sine);
+    bool useSSEShaper = (ws + wst_soft >= wst_sine);
 
     auto wsop = GetQFPtrWaveshaper(wst_soft + ws);
 
@@ -205,6 +213,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_drive].set_type(ct_decibel_narrow_extendable);
     fxdata->p[dist_feedback].set_name("Feedback");
     fxdata->p[dist_feedback].set_type(ct_percent_bipolar);
+
     fxdata->p[dist_model].set_name("Model");
     fxdata->p[dist_model].set_type(ct_distortion_waveshape);
 

@@ -36,7 +36,10 @@ class DistortionEffect : public Effect
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
-    virtual int get_ringout_decay() override { return 1000; }
+
+    static constexpr int ringout_time = 1600, ringout_end = 320;
+
+    virtual int get_ringout_decay() override { return ringout_time; }
     void setvars(bool init);
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
