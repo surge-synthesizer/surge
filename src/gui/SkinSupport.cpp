@@ -985,6 +985,7 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
             }
 
             controls.push_back(control);
+            sessionIds.insert(control->sessionid);
             parent->childControls.push_back(control);
         }
         else

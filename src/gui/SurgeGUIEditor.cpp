@@ -690,6 +690,23 @@ void SurgeGUIEditor::idle()
           */
     }
 #endif
+
+    if (scanJuceSkinComponents)
+    {
+        std::vector<Surge::GUI::Skin::Control::sessionid_t> toRemove;
+        for (const auto &c : juceSkinComponents)
+        {
+            if (!currentSkin->containsControlWithSessionId(c.first))
+            {
+                toRemove.push_back(c.first);
+            }
+        }
+        for (const auto &sid : toRemove)
+        {
+            juceSkinComponents.erase(sid);
+        }
+        scanJuceSkinComponents = false;
+    }
 }
 
 void SurgeGUIEditor::toggle_mod_editing()
@@ -3283,6 +3300,9 @@ void SurgeGUIEditor::reloadFromSkin()
     setJUCEColour(juce::ComboBox::backgroundColourId, juce::Colour(32, 32, 32));
     setJUCEColour(juce::PopupMenu::backgroundColourId, juce::Colour(48, 48, 48));
     setJUCEColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(96, 96, 96));
+
+    synth->refresh_editor = true;
+    scanJuceSkinComponents = true;
 }
 
 juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
