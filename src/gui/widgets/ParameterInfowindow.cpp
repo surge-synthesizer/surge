@@ -50,12 +50,13 @@ void ParameterInfowindow::paint(juce::Graphics &g)
     auto mpValCol = skin->getColor(Colors::InfoWindow::Modulation::ValuePositive);
     auto mnValCol = skin->getColor(Colors::InfoWindow::Modulation::ValueNegative);
 
-    g.setColour(bgCol);
-    g.setOpacity(opacity);
-    g.fillRect(getLocalBounds());
     g.setColour(frameCol);
     g.setOpacity(opacity);
-    g.drawRect(getLocalBounds());
+    g.fillRect(getLocalBounds());
+
+    g.setColour(bgCol);
+    g.setOpacity(opacity);
+    g.fillRect(getLocalBounds().reduced(1));
 
     g.setColour(txtCol);
     g.setOpacity(opacity);
