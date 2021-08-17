@@ -252,7 +252,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
             gain_comp_factor = 1.f + ((drive.v - compensateStartsAt) * compensate);
     }
 
-    bool useSSEShaper = (ws + wst_soft == wst_digital || ws + wst_soft == wst_sine);
+    bool useSSEShaper = (ws + wst_soft >= wst_sine);
 
     auto wsop = GetQFPtrWaveshaper(wst_soft + ws);
 
