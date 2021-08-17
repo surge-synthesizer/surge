@@ -54,8 +54,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     demo_counter = 10;
 
-    // TODO: FIX NUMBER OF FX ASSUMPTION
-    memset(fx, 0, sizeof(void *) * 8);
+    for (int i = 0; i < n_fx_slots; ++i)
+        fx[i].reset(nullptr);
+
     srand((unsigned)time(nullptr));
     // TODO: FIX SCENE ASSUMPTION
     memset(storage.getPatch().scenedata[0], 0, sizeof(pdata) * n_scene_params);
@@ -3595,28 +3596,20 @@ void SurgeSynthesizer::process()
     // apply insert effects
     if (fx_bypass != fxb_no_fx)
     {
-        if (fx[fxslot_ains1] && !(storage.getPatch().fx_disable.val.i & (1 << 0)))
+        for (auto v : {fxslot_ains1, fxslot_ains2, fxslot_ains3, fxslot_ains4})
         {
-            sc_state[0] =
-                fx[fxslot_ains1]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
+            if (fx[v] && !(storage.getPatch().fx_disable.val.i & (1 << v)))
+            {
+                sc_state[0] = fx[v]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
+            }
         }
 
-        if (fx[fxslot_ains2] && !(storage.getPatch().fx_disable.val.i & (1 << 1)))
+        for (auto v : {fxslot_bins1, fxslot_bins2, fxslot_bins3, fxslot_bins4})
         {
-            sc_state[0] =
-                fx[fxslot_ains2]->process_ringout(sceneout[0][0], sceneout[0][1], sc_state[0]);
-        }
-
-        if (fx[fxslot_bins1] && !(storage.getPatch().fx_disable.val.i & (1 << 2)))
-        {
-            sc_state[1] =
-                fx[fxslot_bins1]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
-        }
-
-        if (fx[fxslot_bins2] && !(storage.getPatch().fx_disable.val.i & (1 << 3)))
-        {
-            sc_state[1] =
-                fx[fxslot_bins2]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
+            if (fx[v] && !(storage.getPatch().fx_disable.val.i & (1 << v)))
+            {
+                sc_state[1] = fx[v]->process_ringout(sceneout[1][0], sceneout[1][1], sc_state[1]);
+            }
         }
     }
 
@@ -3678,14 +3671,12 @@ void SurgeSynthesizer::process()
     {
         bool glob = sc_state[0] || sc_state[1] || send1 || send2;
 
-        if (fx[fxslot_global1] && !(storage.getPatch().fx_disable.val.i & (1 << 6)))
+        for (auto v : {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4})
         {
-            glob = fx[fxslot_global1]->process_ringout(output[0], output[1], glob);
-        }
-
-        if (fx[fxslot_global2] && !(storage.getPatch().fx_disable.val.i & (1 << 7)))
-        {
-            glob = fx[fxslot_global2]->process_ringout(output[0], output[1], glob);
+            if (fx[v] && !(storage.getPatch().fx_disable.val.i & (1 << v)))
+            {
+                glob = fx[v]->process_ringout(output[0], output[1], glob);
+            }
         }
     }
 

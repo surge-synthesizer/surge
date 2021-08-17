@@ -83,7 +83,7 @@ class alignas(16) Effect
     float *f[n_fx_params];
     int *pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' woudl be
                                   // worse!
-    bool hasInvalidated;
+    bool hasInvalidated{false};
 };
 
 // Some common constants

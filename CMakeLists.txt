@@ -39,7 +39,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
     # Inlines visibility is only relevant with C++
     $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<COMPILE_LANGUAGE:CXX>>:-fvisibility-inlines-hidden>
+
+    # BP note: If you want to turn on llvm/gcc santize undo this and the link options below
+    # -fsanitize=address -fsanitize=undefined
   )
+
+  add_link_options(
+    # -fsanitize=address -fsanitize=undefinec
+  )
+
   # Enable SSE2 on x86-32 only. It's implied on x86-64 and N/A elsewhere.
   if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     include(CheckCXXSourceCompiles)

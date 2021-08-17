@@ -438,8 +438,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool zoomInvalid = false;
     int minimumZoom = 100;
 
-    int selectedFX[8];
-    std::string fxPresetName[8];
+    int selectedFX[n_fx_slots];
+    std::string fxPresetName[n_fx_slots];
 
     int processRunningCheckEvery{0};
     std::unique_ptr<juce::Component> noProcessingOverlay{nullptr};
@@ -451,7 +451,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool modsource_is_alternate[n_modsources];
 
   private:
-    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 16> vu;
+    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;

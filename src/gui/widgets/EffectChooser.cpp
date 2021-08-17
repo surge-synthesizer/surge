@@ -117,7 +117,7 @@ void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &
 
 juce::Rectangle<int> EffectChooser::getSceneRectangle(int i)
 {
-    const int scenelabelbox[n_scenes][2] = {{1, 1}, {1, 41}};
+    const int scenelabelbox[n_scenes][2] = {{2, 0}, {2, 45}};
     const int scenelabelboxWidth = 11, scenelabelboxHeight = 11;
 
     auto r = juce::Rectangle<int>(scenelabelbox[i][0], scenelabelbox[i][1], scenelabelboxWidth,
@@ -128,9 +128,40 @@ juce::Rectangle<int> EffectChooser::getSceneRectangle(int i)
 
 juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
 {
-    const int fxslotWidth = 19, fxslotHeight = 11;
-    const int fxslotpos[n_fx_slots][2] = {{18, 1},  {44, 1},  {18, 41}, {44, 41},
-                                          {18, 21}, {44, 21}, {89, 11}, {89, 31}};
+    static const int fxslotWidth = 19, fxslotHeight = 11;
+    static int fxslotpos[n_fx_slots][2];
+    static bool fxslotsInitialized{false};
+    static const int topY = 1;
+    static const int startX = 15, globX = 120;
+
+    if (!fxslotsInitialized)
+    {
+        fxslotsInitialized = true;
+        /*
+         * This just assumes the 16 slot ordering.
+         */
+        jassert(n_fx_slots == 16);
+        static int rowYs[3] = {0, 45, 23};
+        for (int i = 0; i < n_fx_slots; ++i)
+        {
+            int row = (i / 2) % 4;
+            int num = i % 2 + 2 * (i >= fxslot_ains3);
+
+            int x = 0, y = 0;
+            if (row < 3)
+            {
+                x = startX + num * 23;
+                y = rowYs[row];
+            }
+            else
+            {
+                x = globX;
+                y = num * 15;
+            }
+            fxslotpos[i][0] = x;
+            fxslotpos[i][1] = y;
+        }
+    }
 
     auto r = juce::Rectangle<int>(fxslotpos[i][0], fxslotpos[i][1], fxslotWidth, fxslotHeight);
 
