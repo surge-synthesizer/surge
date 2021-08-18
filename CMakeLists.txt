@@ -339,7 +339,6 @@ set(SURGE_SHARED_SOURCES
 
 set(SURGE_SYNTH_SOURCES
   src/common/SurgeSynthesizer.cpp
-  src/common/SurgeSynthesizerIDManagement.cpp
   src/common/SurgeSynthesizerIO.cpp
   )
 
