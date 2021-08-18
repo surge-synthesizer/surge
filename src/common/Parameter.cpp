@@ -224,7 +224,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
 void Parameter::clear_flags()
 {
     temposync = false;
-    extend_range = false;
+    set_extend_range(false);
     absolute = false;
     deactivated = true; // CHOICE: if you are a deactivatble parameter make it so you are by default
     porta_constrate = false;
@@ -1849,8 +1849,14 @@ void Parameter::set_storage_value(float f)
     }
 }
 
-float Parameter::get_extended(float f)
+void Parameter::set_extend_range(bool er)
 {
+#if DEBUG_WRITABLE_EXTEND_RANGE
+    extend_range_internal = er;
+#else
+    extend_range = er;
+#endif
+
     if (!extend_range)
     {
         switch (ctrltype)
@@ -1859,41 +1865,58 @@ float Parameter::get_extended(float f)
         {
             // Why the heck are we modifying this here?
             val_max.f = -6.6305f; // 300 Hz
-            return f;
         }
+        break;
         case ct_freq_reson_band2:
         {
             val_min.f = -6.6305f;  // 300 Hz
             val_max.f = 21.23265f; // 1500 Hz
-            return f;
         }
+        break;
         case ct_freq_reson_band3:
         {
             val_min.f = 21.23265f; // 1500 Hz
-            return f;
         }
+        break;
         case ct_lfophaseshuffle:
         {
             val_default.f = 0.f;
-            return f;
         }
+        break;
         default:
+            break;
+        }
+    }
+    else
+    {
+        switch (ctrltype)
         {
-            return f;
+        case ct_freq_reson_band1:
+        case ct_freq_reson_band2:
+        case ct_freq_reson_band3:
+        {
+            val_min.f = -34.4936f; // 60 Hz
+            val_max.f = 49.09578;  // 7500 Hz
         }
+        break;
+        case ct_lfophaseshuffle:
+        {
+            val_default.f = 0.5f;
         }
+        break;
+        }
+    }
+}
+
+float Parameter::get_extended(float f) const
+{
+    if (!extend_range)
+    {
+        return f;
     }
 
     switch (ctrltype)
     {
-    case ct_freq_reson_band1:
-    case ct_freq_reson_band2:
-    case ct_freq_reson_band3:
-    {
-        val_min.f = -34.4936f; // 60 Hz
-        val_max.f = 49.09578;  // 7500 Hz
-        return f;
-    }
     case ct_freq_shift:
         return 100.f * f;
     case ct_pitch_semi7bp:
@@ -1916,7 +1939,6 @@ float Parameter::get_extended(float f)
         return (2.f * f) - 1.f;
     case ct_lfophaseshuffle:
     {
-        val_default.f = 0.5f;
         return (2.f * f) - 1.f;
     }
     case ct_fmratio:
@@ -2035,7 +2057,7 @@ std::string Parameter::tempoSyncNotationValue(float f) const
 
 void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                                 ModulationDisplayMode displaymode,
-                                                ModulationDisplayInfoWindowStrings *iw)
+                                                ModulationDisplayInfoWindowStrings *iw) const
 {
     int detailedMode = false;
 
@@ -2826,7 +2848,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     }
 }
 
-void Parameter::get_display(char *txt, bool external, float ef)
+void Parameter::get_display(char *txt, bool external, float ef) const
 {
     if (ctrltype == ct_none)
     {

@@ -84,7 +84,7 @@ TEST_CASE("Unison Absolute and Relative", "[osc]")
         REQUIRE(f72_1 / f60_1 == Approx(2).margin(0.01));
 
         // test extended mode
-        surge->storage.getPatch().scene[0].osc[0].p[5].extend_range = true;
+        surge->storage.getPatch().scene[0].osc[0].p[5].set_extend_range(true);
         auto f60_0e = frequencyForNote(surge, 60, 5, 0);
         auto f60_1e = frequencyForNote(surge, 60, 5, 1);
         REQUIRE(f60_0e / f60_avg == Approx(pow(f60_0 / f60_avg, 12.f)).margin(0.05));

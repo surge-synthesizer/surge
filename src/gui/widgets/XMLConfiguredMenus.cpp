@@ -486,8 +486,8 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
             fxbuffer->p[i].temposync =
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
             snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
-            fxbuffer->p[i].extend_range =
-                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            fxbuffer->p[i].set_extend_range(
+                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1)));
             snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
             fxbuffer->p[i].deactivated =
                 ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));

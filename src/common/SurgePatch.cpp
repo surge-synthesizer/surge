@@ -1293,15 +1293,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p->QueryIntAttribute("extend_range", &j) == TIXML_SUCCESS)
             {
                 if (j == 1)
-                    param_ptr[i]->extend_range = true;
+                    param_ptr[i]->set_extend_range(true);
                 else
-                    param_ptr[i]->extend_range = false;
+                    param_ptr[i]->set_extend_range(false);
             }
             else
             {
-                param_ptr[i]->extend_range = false;
+                param_ptr[i]->set_extend_range(false);
                 if (revision >= 16 && param_ptr[i]->ctrltype == ct_percent_oscdrift)
-                    param_ptr[i]->extend_range = true;
+                    param_ptr[i]->set_extend_range(true);
             }
 
             if ((p->QueryIntAttribute("absolute", &j) == TIXML_SUCCESS) && (j == 1))

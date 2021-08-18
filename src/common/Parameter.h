@@ -396,7 +396,7 @@ class Parameter
     const char *get_internal_name() const;
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
-    void get_display(char *txt, bool external = false, float ef = 0.f);
+    void get_display(char *txt, bool external = false, float ef = 0.f) const;
     enum ModulationDisplayMode
     {
         TypeIn,
@@ -406,12 +406,12 @@ class Parameter
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,
-                                         ModulationDisplayInfoWindowStrings *iw = nullptr);
+                                         ModulationDisplayInfoWindowStrings *iw = nullptr) const;
     void get_display_alt(char *txt, bool external = false, float ef = 0.f) const;
     char *get_storage_value(char *) const;
     void set_storage_value(int i);
     void set_storage_value(float f);
-    float get_extended(float f);
+    float get_extended(float f) const;
     float get_value_f01() const;
     float normalized_to_value(float value) const;
     float value_to_normalized(float value) const;
@@ -419,6 +419,7 @@ class Parameter
     void set_value_f01(float v, bool force_integer = false);
     bool set_value_from_string(const std::string &s);
     bool set_value_from_string_onto(const std::string &s, pdata &ontoThis);
+    void set_extend_range(bool er);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate
@@ -458,7 +459,16 @@ class Parameter
     bool affect_other_parameters{};
     float moverate{};
     bool per_voice_processing{};
-    bool temposync{}, extend_range{}, absolute{}, deactivated{};
+    bool temposync{}, absolute{}, deactivated{};
+
+#define DEBUG_WRITABLE_EXTEND_RANGE 0
+#if DEBUG_WRITABLE_EXTEND_RANGE
+    bool extend_range_internal{};
+    const bool &extend_range = extend_range_internal;
+#else
+    bool extend_range{};
+#endif
+
     bool porta_constrate{}, porta_gliss{}, porta_retrigger{};
     int porta_curve{};
     int deform_type{};

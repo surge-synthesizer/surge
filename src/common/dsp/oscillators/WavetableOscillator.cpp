@@ -134,7 +134,7 @@ void WavetableOscillator::init_ctrltypes()
 void WavetableOscillator::init_default_values()
 {
     oscdata->p[wt_morph].val.f = 0.0f;
-    oscdata->p[wt_morph].extend_range = true;
+    oscdata->p[wt_morph].set_extend_range(true);
     oscdata->p[wt_skewv].val.f = 0.0f;
     oscdata->p[wt_saturate].val.f = 0.f;
     oscdata->p[wt_formant].val.f = 0.f;
@@ -539,6 +539,6 @@ void WavetableOscillator::handleStreamingMismatches(int streamingRevision,
 {
     if (streamingRevision <= 16)
     {
-        oscdata->p[wt_morph].extend_range = true;
+        oscdata->p[wt_morph].set_extend_range(true);
     }
 }
