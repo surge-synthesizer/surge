@@ -268,8 +268,8 @@ void DistortionEffect::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 11)
     {
         fxdata->p[dist_model].val.i = 0;
-        fxdata->p[dist_preeq_gain].extend_range = false;
-        fxdata->p[dist_posteq_gain].extend_range = false;
+        fxdata->p[dist_preeq_gain].set_extend_range(false);
+        fxdata->p[dist_posteq_gain].set_extend_range(false);
     }
 
     if (streamingRevision <= 15)

@@ -1510,7 +1510,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             contextMenu.addItem(Surge::GUI::toOSCaseForMenu(txt), enable, isChecked,
                                                 [this, p]() {
-                                                    p->extend_range = !p->extend_range;
+                                                    p->set_extend_range(!p->extend_range);
                                                     this->synth->refresh_editor = true;
                                                 });
                         }

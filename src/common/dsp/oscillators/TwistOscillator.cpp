@@ -636,7 +636,7 @@ void TwistOscillator::init_default_values()
     oscdata->p[twist_timbre].val.f = 0.f;
     oscdata->p[twist_morph].val.f = 0.f;
     oscdata->p[twist_aux_mix].val.f = -1.f;
-    oscdata->p[twist_aux_mix].extend_range = false;
+    oscdata->p[twist_aux_mix].set_extend_range(false);
     oscdata->p[twist_lpg_response].val.f = 0.f;
     oscdata->p[twist_lpg_response].deactivated = true;
     oscdata->p[twist_lpg_decay].val.f = 0.f;

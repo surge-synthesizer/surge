@@ -674,7 +674,7 @@ void StringOscillator::init_default_values()
     oscdata->p[str_str2_decay].val.f = 0.95f;
 
     oscdata->p[str_str2_detune].val.f = 0.1f;
-    oscdata->p[str_str2_detune].extend_range = false;
+    oscdata->p[str_str2_detune].set_extend_range(false);
     oscdata->p[str_str_balance].val.f = 0.f;
 
     oscdata->p[str_stiffness].val.f = 0.f;

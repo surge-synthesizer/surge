@@ -190,9 +190,9 @@ void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lf
             else
                 curr->deform_type = 0;
             if (valNode->QueryIntAttribute("extend_range", &q) == TIXML_SUCCESS)
-                curr->extend_range = q;
+                curr->set_extend_range(q);
             else
-                curr->extend_range = false;
+                curr->set_extend_range(false);
             if (valNode->QueryIntAttribute("deactivated", &q) == TIXML_SUCCESS &&
                 curr->can_deactivate())
                 curr->deactivated = q;

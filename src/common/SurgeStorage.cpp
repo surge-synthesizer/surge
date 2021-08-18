@@ -624,7 +624,7 @@ bailOnPortable:
 
     for (int s = 0; s < n_scenes; ++s)
     {
-        getPatch().scene[s].drift.extend_range = true;
+        getPatch().scene[s].drift.set_extend_range(true);
     }
 
     bool mtsMode = Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
@@ -1476,7 +1476,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             int pid = p.id + id;
             getPatch().param_ptr[pid]->val.i = p.val.i;
             getPatch().param_ptr[pid]->temposync = p.temposync;
-            getPatch().param_ptr[pid]->extend_range = p.extend_range;
+            getPatch().param_ptr[pid]->set_extend_range(p.extend_range);
             getPatch().param_ptr[pid]->deactivated = p.deactivated;
             getPatch().param_ptr[pid]->porta_constrate = p.porta_constrate;
             getPatch().param_ptr[pid]->porta_gliss = p.porta_gliss;

@@ -2381,7 +2381,7 @@ bool SurgeSynthesizer::loadOscalgos()
 
                     if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
                     {
-                        storage.getPatch().scene[s].osc[i].p[k].extend_range = j;
+                        storage.getPatch().scene[s].osc[i].p[k].set_extend_range(j);
                     }
                 }
 
@@ -3986,7 +3986,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     auto cp = [](Parameter &to, const Parameter &from) {
         to.val = from.val;
         to.temposync = from.temposync;
-        to.extend_range = from.extend_range;
+        to.set_extend_range(from.extend_range);
         to.deactivated = from.deactivated;
         to.absolute = from.absolute;
     };

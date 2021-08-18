@@ -321,7 +321,7 @@ void loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
             break;
         }
         fxbuffer->p[i].temposync = (int)p.ts[i];
-        fxbuffer->p[i].extend_range = (int)p.er[i];
+        fxbuffer->p[i].set_extend_range((int)p.er[i]);
         fxbuffer->p[i].deactivated = (int)p.da[i];
 
         if (p.dt[i] >= 0) // only set deform type if it could be read from the xml
@@ -411,7 +411,7 @@ void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
             break;
         }
         fxbuffer->p[i].temposync = (int)cb.fxCopyPaste[tp];
-        fxbuffer->p[i].extend_range = (int)cb.fxCopyPaste[xp];
+        fxbuffer->p[i].set_extend_range((int)cb.fxCopyPaste[xp]);
         fxbuffer->p[i].deactivated = (int)cb.fxCopyPaste[dp];
 
         if (fxbuffer->p[i].has_deformoptions())
