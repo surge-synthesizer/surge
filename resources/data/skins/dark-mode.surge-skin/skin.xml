@@ -375,7 +375,7 @@
     <control ui_identifier="lfo.envelope.panel" x="614" y="492"/>
 
     <!-- FX Section -->
-    <control ui_identifier="fx.selector" y="77"/>
+    <control ui_identifier="fx.selector" x="755" y="77"/>
     <control ui_identifier="fx.preset.prevnext" y="213"/>
     <control ui_identifier="fx.preset.name" y="213"/>
 
