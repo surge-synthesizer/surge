@@ -51,6 +51,16 @@ class LFOModulationSource : public ModulationSource
     virtual void process_block() override;
     virtual void completedModulation();
 
+    int get_active_outputs() override { return actout; }
+    float get_output(int which) override { return output_multi[which]; }
+    float get_output01(int which) override { return output_multi[which]; }
+    void set_output(int which, float f) override
+    {
+        // set_output on an LFO should never be called. Blow up in debug if it is
+        assert(false);
+        output_multi[which] = f;
+    }
+
     virtual const char *get_title() override { return "LFO"; }
     virtual int get_type() override { return mst_lfo; }
     virtual bool is_bipolar() override { return true; }
@@ -68,6 +78,8 @@ class LFOModulationSource : public ModulationSource
 
     FormulaModulatorStorage *fs;
 
+    float output_multi[Surge::Formula::max_formula_outputs];
+
   public:
     Surge::MSEG::EvaluatorState msegstate;
     Surge::Formula::EvaluatorState formulastate;
@@ -81,6 +93,7 @@ class LFOModulationSource : public ModulationSource
     float phase, target, noise, noised1, env_phase, priorPhase;
     int unwrappedphase_intpart;
     int priorStep = -1;
+    int actout;
     float ratemult;
     float env_releasestart;
     float iout;

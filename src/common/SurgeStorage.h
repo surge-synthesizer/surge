@@ -949,7 +949,8 @@ class alignas(16) SurgeStorage
 
     std::unique_ptr<SurgePatch> _patch;
 
-    SurgePatch &getPatch();
+    // SurgePatch &getPatch();
+    SurgePatch &getPatch() const;
 
     float pitch_bend;
 

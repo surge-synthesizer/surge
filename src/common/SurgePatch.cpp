@@ -1358,6 +1358,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     else
                         t.muted = false;
 
+                    int source_index = 0;
+                    if (mr->QueryIntAttribute("source_index", &source_index) == TIXML_SUCCESS)
+                        t.source_index = source_index;
+                    else
+                        t.source_index = 0;
+
                     if (sceneId != 0)
                         t.destination_id = paramIdInScene;
                     else
@@ -2219,6 +2225,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                             mr.SetAttribute("source", r->at(b).source_id);
                             mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
                             mr.SetAttribute("muted", r->at(b).muted);
+                            mr.SetAttribute("source_index", r->at(b).source_index);
                             p.InsertEndChild(mr);
                         }
                     }

@@ -216,13 +216,16 @@ bool initEvaluatorState(EvaluatorState &s)
     s.L = nullptr;
     return true;
 }
-float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs, EvaluatorState *s)
+void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs, EvaluatorState *s,
+             float output[max_formula_outputs])
 {
+    s->activeoutputs = 1;
+    memset(output, 0, max_formula_outputs * sizeof(float));
     if (s->L == nullptr)
-        return 0;
+        return;
 
     if (!s->isvalid)
-        return 0;
+        return;
 
     auto gs = Surge::LuaSupport::SGLD("valueAt", s->L);
     struct OnErrorReplaceWithZero
@@ -250,7 +253,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
     {
         s->isvalid = false;
         lua_pop(s->L, 1);
-        return 0;
+        return;
     }
     lua_getglobal(s->L, s->stateName);
     // Stack is now func > table  so we can update the table
@@ -295,7 +298,8 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
             // OK so you returned a value. Just use it
             auto r = lua_tonumber(s->L, -1);
             lua_pop(s->L, 1);
-            return r;
+            output[0] = r;
+            return;
         }
         if (!lua_istable(s->L, -1))
         {
@@ -304,7 +308,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
                 "output set.");
             s->isvalid = false;
             lua_pop(s->L, 1);
-            return 0;
+            return;
         }
         // Store the value and keep it on top of the stack
         lua_setglobal(s->L, s->stateName);
@@ -316,11 +320,38 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         float res = 0.0;
         if (lua_isnumber(s->L, -1))
         {
-            res = lua_tonumber(s->L, -1);
+            output[0] = lua_tonumber(s->L, -1);
+        }
+        else if (lua_istable(s->L, -1))
+        {
+            auto len = 0;
+
+            lua_pushnil(s->L);
+            while (lua_next(s->L, -2)) // because we pushed nil
+            {
+                int idx = -1;
+                // now key is -2, value is -1
+                if (lua_isnumber(s->L, -2))
+                {
+                    idx = lua_tointeger(s->L, -2);
+                }
+                if (idx < 0 || idx >= max_formula_outputs)
+                {
+                    idx = 0;
+                    s->adderror("Please index the output array with numbers 1-8");
+                }
+
+                // Remember - LUA is 0 based
+                output[idx - 1] = lua_tonumber(s->L, -1);
+                lua_pop(s->L, 1);
+                len = std::max(len, idx - 1);
+            }
+            s->activeoutputs = len + 1;
         }
         else
         {
-            s->adderror("You must define the  'output' field in the returned table as a number");
+            s->adderror("You must define the  'output' field in the returned table as a number or "
+                        "float array");
             s->isvalid = false;
         };
         // pop the result and the function
@@ -345,7 +376,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         // Finally pop the table result
         lua_pop(s->L, 1);
         onerr.replace = false;
-        return res;
+        return;
     }
     else
     {
@@ -354,7 +385,7 @@ float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs
         oss << "Failed to evaluate 'process' function." << lua_tostring(s->L, -1);
         s->adderror(oss.str());
         lua_pop(s->L, 1);
-        return 0;
+        return;
     }
 }
 

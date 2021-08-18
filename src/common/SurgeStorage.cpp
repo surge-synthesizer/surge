@@ -727,7 +727,7 @@ void SurgeStorage::initializePatchDb()
     }
 }
 
-SurgePatch &SurgeStorage::getPatch() { return *_patch.get(); }
+SurgePatch &SurgeStorage::getPatch() const { return *_patch.get(); }
 
 struct PEComparer
 {
@@ -1384,6 +1384,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = getPatch().scene[scene].modulation_voice[i].source_id;
+                m.source_index = getPatch().scene[scene].modulation_voice[i].source_index;
                 m.depth = getPatch().scene[scene].modulation_voice[i].depth;
                 m.destination_id =
                     getPatch().scene[scene].modulation_voice[i].destination_id + idoffset;
@@ -1395,6 +1396,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = getPatch().scene[scene].modulation_scene[i].source_id;
+                m.source_index = getPatch().scene[scene].modulation_scene[i].source_index;
                 m.depth = getPatch().scene[scene].modulation_scene[i].depth;
                 m.destination_id =
                     getPatch().scene[scene].modulation_scene[i].destination_id + idoffset;
@@ -1502,6 +1504,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_voice[i].source_id;
+                m.source_index = clipboard_modulation_voice[i].source_index;
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.destination_id =
                     clipboard_modulation_voice[i].destination_id + id - n_global_params;
@@ -1512,6 +1515,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_scene[i].source_id;
+                m.source_index = clipboard_modulation_scene[i].source_index;
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id =
                     clipboard_modulation_scene[i].destination_id + id - n_global_params;
@@ -1540,6 +1544,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_voice[i].source_id;
+                m.source_index = clipboard_modulation_voice[i].source_index;
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
                 getPatch().scene[scene].modulation_voice.push_back(m);
@@ -1549,6 +1554,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             {
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_scene[i].source_id;
+                m.source_index = clipboard_modulation_scene[i].source_index;
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
                 getPatch().scene[scene].modulation_scene.push_back(m);

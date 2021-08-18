@@ -260,18 +260,25 @@ class alignas(16) SurgeSynthesizer
 
   public:
     void updateDisplay();
-    bool isValidModulation(long ptag, modsources modsource);
-    bool isActiveModulation(long ptag, modsources modsource);
-    bool isBipolarModulation(modsources modsources);
-    bool isModsourceUsed(modsources modsource);
-    bool isModDestUsed(long moddest);
-    ModulationRouting *getModRouting(long ptag, modsources modsource);
-    bool setModulation(long ptag, modsources modsource, float value);
-    float getModulation(long ptag, modsources modsource);
-    void muteModulation(long ptag, modsources modsource, bool mute);
-    bool isModulationMuted(long ptag, modsources modsource);
-    float getModDepth(long ptag, modsources modsource);
-    void clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid = false);
+    bool isValidModulation(long ptag, modsources modsource) const;
+    bool isActiveModulation(long ptag, modsources modsource, int index) const;
+    bool isAnyActiveModulation(long ptag, modsources modsource) const; // independent of index
+    bool isBipolarModulation(modsources modsources) const;
+    bool isModsourceUsed(modsources modsource); // FIXME - this should be const
+    bool isModDestUsed(long moddest) const;
+
+    bool supportsIndexedModulator(int scene, modsources modsource) const;
+    int getMaxModulationIndex(int scene, modsources modsource) const;
+    std::vector<int> getModulationIndicesBetween(long ptag, modsources modsource) const;
+    ModulationRouting *getModRouting(long ptag, modsources modsource, int index) const;
+
+    bool setModulation(long ptag, modsources modsource, int index, float value);
+    float getModulation(long ptag, modsources modsource, int index) const;
+    void muteModulation(long ptag, modsources modsource, int index, bool mute);
+    bool isModulationMuted(long ptag, modsources modsource, int index) const;
+    float getModDepth(long ptag, modsources modsource, int index) const;
+    void clearModulation(long ptag, modsources modsource, int index,
+                         bool clearEvenIfInvalid = false);
     void clear_osc_modulation(
         int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
   public:
@@ -346,7 +353,7 @@ class alignas(16) SurgeSynthesizer
     bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
     bool fx_reload_mod[n_fx_slots];
-    std::array<std::vector<std::tuple<int, int, float>>, n_fx_slots> fxmodsync;
+    std::array<std::vector<std::tuple<int, int, int, float>>, n_fx_slots> fxmodsync;
     int32_t fx_suspend_bitmask;
 
     // hold pedal stuff

@@ -158,6 +158,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool editor_open = false;
     bool mod_editor = false;
     modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
+    int modsource_index{0};
     int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0, filterblock_tag = 0, fmconfig_tag = 0;
     double lastTempo = 0;
     int lastTSNum = 0, lastTSDen = 0;
@@ -481,7 +482,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
     bool setParameterFromString(Parameter *p, const std::string &s);
-    bool setParameterModulationFromString(Parameter *p, modsources ms, const std::string &s);
+    bool setParameterModulationFromString(Parameter *p, modsources ms, int modidx,
+                                          const std::string &s);
     bool setControlFromString(modsources ms, const std::string &s);
     friend struct Surge::Overlays::TypeinParamEditor;
     friend struct Surge::Overlays::PatchStoreDialog;
@@ -542,6 +544,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     std::string modulatorName(int ms, bool forButton);
+    std::string modulatorIndexExtension(int scene, int ms, int index);
 
   private:
     Parameter *typeinEditTarget = nullptr;
@@ -607,7 +610,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     static std::string fullyResolvedHelpURL(const std::string &helpurl);
 
   private:
-    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modulationSource = -1);
+    void promptForUserValueEntry(Parameter *p, juce::Component *c)
+    {
+        promptForUserValueEntry(p, c, -1, -1);
+    }
+    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modindex);
 
     /*
     ** Skin support

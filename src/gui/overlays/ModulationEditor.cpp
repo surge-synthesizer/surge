@@ -37,7 +37,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         explicit Datum(RowType t) : type(t) {}
 
         std::string hLab;
-        int dest_id = -1, source_id = -1;
+        int dest_id = -1, source_id = -1, source_index = -1;
         std::string dest_name, source_name;
         int modNum = -1;
 
@@ -115,7 +115,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             muteButton->addListener(this);
             muteButton->setToggleState(
                 mod->moded->synth->isModulationMuted(mod->rows[row].dest_id,
-                                                     (modsources)mod->rows[row].source_id),
+                                                     (modsources)mod->rows[row].source_id,
+                                                     mod->rows[row].source_index),
                 juce::NotificationType::dontSendNotification);
             addAndMakeVisible(*muteButton);
 
@@ -132,7 +133,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             auto rd = mod->rows[row];
             auto um = rd.p->set_modulation_f01(slider->getValue());
-            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id,
+            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id, rd.source_index,
                                              slider->getValue());
             mod->updateRowByModnum(rd.modNum);
             mod->moded->repaint();
@@ -143,15 +144,16 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             if (button == clearButton.get())
             {
                 mod->moded->synth->clearModulation(mod->rows[row].dest_id,
-                                                   (modsources)mod->rows[row].source_id);
+                                                   (modsources)mod->rows[row].source_id,
+                                                   mod->rows[row].source_index);
                 mod->updateRows();
                 mod->moded->listBox->updateContent();
             }
             if (button == muteButton.get())
             {
-                mod->moded->synth->muteModulation(mod->rows[row].dest_id,
-                                                  (modsources)mod->rows[row].source_id,
-                                                  button->getToggleState());
+                mod->moded->synth->muteModulation(
+                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
+                    mod->rows[row].source_index, button->getToggleState());
             }
         }
         void resized() override
@@ -217,10 +219,10 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 char pdisp[TXT_SIZE];
                 int ptag = r.p->id;
                 modsources thisms = (modsources)r.source_id;
-                r.p->get_display_of_modulation_depth(pdisp, moded->synth->getModDepth(ptag, thisms),
-                                                     moded->synth->isBipolarModulation(thisms),
-                                                     Parameter::InfoWindow, &(r.mss));
-                r.depth = moded->synth->getModDepth(ptag, thisms);
+                r.p->get_display_of_modulation_depth(
+                    pdisp, moded->synth->getModDepth(ptag, thisms, r.source_index),
+                    moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(r.mss));
+                r.depth = moded->synth->getModDepth(ptag, thisms, r.source_index);
             }
         }
     }
@@ -230,7 +232,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         std::ostringstream oss;
         int modNum = 0;
         auto append = [&oss, &modNum, this](const std::string &type,
-                                            const std::vector<ModulationRouting> &r, int idBase) {
+                                            const std::vector<ModulationRouting> &r, int idBase,
+                                            int scene) {
             if (r.empty())
                 return;
 
@@ -247,9 +250,12 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 if (moded->synth->fromSynthSideId(q.destination_id + idBase, ptagid))
                     moded->synth->getParameterName(ptagid, nm);
                 std::string sname = moded->ed->modulatorName(q.source_id, false);
+                if (scene >= 0)
+                    sname += moded->ed->modulatorIndexExtension(scene, q.source_id, q.source_index);
                 auto rDisp = Datum(Datum::SHOW_ROW);
                 rDisp.source_id = q.source_id;
                 rDisp.dest_id = q.destination_id + idBase;
+                rDisp.source_index = q.source_index;
                 rDisp.source_name = sname;
                 rDisp.dest_name = nm;
                 rDisp.modNum = modNum++;
@@ -259,10 +265,10 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 auto p = moded->synth->storage.getPatch().param_ptr[q.destination_id + idBase];
                 int ptag = p->id;
                 modsources thisms = (modsources)q.source_id;
-                p->get_display_of_modulation_depth(pdisp, moded->synth->getModDepth(ptag, thisms),
-                                                   moded->synth->isBipolarModulation(thisms),
-                                                   Parameter::InfoWindow, &(rDisp.mss));
-                rDisp.depth = moded->synth->getModDepth(ptag, thisms);
+                p->get_display_of_modulation_depth(
+                    pdisp, moded->synth->getModDepth(ptag, thisms, q.source_index),
+                    moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(rDisp.mss));
+                rDisp.depth = moded->synth->getModDepth(ptag, thisms, q.source_index);
                 rDisp.isBipolar = moded->synth->isBipolarModulation(thisms);
                 rows.push_back(rDisp);
 
@@ -273,19 +279,19 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                     << nm << " at " << q.depth << "\n";
             }
         };
-        append("Global Modulators", moded->synth->storage.getPatch().modulation_global, 0);
+        append("Global Modulators", moded->synth->storage.getPatch().modulation_global, 0, -1);
         append("Scene A - Voice Modulators",
                moded->synth->storage.getPatch().scene[0].modulation_voice,
-               moded->synth->storage.getPatch().scene_start[0]);
+               moded->synth->storage.getPatch().scene_start[0], 0);
         append("Scene A - Scene Modulators",
                moded->synth->storage.getPatch().scene[0].modulation_scene,
-               moded->synth->storage.getPatch().scene_start[0]);
+               moded->synth->storage.getPatch().scene_start[0], 0);
         append("Scene B - Voice Modulators",
                moded->synth->storage.getPatch().scene[1].modulation_voice,
-               moded->synth->storage.getPatch().scene_start[1]);
+               moded->synth->storage.getPatch().scene_start[1], 1);
         append("Scene B - Scene Modulators",
                moded->synth->storage.getPatch().scene[1].modulation_scene,
-               moded->synth->storage.getPatch().scene_start[0]);
+               moded->synth->storage.getPatch().scene_start[1], 1);
         debugRows = oss.str();
     }
 

@@ -46,10 +46,12 @@ struct TypeinParamEditor : public juce::Component,
     void setEditedParam(Parameter *pin) { p = pin; };
     bool isMod{false};
     modsources ms{ms_original};
-    void setModulation(bool isMod, modsources ms)
+    int modidx{0};
+    void setModulation(bool isMod, modsources ms, int modidx)
     {
         this->isMod = isMod;
         this->ms = ms;
+        this->modidx = modidx;
     }
 
     std::string mainLabel;

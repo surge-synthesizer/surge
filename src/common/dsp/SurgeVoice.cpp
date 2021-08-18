@@ -583,7 +583,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
         if (modsources[src_id])
         {
-            localcopy[dst_id].f += depth * modsources[src_id]->get_output(0) * (1.0 - iter->muted);
+            localcopy[dst_id].f +=
+                depth * modsources[src_id]->get_output(iter->source_index) * (1.0 - iter->muted);
         }
         iter++;
     }
