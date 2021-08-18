@@ -206,39 +206,42 @@ struct ParamUserData
 
 struct CountedSetUserData : public ParamUserData
 {
-    virtual int getCountedSetSize() = 0; // A constant time answer to the count of the set
+    virtual int getCountedSetSize() const = 0; // A constant time answer to the count of the set
 };
 
 class Parameter;
 
 struct ParameterExternalFormatter : public ParamUserData
 {
-    virtual bool formatValue(Parameter *p, float value, char *txt, int txtlen) = 0;
-    virtual bool formatAltValue(Parameter *p, float value, char *txt, int txtlen)
+    virtual bool formatValue(const Parameter *p, float value, char *txt, int txtlen) const = 0;
+    virtual bool formatAltValue(const Parameter *p, float value, char *txt, int txtlen) const
     {
         txt[0] = 0;
         return true;
     }
-    virtual bool stringToValue(Parameter *p, const char *txt, float &outVal) = 0;
+    virtual bool stringToValue(const Parameter *p, const char *txt, float &outVal) const = 0;
 };
 
 struct ParameterDiscreteIndexRemapper : public ParamUserData
 {
-    virtual int remapStreamedIndexToDisplayIndex(int i) = 0;
-    virtual std::string nameAtStreamedIndex(int i) = 0;
-    virtual bool hasGroupNames() { return false; }
-    virtual std::string groupNameAtStreamedIndex(int i) { return ""; } // If you want menu grouping
-    virtual bool sortGroupNames() { return true; }
-    virtual bool useRemappedOrderingForGroupsIfNotSorted() { return false; }
+    virtual int remapStreamedIndexToDisplayIndex(int i) const = 0;
+    virtual std::string nameAtStreamedIndex(int i) const = 0;
+    virtual bool hasGroupNames() const { return false; }
+    virtual std::string groupNameAtStreamedIndex(int i) const
+    {
+        return "";
+    } // If you want menu grouping
+    virtual bool sortGroupNames() const { return true; }
+    virtual bool useRemappedOrderingForGroupsIfNotSorted() const { return false; }
 
-    virtual bool supportsTotalIndexOrdering() { return false; }
-    virtual const std::vector<int> totalIndexOrdering() { return std::vector<int>(); }
+    virtual bool supportsTotalIndexOrdering() const { return false; }
+    virtual const std::vector<int> totalIndexOrdering() const { return std::vector<int>(); }
 };
 
 class Parameter;
 struct ParameterDynamicNameFunction
 {
-    virtual const char *getName(Parameter *p) = 0;
+    virtual const char *getName(const Parameter *p) const = 0;
 };
 /*
  * The DBF binds to a couple of properties (deactivate, bipolar) so have a general
@@ -246,12 +249,12 @@ struct ParameterDynamicNameFunction
  */
 struct ParameterDynamicBoolFunction
 {
-    virtual const bool getValue(Parameter *p) = 0;
+    virtual const bool getValue(const Parameter *p) const = 0;
 };
 
 struct ParameterDynamicDeactivationFunction : public ParameterDynamicBoolFunction
 {
-    virtual Parameter *getPrimaryDeactivationDriver(Parameter *p) { return nullptr; };
+    virtual Parameter *getPrimaryDeactivationDriver(const Parameter *p) const { return nullptr; };
 };
 
 /*
@@ -354,18 +357,18 @@ class Parameter
                       bool defaultDeactivation = true);
     virtual ~Parameter();
 
-    bool can_temposync();
-    bool can_extend_range();
-    bool can_be_absolute();
-    bool can_deactivate();
-    bool can_setvalue_from_string();
+    bool can_temposync() const;
+    bool can_extend_range() const;
+    bool can_be_absolute() const;
+    bool can_deactivate() const;
+    bool can_setvalue_from_string() const;
     void clear_flags();
-    bool has_portaoptions();
-    bool has_deformoptions();
-    bool is_bipolar();
-    bool is_discrete_selection(); // basically a hint to use a dropdown not a slider
-    bool is_nonlocal_on_change(); // basically a change to me means other vals change so redraw
-                                  // everyone else too
+    bool has_portaoptions() const;
+    bool has_deformoptions() const;
+    bool is_bipolar() const;
+    bool is_discrete_selection() const; // basically a hint to use a dropdown not a slider
+    bool is_nonlocal_on_change() const; // basically a change to me means other vals change so
+                                        // redraw everyone else too
 
     /*
      * Why "appears deactivated" vs "is_deactivated". Well we have primary items
@@ -380,15 +383,15 @@ class Parameter
      * basically meaning that the menu on B can toggle the decativated state on A by
      * having B be able to locate A (A being the 'primary deactivation driver')
      */
-    bool appears_deactivated();
-    Parameter *get_primary_deactivation_driver();
+    bool appears_deactivated() const;
+    Parameter *get_primary_deactivation_driver() const;
 
     void set_type(int ctrltype);
     void morph(Parameter *a, Parameter *b, float x);
     //	void morph(parameter *b, float x);
     pdata morph(Parameter *b, float x);
-    const char *get_name();
-    const char *get_full_name();
+    const char *get_name() const;
+    const char *get_full_name() const;
     void set_name(const char *n); // never change name_storage as it is used for storage/recall
     const char *get_internal_name() const;
     const char *get_storage_name() const;
@@ -404,15 +407,15 @@ class Parameter
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,
                                          ModulationDisplayInfoWindowStrings *iw = nullptr);
-    void get_display_alt(char *txt, bool external = false, float ef = 0.f);
-    char *get_storage_value(char *);
+    void get_display_alt(char *txt, bool external = false, float ef = 0.f) const;
+    char *get_storage_value(char *) const;
     void set_storage_value(int i);
     void set_storage_value(float f);
     float get_extended(float f);
-    float get_value_f01();
-    float normalized_to_value(float value);
-    float value_to_normalized(float value);
-    float get_default_value_f01();
+    float get_value_f01() const;
+    float normalized_to_value(float value) const;
+    float value_to_normalized(float value) const;
+    float get_default_value_f01() const;
     void set_value_f01(float v, bool force_integer = false);
     bool set_value_from_string(const std::string &s);
     bool set_value_from_string_onto(const std::string &s, pdata &ontoThis);
@@ -427,12 +430,12 @@ class Parameter
     float calculate_modulation_value_from_string(const std::string &s, bool &valid);
 
     void bound_value(bool force_integer = false);
-    std::string tempoSyncNotationValue(float f);
-    float quantize_modulation(float modvalue); // given a mod-value hand it back rounded to a
-                                               // 'reasonable' step size (used in ctrl-drag)
+    std::string tempoSyncNotationValue(float f) const;
+    float quantize_modulation(float modvalue) const; // given a mod-value hand it back rounded to a
+                                                     // 'reasonable' step size (used in ctrl-drag)
 
     void create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry,
-                         const char *lfoPrefixOverride = nullptr);
+                         const char *lfoPrefixOverride = nullptr) const;
 
     pdata val{}, val_default{}, val_min{}, val_max{};
     // You might be tempted to use a non-fixed-size member here, like a std::string, but
@@ -507,7 +510,7 @@ class Parameter
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
                                            // assume i am referencable
 
-    bool supportsDynamicName();
+    bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
     /*

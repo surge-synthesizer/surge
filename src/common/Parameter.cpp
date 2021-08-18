@@ -73,7 +73,7 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
 }
 
 void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup,
-                                int ctrlgroup_entry, const char *lfoPrefixOverride)
+                                int ctrlgroup_entry, const char *lfoPrefixOverride) const
 {
     char prefix[PREFIX_SIZE];
     bool useprefix = true;
@@ -233,7 +233,7 @@ void Parameter::clear_flags()
     porta_curve = porta_lin;
 }
 
-bool Parameter::can_temposync()
+bool Parameter::can_temposync() const
 {
     switch (ctrltype)
     {
@@ -249,7 +249,7 @@ bool Parameter::can_temposync()
     return false;
 }
 
-bool Parameter::can_extend_range()
+bool Parameter::can_extend_range() const
 {
     switch (ctrltype)
     {
@@ -280,7 +280,7 @@ bool Parameter::can_extend_range()
     return false;
 }
 
-bool Parameter::can_be_absolute()
+bool Parameter::can_be_absolute() const
 {
     switch (ctrltype)
     {
@@ -293,7 +293,7 @@ bool Parameter::can_be_absolute()
     return false;
 }
 
-bool Parameter::can_deactivate()
+bool Parameter::can_deactivate() const
 {
     switch (ctrltype)
     {
@@ -314,7 +314,7 @@ bool Parameter::can_deactivate()
     return false;
 }
 
-bool Parameter::has_portaoptions()
+bool Parameter::has_portaoptions() const
 {
     if (ctrltype == ct_portatime)
         return true;
@@ -322,7 +322,7 @@ bool Parameter::has_portaoptions()
         return false;
 }
 
-bool Parameter::has_deformoptions()
+bool Parameter::has_deformoptions() const
 {
     switch (ctrltype)
     {
@@ -338,7 +338,7 @@ bool Parameter::has_deformoptions()
     return false;
 }
 
-bool Parameter::is_bipolar()
+bool Parameter::is_bipolar() const
 {
     if (dynamicBipolar != nullptr)
     {
@@ -390,7 +390,7 @@ bool Parameter::is_bipolar()
     return res;
 }
 
-bool Parameter::is_discrete_selection()
+bool Parameter::is_discrete_selection() const
 {
     switch (ctrltype)
     {
@@ -417,7 +417,7 @@ bool Parameter::is_discrete_selection()
     return false;
 }
 
-bool Parameter::is_nonlocal_on_change()
+bool Parameter::is_nonlocal_on_change() const
 {
     switch (ctrltype)
     {
@@ -431,7 +431,7 @@ bool Parameter::is_nonlocal_on_change()
     return false;
 }
 
-bool Parameter::appears_deactivated()
+bool Parameter::appears_deactivated() const
 {
     if (dynamicDeactivation)
         return dynamicDeactivation->getValue(this);
@@ -442,7 +442,7 @@ bool Parameter::appears_deactivated()
     return false;
 }
 
-Parameter *Parameter::get_primary_deactivation_driver()
+Parameter *Parameter::get_primary_deactivation_driver() const
 {
     if (dynamicDeactivation)
         return dynamicDeactivation->getPrimaryDeactivationDriver(this);
@@ -1758,7 +1758,7 @@ void Parameter::bound_value(bool force_integer)
     };
 }
 
-bool Parameter::supportsDynamicName()
+bool Parameter::supportsDynamicName() const
 {
     switch (ctrltype)
     {
@@ -1776,7 +1776,7 @@ bool Parameter::supportsDynamicName()
     }
     return false;
 }
-const char *Parameter::get_name()
+const char *Parameter::get_name() const
 {
     // We only even want to try this for specific types we know support it
     if (supportsDynamicName() && dynamicName)
@@ -1785,7 +1785,7 @@ const char *Parameter::get_name()
     return dispname;
 }
 
-const char *Parameter::get_full_name()
+const char *Parameter::get_full_name() const
 {
     if (supportsDynamicName() && dynamicName)
     {
@@ -1802,7 +1802,7 @@ const char *Parameter::get_internal_name() const { return name; }
 
 const char *Parameter::get_storage_name() const { return name_storage; }
 
-char *Parameter::get_storage_value(char *str)
+char *Parameter::get_storage_value(char *str) const
 {
     switch (valtype)
     {
@@ -1857,6 +1857,7 @@ float Parameter::get_extended(float f)
         {
         case ct_freq_reson_band1:
         {
+            // Why the heck are we modifying this here?
             val_max.f = -6.6305f; // 300 Hz
             return f;
         }
@@ -1936,7 +1937,7 @@ float Parameter::get_extended(float f)
     }
 }
 
-std::string Parameter::tempoSyncNotationValue(float f)
+std::string Parameter::tempoSyncNotationValue(float f) const
 {
     float a, b = modff(f, &a);
 
@@ -2601,7 +2602,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     }
 }
 
-float Parameter::quantize_modulation(float inputval)
+float Parameter::quantize_modulation(float inputval) const
 {
     float res;
 
@@ -2732,7 +2733,7 @@ float Parameter::quantize_modulation(float inputval)
     return res;
 }
 
-void Parameter::get_display_alt(char *txt, bool external, float ef)
+void Parameter::get_display_alt(char *txt, bool external, float ef) const
 {
 
     txt[0] = 0;
@@ -3507,7 +3508,7 @@ void Parameter::get_display(char *txt, bool external, float ef)
     };
 }
 
-float Parameter::get_value_f01()
+float Parameter::get_value_f01() const
 {
     if (ctrltype == ct_none)
         return 0;
@@ -3526,7 +3527,7 @@ float Parameter::get_value_f01()
     return 0;
 }
 
-float Parameter::normalized_to_value(float value)
+float Parameter::normalized_to_value(float value) const
 {
     switch (valtype)
     {
@@ -3543,7 +3544,7 @@ float Parameter::normalized_to_value(float value)
     return 0;
 }
 
-float Parameter::value_to_normalized(float value)
+float Parameter::value_to_normalized(float value) const
 {
     switch (valtype)
     {
@@ -3562,7 +3563,7 @@ float Parameter::value_to_normalized(float value)
 
 const wchar_t *Parameter::getUnit() const { return L""; }
 
-float Parameter::get_default_value_f01()
+float Parameter::get_default_value_f01() const
 {
     if (ctrltype == ct_none)
         return 0;
@@ -3672,7 +3673,7 @@ void Parameter::morph(Parameter *a, Parameter *b, float x)
     }
 }
 
-bool Parameter::can_setvalue_from_string()
+bool Parameter::can_setvalue_from_string() const
 {
     switch (ctrltype)
     {

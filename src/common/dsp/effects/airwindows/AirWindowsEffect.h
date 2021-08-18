@@ -58,28 +58,29 @@ class alignas(16) AirWindowsEffect : public Effect
     {
         AWFxSelectorMapper(AirWindowsEffect *fx) { this->fx = fx; };
 
-        virtual int remapStreamedIndexToDisplayIndex(int i) override
+        virtual int remapStreamedIndexToDisplayIndex(int i) const override
         {
             return fx->fxreg[i].displayOrder;
         }
-        virtual std::string nameAtStreamedIndex(int i) override { return fx->fxreg[i].name; }
-        virtual bool hasGroupNames() override { return true; }
+        virtual std::string nameAtStreamedIndex(int i) const override { return fx->fxreg[i].name; }
+        virtual bool hasGroupNames() const override { return true; }
 
-        virtual std::string groupNameAtStreamedIndex(int i) override
+        virtual std::string groupNameAtStreamedIndex(int i) const override
         {
             return fx->fxreg[i].groupName;
         }
 
-        bool supportsTotalIndexOrdering() override { return true; }
+        bool supportsTotalIndexOrdering() const override { return true; }
 
-        const std::vector<int> totalIndexOrdering() override { return fx->fxregOrdering; }
+        const std::vector<int> totalIndexOrdering() const override { return fx->fxregOrdering; }
         AirWindowsEffect *fx;
     };
 
     struct AWFxParamFormatter : public ParameterExternalFormatter
     {
         AWFxParamFormatter(AirWindowsEffect *fx, int i) : fx(fx), idx(i) {}
-        virtual bool formatValue(Parameter *p, float value, char *txt, int txtlen) override
+        virtual bool formatValue(const Parameter *p, float value, char *txt,
+                                 int txtlen) const override
         {
             if (fx && fx->airwin)
             {
@@ -119,7 +120,8 @@ class alignas(16) AirWindowsEffect : public Effect
             return true;
         }
 
-        virtual bool stringToValue(Parameter *p, const char *txt, float &outVal) override
+        virtual bool stringToValue(const Parameter *p, const char *txt,
+                                   float &outVal) const override
         {
             if (fx && fx->airwin)
             {

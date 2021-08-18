@@ -144,7 +144,7 @@ void TapeEffect::init_ctrltypes()
      */
     static struct TapeEffectDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(Parameter *p) override
+        const bool getValue(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
@@ -166,7 +166,7 @@ void TapeEffect::init_ctrltypes()
 
             return false;
         }
-        Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+        Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;

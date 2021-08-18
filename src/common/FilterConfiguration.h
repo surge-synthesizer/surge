@@ -377,20 +377,23 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
             std::cout << "BAD MAPPING TYPES" << std::endl;
     }
 
-    virtual int remapStreamedIndexToDisplayIndex(int i) override { return inverseMapping[i]; }
-    virtual std::string nameAtStreamedIndex(int i) override { return fut_menu_names[i]; }
-    virtual bool hasGroupNames() override { return true; };
-
-    virtual std::string groupNameAtStreamedIndex(int i) override
+    virtual int remapStreamedIndexToDisplayIndex(int i) const override
     {
-        return mapping[inverseMapping[i]].second;
+        return inverseMapping.at(i);
+    }
+    virtual std::string nameAtStreamedIndex(int i) const override { return fut_menu_names[i]; }
+    virtual bool hasGroupNames() const override { return true; };
+
+    virtual std::string groupNameAtStreamedIndex(int i) const override
+    {
+        return mapping[inverseMapping.at(i)].second;
     }
 
-    virtual bool sortGroupNames() override { return false; }
-    bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
+    virtual bool sortGroupNames() const override { return false; }
+    bool useRemappedOrderingForGroupsIfNotSorted() const override { return true; }
 
-    virtual bool supportsTotalIndexOrdering() override { return true; }
-    virtual const std::vector<int> totalIndexOrdering() override
+    virtual bool supportsTotalIndexOrdering() const override { return true; }
+    virtual const std::vector<int> totalIndexOrdering() const override
     {
         auto res = std::vector<int>();
         for (auto m : mapping)
@@ -626,20 +629,20 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
             std::cout << "BAD MAPPING TYPES" << std::endl;
     }
 
-    int remapStreamedIndexToDisplayIndex(int i) override { return inverseMapping[i]; }
-    std::string nameAtStreamedIndex(int i) override { return wst_names[i]; }
-    bool hasGroupNames() override { return true; };
+    int remapStreamedIndexToDisplayIndex(int i) const override { return inverseMapping.at(i); }
+    std::string nameAtStreamedIndex(int i) const override { return wst_names[i]; }
+    bool hasGroupNames() const override { return true; };
 
-    std::string groupNameAtStreamedIndex(int i) override
+    std::string groupNameAtStreamedIndex(int i) const override
     {
-        return mapping[inverseMapping[i]].second;
+        return mapping[inverseMapping.at(i)].second;
     }
 
-    bool sortGroupNames() override { return false; }
-    bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
+    bool sortGroupNames() const override { return false; }
+    bool useRemappedOrderingForGroupsIfNotSorted() const override { return true; }
 
-    bool supportsTotalIndexOrdering() override { return true; }
-    const std::vector<int> totalIndexOrdering() override
+    bool supportsTotalIndexOrdering() const override { return true; }
+    const std::vector<int> totalIndexOrdering() const override
     {
         auto res = std::vector<int>();
         for (auto m : mapping)

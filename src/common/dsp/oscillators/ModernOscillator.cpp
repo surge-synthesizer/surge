@@ -536,7 +536,7 @@ void ModernOscillator::process_block(float pitch, float drift, bool stereo, bool
 
 static struct ModernTriName : public ParameterDynamicNameFunction
 {
-    virtual const char *getName(Parameter *p)
+    const char *getName(const Parameter *p) const override
     {
         auto flag = p->deform_type;
         int mt = flag & 0xF;
