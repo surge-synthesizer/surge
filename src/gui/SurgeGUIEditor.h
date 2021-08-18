@@ -144,7 +144,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showSettingsMenu(const juce::Point<int> &where,
                           Surge::GUI::IComponentTagValue *launchFrom);
 
-    static bool fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q);
     // If n_scenes > 2, then this initialization and the modsource_editor one below will need to
     // adjust
     int current_scene = 0, current_osc[n_scenes] = {0, 0}, current_fx = 0;

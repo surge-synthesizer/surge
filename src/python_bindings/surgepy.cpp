@@ -824,8 +824,6 @@ PYBIND11_MODULE(surgepy, m)
         "getVersion", []() { return Surge::Build::FullVersionStr; }, "Get the version of Surge");
     py::class_<SurgeSynthesizer::ID>(m, "SurgeSynthesizer_ID")
         .def(py::init<>())
-        .def("getDawSideIndex", &SurgeSynthesizer::ID::getDawSideIndex)
-        .def("getDawSideId", &SurgeSynthesizer::ID::getDawSideId)
         .def("getSynthSideId", &SurgeSynthesizer::ID::getSynthSideId)
         .def("__repr__", &SurgeSynthesizer::ID::toString);
 

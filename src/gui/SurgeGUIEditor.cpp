@@ -82,12 +82,6 @@ using namespace Surge::ParamConfig;
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 
-bool SurgeGUIEditor::fromSynthGUITag(SurgeSynthesizer *synth, int tag, SurgeSynthesizer::ID &q)
-{
-    // This is wrong for macros and params but is close
-    return synth->fromSynthSideIdWithGuiOffset(tag, start_paramtags, tag_mod_source0 + ms_ctrl1, q);
-}
-
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
     assert(n_paramslots >= n_total_params);

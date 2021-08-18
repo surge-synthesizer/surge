@@ -141,26 +141,26 @@ class alignas(16) SurgeSynthesizer
 
   public:
     /*
-     * For more on this IFDEF see the comment in SurgeSynthesizerIDManagement.cpp
+     * So when surge was pre-juce we contemplated writing our own ID remapping between
+     * internal indices and DAW IDs so put an indirectin and class in place. JUCE obviates
+     * the need for that by using hash of stremaing name as an ID consistently throuhg its
+     * param mechanism. I could, in theory, have gone right back to int as my accessor class
+     * but there's something compelilng about keeping that indirection I plumbed in just in case
+     * i need it in the future. So the ID class is now just a simple wrapper on an int which is
+     * entirely inline.
      */
     struct ID
     {
-        int getDawSideIndex() const { return dawindex; }
-        int getDawSideId() const { return dawid; }
         int getSynthSideId() const { return synthid; }
 
         std::string toString() const
         {
             std::ostringstream oss;
-            oss << "ID[ dawidx=" << dawindex << ", dawid=" << dawid << " synthid=" << synthid
-                << " ]";
+            oss << "ID[" << synthid << "]";
             return oss.str();
         }
 
-        bool operator==(const ID &other) const
-        {
-            return dawindex == other.dawindex && dawid == other.dawid && synthid == other.synthid;
-        }
+        bool operator==(const ID &other) const { return synthid == other.synthid; }
         bool operator!=(const ID &other) const { return !(*this == other); }
 
         friend std::ostream &operator<<(std::ostream &os, const ID &id)
@@ -170,16 +170,20 @@ class alignas(16) SurgeSynthesizer
         }
 
       private:
-        int dawindex = -1, dawid = -1, synthid = -1;
+        int synthid = -1;
         friend SurgeSynthesizer;
     };
 
-    bool fromDAWSideId(int i, ID &q);
-    bool fromDAWSideIndex(int i, ID &q);
-    bool fromSynthSideId(int i, ID &q);
-    bool fromSynthSideIdWithGuiOffset(int i, int start_paramtags, int start_metacontrol_tag, ID &q);
+    bool fromSynthSideId(int i, ID &q) const
+    {
+        if (i < 0 || i >= n_total_params)
+            return false;
 
-    const ID idForParameter(const Parameter *p)
+        q.synthid = i;
+        return true;
+    }
+
+    ID idForParameter(const Parameter *p) const
     {
         // We know this will always work
         ID i;
