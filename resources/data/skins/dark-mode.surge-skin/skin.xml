@@ -126,6 +126,9 @@
     <color id="effect.grid.scene.background" value="empty"/>
     <color id="effect.grid.scene.border" value="fxgridgray"/>
     <color id="effect.grid.scene.text" value="fxgridgray"/>
+    <color id="effect.grid.scene.background.hover" value="fxhovertrans"/>
+    <color id="effect.grid.scene.border.hover" value="fxgridgray"/>
+    <color id="effect.grid.scene.text.hover" value="fxgridgray"/>
 
     <color id="effect.grid.unselected.background" value="empty"/>
     <color id="effect.grid.unselected.border" value="fxgridgray"/>

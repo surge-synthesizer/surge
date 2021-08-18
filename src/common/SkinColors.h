@@ -82,7 +82,7 @@ extern const Surge::Skin::Color Border;
 
 namespace Scene
 {
-extern const Surge::Skin::Color Background, Border, Text;
+extern const Surge::Skin::Color Background, Border, Text, BackgroundHover, BorderHover, TextHover;
 }
 namespace Unselected
 {
