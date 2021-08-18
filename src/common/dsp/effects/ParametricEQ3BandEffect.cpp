@@ -135,7 +135,7 @@ void ParametricEQ3BandEffect::init_ctrltypes()
      */
     static struct EQD : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(Parameter *p) override
+        const bool getValue(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
@@ -155,7 +155,7 @@ void ParametricEQ3BandEffect::init_ctrltypes()
 
             return false;
         }
-        Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+        Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;

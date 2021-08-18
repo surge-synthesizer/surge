@@ -459,10 +459,10 @@ void AliasOscillator::init_ctrltypes()
 {
     static struct WaveRemapper : public ParameterDiscreteIndexRemapper
     {
-        bool hasGroupNames() override { return true; }
-        bool supportsTotalIndexOrdering() override { return true; };
-        bool sortGroupNames() override { return false; }
-        bool useRemappedOrderingForGroupsIfNotSorted() override { return true; }
+        bool hasGroupNames() const override { return true; }
+        bool supportsTotalIndexOrdering() const override { return true; };
+        bool sortGroupNames() const override { return false; }
+        bool useRemappedOrderingForGroupsIfNotSorted() const override { return true; }
 
         std::vector<std::pair<int, std::string>> mapping;
         std::unordered_map<int, int> inverseMapping;
@@ -504,7 +504,7 @@ void AliasOscillator::init_ctrltypes()
             }
         }
 
-        int remapStreamedIndexToDisplayIndex(int i) override
+        int remapStreamedIndexToDisplayIndex(int i) const override
         {
             switch ((ao_waves)i)
             {
@@ -539,7 +539,7 @@ void AliasOscillator::init_ctrltypes()
             }
         }
 
-        std::string nameAtStreamedIndex(int i) override
+        std::string nameAtStreamedIndex(int i) const override
         {
             if (i <= aow_noise)
                 return alias_wave_name[i];
@@ -571,12 +571,12 @@ void AliasOscillator::init_ctrltypes()
             }
         }
 
-        std::string groupNameAtStreamedIndex(int i) override
+        std::string groupNameAtStreamedIndex(int i) const override
         {
-            return mapping[inverseMapping[i]].second;
+            return mapping.at(inverseMapping.at(i)).second;
         }
 
-        const std::vector<int> totalIndexOrdering() override
+        const std::vector<int> totalIndexOrdering() const override
         {
             auto res = std::vector<int>();
 

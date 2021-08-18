@@ -139,7 +139,7 @@ class AliasOscillator : public Oscillator
 struct Always255CountedSet
     : public CountedSetUserData // Something to feed to a ct_countedset_percent control
 {
-    virtual int getCountedSetSize() { return 255; }
+    virtual int getCountedSetSize() const { return 255; }
 };
 
 const Always255CountedSet ALWAYS255COUNTEDSET;

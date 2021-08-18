@@ -495,7 +495,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
         float data[max_config];
     } extraConfig;
 
-    virtual int getCountedSetSize() { return wt.n_tables; }
+    virtual int getCountedSetSize() const { return wt.n_tables; }
 };
 
 struct FilterStorage

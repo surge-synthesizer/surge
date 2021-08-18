@@ -112,7 +112,7 @@ static struct EngineDynamicName : public ParameterDynamicNameFunction
         engineLabels.push_back({"Tone<>Noise", "Low Cut", "Decay Time", "Variation"});
     }
 
-    const char *getName(Parameter *p) override
+    const char *getName(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
@@ -176,7 +176,7 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         engineBipolars.push_back({true, false, false, true});  // Analog Hi-Hat
     }
 
-    const bool getValue(Parameter *p) override
+    const bool getValue(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
@@ -197,7 +197,7 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         }
         auto idx = (p - engp);
 
-        auto res = engineBipolars[eng][idx - 1];
+        bool res = engineBipolars[eng][idx - 1];
         if (idx == TwistOscillator::twist_aux_mix)
             res = p->extend_range;
 
@@ -207,9 +207,15 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
 
 static struct EngineDisplayFormatter : ParameterExternalFormatter
 {
-    bool formatValue(Parameter *p, float value, char *txt, int txtlen) override { return false; }
-    bool stringToValue(Parameter *p, const char *txt, float &outVal) override { return false; }
-    bool formatAltValue(Parameter *p, float value, char *txt, int txtlen) override
+    bool formatValue(const Parameter *p, float value, char *txt, int txtlen) const override
+    {
+        return false;
+    }
+    bool stringToValue(const Parameter *p, const char *txt, float &outVal) const override
+    {
+        return false;
+    }
+    bool formatAltValue(const Parameter *p, float value, char *txt, int txtlen) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
@@ -253,13 +259,13 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
 {
     EngineDynamicDeact() noexcept {}
 
-    const bool getValue(Parameter *p) override
+    const bool getValue(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
         return oscs->p[TwistOscillator::twist_lpg_response].deactivated;
     }
 
-    Parameter *getPrimaryDeactivationDriver(Parameter *p) override
+    Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
         return &(oscs->p[TwistOscillator::twist_lpg_response]);

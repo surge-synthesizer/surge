@@ -483,7 +483,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     // Assign the dynamic name handlers
     static struct : public ParameterDynamicNameFunction
     {
-        const char *getName(Parameter *p)
+        const char *getName(const Parameter *p) const override
         {
             static char res[TXT_SIZE];
             if (p && p->storage)
@@ -518,7 +518,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(Parameter *p) override
+        const bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
