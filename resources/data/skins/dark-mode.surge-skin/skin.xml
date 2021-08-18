@@ -1,5 +1,7 @@
 <surge-skin name="Surge Dark" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
+    <window-size x="904" y="569"/>
+
     <defaultimage directory="SVG/"/>
 
     <color id="white" value="#FFFFFF"/>
