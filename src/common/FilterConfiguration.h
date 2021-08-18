@@ -551,7 +551,7 @@ const char wst_names[n_ws_types][32] = {"Off",
                                         "2 Cycle Bound",
                                         "7 Cycle Bound",
                                         "10 Cycle Bound",
-                                        "ZamAudio Sat",
+                                        "ZamAudio",
                                         "OJD"};
 
 const char wst_ui_names[n_ws_types][16] = {
@@ -560,7 +560,7 @@ const char wst_ui_names[n_ws_types][16] = {
     "1Fold",  "2Fold",   "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",
     "Add1-5", "AddSaw3", "AddSqr3", "Fuzz",     "SoftFz",   "HeavyFz",  "CenterFz",
     "EdgeFz", "Sin+x",   "Sin2x+x", "Sin3x+x",  "Sin7x+x",  "Sin10x+x", "2Cycle",
-    "7Cycle", "10Cycle", "2CycleB", "7CycleB",  "10CycleB", "ZamSat",   "OJD"};
+    "7Cycle", "10Cycle", "2CycleB", "7CycleB",  "10CycleB", "Zam",      "OJD"};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {

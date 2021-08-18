@@ -77,7 +77,7 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     }
     // State for mouse events
     bool isHovered{false}, hasDragged{false};
-    int currentHover{-1}, currentClicked{-1};
+    int currentHover{-1}, currentSceneHover{-1}, currentClicked{-1};
     int dragX, dragY;
 
     void setBypass(int b) { bypassState = b; }

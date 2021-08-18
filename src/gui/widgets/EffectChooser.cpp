@@ -39,7 +39,8 @@ void EffectChooser::paint(juce::Graphics &g)
         jassert(false);
         g.fillAll(juce::Colours::red);
         g.setColour(juce::Colours::white);
-        g.drawText("Can't do V1 yet", getLocalBounds(), juce::Justification::centred);
+        g.drawText("Can't do v1 skins in Surge XT!", getLocalBounds(),
+                   juce::Justification::centred);
         return;
     }
 
@@ -50,25 +51,41 @@ void EffectChooser::paint(juce::Graphics &g)
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
 
+    juce::Colour bgd, frm, txt;
+
+    // Scene boxes
     for (int i = 0; i < n_scenes; ++i)
     {
         auto r = getSceneRectangle(i);
-        g.setColour(skin->getColor(Colors::Effect::Grid::Scene::Background));
+
+        if (isHovered && currentSceneHover == i)
+        {
+            bgd = skin->getColor(Colors::Effect::Grid::Scene::BackgroundHover);
+            frm = skin->getColor(Colors::Effect::Grid::Scene::BorderHover);
+            txt = skin->getColor(Colors::Effect::Grid::Scene::TextHover);
+        }
+        else
+        {
+            bgd = skin->getColor(Colors::Effect::Grid::Scene::Background);
+            frm = skin->getColor(Colors::Effect::Grid::Scene::Border);
+            txt = skin->getColor(Colors::Effect::Grid::Scene::Text);
+        }
+
+        g.setColour(bgd);
         g.fillRect(r);
 
-        g.setColour(skin->getColor(Colors::Effect::Grid::Scene::Border));
+        g.setColour(frm);
         g.drawRect(r);
 
-        g.setColour(skin->getColor(Colors::Effect::Grid::Scene::Text));
+        g.setColour(txt);
         g.drawText(scenename[i], r, juce::Justification::centred);
     }
 
     // FX slots
-    juce::Colour bgd, frm, txt;
-
     for (int i = 0; i < n_fx_slots; i++)
     {
         auto r = getEffectRectangle(i);
+
         getColorsForSlot(i, bgd, frm, txt);
 
         g.setColour(bgd);
@@ -84,6 +101,7 @@ void EffectChooser::paint(juce::Graphics &g)
         auto r = getEffectRectangle(currentClicked)
                      .translated(dragX, dragY)
                      .constrainedWithin(getLocalBounds());
+
         getColorsForSlot(currentClicked, bgd, frm, txt);
 
         g.setColour(bgd);
@@ -117,8 +135,8 @@ void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &
 
 juce::Rectangle<int> EffectChooser::getSceneRectangle(int i)
 {
-    const int scenelabelbox[n_scenes][2] = {{2, 0}, {2, 45}};
-    const int scenelabelboxWidth = 11, scenelabelboxHeight = 11;
+    const int scenelabelbox[n_scenes][2] = {{4, 0}, {4, 45}};
+    const int scenelabelboxWidth = 9, scenelabelboxHeight = 11;
 
     auto r = juce::Rectangle<int>(scenelabelbox[i][0], scenelabelbox[i][1], scenelabelboxWidth,
                                   scenelabelboxHeight);
@@ -137,17 +155,21 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
     if (!fxslotsInitialized)
     {
         fxslotsInitialized = true;
+
         /*
          * This just assumes the 16 slot ordering.
          */
         jassert(n_fx_slots == 16);
+
         static int rowYs[3] = {0, 45, 23};
+
         for (int i = 0; i < n_fx_slots; ++i)
         {
             int row = (i / 2) % 4;
             int num = i % 2 + 2 * (i >= fxslot_ains3);
 
             int x = 0, y = 0;
+
             if (row < 3)
             {
                 x = startX + num * 23;
@@ -158,6 +180,7 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
                 x = globX;
                 y = num * 15;
             }
+
             fxslotpos[i][0] = x;
             fxslotpos[i][1] = y;
         }
@@ -172,6 +195,7 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
 {
     hasDragged = false;
     currentClicked = -1;
+
     for (int i = 0; i < n_fx_slots; ++i)
     {
         auto r = getEffectRectangle(i);
@@ -236,6 +260,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
                 }
             }
         }
+
         hasDragged = false;
         repaint();
     }
@@ -249,6 +274,7 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
         {
             setMouseCursor(juce::MouseCursor::DraggingHandCursor);
         }
+
         hasDragged = true;
     }
 
@@ -260,14 +286,36 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
 void EffectChooser::mouseMove(const juce::MouseEvent &event)
 {
     int nextHover = -1;
+    int nextSceneHover = -1;
+
+    // scene boxes
+    for (int i = 0; i < n_scenes; ++i)
+    {
+        auto r = getSceneRectangle(i);
+
+        if (r.contains(event.getPosition()))
+        {
+            nextSceneHover = i;
+        }
+    }
+
+    if (nextSceneHover != currentSceneHover)
+    {
+        currentSceneHover = nextSceneHover;
+        repaint();
+    }
+
+    // FX boxes
     for (int i = 0; i < n_fx_slots; ++i)
     {
         auto r = getEffectRectangle(i);
+
         if (r.contains(event.getPosition()))
         {
             nextHover = i;
         }
     }
+
     if (nextHover != currentHover)
     {
         currentHover = nextHover;
@@ -280,6 +328,7 @@ void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colo
 {
     // This is lunacy but hey.
     bool byp = isBypassedOrDeactivated(fxslot);
+
     if (fxslot == currentEffect)
     {
         if (byp)

@@ -71,7 +71,10 @@ const Surge::Skin::Color Border("effect.grid.border", 0, 0, 0);
 namespace Scene
 {
 const Surge::Skin::Color Background("effect.grid.scene.background", 255, 255, 255),
-    Border("effect.grid.scene.border", 0, 0, 0), Text("effect.grid.scene.text", 0, 0, 0);
+    Border("effect.grid.scene.border", 0, 0, 0), Text("effect.grid.scene.text", 0, 0, 0),
+    BackgroundHover("effect.grid.scene.background.hover", 212, 212, 212),
+    BorderHover("effect.grid.scene.border.hover", 0, 0, 0),
+    TextHover("effect.grid.scene.text.hover", 0, 0, 0);
 }
 namespace Unselected
 {
