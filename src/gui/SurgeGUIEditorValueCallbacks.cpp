@@ -1776,74 +1776,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             char tmptxt[512];
                             sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
 
+                            auto *popMenu = &addMIDISub;
+
                             // TODO FIXME: Try not to be gross!
                             if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers - 1)
                             {
-                                addMacroSub.addItem(tmptxt, [this, p, bvf, ms]() {
-                                    this->promptForUserValueEntry(p, bvf, ms, 0);
-                                });
+                                popMenu = &addMacroSub;
                             }
                             else if (ms >= ms_lfo1 && ms <= ms_lfo1 + n_lfos_voice - 1)
                             {
-                                if (isIndexed)
-                                {
-                                    int maxidx = synth->getMaxModulationIndex(current_scene, ms);
-                                    auto subm = juce::PopupMenu();
-                                    for (int i = 0; i < maxidx; ++i)
-                                    {
-                                        auto subn = modulatorName(ms, false) +
-                                                    modulatorIndexExtension(current_scene, ms, i);
-                                        subm.addItem(subn, [this, p, bvf, ms, i]() {
-                                            this->promptForUserValueEntry(p, bvf, ms, i);
-                                        });
-                                    }
-                                    addVLFOSub.addSubMenu(tmptxt, subm);
-                                }
-                                else
-                                {
-                                    addVLFOSub.addItem(tmptxt, [this, p, bvf, ms]() {
-                                        this->promptForUserValueEntry(p, bvf, ms, 0);
-                                    });
-                                }
+                                popMenu = &addVLFOSub;
                             }
                             else if (ms >= ms_slfo1 && ms <= ms_slfo1 + n_lfos_scene - 1)
                             {
-                                if (isIndexed)
-                                {
-                                    int maxidx = synth->getMaxModulationIndex(current_scene, ms);
-                                    auto subm = juce::PopupMenu();
-                                    for (int i = 0; i < maxidx; ++i)
-                                    {
-                                        auto subn = modulatorName(ms, false) +
-                                                    modulatorIndexExtension(current_scene, ms, i);
-                                        subm.addItem(subn, [this, p, bvf, ms, i]() {
-                                            this->promptForUserValueEntry(p, bvf, ms, i);
-                                        });
-                                    }
-                                    addSLFOSub.addSubMenu(tmptxt, subm);
-                                }
-                                else
-                                {
-                                    addSLFOSub.addItem(tmptxt, [this, p, bvf, ms]() {
-                                        this->promptForUserValueEntry(p, bvf, ms, 0);
-                                    });
-                                }
+                                popMenu = &addSLFOSub;
                             }
                             else if (ms >= ms_ampeg && ms <= ms_filtereg)
                             {
-                                addEGSub.addItem(tmptxt, [this, p, bvf, ms]() {
-                                    this->promptForUserValueEntry(p, bvf, ms, 0);
-                                });
+                                popMenu = &addEGSub;
                             }
                             else if (ms >= ms_random_bipolar && ms <= ms_alternate_unipolar)
                             {
-                                addMiscSub.addItem(tmptxt, [this, p, bvf, ms]() {
-                                    this->promptForUserValueEntry(p, bvf, ms, 0);
-                                });
+                                popMenu = &addMiscSub;
+                            }
+
+                            if (isIndexed)
+                            {
+                                int maxidx = synth->getMaxModulationIndex(current_scene, ms);
+                                auto subm = juce::PopupMenu();
+                                for (int i = 0; i < maxidx; ++i)
+                                {
+                                    auto subn = modulatorName(ms, false) +
+                                                modulatorIndexExtension(current_scene, ms, i);
+                                    subm.addItem(subn, [this, p, bvf, ms, i]() {
+                                        this->promptForUserValueEntry(p, bvf, ms, i);
+                                    });
+                                }
+                                popMenu->addSubMenu(tmptxt, subm);
                             }
                             else
                             {
-                                addMIDISub.addItem(tmptxt, [this, p, bvf, ms]() {
+                                popMenu->addItem(tmptxt, [this, p, bvf, ms]() {
                                     this->promptForUserValueEntry(p, bvf, ms, 0);
                                 });
                             }
