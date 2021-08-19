@@ -2263,8 +2263,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (auto &t : fxmodsync[s])
                         {
-                            setModulation(storage.getPatch().fx[s].p[std::get<1>(t)].id,
-                                          (modsources)std::get<0>(t), std::get<2>(t));
+                            setModulation(storage.getPatch().fx[s].p[std::get<2>(t)].id,
+                                          (modsources)std::get<0>(t), std::get<1>(t),
+                                          std::get<3>(t));
                         }
                         fxmodsync[s].clear();
                         fx_reload_mod[s] = false;
@@ -2405,7 +2406,7 @@ bool SurgeSynthesizer::loadOscalgos()
     return true;
 }
 
-bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource)
+bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource) const
 {
     if (!modsource)
         return false;
@@ -2435,7 +2436,46 @@ bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource)
     return true;
 }
 
-ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsource)
+std::vector<int> SurgeSynthesizer::getModulationIndicesBetween(long ptag,
+                                                               modsources modsource) const
+{
+    std::vector<int> res;
+
+    if (!isValidModulation(ptag, modsource))
+        return res;
+
+    int scene = storage.getPatch().param_ptr[ptag]->scene;
+    vector<ModulationRouting> *modlist = nullptr;
+
+    if (!scene)
+    {
+        modlist = &storage.getPatch().modulation_global;
+    }
+    else
+    {
+        if (isScenelevel(modsource))
+            modlist = &storage.getPatch().scene[scene - 1].modulation_scene;
+        else
+            modlist = &storage.getPatch().scene[scene - 1].modulation_voice;
+    }
+
+    int id = storage.getPatch().param_ptr[ptag]->param_id_in_scene;
+    if (!scene)
+        id = ptag;
+    int n = modlist->size();
+
+    for (int i = 0; i < n; i++)
+    {
+        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource))
+        {
+            res.push_back(modlist->at(i).source_index);
+        }
+    }
+
+    return res;
+}
+
+ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsource, int index) const
 {
     if (!isValidModulation(ptag, modsource))
         return nullptr;
@@ -2462,7 +2502,8 @@ ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsour
 
     for (int i = 0; i < n; i++)
     {
-        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource))
+        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource) &&
+            (modlist->at(i).source_index == index))
         {
             return &modlist->at(i);
         }
@@ -2471,9 +2512,9 @@ ModulationRouting *SurgeSynthesizer::getModRouting(long ptag, modsources modsour
     return nullptr;
 }
 
-float SurgeSynthesizer::getModDepth(long ptag, modsources modsource)
+float SurgeSynthesizer::getModDepth(long ptag, modsources modsource, int index) const
 {
-    ModulationRouting *r = getModRouting(ptag, modsource);
+    auto *r = getModRouting(ptag, modsource, index);
     float d = 0.f;
     if (r)
         d = r->depth;
@@ -2483,15 +2524,20 @@ float SurgeSynthesizer::getModDepth(long ptag, modsources modsource)
     return d;
 }
 
-bool SurgeSynthesizer::isActiveModulation(long ptag, modsources modsource)
+bool SurgeSynthesizer::isActiveModulation(long ptag, modsources modsource, int index) const
 {
     // if(!isValidModulation(ptag,modsource)) return false;
-    if (getModRouting(ptag, modsource))
+    if (getModRouting(ptag, modsource, index))
         return true;
     return false;
 }
 
-bool SurgeSynthesizer::isBipolarModulation(modsources tms)
+bool SurgeSynthesizer::isAnyActiveModulation(long ptag, modsources modsource) const
+{
+    return !getModulationIndicesBetween(ptag, modsource).empty();
+}
+
+bool SurgeSynthesizer::isBipolarModulation(modsources tms) const
 {
     int scene_ms = storage.getPatch().scene_active.val.i;
 
@@ -2523,7 +2569,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms)
         return false;
 }
 
-bool SurgeSynthesizer::isModDestUsed(long ptag)
+bool SurgeSynthesizer::isModDestUsed(long ptag) const
 {
     int scene_ms = storage.getPatch().scene_active.val.i;
     int scene_p = storage.getPatch().param_ptr[ptag]->scene;
@@ -2537,7 +2583,7 @@ bool SurgeSynthesizer::isModDestUsed(long ptag)
         // if((scene && (j>0))||(!scene && (j==0)))
         if ((scene_p && (j > 0)) || (!scene_p && (j == 0)))
         {
-            vector<ModulationRouting> *modlist;
+            const vector<ModulationRouting> *modlist{nullptr};
 
             switch (j)
             {
@@ -2654,36 +2700,36 @@ bool SurgeSynthesizer::isModsourceUsed(modsources modsource)
     return modsourceused[modsource];
 }
 
-float SurgeSynthesizer::getModulation(long ptag, modsources modsource)
+float SurgeSynthesizer::getModulation(long ptag, modsources modsource, int index) const
 {
     if (!isValidModulation(ptag, modsource))
         return 0.0f;
 
-    ModulationRouting *r = getModRouting(ptag, modsource);
+    auto *r = getModRouting(ptag, modsource, index);
     if (r)
         return storage.getPatch().param_ptr[ptag]->get_modulation_f01(r->depth);
 
     return storage.getPatch().param_ptr[ptag]->get_modulation_f01(0);
 }
 
-bool SurgeSynthesizer::isModulationMuted(long ptag, modsources modsource)
+bool SurgeSynthesizer::isModulationMuted(long ptag, modsources modsource, int index) const
 {
     if (!isValidModulation(ptag, modsource))
         return false;
 
-    ModulationRouting *r = getModRouting(ptag, modsource);
+    auto *r = getModRouting(ptag, modsource, index);
     if (r)
         return r->muted;
 
     return false;
 }
 
-void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, bool mute)
+void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, int index, bool mute)
 {
     if (!isValidModulation(ptag, modsource))
         return;
 
-    ModulationRouting *r = getModRouting(ptag, modsource);
+    ModulationRouting *r = getModRouting(ptag, modsource, index);
     if (r)
         r->muted = mute;
 }
@@ -2717,7 +2763,31 @@ void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
     storage.modRoutingMutex.unlock();
 }
 
-void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool clearEvenIfInvalid)
+bool SurgeSynthesizer::supportsIndexedModulator(int scene, modsources modsource) const
+{
+    if (modsource >= ms_lfo1 && modsource <= ms_lfo6)
+    {
+        auto lf = &(storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
+        return lf->shape.val.i == lt_formula;
+    }
+    return false;
+}
+
+int SurgeSynthesizer::getMaxModulationIndex(int scene, modsources modsource) const
+{
+    if (modsource >= ms_lfo1 && modsource <= ms_lfo6)
+    {
+        auto lf = &(storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
+        if (lf->shape.val.i == lt_formula)
+        {
+            return Surge::Formula::max_formula_outputs;
+        }
+    }
+    return 1;
+}
+
+void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int index,
+                                       bool clearEvenIfInvalid)
 {
     if (!isValidModulation(ptag, modsource) && !clearEvenIfInvalid)
         return;
@@ -2745,7 +2815,8 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool cle
 
     for (int i = 0; i < n; i++)
     {
-        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource))
+        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource) &&
+            (modlist->at(i).source_index == index))
         {
             storage.modRoutingMutex.lock();
             modlist->erase(modlist->begin() + i);
@@ -2755,7 +2826,7 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, bool cle
     }
 }
 
-bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
+bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int index, float val)
 {
     if (!isValidModulation(ptag, modsource))
         return false;
@@ -2785,7 +2856,8 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
     int found_id = -1;
     for (int i = 0; i < n; i++)
     {
-        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource))
+        if ((modlist->at(i).destination_id == id) && (modlist->at(i).source_id == modsource) &&
+            (modlist->at(i).source_index == index))
         {
             found_id = i;
             break;
@@ -2808,6 +2880,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, float val)
             t.source_id = modsource;
             t.destination_id = id;
             t.muted = false;
+            t.source_index = index;
             modlist->push_back(t);
         }
         else
@@ -3226,12 +3299,14 @@ void SurgeSynthesizer::processControl()
             for (int i = 0; i < n; i++)
             {
                 int src_id = storage.getPatch().scene[s].modulation_scene[i].source_id;
+                int src_index = storage.getPatch().scene[s].modulation_scene[i].source_index;
                 if (storage.getPatch().scene[s].modsources[src_id])
                 {
                     int dst_id = storage.getPatch().scene[s].modulation_scene[i].destination_id;
                     float depth = storage.getPatch().scene[s].modulation_scene[i].depth;
                     storage.getPatch().scenedata[s][dst_id].f +=
-                        depth * storage.getPatch().scene[s].modsources[src_id]->get_output(0) *
+                        depth *
+                        storage.getPatch().scene[s].modsources[src_id]->get_output(src_index) *
                         (1.0 - storage.getPatch().scene[s].modulation_scene[i].muted);
                 }
             }
@@ -4015,9 +4090,10 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                     whichForReal = q;
                 }
             }
-            auto depth =
-                getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id);
-            fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, whichForReal, depth));
+            auto depth = getModulation(fxsync[source].p[whichForReal].id,
+                                       (modsources)mv->at(i).source_id, mv->at(i).source_index);
+            fxmodsync[target].push_back(
+                std::make_tuple(mv->at(i).source_id, mv->at(i).source_index, whichForReal, depth));
         }
         if (m == FXReorderMode::SWAP)
         {
@@ -4034,9 +4110,9 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                     }
                 }
                 auto depth = getModulation(fxsync[target].p[whichForReal].id,
-                                           (modsources)mv->at(i).source_id);
-                fxmodsync[source].push_back(
-                    std::make_tuple(mv->at(i).source_id, whichForReal, depth));
+                                           (modsources)mv->at(i).source_id, mv->at(i).source_index);
+                fxmodsync[source].push_back(std::make_tuple(
+                    mv->at(i).source_id, mv->at(i).source_index, whichForReal, depth));
             }
         }
     }

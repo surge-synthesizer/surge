@@ -752,9 +752,9 @@ void SurgeGUIEditor::refresh_mod()
             {
                 s->setIsEditingModulation(mod_editor);
                 s->setModulationState(synth->isModDestUsed(i),
-                                      synth->isActiveModulation(i, thisms));
+                                      synth->isActiveModulation(i, thisms, modsource_index));
                 s->setIsModulationBipolar(synth->isBipolarModulation(thisms));
-                s->setModValue(synth->getModulation(i, thisms));
+                s->setModValue(synth->getModulation(i, thisms, modsource_index));
             }
             else
             {
@@ -3350,7 +3350,7 @@ void SurgeGUIEditor::broadcastPluginAutomationChangeFor(Parameter *p)
 }
 //------------------------------------------------------------------------------------------------
 
-void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, int ms)
+void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, int ms, int modidx)
 {
     if (typeinParamEditor->isVisible())
     {
@@ -3360,7 +3360,6 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setSkin(currentSkin, bitmapStore);
 
     bool ismod = p && ms > 0;
-
     jassert(c);
     if (p)
     {
@@ -3409,9 +3408,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         if (ismod)
         {
             char txt2[256];
-            p->get_display_of_modulation_depth(txt, synth->getModDepth(p->id, (modsources)ms),
-                                               synth->isBipolarModulation((modsources)ms),
-                                               Parameter::TypeIn);
+            p->get_display_of_modulation_depth(
+                txt, synth->getModDepth(p->id, (modsources)ms, modidx),
+                synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
             p->get_display(txt2);
             sprintf(ptext, "mod: %s", txt);
             sprintf(ptext2, "current: %s", txt2);
@@ -3438,12 +3437,13 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     if (ismod)
     {
-        std::string mls = std::string("by ") + (char *)modulatorName(ms, true).c_str();
+        std::string mls = std::string("by ") + modulatorName(ms, true) +
+                          modulatorIndexExtension(current_scene, ms, modidx);
         typeinParamEditor->setModByLabel(mls);
     }
 
     typeinParamEditor->setEditedParam(p);
-    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms);
+    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms, modidx);
 
     if (frame->getIndexOfChildComponent(typeinParamEditor.get()) < 0)
     {
@@ -3641,7 +3641,7 @@ void SurgeGUIEditor::sliderHoverStart(int tag)
     for (int k = 1; k < n_modsources; k++)
     {
         modsources ms = (modsources)k;
-        if (synth->isActiveModulation(ptag, ms))
+        if (synth->isActiveModulation(ptag, ms, modsource_index))
         {
             if (gui_modsrc[k])
             {
@@ -3796,8 +3796,9 @@ void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableCo
     auto p = synth->storage.getPatch().param_ptr[slidertag - start_paramtags];
     int ms = modt - tag_mod_source0;
 
+    jassert(false); // the index below needs fixing
     if (synth->isValidModulation(p->id, (modsources)ms))
-        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms);
+        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms, 0);
 }
 
 void SurgeGUIEditor::resetSmoothing(ControllerModulationSource::SmoothingMode t)
@@ -4042,10 +4043,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         hs->setIsEditingModulation(mod_editor);
         hs->setModulationState(synth->isModDestUsed(p->id),
-                               synth->isActiveModulation(p->id, modsource));
+                               synth->isActiveModulation(p->id, modsource, modsource_index));
         if (synth->isValidModulation(p->id, modsource))
         {
-            hs->setModValue(synth->getModulation(p->id, modsource));
+            hs->setModValue(synth->getModulation(p->id, modsource, modsource_index));
             hs->setIsModulationBipolar(synth->isBipolarModulation(modsource));
         }
 
@@ -4939,4 +4940,13 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
 #endif
 
 #endif
+}
+
+std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index)
+{
+    if (synth->supportsIndexedModulator(scene, (modsources)ms))
+    {
+        return std::string(" Out ") + std::to_string(index + 1);
+    }
+    return "";
 }

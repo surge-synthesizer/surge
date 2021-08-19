@@ -24,6 +24,8 @@ namespace Surge
 {
 namespace Formula
 {
+static constexpr int max_formula_outputs{8};
+
 struct EvaluatorState
 {
     bool released;
@@ -41,11 +43,13 @@ struct EvaluatorState
 
     std::string error;
     bool raisedError = false;
-    void adderror(const std::string &s)
+    void adderror(const std::string &msg)
     {
-        error += s;
+        error += msg;
         raisedError = true;
     }
+
+    int activeoutputs;
 
     lua_State *L; // This is assigned by prepareForEvaluation to be one per thread
 };
@@ -54,8 +58,8 @@ bool initEvaluatorState(EvaluatorState &s);
 bool cleanEvaluatorState(EvaluatorState &s);
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display);
 
-float valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
-              EvaluatorState *state);
+void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
+             EvaluatorState *state, float output[max_formula_outputs]);
 
 void createInitFormula(FormulaModulatorStorage *fs);
 

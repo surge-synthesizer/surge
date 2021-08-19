@@ -262,6 +262,7 @@ struct ModulationRouting
     int destination_id;
     float depth;
     bool muted = false;
+    int source_index{0};
 };
 
 class ModulationSource
@@ -275,13 +276,15 @@ class ModulationSource
     virtual void attack(){};
     virtual void release(){};
     virtual void reset(){};
+    // override these if you support indices
+    virtual int get_active_outputs() { return 1; }
     virtual float get_output(int which) { return output; }
     virtual float get_output01(int which) { return output; }
     virtual void set_output(int which, float f) { output = f; }
+
     virtual bool per_voice() { return false; }
     virtual bool is_bipolar() { return false; }
     virtual void set_bipolar(bool b) {}
-    virtual int get_num_outputs() { return 1; }
 
   protected:
     float output;

@@ -386,6 +386,7 @@ void LFOModulationSource::process_block()
     {
         initPhaseFromStartPhase();
     }
+    actout = 1;
 
     retrigger_FEG = false;
     retrigger_AEG = false;
@@ -877,7 +878,8 @@ void LFOModulationSource::process_block()
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
 
-        iout = Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate);
+        float tmpout[Surge::Formula::max_formula_outputs] = {0, 0, 0, 0, 0, 0, 0, 0};
+        Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate, tmpout);
 
         if (!formulastate.useEnvelope)
         {
@@ -894,11 +896,25 @@ void LFOModulationSource::process_block()
             storage->reportError(em, "Formula Evaluator Error");
             std::cout << "ERROR: " << em << std::endl;
         }
+        /*
+         * Since I'm (right now) the only vector valued modulator just do a little
+         * chute and ladder dance here on the output and return
+         */
+        auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
+        auto uni = lfo->unipolar.val.b;
+        for (auto i = 0; i < formulastate.activeoutputs; ++i)
+        {
+            if (uni)
+                tmpout[i] = 0.5f + 0.5f * tmpout[i];
+            output_multi[i] = useenvval * magnf * tmpout[i];
+        }
+        return;
         break;
     };
 
     float io2 = iout;
 
+    // change this? pls check formula
     if (lfo->unipolar.val.b)
     {
         if (s != lt_stepseq)
@@ -912,7 +928,7 @@ void LFOModulationSource::process_block()
     }
 
     auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
-    output = useenvval * magnf * io2;
+    output_multi[0] = useenvval * magnf * io2;
 }
 
 void LFOModulationSource::completedModulation()

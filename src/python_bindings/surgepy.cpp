@@ -594,11 +594,13 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
     void setModulationPy(const SurgePyNamedParam &to, SurgePyModSource const &from, float amt)
     {
-        setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), amt);
+        // FIXME - 4871
+        setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), amt, 0);
     }
     float getModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
     {
-        return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource());
+        // FIXME - 4871
+        return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), 0);
     }
     bool isValidModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
     {
@@ -606,7 +608,8 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     }
     bool isActiveModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
     {
-        return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource());
+        // FIXME - 4871
+        return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), 0);
     }
     bool isBipolarModulationPy(const SurgePyModSource &from)
     {
@@ -729,7 +732,8 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             r.source = SurgePyModSource((modsources)gm.source_id);
             r.dest = surgePyNamedParamById(gm.destination_id);
             r.depth = gm.depth;
-            r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id);
+            // FIXME 4871
+            r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id, 0);
             gmr.append(r);
         }
 
@@ -748,9 +752,10 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
                 r.depth = gm.depth;
+                // FIXME 4871
                 r.normalizedDepth =
                     getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
-                                  (modsources)gm.source_id);
+                                  (modsources)gm.source_id, 0);
                 sms.append(r);
             }
             ts["scene"] = sms;
@@ -764,9 +769,10 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
                 r.depth = gm.depth;
+                // FIXME 4871
                 r.normalizedDepth =
                     getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
-                                  (modsources)gm.source_id);
+                                  (modsources)gm.source_id, 0);
                 smv.append(r);
             }
             ts["voice"] = smv;
