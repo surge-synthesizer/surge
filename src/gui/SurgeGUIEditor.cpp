@@ -4946,6 +4946,20 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
 {
     if (synth->supportsIndexedModulator(scene, (modsources)ms))
     {
+        if (ms == ms_random_bipolar)
+        {
+            if (index == 0)
+                return " (Uniform)";
+            if (index == 1)
+                return " (Normal)";
+        }
+        if (ms == ms_random_unipolar)
+        {
+            if (index == 0)
+                return " (Uniform)";
+            if (index == 1)
+                return " (Half Normal)";
+        }
         return std::string(" Out ") + std::to_string(index + 1);
     }
     return "";

@@ -223,10 +223,16 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     /*
     ** We want to snap the rnd and alt
     */
-    rndUni.set_output(0, oscene->modsources[ms_random_unipolar]->get_output(0));
+    int ao = oscene->modsources[ms_random_unipolar]->get_active_outputs();
+    rndUni.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndUni.set_output(w, oscene->modsources[ms_random_unipolar]->get_output(w));
     modsources[ms_random_unipolar] = &rndUni;
 
-    rndBi.set_output(0, oscene->modsources[ms_random_bipolar]->get_output(0));
+    ao = oscene->modsources[ms_random_bipolar]->get_active_outputs();
+    rndBi.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndBi.set_output(w, oscene->modsources[ms_random_bipolar]->get_output(w));
     modsources[ms_random_bipolar] = &rndBi;
 
     altUni.set_output(0, oscene->modsources[ms_alternate_unipolar]->get_output(0));

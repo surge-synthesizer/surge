@@ -16,6 +16,7 @@
 #pragma once
 
 #include <random>
+#include "basic_dsp.h"
 
 enum modsrctype
 {
@@ -268,7 +269,11 @@ struct ModulationRouting
 class ModulationSource
 {
   public:
-    ModulationSource() {}
+    ModulationSource()
+    {
+        for (int i = 0; i < vecsize; ++i)
+            voutput[i] = 0.f;
+    }
     virtual ~ModulationSource() {}
     virtual const char *get_title() { return 0; }
     virtual int get_type() { return mst_undefined; }
@@ -277,17 +282,42 @@ class ModulationSource
     virtual void release(){};
     virtual void reset(){};
     // override these if you support indices
-    virtual int get_active_outputs() { return 1; }
-    virtual float get_output(int which) { return output; }
-    virtual float get_output01(int which) { return output; }
-    virtual void set_output(int which, float f) { output = f; }
+    virtual void set_active_outputs(int ao) { active_outputs = ao; }
+    virtual int get_active_outputs() { return active_outputs; }
+    virtual float get_output(int which)
+    {
+        if (which == 0)
+            return output;
+        else if (which < vecsize)
+            return voutput[which];
+        else
+            return 0.f;
+    }
+    virtual float get_output01(int which)
+    {
+        if (which == 0)
+            return output;
+        else if (which < vecsize)
+            return voutput[which];
+        else
+            return 0.f;
+    }
+    virtual void set_output(int which, float f)
+    {
+        if (which == 0)
+            output = f;
+        else if (which < vecsize)
+            voutput[which] = f;
+    }
 
     virtual bool per_voice() { return false; }
     virtual bool is_bipolar() { return false; }
     virtual void set_bipolar(bool b) {}
 
   protected:
-    float output;
+    int active_outputs{0};
+    static constexpr int vecsize = 16;
+    float output, voutput[vecsize];
 };
 
 class ControllerModulationSource : public ModulationSource
@@ -446,16 +476,43 @@ class RandomModulationSource : public ModulationSource
         std::random_device rd;
         gen = std::minstd_rand(rd());
         if (bp)
+        {
             dis = std::uniform_real_distribution<float>(-1.0, 1.0);
+            norm = std::normal_distribution<float>(0, 0.33); // stddev
+        }
         else
+        {
             dis = std::uniform_real_distribution<float>(0.0, 1.0);
+            norm = std::normal_distribution<float>(0, 0.33); // stddev
+        }
     }
 
-    virtual void attack() override { output = dis(gen); }
+    int get_active_outputs() override
+    {
+        return 2; // bipolar can't support lognormal obvs
+    }
 
-    bool bipolar;
+    float get_output(int which) override { return output[which]; }
+
+    virtual void attack() override
+    {
+        if (bipolar)
+        {
+            output[0] = dis(gen);
+            output[1] = limitpm1(norm(gen));
+        }
+        else
+        {
+            output[0] = dis(gen);
+            output[1] = limit01(fabs(norm(gen)));
+        }
+    }
+
+    float output[2];
+    bool bipolar{false};
     std::minstd_rand gen;
     std::uniform_real_distribution<float> dis;
+    std::normal_distribution<float> norm;
 };
 
 class AlternateModulationSource : public ModulationSource
