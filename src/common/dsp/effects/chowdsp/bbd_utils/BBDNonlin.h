@@ -35,7 +35,7 @@ class FastDiode : public chowdsp::WDF_SSE::WDFNode
         logVal = vMul(nextR_Is, oneOverVt);
         // array must be aligned to 16-byte boundary for SSE load
         float f alignas(16)[4];
-        _mm_storeu_ps(f, logVal);
+        _mm_store_ps(f, logVal);
         f[0] = std::log(f[0]);
         f[1] = std::log(f[1]);
         f[2] = std::log(f[2]);
@@ -55,7 +55,7 @@ class FastDiode : public chowdsp::WDF_SSE::WDFNode
         b = vAdd(logVal, vMul(vAdd(a, nextR_Is), oneOverVt));
         // array must be aligned to 16-byte boundary for SSE load
         float f alignas(16)[4];
-        _mm_storeu_ps(f, b);
+        _mm_store_ps(f, b);
         f[0] = chowdsp::Omega::omega2(f[0]);
         f[1] = chowdsp::Omega::omega2(f[1]);
         f[2] = chowdsp::Omega::omega2(f[2]);
@@ -164,7 +164,7 @@ class BBDNonlin
 
         // array must be aligned to 16-byte boundary for SSE load
         float f alignas(16)[4];
-        _mm_storeu_ps(f, input);
+        _mm_store_ps(f, input);
         f[0] = bbdNonlinLUT(f[0]);
         f[1] = bbdNonlinLUT(f[1]);
         f[2] = bbdNonlinLUT(f[2]);
