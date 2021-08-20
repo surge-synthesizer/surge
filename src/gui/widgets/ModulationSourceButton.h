@@ -48,61 +48,58 @@ struct ModulationSourceButton : public juce::Component,
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
-    std::string label;
-    void setLabel(const std::string &s)
-    {
-        label = s;
-        setAccessibleLabel(label);
-    }
-
     void setAccessibleLabel(const std::string &s)
     {
 #if SURGE_JUCE_ACCESSIBLE
 #if MAC
-        setDescription(std::string("Modulator ") + label);
-        setTitle(label);
+        setDescription(std::string("Modulator ") + s);
+        setTitle(s);
 #else
         setDescription("Modulator");
-        setTitle(label);
+        setTitle(s);
 #endif
 #endif
     }
 
-    modsources modSource;
-    void setModSource(modsources ms) { modSource = ms; }
+    modsources getCurrentModSource() const { return std::get<0>(modlist[modlistIndex]); }
+    int getCurrentModIndex() const { return std::get<1>(modlist[modlistIndex]); }
+    std::string getCurrentModLabel() const { return std::get<2>(modlist[modlistIndex]); }
+
+    void setCurrentModLabel(const std::string &s)
+    {
+        jassert(modlist.size() == 1 && modlistIndex == 0);
+        std::get<2>(modlist[modlistIndex]) = s;
+        repaint();
+    }
+
+    typedef std::vector<std::tuple<modsources, int, std::string, std::string>> modlist_t;
+    modlist_t modlist;
+    int modlistIndex{0};
+    void setModList(const modlist_t &m)
+    {
+        modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
+        modlist = m;
+        setAccessibleLabel(getCurrentModLabel());
+    }
     bool isMeta{false}, isBipolar{false};
     void setIsMeta(bool b) { isMeta = b; }
     void setBipolar(bool b) { isBipolar = b; }
 
-    bool hasAlternate{false}, useAlternate{false};
-    modsources alternateSource{ms_original};
-    std::string alternateLabel;
+    juce::Rectangle<int> hamburgerHome;
+    bool needsHamburger() const { return modlist.size() > 1; }
 
-    void setAlternate(modsources alt, const std::string &s)
+    bool isLFO() const
     {
-        alternateSource = alt;
-        alternateLabel = s;
-        hasAlternate = true;
-    }
-
-    modsources getAlternate() { return alternateSource; }
-    bool getHasAlternate() { return hasAlternate; }
-    void setUseAlternate(bool b)
-    {
-        useAlternate = b;
-        if (useAlternate)
+        for (auto m : modlist)
         {
-            setAccessibleLabel(alternateLabel);
+            if (std::get<0>(m) >= ms_lfo1 && std::get<0>(m) <= ms_slfo6)
+            {
+                return true;
+            }
         }
-        else
-        {
-            setAccessibleLabel(label);
-        }
+        return false;
     }
-    bool getUseAlternate() const { return useAlternate; }
-
     bool isUsed{false};
-
     void setUsed(bool b) { isUsed = b; }
 
     int state{0};
@@ -151,7 +148,8 @@ struct ModulationSourceButton : public juce::Component,
         CLICK,
         CLICK_ARROW,
         DRAG_VALUE,
-        DRAG_COMPONENT_HAPPEN
+        DRAG_COMPONENT_HAPPEN,
+        HAMBURGER
     } mouseMode{NONE};
     MouseState getMouseMode() const { return mouseMode; }
     juce::ComponentDragger componentDragger;
@@ -163,6 +161,8 @@ struct ModulationSourceButton : public juce::Component,
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+
+    void resized() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };

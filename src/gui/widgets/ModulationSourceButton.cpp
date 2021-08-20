@@ -142,14 +142,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         g.setFont(Surge::GUI::getFontManager()->displayFont);
 
         // modbutton name
-        if (hasAlternate && useAlternate)
-        {
-            g.drawText(alternateLabel, getLocalBounds(), juce::Justification::centred);
-        }
-        else
-        {
-            g.drawText(label, getLocalBounds(), juce::Justification::centred);
-        }
+        g.drawText(getCurrentModLabel(), getLocalBounds(), juce::Justification::centred);
 
         // modbutton frame
         g.setColour(FrameCol);
@@ -161,7 +154,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         auto topRect = getLocalBounds().withHeight(splitHeight);
         g.setColour(FontCol);
         g.setFont(Surge::GUI::getFontManager()->displayFont);
-        g.drawText(label, topRect, juce::Justification::centred);
+        g.drawText(getCurrentModLabel(), topRect, juce::Justification::centred);
 
         // macro slider area
         auto bottomRect = fillRect.withTrimmedTop(splitHeight - 2);
@@ -218,7 +211,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         g.drawRect(getLocalBounds(), 1);
     }
 
-    if (modSource >= ms_lfo1 && modSource <= ms_slfo6)
+    if (isLFO())
     {
         auto arrSze = getLocalBounds().withLeft(getLocalBounds().getRight() - 14).withHeight(16);
         juce::Graphics::ScopedSaveState gs(g);
@@ -227,6 +220,22 @@ void ModulationSourceButton::paint(juce::Graphics &g)
 
         arrow->drawAt(g, arrSze.getX(), arrSze.getY() + dy, 1.0);
     }
+
+    if (needsHamburger())
+    {
+        g.setColour(FrameCol);
+        float ht = 1.5;
+        int nburg = 4;
+        float pxspace = 1.f * (hamburgerHome.getHeight() - ht) / (nburg - 1);
+
+        for (int i = 0; i < nburg; ++i)
+        {
+            auto r =
+                juce::Rectangle<float>(hamburgerHome.getX(), hamburgerHome.getY() + i * pxspace,
+                                       hamburgerHome.getWidth(), ht);
+            g.fillRoundedRectangle(r, 1);
+        }
+    }
 }
 
 void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
@@ -234,6 +243,25 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
     mouseMode = CLICK;
     everDragged = false;
 
+    if (needsHamburger() && hamburgerHome.contains(event.position.toInt()))
+    {
+        auto menu = juce::PopupMenu();
+        int idx{0};
+        for (auto e : modlist)
+        {
+            menu.addItem(std::get<3>(e), [this, idx]() {
+                this->modlistIndex = idx;
+                mouseMode = HAMBURGER;
+                notifyValueChanged();
+                mouseMode = NONE;
+                repaint();
+            });
+            idx++;
+        }
+        mouseMode = HAMBURGER;
+        menu.showMenuAsync(juce::PopupMenu::Options());
+        return;
+    }
     if (event.mods.isPopupMenu())
     {
         mouseMode = NONE;
@@ -259,7 +287,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
         }
     }
 
-    if (modSource >= ms_lfo1 && modSource <= ms_slfo6)
+    if (isLFO())
     {
         auto arrSze = getLocalBounds().withLeft(getLocalBounds().getRight() - 14).withHeight(16);
 
@@ -414,6 +442,11 @@ void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
         mouseMode = NONE;
         repaint();
     }
+}
+
+void ModulationSourceButton::resized()
+{
+    hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
 }
 } // namespace Widgets
 } // namespace Surge

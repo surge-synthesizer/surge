@@ -256,11 +256,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
     {
-        modsources modsource = (modsources)(tag - tag_mod_source0);
+        auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+        modsources modsource = cms->getCurrentModSource();
 
         if (button.isRightButtonDown() || button.isPopupMenu())
         {
-            auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
             juce::PopupMenu contextMenu;
             std::string hu;
 
@@ -282,6 +282,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 hu = helpURLForSpecial("other-modbutton");
             }
 
+#if USE_OLD_ALTERNATES
             if (cms->getHasAlternate())
             {
                 int idOn = modsource;
@@ -314,6 +315,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     modsource_is_alternate[modsource] = cms->getUseAlternate();
                     this->refresh_mod();
                 });
+#else
+            if (false)
+            {
+#endif
             }
             else
             {
@@ -351,10 +356,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             std::vector<modsources> possibleSources;
             possibleSources.push_back(modsource);
 
+#if FIXME_ALTERNATES
             if (cms->getHasAlternate())
             {
                 possibleSources.push_back((modsources)(cms->getAlternate()));
             }
+#endif
 
             for (auto thisms : possibleSources)
             {
@@ -514,7 +521,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                     if (msb)
                                     {
-                                        msb->setLabel(
+                                        msb->setCurrentModLabel(
                                             synth->storage.getPatch().CustomControllerLabel[ccid]);
                                     }
 
@@ -570,7 +577,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             auto msb =
                                 dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
                             if (msb)
-                                msb->setLabel(
+                                msb->setCurrentModLabel(
                                     synth->storage.getPatch().CustomControllerLabel[ccid]);
                         }
                         if (control->asJuceComponent())
@@ -760,7 +767,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 if (msb)
                                 {
-                                    msb->setLabel(
+                                    msb->setCurrentModLabel(
                                         synth->storage.getPatch().CustomControllerLabel[ccid]);
                                 }
 
@@ -2026,8 +2033,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             {
                 auto *cms = gui_modsrc[modsource].get();
                 modsources thisms = modsource;
+#if FIXME_ALTERNATES
                 if (cms->getHasAlternate() && cms->getUseAlternate())
                     thisms = cms->getAlternate();
+#endif
 
                 synth->clearModulation(ptag, thisms, modsource_index);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
@@ -2239,7 +2248,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         else
         {
             int state = cms->getState();
-            modsources newsource = (modsources)(tag - tag_mod_source0);
+            modsources newsource = cms->getCurrentModSource();
+            int newindex = cms->getCurrentModIndex();
 
             if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK)
             {
@@ -2247,6 +2257,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 {
                 case 0:
                     modsource = newsource;
+                    modsource_index = newindex;
                     if (mod_editor)
                         mod_editor = true;
                     else
@@ -2256,15 +2267,23 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     break;
                 case 1:
                     modsource = newsource;
+                    modsource_index = newindex;
                     mod_editor = true;
                     refresh_mod();
                     break;
                 case 2:
                     modsource = newsource;
+                    modsource_index = newindex;
                     mod_editor = false;
                     refresh_mod();
                     break;
                 };
+            }
+            else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::HAMBURGER)
+            {
+                modsource = newsource;
+                modsource_index = newindex;
+                refresh_mod();
             }
 
             if (isLFO(newsource))
@@ -2552,8 +2571,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 if (gui_modsrc[modsource])
                 {
                     auto cms = gui_modsrc[modsource].get();
+#if FIXME_ALTERNATES
                     if (cms->getHasAlternate() && cms->getUseAlternate())
                         thisms = cms->getAlternate();
+#endif
                 }
                 bool quantize_mod = juce::ModifierKeys::currentModifiers.isCtrlDown();
                 float mv = mci->getModValue();
@@ -2588,7 +2609,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         strxcpy(lbl, p->get_name(), CUSTOM_CONTROLLER_LABEL_SIZE - 1);
                         synth->storage.getPatch()
                             .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] = 0;
-                        gui_modsrc[modsource]->setLabel(lbl);
+                        gui_modsrc[modsource]->setCurrentModLabel(lbl);
                         gui_modsrc[modsource]->repaint();
                     }
                 }

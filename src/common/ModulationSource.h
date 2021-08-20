@@ -128,7 +128,7 @@ const char modsource_names_button[n_modsources][32] = {
     "Macro 6",      "Macro 7",  "Macro 8",    "Amp EG",      "Filter EG",     "LFO 1",
     "LFO 2",        "LFO 3",    "LFO 4",      "LFO 5",       "LFO 6",         "S-LFO 1",
     "S-LFO 2",      "S-LFO 3",  "S-LFO 4",    "S-LFO 5",     "S-LFO 6",       "MPE Timbre",
-    "Rel Velocity", "Random",   "Random Uni", "Alternate",   "Alternate Uni", "Breath",
+    "Rel Velocity", "Random",   "RandUni",    "Alternate",   "Alternate Uni", "Breath",
     "Expression",   "Sustain",  "Lowest Key", "Highest Key", "Latest Key",
 };
 
@@ -183,50 +183,6 @@ const char modsource_names_tag[n_modsources][32] = {
     "lfo5",   "lfo6",   "slfo1",       "slfo2",      "slfo3",       "slfo4",      "slfo5",
     "slfo6",  "timbre", "release_vel", "random",     "random_uni",  "alt",        "alt_uni",
     "breath", "expr",   "sustain",     "lowest_key", "highest_key", "latest_key",
-};
-
-const int modsource_grid_xy[n_modsources][2] = {
-    {0, 0}, // Velocity
-    {0, 3}, // Keytrack
-    {6, 7}, // Poly AT
-    {2, 3}, // Channel
-    {3, 3}, // AT
-    {4, 3}, // Pitch Bend
-    {5, 3}, // Modwheel
-    {0, 0}, // Macro 1
-    {1, 0}, // Macro 2
-    {2, 0}, // Macro 3
-    {3, 0}, // Macro 4
-    {4, 0}, // Macro 5
-    {5, 0}, // Macro 6
-    {6, 0}, // Macro 7
-    {7, 0}, // Macro 8
-    {7, 5}, // AEG
-    {6, 5}, // FEG
-    {0, 5}, // LFO 1
-    {1, 5}, // LFO 2
-    {2, 5}, // LFO 3
-    {3, 5}, // LFO 4
-    {4, 5}, // LFO 5
-    {5, 5}, // LFO 6
-    {0, 7}, // S-LFO 1
-    {1, 7}, // S-LFO 2
-    {2, 7}, // S-LFO 3
-    {3, 7}, // S-LFO 4
-    {4, 7}, // S-LFO 5
-    {5, 7}, // S-LFO 6
-    {9, 3}, // Timbre
-    {1, 3}, // Release Velocity
-    {8, 5}, // Random Bi
-    {8, 5}, // Random Uni
-    {9, 5}, // Alternate Bi
-    {9, 5}, // Alternate Uni
-    {6, 3}, // Breath
-    {7, 3}, // Expression
-    {8, 3}, // Sustain
-    {7, 7}, // Lowest Key
-    {8, 7}, // Highest Key
-    {9, 7}, // Latest Key
 };
 
 inline bool isScenelevel(modsources ms)

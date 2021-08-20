@@ -448,9 +448,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::shared_ptr<SurgeImageStore> bitmapStore = nullptr;
 
   private:
-    bool modsource_is_alternate[n_modsources];
-
-  private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
@@ -458,6 +455,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     /* Infowindow members and functions */
     std::unique_ptr<Surge::Widgets::ParameterInfowindow> paramInfowindow;
+
+    void setupAlternates(modsources ms);
 
   public:
     void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
@@ -544,7 +543,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     std::string modulatorName(int ms, bool forButton);
-    std::string modulatorIndexExtension(int scene, int ms, int index);
+    std::string modulatorIndexExtension(int scene, int ms, int index, bool shortV = false);
 
   private:
     Parameter *typeinEditTarget = nullptr;
