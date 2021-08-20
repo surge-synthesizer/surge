@@ -29,56 +29,42 @@ enum Saturator
     SAT_TANH = 0,
     SAT_SOFT,
     SAT_OJD,
-    SAT_SINE
+    SAT_SINE // removed
 };
 
-// sine each element of a __m128 by breaking it into floats then reassembling
-static inline __m128 fastsin_ps(const __m128 in) noexcept
+// this is a duplicate of the code in QuadFilterWaveshapers.cpp except without the multiplication by
+// 'drive' and without the unused QuadFilterWaveshaperState pointer.
+static inline __m128 ojd_waveshaper_ps(const __m128 x) noexcept
 {
-    float f[4];
-    _mm_storeu_ps(f, in);
-    f[0] = Surge::DSP::fastsin(f[0]);
-    f[1] = Surge::DSP::fastsin(f[1]);
-    f[2] = Surge::DSP::fastsin(f[2]);
-    f[3] = Surge::DSP::fastsin(f[3]);
-    return _mm_load_ps(f);
-}
+    static const auto pm17 = _mm_set1_ps(-1.7f);
+    static const auto p11 = _mm_set1_ps(1.1f);
+    static const auto pm03 = _mm_set1_ps(-0.3f);
+    static const auto p09 = _mm_set1_ps(0.9f);
 
-// waveshaper from https://github.com/JanosGit/Schrammel_OJD/blob/master/Source/Waveshaper.h
-static inline float ojd_waveshaper(float in) noexcept
-{
-    if (in <= -1.7f)
-    {
-        return -1.0f;
-    }
-    else if ((in > -1.7f) && (in < -0.3f))
-    {
-        in += 0.3f;
-        return in + (in * in) / (4.0f * (1.0f - 0.3f)) - 0.3f;
-    }
-    else if ((in > 0.9f) && (in < 1.1f))
-    {
-        in -= 0.9f;
-        return in - (in * in) / (4.0f * (1.0f - 0.9f)) + 0.9f;
-    }
-    else if (in > 1.1f)
-    {
-        return 1.0f;
-    }
+    static const auto denLow = _mm_set1_ps(1.f / (4 * (1 - 0.3f)));
+    static const auto denHigh = _mm_set1_ps(1.f / (4 * (1 - 0.9f)));
 
-    return in;
-};
+    auto maskNeg = _mm_cmple_ps(x, pm17);                         // in <= -1.7f
+    auto maskPos = _mm_cmpge_ps(x, p11);                          // in > 1.1f
+    auto maskLow = _mm_andnot_ps(maskNeg, _mm_cmplt_ps(x, pm03)); // in > -1.7 && in < =0.3
+    auto maskHigh = _mm_andnot_ps(maskPos, _mm_cmpgt_ps(x, p09)); // in > 0.9 && in < 1.1
+    auto maskMid = _mm_and_ps(_mm_cmpge_ps(x, pm03), _mm_cmple_ps(x, p09)); // the middle
 
-// asinh each element of a __m128 by breaking it into floats then reassembling
-static inline __m128 ojd_waveshaper_ps(const __m128 in) noexcept
-{
-    float f[4];
-    _mm_storeu_ps(f, in);
-    f[0] = ojd_waveshaper(f[0]);
-    f[1] = ojd_waveshaper(f[1]);
-    f[2] = ojd_waveshaper(f[2]);
-    f[3] = ojd_waveshaper(f[3]);
-    return _mm_load_ps(f);
+    static const auto vNeg = _mm_set1_ps(-1.0);
+    static const auto vPos = _mm_set1_ps(1.0);
+    auto vMid = x;
+
+    auto xlow = _mm_sub_ps(x, pm03);
+    auto vLow = _mm_add_ps(xlow, _mm_mul_ps(denLow, _mm_mul_ps(xlow, xlow)));
+    vLow = _mm_add_ps(vLow, pm03);
+
+    auto xhi = _mm_sub_ps(x, p09);
+    auto vHi = _mm_sub_ps(xhi, _mm_mul_ps(denHigh, _mm_mul_ps(xhi, xhi)));
+    vHi = _mm_add_ps(vHi, p09);
+
+    return _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_and_ps(maskNeg, vNeg), _mm_and_ps(maskLow, vLow)),
+                                 _mm_add_ps(_mm_and_ps(maskHigh, vHi), _mm_and_ps(maskPos, vPos))),
+                      _mm_and_ps(maskMid, vMid));
 }
 
 static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m128 a2,
@@ -92,17 +78,14 @@ static inline __m128 doNLFilter(const __m128 input, const __m128 a1, const __m12
     __m128 nf;
     switch (sat)
     {
-    case SAT_TANH:
-        nf = Surge::DSP::fasttanhSSEclamped(out);
-        break;
     case SAT_SOFT:
         nf = softclip_ps(out); // note, this is a bit different to Jatin's softclipper
         break;
     case SAT_OJD:
         nf = ojd_waveshaper_ps(out);
         break;
-    default: // SAT_SINE
-        nf = fastsin_ps(out);
+    default: // SAT_TANH; the removed SAT_SINE and others are also caught here
+        nf = Surge::DSP::fasttanhSSEclamped(out);
         break;
     }
 
