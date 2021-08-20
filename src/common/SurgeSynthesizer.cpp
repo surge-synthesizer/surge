@@ -2765,7 +2765,7 @@ void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
 
 bool SurgeSynthesizer::supportsIndexedModulator(int scene, modsources modsource) const
 {
-    if (modsource >= ms_lfo1 && modsource <= ms_lfo6)
+    if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
     {
         auto lf = &(storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
         return lf->shape.val.i == lt_formula;

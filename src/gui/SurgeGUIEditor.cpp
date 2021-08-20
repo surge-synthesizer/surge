@@ -61,6 +61,8 @@
 #include "widgets/WaveShaperSelector.h"
 #include "widgets/XMLConfiguredMenus.h"
 
+#include "ModulationGridConfiguration.h"
+
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -81,9 +83,12 @@ using namespace std;
 using namespace Surge::ParamConfig;
 
 int SurgeGUIEditor::start_paramtag_value = start_paramtags;
+Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
+    jassert(Surge::GUI::ModulationGrid::getModulationGrid());
+
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
     synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
@@ -121,9 +126,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 #if LINUX
     minimumZoom = 100; // See github issue #628
 #endif
-
-    for (int i = 0; i < n_modsources; ++i)
-        modsource_is_alternate[i] = false;
 
     currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
 
@@ -738,8 +740,6 @@ void SurgeGUIEditor::refresh_mod()
         return;
 
     modsources thisms = modsource;
-    if (cms->getHasAlternate() && cms->getUseAlternate())
-        thisms = cms->getAlternate();
 
     synth->storage.modRoutingMutex.lock();
     for (int i = 0; i < n_paramslots; i++)
@@ -796,12 +796,7 @@ void SurgeGUIEditor::refresh_mod()
             // this could change if I cleared the last one
             gui_modsrc[i]->setUsed(synth->isModsourceUsed((modsources)i));
             gui_modsrc[i]->setState(state);
-
-            if (i < ms_ctrl1 || i > ms_ctrl8)
-            {
-                auto mn = modulatorName(i, true);
-                gui_modsrc[i]->setLabel(mn.c_str());
-            }
+            setupAlternates((modsources)i);
             gui_modsrc[i]->repaint();
         }
     }
@@ -898,8 +893,9 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
 juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
 {
     bool isMacro = isCustomController(entry);
-    int gridX = modsource_grid_xy[entry][0];
-    int gridY = modsource_grid_xy[entry][1];
+
+    int gridX = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).x;
+    int gridY = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).y;
     int width = isMacro ? 93 : 74;
 
     // to ensure the same gap between the modbuttons,
@@ -991,10 +987,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
      */
     for (int k = 1; k < n_modsources; k++)
     {
-        if ((k != ms_random_unipolar) && (k != ms_alternate_unipolar))
-        {
-            modsources ms = (modsources)k;
+        modsources ms = (modsources)k;
+        auto e = Surge::GUI::ModulationGrid::getModulationGrid()->get(ms);
 
+        if (e.isPrimary)
+        {
             auto r = positionForModulationGrid(ms);
 
             int state = 0;
@@ -1008,7 +1005,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 gui_modsrc[ms] = std::make_unique<Surge::Widgets::ModulationSourceButton>();
             }
-            gui_modsrc[ms]->setModSource(ms);
             gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
             gui_modsrc[ms]->addListener(this);
@@ -1017,10 +1013,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             gui_modsrc[ms]->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
 
+            setupAlternates(ms);
+
             if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
             {
                 // std::cout << synth->learn_custom << std::endl;
-                gui_modsrc[ms]->setLabel(
+                gui_modsrc[ms]->setCurrentModLabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
                 gui_modsrc[ms]->setIsMeta(true);
                 gui_modsrc[ms]->setBipolar(
@@ -1029,24 +1027,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                               .scene[current_scene]
                                               .modsources[ms])
                                              ->get_target01());
-            }
-            else
-            {
-                gui_modsrc[ms]->setLabel(modulatorName(ms, true).c_str());
-
-                if (ms == ms_random_bipolar)
-                {
-                    gui_modsrc[ms]->setAlternate(ms_random_unipolar,
-                                                 modsource_names_button[ms_random_unipolar]);
-                    gui_modsrc[ms]->setUseAlternate(modsource_is_alternate[ms]);
-                }
-
-                if (ms == ms_alternate_bipolar)
-                {
-                    gui_modsrc[ms]->setAlternate(ms_alternate_unipolar,
-                                                 modsource_names_button[ms_alternate_unipolar]);
-                    gui_modsrc[ms]->setUseAlternate(modsource_is_alternate[ms]);
-                }
             }
 
             frame->getModButtonLayer()->addAndMakeVisible(*gui_modsrc[ms]);
@@ -4628,8 +4608,6 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
-    std::cout << "lfoShapeChanged" << prior << " " << curr << std::endl;
-
     if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
         curr == lt_formula)
     {
@@ -4651,7 +4629,6 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         closeFormulaEditorDialog();
         hadExtendedEditor = true;
     }
-    std::cout << _D(prior) << _D(curr) << _D(hadExtendedEditor) << std::endl;
 
     if (hadExtendedEditor)
     {
@@ -4670,6 +4647,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     lfoNameLabel->setText(modname.c_str());
     lfoNameLabel->repaint();
 
+    setupAlternates(modsource_editor[current_scene]);
     // And now we have dynamic labels really anything
     frame->repaint();
 }
@@ -4942,25 +4920,64 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
 #endif
 }
 
-std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index)
+std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index, bool shortV)
 {
     if (synth->supportsIndexedModulator(scene, (modsources)ms))
     {
         if (ms == ms_random_bipolar)
         {
             if (index == 0)
-                return " (Uniform)";
+                return shortV ? "" : " (Uniform)";
             if (index == 1)
-                return " (Normal)";
+                return shortV ? " N" : " (Normal)";
         }
         if (ms == ms_random_unipolar)
         {
             if (index == 0)
-                return " (Uniform)";
+                return shortV ? "" : " (Uniform)";
             if (index == 1)
-                return " (Half Normal)";
+                return shortV ? " hN" : " (Half Normal)";
         }
-        return std::string(" Out ") + std::to_string(index + 1);
+        if (shortV)
+            return "." + std::to_string(index + 1);
+        else
+            return std::string(" Out ") + std::to_string(index + 1);
     }
     return "";
+}
+
+void SurgeGUIEditor::setupAlternates(modsources ms)
+{
+    jassert(gui_modsrc[ms]);
+    if (!gui_modsrc[ms])
+        return;
+
+    auto e = Surge::GUI::ModulationGrid::getModulationGrid()->get(ms);
+    Surge::Widgets::ModulationSourceButton::modlist_t indexedAlternates;
+    std::vector<modsources> traverse;
+    traverse.push_back(ms);
+    for (auto a : e.alternates)
+        traverse.push_back(a);
+
+    for (auto a : traverse)
+    {
+        auto baseLabel = modulatorName(a, true);
+        auto baseLongName = modulatorName(a, false);
+
+        int idxc = 1;
+        if (synth->supportsIndexedModulator(current_scene, a))
+            idxc = synth->getMaxModulationIndex(current_scene, a);
+        for (int q = 0; q < idxc; ++q)
+        {
+            auto tl = baseLabel;
+            auto ll = baseLongName;
+            if (idxc > 1)
+            {
+                tl += modulatorIndexExtension(current_scene, a, q, true);
+                ll += modulatorIndexExtension(current_scene, a, q, false);
+            }
+            indexedAlternates.emplace_back(a, q, tl, ll);
+        }
+    }
+    gui_modsrc[ms]->setModList(indexedAlternates);
 }
