@@ -205,3 +205,15 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
     return juce::PopupMenu();
 }
+
+juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
+{
+    auto par = processor.macrosById[macro];
+#if SURGE_JUCE_HOST_CONTEXT
+    if (auto *c = getHostContext())
+        if (auto menuInfo = c->getContextMenuForParameterIndex(par))
+            return menuInfo->getEquivalentPopupMenu();
+#endif
+
+    return juce::PopupMenu();
+}
