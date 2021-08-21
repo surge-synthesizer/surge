@@ -92,6 +92,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                   << "Is your JUCE-only inheritance hierarchy missing the tag class?" << std::endl;
     }
 
+    /*
+     * Alright why is this here? Well when we show the macro menu we use the modal version to
+     * stop changes happening underneath us. It's the only non-async menu we have and probably
+     * should get fixed. But juce has a thing where RMB / RMB means the modal menus release both
+     * after the second RMB. So the end hover on rmb rmb doesn't work leading to the bug in
+     * 4874. A fix to this is to use an async menu. But I'm hnot sure why i didn't and there's an
+     * incomplete comment that it was for good reason so instead...
+     */
+    for (const auto &g : gui_modsrc)
+    {
+        if (g && g.get() != control)
+            g->endHover();
+    }
+
     long tag = control->getTag();
 
     if (button.isCtrlDown() && (tag == tag_mp_patch || tag == tag_mp_category))

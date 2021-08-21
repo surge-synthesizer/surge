@@ -138,7 +138,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void refresh_mod();
     void broadcastPluginAutomationChangeFor(Parameter *p);
 
-    void effectSettingsBackgroundClick(int whichScene);
+    void effectSettingsBackgroundClick(int whichScene, Surge::Widgets::EffectChooser *c);
 
     void setDisabledForParameter(Parameter *p, Surge::Widgets::ModulatableControlInterface *s);
     void showSettingsMenu(const juce::Point<int> &where,
