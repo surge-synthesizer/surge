@@ -43,6 +43,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         param_ptr.push_back(fx[fxslot_send2].return_level.assign(
             p_id.next(), 0, "volume_FX2", "Send FX 2 Return", ct_amplitude,
             Surge::Skin::Global::fx2_return, 0, cg_GLOBAL, 0, true, kHorizontal));
+        param_ptr.push_back(fx[fxslot_send3].return_level.assign(
+            p_id.next(), 0, "volume_FX3", "Send FX 3 Return", ct_amplitude,
+            Surge::Skin::Global::fx3_return, 0, cg_GLOBAL, 0, true, kHorizontal));
+        param_ptr.push_back(fx[fxslot_send4].return_level.assign(
+            p_id.next(), 0, "volume_FX4", "Send FX 4 Return", ct_amplitude,
+            Surge::Skin::Global::fx4_return, 0, cg_GLOBAL, 0, true, kHorizontal));
         param_ptr.push_back(volume.assign(
             p_id.next(), 0, "volume", "Global Volume", ct_decibel_attenuation_clipper,
             Surge::Skin::Global::master_volume, 0, cg_GLOBAL, 0, true, kHorizontal | kEasy));
@@ -190,6 +196,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         a->push_back(scene[sc].send_level[1].assign(
             p_id.next(), id_s++, "send_fx_2", "Send FX 2 Level", ct_sendlevel,
             Surge::Skin::Scene::send_fx_2, sc_id, cg_GLOBAL, 0, true, sceasy));
+        a->push_back(scene[sc].send_level[2].assign(
+            p_id.next(), id_s++, "send_fx_3", "Send FX 3 Level", ct_sendlevel,
+            Surge::Skin::Scene::send_fx_3, sc_id, cg_GLOBAL, 0, true, sceasy));
+        a->push_back(scene[sc].send_level[3].assign(
+            p_id.next(), id_s++, "send_fx_4", "Send FX 4 Level", ct_sendlevel,
+            Surge::Skin::Scene::send_fx_4, sc_id, cg_GLOBAL, 0, true, sceasy));
         a->push_back(scene[sc].level_o1.assign(p_id.next(), id_s++, "level_o1", "Osc 1 Level",
                                                ct_amplitude, Surge::Skin::Mixer::level_o1, sc_id,
                                                cg_MIX, 0, true, sceasy));

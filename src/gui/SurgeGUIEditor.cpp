@@ -1335,7 +1335,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         Parameter *p = *iter;
         bool paramIsVisible = ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
                               isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) &&
-                              (p->ctrltype != ct_none);
+                              (p->ctrltype != ct_none) && !isAHiddenSendOrReturn(p);
 
         auto conn = Surge::Skin::Connector::connectorByID(p->ui_identifier);
         std::string uiid = p->ui_identifier;
@@ -4251,8 +4251,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
             lfoDisplay->setTag(p->id + start_paramtags);
             lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
-            std::cout << "Setting ModSource to " << p->ctrlgroup_entry << "/" << modsource_index
-                      << std::endl;
             lfoDisplay->setModSource((modsources)p->ctrlgroup_entry);
             lfoDisplay->setModIndex(modsource_index);
             lfoDisplay->setStorage(&synth->storage);
@@ -4975,4 +4973,63 @@ void SurgeGUIEditor::setupAlternates(modsources ms)
         }
     }
     gui_modsrc[ms]->setModList(indexedAlternates);
+}
+
+bool SurgeGUIEditor::isAHiddenSendOrReturn(Parameter *p)
+{
+    if (p->ctrlgroup != cg_GLOBAL)
+        return false;
+
+    int whichS{-1}, whichR{-1};
+    for (int i = 0; i < n_send_slots; ++i)
+        if (p->id == synth->storage.getPatch().scene[current_scene].send_level[i].id)
+            whichS = i;
+
+    if (whichS != -1)
+    {
+        int group = whichS % 2;
+        if (whichS == whichSendActive[group])
+            return false;
+        return true;
+    }
+    int i = 0;
+    for (auto sl : {fxslot_send1, fxslot_send2, fxslot_send3, fxslot_send4})
+    {
+        if (p->id == synth->storage.getPatch().fx[sl].return_level.id)
+            whichR = i;
+        ++i;
+    }
+    if (whichR != -1)
+    {
+        int group = whichR % 2;
+        if (whichR == whichReturnActive[group])
+            return false;
+        return true;
+    }
+
+    return false;
+}
+
+void SurgeGUIEditor::activateFromCurrentFx()
+{
+    switch (current_fx)
+    {
+        // this version means we always have 1/2 or 3/4 on screen
+    case fxslot_send1:
+    case fxslot_send2:
+        whichSendActive[0] = 0;
+        whichReturnActive[0] = 0;
+        whichSendActive[1] = 1;
+        whichReturnActive[1] = 1;
+        break;
+    case fxslot_send3:
+    case fxslot_send4:
+        whichSendActive[0] = 2;
+        whichReturnActive[0] = 2;
+        whichSendActive[1] = 3;
+        whichReturnActive[1] = 3;
+        break;
+    default:
+        break;
+    }
 }

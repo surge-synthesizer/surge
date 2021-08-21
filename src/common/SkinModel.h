@@ -175,6 +175,11 @@ struct Component
         std::unordered_set<Properties> hasPropertySet;
         std::string internalClassname;
         std::unordered_set<std::string> aliases;
+
+        // Do groups outside of the property since they have references
+        std::shared_ptr<Payload> groupLeader;
+        std::vector<std::shared_ptr<Payload>> group; // only correct in the leader
+        bool isGrouped;
     };
     std::shared_ptr<Payload> payload;
 
@@ -321,6 +326,9 @@ struct Connector
         return *this;
     }
 
+    Connector &asStackedGroupLeader();
+    Connector &inStackedGroup(const Connector &leader);
+
     std::string getProperty(Component::Properties p)
     {
         if (payload->properties.find(p) != payload->properties.end())
@@ -368,8 +376,8 @@ extern Surge::Skin::Connector balance, config, cutoff_1, cutoff_2, envmod_1, env
 }
 namespace Global
 {
-extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx_bypass,
-    fx_disable, master_volume, scene_mode;
+extern Surge::Skin::Connector active_scene, character, fx1_return, fx2_return, fx3_return,
+    fx4_return, fx_bypass, fx_disable, master_volume, scene_mode;
 }
 namespace LFO
 {
@@ -396,7 +404,7 @@ namespace Scene
 {
 extern Surge::Skin::Connector polylimit, splitpoint, drift, fmdepth, fmrouting, gain, keytrack_root,
     noise_color, octave, pan, pbrange_dn, pbrange_up, pitch, playmode, portatime, send_fx_1,
-    send_fx_2, vel_sensitivity, volume, width;
+    send_fx_2, send_fx_3, send_fx_4, vel_sensitivity, volume, width;
 }
 
 namespace ModSources

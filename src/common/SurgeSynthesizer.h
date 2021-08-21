@@ -53,9 +53,8 @@ class alignas(16) SurgeSynthesizer
 
     // aligned stuff
     SurgeStorage storage alignas(16);
-    lipol_ps FX1 alignas(16), // TODO: FIX SCENE ASSUMPTION
-        FX2 alignas(16),      // TODO: FIX SCENE ASSUMPTION
-        amp alignas(16), amp_mute alignas(16), send alignas(16)[2][2];
+    lipol_ps FX alignas(16)[n_send_slots], amp alignas(16), amp_mute alignas(16),
+        send alignas(16)[n_send_slots][n_scenes];
 
     // methods
   public:

@@ -2543,6 +2543,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (current_fx != nfx)
         {
             current_fx = nfx;
+            activateFromCurrentFx();
+
             queue_refresh = true;
         }
 

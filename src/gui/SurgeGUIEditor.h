@@ -148,6 +148,16 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     // adjust
     int current_scene = 0, current_osc[n_scenes] = {0, 0}, current_fx = 0;
 
+    /*
+     * This is the hack to deal with the send return stacking
+     */
+    int whichSendActive[2]{0, 1}; // 13 and 24
+    int whichReturnActive[2]{0, 1};
+    bool isAHiddenSendOrReturn(Parameter *p);
+    bool hasASendOrReturnToChangeTo(int pid);
+    std::string nameOfStandardReturnToChangeTo(int pid);
+    void activateFromCurrentFx();
+
   private:
     void openOrRecreateEditor();
     void makeStorePatchDialog();
@@ -225,6 +235,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
             current_scene = des->editor.current_scene;
             current_fx = des->editor.current_fx;
             modsource = des->editor.modsource;
+
+            activateFromCurrentFx();
 
             for (int i = 0; i < n_scenes; ++i)
             {

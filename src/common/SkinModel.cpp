@@ -191,6 +191,8 @@ Connector master_volume = Connector("global.volume", 756, 29);
 
 Connector fx1_return = Connector("global.fx1_return", 759, 141);
 Connector fx2_return = Connector("global.fx2_return", 759, 162);
+Connector fx3_return = Connector("global.fx3_return", 759, 141);
+Connector fx4_return = Connector("global.fx4_return", 759, 162);
 } // namespace Global
 
 namespace Scene
@@ -241,17 +243,34 @@ Connector keytrack_root =
         .withProperty(Component::TEXT_COLOR, "scene.keytrackroot.text")
         .withProperty(Component::TEXT_HOVER_COLOR, "scene.keytrackroot.text.hover");
 
-Connector scene_output_panel = Connector("scene.output.panel", 606, 78, Components::Group);
+Connector scene_output_panel =
+    Connector("scene.output.panel", 606, 78, Components::Group).asVertical();
 Connector volume =
     Connector("scene.volume", 0, 0).asHorizontal().asWhite().inParent("scene.output.panel");
 Connector pan =
     Connector("scene.pan", 0, 21).asHorizontal().asWhite().inParent("scene.output.panel");
 Connector width =
     Connector("scene.width", 0, 42).asHorizontal().asWhite().inParent("scene.output.panel");
-Connector send_fx_1 =
-    Connector("scene.send_fx_1", 0, 63).asHorizontal().asWhite().inParent("scene.output.panel");
-Connector send_fx_2 =
-    Connector("scene.send_fx_2", 0, 84).asHorizontal().asWhite().inParent("scene.output.panel");
+Connector send_fx_1 = Connector("scene.send_fx_1", 0, 63)
+                          .asHorizontal()
+                          .asWhite()
+                          .inParent("scene.output.panel")
+                          .asStackedGroupLeader();
+Connector send_fx_2 = Connector("scene.send_fx_2", 0, 84)
+                          .asHorizontal()
+                          .asWhite()
+                          .inParent("scene.output.panel")
+                          .asStackedGroupLeader();
+Connector send_fx_3 = Connector("scene.send_fx_3", 0, 63)
+                          .asHorizontal()
+                          .asWhite()
+                          .inParent("scene.output.panel")
+                          .inStackedGroup(send_fx_1);
+Connector send_fx_4 = Connector("scene.send_fx_4", 0, 84)
+                          .asHorizontal()
+                          .asWhite()
+                          .inParent("scene.output.panel")
+                          .inStackedGroup(send_fx_2);
 
 Connector vel_sensitivity =
     Connector("scene.velocity_sensitivity", 699, 301).asVertical().asWhite();

@@ -171,13 +171,13 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     }
 
     amp.set_blocksize(BLOCK_SIZE);
-    // TODO: FIX SCENE ASSUMPTION
-    FX1.set_blocksize(BLOCK_SIZE);
-    FX2.set_blocksize(BLOCK_SIZE);
-    send[0][0].set_blocksize(BLOCK_SIZE);
-    send[0][1].set_blocksize(BLOCK_SIZE);
-    send[1][0].set_blocksize(BLOCK_SIZE);
-    send[1][1].set_blocksize(BLOCK_SIZE);
+
+    for (int i = 0; i < n_send_slots; ++i)
+    {
+        FX[i].set_blocksize(BLOCK_SIZE);
+        send[i][0].set_blocksize(BLOCK_SIZE);
+        send[i][1].set_blocksize(BLOCK_SIZE);
+    }
 
     polydisplay = 0;
     refresh_editor = false;
@@ -3374,7 +3374,7 @@ void SurgeSynthesizer::process()
     }
 
     // TODO: FIX SCENE ASSUMPTION
-    float fxsendout alignas(16)[2][2][BLOCK_SIZE];
+    float fxsendout alignas(16)[n_send_slots][2][BLOCK_SIZE];
     bool play_scene[n_scenes];
 
     {
@@ -3383,10 +3383,11 @@ void SurgeSynthesizer::process()
         clear_block_antidenormalnoise(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
         clear_block_antidenormalnoise(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
 
-        clear_block_antidenormalnoise(fxsendout[0][0], BLOCK_SIZE_QUAD);
-        clear_block_antidenormalnoise(fxsendout[0][1], BLOCK_SIZE_QUAD);
-        clear_block_antidenormalnoise(fxsendout[1][0], BLOCK_SIZE_QUAD);
-        clear_block_antidenormalnoise(fxsendout[1][1], BLOCK_SIZE_QUAD);
+        for (int i = 0; i < n_send_slots; ++i)
+        {
+            clear_block_antidenormalnoise(fxsendout[i][0], BLOCK_SIZE_QUAD);
+            clear_block_antidenormalnoise(fxsendout[i][1], BLOCK_SIZE_QUAD);
+        }
     }
 
     storage.modRoutingMutex.lock();
@@ -3397,37 +3398,28 @@ void SurgeSynthesizer::process()
 
     int fx_bypass = storage.getPatch().fx_bypass.val.i;
 
+    int sendToIndex[n_send_slots][2] = {
+        {fxslot_send1, 0}, {fxslot_send2, 1}, {fxslot_send3, 2}, {fxslot_send4, 3}};
+
     if (fx_bypass == fxb_all_fx)
     {
-        if (fx[fxslot_send1])
+        for (auto si : sendToIndex)
         {
-            FX1.set_target_smoothed(
-                amp_to_linear(storage.getPatch()
-                                  .globaldata[storage.getPatch().fx[fxslot_send1].return_level.id]
-                                  .f));
-            send[0][0].set_target_smoothed(amp_to_linear(
-                storage.getPatch()
-                    .scenedata[0][storage.getPatch().scene[0].send_level[0].param_id_in_scene]
-                    .f));
-            send[0][1].set_target_smoothed(amp_to_linear(
-                storage.getPatch()
-                    .scenedata[1][storage.getPatch().scene[1].send_level[0].param_id_in_scene]
-                    .f));
-        }
-        if (fx[fxslot_send2])
-        {
-            FX2.set_target_smoothed(
-                amp_to_linear(storage.getPatch()
-                                  .globaldata[storage.getPatch().fx[fxslot_send2].return_level.id]
-                                  .f));
-            send[1][0].set_target_smoothed(amp_to_linear(
-                storage.getPatch()
-                    .scenedata[0][storage.getPatch().scene[0].send_level[1].param_id_in_scene]
-                    .f));
-            send[1][1].set_target_smoothed(amp_to_linear(
-                storage.getPatch()
-                    .scenedata[1][storage.getPatch().scene[1].send_level[1].param_id_in_scene]
-                    .f));
+            auto slot = si[0];
+            auto idx = si[1];
+            if (fx[slot])
+            {
+                FX[idx].set_target_smoothed(amp_to_linear(
+                    storage.getPatch().globaldata[storage.getPatch().fx[slot].return_level.id].f));
+                send[idx][0].set_target_smoothed(amp_to_linear(
+                    storage.getPatch()
+                        .scenedata[0][storage.getPatch().scene[0].send_level[idx].param_id_in_scene]
+                        .f));
+                send[idx][1].set_target_smoothed(amp_to_linear(
+                    storage.getPatch()
+                        .scenedata[1][storage.getPatch().scene[1].send_level[idx].param_id_in_scene]
+                        .f));
+            }
         }
     }
 
@@ -3637,39 +3629,36 @@ void SurgeSynthesizer::process()
     accumulate_block(sceneout[1][0], output[0], BLOCK_SIZE_QUAD);
     accumulate_block(sceneout[1][1], output[1], BLOCK_SIZE_QUAD);
 
-    bool send1 = false, send2 = false;
+    bool sendused[4] = {false, false, false, false};
     // add send effects
     // TODO: FIX SCENE ASSUMPTION
     if (fx_bypass == fxb_all_fx)
     {
-        if (fx[fxslot_send1] && !(storage.getPatch().fx_disable.val.i & (1 << 4)))
+        for (auto si : sendToIndex)
         {
-            send[0][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[0][0],
-                                       fxsendout[0][1], BLOCK_SIZE_QUAD);
-            send[0][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[0][0],
-                                       fxsendout[0][1], BLOCK_SIZE_QUAD);
-            send1 = fx[fxslot_send1]->process_ringout(fxsendout[0][0], fxsendout[0][1],
-                                                      sc_state[0] || sc_state[1]);
-            FX1.MAC_2_blocks_to(fxsendout[0][0], fxsendout[0][1], output[0], output[1],
-                                BLOCK_SIZE_QUAD);
-        }
-        if (fx[fxslot_send2] && !(storage.getPatch().fx_disable.val.i & (1 << 5)))
-        {
-            send[1][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[1][0],
-                                       fxsendout[1][1], BLOCK_SIZE_QUAD);
-            send[1][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[1][0],
-                                       fxsendout[1][1], BLOCK_SIZE_QUAD);
-            send2 = fx[fxslot_send2]->process_ringout(fxsendout[1][0], fxsendout[1][1],
-                                                      sc_state[0] || sc_state[1]);
-            FX2.MAC_2_blocks_to(fxsendout[1][0], fxsendout[1][1], output[0], output[1],
-                                BLOCK_SIZE_QUAD);
+            auto slot = si[0];
+            auto idx = si[1];
+
+            if (fx[slot] && !(storage.getPatch().fx_disable.val.i & (1 << slot)))
+            {
+                send[idx][0].MAC_2_blocks_to(sceneout[0][0], sceneout[0][1], fxsendout[idx][0],
+                                             fxsendout[idx][1], BLOCK_SIZE_QUAD);
+                send[idx][1].MAC_2_blocks_to(sceneout[1][0], sceneout[1][1], fxsendout[idx][0],
+                                             fxsendout[idx][1], BLOCK_SIZE_QUAD);
+                sendused[idx] = fx[slot]->process_ringout(fxsendout[idx][0], fxsendout[idx][1],
+                                                          sc_state[0] || sc_state[1]);
+                FX[idx].MAC_2_blocks_to(fxsendout[idx][0], fxsendout[idx][1], output[0], output[1],
+                                        BLOCK_SIZE_QUAD);
+            }
         }
     }
 
     // apply global effects
     if ((fx_bypass == fxb_all_fx) || (fx_bypass == fxb_no_sends))
     {
-        bool glob = sc_state[0] || sc_state[1] || send1 || send2;
+        bool glob = sc_state[0] || sc_state[1];
+        for (int i = 0; i < n_send_slots; ++i)
+            glob = glob || sendused[i];
 
         for (auto v : {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4})
         {
