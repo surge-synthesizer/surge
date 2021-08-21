@@ -73,6 +73,10 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void setStorage(SurgeStorage *s) { storage = s; }
     LFOStorage *lfodata{nullptr};
     void setLFOStorage(LFOStorage *s) { lfodata = s; }
+    modsources modsource;
+    void setModSource(modsources m) { modsource = m; }
+    int modIndex{0};
+    void setModIndex(int m) { modIndex = m; }
 
     StepSequencerStorage *ss{nullptr};
     void setStepSequencerStorage(StepSequencerStorage *s) { ss = s; }

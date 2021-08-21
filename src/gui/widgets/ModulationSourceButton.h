@@ -22,6 +22,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #include <string>
+#include "SurgeJUCEHelpers.h"
 
 class SurgeStorage;
 
@@ -161,6 +162,7 @@ struct ModulationSourceButton : public juce::Component,
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+    Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
     void resized() override;
 
