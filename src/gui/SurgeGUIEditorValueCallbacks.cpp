@@ -2251,8 +2251,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             modsources newsource = cms->getCurrentModSource();
             int newindex = cms->getCurrentModIndex();
 
+            bool updated = false;
             if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK)
             {
+                updated = true;
                 switch (state & 3)
                 {
                 case 0:
@@ -2281,9 +2283,16 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             }
             else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::HAMBURGER)
             {
+                updated = true;
                 modsource = newsource;
                 modsource_index = newindex;
                 refresh_mod();
+            }
+
+            if (updated && lfoDisplay && lfoDisplay->modsource == modsource)
+            {
+                lfoDisplay->setModIndex(modsource_index);
+                lfoDisplay->repaint();
             }
 
             if (isLFO(newsource))

@@ -442,6 +442,23 @@ void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
         mouseMode = NONE;
         repaint();
     }
+    else if (needsHamburger())
+    {
+        int dir = wheelAccumulationHelper.accumulate(wheel, false, true);
+        if (dir != 0)
+        {
+            auto n = this->modlistIndex - dir;
+            if (n < 0)
+                n = this->modlist.size() - 1;
+            else if (n >= modlist.size())
+                n = 0;
+            this->modlistIndex = n;
+            mouseMode = HAMBURGER;
+            notifyValueChanged();
+            mouseMode = NONE;
+            repaint();
+        }
+    }
 }
 
 void ModulationSourceButton::resized()

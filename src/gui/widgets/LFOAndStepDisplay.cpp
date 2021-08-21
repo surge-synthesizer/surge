@@ -225,20 +225,20 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
                 susCountdown--;
             }
 
-            val += tlfo->get_output(0);
+            val += tlfo->get_output(modIndex);
             if (tFullWave)
             {
-                auto v = tFullWave->get_output(0);
+                auto v = tFullWave->get_output(modIndex);
                 minwval = std::min(v, minwval);
                 maxwval = std::max(v, maxwval);
                 wval += v;
             }
             if (s == 0)
-                firstval = tlfo->get_output(0);
+                firstval = tlfo->get_output(modIndex);
             if (s == averagingWindow - 1)
-                lastval = tlfo->get_output(0);
-            minval = std::min(tlfo->get_output(0), minval);
-            maxval = std::max(tlfo->get_output(0), maxval);
+                lastval = tlfo->get_output(modIndex);
+            minval = std::min(tlfo->get_output(modIndex), minval);
+            maxval = std::max(tlfo->get_output(modIndex), maxval);
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
         }
         val = val / averagingWindow;
