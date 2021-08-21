@@ -2906,7 +2906,10 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text)
     {
         storage.getPatch().param_ptr[index]->get_display(text);
     }
-    snprintf(text, TXT_SIZE, "-");
+    else
+    {
+        snprintf(text, TXT_SIZE, "-");
+    }
 }
 
 void SurgeSynthesizer::getParameterDisplayAlt(long index, char *text)
