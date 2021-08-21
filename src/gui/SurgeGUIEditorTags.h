@@ -38,8 +38,6 @@ enum SurgeGUIEditorTags
 
     tag_mseg_edit,
     tag_lfo_menu,
-    // tag_metaparam,
-    // tag_metaparam_end = tag_metaparam+n_customcontrollers,
     start_paramtags,
 };
 
