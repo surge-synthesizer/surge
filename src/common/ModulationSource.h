@@ -118,7 +118,6 @@ const int modsource_display_order[n_modsources] = {
 };
 
 const int n_customcontrollers = 8;
-const int num_metaparameters = n_customcontrollers;
 extern float samplerate_inv;
 extern float samplerate;
 

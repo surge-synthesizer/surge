@@ -55,7 +55,7 @@ struct MSEGControlRegion : public juce::Component,
 
     enum ControlTags
     {
-        tag_segment_nodeedit_mode = metaparam_offset + 1000, // Just to push outside any ID range
+        tag_segment_nodeedit_mode = 1231231, // Just to push outside any ID range
         tag_segment_movement_mode,
         tag_vertical_snap,
         tag_vertical_value,

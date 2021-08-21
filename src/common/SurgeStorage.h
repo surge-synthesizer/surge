@@ -107,7 +107,6 @@ const int n_scene_params = 271;
 const int n_global_params = 9 + n_fx_slots * (n_fx_params + 1); // each param plus a type
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
-const int metaparam_offset = 20480; // has to be bigger than total + 16 * 130 for fake VST3 mapping
 const int n_scenes = 2;
 const int n_filterunits_per_scene = 2;
 const int n_max_filter_subtypes = 16;
@@ -823,7 +822,7 @@ class SurgePatch
 
     // metadata
     std::string name, category, author, comment;
-    // metaparameters
+    // macro controllers
 #define CUSTOM_CONTROLLER_LABEL_SIZE 20
     char CustomControllerLabel[n_customcontrollers][CUSTOM_CONTROLLER_LABEL_SIZE];
 

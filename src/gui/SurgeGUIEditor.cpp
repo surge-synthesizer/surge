@@ -513,15 +513,6 @@ void SurgeGUIEditor::idle()
                     lfoDisplay->invalidateIfIdIsInRange(j);
                 }
             }
-            else if ((j >= metaparam_offset) && (j < (metaparam_offset + n_customcontrollers)))
-            {
-                int cc = j - metaparam_offset;
-                gui_modsrc[ms_ctrl1 + cc]->setValue(
-                    ((ControllerModulationSource *)synth->storage.getPatch()
-                         .scene[current_scene]
-                         .modsources[ms_ctrl1 + cc])
-                        ->get_target01());
-            }
             else if ((j >= 0) && (j < n_total_params) && nonmod_param[j])
             {
                 /*

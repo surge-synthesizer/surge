@@ -1928,18 +1928,9 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
 {
     // does the parameter exist in the interpolator array? If it does, delete it
     ReleaseControlInterpolator(index);
-
     bool need_refresh = false;
 
-    if (index >= metaparam_offset)
-    {
-        ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + index -
-                                                                              metaparam_offset])
-            ->set_target01(value, true);
-        return false;
-    }
-
-    if (index < storage.getPatch().param_ptr.size())
+    if (index >= 0 && index < storage.getPatch().param_ptr.size())
     {
         pdata oldval;
         oldval.i = storage.getPatch().param_ptr[index]->val.i;
@@ -1950,17 +1941,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             storage.getPatch().update_controls();
             need_refresh = true;
         }
-
-        /*if(storage.getPatch().param_ptr[index]->ctrltype == ct_polymode)
-        {
-                if (storage.getPatch().param_ptr[index]->val.i == pm_latch)
-                {
-                        int s = storage.getPatch().param_ptr[index]->scene - 1;
-                        release_if_latched[s&1] = true;
-                        release_anyway[s&1] = true;
-                        // release old notes if previous polymode was latch
-                }
-        }*/
 
         switch (storage.getPatch().param_ptr[index]->ctrltype)
         {
@@ -2915,14 +2895,7 @@ void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
 
 float SurgeSynthesizer::getParameter01(long index)
 {
-    if (index < 0)
-        return 0.f;
-    if (index >= metaparam_offset)
-        return storage.getPatch()
-            .scene[0]
-            .modsources[ms_ctrl1 + index - metaparam_offset]
-            ->get_output01(0);
-    if (index < storage.getPatch().param_ptr.size())
+    if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
 }
@@ -2933,16 +2906,7 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text)
     {
         storage.getPatch().param_ptr[index]->get_display(text);
     }
-    else if (index >= metaparam_offset)
-    {
-        snprintf(text, TXT_SIZE, "%.2f %%",
-                 100.f * storage.getPatch()
-                             .scene[0]
-                             .modsources[ms_ctrl1 + index - metaparam_offset]
-                             ->get_output(0));
-    }
-    else
-        snprintf(text, TXT_SIZE, "-");
+    snprintf(text, TXT_SIZE, "-");
 }
 
 void SurgeSynthesizer::getParameterDisplayAlt(long index, char *text)
@@ -2963,14 +2927,6 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x)
     {
         storage.getPatch().param_ptr[index]->get_display(text, true, x);
     }
-    else if (index >= metaparam_offset)
-    {
-        snprintf(text, TXT_SIZE, "%.2f %%",
-                 100.f * storage.getPatch()
-                             .scene[0]
-                             .modsources[ms_ctrl1 + index - metaparam_offset]
-                             ->get_output(0));
-    }
     else
         snprintf(text, TXT_SIZE, "-");
 }
@@ -2986,12 +2942,6 @@ void SurgeSynthesizer::getParameterName(long index, char *text)
         snprintf(text, TXT_SIZE, "%s%s", sn[scn].c_str(),
                  storage.getPatch().param_ptr[index]->get_full_name());
     }
-    else if (index >= metaparam_offset)
-    {
-        int c = index - metaparam_offset;
-        snprintf(text, TXT_SIZE, "Macro %i: %s", c + 1,
-                 storage.getPatch().CustomControllerLabel[c]);
-    }
     else
         snprintf(text, TXT_SIZE, "-");
 }
@@ -3006,12 +2956,6 @@ void SurgeSynthesizer::getParameterAccessibleName(long index, char *text)
 
         snprintf(text, TXT_SIZE, "%s%s", sn[scn].c_str(),
                  storage.getPatch().param_ptr[index]->get_full_name());
-    }
-    else if (index >= metaparam_offset)
-    {
-        int c = index - metaparam_offset;
-        snprintf(text, TXT_SIZE, "Macro %i: %s", c + 1,
-                 storage.getPatch().CustomControllerLabel[c]);
     }
     else
         snprintf(text, TXT_SIZE, "-");
@@ -3040,52 +2984,25 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm)
                 pm.clump++;
         }
     }
-    else if (index >= metaparam_offset)
-    {
-        pm.flags = 0;
-        pm.fmin = 0.f;
-        pm.fmax = 1.f;
-        pm.fdefault = 0.5f;
-        pm.hide = false;
-        pm.meta =
-            false; // ironic as they are metaparameters, but they don't affect any other sliders
-        pm.expert = false;
-        pm.clump = 1;
-    }
 }
 
 float SurgeSynthesizer::getParameter(long index)
 {
-    if (index < 0)
-        return 0.f;
-    if (index >= metaparam_offset)
-        return storage.getPatch()
-            .scene[0]
-            .modsources[ms_ctrl1 + index - metaparam_offset]
-            ->get_output(0);
-    if (index < storage.getPatch().param_ptr.size())
+    if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
 }
 
 float SurgeSynthesizer::normalizedToValue(long index, float value)
 {
-    if (index < 0)
-        return 0.f;
-    if (index >= metaparam_offset)
-        return value;
-    if (index < storage.getPatch().param_ptr.size())
+    if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->normalized_to_value(value);
     return 0.f;
 }
 
 float SurgeSynthesizer::valueToNormalized(long index, float value)
 {
-    if (index < 0)
-        return 0.f;
-    if (index >= metaparam_offset)
-        return value;
-    if (index < storage.getPatch().param_ptr.size())
+    if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->value_to_normalized(value);
     return 0.f;
 }
@@ -3093,11 +3010,7 @@ float SurgeSynthesizer::valueToNormalized(long index, float value)
 bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, float &outval)
 {
     int id = index.getSynthSideId();
-    if (id < 0)
-        return false;
-    if (id >= metaparam_offset)
-        return false;
-    if (id >= storage.getPatch().param_ptr.size())
+    if (id < 0 || id >= storage.getPatch().param_ptr.size())
         return false;
 
     auto p = storage.getPatch().param_ptr[id];
