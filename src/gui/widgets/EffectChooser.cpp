@@ -213,7 +213,7 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
             auto sge = firstListenerOfType<SurgeGUIEditor>();
             if (sge)
             {
-                sge->effectSettingsBackgroundClick(i);
+                sge->effectSettingsBackgroundClick(i, this);
             }
         }
     }

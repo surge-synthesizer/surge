@@ -342,8 +342,10 @@ void ModulationSourceButton::mouseExit(const juce::MouseEvent &event) { endHover
 
 void ModulationSourceButton::endHover()
 {
+    bool oh = isHovered;
     isHovered = false;
-    repaint();
+    if (oh != isHovered)
+        repaint();
 }
 
 void ModulationSourceButton::onSkinChanged()

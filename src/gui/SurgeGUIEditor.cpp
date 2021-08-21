@@ -1636,7 +1636,7 @@ void SurgeGUIEditor::setParameter(long index, float value)
     }
 }
 
-void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
+void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widgets::EffectChooser *c)
 {
     auto fxGridMenu = juce::PopupMenu();
 
@@ -1671,7 +1671,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene)
             this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_18DBFS;
         });
 
-    fxGridMenu.showMenuAsync(juce::PopupMenu::Options());
+    fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), [c](int i) { c->endHover(); });
 }
 
 void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
