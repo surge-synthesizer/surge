@@ -56,6 +56,7 @@ const int n_lfos = n_lfos_voice + n_lfos_scene;
 const int n_osc_params = 7;
 const int n_fx_params = 12;
 const int n_fx_slots = 16;
+const int n_send_slots = 4;
 const int FIRipol_M = 256;
 const int FIRipol_M_bits = 8;
 const int FIRipol_N = 12;
@@ -103,8 +104,8 @@ extern float samplerate, samplerate_inv;
 extern double dsamplerate, dsamplerate_inv;
 extern double dsamplerate_os, dsamplerate_os_inv;
 
-const int n_scene_params = 271;
-const int n_global_params = 9 + n_fx_slots * (n_fx_params + 1); // each param plus a type
+const int n_scene_params = 273;
+const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
 const int n_global_postparams = 1;
 const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postparams;
 const int n_scenes = 2;
@@ -556,7 +557,7 @@ struct SurgeSceneStorage
     Parameter polymode;
     Parameter portamento;
     Parameter volume, pan, width;
-    Parameter send_level[2]; // fixme before XT1 when I do the sends
+    Parameter send_level[n_send_slots];
 
     FilterStorage filterunit[2];
     Parameter f2_cutoff_is_offset, f2_link_resonance;

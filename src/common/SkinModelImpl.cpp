@@ -248,6 +248,10 @@ Connector &Connector::asJogPlusMinus() noexcept
         .withProperty(Component::DRAGGABLE_HSWITCH, false);
 }
 
+Connector &Connector::asStackedGroupLeader() { return *this; }
+
+Connector &Connector::inStackedGroup(const Connector &leader) { return *this; }
+
 Connector Connector::connectorByID(const std::string &id)
 {
     guaranteeMap();
@@ -321,5 +325,6 @@ std::vector<std::string> Connector::allConnectorIDs()
     });
     return res;
 }
+
 } // namespace Skin
 } // namespace Surge
