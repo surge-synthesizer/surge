@@ -2,7 +2,11 @@
 
 #include "juce_core/juce_core.h"
 
-#include <cctype>
+#if LINUX
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 namespace Surge
 {
@@ -67,7 +71,19 @@ void openFileOrFolder(const std::string &f)
 
     if (path.isDirectory())
     {
+        // See this for why we branch out linux here
+        // https://forum.juce.com/t/linux-spaces-in-path-startasprocess-and-process-opendocument/47296
+#if LINUX
+        if (vfork() == 0)
+        {
+            if (execlp("xdg-open", "xdg-open", f.c_str(), (char *)nullptr) < 0)
+            {
+                _exit(0);
+            }
+        }
+#else
         path.startAsProcess();
+#endif
     }
     else
     {
