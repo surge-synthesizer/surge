@@ -779,6 +779,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->refresh_editor = true;
                             });
                     });
+
+                auto jpm = juceEditor->hostMenuForMacro(ccid);
+
+                if (jpm.getNumItems() > 0)
+                {
+                    contextMenu.addSeparator();
+
+                    juce::PopupMenu::MenuItemIterator iterator(jpm);
+
+                    while (iterator.next())
+                    {
+                        contextMenu.addItem(iterator.getItem());
+                    }
+                }
             }
 
             int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;

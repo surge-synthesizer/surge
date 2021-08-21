@@ -69,6 +69,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void filesDropped(const juce::StringArray &files, int, int) override;
 
     juce::PopupMenu hostMenuFor(Parameter *p);
+    juce::PopupMenu hostMenuForMacro(int macro);
 
     friend class SurgeGUIEditor;
 
