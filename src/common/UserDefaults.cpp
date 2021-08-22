@@ -129,6 +129,18 @@ void initMaps()
             case InitialPatchCategory:
                 r = "initialPatchCategory";
                 break;
+            case LastSCLPath:
+                r = "lastSCLPath";
+                break;
+            case LastKBMPath:
+                r = "lastKBMPath";
+                break;
+            case LastPatchPath:
+                r = "lastPatchPath";
+                break;
+            case LastWavetablePath:
+                r = "lastWavetablePath";
+                break;
             case nKeys:
                 break;
             }

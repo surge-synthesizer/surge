@@ -82,7 +82,6 @@ const int yofs = 10;
 using namespace std;
 using namespace Surge::ParamConfig;
 
-int SurgeGUIEditor::start_paramtag_value = start_paramtags;
 Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
@@ -91,8 +90,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
-    synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
-                                             SurgeStorage::OkCancel def) {
+    synth->storage.okCancelProvider = [](const std::string &msg, const std::string &title,
+                                         SurgeStorage::OkCancel def) {
         // think about threading one day probably
         auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg, "OK",
                                                       "Cancel", nullptr, nullptr);
@@ -2330,6 +2329,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         auto scl_path =
             Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
 
+        scl_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::LastSCLPath, scl_path);
+
         juce::FileChooser c("Select SCL Scale", juce::File(scl_path), "*.scl");
 
         auto r = c.browseForFileToOpen();
@@ -2338,7 +2340,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         {
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
+            auto dir = res.getParentDirectory().getFullPathName().toStdString();
             cb(rString);
+            if (dir != scl_path)
+            {
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::LastSCLPath, dir);
+            }
         }
     });
 
@@ -2375,6 +2383,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
                                                         "tuning-library", "KBM Concert Pitch");
 
+        kbm_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::LastKBMPath, kbm_path);
         juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
 
         auto r = c.browseForFileToOpen();
@@ -2383,7 +2393,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         {
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
+            auto dir = res.getParentDirectory().getFullPathName().toStdString();
             cb(rString);
+            if (dir != kbm_path)
+            {
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::LastKBMPath, dir);
+            }
         }
     });
 
@@ -3134,8 +3150,8 @@ juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
 
     int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
 
-    auto asmt = [this, &smoothMenu, smoothing,
-                 setSmooth](const char *label, ControllerModulationSource::SmoothingMode md) {
+    auto asmt = [&smoothMenu, smoothing, setSmooth](const char *label,
+                                                    ControllerModulationSource::SmoothingMode md) {
         smoothMenu.addItem(label, true, (smoothing == md), [setSmooth, md]() { setSmooth(md); });
     };
 
@@ -4454,9 +4470,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         bool activeGlyph = true;
         if (currentSkin->getVersion() >= 2)
         {
-            auto pv =
+            auto pval =
                 currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::GLPYH_ACTIVE, "true");
-            if (pv == "false")
+            if (pval == "false")
                 activeGlyph = false;
         }
 
@@ -4740,7 +4756,7 @@ void SurgeGUIEditor::showFormulaEditorDialog()
     pt->setSkin(currentSkin, bitmapStore);
 
     addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,
-                         [this]() {});
+                         []() {});
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
