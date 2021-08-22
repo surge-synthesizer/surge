@@ -25,22 +25,15 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                          .withOutput("Scene A", AudioChannelSet::stereo(), false)
                          .withOutput("Scene B", AudioChannelSet::stereo(), false))
 {
-    std::cout << "SurgeXT Startup\n"
-              << "  - Version      : " << Surge::Build::FullVersionStr << "\n"
-              << "  - Build Info   : " << Surge::Build::BuildArch << " "
-              << Surge::Build::BuildCompiler << "\n"
-              << "  - Build Time   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
-              << "\n"
-              << "  - JUCE Version : " << std::hex << JUCE_VERSION << std::dec << "\n"
-#if SURGE_JUCE_ACCESSIBLE
-              << "  - Accessiblity : Enabled\n"
-#endif
-#if SURGE_JUCE_HOST_CONTEXT
-              << "  - JUCE Host Context Support Enabled\n"
-#endif
-              << "  - CPU          : " << Surge::CPUFeatures::cpuBrand() << std::endl;
+    std::cout << "SurgeXT " << getWrapperTypeDescription(wrapperType) << "\n"
+              << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
+              << JUCE_VERSION << std::dec << "\n"
+              << "  - Build Info   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
+              << " using " << Surge::Build::BuildCompiler << "\n";
 
     surge = std::make_unique<SurgeSynthesizer>(this);
+    std::cout << "  - Data         : " << surge->storage.datapath << "\n"
+              << "  - User Data    : " << surge->storage.userDataPath << std::endl;
 
     auto parent = std::make_unique<AudioProcessorParameterGroup>("Root", "Root", "|");
     auto macroG = std::make_unique<AudioProcessorParameterGroup>("macros", "Macros", "|");
