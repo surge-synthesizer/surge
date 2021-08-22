@@ -3756,16 +3756,36 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     // We need to do this search vs componentAt because componentAt will return self since I am
     // there being dropped
     juce::Component *target = nullptr;
-    for (auto kid : frame->getChildren())
-    {
-        if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
+
+    auto isDroppable = [msb](juce::Component *c) {
+        auto tMSB = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(c);
+        auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(c);
+        if (tMSB && msb->isMeta && tMSB && tMSB->isMeta)
+            return true;
+        if (tMCI)
+            return true;
+        return false;
+    };
+    auto recC = [isDroppable, msb, pt](juce::Component *p, auto rec) -> juce::Component * {
+        for (auto kid : p->getChildren())
         {
-            target = kid;
-            // break;
+            if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
+            {
+                if (isDroppable(kid))
+                    return kid;
+
+                auto q = rec(kid, rec);
+                if (q)
+                    return q;
+            }
         }
-    }
+        return nullptr;
+    };
+    target = recC(frame.get(), recC);
+
     if (!target)
         return;
+
     auto tMSB = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(target);
     auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(target);
     if (msb->isMeta && tMSB && tMSB->isMeta)
