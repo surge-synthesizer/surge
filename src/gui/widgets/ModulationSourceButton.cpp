@@ -410,6 +410,7 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
+    getParentComponent()->toFront(false);
     toFront(false);
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
