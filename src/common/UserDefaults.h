@@ -51,6 +51,11 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     InitialPatchName,
     InitialPatchCategory,
 
+    LastSCLPath,
+    LastKBMPath,
+    LastWavetablePath,
+    LastPatchPath,
+
     nKeys
 };
 /**
