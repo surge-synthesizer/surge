@@ -2374,6 +2374,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
                                                         "tuning-library", "KBM Concert Pitch");
+
         juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
 
         auto r = c.browseForFileToOpen();
@@ -3066,19 +3067,23 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
     });
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
-        auto cb = [this](std::string f) {
-            // FIXME - check if f is a path
-            this->synth->storage.userDataPath = f;
+        juce::FileChooser f("Set Custom User Data Folder", juce::File(synth->storage.userDataPath));
+        if (f.browseForDirectory())
+        {
+            auto r = f.getResult();
+            if (!r.isDirectory())
+                return;
+            auto s = f.getResult().getFullPathName().toStdString();
+
             Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::UserDataPath, f);
+                                                   Surge::Storage::UserDataPath, s);
+
+            this->synth->storage.userDataPath = s;
+            synth->storage.createUserDirectory();
+
             this->synth->storage.refresh_wtlist();
             this->synth->storage.refresh_patchlist();
-        };
-        /*
-         * TODO: Implement JUCE directory picker
-        Surge::UserInteractions::promptFileOpenDialog(this->synth->storage.userDataPath,
-        "", "", cb, true, true);
-                                                      */
+        }
     });
 
     dataSubMenu.addSeparator();

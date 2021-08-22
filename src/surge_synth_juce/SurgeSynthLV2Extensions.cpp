@@ -21,14 +21,10 @@
 
 void SurgeSynthProcessorSpecificExtensions(SurgeSynthProcessor *p, SurgeSynthesizer *s)
 {
-    std::cout << "LV2SynthProcessor: " << __FILE__ << std::endl;
     p->surge->activateExtraOutputs = false;
     p->canRemoveBusValue = true;
     p->removeBus(false);
     p->removeBus(false);
     p->canRemoveBusValue = false;
 }
-void SurgeSynthEditorSpecificExtensions(SurgeSynthEditor *e, SurgeGUIEditor *sed)
-{
-    std::cout << "LV2SynthEditor: " << __FILE__ << std::endl;
-}
+void SurgeSynthEditorSpecificExtensions(SurgeSynthEditor *e, SurgeGUIEditor *sed) {}

@@ -19,11 +19,5 @@
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthFlavorExtensions.h"
 
-void SurgeSynthProcessorSpecificExtensions(SurgeSynthProcessor *p, SurgeSynthesizer *s)
-{
-    std::cout << "SynthProcessor: " << __FILE__ << std::endl;
-}
-void SurgeSynthEditorSpecificExtensions(SurgeSynthEditor *e, SurgeGUIEditor *sed)
-{
-    std::cout << "SynthEditor: " << __FILE__ << std::endl;
-}
+void SurgeSynthProcessorSpecificExtensions(SurgeSynthProcessor *p, SurgeSynthesizer *s) {}
+void SurgeSynthEditorSpecificExtensions(SurgeSynthEditor *e, SurgeGUIEditor *sed) {}
