@@ -438,13 +438,22 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
 
 void OscillatorWaveformDisplay::loadWavetableFromFile()
 {
-    juce::FileChooser c("Select Wavetable to Load");
+    auto wtPath = storage->userWavetablesPath;
+    wtPath =
+        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastWavetablePath, wtPath);
+
+    juce::FileChooser c("Select Wavetable to Load", juce::File(wtPath));
     auto r = c.browseForFileToOpen();
     if (r)
     {
         auto res = c.getResult();
         auto rString = res.getFullPathName().toStdString();
         strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
+        auto dir = res.getParentDirectory().getFullPathName().toStdString();
+        if (dir != wtPath)
+        {
+            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastWavetablePath, dir);
+        }
     }
 }
 void OscillatorWaveformDisplay::showWavetableMenu()

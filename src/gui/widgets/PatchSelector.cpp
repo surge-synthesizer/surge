@@ -240,7 +240,10 @@ void PatchSelector::showClassicMenu(bool single_category)
                         [this]() { this->storage->refresh_patchlist(); });
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {
-        juce::FileChooser c("Select Patch to Load", juce::File(storage->userDataPath), "*.fxp");
+        auto patchPath = storage->userPatchesPath;
+        patchPath =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastPatchPath, patchPath);
+        juce::FileChooser c("Select Patch to Load", juce::File(patchPath), "*.fxp");
         auto r = c.browseForFileToOpen();
 
         if (r)
@@ -252,6 +255,11 @@ void PatchSelector::showClassicMenu(bool single_category)
             if (sge)
             {
                 sge->queuePatchFileLoad(rString);
+            }
+            auto dir = res.getParentDirectory().getFullPathName().toStdString();
+            if (dir != patchPath)
+            {
+                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastPatchPath, dir);
             }
         }
     });
