@@ -464,18 +464,28 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
 
     showInfowindowSelfDismiss(isEditingModulation);
 
-#if MAC
-    float speed = 1.2;
-#else
-    float speed = 0.42666;
-#endif
-
-    if (event.mods.isShiftDown())
+    // Revert to classic scrolling behavior if Ctrl is pressed down
+    if (intRange && isStepped && !event.mods.isCtrlDown())
     {
-        speed /= 10.f;
+        delta = 1.f / intRange * (delta > 0 ? 1 : -1);
     }
 
-    delta *= speed;
+    else
+    {
+
+#if MAC
+        float speed = 1.2;
+#else
+        float speed = 0.42666;
+#endif
+
+        if (event.mods.isShiftDown())
+        {
+            speed /= 10.f;
+        }
+
+        delta *= speed;
+    }
 
     editTypeWas = WHEEL;
     notifyBeginEdit();

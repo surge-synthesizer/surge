@@ -156,13 +156,11 @@ struct ModulatableControlInterface
     virtual void setQuantitizedDisplayValue(float f) { quantizedDisplayValue = f; }
     float quantizedDisplayValue{0.f};
 
-    /*
-     * This API is present but doesn't seem to be needed. FIXME - remove it if so.
-     * It is used to do things like step unison count but value quantization does
-     * that just fine.
-     */
-    virtual void setIsStepped(bool s) {}
-    virtual void setIntStepRange(int i) {}
+    // Needed for scroll wheel behavior on stepped sliders
+    bool isStepped{false};
+    virtual void setIsStepped(bool s) { isStepped = s; }
+    int intRange{0};
+    virtual void setIntStepRange(int i) { intRange = i; }
 
     /*
      * Font handling. FIXME - implement this
