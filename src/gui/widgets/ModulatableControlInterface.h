@@ -161,8 +161,13 @@ struct ModulatableControlInterface
      * It is used to do things like step unison count but value quantization does
      * that just fine.
      */
-    virtual void setIsStepped(bool s) {}
-    virtual void setIntStepRange(int i) {}
+    // virtual void setIsStepped(bool s) {}
+    // virtual void setIntStepRange(int i) {}
+
+    bool isStepped{false};
+    virtual void setIsStepped(bool s) { isStepped = s; }
+    int intRange{0};
+    virtual void setIntStepRange(int i) { intRange = i; }
 
     /*
      * Font handling. FIXME - implement this
