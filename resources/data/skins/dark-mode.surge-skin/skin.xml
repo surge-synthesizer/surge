@@ -232,6 +232,8 @@
     <control ui_identifier="scene.width" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_1" class="def-hslider"/>
     <control ui_identifier="scene.send_fx_2" class="def-hslider"/>
+    <control ui_identifier="scene.send_fx_3" class="def-hslider"/>
+    <control ui_identifier="scene.send_fx_4" class="def-hslider"/>
 
     <control ui_identifier="scene.portamento" class="def-hslider"/>
     <control ui_identifier="scene.pitch" class="def-hslider"/>
