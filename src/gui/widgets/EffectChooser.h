@@ -107,8 +107,8 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
                 return true;
             break;
         case fxb_scene_fx_only:
-            if ((fxslot >= fxslot_send1 && fxslot == fxslot_global2) ||
-                (fxslot >= fxslot_send3 && fxslot == fxslot_global4))
+            if ((fxslot >= fxslot_send1 && fxslot <= fxslot_global2) ||
+                (fxslot >= fxslot_send3 && fxslot <= fxslot_global4))
                 return true;
             break;
         }
