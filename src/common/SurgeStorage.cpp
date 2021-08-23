@@ -1257,9 +1257,9 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     return wasBuilt;
 }
 
-int SurgeStorage::get_clipboard_type() { return clipboard_type; }
+int SurgeStorage::get_clipboard_type() const { return clipboard_type; }
 
-int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev)
+int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
 {
     int n = wt_list.size();
     if (!n)
