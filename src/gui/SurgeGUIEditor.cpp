@@ -792,79 +792,6 @@ void SurgeGUIEditor::refresh_mod()
     }
 }
 
-#if PORTED_TO_JUCE
-int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
-{
-#if RESOLVED_ISSUE_4383
-    if (code.virt != 0)
-    {
-        switch (code.virt)
-        {
-        case VKEY_F5:
-            if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                    Surge::Storage::SkinReloadViaF5, 0))
-            {
-                bitmapStore.reset(new SurgeBitmaps());
-                bitmapStore->setupBuiltinBitmaps(frame);
-
-                if (!currentSkin->reloadSkin(bitmapStore))
-                {
-                    auto &db = Surge::GUI::SkinDB::get();
-                    auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
-                                           "Classic.\n\nSkin error:\n") +
-                               db.getAndResetErrorString();
-                    currentSkin = db.defaultSkin(&(synth->storage));
-                    currentSkin->reloadSkin(bitmapStore);
-                    synth->storage.reportError(msg, "Skin Loading Error");
-                }
-
-                reloadFromSkin();
-                synth->refresh_editor = true;
-            }
-
-            return 1;
-            break;
-        case VKEY_TAB:
-            if ((topmostEditorTag() == STORE_PATCH) || (typeinDialog && typeinDialog->isVisible()))
-            {
-                /*
-                ** SaveDialog gets access to the tab key to switch between fields if it is open
-                */
-                return -1;
-            }
-            toggle_mod_editing();
-            return 1;
-            break;
-        case VKEY_ESCAPE:
-            if (typeinDialog && typeinDialog->isVisible())
-            {
-                // important to do this first since it basically stops us listening to changes
-                typeinEditTarget = nullptr;
-
-                typeinDialog->setVisible(false);
-                removeFromFrame.push_back(typeinDialog);
-                typeinDialog = nullptr;
-                typeinMode = Inactive;
-                typeinResetCounter = -1;
-
-                return 1;
-            }
-            break;
-        case VKEY_RETURN:
-            if (typeinDialog && typeinDialog->isVisible())
-            {
-                typeinDialog->setVisible(false);
-            }
-            break;
-        }
-    }
-#endif
-    return -1;
-}
-
-int32_t SurgeGUIEditor::onKeyUp(const VstKeyCode &keyCode, CFrame *frame) { return -1; }
-#endif
-
 bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGroupEntry)
 {
     switch (controlGroup)
@@ -1578,6 +1505,8 @@ bool SurgeGUIEditor::open(void *parent)
     frame = std::make_unique<Surge::Widgets::MainFrame>();
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
+    frame->setWantsKeyboardFocus(true);
+    frame->addKeyListener(this);
     juceEditor->addAndMakeVisible(*frame);
     /*
      * SET UP JUCE EDITOR BETTER
@@ -5074,3 +5003,117 @@ void SurgeGUIEditor::activateFromCurrentFx()
         break;
     }
 }
+bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
+{
+    if (key.getKeyCode() == juce::KeyPress::tabKey)
+    {
+        if (topmostEditorTag() == STORE_PATCH)
+        {
+            /*
+            ** SaveDialog gets access to the tab key to switch between fields if it is open
+            */
+            return false;
+        }
+        toggle_mod_editing();
+        return true;
+    }
+    else if (key.getKeyCode() == juce::KeyPress::F5Key)
+    {
+        if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                Surge::Storage::SkinReloadViaF5, 0))
+        {
+            bitmapStore.reset(new SurgeImageStore());
+            bitmapStore->setupBuiltinBitmaps();
+
+            if (!currentSkin->reloadSkin(bitmapStore))
+            {
+                auto db = Surge::GUI::SkinDB::get();
+                auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
+                                       "Classic.\n\nSkin error:\n") +
+                           db->getAndResetErrorString();
+                currentSkin = db->defaultSkin(&(synth->storage));
+                currentSkin->reloadSkin(bitmapStore);
+                synth->storage.reportError(msg, "Skin Loading Error");
+            }
+
+            reloadFromSkin();
+            synth->refresh_editor = true;
+        }
+
+        return true;
+    }
+    return false;
+}
+
+#if PORTED_TO_JUCE
+int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
+{
+#if RESOLVED_ISSUE_4383
+    if (code.virt != 0)
+    {
+        switch (code.virt)
+        {
+        case VKEY_F5:
+            if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                    Surge::Storage::SkinReloadViaF5, 0))
+            {
+                bitmapStore.reset(new SurgeBitmaps());
+                bitmapStore->setupBuiltinBitmaps(frame);
+
+                if (!currentSkin->reloadSkin(bitmapStore))
+                {
+                    auto &db = Surge::GUI::SkinDB::get();
+                    auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
+                                           "Classic.\n\nSkin error:\n") +
+                               db.getAndResetErrorString();
+                    currentSkin = db.defaultSkin(&(synth->storage));
+                    currentSkin->reloadSkin(bitmapStore);
+                    synth->storage.reportError(msg, "Skin Loading Error");
+                }
+
+                reloadFromSkin();
+                synth->refresh_editor = true;
+            }
+
+            return 1;
+            break;
+        case VKEY_TAB:
+            if ((topmostEditorTag() == STORE_PATCH) || (typeinDialog && typeinDialog->isVisible()))
+            {
+                /*
+                ** SaveDialog gets access to the tab key to switch between fields if it is open
+                */
+                return -1;
+            }
+            toggle_mod_editing();
+            return 1;
+            break;
+        case VKEY_ESCAPE:
+            if (typeinDialog && typeinDialog->isVisible())
+            {
+                // important to do this first since it basically stops us listening to changes
+                typeinEditTarget = nullptr;
+
+                typeinDialog->setVisible(false);
+                removeFromFrame.push_back(typeinDialog);
+                typeinDialog = nullptr;
+                typeinMode = Inactive;
+                typeinResetCounter = -1;
+
+                return 1;
+            }
+            break;
+        case VKEY_RETURN:
+            if (typeinDialog && typeinDialog->isVisible())
+            {
+                typeinDialog->setVisible(false);
+            }
+            break;
+        }
+    }
+#endif
+    return -1;
+}
+
+int32_t SurgeGUIEditor::onKeyUp(const VstKeyCode &keyCode, CFrame *frame) { return -1; }
+#endif

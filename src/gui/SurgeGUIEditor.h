@@ -74,7 +74,8 @@ struct PatchStoreDialog;
 } // namespace Surge
 
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
-                       public SurgeStorage::ErrorListener
+                       public SurgeStorage::ErrorListener,
+                       public juce::KeyListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
@@ -124,6 +125,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                                      ///< processing should apply, otherwise -1
 #endif
 
+  public:
+    bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
+
+  protected:
     virtual void setParameter(long index, float value);
 
     // listener class
