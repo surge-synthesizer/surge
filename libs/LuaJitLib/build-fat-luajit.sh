@@ -25,7 +25,7 @@ cp -r LuaJIT/ "${SD}"
 
 cd "${SD}"
 MACOSX_DEPLOYMENT_TARGET=10.9 make clean
-MACOSX_DEPLOYMENT_TARGET=10.9 make HOST_CC="clang -target x86_64-apple-macos10.9" TARGET_CC="xcrun --toolchain arm64 clang -target arm64-apply-macos10.9 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
+MACOSX_DEPLOYMENT_TARGET=10.9 make HOST_CC="clang -target `uname -m`-apple-macos10.9" TARGET_CC="xcrun --toolchain arm64 clang -target arm64-apply-macos10.9 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
 mv src/lib*a "${OD}/arm64"
 
 MACOSX_DEPLOYMENT_TARGET=10.9 make clean
