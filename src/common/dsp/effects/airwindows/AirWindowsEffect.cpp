@@ -4,17 +4,25 @@
 
 constexpr int subblock_factor = 3; // divide block by 2^this
 
+std::vector<AirWinBaseClass::Registration> AirWindowsEffect::fxreg;
+std::vector<int> AirWindowsEffect::fxregOrdering;
+AirWindowsEffect::AWFxSelectorMapper AirWindowsEffect::mapper;
+
 AirWindowsEffect::AirWindowsEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
 {
+    if (fxreg.empty())
+    {
+        fxreg = AirWinBaseClass::pluginRegistry();
+        fxregOrdering = AirWinBaseClass::pluginRegistryOrdering();
+    }
+
     for (int i = 0; i < n_fx_params - 1; i++)
     {
         param_lags[i].newValue(0);
         param_lags[i].instantize();
         param_lags[i].setRate(0.004 * (BLOCK_SIZE >> subblock_factor));
     }
-
-    mapper = std::make_unique<AWFxSelectorMapper>(this);
 }
 
 AirWindowsEffect::~AirWindowsEffect() {}
@@ -39,15 +47,7 @@ const char *AirWindowsEffect::group_label(int id)
         if (airwin)
         {
             static char txt[1024];
-
-            if (mapper)
-            {
-                strncpy(txt, mapper->nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
-            }
-            else
-            {
-                airwin->getEffectName(txt);
-            }
+            strncpy(txt, mapper.nameAtStreamedIndex(fxdata->p[0].val.i).c_str(), 1023);
             return (const char *)txt;
         }
         else
@@ -86,8 +86,6 @@ void AirWindowsEffect::init_ctrltypes()
     ** of our FX hasn't changed.
     */
     Effect::init_ctrltypes();
-    fxreg = AirWinBaseClass::pluginRegistry();
-    fxregOrdering = AirWinBaseClass::pluginRegistryOrdering();
 
     fxdata->p[0].set_name("FX");
     fxdata->p[0].set_type(ct_airwindows_fx);
@@ -116,7 +114,7 @@ void AirWindowsEffect::resetCtrlTypes(bool useStreamedValues)
     fxdata->p[0].posy_offset = 1;
     fxdata->p[0].val_max.i = fxreg.size() - 1;
 
-    fxdata->p[0].set_user_data(mapper.get());
+    fxdata->p[0].set_user_data(&mapper);
     if (airwin)
     {
         for (int i = 0; i < airwin->paramCount && i < n_fx_params - 1; ++i)
