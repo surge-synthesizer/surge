@@ -51,30 +51,30 @@ class alignas(16) AirWindowsEffect : public Effect
     std::unique_ptr<AirWinBaseClass> airwin;
     int lastSelected = -1;
 
-    std::vector<AirWinBaseClass::Registration> fxreg;
-    std::vector<int> fxregOrdering;
+    static std::vector<AirWinBaseClass::Registration> fxreg;
+    static std::vector<int> fxregOrdering;
 
-    struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper
+    static struct AWFxSelectorMapper : public ParameterDiscreteIndexRemapper
     {
-        AWFxSelectorMapper(AirWindowsEffect *fx) { this->fx = fx; };
+        AWFxSelectorMapper() {}
 
         virtual int remapStreamedIndexToDisplayIndex(int i) const override
         {
-            return fx->fxreg[i].displayOrder;
+            return fxreg[i].displayOrder;
         }
-        virtual std::string nameAtStreamedIndex(int i) const override { return fx->fxreg[i].name; }
+        virtual std::string nameAtStreamedIndex(int i) const override { return fxreg[i].name; }
         virtual bool hasGroupNames() const override { return true; }
 
         virtual std::string groupNameAtStreamedIndex(int i) const override
         {
-            return fx->fxreg[i].groupName;
+            return fxreg[i].groupName;
         }
 
         bool supportsTotalIndexOrdering() const override { return true; }
 
-        const std::vector<int> totalIndexOrdering() const override { return fx->fxregOrdering; }
+        const std::vector<int> totalIndexOrdering() const override { return fxregOrdering; }
         AirWindowsEffect *fx;
-    };
+    } mapper;
 
     struct AWFxParamFormatter : public ParameterExternalFormatter
     {
@@ -145,6 +145,4 @@ class alignas(16) AirWindowsEffect : public Effect
     };
 
     std::array<std::unique_ptr<AWFxParamFormatter>, n_fx_params - 1> fxFormatters;
-
-    std::unique_ptr<AWFxSelectorMapper> mapper;
 };
