@@ -483,19 +483,12 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 #include <sys/stat.h>
 #endif
 
-string SurgeSynthesizer::getUserPatchDirectory() { return storage.userDataPath; }
-string SurgeSynthesizer::getLegacyUserPatchDirectory()
-{
-    return storage.datapath + "patches_user" + PATH_SEPARATOR;
-}
-
 void SurgeSynthesizer::savePatch()
 {
     if (storage.getPatch().category.empty())
         storage.getPatch().category = "Default";
 
-    fs::path savepath =
-        string_to_path(getUserPatchDirectory() + PATH_SEPARATOR + "Patches" + PATH_SEPARATOR);
+    fs::path savepath = string_to_path(storage.userPatchesPath);
 
     try
     {
