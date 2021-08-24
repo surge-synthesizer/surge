@@ -107,7 +107,7 @@ class Oversampling
     }
 
     /** Returns the size of the upsampled blocks */
-    inline constexpr size_t getUpBlockSize() const noexcept { return up_block_size; }
+    static inline constexpr size_t getUpBlockSize() { return up_block_size; }
 
     /** Returns the oversampling ratio */
     inline constexpr size_t getOSRatio() const noexcept { return osRatio; }

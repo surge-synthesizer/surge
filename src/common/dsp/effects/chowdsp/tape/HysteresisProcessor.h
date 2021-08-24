@@ -25,18 +25,28 @@ class HysteresisProcessor
         numSteps = 500,
     };
 
-    template <SolverType solverType>
-    void process_internal(float *dataL, float *dataR, const int numSamples);
-
-    template <SolverType solverType>
-    void process_internal_smooth(float *dataL, float *dataR, const int numSamples);
-
     SmoothedValue<float, ValueSmoothingTypes::Linear> drive;
     SmoothedValue<float, ValueSmoothingTypes::Linear> width;
     SmoothedValue<float, ValueSmoothingTypes::Linear> sat;
     SmoothedValue<float, ValueSmoothingTypes::Multiplicative> makeup;
 
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+    template <SolverType solverType> void process_internal_simd(double *data, const int numSamples);
+
+    template <SolverType solverType>
+    void process_internal_smooth_simd(double *data, const int numSamples);
+
+    HysteresisProcessing hProc;
+#else
+    template <SolverType solverType>
+    void process_internal(double *dataL, double *dataR, const int numSamples);
+
+    template <SolverType solverType>
+    void process_internal_smooth(double *dataL, double *dataR, const int numSamples);
+
     HysteresisProcessing hProcs[2];
+#endif
+
     SolverType solver;
 
     Oversampling<2, BLOCK_SIZE> os;

@@ -1,11 +1,7 @@
 #ifndef HYSTERESISPROCESSING_H_INCLUDED
 #define HYSTERESISPROCESSING_H_INCLUDED
 
-#include <cmath>
-#include <numeric>
-
-namespace chowdsp
-{
+#include "HysteresisOps.h"
 
 enum SolverType
 {
@@ -29,15 +25,19 @@ class HysteresisProcessing
     void reset();
     void setSampleRate(double newSR);
 
-    void cook(float drive, float width, float sat);
+    void cook(float drive, float width, float sat, bool v1);
 
     /* Process a single sample */
-    template <SolverType solverType> inline double process(double H) noexcept
+    template <SolverType solver, typename Float> inline Float process(Float H) noexcept
     {
-        double H_d = deriv(H, H_n1, H_d_n1);
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, _mm_set_pd1(T));
+#else
+        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, T);
+#endif
 
-        double M;
-        switch (solverType)
+        Float M;
+        switch (solver)
         {
         case RK2:
             M = RK2Solver(H, H_d);
@@ -52,14 +52,24 @@ class HysteresisProcessing
             M = NRSolver<8>(H, H_d);
             break;
         default:
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+            M = _mm_set_pd1(0.0);
+#else
             M = 0.0;
-            break;
-        }
+#endif
+        };
 
-        // check for instability
+            // check for instability
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+        auto illCondition =
+            _mm_or_pd(_mm_cmpunord_pd(M, M), _mm_cmpgt_pd(M, _mm_set_pd1(upperLim)));
+        M = _mm_andnot_pd(illCondition, M);
+        H_d = _mm_andnot_pd(illCondition, H_d);
+#else
         bool illCondition = std::isnan(M) || M > upperLim;
         M = illCondition ? 0.0 : M;
         H_d = illCondition ? 0.0 : H_d;
+#endif
 
         M_n1 = M;
         H_n1 = H;
@@ -69,143 +79,139 @@ class HysteresisProcessing
     }
 
   private:
-    static constexpr double ONE_THIRD = 1.0 / 3.0;
-    static constexpr double NEG_TWO_OVER_15 = -2.0 / 15.0;
-
-    inline int sign(double x) const noexcept { return (x > 0.0) - (x < 0.0); }
-
-    inline double langevin(double x) const noexcept // Langevin function
+    // runge-kutta solvers
+    template <typename Float> inline Float RK2Solver(Float H, Float H_d) noexcept
     {
-        return !nearZero ? (coth) - (1.0 / x) : x / 3.0;
-    }
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+#define F(a) _mm_set_pd1(a)
+#define M(a, b) _mm_mul_pd(a, b)
+#define A(a, b) _mm_add_pd(a, b)
+        const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
 
-    inline double langevinD(double x) const noexcept // Derivative of Langevin function
-    {
-        return !nearZero ? (1.0 / (x * x)) - (coth * coth) + 1.0 : ONE_THIRD;
-    }
-
-    inline double langevinD2(double x) const noexcept // 2nd derivative of Langevin function
-    {
-        return !nearZero ? 2.0 * coth * (coth * coth - 1.0) - (2.0 / (x * x * x))
-                         : NEG_TWO_OVER_15 * x;
-    }
-
-    inline double deriv(double x_n, double x_n1,
-                        double x_d_n1) const noexcept // Derivative by alpha transform
-    {
-        constexpr double dAlpha = 0.75;
-        return (((1.0 + dAlpha) / T) * (x_n - x_n1)) - dAlpha * x_d_n1;
-    }
-
-    // hysteresis function dM/dt
-    inline double hysteresisFunc(double M, double H, double H_d) noexcept
-    {
-        Q = (H + alpha * M) / a;
-        coth = 1.0 / std::tanh(Q);
-        nearZero = Q < 0.001 && Q > -0.001;
-
-        M_diff = M_s * langevin(Q) - M;
-
-        delta = (double)((H_d >= 0.0) - (H_d < 0.0));
-        delta_M = (double)(sign(delta) == sign(M_diff));
-
-        L_prime = langevinD(Q);
-
-        kap1 = nc * delta_M;
-        f1Denom = nc * delta * k - alpha * M_diff;
-        f1 = kap1 * M_diff / f1Denom;
-        f2 = M_s_oa_tc * L_prime;
-        f3 = 1.0 - (M_s_oa_tc_talpha * L_prime);
-
-        return H_d * (f1 + f2) / f3;
-    }
-
-    // derivative of hysteresis func w.r.t M (depends on cached values from computing
-    // hysteresisFunc)
-    inline double hysteresisFuncPrime(double H_d, double dMdt) const noexcept
-    {
-        const double L_prime2 = langevinD2(Q);
-        const double M_diff2 = M_s_oa_talpha * L_prime - 1.0;
-
-        const double f1_p =
-            kap1 * ((M_diff2 / f1Denom) + M_diff * alpha * M_diff2 / (f1Denom * f1Denom));
-        const double f2_p = M_s_oaSq_tc_talpha * L_prime2;
-        const double f3_p = -M_s_oaSq_tc_talphaSq * L_prime2;
-
-        return H_d * (f1_p + f2_p) / f3 - dMdt * f3_p / f3;
-    }
-
-    inline double RK2Solver(double H, double H_d) noexcept
-    {
-        const double k1 = T * hysteresisFunc(M_n1, H_n1, H_d_n1);
-        const double k2 =
-            T * hysteresisFunc(M_n1 + (k1 / 2.0), (H + H_n1) / 2.0, (H_d + H_d_n1) / 2.0);
-
+        const auto k2 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), M(A(H, H_n1), F(0.5)),
+                                            M(A(H_d, H_d_n1), F(0.5)), hpState),
+              F(T));
+        return A(M_n1, k2);
+#undef F
+#undef M
+#undef A
+#else
+        const Float k1 = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState) * T;
+        const Float k2 = HysteresisOps::hysteresisFunc(M_n1 + (k1 * 0.5), (H + H_n1) * 0.5,
+                                                       (H_d + H_d_n1) * 0.5, hpState) *
+                         T;
         return M_n1 + k2;
+#endif
     }
 
-    double RK4Solver(double H, double H_d) noexcept
+    template <typename Float> inline Float RK4Solver(Float H, Float H_d) noexcept
     {
-        const double H_1_2 = (H + H_n1) / 2.0;
-        const double H_d_1_2 = (H_d + H_d_n1) / 2.0;
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+#define F(a) _mm_set_pd1(a)
+#define M(a, b) _mm_mul_pd(a, b)
+#define A(a, b) _mm_add_pd(a, b)
+        const auto H_1_2 = M(A(H, H_n1), F(0.5));
+        const auto H_d_1_2 = M(A(H_d, H_d_n1), F(0.5));
 
-        const double k1 = T * hysteresisFunc(M_n1, H_n1, H_d_n1);
-        const double k2 = T * hysteresisFunc(M_n1 + (k1 / 2.0), H_1_2, H_d_1_2);
-        const double k3 = T * hysteresisFunc(M_n1 + (k2 / 2.0), H_1_2, H_d_1_2);
-        const double k4 = T * hysteresisFunc(M_n1 + k3, H, H_d);
+        const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
+        const auto k2 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), H_1_2, H_d_1_2, hpState), F(T));
+        const auto k3 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k2, F(0.5))), H_1_2, H_d_1_2, hpState), F(T));
+        const auto k4 = M(HysteresisOps::hysteresisFunc(A(M_n1, k3), H, H_d, hpState), F(T));
 
-        return M_n1 + k1 / 6.0 + k2 / 3.0 + k3 / 3.0 + k4 / 6.0;
+        const static auto oneSixth = F(1.0 / 6.0);
+        const static auto oneThird = F(1.0 / 3.0);
+        return A(M_n1, A(M(k1, oneSixth), A(M(k2, oneThird), A(M(k3, oneThird), M(k4, oneSixth)))));
+#undef F
+#undef M
+#undef A
+#else
+        const Float H_1_2 = (H + H_n1) * 0.5;
+        const Float H_d_1_2 = (H_d + H_d_n1) * 0.5;
+
+        const Float k1 = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState) * T;
+        const Float k2 =
+            HysteresisOps::hysteresisFunc(M_n1 + (k1 * 0.5), H_1_2, H_d_1_2, hpState) * T;
+        const Float k3 =
+            HysteresisOps::hysteresisFunc(M_n1 + (k2 * 0.5), H_1_2, H_d_1_2, hpState) * T;
+        const Float k4 = HysteresisOps::hysteresisFunc(M_n1 + k3, H, H_d, hpState) * T;
+
+        constexpr double oneSixth = 1.0 / 6.0;
+        constexpr double oneThird = 1.0 / 3.0;
+        return M_n1 + k1 * oneSixth + k2 * oneThird + k3 * oneThird + k4 * oneSixth;
+#endif
     }
 
     // newton-raphson solvers
-    template <int nIterations> inline double NRSolver(double H, double H_d) noexcept
+    template <int nIterations, typename Float> inline Float NRSolver(Float H, Float H_d) noexcept
     {
-        double M = M_n1;
-        const double last_dMdt = hysteresisFunc(M_n1, H_n1, H_d_n1);
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+#define F(a) _mm_set_pd1(a)
+#define M(a, b) _mm_mul_pd(a, b)
+#define D(a, b) _mm_div_pd(a, b)
+#define A(a, b) _mm_add_pd(a, b)
+#define S(a, b) _mm_sub_pd(a, b)
+        auto _M = M_n1;
+        const auto last_dMdt = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState);
 
-        double dMdt, dMdtPrime, deltaNR;
-        for (int i = 0; i < nIterations; ++i)
+        __m128d dMdt, dMdtPrime, deltaNR, num, den;
+        for (int n = 0; n < nIterations; ++n)
         {
-            dMdt = hysteresisFunc(M, H, H_d);
-            dMdtPrime = hysteresisFuncPrime(H_d, dMdt);
-            deltaNR = (M - M_n1 - Talpha * (dMdt + last_dMdt)) / (1.0 - Talpha * dMdtPrime);
+            dMdt = HysteresisOps::hysteresisFunc(_M, H, H_d, hpState);
+            dMdtPrime = HysteresisOps::hysteresisFuncPrime(H_d, dMdt, hpState);
+
+            num = S(S(_M, M_n1), M(F(Talpha), A(dMdt, last_dMdt)));
+            den = S(F(1.0), M(F(Talpha), dMdtPrime));
+            deltaNR = D(num, den);
+            _M = S(_M, deltaNR);
+        }
+
+        return _M;
+#undef F
+#undef M
+#undef D
+#undef A
+#undef S
+#else
+        Float M = M_n1;
+        const Float last_dMdt = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState);
+
+        Float dMdt;
+        Float dMdtPrime;
+        Float deltaNR;
+        for (int n = 0; n < nIterations; ++n)
+        {
+            dMdt = HysteresisOps::hysteresisFunc(M, H, H_d, hpState);
+            dMdtPrime = HysteresisOps::hysteresisFuncPrime(H_d, dMdt, hpState);
+            deltaNR = (M - M_n1 - (Float)Talpha * (dMdt + last_dMdt)) /
+                      (Float(1.0) - (Float)Talpha * dMdtPrime);
             M -= deltaNR;
         }
 
         return M;
+#endif
     }
 
     // parameter values
     double fs = 48000.0;
     double T = 1.0 / fs;
     double Talpha = T / 1.9;
-    double M_s = 1.0;
-    double a = M_s / 4.0;
-    const double alpha = 1.6e-3;
-    double k = 0.47875;
-    double c = 1.7e-1;
     double upperLim = 20.0;
 
-    // Save calculations
-    double nc = 1 - c;
-    double M_s_oa = M_s / a;
-    double M_s_oa_talpha = alpha * M_s / a;
-    double M_s_oa_tc = c * M_s / a;
-    double M_s_oa_tc_talpha = alpha * c * M_s / a;
-    double M_s_oaSq_tc_talpha = alpha * c * M_s / (a * a);
-    double M_s_oaSq_tc_talphaSq = alpha * alpha * c * M_s / (a * a);
-
     // state variables
+#if CHOWTAPE_HYSTERESIS_USE_SIMD
+    __m128d M_n1;
+    __m128d H_n1;
+    __m128d H_d_n1;
+#else
     double M_n1 = 0.0;
     double H_n1 = 0.0;
     double H_d_n1 = 0.0;
+#endif
 
-    // temp vars
-    double Q, M_diff, delta, delta_M, L_prime, kap1, f1Denom, f1, f2, f3;
-    double coth = 0.0;
-    bool nearZero = false;
+    HysteresisOps::HysteresisState hpState;
 };
-
-} // namespace chowdsp
 
 #endif
