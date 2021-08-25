@@ -41,7 +41,7 @@ UninstallFilesDir={commonappdata}\Surge XT\uninstall
 
 [InstallDelete]
 Type: filesandordirs; Name: "{commoncf64}\VST3\Surge Synth Team\Surge XT Effects.vst3"
-;; clean up factory data folder, except tuning-library folder (users might link to their own custom tunings into this folder)
+;; clean up factory data folder, except tuning_library folder (users might link to their own custom tunings into this folder)
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\modulator_presets"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_3rdparty"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_factory"
