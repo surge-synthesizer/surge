@@ -1497,13 +1497,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         bool isChecked = (p->deform_type);
 
-                        contextMenu.addItem(Surge::GUI::toOSCaseForMenu(
-                                                "Ramp Not Masked Above Threshold"),
-                                            true, isChecked, [p, this]() {
-                                                p->deform_type = !p->deform_type;
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCaseForMenu("Ramp Not Masked Above Threshold"), true,
+                            isChecked, [p, this]() {
+                                p->deform_type = !p->deform_type;
 
-                                                synth->refresh_editor = true;
-                                            });
+                                synth->refresh_editor = true;
+                            });
 
                         break;
                     }
@@ -1511,7 +1511,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
 
-                        juce::StringArray tapeHysteresisModes{"Normal", "Medium", "High", "Very High"};
+                        juce::StringArray tapeHysteresisModes{"Normal", "Medium", "High",
+                                                              "Very High"};
 
                         for (int i = 0; i < tapeHysteresisModes.size(); ++i)
                         {
