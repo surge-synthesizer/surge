@@ -2442,14 +2442,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                           (!this->synth->storage.isStandardTuning), false,
                           [this]() { showHTML(this->tuningToHtml()); });
 
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."),
-                          [this]()
-                          {
-                              auto path = Surge::Storage::appendDirectory(
-                                  this->synth->storage.datapath, "tuning_library");
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
+        auto path =
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library");
 
-                              Surge::GUI::openFileOrFolder(path);
-                          });
+        Surge::GUI::openFileOrFolder(path);
+    });
 
     return tuningSubMenu;
 }
