@@ -243,6 +243,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             h.modNum = -1;
             rows.push_back(h);
 
+            std::vector<Datum> trows;
             char nm[TXT_SIZE], dst[TXT_SIZE];
             for (auto q : r)
             {
@@ -270,14 +271,29 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                     moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(rDisp.mss));
                 rDisp.depth = moded->synth->getModDepth(ptag, thisms, q.source_index);
                 rDisp.isBipolar = moded->synth->isBipolarModulation(thisms);
-                rows.push_back(rDisp);
+                trows.push_back(rDisp);
 
                 rDisp.type = Datum::EDIT_ROW;
-                rows.push_back(rDisp);
+                trows.push_back(rDisp);
 
                 oss << "    > " << this->moded->ed->modulatorName(q.source_id, false) << " to "
                     << nm << " at " << q.depth << "\n";
             }
+
+            std::sort(trows.begin(), trows.end(), [](const Datum &a, const Datum &b) -> bool {
+                if (a.source_id != b.source_id)
+                    return a.source_id < b.source_id;
+
+                if (a.dest_id != b.dest_id)
+                    return a.dest_id < b.dest_id;
+
+                if (a.type != b.type)
+                    return a.type < b.type;
+
+                return false;
+            });
+            for (const auto &d : trows)
+                rows.push_back(d);
         };
         append("Global Modulators", moded->synth->storage.getPatch().modulation_global, 0, -1);
         append("Scene A - Voice Modulators",

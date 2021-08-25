@@ -992,9 +992,8 @@ class alignas(16) SurgeStorage
     std::string export_wt_wav_portable(std::string fbase, Wavetable *wt);
     void clipboard_copy(int type, int scene, int entry);
     void clipboard_paste(int type, int scene, int entry);
-    int get_clipboard_type();
-
-    int getAdjacentWaveTable(int id, bool nextPrev);
+    int get_clipboard_type() const;
+    int getAdjacentWaveTable(int id, bool nextPrev) const;
 
     // The in-memory patch database.
     std::vector<Patch> patch_list;

@@ -426,7 +426,7 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
     ** This is used to draw checkmarks in the menu. If for some reason we don't
     ** find one, nothing will break
     */
-    int inferredPatchId = -1;
+    std::vector<int> inferredPatchIds;
     int cnt = storage.patch_list.size();
     string name = storage.getPatch().name;
     string cat = storage.getPatch().category;
@@ -436,39 +436,44 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
             storage.patch_category[storage.patch_list[p].category].name == cat)
         {
             current_category_id = storage.patch_list[p].category;
-            inferredPatchId = p;
-            break;
+            inferredPatchIds.push_back(p);
         }
     }
 
-    if (inferredPatchId >= 0 && inferredPatchId != patchid)
+    if (!inferredPatchIds.empty())
     {
-        // If the patchid is out of range or if it is the default overrule
-        if (patchid < 0 && patchid >= storage.patch_list.size())
+        bool foundOne{false};
+        int nextPatchId = patchid;
+        for (auto inferredPatchId : inferredPatchIds)
         {
-            patchid = inferredPatchId;
+            // If the patchid is out of range or if it is the default overrule
+            if (patchid < 0 && patchid >= storage.patch_list.size())
+            {
+                nextPatchId = inferredPatchId;
+                foundOne = true;
+            }
+            else if (storage.patch_list[patchid].name == storage.initPatchName &&
+                     storage.patch_category[storage.patch_list[patchid].category].name ==
+                         storage.initPatchCategory)
+            {
+                nextPatchId = inferredPatchId;
+                foundOne = true;
+            }
+            else if (patchid == inferredPatchId)
+            {
+                foundOne = true;
+            }
         }
-        else if (storage.patch_list[patchid].name == storage.initPatchName &&
-                 storage.patch_category[storage.patch_list[patchid].category].name ==
-                     storage.initPatchCategory)
+        if (foundOne)
         {
-            patchid = inferredPatchId;
+            patchid = nextPatchId;
         }
         else
         {
             /*
              * I don't see how this could ever happen. Punt.
              */
-            std::ostringstream oss;
-            oss << "Error infering patch id. Prior patchid was " << patchid << " inferred id is "
-                << inferredPatchId << "."
-                << "patch_list[patchid].name/cat = '" << storage.patch_list[patchid].name << "'/'"
-                << storage.patch_list[patchid].name << "' and initPatchNameCat are '"
-                << storage.initPatchName << "'/'" << storage.initPatchCategory << "'. Please "
-                << "share this error with Surge devs.";
-            std::cout << oss.str() << std::endl;
-            storage.reportError(oss.str(), "Software Error");
-            patchid = inferredPatchId;
+            patchid = inferredPatchIds.back();
         }
     }
 }
@@ -478,19 +483,12 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 #include <sys/stat.h>
 #endif
 
-string SurgeSynthesizer::getUserPatchDirectory() { return storage.userDataPath; }
-string SurgeSynthesizer::getLegacyUserPatchDirectory()
-{
-    return storage.datapath + "patches_user" + PATH_SEPARATOR;
-}
-
 void SurgeSynthesizer::savePatch()
 {
     if (storage.getPatch().category.empty())
         storage.getPatch().category = "Default";
 
-    fs::path savepath =
-        string_to_path(getUserPatchDirectory() + PATH_SEPARATOR + "Patches" + PATH_SEPARATOR);
+    fs::path savepath = string_to_path(storage.userPatchesPath);
 
     try
     {

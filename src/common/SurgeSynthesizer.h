@@ -126,10 +126,10 @@ class alignas(16) SurgeSynthesizer
     int calculateChannelMask(int channel, int key);
     void softkillVoice(int scene);
     void enforcePolyphonyLimit(int scene, int margin);
-    int getNonUltrareleaseVoices(int scene);
-    int getNonReleasedVoices(int scene);
+    int getNonUltrareleaseVoices(int scene) const;
+    int getNonReleasedVoices(int scene) const;
 
-    SurgeVoice *getUnusedVoice(int scene);
+    SurgeVoice *getUnusedVoice(int scene); // not const since it updates voice state
     void freeVoice(SurgeVoice *);
     std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
     unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B
@@ -190,31 +190,31 @@ class alignas(16) SurgeSynthesizer
         return i;
     }
 
-    void getParameterDisplay(const ID &index, char *text)
+    void getParameterDisplay(const ID &index, char *text) const
     {
         getParameterDisplay(index.getSynthSideId(), text);
     }
-    void getParameterDisplay(const ID &index, char *text, float x)
+    void getParameterDisplay(const ID &index, char *text, float x) const
     {
         getParameterDisplay(index.getSynthSideId(), text);
     }
-    void getParameterDisplayAlt(const ID &index, char *text)
+    void getParameterDisplayAlt(const ID &index, char *text) const
     {
         getParameterDisplayAlt(index.getSynthSideId(), text);
     }
-    void getParameterName(const ID &index, char *text)
+    void getParameterName(const ID &index, char *text) const
     {
         getParameterName(index.getSynthSideId(), text);
     }
-    void getParameterAccessibleName(const ID &index, char *text)
+    void getParameterAccessibleName(const ID &index, char *text) const
     {
         getParameterAccessibleName(index.getSynthSideId(), text);
     }
-    void getParameterMeta(const ID &index, parametermeta &pm)
+    void getParameterMeta(const ID &index, parametermeta &pm) const
     {
         getParameterMeta(index.getSynthSideId(), pm);
     }
-    float getParameter01(const ID &index) { return getParameter01(index.getSynthSideId()); }
+    float getParameter01(const ID &index) const { return getParameter01(index.getSynthSideId()); }
     bool setParameter01(const ID &index, float value, bool external = false,
                         bool force_integer = false)
     {
@@ -222,18 +222,18 @@ class alignas(16) SurgeSynthesizer
     }
 
     void setMacroParameter01(long macroNum, float val);
-    float getMacroParameter01(long macroNum);
+    float getMacroParameter01(long macroNum) const;
 
-    bool getParameterIsBoolean(const ID &index);
+    bool getParameterIsBoolean(const ID &index) const;
 
-    bool stringToNormalizedValue(const ID &index, std::string s, float &outval);
+    bool stringToNormalizedValue(const ID &index, std::string s, float &outval) const;
 
-    float normalizedToValue(const ID &index, float val)
+    float normalizedToValue(const ID &index, float val) const
     {
         return normalizedToValue(index.getSynthSideId(), val);
     }
 
-    float valueToNormalized(const ID &index, float val)
+    float valueToNormalized(const ID &index, float val) const
     {
         return valueToNormalized(index.getSynthSideId(), val);
     }
@@ -246,16 +246,16 @@ class alignas(16) SurgeSynthesizer
   private:
     bool setParameter01(long index, float value, bool external = false, bool force_integer = false);
     void sendParameterAutomation(long index, float value);
-    float getParameter01(long index);
-    float getParameter(long index);
-    float normalizedToValue(long parameterIndex, float value);
-    float valueToNormalized(long parameterIndex, float value);
-    void getParameterDisplay(long index, char *text);
-    void getParameterDisplay(long index, char *text, float x);
-    void getParameterDisplayAlt(long index, char *text);
-    void getParameterName(long index, char *text);
-    void getParameterAccessibleName(long index, char *text);
-    void getParameterMeta(long index, parametermeta &pm);
+    float getParameter01(long index) const;
+    float getParameter(long index) const;
+    float normalizedToValue(long parameterIndex, float value) const;
+    float valueToNormalized(long parameterIndex, float value) const;
+    void getParameterDisplay(long index, char *text) const;
+    void getParameterDisplay(long index, char *text, float x) const;
+    void getParameterDisplayAlt(long index, char *text) const;
+    void getParameterName(long index, char *text) const;
+    void getParameterAccessibleName(long index, char *text) const;
+    void getParameterMeta(long index, parametermeta &pm) const;
 
   public:
     void updateDisplay();
@@ -296,9 +296,6 @@ class alignas(16) SurgeSynthesizer
     void selectRandomPatch();
 
     void swapMetaControllers(int ct1, int ct2);
-
-    std::string getUserPatchDirectory();
-    std::string getLegacyUserPatchDirectory();
 
     void savePatchToPath(fs::path p);
     void savePatch();

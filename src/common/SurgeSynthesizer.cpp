@@ -470,12 +470,11 @@ void SurgeSynthesizer::enforcePolyphonyLimit(int s, int margin)
     }
 }
 
-int SurgeSynthesizer::getNonUltrareleaseVoices(int s)
+int SurgeSynthesizer::getNonUltrareleaseVoices(int s) const
 {
     int count = 0;
 
-    list<SurgeVoice *>::iterator iter;
-    iter = voices[s].begin();
+    auto iter = voices[s].begin();
     while (iter != voices[s].end())
     {
         SurgeVoice *v = *iter;
@@ -488,12 +487,11 @@ int SurgeSynthesizer::getNonUltrareleaseVoices(int s)
     return count;
 }
 
-int SurgeSynthesizer::getNonReleasedVoices(int s)
+int SurgeSynthesizer::getNonReleasedVoices(int s) const
 {
     int count = 0;
 
-    list<SurgeVoice *>::iterator iter;
-    iter = voices[s].begin();
+    auto iter = voices[s].begin();
     while (iter != voices[s].end())
     {
         SurgeVoice *v = *iter;
@@ -2882,7 +2880,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int index,
     return true;
 }
 
-float SurgeSynthesizer::getMacroParameter01(long macroNum)
+float SurgeSynthesizer::getMacroParameter01(long macroNum) const
 {
     return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01(0);
 }
@@ -2893,14 +2891,14 @@ void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
         ->set_target01(val, true);
 }
 
-float SurgeSynthesizer::getParameter01(long index)
+float SurgeSynthesizer::getParameter01(long index) const
 {
     if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
 }
 
-void SurgeSynthesizer::getParameterDisplay(long index, char *text)
+void SurgeSynthesizer::getParameterDisplay(long index, char *text) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2912,7 +2910,7 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text)
     }
 }
 
-void SurgeSynthesizer::getParameterDisplayAlt(long index, char *text)
+void SurgeSynthesizer::getParameterDisplayAlt(long index, char *text) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2924,7 +2922,7 @@ void SurgeSynthesizer::getParameterDisplayAlt(long index, char *text)
     }
 }
 
-void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x)
+void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2934,7 +2932,7 @@ void SurgeSynthesizer::getParameterDisplay(long index, char *text, float x)
         snprintf(text, TXT_SIZE, "-");
 }
 
-void SurgeSynthesizer::getParameterName(long index, char *text)
+void SurgeSynthesizer::getParameterName(long index, char *text) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2949,7 +2947,7 @@ void SurgeSynthesizer::getParameterName(long index, char *text)
         snprintf(text, TXT_SIZE, "-");
 }
 
-void SurgeSynthesizer::getParameterAccessibleName(long index, char *text)
+void SurgeSynthesizer::getParameterAccessibleName(long index, char *text) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2964,7 +2962,7 @@ void SurgeSynthesizer::getParameterAccessibleName(long index, char *text)
         snprintf(text, TXT_SIZE, "-");
 }
 
-void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm)
+void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
     {
@@ -2989,28 +2987,28 @@ void SurgeSynthesizer::getParameterMeta(long index, parametermeta &pm)
     }
 }
 
-float SurgeSynthesizer::getParameter(long index)
+float SurgeSynthesizer::getParameter(long index) const
 {
     if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->get_value_f01();
     return 0.f;
 }
 
-float SurgeSynthesizer::normalizedToValue(long index, float value)
+float SurgeSynthesizer::normalizedToValue(long index, float value) const
 {
     if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->normalized_to_value(value);
     return 0.f;
 }
 
-float SurgeSynthesizer::valueToNormalized(long index, float value)
+float SurgeSynthesizer::valueToNormalized(long index, float value) const
 {
     if (index >= 0 && index < storage.getPatch().param_ptr.size())
         return storage.getPatch().param_ptr[index]->value_to_normalized(value);
     return 0.f;
 }
 
-bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, float &outval)
+bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, float &outval) const
 {
     int id = index.getSynthSideId();
     if (id < 0 || id >= storage.getPatch().param_ptr.size())
@@ -4037,7 +4035,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     refresh_editor = true;
 }
 
-bool SurgeSynthesizer::getParameterIsBoolean(const ID &id)
+bool SurgeSynthesizer::getParameterIsBoolean(const ID &id) const
 {
     auto index = id.getSynthSideId();
 
