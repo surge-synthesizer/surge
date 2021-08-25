@@ -31,7 +31,7 @@ class HysteresisProcessing
     template <SolverType solver, typename Float> inline Float process(Float H) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, _mm_set_pd1(T));
+        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, _mm_set1_pd(T));
 #else
         auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, T);
 #endif
@@ -53,7 +53,7 @@ class HysteresisProcessing
             break;
         default:
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-            M = _mm_set_pd1(0.0);
+            M = _mm_set1_pd(0.0);
 #else
             M = 0.0;
 #endif
@@ -62,7 +62,7 @@ class HysteresisProcessing
             // check for instability
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
         auto illCondition =
-            _mm_or_pd(_mm_cmpunord_pd(M, M), _mm_cmpgt_pd(M, _mm_set_pd1(upperLim)));
+            _mm_or_pd(_mm_cmpunord_pd(M, M), _mm_cmpgt_pd(M, _mm_set1_pd(upperLim)));
         M = _mm_andnot_pd(illCondition, M);
         H_d = _mm_andnot_pd(illCondition, H_d);
 #else
@@ -83,7 +83,7 @@ class HysteresisProcessing
     template <typename Float> inline Float RK2Solver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set_pd1(a)
+#define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
         const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
@@ -108,7 +108,7 @@ class HysteresisProcessing
     template <typename Float> inline Float RK4Solver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set_pd1(a)
+#define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
         const auto H_1_2 = M(A(H, H_n1), F(0.5));
@@ -148,7 +148,7 @@ class HysteresisProcessing
     template <int nIterations, typename Float> inline Float NRSolver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set_pd1(a)
+#define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define D(a, b) _mm_div_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)

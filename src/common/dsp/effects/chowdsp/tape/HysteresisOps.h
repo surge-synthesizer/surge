@@ -7,7 +7,7 @@
 
 namespace HysteresisOps
 {
-#define F(a) _mm_set_pd1(a)
+#define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define D(a, b) _mm_div_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
@@ -63,12 +63,10 @@ static inline __m128d signumSIMD(__m128d val)
  */
 static inline __m128d tanhSIMD(__m128d x)
 {
-    auto xc = _mm_min_pd(_mm_set_pd1(5.7), _mm_max_pd(_mm_set_pd1(-5.7), x));
+    auto xc = _mm_min_pd(F(5.7), _mm_max_pd(F(-5.7), x));
 
-    static const __m128d v2027025 = _mm_set_pd1(2027025.0), v270270 = _mm_set_pd1(270270.0),
-                         v6930 = _mm_set_pd1(6930.0), v36 = _mm_set_pd1(36.0),
-                         v945945 = _mm_set_pd1(945945.0), v51975 = _mm_set_pd1(51975.0),
-                         v630 = _mm_set_pd1(630.0);
+    static const __m128d v2027025 = F(2027025.0), v270270 = F(270270.0), v6930 = F(6930.0),
+                         v36 = F(36.0), v945945 = F(945945.0), v51975 = F(51975.0), v630 = F(630.0);
 
     auto x2 = M(xc, xc);
     auto numerator = M(xc, A(v2027025, M(x2, A(v270270, M(x2, A(v6930, M(v36, x2)))))));
