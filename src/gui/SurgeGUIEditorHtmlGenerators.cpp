@@ -26,8 +26,7 @@ void SurgeGUIEditor::showHTML(const std::string &html)
 
     auto f = juce::File::createTempFile("_surge.html");
     f.replaceWithText(html);
-    auto U = juce::URL(f);
-    U.launchInDefaultBrowser();
+    f.startAsProcess();
     byebyeOnExit->deleteThese.push_back(f);
 };
 
