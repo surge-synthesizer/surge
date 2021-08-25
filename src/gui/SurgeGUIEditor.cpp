@@ -3003,17 +3003,13 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 {
     auto dataSubMenu = juce::PopupMenu();
 
-    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Data Folder..."), [this]() {
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "patches_factory"));
-    });
+    dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Data Folder..."),
+                        [this]() { Surge::GUI::openFileOrFolder(this->synth->storage.datapath); });
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
         // make it if it isn't there
-        fs::create_directories(string_to_path(
-            Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Patches")));
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->synth->storage.userDataPath, "Patches"));
+        fs::create_directories(string_to_path(this->synth->storage.userDataPath));
+        Surge::GUI::openFileOrFolder(this->synth->storage.userDataPath);
     });
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
