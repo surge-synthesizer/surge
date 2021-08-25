@@ -594,7 +594,7 @@ void FxMenu::scanExtraPresets()
         {
             alit->itemType = tp.first;
             alit->name = ps.name;
-            alit->isUser = true;
+            alit->isUser = !ps.isFactory;
             alit->path = string_to_path(ps.file);
             auto thisPath = rootPath;
             for (const auto &q : ps.subPath)

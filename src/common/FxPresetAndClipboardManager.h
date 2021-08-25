@@ -31,6 +31,7 @@ struct Preset
     std::string file;
     std::string name;
     fs::path subPath{};
+    bool isFactory{false};
     int type{-1};
     float p[n_fx_params];
     bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
@@ -39,6 +40,7 @@ struct Preset
     Preset()
     {
         type = 0;
+        isFactory = false;
 
         for (int i = 0; i < n_fx_params; ++i)
         {

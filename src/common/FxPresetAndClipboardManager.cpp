@@ -33,11 +33,13 @@ void forcePresetRescan(SurgeStorage *storage)
     haveScannedPresets = true;
 
     auto ud = storage->userFXPath;
+    auto fd = string_to_path(storage->datapath) / "fx_presets";
 
-    std::vector<fs::path> sfxfiles;
+    std::vector<std::pair<fs::path, bool>> sfxfiles;
 
-    std::deque<fs::path> workStack;
-    workStack.push_back(fs::path(ud));
+    std::deque<std::pair<fs::path, bool>> workStack;
+    workStack.emplace_back(fs::path(ud), false);
+    workStack.emplace_back(fd, true);
 
     try
     {
@@ -45,17 +47,17 @@ void forcePresetRescan(SurgeStorage *storage)
         {
             auto top = workStack.front();
             workStack.pop_front();
-            if (fs::is_directory(top))
+            if (fs::is_directory(top.first))
             {
-                for (auto &d : fs::directory_iterator(top))
+                for (auto &d : fs::directory_iterator(top.first))
                 {
                     if (fs::is_directory(d))
                     {
-                        workStack.push_back(d);
+                        workStack.emplace_back(d, top.second);
                     }
                     else if (path_to_string(d.path().extension()) == ".srgfx")
                     {
-                        sfxfiles.push_back(d.path());
+                        sfxfiles.emplace_back(d.path(), top.second);
                     }
                 }
             }
@@ -74,12 +76,12 @@ void forcePresetRescan(SurgeStorage *storage)
     {
         {
             Preset preset;
-            preset.file = path_to_string(f);
+            preset.file = path_to_string(f.first);
 
             TiXmlDocument d;
             int t;
 
-            if (!d.LoadFile(f))
+            if (!d.LoadFile(f.first))
                 goto badPreset;
 
             auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
@@ -101,8 +103,15 @@ void forcePresetRescan(SurgeStorage *storage)
                 goto badPreset;
 
             preset.type = t;
+            preset.isFactory = f.second;
 
-            auto rpath = f.lexically_relative(string_to_path(storage->userFXPath)).parent_path();
+            fs::path rpath;
+
+            if (f.second)
+                rpath = f.first.lexically_relative(fd).parent_path();
+            else
+                rpath =
+                    f.first.lexically_relative(string_to_path(storage->userFXPath)).parent_path();
 
             auto startCatPath = rpath.begin();
             if (*(startCatPath) == fx_type_names[t])
