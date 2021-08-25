@@ -2256,7 +2256,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         };
 
         auto scl_path =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library", "SCL");
 
         scl_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastSCLPath, scl_path);
@@ -2310,7 +2310,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         };
 
         auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
-                                                        "tuning-library", "KBM Concert Pitch");
+                                                        "tuning_library", "KBM Concert Pitch");
 
         kbm_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastKBMPath, kbm_path);
@@ -2443,10 +2443,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                           [this]() { showHTML(this->tuningToHtml()); });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
-        auto dpath =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
+        auto path =
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library");
 
-        juce::URL(juce::File(dpath)).launchInDefaultBrowser();
+        Surge::GUI::openFileOrFolder(path);
     });
 
     return tuningSubMenu;
