@@ -183,7 +183,7 @@ void HysteresisProcessor::process_internal_simd(double *data, const int numSampl
         auto curMakeup = makeup.getNextValue();
 
         auto inVec = _mm_load_pd(&data[samp]);
-        auto outVec = _mm_mul_pd(hProc.process<solverType>(inVec), _mm_set_pd1(curMakeup));
+        auto outVec = _mm_mul_pd(hProc.process<solverType>(inVec), _mm_set1_pd(curMakeup));
         _mm_store_pd(&data[samp], outVec);
     }
 }
@@ -201,7 +201,7 @@ void HysteresisProcessor::process_internal_smooth_simd(double *data, const int n
         hProc.cook(curDrive, curWidth, curSat, false);
 
         auto inVec = _mm_load_pd(&data[samp]);
-        auto outVec = _mm_mul_pd(hProc.process<solverType>(inVec), _mm_set_pd1(curMakeup));
+        auto outVec = _mm_mul_pd(hProc.process<solverType>(inVec), _mm_set1_pd(curMakeup));
         _mm_store_pd(&data[samp], outVec);
     }
 }
