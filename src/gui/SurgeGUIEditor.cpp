@@ -2977,8 +2977,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     {
         skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
             Surge::GUI::openFileOrFolder(
-                Surge::Storage::appendDirectory(this->currentSkin->root,
-                                                this->currentSkin->name)
+                Surge::Storage::appendDirectory(this->currentSkin->root, this->currentSkin->name));
         });
     }
     else
