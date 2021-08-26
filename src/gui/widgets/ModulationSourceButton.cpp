@@ -47,7 +47,8 @@ void ModulationSourceButton::paint(juce::Graphics &g)
 
     juce::Colour FrameCol, FillCol, FontCol;
 
-    FillCol = skin->getColor(Colors::ModSource::Used::Background);
+    FillCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::Background)
+                           : skin->getColor(Colors::ModSource::Unused::Background);
     FrameCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::Border)
                             : skin->getColor(Colors::ModSource::Unused::Border);
     FontCol = UsedOrActive ? skin->getColor(Colors::ModSource::Used::Text)
