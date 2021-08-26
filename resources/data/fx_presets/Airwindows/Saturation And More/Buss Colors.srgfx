@@ -1,0 +1,51 @@
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Buss Colors" p0="44" p1="0" p2="0.5" p3="0.5" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Cojones" p0="28" p1="0.5" p2="0.5" p3="0.5" p4="1" p5="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Density" p0="29" p1="0.2" p2="0" p3="1" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Drive" p0="30" p1="0" p2="0" p3="1" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Focus" p0="31" p1="0" p2="0.5" p3="0" p4="1" p5="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Fracture" p0="32" p1="0.25" p2="0" p3="1" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Hard Vacuum" p0="33" p1="0" p2="0" p3="0" p4="1" p5="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Loud" p0="34" p1="0" p2="1" p3="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Mojo" p0="5" p1="0.5" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="NC-17" p0="35" p1="0" p2="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Single-Ended Triode" p0="40" p1="0" p2="0" p3="0" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Spiral" p0="36" p1="0.5" p2="0" p3="0.5" p4="1" p5="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot type="14" name="Unbox" p0="37" p1="0.5" p2="0" p3="0.5" />
+</single-fx>

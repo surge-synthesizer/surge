@@ -53,7 +53,7 @@ struct Preset
     }
 };
 
-void forcePresetRescan(SurgeStorage *);
+void doPresetRescan(SurgeStorage *storage, bool forceRescan = false);
 std::unordered_map<int, std::vector<Preset>> getPresetsByType();
 std::vector<Preset> getPresetsForSingleType(int type_id);
 bool hasPresetsForSingleType(int type_id);

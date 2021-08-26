@@ -3039,7 +3039,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         this->synth->storage.refresh_patchlist();
         this->scannedForMidiPresets = false;
 
-        Surge::FxUserPreset::forcePresetRescan(&(this->synth->storage));
+        Surge::FxUserPreset::doPresetRescan(&(this->synth->storage));
         Surge::ModulatorPreset::forcePresetRescan();
 
         // Rescan for skins
