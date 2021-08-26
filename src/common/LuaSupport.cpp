@@ -159,15 +159,15 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     return true;
 }
 
-bool Surge::LuaSupport::loadSurgePrologue(lua_State *L)
+bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
 {
-    auto guard = SGLD("loadPrologue", L);
+    auto guard = SGLD("loadPrologue", s);
     // now load the surge library
-    auto lua_script = SurgeSharedBinary::surge_prologue_lua;
-    auto lua_size = SurgeSharedBinary::surge_prologue_luaSize;
-    auto load_stat = luaL_loadbuffer(L, lua_script, lua_size, lua_script);
-    auto pcall = lua_pcall(L, 0, 1, 0);
-    lua_setglobal(L, "surge");
+    auto lua_script = SurgeSharedBinary::surge_prelude_lua;
+    auto lua_size = SurgeSharedBinary::surge_prelude_luaSize;
+    auto load_stat = luaL_loadbuffer(s, lua_script, lua_size, lua_script);
+    auto pcall = lua_pcall(s, 0, 1, 0);
+    lua_setglobal(s, "surge");
     return true;
 }
 

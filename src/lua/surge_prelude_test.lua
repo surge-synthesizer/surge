@@ -1,4 +1,4 @@
--- surge = loadfile( "src/lua/surge_prologue.lua")(); loadfile("src/lua/surge_prologue_test.lua")(); print(test())
+-- surge = loadfile( "src/lua/surge_prelude.lua")(); loadfile("src/lua/surge_prelude_test.lua")(); print(test())
 
 function test()
 

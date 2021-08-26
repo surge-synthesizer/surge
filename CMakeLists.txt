@@ -184,8 +184,8 @@ juce_add_binary_data(surge-shared-binary
         resources/surge-shared/paramdocumentation.xml
 
         # I know this looks odd, but (1) its src and (2) I need it at runtime
-        src/lua/surge_prologue.lua
-        src/lua/surge_prologue_test.lua
+        src/lua/surge_prelude.lua
+        src/lua/surge_prelude_test.lua
         )
 
 target_link_libraries(surge-shared PUBLIC

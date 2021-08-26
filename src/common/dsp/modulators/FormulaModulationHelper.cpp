@@ -63,7 +63,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 
     if (firstTimeThrough)
     {
-        Surge::LuaSupport::loadSurgePrologue(s.L);
+        Surge::LuaSupport::loadSurgePrelude(s.L);
         auto reserved0 = std::string(R"FN(
 function surge_reserved_formula_error_stub(m)
     return 0;
