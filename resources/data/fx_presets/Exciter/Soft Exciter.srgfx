@@ -1,0 +1,8 @@
+<single-fx streaming_version="15">
+    <snapshot name="Soft Exciter" p0="0.75" p1="0.15" p2="0.349485" p3="0.650515" p4="1" />
+</single-fx>
+
+<single-fx streaming_version="15">
+    <snapshot name="Widely Excited" p0="0.8" p1="0.45" p2="0.349485" p3="0.650515" p4="0.15" />
+</single-fx>
+
