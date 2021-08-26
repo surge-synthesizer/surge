@@ -182,8 +182,14 @@ void doPresetRescan(SurgeStorage *storage, bool forceRescan)
     for (auto &a : scannedPresets)
     {
         std::sort(a.second.begin(), a.second.end(), [](const Preset &a, const Preset &b) {
+
             if (a.type == b.type)
             {
+                if (a.isFactory != b.isFactory)
+                {
+                    return a.isFactory;
+                }
+
                 return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
             }
             else
