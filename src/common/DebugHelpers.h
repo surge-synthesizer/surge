@@ -8,6 +8,7 @@
 
 #pragma once
 #include <string>
+#include <chrono>
 
 #define _D(x) " " << (#x) << "=" << x
 #define _R(x, y) Surge::Debug::LifeCycleToConsole y(x);
@@ -33,6 +34,14 @@ struct LifeCycleToConsole
     LifeCycleToConsole(const std::string &s);
     ~LifeCycleToConsole();
     std::string s;
+};
+
+struct TimeBlock
+{
+    TimeBlock(const std::string &tag);
+    ~TimeBlock();
+    std::string tag;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
 } // namespace Debug

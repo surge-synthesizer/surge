@@ -16,6 +16,7 @@
 #include "FxPresetAndClipboardManager.h"
 #include "StringOps.h"
 #include "Effect.h"
+#include "DebugHelpers.h"
 
 namespace Surge
 {
@@ -27,8 +28,12 @@ static bool haveScannedPresets = false;
 
 std::unordered_map<int, std::vector<Preset>> getPresetsByType() { return scannedPresets; }
 
-void forcePresetRescan(SurgeStorage *storage)
+void doPresetRescan(SurgeStorage *storage, bool forceRescan)
 {
+    if (haveScannedPresets && !forceRescan)
+        return;
+
+    // auto tb = Surge::Debug::TimeBlock(__func__);
     scannedPresets.clear();
     haveScannedPresets = true;
 
@@ -298,7 +303,7 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
     pfile << "</single-fx>\n";
     pfile.close();
 
-    Surge::FxUserPreset::forcePresetRescan(storage);
+    Surge::FxUserPreset::doPresetRescan(storage, true);
 }
 
 void loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
