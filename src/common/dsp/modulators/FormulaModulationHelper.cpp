@@ -63,6 +63,7 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 
     if (firstTimeThrough)
     {
+        Surge::LuaSupport::loadSurgePrologue(s.L);
         auto reserved0 = std::string(R"FN(
 function surge_reserved_formula_error_stub(m)
     return 0;
@@ -82,7 +83,9 @@ end
     auto h = fs->formulaHash;
     auto pvn = std::string("pvn") + std::to_string(is_display) + "_" + std::to_string(h);
     auto pvf = pvn + "_f";
+    auto pvfInit = pvn + "_fInit";
     snprintf(s.funcName, TXT_SIZE, "%s", pvf.c_str());
+    snprintf(s.funcNameInit, TXT_SIZE, "%s", pvfInit.c_str());
 
     // Handle hash collisions
     lua_getglobal(s.L, pvn.c_str());
@@ -104,6 +107,7 @@ end
     if (hasString)
     {
         snprintf(s.funcName, TXT_SIZE, "%s", pvf.c_str());
+        snprintf(s.funcNameInit, TXT_SIZE, "%s", pvfInit.c_str());
         // CHECK that I can actually get the function here
         lua_getglobal(s.L, s.funcName);
         s.isvalid = lua_isfunction(s.L, -1);
@@ -112,8 +116,8 @@ end
     else
     {
         std::string emsg;
-        bool res =
-            Surge::LuaSupport::parseStringDefiningFunction(s.L, fs->formulaString, "process", emsg);
+        bool res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+            s.L, fs->formulaString, {"process", "init"}, emsg);
 
         if (res)
         {
@@ -124,6 +128,15 @@ end
 
             // Then get it and set its env
             lua_getglobal(s.L, s.funcName);
+            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
+            lua_pop(s.L, 1);
+
+            lua_setglobal(s.L, s.funcNameInit);
+            lua_pushnil(s.L);
+            lua_setglobal(s.L, "init");
+
+            // Then get it and set its env
+            lua_getglobal(s.L, s.funcNameInit);
             Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
             lua_pop(s.L, 1);
 
@@ -143,9 +156,20 @@ end
     if (s.isvalid)
     {
         // Create my state object each time
+        lua_getglobal(s.L, s.funcNameInit);
         lua_createtable(s.L, 0, 10);
+        if (lua_isfunction(s.L, -2))
+        {
+            lua_pcall(s.L, 1, 1, 0);
+            if (!lua_istable(s.L, -1))
+            {
+                s.isvalid = false;
+                // s.adderror( "Init function did not return a table" );
+            }
+        }
         lua_setglobal(s.L,
                       s.stateName); // FIXME - we have to clean this up when evaluat is done
+        lua_pop(s.L, -1);
     }
 
     if (is_display)
@@ -212,6 +236,7 @@ bool cleanEvaluatorState(EvaluatorState &s)
 bool initEvaluatorState(EvaluatorState &s)
 {
     s.funcName[0] = 0;
+    s.funcNameInit[0] = 0;
     s.stateName[0] = 0;
     s.L = nullptr;
     return true;
@@ -256,6 +281,11 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         return;
     }
     lua_getglobal(s->L, s->stateName);
+
+    lua_pushstring(s->L, "av");
+    lua_gettable(s->L, -2);
+    lua_pop(s->L, 1);
+
     // Stack is now func > table  so we can update the table
     lua_pushstring(s->L, "intphase");
     lua_pushinteger(s->L, phaseIntPart);
