@@ -45,7 +45,8 @@ class CodeEditorContainerWithApply : public juce::Component,
                                      public Surge::GUI::SkinConsumingComponent
 {
   public:
-    CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s, Surge::GUI::Skin::ptr_t sk);
+    CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s, Surge::GUI::Skin::ptr_t sk,
+                                 bool addComponents = false);
     std::unique_ptr<juce::CodeDocument> mainDocument;
     std::unique_ptr<juce::CodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
@@ -64,14 +65,16 @@ class CodeEditorContainerWithApply : public juce::Component,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CodeEditorContainerWithApply);
 };
 
-class FormulaModulatorEditor : public CodeEditorContainerWithApply
+struct ExpandingFormulaDebugger;
+
+struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 {
-  public:
     FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs,
                            Surge::GUI::Skin::ptr_t sk);
-    std::unique_ptr<juce::Label> warningLabel;
-    std::unique_ptr<juce::Label> lesserWarningLabel;
+    ~FormulaModulatorEditor();
 
+    std::unique_ptr<juce::TabbedComponent> tabs;
+    std::unique_ptr<ExpandingFormulaDebugger> efd;
     void resized() override;
     void applyCode() override;
 

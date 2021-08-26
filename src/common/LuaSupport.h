@@ -75,9 +75,9 @@ bool setSurgeFunctionEnvironment(lua_State *s);
 
 /*
  * Call this function with a LUA state and it will introduce the global
- * 'surge' which is the surge prologue
+ * 'surge' which is the surge prelude
  */
-bool loadSurgePrologue(lua_State *s);
+bool loadSurgePrelude(lua_State *s);
 
 /*
  * A little leak debugger. Make this on your stack and if you exit the

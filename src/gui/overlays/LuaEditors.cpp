@@ -60,14 +60,13 @@ struct EditorColors
 };
 
 CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s,
-                                                           Surge::GUI::Skin::ptr_t skin)
+                                                           Surge::GUI::Skin::ptr_t skin,
+                                                           bool addComponents)
     : editor(ed), storage(s)
 {
     applyButton = std::make_unique<juce::TextButton>("Apply");
     applyButton->setButtonText("Apply");
-    applyButton->setEnabled(false);
     applyButton->addListener(this);
-    addAndMakeVisible(applyButton.get());
 
     mainDocument = std::make_unique<juce::CodeDocument>();
     mainDocument->addListener(this);
@@ -78,7 +77,12 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
-    addAndMakeVisible(mainEditor.get());
+    if (addComponents)
+    {
+        addAndMakeVisible(applyButton.get());
+        addAndMakeVisible(mainEditor.get());
+    }
+    applyButton->setEnabled(false);
 }
 
 void CodeEditorContainerWithApply::buttonClicked(juce::Button *button)
@@ -114,30 +118,59 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
+struct ExpandingFormulaDebugger : public juce::Component
+{
+    bool isOpen{false};
+    ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed) {}
+    FormulaModulatorEditor *editor{nullptr};
+    void paint(juce::Graphics &g) override
+    {
+        if (isOpen)
+        {
+            g.fillAll(juce::Colours::orchid);
+            g.setColour(juce::Colours::white);
+            g.drawText("Debugger", getLocalBounds(), juce::Justification::centredTop);
+        }
+        else
+        {
+            g.fillAll(juce::Colours::steelblue);
+
+            g.setColour(juce::Colours::white);
+            auto h = 15, y = 10;
+            for (auto c : "Debugger")
+            {
+                g.drawText(std::string("") + c, 0, y, getWidth(), h, juce::Justification::centred);
+                y += h;
+            }
+        }
+    }
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        isOpen = !isOpen;
+        editor->resized();
+    }
+};
+
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                FormulaModulatorStorage *fs,
                                                Surge::GUI::Skin::ptr_t skin)
-    : CodeEditorContainerWithApply(ed, s, skin), formulastorage(fs)
+    : CodeEditorContainerWithApply(ed, s, skin, false), formulastorage(fs)
 {
     mainDocument->insertText(0, fs->formulaString);
+    tabs =
+        std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
+    tabs->addTab("Formula", juce::Colours::red, mainEditor.get(), false);
+    tabs->addTab("Prelude", juce::Colours::yellow, new juce::Label("Prelude", "Coming Soon"), true);
+    tabs->addTab("Help", juce::Colours::green, new juce::Label("Help", "Coming Soon"), true);
+    addAndMakeVisible(*tabs);
 
-    warningLabel = std::make_unique<juce::Label>("Warning");
-    warningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(14));
-    warningLabel->setBounds(5, 5, 730, 20);
-    warningLabel->setColour(juce::Label::textColourId, juce::Colour(255, 0, 0));
-    warningLabel->setText("WARNING: Dont use this! Super alpha! It will crash and probably won't "
-                          "load in the future or work now. And have fun!",
-                          juce::NotificationType::dontSendNotification);
+    tabs->getTabbedButtonBar().addAndMakeVisible(*applyButton);
 
-    addAndMakeVisible(warningLabel.get());
-
-    lesserWarningLabel = std::make_unique<juce::Label>("Lesser Warning");
-    lesserWarningLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-    lesserWarningLabel->setText(
-        "We will copy the script to clipboard when you apply, just in case.",
-        juce::NotificationType::dontSendNotification);
-    addAndMakeVisible(lesserWarningLabel.get());
+    efd = std::make_unique<ExpandingFormulaDebugger>(this);
+    addAndMakeVisible(*efd);
 }
+
+FormulaModulatorEditor::~FormulaModulatorEditor() = default;
 
 void FormulaModulatorEditor::applyCode()
 {
@@ -149,13 +182,16 @@ void FormulaModulatorEditor::applyCode()
 
 void FormulaModulatorEditor::resized()
 {
-    auto w = getWidth() - 5;
-    auto h = getHeight() - 5; // this is a hack obvs
-    int m = 3, m2 = m * 2;
-    warningLabel->setBounds(m, m, w - m2, 20);
-    mainEditor->setBounds(m, 20 + m2, w - m2, h - 40 - m2 - m2);
-    applyButton->setBounds(m, h - 20, 50, 20 - m);
-    lesserWarningLabel->setBounds(m2 + 50, h - 20, w - 70, 20 - m);
+    int efdWidth = 14;
+    if (efd->isOpen)
+    {
+        efdWidth = 200;
+    }
+    tabs->setTabBarDepth(18);
+    tabs->setBounds(2, 2, getWidth() - 8 - efdWidth, getHeight() - 4);
+    auto b = tabs->getTabbedButtonBar().getLocalBounds();
+    applyButton->setBounds(b.getWidth() - 80, 2, 80 - 2, b.getHeight() - 4);
+    efd->setBounds(getWidth() - 4 - efdWidth, 2, efdWidth, getHeight() - 4);
 }
 
 struct WavetablePreviewComponent : juce::Component
