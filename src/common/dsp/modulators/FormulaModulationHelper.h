@@ -30,6 +30,7 @@ struct EvaluatorState
 {
     bool released;
     char funcName[TXT_SIZE];
+    char funcNameInit[TXT_SIZE];
     char stateName[TXT_SIZE];
 
     bool isvalid = false;

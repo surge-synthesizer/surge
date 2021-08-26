@@ -20,10 +20,20 @@
 #include <sstream>
 #include <cstring>
 #include "basic_dsp.h"
+#include "SurgeSharedBinary.h"
 
 bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::string &definition,
                                                     const std::string &functionName,
                                                     std::string &errorMessage)
+{
+    auto res = parseStringDefiningMultipleFunctions(L, definition, {functionName}, errorMessage);
+    if (res != 1)
+        return false;
+    return true;
+}
+int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+    lua_State *L, const std::string &definition, const std::vector<std::string> functions,
+    std::string &errorMessage)
 {
     const char *lua_script = definition.c_str();
     auto lerr = luaL_loadbuffer(L, lua_script, strlen(lua_script), "lua-script");
@@ -42,8 +52,9 @@ bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::str
             errorMessage = oss.str();
         }
         lua_pop(L, 1);
-        lua_pushnil(L);
-        return false;
+        for (auto f : functions)
+            lua_pushnil(L);
+        return 0;
     }
 
     lerr = lua_pcall(L, 0, 0, 0);
@@ -54,30 +65,28 @@ bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::str
         oss << "Lua Evaluation Error: " << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
-        lua_pushnil(L);
-        return false;
+        for (auto f : functions)
+            lua_pushnil(L);
+        return 0;
     }
 
-    lua_getglobal(L, functionName.c_str());
-    if (lua_isfunction(L, -1))
-        return true;
-
-    if (lua_isnil(L, -1))
+    // sloppy
+    int res = 0;
+    std::vector<std::string> frev(functions.rbegin(), functions.rend());
+    for (auto functionName : frev)
     {
-        std::ostringstream oss;
-        oss << "Resolving global name '" << functionName << "' after parse returned nil."
-            << " Did you define the function?";
-        errorMessage = oss.str();
-        return false;
+        lua_getglobal(L, functionName.c_str());
+        if (lua_isfunction(L, -1))
+            res++;
+        else if (!lua_isnil(L, -1))
+        {
+            // Replace whatever is there with a nil
+            lua_pop(L, 1);
+            lua_pushnil(L);
+        }
     }
 
-    std::ostringstream oss;
-    oss << "After trying to find function '" << functionName << "' found non-function type '"
-        << lua_typename(L, lua_type(L, -1)) << "'";
-    errorMessage = oss.str();
-    lua_pop(L, 1);
-    lua_pushnil(L);
-    return false;
+    return res;
 }
 
 int lua_limitRange(lua_State *L)
@@ -106,8 +115,13 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // stack is now func > table > "math" > (math) so set math on table
     lua_settable(L, -3);
 
+    lua_pushstring(L, "surge");
+    lua_getglobal(L, "surge");
+    // stack is now func > table > "surge" > (surge) so set math on table
+    lua_settable(L, -3);
+
     // Now a list of functions we do include
-    std::vector<std::string> functionWhitelist = {"ipairs"};
+    std::vector<std::string> functionWhitelist = {"ipairs", "error"};
     for (const auto &f : functionWhitelist)
     {
         lua_pushstring(L, f.c_str());
@@ -142,6 +156,18 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfenv(L, -2);
 
     // And now the stack is back to just the function wrapped
+    return true;
+}
+
+bool Surge::LuaSupport::loadSurgePrologue(lua_State *L)
+{
+    auto guard = SGLD("loadPrologue", L);
+    // now load the surge library
+    auto lua_script = SurgeSharedBinary::surge_prologue_lua;
+    auto lua_size = SurgeSharedBinary::surge_prologue_luaSize;
+    auto load_stat = luaL_loadbuffer(L, lua_script, lua_size, lua_script);
+    auto pcall = lua_pcall(L, 0, 1, 0);
+    lua_setglobal(L, "surge");
     return true;
 }
 
