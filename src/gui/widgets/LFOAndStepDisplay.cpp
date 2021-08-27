@@ -286,7 +286,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
             path.startNewSubPath(xc, val);
             eupath.startNewSubPath(xc, euval);
 
-            if (!isUnipolar() && (lfodata->shape.val.i != lt_envelope))
+            if (!isUnipolar())
             {
                 edpath.startNewSubPath(xc, edval);
             }
