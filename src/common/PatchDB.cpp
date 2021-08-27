@@ -275,7 +275,7 @@ CREATE TABLE Category (
         {
             auto q = fs::path(name);
             auto l = q.filename();
-            leafname = path_to_string(l); // FIXME
+            leafname = l.u8string(); // FIXME
         }
         void go(workerS &w) override
         {
@@ -484,8 +484,8 @@ CREATE TABLE Category (
         {
             auto exists = SQL::Statement(
                 dbh, "SELECT id, last_write_time from Patches WHERE Patches.Path LIKE ?1");
-            auto s = path_to_string(p.path);
-            exists.bind(1, s);
+            const auto path(p.path.u8string());
+            exists.bind(1, path);
 
             while (exists.step())
             {
@@ -535,7 +535,8 @@ CREATE TABLE Category (
             auto ins = SQL::Statement(dbh, "INSERT INTO PATCHES ( \"path\", \"name\", "
                                            "\"category\", \"category_type\", \"last_write_time\" ) "
                                            "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
-            ins.bind(1, path_to_string(p.path));
+            const auto path(p.path.u8string());
+            ins.bind(1, path);
             ins.bind(2, p.name);
             ins.bind(3, p.catname);
             ins.bind(4, (int)p.type);
