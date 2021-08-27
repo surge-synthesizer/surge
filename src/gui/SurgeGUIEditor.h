@@ -610,6 +610,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     bool getShowVirtualKeyboard();
     void setShowVirtualKeyboard(bool b);
+    void toggleVirtualKeyboard();
 
   private:
     bool scannedForMidiPresets = false;

@@ -2731,18 +2731,21 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
     auto mcValue =
         Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
 
-    middleCSubMenu.addItem("C3", true, (mcValue == 2), [this]() {
+    middleCSubMenu.addItem("C3", true, (mcValue == 2), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 2);
+        juceEditor->keyboard->setOctaveForMiddleC(3);
         synth->refresh_editor = true;
     });
 
-    middleCSubMenu.addItem("C4", true, (mcValue == 1), [this]() {
+    middleCSubMenu.addItem("C4", true, (mcValue == 1), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
+        juceEditor->keyboard->setOctaveForMiddleC(4);
         synth->refresh_editor = true;
     });
 
-    middleCSubMenu.addItem("C5", true, (mcValue == 0), [this]() {
+    middleCSubMenu.addItem("C5", true, (mcValue == 0), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 0);
+        juceEditor->keyboard->setOctaveForMiddleC(5);
         synth->refresh_editor = true;
     });
 
@@ -2799,10 +2802,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
-                   [this, showVirtualKeyboard]() {
-                       setShowVirtualKeyboard(!showVirtualKeyboard);
-                       resizeWindow(zoomFactor);
-                   });
+                   [this]() { toggleVirtualKeyboard(); });
 
     return wfMenu;
 }
@@ -2811,22 +2811,37 @@ bool SurgeGUIEditor::getShowVirtualKeyboard()
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
     bool defaultVal = false;
+
     if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
         defaultVal = false;
     }
+
     return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
 }
 
 void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
+
     if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
     }
+
     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+}
+
+void SurgeGUIEditor::toggleVirtualKeyboard()
+{
+    auto mc =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
+
+    juceEditor->keyboard->setOctaveForMiddleC(5 - mc);
+
+    setShowVirtualKeyboard(!getShowVirtualKeyboard());
+    resizeWindow(zoomFactor);
 }
 
 juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
@@ -2900,16 +2915,6 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
     if (useDevMenu)
     {
-        auto f5Value = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::SkinReloadViaF5, 0);
-
-        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use F5 To Reload Current Skin"), true,
-                            (f5Value == 1), [this, f5Value]() {
-                                Surge::Storage::updateUserDefaultValue(
-                                    &(this->synth->storage), Surge::Storage::SkinReloadViaF5,
-                                    f5Value ? 0 : 1);
-                            });
-
         int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                         Surge::Storage::LayoutGridResolution, 16);
 
@@ -5024,22 +5029,80 @@ void SurgeGUIEditor::activateFromCurrentFx()
 }
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-    if (key.getKeyCode() == juce::KeyPress::tabKey)
+    if (key.getTextCharacter() == juce::KeyPress::tabKey)
     {
+        // store patch dialog gets access to the Tab key to switch between fields if it's open
         if (topmostEditorTag() == STORE_PATCH)
         {
-            /*
-            ** SaveDialog gets access to the tab key to switch between fields if it is open
-            */
             return false;
         }
+
         toggle_mod_editing();
+
         return true;
     }
-    else if (key.getKeyCode() == juce::KeyPress::F5Key)
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
-        if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                Surge::Storage::SkinReloadViaF5, 0))
+        // zoom actions
+        if (!key.getModifiers().isAnyModifierKeyDown() || key.getModifiers().isShiftDown())
+        {
+            int jog = 0;
+
+            if (key.getTextCharacter() == '+')
+            {
+                jog = key.getModifiers().isShiftDown() ? 25 : 10;
+            }
+
+            if (key.getTextCharacter() == '-')
+            {
+                jog = key.getModifiers().isShiftDown() ? -25 : -10;
+            }
+
+            if (jog != 0)
+            {
+                resizeWindow(getZoomFactor() + jog);
+
+                return true;
+            }
+
+            if (key.getTextCharacter() == '*')
+            {
+                auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                               Surge::Storage::DefaultZoom, 150);
+
+                resizeWindow(dzf);
+
+                return true;
+            }
+        }
+
+        // toggle debug console
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'd')
+        {
+            Surge::Debug::toggleConsole();
+
+            return true;
+        }
+
+        // toggle virtual keyboard
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'k')
+        {
+            toggleVirtualKeyboard();
+
+            return true;
+        }
+
+        // open manual
+        if (key.getKeyCode() == juce::KeyPress::F1Key)
+        {
+            juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
+
+            return true;
+        }
+
+        // reload current skin
+        if (key.getKeyCode() == juce::KeyPress::F5Key)
         {
             bitmapStore.reset(new SurgeImageStore());
             bitmapStore->setupBuiltinBitmaps();
@@ -5047,9 +5110,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             if (!currentSkin->reloadSkin(bitmapStore))
             {
                 auto db = Surge::GUI::SkinDB::get();
-                auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
-                                       "Classic.\n\nSkin error:\n") +
-                           db->getAndResetErrorString();
+                std::string msg = "Unable to load skin! Reverting the skin to Surge "
+                                  "Classic.\n\nSkin error:\n" +
+                                  db->getAndResetErrorString();
                 currentSkin = db->defaultSkin(&(synth->storage));
                 currentSkin->reloadSkin(bitmapStore);
                 synth->storage.reportError(msg, "Skin Loading Error");
@@ -5057,10 +5120,26 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             reloadFromSkin();
             synth->refresh_editor = true;
+
+            return true;
         }
 
-        return true;
+        // toggle about screen
+        if (key.getKeyCode() == juce::KeyPress::F12Key)
+        {
+            if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
+            {
+                this->hideAboutScreen();
+            }
+            else
+            {
+                this->showAboutScreen();
+            }
+
+            return true;
+        }
     }
+
     return false;
 }
 

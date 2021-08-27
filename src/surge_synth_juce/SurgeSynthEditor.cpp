@@ -31,8 +31,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
 
-    keyboard->setOctaveForMiddleC(3 + mcValue);
-    keyboard->setLowestVisibleKey(60 - 30);
+    keyboard->setOctaveForMiddleC(5 - mcValue);
+    keyboard->setKeyPressBaseOctave(5);
+    keyboard->setLowestVisibleKey(24);
     tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
     tempoTypein->setText(std::to_string((int)(processor.surge->storage.temposyncratio * 120)));

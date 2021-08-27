@@ -1468,6 +1468,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
             return;
         }
+
         for (auto &s : ms->segments)
         {
             s.dragv0 = s.v0;
@@ -1511,7 +1512,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
             repaint();
         }
+
         auto where = e.position;
+
         if (timeEditMode == DRAW)
         {
             // Allow us to initiate drags on control points in draw mode
@@ -1524,6 +1527,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     amOverControl = true;
                 }
             }
+
             if (!amOverControl)
             {
                 auto da = getDrawArea();
@@ -1552,15 +1556,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         mouseDownOrigin = where.toInt();
         lastPanZoomMousePos = where.toInt();
         inDrag = true;
+
         bool gotHZ = false;
+
         for (auto &h : hotzones)
         {
             if (h.rect.contains(where) && h.type == hotzone::MOUSABLE_NODE)
             {
                 gotHZ = true;
                 hideCursor(where.toInt());
+
                 h.active = true;
                 h.dragging = true;
+
                 repaint();
 
                 /*
@@ -1719,18 +1727,23 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                         showCursorAt(h.rect.getCentre());
                     }
+
                     if (h.zoneSubType == hotzone::SEGMENT_CONTROL && !h.useDrawRect)
                     {
                         showCursorAt(h.rect.getCentre());
                     }
                 }
+
                 if (h.type == hotzone::LOOPMARKER)
                 {
                     showCursorAt(h.rect.getCentre());
                 }
             }
+
+            h.active = false;
             h.dragging = false;
         }
+
         snapGuard = nullptr;
         guaranteeCursorShown();
 
@@ -1752,6 +1765,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     }
 
     bool cursorHidden = false;
+
     void hideCursor(const juce::Point<int> &w)
     {
         cursorHideOrigin = w;
@@ -1768,6 +1782,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         repaint();
         return;
     }
+
     void mouseMagnify(const juce::MouseEvent &event, float scaleFactor) override
     {
         auto pii = event.position.toInt();
@@ -1810,6 +1825,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
 
         bool reset = false;
+
         for (const auto &h : hotzones)
         {
             if (!h.rect.contains(event.position))
@@ -1842,6 +1858,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (!reset)
             setMouseCursor(juce::MouseCursor::NormalCursor);
     }
+
     void mouseDrag(const juce::MouseEvent &event) override
     {
         if (lasso)
@@ -2484,6 +2501,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     }
 
     bool holdOffOnModelChanged{false};
+
     void modelChanged(int activeSegment = -1, bool specialEndpoint = false, bool rchz = true)
     {
         if (holdOffOnModelChanged)
@@ -2580,6 +2598,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
             }
         }
+
         juce::SelectedItemSet<MSEGLassoItem> &getLassoSelection() override { return items; }
 
         bool contains(int msegIndex) const
@@ -2587,11 +2606,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto res = items.isSelected(msegIndex);
             return res;
         }
+
         juce::SelectedItemSet<MSEGLassoItem> items;
         MSEGCanvas *canvas;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSEGLassoSelector);
     };
+
     std::unique_ptr<juce::LassoComponent<MSEGLassoItem>> lasso;
     std::unique_ptr<MSEGLassoSelector> lassoSelector;
 
