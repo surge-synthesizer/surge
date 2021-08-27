@@ -248,7 +248,7 @@ struct WavetablePreviewComponent : juce::Component
 
 WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                  OscillatorStorage *os, Surge::GUI::Skin::ptr_t sk)
-    : CodeEditorContainerWithApply(ed, s, sk), osc(os)
+    : CodeEditorContainerWithApply(ed, s, sk, true), osc(os)
 {
     if (osc->wavetable_formula == "")
     {
