@@ -94,3 +94,15 @@ Surge::Debug::LifeCycleToConsole::~LifeCycleToConsole()
     printf("< %s\n", s.c_str());
     lcdepth--;
 }
+
+Surge::Debug::TimeBlock::TimeBlock(const std::string &itag) : tag(itag)
+{
+    start = std::chrono::high_resolution_clock::now();
+}
+
+Surge::Debug::TimeBlock::~TimeBlock()
+{
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "TimeBlock[" << tag << "]=" << duration.count() << " microsec" << std::endl;
+}

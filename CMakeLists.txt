@@ -181,7 +181,12 @@ juce_add_binary_data(surge-shared-binary
         resources/surge-shared/README_UserArea.txt
         resources/surge-shared/memoryWavetable.wt
         resources/surge-shared/windows.wt
-        resources/surge-shared/paramdocumentation.xml)
+        resources/surge-shared/paramdocumentation.xml
+
+        # I know this looks odd, but (1) its src and (2) I need it at runtime
+        src/lua/surge_prelude.lua
+        src/lua/surge_prelude_test.lua
+        )
 
 target_link_libraries(surge-shared PUBLIC
   luajit-5.1

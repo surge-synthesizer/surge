@@ -266,8 +266,10 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."),
-                        [this]() { Surge::GUI::openFileOrFolder(this->storage->userDataPath); });
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."), [this]() {
+        Surge::GUI::openFileOrFolder(
+            Surge::Storage::appendDirectory(this->storage->userDataPath, "Patches"));
+    });
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder..."), [this]() {
         Surge::GUI::openFileOrFolder(

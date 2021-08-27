@@ -500,7 +500,7 @@ void FxMenu::populate()
     /*
     ** Are there user presets
     */
-    Surge::FxUserPreset::forcePresetRescan(storage);
+    Surge::FxUserPreset::doPresetRescan(storage);
 
     XMLMenuPopulator::populate();
 
@@ -520,7 +520,7 @@ void FxMenu::populate()
     }
 
     auto rsA = [this]() {
-        Surge::FxUserPreset::forcePresetRescan(this->storage);
+        Surge::FxUserPreset::doPresetRescan(this->storage, true);
         auto *sge = firstListenerOfType<SurgeGUIEditor>();
         if (sge)
             sge->queueRebuildUI();
@@ -572,7 +572,7 @@ void FxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
 
 void FxMenu::scanExtraPresets()
 {
-    Surge::FxUserPreset::forcePresetRescan(storage);
+    Surge::FxUserPreset::doPresetRescan(storage);
     for (const auto &tp : Surge::FxUserPreset::getPresetsByType())
     {
         // So lets run all presets until we find the first item with type tp.first
@@ -594,7 +594,7 @@ void FxMenu::scanExtraPresets()
         {
             alit->itemType = tp.first;
             alit->name = ps.name;
-            alit->isUser = true;
+            alit->isUser = !ps.isFactory;
             alit->path = string_to_path(ps.file);
             auto thisPath = rootPath;
             for (const auto &q : ps.subPath)

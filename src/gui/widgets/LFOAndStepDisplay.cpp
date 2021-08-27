@@ -45,32 +45,39 @@ struct TimeB
 };
 
 LFOAndStepDisplay::LFOAndStepDisplay() {}
+
+void LFOAndStepDisplay::resized()
+{
+    outer = getLocalBounds();
+    left_panel = outer.withRight(outer.getX() + lpsize + margin);
+    main_panel = outer.withLeft(left_panel.getRight());
+    waveform_display = main_panel.withTrimmedLeft(19 - margin).withTrimmedRight(margin);
+
+    ss_shift_bg = main_panel.toFloat().withWidth(10).withHeight(32).translated(2, 0).withCentre(
+        juce::Point<float>(main_panel.getX() + 10, main_panel.getCentreY()));
+    ss_shift_left = ss_shift_bg.reduced(1, 1).withBottom(ss_shift_bg.getY() + 16);
+    ss_shift_right = ss_shift_left.translated(0, 16);
+}
+
 void LFOAndStepDisplay::paint(juce::Graphics &g)
 {
     TimeB paint("outerPaint");
-    auto outer = getLocalBounds();
-    auto leftPanel = outer.withRight(outer.getX() + lpsize + margin);
-    auto mainPanel = outer.withLeft(leftPanel.getRight());
 
     if (ss && lfodata->shape.val.i == lt_stepseq)
     {
-        paintStepSeq(g, mainPanel);
+        paintStepSeq(g);
     }
     else
     {
-        paintWaveform(g, mainPanel);
+        paintWaveform(g);
     }
 
-    paintTypeSelector(g, leftPanel);
+    paintTypeSelector(g);
 }
 
-void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<int> &within)
+void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
 {
     TimeB mainTimer("-- paintWaveform");
-    auto mainPanel = within.withTrimmedLeft(19 - margin).withTrimmedRight(margin);
-    auto pathPanel = mainPanel.withTrimmedTop(0).withTrimmedBottom(0);
-    // g.setColour(juce::Colours::blue);
-    // g.drawRect(mainPanel, 1);
 
     juce::Path deactPath, path, eupath, edpath;
     bool drawBeats = isAnythingTemposynced();
@@ -138,6 +145,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
 
     LFOStorage deactivateStorage;
     bool hasFullWave = false, waveIsAmpWave = false;
+
     if (lfodata->rate.deactivated)
     {
         hasFullWave = true;
@@ -179,13 +187,14 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     }
 
     bool drawEnvelope{true};
+
     if (skin->hasColor(Colors::LFO::Waveform::Background))
     {
         g.setColour(skin->getColor(Colors::LFO::Waveform::Background));
-        g.fillRect(pathPanel);
+        g.fillRect(waveform_display);
     }
 
-    int minSamples = (1 << 0) * (int)(mainPanel.getWidth());
+    int minSamples = (1 << 0) * (int)(waveform_display.getWidth());
     int totalSamples = std::max((int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE));
     float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
 
@@ -196,6 +205,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     int susCountdown = -1;
 
     float priorval = 0.f, priorwval = 0.f;
+
     for (int i = 0; i < totalSamples; i += averagingWindow)
     {
         float val = 0;
@@ -205,11 +215,16 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
         float maxval = -1000000, maxwval = -1000000;
         float firstval;
         float lastval;
+
         for (int s = 0; s < averagingWindow; s++)
         {
             tlfo->process_block();
+
             if (tFullWave)
+            {
                 tFullWave->process_block();
+            }
+
             if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
             {
                 susCountdown = susTime * samplerate / BLOCK_SIZE;
@@ -217,8 +232,11 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             else if (susCountdown == 0 && tlfo->env_state == lfoeg_stuck)
             {
                 tlfo->release();
+
                 if (tFullWave)
+                {
                     tFullWave->release();
+                }
             }
             else if (susCountdown > 0)
             {
@@ -226,21 +244,31 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             }
 
             val += tlfo->get_output(modIndex);
+
             if (tFullWave)
             {
                 auto v = tFullWave->get_output(modIndex);
+
                 minwval = std::min(v, minwval);
                 maxwval = std::max(v, maxwval);
                 wval += v;
             }
+
             if (s == 0)
+            {
                 firstval = tlfo->get_output(modIndex);
+            }
+
             if (s == averagingWindow - 1)
+            {
                 lastval = tlfo->get_output(modIndex);
+            }
+
             minval = std::min(tlfo->get_output(modIndex), minval);
             maxval = std::max(tlfo->get_output(modIndex), maxval);
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
         }
+
         val = val / averagingWindow;
         wval = wval / averagingWindow;
         eval = eval / averagingWindow;
@@ -248,21 +276,26 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
         wval = ((-wval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
         minwval = ((-minwval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
         maxwval = ((-maxwval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
+
         float euval = ((-eval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
         float edval = ((eval + 1.0f) * 0.5 * 0.8 + 0.1) * valScale;
-
         float xc = valScale * i / totalSamples;
 
         if (i == 0)
         {
             path.startNewSubPath(xc, val);
             eupath.startNewSubPath(xc, euval);
+
             if (!isUnipolar() && (lfodata->shape.val.i != lt_envelope))
+            {
                 edpath.startNewSubPath(xc, edval);
+            }
+
             if (tFullWave)
             {
                 deactPath.startNewSubPath(xc, wval);
             }
+
             priorval = val;
             priorwval = wval;
         }
@@ -274,11 +307,13 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             // Make sure we draw one closest to prior first. See #1438
             float firstval = minval;
             float secondval = maxval;
+
             if (priorval - minval < maxval - priorval)
             {
                 firstval = maxval;
                 secondval = minval;
             }
+
             path.lineTo(xc - 0.1 * valScale / totalSamples, firstval);
             path.lineTo(xc + 0.1 * valScale / totalSamples, secondval);
 
@@ -302,38 +337,50 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             }
         }
     }
+
     if (lfodata->shape.val.i == lt_formula)
     {
         drawEnvelope = tlfo->formulastate.useEnvelope;
     }
+
     tlfo->completedModulation();
+
     delete tlfo;
+
     if (tFullWave)
     {
         tFullWave->completedModulation();
         delete tFullWave;
     }
 
-    auto at = juce::AffineTransform()
-                  .scale(pathPanel.getWidth() / valScale, pathPanel.getHeight() / valScale)
-                  .translated(pathPanel.getTopLeft());
+    auto at =
+        juce::AffineTransform()
+            .scale(waveform_display.getWidth() / valScale, waveform_display.getHeight() / valScale)
+            .translated(waveform_display.getTopLeft());
 
     for (int i = -1; i < 2; ++i)
     {
         float off = i * 0.4 + 0.5; // so that/s 0.1, 0.5, 0.9
         float x0 = 0, y0 = valScale * off, x1 = valScale, y1 = valScale * off;
+
         at.transformPoint(x0, y0);
         at.transformPoint(x1, y1);
+
         if (i == 0)
+        {
             g.setColour(skin->getColor(Colors::LFO::Waveform::Center));
+        }
         else
+        {
             g.setColour(skin->getColor(Colors::LFO::Waveform::Bounds));
+        }
 
         g.drawLine(x0, y0, x1, y1, 1);
     }
 
     auto pointColor = skin->getColor(Colors::LFO::Waveform::Dots);
     int nxd = 61, nyd = 9;
+
     for (int xd = 0; xd < nxd; xd++)
     {
         float normx = 1.f * xd / (nxd - 1) * 0.99;
@@ -345,7 +392,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
             float normy = 1.f * yd / (nyd - 1);
             float dotPointX = normx * valScale, dotPointY = (0.8 * normy + 0.1) * valScale;
             at.transformPoint(dotPointX, dotPointY);
-            float esize = 0.5;
+            float esize = 1.f;
             float xoff = (xd == 0 ? esize : 0);
             g.setColour(pointColor);
             g.fillEllipse(dotPointX - esize, dotPointY - esize, esize, esize);
@@ -356,7 +403,11 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     {
         g.setColour(skin->getColor(Colors::LFO::Waveform::Envelope));
         g.strokePath(eupath, juce::PathStrokeType(1.f), at);
-        g.strokePath(edpath, juce::PathStrokeType(1.f), at);
+
+        if (!isUnipolar())
+        {
+            g.strokePath(edpath, juce::PathStrokeType(1.f), at);
+        }
     }
 
     if (drawBeats)
@@ -503,7 +554,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
 
     /*
      * In 1.8 I think we don't want to show the key release point in the simulated wave
-     * with the MSEG but I wrote it to debug and we may change our mid so keeping this code
+     * with the MSEG but I wrote it to debug and we may change our mind so keeping this code
      * here
      */
     if (msegRelease && false)
@@ -519,7 +570,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g, const juce::Rectangle<i
     }
 }
 
-void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<int> &mainPanel)
+void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 {
     auto shadowcol = skin->getColor(Colors::LFO::StepSeq::ColumnShadow);
     auto stepMarker = skin->getColor(Colors::LFO::StepSeq::Step::Fill);
@@ -538,7 +589,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
 
     // set my coordinate system so that 0,0 is at splitpoint moved over with room for jogs
     auto shiftTranslate =
-        juce::AffineTransform().translated(mainPanel.getTopLeft()).translated(19, 0);
+        juce::AffineTransform().translated(main_panel.getTopLeft()).translated(19, 0);
 
     {
         juce::Graphics::ScopedSaveState gs(g);
@@ -547,7 +598,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
         for (int i = 0; i < n_stepseqsteps; i++)
         {
             juce::Rectangle<float> rstep(1.f * i * scale, 1.f * margin, scale,
-                                         mainPanel.getHeight() - margin2),
+                                         main_panel.getHeight() - margin2),
                 gstep;
 
             // Draw an outline in the shadow color
@@ -588,6 +639,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
 
                 gstep = gstep.withTrimmedTop(1).withTrimmedLeft(1).withTrimmedRight(
                     i == n_stepseqsteps - 1 ? 1 : 0);
+
                 if (maski)
                 {
                     fillr(gstep, gatecolor);
@@ -614,6 +666,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
             fillr(rstep.withTrimmedLeft(1).reduced(0, 1).withTrimmedRight(
                       i == n_stepseqsteps - 1 ? 1 : 0),
                   stepcolor);
+
             steprect[i] = rstep;
 
             // draw the midpoint line
@@ -623,9 +676,11 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
                 auto fr = rstep.toFloat().withTop(cy).withHeight(1.f);
                 fillr(fr, shadowcol);
             }
+
             // Now draw the value
             auto v = rstep;
             int p1, p2;
+
             if (isUnipolar())
             {
                 auto sv = std::max(ss->steps[i], 0.f);
@@ -636,9 +691,11 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
                 p1 = v.getBottom() -
                      (int)((float)0.5f + v.getHeight() * (0.50f + 0.5f * ss->steps[i]));
                 p2 = v.getCentreY();
+
                 auto ttop = std::min(p1, p2);
                 auto tbottom = std::max(p1, p2);
-                v = v.withTop(ttop).withBottom(tbottom);
+
+                v = v.withTop(ttop).withBottom(tbottom).withTrimmedRight(1).translated(1, 0);
             }
 
             if (lfodata->rate.deactivated &&
@@ -664,8 +721,8 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
 
         fillr(loopStartRect, grabMarker);
         fillr(loopEndRect, grabMarker);
-        g.setColour(grabMarker);
 
+        // continue drawing loop marker vertical lines using the same grabMarker color
         g.drawLine(loopStartRect.getX() + 1, steprect[0].getY(), loopStartRect.getX() + 1,
                    loopStartRect.getY());
         g.drawLine(loopEndRect.getRight(), steprect[0].getY(), loopEndRect.getRight(),
@@ -686,50 +743,58 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
     rect_steps = steprect[0].withRight(steprect[n_stepseqsteps - 1].getRight());
     rect_steps_retrig = gaterect[0].withRight(gaterect[n_stepseqsteps - 1].getRight());
 
-    ss_shift_left = mainPanel.toFloat().withWidth(10).withHeight(32).translated(2, 0).withCentre(
-        juce::Point<float>(mainPanel.getX() + 10, mainPanel.getCentreY()));
-
+    // step seq shift background frame
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Border));
-    g.fillRect(ss_shift_left);
-    ss_shift_left = ss_shift_left.reduced(1, 1).withBottom(ss_shift_left.getY() + 16);
+    g.fillRect(ss_shift_bg);
 
-    float triO = 2;
-    if (ss_shift_hover == 1)
+    // step seq shift left
+    if (stepSeqShiftHover == 0)
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Hover));
     else
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Background));
+
     g.fillRect(ss_shift_left);
+
+    float triO = 2;
     auto triL = juce::Path();
+    auto triR = juce::Path();
+
     triL.addTriangle(ss_shift_left.getTopRight().translated(-triO, triO),
                      ss_shift_left.getBottomRight().translated(-triO, -triO),
                      ss_shift_left.getCentre().withX(ss_shift_left.getX() + triO));
+
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Arrow));
-    if (ss_shift_hover == 1 && skin->getVersion() >= 2)
+
+    if (stepSeqShiftHover == 0 && skin->getVersion() >= 2)
     {
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::ArrowHover));
     }
 
     g.fillPath(triL);
 
-    ss_shift_right = ss_shift_left.translated(0, 16);
-    if (ss_shift_hover == 2)
+    // step seq shift right
+    if (stepSeqShiftHover == 1)
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Hover));
     else
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Background));
+
     g.fillRect(ss_shift_right);
-    auto triR = juce::Path();
+
     triR.addTriangle(
         ss_shift_right.getTopLeft().translated(triO, triO),
         ss_shift_right.getBottomLeft().translated(triO, -triO),
         ss_shift_right.getCentre().withX(ss_shift_right.getX() + ss_shift_right.getWidth() - triO));
+
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::Arrow));
-    if (ss_shift_hover == 2 && skin->getVersion() >= 2)
+
+    if (stepSeqShiftHover == 1 && skin->getVersion() >= 2)
     {
         g.setColour(skin->getColor(Colors::LFO::StepSeq::Button::ArrowHover));
     }
+
     g.fillPath(triR);
 
-    // OK now we have everything drawn we want to draw the LFO. This is similar to the LFO
+    // OK now we have everything drawn we want to draw the step seq. This is similar to the LFO
     // code above but with very different scaling in time since we need to match the steps no
     // matter the rate
 
@@ -747,6 +812,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
     float floorrate = -1.2; // can't be const - we mod it
     float displayRate = lfodata->rate.val.f;
     const float twotofloor = powf(2.0, -1.2); // so copy value here
+
     if (lfodata->rate.temposync)
     {
         /*
@@ -811,9 +877,11 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
         float maxval = -1000000;
         float firstval;
         float lastval;
+
         for (int s = 0; s < averagingWindow; s++)
         {
             tlfo->process_block();
+
             if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
             {
                 susCountdown = susTime * samplerate / BLOCK_SIZE;
@@ -828,39 +896,58 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
             }
 
             val += tlfo->get_output(0);
+
             if (s == 0)
+            {
                 firstval = tlfo->get_output(0);
+            }
+
             if (s == averagingWindow - 1)
+            {
                 lastval = tlfo->get_output(0);
+            }
+
             minval = std::min(tlfo->get_output(0), minval);
             maxval = std::max(tlfo->get_output(0), maxval);
             eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
         }
+
         val = val / averagingWindow;
         eval = eval / averagingWindow;
 
         if (isUnipolar())
+        {
             val = val * 2.0 - 1.0;
+        }
 
         val = ((-val + 1.0f) * 0.5) * valScale;
+
         float euval = ((-eval + 1.0f) * 0.5) * valScale;
         float edval = ((eval + 1.0f) * 0.5) * valScale;
-
         float xc = valScale * i / (cycleSamples * n_stepseqsteps);
+
         if (i == 0)
         {
             path.startNewSubPath(xc, val);
             eupath.startNewSubPath(xc, euval);
+
             if (!isUnipolar())
+            {
                 edpath.startNewSubPath(xc, edval);
+            }
         }
         else
         {
             path.lineTo(xc, val);
             eupath.lineTo(xc, euval);
-            edpath.lineTo(xc, edval);
+
+            if (!isUnipolar())
+            {
+                edpath.lineTo(xc, edval);
+            }
         }
     }
+
     delete tlfo;
 
     auto q = boxo;
@@ -872,8 +959,13 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
     auto tfpath = tf;
 
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Envelope));
+
     g.strokePath(eupath, juce::PathStrokeType(1.0), tfpath);
-    g.strokePath(edpath, juce::PathStrokeType(1.0), tfpath);
+
+    if (!isUnipolar())
+    {
+        g.strokePath(edpath, juce::PathStrokeType(1.0), tfpath);
+    }
 
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Wave));
     g.strokePath(path, juce::PathStrokeType(1.0), tfpath);
@@ -924,6 +1016,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
         {
             int detailedMode = Surge::Storage::getUserDefaultValue(
                 storage, Surge::Storage::HighPrecisionReadouts, 0);
+
             if (detailedMode)
             {
                 prec = 6;
@@ -995,16 +1088,16 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g, const juce::Rectangle<in
     }
 }
 
-void LFOAndStepDisplay::paintTypeSelector(juce::Graphics &g, const juce::Rectangle<int> &within)
+void LFOAndStepDisplay::paintTypeSelector(juce::Graphics &g)
 {
     if (!typeImg)
     {
         g.setColour(juce::Colours::crimson);
-        g.fillRect(within);
+        g.fillRect(left_panel);
         return;
     }
 
-    auto leftpanel = within.translated(0, margin + 2);
+    auto leftpanel = left_panel.translated(0, margin + 2);
     auto type = lfodata->shape.val.i;
     auto off = lfodata->shape.val.i * 76;
     {
@@ -1026,8 +1119,8 @@ void LFOAndStepDisplay::paintTypeSelector(juce::Graphics &g, const juce::Rectang
     if (lfoTypeHover >= 0)
     {
         auto off = lfoTypeHover * 76;
-
         auto dt = typeImgHover;
+
         if (lfoTypeHover == type)
         {
             dt = typeImgHoverOn;
@@ -1039,11 +1132,83 @@ void LFOAndStepDisplay::paintTypeSelector(juce::Graphics &g, const juce::Rectang
             auto at = juce::AffineTransform()
                           .translated(leftpanel.getX(), leftpanel.getY())
                           .translated(0, -off);
+
             g.reduceClipRegion(leftpanel.getX(), leftpanel.getY(), 51, 76);
+
             dt->draw(g, 1.0, at);
         }
     }
 }
+
+void LFOAndStepDisplay::setStepToDefault(const juce::MouseEvent &event)
+{
+    for (int i = 0; i < n_stepseqsteps; ++i)
+    {
+        if (steprect[i].contains(event.position))
+        {
+            ss->steps[i] = 0.f;
+            repaint();
+        }
+    }
+}
+
+void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
+{
+    keyModMult = 0;
+
+    int quantStep = 12;
+
+    if (!storage->isStandardTuning && storage->currentScale.count > 1)
+    {
+        quantStep = storage->currentScale.count;
+    }
+
+    for (int i = 0; i < n_stepseqsteps; ++i)
+    {
+        auto r = steprect[i];
+
+        if (r.contains(event.position))
+        {
+            draggedStep = i;
+
+            float f;
+
+            if (isUnipolar())
+            {
+                f = limit01((r.getBottom() - event.position.y) / r.getHeight());
+            }
+            else
+            {
+                f = limitpm1(2 * (r.getCentreY() - event.position.y) / r.getHeight());
+            }
+
+            if (event.mods.isShiftDown())
+            {
+                keyModMult = quantStep; // only shift pressed
+
+                if (event.mods.isAltDown())
+                {
+                    keyModMult = quantStep * 2; // shift+alt pressed
+
+                    f *= quantStep * 2;
+                    f = floor(f + 0.5);
+                    f *= (1.f / (quantStep * 2));
+                }
+                else
+                {
+                    f *= quantStep;
+                    f = floor(f + 0.5);
+                    f *= (1.f / quantStep);
+                }
+            }
+
+            ss->steps[i] = f;
+
+            repaint();
+        }
+    }
+}
+
 void LFOAndStepDisplay::onSkinChanged()
 {
     if (!(skin && skinControl && associatedBitmapStore))
@@ -1058,8 +1223,8 @@ void LFOAndStepDisplay::onSkinChanged()
 
 void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 {
-
     auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     for (int i = 0; i < n_lfo_types; ++i)
     {
         if (shaperect[i].contains(event.position.toInt()))
@@ -1067,45 +1232,70 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
             if (event.mods.isPopupMenu())
             {
                 notifyControlModifierClicked(event.mods);
+
                 return;
             }
+
             if (i != lfodata->shape.val.i)
             {
                 auto prior = lfodata->shape.val.i;
+
                 lfodata->shape.val.i = i;
+
                 sge->refresh_mod();
                 sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
+
                 repaint();
+
                 sge->lfoShapeChanged(prior, i);
             }
+
             return;
         }
     }
 
-    if (isMSEG() && sge)
+    if (waveform_display.contains(event.position.toInt()) && sge)
     {
-        if (event.mods.isPopupMenu())
-            showMSEGPopupMenu();
-        else
-            sge->toggleMSEGEditor();
-    }
+        if (isMSEG())
+        {
+            if (event.mods.isPopupMenu())
+            {
+                showMSEGPopupMenu();
+            }
+            else
+            {
+                sge->toggleMSEGEditor();
+            }
+        }
 
-    if (isFormula() && sge)
-    {
-        sge->toggleFormulaEditorDialog();
+        if (isFormula())
+        {
+            sge->toggleFormulaEditorDialog();
+        }
     }
 
     if (isStepSequencer())
     {
         dragMode = NONE;
+
+        if (event.mods.isCtrlDown())
+        {
+            setStepToDefault(event);
+            dragMode = RESET_VALUE;
+
+            return;
+        }
+
         if (ss_shift_left.contains(event.position))
         {
             float t = ss->steps[0];
+
             for (int i = 0; i < (n_stepseqsteps - 1); i++)
             {
                 ss->steps[i] = ss->steps[i + 1];
                 assert((i >= 0) && (i < n_stepseqsteps));
             }
+
             ss->steps[n_stepseqsteps - 1] = t;
             ss->trigmask = (((ss->trigmask & 0x000000000000fffe) >> 1) |
                             (((ss->trigmask & 1) << 15) & 0xffff)) |
@@ -1115,16 +1305,20 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                             (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
 
             repaint();
+
             return;
         }
+
         if (ss_shift_right.contains(event.position))
         {
             float t = ss->steps[n_stepseqsteps - 1];
+
             for (int i = (n_stepseqsteps - 2); i >= 0; i--)
             {
                 ss->steps[i + 1] = ss->steps[i];
                 assert((i >= 0) && (i < n_stepseqsteps));
             }
+
             ss->steps[0] = t;
             ss->trigmask = (((ss->trigmask & 0x0000000000007fff) << 1) |
                             (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff)) |
@@ -1132,14 +1326,18 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                             (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000)) |
                            (((ss->trigmask & 0x00007fff00000000) << 1) |
                             (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
+
             repaint();
+
             return;
         }
+
         if (loopStartRect.contains(event.position))
         {
             dragMode = LOOP_START;
             return;
         }
+
         if (loopEndRect.contains(event.position))
         {
             dragMode = LOOP_END;
@@ -1158,50 +1356,64 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 }
                 else
                 {
+                    setStepValue(event);
                     dragMode = VALUES;
                 }
             }
         }
+
         for (int i = 0; i < n_stepseqsteps; ++i)
         {
             auto r = gaterect[i];
+
             if (r.contains(event.position))
             {
                 dragMode = TRIGGERS;
+
                 uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
                 uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
                 uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
-
                 uint64_t maskOn = 0;
                 uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
-                if (maski)
+
+                if (!event.mods.isAnyModifierKeyDown())
                 {
-                    maskOn = (UINT64_C(1) << (i + 16));
-                    maskOff = ~maski;
-                    dragTrigger0 = UINT64_C(1) << 16;
+                    if (maski || maski16 || maski32)
+                    {
+                        maskOn = 0;
+                        maskOff = ~maski & ~maski16 & ~maski32;
+                        dragTrigger0 = 0;
+                    }
+                    else
+                    {
+                        maskOn = (UINT64_C(1) << (i + 0));
+                        maskOff = ss->trigmask;
+                        dragTrigger0 = UINT64_C(1);
+                    }
                 }
-                else if (maski16)
+
+                if (event.mods.isRightButtonDown() || event.mods.isShiftDown())
                 {
-                    maskOn = (UINT64_C(1) << (i + 32));
-                    maskOff = ~maski16;
-                    dragTrigger0 = UINT64_C(1) << 32;
-                }
-                else if (maski32)
-                {
-                    maskOn = 0;
-                    maskOff = ~maski32;
-                    dragTrigger0 = 0;
-                }
-                else
-                {
-                    maskOn = (UINT64_C(1) << (i + 0));
-                    maskOff = ss->trigmask;
-                    dragTrigger0 = UINT64_C(1);
+                    if (maski || ~maski)
+                    {
+                        maskOn = (UINT64_C(1) << (i + 16));
+                        maskOff = ~maski;
+                        dragTrigger0 = UINT64_C(1) << 16;
+                    }
+
+                    if (maski16)
+                    {
+                        maskOn = (UINT64_C(1) << (i + 32));
+                        maskOff = ~maski16;
+                        dragTrigger0 = UINT64_C(1) << 32;
+                    }
                 }
 
                 ss->trigmask &= maskOff;
                 ss->trigmask |= maskOn;
+
                 repaint();
+
                 return;
             }
         }
@@ -1211,12 +1423,15 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
 {
     lfoTypeHover = -1;
+    stepSeqShiftHover = -1;
+
     repaint();
 }
 
 void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
 {
     int nextHover = -1;
+
     for (int i = 0; i < n_lfo_types; ++i)
     {
         if (shaperect[i].contains(event.position.toInt()))
@@ -1224,13 +1439,39 @@ void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
             nextHover = i;
         }
     }
+
     if (nextHover != lfoTypeHover)
     {
         lfoTypeHover = nextHover;
+
         repaint();
+
+        // We hover over the type so
         if (lfoTypeHover >= 0)
         {
-            // We aver over the type so
+            return;
+        }
+    }
+
+    if (ss_shift_left.contains(event.position))
+    {
+        nextHover = 0;
+    }
+
+    if (ss_shift_right.contains(event.position))
+    {
+        nextHover = 1;
+    }
+
+    if (nextHover != stepSeqShiftHover)
+    {
+        stepSeqShiftHover = nextHover;
+
+        repaint();
+
+        // We hover over the stepseq jog so
+        if (stepSeqShiftHover >= 0)
+        {
             return;
         }
     }
@@ -1247,23 +1488,32 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             if (event.mods.isPopupMenu())
             {
                 notifyControlModifierClicked(event.mods);
+
                 return;
             }
+
             if (i != lfodata->shape.val.i)
             {
                 auto prior = lfodata->shape.val.i;
+
                 lfodata->shape.val.i = i;
+
                 sge->refresh_mod();
                 sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
+
                 repaint();
+
                 sge->lfoShapeChanged(prior, i);
             }
+
             return;
         }
     }
 
     if (!isStepSequencer())
+    {
         return;
+    }
 
     if (dragMode != NONE && event.getDistanceFromDragStart() > 0)
     {
@@ -1272,6 +1522,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
         }
     }
+
     switch (dragMode)
     {
     case NONE:
@@ -1287,14 +1538,17 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     {
         int sign = dragMode == LOOP_START ? 1 : -1;
         int loopStart = -1;
+
         for (int i = 0; i < n_stepseqsteps; ++i)
         {
             auto r = steprect[i];
+
             if (r.contains(event.position.x + sign * r.getWidth() * 0.5, r.getCentreY()))
             {
                 loopStart = i;
             }
         }
+
         if (dragMode == LOOP_START)
         {
             if (ss->loop_start != loopStart && loopStart >= 0)
@@ -1313,71 +1567,42 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
         }
         break;
     }
+    case RESET_VALUE:
+    {
+        if (event.mods.isCtrlDown())
+        {
+            setStepToDefault(event);
+            return;
+        }
+        break;
+    }
     case TRIGGERS:
     {
         for (int i = 0; i < n_stepseqsteps; ++i)
         {
             auto r = gaterect[i];
             auto otm = ss->trigmask;
+
             if (r.contains(event.position))
             {
                 auto off = UINT64_MAX & ~(UINT64_C(1) << i) & ~(UINT64_C(1) << (i + 16)) &
                            ~(UINT64_C(1) << (i + 32));
                 auto on = dragTrigger0 << i;
+
                 ss->trigmask &= off;
                 ss->trigmask |= on;
             }
+
             if (ss->trigmask != otm)
+            {
                 repaint();
+            }
         }
         break;
     }
     case VALUES:
     {
-        keyModMult = 0;
-        int quantStep = 12;
-
-        if (!storage->isStandardTuning && storage->currentScale.count > 1)
-            quantStep = storage->currentScale.count;
-
-        for (int i = 0; i < n_stepseqsteps; ++i)
-        {
-            auto r = steprect[i];
-            if (r.contains(event.position))
-            {
-                draggedStep = i;
-                float f;
-                if (isUnipolar())
-                {
-                    f = limit01((r.getBottom() - event.position.y) / r.getHeight());
-                }
-                else
-                {
-                    f = limitpm1(2 * (r.getCentreY() - event.position.y) / r.getHeight());
-                }
-
-                if (event.mods.isShiftDown())
-                {
-                    keyModMult = quantStep; // only shift pressed
-
-                    if (event.mods.isAltDown())
-                    {
-                        keyModMult = quantStep * 2; // shift+alt pressed
-                        f *= quantStep * 2;
-                        f = floor(f + 0.5);
-                        f *= (1.f / (quantStep * 2));
-                    }
-                    else
-                    {
-                        f *= quantStep;
-                        f = floor(f + 0.5);
-                        f *= (1.f / quantStep);
-                    }
-                }
-                ss->steps[i] = f;
-                repaint();
-            }
-        }
+        setStepValue(event);
         break;
     }
     }
@@ -1392,6 +1617,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         }
     }
+
     if (dragMode == ARROW)
     {
         auto rmStepStart = arrowStart;
@@ -1403,17 +1629,25 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
         // find out if a microtuning is loaded and store the scale length for Alt-drag
         // quantization to scale degrees
         keyModMult = 0;
+
         int quantStep = 12;
 
         if (!storage->isStandardTuning && storage->currentScale.count > 1)
+        {
             quantStep = storage->currentScale.count;
+        }
 
         for (int i = 0; i < 16; ++i)
         {
             if (steprect[i].contains(rmStepStart))
+            {
                 startStep = i;
+            }
+
             if (steprect[i].contains(rmStepCurr))
+            {
                 endStep = i;
+            }
         };
 
         int s = startStep, e = endStep;
@@ -1445,6 +1679,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
             if (s != e)
             {
                 float ds = (fs - fe) / (s - e);
+
                 for (int q = s; q <= e; q++)
                 {
                     float f = ss->steps[s] + (q - s) * ds;
@@ -1456,6 +1691,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
                         if (event.mods.isAltDown())
                         {
                             keyModMult = quantStep * 2; // shift+alt pressed
+
                             f *= quantStep * 2;
                             f = floor(f + 0.5);
                             f *= (1.f / (quantStep * 2));
@@ -1478,6 +1714,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
 
     dragMode = NONE;
     draggedStep = -1;
+
     repaint();
 }
 
@@ -1485,21 +1722,17 @@ void LFOAndStepDisplay::mouseDoubleClick(const juce::MouseEvent &event)
 {
     if (isStepSequencer())
     {
-        for (int i = 0; i < n_stepseqsteps; ++i)
-        {
-            if (steprect[i].contains(event.position))
-            {
-                ss->steps[i] = 0.f;
-                repaint();
-            }
-        }
+        setStepToDefault(event);
     }
 }
+
 void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
                                        const juce::MouseWheelDetails &wheel)
 {
     if (!isStepSequencer())
+    {
         return;
+    }
 
     float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
 #if MAC
@@ -1507,16 +1740,21 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
 #endif
 
     if (event.mods.isShiftDown())
+    {
         delta *= 0.1;
+    }
 
     if (delta == 0)
+    {
         return;
+    }
 
     for (int i = 0; i < n_stepseqsteps; ++i)
     {
         if (steprect[i].contains(event.position))
         {
             auto v = ss->steps[i] + delta;
+
             if (isUnipolar())
             {
                 v = limit01(v);
@@ -1525,7 +1763,9 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
             {
                 v = limitpm1(v);
             }
+
             ss->steps[i] = v;
+
             repaint();
         }
     }

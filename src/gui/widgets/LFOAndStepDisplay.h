@@ -29,9 +29,10 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
 {
     LFOAndStepDisplay();
     void paint(juce::Graphics &g) override;
-    void paintWaveform(juce::Graphics &g, const juce::Rectangle<int> &within);
-    void paintStepSeq(juce::Graphics &g, const juce::Rectangle<int> &within);
-    void paintTypeSelector(juce::Graphics &g, const juce::Rectangle<int> &within);
+    void paintWaveform(juce::Graphics &g);
+    void paintStepSeq(juce::Graphics &g);
+    void paintTypeSelector(juce::Graphics &g);
+    void resized() override;
 
     float value;
     float getValue() const override { return value; }
@@ -41,6 +42,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     bool isMSEG() { return lfodata->shape.val.i == lt_mseg; }
     bool isFormula() { return lfodata->shape.val.i == lt_formula; }
     bool isUnipolar() { return lfodata->unipolar.val.b; }
+
     void invalidateIfIdIsInRange(int j) {}
     void invalidateIfAnythingIsTemposynced()
     {
@@ -60,6 +62,9 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
         }
         return drawBeats;
     }
+
+    void setStepToDefault(const juce::MouseEvent &event);
+    void setStepValue(const juce::MouseEvent &event);
 
     int tsNum{4}, tsDen{4};
     void setTimeSignature(int num, int den)
@@ -102,9 +107,11 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
         ARROW,
         LOOP_START,
         LOOP_END,
+        RESET_VALUE,
         TRIGGERS,
-        VALUES
+        VALUES,
     } dragMode{NONE};
+
     int draggedStep{-1};
     int keyModMult;
     uint64_t dragTrigger0;
@@ -127,10 +134,13 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
 
     std::array<juce::Rectangle<int>, n_lfo_types> shaperect;
     std::array<juce::Rectangle<float>, n_stepseqsteps> steprect, gaterect;
+
+    juce::Rectangle<int> outer, left_panel, main_panel, waveform_display;
     juce::Rectangle<float> loopStartRect, loopEndRect, rect_steps, rect_steps_retrig;
-    juce::Rectangle<float> ss_shift_left, ss_shift_right;
+    juce::Rectangle<float> ss_shift_bg, ss_shift_left, ss_shift_right;
+
     int lfoTypeHover{-1};
-    int ss_shift_hover{-1};
+    int stepSeqShiftHover{-1};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };

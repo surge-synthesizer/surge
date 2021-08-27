@@ -505,7 +505,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     friend struct Surge::Overlays::PatchStoreDialog;
     friend struct Surge::Widgets::MainFrame;
 
-    Surge::GUI::IComponentTagValue *msegEditSwitch = nullptr;
+    Surge::GUI::IComponentTagValue *lfoEditSwitch = nullptr;
     int typeinResetCounter = -1;
     std::string typeinResetLabel = "";
 
@@ -610,6 +610,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     bool getShowVirtualKeyboard();
     void setShowVirtualKeyboard(bool b);
+    void toggleVirtualKeyboard();
 
   private:
     bool scannedForMidiPresets = false;

@@ -14,6 +14,8 @@
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
 
+#include "SurgeSharedBinary.h"
+
 TEST_CASE("LUA Hello World", "[lua]")
 {
     SECTION("HW")
@@ -124,6 +126,37 @@ end
     }
 }
 
+TEST_CASE("Surge Prologue", "[lua]")
+{
+    SECTION("Test the Prologue")
+    {
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        luaL_openlibs(L);
+
+        REQUIRE(Surge::LuaSupport::loadSurgePrelude(L));
+
+        auto lua_script = SurgeSharedBinary::surge_prelude_test_lua;
+        auto lua_size = SurgeSharedBinary::surge_prelude_test_luaSize;
+        auto lua = std::string(lua_script, lua_size);
+        std::string emsg;
+        REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(L, lua, "test", emsg));
+        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
+
+        auto pcall = lua_pcall(L, 0, 1, 0);
+        if (pcall != 0)
+        {
+            std::cout << "LUA Error[" << pcall << "] " << lua_tostring(L, -1) << std::endl;
+            INFO("LUA Error " << pcall << " " << lua_tostring(L, -1));
+        }
+
+        REQUIRE(lua_isnumber(L, -1));
+        REQUIRE(lua_tonumber(L, -1) == 1);
+
+        lua_close(L);
+    }
+}
+
 TEST_CASE("LUA Table API", "[lua]")
 {
     SECTION("Push and get Element")
@@ -220,7 +253,6 @@ shazbot = 13
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
-        REQUIRE(err == "After trying to find function 'shazbot' found non-function type 'number'");
         lua_pop(L, 1);
         lua_close(L);
     }
@@ -242,8 +274,6 @@ end
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
-        REQUIRE(err == "Resolving global name 'triple' after parse returned nil. Did you define "
-                       "the function?");
         lua_pop(L, 1);
         lua_close(L);
     }
@@ -293,6 +323,72 @@ error("I will parse but will not run")
                 "Lua Evaluation Error: [string \"lua-script\"]:3: I will parse but will not run");
         lua_pop(L, 1);
         lua_close(L);
+    }
+}
+
+TEST_CASE("Parse Multiple Functions", "[lua]")
+{
+    SECTION("A Pair")
+    {
+        auto fn = R"FN(
+function plus_one(x)
+    return x + 1
+end
+
+function plus_two(x)
+    return x + 2
+end
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+            L, fn, {"plus_one", "plus_two"}, err);
+        REQUIRE(res == 2);
+        REQUIRE(lua_gettop(L) == 2);
+
+        // OK so the first function should be +1 so
+        lua_pushnumber(L, 4);
+        lua_pcall(L, 1, 1, 0);
+        REQUIRE(lua_isnumber(L, -1));
+        REQUIRE(lua_tonumber(L, -1) == 5);
+        lua_pop(L, 1);
+
+        // And the second one is +2 so
+        lua_pushnumber(L, 17);
+        lua_pcall(L, 1, 1, 0);
+        REQUIRE(lua_isnumber(L, -1));
+        REQUIRE(lua_tonumber(L, -1) == 19);
+    }
+
+    SECTION("Just Two of Three There")
+    {
+        auto fn = R"FN(
+function plus_one(x)
+    return x + 1
+end
+
+function plus_two(x)
+    return x + 2
+end
+)FN";
+        lua_State *L = lua_open();
+        REQUIRE(L);
+        REQUIRE(lua_gettop(L) == 0);
+        luaL_openlibs(L);
+
+        std::string err;
+        auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+            L, fn, {"plus_one", "plus_sventeen", "plus_two"}, err);
+        REQUIRE(res == 2);
+        REQUIRE(lua_gettop(L) == 3);
+
+        REQUIRE(lua_isfunction(L, -1));
+        REQUIRE(lua_isnil(L, -2));
+        REQUIRE(lua_isfunction(L, -3));
     }
 }
 
@@ -413,6 +509,34 @@ end)FN");
             {
                 auto q = pow(c.fPhase, pe) * 2 - 1;
                 REQUIRE(q == Approx(c.v));
+            }
+        }
+    }
+}
+
+TEST_CASE("Init Functions", "[formula]")
+{
+    SECTION("Test Init Function")
+    {
+        FormulaModulatorStorage fs;
+        fs.setFormula(R"FN(
+function init(modstate)
+   modstate["av"] = 1.234
+   return modstate
+end
+
+function process(modstate)
+    modstate["output"] = modstate["av"]
+    return modstate
+end)FN");
+
+        for (int id = 0; id <= 10; id++)
+        {
+            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            REQUIRE(!runIt.empty());
+            for (auto c : runIt)
+            {
+                REQUIRE(1.234 == Approx(c.v));
             }
         }
     }

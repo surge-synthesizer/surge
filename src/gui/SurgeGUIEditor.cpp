@@ -889,7 +889,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     ** There are a collection of member states we need to reset
     */
     polydisp = nullptr;
-    msegEditSwitch = nullptr;
+    lfoEditSwitch = nullptr;
     lfoNameLabel = nullptr;
     midiLearnOverlay = nullptr;
 
@@ -1124,14 +1124,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
         {
-            msegEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
-            setAccessibilityInformationByTitleAndAction(msegEditSwitch->asJuceComponent(),
+            lfoEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
+            setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
                                                         "Show MSEG Editor", "Show");
-            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             jassert(msejc);
             msejc->setVisible(false);
-            msegEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
-                                     isAnyOverlayPresent(FORMULA_EDITOR));
+            lfoEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
+                                    isAnyOverlayPresent(FORMULA_EDITOR));
             auto q = modsource_editor[current_scene];
             if ((q >= ms_lfo1 && q <= ms_lfo6) || (q >= ms_slfo1 && q <= ms_slfo6))
             {
@@ -2256,7 +2256,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         };
 
         auto scl_path =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library", "SCL");
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library", "SCL");
 
         scl_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastSCLPath, scl_path);
@@ -2310,7 +2310,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         };
 
         auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
-                                                        "tuning-library", "KBM Concert Pitch");
+                                                        "tuning_library", "KBM Concert Pitch");
 
         kbm_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastKBMPath, kbm_path);
@@ -2443,10 +2443,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                           [this]() { showHTML(this->tuningToHtml()); });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
-        auto dpath =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning-library");
+        auto path =
+            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library");
 
-        juce::URL(juce::File(dpath)).launchInDefaultBrowser();
+        Surge::GUI::openFileOrFolder(path);
     });
 
     return tuningSubMenu;
@@ -2731,18 +2731,21 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
     auto mcValue =
         Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
 
-    middleCSubMenu.addItem("C3", true, (mcValue == 2), [this]() {
+    middleCSubMenu.addItem("C3", true, (mcValue == 2), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 2);
+        juceEditor->keyboard->setOctaveForMiddleC(3);
         synth->refresh_editor = true;
     });
 
-    middleCSubMenu.addItem("C4", true, (mcValue == 1), [this]() {
+    middleCSubMenu.addItem("C4", true, (mcValue == 1), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
+        juceEditor->keyboard->setOctaveForMiddleC(4);
         synth->refresh_editor = true;
     });
 
-    middleCSubMenu.addItem("C5", true, (mcValue == 0), [this]() {
+    middleCSubMenu.addItem("C5", true, (mcValue == 0), [this, mcValue]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 0);
+        juceEditor->keyboard->setOctaveForMiddleC(5);
         synth->refresh_editor = true;
     });
 
@@ -2799,10 +2802,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
-                   [this, showVirtualKeyboard]() {
-                       setShowVirtualKeyboard(!showVirtualKeyboard);
-                       resizeWindow(zoomFactor);
-                   });
+                   [this]() { toggleVirtualKeyboard(); });
 
     return wfMenu;
 }
@@ -2811,22 +2811,37 @@ bool SurgeGUIEditor::getShowVirtualKeyboard()
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
     bool defaultVal = false;
+
     if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
         defaultVal = false;
     }
+
     return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
 }
 
 void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
+
     if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
     }
+
     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+}
+
+void SurgeGUIEditor::toggleVirtualKeyboard()
+{
+    auto mc =
+        Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::MiddleC, 1);
+
+    juceEditor->keyboard->setOctaveForMiddleC(5 - mc);
+
+    setShowVirtualKeyboard(!getShowVirtualKeyboard());
+    resizeWindow(zoomFactor);
 }
 
 juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
@@ -2900,16 +2915,6 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
     if (useDevMenu)
     {
-        auto f5Value = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::SkinReloadViaF5, 0);
-
-        skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use F5 To Reload Current Skin"), true,
-                            (f5Value == 1), [this, f5Value]() {
-                                Surge::Storage::updateUserDefaultValue(
-                                    &(this->synth->storage), Surge::Storage::SkinReloadViaF5,
-                                    f5Value ? 0 : 1);
-                            });
-
         int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                         Surge::Storage::LayoutGridResolution, 16);
 
@@ -2976,7 +2981,8 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     if (useDevMenu)
     {
         skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
-            Surge::GUI::openFileOrFolder(this->currentSkin->root + this->currentSkin->name);
+            Surge::GUI::openFileOrFolder(
+                Surge::Storage::appendDirectory(this->currentSkin->root, this->currentSkin->name));
         });
     }
     else
@@ -3038,7 +3044,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         this->synth->storage.refresh_patchlist();
         this->scannedForMidiPresets = false;
 
-        Surge::FxUserPreset::forcePresetRescan(&(this->synth->storage));
+        Surge::FxUserPreset::doPresetRescan(&(this->synth->storage));
         Surge::ModulatorPreset::forcePresetRescan();
 
         // Rescan for skins
@@ -4574,9 +4580,9 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
         curr == lt_formula)
     {
-        if (msegEditSwitch)
+        if (lfoEditSwitch)
         {
-            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             msejc->setVisible(curr == lt_mseg || curr == lt_formula);
         }
     }
@@ -4625,6 +4631,12 @@ void SurgeGUIEditor::closeMSEGEditor()
     {
         broadcastMSEGState();
         dismissEditorOfType(MSEG_EDITOR);
+
+        if (lfoEditSwitch)
+        {
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
+        }
     }
 }
 void SurgeGUIEditor::toggleMSEGEditor()
@@ -4706,6 +4718,12 @@ void SurgeGUIEditor::showFormulaEditorDialog()
 
     addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,
                          []() {});
+
+    if (lfoEditSwitch)
+    {
+        lfoEditSwitch->setValue(1.0);
+        lfoEditSwitch->asJuceComponent()->repaint();
+    }
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
@@ -4713,6 +4731,12 @@ void SurgeGUIEditor::closeFormulaEditorDialog()
     if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
         dismissEditorOfType(FORMULA_EDITOR);
+
+        if (lfoEditSwitch)
+        {
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
+        }
     }
 }
 
@@ -4796,17 +4820,17 @@ void SurgeGUIEditor::showMSEGEditor()
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
     addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect(), true, [this]() {
-        if (msegEditSwitch)
+        if (lfoEditSwitch)
         {
-            msegEditSwitch->setValue(0.0);
-            msegEditSwitch->asJuceComponent()->repaint();
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
         }
     });
 
-    if (msegEditSwitch)
+    if (lfoEditSwitch)
     {
-        msegEditSwitch->setValue(1.0);
-        msegEditSwitch->asJuceComponent()->repaint();
+        lfoEditSwitch->setValue(1.0);
+        lfoEditSwitch->asJuceComponent()->repaint();
     }
 }
 
@@ -5005,22 +5029,80 @@ void SurgeGUIEditor::activateFromCurrentFx()
 }
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-    if (key.getKeyCode() == juce::KeyPress::tabKey)
+    if (key.getTextCharacter() == juce::KeyPress::tabKey)
     {
+        // store patch dialog gets access to the Tab key to switch between fields if it's open
         if (topmostEditorTag() == STORE_PATCH)
         {
-            /*
-            ** SaveDialog gets access to the tab key to switch between fields if it is open
-            */
             return false;
         }
+
         toggle_mod_editing();
+
         return true;
     }
-    else if (key.getKeyCode() == juce::KeyPress::F5Key)
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
-        if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                Surge::Storage::SkinReloadViaF5, 0))
+        // zoom actions
+        if (!key.getModifiers().isAnyModifierKeyDown() || key.getModifiers().isShiftDown())
+        {
+            int jog = 0;
+
+            if (key.getTextCharacter() == '+')
+            {
+                jog = key.getModifiers().isShiftDown() ? 25 : 10;
+            }
+
+            if (key.getTextCharacter() == '-')
+            {
+                jog = key.getModifiers().isShiftDown() ? -25 : -10;
+            }
+
+            if (jog != 0)
+            {
+                resizeWindow(getZoomFactor() + jog);
+
+                return true;
+            }
+
+            if (key.getTextCharacter() == '*')
+            {
+                auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                               Surge::Storage::DefaultZoom, 150);
+
+                resizeWindow(dzf);
+
+                return true;
+            }
+        }
+
+        // toggle debug console
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'd')
+        {
+            Surge::Debug::toggleConsole();
+
+            return true;
+        }
+
+        // toggle virtual keyboard
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'k')
+        {
+            toggleVirtualKeyboard();
+
+            return true;
+        }
+
+        // open manual
+        if (key.getKeyCode() == juce::KeyPress::F1Key)
+        {
+            juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
+
+            return true;
+        }
+
+        // reload current skin
+        if (key.getKeyCode() == juce::KeyPress::F5Key)
         {
             bitmapStore.reset(new SurgeImageStore());
             bitmapStore->setupBuiltinBitmaps();
@@ -5028,9 +5110,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             if (!currentSkin->reloadSkin(bitmapStore))
             {
                 auto db = Surge::GUI::SkinDB::get();
-                auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
-                                       "Classic.\n\nSkin error:\n") +
-                           db->getAndResetErrorString();
+                std::string msg = "Unable to load skin! Reverting the skin to Surge "
+                                  "Classic.\n\nSkin error:\n" +
+                                  db->getAndResetErrorString();
                 currentSkin = db->defaultSkin(&(synth->storage));
                 currentSkin->reloadSkin(bitmapStore);
                 synth->storage.reportError(msg, "Skin Loading Error");
@@ -5038,10 +5120,26 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             reloadFromSkin();
             synth->refresh_editor = true;
+
+            return true;
         }
 
-        return true;
+        // toggle about screen
+        if (key.getKeyCode() == juce::KeyPress::F12Key)
+        {
+            if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
+            {
+                this->hideAboutScreen();
+            }
+            else
+            {
+                this->showAboutScreen();
+            }
+
+            return true;
+        }
     }
+
     return false;
 }
 
