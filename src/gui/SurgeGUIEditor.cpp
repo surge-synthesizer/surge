@@ -889,7 +889,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     ** There are a collection of member states we need to reset
     */
     polydisp = nullptr;
-    msegEditSwitch = nullptr;
+    lfoEditSwitch = nullptr;
     lfoNameLabel = nullptr;
     midiLearnOverlay = nullptr;
 
@@ -1124,14 +1124,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
         {
-            msegEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
-            setAccessibilityInformationByTitleAndAction(msegEditSwitch->asJuceComponent(),
+            lfoEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
+            setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
                                                         "Show MSEG Editor", "Show");
-            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             jassert(msejc);
             msejc->setVisible(false);
-            msegEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
-                                     isAnyOverlayPresent(FORMULA_EDITOR));
+            lfoEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
+                                    isAnyOverlayPresent(FORMULA_EDITOR));
             auto q = modsource_editor[current_scene];
             if ((q >= ms_lfo1 && q <= ms_lfo6) || (q >= ms_slfo1 && q <= ms_slfo6))
             {
@@ -4575,9 +4575,9 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
         curr == lt_formula)
     {
-        if (msegEditSwitch)
+        if (lfoEditSwitch)
         {
-            auto msejc = dynamic_cast<juce::Component *>(msegEditSwitch);
+            auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             msejc->setVisible(curr == lt_mseg || curr == lt_formula);
         }
     }
@@ -4626,6 +4626,12 @@ void SurgeGUIEditor::closeMSEGEditor()
     {
         broadcastMSEGState();
         dismissEditorOfType(MSEG_EDITOR);
+
+        if (lfoEditSwitch)
+        {
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
+        }
     }
 }
 void SurgeGUIEditor::toggleMSEGEditor()
@@ -4707,6 +4713,12 @@ void SurgeGUIEditor::showFormulaEditorDialog()
 
     addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,
                          []() {});
+
+    if (lfoEditSwitch)
+    {
+        lfoEditSwitch->setValue(1.0);
+        lfoEditSwitch->asJuceComponent()->repaint();
+    }
 }
 
 void SurgeGUIEditor::closeFormulaEditorDialog()
@@ -4714,6 +4726,12 @@ void SurgeGUIEditor::closeFormulaEditorDialog()
     if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
         dismissEditorOfType(FORMULA_EDITOR);
+
+        if (lfoEditSwitch)
+        {
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
+        }
     }
 }
 
@@ -4797,17 +4815,17 @@ void SurgeGUIEditor::showMSEGEditor()
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
     addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect(), true, [this]() {
-        if (msegEditSwitch)
+        if (lfoEditSwitch)
         {
-            msegEditSwitch->setValue(0.0);
-            msegEditSwitch->asJuceComponent()->repaint();
+            lfoEditSwitch->setValue(0.0);
+            lfoEditSwitch->asJuceComponent()->repaint();
         }
     });
 
-    if (msegEditSwitch)
+    if (lfoEditSwitch)
     {
-        msegEditSwitch->setValue(1.0);
-        msegEditSwitch->asJuceComponent()->repaint();
+        lfoEditSwitch->setValue(1.0);
+        lfoEditSwitch->asJuceComponent()->repaint();
     }
 }
 
