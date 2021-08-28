@@ -5066,10 +5066,10 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
 
-            if (key.getTextCharacter() == '*')
+            if (key.getTextCharacter() == '/')
             {
                 auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                               Surge::Storage::DefaultZoom, 150);
+                                                               Surge::Storage::DefaultZoom, 0);
 
                 resizeWindow(dzf);
 
