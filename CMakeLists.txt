@@ -154,6 +154,10 @@ else()
   set( SURGE_JUCE_LOCATION ${CMAKE_SOURCE_DIR}/libs/JUCE )
 endif()
 
+if(EXISTS ${SURGE_JUCE_LOCATION}/README.surge)
+  message(STATUS "Using the SURGE fork of JUCE.")
+endif()
+
 include(cmake/stage-extra-content.cmake)
 
 add_library(surge-shared)
