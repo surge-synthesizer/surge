@@ -33,7 +33,7 @@ struct Exception : public std::runtime_error
 {
     explicit Exception(sqlite3 *h) : std::runtime_error(sqlite3_errmsg(h)), rc(sqlite3_errcode(h))
     {
-        Surge::Debug::stackTraceToStdout();
+        // Surge::Debug::stackTraceToStdout();
     }
     Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc) {}
     const char *what() const noexcept override
@@ -527,8 +527,6 @@ CREATE TABLE Category (
         if (patchLoaded)
             return;
 
-        std::cout << "        - Loading '" << path_to_string(p.path) << "'" << std::endl;
-
         int64_t patchid = -1;
         try
         {
@@ -591,7 +589,6 @@ CREATE TABLE Category (
         if ((vt_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
             (vt_read_int32BE(fxp->fxMagic) != 'FPCh') || (vt_read_int32BE(fxp->fxID) != 'cjs3'))
         {
-            std::cout << "Not a surge patch; bailing" << std::endl;
             return;
         }
 
@@ -712,6 +709,7 @@ CREATE TABLE Category (
             add.step();
 
             add.finalize();
+            par.finalize();
         }
         catch (const SQL::Exception &e)
         {
