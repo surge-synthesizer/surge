@@ -56,6 +56,8 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     LastWavetablePath,
     LastPatchPath,
 
+    TabKeyArmsModulators,
+
     nKeys
 };
 /**
