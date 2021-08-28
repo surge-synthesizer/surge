@@ -419,6 +419,100 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     }
 }
 
+std::string createDebugViewOfModState(const EvaluatorState &es)
+{
+    Surge::LuaSupport::SGLD guard("debugViewGuard", es.L);
+    lua_getglobal(es.L, es.stateName);
+    if (!lua_istable(es.L, -1))
+    {
+        lua_pop(es.L, -1);
+        return "NOT A TABLE";
+    }
+
+    std::ostringstream oss;
+    std::function<void(const std::string &)> rec;
+    rec = [&oss, &es, &rec](const std::string &pfx) {
+        Surge::LuaSupport::SGLD guardR("rec[" + pfx + "]", es.L);
+
+        if (lua_istable(es.L, -1))
+        {
+            // gather and sort keys for display
+            std::vector<std::string> skeys;
+            std::vector<int> ikeys;
+
+            lua_pushnil(es.L);
+            while (lua_next(es.L, -2)) // because we pushed nil
+            {
+                // now key is -2, value is -1
+                if (lua_isnumber(es.L, -2))
+                {
+                    ikeys.push_back(lua_tointeger(es.L, -2));
+                }
+                else if (lua_isstring(es.L, -2))
+                {
+                    skeys.push_back(lua_tostring(es.L, -2));
+                }
+                lua_pop(es.L, 1);
+            }
+
+            if (!skeys.empty())
+                std::sort(skeys.begin(), skeys.end());
+            if (!ikeys.empty())
+                std::sort(ikeys.begin(), ikeys.end());
+
+            auto guts = [&]() {
+                if (lua_isnumber(es.L, -1))
+                {
+                    oss << lua_tonumber(es.L, -1) << "\n";
+                }
+                else if (lua_isstring(es.L, -1))
+                {
+                    oss << lua_tostring(es.L, -1) << "\n";
+                }
+                else if (lua_isnil(es.L, -1))
+                {
+                    oss << "(nil)"
+                        << "\n";
+                }
+                else if (lua_isboolean(es.L, -1))
+                {
+                    oss << (lua_toboolean(es.L, -1) ? "true" : "false") << "\n";
+                }
+                else if (lua_istable(es.L, -1))
+                {
+                    oss << "\n";
+                    rec(pfx + "  ");
+                }
+                else
+                {
+                    oss << "(unknown)\n";
+                }
+            };
+            for (auto k : ikeys)
+            {
+                oss << pfx << "." << k << ": ";
+                lua_pushinteger(es.L, k);
+                lua_gettable(es.L, -2);
+                guts();
+                lua_pop(es.L, 1);
+            }
+
+            for (auto s : skeys)
+            {
+                oss << pfx << s << ": ";
+                lua_pushstring(es.L, s.c_str());
+                lua_gettable(es.L, -2);
+                guts();
+                lua_pop(es.L, 1);
+            }
+        }
+    };
+
+    rec("");
+    lua_pop(es.L, -1);
+    return oss.str();
+}
+
 void createInitFormula(FormulaModulatorStorage *fs)
 {
     fs->setFormula(R"FN(function process(modstate)

@@ -69,8 +69,8 @@ struct ExpandingFormulaDebugger;
 
 struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 {
-    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, FormulaModulatorStorage *fs,
-                           Surge::GUI::Skin::ptr_t sk);
+    FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *lfos,
+                           FormulaModulatorStorage *fs, Surge::GUI::Skin::ptr_t sk);
     ~FormulaModulatorEditor();
 
     std::unique_ptr<juce::TabbedComponent> tabs;
@@ -78,7 +78,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
     void resized() override;
     void applyCode() override;
 
-    FormulaModulatorStorage *formulastorage;
+    LFOStorage *lfos{nullptr};
+    FormulaModulatorStorage *formulastorage{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };

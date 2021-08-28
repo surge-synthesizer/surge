@@ -118,11 +118,65 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
-struct ExpandingFormulaDebugger : public juce::Component
+struct ExpandingFormulaDebugger : public juce::Component, public juce::Button::Listener
 {
     bool isOpen{false};
-    ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed) {}
+    ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
+    {
+        init = std::make_unique<juce::TextButton>("Init Modulator", "Init");
+        init->addListener(this);
+        step = std::make_unique<juce::TextButton>("Step Modulator", "Step");
+        step->addListener(this);
+        dPhase = std::make_unique<juce::TextEditor>("dPhase");
+        dPhase->setText("0.17", juce::NotificationType::dontSendNotification);
+        dPhaseLabel = std::make_unique<juce::Label>("dP");
+        outputDump = std::make_unique<juce::TextEditor>("Output");
+        outputDump->setMultiLine(true, false);
+        outputDump->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+    }
     FormulaModulatorEditor *editor{nullptr};
+
+    pdata tp[n_scene_params];
+
+    void initializeLfoDebugger()
+    {
+        auto lfodata = editor->lfos;
+
+        tp[lfodata->delay.param_id_in_scene].i = lfodata->delay.val.i;
+        tp[lfodata->attack.param_id_in_scene].i = lfodata->attack.val.i;
+        tp[lfodata->hold.param_id_in_scene].i = lfodata->hold.val.i;
+        tp[lfodata->decay.param_id_in_scene].i = lfodata->decay.val.i;
+        tp[lfodata->sustain.param_id_in_scene].i = lfodata->sustain.val.i;
+        tp[lfodata->release.param_id_in_scene].i = lfodata->release.val.i;
+
+        tp[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
+        tp[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
+        tp[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
+        tp[lfodata->start_phase.param_id_in_scene].i = lfodata->start_phase.val.i;
+        tp[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
+        tp[lfodata->trigmode.param_id_in_scene].i = lm_keytrigger;
+
+        lfoDebugger = std::make_unique<LFOModulationSource>();
+        lfoDebugger->assign(editor->storage, editor->lfos, tp, 0, nullptr, nullptr,
+                            editor->formulastorage, true);
+        lfoDebugger->attack();
+
+        stepLfoDebugger();
+    }
+
+    void stepLfoDebugger()
+    {
+        lfoDebugger->process_block();
+        auto st = Surge::Formula::createDebugViewOfModState(lfoDebugger->formulastate);
+        if (outputDump)
+        {
+            outputDump->setText(st, juce::NotificationType::dontSendNotification);
+        }
+    }
+    std::unique_ptr<juce::Button> init, step;
+    std::unique_ptr<juce::TextEditor> dPhase;
+    std::unique_ptr<juce::TextEditor> outputDump;
+    std::unique_ptr<juce::Label> dPhaseLabel;
     void paint(juce::Graphics &g) override
     {
         if (isOpen)
@@ -130,31 +184,87 @@ struct ExpandingFormulaDebugger : public juce::Component
             g.fillAll(juce::Colours::orchid);
             g.setColour(juce::Colours::white);
             g.drawText("Debugger", getLocalBounds(), juce::Justification::centredTop);
+            juce::Path p;
+            p.addTriangle(getWidth() - 2, 2, getWidth() - 2, 14, getWidth() - 16, 7);
+            g.fillPath(p);
         }
         else
         {
             g.fillAll(juce::Colours::steelblue);
-
             g.setColour(juce::Colours::white);
-            auto h = 15, y = 10;
-            for (auto c : "Debugger")
-            {
-                g.drawText(std::string("") + c, 0, y, getWidth(), h, juce::Justification::centred);
-                y += h;
-            }
+
+            auto p = juce::Path();
+            p.addTriangle(2, 2, getWidth() - 2, 2, getWidth() / 2, getWidth() - 2);
+            g.fillPath(p);
+
+            juce::Graphics::ScopedSaveState gs(g);
+            auto at = juce::AffineTransform().rotated(juce::MathConstants<float>::halfPi);
+            g.addTransform(at);
+            auto b = juce::Rectangle<int>(16, -getWidth(), getHeight() - 16, getWidth());
+            g.drawText("Debugger", b, juce::Justification::topLeft);
         }
     }
-    void mouseDown(const juce::MouseEvent &e) override
+    void mouseDown(const juce::MouseEvent &e) override { setOpen(!isOpen); }
+
+    void setOpen(bool b)
     {
-        isOpen = !isOpen;
+        isOpen = b;
+        if (isOpen)
+        {
+            addAndMakeVisible(*init);
+            addAndMakeVisible(*step);
+            addAndMakeVisible(*outputDump);
+        }
+        else
+        {
+            removeChildComponent(init.get());
+            removeChildComponent(step.get());
+            removeChildComponent(outputDump.get());
+        }
         editor->resized();
     }
+
+    void buttonClicked(juce::Button *button) override
+    {
+        if (button == init.get())
+        {
+            initializeLfoDebugger();
+        }
+        if (button == step.get())
+        {
+            if (!lfoDebugger)
+                initializeLfoDebugger();
+            stepLfoDebugger();
+        }
+    }
+
+    void resized() override
+    {
+        if (isOpen)
+        {
+            int headerArea = 16;
+            int buttonHeight = 20;
+            auto w = getWidth();
+            auto m = 2;
+            auto r = juce::Rectangle<int>(0, headerArea, w, buttonHeight);
+            auto ri = r.withWidth(getWidth() / 2).reduced(2);
+            init->setBounds(ri);
+            ri = ri.translated(getWidth() / 2, 0);
+            step->setBounds(ri);
+            auto tx = getLocalBounds().withTop(headerArea + buttonHeight).reduced(2);
+            outputDump->setBounds(tx);
+        }
+    }
+
+    std::unique_ptr<LFOModulationSource> lfoDebugger;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ExpandingFormulaDebugger);
 };
 
-FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s,
+FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *ls,
                                                FormulaModulatorStorage *fs,
                                                Surge::GUI::Skin::ptr_t skin)
-    : CodeEditorContainerWithApply(ed, s, skin, false), formulastorage(fs)
+    : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs)
 {
     mainDocument->insertText(0, fs->formulaString);
     tabs =

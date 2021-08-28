@@ -62,6 +62,8 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
 void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs]);
 
+std::string createDebugViewOfModState(const EvaluatorState &s);
+
 void createInitFormula(FormulaModulatorStorage *fs);
 
 } // namespace Formula
