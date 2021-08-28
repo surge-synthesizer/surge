@@ -141,6 +141,9 @@ void initMaps()
             case LastWavetablePath:
                 r = "lastWavetablePath";
                 break;
+            case TabKeyArmsModulators:
+                r = "tabKeyArmsModulators";
+                break;
             case nKeys:
                 break;
             }

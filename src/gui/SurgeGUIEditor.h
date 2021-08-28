@@ -370,6 +370,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
         return false;
     }
+    bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
 
     std::string getDisplayForTag(long tag, bool external = false, float value = 0);
     float getF01FromString(long tag, const std::string &s);

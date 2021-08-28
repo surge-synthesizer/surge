@@ -1506,8 +1506,9 @@ bool SurgeGUIEditor::open(void *parent)
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
     frame->setWantsKeyboardFocus(true);
-    frame->addKeyListener(this);
     juceEditor->addAndMakeVisible(*frame);
+    juceEditor->addKeyListener(this);
+
     /*
      * SET UP JUCE EDITOR BETTER
      */
@@ -2803,6 +2804,14 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
                    [this]() { toggleVirtualKeyboard(); });
+
+    bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      Surge::Storage::TabKeyArmsModulators, false);
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Tab Key Arms Modulators"), true, tabArm,
+                   [this, tabArm]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::TabKeyArmsModulators, !tabArm);
+                   });
 
     return wfMenu;
 }
@@ -5032,14 +5041,18 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 {
     if (key.getTextCharacter() == juce::KeyPress::tabKey)
     {
-        // store patch dialog gets access to the Tab key to switch between fields if it's open
-        if (topmostEditorTag() == STORE_PATCH)
+        auto tk = Surge::Storage::getUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::DefaultKey::TabKeyArmsModulators, 0);
+        if (!tk)
+        {
+            return false;
+        }
+        if (isAnyOverlayOpenAtAll())
         {
             return false;
         }
 
         toggle_mod_editing();
-
         return true;
     }
 
