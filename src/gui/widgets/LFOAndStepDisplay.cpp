@@ -1425,7 +1425,27 @@ void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
     lfoTypeHover = -1;
     stepSeqShiftHover = -1;
 
+    if (overWaveform)
+    {
+        enterExitWaveform(false);
+    }
+    overWaveform = false;
     repaint();
+}
+
+void LFOAndStepDisplay::enterExitWaveform(bool isInWF)
+{
+    if (isInWF)
+    {
+        if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
+        {
+            setMouseCursor(juce::MouseCursor::PointingHandCursor);
+        }
+    }
+    else
+    {
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+    }
 }
 
 void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
@@ -1475,38 +1495,54 @@ void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
             return;
         }
     }
+
+    if (waveform_display.contains(event.position.toInt()))
+    {
+        if (!overWaveform)
+            enterExitWaveform(true);
+        overWaveform = true;
+    }
+    else
+    {
+        if (overWaveform)
+            enterExitWaveform(false);
+        overWaveform = false;
+    }
 }
 
 void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    for (int i = 0; i < n_lfo_types; ++i)
+    if (!isStepSequencer() || dragMode == NONE)
     {
-        if (shaperect[i].contains(event.position.toInt()))
+        for (int i = 0; i < n_lfo_types; ++i)
         {
-            if (event.mods.isPopupMenu())
+            if (shaperect[i].contains(event.position.toInt()))
             {
-                notifyControlModifierClicked(event.mods);
+                if (event.mods.isPopupMenu())
+                {
+                    notifyControlModifierClicked(event.mods);
+
+                    return;
+                }
+
+                if (i != lfodata->shape.val.i)
+                {
+                    auto prior = lfodata->shape.val.i;
+
+                    lfodata->shape.val.i = i;
+
+                    sge->refresh_mod();
+                    sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
+
+                    repaint();
+
+                    sge->lfoShapeChanged(prior, i);
+                }
 
                 return;
             }
-
-            if (i != lfodata->shape.val.i)
-            {
-                auto prior = lfodata->shape.val.i;
-
-                lfodata->shape.val.i = i;
-
-                sge->refresh_mod();
-                sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
-
-                repaint();
-
-                sge->lfoShapeChanged(prior, i);
-            }
-
-            return;
         }
     }
 
