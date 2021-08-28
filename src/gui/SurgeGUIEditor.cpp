@@ -4713,7 +4713,8 @@ void SurgeGUIEditor::showFormulaEditorDialog()
     auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
 
     auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
-        this, &(this->synth->storage), fs, currentSkin);
+        this, &(this->synth->storage), &synth->storage.getPatch().scene[current_scene].lfo[lfo_id],
+        fs, currentSkin);
     pt->setSkin(currentSkin, bitmapStore);
 
     addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,

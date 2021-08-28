@@ -11,7 +11,8 @@ mod.ClockDivider = { numerator = 1,
               denominator = 1,
               prioribeat = -1,
               newbeat = false,
-              ibeat = 0,
+              intphase = 0, -- increase from 0 up to n
+              ibeat = 0, -- wraps with denominator
               phase = 0
             }
 mod.ClockDivider.new = function(self,o)
@@ -24,7 +25,8 @@ end
 mod.ClockDivider.tick = function(self, intphase, phase)
     beat = (intphase + phase) * self.numerator / self.denominator
     ibeat = math.floor(beat)
-    self.ibeat = ibeat
+    self.intphase = ibeat
+    self.ibeat = ibeat % self.numerator
     self.phase = beat - ibeat
     self.newbeat = false
     if (ibeat ~= self.prioribeat) then
