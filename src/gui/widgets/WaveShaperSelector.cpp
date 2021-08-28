@@ -425,6 +425,11 @@ void WaveShaperSelector::setValue(float f)
 
 void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     lastDragDistance = 0;
     everDragged = false;
 

@@ -144,6 +144,11 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
 
 void MenuForDiscreteParams::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     if (glyphMode && glyphPosition.contains(event.position))
     {
         mouseDownOrigin = event.position.toInt();

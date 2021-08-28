@@ -367,6 +367,11 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 
 void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     if (event.mods.isPopupMenu())
     {
         editTypeWas = NOEDIT;

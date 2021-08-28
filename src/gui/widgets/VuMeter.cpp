@@ -27,6 +27,7 @@ VuMeter::VuMeter()
 #if SURGE_JUCE_ACCESSIBLE
     setAccessible(false);
 #endif
+    setInterceptsMouseClicks(false, false);
 }
 VuMeter::~VuMeter() = default;
 

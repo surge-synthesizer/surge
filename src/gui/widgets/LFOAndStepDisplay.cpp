@@ -1223,6 +1223,11 @@ void LFOAndStepDisplay::onSkinChanged()
 
 void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     for (int i = 0; i < n_lfo_types; ++i)

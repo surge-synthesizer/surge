@@ -22,8 +22,9 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #include <unordered_set>
+#include "MainFrame.h"
 
-class SurgeGUIEditor;
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -123,6 +124,18 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
                 return q;
         }
         return nullptr;
+    }
+
+    bool forwardedMainFrameMouseDowns(const juce::MouseEvent &e)
+    {
+        if (e.mods.isMiddleButtonDown())
+        {
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+            if (sge && sge->frame)
+                sge->frame->mouseDown(e);
+            return true;
+        }
+        return false;
     }
 };
 } // namespace Widgets

@@ -467,6 +467,16 @@ void OscillatorWaveformDisplay::showWavetableMenu()
         menu.showMenuAsync(juce::PopupMenu::Options());
     }
 }
+
+void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
+{
+    if (event.mods.isMiddleButtonDown() && sge)
+    {
+        sge->frame->mouseDown(event);
+        return;
+    }
+}
+
 void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event)
 {
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
@@ -506,6 +516,7 @@ void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event)
         }
     }
 }
+
 void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
 {
     if (supportsCustomEditor())
@@ -891,6 +902,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
     g.drawText(s, customEditorBox, juce::Justification::centred);
 }
+
 void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
 {
     isCustomEditorHovered = false;
