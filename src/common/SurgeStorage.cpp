@@ -2168,6 +2168,15 @@ void SurgeStorage::toggleTuningToCache()
     }
 }
 
+bool SurgeStorage::isStandardTuningAndHasNoToggle()
+{
+    auto res = isStandardTuning;
+    if (isToggledToCache)
+        res = res && togglePriorState[0] && togglePriorState[1] && togglePriorState[2];
+
+    return res;
+}
+
 void SurgeStorage::reportError(const std::string &msg, const std::string &title)
 {
     std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;

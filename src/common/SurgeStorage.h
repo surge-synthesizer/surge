@@ -1098,6 +1098,7 @@ class alignas(16) SurgeStorage
     bool isToggledToCache;
     bool togglePriorState[3];
     void toggleTuningToCache();
+    bool isStandardTuningAndHasNoToggle();
 
     bool retuneToScale(const Tunings::Scale &s)
     {

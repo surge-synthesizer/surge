@@ -2236,6 +2236,14 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_status_tune)
     {
         toggleTuning();
+        if (synth->storage.isStandardTuningAndHasNoToggle())
+        {
+            std::cout << "Who cares you have no toggle" << std::endl;
+        }
+        else
+        {
+            std::cout << "Tuned or Toggled" << std::endl;
+        }
         return;
     }
 
