@@ -814,12 +814,12 @@ juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
 
     int gridX = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).x;
     int gridY = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).y;
-    int width = isMacro ? 93 : 74;
+    int width = isMacro ? 90 : 72;
 
     // to ensure the same gap between the modbuttons,
     // make the first and last non-macro button wider 2px
-    if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
-        width += 2;
+    // if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
+    //    width += 2;
 
     auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
 
@@ -839,23 +839,42 @@ juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
     if (isMacro)
         r = r.withTrimmedBottom(-8);
 
-    int offsetX = 1;
+    int offsetX = 23;
 
     for (int i = 0; i < gridX; i++)
     {
-        if ((!isMacro) && (i == 0))
-            offsetX += 2;
+        // if ((!isMacro) && (i == 0))
+        //    offsetX += 2;
 
         // gross hack for accumulated 2 px horizontal offsets from the previous if clause
         // needed to align the last column nicely
-        if ((!isMacro) && (i == 8))
-            offsetX -= 18;
+        // if ((!isMacro) && (i == 8))
+        //    offsetX -= 18;
 
         offsetX += width;
     }
 
     r = r.translated(offsetX, 8 * gridY);
 
+    return r;
+}
+
+juce::Rectangle<int> SurgeGUIEditor::positionForModOverview()
+{
+    auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
+
+    if (!skinCtrl)
+    {
+        skinCtrl = currentSkin->getOrCreateControlForConnector(
+            Surge::Skin::Connector::connectorByID("controls.modulation.panel"));
+    }
+
+    if (skinCtrl->classname == Surge::GUI::NoneClassName && currentSkin->getVersion() >= 2)
+    {
+        return juce::Rectangle<int>();
+    }
+
+    auto r = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y - 1, 22, 16 * 4 + 8).reduced(1);
     return r;
 }
 
@@ -954,6 +973,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
         }
     }
+    auto moRect = positionForModOverview();
+    auto mol = std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(this);
+    mol->setBounds(moRect);
+    mol->setSkin(currentSkin);
+    modOverviewLauncher = std::move(mol);
+    frame->getModButtonLayer()->addAndMakeVisible(*modOverviewLauncher);
 
     // fx vu-meters & labels. This is all a bit hacky still
     {
@@ -4750,6 +4775,18 @@ void SurgeGUIEditor::closeModulationEditorDialog()
     if (isAnyOverlayPresent(MODULATION_EDITOR))
     {
         dismissEditorOfType(MODULATION_EDITOR);
+    }
+}
+
+void SurgeGUIEditor::toggleModulationEditorDialog()
+{
+    if (isAnyOverlayPresent(MODULATION_EDITOR))
+    {
+        dismissEditorOfType(MODULATION_EDITOR);
+    }
+    else
+    {
+        showModulationEditorDialog();
     }
 }
 
