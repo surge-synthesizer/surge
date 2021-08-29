@@ -500,7 +500,7 @@ void FxMenu::populate()
     /*
     ** Are there user presets
     */
-    Surge::FxUserPreset::doPresetRescan(storage);
+    storage->fxUserPreset->doPresetRescan(storage);
 
     XMLMenuPopulator::populate();
 
@@ -520,7 +520,7 @@ void FxMenu::populate()
     }
 
     auto rsA = [this]() {
-        Surge::FxUserPreset::doPresetRescan(this->storage, true);
+        this->storage->fxUserPreset->doPresetRescan(this->storage, true);
         auto *sge = firstListenerOfType<SurgeGUIEditor>();
         if (sge)
             sge->queueRebuildUI();
@@ -552,7 +552,7 @@ void FxMenu::saveFX()
     {
         sge->promptForMiniEdit("", "Enter a name for the FX preset:", "Save FX Preset",
                                juce::Point<int>{}, [this](const std::string &s) {
-                                   Surge::FxUserPreset::saveFxIn(this->storage, fx, s);
+                                   this->storage->fxUserPreset->saveFxIn(this->storage, fx, s);
                                    auto *sge = firstListenerOfType<SurgeGUIEditor>();
                                    if (sge)
                                        sge->queueRebuildUI();
@@ -560,9 +560,9 @@ void FxMenu::saveFX()
     }
 }
 
-void FxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
+void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 {
-    Surge::FxUserPreset::loadPresetOnto(p, storage, fxbuffer);
+    this->storage->fxUserPreset->loadPresetOnto(p, storage, fxbuffer);
 
     selectedIdx = -1;
     selectedName = p.name;
@@ -572,8 +572,8 @@ void FxMenu::loadUserPreset(const Surge::FxUserPreset::Preset &p)
 
 void FxMenu::scanExtraPresets()
 {
-    Surge::FxUserPreset::doPresetRescan(storage);
-    for (const auto &tp : Surge::FxUserPreset::getPresetsByType())
+    storage->fxUserPreset->doPresetRescan(storage);
+    for (const auto &tp : storage->fxUserPreset->getPresetsByType())
     {
         // So lets run all presets until we find the first item with type tp.first
         auto alit = allPresets.begin();

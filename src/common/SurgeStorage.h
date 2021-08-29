@@ -880,6 +880,15 @@ class MTSClient;
 
 /* storage layer */
 
+namespace Surge
+{
+namespace Storage
+{
+struct FxUserPreset;
+struct ModulatorPreset;
+} // namespace Storage
+} // namespace Surge
+
 class alignas(16) SurgeStorage
 {
   public:
@@ -1010,6 +1019,9 @@ class alignas(16) SurgeStorage
     int firstUserWTCategory;
     std::vector<int> wtOrdering;
     std::vector<int> wtCategoryOrdering;
+
+    std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
+    std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
     std::string wtpath;
     std::string datapath;

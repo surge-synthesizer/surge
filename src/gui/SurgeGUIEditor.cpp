@@ -1970,33 +1970,33 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     lfoSubMenu.addItem("[?] LFO Presets", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
     lfoSubMenu.addSeparator();
 
-    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId,
-                                                                                what]() {
-        // Prompt for a name
-        promptForMiniEdit(
-            "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
-            juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
-                Surge::ModulatorPreset::savePresetToUser(string_to_path(s), &(this->synth->storage),
-                                                         current_scene, currentLfoId);
-            });
-        // and save
-    });
+    lfoSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId, what]() {
+            // Prompt for a name
+            promptForMiniEdit(
+                "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
+                juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
+                    this->synth->storage.modulatorPreset->savePresetToUser(
+                        string_to_path(s), &(this->synth->storage), current_scene, currentLfoId);
+                });
+            // and save
+        });
 
-    auto presetCategories = Surge::ModulatorPreset::getPresets(&(synth->storage));
+    auto presetCategories = this->synth->storage.modulatorPreset->getPresets(&(synth->storage));
     if (!presetCategories.empty())
     {
         lfoSubMenu.addSeparator();
     }
 
-    std::function<void(juce::PopupMenu & m, const Surge::ModulatorPreset::Category &cat)>
+    std::function<void(juce::PopupMenu & m, const Surge::Storage::ModulatorPreset::Category &cat)>
         recurseCat;
-    recurseCat = [this, currentLfoId, presetCategories,
-                  &recurseCat](juce::PopupMenu &m, const Surge::ModulatorPreset::Category &cat) {
+    recurseCat = [this, currentLfoId, presetCategories, &recurseCat](
+                     juce::PopupMenu &m, const Surge::Storage::ModulatorPreset::Category &cat) {
         for (const auto &p : cat.presets)
         {
             auto action = [this, p, currentLfoId]() {
-                Surge::ModulatorPreset::loadPresetFrom(p.path, &(this->synth->storage),
-                                                       current_scene, currentLfoId);
+                this->synth->storage.modulatorPreset->loadPresetFrom(
+                    p.path, &(this->synth->storage), current_scene, currentLfoId);
 
                 auto newshape = this->synth->storage.getPatch()
                                     .scene[current_scene]
@@ -2044,7 +2044,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
     lfoSubMenu.addSeparator();
     lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan Presets"),
-                       []() { Surge::ModulatorPreset::forcePresetRescan(); });
+                       [this]() { this->synth->storage.modulatorPreset->forcePresetRescan(); });
 
     return lfoSubMenu;
 }
@@ -3054,8 +3054,8 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         this->synth->storage.refresh_patchlist();
         this->scannedForMidiPresets = false;
 
-        Surge::FxUserPreset::doPresetRescan(&(this->synth->storage));
-        Surge::ModulatorPreset::forcePresetRescan();
+        this->synth->storage.fxUserPreset->doPresetRescan(&(this->synth->storage), true);
+        this->synth->storage.modulatorPreset->forcePresetRescan();
 
         // Rescan for skins
         auto r = this->currentSkin->root;

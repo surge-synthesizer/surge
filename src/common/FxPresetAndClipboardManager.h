@@ -24,44 +24,50 @@
 
 namespace Surge
 {
-namespace FxUserPreset
+namespace Storage
 {
-struct Preset
+struct FxUserPreset
 {
-    std::string file;
-    std::string name;
-    fs::path subPath{};
-    bool isFactory{false};
-    int type{-1};
-    float p[n_fx_params];
-    bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
-    int dt[n_fx_params];
-
-    Preset()
+    struct Preset
     {
-        type = 0;
-        isFactory = false;
+        std::string file;
+        std::string name;
+        fs::path subPath{};
+        bool isFactory{false};
+        int type{-1};
+        float p[n_fx_params];
+        bool ts[n_fx_params], er[n_fx_params], da[n_fx_params];
+        int dt[n_fx_params];
 
-        for (int i = 0; i < n_fx_params; ++i)
+        Preset()
         {
-            p[i] = 0.0;
-            ts[i] = false;
-            er[i] = false;
-            da[i] = false;
-            dt[i] = -1;
+            type = 0;
+            isFactory = false;
+
+            for (int i = 0; i < n_fx_params; ++i)
+            {
+                p[i] = 0.0;
+                ts[i] = false;
+                er[i] = false;
+                da[i] = false;
+                dt[i] = -1;
+            }
         }
-    }
+    };
+
+    std::unordered_map<int, std::vector<Preset>> scannedPresets;
+    bool haveScannedPresets{false};
+
+    void doPresetRescan(SurgeStorage *storage, bool forceRescan = false);
+    std::unordered_map<int, std::vector<Preset>> getPresetsByType();
+    std::vector<Preset> getPresetsForSingleType(int type_id);
+    bool hasPresetsForSingleType(int type_id);
+
+    void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn);
+
+    void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
 };
-
-void doPresetRescan(SurgeStorage *storage, bool forceRescan = false);
-std::unordered_map<int, std::vector<Preset>> getPresetsByType();
-std::vector<Preset> getPresetsForSingleType(int type_id);
-bool hasPresetsForSingleType(int type_id);
-
-void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn);
-
-void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
-} // namespace FxUserPreset
+} // namespace Storage
 
 namespace FxClipboard
 {

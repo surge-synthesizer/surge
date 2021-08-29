@@ -73,7 +73,7 @@ struct XMLMenuPopulator
          * I knwo this isn't very generalized and I could template it and subclass
          * and use this for N other controls. But I wont
          */
-        Surge::FxUserPreset::Preset fxPreset;
+        Surge::Storage::FxUserPreset::Preset fxPreset;
         bool hasFxUserPreset{false};
     };
     virtual void scanExtraPresets() {}
@@ -203,7 +203,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void saveFX();
 
     void loadByIndex(int index) override;
-    void loadUserPreset(const Surge::FxUserPreset::Preset &p);
+    void loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
 
     SurgeImage *bg{}, *bgHover{};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };

@@ -21,37 +21,43 @@ class SurgeStorage;
 
 namespace Surge
 {
-namespace ModulatorPreset
+namespace Storage
 {
-/*
- * Given a storage, scene, and LFO, stream stream it to a file relative to the location
- * in the user directory LFO presets area
- */
-void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfo);
-
-/*
- * Given a compelted path, load the preset into our storage
- */
-void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lfo);
-
-/*
- * What are the presets we have? In some form of category order
- */
-struct Preset
+struct ModulatorPreset
 {
-    std::string name;
-    fs::path path;
+    /*
+     * Given a storage, scene, and LFO, stream stream it to a file relative to the location
+     * in the user directory LFO presets area
+     */
+    void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfo);
+
+    /*
+     * Given a compelted path, load the preset into our storage
+     */
+    void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lfo);
+
+    /*
+     * What are the presets we have? In some form of category order
+     */
+    struct Preset
+    {
+        std::string name;
+        fs::path path;
+    };
+
+    struct Category
+    {
+        std::string name;
+        std::string path;
+        std::string parentPath;
+        std::vector<Preset> presets;
+    };
+
+    std::vector<Category> getPresets(SurgeStorage *s);
+    void forcePresetRescan();
+
+    std::vector<Category> scanedPresets;
+    bool haveScanedPresets{false};
 };
-
-struct Category
-{
-    std::string name;
-    std::string path;
-    std::string parentPath;
-    std::vector<Preset> presets;
-};
-
-std::vector<Category> getPresets(SurgeStorage *s);
-void forcePresetRescan();
-} // namespace ModulatorPreset
+} // namespace Storage
 } // namespace Surge
