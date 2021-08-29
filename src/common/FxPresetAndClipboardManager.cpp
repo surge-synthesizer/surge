@@ -20,15 +20,15 @@
 
 namespace Surge
 {
-namespace FxUserPreset
+namespace Storage
 {
 
-static std::unordered_map<int, std::vector<Preset>> scannedPresets;
-static bool haveScannedPresets = false;
+std::unordered_map<int, std::vector<FxUserPreset::Preset>> FxUserPreset::getPresetsByType()
+{
+    return scannedPresets;
+}
 
-std::unordered_map<int, std::vector<Preset>> getPresetsByType() { return scannedPresets; }
-
-void doPresetRescan(SurgeStorage *storage, bool forceRescan)
+void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
 {
     if (haveScannedPresets && !forceRescan)
         return;
@@ -199,7 +199,7 @@ void doPresetRescan(SurgeStorage *storage, bool forceRescan)
     }
 }
 
-std::vector<Preset> getPresetsForSingleType(int id)
+std::vector<FxUserPreset::Preset> FxUserPreset::getPresetsForSingleType(int id)
 {
     if (scannedPresets.find(id) == scannedPresets.end())
     {
@@ -208,9 +208,12 @@ std::vector<Preset> getPresetsForSingleType(int id)
     return scannedPresets[id];
 }
 
-bool hasPresetsForSingleType(int id) { return scannedPresets.find(id) != scannedPresets.end(); }
+bool FxUserPreset::hasPresetsForSingleType(int id)
+{
+    return scannedPresets.find(id) != scannedPresets.end();
+}
 
-void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
+void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
 {
     char fxName[TXT_SIZE];
     fxName[0] = 0;
@@ -308,10 +311,10 @@ void saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
     pfile << "</single-fx>\n";
     pfile.close();
 
-    Surge::FxUserPreset::doPresetRescan(storage, true);
+    doPresetRescan(storage, true);
 }
 
-void loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
+void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
 {
     fxbuffer->type.val.i = p.type;
 
@@ -347,7 +350,7 @@ void loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
             fxbuffer->p[i].deform_type = p.dt[i];
     }
 }
-} // namespace FxUserPreset
+} // namespace Storage
 
 namespace FxClipboard
 {

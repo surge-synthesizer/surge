@@ -48,6 +48,8 @@
 
 #include "strnatcmp.h"
 #include "libMTSClient.h"
+#include "FxPresetAndClipboardManager.h"
+#include "ModulatorPresetManager.h"
 
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
@@ -642,6 +644,12 @@ bailOnPortable:
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
     initPatchCategory = Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::InitialPatchCategory, "Templates");
+
+    fxUserPreset = std::make_unique<Surge::Storage::FxUserPreset>();
+    fxUserPreset->doPresetRescan(this);
+
+    modulatorPreset = std::make_unique<Surge::Storage::ModulatorPreset>();
+    modulatorPreset->forcePresetRescan();
 }
 
 void SurgeStorage::createUserDirectory()

@@ -23,13 +23,14 @@
 
 namespace Surge
 {
-namespace ModulatorPreset
+namespace Storage
 {
 
 const static std::string PresetDir = "Modulator Presets";
 const static std::string PresetXtn = ".modpreset";
 
-void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfoid)
+void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s, int scene,
+                                       int lfoid)
 {
     auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
     int lfotype = lfo->shape.val.i;
@@ -121,7 +122,8 @@ void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int 
 /*
  * Given a completed path, load the preset into our storage
  */
-void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lfoid)
+void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene,
+                                     int lfoid)
 {
     auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
     // ToDo: Inverse of above
@@ -221,13 +223,10 @@ void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lf
     }
 }
 
-static std::vector<Category> scanedPresets;
-static bool haveScanedPresets = false;
-
 /*
  * Note: Clients rely on this being sorted by category path if you change it
  */
-std::vector<Category> getPresets(SurgeStorage *s)
+std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage *s)
 {
     if (haveScanedPresets)
         return scanedPresets;
@@ -331,10 +330,10 @@ std::vector<Category> getPresets(SurgeStorage *s)
     return res;
 }
 
-void forcePresetRescan()
+void ModulatorPreset::forcePresetRescan()
 {
     haveScanedPresets = false;
     scanedPresets.clear();
 }
-} // namespace ModulatorPreset
+} // namespace Storage
 } // namespace Surge
