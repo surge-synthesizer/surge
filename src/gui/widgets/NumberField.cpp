@@ -13,6 +13,7 @@
 ** open source in September 2018.
 */
 
+#include "SurgeGUIEditor.h"
 #include "NumberField.h"
 #include "RuntimeFont.h"
 #include "UserDefaults.h"
@@ -110,18 +111,27 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
 }
 void NumberField::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     mouseMode = NONE;
+
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
         return;
     }
+
     mouseMode = DRAG;
+
     if (!Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
         mouseDownOrigin = event.position;
     }
+
     lastDistanceChecked = 0;
 }
 

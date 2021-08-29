@@ -193,6 +193,11 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
 
 void EffectChooser::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     hasDragged = false;
     currentClicked = -1;
 

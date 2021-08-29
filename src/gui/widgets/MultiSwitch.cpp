@@ -77,6 +77,11 @@ float MultiSwitch::coordinateToValue(int x, int y)
 
 void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);

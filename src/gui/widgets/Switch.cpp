@@ -13,6 +13,7 @@
 ** open source in September 2018.
 */
 
+#include "SurgeGUIEditor.h"
 #include "Switch.h"
 #include "SurgeImage.h"
 
@@ -53,6 +54,11 @@ void Switch::paint(juce::Graphics &g)
 
 void Switch::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
