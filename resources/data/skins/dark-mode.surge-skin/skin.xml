@@ -365,7 +365,7 @@
 
     <control ui_identifier="lfo.main.panel" y="477"/>
 
-    <control ui_identifier="lfo.title" y="486"/>
+    <control ui_identifier="lfo.title" y="494" h="71"/>
     <control ui_identifier="lfo.presets" y="477"/>
 
     <control ui_identifier="lfo.trigger_mode" y="483"/>
