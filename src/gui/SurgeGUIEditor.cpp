@@ -110,6 +110,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     mod_editor = false;
     editor_open = false;
+    editor_open = false;
     queue_refresh = false;
     memset(param, 0, n_paramslots * sizeof(void *));
     for (int i = 0; i < n_fx_slots; ++i)
@@ -4541,6 +4542,8 @@ bool SurgeGUIEditor::canDropTarget(const std::string &fname)
         extensions.insert(".wav");
         extensions.insert(".wt");
         extensions.insert(".fxp");
+        extensions.insert(".surge-skin");
+        extensions.insert(".zip");
     }
 
     fs::path fPath(fname);
@@ -4577,7 +4580,34 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     {
         queuePatchFileLoad(fname);
     }
+    else if (fExt == ".surge-skin")
+    {
+        std::ostringstream oss;
+        oss << "Do you wisk to install skin from '" << fname << "' into your Surge User Directory?";
+        auto cb = juce::ModalCallbackFunction::create([this, fPath](int okcs) {
+            if (okcs)
+            {
+                auto db = Surge::GUI::SkinDB::get();
+                auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
+                if (me.isJust())
+                {
+                    this->setupSkinFromEntry(me.fromJust());
+                }
+                else
+                {
+                    std::cout << "Could not find skin after load" << std::endl;
+                }
+            }
+        });
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install Skin", oss.str(),
 
+                                           "Install", "Cancel", frame.get(), cb);
+    }
+    else if (fExt == ".zip")
+    {
+        juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Coming Soom",
+                                          "Zip File Drops coming soon");
+    }
     return true;
 }
 

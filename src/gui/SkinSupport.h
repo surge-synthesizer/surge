@@ -468,6 +468,8 @@ class SkinDB : public juce::DeletedAtShutdown
         return s;
     }
 
+    Maybe<Entry> installSkinFromPathToUserDirectory(SurgeStorage *, const fs::path &from);
+
   private:
     SkinDB();
     ~SkinDB();
@@ -513,5 +515,6 @@ class SkinConsumingComponent
     Skin::Control::ptr_t skinControl = nullptr;
     std::shared_ptr<SurgeImageStore> associatedBitmapStore = nullptr;
 };
+
 } // namespace GUI
 } // namespace Surge
