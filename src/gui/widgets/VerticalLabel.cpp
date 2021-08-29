@@ -32,7 +32,7 @@ VerticalLabel::~VerticalLabel() = default;
 
 void VerticalLabel::paint(juce::Graphics &g)
 {
-     //g.fillAll(juce::Colours::orangered);
+    // g.fillAll(juce::Colours::orangered);
     auto charHeight = font.getHeight() * 0.95;
     float totalHeight = 0;
 

@@ -1155,8 +1155,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 componentForSkinSession<Surge::Widgets::VerticalLabel>(skinCtrl->sessionid);
             frame->addAndMakeVisible(*lfoNameLabel);
             lfoNameLabel->setBounds(skinCtrl->getRect());
-            lfoNameLabel->setFont(
-                Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+            lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
             break;
         }
