@@ -23,6 +23,7 @@
 #include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
 #include "SurgeSharedBinary.h"
+#include "DebugHelpers.h"
 
 #if MAC
 #include <cstdlib>
@@ -2172,10 +2173,14 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 {
     auto res = isStandardTuning;
     if (isToggledToCache)
-        res = res && togglePriorState[0] && togglePriorState[1] && togglePriorState[2];
+    {
+        res = res && togglePriorState[0];
+    }
 
     return res;
 }
+
+void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
 void SurgeStorage::reportError(const std::string &msg, const std::string &title)
 {

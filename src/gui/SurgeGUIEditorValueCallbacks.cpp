@@ -2238,12 +2238,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         toggleTuning();
         if (synth->storage.isStandardTuningAndHasNoToggle())
         {
-            std::cout << "Who cares you have no toggle" << std::endl;
+            juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
+            auto m = makeTuningMenu(where, true);
+
+            auto launchFrom = control;
+            m.showMenuAsync(juce::PopupMenu::Options(), [launchFrom](int i) {
+                if (launchFrom)
+                {
+                    launchFrom->endHover();
+                }
+            });
         }
-        else
-        {
-            std::cout << "Tuned or Toggled" << std::endl;
-        }
+
         return;
     }
 
