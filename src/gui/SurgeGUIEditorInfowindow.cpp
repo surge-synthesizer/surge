@@ -19,6 +19,7 @@
 
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/MainFrame.h"
+#include "DebugHelpers.h"
 
 void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
                                     bool isEditingModulation)
@@ -60,7 +61,20 @@ void SurgeGUIEditor::hideInfowindowNow() { paramInfowindow->doHide(); }
 
 void SurgeGUIEditor::hideInfowindowSoon() { paramInfowindow->doHide(5); }
 
-void SurgeGUIEditor::idleInfowindow() { paramInfowindow->idle(); }
+void SurgeGUIEditor::idleInfowindow()
+{
+    if (infoQCountdown > 0 && infoQState == COUNTDOWN)
+    {
+        infoQCountdown--;
+        if (infoQCountdown == 0)
+        {
+            infoQState = SHOWING;
+            showInfowindow(infoQTag, infoQBounds, false);
+            infoQCountdown = -1;
+        }
+    }
+    paramInfowindow->idle();
+}
 
 void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
 {
@@ -112,3 +126,47 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
 }
 
 void SurgeGUIEditor::repaintFrame() { frame->repaint(); }
+
+void SurgeGUIEditor::enqueueFutureInfowindow(int ptag, const juce::Rectangle<int> &around,
+                                             InfoQAction action)
+{
+    bool doIt = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                    Surge::Storage::InfoWindowPopupOnIdle, true);
+    if (!doIt)
+        return;
+
+    if (action == START)
+    {
+        infoQBounds = around;
+        infoQTag = ptag;
+
+        if (infoQState == DISMISSED_BEFORE)
+        {
+            infoQCountdown = -1;
+        }
+        else if (infoQState == SHOWING)
+        {
+            // This means we have a mouse move while showing so
+            hideInfowindowNow();
+            infoQState = DISMISSED_BEFORE; // this means you only pop once
+        }
+        else
+        {
+            infoQCountdown = 40;
+            infoQState = COUNTDOWN;
+        }
+    }
+    else if (action == CANCEL)
+    {
+        hideInfowindowNow();
+        infoQCountdown = -1;
+        infoQState = DISMISSED_BEFORE;
+    }
+    else if (action == LEAVE)
+    {
+        hideInfowindowNow();
+        infoQCountdown = -1;
+        infoQState = NONE;
+        infoQTag = -1;
+    }
+}

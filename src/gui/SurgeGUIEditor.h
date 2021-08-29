@@ -483,6 +483,23 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void hideInfowindowNow();
     void hideInfowindowSoon();
     void idleInfowindow();
+    enum InfoQAction
+    {
+        START,
+        CANCEL,
+        LEAVE
+    };
+    void enqueueFutureInfowindow(int ptag, const juce::Rectangle<int> &around, InfoQAction action);
+    enum InfoQState
+    {
+        NONE,
+        COUNTDOWN,
+        SHOWING,
+        DISMISSED_BEFORE
+    } infoQState{NONE};
+    int infoQCountdown{-1};
+    int infoQTag{-1};
+    juce::Rectangle<int> infoQBounds;
 
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
