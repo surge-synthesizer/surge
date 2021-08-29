@@ -2236,6 +2236,20 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_status_tune)
     {
         toggleTuning();
+        if (synth->storage.isStandardTuningAndHasNoToggle())
+        {
+            juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
+            auto m = makeTuningMenu(where, true);
+
+            auto launchFrom = control;
+            m.showMenuAsync(juce::PopupMenu::Options(), [launchFrom](int i) {
+                if (launchFrom)
+                {
+                    launchFrom->endHover();
+                }
+            });
+        }
+
         return;
     }
 

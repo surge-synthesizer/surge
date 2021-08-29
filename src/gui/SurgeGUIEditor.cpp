@@ -2210,6 +2210,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
                           (!this->synth->storage.isStandardTuning), false, [this]() {
                               this->synth->storage.retuneTo12TETScaleC261Mapping();
+                              this->synth->storage.resetTuningToggle();
                               this->synth->refresh_editor = true;
                           });
 
