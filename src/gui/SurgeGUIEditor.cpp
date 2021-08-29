@@ -2727,6 +2727,17 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
                             this->frame->repaint();
                         });
 
+    bool infowi = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      Surge::Storage::InfoWindowPopupOnIdle, true);
+
+    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Value Popup On Slider Mouseover"), true,
+                        infowi, [this, infowi]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::InfoWindowPopupOnIdle,
+                                !infowi);
+                            this->frame->repaint();
+                        });
+
     // Middle C submenu
     auto middleCSubMenu = juce::PopupMenu();
 

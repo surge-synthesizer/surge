@@ -76,6 +76,14 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             t->controlEndEdit(this);
     }
 
+    void enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction place)
+    {
+        auto t = getTag();
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->enqueueFutureInfowindow(t, asT()->getBounds(), place);
+    }
+
     void showInfowindow(bool isEditingModulation)
     {
         auto l = asT()->getBounds();

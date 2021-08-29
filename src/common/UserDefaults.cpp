@@ -144,6 +144,9 @@ void initMaps()
             case TabKeyArmsModulators:
                 r = "tabKeyArmsModulators";
                 break;
+            case InfoWindowPopupOnIdle:
+                r = "infoWindowPopupOnIdle";
+                break;
             case nKeys:
                 break;
             }
