@@ -2895,8 +2895,15 @@ void MSEGControlRegion::rebuild()
         movementMode->setHoverSwitchDrawable(std::get<1>(dbl));
         movementMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
+        // canvas is nullptr in rebuild call in constructor, use state in this case
         if (canvas)
+        {
             movementMode->setValue(canvas->timeEditMode / 2.f);
+        }
+        else
+        {
+            movementMode->setValue(eds->timeEditMode / 2.f);
+        }
         addAndMakeVisible(*movementMode);
         // this value centers the loop mode and snap sections against the MSEG editor width
         // if more controls are to be added to that center section, reduce this value
@@ -2978,7 +2985,7 @@ void MSEGControlRegion::rebuild()
         loopMode->setHoverSwitchDrawable(std::get<1>(dbl));
         loopMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
-        loopMode->setValue((ms->loopMode - 1) / 2);
+        loopMode->setValue((ms->loopMode - 1) / 2.f);
         addAndMakeVisible(*loopMode);
 
         xpos += segWidth;
