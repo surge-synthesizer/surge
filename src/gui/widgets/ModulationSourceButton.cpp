@@ -469,5 +469,47 @@ void ModulationSourceButton::resized()
 {
     hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
 }
+
+void ModulationOverviewLaunchButton::buttonClicked(Button *button)
+{
+    editor->toggleModulationEditorDialog();
+    repaint();
+}
+
+void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
+                                                 bool shouldDrawButtonAsHighlighted,
+                                                 bool shouldDrawButtonAsDown)
+{
+    auto FillCol = skin->getColor(Colors::ModSource::Unused::Background);
+    auto FrameCol = skin->getColor(Colors::ModSource::Unused::Border);
+    auto FontCol = skin->getColor(Colors::ModSource::Unused::Text);
+    if (shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
+    {
+        FrameCol = skin->getColor(Colors::ModSource::Unused::BorderHover);
+        FontCol = skin->getColor(Colors::ModSource::Unused::TextHover);
+    }
+    g.fillAll(FillCol);
+    g.setColour(FrameCol);
+    g.drawRect(getLocalBounds(), 1);
+
+    std::string msg = "Show";
+    if (editor->isAnyOverlayPresent(SurgeGUIEditor::MODULATION_EDITOR))
+    {
+        msg = "Hide";
+    }
+    auto f = Surge::GUI::getFontManager()->displayFont;
+    auto h = f.getHeight() * 0.9f;
+    auto sh = h * msg.length();
+    auto y0 = (getHeight() - sh) / 2.f;
+    g.setFont(f);
+    g.setColour(FontCol);
+    for (auto c : msg)
+    {
+        auto s = std::string("") + c;
+        g.drawText(s, juce::Rectangle<int>(0, y0, getWidth(), h), juce::Justification::centred);
+        y0 += h;
+    }
+}
+
 } // namespace Widgets
 } // namespace Surge

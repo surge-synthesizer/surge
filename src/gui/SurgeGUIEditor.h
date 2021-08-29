@@ -390,6 +390,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void closeModulationEditorDialog();
     void showModulationEditorDialog();
+    void toggleModulationEditorDialog();
 
     void closeFormulaEditorDialog();
     void showFormulaEditorDialog();
@@ -423,6 +424,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
+    juce::Rectangle<int> positionForModOverview();
+    std::unique_ptr<juce::Component> modOverviewLauncher;
 
     int wsx = BASE_WINDOW_SIZE_X;
     int wsy = BASE_WINDOW_SIZE_Y;

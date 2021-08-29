@@ -168,6 +168,24 @@ struct ModulationSourceButton : public juce::Component,
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };
+
+struct ModulationOverviewLaunchButton : public juce::Button,
+                                        juce::Button::Listener,
+                                        Surge::GUI::SkinConsumingComponent
+{
+    ModulationOverviewLaunchButton(SurgeGUIEditor *ed) : juce::Button("modov"), editor(ed)
+    {
+        addListener(this);
+    }
+
+    void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+                     bool shouldDrawButtonAsDown) override;
+
+    void buttonClicked(Button *button) override;
+
+    SurgeGUIEditor *editor;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationOverviewLaunchButton);
+};
 } // namespace Widgets
 } // namespace Surge
 #endif // SURGE_XT_MODULATIONSOURCEBUTTON_H
