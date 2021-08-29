@@ -623,6 +623,10 @@ void LFOModulationSource::process_block()
     }
 
     float useenvval = env_val;
+    if (lfo->delay.deactivated)
+    {
+        useenvval = 1.0; // constant envelope at 1
+    }
     switch (s)
     {
     case lt_envelope:

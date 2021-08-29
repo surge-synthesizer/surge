@@ -431,9 +431,9 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 Surge::Skin::LFO::unipolar, sc_id, cg_LFO, ms_lfo1 + l, false));
 
             snprintf(label, LABEL_SIZE, "lfo%i_delay", l);
-            a->push_back(scene[sc].lfo[l].delay.assign(p_id.next(), id_s++, label, "Delay",
-                                                       ct_envtime, Surge::Skin::LFO::delay, sc_id,
-                                                       cg_LFO, ms_lfo1 + l, true, kMini));
+            a->push_back(scene[sc].lfo[l].delay.assign(
+                p_id.next(), id_s++, label, "Delay", ct_envtime_deactivatable,
+                Surge::Skin::LFO::delay, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
             snprintf(label, LABEL_SIZE, "lfo%i_attack", l);
             a->push_back(scene[sc].lfo[l].attack.assign(p_id.next(), id_s++, label, "Attack",
                                                         ct_envtime, Surge::Skin::LFO::attack, sc_id,
@@ -541,6 +541,23 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         }
     } lfoRatePhaseDeact;
 
+    static struct LfoEnvelopeDeact : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(const Parameter *p) const override
+        {
+            auto cge = p->ctrlgroup_entry - ms_lfo1;
+            auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+            auto res = lf->delay.deactivated;
+            return res;
+        }
+        Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
+        {
+            auto cge = p->ctrlgroup_entry - ms_lfo1;
+            auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+            return &(lf->delay);
+        }
+    } lfoEnvelopeDeact;
+
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         for (int lf = 0; lf < n_lfos; ++lf)
@@ -548,6 +565,15 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             scene[sc].lfo[lf].start_phase.dynamicName = &lfoPhaseName;
             scene[sc].lfo[lf].start_phase.dynamicDeactivation = &lfoRatePhaseDeact;
             scene[sc].lfo[lf].rate.dynamicDeactivation = &lfoRatePhaseDeact;
+
+            auto *curr = &(scene[sc].lfo[lf].delay), *end = &(scene[sc].lfo[lf].release);
+            curr->deactivated = false;
+            curr++; // we don't want to apply it to delay
+            while (curr <= end)
+            {
+                curr->dynamicDeactivation = &lfoEnvelopeDeact;
+                curr++;
+            }
         }
     }
 
@@ -1276,7 +1302,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 if (param_ptr[i]->can_deactivate())
                 {
-                    if ((param_ptr[i]->ctrlgroup == cg_LFO) || // this is the LFO rate special case
+                    if ((param_ptr[i]->ctrlgroup ==
+                         cg_LFO) || // this is the LFO rate and env special case
                         (param_ptr[i]->ctrlgroup == cg_GLOBAL &&
                          param_ptr[i]->ctrltype ==
                              ct_freq_hpf)) // this is the global highpass special case

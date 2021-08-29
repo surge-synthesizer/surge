@@ -186,7 +186,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         }
     }
 
-    bool drawEnvelope{true};
+    bool drawEnvelope = !lfodata->delay.deactivated;
 
     if (skin->hasColor(Colors::LFO::Waveform::Background))
     {
