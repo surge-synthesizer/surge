@@ -32,9 +32,10 @@ VerticalLabel::~VerticalLabel() = default;
 
 void VerticalLabel::paint(juce::Graphics &g)
 {
-    // g.fillAll(juce::Colours::orangered);
+     //g.fillAll(juce::Colours::orangered);
     auto charHeight = font.getHeight() * 0.95;
     float totalHeight = 0;
+
     for (auto &c : text)
     {
         if (c == '-')
@@ -53,12 +54,16 @@ void VerticalLabel::paint(juce::Graphics &g)
     auto mx = getWidth() / 2.0;
     auto ty = (getHeight() - totalHeight) / 2.0;
     auto currY = ty;
+
     g.setFont(font);
     g.setColour(fontColour);
+
     for (auto &c : text)
     {
         if (c == '-')
+        {
             continue;
+        }
 
         auto h = charHeight;
 
@@ -66,10 +71,13 @@ void VerticalLabel::paint(juce::Graphics &g)
         {
             h = charHeight * 0.5;
         }
+
         char str[2];
         str[0] = c;
         str[1] = 0;
+
         g.drawText(str, mx - 10, currY, 20, charHeight * 0.5, juce::Justification::centred);
+
         currY += h;
     }
 }

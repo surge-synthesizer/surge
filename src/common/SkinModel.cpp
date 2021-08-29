@@ -485,7 +485,7 @@ namespace LFO
 {
 // For now these two have component 'CUSTOM' and we hadn't pick a component in the code
 Connector lfo_title_label =
-    Connector("lfo.title", 6, 493, 11, 75, Components::Custom, Connector::LFO_LABEL);
+    Connector("lfo.title", 6, 498, 11, 71, Components::Custom, Connector::LFO_LABEL);
 Connector lfo_presets =
     Connector("lfo.presets", 6, 484, 13, 11, Components::Switch, Connector::LFO_MENU)
         .withBackground(IDB_LFO_PRESET_MENU);
