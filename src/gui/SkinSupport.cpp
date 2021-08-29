@@ -1334,5 +1334,33 @@ std::array<SurgeImage *, 3> Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb,
     return res;
 }
 
+Maybe<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s, const fs::path &p)
+{
+    auto parentP = p.parent_path();
+    auto nmP = p.lexically_relative(parentP);
+    auto tgPath = string_to_path(s->userSkinsPath) / nmP;
+
+    try
+    {
+        fs::create_directories(tgPath);
+        fs::copy(p, tgPath, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        // This will give us a broken skin but no need to tell the users
+        FIXMEERROR << "Unable to install Skin: " << e.what();
+        return Maybe<Entry>();
+    }
+    rescanForSkins(s);
+
+    auto nameS = path_to_string(nmP);
+    for (auto &a : availableSkins)
+    {
+        if (a.rootType == USER && a.name.find(nameS) == 0)
+            return Maybe<Entry>(a);
+    }
+    return Maybe<Entry>();
+}
+
 } // namespace GUI
 } // namespace Surge
