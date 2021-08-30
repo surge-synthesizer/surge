@@ -381,6 +381,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         synth->has_patchid_file = true;
     }
 
+    void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
+                               Surge::Widgets::ModulationSourceButton *msb);
+
     void closeStorePatchDialog();
     void showStorePatchDialog();
 
@@ -597,7 +600,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
     std::unique_ptr<Surge::Widgets::LFOAndStepDisplay> lfoDisplay;
 
-    // VSTGUI::CControl *lfodisplay = nullptr;
     Surge::Widgets::Switch *filtersubtype[2] = {};
 
   public:

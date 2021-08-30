@@ -3800,6 +3800,46 @@ void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableCo
         promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms, 0);
 }
 
+void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int> where,
+                                           Surge::Widgets::ModulationSourceButton *msb)
+{
+    std::string pval = synth->storage.getPatch().CustomControllerLabel[ccid];
+
+    if (pval == "-")
+    {
+        pval = "";
+    }
+
+    promptForMiniEdit(
+        pval, "Enter a new name for the macro:", "Rename Macro", where,
+        [this, ccid, msb](const std::string &s) {
+            auto useS = s;
+
+            if (useS == "")
+            {
+                useS = "-";
+            }
+
+            strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid], useS.c_str(),
+                    CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+            synth->storage.getPatch()
+                .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] = 0; // to be sure
+            parameterNameUpdated = true;
+
+            if (msb)
+            {
+                msb->setCurrentModLabel(synth->storage.getPatch().CustomControllerLabel[ccid]);
+
+                if (msb->asJuceComponent())
+                {
+                    msb->asJuceComponent()->repaint();
+                }
+
+                synth->refresh_editor = true;
+            }
+        });
+}
+
 void SurgeGUIEditor::resetSmoothing(ControllerModulationSource::SmoothingMode t)
 {
     // Reset the default value and tell the synth it is updated
@@ -4106,7 +4146,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                     ** SceneMode is special now because we have a streaming vs UI difference.
                     ** The streamed integer value is 0, 1, 2, 3 which matches the scene_mode
                     ** SurgeStorage enum. But our display would look gross in that order, so
-                    ** our display order is single, split, channel split, dual which is 0, 1, 3, 2.
+                    ** our display order is single, split, channel split, dual which is 0, 1,
+                    *3, 2.
                     ** Fine. So just deal with that here.
                     */
                     auto guiscenemode = p->val.i;

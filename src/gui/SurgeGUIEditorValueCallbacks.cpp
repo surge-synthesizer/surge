@@ -754,47 +754,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addItem(
                     Surge::GUI::toOSCaseForMenu("Rename Macro..."), [this, control, ccid]() {
-                        std::string pval = synth->storage.getPatch().CustomControllerLabel[ccid];
+                        auto msb = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                        auto pos = control->asJuceComponent()->getBounds().getTopLeft();
 
-                        if (pval == "-")
-                        {
-                            pval = "";
-                        }
-
-                        promptForMiniEdit(
-                            pval, "Enter a new name for the macro:", "Rename Macro",
-                            control->asJuceComponent()->getBounds().getTopLeft(),
-                            [this, control, ccid](const std::string &s) {
-                                auto useS = s;
-
-                                if (useS == "")
-                                {
-                                    useS = "-";
-                                }
-
-                                strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid],
-                                        useS.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE - 1);
-                                synth->storage.getPatch()
-                                    .CustomControllerLabel[ccid][CUSTOM_CONTROLLER_LABEL_SIZE - 1] =
-                                    0; // to be sure
-                                parameterNameUpdated = true;
-
-                                auto msb =
-                                    dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
-
-                                if (msb)
-                                {
-                                    msb->setCurrentModLabel(
-                                        synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                }
-
-                                if (control && control->asJuceComponent())
-                                {
-                                    control->asJuceComponent()->repaint();
-                                }
-
-                                synth->refresh_editor = true;
-                            });
+                        openMacroRenameDialog(ccid, pos, msb);
                     });
 
                 auto jpm = juceEditor->hostMenuForMacro(ccid);

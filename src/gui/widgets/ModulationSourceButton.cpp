@@ -371,11 +371,16 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
     {
         auto topRect = getLocalBounds().withHeight(splitHeight);
 
-        // TODO: double-click to rename macro?
-        // if (topRect.contains(event.position.toInt()))
-        //{
-        //    return;
-        //}
+        // rename macro on double-click
+        if (topRect.contains(event.position.toInt()))
+        {
+            auto ccid = (int)getCurrentModSource() - ms_ctrl1;
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
+
+            return;
+        }
 
         // match the mouseable area to the painted macro slider area (including slider frame)
         auto frameRect = getLocalBounds();
