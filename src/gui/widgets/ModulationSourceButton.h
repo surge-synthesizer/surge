@@ -152,7 +152,9 @@ struct ModulationSourceButton : public juce::Component,
         DRAG_COMPONENT_HAPPEN,
         HAMBURGER
     } mouseMode{NONE};
+
     MouseState getMouseMode() const { return mouseMode; }
+
     juce::ComponentDragger componentDragger;
     juce::Rectangle<int> mouseDownBounds;
     float valAtMouseDown{0};
@@ -162,6 +164,9 @@ struct ModulationSourceButton : public juce::Component,
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+
+    void buildHamburgerMenu(juce::PopupMenu &menu, const bool addedToModbuttonContextMenu);
+
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
     void resized() override;
