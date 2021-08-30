@@ -296,7 +296,6 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
         }
 
         menu.addItem(modName, [this, idx]() {
-            printf("%d\n", idx);
             this->modlistIndex = idx;
             mouseMode = HAMBURGER;
             notifyValueChanged();
