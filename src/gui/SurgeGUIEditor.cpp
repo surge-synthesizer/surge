@@ -2554,7 +2554,8 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                        Surge::Storage::DefaultZoom, zoomFactor);
 
-        std::string dss = "Zoom to Default (" + std::to_string(dzf) + "%)";
+        std::string dss =
+            Surge::GUI::toOSCaseForMenu("Zoom to Default (") + std::to_string(dzf) + "%)";
 
         zoomSubMenu.addItem(dss, [this, dzf]() { resizeWindow(dzf); });
     }
@@ -2741,6 +2742,19 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
                                 !modValues);
                         });
 
+    bool infowi = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      Surge::Storage::InfoWindowPopupOnIdle, true);
+
+    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Value Readout on Mouse Hover"), true,
+                        infowi, [this, infowi]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::InfoWindowPopupOnIdle,
+                                !infowi);
+                            this->frame->repaint();
+                        });
+
+    dispDefMenu.addSeparator();
+
     bool lfoone = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ShowGhostedLFOWaveReference, true);
 
@@ -2752,16 +2766,7 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
                             this->frame->repaint();
                         });
 
-    bool infowi = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::InfoWindowPopupOnIdle, true);
-
-    dispDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Value Popup On Slider Mouseover"), true,
-                        infowi, [this, infowi]() {
-                            Surge::Storage::updateUserDefaultValue(
-                                &(this->synth->storage), Surge::Storage::InfoWindowPopupOnIdle,
-                                !infowi);
-                            this->frame->repaint();
-                        });
+    dispDefMenu.addSeparator();
 
     // Middle C submenu
     auto middleCSubMenu = juce::PopupMenu();
@@ -3133,7 +3138,8 @@ juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
 
     auto asmt = [&smoothMenu, smoothing, setSmooth](const char *label,
                                                     ControllerModulationSource::SmoothingMode md) {
-        smoothMenu.addItem(label, true, (smoothing == md), [setSmooth, md]() { setSmooth(md); });
+        smoothMenu.addItem(Surge::GUI::toOSCaseForMenu(label), true, (smoothing == md),
+                           [setSmooth, md]() { setSmooth(md); });
     };
 
     asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
@@ -4765,7 +4771,7 @@ void SurgeGUIEditor::togglePatchBrowserDialog()
 void SurgeGUIEditor::showModulationEditorDialog()
 {
     auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
-    addJuceEditorOverlay(std::move(pt), "Modulation Overview", MODULATION_EDITOR,
+    addJuceEditorOverlay(std::move(pt), "Modulation List", MODULATION_EDITOR,
                          juce::Rectangle<int>(50, 50, 750, 450));
 }
 
@@ -5011,7 +5017,7 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
             if (index == 0)
                 return shortV ? "" : " (Uniform)";
             if (index == 1)
-                return shortV ? " hN" : " (Half Normal)";
+                return shortV ? " HN" : " (Half Normal)";
         }
         if (shortV)
             return "." + std::to_string(index + 1);
