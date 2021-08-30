@@ -443,7 +443,12 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 
     if (mouseMode == DRAG_VALUE)
     {
-        auto p = juce::Point<float>(value * getWidth(), 20);
+        auto p = event.mouseDownPosition;
+
+        if (value != valAtMouseDown)
+        {
+            p = juce::Point<float>(value * getWidth(), 20);
+        }
 
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         p = localPointToGlobal(p);
