@@ -244,6 +244,69 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     }
 }
 
+void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
+                                                const bool addedToModbuttonContextMenu)
+{
+    int idx{0};
+    std::string hu;
+    auto modsource = getCurrentModSource();
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (modsource >= ms_ctrl1 && modsource <= ms_ctrl8)
+    {
+        hu = sge->helpURLForSpecial("macro-modbutton");
+    }
+    else if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
+    {
+        hu = sge->helpURLForSpecial("lfo-modbutton");
+    }
+    else if ((modsource >= ms_ampeg && modsource <= ms_filtereg) ||
+             (modsource >= ms_random_bipolar && modsource <= ms_alternate_unipolar))
+    {
+        hu = sge->helpURLForSpecial("internalmod-modbutton");
+    }
+    else
+    {
+        hu = sge->helpURLForSpecial("other-modbutton");
+    }
+
+    if (!addedToModbuttonContextMenu)
+    {
+        if (hu != "")
+        {
+            auto lurl = sge->fullyResolvedHelpURL(hu);
+            std::string hs = std::string("[?] ") + sge->modulatorName(modsource, false);
+            menu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+        }
+        else
+        {
+            menu.addItem(sge->modulatorName(modsource, false), []() {});
+        }
+
+        menu.addSeparator();
+    }
+
+    for (auto e : modlist)
+    {
+        auto modName = std::get<3>(e);
+
+        if (addedToModbuttonContextMenu)
+        {
+            modName = "Switch to " + modName;
+        }
+
+        menu.addItem(modName, [this, idx]() {
+            this->modlistIndex = idx;
+            mouseMode = HAMBURGER;
+            notifyValueChanged();
+            mouseMode = NONE;
+            repaint();
+        });
+
+        idx++;
+    }
+}
+
 void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 {
     mouseMode = CLICK;
@@ -252,22 +315,11 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
     if (needsHamburger() && hamburgerHome.contains(event.position.toInt()))
     {
         auto menu = juce::PopupMenu();
-        int idx{0};
 
-        for (auto e : modlist)
-        {
-            menu.addItem(std::get<3>(e), [this, idx]() {
-                this->modlistIndex = idx;
-                mouseMode = HAMBURGER;
-                notifyValueChanged();
-                mouseMode = NONE;
-                repaint();
-            });
-
-            idx++;
-        }
+        buildHamburgerMenu(menu, false);
 
         mouseMode = HAMBURGER;
+
         menu.showMenuAsync(juce::PopupMenu::Options());
 
         return;

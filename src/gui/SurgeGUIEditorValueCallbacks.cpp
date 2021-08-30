@@ -334,18 +334,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             {
 #endif
             }
+            else if (hu != "")
+            {
+                auto lurl = fullyResolvedHelpURL(hu);
+                std::string hs = std::string("[?] ") + modulatorName(modsource, false);
+                contextMenu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+            }
             else
             {
-                if (hu != "")
-                {
-                    auto lurl = fullyResolvedHelpURL(hu);
-                    std::string hs = std::string("[?] ") + modulatorName(modsource, false);
-                    contextMenu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-                }
-                else
-                {
-                    contextMenu.addItem(modulatorName(modsource, false), []() {});
-                }
+                contextMenu.addItem(modulatorName(modsource, false), []() {});
             }
 
             contextMenu.addSeparator();
@@ -354,6 +351,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 if (!isAnyOverlayPresent(MODULATION_EDITOR))
                     showModulationEditorDialog();
             });
+
+            contextMenu.addSeparator();
+
+            cms->buildHamburgerMenu(contextMenu, true);
+
+            contextMenu.addSeparator();
 
             int n_total_md = synth->storage.getPatch().param_ptr.size();
             const int max_md = 4096;
