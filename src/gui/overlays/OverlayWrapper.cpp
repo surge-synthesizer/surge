@@ -25,7 +25,7 @@ OverlayWrapper::OverlayWrapper()
 {
     closeButton = std::make_unique<juce::TextButton>("closeButton");
     closeButton->addListener(this);
-    closeButton->setButtonText("Close");
+    closeButton->setButtonText("X");
     addAndMakeVisible(*closeButton);
 }
 
@@ -33,11 +33,15 @@ void OverlayWrapper::paint(juce::Graphics &g)
 {
     g.fillAll(skin->getColor(Colors::Dialog::Titlebar::Background));
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
     g.drawText(title, getLocalBounds().withHeight(titlebarSize + margin),
                juce::Justification::centred);
+
     if (icon)
-        icon->drawAt(g, 1, 1, 1);
+    {
+        icon->drawAt(g, 2, 1, 1);
+    }
+
     g.setColour(skin->getColor(Colors::Dialog::Border));
     g.drawRect(getLocalBounds(), 1);
 }
@@ -51,16 +55,19 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     primaryChild = std::move(c);
     primaryChild->setBounds(q);
 
-    auto buttonWidth = 50;
-    auto closeButtonBounds = getLocalBounds()
-                                 .withHeight(titlebarSize - 1)
-                                 .withLeft(getWidth() - buttonWidth)
-                                 .translated(-2, 2);
+    auto buttonSize = titlebarSize - 2;
+    auto closeButtonBounds =
+        getLocalBounds().withHeight(buttonSize).withLeft(getWidth() - buttonSize).translated(-2, 2);
 
     if (showCloseButton)
+    {
         closeButton->setBounds(closeButtonBounds);
+    }
     else
+    {
         closeButton->setVisible(false);
+    }
+
     addAndMakeVisible(*primaryChild);
 }
 

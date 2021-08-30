@@ -38,7 +38,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
      * 0 - nothing
      * 1 - selected modeditor
      * 2 - selected modsource (locked)
-     * 4 [bit 2] - selected arrowbutton [0,1,2 -> 4,5,6]
+     * 4 [bit 2] - selected arrow button [0, 1, 2 -> 4, 5, 6]
      */
 
     bool SelectedModSource = (state & 3) == 1;
@@ -136,11 +136,13 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     g.setColour(FillCol);
     g.fillRect(fillRect);
 
+    auto btnFont = Surge::GUI::getFontManager()->getLatoAtSize(8, juce::Font::bold);
+
     if (!isMeta)
     {
         // modbutton name settings
         g.setColour(FontCol);
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(btnFont);
 
         // modbutton name
         g.drawText(getCurrentModLabel(), getLocalBounds(), juce::Justification::centred);
@@ -153,8 +155,9 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     {
         // macro name area
         auto topRect = getLocalBounds().withHeight(splitHeight);
+
         g.setColour(FontCol);
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(btnFont);
         g.drawText(getCurrentModLabel(), topRect, juce::Justification::centred);
 
         // macro slider area
@@ -215,9 +218,10 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     if (isLFO())
     {
         auto arrSze = getLocalBounds().withLeft(getLocalBounds().getRight() - 14).withHeight(16);
+        float dy = (state >= 4) ? -16 : 0;
+
         juce::Graphics::ScopedSaveState gs(g);
         g.reduceClipRegion(arrSze);
-        float dy = (state >= 4) ? -16 : 0;
 
         arrow->drawAt(g, arrSze.getX(), arrSze.getY() + dy, 1.0);
     }
@@ -225,16 +229,17 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     if (needsHamburger())
     {
         g.setColour(FrameCol);
+
         float ht = 1.5;
-        int nburg = 4;
-        float pxspace = 1.f * (hamburgerHome.getHeight() - ht) / (nburg - 1);
+        int nburg = 3;
+        float pxspace = 1.f * (hamburgerHome.getHeight() - ht) / (nburg);
 
         for (int i = 0; i < nburg; ++i)
         {
-            auto r =
-                juce::Rectangle<float>(hamburgerHome.getX(), hamburgerHome.getY() + i * pxspace,
-                                       hamburgerHome.getWidth(), ht);
-            g.fillRoundedRectangle(r, 1);
+            auto r = juce::Rectangle<float>(hamburgerHome.getX() + 1,
+                                            ht + hamburgerHome.getY() + i * pxspace,
+                                            hamburgerHome.getWidth() - 1, ht);
+            g.fillRect(r);
         }
     }
 }
@@ -248,6 +253,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
     {
         auto menu = juce::PopupMenu();
         int idx{0};
+
         for (auto e : modlist)
         {
             menu.addItem(std::get<3>(e), [this, idx]() {
@@ -257,12 +263,16 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
                 mouseMode = NONE;
                 repaint();
             });
+
             idx++;
         }
+
         mouseMode = HAMBURGER;
         menu.showMenuAsync(juce::PopupMenu::Options());
+
         return;
     }
+
     if (event.mods.isPopupMenu())
     {
         mouseMode = NONE;
@@ -284,6 +294,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
             notifyBeginEdit();
             mouseMode = DRAG_VALUE;
             valAtMouseDown = value;
+
             return;
         }
     }
@@ -345,8 +356,11 @@ void ModulationSourceButton::endHover()
 {
     bool oh = isHovered;
     isHovered = false;
+
     if (oh != isHovered)
+    {
         repaint();
+    }
 }
 
 void ModulationSourceButton::onSkinChanged()
@@ -365,16 +379,19 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
     {
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         auto q = event.position.translated(getBounds().getX(), getBounds().getY());
+
         sge->modSourceButtonDroppedAt(this, q.toInt());
         setBounds(mouseDownBounds);
     }
 
     if (mouseMode == DRAG_VALUE)
     {
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         auto p = juce::Point<float>(value * getWidth(), 20);
+
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
         p = localPointToGlobal(p);
         juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+
         notifyEndEdit();
     }
 
@@ -413,6 +430,7 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
 
     getParentComponent()->toFront(false);
     toFront(false);
+
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
     everDragged = true;
@@ -442,24 +460,37 @@ void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
 
         value = limit01(value + speed * delta);
         mouseMode = DRAG_VALUE;
+
         notifyValueChanged();
+
         mouseMode = NONE;
+
         repaint();
     }
     else if (needsHamburger())
     {
         int dir = wheelAccumulationHelper.accumulate(wheel, false, true);
+
         if (dir != 0)
         {
             auto n = this->modlistIndex - dir;
+
             if (n < 0)
+            {
                 n = this->modlist.size() - 1;
+            }
             else if (n >= modlist.size())
+            {
                 n = 0;
+            }
+
             this->modlistIndex = n;
             mouseMode = HAMBURGER;
+
             notifyValueChanged();
+
             mouseMode = NONE;
+
             repaint();
         }
     }
@@ -483,30 +514,38 @@ void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
     auto FillCol = skin->getColor(Colors::ModSource::Unused::Background);
     auto FrameCol = skin->getColor(Colors::ModSource::Unused::Border);
     auto FontCol = skin->getColor(Colors::ModSource::Unused::Text);
+
     if (shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
     {
         FrameCol = skin->getColor(Colors::ModSource::Unused::BorderHover);
         FontCol = skin->getColor(Colors::ModSource::Unused::TextHover);
     }
+
     g.fillAll(FillCol);
     g.setColour(FrameCol);
     g.drawRect(getLocalBounds(), 1);
 
-    std::string msg = "Show";
+    std::string msg = "List";
+
     if (editor->isAnyOverlayPresent(SurgeGUIEditor::MODULATION_EDITOR))
     {
-        msg = "Hide";
+        msg = "Close";
     }
-    auto f = Surge::GUI::getFontManager()->displayFont;
+
+    auto f = Surge::GUI::getFontManager()->getLatoAtSize(9);
     auto h = f.getHeight() * 0.9f;
     auto sh = h * msg.length();
     auto y0 = (getHeight() - sh) / 2.f;
+
     g.setFont(f);
     g.setColour(FontCol);
+
     for (auto c : msg)
     {
         auto s = std::string("") + c;
+
         g.drawText(s, juce::Rectangle<int>(0, y0, getWidth(), h), juce::Justification::centred);
+
         y0 += h;
     }
 }

@@ -566,7 +566,7 @@ Connector store_patch_dialog = Connector("controls.patch.store.window", 157, 57,
 
 // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in
 // SurgeGUIEditor
-Connector modulation_panel = Connector("controls.modulation.panel", 2, 402, Components::Custom);
+Connector modulation_panel = Connector("controls.modulation.panel", 3, 402, Components::Custom);
 } // namespace OtherControls
 } // namespace Skin
 } // namespace Surge

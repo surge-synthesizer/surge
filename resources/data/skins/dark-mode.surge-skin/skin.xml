@@ -348,7 +348,7 @@
     <control ui_identifier="aeg.release" x="57" y="35"/>
 
     <!-- Modulation Panel -->
-    <control ui_identifier="controls.modulation.panel" x="2" y="401"/>
+    <control ui_identifier="controls.modulation.panel" x="3" y="401"/>
 
     <!-- LFO -->
     <control ui_identifier="lfo.rate" class="mod-hslider"/>

@@ -350,7 +350,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation Editor"), [this]() {
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
                 if (!isAnyOverlayPresent(MODULATION_EDITOR))
                     showModulationEditorDialog();
             });
@@ -1899,11 +1899,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     }
                 }
 
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation Overview..."),
-                                    [this]() {
-                                        if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                                            showModulationEditorDialog();
-                                    });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
+                    if (!isAnyOverlayPresent(MODULATION_EDITOR))
+                        showModulationEditorDialog();
+                });
 
                 if (n_ms)
                 {
