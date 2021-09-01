@@ -160,9 +160,9 @@ const char modsource_names_button[n_modsources][32] = {
     "Breath",
     "Expression",
     "Sustain",
-    "Lowest Key",
-    "Highest Key",
-    "Latest Key",
+    "Lowest", // "key/voice is now an index
+    "Highest",
+    "Latest",
 };
 
 const char modsource_names[n_modsources][32] = {
@@ -204,9 +204,9 @@ const char modsource_names[n_modsources][32] = {
     "Breath",
     "Expression",
     "Sustain Pedal",
-    "Lowest Key",
-    "Highest Key",
-    "Latest Key",
+    "Lowest", // "key/voice is now an index"
+    "Highest",
+    "Latest",
 };
 
 const char modsource_names_tag[n_modsources][32] = {
@@ -315,79 +315,106 @@ class ModulationSource
     float output, voutput[vecsize];
 };
 
-class ControllerModulationSource : public ModulationSource
+namespace Modulator
+{
+enum SmoothingMode
+{
+    LEGACY = -1, // This is (1) the exponential backoff and (2) not streamed.
+    SLOW_EXP,    // Legacy with a sigma clamp
+    FAST_EXP,    // Faster Legacy with a sigma clamp
+    FAST_LINE,   // Linearly move
+    DIRECT       // Apply the value directly
+};
+}
+
+template <int NDX = 1> class ControllerModulationSourceVector : public ModulationSource
 {
   public:
     // Smoothing and Shaping Behaviors
-    enum SmoothingMode
-    {
-        LEGACY = -1, // This is (1) the exponential backoff and (2) not streamed.
-        SLOW_EXP,    // Legacy with a sigma clamp
-        FAST_EXP,    // Faster Legacy with a sigma clamp
-        FAST_LINE,   // Linearly move
-        DIRECT       // Apply the value directly
-    } smoothingMode = LEGACY;
+    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
 
-    ControllerModulationSource()
+    ControllerModulationSourceVector()
     {
-        target = 0.f;
-        output = 0.f;
+        for (int i = 0; i < NDX; ++i)
+        {
+            target[i] = 0.f;
+            value[i] = 0.f;
+            changed[i] = true;
+        }
+        smoothingMode = Modulator::SmoothingMode::LEGACY;
         bipolar = false;
-        changed = true;
-        smoothingMode = LEGACY;
     }
-    ControllerModulationSource(SmoothingMode mode) : ControllerModulationSource()
+    ControllerModulationSourceVector(Modulator::SmoothingMode mode)
+        : ControllerModulationSourceVector()
     {
         smoothingMode = mode;
     }
 
-    virtual ~ControllerModulationSource() {}
-    void set_target(float f)
+    virtual ~ControllerModulationSourceVector() {}
+    void set_target(int idx, float f)
     {
-        target = f;
-        startingpoint = output;
-        changed = true;
+        target[idx] = f;
+        startingpoint[idx] = output;
+        changed[NDX] = true;
     }
 
     void init(float f)
     {
-        target = f;
-        output = f;
-        startingpoint = f;
-        changed = true;
+        assert(NDX == 1);
+        init(0, f);
+    }
+    void init(int idx, float f)
+    {
+        target[idx] = f;
+        value[idx] = f;
+        startingpoint[idx] = f;
+        changed[idx] = true;
     }
 
-    void set_target01(float f, bool updatechanged = true)
+    int get_active_outputs() override
+    {
+        return NDX; // bipolar can't support lognormal obvs
+    }
+
+    void set_target(float f, bool updatechanged = true)
+    {
+        assert(NDX == 1);
+        set_target01(0, f, updatechanged);
+    }
+
+    void set_target01(int idx, float f, bool updatechanged = true)
     {
         if (bipolar)
-            target = 2.f * f - 1.f;
+            target[idx] = 2.f * f - 1.f;
         else
-            target = f;
-        startingpoint = output;
+            target[idx] = f;
+        startingpoint[idx] = value[idx];
         if (updatechanged)
-            changed = true;
+            changed[idx] = true;
     }
+
+    virtual float get_output(int which) override { return value[which]; }
 
     virtual float get_output01(int i) override
     {
         if (bipolar)
-            return 0.5f + 0.5f * output;
-        return output;
+            return 0.5f + 0.5f * value[i];
+        return value[i];
     }
 
-    virtual float get_target01()
+    virtual float get_target01(int idx)
     {
         if (bipolar)
-            return 0.5f + 0.5f * target;
-        return target;
+            return 0.5f + 0.5f * target[idx];
+        return target[idx];
     }
 
-    virtual bool has_changed(bool reset)
+    virtual bool has_changed(int idx, bool reset)
     {
-        if (changed)
+        if (changed[idx])
         {
             if (reset)
-                changed = false;
+                changed[idx] = false;
             return true;
         }
         return false;
@@ -395,73 +422,91 @@ class ControllerModulationSource : public ModulationSource
 
     virtual void reset() override
     {
-        target = 0.f;
-        output = 0.f;
-        bipolar = false;
-    }
-    inline void processSmoothing(SmoothingMode mode, float sigma)
-    {
-        if (mode == LEGACY || mode == SLOW_EXP || mode == FAST_EXP)
+        for (int idx = 0; idx < NDX; ++idx)
         {
-            float b = fabs(target - output);
-            if (b < sigma && mode != LEGACY)
-            {
-                output = target;
-            }
-            else
-            {
-                float a = (mode == FAST_EXP ? 0.99f : 0.9f) * 44100 * samplerate_inv * b;
-                output = (1 - a) * output + a * target;
-            }
-            return;
-        };
-        if (mode == FAST_LINE)
-        {
-            /*
-             * Apply a constant change until we get there.
-             * Rate is set so we cover the entire range (0,1)
-             * in 50 blocks at 44k
-             */
-            float sampf = samplerate / 44100;
-            float da = (target - startingpoint) / (50 * sampf);
-            float b = target - output;
-            if (fabs(b) < fabs(da))
-            {
-                output = target;
-            }
-            else
-            {
-                output += da;
-            }
+            target[idx] = 0.f;
+            value[idx] = 0.f;
+            value[idx] = 0.f;
+            bipolar = false;
         }
-        if (mode == DIRECT)
+    }
+    inline void processSmoothing(Modulator::SmoothingMode mode, float sigma)
+    {
+        for (int idx = 0; idx < NDX; ++idx)
         {
-            output = target;
+            if (mode == Modulator::SmoothingMode::LEGACY ||
+                mode == Modulator::SmoothingMode::SLOW_EXP ||
+                mode == Modulator::SmoothingMode::FAST_EXP)
+            {
+                float b = fabs(target[idx] - value[idx]);
+                if (b < sigma && mode != Modulator::SmoothingMode::LEGACY)
+                {
+                    value[idx] = target[idx];
+                }
+                else
+                {
+                    float a = (mode == Modulator::SmoothingMode::FAST_EXP ? 0.99f : 0.9f) * 44100 *
+                              samplerate_inv * b;
+                    value[idx] = (1 - a) * value[idx] + a * target[idx];
+                }
+                return;
+            };
+            if (mode == Modulator::SmoothingMode::FAST_LINE)
+            {
+                /*
+                 * Apply a constant change until we get there.
+                 * Rate is set so we cover the entire range (0,1)
+                 * in 50 blocks at 44k
+                 */
+                float sampf = samplerate / 44100;
+                float da = (target[idx] - startingpoint[idx]) / (50 * sampf);
+                float b = target[idx] - value[idx];
+                if (fabs(b) < fabs(da))
+                {
+                    value[idx] = target[idx];
+                }
+                else
+                {
+                    value[idx] += da;
+                }
+            }
+            if (mode == Modulator::SmoothingMode::DIRECT)
+            {
+                value[idx] = target[idx];
+            }
         }
     }
     virtual void process_block() override
     {
-        processSmoothing(smoothingMode, smoothingMode == FAST_EXP ? 0.005f : 0.0025f);
+        processSmoothing(smoothingMode,
+                         smoothingMode == Modulator::SmoothingMode::FAST_EXP ? 0.005f : 0.0025f);
     }
 
     virtual bool process_block_until_close(float sigma)
     {
-        if (smoothingMode == LEGACY)
-            processSmoothing(SLOW_EXP, sigma);
+        if (smoothingMode == Modulator::SmoothingMode::LEGACY)
+            processSmoothing(Modulator::SmoothingMode::SLOW_EXP, sigma);
         else
             processSmoothing(smoothingMode, sigma);
 
-        return (output != target); // continue
+        auto res = (value[0] != target[0]);
+        for (int i = 1; i < NDX; ++i)
+        {
+            res &= (value[i] != target[i]);
+        }
+        return res;
     }
 
     virtual bool is_bipolar() override { return bipolar; }
     virtual void set_bipolar(bool b) override { bipolar = b; }
 
-    float target, startingpoint;
+    float target[NDX], startingpoint[NDX], value[NDX];
     int id; // can be used to assign the controller to a parameter id
     bool bipolar;
-    bool changed;
+    bool changed[NDX];
 };
+
+using ControllerModulationSource = ControllerModulationSourceVector<1>;
 
 class RandomModulationSource : public ModulationSource
 {

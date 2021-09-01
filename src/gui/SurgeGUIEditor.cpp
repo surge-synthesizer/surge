@@ -653,13 +653,13 @@ void SurgeGUIEditor::idle()
             if (((ControllerModulationSource *)synth->storage.getPatch()
                      .scene[current_scene]
                      .modsources[ms_ctrl1 + i])
-                    ->has_changed(true))
+                    ->has_changed(0, true))
             {
                 gui_modsrc[ms_ctrl1 + i]->setValue(
                     ((ControllerModulationSource *)synth->storage.getPatch()
                          .scene[current_scene]
                          .modsources[ms_ctrl1 + i])
-                        ->get_target01());
+                        ->get_target01(0));
             }
         }
     }
@@ -742,7 +742,7 @@ void SurgeGUIEditor::refresh_mod()
             if (s->getIsValidToModulate())
             {
                 auto use_scene = 0;
-                if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                if (this->synth->isModulatorDistinctPerScene(thisms))
                     use_scene = current_scene;
 
                 s->setIsEditingModulation(mod_editor);
@@ -968,7 +968,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 gui_modsrc[ms]->setValue(((ControllerModulationSource *)synth->storage.getPatch()
                                               .scene[current_scene]
                                               .modsources[ms])
-                                             ->get_target01());
+                                             ->get_target01(0));
             }
 
             frame->getModButtonLayer()->addAndMakeVisible(*gui_modsrc[ms]);
@@ -2138,7 +2138,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     });
 
     auto smoothMenu = makeSmoothMenu(where, Surge::Storage::PitchSmoothingMode,
-                                     (int)ControllerModulationSource::SmoothingMode::DIRECT,
+                                     (int)Modulator::SmoothingMode::DIRECT,
                                      [this](auto md) { this->resetPitchSmoothing(md); });
 
     mpeSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("MPE Pitch Bend Smoothing"), smoothMenu);
@@ -3133,25 +3133,26 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 // key is the key given to getUserDefaultValue,
 // default is a value to default to,
 // setSmooth is a function called to set the smoothing value
-juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(
-    const juce::Point<int> &where, const Surge::Storage::DefaultKey &key, int defaultValue,
-    std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth)
+juce::PopupMenu
+SurgeGUIEditor::makeSmoothMenu(const juce::Point<int> &where, const Surge::Storage::DefaultKey &key,
+                               int defaultValue,
+                               std::function<void(Modulator::SmoothingMode)> setSmooth)
 {
     auto smoothMenu = juce::PopupMenu();
 
     int smoothing = Surge::Storage::getUserDefaultValue(&(synth->storage), key, defaultValue);
 
     auto asmt = [&smoothMenu, smoothing, setSmooth](const char *label,
-                                                    ControllerModulationSource::SmoothingMode md) {
+                                                    Modulator::SmoothingMode md) {
         smoothMenu.addItem(Surge::GUI::toOSCaseForMenu(label), true, (smoothing == md),
                            [setSmooth, md]() { setSmooth(md); });
     };
 
-    asmt("Legacy", ControllerModulationSource::SmoothingMode::LEGACY);
-    asmt("Slow Exponential", ControllerModulationSource::SmoothingMode::SLOW_EXP);
-    asmt("Fast Exponential", ControllerModulationSource::SmoothingMode::FAST_EXP);
-    asmt("Fast Linear", ControllerModulationSource::SmoothingMode::FAST_LINE);
-    asmt("No Smoothing", ControllerModulationSource::SmoothingMode::DIRECT);
+    asmt("Legacy", Modulator::SmoothingMode::LEGACY);
+    asmt("Slow Exponential", Modulator::SmoothingMode::SLOW_EXP);
+    asmt("Fast Exponential", Modulator::SmoothingMode::FAST_EXP);
+    asmt("Fast Linear", Modulator::SmoothingMode::FAST_LINE);
+    asmt("No Smoothing", Modulator::SmoothingMode::DIRECT);
 
     return smoothMenu;
 };
@@ -3160,9 +3161,9 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 {
     auto midiSubMenu = juce::PopupMenu();
 
-    auto smen = makeSmoothMenu(where, Surge::Storage::SmoothingMode,
-                               (int)ControllerModulationSource::SmoothingMode::LEGACY,
-                               [this](auto md) { this->resetSmoothing(md); });
+    auto smen =
+        makeSmoothMenu(where, Surge::Storage::SmoothingMode, (int)Modulator::SmoothingMode::LEGACY,
+                       [this](auto md) { this->resetSmoothing(md); });
     midiSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Controller Smoothing"), smen);
 
     // TODO: include this after going through the parameter RMB context menu forest!
@@ -3874,7 +3875,7 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
         });
 }
 
-void SurgeGUIEditor::resetSmoothing(ControllerModulationSource::SmoothingMode t)
+void SurgeGUIEditor::resetSmoothing(Modulator::SmoothingMode t)
 {
     // Reset the default value and tell the synth it is updated
     Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::SmoothingMode,
@@ -3882,7 +3883,7 @@ void SurgeGUIEditor::resetSmoothing(ControllerModulationSource::SmoothingMode t)
     synth->changeModulatorSmoothing(t);
 }
 
-void SurgeGUIEditor::resetPitchSmoothing(ControllerModulationSource::SmoothingMode t)
+void SurgeGUIEditor::resetPitchSmoothing(Modulator::SmoothingMode t)
 {
     // Reset the default value and update it in storage for newly created voices to use
     Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::PitchSmoothingMode,
@@ -5094,6 +5095,10 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
                 return shortV ? "" : " (Uniform)";
             if (index == 1)
                 return shortV ? " HN" : " (Half Normal)";
+        }
+        if (ms == ms_lowest_key || ms == ms_latest_key || ms == ms_highest_key)
+        {
+            return (index == 0 ? " Key" : " Voice");
         }
         if (shortV)
             return "." + std::to_string(index + 1);

@@ -384,7 +384,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     Parameter *parameter = synth->storage.getPatch().param_ptr[md];
 
                     auto use_scene = 0;
-                    if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                    if (this->synth->isModulatorDistinctPerScene(thisms))
                         use_scene = current_scene;
 
                     if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
@@ -444,7 +444,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     Parameter *parameter = synth->storage.getPatch().param_ptr[md];
 
                     auto use_scene = 0;
-                    if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                    if (this->synth->isModulatorDistinctPerScene(thisms))
                         use_scene = current_scene;
 
                     if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
@@ -2074,7 +2074,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 if (ctrms)
                 {
                     auto use_scene = 0;
-                    if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                    if (this->synth->isModulatorDistinctPerScene(thisms))
                         use_scene = current_scene;
 
                     ctrms->setModValue(
@@ -2651,7 +2651,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 }
                 synth->setModulation(ptag, thisms, current_scene, modsource_index, mv);
                 auto use_scene = 0;
-                if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                if (this->synth->isModulatorDistinctPerScene(thisms))
                     use_scene = current_scene;
 
                 mci->setModulationState(
@@ -2916,7 +2916,7 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
     if ((bp && val >= -1 && val <= 1) || (val >= 0 && val <= 1))
     {
         cms->set_output(0, val);
-        cms->target = val;
+        cms->target[0] = val;
         synth->refresh_editor = true;
         return true;
     }

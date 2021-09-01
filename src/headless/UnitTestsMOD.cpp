@@ -756,7 +756,7 @@ TEST_CASE("CModulationSources", "[mod]")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
-        ControllerModulationSource a(ControllerModulationSource::SmoothingMode::LEGACY);
+        ControllerModulationSource a(Modulator::SmoothingMode::LEGACY);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -778,7 +778,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        ControllerModulationSource a(ControllerModulationSource::SmoothingMode::FAST_EXP);
+        ControllerModulationSource a(Modulator::SmoothingMode::FAST_EXP);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -801,7 +801,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        ControllerModulationSource a(ControllerModulationSource::SmoothingMode::SLOW_EXP);
+        ControllerModulationSource a(Modulator::SmoothingMode::SLOW_EXP);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -821,7 +821,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        ControllerModulationSource a(ControllerModulationSource::SmoothingMode::FAST_LINE);
+        ControllerModulationSource a(Modulator::SmoothingMode::FAST_LINE);
         a.init(0.5f);
         for (int i = 0; i < 10; ++i)
         {
@@ -840,7 +840,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        ControllerModulationSource a(ControllerModulationSource::SmoothingMode::DIRECT);
+        ControllerModulationSource a(Modulator::SmoothingMode::DIRECT);
         a.init(0.5f);
         for (int i = 0; i < 100; ++i)
         {
