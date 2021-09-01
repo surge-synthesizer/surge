@@ -116,8 +116,8 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
     {
         if (p && ms > 0)
         {
-            res =
-                editor->setParameterModulationFromString(p, ms, modidx, te.getText().toStdString());
+            res = editor->setParameterModulationFromString(p, ms, modScene, modidx,
+                                                           te.getText().toStdString());
         }
         else
         {

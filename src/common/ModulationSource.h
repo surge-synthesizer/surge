@@ -253,6 +253,12 @@ struct ModulationRouting
     float depth;
     bool muted = false;
     int source_index{0};
+    /*
+     * In the case of routing LFO -> Global, the target parameter doesnt have
+     * a scene so we need to disambiguate the source scene. This is only used
+     * for global routings. See #2285
+     */
+    int source_scene{-1};
 };
 
 class ModulationSource

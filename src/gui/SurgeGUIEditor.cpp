@@ -741,11 +741,16 @@ void SurgeGUIEditor::refresh_mod()
 
             if (s->getIsValidToModulate())
             {
+                auto use_scene = 0;
+                if (thisms >= ms_lfo1 && thisms <= ms_slfo6)
+                    use_scene = current_scene;
+
                 s->setIsEditingModulation(mod_editor);
-                s->setModulationState(synth->isModDestUsed(i),
-                                      synth->isActiveModulation(i, thisms, modsource_index));
+                s->setModulationState(
+                    synth->isModDestUsed(i),
+                    synth->isActiveModulation(i, thisms, use_scene, modsource_index));
                 s->setIsModulationBipolar(synth->isBipolarModulation(thisms));
-                s->setModValue(synth->getModulation(i, thisms, modsource_index));
+                s->setModValue(synth->getModulation(i, thisms, use_scene, modsource_index));
             }
             else
             {
@@ -3329,7 +3334,8 @@ void SurgeGUIEditor::broadcastPluginAutomationChangeFor(Parameter *p)
 }
 //------------------------------------------------------------------------------------------------
 
-void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, int ms, int modidx)
+void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, int ms, int modScene,
+                                             int modidx)
 {
     if (typeinParamEditor->isVisible())
     {
@@ -3388,7 +3394,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         {
             char txt2[256];
             p->get_display_of_modulation_depth(
-                txt, synth->getModDepth(p->id, (modsources)ms, modidx),
+                txt, synth->getModDepth(p->id, (modsources)ms, modScene, modidx),
                 synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
             p->get_display(txt2);
             sprintf(ptext, "mod: %s", txt);
@@ -3422,7 +3428,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
 
     typeinParamEditor->setEditedParam(p);
-    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms, modidx);
+    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms, modScene, modidx);
 
     if (frame->getIndexOfChildComponent(typeinParamEditor.get()) < 0)
     {
@@ -3433,52 +3439,79 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->grabFocus();
 }
 
-std::string SurgeGUIEditor::modulatorName(int i, bool button)
+std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
 {
     if ((i >= ms_lfo1 && i <= ms_slfo6))
     {
         int idx = i - ms_lfo1;
         bool isS = idx >= 6;
         int fnum = idx % 6;
-        auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[i - ms_lfo1]);
+        auto useScene = forScene >= 0 ? forScene : current_scene;
+        auto *lfodata = &(synth->storage.getPatch().scene[useScene].lfo[i - ms_lfo1]);
+
+        char sceneN[5], shortsceneS[5];
+        sceneN[0] = 0;
+        shortsceneS[0] = 0;
+        if (forScene >= 0)
+        {
+            sceneN[0] = ' ';
+            sceneN[1] = 'A' + forScene;
+            sceneN[2] = 0;
+            shortsceneS[0] = 'A' + forScene;
+            shortsceneS[1] = ' ';
+            shortsceneS[2] = 0;
+        }
+        char sceneL[16];
+        snprintf(sceneL, 16, "Scene%s", sceneN);
+        char shortsceneL[16];
+        snprintf(shortsceneL, 16, "%sS-", shortsceneS);
 
         if (lfodata->shape.val.i == lt_envelope)
         {
-            char txt[64];
+            char txt[128];
             if (button)
-                sprintf(txt, "%sENV %d", (isS ? "S-" : ""), fnum + 1);
+                sprintf(txt, "%sENV %d", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Envelope %d", (isS ? "Scene" : "Voice"), fnum + 1);
+                sprintf(txt, "%s Envelope %d", (isS ? sceneL : "Voice"), fnum + 1);
             return std::string(txt);
         }
         else if (lfodata->shape.val.i == lt_stepseq)
         {
-            char txt[64];
+            char txt[128];
             if (button)
-                sprintf(txt, "%sSEQ %d", (isS ? "S-" : ""), fnum + 1);
+                sprintf(txt, "%sSEQ %d", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Step Sequencer %d", (isS ? "Scene" : "Voice"), fnum + 1);
+                sprintf(txt, "%s Step Sequencer %d", (isS ? sceneL : "Voice"), fnum + 1);
             return std::string(txt);
         }
         else if (lfodata->shape.val.i == lt_mseg)
         {
-            char txt[64];
+            char txt[128];
             if (button)
-                sprintf(txt, "%sMSEG %d", (isS ? "S-" : ""), fnum + 1);
+                sprintf(txt, "%sMSEG %d", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s MSEG %d", (isS ? "Scene" : "Voice"), fnum + 1);
+                sprintf(txt, "%s MSEG %d", (isS ? sceneL : "Voice"), fnum + 1);
             return std::string(txt);
         }
         else if (lfodata->shape.val.i == lt_formula)
         {
-            char txt[64];
+            char txt[128];
 
             // TODO FIXME: When function LFO type is added, uncomment the second sprintf and remove
             // the first one!
             if (button)
-                sprintf(txt, "%sFORM %d", (isS ? "S-" : ""), fnum + 1);
+                sprintf(txt, "%sFORM %d", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Formula %d", (isS ? "Scene" : "Voice"), fnum + 1);
+                sprintf(txt, "%s Formula %d", (isS ? sceneL : "Voice"), fnum + 1);
+            return std::string(txt);
+        }
+        else
+        {
+            char txt[128];
+            if (button)
+                sprintf(txt, "%sLFO %d", (isS ? shortsceneL : ""), fnum + 1);
+            else
+                sprintf(txt, "%s LFO %d", (isS ? sceneL : "Voice"), fnum + 1);
             return std::string(txt);
         }
     }
@@ -3620,7 +3653,7 @@ void SurgeGUIEditor::sliderHoverStart(int tag)
     for (int k = 1; k < n_modsources; k++)
     {
         modsources ms = (modsources)k;
-        if (synth->isActiveModulation(ptag, ms, modsource_index))
+        if (synth->isActiveModulation(ptag, ms, current_scene, modsource_index))
         {
             if (gui_modsrc[k])
             {
@@ -3797,7 +3830,8 @@ void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableCo
 
     jassert(false); // the index below needs fixing
     if (synth->isValidModulation(p->id, (modsources)ms))
-        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms, 0);
+        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms,
+                                current_scene, 0);
 }
 
 void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int> where,
@@ -4081,11 +4115,12 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         setDisabledForParameter(p, hs.get());
 
         hs->setIsEditingModulation(mod_editor);
-        hs->setModulationState(synth->isModDestUsed(p->id),
-                               synth->isActiveModulation(p->id, modsource, modsource_index));
+        hs->setModulationState(
+            synth->isModDestUsed(p->id),
+            synth->isActiveModulation(p->id, modsource, current_scene, modsource_index));
         if (synth->isValidModulation(p->id, modsource))
         {
-            hs->setModValue(synth->getModulation(p->id, modsource, modsource_index));
+            hs->setModValue(synth->getModulation(p->id, modsource, current_scene, modsource_index));
             hs->setIsModulationBipolar(synth->isBipolarModulation(modsource));
         }
 

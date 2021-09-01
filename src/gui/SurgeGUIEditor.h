@@ -522,8 +522,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
     bool setParameterFromString(Parameter *p, const std::string &s);
-    bool setParameterModulationFromString(Parameter *p, modsources ms, int modidx,
-                                          const std::string &s);
+    bool setParameterModulationFromString(Parameter *p, modsources ms, int modsourceScene,
+                                          int modidx, const std::string &s);
     bool setControlFromString(modsources ms, const std::string &s);
     friend struct Surge::Overlays::TypeinParamEditor;
     friend struct Surge::Overlays::PatchStoreDialog;
@@ -583,7 +583,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<juce::Label> fxPresetLabel;
 
   public:
-    std::string modulatorName(int ms, bool forButton);
+    std::string modulatorName(int ms, bool forButton, int forScene = -1);
     std::string modulatorIndexExtension(int scene, int ms, int index, bool shortV = false);
 
   private:
@@ -652,9 +652,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     void promptForUserValueEntry(Parameter *p, juce::Component *c)
     {
-        promptForUserValueEntry(p, c, -1, -1);
+        promptForUserValueEntry(p, c, -1, -1, -1);
     }
-    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modindex);
+    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modScene,
+                                 int modindex);
 
     /*
     ** Skin support

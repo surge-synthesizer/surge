@@ -1391,6 +1391,22 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     t.depth = (float)depth;
                     t.source_id = modsource;
 
+                    if (sceneId != 0)
+                        t.source_scene = sceneId - 1;
+                    else
+                    {
+                        int sourcescene = 0;
+                        if (mr->QueryIntAttribute("source_scene", &sourcescene) == TIXML_SUCCESS)
+                        {
+                            t.source_scene = sourcescene;
+                        }
+                        else
+                        {
+                            // Explicity set scene to A. See #2285
+                            t.source_scene = 0;
+                        }
+                    }
+
                     int muted = 0;
                     if (mr->QueryIntAttribute("muted", &muted) == TIXML_SUCCESS)
                         t.muted = muted;
@@ -2260,6 +2276,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     {
                         if (r->at(b).destination_id == p_id)
                         {
+                            // if you add something here make sure to replicated it in the global
+                            // below
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
                             mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
@@ -2281,6 +2299,9 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                         TiXmlElement mr("modrouting");
                         mr.SetAttribute("source", r->at(b).source_id);
                         mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
+                        mr.SetAttribute("muted", r->at(b).muted);
+                        mr.SetAttribute("source_index", r->at(b).source_index);
+                        mr.SetAttribute("source_scene", r->at(b).source_scene);
                         p.InsertEndChild(mr);
                     }
                 }

@@ -37,7 +37,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         explicit Datum(RowType t) : type(t) {}
 
         std::string hLab;
-        int dest_id = -1, source_id = -1, source_index = -1;
+        int dest_id = -1, source_id = -1, source_index = -1, source_scene = -1;
         std::string dest_name, source_name;
         int modNum = -1;
 
@@ -113,10 +113,11 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             muteButton = std::make_unique<juce::ToggleButton>("Mute");
             muteButton->setButtonText("Mute");
             muteButton->addListener(this);
+            // FIX THIS SCENE TREATMENT
             muteButton->setToggleState(
-                mod->moded->synth->isModulationMuted(mod->rows[row].dest_id,
-                                                     (modsources)mod->rows[row].source_id,
-                                                     mod->rows[row].source_index),
+                mod->moded->synth->isModulationMuted(
+                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
+                    mod->rows[row].source_scene, mod->rows[row].source_index),
                 juce::NotificationType::dontSendNotification);
             addAndMakeVisible(*muteButton);
 
@@ -133,8 +134,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             auto rd = mod->rows[row];
             auto um = rd.p->set_modulation_f01(slider->getValue());
-            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id, rd.source_index,
-                                             slider->getValue());
+            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id, rd.source_scene,
+                                             rd.source_index, slider->getValue());
             mod->updateRowByModnum(rd.modNum);
             mod->moded->repaint();
             // std::cout << "SVC " << slider->getValue() << std::endl;
@@ -143,9 +144,9 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         {
             if (button == clearButton.get())
             {
-                mod->moded->synth->clearModulation(mod->rows[row].dest_id,
-                                                   (modsources)mod->rows[row].source_id,
-                                                   mod->rows[row].source_index);
+                mod->moded->synth->clearModulation(
+                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
+                    mod->rows[row].source_scene, mod->rows[row].source_index);
                 mod->updateRows();
                 mod->moded->listBox->updateContent();
             }
@@ -153,7 +154,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             {
                 mod->moded->synth->muteModulation(
                     mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_index, button->getToggleState());
+                    mod->rows[row].source_scene, mod->rows[row].source_index,
+                    button->getToggleState());
             }
         }
         void resized() override
@@ -220,9 +222,9 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 int ptag = r.p->id;
                 modsources thisms = (modsources)r.source_id;
                 r.p->get_display_of_modulation_depth(
-                    pdisp, moded->synth->getModDepth(ptag, thisms, r.source_index),
+                    pdisp, moded->synth->getModDepth(ptag, thisms, r.source_scene, r.source_index),
                     moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(r.mss));
-                r.depth = moded->synth->getModDepth(ptag, thisms, r.source_index);
+                r.depth = moded->synth->getModDepth(ptag, thisms, r.source_scene, r.source_index);
             }
         }
     }
@@ -251,12 +253,16 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 if (moded->synth->fromSynthSideId(q.destination_id + idBase, ptagid))
                     moded->synth->getParameterName(ptagid, nm);
                 std::string sname = moded->ed->modulatorName(q.source_id, false);
+                if (scene < 0)
+                    sname = moded->ed->modulatorName(q.source_id, false, q.source_scene);
                 if (scene >= 0)
                     sname += moded->ed->modulatorIndexExtension(scene, q.source_id, q.source_index);
+
                 auto rDisp = Datum(Datum::SHOW_ROW);
                 rDisp.source_id = q.source_id;
                 rDisp.dest_id = q.destination_id + idBase;
                 rDisp.source_index = q.source_index;
+                rDisp.source_scene = q.source_scene;
                 rDisp.source_name = sname;
                 rDisp.dest_name = nm;
                 rDisp.modNum = modNum++;
@@ -267,9 +273,10 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                 int ptag = p->id;
                 modsources thisms = (modsources)q.source_id;
                 p->get_display_of_modulation_depth(
-                    pdisp, moded->synth->getModDepth(ptag, thisms, q.source_index),
+                    pdisp, moded->synth->getModDepth(ptag, thisms, q.source_scene, q.source_index),
                     moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(rDisp.mss));
-                rDisp.depth = moded->synth->getModDepth(ptag, thisms, q.source_index);
+                rDisp.depth =
+                    moded->synth->getModDepth(ptag, thisms, q.source_scene, q.source_index);
                 rDisp.isBipolar = moded->synth->isBipolarModulation(thisms);
                 trows.push_back(rDisp);
 
@@ -281,6 +288,9 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             }
 
             std::sort(trows.begin(), trows.end(), [](const Datum &a, const Datum &b) -> bool {
+                if (a.source_scene != b.source_scene)
+                    return a.source_scene < b.source_scene;
+
                 if (a.source_id != b.source_id)
                     return a.source_id < b.source_id;
 

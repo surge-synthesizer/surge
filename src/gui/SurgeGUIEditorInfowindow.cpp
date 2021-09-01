@@ -98,7 +98,7 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
         sprintf(pname, "%s -> %s", mn.c_str(), txt);
         ModulationDisplayInfoWindowStrings mss;
         p->get_display_of_modulation_depth(
-            pdisp, synth->getModDepth(pid, modsource, modsource_index),
+            pdisp, synth->getModDepth(pid, modsource, current_scene, modsource_index),
             synth->isBipolarModulation(modsource), Parameter::InfoWindow, &mss);
         if (mss.val != "")
         {
