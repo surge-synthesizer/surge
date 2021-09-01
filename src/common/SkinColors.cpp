@@ -392,7 +392,7 @@ const Surge::Skin::Color Positive("slider.modulation.positive", 173, 255, 107),
 }
 } // namespace Slider
 
-namespace VuMeter
+namespace VUMeter
 {
 const Surge::Skin::Color Background("vumeter.background", 21, 21, 21),
     Border("vumeter.border", 205, 206, 212);

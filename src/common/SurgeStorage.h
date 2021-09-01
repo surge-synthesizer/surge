@@ -841,7 +841,7 @@ class SurgePatch
     bool correctlyTuneCombFilter = true;
 
     FilterSelectorMapper patchFilterSelectorMapper;
-    WaveShaperSelectorMapper patchWaveshaperSelectorMapper;
+    WaveshaperSelectorMapper patchWaveshaperSelectorMapper;
 };
 
 struct Patch

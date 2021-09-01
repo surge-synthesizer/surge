@@ -54,7 +54,7 @@ struct ParameterInfowindow;
 struct PatchSelector;
 struct Switch;
 struct VerticalLabel;
-struct VuMeter;
+struct VUMeter;
 
 struct MainFrame;
 
@@ -472,7 +472,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::shared_ptr<SurgeImageStore> bitmapStore = nullptr;
 
   private:
-    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
+    std::array<std::unique_ptr<Surge::Widgets::VUMeter>, n_fx_slots + 1> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;

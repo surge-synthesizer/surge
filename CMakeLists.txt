@@ -394,8 +394,8 @@ set(SURGE_GUI_SOURCES
   src/gui/widgets/PatchSelector.cpp
   src/gui/widgets/Switch.cpp
   src/gui/widgets/VerticalLabel.cpp
-  src/gui/widgets/VuMeter.cpp
-  src/gui/widgets/WaveShaperSelector.cpp
+  src/gui/widgets/VUMeter.cpp
+  src/gui/widgets/WaveshaperSelector.cpp
   src/gui/widgets/XMLConfiguredMenus.cpp
         )
 

@@ -291,7 +291,7 @@ extern const Surge::Skin::Color Positive, Negative;
 }
 } // namespace Slider
 
-namespace VuMeter
+namespace VUMeter
 {
 extern const Surge::Skin::Color Border, Background;
 }

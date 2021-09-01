@@ -172,7 +172,7 @@ Component Label =
                        "background and frame/border colors"});
 
 // ToDo - obvioulsy expand properties
-Component WaveShaperSelector = Component("WaveShaperSelector");
+Component WaveshaperSelector = Component("WaveshaperSelector");
 
 } // namespace Components
 
@@ -392,7 +392,7 @@ Connector envmod_2 = Connector("filter.envmod_2", 569, 301).asVertical().asWhite
 
 Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 301).asVertical().asWhite();
 Connector waveshaper_type =
-    Connector("filter.waveshaper_type", 383, 311, 34, 57, Components::WaveShaperSelector)
+    Connector("filter.waveshaper_type", 383, 311, 34, 57, Components::WaveshaperSelector)
         .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
 
 Connector highpass = Connector("filter.highpass", 354, 301).asVertical().asWhite();

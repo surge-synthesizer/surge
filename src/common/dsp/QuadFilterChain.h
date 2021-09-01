@@ -9,7 +9,7 @@
  * QuadFilterChainState - the state of a filter bank, which comprises a pair of filters (perhaps
  *      in stereo) and a waveshaper
  * FilterUnitQFPtr - A function which, given a QuadFilterUnitState and an input sample, produces
- * output (the filter) WaveShaperQFPtr - A function which waveshapes an input to an output
+ * output (the filter) WaveshaperQFPtr - A function which waveshapes an input to an output
  *
  * The three things that make this set of classes somewhat tricky are:
  *
@@ -47,7 +47,7 @@
  * logically it is a pair of filters, inputs, and outputs, all SSE vectorized.
  *
  * To use that, what do you need to do though? Well, clearly you need to write all of your
- * operators as SSE operators. So the FilterUnitQFPtr and WaveShaperQFPtr need to be _m128 -> _m128,
+ * operators as SSE operators. So the FilterUnitQFPtr and WaveshaperQFPtr need to be _m128 -> _m128,
  * not float to float. You can see those in QuadFilterUnit.cpp and so on. These functions are
  * returned by the GetQFPtrFilterUnit function and so forth, which does a switch on type to return a
  * function of uniform signature (QuadFilterUnitState, _m128) for filter and _m128 for waveshaper.

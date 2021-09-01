@@ -54,7 +54,7 @@ TEST_CASE("Run Every Waveshaper", "[flt]")
     {
         for (int q = 0; q < n_filter_configs; ++q)
         {
-            DYNAMIC_SECTION("Test WaveShaper " << wst_names[wt] << " " << fbc_names[q])
+            DYNAMIC_SECTION("Test Waveshaper " << wst_names[wt] << " " << fbc_names[q])
             {
                 auto surge = Surge::Headless::createSurge(44100);
                 REQUIRE(surge);

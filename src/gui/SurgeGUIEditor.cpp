@@ -58,7 +58,7 @@
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
-#include "widgets/WaveShaperSelector.h"
+#include "widgets/WaveshaperSelector.h"
 #include "widgets/XMLConfiguredMenus.h"
 
 #include "ModulationGridConfiguration.h"
@@ -3049,7 +3049,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                         [this]() { showHTML(skinInspectorHtml()); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Development Guide..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-manual.html");
+        juce::URL("https://surge-synthesizer.github.io/skin-manual.html").launchInDefaultBrowser();
     });
 
     return skinSubMenu;
@@ -4570,14 +4570,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
-    if (skinCtrl->defaultComponent == Surge::Skin::Components::WaveShaperSelector)
+    if (skinCtrl->defaultComponent == Surge::Skin::Components::WaveshaperSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
         if (!p)
             return nullptr;
 
         auto rect = skinCtrl->getRect();
-        auto hsw = componentForSkinSession<Surge::Widgets::WaveShaperSelector>(skinCtrl->sessionid);
+        auto hsw = componentForSkinSession<Surge::Widgets::WaveshaperSelector>(skinCtrl->sessionid);
         hsw->addListener(this);
         hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
         hsw->setTag(p->id + start_paramtags);

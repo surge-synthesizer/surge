@@ -562,12 +562,12 @@ const char wst_ui_names[n_ws_types][16] = {
     "EdgeFz", "Sin+x",   "Sin2x+x", "Sin3x+x",  "Sin7x+x",  "Sin10x+x", "2Cycle",
     "7Cycle", "10Cycle", "2CycleB", "7CycleB",  "10CycleB", "Zam",      "OJD"};
 
-struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
+struct WaveshaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
     std::vector<std::pair<int, std::string>> mapping;
     std::unordered_map<int, int> inverseMapping;
     void p(int i, const std::string &s) { mapping.emplace_back(i, s); }
-    WaveShaperSelectorMapper()
+    WaveshaperSelectorMapper()
     {
         // Obviously improve this
         p(wst_none, "");
