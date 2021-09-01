@@ -313,7 +313,7 @@ void ModulatableSlider::endHover()
 
 void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 {
-    auto p = event.getMouseDownPosition();
+    auto p = mouseDownFloatPosition;
     float distance = event.position.getX() - p.getX();
     if (orientation == ParamConfig::kVertical)
         distance = -(event.position.getY() - p.getY());
@@ -326,6 +326,11 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 
     if (editTypeWas == NOEDIT)
     {
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+
         notifyBeginEdit();
     }
     editTypeWas = DRAG;
@@ -370,6 +375,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 {
     enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::CANCEL);
+    mouseDownFloatPosition = event.position;
 
     if (forwardedMainFrameMouseDowns(event))
     {
@@ -381,11 +387,6 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
         editTypeWas = NOEDIT;
         notifyControlModifierClicked(event.mods);
         return;
-    }
-
-    if (!Surge::GUI::showCursor(storage))
-    {
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
     }
 
     valueOnMouseDown = value;

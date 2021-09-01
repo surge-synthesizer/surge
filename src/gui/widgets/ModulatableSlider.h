@@ -129,6 +129,8 @@ struct ModulatableSlider : public juce::Component,
     // How far do we move in the image to make the handle image be the mod
     float modHandleX{0};
 
+    juce::Point<float> mouseDownFloatPosition;
+
     // Should we draw the label, and where?
     bool drawLabel{false};
     juce::Rectangle<int> labelRect;
