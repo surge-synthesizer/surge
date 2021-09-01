@@ -260,23 +260,31 @@ class alignas(16) SurgeSynthesizer
   public:
     void updateDisplay();
     bool isValidModulation(long ptag, modsources modsource) const;
-    bool isActiveModulation(long ptag, modsources modsource, int index) const;
-    bool isAnyActiveModulation(long ptag, modsources modsource) const; // independent of index
+    bool isActiveModulation(long ptag, modsources modsource, int modsourceScene, int index) const;
+    bool isAnyActiveModulation(long ptag, modsources modsource,
+                               int modsourceScene) const; // independent of index
     bool isBipolarModulation(modsources modsources) const;
     bool isModsourceUsed(modsources modsource); // FIXME - this should be const
     bool isModDestUsed(long moddest) const;
 
     bool supportsIndexedModulator(int scene, modsources modsource) const;
     int getMaxModulationIndex(int scene, modsources modsource) const;
-    std::vector<int> getModulationIndicesBetween(long ptag, modsources modsource) const;
-    ModulationRouting *getModRouting(long ptag, modsources modsource, int index) const;
+    std::vector<int> getModulationIndicesBetween(long ptag, modsources modsource,
+                                                 int modsourceScene) const;
+    ModulationRouting *getModRouting(long ptag, modsources modsource, int modsourceScene,
+                                     int index) const;
 
-    bool setModulation(long ptag, modsources modsource, int index, float value);
-    float getModulation(long ptag, modsources modsource, int index) const;
-    void muteModulation(long ptag, modsources modsource, int index, bool mute);
-    bool isModulationMuted(long ptag, modsources modsource, int index) const;
-    float getModDepth(long ptag, modsources modsource, int index) const;
-    void clearModulation(long ptag, modsources modsource, int index,
+    /*
+     * setModulation etc take a modsource scene. This is only needed for global modulations
+     * since for in-scene modulations the paramter implicit in ptag has a scene. But for
+     * LFOs modulating FX, we need to knwo which scene they originate from. See #2285
+     */
+    bool setModulation(long ptag, modsources modsource, int modsourceScene, int index, float value);
+    float getModulation(long ptag, modsources modsource, int modsourceScene, int index) const;
+    void muteModulation(long ptag, modsources modsource, int modsourceScene, int index, bool mute);
+    bool isModulationMuted(long ptag, modsources modsource, int modsourceScene, int index) const;
+    float getModDepth(long ptag, modsources modsource, int modsourceScene, int index) const;
+    void clearModulation(long ptag, modsources modsource, int modsourceScene, int index,
                          bool clearEvenIfInvalid = false);
     void clear_osc_modulation(
         int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
@@ -349,7 +357,7 @@ class alignas(16) SurgeSynthesizer
     bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
     bool fx_reload_mod[n_fx_slots];
-    std::array<std::vector<std::tuple<int, int, int, float>>, n_fx_slots> fxmodsync;
+    std::array<std::vector<std::tuple<int, int, int, int, float>>, n_fx_slots> fxmodsync;
     int32_t fx_suspend_bitmask;
 
     // hold pedal stuff

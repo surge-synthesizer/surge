@@ -989,10 +989,10 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
         // Assign highest note keytrack to any parameter. Lets do this with highest latest and
         // lowest
         surge->setModulation(surge->storage.getPatch().scene[0].osc[0].pitch.id, ms_highest_key, 0,
+                             0, 0.2);
+        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0, 0,
                              0.2);
-        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0,
-                             0.2);
-        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0,
+        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0, 0,
                              0.2);
         return surge;
     };
@@ -1171,17 +1171,17 @@ TEST_CASE("High Low Latest with splits", "[mod]")
         // Assign highest note keytrack to any parameter. Lets do this with highest latest and
         // lowest
         surge->setModulation(surge->storage.getPatch().scene[0].osc[0].pitch.id, ms_highest_key, 0,
+                             0, 0.2);
+        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0, 0,
                              0.2);
-        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[0].id, ms_latest_key, 0,
-                             0.2);
-        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0,
+        surge->setModulation(surge->storage.getPatch().scene[0].osc[0].p[1].id, ms_lowest_key, 0, 0,
                              0.2);
 
         surge->setModulation(surge->storage.getPatch().scene[1].osc[0].pitch.id, ms_highest_key, 0,
+                             0, 0.2);
+        surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[0].id, ms_latest_key, 0, 0,
                              0.2);
-        surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[0].id, ms_latest_key, 0,
-                             0.2);
-        surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[1].id, ms_lowest_key, 0,
+        surge->setModulation(surge->storage.getPatch().scene[1].osc[0].p[1].id, ms_lowest_key, 0, 0,
                              0.2);
 
         return surge;
