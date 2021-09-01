@@ -3049,7 +3049,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                         [this]() { showHTML(skinInspectorHtml()); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Development Guide..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-manual.html");
+        juce::URL("https://surge-synthesizer.github.io/skin-manual.html").launchInDefaultBrowser();
     });
 
     return skinSubMenu;
