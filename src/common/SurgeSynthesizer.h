@@ -266,6 +266,7 @@ class alignas(16) SurgeSynthesizer
     bool isBipolarModulation(modsources modsources) const;
     bool isModsourceUsed(modsources modsource); // FIXME - this should be const
     bool isModDestUsed(long moddest) const;
+    bool isModulatorDistinctPerScene(modsources modsource); // ModWheel no; SLFO2 yes. etc...
 
     bool supportsIndexedModulator(int scene, modsources modsource) const;
     int getMaxModulationIndex(int scene, modsources modsource) const;
@@ -288,6 +289,7 @@ class alignas(16) SurgeSynthesizer
                          bool clearEvenIfInvalid = false);
     void clear_osc_modulation(
         int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
+
   public:
     std::atomic<bool> rawLoadEnqueued{false}, rawLoadNeedsUIDawExtraState{false};
     std::mutex rawLoadQueueMutex;
@@ -374,7 +376,7 @@ class alignas(16) SurgeSynthesizer
     bool activateExtraOutputs = true;
     void setupActivateExtraOutputs();
 
-    void changeModulatorSmoothing(ControllerModulationSource::SmoothingMode m);
+    void changeModulatorSmoothing(Modulator::SmoothingMode m);
 
     // these have to be thread-safe, so keep private
   private:

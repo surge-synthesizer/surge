@@ -36,6 +36,8 @@
 
 using namespace std;
 
+using CMSKey = ControllerModulationSourceVector<2>;
+
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
     : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
       halfbandB(6, true), halfbandIN(6, true)
@@ -92,14 +94,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     SurgePatch &patch = storage.getPatch();
 
-    storage.smoothingMode =
-        (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-            &storage, Surge::Storage::SmoothingMode,
-            (int)(ControllerModulationSource::SmoothingMode::LEGACY));
-    storage.pitchSmoothingMode =
-        (ControllerModulationSource::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-            &storage, Surge::Storage::PitchSmoothingMode,
-            (int)(ControllerModulationSource::SmoothingMode::DIRECT));
+    storage.smoothingMode = (Modulator::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
+        &storage, Surge::Storage::SmoothingMode, (int)(Modulator::SmoothingMode::LEGACY));
+    storage.pitchSmoothingMode = (Modulator::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
+        &storage, Surge::Storage::PitchSmoothingMode, (int)(Modulator::SmoothingMode::DIRECT));
 
     patch.polylimit.val.i = DEFAULT_POLYLIMIT;
 
@@ -118,13 +116,17 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         scene.modsources[ms_sustain] = new ControllerModulationSource(storage.smoothingMode);
         scene.modsources[ms_aftertouch] = new ControllerModulationSource(storage.smoothingMode);
         scene.modsources[ms_pitchbend] = new ControllerModulationSource(storage.smoothingMode);
-        scene.modsources[ms_lowest_key] = new ControllerModulationSource(storage.smoothingMode);
-        scene.modsources[ms_highest_key] = new ControllerModulationSource(storage.smoothingMode);
-        scene.modsources[ms_latest_key] = new ControllerModulationSource(storage.smoothingMode);
+        scene.modsources[ms_lowest_key] = new CMSKey(storage.smoothingMode);
+        scene.modsources[ms_highest_key] = new CMSKey(storage.smoothingMode);
+        scene.modsources[ms_latest_key] = new CMSKey(storage.smoothingMode);
 
-        ((ControllerModulationSource *)scene.modsources[ms_lowest_key])->init(0.f);
-        ((ControllerModulationSource *)scene.modsources[ms_highest_key])->init(0.f);
-        ((ControllerModulationSource *)scene.modsources[ms_latest_key])->init(0.f);
+        ((CMSKey *)scene.modsources[ms_lowest_key])->init(0, 0.f);
+        ((CMSKey *)scene.modsources[ms_highest_key])->init(0, 0.f);
+        ((CMSKey *)scene.modsources[ms_latest_key])->init(0, 0.f);
+
+        ((CMSKey *)scene.modsources[ms_lowest_key])->init(1, 0.f);
+        ((CMSKey *)scene.modsources[ms_highest_key])->init(1, 0.f);
+        ((CMSKey *)scene.modsources[ms_latest_key])->init(1, 0.f);
 
         scene.modsources[ms_random_bipolar] = new RandomModulationSource(true);
         scene.modsources[ms_random_unipolar] = new RandomModulationSource(false);
@@ -1261,26 +1263,59 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
         }
     }
 
+    float highestP = highest, lowestP = lowest, latestP = latest;
+    for (auto *v : voices[scene])
+    {
+        auto pitch = v->state.pkey;
+        auto vkey = v->state.key;
+        if (vkey == highest)
+            highestP = pitch;
+        if (vkey == lowest)
+            lowestP = pitch;
+        if (vkey == latest)
+            latestP = pitch;
+    }
+
     if (lowest < 129)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_lowest_key])
-            ->init((lowest - ktRoot) * twelfth);
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])
+            ->init(0, (lowest - ktRoot) * twelfth);
     else if (resetToZeroOnLastRelease)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_lowest_key])
-            ->init(0.f);
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init(0, 0.f);
+
+    if (lowestP < std::numeric_limits<float>::max())
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])
+            ->init(1, (lowestP - ktRoot) * twelfth);
+    else if (resetToZeroOnLastRelease)
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init(1, 0.f);
 
     if (highest >= 0)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_highest_key])
-            ->init((highest - ktRoot) * twelfth);
+    {
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])
+            ->init(0, (highest - ktRoot) * twelfth);
+    }
     else if (resetToZeroOnLastRelease)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_highest_key])
-            ->init(0.f);
+    {
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])->init(0, 0.f);
+    }
+
+    if (highestP > std::numeric_limits<float>::min())
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])
+            ->init(1, (highestP - ktRoot) * twelfth);
+    else if (resetToZeroOnLastRelease)
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])->init(1, 0.f);
 
     if (latest >= 0)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_latest_key])
-            ->init((latest - ktRoot) * twelfth);
+    {
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])
+            ->init(0, (latest - ktRoot) * twelfth);
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])
+            ->init(1, (latestP - ktRoot) * twelfth);
+    }
     else if (resetToZeroOnLastRelease)
-        ((ControllerModulationSource *)storage.getPatch().scene[scene].modsources[ms_latest_key])
-            ->init(0.f);
+    {
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])->init(0, 0.f);
+        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])->init(1, 0.f);
+    }
 }
 
 void SurgeSynthesizer::pitchBend(char channel, int value)
@@ -1674,7 +1709,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         if (storage.controllers[i] == cc_encoded)
         {
             ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
-                ->set_target01(fval);
+                ->set_target01(0, fval);
         }
     }
 
@@ -2390,6 +2425,17 @@ bool SurgeSynthesizer::loadOscalgos()
     return true;
 }
 
+bool SurgeSynthesizer::isModulatorDistinctPerScene(modsources modsource)
+{
+    if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
+        return true;
+
+    if (modsource == ms_lowest_key || modsource == ms_highest_key || modsource == ms_latest_key)
+        return true;
+
+    return false;
+}
+
 bool SurgeSynthesizer::isValidModulation(long ptag, modsources modsource) const
 {
     if (!modsource)
@@ -2764,7 +2810,8 @@ bool SurgeSynthesizer::supportsIndexedModulator(int scene, modsources modsource)
         return lf->shape.val.i == lt_formula;
     }
 
-    if (modsource == ms_random_bipolar || modsource == ms_random_unipolar)
+    if (modsource == ms_random_bipolar || modsource == ms_random_unipolar ||
+        modsource == ms_highest_key || modsource == ms_latest_key || modsource == ms_lowest_key)
     {
         return true;
     }
@@ -2784,6 +2831,8 @@ int SurgeSynthesizer::getMaxModulationIndex(int scene, modsources modsource) con
     if (modsource == ms_random_bipolar)
         return 2;
     if (modsource == ms_random_unipolar)
+        return 2;
+    if (modsource == ms_highest_key || modsource == ms_latest_key || modsource == ms_lowest_key)
         return 2;
     return 1;
 }
@@ -3185,6 +3234,20 @@ void SurgeSynthesizer::processControl()
         }
     }
 
+    /*
+     * Update keys if we are bound
+     */
+    prepareModsourceDoProcess((playA ? 1 : 0) | (playB ? 2 : 0));
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        if (storage.getPatch().scene[sc].modsource_doprocess[ms_highest_key] ||
+            storage.getPatch().scene[sc].modsource_doprocess[ms_lowest_key] ||
+            storage.getPatch().scene[sc].modsource_doprocess[ms_latest_key])
+        {
+            updateHighLowKeys(sc);
+        }
+    }
+
     storage.getPatch().copy_globaldata(
         storage.getPatch()
             .globaldata); // Drains a great deal of CPU while in Debug mode.. optimize?
@@ -3196,8 +3259,6 @@ void SurgeSynthesizer::processControl()
         storage.getPatch().copy_scenedata(storage.getPatch().scenedata[1], 1);
 
     //	if(sm == sm_morph) storage.getPatch().do_morph();
-
-    prepareModsourceDoProcess((playA ? 1 : 0) | (playB ? 2 : 0));
 
     for (int s = 0; s < n_scenes; s++)
     {
@@ -3929,7 +3990,7 @@ void SurgeSynthesizer::swapMetaControllers(int c1, int c2)
     refresh_editor = true;
 }
 
-void SurgeSynthesizer::changeModulatorSmoothing(ControllerModulationSource::SmoothingMode m)
+void SurgeSynthesizer::changeModulatorSmoothing(Modulator::SmoothingMode m)
 {
     storage.smoothingMode = m;
     for (int sc = 0; sc < n_scenes; ++sc)

@@ -611,10 +611,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     SurgeSynthEditor *juceEditor{nullptr};
     int firstIdleCountdown = 0;
 
-    juce::PopupMenu
-    makeSmoothMenu(const juce::Point<int> &where, const Surge::Storage::DefaultKey &key,
-                   int defaultValue,
-                   std::function<void(ControllerModulationSource::SmoothingMode)> setSmooth);
+    juce::PopupMenu makeSmoothMenu(const juce::Point<int> &where,
+                                   const Surge::Storage::DefaultKey &key, int defaultValue,
+                                   std::function<void(Modulator::SmoothingMode)> setSmooth);
 
     juce::PopupMenu makeMpeMenu(const juce::Point<int> &rect, bool showhelp);
     juce::PopupMenu makeTuningMenu(const juce::Point<int> &rect, bool showhelp);
@@ -638,8 +637,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     bool scannedForMidiPresets = false;
 
-    void resetSmoothing(ControllerModulationSource::SmoothingMode t);
-    void resetPitchSmoothing(ControllerModulationSource::SmoothingMode t);
+    void resetSmoothing(Modulator::SmoothingMode t);
+    void resetPitchSmoothing(Modulator::SmoothingMode t);
 
   public:
     std::string helpURLFor(Parameter *p); // this requires internal state so doesn't have statics

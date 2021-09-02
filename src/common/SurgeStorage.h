@@ -1239,10 +1239,8 @@ class alignas(16) SurgeStorage
      */
     std::unordered_map<Surge::Storage::DefaultKey, std::pair<int, std::string>> userPrefOverrides;
 
-    ControllerModulationSource::SmoothingMode smoothingMode =
-        ControllerModulationSource::SmoothingMode::LEGACY;
-    ControllerModulationSource::SmoothingMode pitchSmoothingMode =
-        ControllerModulationSource::SmoothingMode::LEGACY;
+    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
+    Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::LEGACY;
     float mpePitchBendRange = -1.0f;
 
     std::atomic<int> otherscene_clients;

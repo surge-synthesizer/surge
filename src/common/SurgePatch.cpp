@@ -2474,9 +2474,9 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         p.SetAttribute("i", l);
         p.SetAttribute("bipolar", scene[0].modsources[ms_ctrl1 + l]->is_bipolar() ? 1 : 0);
         p.SetAttribute(
-            "v",
-            float_to_str(((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target,
-                         txt2));
+            "v", float_to_str(
+                     ((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0],
+                     txt2));
         p.SetAttribute("label", CustomControllerLabel[l]);
 
         cc.InsertEndChild(p);
@@ -2491,9 +2491,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             char str[TXT_SIZE];
             snprintf(str, TXT_SIZE, "s%d", sc);
             mw.SetAttribute(
-                str, float_to_str(
-                         ((ControllerModulationSource *)scene[sc].modsources[ms_modwheel])->target,
-                         txt));
+                str,
+                float_to_str(
+                    ((ControllerModulationSource *)scene[sc].modsources[ms_modwheel])->target[0],
+                    txt));
         }
         patch.InsertEndChild(mw);
     }
