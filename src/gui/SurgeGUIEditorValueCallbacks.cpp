@@ -2626,7 +2626,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             if (p->is_nonlocal_on_change())
                 frame->repaint();
 
-            char pname[TXT_SIZE], pdisp[TXT_SIZE], txt[TXT_SIZE];
+            char pname[TXT_SIZE * 4], pdisp[TXT_SIZE * 4], txt[TXT_SIZE * 4];
             bool modulate = false;
 
             // This allows us to turn on and off the editor. FIXME mseg check it
@@ -2759,7 +2759,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         bvf->repaint();
                     synth->getParameterName(ptagid, pname);
                     synth->getParameterDisplay(ptagid, pdisp);
-                    char pdispalt[256];
+                    char pdispalt[TXT_SIZE * 4];
                     synth->getParameterDisplayAlt(ptagid, pdispalt);
                     if (p->ctrltype == ct_polymode)
                         modulate = true;
