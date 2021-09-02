@@ -945,7 +945,8 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                 }
             }
 
-            switch (storage.getPatch().scene[v->state.scene_id].polymode.val.i)
+            auto polymode = storage.getPatch().scene[v->state.scene_id].polymode.val.i;
+            switch (polymode)
             {
             case pm_poly:
                 if ((v->state.key == key) && (v->state.channel == channel))
@@ -1020,7 +1021,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                         }
                     }
                     else
-                    {
+                    { // MPE branch
                         int highest = -1, lowest = 128, latest = -1;
                         int hichan, lowchan, latechan;
                         int64_t lt = 0;
@@ -1078,6 +1079,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             activateVoiceKey = k;
                         }
                     }
+
                     if (!do_switch)
                     {
                         if (storage.getPatch().scene[v->state.scene_id].polymode.val.i != pm_latch)
@@ -1089,8 +1091,13 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                         v->uber_release();
                         if (getNonUltrareleaseVoices(scene) == 0)
                         {
+                            /* We need to find that last voice if we are done to restart in FP
+                             * so fake a gate quickly. See #4971
+                             */
+                            v->state.gate = (polymode == pm_mono_fp);
                             playVoice(scene, activateVoiceChannel, activateVoiceKey, velocity,
                                       channelState[activateVoiceChannel].keyState[k].lastdetune);
+                            v->state.gate = false;
                         }
                     }
                 }
