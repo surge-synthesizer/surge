@@ -356,8 +356,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             cms->buildHamburgerMenu(contextMenu, true);
 
-            contextMenu.addSeparator();
-
             int n_total_md = synth->storage.getPatch().param_ptr.size();
             const int max_md = 4096;
 
@@ -390,24 +388,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                         synth->isAnyActiveModulation(md, thisms, use_scene))
                     {
-                        char modtxt[TXT_SIZE];
-                        auto pmd = synth->storage.getPatch().param_ptr[md];
 
                         auto indices = synth->getModulationIndicesBetween(md, thisms, use_scene);
                         auto hasIdx = synth->supportsIndexedModulator(use_scene, thisms);
+                        char modtxt[TXT_SIZE];
+
                         for (auto modidx : indices)
                         {
-                            pmd->get_display_of_modulation_depth(
+                            parameter->get_display_of_modulation_depth(
                                 modtxt, synth->getModDepth(md, thisms, use_scene, modidx),
                                 synth->isBipolarModulation(thisms), Parameter::Menu);
-                            char tmptxt[1024]; // leave room for that ubuntu 20.0 error
+                            char tmptxt[TXT_SIZE * 2]; // leave room for that ubuntu 20.0 error
 
-                            if (pmd->ctrlgroup == cg_LFO)
+                            if (parameter->ctrlgroup == cg_LFO)
                             {
                                 char pname[TXT_SIZE];
-                                pmd->create_fullname(
-                                    pmd->get_name(), pname, pmd->ctrlgroup, pmd->ctrlgroup_entry,
-                                    modulatorName(pmd->ctrlgroup_entry, true).c_str());
+                                parameter->create_fullname(
+                                    parameter->get_name(), pname, parameter->ctrlgroup,
+                                    parameter->ctrlgroup_entry,
+                                    modulatorName(parameter->ctrlgroup_entry, true).c_str());
                                 snprintf(tmptxt, TXT_SIZE, "Edit %s%s -> %s: %s",
                                          (char *)modulatorName(thisms, true).c_str(),
                                          modulatorIndexExtension(use_scene, thisms, modidx).c_str(),
@@ -418,7 +417,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 snprintf(tmptxt, TXT_SIZE, "Edit %s%s -> %s: %s",
                                          (char *)modulatorName(thisms, true).c_str(),
                                          modulatorIndexExtension(use_scene, thisms, modidx).c_str(),
-                                         pmd->get_full_name(), modtxt);
+                                         parameter->get_full_name(), modtxt);
                             }
 
                             auto clearOp = [this, parameter, use_scene, bvf, thisms, modidx]() {
@@ -450,11 +449,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
                         synth->isAnyActiveModulation(md, thisms, use_scene))
                     {
-                        auto pmd = synth->storage.getPatch().param_ptr[md];
                         auto indices = synth->getModulationIndicesBetween(md, thisms, use_scene);
+                        auto hasIdx = synth->supportsIndexedModulator(use_scene, thisms);
+
                         for (auto modidx : indices)
                         {
-                            char tmptxt[1024];
+                            char tmptxt[TXT_SIZE * 2];
 
                             if (parameter->ctrlgroup == cg_LFO)
                             {
@@ -1889,31 +1889,36 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         modsources ms = (modsources)k;
                         int startScene = current_scene, endScene = current_scene + 1;
                         bool showScene = false;
+
                         if (p->scene == 0)
                         {
                             startScene = 0;
                             endScene = n_scenes;
                             showScene = true;
                         }
+
                         for (int sc = startScene; sc < endScene; ++sc)
                         {
                             auto indices = synth->getModulationIndicesBetween(ptag, ms, sc);
+
                             for (auto modidx : indices)
                             {
                                 if (synth->isActiveModulation(ptag, ms, sc, modidx))
                                 {
-                                    char modtxt[256];
+                                    char modtxt[TXT_SIZE * 2];
+
                                     p->get_display_of_modulation_depth(
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
                                         synth->isBipolarModulation(ms), Parameter::Menu);
 
-                                    char tmptxt[512];
-                                    sprintf(tmptxt, "Edit %s%s -> %s: %s",
-                                            (char *)modulatorName(ms, true, showScene ? sc : -1)
-                                                .c_str(),
-                                            modulatorIndexExtension(current_scene, ms, sc, modidx)
-                                                .c_str(),
-                                            p->get_full_name(), modtxt);
+                                    char tmptxt[TXT_SIZE];
+
+                                    sprintf(
+                                        tmptxt, "Edit %s%s -> %s: %s",
+                                        (char *)modulatorName(ms, true, showScene ? sc : -1)
+                                            .c_str(),
+                                        modulatorIndexExtension(current_scene, ms, modidx).c_str(),
+                                        p->get_full_name(), modtxt);
 
                                     contextMenu.addItem(tmptxt, [this, p, sc, bvf, ms, modidx]() {
                                         this->promptForUserValueEntry(p, bvf, ms, sc, modidx);
@@ -1943,9 +1948,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 if (synth->isActiveModulation(ptag, ms, sc, modidx))
                                 {
-                                    char tmptxt[256];
+                                    char tmptxt[TXT_SIZE * 2];
+
                                     snprintf(
-                                        tmptxt, 256, "Clear %s%s -> %s",
+                                        tmptxt, TXT_SIZE, "Clear %s%s -> %s",
                                         (char *)modulatorName(ms, true, showScene ? sc : -1)
                                             .c_str(),
                                         modulatorIndexExtension(current_scene, ms, modidx).c_str(),
