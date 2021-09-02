@@ -398,7 +398,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             parameter->get_display_of_modulation_depth(
                                 modtxt, synth->getModDepth(md, thisms, use_scene, modidx),
                                 synth->isBipolarModulation(thisms), Parameter::Menu);
-                            char tmptxt[TXT_SIZE * 2]; // leave room for that ubuntu 20.0 error
+                            char tmptxt[TXT_SIZE * 4]; // leave room for that ubuntu 20.0 error
 
                             if (parameter->ctrlgroup == cg_LFO)
                             {
@@ -454,7 +454,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         for (auto modidx : indices)
                         {
-                            char tmptxt[TXT_SIZE * 2];
+                            char tmptxt[TXT_SIZE * 4];
 
                             if (parameter->ctrlgroup == cg_LFO)
                             {
@@ -624,8 +624,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 .modsources[modsource]);
 
                 contextMenu.addSeparator();
-                char vtxt[1024];
-                snprintf(vtxt, 1024, "%s: %.*f %%",
+
+                char vtxt[TXT_SIZE * 4];
+                snprintf(vtxt, TXT_SIZE * 4, "%s: %.*f %%",
                          Surge::GUI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2),
                          100 * cms->get_output(0));
                 contextMenu.addItem(vtxt, [this, bvf, modsource]() {
@@ -871,7 +872,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            char txt[TXT_SIZE], txt2[512];
+            char txt[TXT_SIZE], txt2[TXT_SIZE * 2];
+
             p->get_display(txt);
             snprintf(txt2, 512, "%s: %s", Surge::GUI::toOSCaseForMenu("Edit Value").c_str(), txt);
 
@@ -1139,8 +1141,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         for (int i = p->val_min.i; i <= max; i += incr)
                         {
-                            char txt[256];
+                            char txt[TXT_SIZE];
                             float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+
                             p->get_display(txt, true, ef);
 
                             std::string displaytxt = txt;
@@ -1561,17 +1564,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         // FIXME : What's a better aprpoach?
                         if (p->ctrltype == ct_fmratio)
                         {
-                            char txt[256], ntxt[256];
-                            memset(txt, 0, 256);
-                            strxcpy(txt, p->get_name(), 256);
+                            char txt[TXT_SIZE], ntxt[TXT_SIZE];
+                            memset(txt, 0, TXT_SIZE);
+                            strxcpy(txt, p->get_name(), TXT_SIZE);
 
                             if (p->absolute)
                             {
-                                snprintf(ntxt, 256, "M%c Frequency", txt[1]);
+                                snprintf(ntxt, TXT_SIZE, "M%c Frequency", txt[1]);
                             }
                             else
                             {
-                                snprintf(ntxt, 256, "M%c Ratio",
+                                snprintf(ntxt, TXT_SIZE, "M%c Ratio",
                                          txt[1]); // Ladies and gentlemen, MC Ratio!
                             }
 
@@ -1786,7 +1789,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if ((!synth->isAnyActiveModulation(ptag, ms, current_scene) || isIndexed) &&
                             synth->isValidModulation(ptag, ms))
                         {
-                            char tmptxt[512];
+                            char tmptxt[TXT_SIZE * 2];
                             sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
 
                             auto *popMenu = &addMIDISub;
@@ -1905,13 +1908,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 if (synth->isActiveModulation(ptag, ms, sc, modidx))
                                 {
-                                    char modtxt[TXT_SIZE * 2];
+                                    char modtxt[TXT_SIZE];
 
                                     p->get_display_of_modulation_depth(
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
                                         synth->isBipolarModulation(ms), Parameter::Menu);
 
-                                    char tmptxt[TXT_SIZE];
+                                    char tmptxt[TXT_SIZE * 4];
 
                                     sprintf(
                                         tmptxt, "Edit %s%s -> %s: %s",
@@ -1948,7 +1951,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 if (synth->isActiveModulation(ptag, ms, sc, modidx))
                                 {
-                                    char tmptxt[TXT_SIZE * 2];
+                                    char tmptxt[TXT_SIZE * 4];
 
                                     snprintf(
                                         tmptxt, TXT_SIZE, "Clear %s%s -> %s",
@@ -2623,7 +2626,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             if (p->is_nonlocal_on_change())
                 frame->repaint();
 
-            char pname[256], pdisp[128], txt[128];
+            char pname[TXT_SIZE], pdisp[TXT_SIZE], txt[TXT_SIZE];
             bool modulate = false;
 
             // This allows us to turn on and off the editor. FIXME mseg check it
