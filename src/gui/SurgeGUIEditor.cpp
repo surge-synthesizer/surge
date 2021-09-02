@@ -31,6 +31,7 @@
 #include "SurgeSynthEditor.h"
 
 #include "SurgeGUIEditorTags.h"
+#include "fmt/core.h"
 
 #include "overlays/AboutScreen.h"
 #include "overlays/CoveringMessageOverlay.h"
@@ -2380,7 +2381,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                               [this](const std::string &s) {
                                   float freq = ::atof(s.c_str());
                                   auto kb = Tunings::tuneA69To(freq);
-                                  kb.name = "Note 69 Retuned 440 to " + std::to_string(freq);
+                                  kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
                                   if (!this->synth->storage.remapToKeyboard(kb))
                                   {
                                       synth->storage.reportError("This .kbm file is not valid!",

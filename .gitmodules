@@ -25,3 +25,6 @@
 [submodule "libs/LuaJitLib/LuaJIT"]
 	path = libs/LuaJitLib/LuaJIT
 	url = https://github.com/LuaJIT/LuaJIT.git
+[submodule "libs/fmt"]
+	path = libs/fmt
+	url = https://github.com/fmtlib/fmt.git
