@@ -36,7 +36,7 @@
 
 using namespace std;
 
-using CMSKey = ControllerModulationSourceVector<2>;
+using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
     : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
@@ -123,10 +123,6 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         ((CMSKey *)scene.modsources[ms_lowest_key])->init(0, 0.f);
         ((CMSKey *)scene.modsources[ms_highest_key])->init(0, 0.f);
         ((CMSKey *)scene.modsources[ms_latest_key])->init(0, 0.f);
-
-        ((CMSKey *)scene.modsources[ms_lowest_key])->init(1, 0.f);
-        ((CMSKey *)scene.modsources[ms_highest_key])->init(1, 0.f);
-        ((CMSKey *)scene.modsources[ms_latest_key])->init(1, 0.f);
 
         scene.modsources[ms_random_bipolar] = new RandomModulationSource(true);
         scene.modsources[ms_random_unipolar] = new RandomModulationSource(false);
@@ -1268,10 +1264,8 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
     {
         auto pitch = v->state.pkey;
         auto vkey = v->state.key;
-        if (vkey == highest)
-            highestP = pitch;
-        if (vkey == lowest)
-            lowestP = pitch;
+        highestP = std::max(pitch, highestP);
+        lowestP = std::min(pitch, lowestP);
         if (vkey == latest)
             latestP = pitch;
     }
@@ -1281,12 +1275,6 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
             ->init(0, (lowest - ktRoot) * twelfth);
     else if (resetToZeroOnLastRelease)
         ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init(0, 0.f);
-
-    if (lowestP < std::numeric_limits<float>::max())
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])
-            ->init(1, (lowestP - ktRoot) * twelfth);
-    else if (resetToZeroOnLastRelease)
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_lowest_key])->init(1, 0.f);
 
     if (highest >= 0)
     {
@@ -1298,23 +1286,14 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
         ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])->init(0, 0.f);
     }
 
-    if (highestP > std::numeric_limits<float>::min())
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])
-            ->init(1, (highestP - ktRoot) * twelfth);
-    else if (resetToZeroOnLastRelease)
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_highest_key])->init(1, 0.f);
-
     if (latest >= 0)
     {
         ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])
             ->init(0, (latest - ktRoot) * twelfth);
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])
-            ->init(1, (latestP - ktRoot) * twelfth);
     }
     else if (resetToZeroOnLastRelease)
     {
         ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])->init(0, 0.f);
-        ((CMSKey *)storage.getPatch().scene[scene].modsources[ms_latest_key])->init(1, 0.f);
     }
 }
 
@@ -2810,8 +2789,7 @@ bool SurgeSynthesizer::supportsIndexedModulator(int scene, modsources modsource)
         return lf->shape.val.i == lt_formula;
     }
 
-    if (modsource == ms_random_bipolar || modsource == ms_random_unipolar ||
-        modsource == ms_highest_key || modsource == ms_latest_key || modsource == ms_lowest_key)
+    if (modsource == ms_random_bipolar || modsource == ms_random_unipolar)
     {
         return true;
     }
@@ -2831,8 +2809,6 @@ int SurgeSynthesizer::getMaxModulationIndex(int scene, modsources modsource) con
     if (modsource == ms_random_bipolar)
         return 2;
     if (modsource == ms_random_unipolar)
-        return 2;
-    if (modsource == ms_highest_key || modsource == ms_latest_key || modsource == ms_lowest_key)
         return 2;
     return 1;
 }
