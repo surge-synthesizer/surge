@@ -3520,15 +3520,31 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
 
     if (i >= ms_ctrl1 && i <= ms_ctrl8)
     {
-        std::string ccl =
-            std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
-        if (ccl == "-")
+        if (button)
         {
-            return std::string(modsource_names[i]);
+            std::string ccl =
+                std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
+            if (ccl == "-")
+            {
+                return std::string(modsource_names[i]);
+            }
+            else
+            {
+                return ccl;
+            }
         }
         else
         {
-            return ccl + " (" + modsource_names[i] + ")";
+            std::string ccl =
+                std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
+            if (ccl == "-")
+            {
+                return std::string(modsource_names[i]);
+            }
+            else
+            {
+                return ccl + " (" + modsource_names[i] + ")";
+            }
         }
     }
     if (button)

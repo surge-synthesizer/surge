@@ -160,9 +160,9 @@ const char modsource_names_button[n_modsources][32] = {
     "Breath",
     "Expression",
     "Sustain",
-    "Lowest", // "key/voice is now an index
-    "Highest",
-    "Latest",
+    "Lowest Key", // "key/voice is now an index
+    "Highest Key",
+    "Latest Key",
 };
 
 const char modsource_names[n_modsources][32] = {
@@ -204,9 +204,9 @@ const char modsource_names[n_modsources][32] = {
     "Breath",
     "Expression",
     "Sustain Pedal",
-    "Lowest", // "key/voice is now an index"
-    "Highest",
-    "Latest",
+    "Lowest Key", // "key/voice is now an index"
+    "Highest Key",
+    "Latest Key",
 };
 
 const char modsource_names_tag[n_modsources][32] = {
@@ -351,11 +351,18 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     }
 
     virtual ~ControllerModulationSourceVector() {}
+
+    void set_target(float f)
+    {
+        assert(NDX == 1);
+        set_target(0, f);
+    }
+
     void set_target(int idx, float f)
     {
         target[idx] = f;
-        startingpoint[idx] = output;
-        changed[NDX] = true;
+        startingpoint[idx] = value[idx];
+        changed[idx] = true;
     }
 
     void init(float f)
@@ -376,7 +383,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         return NDX; // bipolar can't support lognormal obvs
     }
 
-    void set_target(float f, bool updatechanged = true)
+    void set_target01(float f, bool updatechanged = true)
     {
         assert(NDX == 1);
         set_target01(0, f, updatechanged);

@@ -148,10 +148,12 @@ struct ModulationSourceButton : public juce::Component,
         NONE,
         CLICK,
         CLICK_ARROW,
+        PREDRAG_VALUE,
         DRAG_VALUE,
         DRAG_COMPONENT_HAPPEN,
         HAMBURGER
     } mouseMode{NONE};
+    juce::Point<float> mouseDownLocation;
 
     MouseState getMouseMode() const { return mouseMode; }
 
