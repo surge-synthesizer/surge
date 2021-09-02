@@ -3816,7 +3816,8 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     }
     else if (tMCI)
     {
-        openModTypeinOnDrop(msb->getTag(), tMCI, tMCI->asControlValueInterface()->getTag());
+        openModTypeinOnDrop(msb->getTag(), tMCI, tMCI->asControlValueInterface()->getTag(),
+                            msb->modlistIndex);
     }
 }
 void SurgeGUIEditor::swapControllers(int t1, int t2)
@@ -3825,15 +3826,14 @@ void SurgeGUIEditor::swapControllers(int t1, int t2)
 }
 
 void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableControlInterface *sl,
-                                         int slidertag)
+                                         int slidertag, int modidx)
 {
     auto p = synth->storage.getPatch().param_ptr[slidertag - start_paramtags];
     int ms = modt - tag_mod_source0;
 
-    jassert(false); // the index below needs fixing
     if (synth->isValidModulation(p->id, (modsources)ms))
         promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms,
-                                current_scene, 0);
+                                current_scene, modidx);
 }
 
 void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int> where,
