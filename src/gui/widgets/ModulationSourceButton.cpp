@@ -20,6 +20,7 @@
 #include "basic_dsp.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeImage.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -312,6 +313,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 {
     mouseMode = CLICK;
     everDragged = false;
+    mouseDownLocation = event.position;
 
     if (needsHamburger() && hamburgerHome.contains(event.position.toInt()))
     {
@@ -343,11 +345,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 
         if (bottomRect.contains(event.position.toInt()))
         {
-            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
-            notifyBeginEdit();
-            mouseMode = DRAG_VALUE;
-            valAtMouseDown = value;
-
+            mouseMode = PREDRAG_VALUE;
             return;
         }
     }
@@ -392,10 +390,12 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         {
             value = isBipolar ? 0.5f : 0.f;
 
+            mouseMode = DRAG_VALUE;
             notifyBeginEdit();
             notifyValueChanged();
             notifyEndEdit();
             repaint();
+            mouseMode = NONE;
 
             return;
         }
@@ -451,9 +451,12 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
             p = juce::Point<float>(value * getWidth(), 20);
         }
 
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-        p = localPointToGlobal(p);
-        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            p = localPointToGlobal(p);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
 
         notifyEndEdit();
     }
@@ -468,6 +471,22 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     if (mouseMode == NONE)
     {
         return;
+    }
+
+    auto distance = event.position.getX() - mouseDownLocation.getX();
+
+    if (mouseMode == PREDRAG_VALUE && distance == 0)
+        return;
+
+    if (mouseMode == PREDRAG_VALUE)
+    {
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+        notifyBeginEdit();
+        mouseMode = DRAG_VALUE;
+        valAtMouseDown = value;
     }
 
     if (mouseMode == DRAG_VALUE)
