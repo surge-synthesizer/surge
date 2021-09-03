@@ -87,13 +87,19 @@ SurgeSynthEditor::~SurgeSynthEditor()
 
 void SurgeSynthEditor::handleAsyncUpdate() {}
 
-void SurgeSynthEditor::paint(juce::Graphics &g) {}
+void SurgeSynthEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::grey); }
 
 void SurgeSynthEditor::idle() { adapter->idle(); }
 
 void SurgeSynthEditor::resized()
 {
     drawExtendedControls = adapter->getShowVirtualKeyboard();
+    auto w = getWidth();
+    auto h = getHeight() - (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0);
+    auto wR = 1.0 * w / adapter->getWindowSizeX();
+    auto hR = 1.0 * h / adapter->getWindowSizeY();
+    auto zfn = std::min(wR, hR);
+
     bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
     if (drawExtendedControls)
     {
@@ -116,6 +122,9 @@ void SurgeSynthEditor::resized()
         tempoLabel->setVisible(false);
         tempoTypein->setVisible(false);
     }
+
+    if (zfn != 1.0)
+        adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
 }
 
 void SurgeSynthEditor::parentHierarchyChanged()
