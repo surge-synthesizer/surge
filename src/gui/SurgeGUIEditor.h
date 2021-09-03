@@ -29,6 +29,7 @@
 
 #include "overlays/MSEGEditor.h"
 #include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
+#include "overlays/TuningOverlays.h"
 #include "widgets/ModulatableControlInterface.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -75,7 +76,8 @@ struct PatchStoreDialog;
 
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
-                       public juce::KeyListener
+                       public juce::KeyListener,
+                       public Surge::Overlays::ScaleEditor::ScaleTextEditedListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
@@ -344,6 +346,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
         WAVETABLESCRIPTING_EDITOR,
+        TUNING_EDITOR
     };
 
     // I will be handed a pointer I need to keep around you know.
@@ -402,6 +405,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void closeWavetableScripter();
     void showWavetableScripter();
+
+    void toggleTuningEditor();
+    void closeTuningEditor();
+    void showTuningEditor();
+    void scaleTextEdited(juce::String newScale) override;
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();
