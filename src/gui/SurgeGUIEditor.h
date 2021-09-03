@@ -36,6 +36,7 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include "surgesynthteam_tuningui/surgesynthteam_tuningui.h"
 
 class SurgeSynthEditor;
 
@@ -75,7 +76,8 @@ struct PatchStoreDialog;
 
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
-                       public juce::KeyListener
+                       public juce::KeyListener,
+                       public surgesynthteam::ScaleEditor::ScaleTextEditedListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
@@ -344,6 +346,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
         WAVETABLESCRIPTING_EDITOR,
+        TUNING_EDITOR
     };
 
     // I will be handed a pointer I need to keep around you know.
@@ -402,6 +405,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void closeWavetableScripter();
     void showWavetableScripter();
+
+    void toggleTuningEditor();
+    void closeTuningEditor();
+    void showTuningEditor();
+    void scaleTextEdited(juce::String newScale) override;
 
     void lfoShapeChanged(int prior, int curr);
     void showMSEGEditor();

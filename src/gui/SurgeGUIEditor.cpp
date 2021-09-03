@@ -77,6 +77,7 @@
 
 #include "filesystem/import.h"
 #include "RuntimeFont.h"
+#include "surgesynthteam_tuningui/surgesynthteam_tuningui.h"
 
 const int yofs = 10;
 
@@ -2256,6 +2257,11 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                               this->synth->storage.remapToConcertCKeyboard();
                               this->synth->refresh_editor = true;
                           });
+
+    tuningSubMenu.addSeparator();
+
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Scale Editor"), true, false,
+                          [this]() { this->toggleTuningEditor(); });
 
     tuningSubMenu.addSeparator();
 
@@ -4954,6 +4960,52 @@ void SurgeGUIEditor::closeWavetableScripter()
     if (isAnyOverlayPresent(WAVETABLESCRIPTING_EDITOR))
     {
         dismissEditorOfType(WAVETABLESCRIPTING_EDITOR);
+    }
+}
+
+void SurgeGUIEditor::scaleTextEdited(juce::String newScale)
+{
+    try
+    {
+        this->synth->storage.retuneToScale(Tunings::parseSCLData(newScale.toStdString()));
+        this->synth->refresh_editor = true;
+    }
+    catch (Tunings::TuningError &e)
+    {
+        synth->storage.reportError(e.what(), "SCL Error");
+    }
+}
+void SurgeGUIEditor::showTuningEditor()
+{
+    int w = 800, h = 520;
+    auto px = (getWindowSizeX() - w) / 2;
+    auto py = (getWindowSizeY() - h) / 2;
+    auto r = juce::Rectangle<int>(px, py, w, h);
+
+    auto pt = std::make_unique<surgesynthteam::ScaleEditor>(synth->storage.currentScale);
+    pt->addScaleTextEditedListener(this);
+
+    addJuceEditorOverlay(std::move(pt), "Tuning Editor", TUNING_EDITOR, r, true,
+                         [this]() { frame->repaint(); });
+}
+
+void SurgeGUIEditor::closeTuningEditor()
+{
+    if (isAnyOverlayPresent(TUNING_EDITOR))
+    {
+        dismissEditorOfType(TUNING_EDITOR);
+    }
+}
+
+void SurgeGUIEditor::toggleTuningEditor()
+{
+    if (isAnyOverlayPresent(TUNING_EDITOR))
+    {
+        closeTuningEditor();
+    }
+    else
+    {
+        showTuningEditor();
     }
 }
 

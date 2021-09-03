@@ -866,6 +866,8 @@ endif() # build surge effects bank
 
 if( BUILD_SURGE_XT )
 
+  juce_add_module(libs/surgesynthteam_tuningui)
+
   if( WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4 )
     set( SURGE_XT_PRODUCT_NAME "Surge XT (32-bit)" )
   else()
@@ -1026,6 +1028,8 @@ if( BUILD_SURGE_XT )
           juce::juce_audio_utils
           juce::juce_audio_processors
           juce::juce_audio_plugin_client
+
+          surgesynthteam_tuningui
 
           surge-xt-binary
           )

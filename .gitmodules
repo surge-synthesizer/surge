@@ -28,3 +28,6 @@
 [submodule "libs/fmt"]
 	path = libs/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "libs/surgesynthteam_tuningui"]
+	path = libs/surgesynthteam_tuningui
+	url = https://github.com/surge-synthesizer/surgesynthteam_tuningui
