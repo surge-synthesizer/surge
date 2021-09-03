@@ -3347,7 +3347,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setSkin(currentSkin, bitmapStore);
 
     bool ismod = p && ms > 0;
+
     jassert(c);
+
     if (p)
     {
         if (!p->can_setvalue_from_string())
@@ -3395,12 +3397,14 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         if (ismod)
         {
             char txt2[256];
+
             p->get_display_of_modulation_depth(
                 txt, synth->getModDepth(p->id, (modsources)ms, modScene, modidx),
                 synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
             p->get_display(txt2);
-            sprintf(ptext, "mod: %s", txt);
-            sprintf(ptext2, "current: %s", txt2);
+
+            sprintf(ptext, "current: %s", txt2);
+            sprintf(ptext2, "mod: %s", txt);
         }
         else
         {
@@ -3415,8 +3419,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                         .scene[current_scene]
                         .modsources[ms]);
-        sprintf(txt, "%.*f %%", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
+
         sprintf(ptext, "current: %s", txt);
+        sprintf(txt, "%.*f %%", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
     }
 
     typeinParamEditor->setValueLabels(ptext, ptext2);
@@ -3436,6 +3441,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     {
         frame->addAndMakeVisible(*typeinParamEditor);
     }
+
     typeinParamEditor->setBoundsToAccompany(c->getBounds(), frame->getBounds());
     typeinParamEditor->setVisible(true);
     typeinParamEditor->grabFocus();
@@ -3499,8 +3505,6 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
         {
             char txt[128];
 
-            // TODO FIXME: When function LFO type is added, uncomment the second sprintf and remove
-            // the first one!
             if (button)
                 sprintf(txt, "%sFORM %d", (isS ? shortsceneL : ""), fnum + 1);
             else
@@ -3832,8 +3836,8 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     }
     else if (tMCI)
     {
-        openModTypeinOnDrop(msb->getTag(), tMCI, tMCI->asControlValueInterface()->getTag(),
-                            msb->modlistIndex);
+        openModTypeinOnDrop(msb->getCurrentModSource(), tMCI,
+                            tMCI->asControlValueInterface()->getTag(), msb->getCurrentModIndex());
     }
 }
 void SurgeGUIEditor::swapControllers(int t1, int t2)
@@ -3841,14 +3845,14 @@ void SurgeGUIEditor::swapControllers(int t1, int t2)
     synth->swapMetaControllers(t1 - tag_mod_source0 - ms_ctrl1, t2 - tag_mod_source0 - ms_ctrl1);
 }
 
-void SurgeGUIEditor::openModTypeinOnDrop(int modt, Surge::Widgets::ModulatableControlInterface *sl,
+void SurgeGUIEditor::openModTypeinOnDrop(modsources ms,
+                                         Surge::Widgets::ModulatableControlInterface *sl,
                                          int slidertag, int modidx)
 {
     auto p = synth->storage.getPatch().param_ptr[slidertag - start_paramtags];
-    int ms = modt - tag_mod_source0;
 
-    if (synth->isValidModulation(p->id, (modsources)ms))
-        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), ms,
+    if (synth->isValidModulation(p->id, ms))
+        promptForUserValueEntry(p, sl->asControlValueInterface()->asJuceComponent(), (int)ms,
                                 current_scene, modidx);
 }
 
