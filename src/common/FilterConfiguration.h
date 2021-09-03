@@ -506,6 +506,8 @@ enum ws_type
     wst_zamsat,
     wst_ojd,
 
+    wst_softfold,
+
     n_ws_types,
 };
 
@@ -552,15 +554,23 @@ const char wst_names[n_ws_types][32] = {"Off",
                                         "7 Cycle Bound",
                                         "10 Cycle Bound",
                                         "ZamAudio",
-                                        "OJD"};
+                                        "OJD",
+                                        "Soft Single Fold"};
 
 const char wst_ui_names[n_ws_types][16] = {
-    "Off",    "Soft",    "Hard",    "Asym",     "Sine",     "Digital",  "Harm 2",
-    "Harm 3", "Harm 4",  "Harm 5",  "FullRect", "HalfPos",  "HalfNeg",  "SoftRect",
-    "1Fold",  "2Fold",   "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",
-    "Add1-5", "AddSaw3", "AddSqr3", "Fuzz",     "SoftFz",   "HeavyFz",  "CenterFz",
-    "EdgeFz", "Sin+x",   "Sin2x+x", "Sin3x+x",  "Sin7x+x",  "Sin10x+x", "2Cycle",
-    "7Cycle", "10Cycle", "2CycleB", "7CycleB",  "10CycleB", "Zam",      "OJD"};
+    "Off",     "Soft",     "Hard",     "Asym",     "Sine",    "Digital",  "Harm 2",  "Harm 3",
+    "Harm 4",  "Harm 5",   "FullRect", "HalfPos",  "HalfNeg", "SoftRect", "1Fold",   "2Fold",
+    "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",   "Add1-5",   "AddSaw3", "AddSqr3",
+    "Fuzz",    "SoftFz",   "HeavyFz",  "CenterFz", "EdgeFz",  "Sin+x",    "Sin2x+x", "Sin3x+x",
+    "Sin7x+x", "Sin10x+x", "2Cycle",   "7Cycle",   "10Cycle", "2CycleB",  "7CycleB", "10CycleB",
+    "Zam",     "OJD",      "Sft1Fld"};
+
+// Subset used in distortion and rotary
+static constexpr int n_fxws = 8;
+static constexpr std::array<ws_type, n_fxws> FXWaveShapers = {
+    wst_soft,    wst_hard,      wst_asym,    wst_sine,
+    wst_digital, // If you adjust this list above here, you break 1.9 patch compat
+    wst_ojd,     wst_fwrectify, wst_fuzzsoft};
 
 struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
 {
@@ -602,6 +612,7 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_singlefold, "Wavefolder");
         p(wst_dualfold, "Wavefolder");
         p(wst_westfold, "Wavefolder");
+        p(wst_softfold, "Wavefolder");
 
         p(wst_fuzz, "Fuzz");
         p(wst_fuzzheavy, "Fuzz");
