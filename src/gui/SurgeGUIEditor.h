@@ -299,8 +299,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
                                   const juce::Point<int> &);
     void swapControllers(int t1, int t2);
-    void openModTypeinOnDrop(modsources ms, Surge::Widgets::ModulatableControlInterface *sl, int tgt,
-                             int modidx);
+    void openModTypeinOnDrop(modsources ms, Surge::Widgets::ModulatableControlInterface *sl,
+                             int tgt, int modidx);
 
     void queueRebuildUI()
     {
