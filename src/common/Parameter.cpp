@@ -1004,7 +1004,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_distortion_waveshape:
         val_min.i = 0;
-        val_max.i = n_ws_types - 2; // we want to skip none also
+        val_max.i = n_fxws - 1;
         valtype = vt_int;
         val_default.i = 0;
         break;
@@ -3326,7 +3326,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%d bands", i);
             break;
         case ct_distortion_waveshape:
-            snprintf(txt, TXT_SIZE, "%s", wst_names[wst_soft + i]);
+            snprintf(txt, TXT_SIZE, "%s", wst_names[FXWaveShapers[i]]);
             break;
         case ct_oscroute:
             switch (i)

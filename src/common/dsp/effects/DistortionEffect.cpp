@@ -85,9 +85,10 @@ void DistortionEffect::process(float *dataL, float *dataR)
     outgain.set_target_smoothed(db_to_linear(*f[dist_gain]) * ringoutMul);
 
     float fb = *f[dist_feedback];
-    int ws = *pdata_ival[dist_model];
-    if (ws < 0 || ws >= n_ws_types)
-        ws = 0;
+    int wsi = *pdata_ival[dist_model];
+    if (wsi < 0 || wsi >= n_fxws)
+        wsi = 0;
+    auto ws = FXWaveShapers[wsi];
 
     float bL alignas(16)[BLOCK_SIZE << dist_OS_bits];
     float bR alignas(16)[BLOCK_SIZE << dist_OS_bits];

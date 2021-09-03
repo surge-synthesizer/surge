@@ -192,9 +192,10 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
 
     drive.newValue(*f[rot_drive]);
 
-    int ws = *pdata_ival[rot_waveshape];
-    if (ws < 0 || ws >= n_ws_types)
-        ws = 0;
+    int wsi = *pdata_ival[rot_waveshape];
+    if (wsi < 0 || wsi >= n_fxws)
+        wsi = 0;
+    auto ws = FXWaveShapers[wsi];
 
     /*
     ** This is a set of completely empirical scaling settings to offset gain being too crazy

@@ -713,6 +713,21 @@ __m128 ZAMSAT(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
     return F;
 }
 
+__m128 SoftOneFold(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
+{
+    // x / (0.4 + 0.7 x^2)
+    auto y = _mm_mul_ps(x, drive);
+    auto y2 = _mm_mul_ps(y, y);
+
+    static const auto p1 = _mm_set1_ps(1.f);
+    static const auto p04 = _mm_set1_ps(0.4f);
+    static const auto p07 = _mm_set1_ps(0.7f);
+
+    auto num = _mm_add_ps(p04, _mm_mul_ps(p07, y2));
+
+    return _mm_mul_ps(y, _mm_rcp_ps(num));
+}
+
 __m128 OJD(QuadFilterWaveshaperState *__restrict s, __m128 x, __m128 drive)
 {
     x = _mm_mul_ps(x, drive);
@@ -843,6 +858,8 @@ WaveshaperQFPtr GetQFPtrWaveshaper(int type)
         return ZAMSAT;
     case wst_ojd:
         return OJD;
+    case wst_softfold:
+        return SoftOneFold;
     }
     return 0;
 }
