@@ -253,10 +253,14 @@ extern const Surge::Skin::Color Text, TextHover;
 }
 } // namespace Osc
 
-namespace WaveShaper
+namespace Waveshaper
 {
-extern const Surge::Skin::Color Label, LabelHover;
+extern const Surge::Skin::Color Text, TextHover;
+namespace Display
+{
+extern const Surge::Skin::Color Dots, Wave;
 }
+} // namespace Waveshaper
 
 namespace Overlay
 {
