@@ -253,8 +253,14 @@ cmake -Bbuild -DLINUX_ON_ARM=True
 cmake --build build --config Release --target surge-staged-assets
 ```
 
-Cross-compiling should also work, but we've not tried it in this cycle. If you get it to work with one of the
-CMake toolchain files in CMake, we would welcome a pull request to this documentation with information.
+### Cross Compiling for aarch64
+
+To cross compile for aarch64 us the cmake linux toolchain for aarch4, as shown in the azure pipeline here.
+
+```
+cmake -Bignore/xc64 -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake -DCMAKE_BUILD_TYPE=DEBUG -GNinja
+cmake --build ignore/xc64 --config Debug --target surge-headless
+```
 
 # Setting up for Your OS
 
