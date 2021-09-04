@@ -60,7 +60,7 @@ jobs:
       linux-codequality:
         imageName: 'ubuntu-20.04'
         isLinux: True
-        aptGetExtras: "clang"
+        aptGetExtras: ""
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
         cmakeTarget: "code-quality-pipeline-checks"
         cmakeConfig: "Debug"
@@ -77,6 +77,13 @@ jobs:
         aptGetExtras: "clang"
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
         cmakeTarget: "surge-xt_Standalone"
+        cmakeConfig: "Debug"
+      linux-aarm64-cross-headless:
+        imageName: 'ubuntu-18.04'
+        isLinux: True
+        aptGetExtras: "g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi" 
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake"
+        cmakeTarget: "surge-headless"
         cmakeConfig: "Debug"
       linux-juce-targets:
         imageName: 'ubuntu-18.04'

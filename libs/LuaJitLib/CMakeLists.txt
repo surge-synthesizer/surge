@@ -70,7 +70,7 @@ else()
       list(TRANSFORM ARG_LIBS PREPEND -l)
       add_custom_command(TARGET ${name}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
-        COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${name} ${ARG_COMPILE_DEFINITIONS} ${ARG_INCLUDE_DIRECTORIES} ${ARG_LIBS} ${ARG_SOURCES}
+        COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${name} ${ARG_COMPILE_DEFINITIONS} ${ARG_INCLUDE_DIRECTORIES} ${ARG_SOURCES} ${ARG_LIBS}
       )
     else()
       add_executable(${name} ${ARG_SOURCES})
@@ -92,6 +92,7 @@ else()
       endif()
       set(fname ${CMAKE_CURRENT_BINARY_DIR}/LuaJITCheckHostLibraryExists_${variable})
       file(WRITE ${fname}.c "extern int ${func}(void); int main(void) { return ${func}(); }\n")
+      message(STATUS ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${fname} -l${lib} ${fname}.c)
       execute_process(COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${fname} -l${lib} ${fname}.c
         RESULT_VARIABLE status
         OUTPUT_QUIET
@@ -180,10 +181,13 @@ else()
     ENDIF(DL_LIBRARY)
     CHECK_FUNCTION_EXISTS(dlopen LUA_USE_DLOPEN)
     IF(NOT LUA_USE_DLOPEN)
-      MESSAGE(FATAL_ERROR "Cannot compile a useful lua.
+      MESSAGE(ERROR "Cannot compile a useful lua.
   Function dlopen() seems not to be supported on your platform.
   Apparently you are not on a Windows platform as well.
-  So lua has no way to deal with shared libraries!")
+  So lua has no way to deal with shared libraries!
+  
+  You can safely ignore this if cross compiling on linux to arm tho
+")
     ENDIF(NOT LUA_USE_DLOPEN)
   ENDIF(NOT WIN32)
 
@@ -300,6 +304,11 @@ else()
   IF(MINILUA_USE_LIBM)
     set(MINILUA_LIBS m)
   ENDIF()
+  if (LINUX_ON_ARM)
+    message(STATUS "Forcing minilua libm on LINUX_ON_ARM" )
+    list( APPEND MINILUA_LIBS m )
+  endif()
+
   luajit_add_host_executable(minilua
     SOURCES ${LUAJIT_DIR}/src/host/minilua.c
     COMPILE_DEFINITIONS ${TARGET_ARCH}
