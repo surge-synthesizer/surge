@@ -335,33 +335,17 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             }
         }
     }
-    g.fillAll(juce::Colours::black);
-    g.setColour(juce::Colours::white);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
-    g.drawText(wst_ui_names[iValue], getLocalBounds().reduced(0, 1),
-               juce::Justification::centredTop);
-    g.fillRect(0, 12, getWidth(), 1);
 
-    g.setColour(juce::Colours::darkgrey);
-    g.fillRect(buttonM);
-    g.setColour(juce::Colours::white);
-    g.drawText("-", buttonM, juce::Justification::centred);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawRect(buttonM);
+    if (bg)
+        bg->draw(g, 1.0);
 
-    g.setColour(juce::Colours::darkgrey);
-    g.fillRect(buttonP);
-    g.setColour(juce::Colours::white);
-    g.drawText("+", buttonP, juce::Justification::centred);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawRect(buttonP);
-
-    g.setColour(juce::Colours::darkgrey);
-    g.fillRect(buttonA);
-    g.setColour(juce::Colours::white);
-    g.drawText(analysisWidget ? "x" : "?", buttonA, juce::Justification::centred);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawRect(buttonA);
+    if (isLabelHovered)
+        g.setColour(skin->getColor(Colors::WaveShaper::LabelHover));
+    else
+        g.setColour(skin->getColor(Colors::WaveShaper::Label));
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+    g.drawText(wst_ui_names[iValue], getLocalBounds().withHeight(labelHeight),
+               juce::Justification::centred);
 
     // So the wave is in -2,2 in x and -1,1 in y
     juce::Path curvePath;
@@ -389,25 +373,33 @@ void WaveShaperSelector::paint(juce::Graphics &g)
                   .translated(waveArea.getX(), waveArea.getY());
     {
         juce::Graphics::ScopedSaveState gs(g);
+        g.setColour(skin->getColor(Colors::Osc::Display::Dots));
+        int nxd = 7, nyd = 7;
+        for (int xd = 1; xd < nxd - 1; ++xd)
+        {
+            float normx = 4.f * xd / (nxd - 1) - 2;
+            for (int yd = 0; yd < nyd; ++yd)
+            {
+                float normy = 2.f * yd / (nyd - 1) - 1;
+
+                auto p = juce::Point<float>(normx, normy).transformedBy(xf);
+                g.fillEllipse(p.x - 0.5, p.y - 0.5, 1, 1);
+            }
+        }
+    }
+    {
+        juce::Graphics::ScopedSaveState gs(g);
 
         g.reduceClipRegion(waveArea);
-
-        if (iValue == wst_none)
-            g.setColour(juce::Colours::lightgrey);
-        else
-            g.setColour(juce::Colours::white);
-
+        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
         g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
     }
 }
 
 void WaveShaperSelector::resized()
 {
-    auto b = getLocalBounds().withY(getHeight() - 12).withHeight(12);
-    buttonM = b.withTrimmedRight(2.f * getWidth() / 3);
-    buttonP = b.withTrimmedLeft(2.f * getWidth() / 3);
-    buttonA = b.withTrimmedRight(getWidth() / 3.f).withTrimmedLeft(getWidth() / 3.f);
-    waveArea = getLocalBounds().withTrimmedTop(12).withTrimmedBottom(12);
+    labelArea = getLocalBounds().withHeight(labelHeight);
+    waveArea = getLocalBounds().withTrimmedTop(labelHeight).reduced(1);
 }
 
 void WaveShaperSelector::setValue(float f)
@@ -437,24 +429,10 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
     {
         notifyControlModifierClicked(event.mods);
     }
-
-    if (buttonM.toFloat().contains(event.position))
+    if (labelArea.contains(event.position.toInt()))
     {
-        notifyBeginEdit();
-        setValue(nextValueInOrder(value, -1));
-        notifyValueChanged();
-        notifyEndEdit();
-    }
-    if (buttonP.toFloat().contains(event.position))
-    {
-        notifyBeginEdit();
-        setValue(nextValueInOrder(value, +1));
-        notifyValueChanged();
-        notifyEndEdit();
-    }
-    if (buttonA.toFloat().contains(event.position))
-    {
-        toggleAnalysis();
+        auto m = event.mods.withFlags(juce::ModifierKeys::popupMenuClickModifier);
+        notifyControlModifierClicked(m);
     }
 }
 
@@ -501,6 +479,15 @@ void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &e, const juce::M
         notifyEndEdit();
         repaint();
     }
+}
+
+void WaveShaperSelector::jog(int by)
+{
+    notifyBeginEdit();
+    setValue(nextValueInOrder(value, by));
+    notifyValueChanged();
+    notifyEndEdit();
+    repaint();
 }
 
 float WaveShaperSelector::nextValueInOrder(float v, int inc)
@@ -570,6 +557,8 @@ float WaveShaperSelector::nextValueInOrder(float v, int inc)
 
 void WaveShaperSelector::parentHierarchyChanged() { closeAnalysis(); }
 
+bool WaveShaperSelector::isAnalysisOpen() { return analysisWidget ? true : false; }
+
 void WaveShaperSelector::toggleAnalysis()
 {
     if (analysisWidget)
@@ -599,6 +588,11 @@ void WaveShaperSelector::openAnalysis()
     analysisWidget->setBounds(b);
     getParentComponent()->addAndMakeVisible(*analysisWidget);
     repaint();
+}
+
+void WaveShaperSelector::onSkinChanged()
+{
+    bg = associatedBitmapStore->getImage(IDB_WAVESHAPER_BG);
 }
 
 #if SURGE_JUCE_ACCESSIBLE

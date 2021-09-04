@@ -1115,6 +1115,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Patch", "Jog");
             break;
         }
+        case Surge::Skin::Connector::NonParameterConnection::JOG_WAVESHAPE:
+        {
+            auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogwaveshape);
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Waveshape",
+                                                        "Jog");
+            break;
+        }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
@@ -4654,10 +4661,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
         nonmod_param[paramIndex] = hsw.get();
 
-        juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
+        waveshaperSelector = std::move(hsw);
 
-        return dynamic_cast<Surge::GUI::IComponentTagValue *>(
-            juceSkinComponents[skinCtrl->sessionid].get());
+        return dynamic_cast<Surge::GUI::IComponentTagValue *>(waveshaperSelector.get());
     }
     if (skinCtrl->ultimateparentclassname != Surge::GUI::NoneClassName)
         std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname

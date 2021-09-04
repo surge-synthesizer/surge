@@ -392,8 +392,10 @@ Connector envmod_2 = Connector("filter.envmod_2", 569, 301).asVertical().asWhite
 
 Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 301).asVertical().asWhite();
 Connector waveshaper_type =
-    Connector("filter.waveshaper_type", 383, 311, 34, 57, Components::WaveShaperSelector)
+    Connector("filter.waveshaper_type", 384, 311, 34, 47, Components::WaveShaperSelector)
         .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
+Connector waveshaper_jog =
+    Connector("filter.waveshaper_jog", 385, 311 + 49, Connector::JOG_WAVESHAPE).asJogPlusMinus();
 
 Connector highpass = Connector("filter.highpass", 354, 301).asVertical().asWhite();
 } // namespace Filter

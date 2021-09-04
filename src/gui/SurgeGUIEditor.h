@@ -59,6 +59,7 @@ struct VuMeter;
 
 struct MainFrame;
 
+struct WaveShaperSelector;
 struct OscillatorMenu;
 struct FxMenu;
 } // namespace Widgets
@@ -485,6 +486,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
+    std::unique_ptr<Surge::Widgets::WaveShaperSelector> waveshaperSelector;
 
     /* Infowindow members and functions */
     std::unique_ptr<Surge::Widgets::ParameterInfowindow> paramInfowindow;

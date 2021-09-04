@@ -242,6 +242,7 @@ struct Connector
         JOG_PATCHCATEGORY,
         JOG_PATCH,
         JOG_FX,
+        JOG_WAVESHAPE,
 
         STORE_PATCH,
         STORE_PATCH_DIALOG,
@@ -372,7 +373,8 @@ namespace Filter
 {
 extern Surge::Skin::Connector balance, config, cutoff_1, cutoff_2, envmod_1, envmod_2,
     f2_link_resonance, f2_offset_mode, feedback, highpass, keytrack_1, keytrack_2, resonance_1,
-    resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type;
+    resonance_2, subtype_1, subtype_2, type_1, type_2, waveshaper_drive, waveshaper_type,
+    waveshaper_jog;
 }
 namespace Global
 {
