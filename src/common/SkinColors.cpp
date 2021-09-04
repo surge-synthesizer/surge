@@ -349,6 +349,12 @@ const Surge::Skin::Color Text("osc.type.text", 255, 158, 0),
 } // namespace Type
 } // namespace Osc
 
+namespace WaveShaper
+{
+const Surge::Skin::Color Label("waveshaper.label", 15, 15, 15),
+    LabelHover("waveshaper.label.hover", 255, 255, 255);
+}
+
 namespace Overlay
 {
 const Surge::Skin::Color Background("editor.overlay.background", 0, 0, 0, 204);

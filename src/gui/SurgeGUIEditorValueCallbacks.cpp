@@ -35,6 +35,7 @@
 #include "widgets/XMLConfiguredMenus.h"
 
 #include "overlays/TypeinParamEditor.h"
+#include "widgets/WaveShaperSelector.h"
 
 void decode_controllerid(char *txt, int id)
 {
@@ -1133,6 +1134,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 contextMenu.addSubMenu(grpN, sub, true, nullptr, isSubChecked, 0);
                             }
+                        }
+
+                        if (p->ctrltype == ct_wstype)
+                        {
+                            contextMenu.addSeparator();
+                            std::string tg = "Show WaveShaper Analyzer";
+                            if (waveshaperSelector && waveshaperSelector->isAnalysisOpen())
+                                tg = "Hide WaveShaper Analyzer";
+                            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(tg), true, false,
+                                                [this]() {
+                                                    if (this->waveshaperSelector)
+                                                        this->waveshaperSelector->toggleAnalysis();
+                                                });
                         }
                     }
                     else
@@ -2482,6 +2496,17 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         else
             synth->incrementCategory(false);
         return;
+    }
+    break;
+    case tag_mp_jogwaveshape:
+    {
+        if (waveshaperSelector)
+        {
+            if (control->getValue() > 0.5f)
+                waveshaperSelector->jog(1);
+            else
+                waveshaperSelector->jog(-1);
+        }
     }
     break;
     case tag_mp_patch:

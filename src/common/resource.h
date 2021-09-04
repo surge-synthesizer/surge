@@ -45,6 +45,7 @@
 #define IDB_MENU_AS_SLIDER 167
 #define IDB_FILTER_MENU 168
 #define IDB_FILTER_ICONS 169
+#define IDB_WAVESHAPER_BG 183
 
 // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
 #define IDB_MSEG_NODES 301

@@ -28,6 +28,7 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     float getValue() const override { return value; }
     void setValue(float f) override;
 
+    bool isAnalysisOpen();
     void toggleAnalysis();
     void closeAnalysis();
     void openAnalysis();
@@ -38,6 +39,27 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
+    void mouseMove(const juce::MouseEvent &event) override
+    {
+        bool shouldH = false;
+        if (labelArea.contains(event.position.toInt()))
+            shouldH = true;
+        if (shouldH != isLabelHovered)
+        {
+            isLabelHovered = shouldH;
+            repaint();
+        }
+    }
+
+    void mouseExit(const juce::MouseEvent &event) override { endHover(); }
+
+    void endHover() override
+    {
+        isLabelHovered = false;
+        repaint();
+    }
+
+    void jog(int by);
 
     void parentHierarchyChanged() override;
 
@@ -51,9 +73,14 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
     float nextValueInOrder(float v, int inc);
 
-    juce::Rectangle<int> buttonM, buttonP, buttonA, waveArea;
+    juce::Rectangle<int> waveArea, labelArea;
+    static constexpr int labelHeight = 13;
 
     static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
+
+    SurgeImage *bg{nullptr};
+    void onSkinChanged() override;
+    bool isLabelHovered{false};
 
 #if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
