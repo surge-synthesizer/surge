@@ -2245,6 +2245,11 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Scale Editor..."), true, false,
+                          [this]() { this->toggleTuningEditor(); });
+
+    tuningSubMenu.addSeparator();
+
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
                           (!this->synth->storage.isStandardTuning), false, [this]() {
                               this->synth->storage.retuneTo12TETScaleC261Mapping();
@@ -2263,11 +2268,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                               this->synth->storage.remapToConcertCKeyboard();
                               this->synth->refresh_editor = true;
                           });
-
-    tuningSubMenu.addSeparator();
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Scale Editor"), true, false,
-                          [this]() { this->toggleTuningEditor(); });
 
     tuningSubMenu.addSeparator();
 

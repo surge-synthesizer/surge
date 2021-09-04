@@ -19,6 +19,8 @@
 
 #include "SurgeSynthEditor.h"
 
+#include "fmt/core.h"
+
 #include "ModernOscillator.h"
 
 #include "widgets/EffectChooser.h"
@@ -37,22 +39,210 @@
 #include "overlays/TypeinParamEditor.h"
 #include "widgets/WaveShaperSelector.h"
 
-void decode_controllerid(char *txt, int id)
+std::string decodeControllerID(int id)
 {
     int type = (id & 0xffff0000) >> 16;
     int num = (id & 0xffff);
+    std::string out;
+
     switch (type)
     {
     case 1:
-        snprintf(txt, 16, "NRPN %8i", num);
+        out = fmt::format("NRPN {:d}", num);
         break;
     case 2:
-        snprintf(txt, 16, "RPN %8i", num);
+        out = fmt::format("RPN {:d}", num);
         break;
     default:
-        snprintf(txt, 16, "CC %8i", num);
+        out = fmt::format("CC {:d}", num);
         break;
     };
+
+    return out;
+}
+
+void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, bool isForMacro,
+                                                int idx, Surge::GUI::IComponentTagValue *control)
+{
+    long tag = control->getTag();
+    int ptag = tag - start_paramtags;
+    Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+
+    // construct submenus for explicit controller mapping
+    auto midiSub = juce::PopupMenu();
+
+    for (int subs = 0; subs < 7; ++subs)
+    {
+        auto currentSub = juce::PopupMenu();
+        bool isSubChecked = false;
+
+        for (int item = 0; item < 20; ++item)
+        {
+            int mc = (subs * 20) + item;
+            bool isChecked = false;
+            bool isEnabled = true;
+
+            // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
+            if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
+                (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
+                mc == 123)
+            {
+                isEnabled = false;
+            }
+
+            // we don't have any more CCs to cover, so break the loop
+            if (mc > 127)
+            {
+                break;
+            }
+
+            std::string name = fmt::format("CC {:d} ({:s}) {:s}", mc, midicc_names[mc],
+                                           (!isEnabled ? "- RESERVED" : ""));
+
+            if (isForMacro)
+            {
+                if (synth->storage.controllers[idx] == mc)
+                {
+                    isChecked = true;
+                    isSubChecked = true;
+                }
+
+                currentSub.addItem(name, isEnabled, isChecked,
+                                   [this, idx, mc]() { synth->storage.controllers[idx] = mc; });
+            }
+            else
+            {
+                if ((ptag < n_global_params && p->midictrl == mc) ||
+                    (ptag > n_global_params &&
+                     synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
+                {
+                    isChecked = true;
+                    isSubChecked = true;
+                }
+
+                currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
+                    if (ptag < n_global_params)
+                    {
+                        p->midictrl = mc;
+                    }
+                    else
+                    {
+                        int a = ptag;
+
+                        if (ptag >= (n_global_params + n_scene_params))
+                        {
+                            a -= ptag;
+                        }
+
+                        synth->storage.getPatch().param_ptr[a]->midictrl = mc;
+                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
+                    }
+                });
+            }
+        }
+
+        std::string name =
+            fmt::format("CC {:d} ... {:d}", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
+
+        midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
+    }
+
+    std::string what = isForMacro ? "Macro" : "Parameter";
+    std::string assigntxt = fmt::format("Assign {} to MIDI", what);
+
+    parentMenu.addSubMenu(Surge::GUI::toOSCaseForMenu(assigntxt), midiSub);
+
+    bool cancellearn = false;
+
+    auto query = (isForMacro ? synth->learn_custom : synth->learn_param);
+
+    if (query > -1 && query == idx)
+    {
+        cancellearn = true;
+    }
+
+    std::string learntxt;
+
+    if (cancellearn)
+    {
+        learntxt = fmt::format("Abort {} MIDI Learn", what);
+    }
+    else
+    {
+        learntxt = fmt::format("MIDI Learn {}", what);
+    }
+
+    parentMenu.addItem(Surge::GUI::toOSCaseForMenu(learntxt),
+                       [this, p, cancellearn, control, idx, isForMacro] {
+                           if (cancellearn)
+                           {
+                               hideMidiLearnOverlay();
+
+                               if (isForMacro)
+                               {
+                                   synth->learn_custom = -1;
+                               }
+                               else
+                               {
+                                   synth->learn_param = idx;
+                               }
+                           }
+                           else
+                           {
+                               showMidiLearnOverlay(control->asJuceComponent()->getBounds());
+
+                               if (isForMacro)
+                               {
+                                   synth->learn_custom = idx;
+                               }
+                               else
+                               {
+                                   synth->learn_param = idx;
+                               }
+                           }
+                       });
+
+    if (isForMacro)
+    {
+        if (synth->storage.controllers[idx] >= 0)
+        {
+            std::string txt = fmt::format("Clear Learned MIDI ({} ",
+                                          decodeControllerID(synth->storage.controllers[idx]));
+
+            parentMenu.addItem(Surge::GUI::toOSCaseForMenu(txt) +
+                                   midicc_names[synth->storage.controllers[idx]] + ")",
+                               [this, idx]() { synth->storage.controllers[idx] = -1; });
+        }
+    }
+    else
+    {
+        if (p->midictrl >= 0)
+        {
+            std::string txt =
+                fmt::format("Clear Learned MIDI ({} ", decodeControllerID(p->midictrl));
+
+            parentMenu.addItem(
+                Surge::GUI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
+                [this, p, ptag]() {
+                    if (ptag < n_global_params)
+                    {
+                        p->midictrl = -1;
+                    }
+                    else
+                    {
+                        int a = ptag;
+
+                        if (ptag >= (n_global_params + n_scene_params))
+                        {
+                            a -= n_scene_params;
+                        }
+
+                        synth->storage.getPatch().param_ptr[a]->midictrl = -1;
+                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
+                    }
+                });
+        }
+    }
 }
 
 int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *control,
@@ -637,93 +827,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                char txt[TXT_SIZE];
-
-                // Construct submenus for explicit controller mapping
-                auto midiSub = juce::PopupMenu();
-
-                for (int subs = 0; subs < 7; ++subs)
-                {
-                    auto currentSub = juce::PopupMenu();
-                    bool isSubChecked = false;
-
-                    for (int item = 0; item < 20; ++item)
-                    {
-                        int mc = (subs * 20) + item;
-                        bool isChecked = false;
-                        bool isEnabled = true;
-
-                        // these CCs cannot be used for MIDI learn (see
-                        // SurgeSynthesizer::channelController)
-                        if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                            (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) ||
-                            mc == 120 || mc == 123)
-                        {
-                            isEnabled = false;
-                        }
-
-                        // we don't have any more CCs to cover, so break the loop
-                        if (mc > 127)
-                        {
-                            break;
-                        }
-
-                        char name[128];
-
-                        sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
-                                (!isEnabled ? "- RESERVED" : ""));
-
-                        if (synth->storage.controllers[ccid] == mc)
-                        {
-                            isChecked = true;
-                            isSubChecked = true;
-                        }
-
-                        currentSub.addItem(name, isEnabled, isChecked, [this, ccid, mc]() {
-                            synth->storage.controllers[ccid] = mc;
-                        });
-                    }
-
-                    char name[16];
-                    sprintf(name, "CC %d ... %d", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
-
-                    midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
-                }
-
-                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign Macro to..."), midiSub);
-
-                if (synth->learn_custom > -1 && synth->learn_custom == ccid)
-                {
-                    cancellearn = true;
-                }
-
-                std::string learnTag =
-                    cancellearn ? "Abort Macro MIDI Learn" : "MIDI Learn Macro...";
-
-                contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu(learnTag), [this, cancellearn, control, ccid] {
-                        if (cancellearn)
-                        {
-                            hideMidiLearnOverlay();
-                            synth->learn_custom = -1;
-                        }
-                        else
-                        {
-                            showMidiLearnOverlay(control->asJuceComponent()->getBounds());
-                            synth->learn_custom = ccid;
-                        }
-                    });
-
-                if (synth->storage.controllers[ccid] >= 0)
-                {
-                    char txt4[16];
-                    decode_controllerid(txt4, synth->storage.controllers[ccid]);
-                    snprintf(txt, TXT_SIZE, "Clear Learned MIDI (%s ", txt4);
-
-                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu(txt) +
-                                            midicc_names[synth->storage.controllers[ccid]] + ")",
-                                        [this, ccid]() { synth->storage.controllers[ccid] = -1; });
-                }
+                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
 
                 contextMenu.addSeparator();
 
@@ -1139,9 +1243,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if (p->ctrltype == ct_wstype)
                         {
                             contextMenu.addSeparator();
-                            std::string tg = "Show WaveShaper Analyzer";
+
+                            std::string tg = "Show Waveshaper Analyzer...";
+
                             if (waveshaperSelector && waveshaperSelector->isAnalysisOpen())
-                                tg = "Hide WaveShaper Analyzer";
+                            {
+                                tg = "Hide Waveshaper Analyzer";
+                            }
+
                             contextMenu.addItem(Surge::GUI::toOSCaseForMenu(tg), true, false,
                                                 [this]() {
                                                     if (this->waveshaperSelector)
@@ -1210,7 +1319,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addSeparator();
 
                             contextMenu.addSubMenu(
-                                Surge::GUI::toOSCaseForMenu("Sustain Pedal In Mono Mode"),
+                                Surge::GUI::toOSCaseForMenu("Sustain Pedal in Mono Mode"),
                                 makeMonoModeOptionsMenu(menuRect, false));
                         }
                     }
@@ -1642,126 +1751,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                // Construct submenus for explicit controller mapping
-                auto midiSub = juce::PopupMenu();
-
-                for (int subs = 0; subs < 7; ++subs)
-                {
-                    auto currentSub = juce::PopupMenu();
-                    bool isSubChecked = false;
-
-                    for (int item = 0; item < 20; ++item)
-                    {
-                        int mc = (subs * 20) + item;
-                        bool isChecked = false;
-                        bool isEnabled = true;
-
-                        // these CCs cannot be used for MIDI learn (see
-                        // SurgeSynthesizer::channelController)
-                        if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                            (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) ||
-                            mc == 120 || mc == 123)
-                        {
-                            isEnabled = false;
-                        }
-
-                        // we don't have any more CCs to cover, so break the loop
-                        if (mc > 127)
-                        {
-                            break;
-                        }
-
-                        char name[128];
-
-                        sprintf(name, "CC %d (%s) %s", mc, midicc_names[mc],
-                                (!isEnabled ? "- RESERVED" : ""));
-
-                        if ((ptag < n_global_params && p->midictrl == mc) ||
-                            (ptag > n_global_params &&
-                             synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
-                        {
-                            isChecked = true;
-                            isSubChecked = true;
-                        }
-
-                        currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
-                            if (ptag < n_global_params)
-                            {
-                                p->midictrl = mc;
-                            }
-                            else
-                            {
-                                int a = ptag;
-
-                                if (ptag >= (n_global_params + n_scene_params))
-                                {
-                                    a -= ptag;
-                                }
-
-                                synth->storage.getPatch().param_ptr[a]->midictrl = mc;
-                                synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl =
-                                    mc;
-                            }
-                        });
-                    }
-
-                    char name[16];
-                    sprintf(name, "CC %d ... %d", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
-
-                    midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
-                }
-
-                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign Parameter to..."),
-                                       midiSub);
-
-                if (synth->learn_param > -1 && synth->learn_param == p->id)
-                {
-                    cancellearn = true;
-                }
-
-                std::string learnTag =
-                    cancellearn ? "Abort Parameter MIDI Learn" : "MIDI Learn Parameter...";
-
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu(learnTag),
-                                    [this, control, cancellearn, viewSize, p] {
-                                        if (cancellearn)
-                                        {
-                                            hideMidiLearnOverlay();
-                                            synth->learn_param = -1;
-                                        }
-                                        else
-                                        {
-                                            showMidiLearnOverlay(
-                                                control->asJuceComponent()->getBounds());
-                                            synth->learn_param = p->id;
-                                        }
-                                    });
-
-                if (p->midictrl >= 0)
-                {
-                    char txt4[16];
-                    decode_controllerid(txt4, p->midictrl);
-                    sprintf(txt, "Clear Learned MIDI (%s ", txt4);
-
-                    contextMenu.addItem(
-                        Surge::GUI::toOSCaseForMenu(txt) + midicc_names[p->midictrl] + ")",
-                        [this, p, ptag]() {
-                            if (ptag < n_global_params)
-                            {
-                                p->midictrl = -1;
-                            }
-                            else
-                            {
-                                int a = ptag;
-                                if (ptag >= (n_global_params + n_scene_params))
-                                    a -= n_scene_params;
-
-                                synth->storage.getPatch().param_ptr[a]->midictrl = -1;
-                                synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl =
-                                    -1;
-                            }
-                        });
-                }
+                createMIDILearnMenuEntries(contextMenu, false, p->id, control);
 
                 int n_ms = 0;
 
