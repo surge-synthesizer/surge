@@ -337,12 +337,19 @@ void WaveShaperSelector::paint(juce::Graphics &g)
     }
 
     if (bg)
+    {
         bg->draw(g, 1.0);
+    }
 
     if (isLabelHovered)
-        g.setColour(skin->getColor(Colors::WaveShaper::LabelHover));
+    {
+        g.setColour(skin->getColor(Colors::Waveshaper::TextHover));
+    }
     else
-        g.setColour(skin->getColor(Colors::WaveShaper::Label));
+    {
+        g.setColour(skin->getColor(Colors::Waveshaper::Text));
+    }
+
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
     g.drawText(wst_ui_names[iValue], getLocalBounds().withHeight(labelHeight),
                juce::Justification::centred);
@@ -373,16 +380,19 @@ void WaveShaperSelector::paint(juce::Graphics &g)
                   .translated(waveArea.getX(), waveArea.getY());
     {
         juce::Graphics::ScopedSaveState gs(g);
-        g.setColour(skin->getColor(Colors::Osc::Display::Dots));
+        g.setColour(skin->getColor(Colors::Waveshaper::Display::Dots));
+
         int nxd = 7, nyd = 7;
+
         for (int xd = 1; xd < nxd - 1; ++xd)
         {
             float normx = 4.f * xd / (nxd - 1) - 2;
+
             for (int yd = 0; yd < nyd; ++yd)
             {
                 float normy = 2.f * yd / (nyd - 1) - 1;
-
                 auto p = juce::Point<float>(normx, normy).transformedBy(xf);
+
                 g.fillEllipse(p.x - 0.5, p.y - 0.5, 1, 1);
             }
         }
@@ -391,7 +401,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
 
         g.reduceClipRegion(waveArea);
-        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
         g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
     }
 }
