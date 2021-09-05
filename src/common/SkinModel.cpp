@@ -396,6 +396,9 @@ Connector waveshaper_type =
         .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
 Connector waveshaper_jog =
     Connector("filter.waveshaper_jog", 385, 311 + 49, Connector::JOG_WAVESHAPE).asJogPlusMinus();
+Connector waveshaper_analyze = Connector("filter.waveshaper_analyze", 384 + 11, 311 + 49 + 14, 12,
+                                         12, Components::Switch, Connector::ANALYZE_WAVESHAPE)
+                                   .withBackground(IDB_WAVESHAPER_ANALYSIS);
 
 Connector highpass = Connector("filter.highpass", 354, 301).asVertical().asWhite();
 } // namespace Filter

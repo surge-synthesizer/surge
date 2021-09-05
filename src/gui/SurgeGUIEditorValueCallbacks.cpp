@@ -1239,24 +1239,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 contextMenu.addSubMenu(grpN, sub, true, nullptr, isSubChecked, 0);
                             }
                         }
-
-                        if (p->ctrltype == ct_wstype)
-                        {
-                            contextMenu.addSeparator();
-
-                            std::string tg = "Show Waveshaper Analyzer...";
-
-                            if (waveshaperSelector && waveshaperSelector->isAnalysisOpen())
-                            {
-                                tg = "Hide Waveshaper Analyzer";
-                            }
-
-                            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(tg), true, false,
-                                                [this]() {
-                                                    if (this->waveshaperSelector)
-                                                        this->waveshaperSelector->toggleAnalysis();
-                                                });
-                        }
                     }
                     else
                     {
@@ -2496,6 +2478,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 waveshaperSelector->jog(1);
             else
                 waveshaperSelector->jog(-1);
+        }
+    }
+    break;
+    case tag_analyzewaveshape:
+    {
+        if (this->waveshaperSelector)
+        {
+            control->asJuceComponent()->getParentComponent()->toFront(false);
+            if (control->getValue() > 0.5f)
+                this->waveshaperSelector->openAnalysis();
+            else
+                this->waveshaperSelector->closeAnalysis();
         }
     }
     break;

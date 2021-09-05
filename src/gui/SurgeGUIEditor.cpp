@@ -1122,6 +1122,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Jog");
             break;
         }
+        case Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE:
+        {
+            auto q = layoutComponentForSkin(skinCtrl, tag_analyzewaveshape);
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Waveshape",
+                                                        "Open");
+            break;
+        }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
@@ -4312,6 +4319,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_lfo_menu:
                     frame->getControlGroupLayer(cg_LFO)->addAndMakeVisible(*hsw);
                     break;
+                case tag_analyzewaveshape:
+                    frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
+                    break;
+
                 default:
                     std::cout << tag << std::endl;
                     jassert(false);
