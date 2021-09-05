@@ -30,6 +30,8 @@
 #include "IronOxide5.h"
 #include "Logical4.h"
 #include "Loud.h"
+#include "Mackity.h"
+#include "MackEQ.h"
 #include "MatrixVerb.h"
 #include "Melt.h"
 #include "Mojo.h"
@@ -166,6 +168,9 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
    reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 440, gnStereo, "Triple Spread" );
 
    reg.emplace_back(create<Chamber::Chamber>, id++, 223, gnAmbience, "Chamber" );
+
+   reg.emplace_back(create<Mackity::Mackity>, id++, 355, gnSaturation, "Mackity" );
+   reg.emplace_back(create<MackEQ::MackEQ>, id++, 430, gnFilter, "MackEQ" );
    return reg;
 }
 

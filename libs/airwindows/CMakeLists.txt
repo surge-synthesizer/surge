@@ -96,6 +96,12 @@ add_library(${PROJECT_NAME}
   src/Loud.cpp
   src/Loud.h
   src/LoudProc.cpp
+  src/Mackity.cpp
+  src/Mackity.h
+  src/MackityProc.cpp
+  src/MackEQ.cpp
+  src/MackEQ.h
+  src/MackEQProc.cpp
   src/MatrixVerb.cpp
   src/MatrixVerb.h
   src/MatrixVerbProc.cpp
