@@ -1128,7 +1128,7 @@ if( WIN32 )
   add_custom_command(TARGET surge-xt-distribution
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-          COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-${SXTOS}-${SXTVER}-pluginsonly.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
+          COMMAND ${CMAKE_COMMAND} -E tar cvf ${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-${SXTOS}-${SXTVER}-vst3-standalone-only-no-content.zip --format=zip ${SURGE_XT_DIST_TARGET_BASE}
           )
 endif()
 
