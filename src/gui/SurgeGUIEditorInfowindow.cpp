@@ -33,6 +33,8 @@ void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
     }
 
     updateInfowindowContents(ptag, isEditingModulation);
+    paramInfowindow->getParentComponent()->toFront(false);
+    paramInfowindow->toFront(false);
     paramInfowindow->setBoundsToAccompany(relativeTo, frame->getBounds());
     paramInfowindow->setCountdownToHide(-1);
     paramInfowindow->startFadein();
