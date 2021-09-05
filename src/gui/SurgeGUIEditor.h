@@ -490,6 +490,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
     std::unique_ptr<Surge::Widgets::WaveShaperSelector> waveshaperSelector;
+    std::unique_ptr<Surge::Widgets::Switch> waveshaperAnalysis;
 
     /* Infowindow members and functions */
     std::unique_ptr<Surge::Widgets::ParameterInfowindow> paramInfowindow;
