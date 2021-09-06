@@ -29,6 +29,7 @@ MiniEdit::MiniEdit()
     typein->setJustification(juce::Justification::centred);
     typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
     typein->setSelectAllWhenFocused(true);
+    typein->setWantsKeyboardFocus(true);
     typein->addListener(this);
     addAndMakeVisible(*typein);
 

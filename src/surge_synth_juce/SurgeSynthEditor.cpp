@@ -23,6 +23,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
 {
     surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
     juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
+
+    addKeyListener(this);
+
     adapter = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
 
     int yExtra = 0;
@@ -226,4 +229,24 @@ juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 #endif
 
     return juce::PopupMenu();
+}
+
+bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig)
+{
+    if (adapter->getShowVirtualKeyboard() && orig != keyboard.get())
+    {
+        return keyboard->keyPressed(key);
+    }
+
+    return false;
+}
+
+bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
+{
+    if (adapter->getShowVirtualKeyboard() && originatingComponent != keyboard.get())
+    {
+        return keyboard->keyStateChanged(isKeyDown);
+    }
+
+    return false;
 }

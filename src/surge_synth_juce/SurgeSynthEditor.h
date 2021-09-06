@@ -22,7 +22,8 @@ class SurgeJUCELookAndFeel;
  */
 class SurgeSynthEditor : public juce::AudioProcessorEditor,
                          public juce::AsyncUpdater,
-                         public juce::FileDragAndDropTarget
+                         public juce::FileDragAndDropTarget,
+                         public juce::KeyListener
 {
   public:
     SurgeSynthEditor(SurgeSynthProcessor &);
@@ -48,6 +49,9 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     void beginMacroEdit(long macroNum);
     void endMacroEdit(long macroNum);
+
+    bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
+    bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 
     struct IdleTimer : juce::Timer
     {
