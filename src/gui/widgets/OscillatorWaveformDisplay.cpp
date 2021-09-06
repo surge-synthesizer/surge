@@ -338,8 +338,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         if (!fn.empty())
         {
             std::string message = "Wavetable was successfully exported to '" + fn + "'";
-            juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Wavetable Exported!",
-                                              message);
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon,
+                                                   "Wavetable Exported!", message);
         }
     };
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Export Wavetable to File..."), exportAction);
@@ -442,19 +442,23 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
     wtPath =
         Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastWavetablePath, wtPath);
 
-    juce::FileChooser c("Select Wavetable to Load", juce::File(wtPath));
-    auto r = c.browseForFileToOpen();
-    if (r)
-    {
-        auto res = c.getResult();
-        auto rString = res.getFullPathName().toStdString();
-        strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
-        auto dir = res.getParentDirectory().getFullPathName().toStdString();
-        if (dir != wtPath)
-        {
-            Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastWavetablePath, dir);
-        }
-    }
+    if (!sge)
+        return;
+    sge->fileChooser =
+        std::make_unique<juce::FileChooser>("Select Wavetable to Load", juce::File(wtPath));
+    sge->fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this, wtPath](const juce::FileChooser &c) {
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+            strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
+            auto dir = res.getParentDirectory().getFullPathName().toStdString();
+            if (dir != wtPath)
+            {
+                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastWavetablePath,
+                                                       dir);
+            }
+        });
 }
 void OscillatorWaveformDisplay::showWavetableMenu()
 {
