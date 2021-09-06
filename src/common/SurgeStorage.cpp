@@ -1948,7 +1948,16 @@ float glide_log(float x)
 
 bool SurgeStorage::resetToCurrentScaleAndMapping()
 {
-    currentTuning = Tunings::Tuning(currentScale, currentMapping).withSkippedNotesInterpolated();
+    try
+    {
+        currentTuning =
+            Tunings::Tuning(currentScale, currentMapping).withSkippedNotesInterpolated();
+    }
+    catch (Tunings::TuningError &e)
+    {
+        retuneTo12TETScaleC261Mapping();
+        reportError(e.what(), "SCL/KBM Error - Resetting to standard");
+    }
 
     auto t = currentTuning;
 
