@@ -191,33 +191,34 @@ class TuningTableListBoxModel : public juce::TableListBoxModel, public juce::Asy
         if (e.mods.isRightButtonDown())
         {
             rmbMenu->clear();
-            rmbMenu->addItem(1, "Export to CSV");
-            auto result = rmbMenu->show();
-            if (result == 1)
-                exportToCSV();
+            rmbMenu->addItem("Export to CSV", [this]() { this->exportToCSV(); });
+            rmbMenu->showMenuAsync(juce::PopupMenu::Options());
         }
     }
 
+    std::unique_ptr<juce::FileChooser> fileChooser;
     virtual void exportToCSV()
     {
-        juce::FileChooser fc("Export CSV to...", juce::File(), "*.csv");
-        if (fc.browseForFileToSave(true))
-        {
-            auto f = fc.getResult();
-            std::ostringstream csvStream;
-            csvStream << "Midi Note, Frequency, Log(Freq/8.17)\n";
-            for (int i = 0; i < 128; ++i)
-                csvStream << i << ", " << std::fixed << std::setprecision(4)
-                          << tuning.frequencyForMidiNote(i) << ", " << std::fixed
-                          << std::setprecision(6) << tuning.logScaledFrequencyForMidiNote(i)
-                          << "\n";
-            if (!f.replaceWithText(csvStream.str()))
-            {
-                juce::AlertWindow::showMessageBoxAsync(
-                    juce::AlertWindow::AlertIconType::WarningIcon, "Error exporting file",
-                    "An unknown error occured streaming CSV data to file", "OK");
-            }
-        }
+        fileChooser =
+            std::make_unique<juce::FileChooser>("Export CSV to...", juce::File(), "*.csv");
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser &chooser) {
+                auto f = chooser.getResult();
+                std::ostringstream csvStream;
+                csvStream << "Midi Note, Frequency, Log(Freq/8.17)\n";
+                for (int i = 0; i < 128; ++i)
+                    csvStream << i << ", " << std::fixed << std::setprecision(4)
+                              << tuning.frequencyForMidiNote(i) << ", " << std::fixed
+                              << std::setprecision(6) << tuning.logScaledFrequencyForMidiNote(i)
+                              << "\n";
+                if (!f.replaceWithText(csvStream.str()))
+                {
+                    juce::AlertWindow::showMessageBoxAsync(
+                        juce::AlertWindow::AlertIconType::WarningIcon, "Error exporting file",
+                        "An unknown error occured streaming CSV data to file", "OK");
+                }
+            });
     }
 
     virtual void tuningUpdated(const Tunings::Tuning &newTuning)
