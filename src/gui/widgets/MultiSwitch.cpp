@@ -57,13 +57,17 @@ int MultiSwitch::coordinateToSelection(int x, int y)
     double coefX = (double)getWidth() / (double)columns;
     double coefY = (double)getHeight() / (double)rows;
 
-    int my = (int)(y / coefY);
-    int mx = (int)(x / coefX);
+    bool doX = (columns > 1 && rows < 2);
+    bool doY = (rows > 1 && columns < 2);
+
+    int mx = (int)((x * doX) / coefX);
+    int my = (int)((y * doY) / coefY);
 
     if (columns * rows > 1)
     {
         return (mx + my * columns);
     }
+
     return 0;
 }
 
