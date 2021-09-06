@@ -55,7 +55,7 @@ Name: EffectsSA; Description: Surge XT Effects Standalone (32-bit); Types: full 
 Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
 
 [Files]
-Source: {#SURGE_SRC}\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
+Source: {#SURGE_SRC}\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Attribs: readonly; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
 
 ;; these lines are used by Azure pipelines - if you want to build the installer locally, comment them out!
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
