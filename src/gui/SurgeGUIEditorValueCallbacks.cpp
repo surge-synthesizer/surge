@@ -184,7 +184,7 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
                                }
                                else
                                {
-                                   synth->learn_param = idx;
+                                   synth->learn_param = -1;
                                }
                            }
                            else
