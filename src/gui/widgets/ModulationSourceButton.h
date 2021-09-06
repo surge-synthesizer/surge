@@ -107,6 +107,7 @@ struct ModulationSourceButton : public juce::Component,
 
     void setState(int s) { state = s; }
     int getState() const { return state; }
+    bool transientArmed{false}; // armed in drop state
 
     bool secondaryHoverActive{false};
 

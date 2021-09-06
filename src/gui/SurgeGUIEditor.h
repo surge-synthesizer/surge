@@ -302,6 +302,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void mappingFileDropped(const std::string &fn);
     std::string tuningToHtml();
 
+    Surge::Widgets::ModulatableControlInterface *modSourceDragOverTarget{nullptr};
+    Surge::Widgets::ModulatableControlInterface::ModulationState priorModulationState;
+    bool modSourceButtonDraggedOver(Surge::Widgets::ModulationSourceButton *msb,
+                                    const juce::Point<int> &); // true if over a droppable target
     void modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
                                   const juce::Point<int> &);
     void swapControllers(int t1, int t2);

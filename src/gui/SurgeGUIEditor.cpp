@@ -3811,6 +3811,53 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
+bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSourceButton *msb,
+                                                const juce::Point<int> &pt)
+{
+    juce::Component *target = nullptr;
+
+    auto isDroppable = [msb](juce::Component *c) {
+        auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(c);
+        if (tMCI)
+            return true;
+        return false;
+    };
+    auto recC = [isDroppable, msb, pt](juce::Component *p, auto rec) -> juce::Component * {
+        for (auto kid : p->getChildren())
+        {
+            if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
+            {
+                if (isDroppable(kid))
+                    return kid;
+
+                auto q = rec(kid, rec);
+                if (q)
+                    return q;
+            }
+        }
+        return nullptr;
+    };
+    target = recC(frame.get(), recC);
+    auto tMCI = dynamic_cast<Surge::Widgets::ModulatableSlider *>(target);
+    if (tMCI != modSourceDragOverTarget)
+    {
+        if (modSourceDragOverTarget)
+        {
+            modSourceDragOverTarget->setModulationState(priorModulationState);
+            modSourceDragOverTarget->asJuceComponent()->repaint();
+        }
+        modSourceDragOverTarget = tMCI;
+
+        if (tMCI)
+        {
+            priorModulationState = tMCI->modulationState;
+            tMCI->setModulationState(
+                Surge::Widgets::ModulatableControlInterface::MODULATED_BY_ACTIVE);
+            tMCI->asJuceComponent()->repaint();
+        }
+    }
+    return tMCI != nullptr;
+}
 void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
                                               const juce::Point<int> &pt)
 {
@@ -3855,6 +3902,13 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     }
     else if (tMCI)
     {
+        if (modSourceDragOverTarget)
+        {
+            tMCI->setModulationState(priorModulationState);
+            tMCI->asJuceComponent()->repaint();
+
+            modSourceDragOverTarget = nullptr;
+        }
         openModTypeinOnDrop(msb->getCurrentModSource(), tMCI,
                             tMCI->asControlValueInterface()->getTag(), msb->getCurrentModIndex());
     }
