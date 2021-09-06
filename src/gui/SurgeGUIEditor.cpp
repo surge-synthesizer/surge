@@ -240,7 +240,8 @@ void SurgeGUIEditor::idle()
         }
         for (const auto &p : cp)
         {
-            juce::AlertWindow::showMessageBox(juce::AlertWindow::WarningIcon, p.second, p.first);
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, p.second,
+                                                   p.first);
         }
     }
 
@@ -2313,22 +2314,25 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         scl_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastSCLPath, scl_path);
 
-        juce::FileChooser c("Select SCL Scale", juce::File(scl_path), "*.scl");
+        fileChooser =
+            std::make_unique<juce::FileChooser>("Select SCL Scale", juce::File(scl_path), "*.scl");
 
-        auto r = c.browseForFileToOpen();
-
-        if (r)
-        {
-            auto res = c.getResult();
-            auto rString = res.getFullPathName().toStdString();
-            auto dir = res.getParentDirectory().getFullPathName().toStdString();
-            cb(rString);
-            if (dir != scl_path)
-            {
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::LastSCLPath, dir);
-            }
-        }
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this, scl_path, cb](const juce::FileChooser &c) {
+                auto ress = c.getResults();
+                if (ress.size() != 1)
+                    return;
+                auto res = ress.getFirst();
+                auto rString = res.getFullPathName().toStdString();
+                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                cb(rString);
+                if (dir != scl_path)
+                {
+                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::LastSCLPath, dir);
+                }
+            });
     });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
@@ -2366,22 +2370,28 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         kbm_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::LastKBMPath, kbm_path);
-        juce::FileChooser c("Select KBM Mapping", juce::File(kbm_path), "*.kbm");
+        fileChooser = std::make_unique<juce::FileChooser>("Select KBM Mapping",
+                                                          juce::File(kbm_path), "*.kbm");
 
-        auto r = c.browseForFileToOpen();
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this, cb, kbm_path](const juce::FileChooser &c)
 
-        if (r)
-        {
-            auto res = c.getResult();
-            auto rString = res.getFullPathName().toStdString();
-            auto dir = res.getParentDirectory().getFullPathName().toStdString();
-            cb(rString);
-            if (dir != kbm_path)
             {
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::LastKBMPath, dir);
-            }
-        }
+                auto ress = c.getResults();
+                if (ress.size() != 1)
+                    return;
+
+                auto res = c.getResult();
+                auto rString = res.getFullPathName().toStdString();
+                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                cb(rString);
+                if (dir != kbm_path)
+                {
+                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::LastKBMPath, dir);
+                }
+            });
     });
 
     int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
@@ -3094,23 +3104,25 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
     });
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
-        juce::FileChooser f("Set Custom User Data Folder", juce::File(synth->storage.userDataPath));
-        if (f.browseForDirectory())
-        {
-            auto r = f.getResult();
-            if (!r.isDirectory())
-                return;
-            auto s = f.getResult().getFullPathName().toStdString();
+        fileChooser = std::make_unique<juce::FileChooser>("Set Custom User Data Folder",
+                                                          juce::File(synth->storage.userDataPath));
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+            [this](const juce::FileChooser &f) {
+                auto r = f.getResult();
+                if (!r.isDirectory())
+                    return;
+                auto s = f.getResult().getFullPathName().toStdString();
 
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::UserDataPath, s);
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::UserDataPath, s);
 
-            this->synth->storage.userDataPath = s;
-            synth->storage.createUserDirectory();
+                this->synth->storage.userDataPath = s;
+                synth->storage.createUserDirectory();
 
-            this->synth->storage.refresh_wtlist();
-            this->synth->storage.refresh_patchlist();
-        }
+                this->synth->storage.refresh_wtlist();
+                this->synth->storage.refresh_patchlist();
+            });
     });
 
     dataSubMenu.addSeparator();
@@ -4809,8 +4821,6 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     }
     else if (fExt == ".zip")
     {
-        juce::AlertWindow::showMessageBox(juce::AlertWindow::InfoIcon, "Coming Soom",
-                                          "Zip File Drops coming soon");
     }
     return true;
 }

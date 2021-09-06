@@ -243,25 +243,33 @@ void PatchSelector::showClassicMenu(bool single_category)
         auto patchPath = storage->userPatchesPath;
         patchPath =
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastPatchPath, patchPath);
-        juce::FileChooser c("Select Patch to Load", juce::File(patchPath), "*.fxp");
-        auto r = c.browseForFileToOpen();
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (!sge)
+            return;
+        sge->fileChooser = std::make_unique<juce::FileChooser>("Select Patch to Load",
+                                                               juce::File(patchPath), "*.fxp");
+        sge->fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this, patchPath](const juce::FileChooser &c) {
+                auto ress = c.getResults();
+                if (ress.size() != 1)
+                    return;
 
-        if (r)
-        {
-            auto res = c.getResult();
-            auto rString = res.getFullPathName().toStdString();
-            auto sge = firstListenerOfType<SurgeGUIEditor>();
+                auto res = c.getResult();
+                auto rString = res.getFullPathName().toStdString();
+                auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            if (sge)
-            {
-                sge->queuePatchFileLoad(rString);
-            }
-            auto dir = res.getParentDirectory().getFullPathName().toStdString();
-            if (dir != patchPath)
-            {
-                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastPatchPath, dir);
-            }
-        }
+                if (sge)
+                {
+                    sge->queuePatchFileLoad(rString);
+                }
+                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                if (dir != patchPath)
+                {
+                    Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastPatchPath,
+                                                           dir);
+                }
+            });
     });
 
     contextMenu.addSeparator();

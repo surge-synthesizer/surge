@@ -914,9 +914,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            // FIXME: This one shouldn't be async yet since the macro can get swept underneath us
-            contextMenu.showMenu(juce::PopupMenu::Options());
-            control->endHover();
+            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                      [control](int opt) { control->endHover(); });
             return 1;
         }
 

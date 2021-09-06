@@ -146,6 +146,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                     Surge::GUI::IComponentTagValue *control);
 
   public:
+    // to make file chooser async it has to stick around
+    std::unique_ptr<juce::FileChooser> fileChooser;
+
     void refresh_mod();
     void broadcastPluginAutomationChangeFor(Parameter *p);
 
