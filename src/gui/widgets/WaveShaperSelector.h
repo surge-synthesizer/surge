@@ -49,12 +49,21 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
             isLabelHovered = shouldH;
             repaint();
         }
+        bool shouldWH = false;
+        if (waveArea.contains(event.position.toInt()))
+            shouldWH = true;
+        if (shouldWH != isWaveHovered)
+        {
+            isWaveHovered = shouldWH;
+            repaint();
+        }
     }
 
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
 
     void endHover() override
     {
+        isWaveHovered = false;
         isLabelHovered = false;
         repaint();
     }
@@ -78,9 +87,9 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
 
     static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
 
-    SurgeImage *bg{nullptr};
+    SurgeImage *bg{nullptr}, *bgHover{nullptr};
     void onSkinChanged() override;
-    bool isLabelHovered{false};
+    bool isLabelHovered{false}, isWaveHovered{false};
 
 #if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;

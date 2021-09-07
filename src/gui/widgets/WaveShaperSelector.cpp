@@ -26,7 +26,6 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                     powf(2.f, dbLevs[i] / 18.f); // db_to_amp(dbLevs[i]); db_to_amp is limited. Why?
             }
         }
-        std::cout << "Make a tryit slider" << std::endl;
         tryitSlider = std::make_unique<juce::Slider>();
         tryitSlider->setSliderStyle(juce::Slider::LinearVertical);
         tryitSlider->setDoubleClickReturnValue(true, 0.f, juce::ModifierKeys::noModifiers);
@@ -338,7 +337,10 @@ void WaveShaperSelector::paint(juce::Graphics &g)
 
     if (bg)
     {
-        bg->draw(g, 1.0);
+        if (isLabelHovered && bgHover)
+            bgHover->draw(g, 1.0);
+        else
+            bg->draw(g, 1.0);
     }
 
     if (isLabelHovered)
@@ -401,7 +403,10 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
 
         g.reduceClipRegion(waveArea);
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+        if (isWaveHovered)
+            g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
+        else
+            g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
         g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
     }
 }
@@ -603,6 +608,8 @@ void WaveShaperSelector::openAnalysis()
 void WaveShaperSelector::onSkinChanged()
 {
     bg = associatedBitmapStore->getImage(IDB_WAVESHAPER_BG);
+    bgHover = associatedBitmapStore->getImageByStringID(
+        skin->hoverImageIdForResource(IDB_WAVESHAPER_BG, GUI::Skin::HOVER));
 }
 
 #if SURGE_JUCE_ACCESSIBLE
