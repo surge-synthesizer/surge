@@ -46,7 +46,7 @@ static inline int _stricmp(const char *s1, const char *s2) { return strcasecmp(s
 #define _SURGE_STR(x) #x
 #define SURGE_STR(x) _SURGE_STR(x)
 
-const int BASE_WINDOW_SIZE_X = 904;
+const int BASE_WINDOW_SIZE_X = 913;
 const int BASE_WINDOW_SIZE_Y = 569;
 const int NAMECHARS = 64;
 const int BLOCK_SIZE = 32;

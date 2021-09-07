@@ -224,7 +224,14 @@
 
   <controls>
     <!-- Global & Scene -->
-    <control ui_identifier="global.volume" class="def-hslider"/>
+    <control ui_identifier="global.volume" class="def-hslider" x="756"/>
+
+    <control ui_identifier="controls.vu_meter" x="763"/>
+
+    <control ui_identifier="global.fx1_return" x="759"/>
+    <control ui_identifier="global.fx2_return" x="759"/>
+    <control ui_identifier="global.fx3_return" x="759"/>
+    <control ui_identifier="global.fx4_return" x="759"/>
 
     <control ui_identifier="scene.drift" class="def-hslider"/>
     <control ui_identifier="scene.noise_color" class="def-hslider"/>
@@ -244,10 +251,10 @@
 
     <control ui_identifier="scene.fmrouting" y="88"/>
 
-    <control ui_identifier="controls.surge_menu" x="850"/>
-
     <control ui_identifier="scene.gain" y="301"/>
     <control ui_identifier="scene.velocity_sensitivity" y="301"/>
+
+    <control ui_identifier="controls.surge_menu" x="850"/>
 
     <!-- Bend Depth & Play Mode -->
     <control ui_identifier="scene.pbrange_dn" x="157" y="112" w="30" h="13"/>
@@ -328,7 +335,9 @@
     <control ui_identifier="filter.keytrack_2" y="301"/>
     <control ui_identifier="filter.highpass" y="301"/>
     <control ui_identifier="filter.waveshaper_drive" y="301"/>
-    <control ui_identifier="filter.waveshaper_type" x="384" y="311"/>
+    <control ui_identifier="filter.waveshaper_type" x="384"/>
+    <control ui_identifier="filter.waveshaper_jog" x="385"/>
+    <control ui_identifier="filter.waveshaper_analyze" x="406"/>
 
     <!-- FEG -->
     <control ui_identifier="feg.panel" y="266"/>
@@ -382,8 +391,10 @@
 
     <!-- FX Section -->
     <control ui_identifier="fx.selector" x="755" y="77"/>
-    <control ui_identifier="fx.preset.prevnext" y="213"/>
-    <control ui_identifier="fx.preset.name" y="213"/>
+    <control ui_identifier="fx.type" x="761"/>
+    <control ui_identifier="fx.preset.prevnext" x="859" y="213"/>
+    <control ui_identifier="fx.preset.name" x="764" y="213"/>
+    <control ui_identifier="fx.param.panel" x="758"/>
 
     <!-- Misc -->
     <control ui_identifier="msegeditor.window" w="748"/>
