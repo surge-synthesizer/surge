@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 34 47" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0.5" y="0.5" width="33" height="46" rx="4" ry="4" style="stroke: #000000; fill: #242424;"/>
+  <rect x="0.5" y="0.5" width="33" height="12" rx="4" ry="4" style="fill: #399DFF;"/>
+  <rect x="0.5" y="3" width="33" height="10" rx="0" ry="0" style="fill: #399DFF;"/>
+  <line style="stroke: #000000;" x1="0" y1="13" x2="34" y2="13"/>
+  <rect x="0.5" y="0.5" width="33" height="46" rx="4" ry="4" style="stroke: #000000; fill: none;"/>
+</svg>

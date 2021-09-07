@@ -258,7 +258,7 @@ namespace Waveshaper
 extern const Surge::Skin::Color Text, TextHover;
 namespace Display
 {
-extern const Surge::Skin::Color Dots, Wave;
+extern const Surge::Skin::Color Dots, Wave, WaveHover;
 }
 } // namespace Waveshaper
 

@@ -356,7 +356,7 @@ const Surge::Skin::Color Text("waveshaper.text", 15, 15, 15),
 namespace Display
 {
 const Surge::Skin::Color Dots("waveshaper.waveform.dots", 64, 64, 64),
-    Wave("waveshaper.waveform", 255, 144, 0);
+    Wave("waveshaper.waveform", 255, 144, 0), WaveHover("waveshaper.waveform.hover", 255, 255, 255);
 }
 } // namespace Waveshaper
 
