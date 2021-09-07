@@ -728,10 +728,6 @@ void SurgeGUIEditor::toggle_mod_editing()
 
 void SurgeGUIEditor::refresh_mod()
 {
-    auto *cms = gui_modsrc[modsource].get();
-    if (!cms)
-        return;
-
     modsources thisms = modsource;
 
     synth->storage.modRoutingMutex.lock();
@@ -772,12 +768,10 @@ void SurgeGUIEditor::refresh_mod()
 
     synth->storage.modRoutingMutex.unlock();
 
+    // This loop is the problem
     for (int i = 1; i < n_modsources; i++)
     {
         int state = 0;
-
-        if (i == modsource)
-            state = mod_editor ? 2 : 1;
 
         if (i == modsource_editor[current_scene] && lfoNameLabel)
         {
@@ -796,6 +790,17 @@ void SurgeGUIEditor::refresh_mod()
             gui_modsrc[i]->setState(state);
             setupAlternates((modsources)i);
             gui_modsrc[i]->repaint();
+        }
+    }
+
+    // Now find and set the state for the right modsource
+    if (modsource > 0)
+    {
+        int state = mod_editor ? 2 : 1;
+        for (int i = 1; i < n_modsources; i++)
+        {
+            if (gui_modsrc[i] && gui_modsrc[i]->containsModSource(modsource))
+                gui_modsrc[i]->setState(state);
         }
     }
 }
