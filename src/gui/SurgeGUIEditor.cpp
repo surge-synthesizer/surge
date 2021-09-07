@@ -1785,6 +1785,7 @@ void SurgeGUIEditor::scaleFileDropped(const string &fn)
     }
     catch (Tunings::TuningError &e)
     {
+        synth->storage.retuneTo12TETScaleC261Mapping();
         synth->storage.reportError(e.what(), "SCL Error");
     }
 }
@@ -1798,6 +1799,7 @@ void SurgeGUIEditor::mappingFileDropped(const string &fn)
     }
     catch (Tunings::TuningError &e)
     {
+        synth->storage.remapToConcertCKeyboard();
         synth->storage.reportError(e.what(), "KBM Error");
     }
 }
@@ -2304,6 +2306,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             }
             catch (Tunings::TuningError &e)
             {
+                synth->storage.retuneTo12TETScaleC261Mapping();
                 synth->storage.reportError(e.what(), "Loading Error");
             }
         };
@@ -2361,6 +2364,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             }
             catch (Tunings::TuningError &e)
             {
+                synth->storage.remapToConcertCKeyboard();
                 synth->storage.reportError(e.what(), "Loading Error");
             }
         };
@@ -5052,6 +5056,7 @@ void SurgeGUIEditor::scaleTextEdited(juce::String newScale)
     }
     catch (Tunings::TuningError &e)
     {
+        synth->storage.retuneTo12TETScaleC261Mapping();
         synth->storage.reportError(e.what(), "SCL Error");
     }
 }
