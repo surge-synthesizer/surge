@@ -797,10 +797,18 @@ void SurgeGUIEditor::refresh_mod()
     if (modsource > 0)
     {
         int state = mod_editor ? 2 : 1;
+        if (modsource == modsource_editor[current_scene])
+        {
+            state |= 4;
+        }
+
         for (int i = 1; i < n_modsources; i++)
         {
             if (gui_modsrc[i] && gui_modsrc[i]->containsModSource(modsource))
+            {
                 gui_modsrc[i]->setState(state);
+                gui_modsrc[i]->repaint();
+            }
         }
     }
 }
