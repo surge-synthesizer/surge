@@ -78,6 +78,7 @@
 
     <color id="waveshaper.text" value="lightgray"/>
     <color id="waveshaper.text.hover" value="white"/>
+    <color id="waveshaper.waveform.hover" value="white"/>
     <color id="waveshaper.waveform.dots" value="black"/>
 
     <color id="msegeditor.background" value="#202020"/>
