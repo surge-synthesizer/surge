@@ -263,6 +263,8 @@ jobs:
 - job: NotifyReleases
   dependsOn: Build
   condition: succeeded()
+  pool:
+    vmImage: 'ubuntu-20.04'
 
   steps:
   - checkout: none
