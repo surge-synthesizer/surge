@@ -187,12 +187,12 @@ Connector fx_bypass = Connector("global.fx_bypass", 607, 12, 135, 27, Components
                           .withHSwitch2Properties(IDB_FX_GLOBAL_BYPASS, 4, 1, 4);
 Connector character = Connector("global.character", 607, 42, 135, 12, Components::MultiSwitch)
                           .withHSwitch2Properties(IDB_OSC_CHARACTER, 3, 1, 3);
-Connector master_volume = Connector("global.volume", 756, 29);
+Connector master_volume = Connector("global.volume", 760, 29);
 
-Connector fx1_return = Connector("global.fx1_return", 759, 141);
-Connector fx2_return = Connector("global.fx2_return", 759, 162);
-Connector fx3_return = Connector("global.fx3_return", 759, 141);
-Connector fx4_return = Connector("global.fx4_return", 759, 162);
+Connector fx1_return = Connector("global.fx1_return", 763, 141);
+Connector fx2_return = Connector("global.fx2_return", 763, 162);
+Connector fx3_return = Connector("global.fx3_return", 763, 141);
+Connector fx4_return = Connector("global.fx4_return", 763, 162);
 } // namespace Global
 
 namespace Scene
@@ -390,17 +390,17 @@ Connector keytrack_2 = Connector("filter.keytrack_2", 329, 301).asVertical().asW
 Connector envmod_1 = Connector("filter.envmod_1", 549, 301).asVertical().asWhite();
 Connector envmod_2 = Connector("filter.envmod_2", 569, 301).asVertical().asWhite();
 
-Connector waveshaper_drive = Connector("filter.waveshaper_drive", 419, 301).asVertical().asWhite();
+Connector waveshaper_drive = Connector("filter.waveshaper_drive", 421, 301).asVertical().asWhite();
 Connector waveshaper_type =
-    Connector("filter.waveshaper_type", 384, 311, 34, 47, Components::WaveShaperSelector)
+    Connector("filter.waveshaper_type", 386, 310, 34, 47, Components::WaveShaperSelector)
         .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
 Connector waveshaper_jog =
-    Connector("filter.waveshaper_jog", 385, 311 + 49, Connector::JOG_WAVESHAPE).asJogPlusMinus();
-Connector waveshaper_analyze = Connector("filter.waveshaper_analyze", 384 + 11, 311 + 49 + 14, 12,
-                                         12, Components::Switch, Connector::ANALYZE_WAVESHAPE)
+    Connector("filter.waveshaper_jog", 387, 359, Connector::JOG_WAVESHAPE).asJogPlusMinus();
+Connector waveshaper_analyze = Connector("filter.waveshaper_analyze", 408, 375, 11, 11,
+                                         Components::Switch, Connector::ANALYZE_WAVESHAPE)
                                    .withBackground(IDB_WAVESHAPER_ANALYSIS);
 
-Connector highpass = Connector("filter.highpass", 354, 301).asVertical().asWhite();
+Connector highpass = Connector("filter.highpass", 353, 301).asVertical().asWhite();
 } // namespace Filter
 
 namespace FEG
@@ -464,14 +464,14 @@ Connector release = Connector("aeg.release", 60, 34).asVertical().asWhite().inPa
 namespace FX
 {
 Connector fx_selector =
-    Connector("fx.selector", 757, 74, 139, 57, Components::Custom, Connector::FX_SELECTOR);
-Connector fx_type = Connector("fx.type", 761, 194, 133, 18, Components::FxMenu);
+    Connector("fx.selector", 760, 74, 139, 57, Components::Custom, Connector::FX_SELECTOR);
+Connector fx_type = Connector("fx.type", 765, 194, 133, 18, Components::FxMenu);
 
 Connector fx_preset =
-    Connector("fx.preset.name", 762, 212, 95, 12, Components::Custom, Connector::FXPRESET_LABEL);
-Connector fx_jog = Connector("fx.preset.prevnext", 860, 212, Connector::JOG_FX).asJogPlusMinus();
+    Connector("fx.preset.name", 766, 212, 95, 12, Components::Custom, Connector::FXPRESET_LABEL);
+Connector fx_jog = Connector("fx.preset.prevnext", 864, 212, Connector::JOG_FX).asJogPlusMinus();
 
-Connector fx_param_panel = Connector("fx.param.panel", 759, 224, Components::Group);
+Connector fx_param_panel = Connector("fx.param.panel", 763, 224, Components::Group);
 Connector param_1 = Connector("fx.param_1", 0, 0).inParent("fx.param.panel");
 Connector param_2 = Connector("fx.param_2", 0, 20).inParent("fx.param.panel");
 Connector param_3 = Connector("fx.param_3", 0, 40).inParent("fx.param.panel");
@@ -530,7 +530,7 @@ Connector release = Connector("lfo.release", 100, 0).inParent("lfo.envelope.pane
  */
 namespace OtherControls
 {
-Connector surge_menu = Connector("controls.surge_menu", 844, 550, 50, 15, Components::MultiSwitch,
+Connector surge_menu = Connector("controls.surge_menu", 848, 550, 50, 15, Components::MultiSwitch,
                                  Connector::SURGE_MENU)
                            .withProperty(Component::BACKGROUND, IDB_MAIN_MENU)
                            .withProperty(Component::DRAGGABLE_HSWITCH, false);
@@ -561,7 +561,7 @@ Connector status_zoom =
         .inParent("controls.status.panel");
 
 Connector vu_meter =
-    Connector("controls.vu_meter", 763, 15, 123, 13, Components::VuMeter, Connector::MAIN_VU_METER);
+    Connector("controls.vu_meter", 767, 15, 123, 13, Components::VuMeter, Connector::MAIN_VU_METER);
 
 Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Components::Custom,
                                   Connector::MSEG_EDITOR_WINDOW);
