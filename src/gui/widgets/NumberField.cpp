@@ -21,6 +21,8 @@
 #include "basic_dsp.h"
 #include "SurgeGUIUtils.h"
 #include "AccessibleHelpers.h"
+#include <iomanip>
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -54,7 +56,10 @@ std::string NumberField::valueToDisplay() const
         oss << poly << " / " << iValue;
         break;
     default:
-        oss << iValue;
+        if (extended)
+            return fmt::format("{:.2f}", (float)(iValue / 100.0));
+        else
+            oss << iValue;
         break;
     }
     return oss.str();
@@ -73,12 +78,14 @@ void NumberField::paint(juce::Graphics &g)
 
 void NumberField::bounceToInt()
 {
-    iValue = limit_range((int)round(value * (iMax - iMin) + iMin), iMin, iMax);
+    iValue = limit_range(Parameter::intUnscaledFromFloat(value, iMax, iMin), iMin, iMax);
 }
 
-void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n)
+void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n,
+                                 bool isExtended)
 {
     controlMode = n;
+    extended = isExtended;
     switch (controlMode)
     {
     case Skin::Parameters::NONE:
@@ -91,7 +98,7 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
         break;
     case Skin::Parameters::PB_DEPTH:
         iMin = 0;
-        iMax = 24;
+        iMax = 24 * (isExtended ? 100 : 1);
         break;
     case Skin::Parameters::NOTENAME:
         iMin = 0;

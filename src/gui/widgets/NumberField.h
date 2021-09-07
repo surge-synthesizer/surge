@@ -38,6 +38,7 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
 
     float value{0};
     int iValue{0}, iMin{0}, iMax{1};
+    bool extended{false};
     void setValue(float f) override
     {
         value = f;
@@ -67,7 +68,8 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
     void changeBy(int inc);
 
     Surge::Skin::Parameters::NumberfieldControlModes controlMode{Surge::Skin::Parameters::NONE};
-    void setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n);
+    void setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n,
+                        bool isExtended = false);
     Surge::Skin::Parameters::NumberfieldControlModes getControlMode() const { return controlMode; }
 
     enum MouseMode
