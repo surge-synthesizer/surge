@@ -117,7 +117,7 @@ void ModulatableSlider::updateLocationState()
         // This calculation is a little dicey but is correct
         labelRect = juce::Rectangle<int>()
                         .withX(handleX0)
-                        .withY(trayh / 2)
+                        .withY(trayh / 2 + 1)
                         .withHeight(trayh)
                         .withWidth(range)
                         .withTrimmedRight(1)
