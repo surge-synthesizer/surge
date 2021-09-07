@@ -337,10 +337,12 @@ void WaveShaperSelector::paint(juce::Graphics &g)
 
     if (bg)
     {
+        bg->draw(g, 1.0);
+
         if (isLabelHovered && bgHover)
+        {
             bgHover->draw(g, 1.0);
-        else
-            bg->draw(g, 1.0);
+        }
     }
 
     if (isLabelHovered)

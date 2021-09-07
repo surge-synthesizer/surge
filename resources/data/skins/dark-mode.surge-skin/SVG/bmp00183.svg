@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="0 0 34 47" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0.5" y="0.5" width="33" height="46" rx="4" ry="4" style="stroke: #000000; fill: #242424;"/>
-  <rect x="0.5" y="0.5" width="33" height="12" rx="4" ry="4" style="fill: #3D3D3D;"/>
-  <rect x="0.5" y="3" width="33" height="10" rx="0" ry="0" style="fill: #3D3D3D;"/>
-  <line style="stroke: #000000;" x1="0" y1="13" x2="34" y2="13"/>
-  <rect x="0.5" y="0.5" width="33" height="46" rx="4" ry="4" style="stroke: #000000; fill: none;"/>
+<svg width="34" height="47" viewBox="0 0 34 47" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.5" y="0.5" width="33" height="46" rx="2.5" fill="#242424" stroke="black"/>
+<path d="M31 1H3C1.89543 1 1 1.89543 1 3V13H33V3C33 1.89543 32.1046 1 31 1Z" fill="url(#paint0_linear)"/>
+<path d="M0 12.5H34" stroke="black"/>
+<defs>
+<linearGradient id="paint0_linear" x1="17" y1="1" x2="17" y2="13" gradientUnits="userSpaceOnUse">
+<stop stop-color="#434343"/>
+<stop offset="1" stop-color="#303030"/>
+</linearGradient>
+</defs>
 </svg>
