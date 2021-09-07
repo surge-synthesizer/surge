@@ -285,6 +285,8 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         a->push_back(scene[sc].pbrange_dn.assign(
             p_id.next(), id_s++, "pbrange_dn", "Pitch Bend Down Range", ct_pbdepth,
             Surge::Skin::Scene::pbrange_dn, sc_id, cg_GLOBAL, 0, true, kNoPopup));
+        scene[sc].pbrange_up.set_extend_range(false);
+        scene[sc].pbrange_dn.set_extend_range(false);
 
         a->push_back(scene[sc].vca_level.assign(p_id.next(), id_s++, "vca_level", "VCA Gain",
                                                 ct_decibel, Surge::Skin::Scene::gain, sc_id,

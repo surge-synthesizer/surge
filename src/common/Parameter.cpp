@@ -27,6 +27,7 @@
 #include <UserDefaults.h>
 #include "DebugHelpers.h"
 #include "StringOps.h"
+#include "Tunings.h"
 
 Parameter::Parameter()
 {
@@ -276,6 +277,10 @@ bool Parameter::can_extend_range() const
     case ct_percent_oscdrift:
     case ct_twist_aux_mix:
     case ct_countedset_percent_extendable:
+
+    // Extendable integers are really rare and special. If you add one you may
+    // want to chat on discord...
+    case ct_pbdepth:
         return true;
     }
     return false;
@@ -1856,6 +1861,7 @@ void Parameter::set_storage_value(float f)
 
 void Parameter::set_extend_range(bool er)
 {
+    bool prior_extend = extend_range;
 #if DEBUG_WRITABLE_EXTEND_RANGE
     extend_range_internal = er;
 #else
@@ -1888,6 +1894,13 @@ void Parameter::set_extend_range(bool er)
             val_default.f = 0.f;
         }
         break;
+        case ct_pbdepth:
+        {
+            val_min.i = 0;
+            val_max.i = 24;
+            val_default.i = 2;
+        }
+        break;
         default:
             break;
         }
@@ -1909,6 +1922,15 @@ void Parameter::set_extend_range(bool er)
             val_default.f = 0.5f;
         }
         break;
+        case ct_pbdepth:
+        {
+            val_min.i = 0;
+            val_max.i = 2400;
+            val_default.i = 200;
+        }
+        break;
+        default:
+            break;
         }
     }
 }
@@ -3082,6 +3104,14 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         }
         switch (ctrltype)
         {
+        case ct_pbdepth:
+        {
+            if (extend_range)
+                snprintf(txt, TXT_SIZE, "%i Cents", i);
+            else
+                snprintf(txt, TXT_SIZE, "%i Keys", i);
+        }
+        break;
         case ct_midikey_or_channel:
         {
             auto sm = storage->getPatch().scenemode.val.i;
@@ -3918,6 +3948,23 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             break;
         }
+        case ct_pbdepth:
+        {
+            if (extend_range && s.find("/") != std::string::npos)
+            {
+                try
+                {
+                    auto a = Tunings::toneFromString(s);
+                    auto c = a.cents;
+                    ni = (int)std::round(c);
+                }
+                catch (const Tunings::TuningError &e)
+                {
+                    ni = 200;
+                }
+            }
+        }
+        break;
         }
 
         if (ni >= val_min.i && ni <= val_max.i)

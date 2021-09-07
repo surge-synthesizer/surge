@@ -4575,7 +4575,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::NUMBERFIELD_CONTROLMODE,
                                        std::to_string(Surge::Skin::Parameters::NONE));
         pbd->setControlMode(
-            (Surge::Skin::Parameters::NumberfieldControlModes)std::atoi(nfcm.c_str()));
+            (Surge::Skin::Parameters::NumberfieldControlModes)std::atoi(nfcm.c_str()),
+            p->extend_range);
         pbd->setValue(p->get_value_f01());
         pbd->setBounds(skinCtrl->getRect());
 
@@ -4596,6 +4597,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             frame->addAndMakeVisible(*pbd);
         }
+
         nonmod_param[paramIndex] = pbd.get();
 
         if (p && p->ctrltype == ct_midikey_or_channel)

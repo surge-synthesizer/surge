@@ -567,6 +567,73 @@ TEST_CASE("Non-MPE pitch bend", "[mod]")
     }
 }
 
+TEST_CASE("Extended pitch bend", "[mod]")
+{
+    SECTION("Simple Bend Distances Up")
+    {
+        auto surge = surgeOnSine();
+        surge->mpeEnabled = false;
+        surge->storage.getPatch().scene[0].pbrange_up.set_extend_range(true);
+        surge->storage.getPatch().scene[0].pbrange_up.val.i = 250;
+        surge->storage.getPatch().scene[0].pbrange_dn.val.i = 2;
+
+        auto f60 = frequencyForNote(surge, 60);
+        auto f58 = frequencyForNote(surge, 58);
+
+        surge->pitchBend(0, 8192);
+        auto f60bendUp = frequencyForNote(surge, 60);
+
+        surge->pitchBend(0, -8192);
+        auto f60bendDn = frequencyForNote(surge, 60);
+
+        REQUIRE(f60bendUp == Approx(f60 * pow(2, (2.5f / 12.f))).margin(0.3));
+        REQUIRE(f58 == Approx(f60bendDn).margin(0.3));
+    }
+
+    SECTION("Simple Bend Distances Dn")
+    {
+        auto surge = surgeOnSine();
+        surge->mpeEnabled = false;
+        surge->storage.getPatch().scene[0].pbrange_up.val.i = 2;
+        surge->storage.getPatch().scene[0].pbrange_dn.set_extend_range(true);
+        surge->storage.getPatch().scene[0].pbrange_dn.val.i = 250;
+
+        auto f60 = frequencyForNote(surge, 60);
+        auto f62 = frequencyForNote(surge, 62);
+
+        surge->pitchBend(0, 8192);
+        auto f60bendUp = frequencyForNote(surge, 60);
+
+        surge->pitchBend(0, -8192);
+        auto f60bendDn = frequencyForNote(surge, 60);
+
+        REQUIRE(f62 == Approx(f60bendUp).margin(0.3));
+        REQUIRE(f60bendDn == Approx(f60 * pow(2, (-2.5f / 12.f))).margin(0.3));
+    }
+
+    SECTION("Pitch By Ratios")
+    {
+        auto surge = surgeOnSine();
+        surge->mpeEnabled = false;
+        surge->storage.getPatch().scene[0].pbrange_up.set_extend_range(true);
+        surge->storage.getPatch().scene[0].pbrange_up.set_value_from_string("9/8");
+
+        surge->storage.getPatch().scene[0].pbrange_dn.set_extend_range(true);
+        surge->storage.getPatch().scene[0].pbrange_dn.set_value_from_string("3/2");
+
+        auto f60 = frequencyForNote(surge, 60);
+
+        surge->pitchBend(0, 8192);
+        auto f60bendUp = frequencyForNote(surge, 60);
+
+        surge->pitchBend(0, -8192);
+        auto f60bendDn = frequencyForNote(surge, 60);
+
+        REQUIRE(f60bendUp == Approx(f60 * pow(2, (2.04f / 12.f))).margin(0.3));
+        REQUIRE(f60bendDn == Approx(f60 * pow(2, (-7.02f / 12.f))).margin(0.3));
+    }
+}
+
 TEST_CASE("Pitch Bend and Tuning", "[mod][tun]")
 {
     std::vector<std::string> testScales = {"resources/test-data/scl/12-intune.scl",

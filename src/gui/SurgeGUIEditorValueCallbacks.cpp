@@ -1104,6 +1104,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     contextMenu.addItem(
                         txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
+
+                    if (p->can_extend_range())
+                        contextMenu.addItem("Extend", true, p->extend_range, [this, p, control]() {
+                            auto wasExtended = p->extend_range;
+                            p->set_extend_range(!p->extend_range);
+                            if (p->ctrltype == ct_pbdepth)
+                            {
+                                if (wasExtended)
+                                    p->val.i = p->val.i / 100;
+                                else
+                                    p->val.i = p->val.i * 100;
+                            }
+
+                            synth->refresh_editor = true;
+                        });
                 }
                 else
                 {
