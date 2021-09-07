@@ -361,7 +361,6 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 
     mouseDownBounds = getBounds();
     componentDragger.startDraggingComponent(this, event);
-    setMouseCursor(juce::MouseCursor::DraggingHandCursor);
 }
 
 void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
@@ -428,6 +427,7 @@ void ModulationSourceButton::onSkinChanged()
 
 void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 {
+    setMouseCursor(juce::MouseCursor::NormalCursor);
     transientArmed = false;
     if (mouseMode == CLICK || mouseMode == CLICK_ARROW)
     {
@@ -436,7 +436,6 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 
     if (mouseMode == DRAG_COMPONENT_HAPPEN)
     {
-        setMouseCursor(juce::MouseCursor::NormalCursor);
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         auto q = event.position.translated(getBounds().getX(), getBounds().getY());
 
@@ -515,6 +514,8 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     getParentComponent()->toFront(false);
     toFront(false);
 
+    if (mouseMode != DRAG_COMPONENT_HAPPEN)
+        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
     auto sge = firstListenerOfType<SurgeGUIEditor>();

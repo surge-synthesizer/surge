@@ -86,6 +86,14 @@ struct ModulationSourceButton : public juce::Component,
     void setIsMeta(bool b) { isMeta = b; }
     void setBipolar(bool b) { isBipolar = b; }
 
+    bool containsModSource(modsources ms)
+    {
+        for (auto m : modlist)
+            if (std::get<0>(m) == ms)
+                return true;
+        return false;
+    }
+
     juce::Rectangle<int> hamburgerHome;
     bool needsHamburger() const { return modlist.size() > 1; }
 
