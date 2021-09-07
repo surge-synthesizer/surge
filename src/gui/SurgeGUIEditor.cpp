@@ -3845,10 +3845,15 @@ bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSource
 {
     juce::Component *target = nullptr;
 
-    auto isDroppable = [msb](juce::Component *c) {
-        auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(c);
+    auto msrc = msb->getCurrentModSource();
+    auto isDroppable = [this, msrc](juce::Component *c) {
+        auto tMCI = dynamic_cast<Surge::Widgets::ModulatableSlider *>(c);
         if (tMCI)
-            return true;
+        {
+            auto ptag = tMCI->getTag() - start_paramtags;
+            if (this->synth->isValidModulation(ptag, msrc))
+                return true;
+        }
         return false;
     };
     auto recC = [isDroppable, msb, pt](juce::Component *p, auto rec) -> juce::Component * {
