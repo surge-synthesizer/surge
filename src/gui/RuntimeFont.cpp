@@ -25,6 +25,17 @@ namespace GUI
 
 DefaultFonts::DefaultFonts()
 {
+#if WINDOWS
+    /* On windows in memory fonts use GDI and OS fonts use D2D so if we have
+     * LATO in the OS use that
+     */
+    auto ft = juce::Font::findAllTypefaceNames();
+    for (const auto &q : ft)
+        if (q == "Lato")
+            useOSLato = true;
+
+#endif
+
 #define TEST_WITH_INDIE_FLOWER 0
 #if TEST_WITH_INDIE_FLOWER
     latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
@@ -46,7 +57,14 @@ DefaultFonts::~DefaultFonts(){};
 
 juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
-    return juce::Font(latoRegularTypeface).withPointHeight(size).withStyle(style);
+    if (useOSLato)
+    {
+        return juce::Font("Lato", 10, 0).withPointHeight(size).withStyle(style);
+    }
+    else
+    {
+        return juce::Font(latoRegularTypeface).withPointHeight(size).withStyle(style);
+    }
 }
 
 juce::Font DefaultFonts::getFiraMonoAtSize(float size) const

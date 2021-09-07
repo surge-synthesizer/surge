@@ -16,6 +16,8 @@ struct DefaultFonts : public juce::DeletedAtShutdown
                   juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;
     juce::Font getFiraMonoAtSize(float size) const;
 
+    bool useOSLato{false};
+
     juce::Font displayFont;
     juce::Font patchNameFont;
     juce::Font lfoTypeFont;
