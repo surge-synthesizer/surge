@@ -24,6 +24,29 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4
     void drawLabel(juce::Graphics &graphics, juce::Label &label) override;
     void drawTextEditorOutline(juce::Graphics &graphics, int width, int height,
                                juce::TextEditor &editor) override;
-};
 
+    enum SurgeColourIds
+    {
+        componentBgStart = 0x3700001,
+        componentBgEnd,
+
+        vkbTextLabelId,
+        vkbShadowId,
+        vkbBlackKeyId,
+        vkbWhiteKeyId,
+        vkbKeySeparatorId,
+        vkbMouseOverKeyOverlayId,
+        vkbKeyDownOverlayId,
+        vkbOctaveJogBackgroundId,
+        vkbOctaveJogArrowId,
+
+        tempoBackgroundId,
+        tempoLabelId,
+
+        tempoTypeinBackgroundId,
+        tempoTypeinBorderId,
+        tempoTypeinHighlightId,
+        tempoTypeinTextId,
+    };
+};
 #endif // SURGE_XT_SURGEJUCELOOKANDFEEL_H

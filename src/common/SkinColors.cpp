@@ -39,7 +39,8 @@ namespace Entry
 {
 const Surge::Skin::Color Background("dialog.textfield.background", 255, 255, 255),
     Border("dialog.textfield.border", 160, 160, 160),
-    Focus("dialog.textfield.focus", 170, 170, 230), Text("dialog.textfield.text", 0, 0, 0);
+    Caret("dialog.textfield.caret", 160, 160, 160), Focus("dialog.textfield.focus", 224, 224, 224),
+    Text("dialog.textfield.text", 0, 0, 0);
 }
 namespace Label
 {
@@ -409,4 +410,22 @@ const Surge::Skin::Color Background("vumeter.background", 21, 21, 21),
     Border("vumeter.border", 205, 206, 212);
 
 }
+
+namespace VirtualKeyboard
+{
+const Surge::Skin::Color Text("vkb.text", 0, 0, 0), Shadow("vkb.shadow", 0, 0, 0, 64);
+
+namespace Key
+{
+const Surge::Skin::Color Black("vkb.key.black", 0, 0, 0), White("vkb.key.white", 255, 255, 255),
+    Separator("vkb.key.separator", 0, 0, 0, 96), MouseOver("vkb.key.mouse_over", 255, 144, 0, 128),
+    Pressed("vkb.key.pressed", 255, 144, 0);
+}
+
+namespace OctaveJog
+{
+const Surge::Skin::Color Background("vkb.octave.background", 151, 151, 151),
+    Arrow("vkb.octave.arrow", 0, 0, 0);
+}
+} // namespace VirtualKeyboard
 } // namespace Colors

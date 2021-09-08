@@ -29,6 +29,7 @@
 #include "ModulatorPresetManager.h"
 
 #include "SurgeSynthEditor.h"
+#include "SurgeJUCELookAndFeel.h"
 
 #include "SurgeGUIEditorTags.h"
 #include "fmt/core.h"
@@ -3318,6 +3319,8 @@ void SurgeGUIEditor::reloadFromSkin()
 
     setJUCEColour(juce::DocumentWindow::backgroundColourId, juce::Colour(48, 48, 48));
     setJUCEColour(juce::TextButton::buttonColourId, juce::Colour(32, 32, 32));
+    setJUCEColour(juce::CaretComponent::caretColourId,
+                  currentSkin->getColor(Colors::Dialog::Entry::Caret));
     setJUCEColour(juce::TextEditor::backgroundColourId, juce::Colour(32, 32, 32));
     setJUCEColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
     setJUCEColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
@@ -3330,8 +3333,41 @@ void SurgeGUIEditor::reloadFromSkin()
     setJUCEColour(juce::PopupMenu::backgroundColourId, juce::Colour(48, 48, 48));
     setJUCEColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(96, 96, 96));
 
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoBackgroundId,
+                  currentSkin->getColor(Colors::Dialog::Background));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId,
+                  currentSkin->getColor(Colors::Dialog::Label::Text));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBackgroundId,
+                  currentSkin->getColor(Colors::Dialog::Entry::Background));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBorderId,
+                  currentSkin->getColor(Colors::Dialog::Entry::Border));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId,
+                  currentSkin->getColor(Colors::Dialog::Entry::Focus));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId,
+                  currentSkin->getColor(Colors::Dialog::Entry::Text));
+
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbTextLabelId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Text));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbShadowId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Shadow));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbBlackKeyId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Key::Black));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbWhiteKeyId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Key::White));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeySeparatorId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Key::Separator));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbMouseOverKeyOverlayId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Key::MouseOver));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeyDownOverlayId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::Key::Pressed));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogBackgroundId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
+    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogArrowId,
+                  currentSkin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));
+
     synth->refresh_editor = true;
     scanJuceSkinComponents = true;
+    juceEditor->repaint();
 }
 
 juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)

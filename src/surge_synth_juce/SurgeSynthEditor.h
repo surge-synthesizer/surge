@@ -11,6 +11,7 @@
 #pragma once
 
 #include "SurgeSynthProcessor.h"
+#include "SkinSupport.h"
 
 #include "juce_audio_utils/juce_audio_utils.h"
 

@@ -97,6 +97,8 @@ void TypeinParamEditor::onSkinChanged()
     textEd->setColour(juce::TextEditor::backgroundColourId,
                       skin->getColor(Colors::Dialog::Entry::Background));
     textEd->setColour(juce::TextEditor::textColourId, skin->getColor(Colors::Dialog::Entry::Text));
+    textEd->setColour(juce::TextEditor::highlightedTextColourId,
+                      skin->getColor(Colors::Dialog::Entry::Text));
     textEd->setColour(juce::TextEditor::highlightColourId,
                       skin->getColor(Colors::Dialog::Entry::Focus));
     textEd->setColour(juce::TextEditor::outlineColourId,
