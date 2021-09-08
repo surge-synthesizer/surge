@@ -79,6 +79,8 @@ void PatchStoreDialog::onSkinChanged()
                           skin->getColor(Colors::Dialog::Entry::Background));
         typein->setColour(juce::TextEditor::textColourId,
                           skin->getColor(Colors::Dialog::Entry::Text));
+        typein->setColour(juce::TextEditor::highlightedTextColourId,
+                          skin->getColor(Colors::Dialog::Entry::Text));
         typein->setColour(juce::TextEditor::highlightColourId,
                           skin->getColor(Colors::Dialog::Entry::Focus));
         typein->setColour(juce::TextEditor::outlineColourId,

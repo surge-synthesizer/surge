@@ -54,7 +54,7 @@ extern const Surge::Skin::Color Background, Border, Tick;
 }
 namespace Entry
 {
-extern const Surge::Skin::Color Background, Border, Focus, Text;
+extern const Surge::Skin::Color Background, Border, Caret, Focus, Text;
 }
 namespace Label
 {
@@ -304,4 +304,18 @@ namespace VuMeter
 {
 extern const Surge::Skin::Color Border, Background;
 }
+
+namespace VirtualKeyboard
+{
+extern const Surge::Skin::Color Text, Shadow;
+
+namespace Key
+{
+extern const Surge::Skin::Color Black, White, Separator, MouseOver, Pressed;
+}
+namespace OctaveJog
+{
+extern const Surge::Skin::Color Background, Arrow;
+} // namespace OctaveJog
+} // namespace VirtualKeyboard
 } // namespace Colors

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "SurgeSynthProcessor.h"
+#include "SkinSupport.h"
 
 #include "juce_audio_utils/juce_audio_utils.h"
 
@@ -86,6 +87,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::Drawable> logo;
 
     std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };
