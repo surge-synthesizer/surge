@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -f build-osx.sh ]; then
+if [ ! -f CMakeLists.txt ]; then
     echo "Please run build-version-override.sh from the root of the surge git directory"
     exit 1
 fi
