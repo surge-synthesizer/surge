@@ -425,7 +425,7 @@ const Surge::Skin::Color Black("vkb.key.black", 0, 0, 0), White("vkb.key.white",
 namespace OctaveJog
 {
 const Surge::Skin::Color Background("vkb.octave.background", 151, 151, 151),
-    Arrow("vkb.octave.arrow", 255, 0, 0);
+    Arrow("vkb.octave.arrow", 0, 0, 0);
 }
 } // namespace VirtualKeyboard
 } // namespace Colors
