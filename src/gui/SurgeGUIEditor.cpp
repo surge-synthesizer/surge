@@ -3346,27 +3346,28 @@ void SurgeGUIEditor::reloadFromSkin()
     setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId,
                   currentSkin->getColor(Colors::Dialog::Entry::Text));
 
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbTextLabelId,
+    setJUCEColour(juce::MidiKeyboardComponent::textLabelColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Text));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbShadowId,
+    setJUCEColour(juce::MidiKeyboardComponent::shadowColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Shadow));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbBlackKeyId,
+    setJUCEColour(juce::MidiKeyboardComponent::blackNoteColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Key::Black));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbWhiteKeyId,
+    setJUCEColour(juce::MidiKeyboardComponent::whiteNoteColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Key::White));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeySeparatorId,
+    setJUCEColour(juce::MidiKeyboardComponent::keySeparatorLineColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Key::Separator));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbMouseOverKeyOverlayId,
+    setJUCEColour(juce::MidiKeyboardComponent::mouseOverKeyOverlayColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Key::MouseOver));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeyDownOverlayId,
+    setJUCEColour(juce::MidiKeyboardComponent::keyDownOverlayColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::Key::Pressed));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogBackgroundId,
+    setJUCEColour(juce::MidiKeyboardComponent::upDownButtonArrowColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
-    setJUCEColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogArrowId,
+    setJUCEColour(juce::MidiKeyboardComponent::upDownButtonArrowColourId,
                   currentSkin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));
 
     synth->refresh_editor = true;
     scanJuceSkinComponents = true;
+    juceEditor->reapplySurgeComponentColours();
     juceEditor->repaint();
 }
 

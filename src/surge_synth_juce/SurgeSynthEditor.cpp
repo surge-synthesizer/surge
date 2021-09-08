@@ -111,29 +111,16 @@ void SurgeSynthEditor::handleAsyncUpdate() {}
 void SurgeSynthEditor::paint(juce::Graphics &g)
 {
     g.fillAll(findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoBackgroundId));
+}
 
-    keyboard->setColour(juce::MidiKeyboardComponent::textLabelColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbTextLabelId));
-    keyboard->setColour(juce::MidiKeyboardComponent::shadowColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbShadowId));
-    keyboard->setColour(juce::MidiKeyboardComponent::blackNoteColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbBlackKeyId));
-    keyboard->setColour(juce::MidiKeyboardComponent::whiteNoteColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbWhiteKeyId));
-    keyboard->setColour(juce::MidiKeyboardComponent::keySeparatorLineColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeySeparatorId));
-    keyboard->setColour(juce::MidiKeyboardComponent::mouseOverKeyOverlayColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbMouseOverKeyOverlayId));
-    keyboard->setColour(juce::MidiKeyboardComponent::keyDownOverlayColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbKeyDownOverlayId));
-    keyboard->setColour(juce::MidiKeyboardComponent::upDownButtonBackgroundColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogBackgroundId));
-    keyboard->setColour(juce::MidiKeyboardComponent::upDownButtonArrowColourId,
-                        findColour(SurgeJUCELookAndFeel::SurgeColourIds::vkbOctaveJogArrowId));
+void SurgeSynthEditor::idle() { adapter->idle(); }
 
+void SurgeSynthEditor::reapplySurgeComponentColours()
+{
     tempoLabel->setColour(juce::Label::textColourId,
                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId));
 
+    /*
     tempoTypein->setColour(
         juce::TextEditor::backgroundColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBackgroundId));
@@ -142,13 +129,15 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
     tempoTypein->setColour(
         juce::TextEditor::highlightColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId));
-    tempoTypein->setColour(juce::TextEditor::highlightedTextColourId,
-                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
+    tempoTypein->setColour(
+        juce::TextEditor::highlightedTextColourId,
+        findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId));
     tempoTypein->setColour(juce::TextEditor::textColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
-}
+    */
 
-void SurgeSynthEditor::idle() { adapter->idle(); }
+    repaint();
+}
 
 void SurgeSynthEditor::resized()
 {
@@ -158,7 +147,16 @@ void SurgeSynthEditor::resized()
     auto h = getHeight() - (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0);
     auto wR = 1.0 * w / adapter->getWindowSizeX();
     auto hR = 1.0 * h / adapter->getWindowSizeY();
+
     auto zfn = std::min(wR, hR);
+    if (wR < 1 && hR < 1)
+        zfn = std::max(wR, hR);
+    if ((wR - 1) * (hR - 1) < 0)
+        zfn = std::min(zfn, 1.0);
+    auto wT = adapter->getWindowSizeX() * zfn;
+    auto hT = adapter->getWindowSizeY() * zfn +
+              (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0);
+
     bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
 
     if (drawExtendedControls)
@@ -183,12 +181,6 @@ void SurgeSynthEditor::resized()
             tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setVisible(addTempo);
-            tempoTypein->setColour(
-                juce::TextEditor::highlightedTextColourId,
-                findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
-            tempoTypein->setColour(
-                juce::TextEditor::textColourId,
-                findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
         }
     }
     else
@@ -200,7 +192,7 @@ void SurgeSynthEditor::resized()
 
     if (zfn != 1.0)
     {
-        adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
+        // adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
     }
 }
 
