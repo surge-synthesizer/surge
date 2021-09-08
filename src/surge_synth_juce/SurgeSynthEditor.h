@@ -88,6 +88,5 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;
 
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };
