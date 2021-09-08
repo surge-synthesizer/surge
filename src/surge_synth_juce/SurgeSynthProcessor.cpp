@@ -175,7 +175,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
     auto mocs = layouts.getMainOutputChannelSet();
     auto mics = layouts.getMainInputChannelSet();
 
-    auto outputValid = (mocs == AudioChannelSet::stereo()) || mocs.isDisabled();
+    auto outputValid = (mocs == AudioChannelSet::stereo()) || (mocs == AudioChannelSet::mono()) || mocs.isDisabled();
     auto inputValid = (mics == AudioChannelSet::stereo()) || (mics == AudioChannelSet::mono()) ||
                       (mics.isDisabled());
 
