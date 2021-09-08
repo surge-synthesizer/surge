@@ -4526,7 +4526,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setTag(p->id + start_paramtags);
             lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
             lfoDisplay->setModSource((modsources)p->ctrlgroup_entry);
-            lfoDisplay->setModIndex(modsource_index);
+
+            auto msi = 0;
+            if (gui_modsrc[p->ctrlgroup_entry])
+                msi = gui_modsrc[p->ctrlgroup_entry]->getCurrentModIndex();
+            lfoDisplay->setModIndex(msi);
             lfoDisplay->setStorage(&synth->storage);
             lfoDisplay->setStepSequencerStorage(
                 &synth->storage.getPatch().stepsequences[current_scene][lfo_id]);
