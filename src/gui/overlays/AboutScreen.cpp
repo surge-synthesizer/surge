@@ -31,6 +31,49 @@ struct NoUrlHyperlinkButton : public juce::HyperlinkButton
     void clicked() override {}
 };
 
+struct ClickURLImage : public juce::Component
+{
+    ClickURLImage(SurgeImage *img, int offset, const std::string &URL)
+        : url(URL), offset(offset), img(img)
+    {
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        int ys = isHovered ? imgsz : 0;
+        int xs = offset * imgsz;
+        juce::Graphics::ScopedSaveState gs(g);
+        auto t = juce::AffineTransform();
+        t = t.translated(-xs, -ys);
+
+        g.reduceClipRegion(0, 0, imgsz, imgsz);
+        img->draw(g, 1.0, t);
+    }
+
+    void mouseEnter(const juce::MouseEvent &e) override
+    {
+        isHovered = true;
+        repaint();
+    }
+
+    void mouseExit(const juce::MouseEvent &e) override
+    {
+        isHovered = false;
+        repaint();
+    }
+
+    void mouseUp(const juce::MouseEvent &event) override
+    {
+        juce::URL(url).launchInDefaultBrowser();
+    }
+
+    bool isHovered{false};
+    std::string url;
+    int offset;
+    SurgeImage *img;
+    int imgsz = 36;
+};
+
 AboutScreen::AboutScreen() {}
 
 AboutScreen::~AboutScreen() noexcept = default;
@@ -186,51 +229,33 @@ void AboutScreen::resized()
             "by Émilie Gillet, licensed under MIT license",
             600);
 
-        auto lb = std::make_unique<juce::Label>();
-        lb->setInterceptsMouseClicks(false, false);
-        lb->setText("Github / Discord / JUCE logo", juce::NotificationType::dontSendNotification);
-        lb->setColour(juce::Label::textColourId, juce::Colours::orchid);
-        lb->setBounds(500, margin, 300, 50);
-        addAndMakeVisible(*lb);
-        labels.push_back(std::move(lb));
-#if 0
-        auto iconsize = CPoint(36, 36);
-    auto ranchor = vs.right - iconsize.x - margin;
-    auto spacing = 56;
+        auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
 
-    yp = margin;
-
-    // place these right to left respecting right anchor (ranchor) and icon spacing
-    auto discord = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 0), yp), iconsize));
-    discord->setURL("https://discord.gg/aFQDdMV");
-    discord->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-    discord->setHorizOffset(CCoord(144));
-    addView(discord);
-
-    auto gplv3 = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 1), yp), iconsize));
-    gplv3->setURL("https://www.gnu.org/licenses/gpl-3.0-standalone.html");
-    gplv3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-    gplv3->setHorizOffset(CCoord(108));
-    addView(gplv3);
-
-    auto au = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 2), yp), iconsize));
-    au->setURL("https://developer.apple.com/documentation/audiounit");
-    au->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-    au->setHorizOffset(CCoord(72));
-    addView(au);
-
-    auto vst3 = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 3), yp), iconsize));
-    vst3->setURL("https://www.steinberg.net/en/company/technologies/vst3.html");
-    vst3->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-    vst3->setHorizOffset(CCoord(36));
-    addView(vst3);
-
-    auto gh = new CSurgeHyperlink(CRect(CPoint(ranchor - (spacing * 4), yp), iconsize));
-    gh->setURL("https://github.com/surge-synthesizer/surge/");
-    gh->setBitmap(bitmapStore->getBitmap(IDB_ABOUT_LOGOS));
-    gh->setHorizOffset(CCoord(0));
-    addView(gh);
-#endif
+        // so 'github / discord / gpl3'
+        // th 'juce / au / vst3'
+        auto idxes = {0, 4, 3, 5, 1, 2};
+        std::vector<std::string> urls = {
+            // icon order so gh, vst, au, gpl, discord, juce
+            "https://github.com/surge-synthesizer/surge/",
+            "https://www.steinberg.net/en/company/technologies/vst3.html",
+            "https://developer.apple.com/documentation/audiounit",
+            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+            "https://discord.gg/aFQDdMV",
+            "https://juce.com"};
+        int xi = 0, yi = 0;
+        for (auto idx : idxes)
+        {
+            auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx]);
+            bt->setBounds(getWidth() - 40 * 3 + xi * 40, 10 + yi * 40, 36, 36);
+            addAndMakeVisible(*bt);
+            icons.push_back(std::move(bt));
+            xi++;
+            if (xi == 3)
+            {
+                xi = 0;
+                yi++;
+            }
+        }
     }
 }
 

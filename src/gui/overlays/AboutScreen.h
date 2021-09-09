@@ -62,6 +62,7 @@ struct AboutScreen : public juce::Component,
 
     std::vector<std::unique_ptr<juce::Label>> labels;
     std::vector<std::unique_ptr<juce::Button>> buttons;
+    std::vector<std::unique_ptr<juce::Component>> icons;
 
     std::unique_ptr<juce::Button> copyButton;
 
