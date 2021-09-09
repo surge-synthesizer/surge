@@ -216,49 +216,6 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         surge->resetStateFromTimeData();
     }
 
-    for (const MidiMessageMetadata it : midiMessages)
-    {
-        MidiMessage m = it.getMessage();
-        const int ch = m.getChannel() - 1;
-        juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
-        midiKeyboardState.processNextMidiEvent(m);
-
-        if (m.isNoteOn())
-        {
-            surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0);
-        }
-        else if (m.isNoteOff())
-        {
-            surge->releaseNote(ch, m.getNoteNumber(), m.getVelocity());
-        }
-        else if (m.isChannelPressure())
-        {
-            surge->channelAftertouch(ch, m.getChannelPressureValue());
-        }
-        else if (m.isAftertouch())
-        {
-            surge->polyAftertouch(ch, m.getNoteNumber(), m.getAfterTouchValue());
-        }
-        else if (m.isPitchWheel())
-        {
-            surge->pitchBend(ch, m.getPitchWheelValue() - 8192);
-        }
-        else if (m.isController())
-        {
-            surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
-        }
-        else if (m.isProgramChange())
-        {
-            // apparently this is not enough to actually execute SurgeSynthesizer::programChange
-            // for whatever reason!
-            surge->programChange(ch, m.getProgramChangeNumber());
-        }
-        else
-        {
-            // std::cout << "Ignoring message " << std::endl;
-        }
-    }
-
     midiR rec;
     while (midiFromGUI.pop(rec))
     {
@@ -280,8 +237,29 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
     auto sceneBOutput = getBusBuffer(buffer, false, 2);
+
+    auto midiIt = midiMessages.findNextSamplePosition(0);
+    int nextMidi = -1;
+    if (midiIt != midiMessages.cend())
+    {
+        nextMidi = (*midiIt).samplePosition;
+    }
+
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
+        if (i == nextMidi)
+        {
+            applyMidi(*midiIt);
+            midiIt++;
+            if (midiIt == midiMessages.cend())
+            {
+                nextMidi = -1;
+            }
+            else
+            {
+                nextMidi = (*midiIt).samplePosition;
+            }
+        }
         auto outL = mainOutput.getWritePointer(0, i);
         auto outR = mainOutput.getWritePointer(1, i);
 
@@ -333,6 +311,13 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         blockPos = (blockPos + 1) & (BLOCK_SIZE - 1);
     }
 
+    // This should, in theory, never happen, but better safe than sorry
+    while (midiIt != midiMessages.cend())
+    {
+        applyMidi(*midiIt);
+        midiIt++;
+    }
+
     if (checkNamesEvery++ > 10)
     {
         checkNamesEvery = 0;
@@ -340,6 +325,49 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
         {
             updateHostDisplay();
         }
+    }
+}
+
+void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
+{
+    MidiMessage m = it.getMessage();
+    const int ch = m.getChannel() - 1;
+    juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+    midiKeyboardState.processNextMidiEvent(m);
+
+    if (m.isNoteOn())
+    {
+        surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0);
+    }
+    else if (m.isNoteOff())
+    {
+        surge->releaseNote(ch, m.getNoteNumber(), m.getVelocity());
+    }
+    else if (m.isChannelPressure())
+    {
+        surge->channelAftertouch(ch, m.getChannelPressureValue());
+    }
+    else if (m.isAftertouch())
+    {
+        surge->polyAftertouch(ch, m.getNoteNumber(), m.getAfterTouchValue());
+    }
+    else if (m.isPitchWheel())
+    {
+        surge->pitchBend(ch, m.getPitchWheelValue() - 8192);
+    }
+    else if (m.isController())
+    {
+        surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
+    }
+    else if (m.isProgramChange())
+    {
+        // apparently this is not enough to actually execute SurgeSynthesizer::programChange
+        // for whatever reason!
+        surge->programChange(ch, m.getProgramChangeNumber());
+    }
+    else
+    {
+        // std::cout << "Ignoring message " << std::endl;
     }
 }
 
