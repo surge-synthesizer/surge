@@ -357,10 +357,6 @@ TwistOscillator::~TwistOscillator()
         fmdownsamplestate = src_delete(fmdownsamplestate);
 }
 
-template <bool FM> inline constexpr int getBlockSize() { return 4; }
-
-template <> inline constexpr int getBlockSize<true>() { return 1; }
-
 template <bool FM, bool throwaway>
 void TwistOscillator::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
                                              int throwawayBlocks)
@@ -384,7 +380,10 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
     lpgdec.newValue(fv(twist_lpg_decay));
     auxmix.newValue(limit_range(fvbp(twist_aux_mix), -1.f, 1.f));
 
-    constexpr int subblock = getBlockSize<FM>();
+    bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
+
+    constexpr int max_subblock = 4;
+    int subblock = (lpgIsOn || FM) ? 1 : max_subblock;
 #if SAMPLERATE_SRC
     float src_in[subblock][2];
     float src_out[BLOCK_SIZE_OS][2];
@@ -444,8 +443,6 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
         required_blocks - lancRes->inputsRequiredToGenerateOutputs(required_blocks);
 #endif
 
-    bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
-
     if (lpgIsOn)
     {
         mod->trigger = gate ? 1.0 : 0.0;
@@ -454,7 +451,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 
     while (total_generated < required_blocks)
     {
-        plaits::Voice::Frame poutput[subblock];
+        plaits::Voice::Frame poutput[max_subblock];
         patch->harmonics = harm.v;
         patch->timbre = timb.v;
         patch->morph = morph.v;
