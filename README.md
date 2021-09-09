@@ -243,6 +243,13 @@ cmake -Bbuild -G"Visual Studio 15 2017"
 
 ### Building a Mac Fat Binary (ARM/Intel)
 
+To build a fat binary on a mac, simply add the following CMAKE argument to your intiial cmake run.
+
+```
+-D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+```
+
+
 ### Building for Raspberry Pi
 
 To build for a Raspberry Pi, you want to add the `LINUX_ON_ARM` CMake variable when you first run CMake. Otherwise,
@@ -261,6 +268,9 @@ To cross compile for aarch64 us the cmake linux toolchain for aarch4, as shown i
 cmake -Bignore/xc64 -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake -DCMAKE_BUILD_TYPE=DEBUG -GNinja
 cmake --build ignore/xc64 --config Debug --target surge-headless
 ```
+
+Of course that toolchain makes specific choices. You can make other choices as long as (1) you set the CMAKE
+variable LINUX_ON_ARM and (2) you make sure your host and your target compiler are both 64 bit.
 
 # Setting up for Your OS
 
