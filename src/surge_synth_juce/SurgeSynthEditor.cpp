@@ -40,8 +40,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
     keyboard->setLowestVisibleKey(24);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
-    tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-    tempoTypein->setJustification(juce::Justification::centred);
+    tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
     tempoTypein->onReturnKey = [this]() {
@@ -120,21 +119,20 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
     tempoLabel->setColour(juce::Label::textColourId,
                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId));
 
-    /*
     tempoTypein->setColour(
         juce::TextEditor::backgroundColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBackgroundId));
     tempoTypein->setColour(juce::TextEditor::outlineColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBorderId));
+    tempoTypein->setColour(juce::TextEditor::focusedOutlineColourId,
+                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBorderId));
     tempoTypein->setColour(
         juce::TextEditor::highlightColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId));
-    tempoTypein->setColour(
-        juce::TextEditor::highlightedTextColourId,
-        findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId));
+    tempoTypein->setColour(juce::TextEditor::highlightedTextColourId,
+                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
     tempoTypein->setColour(juce::TextEditor::textColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
-    */
 
     repaint();
 }
@@ -163,22 +161,25 @@ void SurgeSynthEditor::resized()
     {
         auto y = getHeight() - extraYSpaceForVirtualKeyboard;
         auto x = addTempo ? 50 : 0;
+        int tempoHeight = 14, typeinHeight = 18, yOffset = -2;
+        int tempoBlockHeight = tempoHeight + typeinHeight;
+        int tempoBlockYPos = ((extraYSpaceForVirtualKeyboard - tempoBlockHeight) / 2) + yOffset;
 
         keyboard->setBounds(x, y, getWidth() - x, extraYSpaceForVirtualKeyboard);
         keyboard->setVisible(true);
 
         if (addTempo)
         {
-            tempoLabel->setBounds(4, y + 4, x - 8, extraYSpaceForVirtualKeyboard / 2 - 8);
-            tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+            tempoLabel->setBounds(4, y + tempoBlockYPos, x - 8, tempoHeight);
+            tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             tempoLabel->setJustificationType(juce::Justification::centred);
             tempoLabel->setVisible(addTempo);
 
-            tempoTypein->setBounds(4, y + 4 + extraYSpaceForVirtualKeyboard / 2, x - 8,
-                                   extraYSpaceForVirtualKeyboard / 2 - 8);
+            tempoTypein->setBounds(4, y + tempoBlockYPos + tempoHeight, x - 8, typeinHeight);
             tempoTypein->setText(
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
-            tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+            tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+            tempoTypein->setIndents(4, 0);
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setVisible(addTempo);
         }
