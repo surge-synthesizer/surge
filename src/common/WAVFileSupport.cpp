@@ -468,16 +468,15 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
 std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
 {
-    std::string path;
-    path = Surge::Storage::appendDirectory(userDataPath, "Wavetables", "Exported");
-    fs::create_directories(string_to_path(path));
+    auto path = userDataPath / "Wavetables" / "Exported";
+    fs::create_directories(path);
 
     auto fnamePre = fbase + ".wav";
-    auto fname = Surge::Storage::appendDirectory(path, fbase + ".wav");
+    auto fname = path / (fbase + ".wav");
     int fnum = 1;
-    while (fs::exists(fs::path(fname)))
+    while (fs::exists(fname))
     {
-        fname = Surge::Storage::appendDirectory(path, fbase + "_" + std::to_string(fnum) + ".wav");
+        fname = path / (fbase + "_" + std::to_string(fnum) + ".wav");
         fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
         fnum++;
     }
@@ -486,9 +485,9 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
     {
         std::filebuf wfp;
-        if (!wfp.open(string_to_path(fname), std::ios::binary | std::ios::out))
+        if (!wfp.open(fname, std::ios::binary | std::ios::out))
         {
-            errorMessage = "Unable to open file " + fname + "!";
+            errorMessage = "Unable to open file " + fname.u8string() + "!";
             errorMessage += std::strerror(errno);
 
             reportError(errorMessage, "Wavetable Export");
@@ -574,5 +573,5 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
     refresh_wtlist();
 
-    return fname;
+    return path_to_string(fname);
 }

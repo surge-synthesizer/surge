@@ -2325,14 +2325,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             }
         };
 
-        auto scl_path =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library", "SCL");
+        auto scl_path = this->synth->storage.datapath / "tuning_library" / "SCL";
 
-        scl_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::LastSCLPath, scl_path);
+        scl_path = Surge::Storage::getUserDefaultPath(&(this->synth->storage),
+                                                      Surge::Storage::LastSCLPath, scl_path);
 
-        fileChooser =
-            std::make_unique<juce::FileChooser>("Select SCL Scale", juce::File(scl_path), "*.scl");
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Select SCL Scale", juce::File(path_to_string(scl_path)), "*.scl");
 
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
@@ -2342,12 +2341,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     return;
                 auto res = ress.getFirst();
                 auto rString = res.getFullPathName().toStdString();
-                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
                 cb(rString);
                 if (dir != scl_path)
                 {
-                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::LastSCLPath, dir);
+                    Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
+                                                          Surge::Storage::LastSCLPath, dir);
                 }
             });
     });
@@ -2383,13 +2382,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             }
         };
 
-        auto kbm_path = Surge::Storage::appendDirectory(this->synth->storage.datapath,
-                                                        "tuning_library", "KBM Concert Pitch");
+        auto kbm_path = this->synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
 
-        kbm_path = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::LastKBMPath, kbm_path);
-        fileChooser = std::make_unique<juce::FileChooser>("Select KBM Mapping",
-                                                          juce::File(kbm_path), "*.kbm");
+        kbm_path = Surge::Storage::getUserDefaultPath(&(this->synth->storage),
+                                                      Surge::Storage::LastKBMPath, kbm_path);
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Select KBM Mapping", juce::File(path_to_string(kbm_path)), "*.kbm");
 
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
@@ -2402,12 +2400,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
                 auto res = c.getResult();
                 auto rString = res.getFullPathName().toStdString();
-                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
                 cb(rString);
                 if (dir != kbm_path)
                 {
-                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                           Surge::Storage::LastKBMPath, dir);
+                    Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
+                                                          Surge::Storage::LastKBMPath, dir);
                 }
             });
     });
@@ -2523,9 +2521,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                           [this]() { showHTML(this->tuningToHtml()); });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
-        auto path =
-            Surge::Storage::appendDirectory(this->synth->storage.datapath, "tuning_library");
-
+        auto path = this->synth->storage.datapath / "tuning_library";
         Surge::GUI::openFileOrFolder(path);
     });
 
@@ -2981,11 +2977,12 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
             if (useDevMenu)
             {
                 dname += " (";
-                if (entry.root.find(synth->storage.datapath) != std::string::npos)
+
+                if (entry.rootType == Surge::GUI::FACTORY)
                 {
                     dname += "factory";
                 }
-                else if (entry.root.find(synth->storage.userDataPath) != std::string::npos)
+                else if (entry.rootType == Surge::GUI::USER)
                 {
                     dname += "user";
                 }
@@ -3085,8 +3082,8 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     if (useDevMenu)
     {
         skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Current Skin Folder..."), [this]() {
-            Surge::GUI::openFileOrFolder(
-                Surge::Storage::appendDirectory(this->currentSkin->root, this->currentSkin->name));
+            Surge::GUI::openFileOrFolder(string_to_path(this->currentSkin->root) /
+                                         this->currentSkin->name);
         });
     }
     else
@@ -3117,13 +3114,13 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Data Folder..."), [this]() {
         // make it if it isn't there
-        fs::create_directories(string_to_path(this->synth->storage.userDataPath));
+        fs::create_directories(this->synth->storage.userDataPath);
         Surge::GUI::openFileOrFolder(this->synth->storage.userDataPath);
     });
 
     dataSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Custom User Data Folder..."), [this]() {
-        fileChooser = std::make_unique<juce::FileChooser>("Set Custom User Data Folder",
-                                                          juce::File(synth->storage.userDataPath));
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Set Custom User Data Folder", juce::File(path_to_string(synth->storage.userDataPath)));
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
             [this](const juce::FileChooser &f) {

@@ -293,25 +293,27 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         ** If local directory doesn't exists - we probably came here through an installer -
         ** check for /usr/share/surge and use /usr/share/Surge as our last guess
         */
-        if (!fs::is_directory(string_to_path(datapath)))
+        if (!fs::is_directory(datapath))
         {
-            if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX) +
-                                                "/share/surge-xt")))
+            if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX)) /
+                                 "share" / "surge-xt"))
             {
-                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/surge-xt";
+                datapath =
+                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "surge-xt";
             }
-            else if (fs::is_directory(string_to_path(
-                         std::string(Surge::Build::CMAKE_INSTALL_PREFIX) + "/share/Surge XT")))
+            else if (fs::is_directory(string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" /
+                                      "Surge XT"))
             {
-                datapath = std::string() + Surge::Build::CMAKE_INSTALL_PREFIX + "/share/Surge XT";
+                datapath =
+                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "Surge XT";
             }
             else
             {
                 std::string systemDataPath = "/usr/share/surge-xt/";
                 if (fs::is_directory(string_to_path(systemDataPath)))
-                    datapath = systemDataPath;
+                    datapath = string_to_path(systemDataPath);
                 else
-                    datapath = "/usr/share/Surge XT/";
+                    datapath = string_to_path("/usr/share/Surge XT/");
             }
         }
 
@@ -397,7 +399,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         path /= L"SurgeXTData";
         if (fs::is_directory(path))
         {
-            datapath = path_to_string(path);
+            datapath = path;
         }
     }
 bailOnPortable:
@@ -455,14 +457,13 @@ bailOnPortable:
     }
 
     // append separator if not present
-    datapath = Surge::Storage::appendDirectory(datapath, std::string());
-    userPatchesPath = Surge::Storage::appendDirectory(userDataPath, "Patches");
-    userWavetablesPath = Surge::Storage::appendDirectory(userDataPath, "Wavetables");
-    userWavetablesExportPath = Surge::Storage::appendDirectory(userWavetablesPath, "Exported");
-    userFXPath = Surge::Storage::appendDirectory(userDataPath, "FX Presets");
-    userMidiMappingsPath = Surge::Storage::appendDirectory(userDataPath, "MIDI Mappings");
-    userModulatorSettingsPath = Surge::Storage::appendDirectory(userDataPath, "Modulator Presets");
-    userSkinsPath = Surge::Storage::appendDirectory(userDataPath, "Skins");
+    userPatchesPath = userDataPath / "Patches";
+    userWavetablesPath = userDataPath / "Wavetables";
+    userWavetablesExportPath = userWavetablesPath / "Exported";
+    userFXPath = userDataPath / "FX Presets";
+    userMidiMappingsPath = userDataPath / "MIDI Mappings";
+    userModulatorSettingsPath = userDataPath / "Modulator Presets";
+    userSkinsPath = userDataPath / "Skins";
     createUserDirectory();
 
     /*
@@ -482,9 +483,8 @@ bailOnPortable:
                     "\n";
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
-        reportError("Cannot parse 'configuration.xml' in path '" + datapath +
-                        "'. Please reinstall Surge!",
-                    "Surge Incorrectly Installed");
+        reportError("Cannot parse 'configuration.xml' from memory. Internal Software Error.",
+                    "Surge Incorrectly Built");
     }
 
     load_midi_controllers();
@@ -655,7 +655,7 @@ bailOnPortable:
 
 void SurgeStorage::createUserDirectory()
 {
-    auto p = string_to_path(userDataPath);
+    auto p = userDataPath;
     auto needToBuild = false;
     if (!fs::is_directory(p))
     {
@@ -669,13 +669,12 @@ void SurgeStorage::createUserDirectory()
             for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
                             userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
                             userSkinsPath, userMidiMappingsPath})
-                fs::create_directories(string_to_path(s));
+                fs::create_directories(s);
 
             auto rd = std::string(SurgeSharedBinary::README_UserArea_txt,
                                   SurgeSharedBinary::README_UserArea_txtSize) +
                       "\n";
-            auto of =
-                std::ofstream(string_to_path(userDataPath) / "README.txt", std::ofstream::out);
+            auto of = std::ofstream(userDataPath / "README.txt", std::ofstream::out);
             if (of.is_open())
                 of << rd << std::endl;
             of.close();
@@ -809,9 +808,9 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 
     try
     {
-        fs::path patchpath = string_to_path(userDir ? userDataPath : datapath);
+        fs::path patchpath = userDir ? userDataPath : datapath;
         if (!subdir.empty())
-            patchpath /= string_to_path(subdir);
+            patchpath /= subdir;
 
         if (!fs::is_directory(patchpath))
         {
@@ -1624,9 +1623,8 @@ void SurgeStorage::write_midi_controllers_to_user_default()
 
     try
     {
-        auto dir = string_to_path(userDataPath);
-        fs::create_directories(dir);
-        auto f = string_to_path(userDataPath) / "SurgeMIDIDefaults.xml";
+        fs::create_directories(userDataPath);
+        auto f = userDataPath / "SurgeMIDIDefaults.xml";
         doc.SaveFile(f);
     }
     catch (const fs::filesystem_error &e)
@@ -1659,7 +1657,7 @@ void SurgeStorage::setSamplerate(float sr)
 
 void SurgeStorage::load_midi_controllers()
 {
-    auto mcp = string_to_path(userDataPath) / "SurgeMIDIDefaults.xml";
+    auto mcp = userDataPath / "SurgeMIDIDefaults.xml";
     TiXmlDocument mcd;
     TiXmlElement *midiRoot = nullptr;
     if (mcd.LoadFile(mcp))
@@ -2000,7 +1998,7 @@ void SurgeStorage::rescanUserMidiMappings()
     const auto extension{fs::path{".srgmid"}.native()};
     try
     {
-        for (const fs::path &d : fs::directory_iterator{string_to_path(userMidiMappingsPath), ec})
+        for (const fs::path &d : fs::directory_iterator{userMidiMappingsPath, ec})
         {
             if (d.extension().native() == extension)
             {
@@ -2125,10 +2123,10 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
 
     doc.InsertEndChild(sm);
 
-    fs::create_directories(string_to_path(userMidiMappingsPath));
-    std::string fn = Surge::Storage::appendDirectory(userMidiMappingsPath, name + ".srgmid");
+    fs::create_directories(userMidiMappingsPath);
+    auto fn = userMidiMappingsPath / (name + ".srgmid");
 
-    if (!doc.SaveFile(string_to_path(fn)))
+    if (!doc.SaveFile(path_to_string(fn)))
     {
         std::ostringstream oss;
         oss << "Unable to save MIDI settings to '" << fn << "'!";
@@ -2338,19 +2336,6 @@ string findReplaceSubstring(string &source, const string &from, const string &to
     source.swap(newString);
 
     return newString;
-}
-
-std::string appendDirectory(const std::string &root, const std::string &path1)
-{
-    if (root[root.size() - 1] == PATH_SEPARATOR)
-        return root + path1;
-    else
-        return root + PATH_SEPARATOR + path1;
-}
-std::string appendDirectory(const std::string &root, const std::string &path1,
-                            const std::string &path2)
-{
-    return appendDirectory(appendDirectory(root, path1), path2);
 }
 
 } // namespace Storage

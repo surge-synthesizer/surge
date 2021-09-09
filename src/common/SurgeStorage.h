@@ -1023,19 +1023,18 @@ class alignas(16) SurgeStorage
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
-    std::string wtpath;
-    std::string datapath;
-    std::string userDefaultFilePath;
-    std::string userDataPath;
-    std::string userPatchesPath;
-    std::string userWavetablesPath;
-    std::string userModulatorSettingsPath;
-    std::string userFXPath;
-    std::string userWavetablesExportPath;
-    std::string userSkinsPath;
-    std::string userMidiMappingsPath;
+    fs::path datapath;
+    fs::path userDefaultFilePath;
+    fs::path userDataPath;
+    fs::path userPatchesPath;
+    fs::path userWavetablesPath;
+    fs::path userModulatorSettingsPath;
+    fs::path userFXPath;
+    fs::path userWavetablesExportPath;
+    fs::path userSkinsPath;
+    fs::path userMidiMappingsPath;
 
-    std::string installedPath;
+    fs::path installedPath;
 
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
     void rescanUserMidiMappings();
@@ -1365,9 +1364,6 @@ bool isValidUTF8(const std::string &testThis);
 std::string findReplaceSubstring(std::string &source, const std::string &from,
                                  const std::string &to);
 
-std::string appendDirectory(const std::string &root, const std::string &path1);
-std::string appendDirectory(const std::string &root, const std::string &path1,
-                            const std::string &path2);
 } // namespace Storage
 } // namespace Surge
 

@@ -35,7 +35,7 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
     auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
     int lfotype = lfo->shape.val.i;
 
-    auto containingPath = fs::path{string_to_path(s->userDataPath) / fs::path{PresetDir}};
+    auto containingPath = s->userDataPath / fs::path{PresetDir};
 
     if (lfotype == lt_mseg)
         containingPath = containingPath / fs::path{"MSEG"};
@@ -233,8 +233,8 @@ std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage 
 
     // Do a dual directory traversal of factory and user data with the fs::directory_iterator stuff
     // looking for .lfopreset
-    auto factoryPath = fs::path({string_to_path(s->datapath) / fs::path{"modulator_presets"}});
-    auto userPath = fs::path({string_to_path(s->userDataPath) / fs::path{PresetDir}});
+    auto factoryPath = s->datapath / fs::path{"modulator_presets"};
+    auto userPath = s->userDataPath / fs::path{PresetDir};
 
     std::map<std::string, Category> resMap; // handy it is sorted!
 
