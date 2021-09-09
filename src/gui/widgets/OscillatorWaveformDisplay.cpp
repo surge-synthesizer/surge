@@ -439,13 +439,12 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
 void OscillatorWaveformDisplay::loadWavetableFromFile()
 {
     auto wtPath = storage->userWavetablesPath;
-    wtPath =
-        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastWavetablePath, wtPath);
+    wtPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastWavetablePath, wtPath);
 
     if (!sge)
         return;
-    sge->fileChooser =
-        std::make_unique<juce::FileChooser>("Select Wavetable to Load", juce::File(wtPath));
+    sge->fileChooser = std::make_unique<juce::FileChooser>("Select Wavetable to Load",
+                                                           juce::File(path_to_string(wtPath)));
     sge->fileChooser->launchAsync(
         juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
         [this, wtPath](const juce::FileChooser &c) {
@@ -456,11 +455,11 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
             strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
-            auto dir = res.getParentDirectory().getFullPathName().toStdString();
+            auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
             if (dir != wtPath)
             {
-                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastWavetablePath,
-                                                       dir);
+                Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastWavetablePath,
+                                                      dir);
             }
         });
 }

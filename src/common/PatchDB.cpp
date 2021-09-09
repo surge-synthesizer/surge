@@ -288,7 +288,8 @@ CREATE TABLE Category (
 
     explicit workerS(SurgeStorage *storage) : storage(storage)
     {
-        auto dbname = storage->userDataPath + "/SurgePatches.db";
+        auto dbpath = storage->userDataPath / fs::path{"SurgePatches.db"};
+        auto dbname = path_to_string(dbpath);
         auto flag = SQLITE_OPEN_FULLMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 

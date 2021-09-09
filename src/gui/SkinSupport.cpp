@@ -96,15 +96,14 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
 #endif
     availableSkins.clear();
 
-    std::array<fs::path, 2> paths = {string_to_path(storage->datapath),
-                                     string_to_path(storage->userSkinsPath)};
+    std::array<fs::path, 2> paths = {storage->datapath, storage->userSkinsPath};
 
     for (auto &source : paths)
     {
         Entry::RootType rt = UNKNOWN;
-        if (path_to_string(source) == path_to_string(paths[0]))
+        if (source == paths[0])
             rt = FACTORY;
-        if (path_to_string(source) == path_to_string(paths[1]))
+        if (source == paths[1])
             rt = USER;
 
         std::vector<fs::path> alldirs;
@@ -1338,7 +1337,7 @@ Maybe<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s,
 {
     auto parentP = p.parent_path();
     auto nmP = p.lexically_relative(parentP);
-    auto tgPath = string_to_path(s->userSkinsPath) / nmP;
+    auto tgPath = s->userSkinsPath / nmP;
 
     try
     {

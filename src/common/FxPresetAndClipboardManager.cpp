@@ -38,7 +38,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
     haveScannedPresets = true;
 
     auto ud = storage->userFXPath;
-    auto fd = string_to_path(storage->datapath) / "fx_presets";
+    auto fd = storage->datapath / "fx_presets";
 
     std::vector<std::pair<fs::path, bool>> sfxfiles;
 
@@ -115,8 +115,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
             if (f.second)
                 rpath = f.first.lexically_relative(fd).parent_path();
             else
-                rpath =
-                    f.first.lexically_relative(string_to_path(storage->userFXPath)).parent_path();
+                rpath = f.first.lexically_relative(storage->userFXPath).parent_path();
 
             auto startCatPath = rpath.begin();
             if (*(startCatPath) == fx_type_names[t])

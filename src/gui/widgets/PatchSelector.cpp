@@ -242,12 +242,12 @@ void PatchSelector::showClassicMenu(bool single_category)
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {
         auto patchPath = storage->userPatchesPath;
         patchPath =
-            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::LastPatchPath, patchPath);
+            Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastPatchPath, patchPath);
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         if (!sge)
             return;
-        sge->fileChooser = std::make_unique<juce::FileChooser>("Select Patch to Load",
-                                                               juce::File(patchPath), "*.fxp");
+        sge->fileChooser = std::make_unique<juce::FileChooser>(
+            "Select Patch to Load", juce::File(path_to_string(patchPath)), "*.fxp");
         sge->fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
             [this, patchPath](const juce::FileChooser &c) {
@@ -263,32 +263,27 @@ void PatchSelector::showClassicMenu(bool single_category)
                 {
                     sge->queuePatchFileLoad(rString);
                 }
-                auto dir = res.getParentDirectory().getFullPathName().toStdString();
+                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
                 if (dir != patchPath)
                 {
-                    Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::LastPatchPath,
-                                                           dir);
+                    Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastPatchPath,
+                                                          dir);
                 }
             });
     });
 
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."), [this]() {
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->storage->userDataPath, "Patches"));
-    });
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."),
+                        [this]() { Surge::GUI::openFileOrFolder(this->storage->userPatchesPath); });
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder..."), [this]() {
-        Surge::GUI::openFileOrFolder(
-            Surge::Storage::appendDirectory(this->storage->datapath, "patches_factory"));
+        Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_factory");
     });
 
     contextMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder..."), [this]() {
-            Surge::GUI::openFileOrFolder(
-                Surge::Storage::appendDirectory(this->storage->datapath, "patches_3rdparty"));
-        });
+        Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder..."),
+        [this]() { Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_3rdparty"); });
 
     contextMenu.addSeparator();
 

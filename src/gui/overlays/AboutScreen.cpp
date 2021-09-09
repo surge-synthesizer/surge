@@ -109,9 +109,11 @@ void AboutScreen::populateData()
     if (host != "Unknown")
         lowerLeft.emplace_back("Host", host, "");
     lowerLeft.emplace_back("", "", "");
-    lowerLeft.emplace_back("Factory Data", storage->datapath, storage->datapath);
-    lowerLeft.emplace_back("User Data", storage->userDataPath, storage->userDataPath);
-    lowerLeft.emplace_back("Plugin", storage->installedPath, "");
+    lowerLeft.emplace_back("Factory Data", storage->datapath.u8string(),
+                           storage->datapath.u8string());
+    lowerLeft.emplace_back("User Data", storage->userDataPath.u8string(),
+                           storage->userDataPath.u8string());
+    lowerLeft.emplace_back("Plugin", storage->installedPath.u8string(), "");
     lowerLeft.emplace_back("Current Skin", skin->displayName, skin->root + skin->name);
     lowerLeft.emplace_back("Skin Author", skin->author, skin->authorURL);
 

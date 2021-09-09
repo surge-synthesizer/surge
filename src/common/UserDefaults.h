@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <filesystem/import.h>
 
 /*
 ** Surge has a variety of settings which users can update and save across
@@ -72,6 +73,11 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
 std::string getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
                                 const std::string &valueIfMissing);
 int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing);
+inline fs::path getUserDefaultPath(SurgeStorage *storage, const DefaultKey &key,
+                                   const fs::path &valueIfMissing)
+{
+    return string_to_path(getUserDefaultValue(storage, key, path_to_string(valueIfMissing)));
+}
 
 /**
  * updateUserDefaultValue
@@ -80,6 +86,11 @@ int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueI
  */
 bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const std::string &value);
 bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const int value);
+inline bool updateUserDefaultPath(SurgeStorage *storage, const DefaultKey &key,
+                                  const fs::path &path)
+{
+    return updateUserDefaultValue(storage, key, path_to_string(path));
+}
 
 } // namespace Storage
 } // namespace Surge
