@@ -928,14 +928,14 @@ class alignas(16) SurgeStorage
         CANCEL
     };
 
-    std::function<OkCancel(const std::string &msg, const std::string &title, OkCancel def)>
-        okCancelProvider =
-            [](const std::string &, const std::string &, OkCancel def) { return def; };
+    std::function<void(const std::string &msg, const std::string &title, OkCancel def,
+                       std::function<void(OkCancel)>)>
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def,
+                              std::function<void(OkCancel)> callback) { callback(def); };
     void clearOkCancelProvider()
     {
-        okCancelProvider = [](const std::string &, const std::string &, OkCancel def) {
-            return def;
-        };
+        okCancelProvider = [](const std::string &, const std::string &, OkCancel def,
+                              std::function<void(OkCancel)> callback) { callback(def); };
     }
 
     std::string initPatchName{"Init Saw"}, initPatchCategory{"Templates"};

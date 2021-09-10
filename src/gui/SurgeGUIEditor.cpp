@@ -93,14 +93,15 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
     synth->storage.okCancelProvider = [](const std::string &msg, const std::string &title,
-                                         SurgeStorage::OkCancel def) {
+                                         SurgeStorage::OkCancel def,
+                                         std::function<void(SurgeStorage::OkCancel)> callback) {
         // think about threading one day probably
+        auto cb = juce::ModalCallbackFunction::create([callback](int isOk) {
+            auto r = isOk ? SurgeStorage::OK : SurgeStorage::CANCEL;
+            callback(r);
+        });
         auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg, "OK",
-                                                      "Cancel", nullptr, nullptr);
-
-        if (res)
-            return SurgeStorage::OK;
-        return SurgeStorage::CANCEL;
+                                                      "Cancel", nullptr, cb);
     };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
