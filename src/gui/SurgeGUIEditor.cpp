@@ -274,6 +274,15 @@ void SurgeGUIEditor::idle()
             hideMidiLearnOverlay();
         }
 
+        if (lfoDisplayRepaintCountdown > 0)
+        {
+            lfoDisplayRepaintCountdown--;
+            if (lfoDisplayRepaintCountdown == 0)
+            {
+                lfoDisplay->repaint();
+            }
+        }
+
         {
             bool expected = true;
             if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) &&
@@ -5197,6 +5206,12 @@ void SurgeGUIEditor::showMSEGEditor()
     auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(&(synth->storage), lfodata, ms,
                                                              &msegEditState[current_scene][lfo_id],
                                                              currentSkin, bitmapStore);
+    mse->onModelChanged = [this]() {
+        if (lfoDisplayRepaintCountdown == 0)
+        {
+            lfoDisplayRepaintCountdown = 2;
+        }
+    };
 
     std::string title = modsource_names[modsource_editor[current_scene]];
     title += " Editor";

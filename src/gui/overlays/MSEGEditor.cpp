@@ -166,6 +166,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         std::function<void(float, float, const juce::Point<float> &)> onDrag;
     };
 
+    std::function<void()> onModelChanged = []() {};
     std::vector<hotzone> hotzones;
 
     static constexpr int drawInsertX = 10, drawInsertY = 10, axisSpaceX = 18, axisSpaceY = 8;
@@ -2582,12 +2583,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         applyZoomPanConstraints(activeSegment, specialEndpoint);
         if (rchz)
             recalcHotZones(mouseDownOrigin); // FIXME
-        // Do this more heavy handed version
-        auto c = getParentComponent();
-        while (c && c->getParentComponent())
-            c = c->getParentComponent();
-        if (c)
-            c->repaint();
+
+        onModelChanged();
     }
 
     static constexpr int longestMSEG = 128;
@@ -3163,6 +3160,8 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
 
     canvas->controlregion = controls.get();
     controls->canvas = canvas.get();
+
+    canvas->onModelChanged = [this]() { this->onModelChanged(); };
 
     addAndMakeVisible(*controls);
     addAndMakeVisible(*canvas);
