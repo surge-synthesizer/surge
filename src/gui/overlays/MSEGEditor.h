@@ -52,6 +52,8 @@ struct MSEGEditor : public juce::Component,
     std::unique_ptr<MSEGControlRegion> controls;
     std::unique_ptr<MSEGCanvas> canvas;
 
+    std::function<void()> onModelChanged = []() {};
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSEGEditor);
 };
 } // namespace Overlays

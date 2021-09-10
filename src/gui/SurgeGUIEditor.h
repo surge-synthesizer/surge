@@ -621,6 +621,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     Surge::GUI::IComponentTagValue *nonmod_param[n_paramslots] = {};
     std::array<std::unique_ptr<Surge::Widgets::ModulationSourceButton>, n_modsources> gui_modsrc;
     std::unique_ptr<Surge::Widgets::LFOAndStepDisplay> lfoDisplay;
+    int lfoDisplayRepaintCountdown{0};
 
     Surge::Widgets::Switch *filtersubtype[2] = {};
 
