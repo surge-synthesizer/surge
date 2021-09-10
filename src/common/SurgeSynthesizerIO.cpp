@@ -306,47 +306,48 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         }
         else
         {
-            auto okc = storage.okCancelProvider(
+            storage.okCancelProvider(
                 std::string("Loaded patch contains a custom tuning, but there is ") +
                     "already a user-selected tuning in place. Do you want to replace the currently "
                     "loaded tuning " +
                     "with the tuning stored in the patch? (The rest of the patch will load "
                     "normally.)",
-                "Replace Tuning", SurgeStorage::CANCEL);
-            if (okc == SurgeStorage::OK)
-            {
-                try
-                {
-                    if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                "Replace Tuning", SurgeStorage::CANCEL, [this](SurgeStorage::OkCancel okc) {
+                    if (okc == SurgeStorage::OK)
                     {
-                        storage.retuneToScale(
-                            Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents));
+                        try
+                        {
+                            if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                            {
+                                storage.retuneToScale(Tunings::parseSCLData(
+                                    storage.getPatch().patchTuning.scaleContents));
+                            }
+                            else
+                            {
+                                storage.retuneTo12TETScale();
+                            }
+                            if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+                            {
+                                auto kb = Tunings::parseKBMData(
+                                    storage.getPatch().patchTuning.mappingContents);
+                                if (storage.getPatch().patchTuning.mappingName.size() > 1)
+                                    kb.name = storage.getPatch().patchTuning.mappingName;
+                                else
+                                    kb.name = storage.guessAtKBMName(kb);
+                                storage.remapToKeyboard(kb);
+                            }
+                            else
+                            {
+                                storage.remapToConcertCKeyboard();
+                            }
+                        }
+                        catch (Tunings::TuningError &e)
+                        {
+                            storage.reportError(e.what(), "Error Restoring Tuning");
+                            storage.retuneTo12TETScaleC261Mapping();
+                        }
                     }
-                    else
-                    {
-                        storage.retuneTo12TETScale();
-                    }
-                    if (storage.getPatch().patchTuning.mappingContents.size() > 1)
-                    {
-                        auto kb =
-                            Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
-                        if (storage.getPatch().patchTuning.mappingName.size() > 1)
-                            kb.name = storage.getPatch().patchTuning.mappingName;
-                        else
-                            kb.name = storage.guessAtKBMName(kb);
-                        storage.remapToKeyboard(kb);
-                    }
-                    else
-                    {
-                        storage.remapToConcertCKeyboard();
-                    }
-                }
-                catch (Tunings::TuningError &e)
-                {
-                    storage.reportError(e.what(), "Error Restoring Tuning");
-                    storage.retuneTo12TETScaleC261Mapping();
-                }
-            }
+                });
         }
     }
 
@@ -528,14 +529,21 @@ void SurgeSynthesizer::savePatch()
 
     if (fs::exists(filename))
     {
-        if (storage.okCancelProvider(
-                std::string("The patch '" + storage.getPatch().name + "' already exists in '" +
-                            storage.getPatch().category +
-                            "'. Are you sure you want to overwrite it?"),
-                std::string("Overwrite patch"), SurgeStorage::OK) == SurgeStorage::CANCEL)
-            return;
+        storage.okCancelProvider(std::string("The patch '" + storage.getPatch().name +
+                                             "' already exists in '" + storage.getPatch().category +
+                                             "'. Are you sure you want to overwrite it?"),
+                                 std::string("Overwrite patch"), SurgeStorage::OK,
+                                 [filename, this](SurgeStorage::OkCancel okc) {
+                                     if (okc == SurgeStorage::OK)
+                                     {
+                                         savePatchToPath(filename);
+                                     }
+                                 });
     }
-    savePatchToPath(filename);
+    else
+    {
+        savePatchToPath(filename);
+    }
 }
 
 void SurgeSynthesizer::savePatchToPath(fs::path filename)
