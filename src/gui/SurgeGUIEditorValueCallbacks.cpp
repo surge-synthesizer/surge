@@ -770,13 +770,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                Surge::GUI::toOSCaseForMenu(" Routings");
 
                     contextMenu.addItem(clearLab, [this, n_total_md, thisms, control]() {
-                        for (int md = 1; md < n_total_md; md++)
+                        for (int md = 0; md < n_total_md; md++)
                         {
-                            for (int sc = 0; sc < n_scenes; ++sc)
-                            {
-                                for (auto idx : synth->getModulationIndicesBetween(md, thisms, sc))
-                                    synth->clearModulation(md, thisms, sc, idx);
-                            }
+                            int scene = synth->storage.getPatch().param_ptr[md]->scene;
+                            if (scene == 0 || scene == current_scene + 1)
+                                for (auto idx :
+                                     synth->getModulationIndicesBetween(md, thisms, current_scene))
+                                    synth->clearModulation(md, thisms, current_scene, idx);
                         }
 
                         refresh_mod();
@@ -2454,6 +2454,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             }
         }
 
+        refresh_mod();
         queue_refresh = true;
         return;
     }
