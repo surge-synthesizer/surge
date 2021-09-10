@@ -12,6 +12,8 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
+class SurgeStorage;
+
 namespace Surge
 {
 namespace Widgets
@@ -71,6 +73,9 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     void jog(int by);
 
     void parentHierarchyChanged() override;
+
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
 
     float lastDragDistance{0};
     bool everDragged{false};
