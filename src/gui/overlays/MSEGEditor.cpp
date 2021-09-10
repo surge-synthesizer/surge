@@ -33,6 +33,30 @@ namespace Surge
 {
 namespace Overlays
 {
+
+struct TimeThisBlock
+{
+    TimeThisBlock(const std::string &tag) : tag(tag)
+    {
+        start = std::chrono::high_resolution_clock::now();
+    }
+    void bump(const std::string &msg)
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "   " << msg << tag << " @ " << int_ms.count() << std::endl;
+    }
+    ~TimeThisBlock()
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Block in " << tag << " took " << int_ms.count() << "ms ("
+                  << 1000.0 / int_ms.count() << " fps)" << std::endl;
+    }
+    std::string tag;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+};
+
 struct MSEGCanvas;
 
 struct MSEGControlRegion : public juce::Component,
@@ -99,6 +123,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         Surge::MSEG::rebuildCache(ms);
         handleDrawable = b->getImage(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
+        setOpaque(true);
     };
 
     /*
@@ -1046,7 +1071,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     virtual void paint(juce::Graphics &g) override
     {
-        g.fillAll(juce::Colours::orchid);
+        // TimeThisBlock ttblock("msegcanvas" );
+
+        // ttblock.bump( "a0" );
         auto uni = lfodata->unipolar.val.b;
         auto vs = getLocalBounds();
 
@@ -1056,14 +1083,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (hotzones.empty())
             recalcHotZones(juce::Point<int>(vs.getX(), vs.getY()));
 
+        // ttblock.bump( "a1" );
         g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+        // ttblock.bump( "a1-1");
         auto drawArea = getDrawArea();
+        // ttblock.bump( "a1-2");
         float maxt = drawDuration();
-
+        // ttblock.bump( "a1-3");
         auto valpx = valToPx();
+        // ttblock.bump( "a1-4");
         auto tpx = timeToPx();
+        // ttblock.bump( "a1-5");
         auto pxt = pxToTime();
+        // ttblock.bump( "a1-6");
 
+        // ttblock.bump( "a2" );
         /*
          * Now draw the loop region
          */
@@ -1103,6 +1137,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
+        // ttblock.bump("a");
         Surge::MSEG::EvaluatorState es, esdf;
         // This is different from the number in LFOMS::assign in draw mode on purpose
         es.seed(8675309);
@@ -1222,6 +1257,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             drawnLast = up > ms->totalDuration;
         }
 
+        // ttblock.bump("b");
+
         int uniLimit = uni ? -1 : 0;
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
@@ -1253,12 +1290,18 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             g.fillPath(fillpath, tfpath);
         }
 
+        // ttblock.bump("c");
+
         // draw vertical grid
         auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
         auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
         auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
+        // ttblock.bump("c1");
+
         updateHTicks();
+
+        // ttblock.bump("c2");
 
         for (auto hp : hTicks)
         {
@@ -1288,7 +1331,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
+        // ttblock.bump("c3");
+
         updateVTicks();
+
+        // ttblock.bump("c4");
 
         for (auto vp : vTicks)
         {
@@ -1310,19 +1357,41 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             else
             {
                 g.setColour(secondaryHGridColor);
+                bool useDottedPath = false; // use juce::Path and dotted. Slow AF on windows
+                bool useSolidPath = false;  // use juce::Path and solid. Fastest, but no dots
+                bool useHand = !(useDottedPath || useSolidPath); // Hand roll the lines. Fast enough
 
-                float dashLength[2] = {2.f, 5.f}; // 2 px dash 5 px gap
-                // Can be any even size if you change the '2' below in createDashedStroke
-                auto dotted = juce::Path();
-                auto markerLine = juce::Path();
-                markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
-                markerLine.lineTo(drawArea.getRight(), v);
-                auto st = juce::PathStrokeType(0.5, juce::PathStrokeType::beveled,
-                                               juce::PathStrokeType::butt);
-                st.createDashedStroke(dotted, markerLine, dashLength, 2);
-                g.strokePath(dotted, st);
+                if (useHand)
+                {
+                    float x = drawArea.getX() - ticklen;
+                    float xe = drawArea.getRight();
+
+                    while (x < xe)
+                    {
+                        g.drawLine(x, v, std::min(xe, x + 2), v, 0.5);
+                        x += 5;
+                    }
+                }
+                else
+                {
+                    float dashLength[2] = {2.f, 5.f}; // 2 px dash 5 px gap
+                    // Can be any even size if you change the '2' below in createDashedStroke
+                    auto dotted = juce::Path();
+                    auto markerLine = juce::Path();
+                    markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
+                    markerLine.lineTo(drawArea.getRight(), v);
+                    auto st = juce::PathStrokeType(0.5, juce::PathStrokeType::beveled,
+                                                   juce::PathStrokeType::butt);
+                    st.createDashedStroke(dotted, markerLine, dashLength, 2);
+                    if (useDottedPath)
+                        g.strokePath(dotted, st);
+                    else
+                        g.strokePath(markerLine, st);
+                }
             }
         }
+
+        // ttblock.bump("d");
 
         // draw hover loop markers
         for (const auto &h : hotzones)
@@ -1363,6 +1432,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
             }
         }
+
+        // ttblock.bump("e");
 
         drawAxis(g);
 
