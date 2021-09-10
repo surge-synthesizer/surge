@@ -4796,6 +4796,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         auto rect = skinCtrl->getRect();
         auto hsw = componentForSkinSession<Surge::Widgets::WaveShaperSelector>(skinCtrl->sessionid);
         hsw->addListener(this);
+        hsw->setStorage(&(synth->storage));
         hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
         hsw->setTag(p->id + start_paramtags);
         hsw->setBounds(rect);

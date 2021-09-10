@@ -8,15 +8,18 @@
 #include "DSPUtils.h"
 #include <iostream>
 #include "AccessibleHelpers.h"
+#include "ModulatableSlider.h"
 
 namespace Surge
 {
 namespace Widgets
 {
 
-struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::Listener
+struct WaveShaperAnalysisWidget : public juce::Component,
+                                  public Surge::GUI::IComponentTagValue::Listener,
+                                  public Surge::GUI::SkinConsumingComponent
 {
-    WaveShaperAnalysisWidget()
+    WaveShaperAnalysisWidget(SurgeStorage *storage)
     {
         if (ampLevs[0] == 0)
         {
@@ -26,16 +29,19 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
                     powf(2.f, dbLevs[i] / 18.f); // db_to_amp(dbLevs[i]); db_to_amp is limited. Why?
             }
         }
-        tryitSlider = std::make_unique<juce::Slider>();
-        tryitSlider->setSliderStyle(juce::Slider::LinearVertical);
-        tryitSlider->setDoubleClickReturnValue(true, 0.f, juce::ModifierKeys::noModifiers);
-        tryitSlider->setSliderSnapsToMousePosition(false);
-        tryitSlider->setRange(-1.0, 1.0);
-        tryitSlider->setValue(0.0);
+        tryitSlider = std::make_unique<Surge::Widgets::ModulatableSlider>();
+        tryitSlider->setOrientation(Surge::ParamConfig::kVertical);
+        tryitSlider->setValue(0.5);
+        tryitSlider->setQuantitizedDisplayValue(0.5);
+        tryitSlider->setBipolarFn([]() { return true; });
+        tryitSlider->setIsLightStyle(true);
+        tryitSlider->setStorage(storage);
         tryitSlider->addListener(this);
         addAndMakeVisible(*tryitSlider);
     }
-    void resized() override { tryitSlider->setBounds(0, 2, 20, getHeight() - 4); }
+
+    void onSkinChanged() override { tryitSlider->setSkin(skin, associatedBitmapStore); }
+    void resized() override { tryitSlider->setBounds(0, 2, 22, 84); }
     void paint(juce::Graphics &g) override
     {
         if (sliderDrivenCurve.empty())
@@ -157,9 +163,10 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
         }
     }
 
-    void sliderValueChanged(juce::Slider *slider) override
+    void valueChanged(Surge::GUI::IComponentTagValue *p) override
     {
         recalcFromSlider();
+        tryitSlider->setQuantitizedDisplayValue(tryitSlider->getValue());
         repaint();
     }
 
@@ -255,7 +262,7 @@ struct WaveShaperAnalysisWidget : public juce::Component, public juce::Slider::L
         recalcFromSlider();
     }
     ws_type wstype{wst_none};
-    std::unique_ptr<juce::Slider> tryitSlider;
+    std::unique_ptr<Surge::Widgets::ModulatableSlider> tryitSlider;
 
     static constexpr int n_db_levs = 7, npts = 128;
     static std::array<float, n_db_levs> ampLevs, dbLevs;
@@ -599,7 +606,8 @@ void WaveShaperSelector::openAnalysis()
 {
     if (analysisWidget)
         return;
-    analysisWidget = std::make_unique<WaveShaperAnalysisWidget>();
+    analysisWidget = std::make_unique<WaveShaperAnalysisWidget>(storage);
+    analysisWidget->setSkin(skin, associatedBitmapStore);
     analysisWidget->setWST((ws_type)iValue);
     auto b = getBoundsInParent().translated(-270, 0).withWidth(270).withHeight(155);
     analysisWidget->setBounds(b);
@@ -612,6 +620,8 @@ void WaveShaperSelector::onSkinChanged()
     bg = associatedBitmapStore->getImage(IDB_WAVESHAPER_BG);
     bgHover = associatedBitmapStore->getImageByStringID(
         skin->hoverImageIdForResource(IDB_WAVESHAPER_BG, GUI::Skin::HOVER));
+    if (analysisWidget)
+        analysisWidget->setSkin(skin, associatedBitmapStore);
 }
 
 #if SURGE_JUCE_ACCESSIBLE
