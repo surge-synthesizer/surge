@@ -1160,6 +1160,8 @@ if( UNIX AND NOT APPLE )
           COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_SOURCE_DIR}/installer_linux/make_rpm.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           COMMAND ${CMAKE_SOURCE_DIR}/scripts/installer_linux/make_rpm.sh "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
           )
+
+  set(SURGE_FILESYSTEM_FORCE_GHC TRUE)
 endif()
 
 if( WIN32 )
