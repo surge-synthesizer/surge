@@ -3146,7 +3146,7 @@ void MSEGControlRegion::rebuild()
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
                        Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp)
-    : juce::Component("MSEG Editor")
+    : OverlayComponent("MSEG Editor")
 {
     // Leave these in for now
     if (ms->n_activeSegments <= 0) // This is an error state! Compensate

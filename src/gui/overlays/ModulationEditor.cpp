@@ -381,7 +381,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 };
 
 ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
-    : ed(ed), synth(s), juce::Component("Modulation Editor")
+    : ed(ed), synth(s), OverlayComponent("Modulation Editor")
 {
     listBoxModel = std::make_unique<ModulationListBoxModel>(this);
     listBox = std::make_unique<juce::ListBox>("Mod Editor List", listBoxModel.get());

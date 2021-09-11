@@ -27,6 +27,7 @@
 #include "SkinSupport.h"
 #include "SkinColors.h"
 
+#include "overlays/OverlayComponent.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
 #include "overlays/TuningOverlays.h"
@@ -37,6 +38,7 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <cstdarg>
 
 class SurgeSynthEditor;
 
@@ -78,7 +80,7 @@ struct PatchStoreDialog;
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
                        public juce::KeyListener,
-                       public Surge::Overlays::ScaleEditor::ScaleTextEditedListener
+                       public Surge::Overlays::TuningEditor::ScaleTextEditedListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
@@ -174,7 +176,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   private:
     void openOrRecreateEditor();
-    void makeStorePatchDialog();
+    std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
     void close_editor();
     bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
     void repushAutomationFor(Parameter *p);
@@ -235,7 +237,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                 des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
             }
         }
-        des->editor.isMSEGOpen = (editorOverlayTagAtClose == "msegEditor");
+        des->editor.isMSEGOpen = isAnyOverlayPresent(MSEG_EDITOR);
     }
 
     void loadFromDAWExtraState(SurgeSynthesizer *synth)
@@ -360,6 +362,29 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         TUNING_EDITOR
     };
 
+  private:
+    std::unique_ptr<Surge::Overlays::OverlayComponent> createOverlay(OverlayTags);
+
+  public:
+    void showOverlay(OverlayTags olt)
+    {
+        showOverlay(olt, [](auto *s) {});
+    }
+    void showOverlay(OverlayTags olt,
+                     std::function<void(Surge::Overlays::OverlayComponent *)> setup);
+    void closeOverlay(OverlayTags);
+    void toggleOverlay(OverlayTags t)
+    {
+        if (isAnyOverlayPresent(t))
+        {
+            closeOverlay(t);
+        }
+        else
+        {
+            showOverlay(t);
+        }
+    }
+
     // I will be handed a pointer I need to keep around you know.
     void addJuceEditorOverlay(
         std::unique_ptr<juce::Component> c,
@@ -371,13 +396,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
 
     void dismissEditorOfType(OverlayTags ofType);
-    OverlayTags topmostEditorTag()
-    {
-        static bool warnTET = false;
-        jassert(warnTET);
-        warnTET = true;
-        return NO_EDITOR;
-    }
     bool isAnyOverlayPresent(OverlayTags tag)
     {
         if (juceOverlays.find(tag) != juceOverlays.end() && juceOverlays[tag])
@@ -399,33 +417,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                Surge::Widgets::ModulationSourceButton *msb);
 
-    void closeStorePatchDialog();
-    void showStorePatchDialog();
-
-    void closePatchBrowserDialog();
-    void showPatchBrowserDialog();
-    void togglePatchBrowserDialog();
-
-    void closeModulationEditorDialog();
-    void showModulationEditorDialog();
-    void toggleModulationEditorDialog();
-
-    void closeFormulaEditorDialog();
-    void showFormulaEditorDialog();
-    void toggleFormulaEditorDialog();
-
-    void closeWavetableScripter();
-    void showWavetableScripter();
-
-    void toggleTuningEditor();
-    void closeTuningEditor();
-    void showTuningEditor();
     void scaleTextEdited(juce::String newScale) override;
 
     void lfoShapeChanged(int prior, int curr);
-    void showMSEGEditor();
-    void closeMSEGEditor();
-    void toggleMSEGEditor();
     void broadcastMSEGState();
     int msegIsOpenFor = -1, msegIsOpenInScene = -1;
     bool showMSEGEditorOnNextIdleOrOpen = false;
@@ -558,7 +552,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Overlays::MiniEdit> miniEdit;
 
   public:
-    std::string editorOverlayTagAtClose; // FIXME what is this?
     void promptForMiniEdit(const std::string &value, const std::string &prompt,
                            const std::string &title, const juce::Point<int> &where,
                            std::function<void(const std::string &)> onOK);

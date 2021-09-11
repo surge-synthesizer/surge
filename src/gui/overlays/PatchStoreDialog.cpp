@@ -172,7 +172,7 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
 {
     if (button == cancelButton.get())
     {
-        editor->closeStorePatchDialog();
+        editor->closeOverlay(SurgeGUIEditor::STORE_PATCH);
     }
 
     if (button == okButton.get())
@@ -215,7 +215,7 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         synth->storage.getPatch().dawExtraState.isPopulated = false;
         synth->savePatch();
 
-        editor->closeStorePatchDialog();
+        editor->closeOverlay(SurgeGUIEditor::STORE_PATCH);
     }
 }
 

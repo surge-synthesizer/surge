@@ -255,7 +255,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
 
         auto d = data[rowNumber];
         editor->queuePatchFileLoad(d.file);
-        editor->closePatchBrowserDialog();
+        editor->closeOverlay(SurgeGUIEditor::PATCH_BROWSER);
     }
 
     void executeQuery(const std::string &n) { data = storage->patchDB->rawQueryForNameLike(n); }
@@ -268,7 +268,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
 };
 
 PatchDBViewer::PatchDBViewer(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor(e), storage(s), juce::Component("PatchDB Viewer")
+    : editor(e), storage(s), OverlayComponent("PatchDB Viewer")
 {
     storage->initializePatchDb();
     createElements();

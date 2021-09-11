@@ -36,14 +36,10 @@
 
 #include "overlays/AboutScreen.h"
 #include "overlays/CoveringMessageOverlay.h"
-#include "overlays/LuaEditors.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
-#include "overlays/ModulationEditor.h"
-#include "overlays/PatchDBViewer.h"
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/OverlayWrapper.h"
-#include "overlays/PatchStoreDialog.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -322,7 +318,7 @@ void SurgeGUIEditor::idle()
 
         if (showMSEGEditorOnNextIdleOrOpen)
         {
-            showMSEGEditor();
+            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
             showMSEGEditorOnNextIdleOrOpen = false;
         }
 
@@ -927,10 +923,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         return;
     assert(frame);
 
-    editorOverlayTagAtClose = "";
     if (editor_open)
     {
-        editorOverlayTagAtClose = topmostEditorTag();
         close_editor();
     }
 
@@ -1535,7 +1529,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     if (showMSEGEditorOnNextIdleOrOpen)
     {
-        showMSEGEditor();
+        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
         showMSEGEditorOnNextIdleOrOpen = false;
     }
 
@@ -1547,7 +1541,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[lfoidx]);
         if (ld->shape.val.i != lt_mseg)
         {
-            closeMSEGEditor();
+            closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
         }
     }
 
@@ -1599,7 +1593,7 @@ bool SurgeGUIEditor::open(void *parent)
     auto *des = &(synth->storage.getPatch().dawExtraState);
 
     if (des->isPopulated && des->editor.isMSEGOpen)
-        showMSEGEditor();
+        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
 
     return true;
 }
@@ -2077,11 +2071,11 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
                 if (isAnyOverlayPresent(MSEG_EDITOR))
                 {
-                    closeMSEGEditor();
+                    closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
 
                     if (newshape == lt_mseg)
                     {
-                        showMSEGEditor();
+                        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                     }
                 }
 
@@ -2279,8 +2273,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Scale Editor..."), true, false,
-                          [this]() { this->toggleTuningEditor(); });
+    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Tuning Editor..."), true, false,
+                          [this]() { this->toggleOverlay(TUNING_EDITOR); });
 
     tuningSubMenu.addSeparator();
 
@@ -3316,7 +3310,7 @@ void SurgeGUIEditor::reloadFromSkin()
     // update MSEG editor if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
-        showMSEGEditor();
+        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
     }
 
     // adjust JUCE look and feel colors
@@ -4061,70 +4055,6 @@ void SurgeGUIEditor::resetPitchSmoothing(Modulator::SmoothingMode t)
     Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::PitchSmoothingMode,
                                            (int)t);
     synth->storage.pitchSmoothingMode = t;
-}
-
-void SurgeGUIEditor::makeStorePatchDialog()
-{
-    auto npc = Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG;
-    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
-    std::string name = synth->storage.getPatch().name;
-    std::string category = synth->storage.getPatch().category;
-    std::string author = synth->storage.getPatch().author;
-    std::string comments = synth->storage.getPatch().comment;
-
-    auto defaultAuthor = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, "");
-    auto defaultComment = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::DefaultPatchComment, "");
-    auto oldAuthor = std::string("");
-
-    if (!Surge::Storage::isValidUTF8(defaultAuthor))
-    {
-        defaultAuthor = "";
-    }
-    if (!Surge::Storage::isValidUTF8(defaultComment))
-    {
-        defaultComment = "";
-    }
-
-    if (author == "" && defaultAuthor != "")
-    {
-        author = defaultAuthor;
-    }
-
-    if (author != "" && defaultAuthor != "")
-    {
-        if (_stricmp(author.c_str(), defaultAuthor.c_str()))
-        {
-            oldAuthor = author;
-            author = defaultAuthor;
-        }
-    }
-
-    if (comments == "" && defaultComment != "")
-    {
-        comments = defaultComment;
-    }
-
-    if (oldAuthor != "")
-    {
-        if (comments == "")
-            comments += "Original patch by " + oldAuthor;
-        else
-            comments += " (Original patch by " + oldAuthor + ")";
-    }
-
-    auto pb = std::make_unique<Surge::Overlays::PatchStoreDialog>();
-    pb->setSkin(currentSkin);
-    pb->setName(name);
-    pb->setAuthor(author);
-    pb->setCategory(category);
-    pb->setComment(comments);
-    pb->setSurgeGUIEditor(this);
-
-    addJuceEditorOverlay(std::move(pb), "Store Patch", STORE_PATCH, skinCtrl->getRect(), false);
 }
 
 Surge::GUI::IComponentTagValue *
@@ -4928,12 +4858,12 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     bool hadExtendedEditor = false;
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
-        closeMSEGEditor();
+        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
         hadExtendedEditor = true;
     }
     if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
-        closeFormulaEditorDialog();
+        closeOverlay(FORMULA_EDITOR);
         hadExtendedEditor = true;
     }
 
@@ -4941,11 +4871,11 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     {
         if (curr == lt_mseg)
         {
-            showMSEGEditor();
+            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
         }
         if (curr == lt_formula)
         {
-            showFormulaEditorDialog();
+            showOverlay(FORMULA_EDITOR);
         }
     }
 
@@ -4959,163 +4889,6 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     frame->repaint();
 }
 
-void SurgeGUIEditor::closeStorePatchDialog() { dismissEditorOfType(STORE_PATCH); }
-
-void SurgeGUIEditor::showStorePatchDialog() { makeStorePatchDialog(); }
-
-void SurgeGUIEditor::closeMSEGEditor()
-{
-    if (isAnyOverlayPresent(MSEG_EDITOR))
-    {
-        broadcastMSEGState();
-        dismissEditorOfType(MSEG_EDITOR);
-
-        if (lfoEditSwitch)
-        {
-            lfoEditSwitch->setValue(0.0);
-            lfoEditSwitch->asJuceComponent()->repaint();
-        }
-    }
-}
-void SurgeGUIEditor::toggleMSEGEditor()
-{
-    if (isAnyOverlayPresent(MSEG_EDITOR))
-    {
-        closeMSEGEditor();
-    }
-    else
-    {
-        showMSEGEditor();
-    }
-}
-
-void SurgeGUIEditor::showPatchBrowserDialog()
-{
-    auto pt = std::make_unique<Surge::Overlays::PatchDBViewer>(this, &(this->synth->storage));
-
-    auto npc = Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER;
-    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-    auto yPos = skinCtrl->y + skinCtrl->h - 1;
-    auto xBuf = 25;
-    auto w = getWindowSizeX() - xBuf * 2;
-    auto h = getWindowSizeY() - yPos - xBuf;
-
-    addJuceEditorOverlay(std::move(pt), "Patch Browser", PATCH_BROWSER,
-                         juce::Rectangle<int>(xBuf, yPos, w, h));
-}
-
-void SurgeGUIEditor::closePatchBrowserDialog()
-{
-    if (isAnyOverlayPresent(PATCH_BROWSER))
-    {
-        dismissEditorOfType(PATCH_BROWSER);
-    }
-}
-
-void SurgeGUIEditor::togglePatchBrowserDialog()
-{
-    if (isAnyOverlayPresent(PATCH_BROWSER))
-    {
-        closePatchBrowserDialog();
-    }
-    else
-    {
-        showPatchBrowserDialog();
-    }
-}
-
-void SurgeGUIEditor::showModulationEditorDialog()
-{
-    auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
-    addJuceEditorOverlay(std::move(pt), "Modulation List", MODULATION_EDITOR,
-                         juce::Rectangle<int>(50, 50, 750, 450));
-}
-
-void SurgeGUIEditor::closeModulationEditorDialog()
-{
-    if (isAnyOverlayPresent(MODULATION_EDITOR))
-    {
-        dismissEditorOfType(MODULATION_EDITOR);
-    }
-}
-
-void SurgeGUIEditor::toggleModulationEditorDialog()
-{
-    if (isAnyOverlayPresent(MODULATION_EDITOR))
-    {
-        dismissEditorOfType(MODULATION_EDITOR);
-    }
-    else
-    {
-        showModulationEditorDialog();
-    }
-}
-
-void SurgeGUIEditor::showFormulaEditorDialog()
-{
-    // For now, follow the MSEG Sizing
-    auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
-    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
-    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
-    auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
-
-    auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
-        this, &(this->synth->storage), &synth->storage.getPatch().scene[current_scene].lfo[lfo_id],
-        fs, currentSkin);
-    pt->setSkin(currentSkin, bitmapStore);
-
-    addJuceEditorOverlay(std::move(pt), "Formula Editor", FORMULA_EDITOR, skinCtrl->getRect(), true,
-                         []() {});
-
-    if (lfoEditSwitch)
-    {
-        lfoEditSwitch->setValue(1.0);
-        lfoEditSwitch->asJuceComponent()->repaint();
-    }
-}
-
-void SurgeGUIEditor::closeFormulaEditorDialog()
-{
-    if (isAnyOverlayPresent(FORMULA_EDITOR))
-    {
-        dismissEditorOfType(FORMULA_EDITOR);
-
-        if (lfoEditSwitch)
-        {
-            lfoEditSwitch->setValue(0.0);
-            lfoEditSwitch->asJuceComponent()->repaint();
-        }
-    }
-}
-
-void SurgeGUIEditor::showWavetableScripter()
-{
-    int w = 800, h = 520;
-    auto px = (getWindowSizeX() - w) / 2;
-    auto py = (getWindowSizeY() - h) / 2;
-    auto r = juce::Rectangle<int>(px, py, w, h);
-
-    auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
-
-    auto pt = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
-        this, &(this->synth->storage), os, currentSkin);
-    pt->setSkin(currentSkin, bitmapStore);
-
-    addJuceEditorOverlay(std::move(pt), "Wavetable Editor", WAVETABLESCRIPTING_EDITOR, r, true,
-                         [this]() { frame->repaint(); });
-}
-
-void SurgeGUIEditor::closeWavetableScripter()
-{
-    if (isAnyOverlayPresent(WAVETABLESCRIPTING_EDITOR))
-    {
-        dismissEditorOfType(WAVETABLESCRIPTING_EDITOR);
-    }
-}
-
 void SurgeGUIEditor::scaleTextEdited(juce::String newScale)
 {
     try
@@ -5127,51 +4900,6 @@ void SurgeGUIEditor::scaleTextEdited(juce::String newScale)
     {
         synth->storage.retuneTo12TETScaleC261Mapping();
         synth->storage.reportError(e.what(), "SCL Error");
-    }
-}
-void SurgeGUIEditor::showTuningEditor()
-{
-    int w = 750, h = 500;
-    auto px = (getWindowSizeX() - w) / 2;
-    auto py = (getWindowSizeY() - h) / 2;
-    auto r = juce::Rectangle<int>(px, py, w, h);
-
-    auto pt = std::make_unique<Surge::Overlays::ScaleEditor>(synth->storage.currentScale);
-    pt->addScaleTextEditedListener(this);
-
-    addJuceEditorOverlay(std::move(pt), "Tuning Editor", TUNING_EDITOR, r, true,
-                         [this]() { frame->repaint(); });
-}
-
-void SurgeGUIEditor::closeTuningEditor()
-{
-    if (isAnyOverlayPresent(TUNING_EDITOR))
-    {
-        dismissEditorOfType(TUNING_EDITOR);
-    }
-}
-
-void SurgeGUIEditor::toggleTuningEditor()
-{
-    if (isAnyOverlayPresent(TUNING_EDITOR))
-    {
-        closeTuningEditor();
-    }
-    else
-    {
-        showTuningEditor();
-    }
-}
-
-void SurgeGUIEditor::toggleFormulaEditorDialog()
-{
-    if (isAnyOverlayPresent(FORMULA_EDITOR))
-    {
-        closeFormulaEditorDialog();
-    }
-    else
-    {
-        showFormulaEditorDialog();
     }
 }
 
@@ -5194,48 +4922,6 @@ void SurgeGUIEditor::broadcastMSEGState()
     }
     msegIsOpenFor = -1;
     msegIsOpenInScene = -1;
-}
-void SurgeGUIEditor::showMSEGEditor()
-{
-    broadcastMSEGState();
-
-    auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
-    msegIsOpenFor = lfo_id;
-    msegIsOpenInScene = current_scene;
-
-    auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
-    auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
-    auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(&(synth->storage), lfodata, ms,
-                                                             &msegEditState[current_scene][lfo_id],
-                                                             currentSkin, bitmapStore);
-    mse->onModelChanged = [this]() {
-        if (lfoDisplayRepaintCountdown == 0)
-        {
-            lfoDisplayRepaintCountdown = 2;
-        }
-    };
-
-    std::string title = modsource_names[modsource_editor[current_scene]];
-    title += " Editor";
-    Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
-
-    auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
-    auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-    auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
-    addJuceEditorOverlay(std::move(mse), title, MSEG_EDITOR, skinCtrl->getRect(), true, [this]() {
-        if (lfoEditSwitch)
-        {
-            lfoEditSwitch->setValue(0.0);
-            lfoEditSwitch->asJuceComponent()->repaint();
-        }
-    });
-
-    if (lfoEditSwitch)
-    {
-        lfoEditSwitch->setValue(1.0);
-        lfoEditSwitch->asJuceComponent()->repaint();
-    }
 }
 
 void SurgeGUIEditor::repushAutomationFor(Parameter *p)

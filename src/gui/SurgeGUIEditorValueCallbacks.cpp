@@ -540,7 +540,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
                 if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                    showModulationEditorDialog();
+                    showOverlay(MODULATION_EDITOR);
             });
 
             contextMenu.addSeparator();
@@ -1877,7 +1877,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
                     if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                        showModulationEditorDialog();
+                        showOverlay(MODULATION_EDITOR);
                 });
 
                 if (n_ms)
@@ -2272,17 +2272,17 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
             if (lfodata->shape.val.i == lt_mseg)
             {
-                showMSEGEditor();
+                showOverlay(SurgeGUIEditor::MSEG_EDITOR);
             }
             else if (lfodata->shape.val.i == lt_formula)
             {
-                showFormulaEditorDialog();
+                showOverlay(FORMULA_EDITOR);
             }
         }
         else
         {
-            closeMSEGEditor();
-            closeFormulaEditorDialog();
+            closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            closeOverlay(FORMULA_EDITOR);
         }
         return;
     }
@@ -2370,12 +2370,12 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     bool hadExtendedOverlay = false;
                     if (isAnyOverlayPresent(MSEG_EDITOR))
                     {
-                        closeMSEGEditor();
+                        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
                         hadExtendedOverlay = true;
                     }
                     if (isAnyOverlayPresent(FORMULA_EDITOR))
                     {
-                        closeFormulaEditorDialog();
+                        closeOverlay(FORMULA_EDITOR);
                         hadExtendedOverlay = true;
                     }
                     if (hadExtendedOverlay)
@@ -2384,11 +2384,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                                                                                        ms_lfo1]);
                         if (ld->shape.val.i == lt_mseg)
                         {
-                            showMSEGEditor();
+                            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                         }
                         if (ld->shape.val.i == lt_formula)
                         {
-                            showFormulaEditorDialog();
+                            showOverlay(FORMULA_EDITOR);
                         }
                     }
 
@@ -2446,11 +2446,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                             .lfo[modsource_editor[current_scene] - ms_lfo1]);
             if (ld->shape.val.i == lt_mseg)
             {
-                showMSEGEditor();
+                showOverlay(SurgeGUIEditor::MSEG_EDITOR);
             }
             else
             {
-                closeMSEGEditor();
+                closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
             }
         }
 
@@ -2473,10 +2473,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_category:
     {
-        if (isAnyOverlayPresent(STORE_PATCH))
-        {
-            closeStorePatchDialog();
-        }
+        closeOverlay(STORE_PATCH);
 
         if (control->getValue() > 0.5f)
             synth->incrementCategory(true);
@@ -2510,10 +2507,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_patch:
     {
-        if (isAnyOverlayPresent(STORE_PATCH))
-        {
-            closeStorePatchDialog();
-        }
+        closeOverlay(STORE_PATCH);
 
         auto insideCategory = Surge::Storage::getUserDefaultValue(
             &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
@@ -2633,7 +2627,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        showStorePatchDialog();
+        showOverlay(STORE_PATCH);
     }
     break;
 
