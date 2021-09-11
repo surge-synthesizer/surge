@@ -89,7 +89,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
         if (sge)
         {
-            sge->togglePatchBrowserDialog();
+            sge->toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
         }
         return;
     }
@@ -105,7 +105,7 @@ void PatchSelector::openPatchBrowser()
 
     if (sge)
     {
-        sge->showPatchBrowserDialog();
+        sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
     }
 }
 void PatchSelector::showClassicMenu(bool single_category)
@@ -230,7 +230,7 @@ void PatchSelector::showClassicMenu(bool single_category)
 
         if (sge)
         {
-            sge->showPatchBrowserDialog();
+            sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
         }
     });
 

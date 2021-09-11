@@ -19,6 +19,7 @@
 #include "SurgeStorage.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "OverlayComponent.h"
 
 class SurgeGUIEditor;
 
@@ -29,7 +30,7 @@ namespace Overlays
 class PatchDBSQLTableModel;
 class PatchDBSQLTreeViewItem;
 
-class PatchDBViewer : public juce::Component, public juce::TextEditor::Listener
+class PatchDBViewer : public OverlayComponent, public juce::TextEditor::Listener
 {
   public:
     PatchDBViewer(SurgeGUIEditor *ed, SurgeStorage *s);

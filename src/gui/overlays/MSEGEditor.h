@@ -19,6 +19,7 @@
 #include "RefreshableOverlay.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "OverlayComponent.h"
 
 namespace Surge
 {
@@ -27,7 +28,7 @@ namespace Overlays
 struct MSEGControlRegion;
 struct MSEGCanvas;
 
-struct MSEGEditor : public juce::Component,
+struct MSEGEditor : public OverlayComponent,
                     public Surge::GUI::SkinConsumingComponent,
                     public RefreshableOverlay
 {

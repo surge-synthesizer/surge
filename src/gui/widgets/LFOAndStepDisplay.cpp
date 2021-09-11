@@ -1269,13 +1269,13 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
             }
             else
             {
-                sge->toggleMSEGEditor();
+                sge->toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
             }
         }
 
         if (isFormula())
         {
-            sge->toggleFormulaEditorDialog();
+            sge->toggleOverlay(SurgeGUIEditor::FORMULA_EDITOR);
         }
     }
 
@@ -1833,7 +1833,7 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                                : "Open MSEG Editor";
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
         if (sge)
-            sge->toggleMSEGEditor();
+            sge->toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
     });
 
     contextMenu.addSeparator();
@@ -1843,8 +1843,8 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                             ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
                             if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                             {
-                                sge->closeMSEGEditor();
-                                sge->showMSEGEditor();
+                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                             }
                             repaint();
                         });
@@ -1854,8 +1854,8 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                             ms->loopMode = MSEGStorage::LoopMode::LOOP;
                             if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                             {
-                                sge->closeMSEGEditor();
-                                sge->showMSEGEditor();
+                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                             }
                             repaint();
                         });
@@ -1865,8 +1865,8 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                             ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
                             if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                             {
-                                sge->closeMSEGEditor();
-                                sge->showMSEGEditor();
+                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                             }
                             repaint();
                         });

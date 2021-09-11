@@ -597,7 +597,7 @@ void ModulationSourceButton::resized()
 
 void ModulationOverviewLaunchButton::buttonClicked(Button *button)
 {
-    editor->toggleModulationEditorDialog();
+    editor->toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
     repaint();
 }
 

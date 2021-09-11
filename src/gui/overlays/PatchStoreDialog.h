@@ -19,6 +19,7 @@
 #include "SkinSupport.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "OverlayComponent.h"
 
 class SurgeGUIEditor;
 
@@ -26,7 +27,7 @@ namespace Surge
 {
 namespace Overlays
 {
-struct PatchStoreDialog : public juce::Component,
+struct PatchStoreDialog : public OverlayComponent,
                           public Surge::GUI::SkinConsumingComponent,
                           public juce::Button::Listener
 {

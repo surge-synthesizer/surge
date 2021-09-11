@@ -299,10 +299,10 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     contextMenu.addSeparator();
     auto owts = [this]() {
         if (sge)
-            sge->showWavetableScripter();
+            sge->showOverlay(SurgeGUIEditor::WAVETABLESCRIPTING_EDITOR);
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Editor..."), owts);
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Script Editor..."), owts);
     contextMenu.addSeparator();
 
     auto refresh = [this]() { this->storage->refresh_wtlist(); };

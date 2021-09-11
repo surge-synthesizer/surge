@@ -22,6 +22,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <sstream>
 #include <set>
+#include "OverlayComponent.h"
 
 namespace Surge
 {
@@ -249,7 +250,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel, public juce::Asy
     juce::TableListBox *table;
 };
 
-class ScaleEditor : public juce::Component, public juce::FileDragAndDropTarget
+class TuningEditor : public OverlayComponent, public juce::FileDragAndDropTarget
 {
   public:
     class ToneEditor : public juce::Component,
@@ -264,7 +265,7 @@ class ScaleEditor : public juce::Component, public juce::FileDragAndDropTarget
         std::unique_ptr<juce::Component> coarseKnob, fineKnob, playingLED;
         std::unique_ptr<juce::TextButton> hideButton;
 
-        ScaleEditor *parent;
+        TuningEditor *parent;
 
         float cents;
         int index;
@@ -287,8 +288,8 @@ class ScaleEditor : public juce::Component, public juce::FileDragAndDropTarget
     class RadialScaleGraph;
     class GeneratorSection;
 
-    ScaleEditor(Tunings::Scale &s);
-    ~ScaleEditor() override;
+    TuningEditor(Tunings::Scale &s);
+    ~TuningEditor() override;
 
     class ScaleTextEditedListener
     {

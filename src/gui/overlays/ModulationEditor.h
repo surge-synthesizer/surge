@@ -17,6 +17,7 @@
 #define SURGE_XT_MODULATIONEDITOR_H
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "OverlayComponent.h"
 
 class SurgeGUIEditor;
 class SurgeSynthesizer;
@@ -27,7 +28,7 @@ namespace Overlays
 {
 class ModulationListBoxModel;
 
-class ModulationEditor : public juce::Component
+class ModulationEditor : public OverlayComponent
 {
   public:
     ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s);

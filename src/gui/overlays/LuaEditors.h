@@ -24,6 +24,7 @@
 #include "SkinSupport.h"
 
 #include "juce_gui_extra/juce_gui_extra.h"
+#include "OverlayComponent.h"
 
 class SurgeGUIEditor;
 
@@ -38,7 +39,7 @@ namespace Overlays
  * having a superclass constructor and implementing resized; and where you have
  * to handle the apply condition with applyCode()
  */
-class CodeEditorContainerWithApply : public juce::Component,
+class CodeEditorContainerWithApply : public OverlayComponent,
                                      public juce::CodeDocument::Listener,
                                      public juce::Button::Listener,
                                      public juce::KeyListener,
