@@ -33,7 +33,13 @@ function(use_platform_fs)
   target_include_directories(${PROJECT_NAME} INTERFACE "${INC_DIR}")
 endfunction()
 
-set(SURGE_FILESYSTEM_FORCE_GHC OFF CACHE BOOL "Force GHC filesystem implementation")
+if (UNIX AND NOT APPLE)
+  # with gcc11 on arch and latest ardour we get a crash in std::fs if we use the
+  # os provided one so keep this as an option but default to off
+  set(SURGE_FILESYSTEM_FORCE_GHC ON CACHE BOOL "Force GHC filesystem implementation")
+else()
+  set(SURGE_FILESYSTEM_FORCE_GHC OFF CACHE BOOL "Force GHC filesystem implementation")
+endif()
 if (${SURGE_FILESYSTEM_FORCE_GHC})
   use_ghc_fs()
 else()
