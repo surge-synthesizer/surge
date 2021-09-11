@@ -88,6 +88,7 @@ void SurgeImageStore::setupBuiltinBitmaps()
     addEntry(IDB_MIDI_LEARN);
     addEntry(IDB_WAVESHAPER_BG);
     addEntry(IDB_WAVESHAPER_ANALYSIS);
+    addEntry(IDB_MODMENU_ICONS);
 
     // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding
     // block

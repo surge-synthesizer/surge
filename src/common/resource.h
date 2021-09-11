@@ -47,6 +47,7 @@
 #define IDB_FILTER_ICONS 169
 #define IDB_WAVESHAPER_BG 183
 #define IDB_WAVESHAPER_ANALYSIS 184
+#define IDB_MODMENU_ICONS 185
 
 // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
 #define IDB_MSEG_NODES 301

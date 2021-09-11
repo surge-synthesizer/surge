@@ -20,6 +20,7 @@
 #include "overlays/PatchStoreDialog.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/TuningOverlays.h"
+#include "widgets/MainFrame.h"
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatchDialog()
 {
@@ -235,6 +236,9 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
             }
         };
         break;
+    case MODULATION_EDITOR:
+        onClose = [this]() { frame->repaint(); };
+        break;
     default:
         break;
     }
@@ -249,6 +253,9 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
             lfoEditSwitch->setValue(1.0);
             lfoEditSwitch->asJuceComponent()->repaint();
         }
+        break;
+    case MODULATION_EDITOR:
+        frame->repaint();
         break;
     default:
         break;
@@ -275,5 +282,14 @@ void SurgeGUIEditor::closeOverlay(OverlayTags olt)
     if (isAnyOverlayPresent(olt))
     {
         dismissEditorOfType(olt);
+    }
+
+    switch (olt)
+    {
+    case MODULATION_EDITOR:
+        frame->repaint();
+        break;
+    default:
+        break;
     }
 }

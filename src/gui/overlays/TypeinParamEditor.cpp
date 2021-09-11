@@ -30,6 +30,7 @@ TypeinParamEditor::TypeinParamEditor()
     textEd->setIndents(4, (textEd->getHeight() - textEd->getTextHeight()) / 2);
     textEd->setJustification(juce::Justification::centred);
     addAndMakeVisible(*textEd);
+    textEd->setWantsKeyboardFocus(true);
 }
 
 void TypeinParamEditor::paint(juce::Graphics &g)
