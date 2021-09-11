@@ -553,7 +553,7 @@ const char wst_names[n_ws_types][32] = {"Off",
                                         "2 Cycle Bound",
                                         "7 Cycle Bound",
                                         "10 Cycle Bound",
-                                        "ZamAudio",
+                                        "Medium",
                                         "OJD",
                                         "Soft Single Fold"};
 
@@ -563,7 +563,7 @@ const char wst_ui_names[n_ws_types][16] = {
     "WCFold",  "Add12",    "Add13",    "Add14",    "Add15",   "Add1-5",   "AddSaw3", "AddSqr3",
     "Fuzz",    "SoftFz",   "HeavyFz",  "CenterFz", "EdgeFz",  "Sin+x",    "Sin2x+x", "Sin3x+x",
     "Sin7x+x", "Sin10x+x", "2Cycle",   "7Cycle",   "10Cycle", "2CycleB",  "7CycleB", "10CycleB",
-    "Zam",     "OJD",      "Sft1Fld"};
+    "Medium",  "OJD",      "Sft1Fld"};
 
 // Subset used in distortion and rotary
 static constexpr int n_fxws = 8;
@@ -583,10 +583,10 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_none, "");
 
         p(wst_soft, "Saturator");
+        p(wst_zamsat, "Saturator");
         p(wst_hard, "Saturator");
         p(wst_asym, "Saturator");
         p(wst_ojd, "Saturator");
-        p(wst_zamsat, "Saturator");
 
         p(wst_sine, "Effect");
         p(wst_digital, "Effect");
@@ -609,10 +609,10 @@ struct WaveShaperSelectorMapper : public ParameterDiscreteIndexRemapper
         p(wst_negwav, "Rectifiers");
         p(wst_softrect, "Rectifiers");
 
+        p(wst_softfold, "Wavefolder");
         p(wst_singlefold, "Wavefolder");
         p(wst_dualfold, "Wavefolder");
         p(wst_westfold, "Wavefolder");
-        p(wst_softfold, "Wavefolder");
 
         p(wst_fuzz, "Fuzz");
         p(wst_fuzzheavy, "Fuzz");
