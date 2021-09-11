@@ -414,6 +414,7 @@ class Skin
 class SkinDB : public juce::DeletedAtShutdown
 {
   public:
+    static SkinDB *instance;
     static SkinDB *get();
 
     struct Entry
@@ -481,7 +482,6 @@ class SkinDB : public juce::DeletedAtShutdown
     Entry defaultSkinEntry;
     bool foundDefaultSkinEntry = false;
 
-    static std::shared_ptr<SkinDB> instance;
     static std::ostringstream errorStream;
 
     friend class Skin;
