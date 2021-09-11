@@ -19,6 +19,7 @@
 #include "SkinModel.h"
 #include "SkinColors.h"
 #include "filesystem/import.h"
+#include "SkinFonts.h"
 
 /*
 ** Support for rudimentary skinning in Surge
@@ -215,6 +216,8 @@ class Skin
     }
 
     juce::Colour colorFromHexString(const std::string &hex) const;
+
+    juce::Font getFont(const Surge::Skin::FontDesc &d);
 
   private:
     juce::Colour

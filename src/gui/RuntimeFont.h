@@ -7,10 +7,16 @@ namespace Surge
 namespace GUI
 {
 
+class Skin;
+
 struct DefaultFonts : public juce::DeletedAtShutdown
 {
     DefaultFonts();
     ~DefaultFonts();
+
+    // When we can make this say 'private' we are done
+    // private:
+
     juce::Font
     getLatoAtSize(float size,
                   juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;
@@ -27,6 +33,7 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::ReferenceCountedObjectPtr<juce::Typeface> firaMonoRegularTypeface;
 
     static DefaultFonts *fmi;
+    friend class Skin;
 };
 
 DefaultFonts *getFontManager();

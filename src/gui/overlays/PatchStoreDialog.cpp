@@ -74,7 +74,7 @@ void PatchStoreDialog::paint(juce::Graphics &g)
 void PatchStoreDialog::onSkinChanged()
 {
     auto resetColors = [this](const auto &typein) {
-        typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+        typein->setFont(skin->getFont(Fonts::PatchStore::TextEntry));
         typein->setColour(juce::TextEditor::backgroundColourId,
                           skin->getColor(Colors::Dialog::Entry::Background));
         typein->setColour(juce::TextEditor::textColourId,
@@ -92,7 +92,7 @@ void PatchStoreDialog::onSkinChanged()
     resetColors(commentEd);
 
     auto resetLabel = [this](const auto &label) {
-        label->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
+        label->setFont(skin->getFont(Fonts::PatchStore::Label));
         label->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Label::Text));
     };
     resetLabel(nameEdL);
@@ -102,7 +102,6 @@ void PatchStoreDialog::onSkinChanged()
     resetLabel(storeTuningLabel);
 
     auto resetButton = [this](const auto &button) {
-        // button->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
         button->setColour(juce::TextButton::buttonColourId,
                           skin->getColor(Colors::Dialog::Button::Background));
         button->setColour(juce::TextButton::buttonOnColourId,

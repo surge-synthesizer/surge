@@ -61,6 +61,8 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     SurgeGUIEditor *editor;
     SurgeStorage *storage;
 
+    virtual void onSkinChanged() override;
+
     virtual void applyCode() = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CodeEditorContainerWithApply);

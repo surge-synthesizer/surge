@@ -51,7 +51,7 @@ struct EffectLabel : public juce::Component, public Surge::GUI::SkinConsumingCom
         g.fillRect(lb);
 
         g.setColour(skin->getColor(Colors::Effect::Label::Text));
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(skin->getFont(Fonts::Widgets::EffectLabel));
         g.drawText(label, getLocalBounds(), juce::Justification::centredLeft);
     }
 

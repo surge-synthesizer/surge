@@ -73,7 +73,6 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
     mainEditor = std::make_unique<juce::CodeEditorComponent>(*mainDocument, tokenizer.get());
-    mainEditor->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
@@ -91,6 +90,11 @@ void CodeEditorContainerWithApply::buttonClicked(juce::Button *button)
     {
         applyCode();
     }
+}
+
+void CodeEditorContainerWithApply::onSkinChanged()
+{
+    mainEditor->setFont(skin->getFont(Fonts::LuaEditor::Code));
 }
 
 void CodeEditorContainerWithApply::codeDocumentTextInserted(const juce::String &newText,
