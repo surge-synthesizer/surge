@@ -984,6 +984,7 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
     {
         auto surge = surgeOnSine();
         auto surgeTuned = surgeOnSine();
+        surgeTuned->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
         surgeTuned->storage.retuneToScale(s);
 
