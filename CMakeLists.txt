@@ -340,6 +340,7 @@ set(SURGE_SHARED_SOURCES
         src/common/SkinModel.cpp
         src/common/SkinModelImpl.cpp
         src/common/SkinColors.cpp
+        src/common/SkinFonts.cpp
         src/common/SurgePatch.cpp
         src/common/SurgeStorage.cpp
         src/common/UserDefaults.cpp

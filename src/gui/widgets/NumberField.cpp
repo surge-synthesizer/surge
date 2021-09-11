@@ -66,10 +66,14 @@ std::string NumberField::valueToDisplay() const
 }
 void NumberField::paint(juce::Graphics &g)
 {
+    jassert(skin);
+
     bg->draw(g, 1.0);
     if (bgHover && isHover)
         bgHover->draw(g, 1.0);
-    g.setFont(Surge::GUI::getFontManager()->displayFont);
+
+    g.setFont(skin->getFont(Fonts::Widgets::NumberField));
+
     g.setColour(textColour);
     if (isHover)
         g.setColour(textHoverColour);

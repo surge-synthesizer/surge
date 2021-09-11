@@ -16,6 +16,7 @@
 #include <iostream>
 #include <iomanip>
 #include "SurgeXTBinary.h"
+#include "RuntimeFont.h"
 
 namespace Surge
 {
@@ -1070,6 +1071,31 @@ bool Skin::hasColor(const std::string &iid) const
                       // internally we strip it
         id = std::string(id.c_str() + 1);
     return colors.find(id) != colors.end();
+}
+
+juce::Font Skin::getFont(const Surge::Skin::FontDesc &d)
+{
+    jassert((int)Surge::Skin::FontDesc::plain == juce::Font::FontStyleFlags::plain);
+    jassert((int)Surge::Skin::FontDesc::italic == juce::Font::FontStyleFlags::italic);
+    jassert((int)Surge::Skin::FontDesc::bold == juce::Font::FontStyleFlags::bold);
+
+    if (d.hasParent)
+    {
+        return getFont(d.parent);
+    }
+    if (d.defaultFamily == Surge::Skin::FontDesc::SANS)
+    {
+        return Surge::GUI::getFontManager()->getLatoAtSize(d.size,
+                                                           (juce::Font::FontStyleFlags)d.style);
+    }
+    if (d.defaultFamily == Surge::Skin::FontDesc::MONO)
+    {
+        return Surge::GUI::getFontManager()->getFiraMonoAtSize(d.size);
+    }
+
+    static bool IHaveImplementedThis = false;
+    jassert(IHaveImplementedThis);
+    return Surge::GUI::getFontManager()->getLatoAtSize(d.size, (juce::Font::FontStyleFlags)d.style);
 }
 
 juce::Colour Skin::getColor(const std::string &iid, const juce::Colour &def,
