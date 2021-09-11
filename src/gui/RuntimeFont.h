@@ -25,6 +25,8 @@ struct DefaultFonts : public juce::DeletedAtShutdown
 
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface;
     juce::ReferenceCountedObjectPtr<juce::Typeface> firaMonoRegularTypeface;
+
+    static DefaultFonts *fmi;
 };
 
 DefaultFonts *getFontManager();

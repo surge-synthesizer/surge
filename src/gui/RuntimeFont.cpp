@@ -53,7 +53,7 @@ DefaultFonts::DefaultFonts()
     aboutFont = getLatoAtSize(10);
 }
 
-DefaultFonts::~DefaultFonts(){};
+DefaultFonts::~DefaultFonts() { fmi = nullptr; };
 
 juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
@@ -72,12 +72,13 @@ juce::Font DefaultFonts::getFiraMonoAtSize(float size) const
     return juce::Font(firaMonoRegularTypeface).withPointHeight(size);
 }
 
+DefaultFonts *DefaultFonts::fmi{nullptr};
+
 DefaultFonts *getFontManager()
 {
-    static DefaultFonts *fmi{nullptr};
-    if (!fmi)
-        fmi = new DefaultFonts();
-    return fmi;
+    if (!DefaultFonts::fmi)
+        DefaultFonts::fmi = new DefaultFonts();
+    return DefaultFonts::fmi;
 }
 
 } // namespace GUI

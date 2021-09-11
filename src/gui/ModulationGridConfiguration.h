@@ -65,6 +65,9 @@ struct ModulationGrid : juce::DeletedAtShutdown
         add(ms_latest_key, 9, 7);
     }
 
+    // This is only called at dll shutdown basically
+    ~ModulationGrid() { grid = nullptr; }
+
     void add(modsources ms, int x, int y) { data[ms] = Entry{x, y, ms}; }
     void add(modsources ms, int x, int y, const std::vector<modsources> &alternates)
     {

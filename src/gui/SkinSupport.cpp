@@ -26,9 +26,10 @@ const std::string NoneClassName = "none";
 const std::string Skin::defaultImageIDPrefix = "DEFAULT/";
 std::ostringstream SkinDB::errorStream;
 
+SkinDB *SkinDB::instance{nullptr};
+
 SkinDB *Surge::GUI::SkinDB::get()
 {
-    static SkinDB *instance{nullptr};
     if (!instance)
         instance = new SkinDB();
 
@@ -51,6 +52,7 @@ SkinDB::~SkinDB()
     skins.clear(); // Not really necessary but means the skins are destroyed before the rest of the
                    // dtor runs
                    // std::cout << "Destroying SkinDB" << std::endl;
+    instance = nullptr;
 }
 
 std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
