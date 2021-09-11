@@ -4463,8 +4463,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         int lfo_id = p->ctrlgroup_entry - ms_lfo1;
         if ((lfo_id >= 0) && (lfo_id < n_lfos))
         {
-            lfoDisplay =
-                componentForSkinSession<Surge::Widgets::LFOAndStepDisplay>(skinCtrl->sessionid);
+            if (!lfoDisplay)
+                lfoDisplay = std::make_unique<Surge::Widgets::LFOAndStepDisplay>();
             lfoDisplay->setBounds(skinCtrl->getRect());
             lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
             lfoDisplay->setTag(p->id + start_paramtags);
@@ -4550,7 +4550,22 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
     if (skinCtrl->defaultComponent == Surge::Skin::Components::NumberField)
     {
-        auto pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
+        // some are managed outside of the skin session management
+        std::unique_ptr<Surge::Widgets::NumberField> pbd;
+        switch (p->ctrltype)
+        {
+        case ct_polylimit:
+            pbd = std::move(polydisp);
+            break;
+        case ct_midikey_or_channel:
+            pbd = std::move(splitpointControl);
+            break;
+        default:
+            break;
+        }
+
+        if (!pbd)
+            pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
         pbd->addListener(this);
         pbd->setSkin(currentSkin, bitmapStore, skinCtrl);
         pbd->setTag(tag);
@@ -4731,24 +4746,28 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (!p)
             return nullptr;
 
+        /*
+         * This doesn't participate in the juceSkinComponents but that's OK
+         */
         auto rect = skinCtrl->getRect();
-        auto hsw = componentForSkinSession<Surge::Widgets::WaveShaperSelector>(skinCtrl->sessionid);
-        hsw->addListener(this);
-        hsw->setStorage(&(synth->storage));
-        hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
-        hsw->setTag(p->id + start_paramtags);
-        hsw->setBounds(rect);
-        hsw->setValue(p->get_value_f01());
+
+        if (!waveshaperSelector)
+            waveshaperSelector = std::make_unique<Surge::Widgets::WaveShaperSelector>();
+
+        waveshaperSelector->addListener(this);
+        waveshaperSelector->setStorage(&(synth->storage));
+        waveshaperSelector->setSkin(currentSkin, bitmapStore, skinCtrl);
+        waveshaperSelector->setTag(p->id + start_paramtags);
+        waveshaperSelector->setBounds(rect);
+        waveshaperSelector->setValue(p->get_value_f01());
 
         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
         if (parm && parm->supportsTotalIndexOrdering())
-            hsw->setIntOrdering(parm->totalIndexOrdering());
+            waveshaperSelector->setIntOrdering(parm->totalIndexOrdering());
 
-        setAccessibilityInformationByParameter(hsw.get(), p, "Select");
-        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
-        nonmod_param[paramIndex] = hsw.get();
-
-        waveshaperSelector = std::move(hsw);
+        setAccessibilityInformationByParameter(waveshaperSelector.get(), p, "Select");
+        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*waveshaperSelector);
+        nonmod_param[paramIndex] = waveshaperSelector.get();
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(waveshaperSelector.get());
     }
