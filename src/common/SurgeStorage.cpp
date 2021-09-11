@@ -864,7 +864,9 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
                 {
                     Patch e;
                     e.category = category;
-                    e.path = f.path();
+                    // do placement new to call copy constructor, not move constructor
+                    // (prevents crash from the lifetime of f.path() expiring)
+                    new (&e.path) fs::path(f.path());
                     e.name = path_to_string(f.path().filename());
                     e.name = e.name.substr(0, e.name.size() - xtn.length());
                     items.push_back(e);
