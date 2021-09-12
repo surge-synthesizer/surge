@@ -685,7 +685,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
             if (isUnipolar())
             {
                 auto sv = std::max(ss->steps[i], 0.f);
-                v = v.withTrimmedTop((int)(v.getHeight() * (1 - sv)));
+                v = v.withTrimmedTop((int)(v.getHeight() * (1 - sv))).withTrimmedRight(1);
             }
             else
             {
