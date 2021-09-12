@@ -39,6 +39,8 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
 
     std::string label, url;
     SurgeImage *icons{nullptr};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuTitleHelpComponent);
 };
 
 struct TinyLittleIconButton;
@@ -68,6 +70,8 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
     std::string source, amount;
     std::function<void(OpType)> callback;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModMenuCustomComponent);
 };
 
 struct ModMenuForAllComponent : ModMenuCustomComponent
@@ -81,6 +85,8 @@ struct ModMenuForAllComponent : ModMenuCustomComponent
     ModMenuForAllComponent(std::function<void(AllAction)> callback);
     std::function<void(AllAction)> allCB;
     void mouseUp(const juce::MouseEvent &e) override {}
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModMenuForAllComponent);
 };
 } // namespace Widgets
 } // namespace Surge

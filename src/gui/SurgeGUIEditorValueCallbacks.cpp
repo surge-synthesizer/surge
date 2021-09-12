@@ -1746,7 +1746,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     }
                 }
 
-                contextMenu.addSeparator();
                 int n_ms = 0;
 
                 for (int ms = 1; ms < n_modsources; ms++)
@@ -1761,6 +1760,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
                 if (n_ms)
                 {
+                    contextMenu.addSeparator();
                     auto sectionLabel = fmt::format("{:s} Modulations", p->get_full_name());
                     contextMenu.addSectionHeader(sectionLabel);
 
@@ -1889,6 +1889,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         contextMenu.addCustomItem(-1, std::move(allThree));
                     }
                 }
+
+                contextMenu.addSeparator();
 
                 // see if we have any modulators that are unassigned, then create "Add Modulation
                 // from..." menu

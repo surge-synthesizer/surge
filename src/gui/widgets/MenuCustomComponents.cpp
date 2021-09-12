@@ -61,6 +61,8 @@ struct TinyLittleIconButton : public juce::Component
     std::function<void()> callback;
     SurgeImage *icons{nullptr};
     int offset{0};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TinyLittleIconButton);
 };
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
@@ -93,14 +95,18 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
     g.setColour(findColour(juce::PopupMenu::headerTextColourId));
 
     auto rText = r.withTrimmedLeft(12);
-    g.drawText(label, rText, juce::Justification::centredLeft);
+    g.drawText(label, rText, juce::Justification::centred);
 
     auto yp = 4 * 20;
-    auto tl = r.getTopRight();
-    auto clipBox = juce::Rectangle<int>(tl.x - 22, tl.y, 20, 20);
+    auto xp = 0;
+    if (isItemHighlighted())
+        xp = 20;
+
+    auto tl = r.getTopLeft();
+    auto clipBox = juce::Rectangle<int>(tl.x, tl.y, 20, 20);
     g.reduceClipRegion(clipBox);
     if (icons)
-        icons->drawAt(g, clipBox.getX(), clipBox.getY() - yp, 1.0);
+        icons->drawAt(g, clipBox.getX() - xp, clipBox.getY() - yp, 1.0);
 }
 
 void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e)
@@ -160,7 +166,9 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
     }
     auto h = getHeight() - 2 * mg;
     auto r = getLocalBounds().withTrimmedLeft(xp + 3 * mg + 3 * (h + mg) + mg).withTrimmedRight(4);
-    g.setFont(getLookAndFeel().getPopupMenuFont());
+    auto ft = getLookAndFeel().getPopupMenuFont();
+    ft = ft.withHeight(ft.getHeight() - 1);
+    g.setFont(ft);
     g.drawText(source, r, juce::Justification::centredLeft);
     g.drawText(amount, r, juce::Justification::centredRight);
 }
