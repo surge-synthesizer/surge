@@ -393,6 +393,7 @@ set(SURGE_GUI_SOURCES
         src/gui/widgets/MultiSwitch.cpp
         src/gui/widgets/ModulationSourceButton.cpp
         src/gui/widgets/ModulatableSlider.cpp
+        src/gui/widgets/ModMenuCustomComponent.cpp
         src/gui/widgets/NumberField.cpp
         src/gui/widgets/OscillatorWaveformDisplay.cpp
         src/gui/widgets/ParameterInfowindow.cpp
