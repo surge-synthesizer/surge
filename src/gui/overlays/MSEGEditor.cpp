@@ -28,6 +28,7 @@
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
 #include <set>
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -2270,8 +2271,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-        contextMenu.addItem("[?] MSEG Segment",
-                            [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("MSEG Segment", hurl);
+        tcomp->setSkin(skin, associatedBitmapStore);
+        contextMenu.addCustomItem(-1, std::move(tcomp));
 
         contextMenu.addSeparator();
 
@@ -2870,8 +2872,9 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor");
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-        contextMenu.addItem("[?] " + menuName,
-                            [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
+        tcomp->setSkin(skin, associatedBitmapStore);
+        contextMenu.addCustomItem(-1, std::move(tcomp));
 
         contextMenu.addSeparator();
 

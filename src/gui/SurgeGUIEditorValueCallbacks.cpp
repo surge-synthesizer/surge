@@ -371,17 +371,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto hu = helpURLForSpecial("osc-select");
             char txt[TXT_SIZE];
 
-            if (hu != "")
-            {
-                snprintf(txt, TXT_SIZE, "[?] Osc %d", a + 1);
-                auto lurl = fullyResolvedHelpURL(hu);
-                contextMenu.addItem(txt, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-            }
-            else
-            {
-                snprintf(txt, TXT_SIZE, "Osc %d", a + 1);
-                contextMenu.addItem(txt, []() {});
-            }
+            auto lurl = hu;
+            if (lurl != "")
+                lurl = fullyResolvedHelpURL(hu);
+            auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+                fmt::format("Osc {:d}", a + 1), lurl);
+            tcomp->setSkin(currentSkin, bitmapStore);
+            contextMenu.addCustomItem(-1, std::move(tcomp));
 
             contextMenu.addSeparator();
 
@@ -427,19 +423,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("scene-select");
-            char txt[TXT_SIZE];
-
-            if (hu != "")
-            {
-                snprintf(txt, TXT_SIZE, "[?] Scene %c", 'A' + a);
-                auto lurl = fullyResolvedHelpURL(hu);
-                contextMenu.addItem(txt, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-            }
-            else
-            {
-                snprintf(txt, TXT_SIZE, "Scene %c", 'A' + a);
-                contextMenu.addItem(txt, []() {});
-            }
+            auto lurl = hu;
+            if (lurl != "")
+                lurl = fullyResolvedHelpURL(hu);
+            auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+                fmt::format("Scene {:c}", 'A' + a), lurl);
+            tcomp->setSkin(currentSkin, bitmapStore);
+            contextMenu.addCustomItem(-1, std::move(tcomp));
 
             contextMenu.addSeparator();
 
@@ -488,54 +478,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 hu = helpURLForSpecial("other-modbutton");
             }
 
-#if USE_OLD_ALTERNATES
-            if (cms->getHasAlternate())
-            {
-                int idOn = modsource;
-                int idOff = cms->getAlternate();
-
-                if (cms->getUseAlternate())
-                {
-                    auto t = idOn;
-                    idOn = idOff;
-                    idOff = t;
-                }
-
-                if (hu != "")
-                {
-                    auto lurl = fullyResolvedHelpURL(hu);
-                    std::string hs = std::string("[?] ") + (char *)modsource_names[idOn];
-                    contextMenu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-                }
-                else
-                {
-                    contextMenu.addItem(modsource_names[idOn], []() {});
-                }
-
-                bool activeMod = ((cms->getState() & 3) == 2);
-                std::string offLab = "Switch to ";
-                offLab += modsource_names[idOff];
-
-                contextMenu.addItem(offLab, !activeMod, false, [this, modsource, cms]() {
-                    cms->setUseAlternate(!cms->getUseAlternate());
-                    modsource_is_alternate[modsource] = cms->getUseAlternate();
-                    this->refresh_mod();
-                });
-#else
-            if (false)
-            {
-#endif
-            }
-            else if (hu != "")
-            {
-                auto lurl = fullyResolvedHelpURL(hu);
-                std::string hs = std::string("[?] ") + modulatorName(modsource, false);
-                contextMenu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
-            }
-            else
-            {
-                contextMenu.addItem(modulatorName(modsource, false), []() {});
-            }
+            auto lurl = hu;
+            if (lurl != "")
+                lurl = fullyResolvedHelpURL(lurl);
+            auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+                modulatorName(modsource, false), lurl);
+            hmen->setSkin(currentSkin, bitmapStore);
+            contextMenu.addCustomItem(-1, std::move(hmen));
 
             contextMenu.addSeparator();
 
@@ -961,18 +910,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto contextMenu = juce::PopupMenu();
             std::string helpurl = helpURLFor(p);
 
-            if (helpurl == "")
-            {
-                contextMenu.addSectionHeader(std::string(p->get_full_name()));
-            }
-            else
-            {
-                auto lurl = fullyResolvedHelpURL(helpurl);
-                auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                    p->get_full_name(), lurl);
-                hmen->setSkin(currentSkin, bitmapStore);
-                contextMenu.addCustomItem(-1, std::move(hmen));
-            }
+            auto lurl = helpurl;
+            if (lurl != "")
+                lurl = fullyResolvedHelpURL(helpurl);
+            auto hmen =
+                std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(p->get_full_name(), lurl);
+            hmen->setSkin(currentSkin, bitmapStore);
+            contextMenu.addCustomItem(-1, std::move(hmen));
 
             contextMenu.addSeparator();
 

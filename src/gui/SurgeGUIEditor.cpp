@@ -46,6 +46,7 @@
 #include "widgets/LFOAndStepDisplay.h"
 #include "widgets/MainFrame.h"
 #include "widgets/MenuForDiscreteParams.h"
+#include "widgets/MenuCustomComponents.h"
 #include "widgets/ModulationSourceButton.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
@@ -1629,6 +1630,14 @@ void SurgeGUIEditor::setParameter(long index, float value)
     }
 }
 
+void SurgeGUIEditor::addHelpHeaderTo(const std::string &lab, const std::string &hu,
+                                     juce::PopupMenu &m) const
+{
+    auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(lab, hu);
+    tc->setSkin(currentSkin, bitmapStore);
+    m.addCustomItem(-1, std::move(tc));
+}
+
 void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widgets::EffectChooser *c)
 {
     auto fxGridMenu = juce::PopupMenu();
@@ -1636,8 +1645,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
     auto msurl = SurgeGUIEditor::helpURLForSpecial("fx-selector");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    fxGridMenu.addItem("[?] Effect Settings",
-                       [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    addHelpHeaderTo("Effect Settings", hurl, fxGridMenu);
 
     fxGridMenu.addSeparator();
 
@@ -2033,7 +2041,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
     auto lfoSubMenu = juce::PopupMenu();
 
-    lfoSubMenu.addItem("[?] LFO Presets", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    addHelpHeaderTo("LFO Presets", hurl, lfoSubMenu);
     lfoSubMenu.addSeparator();
 
     lfoSubMenu.addItem(
@@ -2125,7 +2133,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     {
         auto lurl = fullyResolvedHelpURL(hu);
 
-        mpeSubMenu.addItem("[?] MPE", [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+        addHelpHeaderTo("MPE", lurl, mpeSubMenu);
         mpeSubMenu.addSeparator();
     }
 
@@ -2234,8 +2242,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         auto lurl = fullyResolvedHelpURL(hu);
 
-        tuningSubMenu.addItem("[?] Tuning ",
-                              [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+        addHelpHeaderTo("Tuning", lurl, tuningSubMenu);
 
         tuningSubMenu.addSeparator();
     }
@@ -2542,7 +2549,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     {
         auto lurl = fullyResolvedHelpURL(hu);
 
-        zoomSubMenu.addItem("[?] Zoom", [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+        addHelpHeaderTo("Zoom", lurl, zoomSubMenu);
 
         zoomSubMenu.addSeparator();
     }

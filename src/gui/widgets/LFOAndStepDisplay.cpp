@@ -20,6 +20,7 @@
 #include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 #include <chrono>
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -1820,7 +1821,9 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
         storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    contextMenu.addItem("[?] MSEG Segment", [hurl]() { juce::URL(hurl).launchInDefaultBrowser(); });
+    auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("MSEG Settings", hurl);
+    hmen->setSkin(skin, associatedBitmapStore);
+    contextMenu.addCustomItem(-1, std::move(hmen));
 
     contextMenu.addSeparator();
 

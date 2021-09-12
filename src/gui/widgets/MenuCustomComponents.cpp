@@ -68,6 +68,7 @@ struct TinyLittleIconButton : public juce::Component
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     getLookAndFeel().getIdealPopupMenuItemSize(label, false, 22, idealWidth, idealHeight);
+    idealWidth += 8; // it reserves 12 for the icon already
 }
 
 void MenuTitleHelpComponent::onSkinChanged()
@@ -91,11 +92,26 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
 
-    g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
+    if (centerBold)
+        g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
+    else
+    {
+        auto ft = getLookAndFeel().getPopupMenuFont();
+        ft = ft.withHeight(ft.getHeight() - 1);
+        g.setFont(ft);
+    }
     g.setColour(findColour(juce::PopupMenu::headerTextColourId));
 
-    auto rText = r.withTrimmedLeft(12);
-    g.drawText(label, rText, juce::Justification::centred);
+    if (centerBold)
+    {
+        auto rText = r; // not centered? trim 12 from the left here
+        g.drawText(label, rText, juce::Justification::centred);
+    }
+    else
+    {
+        auto rText = r.withTrimmedLeft(12 + 20 + 2); // not centered? trim 12 from the left here
+        g.drawText(label, rText, juce::Justification::centredLeft);
+    }
 
     auto yp = 4 * 20;
     auto xp = 0;
@@ -103,6 +119,8 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         xp = 20;
 
     auto tl = r.getTopLeft();
+    if (!centerBold)
+        tl = tl.translated(12, 0);
     auto clipBox = juce::Rectangle<int>(tl.x, tl.y, 20, 20);
     g.reduceClipRegion(clipBox);
     if (icons)

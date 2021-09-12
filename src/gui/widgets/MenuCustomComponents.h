@@ -39,6 +39,8 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
 
     std::string label, url;
     SurgeImage *icons{nullptr};
+    bool centerBold{true};
+    void setCenterBold(bool b) { centerBold = b; }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuTitleHelpComponent);
 };
