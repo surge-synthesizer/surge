@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "ModMenuCustomComponent.h"
+#include "MenuCustomComponents.h"
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 
@@ -63,9 +63,55 @@ struct TinyLittleIconButton : public juce::Component
     int offset{0};
 };
 
-ModMenuCustomComponent::ModMenuCustomComponent(const std::string &lab,
+void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
+{
+    getLookAndFeel().getIdealPopupMenuItemSize(label, false, 22, idealWidth, idealHeight);
+}
+
+void MenuTitleHelpComponent::onSkinChanged()
+{
+    icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
+    repaint();
+}
+
+void MenuTitleHelpComponent::paint(juce::Graphics &g)
+{
+    auto r = getLocalBounds().reduced(1);
+    if (isItemHighlighted())
+    {
+        g.setColour(findColour(juce::PopupMenu::highlightedBackgroundColourId));
+        g.fillRect(r);
+
+        g.setColour(findColour(juce::PopupMenu::highlightedTextColourId));
+    }
+    else
+    {
+        g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+    }
+
+    g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
+    g.setColour(findColour(juce::PopupMenu::headerTextColourId));
+
+    auto rText = r.withTrimmedLeft(12);
+    g.drawText(label, rText, juce::Justification::centredLeft);
+
+    auto yp = 4 * 20;
+    auto tl = r.getTopRight();
+    auto clipBox = juce::Rectangle<int>(tl.x - 22, tl.y, 20, 20);
+    g.reduceClipRegion(clipBox);
+    if (icons)
+        icons->drawAt(g, clipBox.getX(), clipBox.getY() - yp, 1.0);
+}
+
+void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e)
+{
+    juce::URL(url).launchInDefaultBrowser();
+    triggerMenuItem();
+}
+
+ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::string &a,
                                                std::function<void(OpType)> cb)
-    : juce::PopupMenu::CustomComponent(false), menuText(lab), callback(std::move(cb))
+    : juce::PopupMenu::CustomComponent(false), source(s), amount(a), callback(std::move(cb))
 {
     auto tb = std::make_unique<TinyLittleIconButton>(1, [this]() {
         callback(CLEAR);
@@ -93,6 +139,7 @@ ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
 
 void ModMenuCustomComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
+    auto menuText = source + " " + amount;
     getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 22, idealWidth, idealHeight);
     auto h = idealHeight - 2 * mg;
     idealWidth += 3 * mg + 3 * (mg + h) + xp;
@@ -112,9 +159,10 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
     auto h = getHeight() - 2 * mg;
-    auto r = getLocalBounds().withTrimmedLeft(xp + 3 * mg + 3 * (h + mg) + mg);
+    auto r = getLocalBounds().withTrimmedLeft(xp + 3 * mg + 3 * (h + mg) + mg).withTrimmedRight(4);
     g.setFont(getLookAndFeel().getPopupMenuFont());
-    g.drawText(menuText, r, juce::Justification::centredLeft);
+    g.drawText(source, r, juce::Justification::centredLeft);
+    g.drawText(amount, r, juce::Justification::centredRight);
 }
 
 void ModMenuCustomComponent::setIsMuted(bool b)
@@ -149,5 +197,26 @@ void ModMenuCustomComponent::onSkinChanged()
     edit->icons = icons;
     mute->icons = icons;
 }
+
+// bit of a hack - the menus mean something different so do a cb on a cb
+ModMenuForAllComponent::ModMenuForAllComponent(std::function<void(AllAction)> cb)
+    : allCB(cb), ModMenuCustomComponent("Apply to All", "", [this](OpType op) {
+          switch (op)
+          {
+          case ModMenuCustomComponent::CLEAR:
+              allCB(CLEAR);
+              break;
+          case ModMenuCustomComponent::MUTE:
+              allCB(UNMUTE);
+              break;
+          case ModMenuCustomComponent::EDIT:
+              allCB(MUTE);
+              break;
+          }
+      })
+{
+    edit->offset = 3;
+}
+
 } // namespace Widgets
 } // namespace Surge
