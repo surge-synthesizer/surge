@@ -21,6 +21,7 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
 #include "AliasOscillator.h"
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -350,9 +351,11 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto ca = [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); };
             contextMenu.addSeparator();
-            contextMenu.addItem("[?] Wavetables", ca);
+            auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Wavetables", lurl);
+            tc->setSkin(skin, associatedBitmapStore);
+            tc->setCenterBold(false);
+            contextMenu.addCustomItem(-1, std::move(tc));
         }
     }
 }
@@ -582,16 +585,12 @@ bool OscillatorWaveformDisplay::supportsCustomEditor()
     return false;
 }
 
-struct AliasAdditiveEditor : public juce::Component
+struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
 {
     juce::Colour b = juce::Colours::pink;
-    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, Surge::GUI::Skin::ptr_t sk)
-        : storage(s), oscdata(osc), skin(sk)
-    {
-    }
+    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc) {}
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
-    Surge::GUI::Skin::ptr_t skin;
 
     std::array<juce::Rectangle<float>, AliasOscillator::n_additive_partials> sliders;
 
@@ -634,7 +633,10 @@ struct AliasAdditiveEditor : public juce::Component
         {
             auto contextMenu = juce::PopupMenu();
             {
-                contextMenu.addItem("[?] Alias Osc Additive Options", []() {});
+                auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+                    "Alias Osc Additive Options", "");
+                tc->setSkin(skin, associatedBitmapStore);
+                contextMenu.addCustomItem(-1, std::move(tc));
                 contextMenu.addSeparator();
             }
             {
@@ -861,7 +863,11 @@ void OscillatorWaveformDisplay::showCustomEditor()
 
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
-        customEditor = std::make_unique<AliasAdditiveEditor>(storage, oscdata, skin);
+    {
+        auto ed = std::make_unique<AliasAdditiveEditor>(storage, oscdata);
+        ed->setSkin(skin, associatedBitmapStore);
+        customEditor = std::move(ed);
+    }
 
     if (customEditor)
     {

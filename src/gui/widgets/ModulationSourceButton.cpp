@@ -276,8 +276,7 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            std::string hs = std::string("[?] ") + sge->modulatorName(modsource, false);
-            menu.addItem(hs, [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); });
+            sge->addHelpHeaderTo(sge->modulatorName(modsource, false), lurl, menu);
         }
         else
         {

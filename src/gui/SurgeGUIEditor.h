@@ -646,6 +646,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
 
   public:
+    void addHelpHeaderTo(const std::string &lab, const std::string &hu, juce::PopupMenu &m) const;
+
+  public:
     bool getShowVirtualKeyboard();
     void setShowVirtualKeyboard(bool b);
     void toggleVirtualKeyboard();

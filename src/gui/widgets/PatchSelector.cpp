@@ -20,6 +20,7 @@
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include "UserDefaults.h"
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -293,13 +294,15 @@ void PatchSelector::showClassicMenu(bool single_category)
     {
         auto hu = sge->helpURLForSpecial("patch-browser");
 
+        auto lurl = hu;
         if (hu != "")
         {
-            auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto ca = [lurl]() { juce::URL(lurl).launchInDefaultBrowser(); };
-
-            contextMenu.addItem("[?] Patch Browser", ca);
+            lurl = sge->fullyResolvedHelpURL(hu);
         }
+        auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Patch Browser", lurl);
+        hmen->setSkin(skin, associatedBitmapStore);
+        hmen->setCenterBold(false);
+        contextMenu.addCustomItem(-1, std::move(hmen));
     }
 
     auto o = juce::PopupMenu::Options();
