@@ -643,6 +643,7 @@ TEST_CASE("Pitch Bend and Tuning", "[mod][tun]")
     SECTION("Multi Scale Bend Distances")
     {
         auto surge = surgeOnSine();
+        surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         surge->mpeEnabled = false;
 
         for (auto sclf : testScales)

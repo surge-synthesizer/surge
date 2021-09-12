@@ -32,6 +32,9 @@ void restreamTemplatesWithModifications()
             surge->storage.getPatch().correctlyTuneCombFilter = true;
         }
 
+        surge->storage.tuningApplicationMode =
+            SurgeStorage::TuningApplicationMode::RETUNE_MIDI_ONLY;
+
         if (oR == ff_revision)
         {
             std::cout << "  Patch is streamed at latest; skipping" << std::endl;
