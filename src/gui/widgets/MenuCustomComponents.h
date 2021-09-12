@@ -24,6 +24,23 @@ namespace Surge
 namespace Widgets
 {
 
+struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::SkinConsumingComponent
+{
+    MenuTitleHelpComponent(const std::string &l, const std::string &u)
+        : label(l), url(u), juce::PopupMenu::CustomComponent(false)
+    {
+    }
+
+    void getIdealSize(int &idealWidth, int &idealHeight) override;
+
+    void mouseUp(const juce::MouseEvent &e) override;
+    void paint(juce::Graphics &g) override;
+    void onSkinChanged() override;
+
+    std::string label, url;
+    SurgeImage *icons{nullptr};
+};
+
 struct TinyLittleIconButton;
 
 struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::SkinConsumingComponent
@@ -34,7 +51,8 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
         CLEAR,
         MUTE
     };
-    ModMenuCustomComponent(const std::string &lab, std::function<void(OpType)> callback);
+    ModMenuCustomComponent(const std::string &source, const std::string &amount,
+                           std::function<void(OpType)> callback);
     ~ModMenuCustomComponent() noexcept;
     void getIdealSize(int &idealWidth, int &idealHeight) override;
     void paint(juce::Graphics &g) override;
@@ -48,8 +66,21 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     void mouseUp(const juce::MouseEvent &e) override;
 
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
-    std::string menuText;
+    std::string source, amount;
     std::function<void(OpType)> callback;
+};
+
+struct ModMenuForAllComponent : ModMenuCustomComponent
+{
+    enum AllAction
+    {
+        CLEAR,
+        MUTE,
+        UNMUTE
+    };
+    ModMenuForAllComponent(std::function<void(AllAction)> callback);
+    std::function<void(AllAction)> allCB;
+    void mouseUp(const juce::MouseEvent &e) override {}
 };
 } // namespace Widgets
 } // namespace Surge
