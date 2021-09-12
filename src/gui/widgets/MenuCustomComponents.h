@@ -45,6 +45,18 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuTitleHelpComponent);
 };
 
+struct MenuCenteredBoldLabel : juce::PopupMenu::CustomComponent
+{
+    MenuCenteredBoldLabel(const std::string &s) : label(s), juce::PopupMenu::CustomComponent(true)
+    {
+    }
+    void getIdealSize(int &idealWidth, int &idealHeight) override;
+    void paint(juce::Graphics &g) override;
+
+    std::string label;
+    static void addToMenu(juce::PopupMenu &m, const std::string label);
+};
+
 struct TinyLittleIconButton;
 
 struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::SkinConsumingComponent

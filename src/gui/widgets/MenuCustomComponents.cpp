@@ -67,7 +67,7 @@ struct TinyLittleIconButton : public juce::Component
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
-    getLookAndFeel().getIdealPopupMenuItemSize(label, false, 22, idealWidth, idealHeight);
+    getLookAndFeel().getIdealPopupMenuItemSize(label, false, 20, idealWidth, idealHeight);
     idealWidth += 8; // it reserves 12 for the icon already
 }
 
@@ -133,6 +133,26 @@ void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e)
     triggerMenuItem();
 }
 
+void MenuCenteredBoldLabel::getIdealSize(int &idealWidth, int &idealHeight)
+{
+    getLookAndFeel().getIdealPopupMenuItemSize(label, false, -1, idealWidth, idealHeight);
+}
+
+void MenuCenteredBoldLabel::paint(juce::Graphics &g)
+{
+    auto r = getLocalBounds().reduced(1);
+    auto ft = getLookAndFeel().getPopupMenuFont();
+    ft = ft.withHeight(ft.getHeight() - 1).boldened();
+    g.setFont(ft);
+    g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+    g.drawText(label, r, juce::Justification::centredTop);
+}
+
+void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
+{
+    m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label));
+}
+
 ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::string &a,
                                                std::function<void(OpType)> cb)
     : juce::PopupMenu::CustomComponent(false), source(s), amount(a), callback(std::move(cb))
@@ -164,7 +184,7 @@ ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
 void ModMenuCustomComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     auto menuText = source + " " + amount;
-    getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 22, idealWidth, idealHeight);
+    getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 20, idealWidth, idealHeight);
     auto h = idealHeight - 2 * mg;
     idealWidth += 3 * mg + 3 * (mg + h) + xp;
 }
