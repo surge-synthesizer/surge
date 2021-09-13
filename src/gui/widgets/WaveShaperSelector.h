@@ -18,7 +18,6 @@ namespace Surge
 {
 namespace Widgets
 {
-struct WaveShaperAnalysisWidget;
 struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveShaperSelector>
 {
     WaveShaperSelector();
@@ -29,12 +28,6 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     int iValue;
     float getValue() const override { return value; }
     void setValue(float f) override;
-
-    bool isAnalysisOpen();
-    void toggleAnalysis();
-    void closeAnalysis();
-    void openAnalysis();
-    std::unique_ptr<WaveShaperAnalysisWidget> analysisWidget;
 
     void resized() override;
 

@@ -1184,6 +1184,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         Parameter::intScaledToFloat(i, p->val_max.i, p->val_min.i);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
+
+                                    if (p->ctrltype == ct_wstype)
+                                    {
+                                        updateWaveshaperOverlay();
+                                    }
                                     repushAutomationFor(p);
                                     synth->refresh_editor = true;
                                 });
@@ -2473,9 +2478,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         {
             control->asJuceComponent()->getParentComponent()->toFront(false);
             if (control->getValue() > 0.5f)
-                this->waveshaperSelector->openAnalysis();
+                showOverlay(WAVESHAPER_ANALYZER);
             else
-                this->waveshaperSelector->closeAnalysis();
+                closeOverlay(WAVESHAPER_ANALYZER);
         }
     }
     break;
@@ -2869,6 +2874,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         default:
             break;
         }
+    }
+
+    if (tag == waveshaperSelector->getTag())
+    {
+        updateWaveshaperOverlay();
     }
 }
 
