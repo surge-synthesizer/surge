@@ -12,6 +12,6 @@ To add another plugin
 5. Compile and fix the *in++ idion with the unused value   
 6. Modify getParameterDisplay to take a float extVal and bool isExternal using the EXTV macro
 7. As needed implement parseParameterValueFromString and isBipolar on the new FX
-8. Add the new FX to the config.xml
+8. Add the new FX to the patches in resources/data
 
 and then cmake again and it should all work.

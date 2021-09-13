@@ -21,7 +21,7 @@ typedef int audioMasterCallback;
 class SurgeStorage;
 
 struct AirWinBaseClass {
-   
+
    AirWinBaseClass( audioMasterCallback amc, int knpr, int knpa ) : paramCount( knpa ) { }
    virtual ~AirWinBaseClass() = default;
 
@@ -30,12 +30,12 @@ struct AirWinBaseClass {
    virtual void setUniqueID( unsigned long l ) { }
 
    virtual void programsAreChunks( bool b ) { }
-   
+
    virtual bool canProcessReplacing() { return true; }
    virtual bool canDoubleReplacing() { return false; }
 
    virtual bool getEffectName( char *name ) = 0;
-   
+
    virtual float getParameter( VstInt32 index ) = 0;
    virtual void setParameter( VstInt32 index, float value ) = 0;
 
@@ -49,7 +49,7 @@ struct AirWinBaseClass {
    {
       sprintf( txt, "%d", (int)( value * ( parameterIntegralUpperBound(index) + 0.99 )) );
    }
-   
+
    virtual void processReplacing( float **in, float **out, VstInt32 sampleFrames ) = 0;
 
    virtual void getParameterName(VstInt32 index, char *text) = 0;    // name of the parameter
@@ -60,7 +60,7 @@ struct AirWinBaseClass {
    double getSampleRate() { return sr; }
 
    int paramCount = 0;
-   
+
    static constexpr int kVstMaxProgNameLen = 64;
    static constexpr int kVstMaxParamStrLen = 64;
    static constexpr int kVstMaxProductStrLen = 64;
