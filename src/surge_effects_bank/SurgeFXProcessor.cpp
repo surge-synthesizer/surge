@@ -19,6 +19,9 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
                          .withInput("Sidechain", juce::AudioChannelSet::stereo(), true))
 {
+    nonLatentBlockMode = !juce::PluginHostType().isFruityLoops();
+    setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
+
     effectNum = fxt_delay;
     storage.reset(new SurgeStorage());
     storage->userPrefOverrides[Surge::Storage::HighPrecisionReadouts] = std::make_pair(0, "");
@@ -104,6 +107,7 @@ void SurgefxAudioProcessor::changeProgramName(int index, const juce::String &new
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     storage->setSamplerate(sr);
+    setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
 }
 
 void SurgefxAudioProcessor::releaseResources()
@@ -168,46 +172,116 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         audio_thread_surge_effect = surge_effect;
     }
 
-    for (int outPos = 0; outPos < buffer.getNumSamples() && !resettingFx; outPos += BLOCK_SIZE)
+    if (nonLatentBlockMode)
     {
-        auto outL = mainInputOutput.getWritePointer(0, outPos);
-        auto outR = mainInputOutput.getWritePointer(1, outPos);
+        auto sideChainBus = getBus(true, 1);
+
+        for (int outPos = 0; outPos < buffer.getNumSamples() && !resettingFx; outPos += BLOCK_SIZE)
+        {
+            auto outL = mainInputOutput.getWritePointer(0, outPos);
+            auto outR = mainInputOutput.getWritePointer(1, outPos);
+
+            if (effectNum == fxt_vocoder && sideChainBus && sideChainBus->isEnabled())
+            {
+                auto sideL = sideChainInput.getReadPointer(0, outPos);
+                auto sideR = sideChainInput.getReadPointer(1, outPos);
+
+                memcpy(storage->audio_in_nonOS[0], sideL, BLOCK_SIZE * sizeof(float));
+                memcpy(storage->audio_in_nonOS[1], sideR, BLOCK_SIZE * sizeof(float));
+            }
+
+            for (int i = 0; i < n_fx_params; ++i)
+            {
+                fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
+                paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), *(fxParamFeatures[i]));
+            }
+            copyGlobaldataSubset(storage_id_start, storage_id_end);
+
+            if (is_aligned(outL, 16) && is_aligned(outR, 16))
+            {
+                audio_thread_surge_effect->process(outL, outR);
+            }
+            else
+            {
+                float bufferL alignas(16)[BLOCK_SIZE], bufferR alignas(16)[BLOCK_SIZE];
+
+                auto inL = mainInputOutput.getReadPointer(0, outPos);
+                auto inR = mainInputOutput.getReadPointer(1, outPos);
+
+                memcpy(bufferL, inL, BLOCK_SIZE * sizeof(float));
+                memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
+
+                audio_thread_surge_effect->process(bufferL, bufferR);
+
+                memcpy(outL, bufferL, BLOCK_SIZE * sizeof(float));
+                memcpy(outR, bufferR, BLOCK_SIZE * sizeof(float));
+            }
+        }
+    }
+    else
+    {
+        auto outL = mainInputOutput.getWritePointer(0, 0);
+        auto outR = mainInputOutput.getWritePointer(1, 0);
+
+        auto inL = mainInputOutput.getReadPointer(0, 0);
+        auto inR = mainInputOutput.getReadPointer(1, 0);
+
+        const float *sideL = nullptr, *sideR = nullptr;
 
         auto sideChainBus = getBus(true, 1);
+
         if (effectNum == fxt_vocoder && sideChainBus && sideChainBus->isEnabled())
         {
-            auto sideL = sideChainInput.getReadPointer(0, outPos);
-            auto sideR = sideChainInput.getReadPointer(1, outPos);
-
-            memcpy(storage->audio_in_nonOS[0], sideL, BLOCK_SIZE * sizeof(float));
-            memcpy(storage->audio_in_nonOS[1], sideR, BLOCK_SIZE * sizeof(float));
+            sideL = sideChainInput.getReadPointer(0, 0);
+            sideR = sideChainInput.getReadPointer(1, 0);
         }
 
-        for (int i = 0; i < n_fx_params; ++i)
+        for (int smp = 0; smp < buffer.getNumSamples(); smp++)
         {
-            fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
-            paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), *(fxParamFeatures[i]));
-        }
-        copyGlobaldataSubset(storage_id_start, storage_id_end);
+            input_buffer[0][input_position] = inL[smp];
+            input_buffer[1][input_position] = inR[smp];
+            if (effectNum == fxt_vocoder && sideL && sideR)
+            {
+                sidechain_buffer[0][input_position] = sideL[smp];
+                sidechain_buffer[1][input_position] = sideR[smp];
+            }
+            else
+            {
+                sidechain_buffer[0][input_position] = 0.f;
+                sidechain_buffer[1][input_position] = 0.f;
+            }
+            input_position++;
 
-        if (is_aligned(outL, 16) && is_aligned(outR, 16))
-        {
-            audio_thread_surge_effect->process(outL, outR);
-        }
-        else
-        {
-            float bufferL alignas(16)[BLOCK_SIZE], bufferR alignas(16)[BLOCK_SIZE];
+            if (input_position == BLOCK_SIZE)
+            {
+                memcpy(storage->audio_in_nonOS[0], sidechain_buffer[0], BLOCK_SIZE * sizeof(float));
+                memcpy(storage->audio_in_nonOS[1], sidechain_buffer[1], BLOCK_SIZE * sizeof(float));
 
-            auto inL = mainInputOutput.getReadPointer(0, outPos);
-            auto inR = mainInputOutput.getReadPointer(1, outPos);
+                for (int i = 0; i < n_fx_params; ++i)
+                {
+                    fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
+                    paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]),
+                                          *(fxParamFeatures[i]));
+                }
+                copyGlobaldataSubset(storage_id_start, storage_id_end);
 
-            memcpy(bufferL, inL, BLOCK_SIZE * sizeof(float));
-            memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
+                audio_thread_surge_effect->process(input_buffer[0], input_buffer[1]);
+                memcpy(output_buffer, input_buffer, 2 * BLOCK_SIZE * sizeof(float));
+                input_position = 0;
+                output_position = 0;
+            }
 
-            audio_thread_surge_effect->process(bufferL, bufferR);
-
-            memcpy(outL, bufferL, BLOCK_SIZE * sizeof(float));
-            memcpy(outR, bufferR, BLOCK_SIZE * sizeof(float));
+            if (output_position >= 0 && output_position < BLOCK_SIZE) // that < shoudl never happen
+            {
+                outL[smp] = output_buffer[0][output_position];
+                outR[smp] = output_buffer[1][output_position];
+                output_position++;
+            }
+            else
+            {
+                outL[smp] = 0;
+                outR[smp] = 0;
+            }
         }
     }
 }
@@ -340,6 +414,8 @@ void SurgefxAudioProcessor::reorderSurgeParams()
 void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
 {
     resettingFx = true;
+    input_position = 0;
+    output_position = -1;
     effectNum = type;
     fxstorage->type.val.i = effectNum;
 
