@@ -60,6 +60,7 @@ void WaveShaperEffect::setvars(bool init)
 
         drive.newValue(db_to_amp(*f[ws_drive]));
         bias.newValue(clamp1bp(*f[ws_bias]));
+
         bias.instantize();
         drive.instantize();
     }
@@ -99,8 +100,12 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
         float R[n_waveshaper_registers];
         initializeWaveshaperRegister(lastShape, R);
+
         for (int i = 0; i < n_waveshaper_registers; ++i)
+        {
             wss.R[i] = _mm_set1_ps(R[i]);
+        }
+
         wss.init = _mm_cmpneq_ps(_mm_setzero_ps(), _mm_setzero_ps());
     }
 
@@ -113,16 +118,19 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     if (wsptr)
     {
         float din alignas(16)[4] = {0, 0, 0, 0};
+
         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
         {
-            din[0] = dataOS[0][i];
-            din[1] = dataOS[1][i];
+            din[0] = dataOS[0][i] + bias.v;
+            din[1] = dataOS[1][i] + bias.v;
+
             auto dat = _mm_load_ps(din);
             auto drv = _mm_set1_ps(drive.v);
 
             dat = wsptr(&wss, dat, drv);
 
             float res alignas(16)[4];
+
             _mm_store_ps(res, dat);
 
             dataOS[0][i] = res[0];
@@ -134,6 +142,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     }
 
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
+
     copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
 
@@ -207,12 +216,13 @@ void WaveShaperEffect::init_ctrltypes()
     fxdata->p[ws_bias].set_type(ct_percent_bipolar);
     fxdata->p[ws_drive].set_name("Drive");
     fxdata->p[ws_drive].set_type(ct_decibel_narrow_short_extendable);
+
     fxdata->p[ws_postlowcut].set_name("Low Cut");
     fxdata->p[ws_postlowcut].set_type(ct_freq_audible_deactivatable);
     fxdata->p[ws_posthighcut].set_name("High Cut");
     fxdata->p[ws_posthighcut].set_type(ct_freq_audible_deactivatable);
 
-    fxdata->p[ws_postboost].set_name("Boost");
+    fxdata->p[ws_postboost].set_name("Gain");
     fxdata->p[ws_postboost].set_type(ct_decibel_narrow_short_extendable);
     fxdata->p[ws_mix].set_name("Mix");
     fxdata->p[ws_mix].set_type(ct_percent);

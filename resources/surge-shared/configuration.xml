@@ -70,8 +70,8 @@
     <snapshot name="Init" p0="0.85" p1="0.5" p2="0.5" p3="0" p4="30" p5="1" p6="0.1" p7="0.1" p8="0" p9="0" p10="0"
               p11="1"/>
 </type>
-<type i="25" name="WaveShaper">
-    <snapshot name="Init"/>
+<type i="25" name="Waveshaper">
+    <snapshot name="Init" p0="-60" p0_deactivated="1" p1="70" p1_deactivated="1" p2="0" p3="0" p4="0" p5="-60" p6="70" p7="0" p8="1"/>
 </type>
 <separator/>
 <type i="21" name="Combulator">
