@@ -127,11 +127,11 @@ void PatchStoreDialog::resized()
     nameEd->setBounds(ce);
     nameEd->setIndents(4, (nameEd->getHeight() - nameEd->getTextHeight()) / 2);
     ce = ce.translated(0, h);
-    authorEd->setBounds(ce);
-    authorEd->setIndents(4, (authorEd->getHeight() - authorEd->getTextHeight()) / 2);
-    ce = ce.translated(0, h);
     catEd->setBounds(ce);
     catEd->setIndents(4, (catEd->getHeight() - catEd->getTextHeight()) / 2);
+    ce = ce.translated(0, h);
+    authorEd->setBounds(ce);
+    authorEd->setIndents(4, (authorEd->getHeight() - authorEd->getTextHeight()) / 2);
     ce = ce.translated(0, h);
     commentEd->setBounds(ce);
     commentEd->setIndents(4, (commentEd->getHeight() - commentEd->getTextHeight()) / 2);
@@ -145,9 +145,9 @@ void PatchStoreDialog::resized()
     auto cl = r.withRight(xSplit).reduced(2);
     nameEdL->setBounds(cl);
     cl = cl.translated(0, h);
-    authorEdL->setBounds(cl);
-    cl = cl.translated(0, h);
     catEdL->setBounds(cl);
+    cl = cl.translated(0, h);
+    authorEdL->setBounds(cl);
     cl = cl.translated(0, h);
     commentEdL->setBounds(cl);
     cl = cl.translated(0, h);
