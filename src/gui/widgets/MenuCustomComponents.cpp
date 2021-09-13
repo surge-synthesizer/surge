@@ -67,8 +67,22 @@ struct TinyLittleIconButton : public juce::Component
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
-    getLookAndFeel().getIdealPopupMenuItemSize(label, false, 20, idealWidth, idealHeight);
-    idealWidth += 8; // it reserves 12 for the icon already
+    auto standardMenuItemHeight = 20;
+
+    juce::Font font;
+    if (centerBold)
+        font = getLookAndFeel().getPopupMenuFont().boldened();
+    else
+    {
+        auto ft = getLookAndFeel().getPopupMenuFont();
+        ft = ft.withHeight(ft.getHeight() - 1);
+        font = ft;
+    }
+
+    idealHeight =
+        standardMenuItemHeight > 0 ? standardMenuItemHeight : std::round(font.getHeight() * 1.3f);
+    idealWidth = font.getStringWidth(label) + idealHeight * 2;
+    idealWidth += 20;
 }
 
 void MenuTitleHelpComponent::onSkinChanged()
