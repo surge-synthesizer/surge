@@ -39,8 +39,15 @@ struct TypeinParamEditor : public juce::Component,
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
     void grabFocus();
+    juce::Rectangle<int> getRequiredSize();
     void setBoundsToAccompany(const juce::Rectangle<int> &controlRect,
                               const juce::Rectangle<int> &parentRect);
+    void resized() override;
+    void visibilityChanged() override
+    {
+        if (isVisible())
+            textEd->setWantsKeyboardFocus(true);
+    }
 
     Parameter *p{nullptr};
     void setEditedParam(Parameter *pin) { p = pin; };
@@ -67,6 +74,8 @@ struct TypeinParamEditor : public juce::Component,
     std::string modbyLabel;
     void setModByLabel(const std::string &by) { modbyLabel = by; }
 
+    virtual bool handleTypein(const std::string &value);
+
     void setEditableText(const std::string &et) { textEd->setText(et, juce::dontSendNotification); }
 
     enum TypeinMode
@@ -88,6 +97,14 @@ struct TypeinParamEditor : public juce::Component,
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TypeinParamEditor);
+};
+
+struct TypeinLambdaEditor : public TypeinParamEditor
+{
+    TypeinLambdaEditor(std::function<bool(const std::string &)> c) : callback(c){};
+    bool handleTypein(const std::string &value) override { return callback(value); }
+    std::function<bool(const std::string &)> callback;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TypeinLambdaEditor);
 };
 } // namespace Overlays
 } // namespace Surge

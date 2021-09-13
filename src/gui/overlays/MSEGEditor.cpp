@@ -27,6 +27,7 @@
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
 #include "widgets/Switch.h"
+#include "overlays/TypeinParamEditor.h"
 #include <set>
 #include "widgets/MenuCustomComponents.h"
 
@@ -89,6 +90,8 @@ struct MSEGControlRegion : public juce::Component,
         tag_loop_mode,
         tag_edit_mode,
     };
+
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
 
     void rebuild();
     void valueChanged(Surge::GUI::IComponentTagValue *p) override;
@@ -2801,6 +2804,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         */
 
     bool isOnOff = false;
+    bool hasTypein = false;
     std::string menuName = "";
     switch (tag)
     {
@@ -2837,6 +2841,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         menuName = "Vertical Snap Value";
     case tag_horizontal_value:
     {
+        hasTypein = true;
         if (menuName == "")
             menuName = "Horizontal Snap Value";
 
@@ -2865,7 +2870,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         break;
     }
 
-    if (options.size() || isOnOff)
+    if (!options.empty() || isOnOff)
     {
         auto contextMenu = juce::PopupMenu();
 
@@ -2907,6 +2912,51 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                                             iv->repaint();
                                     });
             }
+        }
+        if (hasTypein)
+        {
+            contextMenu.addSeparator();
+
+            auto handleTypein = [pControl, this](const std::string &s) {
+                auto i = std::atoi(s.c_str());
+                if (i > 1 && i <= 100)
+                {
+                    pControl->setValue(Parameter::intScaledToFloat(i, 100, 1));
+                    auto iv = pControl->asJuceComponent();
+                    if (iv)
+                        iv->repaint();
+                    return true;
+                }
+                return false;
+            };
+
+            auto showTypein = [this, handleTypein, menuName, pControl]() {
+                if (!typeinEditor)
+                {
+                    typeinEditor =
+                        std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+                    getParentComponent()->addChildComponent(*typeinEditor);
+                }
+                typeinEditor->callback = handleTypein;
+                typeinEditor->setMainLabel(menuName);
+                typeinEditor->setValueLabels("Enter new value", "");
+                typeinEditor->setSkin(skin, associatedBitmapStore);
+                typeinEditor->setEditableText(
+                    std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 100, 1)));
+
+                auto topOfControl = pControl->asJuceComponent()->getParentComponent()->getY();
+                auto pb = pControl->asJuceComponent()->getBounds();
+                auto cx = pb.getCentreX();
+
+                auto r = typeinEditor->getRequiredSize();
+                cx -= r.getWidth() / 2;
+                r = r.withBottomY(topOfControl).withX(cx);
+                typeinEditor->setBounds(r);
+
+                typeinEditor->setVisible(true);
+                typeinEditor->grabFocus();
+            };
+            contextMenu.addItem("Edit Value", true, false, showTypein);
         }
         contextMenu.showMenuAsync(juce::PopupMenu::Options());
     }

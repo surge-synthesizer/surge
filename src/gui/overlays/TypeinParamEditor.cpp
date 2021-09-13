@@ -74,23 +74,30 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     }
 }
 
+juce::Rectangle<int> TypeinParamEditor::getRequiredSize()
+{
+    int ht = 56 + (isMod ? 22 : 0);
+    auto r = juce::Rectangle<int>(0, 0, 144, ht);
+    return r;
+}
 void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &controlRect,
                                              const juce::Rectangle<int> &parentRect)
 {
-    int ht = 56 + (isMod ? 22 : 0);
-    auto r = juce::Rectangle<int>(0, 0, 144, ht)
-                 .withX(controlRect.getX())
-                 .withY(controlRect.getY() - ht);
-
+    auto r = getRequiredSize();
+    r = r.withX(controlRect.getX()).withY(controlRect.getY() - r.getHeight());
+    ;
     if (!parentRect.contains(r))
     {
         r = r.withY(controlRect.getBottom());
     }
 
-    auto ter = juce::Rectangle<int>(0, ht - 22, 144, 22).reduced(2);
-    textEd->setBounds(ter);
-
     setBounds(r);
+}
+
+void TypeinParamEditor::resized()
+{
+    auto ter = juce::Rectangle<int>(0, getHeight() - 22, 144, 22).reduced(2);
+    textEd->setBounds(ter);
 }
 
 void TypeinParamEditor::onSkinChanged()
@@ -109,28 +116,35 @@ void TypeinParamEditor::onSkinChanged()
 
     repaint();
 }
-void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
+
+bool TypeinParamEditor::handleTypein(const std::string &value)
 {
     if (!editor)
-        return;
+        return false;
 
     bool res = false;
     if (typeinMode == Param)
     {
         if (p && ms > 0)
         {
-            res = editor->setParameterModulationFromString(p, ms, modScene, modidx,
-                                                           te.getText().toStdString());
+            res = editor->setParameterModulationFromString(p, ms, modScene, modidx, value);
         }
         else
         {
-            res = editor->setParameterFromString(p, te.getText().toStdString());
+            res = editor->setParameterFromString(p, value);
         }
     }
     else
     {
-        res = editor->setControlFromString(ms, te.getText().toStdString());
+        res = editor->setControlFromString(ms, value);
     }
+    return res;
+}
+
+void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
+{
+    auto res = handleTypein(te.getText().toStdString());
+
     if (res)
     {
         setVisible(false);
