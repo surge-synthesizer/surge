@@ -78,7 +78,8 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     void setStorage(SurgeStorage *s) { storage = s; }
 
     float lastDragDistance{0};
-    bool everDragged{false};
+    bool everDragged{false},
+        everMoved{false}; // the first is if we change the second if we move at all
 
     std::vector<int> intOrdering;
     void setIntOrdering(const std::vector<int> &io) { intOrdering = io; }

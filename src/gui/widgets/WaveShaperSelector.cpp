@@ -9,6 +9,7 @@
 #include <iostream>
 #include "AccessibleHelpers.h"
 #include "ModulatableSlider.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -448,6 +449,7 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 
     lastDragDistance = 0;
     everDragged = false;
+    everMoved = false;
 
     if (event.mods.isPopupMenu())
     {
@@ -463,6 +465,18 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
 {
     auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
+    if (fabs(d - lastDragDistance) > 0)
+    {
+        if (!everMoved)
+        {
+            if (!Surge::GUI::showCursor(storage))
+            {
+                juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
+                    true);
+            }
+        }
+        everMoved = true;
+    }
     if (fabs(d - lastDragDistance) > 10)
     {
         if (!everDragged)
@@ -485,11 +499,22 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
 
 void WaveShaperSelector::mouseUp(const juce::MouseEvent &e)
 {
+    if (everMoved)
+    {
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            auto p = e.mouseDownPosition;
+            p = localPointToGlobal(p);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
+    }
     if (everDragged)
     {
         notifyEndEdit();
     }
     everDragged = false;
+    everMoved = false;
 }
 
 void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &w)
