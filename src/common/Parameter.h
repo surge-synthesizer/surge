@@ -491,7 +491,8 @@ class Parameter
         kHasCustomMinValue = 1U << 3U,
         kHasCustomMaxValue = 1U << 4U,
         kUnitsAreSemitonesOrKeys = 1U << 5U,
-        kScaleBasedOnIsBiPolar = 1U << 6U
+        kScaleBasedOnIsBiPolar = 1U << 6U,
+        kAllowsTuningFractionTypein = 1U << 7U,
     };
 
 #define DISPLAYINFO_TXT_SIZE 128

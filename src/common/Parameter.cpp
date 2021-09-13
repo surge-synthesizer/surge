@@ -1286,7 +1286,7 @@ void Parameter::set_type(int ctrltype)
         break;
 
         /*
-          Again the missing breaks here are on purpose
+          Again the missing breaks here are on purpose but we pick out a few for Tuning later
          */
     case ct_pitch_semi7bp_absolutable:
         displayInfo.absoluteFactor = 10.0;
@@ -1482,6 +1482,20 @@ void Parameter::set_type(int ctrltype)
         displayInfo.scale = 1.0f;
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ips");
+        break;
+    }
+
+    switch (ctrltype)
+    {
+    case ct_pitch_semi7bp_absolutable:
+    case ct_pitch_semi7bp:
+    case ct_pitch:
+    case ct_pitch4oct:
+    case ct_syncpitch:
+    case ct_oscspread:
+        displayInfo.customFeatures |= kAllowsTuningFractionTypein;
+        break;
+    default:
         break;
     }
 }
@@ -3999,6 +4013,26 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     }
     case LinearWithScale:
     {
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
+        {
+            // Check for a fraction
+            if (s.find("/") != std::string::npos)
+            {
+                try
+                {
+                    auto a = Tunings::toneFromString(s);
+                    auto ct = a.cents;
+
+                    nv = ct;
+                    if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
+                        nv /= 100.0;
+                }
+                catch (const Tunings::TuningError &e)
+                {
+                }
+            }
+        }
+
         float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
         float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
         float factor = ext_mul * abs_mul;
@@ -4195,6 +4229,26 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
     {
         valid = true;
         auto mv = (float)std::atof(s.c_str());
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
+        {
+            // Check for a fraction
+            if (s.find("/") != std::string::npos)
+            {
+                try
+                {
+                    auto a = Tunings::toneFromString(s);
+                    auto ct = a.cents;
+
+                    mv = ct;
+                    if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
+                        mv /= 100.0;
+                }
+                catch (const Tunings::TuningError &e)
+                {
+                }
+            }
+        }
+
         mv /= displayInfo.scale;
 
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
