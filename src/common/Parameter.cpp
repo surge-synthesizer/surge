@@ -440,6 +440,7 @@ bool Parameter::is_discrete_selection() const
     case ct_twist_engine:
     case ct_ensemble_stages:
     case ct_alias_wave:
+    case ct_wstype:
         return true;
     default:
         break;

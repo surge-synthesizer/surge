@@ -17,6 +17,7 @@
 #include "RotarySpeakerEffect.h"
 #include "TreemonsterEffect.h"
 #include "VocoderEffect.h"
+#include "WaveShaperEffect.h"
 #include "airwindows/AirWindowsEffect.h"
 #include "chowdsp/NeuronEffect.h"
 #include "chowdsp/CHOWEffect.h"
@@ -80,6 +81,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new BBDEnsembleEffect(storage, fxdata, pd);
     case fxt_treemonster:
         return new TreemonsterEffect(storage, fxdata, pd);
+    case fxt_waveshaper:
+        return new WaveShaperEffect(storage, fxdata, pd);
     default:
         return 0;
     };
