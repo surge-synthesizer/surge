@@ -359,7 +359,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
         WAVETABLESCRIPTING_EDITOR, // This code is here but incomplete, and off in XT 1.0
-        TUNING_EDITOR
+        TUNING_EDITOR,
+        WAVESHAPER_ANALYZER
     };
 
   private:
@@ -404,6 +405,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         return false;
     }
     bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
+    juce::Component *getOverlayIfOpen(OverlayTags tag);
+
+    void updateWaveshaperOverlay(); // this is the only overlay which updates from patch values
 
     std::string getDisplayForTag(long tag, bool external = false, float value = 0);
     float getF01FromString(long tag, const std::string &s);

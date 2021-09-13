@@ -94,6 +94,10 @@ namespace LuaEditor
 {
 extern const Surge::Skin::FontDesc Code;
 }
+namespace WaveShaperAnalysis
+{
+extern const Surge::Skin::FontDesc Title, DBAmount, DBLabel;
+}
 
 } // namespace Fonts
 #endif // SURGE_XT_SKINFONTS_H

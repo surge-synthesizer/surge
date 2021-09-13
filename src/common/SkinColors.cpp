@@ -359,6 +359,12 @@ namespace Display
 const Surge::Skin::Color Dots("waveshaper.waveform.dots", 64, 64, 64),
     Wave("waveshaper.waveform", 255, 144, 0), WaveHover("waveshaper.waveform.hover", 255, 255, 255);
 }
+namespace Analysis
+{
+const Surge::Skin::Color Border("waveshaper.analysis.border", 255, 255, 255),
+    Background("waveshaper.analysis.background", 10, 10, 20),
+    Title("waveshaper.analysis.title", 255, 255, 255);
+}
 } // namespace Waveshaper
 
 namespace Overlay

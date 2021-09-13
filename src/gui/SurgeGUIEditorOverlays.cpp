@@ -20,7 +20,10 @@
 #include "overlays/PatchStoreDialog.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/TuningOverlays.h"
+#include "overlays/WaveShaperAnalysis.h"
+#include "overlays/OverlayWrapper.h"
 #include "widgets/MainFrame.h"
+#include "widgets/WaveShaperSelector.h"
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatchDialog()
 {
@@ -197,6 +200,28 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         return pt;
     }
     break;
+
+    case WAVESHAPER_ANALYZER:
+    {
+        auto pt = std::make_unique<Surge::Overlays::WaveShaperAnalysis>(&(this->synth->storage));
+        pt->setSkin(currentSkin, bitmapStore);
+
+        auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE;
+        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+        auto b = skinCtrl->getRect();
+
+        auto w = 300;
+        auto h = 160;
+        auto c = b.getCentreX() - w / 2;
+        auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 2);
+        pt->setEnclosingParentPosition(p);
+        pt->setEnclosingParentTitle("WaveShaper Analysis");
+        pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
+        return pt;
+    }
+    break;
+
     case MODULATION_EDITOR:
     {
         auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
@@ -238,6 +263,9 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
         break;
     case MODULATION_EDITOR:
         onClose = [this]() { frame->repaint(); };
+        break;
+    case WAVESHAPER_ANALYZER:
+        onClose = [this]() { this->synth->refresh_editor = true; };
         break;
     default:
         break;
@@ -291,5 +319,51 @@ void SurgeGUIEditor::closeOverlay(OverlayTags olt)
         break;
     default:
         break;
+    }
+}
+
+void SurgeGUIEditor::addJuceEditorOverlay(
+    std::unique_ptr<juce::Component> c,
+    std::string editorTitle, // A window display title - whatever you want
+    OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
+    const juce::Rectangle<int> &containerSize, bool showCloseButton, std::function<void()> onClose)
+{
+    auto ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
+    ol->setBounds(containerSize);
+    ol->setTitle(editorTitle);
+    ol->setSkin(currentSkin, bitmapStore);
+    ol->setSurgeGUIEditor(this);
+    ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON));
+    ol->setShowCloseButton(showCloseButton);
+    ol->setCloseOverlay([this, editorTag, onClose]() {
+        this->dismissEditorOfType(editorTag);
+        onClose();
+    });
+
+    ol->addAndTakeOwnership(std::move(c));
+    frame->addAndMakeVisible(*ol);
+    juceOverlays[editorTag] = std::move(ol);
+}
+
+juce::Component *SurgeGUIEditor::getOverlayIfOpen(OverlayTags tag)
+{
+    if (juceOverlays.find(tag) == juceOverlays.end())
+        return nullptr;
+
+    if (!juceOverlays[tag])
+        return nullptr;
+
+    return juceOverlays[tag]->primaryChild.get();
+}
+
+void SurgeGUIEditor::updateWaveshaperOverlay()
+{
+    auto wso =
+        dynamic_cast<Surge::Overlays::WaveShaperAnalysis *>(getOverlayIfOpen(WAVESHAPER_ANALYZER));
+    auto t = synth->storage.getPatch().scene[current_scene].wsunit.type.val.i;
+    if (wso)
+    {
+        wso->setWSType(t);
+        wso->repaint();
     }
 }

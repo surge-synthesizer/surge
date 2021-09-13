@@ -36,6 +36,13 @@ namespace LuaEditor
 {
 const Surge::Skin::FontDesc Code("fonts.luaeditor.code", Surge::Skin::FontDesc::MONO, 9);
 }
+
+namespace WaveShaperAnalysis
+{
+const Surge::Skin::FontDesc Title("fonts.waveshaperanalysis.title", 12),
+    DBAmount("fonts.waveshaperanalysis.dbamout", 9), DBLabel("fonts.waveshaperanalysis.dblabel", 7);
+}
+
 } // namespace Fonts
 
 /*

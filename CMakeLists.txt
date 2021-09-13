@@ -385,6 +385,7 @@ set(SURGE_GUI_SOURCES
         src/gui/overlays/TypeinParamEditor.cpp
         src/gui/overlays/OverlayWrapper.cpp
         src/gui/overlays/PatchStoreDialog.cpp
+        src/gui/overlays/WaveShaperAnalysis.cpp
 
         src/gui/widgets/EffectChooser.cpp
         src/gui/widgets/LFOAndStepDisplay.cpp

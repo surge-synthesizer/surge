@@ -1145,6 +1145,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_analyzewaveshape);
+            q->setValue(isAnyOverlayPresent(WAVESHAPER_ANALYZER) ? 1 : 0);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Waveshape",
                                                         "Open");
             break;
@@ -3802,29 +3803,6 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
         }
         juceOverlays.erase(ofType);
     }
-}
-
-void SurgeGUIEditor::addJuceEditorOverlay(
-    std::unique_ptr<juce::Component> c,
-    std::string editorTitle, // A window display title - whatever you want
-    OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
-    const juce::Rectangle<int> &containerSize, bool showCloseButton, std::function<void()> onClose)
-{
-    auto ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
-    ol->setBounds(containerSize);
-    ol->setTitle(editorTitle);
-    ol->setSkin(currentSkin, bitmapStore);
-    ol->setSurgeGUIEditor(this);
-    ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON));
-    ol->setShowCloseButton(showCloseButton);
-    ol->setCloseOverlay([this, editorTag, onClose]() {
-        this->dismissEditorOfType(editorTag);
-        onClose();
-    });
-
-    ol->addAndTakeOwnership(std::move(c));
-    frame->addAndMakeVisible(*ol);
-    juceOverlays[editorTag] = std::move(ol);
 }
 
 std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
