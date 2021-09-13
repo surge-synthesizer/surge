@@ -237,9 +237,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 
     int ti = fx->type.val.i;
 
-    std::ostringstream oss;
-    oss << storage->userFXPath << PATH_SEPARATOR << fx_type_names[ti] << PATH_SEPARATOR;
-    auto storagePath = string_to_path(oss.str());
+    auto storagePath = storage->userFXPath / fs::path(fx_type_names[ti]);
 
     if (!spp.empty())
         storagePath /= spp;
@@ -248,11 +246,11 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 
     fs::create_directories(storagePath);
 
-    auto fn = path_to_string(outputPath);
-    std::ofstream pfile(fn, std::ios::out);
+    std::ofstream pfile(outputPath, std::ios::out);
     if (!pfile.is_open())
     {
-        storage->reportError(std::string("Unable to open FX preset file '") + fn + "' for writing!",
+        storage->reportError(std::string("Unable to open FX preset file '") +
+                                 path_to_string(outputPath) + "' for writing!",
                              "Error");
         return;
     }
