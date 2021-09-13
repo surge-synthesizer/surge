@@ -1,0 +1,11 @@
+<single-fx streaming_version="17">
+  <snapshot name="MackEQ" 
+     type="14"
+     p0="56"
+     p1="0.1"
+     p2="0.5"
+     p3="0.5"
+     p4="1"
+     p5="1"
+  />
+</single-fx>
