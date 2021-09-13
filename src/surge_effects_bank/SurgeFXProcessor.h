@@ -31,6 +31,13 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     SurgefxAudioProcessor();
     ~SurgefxAudioProcessor();
 
+    float input_buffer alignas(16)[2][BLOCK_SIZE];
+    float sidechain_buffer alignas(16)[2][BLOCK_SIZE];
+    float output_buffer alignas(16)[2][BLOCK_SIZE];
+    int input_position{0};
+    int output_position{-1};
+
+    bool nonLatentBlockMode{true};
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
