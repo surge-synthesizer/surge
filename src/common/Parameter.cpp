@@ -135,6 +135,30 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
         case 7:
             snprintf(prefix, PREFIX_SIZE, "FX M2");
             break;
+        case 8:
+            snprintf(prefix, PREFIX_SIZE, "FX A3");
+            break;
+        case 9:
+            snprintf(prefix, PREFIX_SIZE, "FX A4");
+            break;
+        case 10:
+            snprintf(prefix, PREFIX_SIZE, "FX B3");
+            break;
+        case 11:
+            snprintf(prefix, PREFIX_SIZE, "FX B4");
+            break;
+        case 12:
+            snprintf(prefix, PREFIX_SIZE, "FX S3");
+            break;
+        case 13:
+            snprintf(prefix, PREFIX_SIZE, "FX S4");
+            break;
+        case 14:
+            snprintf(prefix, PREFIX_SIZE, "FX M3");
+            break;
+        case 15:
+            snprintf(prefix, PREFIX_SIZE, "FX M4");
+            break;
         default:
             snprintf(prefix, PREFIX_SIZE, "FXERR");
             break;
