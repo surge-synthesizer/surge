@@ -272,6 +272,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addSectionHeader("FACTORY WAVETABLES");
 
+    bool addUserLabel = false;
     for (auto c : storage->wtCategoryOrdering)
     {
         if (idx == storage->firstThirdPartyWTCategory)
@@ -282,7 +283,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         if (idx == storage->firstUserWTCategory &&
             storage->firstUserWTCategory != storage->wt_category.size())
         {
-            contextMenu.addSectionHeader("USER WAVETABLES");
+            addUserLabel = true;
         }
 
         idx++;
@@ -291,19 +292,29 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         if (cat.numberOfPatchesInCategoryAndChildren == 0)
             continue;
 
+        if (addUserLabel)
+        {
+            contextMenu.addSectionHeader("USER WAVETABLES");
+            addUserLabel = false;
+        }
+
         if (cat.isRoot)
         {
             populateMenuForCategory(contextMenu, c, selectedItem);
         }
     }
 
+    /*
+    We've decided to postpone this feature until after XT 1.0
     contextMenu.addSeparator();
     auto owts = [this]() {
         if (sge)
             sge->showOverlay(SurgeGUIEditor::WAVETABLESCRIPTING_EDITOR);
     };
 
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Script Editor..."), owts);
+     */
     contextMenu.addSeparator();
 
     auto refresh = [this]() { this->storage->refresh_wtlist(); };
