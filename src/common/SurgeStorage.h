@@ -306,7 +306,7 @@ const char fx_type_names[n_fx_types][16] = {
     "Off",        "Delay",       "Reverb 1",   "Phaser",      "Rotary",    "Distortion", "EQ",
     "Freq Shift", "Conditioner", "Chorus",     "Vocoder",     "Reverb 2",  "Flanger",    "Ring Mod",
     "Airwindows", "Neuron",      "Graphic EQ", "Resonator",   "CHOW",      "Exciter",    "Ensemble",
-    "Combulator", "Nimbus",      "Tape",       "Treemonster", "WaveShaper"};
+    "Combulator", "Nimbus",      "Tape",       "Treemonster", "Waveshaper"};
 
 const char fx_type_shortnames[n_fx_types][8] = {
     "OFF", "DLY", "RV1", "PH",  "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",  "RV2", "FL",
