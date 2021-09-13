@@ -268,6 +268,7 @@ set(SURGE_SHARED_SOURCES
         src/common/dsp/effects/RotarySpeakerEffect.cpp
         src/common/dsp/effects/TreemonsterEffect.cpp
         src/common/dsp/effects/VocoderEffect.cpp
+        src/common/dsp/effects/WaveShaperEffect.cpp
         src/common/dsp/effects/airwindows/AirWindowsEffect.cpp
         src/common/dsp/effects/airwindows/AirWindowsEffect.h
         src/common/dsp/effects/chowdsp/CHOWEffect.cpp
