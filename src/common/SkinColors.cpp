@@ -434,4 +434,16 @@ const Surge::Skin::Color Background("vkb.octave.background", 151, 151, 151),
     Arrow("vkb.octave.arrow", 0, 0, 0);
 }
 } // namespace VirtualKeyboard
+
+namespace JuceWidgets
+{
+namespace TabbedBar
+{
+const Surge::Skin::Color ActiveButtonBackground("tabbar.activetab.background", 100, 50, 0),
+    InactiveButtonBackground("tabbar.inactivetab.background", 30, 30, 30),
+    TabOutline("tabbar.tab.outline", 180, 100, 0), Text("tabbar.text", 255, 255, 255),
+    HoverText("tabbar.hovertext", 255, 0x90, 0);
+}
+} // namespace JuceWidgets
+
 } // namespace Colors

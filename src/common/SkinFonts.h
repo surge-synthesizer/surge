@@ -85,7 +85,8 @@ extern const Surge::Skin::FontDesc Display;
 namespace Widgets
 {
 extern const Surge::Skin::FontDesc NumberField, EffectLabel;
-}
+extern const Surge::Skin::FontDesc TabButtonFont;
+} // namespace Widgets
 namespace PatchStore
 {
 extern const Surge::Skin::FontDesc Label, TextEntry;

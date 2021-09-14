@@ -3288,6 +3288,8 @@ void SurgeGUIEditor::reloadFromSkin()
     if (!frame || !bitmapStore.get())
         return;
 
+    juceEditor->surgeLF->setSkin(currentSkin, bitmapStore);
+
     float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
     bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 

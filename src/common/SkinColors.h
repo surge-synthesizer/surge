@@ -322,4 +322,13 @@ namespace OctaveJog
 extern const Surge::Skin::Color Background, Arrow;
 } // namespace OctaveJog
 } // namespace VirtualKeyboard
+
+namespace JuceWidgets
+{
+namespace TabbedBar
+{
+extern const Surge::Skin::Color ActiveButtonBackground, InactiveButtonBackground, TabOutline, Text,
+    HoverText;
+}
+} // namespace JuceWidgets
 } // namespace Colors
