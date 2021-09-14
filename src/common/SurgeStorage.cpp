@@ -645,6 +645,8 @@ bailOnPortable:
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
     initPatchCategory = Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::InitialPatchCategory, "Templates");
+    initPatchCategoryType = Surge::Storage::getUserDefaultValue(
+        this, Surge::Storage::InitialPatchCategoryType, "Factory");
 
     fxUserPreset = std::make_unique<Surge::Storage::FxUserPreset>();
     fxUserPreset->doPresetRescan(this);
@@ -855,6 +857,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
             PatchCategory c;
             c.name = path_to_string(p).substr(patchpathSubstrLength);
             c.internalid = category;
+            c.isFactory = !userDir;
 
             c.numberOfPatchesInCatgory = 0;
             for (auto &f : fs::directory_iterator(p))

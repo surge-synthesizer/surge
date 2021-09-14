@@ -858,6 +858,7 @@ struct PatchCategory
     int order;
     std::vector<PatchCategory> children;
     bool isRoot;
+    bool isFactory;
 
     int internalid;
     int numberOfPatchesInCatgory;
@@ -937,7 +938,8 @@ class alignas(16) SurgeStorage
                               std::function<void(OkCancel)> callback) { callback(def); };
     }
 
-    std::string initPatchName{"Init Saw"}, initPatchCategory{"Templates"};
+    std::string initPatchName{"Init Saw"}, initPatchCategory{"Templates"},
+        initPatchCategoryType{"Factory"};
 
     static constexpr int tuning_table_size = 512;
     float table_pitch alignas(16)[tuning_table_size];
@@ -1269,14 +1271,14 @@ class alignas(16) SurgeStorage
     // whether to skip loading, desired while exporting manifests. Only used by LV2 currently.
     static bool skipLoadWtAndPatch;
 
-    /*
-     * An RNG which is decoupled from the non-Surge global state and is threadsafe.
-     * This RNG has the semantic that it is seeded when the first Surge in your session
-     * uses it on a given thread, and then retains its independent state. It is designed
-     * to have the same API as std::rand, so 'std::rand -> storage::rand' is a good change.
-     *
-     * Reseeding it impacts the global state on that thread.
-     */
+/*
+ * An RNG which is decoupled from the non-Surge global state and is threadsafe.
+ * This RNG has the semantic that it is seeded when the first Surge in your session
+ * uses it on a given thread, and then retains its independent state. It is designed
+ * to have the same API as std::rand, so 'std::rand -> storage::rand' is a good change.
+ *
+ * Reseeding it impacts the global state on that thread.
+ */
 #define STORAGE_USES_INDEPENDENT_RNG 1
 #if STORAGE_USES_INDEPENDENT_RNG
     /*
@@ -1334,7 +1336,7 @@ class alignas(16) SurgeStorage
         runningOnAudioThread();
         return rngGen.z1(rngGen.g);
     }
-    // void seed_rand(int s) { rngGen.g.seed(s); }
+// void seed_rand(int s) { rngGen.g.seed(s); }
 #else
     inline int rand() { return std::rand(); }
     inline uint32_t rand_u32() { return (uint32_t)(rand_01() * (float)(0xFFFFFFFF)); }

@@ -201,10 +201,12 @@ void PatchSelector::showClassicMenu(bool single_category)
     auto initAction = [this]() {
         int i = 0;
 
+        bool lookingForFactory = (storage->initPatchCategoryType == "Factory");
         for (auto p : storage->patch_list)
         {
             if (p.name == storage->initPatchName &&
-                storage->patch_category[p.category].name == storage->initPatchCategory)
+                storage->patch_category[p.category].name == storage->initPatchCategory &&
+                storage->patch_category[p.category].isFactory == lookingForFactory)
             {
                 loadPatch(i);
                 break;
@@ -222,6 +224,10 @@ void PatchSelector::showClassicMenu(bool single_category)
 
         Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchCategory,
                                                storage->patch_category[current_category].name);
+
+        Surge::Storage::updateUserDefaultValue(
+            storage, Surge::Storage::InitialPatchCategoryType,
+            storage->patch_category[current_category].isFactory ? "Factory" : "User");
     });
 
     contextMenu.addSeparator();

@@ -228,10 +228,12 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     mpeGlobalPitchBendRange = 0;
 
     int pid = 0;
+    bool lookingForFactory = (storage.initPatchCategoryType == "Factory");
     for (auto p : storage.patch_list)
     {
         if (p.name == storage.initPatchName &&
-            storage.patch_category[p.category].name == storage.initPatchCategory)
+            storage.patch_category[p.category].name == storage.initPatchCategory &&
+            storage.patch_category[p.category].isFactory == lookingForFactory)
         {
             patchid_queue = pid;
             break;

@@ -129,6 +129,9 @@ void initMaps()
             case InitialPatchCategory:
                 r = "initialPatchCategory";
                 break;
+            case InitialPatchCategoryType:
+                r = "initialPatchCategoryType";
+                break;
             case LastSCLPath:
                 r = "lastSCLPath";
                 break;
