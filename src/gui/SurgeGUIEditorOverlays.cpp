@@ -176,8 +176,11 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto py = (getWindowSizeY() - h) / 2;
         auto r = juce::Rectangle<int>(px, py, w, h);
 
-        auto pt = std::make_unique<Surge::Overlays::TuningEditor>(synth->storage.currentScale);
-        pt->addScaleTextEditedListener(this);
+        auto pt = std::make_unique<Surge::Overlays::TuningOverlay>();
+        pt->setStorage(&(this->synth->storage));
+        pt->setSkin(currentSkin, bitmapStore);
+        pt->setTuning(synth->storage.currentTuning);
+        // pt->addScaleTextEditedListener(this);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         pt->setEnclosingParentTitle("Tuning Editor");
         return pt;
