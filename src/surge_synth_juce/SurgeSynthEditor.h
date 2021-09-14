@@ -35,6 +35,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     //==============================================================================
     void paint(juce::Graphics &) override;
     void resized() override;
+    int rezoomGuard{0};
     void parentHierarchyChanged() override;
 
     void paramsChangedCallback();

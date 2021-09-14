@@ -191,9 +191,11 @@ void SurgeSynthEditor::resized()
         tempoTypein->setVisible(false);
     }
 
-    if (zfn != 1.0)
+    if (zfn != 1.0 && rezoomGuard == 0)
     {
-        // adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
+        rezoomGuard++;
+        adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
+        rezoomGuard--;
     }
 }
 
