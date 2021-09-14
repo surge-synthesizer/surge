@@ -301,7 +301,7 @@ void FormulaModulatorEditor::resized()
     {
         efdWidth = 200;
     }
-    tabs->setTabBarDepth(18);
+    tabs->setTabBarDepth(14);
     tabs->setBounds(2, 2, getWidth() - 8 - efdWidth, getHeight() - 4);
     auto b = tabs->getTabbedButtonBar().getLocalBounds();
     applyButton->setBounds(b.getWidth() - 80, 2, 80 - 2, b.getHeight() - 4);

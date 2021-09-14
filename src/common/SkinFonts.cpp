@@ -26,7 +26,9 @@ namespace Widgets
 {
 const Surge::Skin::FontDesc NumberField("fonts.widgets.numberfield", System::Display),
     EffectLabel("fonts.widgets.effectlabel", System::Display);
-}
+const Surge::Skin::FontDesc TabButtonFont("fonts.widgets.tabbutton", System::Display);
+
+} // namespace Widgets
 namespace PatchStore
 {
 const Surge::Skin::FontDesc Label("fonts.patchstore.label", 11),

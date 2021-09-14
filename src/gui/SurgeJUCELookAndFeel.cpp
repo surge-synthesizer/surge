@@ -14,9 +14,59 @@
 */
 
 #include "SurgeJUCELookAndFeel.h"
+
+void SurgeJUCELookAndFeel::onSkinChanged()
+{
+    setColour(tempoTypeinTextId, juce::Colours::black);
+    setColour(tempoTypeinHighlightId, juce::Colours::red);
+}
+
 void SurgeJUCELookAndFeel::drawLabel(juce::Graphics &graphics, juce::Label &label)
 {
     LookAndFeel_V4::drawLabel(graphics, label);
+}
+
+int SurgeJUCELookAndFeel::getTabButtonBestWidth(juce::TabBarButton &b, int d)
+{
+    auto f = skin->getFont(Fonts::Widgets::TabButtonFont);
+    auto r = f.getStringWidth(b.getButtonText()) + 20;
+    return r;
+}
+
+void SurgeJUCELookAndFeel::drawTabButton(juce::TabBarButton &button, juce::Graphics &g,
+                                         bool isMouseOver, bool isMouseDown)
+{
+    auto o = button.getTabbedButtonBar().getOrientation();
+
+    if (o != juce::TabbedButtonBar::TabsAtBottom)
+    {
+        juce::LookAndFeel_V4::drawTabButton(button, g, isMouseOver, isMouseDown);
+        return;
+    }
+
+    auto activeArea = button.getActiveArea();
+    auto fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::InactiveButtonBackground);
+    auto textColor = skin->getColor(Colors::JuceWidgets::TabbedBar::Text);
+    if (button.getToggleState())
+    {
+        fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::ActiveButtonBackground);
+    }
+    if (isMouseOver || isMouseDown)
+    {
+        textColor = skin->getColor(Colors::JuceWidgets::TabbedBar::HoverText);
+    }
+
+    g.setColour(skin->getColor(Colors::JuceWidgets::TabbedBar::TabOutline));
+    g.drawRect(activeArea);
+
+    auto fa = activeArea.withTrimmedLeft(1).withTrimmedRight(1).withTrimmedBottom(1);
+    g.setColour(fillColor);
+    g.fillRect(fa);
+
+    g.setColour(textColor);
+    auto f = skin->getFont(Fonts::Widgets::TabButtonFont);
+    g.setFont(f);
+    g.drawText(button.getButtonText(), activeArea, juce::Justification::centred);
 }
 void SurgeJUCELookAndFeel::drawTextEditorOutline(juce::Graphics &g, int width, int height,
                                                  juce::TextEditor &textEditor)
