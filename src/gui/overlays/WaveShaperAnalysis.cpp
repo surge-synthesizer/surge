@@ -132,9 +132,6 @@ void WaveShaperAnalysis::valueChanged(Surge::GUI::IComponentTagValue *p)
 
 void WaveShaperAnalysis::recalcFromSlider()
 {
-    if (wstype == wst_none)
-        return;
-
     sliderDrivenCurve.clear();
     float dx = 1.f / (npts - 1);
 
