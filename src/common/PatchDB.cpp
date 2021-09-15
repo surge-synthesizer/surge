@@ -63,7 +63,8 @@ void Exec(sqlite3 *h, const std::string &statement)
 struct Statement
 {
     bool prepared{false};
-    Statement(sqlite3 *h, const std::string &statement) : h(h)
+    std::string statementCopy;
+    Statement(sqlite3 *h, const std::string &statement) : h(h), statementCopy(statement)
     {
         auto rc = sqlite3_prepare_v2(h, statement.c_str(), -1, &s, nullptr);
         if (rc != SQLITE_OK)
@@ -74,7 +75,9 @@ struct Statement
     {
         if (prepared)
         {
-            std::cout << "ERROR: Prepared Statement never Finalized" << std::endl;
+            std::cout << "ERROR: Prepared Statement never Finalized \n"
+                      << statementCopy << "\n"
+                      << std::endl;
         }
     }
     void finalize()
@@ -196,18 +199,21 @@ struct TxnGuard
 };
 } // namespace SQL
 
-struct PatchDB::workerS
+struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "4"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "5"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
      */
+
+    // language=SQL
     static constexpr const char *setup_sql = R"SQL(
 DROP TABLE IF EXISTS "Patches";
 DROP TABLE IF EXISTS "PatchFeature";
 DROP TABLE IF EXISTS "Version";
 DROP TABLE IF EXISTS "Category";
+DROP TABLE IF EXISTS "DebugJunk";
 CREATE TABLE "Version" (
     id integer primary key,
     schema_version varchar(256)
@@ -235,13 +241,17 @@ CREATE TABLE Category (
       isroot int,
       type int,
       parent_id int
+);
+CREATE TABLE DebugJunk (
+    id integer primary key,
+    junk varchar(2048)
 )
     )SQL";
 
     struct EnQAble
     {
         virtual ~EnQAble() = default;
-        virtual void go(workerS &) = 0;
+        virtual void go(WriterWorker &) = 0;
     };
 
     struct EnQPatch : public EnQAble
@@ -255,7 +265,14 @@ CREATE TABLE Category (
         std::string catname;
         CatType type;
 
-        void go(workerS &w) override { w.parseFXPIntoDB(*this); }
+        void go(WriterWorker &w) override { w.parseFXPIntoDB(*this); }
+    };
+
+    struct EnQDebugMsg : public EnQAble
+    {
+        std::string msg;
+        EnQDebugMsg(const std::string msg) : msg(msg) {}
+        void go(WriterWorker &w) override { w.addDebug(msg); }
     };
 
     struct EnQCategory : public EnQAble
@@ -277,7 +294,7 @@ CREATE TABLE Category (
             auto l = q.filename();
             leafname = l.u8string(); // FIXME
         }
-        void go(workerS &w) override
+        void go(WriterWorker &w) override
         {
             if (isroot)
                 w.addRootCategory(name, type);
@@ -286,11 +303,10 @@ CREATE TABLE Category (
         }
     };
 
-    explicit workerS(SurgeStorage *storage) : storage(storage)
+    void openDb()
     {
-        auto dbpath = storage->userDataPath / fs::path{"SurgePatches.db"};
-        auto dbname = path_to_string(dbpath);
-        auto flag = SQLITE_OPEN_FULLMUTEX; // basically lock
+        std::cout << "--OPEN" << std::endl;
+        auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
         std::cout << "\nPatchDB : Opening sqlitedb " << dbname << std::endl;
@@ -305,6 +321,27 @@ CREATE TABLE Category (
             dbh = nullptr;
             return;
         }
+    }
+
+    void closeDb()
+    {
+        std::cout << "--CLOSE" << std::endl;
+        if (dbh)
+            sqlite3_close(dbh);
+        dbh = nullptr;
+    }
+
+    std::string dbname;
+    fs::path dbpath;
+
+    explicit WriterWorker(SurgeStorage *storage) : storage(storage)
+    {
+        dbpath = storage->userDataPath / fs::path{"SurgePatches.db"};
+        dbname = path_to_string(dbpath);
+
+        openDb();
+        if (dbh == nullptr)
+            return;
 
         /*
          * OK check my version
@@ -356,10 +393,12 @@ CREATE TABLE Category (
                 storage->reportError(e.what(), "PatchDB Setup Error");
             }
         }
+        closeDb();
+
         qThread = std::thread([this]() { this->loadQueueFunction(); });
     }
 
-    ~workerS()
+    ~WriterWorker()
     {
         keepRunning = false;
         qCV.notify_all();
@@ -432,6 +471,7 @@ CREATE TABLE Category (
 
                 while (keepRunning && pathQ.empty())
                 {
+                    closeDb();
                     qCV.wait(lk);
                 }
 
@@ -445,21 +485,29 @@ CREATE TABLE Category (
                 }
             }
             {
-                try
+                if (!dbh)
+                    openDb();
+                if (dbh == nullptr)
                 {
-                    SQL::TxnGuard tg(dbh);
-
-                    for (auto *p : doThis)
-                    {
-                        p->go(*this);
-                        delete p;
-                    }
-
-                    tg.end();
                 }
-                catch (SQL::Exception &e)
+                else
                 {
-                    storage->reportError(e.what(), "Patch DB");
+                    try
+                    {
+                        SQL::TxnGuard tg(dbh);
+
+                        for (auto *p : doThis)
+                        {
+                            p->go(*this);
+                            delete p;
+                        }
+
+                        tg.end();
+                    }
+                    catch (SQL::Exception &e)
+                    {
+                        storage->reportError(e.what(), "Patch DB");
+                    }
                 }
             }
         }
@@ -628,6 +676,21 @@ CREATE TABLE Category (
         }
     }
 
+    void addDebug(const std::string &m)
+    {
+        std::cout << "Adding debugjunk " << m << std::endl;
+        try
+        {
+            auto there = SQL::Statement(dbh, "INSERT INTO DebugJunk  (\"junk\") VALUES (?1)");
+            there.bind(1, m);
+            there.step();
+            there.finalize();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+        }
+    }
     void addRootCategory(const std::string &name, CatType type)
     {
         // Check if it is there
@@ -640,10 +703,9 @@ CREATE TABLE Category (
             there.bind(2, (int)type);
             there.step();
             auto count = there.col_int(0);
+            there.finalize();
             if (count > 0)
                 return;
-
-            there.finalize();
         }
         catch (const SQL::Exception &e)
         {
@@ -738,6 +800,30 @@ CREATE TABLE Category (
         qCV.notify_all();
     }
 
+    sqlite3 *getReadOnlyConn()
+    {
+        if (!rodbh)
+        {
+            std::cout << "--OPEN" << std::endl;
+            auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
+            flag |= SQLITE_OPEN_READONLY;
+
+            auto ec = sqlite3_open_v2(dbname.c_str(), &rodbh, flag, nullptr);
+
+            if (ec != SQLITE_OK)
+            {
+                std::ostringstream oss;
+                oss << "An error occured opening r/o sqlite file '" << dbname
+                    << "'. The error was '" << sqlite3_errmsg(dbh) << "'.";
+                storage->reportError(oss.str(), "Surge Patch Database Error");
+                rodbh = nullptr;
+            }
+        }
+        return rodbh;
+    }
+
+  private:
+    sqlite3 *rodbh{nullptr};
     sqlite3 *dbh;
     SurgeStorage *storage;
 };
@@ -745,21 +831,25 @@ PatchDB::PatchDB(SurgeStorage *s) : storage(s) { initialize(); }
 
 PatchDB::~PatchDB() = default;
 
-void PatchDB::initialize() { worker = std::make_unique<workerS>(storage); }
+void PatchDB::initialize() { worker = std::make_unique<WriterWorker>(storage); }
 
 void PatchDB::considerFXPForLoad(const fs::path &fxp, const std::string &name,
                                  const std::string &catName, const CatType type) const
 {
-    worker->enqueueWorkItem(new workerS::EnQPatch(fxp, name, catName, type));
+    worker->enqueueWorkItem(new WriterWorker::EnQPatch(fxp, name, catName, type));
 }
 
 void PatchDB::addRootCategory(const std::string &name, CatType type)
 {
-    worker->enqueueWorkItem(new workerS::EnQCategory(name, type));
+    worker->enqueueWorkItem(new WriterWorker::EnQCategory(name, type));
 }
 void PatchDB::addSubCategory(const std::string &name, const std::string &parent, CatType type)
 {
-    worker->enqueueWorkItem(new workerS::EnQCategory(name, parent, type));
+    worker->enqueueWorkItem(new WriterWorker::EnQCategory(name, parent, type));
+}
+void PatchDB::addDebugMessage(const std::string &debug)
+{
+    worker->enqueueWorkItem(new WriterWorker::EnQDebugMsg(debug));
 }
 
 // FIXME - push to worker perhaps?
@@ -774,7 +864,7 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
 
     try
     {
-        auto q = SQL::Statement(worker->dbh, query);
+        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
         std::string nameLikeThis = "%" + nameLikeThisP + "%";
         q.bind(1, nameLikeThis);
 
@@ -819,7 +909,7 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
 
     try
     {
-        auto q = SQL::Statement(worker->dbh, query);
+        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
         q.bind(1, t);
 
         while (q.step())
@@ -837,7 +927,7 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
 
         q.finalize();
 
-        auto par = SQL::Statement(worker->dbh,
+        auto par = SQL::Statement(worker->getReadOnlyConn(),
                                   "select COUNT(id) from category where category.parent_id = ?");
         for (auto &cr : res)
         {

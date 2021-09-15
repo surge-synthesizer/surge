@@ -303,8 +303,13 @@ void PatchDBViewer::createElements()
     treeView->setBounds(0, 50, 200, getHeight() - 50);
     treeRoot = std::make_unique<PatchDBSQLTreeViewItem>(editor, storage);
     treeView->setRootItem(treeRoot.get());
-
     addAndMakeVisible(*treeView);
+
+    auto tb = std::make_unique<juce::TextButton>();
+    tb->setButtonText("Debug");
+    doDebug = std::move(tb);
+    doDebug->addListener(this);
+    addAndMakeVisible(*doDebug);
 
     executeQuery();
 }
@@ -322,11 +327,21 @@ void PatchDBViewer::resized()
     if (nameTypein)
         nameTypein->setBounds(10, 10, 400, 30);
 
+    if (doDebug)
+        doDebug->setBounds(420, 10, 100, 30);
+
     if (table)
         table->setBounds(200, 50, getWidth() - 202, getHeight() - 52);
 
     if (treeView)
         treeView->setBounds(2, 50, 196, getHeight() - 52);
+}
+void PatchDBViewer::buttonClicked(juce::Button *button)
+{
+    if (button == doDebug.get())
+    {
+        storage->patchDB->addDebugMessage(std::string("Debugging with ") + std::to_string(rand()));
+    }
 }
 
 } // namespace Overlays

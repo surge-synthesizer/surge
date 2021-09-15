@@ -30,7 +30,9 @@ namespace Overlays
 class PatchDBSQLTableModel;
 class PatchDBSQLTreeViewItem;
 
-class PatchDBViewer : public OverlayComponent, public juce::TextEditor::Listener
+class PatchDBViewer : public OverlayComponent,
+                      public juce::TextEditor::Listener,
+                      public juce::Button::Listener
 {
   public:
     PatchDBViewer(SurgeGUIEditor *ed, SurgeStorage *s);
@@ -52,6 +54,9 @@ class PatchDBViewer : public OverlayComponent, public juce::TextEditor::Listener
 
     std::unique_ptr<juce::TreeView> treeView;
     std::unique_ptr<PatchDBSQLTreeViewItem> treeRoot;
+
+    std::unique_ptr<juce::Button> doDebug;
+    void buttonClicked(juce::Button *button) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBViewer);
 };

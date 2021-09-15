@@ -30,7 +30,7 @@ namespace PatchStorage
 {
 struct PatchDB
 {
-    struct workerS;
+    struct WriterWorker;
     struct patchRecord
     {
         patchRecord(int i, const std::string &f, const std::string &c, const std::string &n,
@@ -70,13 +70,15 @@ struct PatchDB
 
     SurgeStorage *storage;
 
-    std::unique_ptr<workerS> worker;
+    std::unique_ptr<WriterWorker> worker;
 
     void considerFXPForLoad(const fs::path &fxp, const std::string &name,
                             const std::string &catName, const CatType type) const;
 
     void addRootCategory(const std::string &name, CatType type);
     void addSubCategory(const std::string &name, const std::string &parent, CatType type);
+
+    void addDebugMessage(const std::string &debug);
 
     // This is a temporary API point
     std::vector<patchRecord> rawQueryForNameLike(const std::string &nameLikeThis);
