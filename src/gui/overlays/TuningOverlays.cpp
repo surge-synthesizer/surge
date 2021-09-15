@@ -1,4 +1,8 @@
 #include "TuningOverlays.h"
+#include "RuntimeFont.h"
+#include "SurgeStorage.h"
+#include "UserDefaults.h"
+#include "fmt/core.h"
 
 using namespace juce;
 
@@ -6,6 +10,361 @@ namespace Surge
 {
 namespace Overlays
 {
+
+class TuningTableListBoxModel : public juce::TableListBoxModel,
+                                public Surge::GUI::SkinConsumingComponent
+{
+  public:
+    TuningTableListBoxModel()
+    {
+        for (int i = 0; i < 128; ++i)
+            notesOn[i] = false;
+
+        rmbMenu = std::make_unique<juce::PopupMenu>();
+    }
+    ~TuningTableListBoxModel() { table = nullptr; }
+
+    void setTableListBox(juce::TableListBox *t) { table = t; }
+
+    void setupDefaultHeaders(juce::TableListBox *table)
+    {
+        table->setHeaderHeight(15);
+        table->setRowHeight(13);
+        table->getHeader().addColumn("Note", 1, 50);
+        table->getHeader().addColumn("Freq (hz)", 2, 50);
+    }
+
+    virtual int getNumRows() override { return 128; }
+    virtual void paintRowBackground(juce::Graphics &g, int rowNumber, int width, int height,
+                                    bool rowIsSelected) override
+    {
+        if (!table)
+            return;
+
+        auto alternateColour =
+            table->getLookAndFeel()
+                .findColour(juce::ListBox::backgroundColourId)
+                .interpolatedWith(table->getLookAndFeel().findColour(juce::ListBox::textColourId),
+                                  0.03f);
+        if (rowNumber % 2)
+            g.fillAll(alternateColour);
+    }
+
+    int mcoff{1};
+    void setMiddleCOff(int m)
+    {
+        mcoff = m;
+        if (table)
+            table->repaint();
+    }
+    virtual void paintCell(juce::Graphics &g, int rowNumber, int columnID, int width, int height,
+                           bool rowIsSelected) override
+    {
+        if (!table)
+            return;
+
+        int noteInScale = rowNumber % 12;
+        bool whitekey = true;
+        bool noblack = false;
+        if ((noteInScale == 1 || noteInScale == 3 || noteInScale == 6 || noteInScale == 8 ||
+             noteInScale == 10))
+        {
+            whitekey = false;
+        }
+        if (noteInScale == 4 || noteInScale == 11)
+            noblack = true;
+
+        // Black Key
+        auto kbdColour = table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId);
+        if (whitekey)
+            kbdColour = kbdColour.interpolatedWith(
+                table->getLookAndFeel().findColour(juce::ListBox::textColourId), 0.3f);
+
+        bool no = true;
+        auto pressedColour = juce::Colour(0xFFaaaa50);
+
+        if (notesOn[rowNumber])
+        {
+            no = true;
+            kbdColour = pressedColour;
+        }
+
+        g.fillAll(kbdColour);
+        if (!whitekey && columnID != 0 && no)
+        {
+            g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+            // draw an inset top and bottom
+            g.fillRect(0, 0, width - 1, 1);
+            g.fillRect(0, height - 1, width - 1, 1);
+        }
+
+        int txtOff = 0;
+        if (columnID == 0)
+        {
+            // Black Key
+            if (!whitekey)
+            {
+                txtOff = 10;
+                // "Black Key"
+                auto kbdColour =
+                    table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId);
+                auto kbc = kbdColour.interpolatedWith(
+                    table->getLookAndFeel().findColour(juce::ListBox::textColourId), 0.3f);
+                g.setColour(kbc);
+                g.fillRect(0, 0, txtOff, height);
+
+                // OK so now check neighbors
+                if (rowNumber > 0 && notesOn[rowNumber - 1])
+                {
+                    g.setColour(pressedColour);
+                    g.fillRect(0, 0, txtOff, height / 2);
+                }
+                if (rowNumber < 127 && notesOn[rowNumber + 1])
+                {
+                    g.setColour(pressedColour);
+                    g.fillRect(0, height / 2, txtOff, height / 2);
+                }
+                g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+                g.fillRect(0, height / 2, txtOff, 1);
+
+                if (no)
+                {
+                    g.fillRect(txtOff, 0, width - 1 - txtOff, 1);
+                    g.fillRect(txtOff, height - 1, width - 1 - txtOff, 1);
+                    g.fillRect(txtOff, 0, 1, height - 1);
+                }
+            }
+        }
+
+        g.setColour(table->getLookAndFeel().findColour(juce::ListBox::textColourId));
+
+        auto mn = rowNumber;
+        double fr = tuning.frequencyForMidiNote(mn);
+
+        std::string notenum, notename, display;
+
+        g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+        g.fillRect(width - 1, 0, 1, height);
+        if (noblack)
+            g.fillRect(0, height - 1, width, 1);
+
+        g.setColour(juce::Colours::white);
+        auto just = juce::Justification::centredLeft;
+        switch (columnID)
+        {
+        case 1:
+        {
+            notenum = std::to_string(mn);
+            notename = noteInScale % 12 == 0 ? fmt::format("C{:d}", rowNumber / 12 - mcoff) : "";
+            static std::vector<std::string> nn = {
+                {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}};
+
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.drawText(notename, 2 + txtOff, 0, width - 4, height, juce::Justification::centredLeft,
+                       false);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+            g.drawText(notenum, 2 + txtOff, 0, width - 2 - txtOff - 2, height,
+                       juce::Justification::centredRight, false);
+
+            break;
+        }
+        case 2:
+        {
+            just = juce::Justification::centredRight;
+            display = fmt::format("{:.2f}", fr);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.drawText(display, 2 + txtOff, 0, width - 4, height, juce::Justification::centredRight,
+                       false);
+            break;
+        }
+        }
+    }
+
+    virtual void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &e) override
+    {
+        if (e.mods.isRightButtonDown())
+        {
+            rmbMenu->clear();
+            rmbMenu->addItem("Export to CSV", [this]() { this->exportToCSV(); });
+            rmbMenu->showMenuAsync(juce::PopupMenu::Options());
+        }
+    }
+
+    std::unique_ptr<juce::FileChooser> fileChooser;
+    virtual void exportToCSV()
+    {
+        fileChooser =
+            std::make_unique<juce::FileChooser>("Export CSV to...", juce::File(), "*.csv");
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser &chooser) {
+                auto f = chooser.getResult();
+                std::ostringstream csvStream;
+                csvStream << "Midi Note, Frequency, Log(Freq/8.17)\n";
+                for (int i = 0; i < 128; ++i)
+                    csvStream << i << ", " << std::fixed << std::setprecision(4)
+                              << tuning.frequencyForMidiNote(i) << ", " << std::fixed
+                              << std::setprecision(6) << tuning.logScaledFrequencyForMidiNote(i)
+                              << "\n";
+                if (!f.replaceWithText(csvStream.str()))
+                {
+                    juce::AlertWindow::showMessageBoxAsync(
+                        juce::AlertWindow::AlertIconType::WarningIcon, "Error exporting file",
+                        "An unknown error occured streaming CSV data to file", "OK");
+                }
+            });
+    }
+
+    virtual void tuningUpdated(const Tunings::Tuning &newTuning)
+    {
+        tuning = newTuning;
+        if (table)
+            table->repaint();
+    }
+    virtual void noteOn(int noteNum)
+    {
+        notesOn[noteNum] = true;
+        if (table)
+            table->repaint();
+    }
+    virtual void noteOff(int noteNum)
+    {
+        notesOn[noteNum] = false;
+        if (table)
+            table->repaint();
+    }
+
+  private:
+    Tunings::Tuning tuning;
+    std::array<std::atomic<bool>, 128> notesOn;
+    std::unique_ptr<juce::PopupMenu> rmbMenu;
+    juce::TableListBox *table{nullptr};
+};
+
+class RadialScaleGraph;
+
+class TuningEditor : public OverlayComponent, public juce::FileDragAndDropTarget
+{
+  public:
+    class ToneEditor : public juce::Component,
+                       public juce::TextEditor::Listener,
+                       public juce::Button::Listener
+    {
+      public:
+        ToneEditor(bool editable);
+
+        std::unique_ptr<juce::Label> displayIndex;
+        std::unique_ptr<juce::TextEditor> displayValue;
+        std::unique_ptr<juce::Component> coarseKnob, fineKnob, playingLED;
+        std::unique_ptr<juce::TextButton> hideButton;
+
+        TuningEditor *parent;
+
+        float cents;
+        int index;
+
+        int playingNotes = 0;
+        void incNotes();
+        void decNotes();
+
+        virtual void textEditorTextChanged(juce::TextEditor &) override
+        {
+            onToneChanged(index, displayValue->getText());
+        }
+
+        virtual void buttonClicked(juce::Button *b) override;
+        virtual void displayText(bool dt);
+
+        std::function<void(int index, juce::String)> onToneChanged = [](int, juce::String) {};
+    };
+
+    class GeneratorSection;
+
+    TuningEditor(Tunings::Scale &s);
+    ~TuningEditor() override;
+
+    class ScaleTextEditedListener
+    {
+      public:
+        virtual ~ScaleTextEditedListener() {}
+        virtual void scaleTextEdited(juce::String newScale) = 0;
+    };
+    void addScaleTextEditedListener(ScaleTextEditedListener *sel) { listeners.insert(sel); }
+    void removeScaleTextEditedListener(ScaleTextEditedListener *sel) { listeners.erase(sel); }
+
+    void recalculateScaleText();
+
+    void setScaleText(juce::String &s)
+    {
+        scaleText = s;
+        scale = Tunings::parseSCLData(s.toStdString());
+    }
+
+    void buildUIFromScale();
+    void toggleToneDisplay();
+    bool displayTones = true;
+
+    virtual bool isInterestedInFileDrag(const juce::StringArray &filenames) override
+    {
+        if (filenames.size() == 1)
+        {
+            juce::File f(filenames[0]);
+            if (f.hasFileExtension(".scl"))
+                return true;
+        }
+        return false;
+    }
+
+    virtual void filesDropped(const juce::StringArray &filenames, int mouseX, int mouseY) override
+    {
+        if (filenames.size() != 1)
+            return;
+        juce::File f(filenames[0]);
+        if (f.hasFileExtension(".scl"))
+        {
+            auto s = f.loadFileAsString();
+            setScaleText(s);
+            for (auto sl : listeners)
+                sl->scaleTextEdited(s);
+            buildUIFromScale();
+        }
+    }
+
+    void resetScale(const Tunings::Scale &s)
+    {
+        if (scale.rawText != s.rawText)
+        {
+            scale = s;
+            scaleText = s.rawText;
+            buildUIFromScale();
+            repaint();
+        }
+    }
+
+    virtual void paint(juce::Graphics &g) override
+    {
+        // (Our component is opaque, so we must completely fill the background with a solid colour)
+        g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    }
+
+    void scaleNoteOn(int scaleNote);
+    void scaleNoteOff(int scaleNote);
+
+  private:
+    std::set<ScaleTextEditedListener *> listeners;
+    juce::String scaleText;
+    Tunings::Scale scale;
+    std::vector<std::unique_ptr<ToneEditor>> toneEditors;
+    std::unique_ptr<juce::Component> notesSection;
+    std::unique_ptr<juce::Viewport> notesViewport;
+
+    std::unique_ptr<juce::TabbedComponent> analyticsTab;
+    RadialScaleGraph *radialScaleGraph;
+
+    std::unique_ptr<GeneratorSection> generatorSection;
+
+    std::unique_ptr<juce::GroupComponent> notesGroup, generatorGroup, analyticsGroup;
+};
 
 class InfiniteKnob : public Component
 {
@@ -71,11 +430,14 @@ class InfiniteKnob : public Component
     bool enabled = true;
 };
 
-class TuningEditor::RadialScaleGraph : public juce::Component
+class RadialScaleGraph : public juce::Component
 {
   public:
-    RadialScaleGraph(Tunings::Scale &s) : scale(s)
+    RadialScaleGraph() { setScale(Tunings::evenTemperament12NoteScale()); }
+
+    void setScale(const Tunings::Scale &s)
     {
+        scale = s;
         notesOn.clear();
         notesOn.resize(scale.count);
         for (int i = 0; i < scale.count; ++i)
@@ -511,7 +873,7 @@ void TuningEditor::buildUIFromScale()
         addAndMakeVisible(analyticsTab.get());
         analyticsTab->setBounds(analyticsGroup->getBounds().withTrimmedTop(15).reduced(m));
         analyticsTab->setTabBarDepth(30);
-        radialScaleGraph = new RadialScaleGraph(scale);
+        radialScaleGraph = new RadialScaleGraph();
         radialScaleGraph->onToneChanged = [this](int idx, double val) {
             if (idx >= 0 && idx < this->scale.count)
             {
@@ -606,7 +968,7 @@ void TuningEditor::toggleToneDisplay()
         c->displayText(displayTones);
 }
 
-void TuningEditor::RadialScaleGraph::paint(Graphics &g)
+void RadialScaleGraph::paint(Graphics &g)
 {
     if (notesOn.size() != scale.count)
     {
@@ -804,7 +1166,7 @@ void TuningEditor::recalculateScaleText()
     radialScaleGraph->repaint();
 }
 
-void TuningEditor::RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
+void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 {
     int ohsi = hotSpotIndex;
     hotSpotIndex = -1;
@@ -818,7 +1180,7 @@ void TuningEditor::RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
     if (ohsi != hotSpotIndex)
         repaint();
 }
-void TuningEditor::RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
+void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
 {
     if (hotSpotIndex == -1)
         centsAtMouseDown = 0;
@@ -829,7 +1191,7 @@ void TuningEditor::RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
     }
 }
 
-void TuningEditor::RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
+void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 {
     if (hotSpotIndex != -1)
     {
@@ -864,6 +1226,95 @@ void TuningEditor::scaleNoteOff(int scaleNote)
     if (scaleNote == 0)
         toneEditors.back()->decNotes();
     radialScaleGraph->noteOff(scaleNote);
+}
+
+struct SCLKBMDisplay : public juce::Component, Surge::GUI::SkinConsumingComponent
+{
+    SCLKBMDisplay()
+    {
+        scl = std::make_unique<juce::TextEditor>();
+        scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
+        scl->setMultiLine(true, false);
+        addAndMakeVisible(*scl);
+        kbm = std::make_unique<juce::TextEditor>();
+        kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
+        kbm->setMultiLine(true, false);
+        addAndMakeVisible(*kbm);
+    }
+    void setTuning(const Tunings::Tuning &t)
+    {
+        scl->setText(t.scale.rawText, juce::NotificationType::dontSendNotification);
+        kbm->setText(t.keyboardMapping.rawText, juce::NotificationType::dontSendNotification);
+        kbm->setText(t.keyboardMapping.rawText, juce::NotificationType::dontSendNotification);
+    }
+
+    void resized()
+    {
+        auto w = getWidth();
+        auto h = getHeight();
+        scl->setBounds(2, 2, w / 2 - 4, h - 4);
+        kbm->setBounds(w / 2 + 2, 2, w / 2 - 4, h - 4);
+    }
+    std::unique_ptr<juce::TextEditor> scl, kbm;
+};
+
+TuningOverlay::TuningOverlay()
+{
+    tuning = Tunings::Tuning(Tunings::evenTemperament12NoteScale(),
+                             Tunings::startScaleOnAndTuneNoteTo(60, 60, Tunings::MIDI_0_FREQ * 32));
+    tuningKeyboardTableModel = std::make_unique<TuningTableListBoxModel>();
+    tuningKeyboardTableModel->tuningUpdated(tuning);
+    tuningKeyboardTable =
+        std::make_unique<juce::TableListBox>("Tuning", tuningKeyboardTableModel.get());
+    tuningKeyboardTableModel->setTableListBox(tuningKeyboardTable.get());
+    tuningKeyboardTableModel->setupDefaultHeaders(tuningKeyboardTable.get());
+    addAndMakeVisible(*tuningKeyboardTable);
+
+    tuningKeyboardTable->getViewport()->setScrollBarsShown(true, false);
+    tuningKeyboardTable->getViewport()->setViewPositionProportionately(0.0, 48.0 / 127.0);
+
+    tabArea =
+        std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
+
+    sclKbmDisplay = std::make_unique<SCLKBMDisplay>();
+    radialScaleGraph = std::make_unique<RadialScaleGraph>();
+
+    tabArea->addTab("SCL/KBM", juce::Colours::black, sclKbmDisplay.get(), false);
+    tabArea->addTab("Tones", juce::Colours::black, new juce::Label("S"), true);
+    tabArea->addTab("Radial", juce::Colours::black, radialScaleGraph.get(), false);
+    tabArea->addTab("Interval", juce::Colours::black, new juce::Label("S"), true);
+    tabArea->addTab("Generators", juce::Colours::black, new juce::Label("S"), true);
+    addAndMakeVisible(*tabArea);
+}
+
+TuningOverlay::~TuningOverlay() = default;
+
+void TuningOverlay::resized()
+{
+    auto h = getHeight();
+    auto w = getWidth();
+    tuningKeyboardTable->setBounds(0, 0, 120, h);
+
+    tabArea->setBounds(120, 0, w - 120, h);
+    // it's a bit of a hack to put this here but by this [oint i'm all set up
+    if (storage)
+    {
+        auto mcoff = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
+        tuningKeyboardTableModel->setMiddleCOff(mcoff);
+    }
+}
+void TuningOverlay::setTuning(const Tunings::Tuning &t)
+{
+    tuning = t;
+    tuningKeyboardTableModel->tuningUpdated(tuning);
+    sclKbmDisplay->setTuning(t);
+    radialScaleGraph->setScale(t.scale);
+}
+
+void TuningOverlay::onSkinChanged()
+{
+    tuningKeyboardTableModel->setSkin(skin, associatedBitmapStore);
+    tuningKeyboardTable->repaint();
 }
 
 } // namespace Overlays

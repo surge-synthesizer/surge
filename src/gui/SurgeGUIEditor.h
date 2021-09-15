@@ -80,7 +80,7 @@ struct PatchStoreDialog;
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
                        public juce::KeyListener,
-                       public Surge::Overlays::TuningEditor::ScaleTextEditedListener
+                       public Surge::Overlays::TuningOverlay::TuningTextEditedListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
