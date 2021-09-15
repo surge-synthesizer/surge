@@ -1022,7 +1022,7 @@ if (BUILD_SURGE_XT)
         endif ()
     endif ()
 
-    target_link_libraries(surge-xt PUBLIC
+    target_link_libraries(surge-xt PRIVATE
             surge::airwindows
             surge::filesystem
             surge::tinyxml
