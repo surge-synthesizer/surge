@@ -12,6 +12,8 @@ pr:
 
 jobs:
 - job: Build
+  variables:
+    defaultTargets: "surge-xt_Packaged surge-fx_Packaged"
   strategy:
     matrix:
       macOS-unit-test:
@@ -27,7 +29,7 @@ jobs:
         isMac: True
         isMacFat: True
         cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
-        cmakeTarget: "ci-pull-req"
+        cmakeTarget: $(defaultTargets)
         cmakeConfig: "Debug"
         xcodePath: "/Applications/Xcode_12.2.app"
       macOS-arm:
@@ -35,7 +37,7 @@ jobs:
         isMac: True
         isMacFat: True
         cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
-        cmakeTarget: "ci-pull-req"
+        cmakeTarget: $(defaultTargets)
         cmakeConfig: "Debug"
         xcodePath: "/Applications/Xcode_12.2.app"
       windows-x64:
@@ -43,13 +45,13 @@ jobs:
         isWindows: True
         cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
         cmakeConfig: "Debug"
-        cmakeTarget: "ci-pull-req"
+        cmakeTarget: $(defaultTargets)
       windows-x86-vs2017:
         imageName: 'vs2017-win2016'
         isWindows: True
         cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
         cmakeConfig: "Debug"
-        cmakeTarget: "ci-pull-req"
+        cmakeTarget: $(defaultTargets)
       windows-unittest:
         imageName: 'vs2017-win2016'
         isWindows: True
@@ -68,7 +70,7 @@ jobs:
         imageName: 'ubuntu-20.04'
         isLinux: True
         aptGetExtras: ""
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DBUILD_SURGE_PYTHON_BINDINGS=True"
+        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
         cmakeTarget: "surgepy"
         cmakeConfig: "Debug"
       linux-clang-juce:
@@ -89,7 +91,7 @@ jobs:
         imageName: 'ubuntu-18.04'
         isLinux: True
         cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: "ci-pull-req"
+        cmakeTarget: $(defaultTargets)
         cmakeConfig: "Debug"
       linux-unittest:
         imageName: 'ubuntu-20.04'
@@ -102,7 +104,7 @@ jobs:
         imageName: 'ubuntu-20.04'
         isLinux: True
         needsLV2: True
-        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=libs/JUCE-lv2"
+        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
         cmakeConfig: "Release"
         cmakeTarget: "surge-xt_LV2"
 
@@ -228,7 +230,7 @@ jobs:
 
       ls -l "${LOCALAPPDATA}/Surge XT/"
       
-      build/Release/surge-headless.exe
+      build/src/headless/Release/surge-headless.exe
 
     condition: variables.isWindowsUnitTest
     displayName: windows - run unit tests
@@ -244,7 +246,7 @@ jobs:
       mkdir -p $XDG_DATA_HOME
       rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge-xt/"
 
-      ./build/surge-headless
+      ./build/src/headless/surge-headless
     condition: variables.isLinuxUnitTest
     displayName: linux - run unit test
 
@@ -256,7 +258,7 @@ jobs:
       mkdir "$HOME/Library/Application Support/Surge XT"
       rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge XT/"
       
-      ./build/Release/surge-headless
+      ./build/src/headless/Release/surge-headless
     condition: variables.isMacUnitTest
     displayName: macOS - run unit tests
 
