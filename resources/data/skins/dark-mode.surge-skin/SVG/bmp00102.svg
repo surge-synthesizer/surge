@@ -211,7 +211,7 @@
 </g>
 <path d="M157.5 14.5C157.5 13.3954 158.395 12.5 159.5 12.5H544.5C545.605 12.5 546.5 13.3954 546.5 14.5V36.5C546.5 37.6046 545.605 38.5 544.5 38.5H159.5C158.395 38.5 157.5 37.6046 157.5 36.5V14.5Z" fill="#242424"/>
 <path d="M159.5 13H544.5V12H159.5V13ZM546 14.5V36.5H547V14.5H546ZM544.5 38H159.5V39H544.5V38ZM158 36.5V14.5H157V36.5H158ZM159.5 38C158.672 38 158 37.3284 158 36.5H157C157 37.8807 158.119 39 159.5 39V38ZM546 36.5C546 37.3284 545.328 38 544.5 38V39C545.881 39 547 37.8807 547 36.5H546ZM544.5 13C545.328 13 546 13.6716 546 14.5H547C547 13.1193 545.881 12 544.5 12V13ZM159.5 12C158.119 12 157 13.1193 157 14.5H158C158 13.6716 158.672 13 159.5 13V12Z" fill="black"/>
-<g opacity="0.1">
+<g opacity="0.2">
 <rect width="903" height="569" fill="url(#pattern4)" fill-opacity="0.2"/>
 <rect width="903" height="569" fill="url(#paint18_linear)"/>
 <rect width="903" height="569" fill="url(#paint19_radial)" fill-opacity="0.5"/>
@@ -308,7 +308,7 @@
 <stop stop-color="#959595" stop-opacity="0.5"/>
 <stop offset="1" stop-opacity="0.5"/>
 </linearGradient>
-<radialGradient id="paint19_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(451) rotate(90) scale(134.5 451)">
+<radialGradient id="paint19_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(451) rotate(90) scale(451)">
 <stop stop-color="#A0B5FF"/>
 <stop offset="1" stop-color="white" stop-opacity="0"/>
 </radialGradient>
