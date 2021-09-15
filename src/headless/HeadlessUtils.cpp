@@ -4,10 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-#if LIBSNDFILE
-#include <sndfile.h>
-#endif
-
 namespace Surge
 {
 namespace Headless
@@ -41,25 +37,6 @@ void writeToStream(const float *data, int nSamples, int nChannels, std::ostream 
             avgOut = 0;
         }
     }
-}
-
-void writeToWav(const float *data, int nSamples, int nChannels, float sampleRate,
-                std::string wavFileName)
-{
-#if LIBSNDFILE
-    SF_INFO sfinfo;
-    sfinfo.channels = nChannels;
-    sfinfo.samplerate = sampleRate;
-    sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-
-    SNDFILE *of = sf_open(wavFileName.c_str(), SFM_WRITE, &sfinfo);
-    sf_count_t count = sf_write_float(of, &data[0], nSamples * nChannels);
-    sf_write_sync(of);
-    sf_close(of);
-#else
-    std::cout << "writeToWav requires libsndfile which is not available on your platform."
-              << std::endl;
-#endif
 }
 
 } // namespace Headless

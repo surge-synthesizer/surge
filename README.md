@@ -153,7 +153,7 @@ git clone --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
 then run a fresh CMake to (1) point to that JUCE fork and (2) activate LV2
 
 ```
-cmake -Bbuild_lv2 -DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_ALTERNATE_JUCE=/some/location/JUCE-lv2/
+cmake -Bbuild_lv2 -DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=/some/location/JUCE-lv2/
 cmake --build build_lv2 --config Release --target surge-xt_LV2 --parallel 4
 cmake --build build_lv2 --config Release --target surge-fx_LV2 --parallel 4
 ```

@@ -1,0 +1,62 @@
+# vi:set sw=2 et:
+project(surge-fx VERSION ${CMAKE_PROJECT_VERSION})
+
+if(WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+  set(SURGE_FX_PRODUCT_NAME "Surge XT Effects (32-bit)")
+else()
+  set(SURGE_FX_PRODUCT_NAME "Surge XT Effects")
+endif()
+
+file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
+  ${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/*.svg
+  ${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/icons/*.svg
+)
+
+juce_add_binary_data(surge-fx-binary
+  SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
+)
+
+juce_add_plugin(${PROJECT_NAME}
+  PRODUCT_NAME ${SURGE_FX_PRODUCT_NAME}
+  COMPANY_NAME "Surge Synth Team"
+  COMPANY_WEBSITE "https://surge-synth-team.org/"
+  BUNDLE_ID "org.surge-synth-team.surge-xt-fx"
+  PLUGIN_MANUFACTURER_CODE VmbA
+  PLUGIN_CODE SFXT
+
+  ICON_BIG "${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/SurgeFXLogo.png"
+
+  IS_SYNTH FALSE
+  NEEDS_MIDI_INPUT FALSE
+  NEEDS_MIDI_OUTPUT FALSE
+  IS_MIDI_EFFECT FALSE
+
+  COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
+
+  VST3_CATEGORIES Fx
+  VST2_CATEGORY kPlugCategEffect
+  AU_MAIN_TYPE kAudioUnitType_Effect
+
+  LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
+  LV2_SHARED_LIBRARY_NAME SurgeXT_FX
+
+  FORMATS ${SURGE_JUCE_FORMATS}
+)
+
+target_sources(${PROJECT_NAME} PRIVATE
+  SurgeFXEditor.cpp
+  SurgeFXEditor.h
+  SurgeFXProcessor.cpp
+  SurgeFXProcessor.h
+  SurgeLookAndFeel.h
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  surge::surge-common
+  surge-fx-binary
+  surge-juce
+  juce::juce_audio_utils
+  juce::juce_audio_processors
+)
+
+surge_juce_package(${PROJECT_NAME} "Surge XT Effects")
