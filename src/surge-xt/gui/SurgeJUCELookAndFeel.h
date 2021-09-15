@@ -27,6 +27,11 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
     void drawTextEditorOutline(juce::Graphics &graphics, int width, int height,
                                juce::TextEditor &editor) override;
 
+    juce::Button *createDocumentWindowButton(int i) override;
+    void drawDocumentWindowTitleBar(juce::DocumentWindow &window, juce::Graphics &graphics, int i,
+                                    int i1, int i2, int i3, const juce::Image *image,
+                                    bool b) override;
+
     int getTabButtonBestWidth(juce::TabBarButton &, int d) override;
     void drawTabButton(juce::TabBarButton &button, juce::Graphics &g, bool isMouseOver,
                        bool isMouseDown) override;
