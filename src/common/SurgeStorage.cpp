@@ -238,8 +238,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
 #if MAC
     char path[1024];
-    const char *buildOverrideDataPath = getenv("PIPELINE_OVERRIDE_DATA_HOME");
-    if (buildOverrideDataPath)
+    std::string buildOverrideDataPath;
+    if (getOverrideDataHome(buildOverrideDataPath))
     {
         hasSuppliedDataPath = true;
         suppliedDataPath = buildOverrideDataPath;
@@ -273,7 +273,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
-        const char *buildOverrideDataPath = getenv("PIPELINE_OVERRIDE_DATA_HOME");
         const char *xdgDataPath = getenv("XDG_DATA_HOME");
         std::string localDataPath = std::string(homePath) + "/.local/share/surge-xt/";
         if (xdgDataPath)
@@ -317,9 +316,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             }
         }
 
-        if (buildOverrideDataPath)
+        std::string buildOverrideDataPath;
+        if (getOverrideDataHome(buildOverrideDataPath))
         {
-            datapath = std::string(buildOverrideDataPath);
+            datapath = buildOverrideDataPath;
             std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
             std::cout << "         Only use this in build pipelines please!" << std::endl;
         }
@@ -427,6 +427,12 @@ bailOnPortable:
             path /= L"Surge XT";
             datapath = path_to_string(path);
         }
+    }
+
+    std::string orPath;
+    if (getOverrideDataHome(orPath))
+    {
+        datapath = orPath;
     }
 
     // Portable - first check for dllPath\\SurgeXTUserData
@@ -1266,6 +1272,24 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
+}
+
+bool SurgeStorage::getOverrideDataHome(std::string &v)
+{
+    bool r = false;
+    if (auto *c = getenv("PIPELINE_OVERRIDE_DATA_HOME"))
+    {
+        r = true;
+        v = c;
+    }
+
+    if (auto *c = getenv("SURGE_DATA_HOME"))
+    {
+        r = true;
+        v = c;
+    }
+
+    return r;
 }
 
 int SurgeStorage::get_clipboard_type() const { return clipboard_type; }
