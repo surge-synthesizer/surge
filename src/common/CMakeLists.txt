@@ -284,19 +284,27 @@ elseif(WIN32)
   )
 endif()
 
-add_custom_target(git-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMAND ${CMAKE_COMMAND} -D PROJECT_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR}
-                           -D PROJECT_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
-                           -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
-                           -D AZURE_PIPELINE=${AZURE_PIPELINE}
-                           -D WIN32=${WIN32}
-                           -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                           -D SURGE_COMPILER_INFO="${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
-                           -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
-)
+option(SURGE_RELIABLE_VERSION_INFO "Update version info on every build (off: generate only at configuration time)" ON)
+if(SURGE_RELIABLE_VERSION_INFO)
+  add_custom_target(version-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -D CMAKE_PROJECT_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR}
+                             -D CMAKE_PROJECT_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
+                             -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
+                             -D AZURE_PIPELINE=${AZURE_PIPELINE}
+                             -D WIN32=${WIN32}
+                             -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                             -D CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
+                             -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
+                             -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
+  )
+  add_dependencies(${PROJECT_NAME} version-info)
+else()
+  set(SURGESRC ${CMAKE_SOURCE_DIR})
+  set(SURGEBLD ${CMAKE_BINARY_DIR})
+  include(${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake)
+endif()
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
-add_dependencies(${PROJECT_NAME} git-info)
 
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC
