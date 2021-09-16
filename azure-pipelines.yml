@@ -209,7 +209,7 @@ jobs:
       - bash: |
           set -e
 
-          export PIPELINE_OVERRIDE_DATA_HOME=`pwd`/resources/data
+          export SURGE_DATA_HOME=`pwd`/resources/data
           cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
         displayName: all - build with cmake
         condition: variables.needsLV2
@@ -241,11 +241,7 @@ jobs:
 
           export PATH=$AGENT_TEMPDIRECTORY:$PATH
 
-          echo "Running HeadlessTest"
-          export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
-          mkdir -p $XDG_DATA_HOME
-          rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge-xt/"
-
+          export SURGE_DATA_HOME=`pwd`/resources/data
           ./build/src/surge-testrunner/surge-testrunner
         condition: variables.isLinuxUnitTest
         displayName: linux - run unit test
@@ -254,10 +250,8 @@ jobs:
           set -e
 
           export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-          mkdir "$HOME/Library/Application Support/Surge XT"
-          rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge XT/"
-
+          
+          export SURGE_DATA_HOME=`pwd`/resources/data
           ./build/src/surge-testrunner/Release/surge-testrunner
         condition: variables.isMacUnitTest
         displayName: macOS - run unit tests
