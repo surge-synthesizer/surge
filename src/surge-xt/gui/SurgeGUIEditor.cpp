@@ -1992,12 +1992,16 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
             .launchInDefaultBrowser();
     });
 
-    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Library..."), []() {
+        juce::URL("https://surge-synthesizer.github.io/skin-library").launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Manual..."), []() {
         juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
+    });
+
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
+        juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
     });
 
     settingsMenu.addSeparator();
