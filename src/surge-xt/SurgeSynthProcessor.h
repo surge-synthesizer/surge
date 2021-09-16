@@ -12,7 +12,7 @@
 
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
-#include "LockFreeStack.h"
+#include "util/LockFreeStack.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
 

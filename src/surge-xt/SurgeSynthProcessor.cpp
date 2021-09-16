@@ -11,7 +11,7 @@
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "DebugHelpers.h"
-#include "SurgeSynthFlavorExtensions.h"
+#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
 #include "CPUFeatures.h"
 

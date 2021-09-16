@@ -58,22 +58,22 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     #error
     #endif
     int main() {}" SURGE_ARCH_I386)
-        if (SURGE_ARCH_I386)
-            add_compile_options(-msse2 -mfpmath=sse)
-        endif ()
-    endif ()
+    if(SURGE_ARCH_I386)
+      add_compile_options(-msse2 -mfpmath=sse)
+    endif()
+  endif()
 
-    # Add AVX support
-    include(CheckCXXSourceCompiles)
-    check_cxx_source_compiles("
+  # Add AVX support
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("
 #if defined(__x86_64__) || defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
   #ifndef __AVX__
   #error
   #endif
 #endif
     int main() {}" COMPILER_HAS_AVX_OR_IS_ARM)
-  if (NOT COMPILER_HAS_AVX_OR_IS_ARM)
-    message(STATUS "Holding off on AVX support. See #4479 for the strategy" )
+  if(NOT COMPILER_HAS_AVX_OR_IS_ARM)
+    message(STATUS "Holding off on AVX support. See #4479 for the strategy")
     # add_compile_options("-mavx")
   endif()
 
@@ -88,7 +88,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
       -Werror=bitwise-op-parentheses
       -Werror=pointer-bool-conversion
     )
-    if (CMAKE_CXX_COMPILER_ID MATCHES "^AppleClang$")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "^AppleClang$")
       # Apple Clang only
       add_compile_options(
         -fasm-blocks
@@ -97,9 +97,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
     add_compile_options(
-        -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
-        -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
-        -Wno-return-local-addr # squelch sqlite3 error: function may return address of local variable
+      -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
+      -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
+      -Wno-return-local-addr # squelch sqlite3 error: function may return address of local variable
     )
   endif()
 endif()
@@ -134,16 +134,16 @@ if(MSVC)
 endif()
 # }}}
 # Source Groups {{{
-source_group( "Libraries" REGULAR_EXPRESSION "libs/" )
-source_group( "AirWindows" REGULAR_EXPRESSION "libs/airwindows/" )
-source_group( "Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp" )
-source_group( "Surge DSP" REGULAR_EXPRESSION "src/common/dsp" )
-source_group( "Surge FX" REGULAR_EXPRESSION "src/common/dsp/effects" )
-source_group( "Surge GUI" REGULAR_EXPRESSION "src/gui" )
-source_group( "Generated Code" REGULAR_EXPRESSION "version.cpp" )
-source_group( "Headless" REGULAR_EXPRESSION "src/headless" )
-source_group( "Surge XT Juce" REGULAR_EXPRESSION "src/surge_synth_juce" )
-source_group( "Surge FX Juce" REGULAR_EXPRESSION "src/surge_effects_bank" )
+source_group("Libraries" REGULAR_EXPRESSION "libs/")
+source_group("AirWindows" REGULAR_EXPRESSION "libs/airwindows/")
+source_group("Surge Core" REGULAR_EXPRESSION "src/common/.*\.cpp")
+source_group("Surge DSP" REGULAR_EXPRESSION "src/common/dsp")
+source_group("Surge FX" REGULAR_EXPRESSION "src/common/dsp/effects")
+source_group("Surge GUI" REGULAR_EXPRESSION "src/gui")
+source_group("Generated Code" REGULAR_EXPRESSION "version.cpp")
+source_group("Headless" REGULAR_EXPRESSION "src/headless")
+source_group("Surge XT Juce" REGULAR_EXPRESSION "src/surge_synth_juce")
+source_group("Surge FX Juce" REGULAR_EXPRESSION "src/surge_effects_bank")
 # }}}
 
 add_subdirectory(resources)
@@ -165,15 +165,15 @@ add_dependencies(code-quality-pipeline-checks download-extra-content)
 # Clang Format checks
 set(CLANG_FORMAT_DIRS src)
 set(CLANG_FORMAT_EXTS cpp h)
-foreach (dir ${CLANG_FORMAT_DIRS})
-  foreach (ext ${CLANG_FORMAT_EXTS})
+foreach(dir ${CLANG_FORMAT_DIRS})
+  foreach(ext ${CLANG_FORMAT_EXTS})
     list(APPEND CLANG_FORMAT_GLOBS "':(glob)${dir}/**/*.${ext}'")
-  endforeach ()
-endforeach ()
+  endforeach()
+endforeach()
 add_custom_command(TARGET code-quality-pipeline-checks
   POST_BUILD
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} -E echo About to check clang-format
   COMMAND git ls-files -- ${CLANG_FORMAT_GLOBS} | xargs clang-format --dry-run --Werror
-)
+  )
 # }}}

@@ -3,10 +3,11 @@ set(SURGE_PRODUCT_DIR ${CMAKE_BINARY_DIR}/surge_xt_products)
 file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 add_custom_target(surge-xt-distribution)
+add_custom_target(surge-staged-assets)
 add_custom_command(TARGET surge-xt-distribution
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt ${SURGE_PRODUCT_DIR}
-)
+  )
 
 function(surge_juce_package target product_name)
   get_target_property(output_dir ${target} RUNTIME_OUTPUT_DIRECTORY)
@@ -26,6 +27,8 @@ function(surge_juce_package target product_name)
       )
     endif()
   endforeach()
+
+  add_dependencies(surge-staged-assets ${pkg_target})
   add_dependencies(surge-xt-distribution ${pkg_target})
 
   # Add CMake install rules for UNIX only right now (macOS and Windows use installers)
@@ -60,7 +63,7 @@ function(surge_make_installers)
       POST_BUILD
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       COMMAND ${CMAKE_SOURCE_DIR}/scripts/${PATH} "${SURGE_PRODUCT_DIR}" "${CMAKE_SOURCE_DIR}" "${SURGE_XT_DIST_OUTPUT_DIR}" "${SXTVER}"
-    )
+      )
   endfunction()
 
   if(APPLE)
@@ -72,16 +75,16 @@ function(surge_make_installers)
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E tar cvf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip --format=zip ${SURGE_PRODUCT_DIR}
-    )
+      )
     find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
     if(SURGE_NUGET_EXE)
-      message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}" )
+      message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
       add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
         COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge${SURGE_BITNESS}.iss"
-    )
+        )
     else()
       message(STATUS "NuGet not found, not creating InnoSetup installer")
     endif()

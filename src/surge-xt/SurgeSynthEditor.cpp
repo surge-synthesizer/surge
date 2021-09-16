@@ -13,7 +13,7 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
-#include "SurgeSynthFlavorExtensions.h"
+#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "SurgeJUCELookAndFeel.h"
 #include "RuntimeFont.h"
 #include <version.h>
