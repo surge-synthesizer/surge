@@ -2,293 +2,293 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
-- xt-alpha
-- release-xt/*
+  - main
+  - xt-alpha
+  - release-xt/*
 
 pr:
-- main
-- xt-alpha
+  - main
+  - xt-alpha
 
 jobs:
-- job: Build
-  variables:
-    defaultTargets: "surge-xt_Packaged surge-fx_Packaged"
-  strategy:
-    matrix:
-      macOS-unit-test:
-        imageName: 'macos-10.15'
-        isMac: True
-        isMacUnitTest: True
-        cmakeArguments: "-GXcode"
-        cmakeTarget: "surge-headless"
-        cmakeConfig: "Release"
-        xcodePath: "/Applications/Xcode_12.2.app"
-      macOS-x86:
-        imageName: 'macos-10.15'
-        isMac: True
-        isMacFat: True
-        cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
-        cmakeTarget: $(defaultTargets)
-        cmakeConfig: "Debug"
-        xcodePath: "/Applications/Xcode_12.2.app"
-      macOS-arm:
-        imageName: 'macos-10.15'
-        isMac: True
-        isMacFat: True
-        cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
-        cmakeTarget: $(defaultTargets)
-        cmakeConfig: "Debug"
-        xcodePath: "/Applications/Xcode_12.2.app"
-      windows-x64:
-        imageName: 'windows-2019'
-        isWindows: True
-        cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
-        cmakeConfig: "Debug"
-        cmakeTarget: $(defaultTargets)
-      windows-x86-vs2017:
-        imageName: 'vs2017-win2016'
-        isWindows: True
-        cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
-        cmakeConfig: "Debug"
-        cmakeTarget: $(defaultTargets)
-      windows-unittest:
-        imageName: 'vs2017-win2016'
-        isWindows: True
-        isWindowsUnitTest: True
-        cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
-        cmakeConfig: "Release"
-        cmakeTarget: "surge-headless"
-      linux-codequality:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        aptGetExtras: ""
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: "code-quality-pipeline-checks"
-        cmakeConfig: "Debug"
-      linux-pythonapi:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        aptGetExtras: ""
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
-        cmakeTarget: "surgepy"
-        cmakeConfig: "Debug"
-      linux-clang-juce:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        aptGetExtras: "clang"
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
-        cmakeTarget: "surge-xt_Standalone"
-        cmakeConfig: "Debug"
-      linux-aarm64-cross-headless:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        aptGetExtras: "g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi" 
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake"
-        cmakeTarget: "surge-headless"
-        cmakeConfig: "Debug"
-      linux-juce-targets:
-        imageName: 'ubuntu-18.04'
-        isLinux: True
-        cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-        cmakeTarget: $(defaultTargets)
-        cmakeConfig: "Debug"
-      linux-unittest:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        isLinuxUnitTest: True
-        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
-        cmakeConfig: "Release"
-        cmakeTarget: "surge-headless"
-      linux-lv2:
-        imageName: 'ubuntu-20.04'
-        isLinux: True
-        needsLV2: True
-        cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
-        cmakeConfig: "Release"
-        cmakeTarget: "surge-xt_LV2"
+  - job: Build
+    variables:
+      defaultTargets: "surge-xt_Packaged surge-fx_Packaged"
+    strategy:
+      matrix:
+        macOS-unit-test:
+          imageName: 'macos-10.15'
+          isMac: True
+          isMacUnitTest: True
+          cmakeArguments: "-GXcode"
+          cmakeTarget: "surge-testrunner"
+          cmakeConfig: "Release"
+          xcodePath: "/Applications/Xcode_12.2.app"
+        macOS-x86:
+          imageName: 'macos-10.15'
+          isMac: True
+          isMacFat: True
+          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
+          cmakeTarget: $(defaultTargets)
+          cmakeConfig: "Debug"
+          xcodePath: "/Applications/Xcode_12.2.app"
+        macOS-arm:
+          imageName: 'macos-10.15'
+          isMac: True
+          isMacFat: True
+          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
+          cmakeTarget: $(defaultTargets)
+          cmakeConfig: "Debug"
+          xcodePath: "/Applications/Xcode_12.2.app"
+        windows-x64:
+          imageName: 'windows-2019'
+          isWindows: True
+          cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
+          cmakeConfig: "Debug"
+          cmakeTarget: $(defaultTargets)
+        windows-x86-vs2017:
+          imageName: 'vs2017-win2016'
+          isWindows: True
+          cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
+          cmakeConfig: "Debug"
+          cmakeTarget: $(defaultTargets)
+        windows-unittest:
+          imageName: 'vs2017-win2016'
+          isWindows: True
+          isWindowsUnitTest: True
+          cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
+          cmakeConfig: "Release"
+          cmakeTarget: "surge-testrunner"
+        linux-codequality:
+          imageName: 'ubuntu-20.04'
+          isLinux: True
+          aptGetExtras: ""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
+          cmakeTarget: "code-quality-pipeline-checks"
+          cmakeConfig: "Debug"
+        linux-pythonapi:
+          imageName: 'ubuntu-20.04'
+          isLinux: True
+          aptGetExtras: ""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
+          cmakeTarget: "surge-python"
+          cmakeConfig: "Debug"
+        linux-clang-juce:
+          imageName: 'ubuntu-18.04'
+          isLinux: True
+          aptGetExtras: "clang"
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+          cmakeTarget: "surge-xt_Standalone"
+          cmakeConfig: "Debug"
+        linux-aarm64-cross-headless:
+          imageName: 'ubuntu-18.04'
+          isLinux: True
+          aptGetExtras: "g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi"
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake"
+          cmakeTarget: "surge-testrunner"
+          cmakeConfig: "Debug"
+        linux-juce-targets:
+          imageName: 'ubuntu-18.04'
+          isLinux: True
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
+          cmakeTarget: $(defaultTargets)
+          cmakeConfig: "Debug"
+        linux-unittest:
+          imageName: 'ubuntu-20.04'
+          isLinux: True
+          isLinuxUnitTest: True
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
+          cmakeConfig: "Release"
+          cmakeTarget: "surge-testrunner"
+        linux-lv2:
+          imageName: 'ubuntu-20.04'
+          isLinux: True
+          needsLV2: True
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
+          cmakeConfig: "Release"
+          cmakeTarget: "surge-xt_LV2"
 
-  pool:
-    vmImage: $(imageName)
+    pool:
+      vmImage: $(imageName)
 
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
+    steps:
+      - checkout: self
+        fetchDepth: 1
+        # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
-  - bash: |
-     echo "BUILD REASON   = " $BUILD_REASON
-     echo "cmakeArguments = " $(cmakeArguments)
-     echo "cmakeTarget    = " $(cmakeTarget)
-     echo "cmakeConfig    = " $(cmakeConfig)
-     echo "aptGetExtras   = " $(aptGetExtras)
-    displayName: all - details on build
-    
-  - bash: |
-      # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
+      - bash: |
+          echo "BUILD REASON   = " $BUILD_REASON
+          echo "cmakeArguments = " $(cmakeArguments)
+          echo "cmakeTarget    = " $(cmakeTarget)
+          echo "cmakeConfig    = " $(cmakeConfig)
+          echo "aptGetExtras   = " $(aptGetExtras)
+        displayName: all - details on build
 
-      # Pipelines be timin out. Try this thrice. Should be cheap if it works.
-      . ./scripts/misc/defensive-submodule.sh
-      . ./scripts/misc/defensive-submodule.sh
-      . ./scripts/misc/defensive-submodule.sh
-    displayName: all - submodule init
+      - bash: |
+          # do this here, because we're using a shallow clone and it fails using `submodules: recursive` above
 
-
-  - bash: |
-      set -e
-
-      echo "aptGetExtras are $(aptGetExtras)"
-      sudo apt-get update
-
-      sudo apt-get install -y \
-          devscripts \
-          libxcb-cursor-dev \
-          libxcb-keysyms1-dev \
-          libxcb-util-dev \
-          libxkbcommon-dev \
-          libxkbcommon-x11-dev \
-          ninja-build \
-          xcb \
-          $(aptGetExtras)
-
-        # These are the JUCE deps
-        sudo apt-get install -y libgtk-3-dev
-        sudo apt-get install -y libwebkit2gtk-4.0
-        sudo apt-get install -y libwebkit2gtk-4.0-dev
-        sudo apt-get install -y libcurl4-openssl-dev
-        sudo apt-get install -y alsa
-        sudo apt-get install -y alsa-tools
-        sudo apt-get install -y libasound2-dev
-        sudo apt-get install -y libjack-dev
-        sudo apt-get install -y libfreetype6-dev
-        sudo apt-get install -y libxinerama-dev
-        sudo apt-get install -y libxcb-xinerama0
-        sudo apt-get install -y libxinerama1
-        sudo apt-get install -y x11proto-xinerama-dev
-        sudo apt-get install -y libxrandr-dev
-        sudo apt-get install -y libgl1-mesa-dev
-        sudo apt-get install -y libxcursor-dev
-        sudo apt-get install -y libxcursor1
-        sudo apt-get install -y libxcb-cursor-dev
-        sudo apt-get install -y libxcb-cursor0
-        sudo apt-get install -y --fix-missing
-
-    condition: variables.isLinux
-    displayName: linux - run apt-get
+          # Pipelines be timin out. Try this thrice. Should be cheap if it works.
+          . ./scripts/misc/defensive-submodule.sh
+          . ./scripts/misc/defensive-submodule.sh
+          . ./scripts/misc/defensive-submodule.sh
+        displayName: all - submodule init
 
 
-  - bash: |
-      set -e
-      sudo xcode-select -s $(xcodePath)
-    displayName: mac - run xcode-select
-    condition: variables.isMac
+      - bash: |
+          set -e
 
-  - bash: |
-      set -e
-      cd libs
-      sudo apt-get install -y lv2-dev
-      git clone --depth 1 --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
-      cd JUCE-lv2
-      git checkout lv2
+          echo "aptGetExtras are $(aptGetExtras)"
+          sudo apt-get update
 
-      cd ..
-    displayName: linux - grab LV2 JUCE
-    condition: variables.needsLV2
+          sudo apt-get install -y \
+              devscripts \
+              libxcb-cursor-dev \
+              libxcb-keysyms1-dev \
+              libxcb-util-dev \
+              libxkbcommon-dev \
+              libxkbcommon-x11-dev \
+              ninja-build \
+              xcb \
+              $(aptGetExtras)
 
-  - bash: |
-      set -e
-      cmake -Bbuild $(cmakeArguments)
-    displayName: all - configure with cmake 
+            # These are the JUCE deps
+            sudo apt-get install -y libgtk-3-dev
+            sudo apt-get install -y libwebkit2gtk-4.0
+            sudo apt-get install -y libwebkit2gtk-4.0-dev
+            sudo apt-get install -y libcurl4-openssl-dev
+            sudo apt-get install -y alsa
+            sudo apt-get install -y alsa-tools
+            sudo apt-get install -y libasound2-dev
+            sudo apt-get install -y libjack-dev
+            sudo apt-get install -y libfreetype6-dev
+            sudo apt-get install -y libxinerama-dev
+            sudo apt-get install -y libxcb-xinerama0
+            sudo apt-get install -y libxinerama1
+            sudo apt-get install -y x11proto-xinerama-dev
+            sudo apt-get install -y libxrandr-dev
+            sudo apt-get install -y libgl1-mesa-dev
+            sudo apt-get install -y libxcursor-dev
+            sudo apt-get install -y libxcursor1
+            sudo apt-get install -y libxcb-cursor-dev
+            sudo apt-get install -y libxcb-cursor0
+            sudo apt-get install -y --fix-missing
 
-  - bash: |
-      set -e
-      cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
-    displayName: all - build with cmake 
-    condition: not(variables.needsLV2)
-
-  - bash: |
-      set -e
-
-      export PIPELINE_OVERRIDE_DATA_HOME=`pwd`/resources/data
-      cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
-    displayName: all - build with cmake
-    condition: variables.needsLV2
-
-
-    #- bash: |
-  #    set -e
-  #    echo "Surge.component"
-  #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-  #  displayName: mac - lipo the AU
-  #  condition: variables.isMacFat
-
-  - bash: | 
-      set -e
-
-      mkdir -p "${LOCALAPPDATA}/Surge XT/"
-      cd resources/data && tar cf - . | ( cd "${LOCALAPPDATA}/Surge XT" && tar xf - ) && cd ../..
-
-      ls -l "${LOCALAPPDATA}/Surge XT/"
-      
-      build/src/headless/Release/surge-headless.exe
-
-    condition: variables.isWindowsUnitTest
-    displayName: windows - run unit tests
+        condition: variables.isLinux
+        displayName: linux - run apt-get
 
 
-  - bash: |
-      set -e
+      - bash: |
+          set -e
+          sudo xcode-select -s $(xcodePath)
+        displayName: mac - run xcode-select
+        condition: variables.isMac
 
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
+      - bash: |
+          set -e
+          cd libs
+          sudo apt-get install -y lv2-dev
+          git clone --depth 1 --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
+          cd JUCE-lv2
+          git checkout lv2
 
-      echo "Running HeadlessTest"
-      export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
-      mkdir -p $XDG_DATA_HOME
-      rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge-xt/"
+          cd ..
+        displayName: linux - grab LV2 JUCE
+        condition: variables.needsLV2
 
-      ./build/src/headless/surge-headless
-    condition: variables.isLinuxUnitTest
-    displayName: linux - run unit test
+      - bash: |
+          set -e
+          cmake -Bbuild $(cmakeArguments)
+        displayName: all - configure with cmake
 
-  - bash: |
-      set -e
+      - bash: |
+          set -e
+          cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
+        displayName: all - build with cmake
+        condition: not(variables.needsLV2)
 
-      export PATH=$AGENT_TEMPDIRECTORY:$PATH
-      
-      mkdir "$HOME/Library/Application Support/Surge XT"
-      rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge XT/"
-      
-      ./build/src/headless/Release/surge-headless
-    condition: variables.isMacUnitTest
-    displayName: macOS - run unit tests
+      - bash: |
+          set -e
 
-- job: NotifyReleases
-  dependsOn: Build
-  condition: succeeded()
-  pool:
-    vmImage: 'ubuntu-20.04'
+          export PIPELINE_OVERRIDE_DATA_HOME=`pwd`/resources/data
+          cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
+        displayName: all - build with cmake
+        condition: variables.needsLV2
 
-  steps:
-  - checkout: none
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: notify-releases.sh
+        #- bash: |
+      #    set -e
+      #    echo "Surge.component"
+      #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
+      #  displayName: mac - lipo the AU
+      #  condition: variables.isMacFat
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: notify-xt-releases.sh
+      - bash: |
+          set -e
 
-  - bash: |
-      echo "Notifying releases for branch: $BUILD_SOURCEBRANCH"
+          mkdir -p "${LOCALAPPDATA}/Surge XT/"
+          cd resources/data && tar cf - . | ( cd "${LOCALAPPDATA}/Surge XT" && tar xf - ) && cd ../..
 
-      # remove refs/heads/
-      export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
+          ls -l "${LOCALAPPDATA}/Surge XT/"
 
-      if ! [[ $BRANCH =~ ^(main|release-xt/.+)$ ]]; then
-        exit
-      fi
+          build/src/surge-testrunner/Release/surge-testrunner.exe
 
-      echo "Launching the XT Release Build"
-      . $AGENT_TEMPDIRECTORY/notify-xt-releases.sh $BRANCH
-    displayName: Notify Releases
+        condition: variables.isWindowsUnitTest
+        displayName: windows - run unit tests
+
+
+      - bash: |
+          set -e
+
+          export PATH=$AGENT_TEMPDIRECTORY:$PATH
+
+          echo "Running HeadlessTest"
+          export XDG_DATA_HOME=$AGENT_TEMPDIRECTORY/XH
+          mkdir -p $XDG_DATA_HOME
+          rsync -r --delete "resources/data/" "$XDG_DATA_HOME/surge-xt/"
+
+          ./build/src/surge-testrunner/surge-testrunner
+        condition: variables.isLinuxUnitTest
+        displayName: linux - run unit test
+
+      - bash: |
+          set -e
+
+          export PATH=$AGENT_TEMPDIRECTORY:$PATH
+
+          mkdir "$HOME/Library/Application Support/Surge XT"
+          rsync -r --delete "resources/data/" "$HOME/Library/Application Support/Surge XT/"
+
+          ./build/src/surge-testrunner/Release/surge-testrunner
+        condition: variables.isMacUnitTest
+        displayName: macOS - run unit tests
+
+  - job: NotifyReleases
+    dependsOn: Build
+    condition: succeeded()
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    steps:
+      - checkout: none
+
+      - task: DownloadSecureFile@1
+        inputs:
+          secureFile: notify-releases.sh
+
+      - task: DownloadSecureFile@1
+        inputs:
+          secureFile: notify-xt-releases.sh
+
+      - bash: |
+          echo "Notifying releases for branch: $BUILD_SOURCEBRANCH"
+
+          # remove refs/heads/
+          export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
+
+          if ! [[ $BRANCH =~ ^(main|release-xt/.+)$ ]]; then
+            exit
+          fi
+
+          echo "Launching the XT Release Build"
+          . $AGENT_TEMPDIRECTORY/notify-xt-releases.sh $BRANCH
+        displayName: Notify Releases

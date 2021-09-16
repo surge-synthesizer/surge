@@ -6,13 +6,19 @@
 #include <utility>
 
 #include "SurgeSynthesizer.h"
-#include "HeadlessPluginLayerProxy.h"
 #include "version.h"
 #include "filesystem/import.h"
 
 namespace py = pybind11;
 
-static std::unique_ptr<HeadlessPluginLayerProxy> spysetup_parent = nullptr;
+class PythonPluginLayerProxy : public SurgeSynthesizer::PluginLayer
+{
+  public:
+    void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float d) override {}
+    void surgeMacroUpdated(long macroNum, float d) override {}
+};
+
+static std::unique_ptr<PythonPluginLayerProxy> spysetup_parent = nullptr;
 static std::mutex spysetup_mutex;
 
 /*
@@ -815,7 +821,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 SurgeSynthesizer *createSurge(float sr)
 {
     if (spysetup_parent == nullptr)
-        spysetup_parent = std::make_unique<HeadlessPluginLayerProxy>();
+        spysetup_parent = std::make_unique<PythonPluginLayerProxy>();
     auto surge = new SurgeSynthesizerWithPythonExtensions(spysetup_parent.get());
     surge->setSamplerate(sr);
     surge->time_data.tempo = 120;
