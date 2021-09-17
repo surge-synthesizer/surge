@@ -43,7 +43,6 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     DefaultPatchAuthor,
     DefaultPatchComment,
     ModWindowShowsValues,
-    SkinReloadViaF5,
     LayoutGridResolution,
 
     ShowVirtualKeyboard_Plugin,
@@ -61,6 +60,9 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     TabKeyArmsModulators,
 
     InfoWindowPopupOnIdle,
+
+    UseKeyboardShortcuts_Plugin,
+    UseKeyboardShortcuts_Standalone,
 
     nKeys
 };

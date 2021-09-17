@@ -246,6 +246,90 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
     }
 }
 
+void SurgeGUIEditor::changeSelectedOsc(int value)
+{
+    auto tabPosMem = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, 0);
+
+    if (tabPosMem)
+    {
+        current_osc[current_scene] = value;
+    }
+    else
+    {
+        for (int i = 0; i < n_scenes; i++)
+        {
+            current_osc[i] = value;
+        }
+    }
+
+    queue_refresh = true;
+}
+
+void SurgeGUIEditor::changeSelectedScene(int value)
+{
+    current_scene = value;
+
+    synth->release_if_latched[synth->storage.getPatch().scene_active.val.i] = true;
+    synth->storage.getPatch().scene_active.val.i = current_scene;
+
+    if (isAnyOverlayPresent(MSEG_EDITOR))
+    {
+        auto ld = &(synth->storage.getPatch()
+                        .scene[current_scene]
+                        .lfo[modsource_editor[current_scene] - ms_lfo1]);
+
+        if (ld->shape.val.i == lt_mseg)
+        {
+            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+        }
+        else
+        {
+            closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+        }
+    }
+
+    if (isAnyOverlayPresent(FORMULA_EDITOR))
+    {
+        auto ld = &(synth->storage.getPatch()
+                        .scene[current_scene]
+                        .lfo[modsource_editor[current_scene] - ms_lfo1]);
+
+        if (ld->shape.val.i == lt_formula)
+        {
+            showOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+        }
+        else
+        {
+            closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+        }
+    }
+
+    refresh_mod();
+
+    queue_refresh = true;
+}
+
+void SurgeGUIEditor::refreshSkin()
+{
+    bitmapStore.reset(new SurgeImageStore());
+    bitmapStore->setupBuiltinBitmaps();
+
+    if (!currentSkin->reloadSkin(bitmapStore))
+    {
+        auto db = Surge::GUI::SkinDB::get();
+        std::string msg =
+            "Unable to load skin! Reverting the skin to Surge Classic.\n\nSkin error:\n" +
+            db->getAndResetErrorString();
+        currentSkin = db->defaultSkin(&(synth->storage));
+        currentSkin->reloadSkin(bitmapStore);
+        synth->storage.reportError(msg, "Skin Loading Error");
+    }
+
+    reloadFromSkin();
+    synth->refresh_editor = true;
+}
+
 int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *control,
                                                const juce::ModifierKeys &button,
                                                bool isDoubleClickEvent)
@@ -2413,28 +2497,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
     case tag_scene_select:
     {
-        current_scene = (int)(control->getValue() * 1.f) + 0.5f;
-        synth->release_if_latched[synth->storage.getPatch().scene_active.val.i] = true;
-        synth->storage.getPatch().scene_active.val.i = current_scene;
-        // synth->storage.getPatch().param_ptr[scene_select_pid]->set_value_f01(control->getValue());
+        changeSelectedScene((int)(control->getValue() * 1.f) + 0.5f);
 
-        if (isAnyOverlayPresent(MSEG_EDITOR))
-        {
-            auto ld = &(synth->storage.getPatch()
-                            .scene[current_scene]
-                            .lfo[modsource_editor[current_scene] - ms_lfo1]);
-            if (ld->shape.val.i == lt_mseg)
-            {
-                showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-            }
-            else
-            {
-                closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-            }
-        }
-
-        refresh_mod();
-        queue_refresh = true;
         return;
     }
     break;
@@ -2535,20 +2599,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_osc_select:
     {
-        auto tabPosMem = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, 0);
+        changeSelectedOsc((int)(control->getValue() * 2.f + 0.5f));
 
-        if (tabPosMem)
-            current_osc[current_scene] = (int)(control->getValue() * 2.f + 0.5f);
-        else
-        {
-            for (int i = 0; i < n_scenes; i++)
-            {
-                current_osc[i] = (int)(control->getValue() * 2.f + 0.5f);
-            }
-        }
-
-        queue_refresh = true;
         return;
     }
     break;

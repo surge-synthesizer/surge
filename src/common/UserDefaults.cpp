@@ -111,9 +111,6 @@ void initMaps()
             case ModWindowShowsValues:
                 r = "modWindowShowsValues";
                 break;
-            case SkinReloadViaF5:
-                r = "skinReloadViaF5";
-                break;
             case LayoutGridResolution:
                 r = "layoutGridResolution";
                 break;
@@ -146,6 +143,12 @@ void initMaps()
                 break;
             case TabKeyArmsModulators:
                 r = "tabKeyArmsModulators";
+                break;
+            case UseKeyboardShortcuts_Plugin:
+                r = "useKeyboardShortcutsPlugin";
+                break;
+            case UseKeyboardShortcuts_Standalone:
+                r = "useKeyboardShortcutsStandalone";
                 break;
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
@@ -188,7 +191,7 @@ void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
                 std::ostringstream oss;
                 oss << "This version of Surge only reads version 1 defaults. You user defaults "
                        "version is "
-                    << version << ". Defaults ignored";
+                    << version << ". Defaults will be ignored!";
                 storage->reportError(oss.str(), "File Version Error");
                 return;
             }
@@ -203,13 +206,8 @@ void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
                 def->Attribute("type", &vt);
                 v.type = (UserDefaultValue::ValueType)vt;
 
-                if (stringsToKeys.find(v.keystring) == stringsToKeys.end())
-                {
-                    storage->reportError(std::string("Unknown key '") + v.keystring +
-                                             "' when loading UserDefaults.",
-                                         "User Defaults Error");
-                }
-                else
+                // silently disregard default keys we don't recognize
+                if (stringsToKeys.find(v.keystring) != stringsToKeys.end())
                 {
                     v.key = stringsToKeys[v.keystring];
                     defaultsFileContents[v.key] = v;
