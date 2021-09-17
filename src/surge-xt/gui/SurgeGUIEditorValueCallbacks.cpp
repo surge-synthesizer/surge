@@ -2587,7 +2587,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         synth->load_fx_needed = true;
         // queue_refresh = true;
-        synth->fx_reload[current_fx & 7] = true;
+        synth->fx_reload[limit_range(current_fx, 0, n_fx_slots - 1)] = true;
         synth->processThreadunsafeOperations();
 
         if (fxMenu && fxMenu->selectedIdx >= 0)
