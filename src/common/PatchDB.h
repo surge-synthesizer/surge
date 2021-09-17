@@ -80,6 +80,11 @@ struct PatchDB
 
     void addDebugMessage(const std::string &debug);
 
+    // Query APIs
+    std::vector<std::pair<std::string, int>> readAllFeatures();
+    std::vector<std::string> readAllFeatureValueString(const std::string &feature);
+    std::vector<int> readAllFeatureValueInt(const std::string &feature);
+
     // This is a temporary API point
     std::vector<patchRecord> rawQueryForNameLike(const std::string &nameLikeThis);
     std::vector<catRecord> rootCategoriesForType(const CatType t);

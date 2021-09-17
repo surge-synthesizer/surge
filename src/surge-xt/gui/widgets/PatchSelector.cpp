@@ -74,13 +74,57 @@ void PatchSelector::paint(juce::Graphics &g)
     g.drawText(author, auth,
                skin->getVersion() >= 2 ? juce::Justification::centredRight
                                        : juce::Justification::centredLeft);
+
+    // favorites rect
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+        g.reduceClipRegion(favoritesRect);
+        auto img = associatedBitmapStore->getImage(IDB_FAVORITE_BUTTON);
+        int yShift = 13 * ((favoritesHover ? 1 : 0) + (isFavorite ? 2 : 0));
+        img->drawAt(g, favoritesRect.getX(), favoritesRect.getY() - yShift, 1.0);
+    }
 }
 
+void PatchSelector::resized()
+{
+    auto fsize = 15;
+    favoritesRect = getLocalBounds()
+                        .withTrimmedBottom(getHeight() - fsize)
+                        .withTrimmedLeft(getWidth() - fsize)
+                        .reduced(1, 1)
+                        .translated(-2, 1);
+}
+
+void PatchSelector::mouseMove(const juce::MouseEvent &e)
+{
+    auto pfh = favoritesHover;
+    favoritesHover = false;
+    if (favoritesRect.contains(e.position.toInt()))
+    {
+        favoritesHover = true;
+    }
+    if (favoritesHover != pfh)
+    {
+        repaint();
+    }
+}
 void PatchSelector::mouseDown(const juce::MouseEvent &e)
 {
     if (e.mods.isMiddleButtonDown())
     {
         notifyControlModifierClicked(e.mods);
+        return;
+    }
+
+    if (favoritesRect.contains(e.position.toInt()))
+    {
+        isFavorite = !isFavorite;
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        if (sge)
+        {
+            sge->setPatchAsFavorite(isFavorite);
+        }
         return;
     }
 

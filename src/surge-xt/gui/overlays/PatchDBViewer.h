@@ -27,6 +27,7 @@ namespace Surge
 {
 namespace Overlays
 {
+class PatchDBFiltersDisplay;
 class PatchDBSQLTableModel;
 class PatchDBSQLTreeViewItem;
 
@@ -54,6 +55,7 @@ class PatchDBViewer : public OverlayComponent,
 
     std::unique_ptr<juce::TreeView> treeView;
     std::unique_ptr<PatchDBSQLTreeViewItem> treeRoot;
+    std::unique_ptr<PatchDBFiltersDisplay> filters;
 
     std::unique_ptr<juce::Button> doDebug;
     void buttonClicked(juce::Button *button) override;

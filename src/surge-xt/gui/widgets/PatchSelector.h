@@ -44,8 +44,13 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
         current_patch = patch;
     }
 
+    bool isFavorite{false};
+    void setIsFavorite(bool b)
+    {
+        isFavorite = b;
+        repaint();
+    }
     void setLabel(const std::string &l) { pname = l; }
-
     void setCategory(std::string l)
     {
         if (l.length())
@@ -74,7 +79,16 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
         repaint();
     }
 
+    void resized() override;
     void mouseDown(const juce::MouseEvent &event) override;
+    bool favoritesHover{false};
+    void mouseMove(const juce::MouseEvent &event) override;
+    void mouseExit(const juce::MouseEvent &event) override { endHover(); }
+    void endHover() override
+    {
+        favoritesHover = false;
+        repaint();
+    }
     void showClassicMenu(bool singleCategory = false);
     void openPatchBrowser();
 
@@ -89,6 +103,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
 
   protected:
+    juce::Rectangle<int> favoritesRect;
+
     std::string pname;
     std::string category;
     std::string author;

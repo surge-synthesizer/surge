@@ -22,6 +22,19 @@ namespace Surge
 {
 namespace Overlays
 {
+
+struct PatchDBFiltersDisplay : juce::Component
+{
+    PatchDBFiltersDisplay() {}
+    struct Item : juce::Component
+    {
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Item);
+    };
+
+    void paint(juce::Graphics &g) { g.fillAll(juce::Colours::orchid); }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBFiltersDisplay)
+};
+
 struct SharedTreeViewItem : public juce::TreeViewItem
 {
     SharedTreeViewItem(SurgeGUIEditor *ed, SurgeStorage *s) : editor(ed), storage(s) {}
@@ -130,6 +143,52 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CategoryItem);
     };
 
+    struct FeatureQueryItem : public SharedTreeViewItem
+    {
+
+        FeatureQueryItem(SurgeGUIEditor *ed, SurgeStorage *s, std::string feature, int type)
+            : SharedTreeViewItem(ed, s), feature(feature), type(type)
+        {
+        }
+        int type;
+        std::string feature;
+
+        bool mightContainSubItems() override { return true; }
+        void paintItem(juce::Graphics &g, int width, int height) override
+        {
+            juce::TreeViewItem::paintItem(g, width, height);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.drawText(juce::CharPointer_UTF8(feature.c_str()), 2, 0, width - 2, height,
+                       juce::Justification::centredLeft);
+        }
+
+        void itemOpennessChanged(bool isOpenNow) override
+        {
+            if (isOpenNow)
+            {
+
+                if (type == 1)
+                {
+                    auto res = storage->patchDB->readAllFeatureValueString(feature);
+                    for (auto r : res)
+                        addSubItem(new TextSubItem(editor, storage, r));
+                }
+                else
+                {
+                    auto res = storage->patchDB->readAllFeatureValueInt(feature);
+                    for (auto r : res)
+                        addSubItem(new TextSubItem(editor, storage, std::to_string(r)));
+                }
+            }
+            else
+            {
+                while (getNumSubItems() > 0)
+                    removeSubItem(0);
+            }
+        }
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FeatureQueryItem);
+    };
+
     struct SpecialQueryItem : public SharedTreeViewItem
     {
         enum SpecialType
@@ -171,6 +230,18 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
 
         void itemOpennessChanged(bool isOpenNow) override
         {
+            if (isOpenNow)
+            {
+                auto features = storage->patchDB->readAllFeatures();
+                for (auto f : features)
+                    addSubItem(new FeatureQueryItem(editor, storage, f.first, f.second));
+            }
+            else
+            {
+                while (getNumSubItems() > 0)
+                    removeSubItem(0);
+            }
+
             std::cout << type << " " << isOpenNow << std::endl;
         }
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpecialQueryItem);
@@ -311,6 +382,9 @@ void PatchDBViewer::createElements()
     doDebug->addListener(this);
     addAndMakeVisible(*doDebug);
 
+    filters = std::make_unique<PatchDBFiltersDisplay>();
+    addAndMakeVisible(*filters);
+
     executeQuery();
 }
 
@@ -330,8 +404,11 @@ void PatchDBViewer::resized()
     if (doDebug)
         doDebug->setBounds(420, 10, 100, 30);
 
+    if (filters)
+        filters->setBounds(200, 50, getWidth() - 202, 48);
+
     if (table)
-        table->setBounds(200, 50, getWidth() - 202, getHeight() - 52);
+        table->setBounds(200, 100, getWidth() - 202, getHeight() - 102);
 
     if (treeView)
         treeView->setBounds(2, 50, 196, getHeight() - 52);
