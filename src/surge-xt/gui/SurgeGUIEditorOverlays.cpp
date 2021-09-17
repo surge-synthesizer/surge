@@ -108,7 +108,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto w = getWindowSizeX() - xBuf * 2;
         auto h = getWindowSizeY() - yPos - xBuf;
         pt->setEnclosingParentPosition(juce::Rectangle<int>(xBuf, yPos, w, h));
-        pt->setEnclosingParentTitle("Patch DB Viewer");
+        pt->setEnclosingParentTitle("Patch Database");
         return pt;
     }
     break;
@@ -199,7 +199,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
             this, &(this->synth->storage), os, currentSkin);
         pt->setSkin(currentSkin, bitmapStore);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
-        pt->setEnclosingParentTitle("WaveTable Script Editor");
+        pt->setEnclosingParentTitle("Wavetable Script Editor");
         return pt;
     }
     break;
@@ -219,7 +219,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto c = b.getCentreX() - w / 2;
         auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 2);
         pt->setEnclosingParentPosition(p);
-        pt->setEnclosingParentTitle("WaveShaper Analysis");
+        pt->setEnclosingParentTitle("Waveshaper Analysis");
         pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
         return pt;
     }

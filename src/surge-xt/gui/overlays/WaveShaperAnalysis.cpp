@@ -114,7 +114,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
         g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::DBLabel));
         tx = tx.translated(0, 12);
-        g.drawText("Drive (db)", tx, juce::Justification::centred);
+        g.drawText("Drive (dB)", tx, juce::Justification::centred);
     }
 
     g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Title));
