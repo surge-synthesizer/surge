@@ -120,16 +120,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         }
     }
 
-  protected:
-#if PORTED_TO_JUCE
-    int32_t onKeyDown(const VstKeyCode &code,
-                      VSTGUI::CFrame *frame) override; ///< should return 1 if no further key down
-                                                       ///< processing should apply, otherwise -1
-    int32_t onKeyUp(const VstKeyCode &code,
-                    VSTGUI::CFrame *frame) override; ///< should return 1 if no further key up
-                                                     ///< processing should apply, otherwise -1
-#endif
-
   public:
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
 
@@ -146,6 +136,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, bool isForMacro, int ccid,
                                     Surge::GUI::IComponentTagValue *control);
+
+    void changeSelectedOsc(int value);
+    void changeSelectedScene(int value);
+
+    void refreshSkin();
 
   public:
     // to make file chooser async it has to stick around
@@ -656,6 +651,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getShowVirtualKeyboard();
     void setShowVirtualKeyboard(bool b);
     void toggleVirtualKeyboard();
+
+    bool getUseKeyboardShortcuts();
+    void setUseKeyboardShortcuts(bool b);
+    void toggleUseKeyboardShortcuts();
 
   private:
     bool scannedForMidiPresets = false;

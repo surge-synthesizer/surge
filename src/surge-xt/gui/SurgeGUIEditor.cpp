@@ -2866,13 +2866,24 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 {
     auto wfMenu = juce::PopupMenu();
 
-    // activate individual scene outputs
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Activate Individual Scene Outputs"), true,
                    (synth->activateExtraOutputs), [this]() {
                        this->synth->activateExtraOutputs = !this->synth->activateExtraOutputs;
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::ActivateExtraOutputs,
                            this->synth->activateExtraOutputs ? 1 : 0);
+                   });
+
+    wfMenu.addSeparator();
+
+    bool tabPosMem = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"), true, tabPosMem,
+                   [this, tabPosMem]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene,
+                           !tabPosMem);
                    });
 
     bool msegSnapMem = Surge::Storage::getUserDefaultValue(
@@ -2885,7 +2896,8 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                            !msegSnapMem);
                    });
 
-    // wrap around browsing patches within current category
+    wfMenu.addSeparator();
+
     bool patchJogWrap = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::PatchJogWraparound, true);
 
@@ -2896,29 +2908,28 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, !patchJogWrap);
         });
 
-    // remember tab positions per scene
-    bool tabPosMem = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Remember Tab Positions Per Scene"), true, tabPosMem,
-                   [this, tabPosMem]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene,
-                           !tabPosMem);
-                   });
-
-    bool showVirtualKeyboard = getShowVirtualKeyboard();
-
-    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
-                   [this]() { toggleVirtualKeyboard(); });
+    wfMenu.addSeparator();
 
     bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::TabKeyArmsModulators, false);
+
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Tab Key Arms Modulators"), true, tabArm,
                    [this, tabArm]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::TabKeyArmsModulators, !tabArm);
                    });
+
+    bool kbShortcuts = getUseKeyboardShortcuts();
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Keyboard Shortcuts"), true, kbShortcuts,
+                   [this]() { toggleUseKeyboardShortcuts(); });
+
+    wfMenu.addSeparator();
+
+    bool showVirtualKeyboard = getShowVirtualKeyboard();
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Show Virtual Keyboard"), true, showVirtualKeyboard,
+                   [this]() { toggleVirtualKeyboard(); });
 
     return wfMenu;
 }
@@ -2926,15 +2937,13 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 bool SurgeGUIEditor::getShowVirtualKeyboard()
 {
     auto key = Surge::Storage::ShowVirtualKeyboard_Plugin;
-    bool defaultVal = false;
 
     if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
     {
         key = Surge::Storage::ShowVirtualKeyboard_Standalone;
-        defaultVal = false;
     }
 
-    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
+    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, false);
 }
 
 void SurgeGUIEditor::setShowVirtualKeyboard(bool b)
@@ -2958,6 +2967,37 @@ void SurgeGUIEditor::toggleVirtualKeyboard()
 
     setShowVirtualKeyboard(!getShowVirtualKeyboard());
     resizeWindow(zoomFactor);
+}
+
+bool SurgeGUIEditor::getUseKeyboardShortcuts()
+{
+    auto key = Surge::Storage::UseKeyboardShortcuts_Plugin;
+    bool defaultVal = false;
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::UseKeyboardShortcuts_Standalone;
+        defaultVal = true;
+    }
+
+    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
+}
+
+void SurgeGUIEditor::setUseKeyboardShortcuts(bool b)
+{
+    auto key = Surge::Storage::UseKeyboardShortcuts_Plugin;
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::UseKeyboardShortcuts_Standalone;
+    }
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+}
+
+void SurgeGUIEditor::toggleUseKeyboardShortcuts()
+{
+    setUseKeyboardShortcuts(!getUseKeyboardShortcuts());
 }
 
 juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
@@ -3054,24 +3094,8 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         skinSubMenu.addSeparator();
     }
 
-    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reload Current Skin"), [this]() {
-        this->bitmapStore.reset(new SurgeImageStore());
-        this->bitmapStore->setupBuiltinBitmaps();
-
-        if (!this->currentSkin->reloadSkin(this->bitmapStore))
-        {
-            auto *db = Surge::GUI::SkinDB::get();
-            auto msg = std::string("Unable to load skin! Reverting the skin to "
-                                   "Surge Classic.\n\nSkin error:\n") +
-                       db->getAndResetErrorString();
-            this->currentSkin = db->defaultSkin(&(this->synth->storage));
-            this->currentSkin->reloadSkin(this->bitmapStore);
-            synth->storage.reportError(msg, "Skin Loading Error");
-        }
-
-        reloadFromSkin();
-        this->synth->refresh_editor = true;
-    });
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reload Current Skin"),
+                        [this]() { refreshSkin(); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Rescan Skins"), [this]() {
         auto r = this->currentSkin->root;
@@ -5137,23 +5161,26 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         auto tk = Surge::Storage::getUserDefaultValue(
             &(this->synth->storage), Surge::Storage::DefaultKey::TabKeyArmsModulators, 0);
+
         if (!tk)
         {
             return false;
         }
+
         if (isAnyOverlayOpenAtAll())
         {
             return false;
         }
 
         toggle_mod_editing();
+
         return true;
     }
 
-    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    if (getUseKeyboardShortcuts())
     {
         // zoom actions
-        if (!key.getModifiers().isAnyModifierKeyDown() || key.getModifiers().isShiftDown())
+        if (key.getModifiers().isShiftDown())
         {
             int jog = 0;
 
@@ -5185,6 +5212,98 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             }
         }
 
+        // prev-next category
+        if (key.getModifiers().isShiftDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
+                                                 key.getKeyCode() == juce::KeyPress::rightKey))
+        {
+            closeOverlay(STORE_PATCH);
+
+            synth->incrementCategory(key.getKeyCode() == juce::KeyPress::rightKey);
+
+            return true;
+        }
+
+        // prev-next patch
+        if (key.getModifiers().isCommandDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
+                                                   key.getKeyCode() == juce::KeyPress::rightKey))
+        {
+            closeOverlay(STORE_PATCH);
+
+            auto insideCategory = Surge::Storage::getUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
+
+            synth->incrementPatch(key.getKeyCode() == juce::KeyPress::rightKey, insideCategory);
+
+            return true;
+        }
+
+        // toggle scene
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 's')
+        {
+            // TODO fix scene assumption! If we ever increase number of scenes, we will need
+            // individual key combinations for selecting a particular scene
+            // for now though, a simple toggle will do
+            changeSelectedScene(1 - current_scene);
+
+            return true;
+        }
+
+        // select oscillator
+        if (key.getModifiers().isAltDown() &&
+            (key.getTextCharacter() >= '1' && key.getTextCharacter() <= '1' + n_oscs - 1))
+        {
+            // juce::getTextCharacter() returns ASCII code of the char
+            // so subtract the first one we need to get the ordinal number of the osc, 0-based
+            changeSelectedOsc(key.getTextCharacter() - '1');
+
+            return true;
+        }
+
+        // store patch
+        // TODO: this one doesn't work for some reason. investigate why!
+        if (key.getModifiers().isCommandDown() && key.getTextCharacter() == 's')
+        {
+            showOverlay(SurgeGUIEditor::STORE_PATCH);
+
+            return true;
+        }
+
+        // toggle tuning editor
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 't')
+        {
+            toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
+
+            frame->repaint();
+
+            return true;
+        }
+
+        // toggle patch browser
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'p')
+        {
+            toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
+
+            frame->repaint();
+
+            return true;
+        }
+
+        // toggle a valid editor (MSEG, formula...)
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'e')
+        {
+            return true;
+        }
+
+        // toggle modulation list
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'm')
+        {
+            toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
+
+            frame->repaint();
+
+            return true;
+        }
+
         // toggle debug console
         if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'd')
         {
@@ -5212,22 +5331,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // reload current skin
         if (key.getKeyCode() == juce::KeyPress::F5Key)
         {
-            bitmapStore.reset(new SurgeImageStore());
-            bitmapStore->setupBuiltinBitmaps();
-
-            if (!currentSkin->reloadSkin(bitmapStore))
-            {
-                auto db = Surge::GUI::SkinDB::get();
-                std::string msg = "Unable to load skin! Reverting the skin to Surge "
-                                  "Classic.\n\nSkin error:\n" +
-                                  db->getAndResetErrorString();
-                currentSkin = db->defaultSkin(&(synth->storage));
-                currentSkin->reloadSkin(bitmapStore);
-                synth->storage.reportError(msg, "Skin Loading Error");
-            }
-
-            reloadFromSkin();
-            synth->refresh_editor = true;
+            refreshSkin();
 
             return true;
         }
@@ -5250,76 +5354,3 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
     return false;
 }
-
-#if PORTED_TO_JUCE
-int32_t SurgeGUIEditor::onKeyDown(const VstKeyCode &code, CFrame *frame)
-{
-#if RESOLVED_ISSUE_4383
-    if (code.virt != 0)
-    {
-        switch (code.virt)
-        {
-        case VKEY_F5:
-            if (Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                    Surge::Storage::SkinReloadViaF5, 0))
-            {
-                bitmapStore.reset(new SurgeBitmaps());
-                bitmapStore->setupBuiltinBitmaps(frame);
-
-                if (!currentSkin->reloadSkin(bitmapStore))
-                {
-                    auto &db = Surge::GUI::SkinDB::get();
-                    auto msg = std::string("Unable to load skin! Reverting the skin to Surge "
-                                           "Classic.\n\nSkin error:\n") +
-                               db.getAndResetErrorString();
-                    currentSkin = db.defaultSkin(&(synth->storage));
-                    currentSkin->reloadSkin(bitmapStore);
-                    synth->storage.reportError(msg, "Skin Loading Error");
-                }
-
-                reloadFromSkin();
-                synth->refresh_editor = true;
-            }
-
-            return 1;
-            break;
-        case VKEY_TAB:
-            if ((topmostEditorTag() == STORE_PATCH) || (typeinDialog && typeinDialog->isVisible()))
-            {
-                /*
-                ** SaveDialog gets access to the tab key to switch between fields if it is open
-                */
-                return -1;
-            }
-            toggle_mod_editing();
-            return 1;
-            break;
-        case VKEY_ESCAPE:
-            if (typeinDialog && typeinDialog->isVisible())
-            {
-                // important to do this first since it basically stops us listening to changes
-                typeinEditTarget = nullptr;
-
-                typeinDialog->setVisible(false);
-                removeFromFrame.push_back(typeinDialog);
-                typeinDialog = nullptr;
-                typeinMode = Inactive;
-                typeinResetCounter = -1;
-
-                return 1;
-            }
-            break;
-        case VKEY_RETURN:
-            if (typeinDialog && typeinDialog->isVisible())
-            {
-                typeinDialog->setVisible(false);
-            }
-            break;
-        }
-    }
-#endif
-    return -1;
-}
-
-int32_t SurgeGUIEditor::onKeyUp(const VstKeyCode &keyCode, CFrame *frame) { return -1; }
-#endif
