@@ -59,6 +59,7 @@ inline std::unordered_map<std::string, int> createIdNameMap()
     res["WAVESHAPER_BG"] = 183;
     res["WAVESHAPER_ANALYSIS"] = 184;
     res["MODMENU_ICONS"] = 185;
+    res["FAVORITE_BUTTON"] = 186;
     res["MSEG_NODES"] = 301;
     res["MSEG_MOVEMENT_MODE"] = 302;
     res["MSEG_VERTICAL_SNAP"] = 303;
@@ -129,6 +130,7 @@ inline std::unordered_set<int> allowedImageIds()
     allowed.insert(183);
     allowed.insert(184);
     allowed.insert(185);
+    allowed.insert(186);
     allowed.insert(301);
     allowed.insert(302);
     allowed.insert(303);

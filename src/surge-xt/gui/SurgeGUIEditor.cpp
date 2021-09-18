@@ -404,6 +404,7 @@ void SurgeGUIEditor::idle()
                 patchSelector->setLabel(synth->storage.getPatch().name);
                 patchSelector->setCategory(synth->storage.getPatch().category);
                 patchSelector->setAuthor(synth->storage.getPatch().author);
+                patchSelector->setIsFavorite(isPatchFavorite());
                 patchSelector->repaint();
             }
         }
@@ -1255,6 +1256,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setTag(tag_patchname);
             patchSelector->setSkin(currentSkin, bitmapStore);
             patchSelector->setLabel(synth->storage.getPatch().name);
+            patchSelector->setIsFavorite(isPatchFavorite());
             patchSelector->setCategory(synth->storage.getPatch().category);
             patchSelector->setIDs(synth->current_category_id, synth->patchid);
             patchSelector->setAuthor(synth->storage.getPatch().author);
@@ -5354,3 +5356,6 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
     return false;
 }
+
+void SurgeGUIEditor::setPatchAsFavorite(bool b) {}
+bool SurgeGUIEditor::isPatchFavorite() { return false; }

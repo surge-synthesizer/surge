@@ -201,7 +201,7 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "5"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "7"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -230,7 +230,7 @@ CREATE TABLE PatchFeature (
       id integer primary key,
       patch_id integer,
       feature varchar(64),
-      featurre_group int,
+      feature_type int,
       feature_ivalue int,
       feature_svalue varchar(64)
 );
@@ -454,6 +454,48 @@ CREATE TABLE DebugJunk (
                 res.emplace_back("AUTHOR", STRING, 0, meta->Attribute("author"));
             }
         }
+
+        auto parameters = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
+        auto par = parameters->FirstChildElement();
+
+        while (par)
+        {
+            std::string s = par->Value();
+            if (s == "scenemode")
+            {
+                int sm;
+                if (par->QueryIntAttribute("value", &sm) == TIXML_SUCCESS)
+                {
+                    res.emplace_back("SCENE_MODE", STRING, 0, scene_mode_names[sm]);
+                }
+            }
+
+            if (s.find("fx") == 0 && s.find("_type") != std::string::npos)
+            {
+                int sm;
+                if (par->QueryIntAttribute("value", &sm) == TIXML_SUCCESS)
+                {
+                    if (sm != 0)
+                    {
+                        res.emplace_back("FX", STRING, 0, fx_type_names[sm]);
+                    }
+                }
+            }
+            if (s.find("_filter") != std::string::npos && s.find("_type") != std::string::npos)
+            {
+                int sm;
+                if (par->QueryIntAttribute("value", &sm) == TIXML_SUCCESS)
+                {
+                    if (sm != 0)
+                    {
+                        res.emplace_back("FILTER", STRING, 0, fut_names[sm]);
+                    }
+                }
+            }
+
+            par = par->NextSiblingElement();
+        }
+
         return res;
     }
 
@@ -650,16 +692,18 @@ CREATE TABLE DebugJunk (
 
         try
         {
-            auto ins = SQL::Statement(dbh, "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
-                                           "\"feature_ivalue\", \"feature_svalue\" ) "
-                                           "VALUES ( ?1, ?2, ?3, ?4 )");
+            auto ins =
+                SQL::Statement(dbh, "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
+                                    "\"feature_type\", \"feature_ivalue\", \"feature_svalue\" ) "
+                                    "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
             auto feat = extractFeaturesFromXML(xml);
             for (auto f : feat)
             {
                 ins.bindi64(1, patchid);
                 ins.bind(2, std::get<0>(f));
-                ins.bind(3, std::get<2>(f));
-                ins.bind(4, std::get<3>(f));
+                ins.bind(3, (int)std::get<1>(f));
+                ins.bind(4, std::get<2>(f));
+                ins.bind(5, std::get<3>(f));
 
                 ins.step();
 
@@ -852,6 +896,78 @@ void PatchDB::addDebugMessage(const std::string &debug)
     worker->enqueueWorkItem(new WriterWorker::EnQDebugMsg(debug));
 }
 
+std::vector<std::pair<std::string, int>> PatchDB::readAllFeatures()
+{
+
+    std::vector<std::pair<std::string, int>> res;
+
+    // language=SQL
+    std::string query = "SELECT DISTINCT feature, feature_type from PatchFeature order by feature";
+    try
+    {
+        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
+        while (q.step())
+        {
+            res.emplace_back(q.col_str(0), q.col_int(1));
+        }
+        q.finalize();
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - readFeatures");
+    }
+    return res;
+}
+
+std::vector<std::string> PatchDB::readAllFeatureValueString(const std::string &feature)
+{
+
+    std::vector<std::string> res;
+
+    // language=SQL
+    std::string query = "SELECT DISTINCT feature_svalue from PatchFeature WHERE feature = ? "
+                        " order by feature_svalue";
+    try
+    {
+        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
+        q.bind(1, feature);
+        while (q.step())
+        {
+            res.emplace_back(q.col_str(0));
+        }
+        q.finalize();
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - readFeatures");
+    }
+    return res;
+}
+
+std::vector<int> PatchDB::readAllFeatureValueInt(const std::string &feature)
+{
+
+    std::vector<int> res;
+
+    // language=SQL
+    std::string query = "SELECT DISTINCT feature_ivalue from PatchFeature WHERE feature = ? "
+                        " order by feature_ivalue";
+    try
+    {
+        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
+        q.bind(1, feature);
+        while (q.step())
+        {
+            res.emplace_back(q.col_int(0));
+        }
+        q.finalize();
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - readFeatures");
+    }
+    return res;
+}
 // FIXME - push to worker perhaps?
 std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string &nameLikeThisP)
 {

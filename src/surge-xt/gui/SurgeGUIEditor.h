@@ -522,6 +522,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int infoQTag{-1};
     juce::Rectangle<int> infoQBounds;
 
+    /*
+     * Favorites support
+     */
+    void setPatchAsFavorite(bool b);
+    bool isPatchFavorite();
+
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
