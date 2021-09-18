@@ -37,16 +37,27 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     void mouseMove(const juce::MouseEvent &event) override
     {
         bool shouldH = false;
+
         if (labelArea.contains(event.position.toInt()))
+        {
             shouldH = true;
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
+
         if (shouldH != isLabelHovered)
         {
             isLabelHovered = shouldH;
             repaint();
         }
+
         bool shouldWH = false;
+
         if (waveArea.contains(event.position.toInt()))
+        {
             shouldWH = true;
+            setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+        }
+
         if (shouldWH != isWaveHovered)
         {
             isWaveHovered = shouldWH;
@@ -60,6 +71,8 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     {
         isWaveHovered = false;
         isLabelHovered = false;
+
+        setMouseCursor(juce::MouseCursor::NormalCursor);
         repaint();
     }
 

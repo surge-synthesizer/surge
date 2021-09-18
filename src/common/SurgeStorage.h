@@ -979,6 +979,7 @@ class alignas(16) SurgeStorage
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);
 
+    bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
 
     void refresh_wtlist();

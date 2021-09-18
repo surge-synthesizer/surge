@@ -76,38 +76,59 @@ struct MenuForDiscreteParams : public juce::Component,
         LEFT,
         RIGHT
     } glyphLocation = LEFT;
+
     void setDragGlyph(SurgeImage *d, int boxSize)
     {
         dragGlyph = d;
         dragGlyphBoxSize = boxSize;
     }
+
     void setDragGlyphHover(SurgeImage *d) { dragGlyphHover = d; }
+
     juce::Rectangle<float> glyphPosition;
-
-    void setGlyphMode(bool b) { glyphMode = b; }
     bool glyphMode{false};
-
-    void setBackgroundDrawable(SurgeImage *d) { bg = d; }
-    void setHoverBackgroundDrawable(SurgeImage *d) { bghover = d; }
     SurgeImage *bg{nullptr}, *bghover{nullptr};
 
+    void setGlyphMode(bool b) { glyphMode = b; }
+    void setBackgroundDrawable(SurgeImage *d) { bg = d; }
+    void setHoverBackgroundDrawable(SurgeImage *d) { bghover = d; }
+
     void paint(juce::Graphics &g) override;
+
     bool isHovered{false};
-    void mouseEnter(const juce::MouseEvent &e) override
+
+    void mouseEnter(const juce::MouseEvent &event) override
     {
         isHovered = true;
         repaint();
     }
-    void mouseExit(const juce::MouseEvent &e) override
+
+    void mouseMove(const juce::MouseEvent &event) override
     {
-        isHovered = false;
-        repaint();
+        if (glyphMode && glyphPosition.contains(event.position))
+        {
+            setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+        }
+        else
+        {
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
     }
+
+    void mouseExit(const juce::MouseEvent &event) override { endHover(); }
+
     void endHover() override
     {
         isHovered = false;
+
+        if (glyphMode)
+        {
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
+
         repaint();
     }
+
     juce::Point<int> mouseDownOrigin;
     bool isDraggingGlyph{false};
     float lastDragDistance{0};

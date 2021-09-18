@@ -17,14 +17,28 @@ function(surge_juce_package target product_name)
     add_dependencies(${pkg_target} ${target}_${format})
   endforeach()
   foreach(format AU Standalone VST3)
-    if(TARGET ${target}_${format})
-      add_custom_command(
-        TARGET ${pkg_target}
-        POST_BUILD
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND echo "${target}: Re-locating ${format} components"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${output_dir}/${format} ${SURGE_PRODUCT_DIR}/
-      )
+    if(NOT SURGE_COPY_TO_PRODUCTS)
+      # Add the copy rule to the pkg_target
+      if(TARGET ${target}_${format})
+        add_custom_command(
+          TARGET ${pkg_target}
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "${target}: Re-locating ${format} components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${output_dir}/${format} ${SURGE_PRODUCT_DIR}/
+        )
+      endif()
+    else()
+      # Add the copy rule to the target itself
+      if(TARGET ${target}_${format})
+        add_custom_command(
+          TARGET ${target}_${format}
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "${target}: Re-locating ${format} components"
+          COMMAND ${CMAKE_COMMAND} -E copy_directory ${output_dir}/${format} ${SURGE_PRODUCT_DIR}/
+        )
+      endif()
     endif()
   endforeach()
 

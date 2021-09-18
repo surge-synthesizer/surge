@@ -21,7 +21,7 @@ namespace Surge
    const char* Build::FullVersionStr = "@SURGE_FULL_VERSION@";
    const char* Build::BuildHost = "@SURGE_BUILD_FQDN@";
    const char* Build::BuildArch = "@SURGE_BUILD_ARCH@";
-   const char *Build::BuildCompiler = "@SURGE_COMPILER_INFO@";
+   const char *Build::BuildCompiler = "@CMAKE_CXX_COMPILER_ID@-@CMAKE_CXX_COMPILER_VERSION@";
 
    const char* Build::BuildLocation = "@SURGE_BUILD_LOCATION@";
 

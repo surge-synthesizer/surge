@@ -1683,6 +1683,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             // Lin doesn't cursor hide so this hand is bad there
             setMouseCursor(juce::MouseCursor::DraggingHandCursor);
         }
+
         return;
     }
 
@@ -1690,6 +1691,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         auto ha = getHAxisDoubleClickArea();
         auto where = event.position.toInt();
+
         if (ha.contains(where))
         {
             zoomToFull();
@@ -1714,7 +1716,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                     case hotzone::SEGMENT_ENDPOINT:
                     {
-
                         if (event.mods.isShiftDown() && h.associatedSegment >= 0)
                         {
                             Surge::MSEG::deleteSegment(ms, ms->segmentStart[h.associatedSegment]);
@@ -1723,14 +1724,20 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         {
                             Surge::MSEG::unsplitSegment(ms, t);
                         }
+
                         modelChanged();
+                        repaint();
+
                         return;
                     }
                     case hotzone::SEGMENT_CONTROL:
                     {
-                        // Reset the controlpoint to duration half value middle
+                        // Reset the control point to duration half value middle
                         Surge::MSEG::resetControlPoint(ms, t);
+
                         modelChanged();
+                        repaint();
+
                         return;
                     }
                     case hotzone::LOOP_START:
@@ -1751,16 +1758,23 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     Surge::MSEG::splitSegment(ms, t, v);
                 }
+
                 modelChanged();
+                repaint();
+
                 return;
             }
             else
             {
                 Surge::MSEG::extendTo(ms, t, v);
+
                 modelChanged();
+                repaint();
+
                 return;
             }
         }
+
         guaranteeCursorShown();
     }
 
@@ -1784,6 +1798,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 lassoSelector.reset(nullptr);
             }
+
             return;
         }
 
@@ -1818,6 +1833,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             h.active = false;
             h.dragging = false;
+
+            repaint();
         }
 
         snapGuard = nullptr;
