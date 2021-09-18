@@ -80,6 +80,10 @@
     <color id="waveshaper.text.hover" value="white"/>
     <color id="waveshaper.waveform.hover" value="white"/>
     <color id="waveshaper.waveform.dots" value="black"/>
+    <color id="waveshaper.analysis.background" value="#202020"/>
+    <color id="waveshaper.analysis.border" value="black"/>
+    <color id="waveshaper.analysis.dots" value="black"/>
+    <color id="waveshaper.analysis.text" value="lightgray"/>
 
     <color id="msegeditor.background" value="#202020"/>
     <color id="msegeditor.curve" value="modblue"/>
