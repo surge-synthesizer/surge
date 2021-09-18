@@ -110,7 +110,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         oss << std::fixed << std::setprecision(2) << sliderDb;
         g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::DBAmount));
         g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
-        g.drawText(oss.str().c_str(), tx, juce::Justification::centred);
+        g.drawText(oss.str(), tx, juce::Justification::centred);
 
         g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::DBLabel));
         tx = tx.translated(0, 12);

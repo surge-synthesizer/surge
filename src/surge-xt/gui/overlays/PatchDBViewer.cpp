@@ -46,8 +46,7 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
         {
             juce::TreeViewItem::paintItem(g, width, height);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.drawText(juce::CharPointer_UTF8(text.c_str()), 2, 0, width - 2, height,
-                       juce::Justification::centredLeft);
+            g.drawText(text, 2, 0, width - 2, height, juce::Justification::centredLeft);
         }
 
         std::string text;
@@ -66,8 +65,7 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
         {
             juce::TreeViewItem::paintItem(g, width, height);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.drawText(juce::CharPointer_UTF8(cat.leaf_name.c_str()), 2, 0, width - 2, height,
-                       juce::Justification::centredLeft);
+            g.drawText(cat.leaf_name, 2, 0, width - 2, height, juce::Justification::centredLeft);
         }
 
         void itemOpennessChanged(bool isOpenNow) override
@@ -106,7 +104,7 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
                 text = "Third Party";
             if (type == PatchStorage::PatchDB::USER)
                 text = "User";
-            g.drawText(text.c_str(), 2, 0, width - 2, height, juce::Justification::centredLeft);
+            g.drawText(text, 2, 0, width - 2, height, juce::Justification::centredLeft);
         }
 
         void itemOpennessChanged(bool isOpenNow) override
@@ -166,7 +164,7 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
                 break;
             }
             g.setColour(juce::Colours::black);
-            g.drawText(text.c_str(), 2, 0, width - 2, height, juce::Justification::centredLeft);
+            g.drawText(text, 2, 0, width - 2, height, juce::Justification::centredLeft);
         }
 
         void itemOpennessChanged(bool isOpenNow) override
@@ -242,7 +240,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
             break;
         }
         g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-        g.drawText(s.c_str(), 0, 0, width, height, juce::Justification::centredLeft);
+        g.drawText(s, 0, 0, width, height, juce::Justification::centredLeft);
     }
 
     void cellDoubleClicked(int rowNumber, int columnId, const juce::MouseEvent &event) override
