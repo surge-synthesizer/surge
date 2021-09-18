@@ -327,8 +327,7 @@ namespace JuceWidgets
 {
 namespace TabbedBar
 {
-extern const Surge::Skin::Color ActiveButtonBackground, InactiveButtonBackground, TabOutline, Text,
-    HoverText;
+extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Border, Text, TextHover;
 }
 } // namespace JuceWidgets
 } // namespace Colors

@@ -53,18 +53,20 @@ void SurgeJUCELookAndFeel::drawTabButton(juce::TabBarButton &button, juce::Graph
     }
 
     auto activeArea = button.getActiveArea();
-    auto fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::InactiveButtonBackground);
+    auto fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::InactiveTabBackground);
     auto textColor = skin->getColor(Colors::JuceWidgets::TabbedBar::Text);
+
     if (button.getToggleState())
     {
-        fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::ActiveButtonBackground);
-    }
-    if (isMouseOver || isMouseDown)
-    {
-        textColor = skin->getColor(Colors::JuceWidgets::TabbedBar::HoverText);
+        fillColor = skin->getColor(Colors::JuceWidgets::TabbedBar::ActiveTabBackground);
     }
 
-    g.setColour(skin->getColor(Colors::JuceWidgets::TabbedBar::TabOutline));
+    if (isMouseOver || isMouseDown)
+    {
+        textColor = skin->getColor(Colors::JuceWidgets::TabbedBar::TextHover);
+    }
+
+    g.setColour(skin->getColor(Colors::JuceWidgets::TabbedBar::Border));
     g.drawRect(activeArea);
 
     auto fa = activeArea.withTrimmedLeft(1).withTrimmedRight(1).withTrimmedBottom(1);
@@ -76,6 +78,7 @@ void SurgeJUCELookAndFeel::drawTabButton(juce::TabBarButton &button, juce::Graph
     g.setFont(f);
     g.drawText(button.getButtonText(), activeArea, juce::Justification::centred);
 }
+
 void SurgeJUCELookAndFeel::drawTextEditorOutline(juce::Graphics &g, int width, int height,
                                                  juce::TextEditor &textEditor)
 {
@@ -97,6 +100,7 @@ void SurgeJUCELookAndFeel::drawTextEditorOutline(juce::Graphics &g, int width, i
         }
     }
 }
+
 void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(juce::DocumentWindow &window,
                                                       juce::Graphics &g, int w, int h,
                                                       int titleSpaceX, int titleSpaceY,
@@ -104,34 +108,36 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(juce::DocumentWindow &wind
 {
     // You will have a reference to a skin here so can do skin->getColour and skin->getFont with no
     // problem. This color is a dumb one to pick of course but shows that it works.
-    g.fillAll(skin->getColor(Colors::MSEGEditor::GradientFill::StartColor));
+    g.fillAll(juce::Colour(48, 48, 48));
 
     g.setColour(juce::Colours::white);
 
-    auto surgeLabel = "Surge XT";
+    juce::String surgeLabel = "Surge XT";
     auto surgeVersion = Surge::Build::FullVersionStr;
-    auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(13);
-    auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(13);
+    auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14);
+    auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14);
 
-    // we will probably need these in final even though we don't use them here
-    auto sw = fontSurge.getStringWidth("Surge XT");
+    auto sw = fontSurge.getStringWidth(surgeLabel);
     auto vw = fontVersion.getStringWidth(surgeVersion);
 
     auto ic = associatedBitmapStore->getImage(IDB_SURGE_ICON);
 
-    // Surge Icon is 12 x 14 so draw that in the center
-    auto ix = w / 2 - 6;
-    auto iy = h / 2 - 7;
+    // Surge icon is 12 x 14 so draw that in the center
+    auto titleCenter = w / 2;
+    auto textMargin = 5;
+    auto titleTextWidth = sw + vw + textMargin;
 
     if (ic)
     {
-        ic->drawAt(g, ix, iy, 1.0);
+        ic->drawAt(g, titleCenter - (titleTextWidth / 2) - 14 - textMargin, h / 2 - 7, 1.0);
     }
 
-    auto boxSurge = juce::Rectangle<int>(0, 0, ix - 4, h);
+    auto boxSurge = juce::Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);
     g.setFont(fontSurge);
-    g.drawText(surgeLabel, boxSurge, juce::Justification::centredRight);
-    auto boxVersion = juce::Rectangle<int>(ix + 12 + 4, 0, ix - 12 - 4, h);
+    g.drawText(surgeLabel, boxSurge, juce::Justification::centredLeft);
+
+    auto boxVersion =
+        juce::Rectangle<int>(titleCenter - (titleTextWidth / 2) + sw + textMargin, 0, vw, h);
     g.setFont(fontVersion);
     g.drawText(surgeVersion, boxVersion, juce::Justification::centredLeft);
 }
@@ -150,7 +156,7 @@ class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
     {
         if (shouldDrawButtonAsHighlighted)
         {
-            g.setColour(juce::Colours::yellow);
+            g.setColour(Colour(96, 96, 96));
             g.fillAll();
         }
 
@@ -172,17 +178,18 @@ class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeJUCELookAndFeel_DocumentWindowButton)
 };
+
 juce::Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 {
     Path shape;
-    auto crossThickness = 0.15f;
+    auto crossThickness = 0.25f;
 
     if (buttonType == DocumentWindow::closeButton)
     {
         shape.addLineSegment({0.0f, 0.0f, 1.0f, 1.0f}, crossThickness);
         shape.addLineSegment({1.0f, 0.0f, 0.0f, 1.0f}, crossThickness);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("close", Colour(0xff9A131D), shape,
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("close", Colour(212, 64, 64), shape,
                                                              shape);
     }
 
@@ -190,8 +197,8 @@ juce::Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
     {
         shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimise", Colour(0xffaa8811), shape,
-                                                             shape);
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimise", Colour(255, 212, 32),
+                                                             shape, shape);
     }
 
     if (buttonType == DocumentWindow::maximiseButton)
