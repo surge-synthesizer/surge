@@ -439,10 +439,10 @@ namespace JuceWidgets
 {
 namespace TabbedBar
 {
-const Surge::Skin::Color ActiveButtonBackground("tabbar.activetab.background", 100, 50, 0),
-    InactiveButtonBackground("tabbar.inactivetab.background", 30, 30, 30),
-    TabOutline("tabbar.tab.outline", 180, 100, 0), Text("tabbar.text", 255, 255, 255),
-    HoverText("tabbar.hovertext", 255, 0x90, 0);
+const Surge::Skin::Color ActiveTabBackground("tabbar.active.background", 100, 50, 0),
+    InactiveTabBackground("tabbar.inactive.background", 30, 30, 30),
+    Border("tabbar.border", 180, 100, 0), Text("tabbar.text", 255, 255, 255),
+    TextHover("tabbar.text.hover", 255, 0x90, 0);
 }
 } // namespace JuceWidgets
 
