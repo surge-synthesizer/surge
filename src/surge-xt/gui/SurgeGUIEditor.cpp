@@ -1652,6 +1652,45 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
 
     fxGridMenu.addSeparator();
 
+    int fxSlotOrder[n_fx_slots] = {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+                                   fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+                                   fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+                                   fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
+
+    auto clearSlots = [this, fxSlotOrder](int fxchain) {
+        auto selfx = current_fx;
+
+        for (int i = 0; i < n_fx_slots; i++)
+        {
+            if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
+            {
+                fxMenu->setFxStorage(&synth->storage.getPatch().fx[fxSlotOrder[i]]);
+                fxMenu->setFxBuffer(&synth->fxsync[fxSlotOrder[i]]);
+                fxMenu->setCurrentFx(fxSlotOrder[i]);
+                fxMenu->loadByIndex(0);
+            }
+        }
+
+        fxMenu->setCurrentFx(selfx);
+    };
+
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX"), true, false,
+                       [this, clearSlots]() { clearSlots(0); });
+
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX"), true, false,
+                       [this, clearSlots]() { clearSlots(1); });
+
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX"), true, false,
+                       [this, clearSlots]() { clearSlots(2); });
+
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX"), true, false,
+                       [this, clearSlots]() { clearSlots(3); });
+
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX"), true, false,
+                       [this, clearSlots]() { clearSlots(-1); });
+
+    fxGridMenu.addSeparator();
+
     std::string sc = std::string("Scene ") + (char)('A' + whichScene);
 
     fxGridMenu.addItem(
