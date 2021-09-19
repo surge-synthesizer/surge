@@ -124,6 +124,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         if (sge)
         {
             sge->setPatchAsFavorite(isFavorite);
+            repaint();
         }
         return;
     }
@@ -208,6 +209,7 @@ void PatchSelector::showClassicMenu(bool single_category)
     }
     else
     {
+        bool addedFavorites = false;
         if (patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
             contextMenu.addSectionHeader("FACTORY PATCHES");
@@ -218,6 +220,7 @@ void PatchSelector::showClassicMenu(bool single_category)
             if (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory)
             {
                 std::string txt;
+                bool favs = false;
 
                 if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
                 {
@@ -225,17 +228,25 @@ void PatchSelector::showClassicMenu(bool single_category)
                 }
                 else
                 {
+                    favs = true;
                     txt = "USER PATCHES";
                 }
 
                 contextMenu.addColumnBreak();
                 contextMenu.addSectionHeader(txt);
+                if (favs && optionallyAddFavorites(contextMenu, false))
+                    contextMenu.addSeparator();
+                addedFavorites = true;
             }
 
             // remap index to the corresponding category in alphabetical order.
             int c = storage->patchCategoryOrdering[i];
 
             populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
+        }
+        if (!addedFavorites)
+        {
+            optionallyAddFavorites(contextMenu, true);
         }
     }
 
@@ -359,6 +370,42 @@ void PatchSelector::showClassicMenu(bool single_category)
     if (sge)
         o = sge->optionsForPosition(getBounds().getBottomLeft());
     contextMenu.showMenuAsync(o);
+}
+
+bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak)
+{
+    std::vector<std::pair<int, Patch>> favs;
+    int i = 0;
+    for (auto p : storage->patch_list)
+    {
+        if (p.isFavorite)
+        {
+            favs.emplace_back(i, p);
+        }
+        i++;
+    }
+
+    if (favs.empty())
+        return false;
+
+    std::sort(favs.begin(), favs.end(),
+              [](const auto &a, const auto &b) { return a.second.name < b.second.name; });
+
+    if (addColumnBreak)
+    {
+        p.addColumnBreak();
+        p.addSectionHeader("FAVORITES");
+    }
+
+    auto subMenu = juce::PopupMenu();
+    subMenu.addSectionHeader("FAVORITES");
+    for (auto f : favs)
+    {
+        subMenu.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
+                        [this, f]() { this->loadPatch(f.first); });
+    }
+    p.addSubMenu("Favorites", subMenu);
+    return true;
 }
 
 bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,

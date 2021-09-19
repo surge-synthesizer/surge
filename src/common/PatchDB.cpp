@@ -201,7 +201,7 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "7"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "9"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -248,6 +248,13 @@ CREATE TABLE DebugJunk (
 )
     )SQL";
 
+    // language=SQL
+    static constexpr const char *setup_user = R"SQL(
+CREATE TABLE IF NOT EXISTS Favorites (
+    id integer primary key,
+    path varchar(2048)
+);
+)SQL";
     struct EnQAble
     {
         virtual ~EnQAble() = default;
@@ -271,8 +278,16 @@ CREATE TABLE DebugJunk (
     struct EnQDebugMsg : public EnQAble
     {
         std::string msg;
-        EnQDebugMsg(const std::string msg) : msg(msg) {}
+        EnQDebugMsg(const std::string &msg) : msg(msg) {}
         void go(WriterWorker &w) override { w.addDebug(msg); }
+    };
+
+    struct EnQFavorite : public EnQAble
+    {
+        std::string path;
+        bool value;
+        EnQFavorite(const std::string &m, bool v) : path(m), value(v) {}
+        void go(WriterWorker &w) override { w.setFavorite(path, value); }
     };
 
     struct EnQCategory : public EnQAble
@@ -338,11 +353,16 @@ CREATE TABLE DebugJunk (
     {
         dbpath = storage->userDataPath / fs::path{"SurgePatches.db"};
         dbname = path_to_string(dbpath);
+    }
 
-        openDb();
-        if (dbh == nullptr)
-            return;
+    struct EnQSetup : EnQAble
+    {
+        EnQSetup() {}
+        void go(WriterWorker &w) { w.setupDatabase(); }
+    };
 
+    void setupDatabase()
+    {
         /*
          * OK check my version
          */
@@ -387,25 +407,39 @@ CREATE TABLE DebugJunk (
                 auto versql = std::string("INSERT INTO VERSION (\"schema_version\") VALUES (\"") +
                               schema_version + "\")";
                 SQL::Exec(dbh, versql);
+
+                SQL::Exec(dbh, setup_user);
             }
             catch (const SQL::Exception &e)
             {
                 storage->reportError(e.what(), "PatchDB Setup Error");
             }
         }
-        closeDb();
+    }
 
+    bool haveOpenedForWriteOnce{false};
+    void openForWrite()
+    {
+        if (haveOpenedForWriteOnce)
+            return;
+        // We know this is called in the lock so can manipulate pathQ properly
+        haveOpenedForWriteOnce = true;
+        std::cout << "CREATING THREAD " << std::endl;
         qThread = std::thread([this]() { this->loadQueueFunction(); });
+        pathQ.push_back(new EnQSetup());
     }
 
     ~WriterWorker()
     {
-        keepRunning = false;
-        qCV.notify_all();
-        qThread.join();
-        // clean up all the prepared statements
-        if (dbh)
-            sqlite3_close(dbh);
+        if (haveOpenedForWriteOnce)
+        {
+            keepRunning = false;
+            qCV.notify_all();
+            qThread.join();
+            // clean up all the prepared statements
+            if (dbh)
+                sqlite3_close(dbh);
+        }
     }
 
     // FIXME features shuld be an enum or something
@@ -513,7 +547,8 @@ CREATE TABLE DebugJunk (
 
                 while (keepRunning && pathQ.empty())
                 {
-                    closeDb();
+                    if (dbh)
+                        closeDb();
                     qCV.wait(lk);
                 }
 
@@ -526,6 +561,7 @@ CREATE TABLE DebugJunk (
                     pathQ.erase(b, e);
                 }
             }
+            if (!doThis.empty())
             {
                 if (!dbh)
                     openDb();
@@ -720,9 +756,33 @@ CREATE TABLE DebugJunk (
         }
     }
 
+    void setFavorite(const std::string &p, bool v)
+    {
+        try
+        {
+            if (v)
+            {
+                auto there = SQL::Statement(dbh, "INSERT INTO Favorites  (\"path\") VALUES (?1)");
+                there.bind(1, p);
+                there.step();
+                there.finalize();
+            }
+            else
+            {
+                auto there = SQL::Statement(dbh, "DELETE FROM Favorites WHERE path = ?1");
+                there.bind(1, p);
+                there.step();
+                there.finalize();
+            }
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+        }
+    }
+
     void addDebug(const std::string &m)
     {
-        std::cout << "Adding debugjunk " << m << std::endl;
         try
         {
             auto there = SQL::Statement(dbh, "INSERT INTO DebugJunk  (\"junk\") VALUES (?1)");
@@ -839,16 +899,17 @@ CREATE TABLE DebugJunk (
     {
         {
             std::lock_guard<std::mutex> g(qLock);
+            openForWrite();
+
             pathQ.push_back(p);
         }
         qCV.notify_all();
     }
 
-    sqlite3 *getReadOnlyConn()
+    sqlite3 *getReadOnlyConn(bool notifyOnError = true)
     {
         if (!rodbh)
         {
-            std::cout << "--OPEN" << std::endl;
             auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
             flag |= SQLITE_OPEN_READONLY;
 
@@ -856,10 +917,13 @@ CREATE TABLE DebugJunk (
 
             if (ec != SQLITE_OK)
             {
-                std::ostringstream oss;
-                oss << "An error occured opening r/o sqlite file '" << dbname
-                    << "'. The error was '" << sqlite3_errmsg(dbh) << "'.";
-                storage->reportError(oss.str(), "Surge Patch Database Error");
+                if (notifyOnError)
+                {
+                    std::ostringstream oss;
+                    oss << "An error occured opening r/o sqlite file '" << dbname
+                        << "'. The error was '" << sqlite3_errmsg(dbh) << "'.";
+                    storage->reportError(oss.str(), "Surge Patch Database Error");
+                }
                 rodbh = nullptr;
             }
         }
@@ -980,7 +1044,11 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
 
     try
     {
-        auto q = SQL::Statement(worker->getReadOnlyConn(), query);
+        auto conn = worker->getReadOnlyConn(false);
+        if (!conn)
+            return res;
+
+        auto q = SQL::Statement(conn, query);
         std::string nameLikeThis = "%" + nameLikeThisP + "%";
         q.bind(1, nameLikeThis);
 
@@ -1064,6 +1132,33 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
     }
 
     return res;
+}
+
+void PatchDB::isUserFavorite(const std::string &path, bool isIt)
+{
+    worker->enqueueWorkItem(new WriterWorker::EnQFavorite(path, isIt));
+}
+std::vector<std::string> PatchDB::readUserFavorites()
+{
+    auto conn = worker->getReadOnlyConn(false);
+    if (!conn)
+        return std::vector<std::string>();
+    try
+    {
+        auto res = std::vector<std::string>();
+        auto st = SQL::Statement(conn, "select path from Favorites;");
+        while (st.step())
+        {
+            res.push_back(st.col_str(0));
+        }
+        st.finalize();
+        return res;
+    }
+    catch (SQL::Exception &e)
+    {
+        storage->reportError(e.what(), "PatchDB - Loading Favorites");
+    }
+    return std::vector<std::string>();
 }
 
 } // namespace PatchStorage

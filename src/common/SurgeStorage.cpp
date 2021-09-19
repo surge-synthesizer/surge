@@ -495,6 +495,7 @@ bailOnPortable:
 
     load_midi_controllers();
 
+    patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
     bool loadWtAndPatch = true;
 
 #if !TARGET_RACK
@@ -504,7 +505,22 @@ bailOnPortable:
     {
         refresh_wtlist();
         refresh_patchlist();
+        auto favorites = patchDB->readUserFavorites();
+        std::unordered_set<std::string> favSet;
+        for (auto f : favorites)
+        {
+            favSet.insert(f);
+        }
+        for (auto &p : patch_list)
+        {
+            auto ps = p.path.u8string();
+            if (favSet.find(ps) != favSet.end())
+                p.isFavorite = true;
+            else
+                p.isFavorite = false;
+        }
     }
+
 #endif
 
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
@@ -696,10 +712,10 @@ void SurgeStorage::createUserDirectory()
 
 void SurgeStorage::initializePatchDb()
 {
-    if (patchDB)
+    if (patchDBInitialized)
         return;
 
-    patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
+    patchDBInitialized = true;
 
     auto catToType = [this](int q) {
         auto t = Surge::PatchStorage::PatchDB::CatType::FACTORY;
