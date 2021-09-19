@@ -849,7 +849,7 @@ struct Patch
     fs::path path;
     int category;
     int order;
-    bool fav;
+    bool isFavorite;
 };
 
 struct PatchCategory
@@ -955,6 +955,7 @@ class alignas(16) SurgeStorage
     ~SurgeStorage();
 
     std::unique_ptr<Surge::PatchStorage::PatchDB> patchDB;
+    bool patchDBInitialized{false};
     void initializePatchDb();
 
     std::unique_ptr<SurgePatch> _patch;

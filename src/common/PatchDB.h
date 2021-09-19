@@ -72,18 +72,20 @@ struct PatchDB
 
     std::unique_ptr<WriterWorker> worker;
 
+    // Write APIs
     void considerFXPForLoad(const fs::path &fxp, const std::string &name,
                             const std::string &catName, const CatType type) const;
-
     void addRootCategory(const std::string &name, CatType type);
     void addSubCategory(const std::string &name, const std::string &parent, CatType type);
-
     void addDebugMessage(const std::string &debug);
+
+    void isUserFavorite(const std::string &path, bool isIt);
 
     // Query APIs
     std::vector<std::pair<std::string, int>> readAllFeatures();
     std::vector<std::string> readAllFeatureValueString(const std::string &feature);
     std::vector<int> readAllFeatureValueInt(const std::string &feature);
+    std::vector<std::string> readUserFavorites();
 
     // This is a temporary API point
     std::vector<patchRecord> rawQueryForNameLike(const std::string &nameLikeThis);
