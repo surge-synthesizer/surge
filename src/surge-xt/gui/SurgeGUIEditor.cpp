@@ -1664,10 +1664,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
         {
             if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
             {
-                fxMenu->setFxStorage(&synth->storage.getPatch().fx[fxSlotOrder[i]]);
-                fxMenu->setFxBuffer(&synth->fxsync[fxSlotOrder[i]]);
-                fxMenu->setCurrentFx(fxSlotOrder[i]);
-                fxMenu->loadByIndex(0);
+                synth->enqueueFXOff(fxSlotOrder[i]);
             }
         }
 

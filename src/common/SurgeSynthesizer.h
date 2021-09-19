@@ -101,6 +101,7 @@ class alignas(16) SurgeSynthesizer
      */
     void processThreadunsafeOperations(bool doItEvenIfAudioIsRunningDANGER = false);
     bool loadFx(bool initp, bool force_reload_all);
+    void enqueueFXOff(int whichFX);
     bool loadOscalgos();
     bool load_fx_needed;
 
