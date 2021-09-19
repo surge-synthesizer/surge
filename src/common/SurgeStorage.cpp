@@ -716,6 +716,7 @@ void SurgeStorage::initializePatchDb()
         return;
 
     patchDBInitialized = true;
+    patchDB->prepareForWrites();
 
     auto catToType = [this](int q) {
         auto t = Surge::PatchStorage::PatchDB::CatType::FACTORY;

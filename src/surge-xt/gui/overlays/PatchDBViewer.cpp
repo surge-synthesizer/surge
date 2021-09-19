@@ -17,6 +17,7 @@
 #include "PatchDB.h"
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -342,7 +343,14 @@ PatchDBViewer::PatchDBViewer(SurgeGUIEditor *e, SurgeStorage *s)
     storage->initializePatchDb();
     createElements();
 }
-PatchDBViewer::~PatchDBViewer() { treeView->setRootItem(nullptr); };
+PatchDBViewer::~PatchDBViewer()
+{
+    treeView->setRootItem(nullptr);
+    if (countdownClock)
+    {
+        countdownClock->stopTimer();
+    }
+};
 
 void PatchDBViewer::createElements()
 {
@@ -383,9 +391,61 @@ void PatchDBViewer::createElements()
     filters = std::make_unique<PatchDBFiltersDisplay>();
     addAndMakeVisible(*filters);
 
-    executeQuery();
+    jobCountdown = std::make_unique<juce::Label>();
+    jobCountdown->setText("COUNTDOWN", juce::NotificationType::dontSendNotification);
+    jobCountdown->setColour(juce::Label::backgroundColourId,
+                            juce::Colour(0xFF, 0x90, 0).withAlpha(0.4f));
+    jobCountdown->setJustificationType(juce::Justification::centred);
+    jobCountdown->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(36));
+    addChildComponent(*jobCountdown);
+
+    if (storage->patchDB->numberOfJobsOutstanding() > 0)
+    {
+        checkJobsOverlay();
+    }
+    else
+    {
+        executeQuery();
+    }
 }
 
+struct CountdownTimer : public juce::Timer
+{
+    CountdownTimer(PatchDBViewer *d) : v(d) {}
+    PatchDBViewer *v{nullptr};
+    void timerCallback() override
+    {
+        if (v)
+            v->checkJobsOverlay();
+    }
+};
+void PatchDBViewer::checkJobsOverlay()
+{
+    auto jo = storage->patchDB->numberOfJobsOutstanding();
+    if (jo == 0)
+    {
+        jobCountdown->setVisible(false);
+        executeQuery();
+        if (countdownClock)
+        {
+            countdownClock->stopTimer();
+        }
+    }
+    else
+    {
+        jobCountdown->setText(fmt::format("Jobs Outstanding : {:d}", jo),
+                              juce::NotificationType::dontSendNotification);
+        jobCountdown->setVisible(true);
+        if (!countdownClock)
+        {
+            countdownClock = std::make_unique<CountdownTimer>(this);
+        }
+        if (!countdownClock->isTimerRunning())
+        {
+            countdownClock->startTimerHz(30);
+        }
+    }
+}
 void PatchDBViewer::executeQuery()
 {
     tableModel->executeQuery(nameTypein->getText().toStdString());
@@ -396,6 +456,9 @@ void PatchDBViewer::textEditorTextChanged(juce::TextEditor &editor) { executeQue
 void PatchDBViewer::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 void PatchDBViewer::resized()
 {
+    if (jobCountdown)
+        jobCountdown->setBounds(getLocalBounds());
+
     if (nameTypein)
         nameTypein->setBounds(10, 10, 400, 30);
 

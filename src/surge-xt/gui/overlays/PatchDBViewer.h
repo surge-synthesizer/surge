@@ -40,6 +40,7 @@ class PatchDBViewer : public OverlayComponent,
     ~PatchDBViewer();
     void createElements();
     void executeQuery();
+    void checkJobsOverlay();
 
     void paint(juce::Graphics &g) override;
 
@@ -59,6 +60,9 @@ class PatchDBViewer : public OverlayComponent,
 
     std::unique_ptr<juce::Button> doDebug;
     void buttonClicked(juce::Button *button) override;
+
+    std::unique_ptr<juce::Label> jobCountdown;
+    std::unique_ptr<juce::Timer> countdownClock;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBViewer);
 };

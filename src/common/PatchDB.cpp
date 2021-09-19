@@ -201,7 +201,7 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "9"; // I will rebuild if this is not my verion
+    static constexpr const char *schema_version = "10"; // I will rebuild if this is not my verion
 
     /*
      * Obviously a lot of thought needs to go into this
@@ -320,11 +320,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
     void openDb()
     {
-        std::cout << "--OPEN" << std::endl;
+        std::cout << ">>> Opening r/w DB" << std::endl;
         auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
-        std::cout << "\nPatchDB : Opening sqlitedb " << dbname << std::endl;
         auto ec = sqlite3_open_v2(dbname.c_str(), &dbh, flag, nullptr);
 
         if (ec != SQLITE_OK)
@@ -340,7 +339,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
     void closeDb()
     {
-        std::cout << "--CLOSE" << std::endl;
+        std::cout << "<<<< Closing r/w DB" << std::endl;
         if (dbh)
             sqlite3_close(dbh);
         dbh = nullptr;
@@ -361,8 +360,11 @@ CREATE TABLE IF NOT EXISTS Favorites (
         void go(WriterWorker &w) { w.setupDatabase(); }
     };
 
+    std::atomic<bool> hasSetup{false};
     void setupDatabase()
     {
+        std::cout << "PatchDB : Setup Database " << dbname << std::endl;
+        hasSetup = true;
         /*
          * OK check my version
          */
@@ -424,9 +426,16 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         // We know this is called in the lock so can manipulate pathQ properly
         haveOpenedForWriteOnce = true;
-        std::cout << "CREATING THREAD " << std::endl;
         qThread = std::thread([this]() { this->loadQueueFunction(); });
-        pathQ.push_back(new EnQSetup());
+
+        {
+            std::lock_guard<std::mutex> g(qLock);
+            pathQ.push_back(new EnQSetup());
+        }
+        qCV.notify_all();
+        while (!hasSetup)
+        {
+        }
     }
 
     ~WriterWorker()
@@ -899,7 +908,6 @@ CREATE TABLE IF NOT EXISTS Favorites (
     {
         {
             std::lock_guard<std::mutex> g(qLock);
-            openForWrite();
 
             pathQ.push_back(p);
         }
@@ -913,6 +921,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
             flag |= SQLITE_OPEN_READONLY;
 
+            std::cout << ">>>RO> Opening r/o DB" << std::endl;
             auto ec = sqlite3_open_v2(dbname.c_str(), &rodbh, flag, nullptr);
 
             if (ec != SQLITE_OK)
@@ -940,6 +949,7 @@ PatchDB::PatchDB(SurgeStorage *s) : storage(s) { initialize(); }
 PatchDB::~PatchDB() = default;
 
 void PatchDB::initialize() { worker = std::make_unique<WriterWorker>(storage); }
+void PatchDB::prepareForWrites() { worker->openForWrite(); }
 
 void PatchDB::considerFXPForLoad(const fs::path &fxp, const std::string &name,
                                  const std::string &catName, const CatType type) const
@@ -1066,7 +1076,14 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
     }
     catch (SQL::Exception &e)
     {
-        storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
+        if (e.rc == SQLITE_BUSY)
+        {
+            // Oh well
+        }
+        else
+        {
+            storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
+        }
     }
 
     return res;
@@ -1134,8 +1151,9 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
     return res;
 }
 
-void PatchDB::isUserFavorite(const std::string &path, bool isIt)
+void PatchDB::setUserFavorite(const std::string &path, bool isIt)
 {
+    prepareForWrites();
     worker->enqueueWorkItem(new WriterWorker::EnQFavorite(path, isIt));
 }
 std::vector<std::string> PatchDB::readUserFavorites()
@@ -1146,6 +1164,18 @@ std::vector<std::string> PatchDB::readUserFavorites()
     try
     {
         auto res = std::vector<std::string>();
+        auto hasFav = SQL::Statement(
+            conn, "SELECT count(*) from sqlite_master where tbl_name = \"Favorites\"");
+        int favCt = 0;
+        while (hasFav.step())
+        {
+            favCt = hasFav.col_int(0);
+        }
+        hasFav.finalize();
+
+        if (favCt == 0)
+            return std::vector<std::string>();
+
         auto st = SQL::Statement(conn, "select path from Favorites;");
         while (st.step())
         {
@@ -1156,9 +1186,16 @@ std::vector<std::string> PatchDB::readUserFavorites()
     }
     catch (SQL::Exception &e)
     {
+        // This error really doesn't matter most of the time
         storage->reportError(e.what(), "PatchDB - Loading Favorites");
     }
     return std::vector<std::string>();
+}
+
+int PatchDB::numberOfJobsOutstanding()
+{
+    std::lock_guard<std::mutex> guard(worker->qLock);
+    return worker->pathQ.size();
 }
 
 } // namespace PatchStorage
