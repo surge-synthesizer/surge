@@ -3163,6 +3163,15 @@ void SurgeSynthesizer::resetStateFromTimeData()
         storage.temposyncratio_inv = 1.f;
     }
 }
+
+void SurgeSynthesizer::enqueueFXOff(int whichFX)
+{
+    // this can come from the UI thread. I don't think we need the spawn mutex but we might
+    std::lock_guard<std::mutex> lg(fxSpawnMutex);
+    fxsync[whichFX].type.val.i = fxt_off;
+    load_fx_needed = true;
+}
+
 void SurgeSynthesizer::processControl()
 {
     processEnqueuedPatchIfNeeded();
