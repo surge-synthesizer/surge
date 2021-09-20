@@ -241,6 +241,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     std::string buildOverrideDataPath;
     if (getOverrideDataHome(buildOverrideDataPath))
     {
+        datapathOverriden = true;
         hasSuppliedDataPath = true;
         suppliedDataPath = buildOverrideDataPath;
     }
@@ -319,6 +320,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         std::string buildOverrideDataPath;
         if (getOverrideDataHome(buildOverrideDataPath))
         {
+            datapathOverriden = true;
             datapath = buildOverrideDataPath;
             std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
             std::cout << "         Only use this in build pipelines please!" << std::endl;
@@ -432,6 +434,7 @@ bailOnPortable:
     std::string orPath;
     if (getOverrideDataHome(orPath))
     {
+        datapathOverriden = true;
         datapath = orPath;
     }
 

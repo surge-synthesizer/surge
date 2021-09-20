@@ -921,7 +921,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
             flag |= SQLITE_OPEN_READONLY;
 
-            std::cout << ">>>RO> Opening r/o DB" << std::endl;
+            // std::cout << ">>>RO> Opening r/o DB" << std::endl;
             auto ec = sqlite3_open_v2(dbname.c_str(), &rodbh, flag, nullptr);
 
             if (ec != SQLITE_OK)

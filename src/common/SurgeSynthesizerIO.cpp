@@ -484,12 +484,19 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 #include <sys/stat.h>
 #endif
 
-void SurgeSynthesizer::savePatch()
+void SurgeSynthesizer::savePatch(bool factoryInPlace)
 {
     if (storage.getPatch().category.empty())
         storage.getPatch().category = "Default";
 
     fs::path savepath = storage.userPatchesPath;
+
+    if (factoryInPlace && patchid >= 0 && patchid < storage.patch_list.size())
+    {
+        auto fpath = storage.patch_list[patchid].path;
+        savePatchToPath(fpath);
+        return;
+    }
 
     try
     {

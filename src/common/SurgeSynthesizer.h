@@ -309,7 +309,7 @@ class alignas(16) SurgeSynthesizer
     void swapMetaControllers(int ct1, int ct2);
 
     void savePatchToPath(fs::path p);
-    void savePatch();
+    void savePatch(bool factoryInPlace = false);
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);

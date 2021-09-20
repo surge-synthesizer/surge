@@ -1155,6 +1155,19 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         s = meta->Attribute("author");
         if (s)
             author = s;
+
+        auto *tagsX = TINYXML_SAFE_TO_ELEMENT(meta->FirstChild("tags"));
+        tags.clear();
+        if (tagsX)
+        {
+            auto tag = TINYXML_SAFE_TO_ELEMENT(tagsX->FirstChildElement("tag"));
+            while (tag)
+            {
+                std::string tagName = tag->Attribute("tag");
+                tags.emplace_back(tagName);
+                tag = TINYXML_SAFE_TO_ELEMENT(tag->NextSiblingElement("tag"));
+            }
+        }
     }
 
     TiXmlElement *parameters = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
@@ -2244,6 +2257,15 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     meta.SetAttribute("category", this->category);
     meta.SetAttribute("comment", comment);
     meta.SetAttribute("author", author);
+
+    TiXmlElement tagsX("tags");
+    for (auto t : tags)
+    {
+        TiXmlElement tx("tag");
+        tx.SetAttribute("tag", t.tag);
+        tagsX.InsertEndChild(tx);
+    }
+    meta.InsertEndChild(tagsX);
     patch.InsertEndChild(meta);
 
     TiXmlElement parameters("parameters");

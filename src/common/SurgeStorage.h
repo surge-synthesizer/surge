@@ -822,6 +822,15 @@ class SurgePatch
 
     // metadata
     std::string name, category, author, comment;
+
+    struct Tag
+    {
+        Tag() : tag("no-tag") {}
+        Tag(const std::string &s) : tag(s) {}
+        std::string tag;
+    };
+    std::vector<Tag> tags;
+
     // macro controllers
 #define CUSTOM_CONTROLLER_LABEL_SIZE 20
     char CustomControllerLabel[n_customcontrollers][CUSTOM_CONTROLLER_LABEL_SIZE];
@@ -1026,6 +1035,7 @@ class alignas(16) SurgeStorage
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
+    bool datapathOverriden{false};
     fs::path datapath;
     fs::path userDefaultFilePath;
     fs::path userDataPath;

@@ -79,6 +79,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
         repaint();
     }
 
+    void setTags(const std::vector<SurgePatch::Tag> &itag) { tags = itag; }
+
     void resized() override;
     void mouseDown(const juce::MouseEvent &event) override;
     bool favoritesHover{false};
@@ -109,6 +111,7 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     std::string pname;
     std::string category;
     std::string author;
+    std::vector<SurgePatch::Tag> tags;
     int current_category = 0, current_patch = 0;
 
     /**
