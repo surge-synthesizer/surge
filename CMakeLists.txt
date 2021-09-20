@@ -25,11 +25,7 @@ message(STATUS "Targeting ${SURGE_BITNESS} bit configuration")
 # }}}
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
-if(APPLE)
-  set(CMAKE_CXX_STANDARD 14)
-else()
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   # Any Clang or any GCC
@@ -91,6 +87,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     if(CMAKE_CXX_COMPILER_ID MATCHES "^AppleClang$")
       # Apple Clang only
       add_compile_options(
+        -faligned-allocation
         -fasm-blocks
       )
     endif()
