@@ -18,10 +18,10 @@ document for our future selves**. As such, it is rather casual and incomplete no
 Third-party libraries are copied or submoduled into `libs`. All of the Surge C++ source code is in the `src` directory.
 
 `src/common` contains the complete engine code of Surge, all the DSP and voice handling logic, and so on.
-`src\gui` contains the user interface code, along with custom UI widget classes, various helpers, etc.
+`src/surge-xt/gui` contains the user interface code, along with custom UI widget classes, various helpers, etc.
 
-Each of the plugin flavors is handled by JUCE plugin wrappers, which can be found in `src/surge_synth_juce`.
-Additionally, we also have a headless flavor in `src/headless`.
+Each of the plugin flavors is handled by JUCE plugin wrappers, which can be found in `src/surge-xt/plugin_type_extensions`.
+Additionally, we also have a headless flavor in `src/surge-testrunner`.
 
 # SurgeStorage, Parameter and SurgeSynthesizer
 
