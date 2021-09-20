@@ -302,20 +302,24 @@ juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 
 bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig)
 {
+#if MAC
+    // See #5123
     if (adapter->getShowVirtualKeyboard() && orig != keyboard.get())
     {
         return keyboard->keyPressed(key);
     }
-
+#endif
     return false;
 }
 
 bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
 {
+#if MAC
     if (adapter->getShowVirtualKeyboard() && originatingComponent != keyboard.get())
     {
         return keyboard->keyStateChanged(isKeyDown);
     }
+#endif
 
     return false;
 }
