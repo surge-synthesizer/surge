@@ -5398,7 +5398,7 @@ void SurgeGUIEditor::setPatchAsFavorite(bool b)
     if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
     {
         synth->storage.patch_list[synth->patchid].isFavorite = b;
-        synth->storage.patchDB->isUserFavorite(
+        synth->storage.patchDB->setUserFavorite(
             synth->storage.patch_list[synth->patchid].path.u8string(), b);
     }
 }

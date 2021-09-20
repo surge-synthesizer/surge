@@ -67,6 +67,7 @@ struct PatchDB
     ~PatchDB();
 
     void initialize();
+    void prepareForWrites();
 
     SurgeStorage *storage;
 
@@ -78,8 +79,9 @@ struct PatchDB
     void addRootCategory(const std::string &name, CatType type);
     void addSubCategory(const std::string &name, const std::string &parent, CatType type);
     void addDebugMessage(const std::string &debug);
+    void setUserFavorite(const std::string &path, bool isIt);
 
-    void isUserFavorite(const std::string &path, bool isIt);
+    int numberOfJobsOutstanding();
 
     // Query APIs
     std::vector<std::pair<std::string, int>> readAllFeatures();
