@@ -17,6 +17,7 @@
 #define SURGE_XT_PATCHSTOREDIALOG_H
 
 #include "SkinSupport.h"
+#include "SurgeStorage.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "OverlayComponent.h"
@@ -36,18 +37,19 @@ struct PatchStoreDialog : public OverlayComponent,
     void resized() override;
 
     SurgeGUIEditor *editor{nullptr};
-    void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
+    void setSurgeGUIEditor(SurgeGUIEditor *e);
 
     void setName(const std::string &n) { nameEd->setText(n, juce::dontSendNotification); }
     void setAuthor(const std::string &a) { authorEd->setText(a, juce::dontSendNotification); }
     void setCategory(const std::string &c) { catEd->setText(c, juce::dontSendNotification); }
     void setComment(const std::string &c) { commentEd->setText(c, juce::dontSendNotification); }
+    void setTags(const std::vector<SurgePatch::Tag> &t);
 
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
-    std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, commentEd;
-    std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, commentEdL;
-    std::unique_ptr<juce::TextButton> okButton, cancelButton;
+    std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, tagEd, commentEd;
+    std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, tagEdL, commentEdL;
+    std::unique_ptr<juce::TextButton> okButton, okOverButton, cancelButton;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
 

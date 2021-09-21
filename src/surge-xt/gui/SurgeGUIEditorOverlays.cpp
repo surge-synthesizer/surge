@@ -84,6 +84,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
     pb->setAuthor(author);
     pb->setCategory(category);
     pb->setComment(comments);
+    pb->setTags(synth->storage.getPatch().tags);
     pb->setSurgeGUIEditor(this);
 
     pb->setEnclosingParentTitle("Store Patch");

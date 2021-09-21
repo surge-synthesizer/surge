@@ -405,6 +405,7 @@ void SurgeGUIEditor::idle()
                 patchSelector->setCategory(synth->storage.getPatch().category);
                 patchSelector->setAuthor(synth->storage.getPatch().author);
                 patchSelector->setIsFavorite(isPatchFavorite());
+                patchSelector->setTags(synth->storage.getPatch().tags);
                 patchSelector->repaint();
             }
         }
@@ -1260,6 +1261,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setCategory(synth->storage.getPatch().category);
             patchSelector->setIDs(synth->current_category_id, synth->patchid);
             patchSelector->setAuthor(synth->storage.getPatch().author);
+            patchSelector->setTags(synth->storage.getPatch().tags);
             patchSelector->setBounds(skinCtrl->getRect());
 
             setAccessibilityInformationByTitleAndAction(patchSelector.get(), "Patch Selector",

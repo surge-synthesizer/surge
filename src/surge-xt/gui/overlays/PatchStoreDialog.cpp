@@ -35,6 +35,7 @@ PatchStoreDialog::PatchStoreDialog()
     nameEd = makeEd("patch name");
     authorEd = makeEd("patch author");
     commentEd = makeEd("patch comment");
+    tagEd = makeEd("patch tags");
     catEd = makeEd("patch category");
 
     auto makeL = [this](const std::string &n) {
@@ -45,6 +46,7 @@ PatchStoreDialog::PatchStoreDialog()
     };
     nameEdL = makeL("Name");
     authorEdL = makeL("Author");
+    tagEdL = makeL("Tags");
     catEdL = makeL("Category");
     commentEdL = makeL("Comment");
 
@@ -58,6 +60,11 @@ PatchStoreDialog::PatchStoreDialog()
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 
+    okOverButton = std::make_unique<juce::TextButton>("patchOK");
+    okOverButton->setButtonText("FacOver");
+    okOverButton->addListener(this);
+    addAndMakeVisible(*okOverButton);
+
     storeTuningButton = std::make_unique<juce::ToggleButton>();
     storeTuningButton->setToggleState(false, juce::dontSendNotification);
     storeTuningButton->setButtonText("");
@@ -69,6 +76,16 @@ PatchStoreDialog::PatchStoreDialog()
 void PatchStoreDialog::paint(juce::Graphics &g)
 {
     g.fillAll(skin->getColor(Colors::Dialog::Background));
+}
+
+void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
+{
+    editor = e;
+    if (!editor || !editor->synth->storage.datapathOverriden)
+    {
+        okOverButton->setVisible(false);
+        resized();
+    }
 }
 
 void PatchStoreDialog::onSkinChanged()
@@ -89,6 +106,7 @@ void PatchStoreDialog::onSkinChanged()
     resetColors(nameEd);
     resetColors(authorEd);
     resetColors(catEd);
+    resetColors(tagEd);
     resetColors(commentEd);
 
     auto resetLabel = [this](const auto &label) {
@@ -97,6 +115,7 @@ void PatchStoreDialog::onSkinChanged()
     };
     resetLabel(nameEdL);
     resetLabel(authorEdL);
+    resetLabel(tagEdL);
     resetLabel(catEdL);
     resetLabel(commentEdL);
     resetLabel(storeTuningLabel);
@@ -113,11 +132,13 @@ void PatchStoreDialog::onSkinChanged()
     };
     resetButton(okButton);
     resetButton(cancelButton);
+    resetButton(okOverButton);
 }
 
 void PatchStoreDialog::resized()
 {
-    auto h = getHeight() / 5;
+    auto h = 25;
+    auto commH = getHeight() - 5 * h;
     auto xSplit = 70;
     auto buttonWidth = 60;
     auto margin = 2;
@@ -133,14 +154,25 @@ void PatchStoreDialog::resized()
     authorEd->setBounds(ce);
     authorEd->setIndents(4, (authorEd->getHeight() - authorEd->getTextHeight()) / 2);
     ce = ce.translated(0, h);
-    commentEd->setBounds(ce);
-    commentEd->setIndents(4, (commentEd->getHeight() - commentEd->getTextHeight()) / 2);
+    tagEd->setBounds(ce);
+    tagEd->setIndents(4, (tagEd->getHeight() - tagEd->getTextHeight()) / 2);
+
     ce = ce.translated(0, h);
+    auto q = ce.withHeight(commH - margin);
+    commentEd->setBounds(q);
+    commentEd->setIndents(4, (commentEd->getHeight() - commentEd->getTextHeight()) / 2);
+    ce = ce.translated(0, commH);
 
     auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight());
     cancelButton->setBounds(be);
     be = be.translated(-buttonWidth - margin, 0);
     okButton->setBounds(be);
+
+    if (okOverButton->isVisible())
+    {
+        be = be.translated(-buttonWidth - margin, 0);
+        okOverButton->setBounds(be);
+    }
 
     auto cl = r.withRight(xSplit).reduced(2);
     nameEdL->setBounds(cl);
@@ -149,8 +181,10 @@ void PatchStoreDialog::resized()
     cl = cl.translated(0, h);
     authorEdL->setBounds(cl);
     cl = cl.translated(0, h);
-    commentEdL->setBounds(cl);
+    tagEdL->setBounds(cl);
     cl = cl.translated(0, h);
+    commentEdL->setBounds(cl);
+    cl = cl.translated(0, commH);
 
     if (!editor || editor->synth->storage.isStandardTuning)
     {
@@ -159,7 +193,7 @@ void PatchStoreDialog::resized()
     }
     else
     {
-        cl = cl.withWidth(getWidth() - 4 * margin - 2 * buttonWidth);
+        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth);
         auto fb = cl.withWidth(h);
         storeTuningButton->setBounds(fb);
         auto lb = cl.withX(fb.getRight() + margin);
@@ -174,7 +208,7 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         editor->closeOverlay(SurgeGUIEditor::STORE_PATCH);
     }
 
-    if (button == okButton.get())
+    if (button == okButton.get() || button == okOverButton.get())
     {
         auto synth = editor->synth;
 
@@ -182,6 +216,20 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         synth->storage.getPatch().author = authorEd->getText().toStdString();
         synth->storage.getPatch().category = catEd->getText().toStdString();
         synth->storage.getPatch().comment = commentEd->getText().toStdString();
+
+        auto tagString = tagEd->getText();
+        std::vector<SurgePatch::Tag> tags;
+        while (tagString.contains(","))
+        {
+            auto ltag = tagString.upToFirstOccurrenceOf(",", false, true);
+            tagString = tagString.fromFirstOccurrenceOf(",", false, true);
+            tags.emplace_back(ltag.trim().toStdString());
+        }
+        tagString = tagString.trim();
+        if (tagString.length())
+            tags.emplace_back(tagString.toStdString());
+
+        synth->storage.getPatch().tags = tags;
 
         synth->storage.getPatch().patchTuning.tuningStoredInPatch =
             storeTuningButton->isVisible() && storeTuningButton->getToggleState();
@@ -212,10 +260,29 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
 
         // Ignore whatever comes from the DAW
         synth->storage.getPatch().dawExtraState.isPopulated = false;
-        synth->savePatch();
+        if (button == okOverButton.get())
+        {
+            synth->savePatch(true);
+        }
+        else
+        {
+            synth->savePatch();
+        }
 
         editor->closeOverlay(SurgeGUIEditor::STORE_PATCH);
     }
+}
+
+void PatchStoreDialog::setTags(const std::vector<SurgePatch::Tag> &itags)
+{
+    std::string pfx = "";
+    std::ostringstream oss;
+    for (const auto &t : itags)
+    {
+        oss << pfx << t.tag;
+        pfx = ", ";
+    }
+    tagEd->setText(oss.str(), juce::NotificationType::dontSendNotification);
 }
 
 } // namespace Overlays
