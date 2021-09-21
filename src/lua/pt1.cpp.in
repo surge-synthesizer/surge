@@ -1,0 +1,3 @@
+#include <string>
+
+std::string surge_prelude_lua = R"LUAPRELUDE(

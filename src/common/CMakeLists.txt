@@ -25,9 +25,7 @@ juce_add_binary_data(surge-common-binary
   ${CMAKE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
   ${CMAKE_SOURCE_DIR}/resources/surge-shared/windows.wt
   ${CMAKE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
-)
+  )
 
 add_library(${PROJECT_NAME}
   CPUFeatures.cpp
@@ -243,7 +241,30 @@ add_library(${PROJECT_NAME}
   resource.h
   version.cpp.in
   version.h
-)
+  )
+
+
+# Handle the lua code differently
+add_custom_target(surge-lua-src
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/lua_code.cpp
+  COMMAND ${CMAKE_COMMAND} -E echo "Building lua wrapper"
+  COMMAND ${CMAKE_COMMAND} -E cat
+  ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+  ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+  ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in > ${CMAKE_BINARY_DIR}/lua_code.cpp
+
+
+  SOURCES
+  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+  ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+  ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+  ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in
+  )
+target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/lua_code.cpp)
+add_dependencies(${PROJECT_NAME} surge-lua-src)
 
 if(APPLE)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MAC=1)
@@ -253,14 +274,14 @@ if(APPLE)
     "-framework CoreServices"
     "-framework CoreFoundation"
     "-framework Foundation"
-  )
+    )
 elseif(UNIX)
   target_compile_definitions(${PROJECT_NAME} PUBLIC LINUX=1)
   target_link_libraries(${PROJECT_NAME} PUBLIC
     pthread
     dl
     -Wl,--no-undefined
-  )
+    )
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
     target_link_libraries(${PROJECT_NAME} PUBLIC execinfo)
   endif()
@@ -281,7 +302,7 @@ elseif(WIN32)
     _CRT_SECURE_NO_WARNINGS=1
     UNICODE
     _UNICODE
-  )
+    )
 endif()
 
 option(SURGE_RELIABLE_VERSION_INFO "Update version info on every build (off: generate only at configuration time)" ON)
@@ -289,15 +310,15 @@ if(SURGE_RELIABLE_VERSION_INFO)
   add_custom_target(version-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} -D CMAKE_PROJECT_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR}
-                             -D CMAKE_PROJECT_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
-                             -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
-                             -D AZURE_PIPELINE=${AZURE_PIPELINE}
-                             -D WIN32=${WIN32}
-                             -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                             -D CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
-                             -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
-                             -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
-  )
+    -D CMAKE_PROJECT_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
+    -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
+    -D AZURE_PIPELINE=${AZURE_PIPELINE}
+    -D WIN32=${WIN32}
+    -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -D CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
+    -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
+    -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
+    )
   add_dependencies(${PROJECT_NAME} version-info)
 else()
   set(SURGESRC ${CMAKE_SOURCE_DIR})
@@ -322,6 +343,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   tuning-library
   PRIVATE surge-platform
 )
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   dsp
@@ -331,4 +353,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   dsp/oscillators
   dsp/utilities
   dsp/vembertech
-)
+  )

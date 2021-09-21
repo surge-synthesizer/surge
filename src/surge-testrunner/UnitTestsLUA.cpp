@@ -126,9 +126,11 @@ end
     }
 }
 
-TEST_CASE("Surge Prologue", "[lua]")
+extern std::string surge_prelude_test_lua;
+
+TEST_CASE("Surge Prelude", "[lua]")
 {
-    SECTION("Test the Prologue")
+    SECTION("Test the Prelude")
     {
         lua_State *L = lua_open();
         REQUIRE(L);
@@ -136,11 +138,9 @@ TEST_CASE("Surge Prologue", "[lua]")
 
         REQUIRE(Surge::LuaSupport::loadSurgePrelude(L));
 
-        auto lua_script = SurgeSharedBinary::surge_prelude_test_lua;
-        auto lua_size = SurgeSharedBinary::surge_prelude_test_luaSize;
-        auto lua = std::string(lua_script, lua_size);
         std::string emsg;
-        REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(L, lua, "test", emsg));
+        REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(L, surge_prelude_test_lua, "test",
+                                                               emsg));
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
 
         auto pcall = lua_pcall(L, 0, 1, 0);
