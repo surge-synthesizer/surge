@@ -3,11 +3,7 @@
 
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {
-#if __cplusplus > 201402L
     return std::clamp(x, low, high);
-#else
-    return std::min(std::max(x, low), high);
-#endif
 }
 
 template <typename T> inline T limit01(const T &x) { return limit_range(x, (T)0, (T)1); }
