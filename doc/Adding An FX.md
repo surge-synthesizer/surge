@@ -2,7 +2,7 @@
 
 This tutorial will demonstrate how to add an example effect called `MyEffect`.
 
-1. Create `src/common/dsp/effect/MyEffect.h` and `MyEffect.cpp`. Look at Flanger as an example.
+1. Create `src/common/dsp/effects/MyEffect.h` and `MyEffect.cpp`. Look at Flanger as an example.
    * The parameters for your effect should be placed in a named enum in header.
    * Override `init_ctrltypes()` to initialize the parameter names and types,
      and `init_default_values()` to set the default parameter values.
@@ -24,10 +24,10 @@ Note that we have chosen the effect ID `fxt_myeffect` for our example effect.
 * Add a 3 or 4 character shorthand name of your effect to `fx_type_shortnames`.
   Verify if this fits properly in the FX grid boxes on the GUI!
 
-4. In `resources/data/configuration.xml` add your effect to the `fx` XML group.
+4. In `resources/surge-shared/configuration.xml` add your effect to the `fx` XML group.
    Later, you may also add snapshots for presets of your effect.
 
-5. In `CMakeLists.txt`, add path to your .cpp under `SURGE_SHARED_SOURCES`,
+5. In `src/common/CMakeLists.txt`, add path to your .cpp under `SURGE_SHARED_SOURCES`,
    search the file for `Chorus` for example, to see where it goes.
    Please place your effect in alphabetical order here.
 

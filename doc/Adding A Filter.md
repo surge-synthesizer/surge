@@ -4,7 +4,7 @@
    It should have two functions, `makeCoefficients()` and `process()`. The prototype for `process()` is fixed;
    the prototype for `makeCoefficients()` is up to you. You are making free functions here, not objects.
    Vintage Ladders signatures are good starting points.
-   Add the cpp to `CMakeLists.txt` in the same place where `VintageLadders.cpp`is.
+   Add the cpp to `src/common/CMakeLists.txt` in the same place where `VintageLadders.cpp`is.
 
 2. In `FilterConfiguration.h`:
 * add an enum to `fu_type`. Most importantly, add it at the very **end**!
