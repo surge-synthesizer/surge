@@ -18,6 +18,7 @@
 #include "SurgeImageStore.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -151,6 +152,13 @@ void MiniEdit::visibilityChanged()
 {
     if (isVisible())
         grabFocus();
+    if (editor)
+    {
+        if (isVisible())
+            editor->vkbForward++;
+        else
+            editor->vkbForward--;
+    }
 }
 
 void MiniEdit::textEditorReturnKeyPressed(juce::TextEditor &editor)

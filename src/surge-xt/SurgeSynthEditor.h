@@ -52,6 +52,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void beginMacroEdit(long macroNum);
     void endMacroEdit(long macroNum);
 
+    int forwardedKeypressCount{0};
+    std::array<bool, 256> forwardedKeypresses;
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
     bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 

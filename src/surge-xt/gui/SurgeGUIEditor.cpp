@@ -3859,22 +3859,6 @@ void SurgeGUIEditor::sliderHoverEnd(int tag)
     }
 }
 
-void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
-{
-    if (juceOverlays.empty())
-        return;
-
-    if (juceOverlays.find(ofType) != juceOverlays.end())
-    {
-        if (juceOverlays[ofType])
-        {
-            frame->removeChildComponent(juceOverlays[ofType].get());
-            juceDeleteOnIdle.push_back(std::move(juceOverlays[ofType]));
-        }
-        juceOverlays.erase(ofType);
-    }
-}
-
 std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
 {
     if (tag < start_paramtags)
@@ -3920,6 +3904,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
                                        std::function<void(const std::string &)> onOK)
 {
     miniEdit->setSkin(currentSkin, bitmapStore);
+    miniEdit->setEditor(this);
     if (frame->getIndexOfChildComponent(miniEdit.get()) < 0)
     {
         frame->addChildComponent(*miniEdit);

@@ -364,6 +364,41 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     ol->addAndTakeOwnership(std::move(c));
     frame->addAndMakeVisible(*ol);
     juceOverlays[editorTag] = std::move(ol);
+    if (overlayConsumesKeyboard(editorTag))
+        vkbForward++;
+}
+
+void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
+{
+    if (juceOverlays.empty())
+        return;
+
+    if (overlayConsumesKeyboard(ofType))
+        vkbForward--;
+
+    if (juceOverlays.find(ofType) != juceOverlays.end())
+    {
+        if (juceOverlays[ofType])
+        {
+            frame->removeChildComponent(juceOverlays[ofType].get());
+            juceDeleteOnIdle.push_back(std::move(juceOverlays[ofType]));
+        }
+        juceOverlays.erase(ofType);
+    }
+}
+
+bool SurgeGUIEditor::overlayConsumesKeyboard(OverlayTags ofType)
+{
+    switch (ofType)
+    {
+    case PATCH_BROWSER:
+    case STORE_PATCH:
+    case FORMULA_EDITOR:
+        return true;
+    default:
+        break;
+    }
+    return false;
 }
 
 juce::Component *SurgeGUIEditor::getOverlayIfOpen(OverlayTags tag)
