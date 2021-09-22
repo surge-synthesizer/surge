@@ -465,16 +465,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem(
-                "Copy", [this, a]() { synth->storage.clipboard_copy(cp_osc, current_scene, a); });
-
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy With Modulation"), [this, a]() {
-                synth->storage.clipboard_copy(cp_oscmod, current_scene, a);
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Oscillator"), [this, a]() {
+                synth->storage.clipboard_copy(cp_osc, current_scene, a);
             });
+
+            contextMenu.addItem(
+                Surge::GUI::toOSCaseForMenu("Copy Oscillator with Modulation"),
+                [this, a]() { synth->storage.clipboard_copy(cp_oscmod, current_scene, a); });
 
             if (synth->storage.get_clipboard_type() == cp_osc)
             {
-                contextMenu.addItem("Paste", [this, a]() {
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Oscillator"), [this, a]() {
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
                     queue_refresh = true;
@@ -517,9 +518,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem("Copy",
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Scene"),
                                 [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
-            contextMenu.addItem("Paste",
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Scene"),
                                 synth->storage.get_clipboard_type() == cp_scene, // enabled
                                 false, [this, a]() {
                                     synth->storage.clipboard_paste(cp_scene, a, -1);
@@ -923,17 +924,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             {
                 contextMenu.addSeparator();
 
-                contextMenu.addItem("Copy", [this, sc, lfo_id]() {
-                    if (lfo_id >= 0)
-                    {
-                        synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
-                        mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
-                    }
-                });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator"),
+                                    [this, sc, lfo_id]() {
+                                        if (lfo_id >= 0)
+                                        {
+                                            synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
+                                            mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
+                                        }
+                                    });
 
                 if (synth->storage.get_clipboard_type() == cp_lfo)
                 {
-                    contextMenu.addItem("Paste", [this, sc, lfo_id]() {
+                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste"), [this, sc, lfo_id]() {
                         if (lfo_id >= 0)
                         {
                             synth->storage.clipboard_paste(cp_lfo, sc, lfo_id);

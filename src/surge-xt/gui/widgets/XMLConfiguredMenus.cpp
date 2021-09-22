@@ -538,8 +538,8 @@ void FxMenu::populate()
 
     menu.addSeparator();
 
-    menu.addItem("Copy", [this]() { this->copyFX(); });
-    menu.addItem("Paste", [this]() { this->pasteFX(); });
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() { this->pasteFX(); });
 
     if (fx->type.val.i != fxt_off)
     {
