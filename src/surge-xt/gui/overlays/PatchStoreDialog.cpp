@@ -16,6 +16,7 @@
 #include "PatchStoreDialog.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -70,7 +71,7 @@ PatchStoreDialog::PatchStoreDialog()
     storeTuningButton->setButtonText("");
     addAndMakeVisible(*storeTuningButton);
 
-    storeTuningLabel = makeL("Store tuning in patch");
+    storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu("Store Tuning in Patch"));
 }
 
 void PatchStoreDialog::paint(juce::Graphics &g)

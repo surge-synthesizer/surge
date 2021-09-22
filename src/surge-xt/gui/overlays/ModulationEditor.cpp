@@ -149,6 +149,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
                     mod->rows[row].source_scene, mod->rows[row].source_index);
                 mod->updateRows();
                 mod->moded->listBox->updateContent();
+                mod->moded->ed->queue_refresh = true;
             }
             if (button == muteButton.get())
             {
