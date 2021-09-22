@@ -87,8 +87,10 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
     pb->setTags(synth->storage.getPatch().tags);
     pb->setSurgeGUIEditor(this);
 
+    // since it is now modal center in the window
+    auto posRect = skinCtrl->getRect().withCentre(frame->getBounds().getCentre());
     pb->setEnclosingParentTitle("Store Patch");
-    pb->setEnclosingParentPosition(skinCtrl->getRect());
+    pb->setEnclosingParentPosition(posRect);
     pb->setHasIndependentClose(false);
     return pb;
 }
@@ -250,6 +252,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     setup(ol.get());
 
     std::function<void()> onClose = []() {};
+    bool isModal = false;
 
     switch (olt)
     {
@@ -271,10 +274,13 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     case WAVESHAPER_ANALYZER:
         onClose = [this]() { this->synth->refresh_editor = true; };
         break;
+    case STORE_PATCH:
+        isModal = true;
+        break;
     default:
         break;
     }
-    addJuceEditorOverlay(std::move(ol), t, olt, r, c, onClose);
+    addJuceEditorOverlay(std::move(ol), t, olt, r, c, onClose, isModal);
 
     switch (olt)
     {
@@ -330,10 +336,21 @@ void SurgeGUIEditor::addJuceEditorOverlay(
     std::unique_ptr<juce::Component> c,
     std::string editorTitle, // A window display title - whatever you want
     OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
-    const juce::Rectangle<int> &containerSize, bool showCloseButton, std::function<void()> onClose)
+    const juce::Rectangle<int> &containerSize, bool showCloseButton, std::function<void()> onClose,
+    bool forceModal)
 {
-    auto ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
-    ol->setBounds(containerSize);
+    std::unique_ptr<Surge::Overlays::OverlayWrapper> ol;
+
+    if (forceModal)
+    {
+        ol = std::make_unique<Surge::Overlays::OverlayWrapper>(containerSize);
+        ol->setBounds(frame->getBounds());
+    }
+    else
+    {
+        ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
+        ol->setBounds(containerSize);
+    }
     ol->setTitle(editorTitle);
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);

@@ -31,7 +31,8 @@ struct OverlayWrapper : public juce::Component,
                         public Surge::GUI::SkinConsumingComponent,
                         public juce::Button::Listener
 {
-    OverlayWrapper();
+    OverlayWrapper();                             // The default form
+    OverlayWrapper(const juce::Rectangle<int> &); // The modal form
 
     static constexpr int titlebarSize = 14, margin = 1;
 
@@ -56,6 +57,9 @@ struct OverlayWrapper : public juce::Component,
 
     std::function<void()> closeOverlay = []() {};
     void setCloseOverlay(std::function<void()> f) { closeOverlay = std::move(f); }
+
+    juce::Rectangle<int> componentBounds;
+    bool isModal{false};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
 };

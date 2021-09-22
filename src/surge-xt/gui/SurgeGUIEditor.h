@@ -387,7 +387,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         std::string editorTitle, // A window display title - whatever you want
         OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
         const juce::Rectangle<int> &containerBounds, bool showCloseButton = true,
-        std::function<void()> onClose = []() {});
+        std::function<void()> onClose = []() {}, bool forceModal = false);
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
     std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
 
