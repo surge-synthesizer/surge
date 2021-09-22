@@ -1,17 +1,17 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ ** Surge Synthesizer is Free and Open Source Software
+ **
+ ** Surge is made available under the Gnu General Public License, v3.0
+ ** https://www.gnu.org/licenses/gpl-3.0.en.html
+ **
+ ** Copyright 2004-2021 by various individuals as described by the Git transaction log
+ **
+ ** All source at: https://github.com/surge-synthesizer/surge.git
+ **
+ ** Surge was a commercial product from 2004-2018, with Copyright and ownership
+ ** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+ ** open source in September 2018.
+ */
 
 #include "OverlayWrapper.h"
 #include "RuntimeFont.h"
@@ -29,27 +29,43 @@ OverlayWrapper::OverlayWrapper()
     addAndMakeVisible(*closeButton);
 }
 
+OverlayWrapper::OverlayWrapper(const juce::Rectangle<int> &cb) : OverlayWrapper()
+{
+    componentBounds = cb;
+    isModal = true;
+}
+
 void OverlayWrapper::paint(juce::Graphics &g)
 {
-    g.fillAll(skin->getColor(Colors::Dialog::Titlebar::Background));
+    auto sp = getLocalBounds();
+    if (isModal)
+    {
+        sp = componentBounds;
+        g.fillAll(skin->getColor(Colors::Overlay::Background));
+    }
+
+    g.setColour(skin->getColor(Colors::Dialog::Titlebar::Background));
+    g.fillRect(sp);
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
-    g.drawText(title, getLocalBounds().withHeight(titlebarSize + margin),
-               juce::Justification::centred);
+    g.drawText(title, sp.withHeight(titlebarSize + margin), juce::Justification::centred);
 
     if (icon)
     {
-        icon->drawAt(g, 2, 1, 1);
+        icon->drawAt(g, sp.getX() + 2, sp.getY() + 1, 1);
     }
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
-    g.drawRect(getLocalBounds(), 1);
+    g.drawRect(sp, 1);
 }
 
 void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
 {
-    auto q = getLocalBounds()
-                 .reduced(2 * margin, 2 * margin)
+    auto sp = getLocalBounds();
+    if (isModal)
+        sp = componentBounds;
+
+    auto q = sp.reduced(2 * margin, 2 * margin)
                  .withTrimmedBottom(titlebarSize)
                  .translated(0, titlebarSize + 0 * margin);
     primaryChild = std::move(c);

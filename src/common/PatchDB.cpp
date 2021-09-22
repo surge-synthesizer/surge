@@ -946,7 +946,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
   private:
     sqlite3 *rodbh{nullptr};
-    sqlite3 *dbh = nullptr;
+    sqlite3 *dbh{nullptr};
     SurgeStorage *storage;
 };
 PatchDB::PatchDB(SurgeStorage *s) : storage(s) { initialize(); }

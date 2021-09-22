@@ -194,7 +194,7 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
 void NumberField::changeBy(int inc)
 {
     float dv = 1.f / (iMax - iMin);
-    value += dv * inc;
+    value = limit01(value + dv * inc);
     bounceToInt();
 
     notifyValueChanged();

@@ -410,6 +410,12 @@ void SurgeGUIEditor::idle()
             }
         }
 
+        if (patchChanged && isAnyOverlayPresent(MODULATION_EDITOR))
+        {
+            closeOverlay(MODULATION_EDITOR);
+            showOverlay(MODULATION_EDITOR);
+        }
+
         bool vuInvalid = false;
         if (synth->vu_peak[0] != vu[0]->getValue())
         {
