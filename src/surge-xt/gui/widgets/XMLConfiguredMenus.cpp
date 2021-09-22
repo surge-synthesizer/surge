@@ -134,11 +134,13 @@ void XMLMenuPopulator::populate()
             USPS,
             FOLD
         } type;
+
         ~Tree()
         {
             for (auto c : children)
                 delete c;
         }
+
         std::string name;
         std::vector<std::string> fullPath;
         int idx = -1;
@@ -147,22 +149,26 @@ void XMLMenuPopulator::populate()
         std::vector<Tree *> children;
         bool hasUser{false};
         bool hasFac{false};
+
         void addByPath(const Item &i, int idx, int depth = 0)
         {
             if (i.pathElements.size() == depth)
             {
                 auto t = new Tree();
+
                 t->name = i.name;
                 t->idx = idx;
                 t->fullPath = i.pathElements;
                 t->parent = this;
                 t->depth = depth;
                 t->type = i.isSeparator ? SEP : (i.isUser ? USPS : FACPS);
+
                 children.push_back(t);
             }
             else
             {
                 Tree *addToThis = nullptr;
+
                 for (auto c : children)
                 {
                     if (c->type == FOLD && c->name == i.pathElements[depth])
@@ -170,6 +176,7 @@ void XMLMenuPopulator::populate()
                         addToThis = c;
                     }
                 }
+
                 if (!addToThis)
                 {
                     addToThis = new Tree();
@@ -179,8 +186,10 @@ void XMLMenuPopulator::populate()
                     addToThis->type = FOLD;
                     addToThis->parent = this;
                     addToThis->depth = depth + 1;
+
                     children.push_back(addToThis);
                 }
+
                 addToThis->addByPath(i, idx, depth + 1);
             }
         }
@@ -189,6 +198,7 @@ void XMLMenuPopulator::populate()
         {
             hasFac = false;
             hasUser = false;
+
             for (auto c : children)
             {
                 switch (c->type)
@@ -215,10 +225,12 @@ void XMLMenuPopulator::populate()
         void buildJuceMenu(juce::PopupMenu &m, XMLMenuPopulator *host)
         {
             bool inFac = true;
+
             if (depth == 1 && hasFac && hasUser)
             {
                 m.addSectionHeader("FACTORY PRESETS");
             }
+
             for (auto c : children)
             {
                 switch (c->type)
@@ -260,13 +272,20 @@ void XMLMenuPopulator::populate()
 
     auto rootTree = std::make_unique<Tree>();
     int idx = 0;
+
     for (const auto &p : allPresets)
     {
         rootTree->addByPath(p, idx);
         idx++;
     }
+
     rootTree->updateFacUserFlag();
     menu = juce::PopupMenu();
+
+    if (strcmp(mtype, "fx") == 0)
+    {
+        menu.addSectionHeader("FX PRESETS");
+    }
     rootTree->buildJuceMenu(menu, this);
 
     maxIdx = allPresets.size();
@@ -497,35 +516,37 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 
 void FxMenu::populate()
 {
-    /*
-    ** Are there user presets
-    */
+    // Are there any user presets?
     storage->fxUserPreset->doPresetRescan(storage);
 
     XMLMenuPopulator::populate();
 
-    /*
-    ** Add copy/paste/save
-    */
-
-    menu.addSeparator();
-    menu.addItem("Copy", [this]() { this->copyFX(); });
-    menu.addItem("Paste", [this]() { this->pasteFX(); });
-
-    menu.addSeparator();
-
-    if (fx->type.val.i != fxt_off)
-    {
-        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset"), [this]() { this->saveFX(); });
-    }
+    menu.addColumnBreak();
+    menu.addSectionHeader("FUNCTIONS");
 
     auto rsA = [this]() {
         this->storage->fxUserPreset->doPresetRescan(this->storage, true);
         auto *sge = firstListenerOfType<SurgeGUIEditor>();
+
         if (sge)
+        {
             sge->queueRebuildUI();
+        }
     };
+
     menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
+
+    menu.addSeparator();
+
+    menu.addItem("Copy", [this]() { this->copyFX(); });
+    menu.addItem("Paste", [this]() { this->pasteFX(); });
+
+    if (fx->type.val.i != fxt_off)
+    {
+        menu.addSeparator();
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset As..."),
+                     [this]() { this->saveFX(); });
+    }
 }
 
 Surge::FxClipboard::Clipboard FxMenu::fxClipboard;

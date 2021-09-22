@@ -1660,8 +1660,6 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
                                    fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
 
     auto clearSlots = [this, fxSlotOrder](int fxchain) {
-        auto selfx = current_fx;
-
         for (int i = 0; i < n_fx_slots; i++)
         {
             if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
@@ -1669,23 +1667,21 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
                 synth->enqueueFXOff(fxSlotOrder[i]);
             }
         }
-
-        fxMenu->setCurrentFx(selfx);
     };
 
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX"), true, false,
-                       [this, clearSlots]() { clearSlots(0); });
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX Chain"), true,
+                       false, [this, clearSlots]() { clearSlots(0); });
 
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX"), true, false,
-                       [this, clearSlots]() { clearSlots(1); });
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX Chain"), true,
+                       false, [this, clearSlots]() { clearSlots(1); });
 
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX"), true, false,
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX Chain"), true, false,
                        [this, clearSlots]() { clearSlots(2); });
 
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX"), true, false,
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX Chain"), true, false,
                        [this, clearSlots]() { clearSlots(3); });
 
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX"), true, false,
+    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX Chains"), true, false,
                        [this, clearSlots]() { clearSlots(-1); });
 
     fxGridMenu.addSeparator();
@@ -2089,17 +2085,16 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     addHelpHeaderTo("LFO Presets", hurl, lfoSubMenu);
     lfoSubMenu.addSeparator();
 
-    lfoSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId, what]() {
-            // Prompt for a name
-            promptForMiniEdit(
-                "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
-                juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
-                    this->synth->storage.modulatorPreset->savePresetToUser(
-                        string_to_path(s), &(this->synth->storage), current_scene, currentLfoId);
-                });
-            // and save
-        });
+    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " Preset As..."),
+                       [this, currentLfoId, what]() {
+                           promptForMiniEdit(
+                               "", "Enter the name for " + what + " preset:", what + " Preset Name",
+                               juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
+                                   this->synth->storage.modulatorPreset->savePresetToUser(
+                                       string_to_path(s), &(this->synth->storage), current_scene,
+                                       currentLfoId);
+                               });
+                       });
 
     auto presetCategories = this->synth->storage.modulatorPreset->getPresets(&(synth->storage));
     if (!presetCategories.empty())
