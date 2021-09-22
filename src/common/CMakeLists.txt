@@ -245,7 +245,6 @@ add_library(${PROJECT_NAME}
 
 
 # Handle the lua code differently
-message(STATUS "${CMAKE_VERSION}")
 if("${CMAKE_VERSION}" VERSION_LESS "3.18")
   message(STATUS "Using command line cat rather than cmake cat for ${CMAKE_VERSION}")
   add_custom_target(surge-lua-src

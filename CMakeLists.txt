@@ -1,5 +1,5 @@
 # vi:set sw=2 et:
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15) # I really want this to be OS dependent but it is too early
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "Minimum macOS version")
@@ -23,6 +23,14 @@ message(STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}")
 math(EXPR SURGE_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
 message(STATUS "Targeting ${SURGE_BITNESS} bit configuration")
 # }}}
+
+# So do a version check windows only here
+if(WIN32)
+  if(${CMAKE_VERSION} VERSION_LESS "3.18")
+    message(FATAL_ERROR "On Windows, building surge requires at least CMake 3.18; you are running ${CMAKE_VERSION}")
+  endif()
+endif()
+
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
