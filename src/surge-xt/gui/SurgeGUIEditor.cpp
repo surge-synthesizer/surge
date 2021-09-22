@@ -2085,17 +2085,16 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     addHelpHeaderTo("LFO Presets", hurl, lfoSubMenu);
     lfoSubMenu.addSeparator();
 
-    lfoSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Save " + what + " As..."), [this, currentLfoId, what]() {
-            // Prompt for a name
-            promptForMiniEdit(
-                "preset", "Enter the name for " + what + " preset:", what + " Preset Name",
-                juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
-                    this->synth->storage.modulatorPreset->savePresetToUser(
-                        string_to_path(s), &(this->synth->storage), current_scene, currentLfoId);
-                });
-            // and save
-        });
+    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " Preset As..."),
+                       [this, currentLfoId, what]() {
+                           promptForMiniEdit(
+                               "", "Enter the name for " + what + " preset:", what + " Preset Name",
+                               juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
+                                   this->synth->storage.modulatorPreset->savePresetToUser(
+                                       string_to_path(s), &(this->synth->storage), current_scene,
+                                       currentLfoId);
+                               });
+                       });
 
     auto presetCategories = this->synth->storage.modulatorPreset->getPresets(&(synth->storage));
     if (!presetCategories.empty())

@@ -544,7 +544,8 @@ void FxMenu::populate()
     if (fx->type.val.i != fxt_off)
     {
         menu.addSeparator();
-        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset"), [this]() { this->saveFX(); });
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset As..."),
+                     [this]() { this->saveFX(); });
     }
 }
 
