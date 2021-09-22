@@ -245,24 +245,48 @@ add_library(${PROJECT_NAME}
 
 
 # Handle the lua code differently
-add_custom_target(surge-lua-src
-  BYPRODUCTS ${CMAKE_BINARY_DIR}/lua_code.cpp
-  COMMAND ${CMAKE_COMMAND} -E echo "Building lua wrapper"
-  COMMAND ${CMAKE_COMMAND} -E cat
-  ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
-  ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
-  ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in > ${CMAKE_BINARY_DIR}/lua_code.cpp
+message(STATUS "${CMAKE_VERSION}")
+if("${CMAKE_VERSION}" VERSION_LESS "3.18")
+  message(STATUS "Using command line cat rather than cmake cat for ${CMAKE_VERSION}")
+  add_custom_target(surge-lua-src
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/lua_code.cpp
+    COMMAND ${CMAKE_COMMAND} -E echo "Building lua wrapper"
+    COMMAND cat
+    ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in > ${CMAKE_BINARY_DIR}/lua_code.cpp
 
 
-  SOURCES
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
-  ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
-  ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
-  ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
-  ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in
-  )
+    SOURCES
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in
+    )
+else()
+  message(STATUS "Using cmake cat to assemble lua src")
+  add_custom_target(surge-lua-src
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/lua_code.cpp
+    COMMAND ${CMAKE_COMMAND} -E echo "Building lua wrapper"
+    COMMAND ${CMAKE_COMMAND} -E cat
+    ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in > ${CMAKE_BINARY_DIR}/lua_code.cpp
+
+
+    SOURCES
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/surge_prelude_test.lua
+    ${CMAKE_SOURCE_DIR}/src/lua/pt1.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/pt2.cpp.in
+    ${CMAKE_SOURCE_DIR}/src/lua/pt3.cpp.in
+    )
+endif()
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/lua_code.cpp)
 add_dependencies(${PROJECT_NAME} surge-lua-src)
 
@@ -342,7 +366,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   surge-common-binary
   tuning-library
   PRIVATE surge-platform
-)
+  )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
