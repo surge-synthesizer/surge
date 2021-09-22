@@ -250,31 +250,31 @@ void ModulatableSlider::onSkinChanged()
     if (skinControl.get())
     {
         auto htr = skin->propertyValue(skinControl, Surge::Skin::Component::SLIDER_TRAY);
-        if (htr.isJust())
+        if (htr.has_value())
         {
-            pTray = associatedBitmapStore->getImageByStringID(htr.fromJust());
+            pTray = associatedBitmapStore->getImageByStringID(*htr);
         }
         auto hi = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_IMAGE);
-        if (hi.isJust())
+        if (hi.has_value())
         {
-            pHandle = associatedBitmapStore->getImageByStringID(hi.fromJust());
+            pHandle = associatedBitmapStore->getImageByStringID(*hi);
         }
         auto ho = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_HOVER_IMAGE);
-        if (ho.isJust())
+        if (ho.has_value())
         {
-            pHandleHover = associatedBitmapStore->getImageByStringID(ho.fromJust());
+            pHandleHover = associatedBitmapStore->getImageByStringID(*ho);
         }
         auto ht = skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_TEMPOSYNC_IMAGE);
-        if (ht.isJust())
+        if (ht.has_value())
         {
-            pTempoSyncHandle = associatedBitmapStore->getImageByStringID(ht.fromJust());
+            pTempoSyncHandle = associatedBitmapStore->getImageByStringID(*ht);
         }
 
         auto hth =
             skin->propertyValue(skinControl, Surge::Skin::Component::HANDLE_TEMPOSYNC_HOVER_IMAGE);
-        if (hth.isJust())
+        if (hth.has_value())
         {
-            pTempoSyncHoverHandle = associatedBitmapStore->getImageByStringID(hth.fromJust());
+            pTempoSyncHoverHandle = associatedBitmapStore->getImageByStringID(*hth);
         }
     }
 

@@ -1452,13 +1452,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
     {
         auto mtext = currentSkin->propertyValue(l, Surge::Skin::Component::TEXT);
         auto ctext = currentSkin->propertyValue(l, Surge::Skin::Component::CONTROL_TEXT);
-        if (ctext.isJust() && uiidToSliderLabel.find(ctext.fromJust()) != uiidToSliderLabel.end())
+        if (ctext.has_value() && uiidToSliderLabel.find(*ctext) != uiidToSliderLabel.end())
         {
-
-            mtext = Surge::Maybe<std::string>(uiidToSliderLabel[ctext.fromJust()]);
+            mtext = ctext;
         }
 
-        if (mtext.isJust())
+        if (mtext.has_value())
         {
             auto txtalign = Surge::GUI::Skin::setJuceTextAlignProperty(
                 currentSkin->propertyValue(l, Surge::Skin::Component::TEXT_ALIGN, "left"));
@@ -1486,7 +1485,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lb->setColour(juce::Label::textColourId, col);
             lb->setColour(juce::Label::backgroundColourId, bgcol);
             lb->setBounds(l->getRect());
-            lb->setText(mtext.fromJust(), juce::dontSendNotification);
+            lb->setText(*mtext, juce::dontSendNotification);
 
             frame->addAndMakeVisible(*lb);
             juceSkinComponents[l->sessionid] = std::move(lb);
@@ -1494,9 +1493,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         else
         {
             auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
-            if (image.isJust())
+            if (image.has_value())
             {
-                auto bmp = bitmapStore->getImageByStringID(image.fromJust());
+                auto bmp = bitmapStore->getImageByStringID(*image);
                 if (bmp)
                 {
                     auto r = l->getRect();
@@ -3147,9 +3146,9 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
         // So go find the skin
         auto e = db->getEntryByRootAndName(r, n);
-        if (e.isJust())
+        if (e.has_value())
         {
-            setupSkinFromEntry(e.fromJust());
+            setupSkinFromEntry(*e);
         }
         else
         {
@@ -3241,9 +3240,9 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
         // So go find the skin
         auto e = db->getEntryByRootAndName(r, n);
 
-        if (e.isJust())
+        if (e.has_value())
         {
-            setupSkinFromEntry(e.fromJust());
+            setupSkinFromEntry(*e);
         }
         else
         {
@@ -4720,9 +4719,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hsw->setDeactivated(false);
 
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
-        if (pv.isJust())
+        if (pv.has_value())
         {
-            hsw->setBackgroundDrawable(bitmapStore->getImageByStringID(pv.fromJust()));
+            hsw->setBackgroundDrawable(bitmapStore->getImageByStringID(*pv));
             jassert(false); // hover
         }
         else
@@ -4883,9 +4882,9 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
             {
                 auto db = Surge::GUI::SkinDB::get();
                 auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
-                if (me.isJust())
+                if (me.has_value())
                 {
-                    this->setupSkinFromEntry(me.fromJust());
+                    this->setupSkinFromEntry(*me);
                 }
                 else
                 {

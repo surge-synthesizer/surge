@@ -1146,19 +1146,19 @@ SurgeImage *Skin::backgroundBitmapForControl(Skin::Control::ptr_t c,
     SurgeImage *bmp = nullptr;
 
     auto ms = propertyValue(c, Surge::Skin::Component::Properties::BACKGROUND);
-    if (ms.isJust())
+    if (ms.has_value())
     {
-        auto msAsInt = std::atoi(ms.fromJust().c_str());
+        auto msv = *ms;
+        auto msAsInt = std::atoi(msv.c_str());
         if (imageAllowedIds.find(msAsInt) != imageAllowedIds.end())
         {
-            bmp = bitmapStore->getImage(std::atoi(ms.fromJust().c_str()));
+            bmp = bitmapStore->getImage(std::atoi(msv.c_str()));
         }
         else
         {
-            bmp = bitmapStore->getImageByStringID(ms.fromJust());
+            bmp = bitmapStore->getImageByStringID(msv);
             if (!bmp)
-                bmp = bitmapStore->loadImageByPathForStringID(resourceName(ms.fromJust()),
-                                                              ms.fromJust());
+                bmp = bitmapStore->loadImageByPathForStringID(resourceName(msv), msv);
         }
     }
     return bmp;
@@ -1361,7 +1361,8 @@ std::array<SurgeImage *, 3> Skin::standardHoverAndHoverOnForCSB(SurgeImage *csb,
     return res;
 }
 
-Maybe<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s, const fs::path &p)
+std::optional<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s,
+                                                                        const fs::path &p)
 {
     auto parentP = p.parent_path();
     auto nmP = p.lexically_relative(parentP);
@@ -1376,7 +1377,7 @@ Maybe<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s,
     {
         // This will give us a broken skin but no need to tell the users
         FIXMEERROR << "Unable to install Skin: " << e.what();
-        return Maybe<Entry>();
+        return {};
     }
     rescanForSkins(s);
 
@@ -1384,9 +1385,9 @@ Maybe<SkinDB::Entry> SkinDB::installSkinFromPathToUserDirectory(SurgeStorage *s,
     for (auto &a : availableSkins)
     {
         if (a.rootType == USER && a.name.find(nameS) == 0)
-            return Maybe<Entry>(a);
+            return a;
     }
-    return Maybe<Entry>();
+    return {};
 }
 
 } // namespace GUI

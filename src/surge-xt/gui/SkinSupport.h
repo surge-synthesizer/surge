@@ -21,6 +21,8 @@
 #include "filesystem/import.h"
 #include "SkinFonts.h"
 
+#include <optional>
+
 /*
 ** Support for rudimentary skinning in Surge
 **
@@ -39,35 +41,6 @@ class TiXmlElement;
 
 namespace Surge
 {
-
-template <typename T> class Maybe
-{
-  public:
-    Maybe() : _empty(true){};
-    explicit Maybe(const T &value) : _empty(false), _value(value){};
-
-    T fromJust() const
-    {
-        if (isJust())
-        {
-            return _value;
-        }
-        else
-        {
-            throw "Cannot get value from Nothing";
-        }
-    }
-
-    bool isJust() const { return !_empty; }
-    bool isNothing() const { return _empty; }
-
-    static bool isJust(const Maybe &m) { return m.isJust(); }
-    static bool isNothing(const Maybe &m) { return m.isNothing(); }
-
-  private:
-    bool _empty;
-    T _value;
-};
 
 namespace GUI
 {
@@ -279,11 +252,11 @@ class Skin
 
     void addControl(Skin::Control::ptr_t c) { controls.push_back(c); }
 
-    Maybe<std::string> propertyValue(Skin::Control::ptr_t c,
-                                     Surge::Skin::Component::Properties pkey)
+    std::optional<std::string> propertyValue(Skin::Control::ptr_t c,
+                                             Surge::Skin::Component::Properties pkey)
     {
         if (!c->defaultComponent.hasProperty(pkey))
-            return Maybe<std::string>();
+            return {};
 
         auto stringNames = c->defaultComponent.payload->propertyNamesMap[pkey];
 
@@ -293,17 +266,17 @@ class Skin
 
         for (auto const &key : stringNames)
             if (c->allprops.find(key) != c->allprops.end())
-                return Maybe<std::string>(c->allprops[key]);
+                return c->allprops[key];
 
         auto cl = componentClasses[c->classname];
         if (!cl)
-            return Maybe<std::string>();
+            return {};
 
         do
         {
             for (auto const &key : stringNames)
                 if (cl->allprops.find(key) != cl->allprops.end())
-                    return Maybe<std::string>(cl->allprops[key]);
+                    return cl->allprops[key];
 
             if (cl->allprops.find("parent") != cl->allprops.end() &&
                 componentClasses.find(cl->allprops["parent"]) != componentClasses.end())
@@ -311,20 +284,16 @@ class Skin
                 cl = componentClasses[cl->allprops["parent"]];
             }
             else
-                return Maybe<std::string>();
+                return {};
         } while (cl);
 
-        return Maybe<std::string>();
+        return {};
     }
 
     std::string propertyValue(Skin::Control::ptr_t c, Surge::Skin::Component::Properties key,
                               const std::string &defaultValue)
     {
-        auto pv = propertyValue(c, key);
-        if (pv.isJust())
-            return pv.fromJust();
-        else
-            return defaultValue;
+        return propertyValue(c, key).value_or(defaultValue);
     }
 
     std::string customBackgroundImage() const { return bgimg; }
@@ -452,12 +421,12 @@ class SkinDB : public juce::DeletedAtShutdown
 
     void rescanForSkins(SurgeStorage *);
     const std::vector<Entry> &getAvailableSkins() const { return availableSkins; }
-    Maybe<Entry> getEntryByRootAndName(const std::string &r, const std::string &n)
+    std::optional<Entry> getEntryByRootAndName(const std::string &r, const std::string &n)
     {
         for (auto &a : availableSkins)
             if (a.root == r && a.name == n)
-                return Maybe<Entry>(a);
-        return Maybe<Entry>();
+                return a;
+        return {};
     }
     const Entry &getDefaultSkinEntry() const { return defaultSkinEntry; }
 
@@ -472,7 +441,7 @@ class SkinDB : public juce::DeletedAtShutdown
         return s;
     }
 
-    Maybe<Entry> installSkinFromPathToUserDirectory(SurgeStorage *, const fs::path &from);
+    std::optional<Entry> installSkinFromPathToUserDirectory(SurgeStorage *, const fs::path &from);
 
   private:
     SkinDB();
