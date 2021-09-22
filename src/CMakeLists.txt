@@ -97,6 +97,7 @@ endif()
 message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
 
 add_subdirectory(common)
+add_subdirectory(lua)
 add_subdirectory(platform)
 
 if(SURGE_BUILD_TESTRUNNER)

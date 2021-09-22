@@ -16,6 +16,8 @@
 
 #include "SurgeSharedBinary.h"
 
+#include "lua/LuaSources.h"
+
 TEST_CASE("LUA Hello World", "[lua]")
 {
     SECTION("HW")
@@ -126,8 +128,6 @@ end
     }
 }
 
-extern std::string surge_prelude_test_lua;
-
 TEST_CASE("Surge Prelude", "[lua]")
 {
     SECTION("Test the Prelude")
@@ -139,8 +139,8 @@ TEST_CASE("Surge Prelude", "[lua]")
         REQUIRE(Surge::LuaSupport::loadSurgePrelude(L));
 
         std::string emsg;
-        REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(L, surge_prelude_test_lua, "test",
-                                                               emsg));
+        REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(
+            L, Surge::LuaSources::surge_prelude_test, "test", emsg));
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
 
         auto pcall = lua_pcall(L, 0, 1, 0);
