@@ -118,13 +118,24 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
     if (favoritesRect.contains(e.position.toInt()))
     {
-        isFavorite = !isFavorite;
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-        if (sge)
+        if (e.mods.isPopupMenu())
         {
-            sge->setPatchAsFavorite(isFavorite);
-            repaint();
+            juce::PopupMenu menu;
+            menu.addSectionHeader("FAVORITES");
+            optionallyAddFavorites(menu, false, false);
+            menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) { this->endHover(); });
+            return;
+        }
+        else
+        {
+            isFavorite = !isFavorite;
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            if (sge)
+            {
+                sge->setPatchAsFavorite(isFavorite);
+                repaint();
+            }
         }
         return;
     }
@@ -372,7 +383,8 @@ void PatchSelector::showClassicMenu(bool single_category)
     contextMenu.showMenuAsync(o);
 }
 
-bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak)
+bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak,
+                                           bool addToSubMenu)
 {
     std::vector<std::pair<int, Patch>> favs;
     int i = 0;
@@ -397,14 +409,25 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
         p.addSectionHeader("FAVORITES");
     }
 
-    auto subMenu = juce::PopupMenu();
-    subMenu.addSectionHeader("FAVORITES");
-    for (auto f : favs)
+    if (addToSubMenu)
     {
-        subMenu.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
-                        [this, f]() { this->loadPatch(f.first); });
+        auto subMenu = juce::PopupMenu();
+        subMenu.addSectionHeader("FAVORITES");
+        for (auto f : favs)
+        {
+            subMenu.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
+                            [this, f]() { this->loadPatch(f.first); });
+        }
+        p.addSubMenu("Favorites", subMenu);
     }
-    p.addSubMenu("Favorites", subMenu);
+    else
+    {
+        for (auto f : favs)
+        {
+            p.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
+                      [this, f]() { this->loadPatch(f.first); });
+        }
+    }
     return true;
 }
 

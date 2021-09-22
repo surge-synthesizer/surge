@@ -92,7 +92,8 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
         repaint();
     }
     void showClassicMenu(bool singleCategory = false);
-    bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader);
+    bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader,
+                                bool addToSubmenu = true);
     void openPatchBrowser();
 
     void paint(juce::Graphics &g) override;
