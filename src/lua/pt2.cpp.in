@@ -1,3 +1,0 @@
-)LUAPRELUDE";
-
-std::string surge_prelude_test_lua = R"LUATEST(

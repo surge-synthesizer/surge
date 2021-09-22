@@ -22,7 +22,7 @@
 #include "basic_dsp.h"
 #include "SurgeSharedBinary.h"
 
-extern std::string surge_prelude_lua;
+#include "lua/LuaSources.h"
 
 bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::string &definition,
                                                     const std::string &functionName,
@@ -165,7 +165,7 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
 {
     auto guard = SGLD("loadPrologue", s);
     // now load the surge library
-    auto lua_script = surge_prelude_lua;
+    auto &lua_script = LuaSources::surge_prelude;
     auto lua_size = lua_script.size();
     auto load_stat = luaL_loadbuffer(s, lua_script.c_str(), lua_size, lua_script.c_str());
     auto pcall = lua_pcall(s, 0, 1, 0);
