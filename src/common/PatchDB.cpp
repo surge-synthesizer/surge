@@ -332,6 +332,11 @@ CREATE TABLE IF NOT EXISTS Favorites (
             oss << "An error occured opening sqlite file '" << dbname << "'. The error was '"
                 << sqlite3_errmsg(dbh) << "'.";
             storage->reportError(oss.str(), "Surge Patch Database Error");
+            if (dbh)
+            {
+                // even if opening fails we still need to close the database
+                sqlite3_close(dbh);
+            }
             dbh = nullptr;
             return;
         }
@@ -941,7 +946,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
   private:
     sqlite3 *rodbh{nullptr};
-    sqlite3 *dbh;
+    sqlite3 *dbh = nullptr;
     SurgeStorage *storage;
 };
 PatchDB::PatchDB(SurgeStorage *s) : storage(s) { initialize(); }
