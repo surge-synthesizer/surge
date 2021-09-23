@@ -30,16 +30,17 @@ MultiSwitch::~MultiSwitch() = default;
 
 void MultiSwitch::paint(juce::Graphics &g)
 {
-    juce::Graphics::ScopedSaveState gs(g);
     auto y = -valueToOff(value) * heightOfOneImage;
     auto t = juce::AffineTransform().translated(0, y);
+    juce::Graphics::ScopedSaveState gs(g);
+
     g.reduceClipRegion(getLocalBounds());
     switchD->draw(g, 1.0, t);
 
-    // Do hover
     if (isHovered)
     {
         int iv = getIntegerValue();
+
         if (iv == hoverSelection && hoverOnSwitchD)
         {
             hoverOnSwitchD->draw(g, 1.0, t);
@@ -48,6 +49,7 @@ void MultiSwitch::paint(juce::Graphics &g)
         {
             auto y2 = hoverSelection + frameOffset;
             auto t2 = juce::AffineTransform().translated(0, -y2 * heightOfOneImage);
+
             hoverSwitchD->draw(g, 1.0, t2);
         }
     }
@@ -75,7 +77,9 @@ int MultiSwitch::coordinateToSelection(int x, int y)
 float MultiSwitch::coordinateToValue(int x, int y)
 {
     if (rows * columns <= 1)
+    {
         return 0;
+    }
 
     return 1.f * coordinateToSelection(x, y) / (rows * columns - 1);
 }
@@ -95,7 +99,8 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 
     everDragged = false;
     isMouseDown = true;
-    juce::Timer::callAfterDelay(400, [this]() { this->setCursorToArrow(); });
+
+    juce::Timer::callAfterDelay(250, [this]() { this->setCursorToArrow(); });
     setValue(coordinateToValue(event.x, event.y));
     notifyValueChanged();
 }
@@ -103,7 +108,9 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 void MultiSwitch::mouseMove(const juce::MouseEvent &event)
 {
     int ohs = hoverSelection;
+
     hoverSelection = coordinateToSelection(event.x, event.y);
+
     if (ohs != hoverSelection || !isHovered)
     {
         repaint();
@@ -115,13 +122,20 @@ void MultiSwitch::mouseMove(const juce::MouseEvent &event)
 void MultiSwitch::setCursorToArrow()
 {
     if (!isMouseDown)
+    {
         return;
+    }
+
     if (rows * columns > 1)
     {
         if (rows > columns)
+        {
             setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+        }
         else
+        {
             setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
+        }
     }
 }
 
@@ -129,11 +143,18 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 {
     if (draggable)
     {
-        if (everDragged)
+        if (!everDragged)
         {
             everDragged = true;
             setCursorToArrow();
+
+            if (!Surge::GUI::showCursor(storage))
+            {
+                juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
+                    true);
+            }
         }
+
         int sel = coordinateToSelection(event.x, event.y);
         hoverSelection = sel;
         setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
@@ -145,34 +166,48 @@ void MultiSwitch::mouseUp(const juce::MouseEvent &event)
 {
     isMouseDown = false;
     setMouseCursor(juce::MouseCursor::NormalCursor);
+
+    if (!Surge::GUI::showCursor(storage))
+    {
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+    }
 }
+
 void MultiSwitch::mouseEnter(const juce::MouseEvent &event)
 {
     hoverSelection = coordinateToSelection(event.x, event.y);
 
     isHovered = true;
 }
+
 void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }
+
 void MultiSwitch::endHover()
 {
     isHovered = false;
     repaint();
 }
+
 void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {
     if (!draggable)
+    {
         return;
+    }
 
     int dir = wheelHelper.accumulate(wheel);
+
     // Veritcally aligned switches have higher values at the bottom
     if (rows > 1)
     {
         dir = -dir;
     }
+
     if (dir != 0)
     {
         auto iv = limit_range(getIntegerValue() + dir, 0, rows * columns - 1);
+
         setValue(1.f * iv / (rows * columns - 1));
         notifyValueChanged();
     }
@@ -190,6 +225,7 @@ struct MultiSwitchRadioButton : public juce::Component
         setInterceptsMouseClicks(false, false);
         setAccessible(true);
     }
+
     MultiSwitch *mswitch;
     float val;
     int ival;
@@ -214,6 +250,7 @@ struct MultiSwitchRadioButton : public juce::Component
             mswitch->notifyEndEdit();
             mswitch->repaint();
         }
+
         void showMenu()
         {
             auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
@@ -243,8 +280,10 @@ struct MultiSwitchRadioButton : public juce::Component
 
 void MultiSwitch::setupAccessibility()
 {
-    if (rows * columns <= 1) // i use an alternate handler below
+    if (rows * columns <= 1) // I use an alternate handler below
+    {
         return;
+    }
 
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
@@ -257,19 +296,22 @@ void MultiSwitch::setupAccessibility()
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
     jassert(sge);
+
     if (!sge)
+    {
         return;
+    }
 
     float dr = getHeight() / rows;
     float dc = getWidth() / columns;
     int sel = 0;
+
     for (int c = 0; c < columns; ++c)
     {
         for (int r = 0; r < rows; ++r)
         {
             float val = ((float)sel) / (rows * columns - 1);
             auto title = sge->getDisplayForTag(getTag(), true, val);
-
             auto ac = std::make_unique<MultiSwitchRadioButton>(this, val, sel, title);
 
             sel++;
@@ -280,6 +322,7 @@ void MultiSwitch::setupAccessibility()
         }
     }
 }
+
 template <> struct DiscreteAHRange<MultiSwitch>
 {
     static int iMaxV(MultiSwitch *t) { return t->rows * t->columns - 1; }
