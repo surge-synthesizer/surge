@@ -22,6 +22,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeImage;
+class SurgeStorage;
 
 namespace Surge
 {
@@ -35,6 +36,9 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 {
     MultiSwitch();
     ~MultiSwitch();
+
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
 
     int rows{0}, columns{0}, heightOfOneImage{0}, frameOffset{0};
     int getRows() const { return rows; }
@@ -60,11 +64,14 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     void setDraggable(bool d) { draggable = d; }
 
     void paint(juce::Graphics &g) override;
+
+    bool everDragged{false};
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
 
     void endHover() override;
 

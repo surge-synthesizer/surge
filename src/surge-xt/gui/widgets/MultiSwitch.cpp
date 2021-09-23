@@ -18,6 +18,7 @@
 #include "basic_dsp.h"
 #include "AccessibleHelpers.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -65,7 +66,7 @@ int MultiSwitch::coordinateToSelection(int x, int y)
 
     if (columns * rows > 1)
     {
-        return (mx + my * columns);
+        return limit_range(mx + my * columns, 0, columns * rows - 1);
     }
 
     return 0;
@@ -86,6 +87,7 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    everDragged = false;
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
@@ -111,6 +113,20 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 {
     if (draggable)
     {
+        if (!Surge::GUI::showCursor(storage) && !everDragged &&
+            event.getDistanceFromDragStart() > 0)
+        {
+            everDragged = true;
+            if (rows * columns > 1)
+            {
+                if (rows > columns)
+                    setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+                else
+                    setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
+            }
+            // juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+
         int sel = coordinateToSelection(event.x, event.y);
         hoverSelection = sel;
         setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
@@ -118,9 +134,19 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
     }
 }
 
+void MultiSwitch::mouseUp(const juce::MouseEvent &event)
+{
+    if (everDragged)
+    {
+        everDragged = false;
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+        // juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+    }
+}
 void MultiSwitch::mouseEnter(const juce::MouseEvent &event)
 {
     hoverSelection = coordinateToSelection(event.x, event.y);
+
     isHovered = true;
 }
 void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }

@@ -4296,6 +4296,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             auto drgb = currentSkin->propertyValue(skinCtrl,
                                                    Surge::Skin::Component::DRAGGABLE_HSWITCH, "1");
             auto hsw = componentForSkinSession<Surge::Widgets::MultiSwitch>(skinCtrl->sessionid);
+            hsw->setStorage(&(synth->storage));
             hsw->setRows(std::atoi(rows.c_str()));
             hsw->setColumns(std::atoi(cols.c_str()));
             hsw->setTag(tag);
