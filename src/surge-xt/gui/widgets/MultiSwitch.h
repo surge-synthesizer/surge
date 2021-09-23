@@ -65,13 +65,14 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 
     void paint(juce::Graphics &g) override;
 
-    bool everDragged{false};
+    bool everDragged{false}, isMouseDown{false};
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
+    void setCursorToArrow();
 
     void endHover() override;
 
