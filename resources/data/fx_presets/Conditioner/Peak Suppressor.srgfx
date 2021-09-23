@@ -1,3 +1,3 @@
 <single-fx streaming_version="15">
-    <snapshot type="8" name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" />
+    <snapshot type="8" name="Peak Suppressor" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-12.728600" p5="0.316072" p6="0.760714" p7="-7.328576" p8="-60" p8_deactivated="1" />
 </single-fx>
