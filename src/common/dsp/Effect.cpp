@@ -7,6 +7,7 @@
 #include "FlangerEffect.h"
 #include "FrequencyShifterEffect.h"
 #include "GraphicEQ11BandEffect.h"
+#include "MSToolEffect.h"
 #include "NimbusEffect.h"
 #include "ParametricEQ3BandEffect.h"
 #include "PhaserEffect.h"
@@ -83,6 +84,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new TreemonsterEffect(storage, fxdata, pd);
     case fxt_waveshaper:
         return new WaveShaperEffect(storage, fxdata, pd);
+    case fxt_mstool:
+        return new MSToolEffect(storage, fxdata, pd);
     default:
         return 0;
     };
