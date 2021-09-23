@@ -87,13 +87,15 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    everDragged = false;
     if (event.mods.isPopupMenu())
     {
         notifyControlModifierClicked(event.mods);
         return;
     }
 
+    everDragged = false;
+    isMouseDown = true;
+    juce::Timer::callAfterDelay(400, [this]() { this->setCursorToArrow(); });
     setValue(coordinateToValue(event.x, event.y));
     notifyValueChanged();
 }
@@ -106,27 +108,32 @@ void MultiSwitch::mouseMove(const juce::MouseEvent &event)
     {
         repaint();
     }
+
     isHovered = true;
+}
+
+void MultiSwitch::setCursorToArrow()
+{
+    if (!isMouseDown)
+        return;
+    if (rows * columns > 1)
+    {
+        if (rows > columns)
+            setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+        else
+            setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
+    }
 }
 
 void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 {
     if (draggable)
     {
-        if (!Surge::GUI::showCursor(storage) && !everDragged &&
-            event.getDistanceFromDragStart() > 0)
+        if (everDragged)
         {
             everDragged = true;
-            if (rows * columns > 1)
-            {
-                if (rows > columns)
-                    setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
-                else
-                    setMouseCursor(juce::MouseCursor::LeftRightResizeCursor);
-            }
-            // juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+            setCursorToArrow();
         }
-
         int sel = coordinateToSelection(event.x, event.y);
         hoverSelection = sel;
         setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
@@ -136,12 +143,8 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 
 void MultiSwitch::mouseUp(const juce::MouseEvent &event)
 {
-    if (everDragged)
-    {
-        everDragged = false;
-        setMouseCursor(juce::MouseCursor::NormalCursor);
-        // juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-    }
+    isMouseDown = false;
+    setMouseCursor(juce::MouseCursor::NormalCursor);
 }
 void MultiSwitch::mouseEnter(const juce::MouseEvent &event)
 {
