@@ -30,9 +30,9 @@ MultiSwitch::~MultiSwitch() = default;
 
 void MultiSwitch::paint(juce::Graphics &g)
 {
+    juce::Graphics::ScopedSaveState gs(g);
     auto y = -valueToOff(value) * heightOfOneImage;
     auto t = juce::AffineTransform().translated(0, y);
-    juce::Graphics::ScopedSaveState gs(g);
 
     g.reduceClipRegion(getLocalBounds());
     switchD->draw(g, 1.0, t);
