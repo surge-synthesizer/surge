@@ -380,7 +380,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
             showOverlay(t);
         }
     }
-
+    bool overlayConsumesKeyboard(OverlayTags);
     // I will be handed a pointer I need to keep around you know.
     void addJuceEditorOverlay(
         std::unique_ptr<juce::Component> c,
@@ -657,6 +657,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getShowVirtualKeyboard();
     void setShowVirtualKeyboard(bool b);
     void toggleVirtualKeyboard();
+
+    int vkbForward{0};
+    bool shouldForwardKeysToVKB() { return vkbForward == 0; }
 
     bool getUseKeyboardShortcuts();
     void setUseKeyboardShortcuts(bool b);

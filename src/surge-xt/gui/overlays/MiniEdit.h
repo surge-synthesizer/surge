@@ -20,6 +20,8 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
+class SurgeGUIEditor;
+
 namespace Surge
 {
 namespace Overlays
@@ -31,6 +33,7 @@ struct MiniEdit : public juce::Component,
 {
     MiniEdit();
     ~MiniEdit();
+    void setEditor(SurgeGUIEditor *ed) { editor = ed; }
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
     void visibilityChanged() override;
@@ -50,6 +53,7 @@ struct MiniEdit : public juce::Component,
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
     void grabFocus() { typein->grabKeyboardFocus(); }
+    SurgeGUIEditor *editor{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MiniEdit);
 };

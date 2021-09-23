@@ -100,6 +100,19 @@ void TypeinParamEditor::resized()
     textEd->setBounds(ter);
 }
 
+void TypeinParamEditor::visibilityChanged()
+{
+    if (isVisible())
+        textEd->setWantsKeyboardFocus(true);
+    if (editor)
+    {
+        if (isVisible())
+            editor->vkbForward++;
+        else
+            editor->vkbForward--;
+    }
+}
+
 void TypeinParamEditor::onSkinChanged()
 {
     textEd->setColour(juce::TextEditor::backgroundColourId,

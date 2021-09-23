@@ -302,24 +302,28 @@ juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 
 bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig)
 {
-#if MAC
-    // See #5123
-    if (adapter->getShowVirtualKeyboard() && orig != keyboard.get())
+    /*
+     * So sigh. On Lin/Win the keyStateChanged event of the parent isn't supressed
+     * when the ksystatechange is false. But the midi keyboard rescans on state change.
+     * So what we need to do is: forward all keystate trues (which will come before a
+     * keypress but only if the keybress is not in a text edit) but only forward keystate
+     * false if i have sent at least one key through this fallthrough mechanism. So:
+     */
+    if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
+        orig != keyboard.get())
     {
         return keyboard->keyPressed(key);
     }
-#endif
     return false;
 }
 
 bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
 {
-#if MAC
-    if (adapter->getShowVirtualKeyboard() && originatingComponent != keyboard.get())
+    if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
+        originatingComponent != keyboard.get())
     {
         return keyboard->keyStateChanged(isKeyDown);
     }
-#endif
 
     return false;
 }

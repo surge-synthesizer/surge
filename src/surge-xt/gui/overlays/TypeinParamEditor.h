@@ -43,11 +43,8 @@ struct TypeinParamEditor : public juce::Component,
     void setBoundsToAccompany(const juce::Rectangle<int> &controlRect,
                               const juce::Rectangle<int> &parentRect);
     void resized() override;
-    void visibilityChanged() override
-    {
-        if (isVisible())
-            textEd->setWantsKeyboardFocus(true);
-    }
+
+    void visibilityChanged() override;
 
     Parameter *p{nullptr};
     void setEditedParam(Parameter *pin) { p = pin; };
