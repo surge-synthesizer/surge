@@ -1047,8 +1047,6 @@ class alignas(16) SurgeStorage
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
 
-    fs::path installedPath;
-
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
     void rescanUserMidiMappings();
     void loadMidiMappingByName(std::string name);

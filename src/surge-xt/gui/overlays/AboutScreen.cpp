@@ -20,6 +20,7 @@
 #include "version.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "platform/Paths.h"
 
 namespace Surge
 {
@@ -113,7 +114,7 @@ void AboutScreen::populateData()
                            storage->datapath.u8string());
     lowerLeft.emplace_back("User Data", storage->userDataPath.u8string(),
                            storage->userDataPath.u8string());
-    lowerLeft.emplace_back("Plugin", storage->installedPath.u8string(), "");
+    lowerLeft.emplace_back("Plugin", Paths::appPath().u8string(), "");
     lowerLeft.emplace_back("Current Skin", skin->displayName, skin->root + skin->name);
     lowerLeft.emplace_back("Skin Author", skin->author, skin->authorURL);
 

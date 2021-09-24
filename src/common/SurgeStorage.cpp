@@ -24,6 +24,7 @@
 #include "UserDefaults.h"
 #include "SurgeSharedBinary.h"
 #include "DebugHelpers.h"
+#include "platform/Paths.h"
 
 #if MAC
 #include <cstdlib>
@@ -68,33 +69,6 @@ double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
-
-#if WINDOWS
-void dummyExportedWindowsToLookupDLL() {}
-#else
-#include <dlfcn.h>
-std::string getDLLPath()
-{
-    Dl_info info;
-    if (dladdr((const void *)getDLLPath, &info))
-    {
-        auto res = std::string(info.dli_fname);
-#if MAC
-        for (int i = 0; i < 3; i++)
-        {
-            size_t delPos = res.find_last_of('/');
-            if (delPos == std::string::npos)
-            {
-                return "<error>"; // unexpected
-            }
-            res.erase(delPos, res.length() - delPos);
-        }
-#endif
-        return res;
-    }
-    return "";
-}
-#endif
 
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
@@ -228,8 +202,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     const char *homePath = getenv("HOME");
     if (!homePath)
         throw std::runtime_error("The environment variable HOME does not exist");
-
-    installedPath = getDLLPath();
 #endif
 
 #if MAC
@@ -360,47 +332,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     // std::cout << "User data path is " << userDataPath << std::endl;
 
 #elif WINDOWS
-#if TARGET_RACK
-    datapath = suppliedDataPath;
-#else
-    fs::path dllPath;
+    const auto installPath{Surge::Paths::installPath()};
 
     // First check the portable mode sitting beside me
+    if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
     {
-        WCHAR pathBuf[MAX_PATH];
-        HMODULE hm = NULL;
-
-        if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                                  GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                              reinterpret_cast<LPCTSTR>(&dummyExportedWindowsToLookupDLL),
-                              &hm) == 0)
-        {
-            int ret = GetLastError();
-            printf("GetModuleHandle failed, error = %d\n", ret);
-            // Return or however you want to handle an error.
-            goto bailOnPortable;
-        }
-        if (GetModuleFileName(hm, pathBuf, std::size(pathBuf)) == 0)
-        {
-            int ret = GetLastError();
-            printf("GetModuleFileName failed, error = %d\n", ret);
-            // Return or however you want to handle an error.
-            goto bailOnPortable;
-        }
-
-        // The pathBuf variable should now contain the full filepath for this DLL.
-        fs::path path(pathBuf);
-        installedPath = path_to_string(path);
-
-        path.remove_filename();
-        dllPath = path;
-        path /= L"SurgeXTData";
-        if (fs::is_directory(path))
-        {
-            datapath = path;
-        }
+        datapath = std::move(path);
     }
-bailOnPortable:
 
     if (datapath.empty())
     {
@@ -434,22 +372,17 @@ bailOnPortable:
         datapath = orPath;
     }
 
-    // Portable - first check for dllPath\\SurgeXTUserData
-    if (!dllPath.empty() && fs::is_directory(dllPath / L"SurgeXTUserData"))
+    // Portable - first check for installPath\\SurgeXTUserData
+    if (auto path{installPath / L"SurgeXTUserData"}; fs::is_directory(path))
     {
-        userDataPath = path_to_string(dllPath / L"SurgeXTUserData");
+        userDataPath = std::move(path);
     }
-    else
+    else if (PWSTR documentsFolder;
+             !SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
     {
-        PWSTR documentsFolder;
-        if (!SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
-        {
-            fs::path path(documentsFolder);
-            path /= L"Surge XT";
-            userDataPath = path_to_string(path);
-        }
+        userDataPath = fs::path{documentsFolder} / L"Surge XT";
+        // FIXME: Don't leak documentsFolder!
     }
-#endif
 #endif
 
     userDefaultFilePath = userDataPath;
@@ -497,7 +430,6 @@ bailOnPortable:
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
     bool loadWtAndPatch = true;
 
-#if !TARGET_RACK
     // skip loading during export, it pops up an irrelevant error dialog. Only used by LV2
     loadWtAndPatch = !skipLoadWtAndPatch;
     if (loadWtAndPatch)
@@ -519,8 +451,6 @@ bailOnPortable:
                 p.isFavorite = false;
         }
     }
-
-#endif
 
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);

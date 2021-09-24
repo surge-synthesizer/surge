@@ -254,13 +254,12 @@ if(APPLE)
     )
 elseif(UNIX)
   target_compile_definitions(${PROJECT_NAME} PUBLIC LINUX=1)
-  target_link_libraries(${PROJECT_NAME} PUBLIC
+  target_link_libraries(${PROJECT_NAME} PRIVATE
     pthread
-    dl
     -Wl,--no-undefined
     )
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
-    target_link_libraries(${PROJECT_NAME} PUBLIC execinfo)
+    target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)
   endif()
   if(LINUX_ON_ARM)
     target_compile_definitions(${PROJECT_NAME} PUBLIC ARM_NEON=1)

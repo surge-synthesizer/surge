@@ -185,19 +185,20 @@ foreach(format ${SURGE_JUCE_FORMATS})
 endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  surge::surge-common
+  surge-common
+  surge-platform
   surge-juce
   juce::juce_graphics
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_audio_plugin_client
-  PUBLIC surge-xt-binary # FIXME
+  surge-xt-binary
   )
 
-# FIXME: surge-gui and surge-xt depend on each other :(
 target_include_directories(${PROJECT_NAME}
-  PUBLIC
+  PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/gui
-  ${CMAKE_CURRENT_SOURCE_DIR})
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
 surge_juce_package(${PROJECT_NAME} "Surge XT")
