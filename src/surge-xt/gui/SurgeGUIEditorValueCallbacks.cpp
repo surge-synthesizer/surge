@@ -573,8 +573,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            cms->buildHamburgerMenu(contextMenu, true);
-
             int n_total_md = synth->storage.getPatch().param_ptr.size();
             const int max_md = 4096;
 
@@ -831,6 +829,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     showOverlay(MODULATION_EDITOR);
             });
 
+            contextMenu.addSeparator();
+
+            auto hamSub = juce::PopupMenu();
+            cms->buildHamburgerMenu(hamSub, false);
+            contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
             contextMenu.addSeparator();
 
             if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
