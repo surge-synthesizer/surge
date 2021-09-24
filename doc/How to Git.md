@@ -250,3 +250,9 @@ git push origin my-branch-name --force
 ```
 
 and the PR page will say "@user force pushed branch" and everything can proceed.
+
+## I'm still confused
+
+Check out this excellent video from Dylan Beattie. It may help. But its fun!
+
+[![Video Showing Music And Git](https://img.youtube.com/vi/S9Do2p4PwtE/0.jpg)](https://www.youtube.com/watch?v=S9Do2p4PwtE)
