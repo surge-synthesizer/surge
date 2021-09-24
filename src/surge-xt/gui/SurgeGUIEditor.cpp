@@ -404,6 +404,7 @@ void SurgeGUIEditor::idle()
                 patchSelector->setLabel(synth->storage.getPatch().name);
                 patchSelector->setCategory(synth->storage.getPatch().category);
                 patchSelector->setAuthor(synth->storage.getPatch().author);
+                patchSelector->setComment(synth->storage.getPatch().comment);
                 patchSelector->setIsFavorite(isPatchFavorite());
                 patchSelector->setTags(synth->storage.getPatch().tags);
                 patchSelector->repaint();
@@ -1267,6 +1268,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setCategory(synth->storage.getPatch().category);
             patchSelector->setIDs(synth->current_category_id, synth->patchid);
             patchSelector->setAuthor(synth->storage.getPatch().author);
+            patchSelector->setComment(synth->storage.getPatch().comment);
             patchSelector->setTags(synth->storage.getPatch().tags);
             patchSelector->setBounds(skinCtrl->getRect());
 
