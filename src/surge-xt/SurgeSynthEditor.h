@@ -70,6 +70,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<IdleTimer> idleTimer;
 
     bool drawExtendedControls{false};
+    float midiKeyboardVelocity{90.f / 127.f};
     std::unique_ptr<juce::MidiKeyboardComponent> keyboard;
     std::unique_ptr<juce::Label> tempoLabel;
     std::unique_ptr<juce::TextEditor> tempoTypein;

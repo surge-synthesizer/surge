@@ -31,7 +31,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
 
     keyboard = std::make_unique<juce::MidiKeyboardComponent>(
         processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
-
+    keyboard->setVelocity(midiKeyboardVelocity, true);
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
 
@@ -309,6 +309,22 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
      * keypress but only if the keybress is not in a text edit) but only forward keystate
      * false if i have sent at least one key through this fallthrough mechanism. So:
      */
+    if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
+        key.isCurrentlyDown())
+    {
+        if (key.getKeyCode() == 'X' || key.getKeyCode() == 'x')
+        {
+            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.05f, 0.f, 1.f);
+            keyboard->setVelocity(midiKeyboardVelocity, true);
+            return true;
+        }
+        if (key.getKeyCode() == 'C' || key.getKeyCode() == 'c')
+        {
+            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.05f, 0.f, 1.f);
+            keyboard->setVelocity(midiKeyboardVelocity, true);
+            return true;
+        }
+    }
     if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
         orig != keyboard.get())
     {
