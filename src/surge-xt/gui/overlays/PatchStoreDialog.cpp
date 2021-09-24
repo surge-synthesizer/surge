@@ -36,6 +36,9 @@ PatchStoreDialog::PatchStoreDialog()
     nameEd = makeEd("patch name");
     authorEd = makeEd("patch author");
     commentEd = makeEd("patch comment");
+    commentEd->setMultiLine(true, true);
+    commentEd->setReturnKeyStartsNewLine(true);
+    commentEd->setJustification(juce::Justification::topLeft);
     tagEd = makeEd("patch tags");
     catEd = makeEd("patch category");
 
@@ -161,7 +164,6 @@ void PatchStoreDialog::resized()
     ce = ce.translated(0, h);
     auto q = ce.withHeight(commH - margin);
     commentEd->setBounds(q);
-    commentEd->setIndents(4, (commentEd->getHeight() - commentEd->getTextHeight()) / 2);
     ce = ce.translated(0, commH);
 
     auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight());

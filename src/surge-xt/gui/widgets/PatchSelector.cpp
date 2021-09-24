@@ -95,8 +95,20 @@ void PatchSelector::resized()
                         .translated(-2, 1);
 }
 
+void PatchSelector::mouseEnter(const juce::MouseEvent &)
+{
+    if (tooltipCountdown < 0)
+    {
+        tooltipCountdown = 5;
+        juce::Timer::callAfterDelay(200, [this]() { shouldTooltip(); });
+    }
+}
+
 void PatchSelector::mouseMove(const juce::MouseEvent &e)
 {
+    if (tooltipCountdown >= 0)
+        tooltipCountdown = 5;
+    toggleCommentTooltip(false);
     auto pfh = favoritesHover;
     favoritesHover = false;
     if (favoritesRect.contains(e.position.toInt()))
@@ -154,6 +166,28 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     bool single_category =
         e.mods.isRightButtonDown() || e.mods.isCtrlDown() || e.mods.isCommandDown();
     showClassicMenu(single_category);
+}
+
+void PatchSelector::shouldTooltip()
+{
+    if (tooltipCountdown < 0)
+        return;
+    tooltipCountdown--;
+    if (tooltipCountdown == 0)
+    {
+        tooltipCountdown = -1;
+        toggleCommentTooltip(true);
+    }
+    else
+    {
+        juce::Timer::callAfterDelay(200, [this]() { shouldTooltip(); });
+    }
+}
+
+void PatchSelector::toggleCommentTooltip(bool b)
+{
+    if (b && !comment.empty())
+        std::cout << "-------------\n" << comment << "---------------\n" << std::endl;
 }
 
 void PatchSelector::openPatchBrowser()

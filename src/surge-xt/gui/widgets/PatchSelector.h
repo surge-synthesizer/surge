@@ -78,6 +78,7 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
         repaint();
     }
+    void setComment(const std::string &c) { comment = c; }
 
     void setTags(const std::vector<SurgePatch::Tag> &itag) { tags = itag; }
 
@@ -85,10 +86,13 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     void mouseDown(const juce::MouseEvent &event) override;
     bool favoritesHover{false};
     void mouseMove(const juce::MouseEvent &event) override;
+    void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
     void endHover() override
     {
         favoritesHover = false;
+        tooltipCountdown = -1;
+        toggleCommentTooltip(false);
         repaint();
     }
     void showClassicMenu(bool singleCategory = false);
@@ -112,8 +116,13 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     std::string pname;
     std::string category;
     std::string author;
+    std::string comment;
     std::vector<SurgePatch::Tag> tags;
     int current_category = 0, current_patch = 0;
+
+    int tooltipCountdown{-1};
+    void toggleCommentTooltip(bool b);
+    void shouldTooltip();
 
     /**
      * populatePatchMenuForCategory
