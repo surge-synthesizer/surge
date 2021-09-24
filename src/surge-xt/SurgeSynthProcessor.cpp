@@ -462,14 +462,14 @@ void SurgeSynthProcessor::handleNoteOn(MidiKeyboardState *source, int midiChanne
                                        int midiNoteNumber, float velocity)
 {
     if (!isAddingFromMidi)
-        midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, velocity, true));
+        midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), true));
 }
 
 void SurgeSynthProcessor::handleNoteOff(MidiKeyboardState *source, int midiChannel,
                                         int midiNoteNumber, float velocity)
 {
     if (!isAddingFromMidi)
-        midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, velocity, false));
+        midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), false));
 }
 
 //==============================================================================
