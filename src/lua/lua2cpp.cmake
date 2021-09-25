@@ -20,7 +20,7 @@ endforeach()
 # Generate source
 set(src "#include \"${out_hdr}\"\n\n${namespace} {\n\n")
 foreach(var ${vars})
-  set(src "${src}const std::string ${var} = R\"EOF(\n${${var}_value}\n)EOF\";\n\n")
+  set(src "${src}const std::string ${var} = R\"EOF(${${var}_value}\n)EOF\";\n\n")
 endforeach()
 set(src "${src}} // ${namespace}\n")
 file(WRITE "${out_dir}/${out_cpp}" "${src}")
