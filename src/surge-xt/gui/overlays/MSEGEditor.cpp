@@ -3019,6 +3019,7 @@ void MSEGControlRegion::rebuild()
         jassert(!movementMode);
         movementMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         movementMode->setBounds(btnrect);
+        movementMode->setStorage(storage);
         movementMode->addListener(this);
         movementMode->setTag(tag_segment_movement_mode);
         movementMode->setHeightOfOneImage(buttonHeight);
@@ -3070,6 +3071,7 @@ void MSEGControlRegion::rebuild()
         jassert(!editMode);
         editMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         editMode->setBounds(btnrect);
+        editMode->setStorage(storage);
         editMode->addListener(this);
         editMode->setTag(tag_edit_mode);
         editMode->setHeightOfOneImage(buttonHeight);
@@ -3110,6 +3112,7 @@ void MSEGControlRegion::rebuild()
         jassert(!loopMode);
         loopMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         loopMode->setBounds(btnrect);
+        loopMode->setStorage(storage);
         loopMode->addListener(this);
         loopMode->setTag(tag_loop_mode);
         loopMode->setHeightOfOneImage(buttonHeight);
