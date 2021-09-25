@@ -29,15 +29,17 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
 
     adapter = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
 
-    keyboard = std::make_unique<juce::MidiKeyboardComponent>(
-        processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
-    keyboard->setVelocity(midiKeyboardVelocity, true);
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
 
+    keyboard = std::make_unique<juce::MidiKeyboardComponent>(
+        processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
+    keyboard->setVelocity(midiKeyboardVelocity, true);
     keyboard->setOctaveForMiddleC(5 - mcValue);
     keyboard->setKeyPressBaseOctave(5);
     keyboard->setLowestVisibleKey(24);
+    // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
+    keyboard->setWantsKeyboardFocus(false);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
     tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
@@ -303,33 +305,38 @@ juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig)
 {
     /*
-     * So sigh. On Lin/Win the keyStateChanged event of the parent isn't supressed
-     * when the ksystatechange is false. But the midi keyboard rescans on state change.
+     * So, sigh. On Linux/Windows the keyStateChanged event of the parent isn't suppressed
+     * when the keyStateChange is false. But the MIDI keyboard rescans on state change.
      * So what we need to do is: forward all keystate trues (which will come before a
-     * keypress but only if the keybress is not in a text edit) but only forward keystate
-     * false if i have sent at least one key through this fallthrough mechanism. So:
+     * keypress but only if the keypress is not in a text edit) but only forward keystate
+     * false if I have sent at least one key through this fallthrough mechanism. So:
      */
-    if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
-        key.isCurrentlyDown())
+    if (adapter->getShowVirtualKeyboard())
     {
-        if (key.getKeyCode() == 'X' || key.getKeyCode() == 'x')
+        // reduce VKB velocity for QWERTY by 10%
+        if (key.getTextCharacter() == 'x')
         {
-            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.05f, 0.f, 1.f);
+            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.1f, 0.f, 1.f);
             keyboard->setVelocity(midiKeyboardVelocity, true);
+
             return true;
         }
-        if (key.getKeyCode() == 'C' || key.getKeyCode() == 'c')
+
+        // increaseVKB velocity for QWERTY by 10%
+        if (key.getTextCharacter() == 'c')
         {
-            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.05f, 0.f, 1.f);
+            midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.1f, 0.f, 1.f);
             keyboard->setVelocity(midiKeyboardVelocity, true);
+
             return true;
         }
+
+        if (adapter->shouldForwardKeysToVKB() && orig != keyboard.get())
+        {
+            return keyboard->keyPressed(key);
+        }
     }
-    if (adapter->getShowVirtualKeyboard() && adapter->shouldForwardKeysToVKB() &&
-        orig != keyboard.get())
-    {
-        return keyboard->keyPressed(key);
-    }
+
     return false;
 }
 
