@@ -84,6 +84,11 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
 
+    virtual void onSkinChanged() override;
+
+    std::unique_ptr<juce::CodeDocument> preludeDocument;
+    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 

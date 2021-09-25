@@ -173,6 +173,8 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
     return true;
 }
 
+std::string Surge::LuaSupport::getSurgePrelude() { return LuaSources::surge_prelude; }
+
 Surge::LuaSupport::SGLD::~SGLD()
 {
     if (L)

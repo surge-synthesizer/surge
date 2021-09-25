@@ -80,6 +80,11 @@ bool setSurgeFunctionEnvironment(lua_State *s);
 bool loadSurgePrelude(lua_State *s);
 
 /*
+ * Call this function to get a string representation of the prelude
+ */
+std::string getSurgePrelude();
+
+/*
  * A little leak debugger. Make this on your stack and if you exit the
  * block with a different stack than you start, it complains for you
  * with both a print

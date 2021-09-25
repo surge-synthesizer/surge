@@ -19,6 +19,7 @@
 #include "SkinSupport.h"
 #include "SkinColors.h"
 #include "WavetableScriptEvaluator.h"
+#include "LuaSupport.h"
 
 namespace Surge
 {
@@ -95,6 +96,7 @@ void CodeEditorContainerWithApply::buttonClicked(juce::Button *button)
 void CodeEditorContainerWithApply::onSkinChanged()
 {
     mainEditor->setFont(skin->getFont(Fonts::LuaEditor::Code));
+    EditorColors::setColorsFromSkin(mainEditor.get(), skin);
 }
 
 void CodeEditorContainerWithApply::codeDocumentTextInserted(const juce::String &newText,
@@ -271,10 +273,19 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs)
 {
     mainDocument->insertText(0, fs->formulaString);
+
+    preludeDocument = std::make_unique<juce::CodeDocument>();
+    preludeDocument->insertText(0, Surge::LuaSupport::getSurgePrelude());
+
+    preludeDisplay = std::make_unique<juce::CodeEditorComponent>(*preludeDocument, tokenizer.get());
+    preludeDisplay->setTabSize(4, true);
+    preludeDisplay->setReadOnly(true);
+    EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
+
     tabs =
         std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
     tabs->addTab("Formula", juce::Colours::red, mainEditor.get(), false);
-    tabs->addTab("Prelude", juce::Colours::yellow, new juce::Label("Prelude", "Coming Soon"), true);
+    tabs->addTab("Prelude", juce::Colours::yellow, preludeDisplay.get(), false);
     tabs->addTab("Help", juce::Colours::green, new juce::Label("Help", "Coming Soon"), true);
     addAndMakeVisible(*tabs);
 
@@ -285,6 +296,13 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
 }
 
 FormulaModulatorEditor::~FormulaModulatorEditor() = default;
+
+void FormulaModulatorEditor::onSkinChanged()
+{
+    CodeEditorContainerWithApply::onSkinChanged();
+    preludeDisplay->setFont(skin->getFont(Fonts::LuaEditor::Code));
+    EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
+}
 
 void FormulaModulatorEditor::applyCode()
 {

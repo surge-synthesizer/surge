@@ -3,6 +3,7 @@
 -- The surge prelude is loaded in each surge session and provides a set of
 -- built in utilities we've found handy in writing modulators. At each release
 -- point, we will snap the prelude as stable and not break apis after that.
+-- This display of the prelude currently serves as its documentation
 
 local surge = {}
 local mod = {}
