@@ -191,6 +191,11 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 
 void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
 {
+    if (supressMainFrameMouseEvent(e))
+    {
+        return;
+    }
+
     auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
     if (fabs(d - lastDragDistance) > 0)
     {

@@ -148,6 +148,11 @@ void NumberField::mouseDown(const juce::MouseEvent &event)
 
 void NumberField::mouseDrag(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     float d = -event.getDistanceFromDragStartY();
     float dD = d - lastDistanceChecked;
     float thresh = 10;
@@ -177,6 +182,11 @@ void NumberField::mouseUp(const juce::MouseEvent &event)
 }
 void NumberField::mouseDoubleClick(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     notifyControlModifierDoubleClicked(event.mods);
     repaint();
 }
