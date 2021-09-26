@@ -68,6 +68,8 @@ struct XMLMenuPopulator
         fs::path path{};
         bool isUser{false};
         bool isSeparator{false};
+        bool isSectionHeader{false};
+        bool hasColumnBreak{false};
 
         /*
          * I knwo this isn't very generalized and I could template it and subclass
