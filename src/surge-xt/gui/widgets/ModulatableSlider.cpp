@@ -313,6 +313,11 @@ void ModulatableSlider::endHover()
 
 void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     auto p = mouseDownFloatPosition;
     float distance = event.position.getX() - p.getX();
     if (orientation == ParamConfig::kVertical)
@@ -452,6 +457,11 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 
 void ModulatableSlider::mouseDoubleClick(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     editTypeWas = DOUBLECLICK;
 
     notifyBeginEdit();

@@ -781,6 +781,11 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
+        if (event.mods.isMiddleButtonDown())
+        {
+            return;
+        }
+
         int clickedSlider = -1;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
@@ -801,6 +806,10 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
     void mouseDrag(const juce::MouseEvent &event) override
     {
+        if (event.mods.isMiddleButtonDown())
+        {
+            return;
+        }
 
         int draggedSlider = -1;
 

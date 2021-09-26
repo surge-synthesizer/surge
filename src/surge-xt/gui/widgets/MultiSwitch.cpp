@@ -141,6 +141,11 @@ void MultiSwitch::setCursorToArrow()
 
 void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     if (draggable)
     {
         if (!everDragged)

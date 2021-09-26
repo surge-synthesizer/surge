@@ -1518,6 +1518,11 @@ void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
 
 void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 {
+    if (supressMainFrameMouseEvent(event))
+    {
+        return;
+    }
+
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     if (!isStepSequencer() || dragMode == NONE)

@@ -145,6 +145,11 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         }
         return false;
     }
+
+    bool supressMainFrameMouseEvent(const juce::MouseEvent &e)
+    {
+        return firstListenerOfType<SurgeGUIEditor>() && e.mods.isMiddleButtonDown();
+    }
 };
 } // namespace Widgets
 } // namespace Surge

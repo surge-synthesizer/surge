@@ -167,6 +167,11 @@ void MenuForDiscreteParams::mouseDown(const juce::MouseEvent &event)
 
 void MenuForDiscreteParams::mouseDrag(const juce::MouseEvent &e)
 {
+    if (supressMainFrameMouseEvent(e))
+    {
+        return;
+    }
+
     auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
     if (fabs(d - lastDragDistance) > 10)
     {
