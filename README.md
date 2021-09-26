@@ -272,6 +272,17 @@ cmake --build ignore/xc64 --config Debug --target surge-headless
 Of course that toolchain makes specific choices. You can make other choices as long as (1) you set the CMAKE
 variable LINUX_ON_ARM and (2) you make sure your host and your target compiler are both 64 bit.
 
+### Cross Compiling for macOS
+
+Surge cross compiles to macOS Intel from Linux and BSD.
+
+1. Install [osxcross](https://github.com/tpoechtrager/osxcross). Make sure to also install the `libclang_rt` library built by their `build_compiler_rt.sh` script.
+2. Configure and build Surge:
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-apple-darwin20.4-clang.cmake -DCMAKE_FIND_ROOT_PATH=<path_to_osxcross_sdk> -Bbuild
+cmake --build build
+```
+
 # Setting up for Your OS
 
 ## Windows
