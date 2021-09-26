@@ -45,7 +45,8 @@ target_compile_definitions(surge-juce INTERFACE
   )
 
 set(SURGE_JUCE_FORMATS VST3 Standalone)
-if(APPLE)
+if(APPLE AND NOT CMAKE_CROSSCOMPILING)
+  # AU requires the Rez resource compiler, which seems to be unavailable on osxcross
   list(APPEND SURGE_JUCE_FORMATS AU)
 endif()
 
@@ -121,7 +122,7 @@ if(SURGE_BUILD_FX AND SURGE_BUILD_XT AND NOT CMAKE_CROSSCOMPILING)
 endif()
 
 # FIXME: Plugin validation {{{
-if(APPLE)
+if(APPLE AND NOT CMAKE_CROSSCOMPILING)
   message(STATUS "Validate me! Please!")
   add_custom_target(stage-pluginval)
   add_custom_command(TARGET stage-pluginval
