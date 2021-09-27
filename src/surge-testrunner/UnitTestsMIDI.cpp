@@ -1367,3 +1367,31 @@ TEST_CASE("Priority Modes with Keysplit", "[midi]")
         }
     }
 }
+
+TEST_CASE("Voice Stealing", "[midi]")
+{
+    for (auto pc : {4, 16, 32, 50, 61, 64})
+    {
+        DYNAMIC_SECTION("PolyCount " << pc)
+        {
+            auto surge = surgeOnSine();
+            surge->storage.getPatch().polylimit.val.i = pc;
+            for (int i = 0; i < 10; ++i)
+                surge->process();
+
+            for (int v = 1; v < 127; ++v)
+            {
+                surge->playNote(0, v, 120, 0);
+                for (int i = 0; i < 20; ++i)
+                    surge->process();
+                REQUIRE(surge->voices[0].size() <= pc);
+                REQUIRE(surge->voices[0].back()->state.key == v);
+                if (v > pc)
+                {
+                    REQUIRE(surge->voices[0].front()->state.key == v - pc + 1);
+                    REQUIRE(surge->voices[0].size() == pc);
+                }
+            }
+        }
+    }
+}

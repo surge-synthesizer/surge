@@ -446,10 +446,10 @@ void SurgeSynthesizer::enforcePolyphonyLimit(int s, int margin)
 {
     list<SurgeVoice *>::iterator iter;
 
-    if (voices[s].size() > (storage.getPatch().polylimit.val.i + margin))
+    int paddedPoly = std::min((storage.getPatch().polylimit.val.i + margin), MAX_VOICES - 1);
+    if (voices[s].size() > paddedPoly)
     {
-        int excess_voices =
-            max(0, (int)voices[s].size() - (storage.getPatch().polylimit.val.i + margin));
+        int excess_voices = max(0, (int)voices[s].size() - paddedPoly);
         iter = voices[s].begin();
 
         while (iter != voices[s].end())
