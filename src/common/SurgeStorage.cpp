@@ -199,9 +199,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     }
 
 #if MAC || LINUX
-    const char *homePath = getenv("HOME");
-    if (!homePath)
-        throw std::runtime_error("The environment variable HOME does not exist");
+    const auto homePath{Surge::Paths::homePath()};
 #endif
 
 #if MAC
@@ -236,25 +234,22 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         datapath = suppliedDataPath;
     }
 
-    // ~/Documents/Surge XT in full name
-    sprintf(path, "%s/Documents/Surge XT", homePath);
-    userDataPath = path;
+    userDataPath = homePath / "Documents/Surge XT";
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
-        const char *xdgDataPath = getenv("XDG_DATA_HOME");
-        std::string localDataPath = std::string(homePath) + "/.local/share/surge-xt/";
-        if (xdgDataPath)
+        if (const char *xdgDataPath = getenv("XDG_DATA_HOME"))
         {
-            datapath = std::string(xdgDataPath) + "/surge-xt/";
+            datapath = fs::path{xdgDataPath} / "surge-xt";
         }
-        else if (fs::is_directory(string_to_path(localDataPath)))
+        else if (auto localDataPath{homePath / ".local/share/surge-xt"};
+                 fs::is_directory(localDataPath))
         {
-            datapath = localDataPath;
+            datapath = std::move(localDataPath);
         }
         else
         {
-            datapath = std::string(homePath) + "/.local/share/Surge XT/";
+            datapath = homePath / ".local/share/Surge XT";
         }
 
         /*
@@ -308,21 +303,18 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     ** Compensating for whether your distro makes you a ~/Documents or not
     */
 
-    std::string documentsSurge = std::string(homePath) + "/Documents/Surge XT";
-    std::string dotSurge = std::string(homePath) + "/.Surge XT";
-    std::string documents = std::string(homePath) + "/Documents/";
-
-    if (fs::is_directory(string_to_path(documentsSurge)))
+    // FIXME: This "if" chain makes no sense. It's only here as a 1:1 mapping from the old code.
+    if (auto documentsSurge = homePath / "Documents/Surge XT"; fs::is_directory(documentsSurge))
     {
-        userDataPath = documentsSurge;
+        userDataPath = std::move(documentsSurge);
     }
-    else if (fs::is_directory(string_to_path(dotSurge)))
+    else if (auto dotSurge = homePath / ".Surge XT"; fs::is_directory(dotSurge))
     {
-        userDataPath = dotSurge;
+        userDataPath = std::move(dotSurge);
     }
-    else if (fs::is_directory(string_to_path(documents)))
+    else if (auto documents = homePath / "Documents"; fs::is_directory(documents))
     {
-        userDataPath = documentsSurge;
+        userDataPath = std::move(documentsSurge);
     }
     else
     {

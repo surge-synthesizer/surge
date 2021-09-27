@@ -14,6 +14,7 @@
 */
 
 #include "platform/Paths.h"
+#include <cstdlib>
 #include <stdexcept>
 #include <dlfcn.h>
 
@@ -29,6 +30,14 @@ fs::path binaryPath()
         throw std::runtime_error{"Failed to retrieve shared object file name"};
     }
     return fs::path{info.dli_fname};
+}
+
+fs::path homePath()
+{
+    const char *const path = std::getenv("HOME");
+    if (!path || !path[0])
+        throw std::runtime_error{"The environment variable HOME is unset or empty"};
+    return fs::path{path};
 }
 
 } // namespace Surge::Paths
