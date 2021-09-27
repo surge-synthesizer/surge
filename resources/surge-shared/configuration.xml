@@ -40,7 +40,7 @@
 <fx>
 <type i="0" name="Off"/>
 <separator/>
-<sectionheader label="FILTERS AND EQS"/>
+<sectionheader label="FILTERING"/>
 <type i="6" name="EQ">
     <snapshot name="Init" p0="0.000000" p1="-27.251785" p2="2.000000" p3="0.000000" p4="6.000000" p5="2.000000"
               p6="0.000000" p7="54.964317" p8="2.223215"/>
@@ -56,7 +56,7 @@
               p7="0.75" p8="0.793701" p9="1" p10="0" p11="1"/>
 </type>
 <separator/>
-<sectionheader label="SATURATION AND SHAPING"/>
+<sectionheader label="DISTORTION"/>
 <type i="18" name="CHOW">
     <snapshot name="Init" p0="-24" p1="10" p3="1"/>
 </type>
@@ -77,7 +77,7 @@
               p7="0" p8="1"/>
 </type>
 <separator/>
-<sectionheader label="FREQUENCY"/>
+<sectionheader label="MANGLING"/>
 <type i="21" name="Combulator">
     <snapshot name="Init" p0="0" p1="-9" p2="0.25" p3="-0.25" p4="0.75" p5="0" p6="0.793701" p7="0.793701" p8="0.793701"
               p9="0.25" p10="-0.25" p11="1"/>
@@ -98,8 +98,10 @@
     <snapshot name="Init" p0="0" p1="-96" p2="0" p3="0" p5="20" p6="-15.4741" p7="49.0958" p8="0" p9="0" p10="0"
               p11="1"/>
 </type>
+<sectionheader label="" columnbreak="1"/>
+<type i="-1" name=""/>
 <separator/>
-<sectionheader label="MODULATION" columnbreak="1"/>
+<sectionheader label="MODULATION"/>
 <type i="9" name="Chorus">
     <snapshot name="Init (Dry)" p0="-7.885717" p1="-2.850000" p2="0.669643" p3="0.000000" p4="-23.625008" p5="65.662498"
               p6="0.500000"/>
@@ -121,7 +123,7 @@
     <snapshot name="Init" p0="-7.00000" p1="0.000000" p2="0.000000"/>
 </type>
 <separator/>
-<sectionheader label="TIME"/>
+<sectionheader label="TIME &amp; SPACE"/>
 <type i="1" name="Delay">
     <snapshot name="Init (Dry)" p0="-1.000000" p0_temposync="1" p1="-1.000000" p1_temposync="1" p2="0.000000"
               p3="0.000000" p4="-14.105346" p5="48.289276" p6="-1.179463" p7="0.000000" p8="0.000000" p9="0.000000"
@@ -143,7 +145,7 @@
               p6="0.500000" p7="0.500000" p8="0.000000" p9="1.000000"/>
 </type>
 <separator/>
-<sectionheader label="MULTI"/>
+<sectionheader label="MULTIEFFECTS"/>
 <type i="14" name="Airwindows">
     <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>
 </type>
