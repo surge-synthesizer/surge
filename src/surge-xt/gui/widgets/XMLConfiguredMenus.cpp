@@ -504,49 +504,50 @@ void FxMenu::mouseExit(const juce::MouseEvent &event)
 
 void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {
-    if (!type)
-        fxbuffer->type.val.i = type;
-
-    if (e)
+    if (type > -1)
     {
         fxbuffer->type.val.i = type;
-        // storage->patch.update_controls();
-        selectedName = e->Attribute("name");
 
-        Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
-        if (t_fx)
+        if (e)
         {
-            t_fx->init_ctrltypes();
-            t_fx->init_default_values();
-            delete t_fx;
-        }
+            // storage->patch.update_controls();
+            selectedName = e->Attribute("name");
 
-        for (int i = 0; i < n_fx_params; i++)
-        {
-            double d;
-            int j;
-            char lbl[TXT_SIZE], sublbl[TXT_SIZE];
-            snprintf(lbl, TXT_SIZE, "p%i", i);
-            if (fxbuffer->p[i].valtype == vt_float)
+            Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
+            if (t_fx)
             {
-                if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
-                    fxbuffer->p[i].set_storage_value((float)d);
-            }
-            else
-            {
-                if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
-                    fxbuffer->p[i].set_storage_value(j);
+                t_fx->init_ctrltypes();
+                t_fx->init_default_values();
+                delete t_fx;
             }
 
-            snprintf(sublbl, TXT_SIZE, "p%i_temposync", i);
-            fxbuffer->p[i].temposync =
-                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-            snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
-            fxbuffer->p[i].set_extend_range(
-                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1)));
-            snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
-            fxbuffer->p[i].deactivated =
-                ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            for (int i = 0; i < n_fx_params; i++)
+            {
+                double d;
+                int j;
+                char lbl[TXT_SIZE], sublbl[TXT_SIZE];
+                snprintf(lbl, TXT_SIZE, "p%i", i);
+                if (fxbuffer->p[i].valtype == vt_float)
+                {
+                    if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                        fxbuffer->p[i].set_storage_value((float)d);
+                }
+                else
+                {
+                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                        fxbuffer->p[i].set_storage_value(j);
+                }
+
+                snprintf(sublbl, TXT_SIZE, "p%i_temposync", i);
+                fxbuffer->p[i].temposync =
+                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+                snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
+                fxbuffer->p[i].set_extend_range(
+                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1)));
+                snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
+                fxbuffer->p[i].deactivated =
+                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+            }
         }
     }
 }
