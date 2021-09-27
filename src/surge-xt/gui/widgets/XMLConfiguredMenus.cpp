@@ -40,6 +40,20 @@ void XMLMenuPopulator::scanXMLPresets()
             {
                 scanXMLPresetForType(type, std::vector<std::string>());
             }
+            else if (type->Value() && strcmp(type->Value(), "sectionheader") == 0)
+            {
+                Item sec;
+                sec.isSectionHeader = true;
+                if (type->Attribute("label"))
+                    sec.name = type->Attribute("label");
+                else
+                    sec.name = "UNLABELED SECTION";
+                int b = 0;
+                if (type->QueryIntAttribute("columnbreak", &b) != TIXML_SUCCESS)
+                    b = 0;
+                sec.hasColumnBreak = b;
+                allPresets.push_back(sec);
+            }
             else if (type->Value() && strcmp(type->Value(), "separator") == 0)
             {
                 Item sep;
@@ -130,6 +144,7 @@ void XMLMenuPopulator::populate()
         enum
         {
             SEP,
+            SECHEAD,
             FACPS,
             USPS,
             FOLD
@@ -149,6 +164,7 @@ void XMLMenuPopulator::populate()
         std::vector<Tree *> children;
         bool hasUser{false};
         bool hasFac{false};
+        bool colBreak{false};
 
         void addByPath(const Item &i, int idx, int depth = 0)
         {
@@ -161,7 +177,9 @@ void XMLMenuPopulator::populate()
                 t->fullPath = i.pathElements;
                 t->parent = this;
                 t->depth = depth;
-                t->type = i.isSeparator ? SEP : (i.isUser ? USPS : FACPS);
+                t->type =
+                    i.isSeparator ? SEP : (i.isSectionHeader ? SECHEAD : (i.isUser ? USPS : FACPS));
+                t->colBreak = i.hasColumnBreak;
 
                 children.push_back(t);
             }
@@ -217,6 +235,7 @@ void XMLMenuPopulator::populate()
                     hasUser = true;
                     break;
                 case SEP:
+                case SECHEAD:
                     break;
                 }
             }
@@ -233,6 +252,7 @@ void XMLMenuPopulator::populate()
 
             for (auto c : children)
             {
+                // std::cout << c->type << " " << c->name << std::endl;
                 switch (c->type)
                 {
                 case FACPS:
@@ -256,6 +276,13 @@ void XMLMenuPopulator::populate()
                 case SEP:
                 {
                     m.addSeparator();
+                }
+                break;
+                case SECHEAD:
+                {
+                    if (c->colBreak)
+                        m.addColumnBreak();
+                    m.addSectionHeader(c->name);
                 }
                 break;
                 case FOLD:
