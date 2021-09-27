@@ -27,6 +27,9 @@ fs::path appPath();
 /// @return The path of the running Surge binary file itself (.exe, .dll, .so, ...)
 fs::path binaryPath();
 
+/// @return The current user's home directory (e.g. /home/user, /Users/user, C:\Users\user)
+fs::path homePath();
+
 /// @return The directory where the running Surge application / plugin is installed
 inline fs::path installPath() { return appPath().parent_path(); }
 

@@ -16,6 +16,24 @@
 #include "platform/Paths.h"
 #include <system_error>
 #include <windows.h>
+#include <shlobj.h>
+
+namespace
+{
+
+fs::path knownFolderPath(REFKNOWNFOLDERID rfid)
+{
+    fs::path path;
+    PWSTR pathStr{};
+    if (::SHGetKnownFolderPath(rfid, 0, nullptr, &pathStr) == S_OK)
+        path = pathStr;
+    ::CoTaskMemFree(pathStr);
+    if (path.empty())
+        throw std::runtime_error{"Failed to retrieve known folder path"};
+    return path;
+}
+
+} // anonymous namespace
 
 namespace Surge::Paths
 {
@@ -41,5 +59,7 @@ fs::path binaryPath()
             return fs::path{&buf[0]};
     }
 }
+
+fs::path homePath() { return knownFolderPath(FOLDERID_Profile); }
 
 } // namespace Surge::Paths
