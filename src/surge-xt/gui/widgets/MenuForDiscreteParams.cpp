@@ -56,10 +56,15 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
 
     if (bg)
     {
-        bg->draw(g, 1.0, imgt);
+        float dOp = 1.0;
+        if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
+        {
+            dOp = 0.5;
+        }
+        bg->draw(g, dOp, imgt);
         if (isHovered && bghover)
         {
-            bghover->draw(g, 1.0, imgt);
+            bghover->draw(g, dOp, imgt);
         }
     }
 
@@ -196,6 +201,15 @@ void MenuForDiscreteParams::mouseDrag(const juce::MouseEvent &e)
         lastDragDistance = d;
     }
 }
+
+void MenuForDiscreteParams::mouseDoubleClick(const juce::MouseEvent &e)
+{
+    if (glyphMode && glyphPosition.contains(e.position))
+    {
+        notifyControlModifierDoubleClicked(e.mods.allKeyboardModifiers);
+    }
+}
+
 void MenuForDiscreteParams::mouseUp(const juce::MouseEvent &e)
 {
     if (isDraggingGlyph && !Surge::GUI::showCursor(storage))

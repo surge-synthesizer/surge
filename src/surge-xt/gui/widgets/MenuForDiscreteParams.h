@@ -135,6 +135,7 @@ struct MenuForDiscreteParams : public juce::Component,
     void mouseDown(const juce::MouseEvent &e) override;
     void mouseDrag(const juce::MouseEvent &e) override;
     void mouseUp(const juce::MouseEvent &e) override;
+    void mouseDoubleClick(const juce::MouseEvent &e) override;
 
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &w) override;
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;

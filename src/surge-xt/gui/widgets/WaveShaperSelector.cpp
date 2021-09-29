@@ -24,6 +24,7 @@ WaveShaperSelector::~WaveShaperSelector() {}
 void WaveShaperSelector::paint(juce::Graphics &g)
 {
     float dOpacity = (isDeactivated ? 0.5 : 1.0);
+    float dThick = (isDeactivated ? 0.6 : 1.0);
     if (wsCurves[iValue].empty())
     {
         /*
@@ -151,7 +152,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover).withAlpha(dOpacity));
         else
             g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave).withAlpha(dOpacity));
-        g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
+        g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : dThick}, xf);
     }
 }
 
@@ -168,6 +169,13 @@ void WaveShaperSelector::setValue(float f)
     repaint();
 }
 
+void WaveShaperSelector::mouseDoubleClick(const juce::MouseEvent &event)
+{
+    if (waveArea.contains(event.position.toInt()))
+    {
+        notifyControlModifierDoubleClicked(event.mods.allKeyboardModifiers);
+    }
+}
 void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 {
     if (forwardedMainFrameMouseDowns(event))
