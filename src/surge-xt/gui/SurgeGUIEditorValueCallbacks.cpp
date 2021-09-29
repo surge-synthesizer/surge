@@ -962,6 +962,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
+    if (isDoubleClickEvent)
+    {
+        int ptag = tag - start_paramtags;
+
+        if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+        {
+            Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+            if (p->ctrltype == ct_filtertype || p->ctrltype == ct_wstype)
+            {
+                p->deactivated = !p->deactivated;
+                synth->refresh_editor = true;
+                return 0;
+            }
+        }
+    }
+
     if (!(button.isRightButtonDown() || button.isCtrlDown() || isDoubleClickEvent))
     {
         return 0;
