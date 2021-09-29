@@ -1317,11 +1317,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 if (param_ptr[i]->can_deactivate())
                 {
-                    if ((param_ptr[i]->ctrlgroup ==
-                         cg_LFO) || // this is the LFO rate and env special case
-                        (param_ptr[i]->ctrlgroup == cg_GLOBAL &&
-                         param_ptr[i]->ctrltype ==
-                             ct_freq_hpf)) // this is the global highpass special case
+                    auto cg = param_ptr[i]->ctrlgroup;
+                    auto ct = param_ptr[i]->ctrltype;
+                    // Do we want to taggle to default deactivated on or off?
+                    if ((cg == cg_LFO) || // this is the LFO rate and env special case
+                        (ct == cg_GLOBAL &&
+                         ct == ct_freq_hpf) || // this is the global highpass special case
+                        (ct == ct_filtertype || ct == ct_wstype) // filter bypass
+                    )
                         param_ptr[i]->deactivated = false;
                     else
                         param_ptr[i]->deactivated = true;

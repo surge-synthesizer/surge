@@ -340,6 +340,8 @@ bool Parameter::can_deactivate() const
     case ct_envtime_deactivatable:
     case ct_tape_drive:
     case ct_tape_speed:
+    case ct_wstype:
+    case ct_filtertype:
         return true;
     }
     return false;

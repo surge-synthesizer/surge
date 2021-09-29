@@ -3529,11 +3529,33 @@ void SurgeSynthesizer::process()
         storage.modRoutingMutex.unlock();
 
         fbq_global g;
-        g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
-                                      storage.getPatch().scene[s].filterunit[0].subtype.val.i);
-        g.FU2ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[1].type.val.i,
-                                      storage.getPatch().scene[s].filterunit[1].subtype.val.i);
-        g.WSptr = GetQFPtrWaveshaper(storage.getPatch().scene[s].wsunit.type.val.i);
+        if (storage.getPatch().scene[s].filterunit[0].type.deactivated)
+        {
+            g.FU1ptr = nullptr;
+        }
+        else
+        {
+            g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
+                                          storage.getPatch().scene[s].filterunit[0].subtype.val.i);
+        }
+        if (storage.getPatch().scene[s].filterunit[1].type.deactivated)
+        {
+            g.FU2ptr = nullptr;
+        }
+        else
+        {
+            g.FU2ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[1].type.val.i,
+                                          storage.getPatch().scene[s].filterunit[1].subtype.val.i);
+        }
+
+        if (storage.getPatch().scene[s].wsunit.type.deactivated)
+        {
+            g.WSptr = nullptr;
+        }
+        else
+        {
+            g.WSptr = GetQFPtrWaveshaper(storage.getPatch().scene[s].wsunit.type.val.i);
+        }
 
         FBQFPtr ProcessQuadFB =
             GetFBQPointer(storage.getPatch().scene[s].filterblock_configuration.val.i,

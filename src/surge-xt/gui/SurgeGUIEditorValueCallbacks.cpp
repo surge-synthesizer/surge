@@ -1354,6 +1354,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 makeMonoModeOptionsMenu(menuRect, false));
                         }
                     }
+
+                    if (p->can_deactivate())
+                    {
+                        contextMenu.addSeparator();
+                        std::string txt = "Deactivate";
+                        if (p->deactivated)
+                        {
+                            txt = "Activate";
+                        }
+                        contextMenu.addItem(txt, [this, p]() {
+                            p->deactivated = !p->deactivated;
+                            this->synth->refresh_editor = true;
+                        });
+                    }
                 }
             }
 
