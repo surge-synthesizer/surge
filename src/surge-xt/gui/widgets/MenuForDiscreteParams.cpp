@@ -89,11 +89,16 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
             g.reduceClipRegion(glyphBox);
             if (dragGlyph)
             {
-                dragGlyph->draw(g, 1.0, gt);
+                auto opacity = 1.0;
+                if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
+                {
+                    opacity = 0.5;
+                }
+                dragGlyph->draw(g, opacity, gt);
 
                 if (isHovered && dragGlyphHover)
                 {
-                    dragGlyphHover->draw(g, 1.0, gt);
+                    dragGlyphHover->draw(g, opacity, gt);
                 }
             }
             else
@@ -110,6 +115,10 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
         if (isHovered)
         {
             valcol = skin->getColor(Colors::Menu::FilterValueHover);
+        }
+        if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
+        {
+            valcol = valcol.withAlpha(0.5f);
         }
         g.setColour(valcol);
         g.drawText(dt, r, juce::Justification::centredLeft);
@@ -130,7 +139,7 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
             labcol = skin->getColor(Colors::Menu::NameHover);
             valcol = skin->getColor(Colors::Menu::ValueHover);
         }
-        if (isDeactivated)
+        if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
         {
             labcol = skin->getColor(Colors::Menu::NameDeactivated);
             valcol = skin->getColor(Colors::Menu::ValueDeactivated);

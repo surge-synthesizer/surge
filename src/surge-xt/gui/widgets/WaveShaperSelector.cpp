@@ -23,6 +23,7 @@ WaveShaperSelector::~WaveShaperSelector() {}
 
 void WaveShaperSelector::paint(juce::Graphics &g)
 {
+    float dOpacity = (isDeactivated ? 0.5 : 1.0);
     if (wsCurves[iValue].empty())
     {
         /*
@@ -88,11 +89,11 @@ void WaveShaperSelector::paint(juce::Graphics &g)
 
     if (isLabelHovered)
     {
-        g.setColour(skin->getColor(Colors::Waveshaper::TextHover));
+        g.setColour(skin->getColor(Colors::Waveshaper::TextHover).withAlpha(dOpacity));
     }
     else
     {
-        g.setColour(skin->getColor(Colors::Waveshaper::Text));
+        g.setColour(skin->getColor(Colors::Waveshaper::Text).withAlpha(dOpacity));
     }
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
@@ -147,9 +148,9 @@ void WaveShaperSelector::paint(juce::Graphics &g)
 
         g.reduceClipRegion(waveArea);
         if (isWaveHovered)
-            g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
+            g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover).withAlpha(dOpacity));
         else
-            g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+            g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave).withAlpha(dOpacity));
         g.strokePath(curvePath, juce::PathStrokeType{iValue == wst_none ? 0.6f : 1.f}, xf);
     }
 }

@@ -101,7 +101,8 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
 
     SurgeImage *bg{nullptr}, *bgHover{nullptr};
     void onSkinChanged() override;
-    bool isLabelHovered{false}, isWaveHovered{false};
+    bool isLabelHovered{false}, isWaveHovered{false}, isDeactivated{false};
+    void setDeactivated(bool b) { isDeactivated = b; }
 
 #if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;

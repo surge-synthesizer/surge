@@ -4157,6 +4157,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             auto dbls = currentSkin->standardHoverAndHoverOnForIDB(IDB_MENU_AS_SLIDER, bitmapStore);
             hs->setBackgroundDrawable(dbls[0]);
             hs->setHoverBackgroundDrawable(dbls[1]);
+            hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
+
             setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
             param[p->id] = hs.get();
             frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
@@ -4694,6 +4696,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hsw->setStorage(&(synth->storage));
         hsw->setBounds(rect);
         hsw->setValue(p->get_value_f01());
+        hsw->setDeactivated(p->appears_deactivated());
         p->ctrlstyle = p->ctrlstyle | kNoPopup;
 
         setAccessibilityInformationByParameter(hsw.get(), p, "Select");
@@ -4704,7 +4707,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         hsw->setMinMax(0, n_fu_types - 1);
         hsw->setLabel(p->get_name());
-        hsw->setDeactivated(false);
 
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
         if (pv.has_value())
@@ -4796,6 +4798,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         waveshaperSelector->setTag(p->id + start_paramtags);
         waveshaperSelector->setBounds(rect);
         waveshaperSelector->setValue(p->get_value_f01());
+
+        waveshaperSelector->setDeactivated(p->appears_deactivated());
 
         auto *parm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
         if (parm && parm->supportsTotalIndexOrdering())
