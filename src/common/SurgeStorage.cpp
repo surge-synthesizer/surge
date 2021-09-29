@@ -1258,10 +1258,10 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
     }
 }
 
-void SurgeStorage::clipboard_copy(int type, int scene, int entry)
+void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 {
     bool includemod = false, includeall = false;
-    if (type == cp_oscmod)
+    if (type & cp_oscmod)
     {
         type = cp_osc;
         includemod = true;
@@ -1271,9 +1271,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
     int id = -1;
 
     clipboard_type = type;
-    switch (type)
+    if (type & cp_osc)
     {
-    case cp_osc:
         cgroup = 2;
         cgroup_e = entry;
         id = getPatch().scene[scene].osc[entry].type.id; // first parameter id
@@ -1285,8 +1284,9 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
         }
         memcpy(&clipboard_extraconfig[0], &getPatch().scene[scene].osc[entry].extraConfig,
                sizeof(OscillatorStorage::ExtraConfigurationData));
-        break;
-    case cp_lfo:
+    }
+    if (type & cp_lfo)
+    {
         cgroup = 6;
         cgroup_e = entry + ms_lfo1;
         id = getPatch().scene[scene].lfo[entry].shape.id;
@@ -1297,8 +1297,8 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
             clipboard_msegs[0] = getPatch().msegs[scene][entry];
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
             clipboard_formulae[0] = getPatch().formulamods[scene][entry];
-        break;
-    case cp_scene:
+    }
+    if (type & cp_scene)
     {
         includemod = true;
         includeall = true;
@@ -1320,17 +1320,13 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
         }
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
     }
-    break;
-    default:
-        return;
-    }
 
     modRoutingMutex.lock();
     {
-
         clipboard_p.clear();
         clipboard_modulation_scene.clear();
         clipboard_modulation_voice.clear();
+        clipboard_modulation_global.clear();
 
         std::set<int> used_entries;
 
@@ -1377,14 +1373,62 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry)
                     clipboard_modulation_scene.push_back(m);
             }
         }
+
+        if (type & cp_modulator_target)
+        {
+            if (entry >= 0)
+            {
+                ms = (modsources)(entry + ms_lfo1);
+            }
+            n = getPatch().scene[scene].modulation_voice.size();
+            for (int i = 0; i < n; i++)
+            {
+                if (getPatch().scene[scene].modulation_voice[i].source_id != ms)
+                    continue;
+                ModulationRouting m;
+                m.source_id = getPatch().scene[scene].modulation_voice[i].source_id;
+                m.source_index = getPatch().scene[scene].modulation_voice[i].source_index;
+                m.depth = getPatch().scene[scene].modulation_voice[i].depth;
+                m.destination_id = getPatch().scene[scene].modulation_voice[i].destination_id;
+                clipboard_modulation_voice.push_back(m);
+            }
+            n = getPatch().scene[scene].modulation_scene.size();
+            for (int i = 0; i < n; i++)
+            {
+                if (getPatch().scene[scene].modulation_scene[i].source_id != ms)
+                    continue;
+                ModulationRouting m;
+                m.source_id = getPatch().scene[scene].modulation_scene[i].source_id;
+                m.source_index = getPatch().scene[scene].modulation_scene[i].source_index;
+                m.depth = getPatch().scene[scene].modulation_scene[i].depth;
+                m.destination_id = getPatch().scene[scene].modulation_scene[i].destination_id;
+                clipboard_modulation_scene.push_back(m);
+            }
+            n = getPatch().modulation_global.size();
+            for (int i = 0; i < n; i++)
+            {
+                if (getPatch().modulation_global[i].source_id != ms ||
+                    getPatch().modulation_global[i].source_scene != scene)
+                    continue;
+                ModulationRouting m;
+                m.source_id = getPatch().modulation_global[i].source_id;
+                m.source_index = getPatch().modulation_global[i].source_index;
+                m.source_scene = getPatch().modulation_global[i].source_scene;
+                m.depth = getPatch().modulation_global[i].depth;
+                m.destination_id = getPatch().modulation_global[i].destination_id;
+                clipboard_modulation_global.push_back(m);
+            }
+        }
     }
     modRoutingMutex.unlock();
 }
 
-void SurgeStorage::clipboard_paste(int type, int scene, int entry)
+void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms,
+                                   std::function<bool(int, modsources)> isValid)
 {
     assert(scene < n_scenes);
-    if (type != clipboard_type)
+
+    if (!(type & clipboard_type))
         return;
 
     int cgroup = -1;
@@ -1393,12 +1437,12 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
     int n = clipboard_p.size();
     int start = 0;
 
-    if (!n)
-        return;
+    // fixme make this one or the other
+    // if (!n)
+    //    return;
 
-    switch (type)
+    if (type & cp_osc)
     {
-    case cp_osc:
         cgroup = 2;
         cgroup_e = entry;
         id = getPatch().scene[scene].osc[entry].type.id; // first parameter id
@@ -1408,13 +1452,14 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 
         memcpy(&getPatch().scene[scene].osc[entry].extraConfig, &clipboard_extraconfig[0],
                sizeof(OscillatorStorage::ExtraConfigurationData));
-        break;
-    case cp_lfo:
+    }
+    if (type & cp_lfo)
+    {
         cgroup = 6;
         cgroup_e = entry + ms_lfo1;
         id = getPatch().scene[scene].lfo[entry].shape.id;
-        break;
-    case cp_scene:
+    }
+    if (type & cp_scene)
     {
         id = getPatch().scene[scene].octave.id;
 
@@ -1437,14 +1482,16 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
 
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
     }
-    break;
-    default:
-        return;
+
+    if (type == cp_modulator_target)
+    {
+        // We use an == here rather than an & because in this case we want *only* the mod targets
+        // so disable the parameter copies
+        n = 0;
     }
 
     modRoutingMutex.lock();
     {
-
         for (int i = start; i < n; i++)
         {
             Parameter p = clipboard_p[i];
@@ -1460,9 +1507,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
             getPatch().param_ptr[pid]->deform_type = p.deform_type;
         }
 
-        switch (type)
-        {
-        case cp_osc:
+        if (type & cp_osc)
         {
             if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
             {
@@ -1495,8 +1540,8 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
                 getPatch().scene[scene].modulation_scene.push_back(m);
             }
         }
-        break;
-        case cp_lfo:
+        if (type & cp_lfo)
+        {
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
                 memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
                        sizeof(StepSequencerStorage));
@@ -1504,9 +1549,70 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
                 getPatch().msegs[scene][entry] = clipboard_msegs[0];
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
                 getPatch().formulamods[scene][entry] = clipboard_formulae[0];
-
-            break;
-        case cp_scene:
+        }
+        if (type & cp_modulator_target)
+        {
+            if (entry >= 0)
+            {
+                ms = (modsources)(entry + ms_lfo1);
+            }
+            // copy modroutings
+            n = clipboard_modulation_voice.size();
+            for (int i = 0; i < n; i++)
+            {
+                ModulationRouting m;
+                m.source_id = ms;
+                m.source_index = clipboard_modulation_voice[i].source_index;
+                m.depth = clipboard_modulation_voice[i].depth;
+                m.destination_id = clipboard_modulation_voice[i].destination_id;
+                if (isValid(m.destination_id + getPatch().scene_start[scene],
+                            (modsources)m.source_id))
+                {
+                    if (isScenelevel((modsources)m.source_id))
+                    {
+                        getPatch().scene[scene].modulation_scene.push_back(m);
+                    }
+                    else
+                    {
+                        getPatch().scene[scene].modulation_voice.push_back(m);
+                    }
+                }
+            }
+            n = clipboard_modulation_scene.size();
+            for (int i = 0; i < n; i++)
+            {
+                ModulationRouting m;
+                m.source_id = ms;
+                m.source_index = clipboard_modulation_scene[i].source_index;
+                m.depth = clipboard_modulation_scene[i].depth;
+                m.destination_id = clipboard_modulation_scene[i].destination_id;
+                if (isValid(m.destination_id + getPatch().scene_start[scene],
+                            (modsources)m.source_id))
+                {
+                    if (isScenelevel((modsources)m.source_id))
+                    {
+                        getPatch().scene[scene].modulation_scene.push_back(m);
+                    }
+                    else
+                    {
+                        getPatch().scene[scene].modulation_voice.push_back(m);
+                    }
+                }
+            }
+            n = clipboard_modulation_global.size();
+            for (int i = 0; i < n; i++)
+            {
+                ModulationRouting m;
+                m.source_id = ms;
+                m.source_index = clipboard_modulation_global[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                m.depth = clipboard_modulation_global[i].depth;
+                m.destination_id = clipboard_modulation_global[i].destination_id;
+                if (isValid(m.destination_id, (modsources)m.source_id))
+                    getPatch().modulation_global.push_back(m);
+            }
+        }
+        if (type & cp_scene)
         {
             getPatch().scene[scene].modulation_voice.clear();
             getPatch().scene[scene].modulation_scene.clear();
@@ -1532,7 +1638,6 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry)
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
                 getPatch().scene[scene].modulation_scene.push_back(m);
             }
-        }
         }
     }
 

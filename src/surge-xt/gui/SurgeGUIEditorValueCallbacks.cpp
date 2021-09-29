@@ -831,10 +831,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            auto hamSub = juce::PopupMenu();
-            cms->buildHamburgerMenu(hamSub, false);
-            contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
-            contextMenu.addSeparator();
+            if (cms->needsHamburger())
+            {
+                auto hamSub = juce::PopupMenu();
+                cms->buildHamburgerMenu(hamSub, false);
+                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
+                contextMenu.addSeparator();
+            }
 
             if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
             {
@@ -929,21 +932,54 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator"),
                                     [this, sc, lfo_id]() {
-                                        if (lfo_id >= 0)
-                                        {
-                                            synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
-                                            mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
-                                        }
+                                        synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
+                                        mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
                                     });
 
-                if (synth->storage.get_clipboard_type() == cp_lfo)
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator with Targets"),
+                                    [this, sc, lfo_id]() {
+                                        synth->storage.clipboard_copy(cp_lfomod, sc, lfo_id);
+                                        mostRecentCopiedMSEGState = msegEditState[sc][lfo_id];
+                                    });
+
+                contextMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu("Copy Targets"), [this, sc, lfo_id]() {
+                        synth->storage.clipboard_copy(cp_modulator_target, sc, lfo_id);
+                    });
+
+                if (synth->storage.get_clipboard_type() & cp_lfo ||
+                    synth->storage.get_clipboard_type() & cp_modulator_target)
                 {
-                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste"), [this, sc, lfo_id]() {
-                        if (lfo_id >= 0)
-                        {
-                            synth->storage.clipboard_paste(cp_lfo, sc, lfo_id);
-                            msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
-                        }
+                    auto t = synth->storage.get_clipboard_type();
+                    contextMenu.addItem(
+                        Surge::GUI::toOSCaseForMenu("Paste"), [this, sc, t, lfo_id]() {
+                            synth->storage.clipboard_paste(
+                                t, sc, lfo_id, ms_original, [this](int p, modsources m) {
+                                    auto res = synth->isValidModulation(p, m);
+                                    return res;
+                                });
+                            if (t & cp_lfo)
+                                msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
+                            queue_refresh = true;
+                        });
+                }
+            }
+            else
+            {
+                contextMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu("Copy Targets"), [this, sc, modsource]() {
+                        synth->storage.clipboard_copy(cp_modulator_target, sc, -1, modsource);
+                    });
+
+                if (synth->storage.get_clipboard_type() & cp_modulator_target)
+                {
+                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste"), [this, sc,
+                                                                               modsource]() {
+                        synth->storage.clipboard_paste(
+                            cp_modulator_target, sc, -1, modsource, [this](int p, modsources m) {
+                                auto res = synth->isValidModulation(p, m);
+                                return res;
+                            });
                         queue_refresh = true;
                     });
                 }

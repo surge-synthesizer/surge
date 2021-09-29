@@ -880,12 +880,12 @@ struct PatchCategory
 enum surge_copysource
 {
     cp_off = 0,
-    cp_scene,
-    cp_osc,
-    cp_lfo,
-    cp_oscmod,
-
-    n_copysources,
+    cp_scene = 1U << 1,
+    cp_osc = 1U << 2,
+    cp_oscmod = 1U << 3,
+    cp_lfo = 1U << 4,
+    cp_modulator_target = 1U << 5,
+    cp_lfomod = cp_lfo | cp_modulator_target
 };
 
 class MTSClient;
@@ -1014,8 +1014,15 @@ class alignas(16) SurgeStorage
     // void load_wt_wav(std::string filename, Wavetable* wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt);
     std::string export_wt_wav_portable(std::string fbase, Wavetable *wt);
-    void clipboard_copy(int type, int scene, int entry);
-    void clipboard_paste(int type, int scene, int entry);
+    void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
+    // this function is a bit of a hack to stop me having a reference to a surge synth
+    // here and also stop me having to move all of isValidModulation and its buddies onto
+    // storage
+    void clipboard_paste(
+        int type, int scene, int entry, modsources ms = ms_original,
+        std::function<bool(int, modsources)> isValidModulation = [](auto a, auto b) {
+            return true;
+        });
     int get_clipboard_type() const;
     int getAdjacentWaveTable(int id, bool nextPrev) const;
 
@@ -1275,7 +1282,8 @@ class alignas(16) SurgeStorage
     MSEGStorage clipboard_msegs[n_lfos];
     FormulaModulatorStorage clipboard_formulae[n_lfos];
     OscillatorStorage::ExtraConfigurationData clipboard_extraconfig[n_oscs];
-    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice;
+    std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice,
+        clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
     char clipboard_wt_names[n_oscs][256];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
