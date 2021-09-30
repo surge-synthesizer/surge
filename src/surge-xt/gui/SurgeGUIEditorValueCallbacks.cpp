@@ -1018,10 +1018,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
     }
 
-    if (!(button.isRightButtonDown() || isDoubleClickEvent))
-    {
-        return 0;
-    }
+    /* ED: unsure why this is here, it prevents keyboard modifiers from reaching the following
+       section of code? */
+    // if (!(button.isRightButtonDown() || isDoubleClickEvent))
+    //{
+    //    return 0;
+    //}
 
     int ptag = tag - start_paramtags;
 
