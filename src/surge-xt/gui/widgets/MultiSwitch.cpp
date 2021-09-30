@@ -91,7 +91,6 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-
     if (event.mods.isPopupMenu() || event.mods.isCommandDown())
     {
         notifyControlModifierClicked(event.mods);
