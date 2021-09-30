@@ -410,10 +410,10 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_gain3].posy_offset = 5;
 
     fxdata->p[combulator_pan2].set_name("Pan 2");
-    fxdata->p[combulator_pan2].set_type(ct_percent_bipolar_stereo);
+    fxdata->p[combulator_pan2].set_type(ct_percent_bipolar_pan);
     fxdata->p[combulator_pan2].posy_offset = 7;
     fxdata->p[combulator_pan3].set_name("Pan 3");
-    fxdata->p[combulator_pan3].set_type(ct_percent_bipolar_stereo);
+    fxdata->p[combulator_pan3].set_type(ct_percent_bipolar_pan);
     fxdata->p[combulator_pan3].posy_offset = 7;
     fxdata->p[combulator_mix].set_name("Mix");
     fxdata->p[combulator_mix].set_type(ct_percent);

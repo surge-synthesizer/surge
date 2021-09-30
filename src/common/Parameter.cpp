@@ -394,6 +394,7 @@ bool Parameter::is_bipolar() const
     case ct_freq_mod:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_pan:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
     case ct_freq_shift:
@@ -992,6 +993,7 @@ void Parameter::set_type(int ctrltype)
     case ct_modern_trimix:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
@@ -1313,6 +1315,18 @@ void Parameter::set_type(int ctrltype)
         snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "100.00 %% (Right)");
         displayInfo.scale = 100;
         break;
+    case ct_percent_bipolar_pan:
+        displayType = LinearWithScale;
+        displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
+                                     ParamDisplayFeatures::kHasCustomMaxString |
+                                     ParamDisplayFeatures::kHasCustomDefaultString;
+
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
+        snprintf(displayInfo.minLabel, DISPLAYINFO_TXT_SIZE, "-100.00 %% (Left)");
+        snprintf(displayInfo.defLabel, DISPLAYINFO_TXT_SIZE, "0.00 %% (Center)");
+        snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "100.00 %% (Right)");
+        displayInfo.scale = 100;
+        break;
     case ct_percent_bipolar_stringbal:
         displayType = LinearWithScale;
         displayInfo.customFeatures = ParamDisplayFeatures::kHasCustomMinString |
@@ -1580,6 +1594,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent200:
         case ct_percent_bipolar:
         case ct_percent_bipolar_stereo:
+        case ct_percent_bipolar_pan:
         case ct_percent_bipolar_stringbal:
         case ct_percent_bipolar_w_dynamic_unipolar_formatting:
         case ct_twist_aux_mix:
@@ -3419,13 +3434,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "LR -> MS -> LR");
+                snprintf(txt, TXT_SIZE, "L-R > M-S > L-R");
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "LR -> MS");
+                snprintf(txt, TXT_SIZE, "L-R > M-S");
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "MS -> LR");
+                snprintf(txt, TXT_SIZE, "M-S > L-R");
                 break;
             }
             break;
@@ -3811,6 +3826,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_percent200:
     case ct_percent_bipolar:
     case ct_percent_bipolar_stereo:
+    case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:

@@ -184,7 +184,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         a->push_back(scene[sc].volume.assign(p_id.next(), id_s++, "volume", "Volume",
                                              ct_amplitude_clipper, Surge::Skin::Scene::volume,
                                              sc_id, cg_GLOBAL, 0, true, sceasy));
-        a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bipolar,
+        a->push_back(scene[sc].pan.assign(p_id.next(), id_s++, "pan", "Pan", ct_percent_bipolar_pan,
                                           Surge::Skin::Scene::pan, sc_id, cg_GLOBAL, 0, true,
                                           sceasy));
         a->push_back(scene[sc].width.assign(p_id.next(), id_s++, "pan2", "Width",
