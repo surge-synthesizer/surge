@@ -54,6 +54,7 @@ const int n_lfos_voice = 6;
 const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
 const int n_osc_params = 7;
+const int n_egs = 2;
 const int n_fx_params = 12;
 const int n_fx_slots = 16;
 const int n_send_slots = 4;
