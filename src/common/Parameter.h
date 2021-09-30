@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -64,6 +64,7 @@ enum ctrltypes
     ct_decibel_attenuation,
     ct_decibel_attenuation_clipper,
     ct_decibel_attenuation_large,
+    ct_decibel_attenuation_plus12,
     ct_decibel_fmdepth,
     ct_decibel_extendable,
     ct_decibel_deactivatable,
@@ -180,6 +181,7 @@ enum ctrltypes
     ct_tape_microns,
     ct_tape_speed,
     ct_lfophaseshuffle,
+    ct_mscodec,
     num_ctrltypes,
 };
 

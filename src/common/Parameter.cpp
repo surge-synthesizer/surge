@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -443,6 +443,7 @@ bool Parameter::is_discrete_selection() const
     case ct_ensemble_stages:
     case ct_alias_wave:
     case ct_wstype:
+    case ct_mscodec:
         return true;
     default:
         break;
@@ -458,6 +459,7 @@ bool Parameter::is_nonlocal_on_change() const
     case ct_twist_engine:
     case ct_phaser_stages:
     case ct_nimbusmode:
+    case ct_mscodec:
         return true;
     default:
         break;
@@ -689,6 +691,12 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_min.f = -96;
         val_max.f = 0;
+        val_default.f = 0;
+        break;
+    case ct_decibel_attenuation_plus12:
+        valtype = vt_float;
+        val_min.f = -48;
+        val_max.f = 12;
         val_default.f = 0;
         break;
     case ct_decibel_fmdepth:
@@ -1037,6 +1045,12 @@ void Parameter::set_type(int ctrltype)
     case ct_distortion_waveshape:
         val_min.i = 0;
         val_max.i = n_fxws - 1;
+        valtype = vt_int;
+        val_default.i = 0;
+        break;
+    case ct_mscodec:
+        val_min.i = 0;
+        val_max.i = 2;
         valtype = vt_int;
         val_default.i = 0;
         break;
@@ -1407,6 +1421,7 @@ void Parameter::set_type(int ctrltype)
     case ct_decibel_attenuation:
     case ct_decibel_attenuation_clipper:
     case ct_decibel_attenuation_large:
+    case ct_decibel_attenuation_plus12:
     case ct_decibel_fmdepth:
     case ct_decibel_narrow:
     case ct_decibel_extra_narrow:
@@ -1662,6 +1677,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_decibel_attenuation:
         case ct_decibel_attenuation_clipper:
         case ct_decibel_attenuation_large:
+        case ct_decibel_attenuation_plus12:
         case ct_decibel_fmdepth:
         case ct_decibel_extendable:
         case ct_decibel_deactivatable:
@@ -3399,6 +3415,20 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case ct_distortion_waveshape:
             snprintf(txt, TXT_SIZE, "%s", wst_names[FXWaveShapers[i]]);
             break;
+        case ct_mscodec:
+            switch (i)
+            {
+            case 0:
+                snprintf(txt, TXT_SIZE, "LR -> MS -> LR");
+                break;
+            case 1:
+                snprintf(txt, TXT_SIZE, "LR -> MS");
+                break;
+            case 2:
+                snprintf(txt, TXT_SIZE, "MS -> LR");
+                break;
+            }
+            break;
         case ct_oscroute:
             switch (i)
             {
@@ -3802,6 +3832,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_decibel_attenuation:
     case ct_decibel_attenuation_clipper:
     case ct_decibel_attenuation_large:
+    case ct_decibel_attenuation_plus12:
     case ct_decibel_fmdepth:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:

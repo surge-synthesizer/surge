@@ -98,6 +98,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/GraphicEQ11BandEffect.cpp
   dsp/effects/GraphicEQ11BandEffect.h
   dsp/effects/ModControl.h
+  dsp/effects/MSToolEffect.cpp
+  dsp/effects/MSToolEffect.h
   dsp/effects/NimbusEffect.cpp
   dsp/effects/NimbusEffect.h
   dsp/effects/ParametricEQ3BandEffect.cpp

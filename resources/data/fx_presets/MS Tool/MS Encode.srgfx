@@ -1,0 +1,23 @@
+<single-fx streaming_version="17">
+  <snapshot name="MS Encode" 
+     type="26"
+     p0="1"
+     p1="-60"
+     p1_deactivated="1"
+     p2="0"
+     p2_deactivated="1"
+     p3="-6.63049"
+     p4="70"
+     p4_deactivated="1"
+     p5="-60"
+     p5_deactivated="1"
+     p6="0"
+     p6_deactivated="1"
+     p7="50.2131"
+     p8="70"
+     p8_deactivated="1"
+     p9="0"
+     p10="0"
+     p11="0"
+  />
+</single-fx>

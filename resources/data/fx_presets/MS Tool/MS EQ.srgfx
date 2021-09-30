@@ -1,0 +1,17 @@
+<single-fx streaming_version="17">
+  <snapshot name="MS EQ" 
+     type="26"
+     p0="0"
+     p1="-60"
+     p2="0"
+     p3="-6.63049"
+     p4="70"
+     p5="-60"
+     p6="0"
+     p7="50.2131"
+     p8="70"
+     p9="0"
+     p10="0"
+     p11="0"
+  />
+</single-fx>
