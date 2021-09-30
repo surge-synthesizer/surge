@@ -24,6 +24,12 @@ jobs:
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
           xcodePath: "/Applications/Xcode_12.2.app"
+        windows-x86-vs2017:
+          imageName: 'vs2017-win2016'
+          isWindows: True
+          cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
+          cmakeConfig: "Debug"
+          cmakeTarget: "surge-xt_Standalone" # just a subset for time
         macOS-x86:
           imageName: 'macos-10.15'
           isMac: True
@@ -46,12 +52,6 @@ jobs:
           cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
-        windows-x86-vs2017:
-          imageName: 'vs2017-win2016'
-          isWindows: True
-          cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
-          cmakeConfig: "Debug"
-          cmakeTarget: $(defaultTargets)
         windows-unittest:
           imageName: 'vs2017-win2016'
           isWindows: True
@@ -66,32 +66,19 @@ jobs:
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
           cmakeTarget: "code-quality-pipeline-checks"
           cmakeConfig: "Debug"
-        linux-pythonapi:
-          imageName: 'ubuntu-20.04'
-          isLinux: True
-          aptGetExtras: ""
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
-          cmakeTarget: "surge-python"
-          cmakeConfig: "Debug"
-        linux-clang-juce:
+        linux-clang-juce-lv2:
           imageName: 'ubuntu-18.04'
           isLinux: True
           aptGetExtras: "clang"
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
-          cmakeTarget: "surge-xt_Standalone"
+          needsLV2: True
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
+          cmakeTarget: "surge-xt_LV2"
           cmakeConfig: "Debug"
-        linux-aarm64-cross-headless:
+        linux-juce-python-targets:
           imageName: 'ubuntu-18.04'
           isLinux: True
-          aptGetExtras: "g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi"
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake"
-          cmakeTarget: "surge-testrunner"
-          cmakeConfig: "Debug"
-        linux-juce-targets:
-          imageName: 'ubuntu-18.04'
-          isLinux: True
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-          cmakeTarget: $(defaultTargets)
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
+          cmakeTarget: "surge-xt_Packaged surge-fx_Packaged surge-python"
           cmakeConfig: "Debug"
         linux-unittest:
           imageName: 'ubuntu-20.04'
@@ -100,13 +87,7 @@ jobs:
           cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
-        linux-lv2:
-          imageName: 'ubuntu-20.04'
-          isLinux: True
-          needsLV2: True
-          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
-          cmakeConfig: "Release"
-          cmakeTarget: "surge-xt_LV2"
+
 
     pool:
       vmImage: $(imageName)
@@ -250,7 +231,7 @@ jobs:
           set -e
 
           export PATH=$AGENT_TEMPDIRECTORY:$PATH
-          
+
           export SURGE_DATA_HOME=`pwd`/resources/data
           ./build/src/surge-testrunner/Release/surge-testrunner
         condition: variables.isMacUnitTest
