@@ -1018,12 +1018,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
     }
 
-    /* ED: unsure why this is here, it prevents keyboard modifiers from reaching the following
+    /* ED: unsure why this is here, it prevents key modifiers from reaching the following
        section of code? */
-    // if (!(button.isRightButtonDown() || isDoubleClickEvent))
-    //{
-    //    return 0;
-    //}
+    /*
+    if (!(button.isRightButtonDown() || isDoubleClickEvent))
+    {
+        return 0;
+    }
+    */
 
     int ptag = tag - start_paramtags;
 
@@ -2217,11 +2219,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 synth->clearModulation(ptag, thisms, current_scene, modsource_index);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
                 jassert(ctrms);
+
                 if (ctrms)
                 {
                     auto use_scene = 0;
+
                     if (this->synth->isModulatorDistinctPerScene(thisms))
+                    {
                         use_scene = current_scene;
+                    }
 
                     ctrms->setModValue(
                         synth->getModulation(p->id, thisms, use_scene, modsource_index));
@@ -2230,6 +2236,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         synth->isActiveModulation(p->id, thisms, use_scene, modsource_index));
                     ctrms->setIsModulationBipolar(synth->isBipolarModulation(thisms));
                 }
+
                 oscWaveform->repaint();
 
                 return 0;
@@ -2240,10 +2247,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                 case ct_lfotype:
                     /*
-                    ** This code resets you to default if you double click on control
-                    ** but on the lfoshape UI this is undesirable; it means if you accidentally
-                    ** control click on step sequencer, say, you go back to sin and lose your
-                    ** edits. So supress
+                    ** This code resets you to default if you double-click on control,
+                    ** but on the LFO type widget this is undesirable; it means if you accidentally
+                    ** Control-click on step sequencer, say, you go back to Sine and lose your
+                    ** edits. So supress it!
                     */
                     break;
                 case ct_freq_audible_with_tunability:
@@ -2270,12 +2277,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     p->set_value_f01(p->get_default_value_f01());
                     control->setValue(p->get_value_f01());
+
                     if (oscWaveform && (p->ctrlgroup == cg_OSC))
+                    {
                         oscWaveform->repaint();
+                    }
+
                     if (lfoDisplay && (p->ctrlgroup == cg_LFO))
+                    {
                         lfoDisplay->repaint();
+                    }
+
                     if (bvf)
+                    {
                         bvf->repaint();
+                    }
+
                     return 0;
                 }
                 }
@@ -2328,6 +2345,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
     }
+
     return 0;
 }
 

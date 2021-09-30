@@ -59,10 +59,9 @@ void Switch::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    notifyControlModifierClicked(event.mods);
-
-    if (event.mods.isPopupMenu())
+    if (event.mods.isPopupMenu() || event.mods.isCommandDown())
     {
+        notifyControlModifierClicked(event.mods);
         return;
     }
 
