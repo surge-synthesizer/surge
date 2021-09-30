@@ -51,7 +51,6 @@
 #include "Surge.h"
 #include "TripleSpread.h"
 #include "ToTape6.h"
-#include "Tube.h"
 #include "UnBox.h"
 #include "Verbity.h"
 #include "VariMu.h"
@@ -182,7 +181,8 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<Mackity::Mackity>, id++, 355, gnSaturation, "Mackity");
     reg.emplace_back(create<MackEQ::MackEQ>, id++, 430, gnFilter, "MackEQ");
 
-    reg.emplace_back(create<Tube::Tube>, id++, 395, gnSaturation, "Tube" );
+    reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
+
     return reg;
 }
 
