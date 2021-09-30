@@ -76,11 +76,11 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
         if (p->set_value_from_string_onto(text.toStdString(), onto))
         {
             if (p->valtype == vt_float)
-                return onto.f;
+                return p->value_to_normalized(onto.f);
             if (p->valtype == vt_int)
-                return onto.i;
+                return p->value_to_normalized((float)onto.i);
             if (p->valtype == vt_bool)
-                return onto.b;
+                return p->value_to_normalized((float)onto.b);
         }
         return 0;
     }
