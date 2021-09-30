@@ -20,6 +20,7 @@
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "AccessibleHelpers.h"
+#include "MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -309,10 +310,6 @@ void XMLMenuPopulator::populate()
     rootTree->updateFacUserFlag();
     menu = juce::PopupMenu();
 
-    if (strcmp(mtype, "fx") == 0)
-    {
-        menu.addSectionHeader("FX PRESETS");
-    }
     rootTree->buildJuceMenu(menu, this);
 
     maxIdx = allPresets.size();
@@ -508,18 +505,18 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     {
         fxbuffer->type.val.i = type;
 
+        Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
+        if (t_fx)
+        {
+            t_fx->init_ctrltypes();
+            t_fx->init_default_values();
+            delete t_fx;
+        }
+
         if (e)
         {
             // storage->patch.update_controls();
             selectedName = e->Attribute("name");
-
-            Effect *t_fx = spawn_effect(type, storage, fxbuffer, 0);
-            if (t_fx)
-            {
-                t_fx->init_ctrltypes();
-                t_fx->init_default_values();
-                delete t_fx;
-            }
 
             for (int i = 0; i < n_fx_params; i++)
             {
@@ -549,6 +546,10 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
                     ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
             }
         }
+        else
+        {
+            selectedName = "Off";
+        }
     }
 }
 
@@ -562,6 +563,13 @@ void FxMenu::populate()
     menu.addColumnBreak();
     menu.addSectionHeader("FUNCTIONS");
 
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Initialize ") + fxslot_names[current_fx], [this]() {
+        loadSnapshot(fxt_off, nullptr, 0);
+        if (getControlListener())
+            getControlListener()->valueChanged(asControlValueInterface());
+        repaint();
+    });
+
     auto rsA = [this]() {
         this->storage->fxUserPreset->doPresetRescan(this->storage, true);
         auto *sge = firstListenerOfType<SurgeGUIEditor>();
@@ -572,18 +580,39 @@ void FxMenu::populate()
         }
     };
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
-
     menu.addSeparator();
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() { this->pasteFX(); });
-
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
     if (fx->type.val.i != fxt_off)
     {
-        menu.addSeparator();
         menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset As..."),
                      [this]() { this->saveFX(); });
+    }
+
+    menu.addSeparator();
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
+    if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
+    {
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() { this->pasteFX(); });
+    }
+
+    menu.addSeparator();
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        auto hu = sge->helpURLForSpecial("fx-selector");
+
+        auto lurl = hu;
+        if (hu != "")
+        {
+            lurl = sge->fullyResolvedHelpURL(hu);
+        }
+        auto hmen =
+            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Effect Selector", lurl);
+        hmen->setSkin(skin, associatedBitmapStore);
+        hmen->setCenterBold(false);
+        menu.addCustomItem(-1, std::move(hmen));
     }
 }
 

@@ -38,7 +38,6 @@
 </type>
 </osc>
 <fx>
-<type i="0" name="Off"/>
 <sectionheader label="FILTERING"/>
 <type i="6" name="EQ">
     <snapshot name="Init" p0="0.000000" p1="-27.251785" p2="2.000000" p3="0.000000" p4="6.000000" p5="2.000000"
@@ -95,9 +94,7 @@
     <snapshot name="Init" p0="0" p1="-96" p2="0" p3="0" p5="20" p6="-15.4741" p7="49.0958" p8="0" p9="0" p10="0"
               p11="1"/>
 </type>
-<sectionheader label="" columnbreak="1"/>
-<type i="-1" name=""/>
-<sectionheader label="MODULATION"/>
+<sectionheader label="MODULATION" columnbreak="1"/>
 <type i="9" name="Chorus">
     <snapshot name="Init (Dry)" p0="-7.885717" p1="-2.850000" p2="0.669643" p3="0.000000" p4="-23.625008" p5="65.662498"
               p6="0.500000"/>

@@ -77,6 +77,7 @@ struct Clipboard
     std::vector<float> fxCopyPaste;
 };
 void copyFx(SurgeStorage *, FxStorage *from, Clipboard &cb);
+bool isPasteAvailable(const Clipboard &cb);
 void pasteFx(SurgeStorage *, FxStorage *onto, Clipboard &cb);
 } // namespace FxClipboard
 } // namespace Surge
