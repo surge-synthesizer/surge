@@ -490,7 +490,7 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
     showInfowindowSelfDismiss(isEditingModulation);
 
     // Revert to classic scrolling behavior if Ctrl is pressed down
-    if (intRange && isStepped && !event.mods.isCtrlDown())
+    if (intRange && isStepped && !event.mods.isCommandDown())
     {
         delta = 1.f / intRange * (delta > 0 ? 1 : -1);
     }

@@ -352,11 +352,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     if (button.isMiddleButtonDown())
     {
         toggle_mod_editing();
+
         return 1;
     }
 
     juce::Rectangle<int> viewSize;
     auto bvf = control->asJuceComponent();
+
     if (bvf)
     {
         viewSize = bvf->getBounds();
@@ -369,22 +371,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     }
 
     /*
-     * Alright why is this here? Well when we show the macro menu we use the modal version to
+     * Alright why is this here? Well, when we show the macro menu we use the modal version to
      * stop changes happening underneath us. It's the only non-async menu we have and probably
-     * should get fixed. But juce has a thing where RMB / RMB means the modal menus release both
-     * after the second RMB. So the end hover on rmb rmb doesn't work leading to the bug in
-     * 4874. A fix to this is to use an async menu. But I'm hnot sure why i didn't and there's an
-     * incomplete comment that it was for good reason so instead...
+     * should get fixed. But JUCE has a thing where RMB RMB means the modal menus release both
+     * after the second RMB. So the end hover on RMB RMB doesn't work, leading to the bug in
+     * #4874. A fix to this is to use an async menu. But I'm not sure why I didn't and there's an
+     * incomplete comment that it was for good reason, so instead...
      */
     for (const auto &g : gui_modsrc)
     {
         if (g && g.get() != control)
+        {
             g->endHover();
+        }
     }
 
     long tag = control->getTag();
 
-    if (button.isCtrlDown() && (tag == tag_mp_patch || tag == tag_mp_category))
+    if (button.isCommandDown() && (tag == tag_mp_patch || tag == tag_mp_category))
     {
         synth->selectRandomPatch();
         return 1;
@@ -1014,7 +1018,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
     }
 
-    if (!(button.isRightButtonDown() || button.isCtrlDown() || isDoubleClickEvent))
+    if (!(button.isRightButtonDown() || isDoubleClickEvent))
     {
         return 0;
     }
@@ -2276,7 +2280,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
         // exclusive mute/solo in the mixer
-        else if (button.isCtrlDown())
+        else if (button.isCommandDown())
         {
             if (p->ctrltype == ct_bool_mute)
             {
@@ -2317,7 +2321,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 synth->refresh_editor = true;
             }
             else
+            {
                 p->bound_value();
+            }
         }
     }
     return 0;
@@ -2337,6 +2343,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
     juce::Rectangle<int> viewSize;
     auto bvf = control->asJuceComponent();
+
     if (bvf)
     {
         viewSize = bvf->getBounds();
@@ -2762,7 +2769,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         thisms = cms->getAlternate();
 #endif
                 }
-                bool quantize_mod = juce::ModifierKeys::currentModifiers.isCtrlDown();
+                bool quantize_mod = juce::ModifierKeys::currentModifiers.isCommandDown();
                 float mv = mci->getModValue();
                 if (quantize_mod)
                 {
@@ -2857,7 +2864,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     }
                 }
 
-                bool force_integer = juce::ModifierKeys::currentModifiers.isCtrlDown();
+                bool force_integer = juce::ModifierKeys::currentModifiers.isCommandDown();
                 SurgeSynthesizer::ID ptagid;
                 synth->fromSynthSideId(ptag, ptagid);
                 if (synth->setParameter01(ptagid, val, false, force_integer))

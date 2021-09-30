@@ -1284,7 +1284,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
     {
         dragMode = NONE;
 
-        if (event.mods.isCtrlDown())
+        if (event.mods.isCommandDown())
         {
             setStepToDefault(event);
             dragMode = RESET_VALUE;
@@ -1616,7 +1616,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     }
     case RESET_VALUE:
     {
-        if (event.mods.isCtrlDown())
+        if (event.mods.isCommandDown())
         {
             setStepToDefault(event);
             return;

@@ -1651,19 +1651,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                  * Activate temporary snap. Note this is also handled similarly in
                  * onMouseMoved so if you change ctrl/alt here change it there too
                  */
-                bool c = e.mods.isCtrlDown();
-#if MAC
-                c = e.mods.isCommandDown();
-#endif
-
+                bool c = e.mods.isCommandDown();
                 bool a = e.mods.isAltDown();
+
                 if (c || a)
                 {
                     snapGuard = std::make_shared<SnapGuard>(this);
+
                     if (c)
+                    {
                         ms->hSnap = ms->hSnapDefault;
+                    }
                     if (a)
+                    {
                         ms->vSnap = ms->vSnapDefault;
+                    }
                 }
                 break;
             }
@@ -2149,15 +2151,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
          * Activate temporary snap. Note this is also checked in onMouseDown
          * so if you change ctrl/alt here change it there too
          */
-        bool c = event.mods.isCtrlDown();
-#if MAC
-        c = event.mods.isCommandDown();
-#endif
-
+        bool c = event.mods.isCommandDown();
         bool a = event.mods.isAltDown();
+
         if ((c || a))
         {
             bool wasSnapGuard = true;
+
             if (!snapGuard)
             {
                 wasSnapGuard = false;

@@ -110,8 +110,7 @@ void CodeEditorContainerWithApply::codeDocumentTextDeleted(int startIndex, int e
 }
 bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::Component *o)
 {
-    if (key.getKeyCode() == juce::KeyPress::returnKey &&
-        (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown()))
+    if (key.getKeyCode() == juce::KeyPress::returnKey && key.getModifiers().isCommandDown())
     {
         applyCode();
         return true;

@@ -566,7 +566,7 @@ Connector vu_meter =
 Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Components::Custom,
                                   Connector::MSEG_EDITOR_WINDOW);
 
-Connector store_patch_dialog = Connector("controls.patch.store.window", 157, 57, 390, 220,
+Connector store_patch_dialog = Connector("controls.patch.store.window", 157, 57, 390, 270,
                                          Components::Custom, Connector::STORE_PATCH_DIALOG);
 
 // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in

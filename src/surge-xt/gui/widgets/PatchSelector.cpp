@@ -133,9 +133,15 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         if (e.mods.isPopupMenu())
         {
             juce::PopupMenu menu;
+
             menu.addSectionHeader("FAVORITES");
-            optionallyAddFavorites(menu, false, false);
-            menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) { this->endHover(); });
+            auto haveFavs = optionallyAddFavorites(menu, false, false);
+
+            if (haveFavs)
+            {
+                menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) { this->endHover(); });
+            }
+
             return;
         }
         else
@@ -162,17 +168,21 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         }
         return;
     }
+
     // if RMB is down, only show the current category
-    bool single_category =
-        e.mods.isRightButtonDown() || e.mods.isCtrlDown() || e.mods.isCommandDown();
+    bool single_category = e.mods.isRightButtonDown() || e.mods.isCommandDown();
     showClassicMenu(single_category);
 }
 
 void PatchSelector::shouldTooltip()
 {
     if (tooltipCountdown < 0)
+    {
         return;
+    }
+
     tooltipCountdown--;
+
     if (tooltipCountdown == 0)
     {
         tooltipCountdown = -1;
@@ -446,12 +456,15 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
     if (addToSubMenu)
     {
         auto subMenu = juce::PopupMenu();
+
         subMenu.addSectionHeader("FAVORITES");
+
         for (auto f : favs)
         {
             subMenu.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
                             [this, f]() { this->loadPatch(f.first); });
         }
+
         p.addSubMenu("Favorites", subMenu);
     }
     else

@@ -107,6 +107,7 @@ void PatchStoreDialog::onSkinChanged()
         typein->setColour(juce::TextEditor::outlineColourId,
                           skin->getColor(Colors::Dialog::Entry::Border));
     };
+
     resetColors(nameEd);
     resetColors(authorEd);
     resetColors(catEd);
@@ -117,6 +118,7 @@ void PatchStoreDialog::onSkinChanged()
         label->setFont(skin->getFont(Fonts::PatchStore::Label));
         label->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Label::Text));
     };
+
     resetLabel(nameEdL);
     resetLabel(authorEdL);
     resetLabel(tagEdL);
@@ -134,6 +136,7 @@ void PatchStoreDialog::onSkinChanged()
         button->setColour(juce::TextButton::textColourOnId,
                           skin->getColor(Colors::Dialog::Button::TextPressed));
     };
+
     resetButton(okButton);
     resetButton(cancelButton);
     resetButton(okOverButton);
@@ -142,12 +145,15 @@ void PatchStoreDialog::onSkinChanged()
 void PatchStoreDialog::resized()
 {
     auto h = 25;
-    auto commH = getHeight() - 5 * h;
+    auto commH = getHeight() - 6 * h + 8;
     auto xSplit = 70;
     auto buttonWidth = 60;
     auto margin = 2;
     auto r = getLocalBounds().withHeight(h);
-    auto ce = r.withTrimmedLeft(xSplit).reduced(margin);
+    auto ce = r.withTrimmedLeft(xSplit)
+                  .withTrimmedRight(margin * 3)
+                  .reduced(margin)
+                  .translated(0, margin * 3);
 
     nameEd->setBounds(ce);
     nameEd->setIndents(4, (nameEd->getHeight() - nameEd->getTextHeight()) / 2);
@@ -166,7 +172,7 @@ void PatchStoreDialog::resized()
     commentEd->setBounds(q);
     ce = ce.translated(0, commH);
 
-    auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight());
+    auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight()).translated(0, margin * 3);
     cancelButton->setBounds(be);
     be = be.translated(-buttonWidth - margin, 0);
     okButton->setBounds(be);
@@ -177,7 +183,7 @@ void PatchStoreDialog::resized()
         okOverButton->setBounds(be);
     }
 
-    auto cl = r.withRight(xSplit).reduced(2);
+    auto cl = r.withRight(xSplit).reduced(2).translated(0, margin * 3);
     nameEdL->setBounds(cl);
     cl = cl.translated(0, h);
     catEdL->setBounds(cl);
@@ -196,10 +202,12 @@ void PatchStoreDialog::resized()
     }
     else
     {
-        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth);
+        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth).translated(0, margin * 3);
+
         auto fb = cl.withWidth(h);
+        auto lb = cl.withX(fb.getRight());
+
         storeTuningButton->setBounds(fb);
-        auto lb = cl.withX(fb.getRight() + margin);
         storeTuningLabel->setBounds(lb);
     }
 }

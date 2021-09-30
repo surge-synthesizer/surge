@@ -40,7 +40,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     g.drawRect(getLocalBounds());
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-    g.setColour(skin->getColor(Colors::Slider::Label::Dark));
+    g.setColour(skin->getColor(Colors::Dialog::Label::Text));
 
     auto r = getLocalBounds().translated(0, 2).withHeight(14);
     g.drawText(mainLabel, r, juce::Justification::centred);
@@ -57,7 +57,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
 
     if (wasInputInvalid)
     {
-        g.setColour(juce::Colours::red);
+        g.setColour(skin->getColor(Colors::Dialog::Label::Error));
         g.drawText("Input out of range!", r, juce::Justification::centred);
     }
     else
@@ -65,7 +65,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
         g.drawText(primaryVal, r, juce::Justification::centred);
     }
 
-    g.setColour(skin->getColor(Colors::Slider::Label::Dark));
+    g.setColour(skin->getColor(Colors::Dialog::Label::Text));
 
     if (isMod)
     {
@@ -103,13 +103,20 @@ void TypeinParamEditor::resized()
 void TypeinParamEditor::visibilityChanged()
 {
     if (isVisible())
+    {
         textEd->setWantsKeyboardFocus(true);
+    }
+
     if (editor)
     {
         if (isVisible())
+        {
             editor->vkbForward++;
+        }
         else
+        {
             editor->vkbForward--;
+        }
     }
 }
 
