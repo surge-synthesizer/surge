@@ -150,11 +150,11 @@ const char *MSToolEffect::group_label(int id)
     switch (id)
     {
     case 0:
-        return "MS Options";
+        return " Options";
     case 1:
-        return "Filter M";
+        return "Mid Filter";
     case 2:
-        return "Filter S";
+        return "Side Filter";
     case 3:
         return "Output";
     }
@@ -220,32 +220,32 @@ void MSToolEffect::init_ctrltypes()
     fxdata->p[mstl_matrix].set_name("Matrix");
     fxdata->p[mstl_matrix].set_type(ct_mscodec);
 
-    fxdata->p[mstl_hpm].set_name("HP M");
+    fxdata->p[mstl_hpm].set_name("Low Cut");
     fxdata->p[mstl_hpm].set_type(ct_freq_audible_deactivatable);
-    fxdata->p[mstl_pqm].set_name("Peak M");
+    fxdata->p[mstl_pqm].set_name("Gain");
     fxdata->p[mstl_pqm].set_type(ct_decibel_narrow_deactivatable);
-    fxdata->p[mstl_freqm].set_name("Freq M");
+    fxdata->p[mstl_freqm].set_name("Frequency");
     fxdata->p[mstl_freqm].set_type(ct_freq_audible);
     fxdata->p[mstl_freqm].dynamicDeactivation = &eqGroupDeact;
-    fxdata->p[mstl_lpm].set_name("LP M");
+    fxdata->p[mstl_lpm].set_name("High Cut");
     fxdata->p[mstl_lpm].set_type(ct_freq_audible_deactivatable);
 
-    fxdata->p[mstl_hps].set_name("HP S");
+    fxdata->p[mstl_hps].set_name("Low Cut");
     fxdata->p[mstl_hps].set_type(ct_freq_audible_deactivatable);
-    fxdata->p[mstl_pqs].set_name("Peak S");
+    fxdata->p[mstl_pqs].set_name("Gain");
     fxdata->p[mstl_pqs].set_type(ct_decibel_narrow_deactivatable);
-    fxdata->p[mstl_freqs].set_name("Freq S");
+    fxdata->p[mstl_freqs].set_name("Frequency");
     fxdata->p[mstl_freqs].set_type(ct_freq_audible);
     fxdata->p[mstl_freqs].dynamicDeactivation = &eqGroupDeact;
-    fxdata->p[mstl_lps].set_name("LP S");
+    fxdata->p[mstl_lps].set_name("High Cut");
     fxdata->p[mstl_lps].set_type(ct_freq_audible_deactivatable);
 
-    fxdata->p[mstl_mgain].set_name("Gain M");
+    fxdata->p[mstl_mgain].set_name("Mid Gain");
     fxdata->p[mstl_mgain].set_type(ct_decibel_attenuation_plus12);
-    fxdata->p[mstl_sgain].set_name("Gain S");
+    fxdata->p[mstl_sgain].set_name("Side Gain");
     fxdata->p[mstl_sgain].set_type(ct_decibel_attenuation_plus12);
-    fxdata->p[mstl_outgain].set_name("Balance L/R");
-    fxdata->p[mstl_outgain].set_type(ct_percent_bipolar);
+    fxdata->p[mstl_outgain].set_name("Balance");
+    fxdata->p[mstl_outgain].set_type(ct_percent_bipolar_stereo);
 
     fxdata->p[mstl_matrix].posy_offset = 1;
 

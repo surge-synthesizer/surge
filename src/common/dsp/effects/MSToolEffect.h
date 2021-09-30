@@ -27,7 +27,7 @@ class MSToolEffect : public Effect
   public:
     MSToolEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~MSToolEffect();
-    virtual const char *get_effectname() override { return "MS Tool"; }
+    virtual const char *get_effectname() override { return "Mid-Side Tool"; }
     virtual void init() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
