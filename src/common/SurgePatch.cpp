@@ -672,7 +672,7 @@ void SurgePatch::init_default_values()
         scene[sc].fm_depth.val.f = -24.f;
         scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
         scene[sc].keytrack_root.val.i = 60;
-        
+
         for (int i = 0; i < n_send_slots; i++)
         {
             scene[sc].send_level[i].val.f = scene[sc].send_level[i].val_min.f;
