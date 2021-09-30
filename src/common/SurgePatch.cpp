@@ -672,10 +672,13 @@ void SurgePatch::init_default_values()
         scene[sc].fm_depth.val.f = -24.f;
         scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
         scene[sc].keytrack_root.val.i = 60;
-        scene[sc].send_level[0].val.f = scene[sc].send_level[0].val_min.f;
-        scene[sc].send_level[1].val.f = scene[sc].send_level[1].val_min.f;
-        scene[sc].send_level[0].per_voice_processing = false;
-        scene[sc].send_level[1].per_voice_processing = false;
+
+        for (int i = 0; i < n_send_slots; i++)
+        {
+            scene[sc].send_level[i].val.f = scene[sc].send_level[i].val_min.f;
+            scene[sc].send_level[i].per_voice_processing = false;
+        }
+
         scene[sc].volume.val.f = 0.890899f;
         scene[sc].width.val.f = 1.f; // width
 
@@ -696,28 +699,20 @@ void SurgePatch::init_default_values()
         scene[sc].lowcut.deactivated = false;
         scene[sc].lowcut.per_voice_processing = false;
 
-        scene[sc].adsr[0].a.val.f = scene[sc].adsr[0].a.val_min.f;
-        scene[sc].adsr[0].a.val_default.f = scene[sc].adsr[0].a.val_min.f;
-        scene[sc].adsr[0].d.val.f = -2;
-        scene[sc].adsr[0].d.val_default.f = -2;
-        scene[sc].adsr[0].r.val.f = -5;
-        scene[sc].adsr[0].r.val_default.f = -5;
-        scene[sc].adsr[0].s.val.f = 1;
-        scene[sc].adsr[0].s.val_default.f = 1;
-        scene[sc].adsr[0].a_s.val.i = 1;
-        scene[sc].adsr[0].d_s.val.i = 1;
-        scene[sc].adsr[0].r_s.val.i = 2;
-        scene[sc].adsr[1].a.val.f = scene[sc].adsr[1].a.val_min.f;
-        scene[sc].adsr[1].a.val_default.f = scene[sc].adsr[1].a.val_min.f;
-        scene[sc].adsr[1].d.val.f = -2;
-        scene[sc].adsr[1].d.val_default.f = -2;
-        scene[sc].adsr[1].s.val.f = 0;
-        scene[sc].adsr[1].s.val_default.f = 0;
-        scene[sc].adsr[1].r.val.f = -2;
-        scene[sc].adsr[1].r.val_default.f = -2;
-        scene[sc].adsr[1].a_s.val.i = 1;
-        scene[sc].adsr[1].d_s.val.i = 1;
-        scene[sc].adsr[1].r_s.val.i = 1;
+        for (int i = 0; i < n_egs; i++)
+        {
+            scene[sc].adsr[i].a.val.f = scene[sc].adsr[i].a.val_min.f;
+            scene[sc].adsr[i].a.val_default.f = scene[sc].adsr[i].a.val_min.f;
+            scene[sc].adsr[i].d.val.f = -2;
+            scene[sc].adsr[i].d.val_default.f = -2;
+            scene[sc].adsr[i].r.val.f = -5;
+            scene[sc].adsr[i].r.val_default.f = (i == 0) ? -5.f : 0.f;
+            scene[sc].adsr[i].s.val.f = 1;
+            scene[sc].adsr[i].s.val_default.f = 1;
+            scene[sc].adsr[i].a_s.val.i = 1;
+            scene[sc].adsr[i].d_s.val.i = 1;
+            scene[sc].adsr[i].r_s.val.i = 2;
+        }
 
         for (int l = 0; l < n_lfos; l++)
         {
