@@ -555,6 +555,8 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 
 void FxMenu::populate()
 {
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     // Are there any user presets?
     storage->fxUserPreset->doPresetRescan(storage);
 
@@ -563,24 +565,47 @@ void FxMenu::populate()
     menu.addColumnBreak();
     menu.addSectionHeader("FUNCTIONS");
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Initialize ") + fxslot_names[current_fx], [this]() {
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Current FX Unit"), [this]() {
         loadSnapshot(fxt_off, nullptr, 0);
         if (getControlListener())
+        {
             getControlListener()->valueChanged(asControlValueInterface());
+        }
         repaint();
     });
 
-    auto rsA = [this]() {
+    if (sge)
+    {
+        auto initSubmenu = juce::PopupMenu();
+
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX Chain"), true,
+                            false, [this, sge]() { sge->enqueueFXChainClear(0); });
+
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX Chain"), true,
+                            false, [this, sge]() { sge->enqueueFXChainClear(1); });
+
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX Chain"), true, false,
+                            [this, sge]() { sge->enqueueFXChainClear(2); });
+
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX Chain"), true, false,
+                            [this, sge]() { sge->enqueueFXChainClear(3); });
+
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX Chains"), true, false,
+                            [this, sge]() { sge->enqueueFXChainClear(-1); });
+
+        menu.addSubMenu(Surge::GUI::toOSCaseForMenu("Initialize Chains"), initSubmenu);
+    }
+
+    menu.addSeparator();
+
+    auto rsA = [this, sge]() {
         this->storage->fxUserPreset->doPresetRescan(this->storage, true);
-        auto *sge = firstListenerOfType<SurgeGUIEditor>();
 
         if (sge)
         {
             sge->queueRebuildUI();
         }
     };
-
-    menu.addSeparator();
 
     menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
     if (fx->type.val.i != fxt_off)
@@ -590,6 +615,7 @@ void FxMenu::populate()
     }
 
     menu.addSeparator();
+
     menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
     if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
     {
@@ -597,21 +623,21 @@ void FxMenu::populate()
     }
 
     menu.addSeparator();
-    auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     if (sge)
     {
-        auto hu = sge->helpURLForSpecial("fx-selector");
-
+        auto hu = sge->helpURLForSpecial("fx-presets");
         auto lurl = hu;
+
         if (hu != "")
         {
             lurl = sge->fullyResolvedHelpURL(hu);
         }
-        auto hmen =
-            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Effect Selector", lurl);
+
+        auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("FX Presets", lurl);
         hmen->setSkin(skin, associatedBitmapStore);
         hmen->setCenterBold(false);
+
         menu.addCustomItem(-1, std::move(hmen));
     }
 }
@@ -663,7 +689,7 @@ void FxMenu::scanExtraPresets()
     storage->fxUserPreset->doPresetRescan(storage);
     for (const auto &tp : storage->fxUserPreset->getPresetsByType())
     {
-        // So lets run all presets until we find the first item with type tp.first
+        // So let's run all presets until we find the first item with type tp.first
         auto alit = allPresets.begin();
         while (alit->itemType != tp.first && alit != allPresets.end())
             alit++;

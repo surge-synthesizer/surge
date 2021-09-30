@@ -1657,39 +1657,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
     auto msurl = SurgeGUIEditor::helpURLForSpecial("fx-selector");
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    addHelpHeaderTo("Effect Settings", hurl, fxGridMenu);
-
-    fxGridMenu.addSeparator();
-
-    int fxSlotOrder[n_fx_slots] = {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
-                                   fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
-                                   fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
-                                   fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
-
-    auto clearSlots = [this, fxSlotOrder](int fxchain) {
-        for (int i = 0; i < n_fx_slots; i++)
-        {
-            if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
-            {
-                synth->enqueueFXOff(fxSlotOrder[i]);
-            }
-        }
-    };
-
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX Chain"), true,
-                       false, [this, clearSlots]() { clearSlots(0); });
-
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX Chain"), true,
-                       false, [this, clearSlots]() { clearSlots(1); });
-
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX Chain"), true, false,
-                       [this, clearSlots]() { clearSlots(2); });
-
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX Chain"), true, false,
-                       [this, clearSlots]() { clearSlots(3); });
-
-    fxGridMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX Chains"), true, false,
-                       [this, clearSlots]() { clearSlots(-1); });
+    addHelpHeaderTo("FX Unit Selector", hurl, fxGridMenu);
 
     fxGridMenu.addSeparator();
 
@@ -4892,6 +4860,22 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     {
     }
     return true;
+}
+
+void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
+{
+    int fxSlotOrder[n_fx_slots] = {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+                                   fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+                                   fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+                                   fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
+
+    for (int i = 0; i < n_fx_slots; i++)
+    {
+        if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
+        {
+            synth->enqueueFXOff(fxSlotOrder[i]);
+        }
+    }
 }
 
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)

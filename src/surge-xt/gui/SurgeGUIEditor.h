@@ -282,6 +282,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                              float &correctedZf); // returns true if it fits; false if not; sets
                                                   // correctedZF to right size in either case
 
+    void enqueueFXChainClear(int fxchain);
     void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m);
 
     /*

@@ -386,6 +386,7 @@ void copyFx(SurgeStorage *storage, FxStorage *fx, Clipboard &cb)
 }
 
 bool isPasteAvailable(const Clipboard &cb) { return !cb.fxCopyPaste.empty(); }
+
 void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
 {
     if (cb.fxCopyPaste.empty())
