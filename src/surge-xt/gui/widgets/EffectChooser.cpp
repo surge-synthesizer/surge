@@ -245,18 +245,23 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
         for (int i = 0; i < n_fx_slots; ++i)
         {
             auto r = getEffectRectangle(i);
+
             if (r.contains(event.getPosition()))
             {
                 auto m = SurgeSynthesizer::FXReorderMode::SWAP;
-                if (event.mods.isCtrlDown())
+
+                if (event.mods.isCommandDown())
                 {
                     m = SurgeSynthesizer::FXReorderMode::COPY;
                 }
+
                 if (event.mods.isShiftDown())
                 {
                     m = SurgeSynthesizer::FXReorderMode::MOVE;
                 }
+
                 auto sge = firstListenerOfType<SurgeGUIEditor>();
+
                 if (sge)
                 {
                     sge->swapFX(currentClicked, i, m);

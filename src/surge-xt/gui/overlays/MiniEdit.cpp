@@ -28,7 +28,7 @@ MiniEdit::MiniEdit()
 {
     typein = std::make_unique<juce::TextEditor>("minieditTypein");
     typein->setJustification(juce::Justification::centred);
-    typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
+    typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     typein->setSelectAllWhenFocused(true);
     typein->setWantsKeyboardFocus(true);
     typein->addListener(this);
@@ -49,7 +49,7 @@ MiniEdit::~MiniEdit() {}
 
 juce::Rectangle<int> MiniEdit::getDisplayRegion()
 {
-    auto fullRect = juce::Rectangle<int>(0, 0, 160, 80).withCentre(getBounds().getCentre());
+    auto fullRect = juce::Rectangle<int>(0, 0, 180, 80).withCentre(getBounds().getCentre());
     return fullRect;
 }
 
@@ -108,27 +108,32 @@ void MiniEdit::onSkinChanged()
                       skin->getColor(Colors::Dialog::Entry::Focus));
     typein->setColour(juce::TextEditor::outlineColourId,
                       skin->getColor(Colors::Dialog::Entry::Border));
+    typein->setColour(juce::TextEditor::focusedOutlineColourId,
+                      skin->getColor(Colors::Dialog::Entry::Border));
+
     repaint();
 }
 
 void MiniEdit::resized()
 {
-    auto eh = 18, mg = 2, bw = 40;
-    auto fullRect = getDisplayRegion();
+    auto typeinHeight = 18, margin = 2, btnWidth = 40;
 
-    auto typeinBox = fullRect.translated(0, 2 * eh + mg * 2)
-                         .withHeight(eh)
-                         .withTrimmedLeft(2 * mg)
-                         .withTrimmedRight(2 * mg);
+    auto fullRect = getDisplayRegion();
+    auto dialogCenter = fullRect.getWidth() / 2;
+    auto typeinBox = fullRect.translated(0, 2 * typeinHeight + margin * 2)
+                         .withHeight(typeinHeight)
+                         .withTrimmedLeft(2 * margin)
+                         .withTrimmedRight(2 * margin);
+
     typein->setBounds(typeinBox);
     typein->setIndents(4, (typein->getHeight() - typein->getTextHeight()) / 2);
 
-    auto buttonRow = fullRect.translated(0, (3 * eh) + (mg * 3) + 2)
-                         .withHeight(eh - 4)
-                         .withTrimmedLeft(mg)
-                         .withTrimmedRight(mg);
-    auto okRect = buttonRow.withTrimmedLeft(40).withWidth(40);
-    auto canRect = buttonRow.withTrimmedLeft(80).withWidth(40);
+    auto buttonRow = fullRect.translated(0, (3 * typeinHeight) + (margin * 3) + 2)
+                         .withHeight(typeinHeight - 4)
+                         .withTrimmedLeft(margin)
+                         .withTrimmedRight(margin);
+    auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
+    auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
 
     okButton->setBounds(okRect);
     cancelButton->setBounds(canRect);
@@ -145,19 +150,27 @@ void MiniEdit::buttonClicked(juce::Button *button)
     {
         callback(typein->getText().toStdString());
     }
+
     setVisible(false);
 }
 
 void MiniEdit::visibilityChanged()
 {
     if (isVisible())
+    {
         grabFocus();
+    }
+
     if (editor)
     {
         if (isVisible())
+        {
             editor->vkbForward++;
+        }
         else
+        {
             editor->vkbForward--;
+        }
     }
 }
 

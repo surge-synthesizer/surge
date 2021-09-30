@@ -2751,7 +2751,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
         txt[0] = 0;
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter default patch author name:", "Set Default Patch Author",
+        promptForMiniEdit(txt, "Enter a default patch author name:", "Set Default Patch Author",
                           where, [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, s);
@@ -2766,8 +2766,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
         txt[0] = 0;
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter default patch comment text:", "Set Default Patch Comment",
-                          where, [this](const std::string &s) {
+        promptForMiniEdit(txt, "Enter a default patch comment:", "Set Default Patch Comment", where,
+                          [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
                           });
@@ -3274,7 +3274,7 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         char msn[256];
         msn[0] = 0;
         promptForMiniEdit(
-            msn, "MIDI Mapping Name", "Save MIDI Mapping", where,
+            msn, "Enter a name for the MIDI mapping:", "Save MIDI Mapping", where,
             [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); });
     });
 
