@@ -140,6 +140,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/PatchSelector.h
   gui/widgets/Switch.cpp
   gui/widgets/Switch.h
+  gui/widgets/TypeAheadTextEditor.cpp
   gui/widgets/VerticalLabel.cpp
   gui/widgets/VerticalLabel.h
   gui/widgets/VuMeter.cpp
