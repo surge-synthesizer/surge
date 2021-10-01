@@ -86,6 +86,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
     pb->setComment(comments);
     pb->setTags(synth->storage.getPatch().tags);
     pb->setSurgeGUIEditor(this);
+    pb->setStorage(&(this->synth->storage));
 
     // since it is now modal center in the window
     auto posRect = skinCtrl->getRect().withCentre(frame->getBounds().getCentre());

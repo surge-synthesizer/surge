@@ -23,21 +23,28 @@
 #include "OverlayComponent.h"
 
 class SurgeGUIEditor;
+class SurgeStorage;
 
 namespace Surge
 {
 namespace Overlays
 {
+struct PatchStoreDialogCategoryProvider;
+
 struct PatchStoreDialog : public OverlayComponent,
                           public Surge::GUI::SkinConsumingComponent,
                           public juce::Button::Listener
 {
     PatchStoreDialog();
+    ~PatchStoreDialog();
     void paint(juce::Graphics &g) override;
     void resized() override;
 
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e);
+
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s);
 
     void setName(const std::string &n) { nameEd->setText(n, juce::dontSendNotification); }
     void setAuthor(const std::string &a) { authorEd->setText(a, juce::dontSendNotification); }
@@ -52,6 +59,8 @@ struct PatchStoreDialog : public OverlayComponent,
     std::unique_ptr<juce::TextButton> okButton, okOverButton, cancelButton;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
+
+    std::unique_ptr<PatchStoreDialogCategoryProvider> categoryProvider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchStoreDialog);
 };
