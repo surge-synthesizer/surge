@@ -84,13 +84,14 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
     void resized() override;
     void mouseDown(const juce::MouseEvent &event) override;
-    bool favoritesHover{false};
+    bool favoritesHover{false}, searchHover{false};
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
     void endHover() override
     {
         favoritesHover = false;
+        searchHover = false;
         tooltipCountdown = -1;
         toggleCommentTooltip(false);
         repaint();
@@ -111,7 +112,7 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
 
   protected:
-    juce::Rectangle<int> favoritesRect;
+    juce::Rectangle<int> favoritesRect, searchRect;
 
     std::string pname;
     std::string category;

@@ -83,6 +83,14 @@ void PatchSelector::paint(juce::Graphics &g)
         int yShift = 13 * ((favoritesHover ? 1 : 0) + (isFavorite ? 2 : 0));
         img->drawAt(g, favoritesRect.getX(), favoritesRect.getY() - yShift, 1.0);
     }
+
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+        g.reduceClipRegion(searchRect);
+        auto img = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
+        int yShift = 13 * ((searchHover ? 1 : 0));
+        img->drawAt(g, searchRect.getX(), searchRect.getY() - yShift, 1.0);
+    }
 }
 
 void PatchSelector::resized()
@@ -93,6 +101,11 @@ void PatchSelector::resized()
                         .withTrimmedLeft(getWidth() - fsize)
                         .reduced(1, 1)
                         .translated(-2, 1);
+    searchRect = getLocalBounds()
+                     .withTrimmedBottom(getHeight() - fsize)
+                     .withWidth(fsize)
+                     .reduced(1, 1)
+                     .translated(2, 1);
 }
 
 void PatchSelector::mouseEnter(const juce::MouseEvent &)
@@ -115,7 +128,15 @@ void PatchSelector::mouseMove(const juce::MouseEvent &e)
     {
         favoritesHover = true;
     }
-    if (favoritesHover != pfh)
+
+    auto psh = searchHover;
+    searchHover = false;
+    if (searchRect.contains(e.position.toInt()))
+    {
+        searchHover = true;
+    }
+
+    if (favoritesHover != pfh || searchHover != psh)
     {
         repaint();
     }
@@ -158,7 +179,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         return;
     }
 
-    if (e.mods.isShiftDown())
+    if (e.mods.isShiftDown() || searchRect.contains(e.position.toInt()))
     {
         auto sge = firstListenerOfType<SurgeGUIEditor>();
 
