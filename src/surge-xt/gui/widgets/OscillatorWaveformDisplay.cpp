@@ -273,6 +273,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     contextMenu.addSectionHeader("FACTORY WAVETABLES");
 
     bool addUserLabel = false;
+
     for (auto c : storage->wtCategoryOrdering)
     {
         if (idx == storage->firstThirdPartyWTCategory)
@@ -289,8 +290,11 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         idx++;
 
         PatchCategory cat = storage->wt_category[c];
+
         if (cat.numberOfPatchesInCategoryAndChildren == 0)
+        {
             continue;
+        }
 
         if (addUserLabel)
         {
@@ -315,6 +319,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Script Editor..."), owts);
      */
+
     contextMenu.addSeparator();
 
     auto refresh = [this]() { this->storage->refresh_wtlist(); };
@@ -323,6 +328,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     auto rnaction = [this]() {
         char c[256];
         strncpy(c, this->oscdata->wavetable_display_name, 256);
+
         if (sge)
         {
             sge->promptForMiniEdit(
@@ -333,6 +339,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                 });
         }
     };
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Change Wavetable Display Name..."), rnaction);
 
     contextMenu.addSeparator();
@@ -374,10 +381,10 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &contextMenu,
                                                         int categoryId, int selectedItem)
 {
-    char name[NAMECHARS];
-    juce::PopupMenu subMenu;
     int sub = 0;
-
+    char name[NAMECHARS];
+    bool selected = false;
+    juce::PopupMenu subMenu;
     PatchCategory cat = storage->wt_category[categoryId];
 
     for (auto p : storage->wtOrdering)
@@ -386,15 +393,24 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         {
             sprintf(name, "%s", storage->wt_list[p].name.c_str());
             auto action = [this, p]() { this->loadWavetable(p); };
+            bool checked = false;
 
-            bool checked = (p == selectedItem);
+            if (p == selectedItem)
+            {
+                checked = true;
+                selected = true;
+            }
+
             subMenu.addItem(name, true, checked, action);
 
             sub++;
+
+            if (sub != 0 && sub % 16 == 0)
+            {
+                subMenu.addColumnBreak();
+            }
         }
     }
-
-    bool selected = false;
 
     for (auto child : cat.children)
     {
@@ -402,15 +418,23 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         {
             // this isn't the best approach but it works
             int cidx = 0;
+
             for (auto &cc : storage->wt_category)
             {
                 if (cc.name == child.name)
+                {
                     break;
+                }
+
                 cidx++;
             }
 
-            bool subSel = populateMenuForCategory(subMenu, cidx, selectedItem);
-            selected = selected || subSel;
+            bool checked = populateMenuForCategory(subMenu, cidx, selectedItem);
+
+            if (checked)
+            {
+                selected = true;
+            }
         }
     }
 
@@ -418,10 +442,12 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
     {
         std::string catName = storage->wt_category[categoryId].name;
         std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
+
         if (sepPos != std::string::npos)
         {
             catName = catName.substr(sepPos + 1);
         }
+
         strncpy(name, catName.c_str(), NAMECHARS);
     }
     else
@@ -429,15 +455,7 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
     }
 
-    contextMenu.addSubMenu(name, subMenu);
-
-#if 0
-    if (selected || (selectedItem >= 0 && storage->wt_list[selectedItem].category == categoryId))
-    {
-        selected = true;
-        submenuItem->setChecked(true);
-    }
-#endif
+    contextMenu.addSubMenu(name, subMenu, true, nullptr, selected);
 
     return selected;
 }
