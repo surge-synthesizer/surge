@@ -365,6 +365,15 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
         // for whatever reason!
         surge->programChange(ch, m.getProgramChangeNumber());
     }
+    else if (m.isAllNotesOff() || m.isAllSoundOff())
+    {
+        /*
+         * Surge currently doesn't distinguish allNouts and allSounds off. It should
+         * in the future but for now push both APIs through here so XT and 1.9 behave
+         * the same
+         */
+        surge->allNotesOff();
+    }
     else
     {
         // std::cout << "Ignoring message " << std::endl;
