@@ -20,6 +20,7 @@
 #include "WidgetBaseMixin.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "widgets/TypeAheadTextEditor.h"
 
 class SurgeStorage;
 
@@ -27,7 +28,12 @@ namespace Surge
 {
 namespace Widgets
 {
-struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelector>
+
+struct PatchDBTypeAheadProvider;
+
+struct PatchSelector : public juce::Component,
+                       public WidgetBaseMixin<PatchSelector>,
+                       public TypeAhead::TypeAheadListener
 {
     PatchSelector();
     ~PatchSelector();
@@ -36,7 +42,7 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
     void setValue(float f) override {}
 
     SurgeStorage *storage{nullptr};
-    void setStorage(SurgeStorage *s) { storage = s; }
+    void setStorage(SurgeStorage *s);
 
     void setIDs(int category, int patch)
     {
@@ -82,6 +88,10 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
     void setTags(const std::vector<SurgePatch::Tag> &itag) { tags = itag; }
 
+    /// TypeAhead API
+    void itemSelected(int providerIndex) override;
+    void typeaheadCanceled() override;
+
     void resized() override;
     void mouseDown(const juce::MouseEvent &event) override;
     bool favoritesHover{false}, searchHover{false};
@@ -108,6 +118,11 @@ struct PatchSelector : public juce::Component, public WidgetBaseMixin<PatchSelec
 
     int getCurrentPatchId() const;
     int getCurrentCategoryId() const;
+
+    bool isTypeaheadSearchOn{false};
+    void toggleTypeAheadSearch(bool);
+    std::unique_ptr<Surge::Widgets::TypeAhead> typeAhead;
+    std::unique_ptr<PatchDBTypeAheadProvider> patchDbProvider;
 
     std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
 

@@ -31,12 +31,13 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
     PatchStoreDialogCategoryProvider() {}
     SurgeStorage *storage;
 
-    std::vector<std::string> data;
-    std::vector<std::string> searchFor(const std::string &s) override
+    std::vector<int> data;
+    std::vector<int> searchFor(const std::string &s) override
     {
-        std::vector<std::string> res;
+        std::vector<int> res;
         if (storage)
         {
+            int idx = 0;
             for (auto &c : storage->patch_category)
             {
                 if (!c.isFactory)
@@ -46,12 +47,20 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                         [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
                     if (it != c.name.end())
                     {
-                        res.push_back(c.name);
+                        res.push_back(idx);
                     }
                 }
+                idx++;
             }
         }
         return res;
+    }
+
+    std::string textBoxValueForIndex(int idx) override
+    {
+        if (storage)
+            return storage->patch_category[idx].name;
+        return "";
     }
 };
 
