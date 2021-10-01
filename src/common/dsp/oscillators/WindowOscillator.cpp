@@ -150,9 +150,9 @@ void WindowOscillator::init_ctrltypes()
     oscdata->p[win_window].set_type(ct_wt2window);
 
     oscdata->p[win_lowcut].set_name("Low Cut");
-    oscdata->p[win_lowcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[win_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     oscdata->p[win_highcut].set_name("High Cut");
-    oscdata->p[win_highcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[win_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     oscdata->p[win_unison_detune].set_name("Unison Detune");
     oscdata->p[win_unison_detune].set_type(ct_oscspread);
@@ -166,13 +166,11 @@ void WindowOscillator::init_default_values()
     oscdata->p[win_formant].val.f = 0.0f;
     oscdata->p[win_window].val.i = 0;
 
-    // high cut at the bottom
-    oscdata->p[win_lowcut].val_default.f = oscdata->p[win_lowcut].val_min.f;
+    // low cut at the bottom
     oscdata->p[win_lowcut].val.f = oscdata->p[win_lowcut].val_min.f;
     oscdata->p[win_lowcut].deactivated = true;
 
-    // low cut at the top
-    oscdata->p[win_highcut].val_default.f = oscdata->p[win_highcut].val_max.f;
+    // high cut at the top
     oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f;
     oscdata->p[win_highcut].deactivated = true;
 

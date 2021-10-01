@@ -258,10 +258,10 @@ void TreemonsterEffect::init_ctrltypes()
     fxdata->p[tm_speed].val_default.f = 0.5f;
     fxdata->p[tm_speed].posy_offset = 1;
     fxdata->p[tm_hp].set_name("Low Cut");
-    fxdata->p[tm_hp].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[tm_hp].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[tm_hp].posy_offset = 1;
     fxdata->p[tm_lp].set_name("High Cut");
-    fxdata->p[tm_lp].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[tm_lp].set_type(ct_freq_audible_deactivatable_lp);
     fxdata->p[tm_lp].posy_offset = 1;
 
     fxdata->p[tm_pitch].set_name("Pitch");
@@ -286,11 +286,9 @@ void TreemonsterEffect::init_default_values()
     fxdata->p[tm_threshold].val.f = -24.f;
     fxdata->p[tm_speed].val.f = 0.5f;
 
-    fxdata->p[tm_hp].val_default.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_hp].val.f = fxdata->p[tm_hp].val_min.f;
     fxdata->p[tm_hp].deactivated = false;
 
-    fxdata->p[tm_lp].val_default.f = fxdata->p[tm_lp].val_max.f;
     fxdata->p[tm_lp].val.f = fxdata->p[tm_lp].val_max.f;
     fxdata->p[tm_lp].deactivated = false;
 

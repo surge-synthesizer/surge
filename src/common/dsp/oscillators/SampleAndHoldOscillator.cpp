@@ -131,9 +131,9 @@ void SampleAndHoldOscillator::init_ctrltypes()
     oscdata->p[shn_width].set_type(ct_percent);
     oscdata->p[shn_width].val_default.f = 0.5f;
     oscdata->p[shn_lowcut].set_name("Low Cut");
-    oscdata->p[shn_lowcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[shn_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     oscdata->p[shn_highcut].set_name("High Cut");
-    oscdata->p[shn_highcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[shn_highcut].set_type(ct_freq_audible_deactivatable_lp);
     oscdata->p[shn_sync].set_name("Sync");
     oscdata->p[shn_sync].set_type(ct_syncpitch);
     oscdata->p[shn_unison_detune].set_name("Unison Detune");
@@ -147,13 +147,11 @@ void SampleAndHoldOscillator::init_default_values()
 
     oscdata->p[shn_width].val.f = 0.5f;
 
-    // high cut at the bottom
-    oscdata->p[shn_lowcut].val_default.f = oscdata->p[shn_lowcut].val_min.f;
+    // low cut at the bottom
     oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f;
     oscdata->p[shn_lowcut].deactivated = true;
 
-    // low cut at the top
-    oscdata->p[shn_highcut].val_default.f = oscdata->p[shn_highcut].val_max.f;
+    // high cut at the top
     oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f;
     oscdata->p[shn_highcut].deactivated = true;
 
@@ -492,9 +490,9 @@ void SampleAndHoldOscillator::handleStreamingMismatches(int streamingRevision,
 {
     if (streamingRevision <= 12)
     {
-        oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f; // high cut at the bottom
+        oscdata->p[shn_lowcut].val.f = oscdata->p[shn_lowcut].val_min.f; // low cut at the bottom
         oscdata->p[shn_lowcut].deactivated = true;
-        oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // low cut at the top
+        oscdata->p[shn_highcut].val.f = oscdata->p[shn_highcut].val_max.f; // high cut at the top
         oscdata->p[shn_sync].deactivated = true;
     }
 }

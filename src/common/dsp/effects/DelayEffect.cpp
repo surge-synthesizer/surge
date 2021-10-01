@@ -270,9 +270,9 @@ void DelayEffect::init_ctrltypes()
     fxdata->p[dly_crossfeed].set_name("Crossfeed");
     fxdata->p[dly_crossfeed].set_type(ct_percent);
     fxdata->p[dly_lowcut].set_name("Low Cut");
-    fxdata->p[dly_lowcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[dly_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[dly_highcut].set_name("High Cut");
-    fxdata->p[dly_highcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[dly_highcut].set_type(ct_freq_audible_deactivatable_lp);
     fxdata->p[dly_mod_rate].set_name("Rate");
     fxdata->p[dly_mod_rate].set_type(ct_lforate);
     fxdata->p[dly_mod_depth].set_name("Depth");
@@ -309,11 +309,9 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_feedback].val.f = 0.0f;
     fxdata->p[dly_crossfeed].val.f = 0.0f;
 
-    fxdata->p[dly_lowcut].val_default.f = fxdata->p[dly_lowcut].val_min.f;
     fxdata->p[dly_lowcut].val.f = -24.f;
     fxdata->p[dly_lowcut].deactivated = false;
 
-    fxdata->p[dly_highcut].val_default.f = fxdata->p[dly_highcut].val_max.f;
     fxdata->p[dly_highcut].val.f = 30.f;
     fxdata->p[dly_highcut].deactivated = false;
 

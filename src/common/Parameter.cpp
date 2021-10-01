@@ -330,6 +330,8 @@ bool Parameter::can_deactivate() const
     case ct_percent_deactivatable:
     case ct_freq_hpf:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_deactivatable_hp:
+    case ct_freq_audible_deactivatable_lp:
     case ct_lforate_deactivatable:
     case ct_rotarydrive:
     case ct_airwindows_fx:
@@ -605,6 +607,18 @@ void Parameter::set_type(int ctrltype)
         val_min.f = -60;
         val_max.f = 70;
         val_default.f = 3;
+        break;
+    case ct_freq_audible_deactivatable_hp:
+        valtype = vt_float;
+        val_min.f = -60;
+        val_max.f = 70;
+        val_default.f = -60;
+        break;
+    case ct_freq_audible_deactivatable_lp:
+        valtype = vt_float;
+        val_min.f = -60;
+        val_max.f = 70;
+        val_default.f = 70;
         break;
     case ct_freq_audible_with_very_low_lowerbound:
         valtype = vt_float;
@@ -1360,6 +1374,8 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_deactivatable_hp:
+    case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:
@@ -2777,6 +2793,8 @@ float Parameter::quantize_modulation(float inputval) const
         case ct_freq_hpf:
         case ct_freq_audible:
         case ct_freq_audible_deactivatable:
+        case ct_freq_audible_deactivatable_hp:
+        case ct_freq_audible_deactivatable_lp:
         case ct_freq_audible_with_tunability:
         case ct_freq_audible_with_very_low_lowerbound:
         case ct_freq_reson_band1:
@@ -2863,6 +2881,8 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_deactivatable_hp:
+    case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:
@@ -3434,13 +3454,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "L-R > M-S > L-R");
+                snprintf(txt, TXT_SIZE, "LR -> MS -> LR");
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "L-R > M-S");
+                snprintf(txt, TXT_SIZE, "LR -> MS");
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "M-S > L-R");
+                snprintf(txt, TXT_SIZE, "MS -> LR");
                 break;
             }
             break;
@@ -3855,6 +3875,8 @@ bool Parameter::can_setvalue_from_string() const
     case ct_envtime_linkable_delay:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_deactivatable_hp:
+    case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_with_very_low_lowerbound:
     case ct_freq_reson_band1:

@@ -232,9 +232,9 @@ void RingModulatorEffect::init_ctrltypes()
     fxdata->p[rm_diode_linregion].set_type(ct_percent);
 
     fxdata->p[rm_lowcut].set_name("Low Cut");
-    fxdata->p[rm_lowcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[rm_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[rm_highcut].set_name("High Cut");
-    fxdata->p[rm_highcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[rm_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[rm_mix].set_name("Mix");
     fxdata->p[rm_mix].set_type(ct_percent);
@@ -261,11 +261,9 @@ void RingModulatorEffect::init_default_values()
     fxdata->p[rm_unison_detune].val.f = 0.2;
     fxdata->p[rm_unison_voices].val.i = 1;
 
-    fxdata->p[rm_lowcut].val_default.f = fxdata->p[rm_lowcut].val_min.f;
     fxdata->p[rm_lowcut].val.f = fxdata->p[rm_lowcut].val_min.f;
     fxdata->p[rm_lowcut].deactivated = false;
 
-    fxdata->p[rm_highcut].val_default.f = fxdata->p[rm_highcut].val_max.f;
     fxdata->p[rm_highcut].val.f = fxdata->p[rm_highcut].val_max.f;
     fxdata->p[rm_highcut].deactivated = false;
     fxdata->p[rm_mix].val.f = 1.0;
