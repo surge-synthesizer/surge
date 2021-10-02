@@ -1,3 +1,18 @@
+/*
+** Surge Synthesizer is Free and Open Source Software
+**
+** Surge is made available under the Gnu General Public License, v3.0
+** https://www.gnu.org/licenses/gpl-3.0.en.html
+**
+** Copyright 2004-2021 by various individuals as described by the Git transaction log
+**
+** All source at: https://github.com/surge-synthesizer/surge.git
+**
+** Surge was a commercial product from 2004-2018, with Copyright and ownership
+** in that period held by Claes Johanson at Vember Audio. Claes made Surge
+** open source in September 2018.
+*/
+
 #include "ConditionerEffect.h"
 #include <vembertech/basic_dsp.h>
 #include "SurgeParamConfig.h"
@@ -7,7 +22,7 @@ using namespace std;
 using namespace vt_dsp;
 
 ConditionerEffect::ConditionerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), band1(storage), band2(storage)
+    : Effect(storage, fxdata, pd), band1(storage), band2(storage), hp(storage)
 {
     bufpos = 0;
 
@@ -43,6 +58,7 @@ void ConditionerEffect::setvars(bool init)
 {
     band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[cond_bass]);
     band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[cond_treble]);
+    hp.coeff_HP(hp.calc_omega(*f[cond_hpwidth] / 12.0), 0.4);
 
     if (init)
     {
@@ -110,6 +126,12 @@ void ConditionerEffect::process(float *dataL, float *dataR)
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+
+    if (!fxdata->p[cond_hpwidth].deactivated)
+    {
+        hp.process_block(S);
+    }
+
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
     ampL.multiply_block(dataL, BLOCK_SIZE_QUAD);
@@ -182,14 +204,15 @@ int ConditionerEffect::vu_ypos(int id)
     switch (id)
     {
     case 0:
-        return 15;
-    case 1:
         return 17;
-    case 2:
+    case 1:
         return 19;
+    case 2:
+        return 21;
     }
     return 0;
 }
+
 const char *ConditionerEffect::group_label(int id)
 {
     switch (id)
@@ -205,6 +228,7 @@ const char *ConditionerEffect::group_label(int id)
     }
     return 0;
 }
+
 int ConditionerEffect::group_label_ypos(int id)
 {
     switch (id)
@@ -214,9 +238,9 @@ int ConditionerEffect::group_label_ypos(int id)
     case 1:
         return 7;
     case 2:
-        return 13;
+        return 15;
     case 3:
-        return 27;
+        return 29;
     }
     return 0;
 }
@@ -234,6 +258,8 @@ void ConditionerEffect::init_ctrltypes()
 
     fxdata->p[cond_width].set_name("Width");
     fxdata->p[cond_width].set_type(ct_percent_bipolar);
+    fxdata->p[cond_hpwidth].set_name("Side Low Cut");
+    fxdata->p[cond_hpwidth].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[cond_balance].set_name("Balance");
     fxdata->p[cond_balance].set_type(ct_percent_bipolar);
 
@@ -250,18 +276,21 @@ void ConditionerEffect::init_ctrltypes()
     fxdata->p[cond_treble].posy_offset = 1;
 
     fxdata->p[cond_width].posy_offset = 3;
-    fxdata->p[cond_balance].posy_offset = 3;
+    fxdata->p[cond_hpwidth].posy_offset = -7;
+    fxdata->p[cond_balance].posy_offset = 5;
 
-    fxdata->p[cond_threshold].posy_offset = 11;
-    fxdata->p[cond_attack].posy_offset = 11;
-    fxdata->p[cond_release].posy_offset = 11;
-    fxdata->p[cond_gain].posy_offset = 13;
+    fxdata->p[cond_threshold].posy_offset = 13;
+    fxdata->p[cond_attack].posy_offset = 13;
+    fxdata->p[cond_release].posy_offset = 13;
+    fxdata->p[cond_gain].posy_offset = 15;
 }
 
 void ConditionerEffect::init_default_values()
 {
     fxdata->p[cond_bass].deactivated = false;
     fxdata->p[cond_treble].deactivated = false;
+    fxdata->p[cond_hpwidth].val.f = -60;
+    fxdata->p[cond_hpwidth].deactivated = true;
 }
 
 void ConditionerEffect::handleStreamingMismatches(int streamingRevision,
@@ -271,5 +300,11 @@ void ConditionerEffect::handleStreamingMismatches(int streamingRevision,
     {
         fxdata->p[cond_bass].deactivated = false;
         fxdata->p[cond_treble].deactivated = false;
+    }
+
+    if (streamingRevision <= 16)
+    {
+        fxdata->p[cond_hpwidth].val.f = -60;
+        fxdata->p[cond_hpwidth].deactivated = true;
     }
 }
