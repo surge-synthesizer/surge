@@ -5276,10 +5276,18 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // store patch
-        // TODO: this one doesn't work for some reason. investigate why!
-        if (key.getModifiers().isCommandDown() && key.getTextCharacter() == 's')
+        if (key.getModifiers().isCommandDown() && key.getKeyCode() == 83) // 's'
         {
             showOverlay(SurgeGUIEditor::STORE_PATCH);
+
+            return true;
+        }
+
+        // toggle patch search typeahead
+        if (key.getModifiers().isCommandDown() && key.getKeyCode() == 70) // 'f'
+        {
+            patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
+            patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
 
             return true;
         }
@@ -5307,6 +5315,15 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // toggle a valid editor (MSEG, formula...)
         if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'e')
         {
+            return true;
+        }
+
+        // toggle setting patch as favorite
+        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'f')
+        {
+            setPatchAsFavorite(!isPatchFavorite());
+            patchSelector->setIsFavorite(isPatchFavorite());
+
             return true;
         }
 
