@@ -97,7 +97,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
     }
     bool getFXParamExtended(int i) { return *(fxParamFeatures[i]) & kExtended; }
-    void setFXStorageExtended(int i, bool b) { fxstorage->p[fx_param_remap[i]].extend_range = b; }
+    void setFXStorageExtended(int i, bool b)
+    {
+        fxstorage->p[fx_param_remap[i]].set_extend_range(b);
+    }
     bool getFXStorageExtended(int i) { return fxstorage->p[fx_param_remap[i]].extend_range; }
     bool canExtend(int i) { return fxstorage->p[fx_param_remap[i]].can_extend_range(); }
 
@@ -207,7 +210,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void paramFeatureOntoParam(Parameter *p, int32_t features)
     {
         p->temposync = features & kTempoSync;
-        p->extend_range = features & kExtended;
+        p->set_extend_range(features & kExtended);
     }
 
     // Information about parameter strings

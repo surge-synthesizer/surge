@@ -158,12 +158,12 @@ void NumberField::mouseDrag(const juce::MouseEvent &event)
     float thresh = 10;
     if (dD > thresh)
     {
-        changeBy(1);
+        changeBy(getChangeMultiplier(event));
         lastDistanceChecked = d;
     }
     if (dD < -thresh)
     {
-        changeBy(-1);
+        changeBy(-getChangeMultiplier(event));
         lastDistanceChecked = d;
     }
 }
@@ -197,18 +197,35 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
 
     if (dir != 0)
     {
-        changeBy(dir);
+        changeBy(dir * getChangeMultiplier(event));
     }
 }
 
-void NumberField::changeBy(int inc)
+void NumberField::changeBy(float inc)
 {
     float dv = 1.f / (iMax - iMin);
     value = limit01(value + dv * inc);
     bounceToInt();
+    if (iValue == iMin)
+    {
+        value = 0.005f;
+    }
+    else if (iValue == iMax)
+    {
+        value = 0.995f;
+    }
 
     notifyValueChanged();
     repaint();
+}
+
+float NumberField::getChangeMultiplier(const juce::MouseEvent &event)
+{
+    if (controlMode == Skin::Parameters::PB_DEPTH && extended && !event.mods.isShiftDown())
+    {
+        return 99.f + 0.005f;
+    }
+    return 1.f;
 }
 
 #if SURGE_JUCE_ACCESSIBLE

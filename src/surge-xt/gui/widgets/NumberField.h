@@ -65,7 +65,9 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
 
     void paint(juce::Graphics &g) override;
 
-    void changeBy(int inc);
+    void changeBy(float inc);
+
+    float getChangeMultiplier(const juce::MouseEvent &event);
 
     Surge::Skin::Parameters::NumberfieldControlModes controlMode{Surge::Skin::Parameters::NONE};
     void setControlMode(Surge::Skin::Parameters::NumberfieldControlModes n,

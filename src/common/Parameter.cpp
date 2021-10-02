@@ -3179,7 +3179,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case ct_pbdepth:
         {
             if (extend_range)
-                snprintf(txt, TXT_SIZE, "%i Cents", i);
+                snprintf(txt, TXT_SIZE, "%0.2f Keys", i * 1.f / 100);
             else
                 snprintf(txt, TXT_SIZE, "%i Keys", i);
         }
@@ -4051,6 +4051,21 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                     ni = 200;
                 }
             }
+            else if (extend_range)
+            {
+                try
+                {
+                    ni = std::round(std::stof(s) * 100);
+                }
+                catch (const std::invalid_argument &)
+                {
+                    ni = val_min.i - 1; // set value of ni out of range on invalid input
+                }
+                catch (const std::out_of_range &)
+                {
+                    ni = val_min.i - 1; // same for out of range input
+                }
+            }
         }
         break;
         }
@@ -4432,7 +4447,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         {
             /*
              * OK so what's happening here? Well we need to give a number that
-             * when handed in asfter going through get_extended gives us what
+             * when handed in after going through get_extended gives us what
              * we typed in through the formatting.
              *
              * That is p->get_extended(mf) = v / 31 / 2. So lets get to work
