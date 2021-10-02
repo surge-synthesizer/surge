@@ -204,9 +204,9 @@ void WaveShaperEffect::init_ctrltypes()
     Effect::init_ctrltypes();
 
     fxdata->p[ws_prelowcut].set_name("Low Cut");
-    fxdata->p[ws_prelowcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ws_prelowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[ws_prehighcut].set_name("High Cut");
-    fxdata->p[ws_prehighcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ws_prehighcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[ws_shaper].set_name("Shape");
     fxdata->p[ws_shaper].set_type(ct_wstype);
@@ -218,9 +218,9 @@ void WaveShaperEffect::init_ctrltypes()
     fxdata->p[ws_drive].set_type(ct_decibel_narrow_short_extendable);
 
     fxdata->p[ws_postlowcut].set_name("Low Cut");
-    fxdata->p[ws_postlowcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ws_postlowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[ws_posthighcut].set_name("High Cut");
-    fxdata->p[ws_posthighcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ws_posthighcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[ws_postboost].set_name("Gain");
     fxdata->p[ws_postboost].set_type(ct_decibel_narrow_short_extendable);

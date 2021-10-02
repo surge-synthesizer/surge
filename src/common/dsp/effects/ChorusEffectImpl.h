@@ -178,9 +178,9 @@ template <int v> void ChorusEffect<v>::init_ctrltypes()
     fxdata->p[ch_feedback].set_type(ct_percent);
 
     fxdata->p[ch_lowcut].set_name("Low Cut");
-    fxdata->p[ch_lowcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ch_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[ch_highcut].set_name("High Cut");
-    fxdata->p[ch_highcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ch_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[ch_mix].set_name("Mix");
     fxdata->p[ch_mix].set_type(ct_percent);
@@ -237,11 +237,9 @@ template <int v> void ChorusEffect<v>::init_default_values()
     fxdata->p[ch_depth].val.f = 0.3f;
     fxdata->p[ch_feedback].val.f = 0.5f;
 
-    fxdata->p[ch_lowcut].val_default.f = fxdata->p[ch_lowcut].val_min.f;
     fxdata->p[ch_lowcut].val.f = -3.f * 12.f;
     fxdata->p[ch_lowcut].deactivated = false;
 
-    fxdata->p[ch_highcut].val_default.f = fxdata->p[ch_lowcut].val_max.f;
     fxdata->p[ch_highcut].val.f = 3.f * 12.f;
     fxdata->p[ch_highcut].deactivated = false;
 

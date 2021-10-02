@@ -998,10 +998,10 @@ void SineOscillator::init_ctrltypes()
     oscdata->p[sine_FMmode].set_type(ct_sinefmlegacy);
 
     oscdata->p[sine_lowcut].set_name("Low Cut");
-    oscdata->p[sine_lowcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[sine_lowcut].set_type(ct_freq_audible_deactivatable_hp);
 
     oscdata->p[sine_highcut].set_name("High Cut");
-    oscdata->p[sine_highcut].set_type(ct_freq_audible_deactivatable);
+    oscdata->p[sine_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     oscdata->p[sine_unison_detune].set_name("Unison Detune");
     oscdata->p[sine_unison_detune].set_type(ct_oscspread);
@@ -1016,13 +1016,11 @@ void SineOscillator::init_default_values()
     oscdata->p[sine_feedback].val.f = 0;
     oscdata->p[sine_FMmode].val.i = 1;
 
-    // high cut at the bottom
-    oscdata->p[sine_lowcut].val_default.f = oscdata->p[sine_lowcut].val_min.f;
+    // low cut at the bottom
     oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f;
     oscdata->p[sine_lowcut].deactivated = true;
 
-    // low cut at the top
-    oscdata->p[sine_highcut].val_default.f = oscdata->p[sine_highcut].val_max.f;
+    // high cut at the top
     oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f;
     oscdata->p[sine_highcut].deactivated = true;
 
@@ -1046,11 +1044,11 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
 
     if (streamingRevision <= 12)
     {
-        // high cut at the bottom
+        // low cut at the bottom
         oscdata->p[sine_lowcut].val.f = oscdata->p[sine_lowcut].val_min.f;
         oscdata->p[sine_lowcut].deactivated = true;
 
-        // low cut at the top
+        // high cut at the top
         oscdata->p[sine_highcut].val.f = oscdata->p[sine_highcut].val_max.f;
         oscdata->p[sine_highcut].deactivated = true;
 

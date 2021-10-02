@@ -208,7 +208,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_preeq_bw].set_name("Bandwidth");
     fxdata->p[dist_preeq_bw].set_type(ct_bandwidth);
     fxdata->p[dist_preeq_highcut].set_name("High Cut");
-    fxdata->p[dist_preeq_highcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[dist_preeq_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[dist_drive].set_name("Drive");
     fxdata->p[dist_drive].set_type(ct_decibel_narrow_extendable);
@@ -225,7 +225,7 @@ void DistortionEffect::init_ctrltypes()
     fxdata->p[dist_posteq_bw].set_name("Bandwidth");
     fxdata->p[dist_posteq_bw].set_type(ct_bandwidth);
     fxdata->p[dist_posteq_highcut].set_name("High Cut");
-    fxdata->p[dist_posteq_highcut].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[dist_posteq_highcut].set_type(ct_freq_audible_deactivatable_lp);
 
     fxdata->p[dist_gain].set_name("Gain");
     fxdata->p[dist_gain].set_type(ct_decibel_narrow);
