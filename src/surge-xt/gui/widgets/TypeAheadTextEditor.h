@@ -17,6 +17,7 @@
 #define SURGE_TYPEAHEADTEXTEDITOR_H
 
 #include <string>
+#include <set>
 #include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
@@ -28,16 +29,29 @@ struct TypeAheadListBoxModel;
 struct TypeAheadDataProvider
 {
     virtual ~TypeAheadDataProvider() = default;
-    virtual std::vector<std::string> searchFor(const std::string &s) = 0;
+    virtual std::vector<int> searchFor(const std::string &s) = 0;
+    virtual std::string textBoxValueForIndex(int idx) = 0;
+    virtual void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
+                               bool rowIsSelected);
 };
 
 struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
 {
-
     TypeAhead(const std::string &l, TypeAheadDataProvider *p); // does not take ownership
     ~TypeAhead();
 
-    void dismissWithValue(const std::string &s);
+    struct TypeAheadListener
+    {
+        virtual ~TypeAheadListener() = default;
+        virtual void itemSelected(int providerIndex) = 0;
+        virtual void typeaheadCanceled() = 0;
+    };
+
+    std::set<TypeAheadListener *> taList;
+    void addTypeAheadListener(TypeAheadListener *l) { taList.insert(l); }
+    void removeTypeAheadListener(TypeAheadListener *l) { taList.erase(l); }
+
+    void dismissWithValue(int providerIdx, const std::string &s);
     void dismissWithoutValue();
 
     std::unique_ptr<juce::ListBox> lbox;
@@ -46,8 +60,10 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     void showLbox();
     void parentHierarchyChanged() override;
     void textEditorTextChanged(juce::TextEditor &editor) override;
-    void textEditorReturnKeyPressed(juce::TextEditor &editor) override { lbox->setVisible(false); }
-    void textEditorEscapeKeyPressed(juce::TextEditor &editor) override { lbox->setVisible(false); }
+
+    bool setToElementZeroOnReturn{false};
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
+    void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
 
     bool keyPressed(const juce::KeyPress &press) override;
 };

@@ -14,16 +14,34 @@
 */
 
 #include "TypeAheadTextEditor.h"
+#include "MainFrame.h"
 
 namespace Surge
 {
 namespace Widgets
 {
 
+void TypeAheadDataProvider::paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
+                                          bool rowIsSelected)
+{
+    if (rowIsSelected)
+    {
+        g.fillAll(juce::Colours::wheat);
+        g.setColour(juce::Colours::darkblue);
+    }
+    else
+    {
+        g.fillAll(juce::Colours::white);
+        g.setColour(juce::Colours::black);
+    }
+    g.drawText(textBoxValueForIndex(searchIndex), 0, 0, width, height,
+               juce::Justification::centredLeft);
+}
+
 struct TypeAheadListBoxModel : public juce::ListBoxModel
 {
     TypeAheadDataProvider *provider;
-    std::vector<std::string> search;
+    std::vector<int> search;
     TypeAhead *ta{nullptr};
     TypeAheadListBoxModel(TypeAhead *t, TypeAheadDataProvider *p) : ta(t), provider(p) {}
 
@@ -33,24 +51,18 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     void paintListBoxItem(int rowNumber, juce::Graphics &g, int width, int height,
                           bool rowIsSelected) override
     {
-        if (rowIsSelected)
-        {
-            g.fillAll(juce::Colours::wheat);
-            g.setColour(juce::Colours::darkblue);
-        }
-        else
-        {
-            g.fillAll(juce::Colours::white);
-            g.setColour(juce::Colours::black);
-        }
-        g.drawText(search[rowNumber], 0, 0, width, height, juce::Justification::centredLeft);
+        provider->paintDataItem(search[rowNumber], g, width, height, rowIsSelected);
     }
 
     void returnKeyPressed(int lastRowSelected) override
     {
-        ta->dismissWithValue(search[lastRowSelected]);
+        ta->dismissWithValue(lastRowSelected, provider->textBoxValueForIndex(lastRowSelected));
     }
-    void escapeKeyPressed() { ta->dismissWithoutValue(); }
+    void escapeKeyPressed()
+    {
+        std::cout << "B" << std::endl;
+        ta->dismissWithoutValue();
+    }
 };
 
 struct TypeAheadListBox : public juce::ListBox
@@ -68,6 +80,7 @@ struct TypeAheadListBox : public juce::ListBox
         {
             if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
             {
+                std::cout << "A" << std::endl;
                 m->escapeKeyPressed();
                 return true;
             }
@@ -87,28 +100,71 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
 
 TypeAhead::~TypeAhead() = default;
 
-void TypeAhead::dismissWithValue(const std::string &s)
+void TypeAhead::dismissWithValue(int providerIdx, const std::string &s)
 {
     setText(s, juce::NotificationType::dontSendNotification);
     lbox->setVisible(false);
     grabKeyboardFocus();
+    for (auto l : taList)
+        l->itemSelected(providerIdx);
 }
 
 void TypeAhead::dismissWithoutValue()
 {
+    std::cout << "C" << std::endl;
     lbox->setVisible(false);
     grabKeyboardFocus();
+    for (auto l : taList)
+        l->typeaheadCanceled();
+}
+
+void TypeAhead::textEditorEscapeKeyPressed(juce::TextEditor &editor)
+{
+    lbox->setVisible(false);
+    for (auto l : taList)
+        l->typeaheadCanceled();
+}
+
+void TypeAhead::textEditorReturnKeyPressed(juce::TextEditor &editor)
+{
+    lbox->setVisible(false);
+
+    if (setToElementZeroOnReturn && lboxmodel->getNumRows() > 1)
+    {
+        auto r = lboxmodel->provider->textBoxValueForIndex(0);
+        setText(r, juce::NotificationType::dontSendNotification);
+        for (auto l : taList)
+        {
+            l->itemSelected(0);
+        }
+    }
 }
 
 void TypeAhead::parentHierarchyChanged()
 {
     TextEditor::parentHierarchyChanged();
-    getParentComponent()->addChildComponent(*lbox);
+    auto p = getParentComponent();
+    while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
+    {
+        p = p->getParentComponent();
+    }
+    if (p)
+        p->addChildComponent(*lbox);
 }
 
 void TypeAhead::showLbox()
 {
-    auto b = getBounds().translated(0, getHeight()).withHeight(140);
+    auto p = getParentComponent();
+    while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
+    {
+        p = p->getParentComponent();
+    }
+
+    auto b = getLocalBounds().translated(0, getHeight()).withHeight(140);
+    if (p)
+    {
+        b = p->getLocalArea(this, b);
+    }
     lbox->setBounds(b);
     lbox->setVisible(true);
     lbox->toFront(false);

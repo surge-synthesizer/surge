@@ -21,13 +21,44 @@
 #include "RuntimeFont.h"
 #include "UserDefaults.h"
 #include "widgets/MenuCustomComponents.h"
+#include "PatchDB.h"
 
 namespace Surge
 {
 namespace Widgets
 {
-PatchSelector::PatchSelector() = default;
+
+struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
+{
+    SurgeStorage *storage;
+    std::vector<PatchStorage::PatchDB::patchRecord> lastSearchResult;
+    std::vector<int> searchFor(const std::string &s) override
+    {
+        lastSearchResult = storage->patchDB->rawQueryForNameLike(s);
+        std::vector<int> res(lastSearchResult.size());
+        std::iota(res.begin(), res.end(), 0);
+        return res;
+    }
+    std::string textBoxValueForIndex(int idx) override { return lastSearchResult[idx].name; }
+};
+
+PatchSelector::PatchSelector()
+{
+    patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>();
+    typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("patch select", patchDbProvider.get());
+    typeAhead->setVisible(false);
+    typeAhead->addTypeAheadListener(this);
+    typeAhead->setToElementZeroOnReturn = true;
+    addChildComponent(*typeAhead);
+};
 PatchSelector::~PatchSelector() = default;
+
+void PatchSelector::setStorage(SurgeStorage *s)
+{
+    storage = s;
+    storage->patchDB->initialize();
+    patchDbProvider->storage = s;
+}
 
 void PatchSelector::paint(juce::Graphics &g)
 {
@@ -65,15 +96,18 @@ void PatchSelector::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::PatchBrowser::Text));
 
     // patch name
-    g.setFont(Surge::GUI::getFontManager()->patchNameFont);
-    g.drawText(pname, pbrowser, juce::Justification::centred);
+    if (!isTypeaheadSearchOn)
+    {
+        g.setFont(Surge::GUI::getFontManager()->patchNameFont);
+        g.drawText(pname, pbrowser, juce::Justification::centred);
 
-    // category/author name
-    g.setFont(Surge::GUI::getFontManager()->displayFont);
-    g.drawText(category, cat, juce::Justification::centredLeft);
-    g.drawText(author, auth,
-               skin->getVersion() >= 2 ? juce::Justification::centredRight
-                                       : juce::Justification::centredLeft);
+        // category/author name
+        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.drawText(category, cat, juce::Justification::centredLeft);
+        g.drawText(author, auth,
+                   skin->getVersion() >= 2 ? juce::Justification::centredRight
+                                           : juce::Justification::centredLeft);
+    }
 
     // favorites rect
     {
@@ -106,6 +140,9 @@ void PatchSelector::resized()
                      .withWidth(fsize)
                      .reduced(1, 1)
                      .translated(2, 1);
+
+    auto tad = getLocalBounds().reduced(fsize + 5, 2).translated(0, -1);
+    typeAhead->setBounds(tad);
 }
 
 void PatchSelector::mouseEnter(const juce::MouseEvent &)
@@ -181,12 +218,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
     if (e.mods.isShiftDown() || searchRect.contains(e.position.toInt()))
     {
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-        if (sge)
-        {
-            sge->toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
-        }
+        toggleTypeAheadSearch(!isTypeaheadSearchOn);
         return;
     }
 
@@ -643,6 +675,36 @@ void PatchSelector::loadPatch(int id)
 int PatchSelector::getCurrentPatchId() const { return current_patch; }
 
 int PatchSelector::getCurrentCategoryId() const { return current_category; }
+
+void PatchSelector::itemSelected(int providerIndex)
+{
+    auto sr = patchDbProvider->lastSearchResult[providerIndex];
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    toggleTypeAheadSearch(false);
+    if (sge)
+    {
+        sge->queuePatchFileLoad(sr.file);
+    }
+}
+void PatchSelector::typeaheadCanceled() { toggleTypeAheadSearch(false); }
+
+void PatchSelector::toggleTypeAheadSearch(bool b)
+{
+    isTypeaheadSearchOn = b;
+    if (isTypeaheadSearchOn)
+    {
+        typeAhead->setText(pname, juce::NotificationType::dontSendNotification);
+        typeAhead->setVisible(true);
+        typeAhead->grabKeyboardFocus();
+        typeAhead->selectAll();
+    }
+    else
+    {
+        typeAhead->setVisible(false);
+    }
+    repaint();
+    return;
+}
 
 #if SURGE_JUCE_ACCESSIBLE
 class PatchSelectorAH : public juce::AccessibilityHandler
