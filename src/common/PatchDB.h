@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include "filesystem/import.h"
 #include <iostream>
+#include <vector>
 
 class SurgeStorage;
 
@@ -96,6 +97,31 @@ struct PatchDB
 
   private:
     std::vector<catRecord> internalCategories(int arg, const std::string &query);
+};
+
+struct PatchDBQueryParser
+{
+    PatchDBQueryParser() = default;
+
+    enum TokenType
+    {
+        INVALID,
+        LITERAL,
+        AND,
+        OR,
+        SUB_EXPRESSION,
+        KEYWORD_EQUALS
+    };
+
+    struct Token
+    {
+        TokenType type{INVALID};
+        std::string prefix;
+        std::string content;
+        std::vector<std::unique_ptr<Token>> children;
+    };
+
+    std::unique_ptr<Token> parseQuery(const std::string &q);
 };
 
 } // namespace PatchStorage

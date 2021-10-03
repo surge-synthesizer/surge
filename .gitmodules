@@ -28,3 +28,7 @@
 [submodule "libs/fmt"]
 	path = libs/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "libs/PEGTL"]
+	path = libs/PEGTL
+	url = https://github.com/taocpp/PEGTL.git
+	branch = 2.x
