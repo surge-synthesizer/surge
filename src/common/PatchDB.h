@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include "filesystem/import.h"
 #include <iostream>
+#include <vector>
 
 class SurgeStorage;
 
@@ -28,6 +29,33 @@ namespace Surge
 {
 namespace PatchStorage
 {
+
+struct PatchDBQueryParser
+{
+    PatchDBQueryParser() = default;
+
+    enum TokenType
+    {
+        INVALID,
+        LITERAL,
+        AND,
+        OR,
+        KEYWORD_EQUALS
+    };
+
+    struct Token
+    {
+        TokenType type{INVALID};
+        std::string prefix;
+        std::string content;
+        std::vector<std::unique_ptr<Token>> children;
+    };
+
+    static std::unique_ptr<Token> parseQuery(const std::string &q);
+    static void printParseTree(std::ostream &os, const std::unique_ptr<Token> &t,
+                               const std::string pfx = "");
+};
+
 struct PatchDB
 {
     struct WriterWorker;
@@ -88,6 +116,15 @@ struct PatchDB
     std::vector<std::string> readAllFeatureValueString(const std::string &feature);
     std::vector<int> readAllFeatureValueInt(const std::string &feature);
     std::vector<std::string> readUserFavorites();
+
+    // How the query string works
+    static std::string sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t);
+    std::vector<patchRecord> queryFromQueryString(const std::string &query)
+    {
+        return queryFromQueryString(PatchDBQueryParser::parseQuery(query));
+    }
+    std::vector<patchRecord>
+    queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &t);
 
     // This is a temporary API point
     std::vector<patchRecord> rawQueryForNameLike(const std::string &nameLikeThis);

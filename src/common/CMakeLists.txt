@@ -16,6 +16,10 @@ surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 surge_add_lib_subdirectory(LuaJitLib)
 
+set(PEGTL_BUILD_TESTS OFF)
+set(PEGTL_BUILD_EXAMPLES OFF)
+surge_add_lib_subdirectory(PEGTL)
+
 juce_add_binary_data(surge-common-binary
   NAMESPACE SurgeSharedBinary
   HEADER_NAME SurgeSharedBinary.h
@@ -43,6 +47,7 @@ add_library(${PROJECT_NAME}
   Parameter.cpp
   Parameter.h
   PatchDB.cpp
+  PatchDBQueryParser.cpp
   PatchDB.h
   SkinColors.cpp
   SkinColors.h
@@ -322,6 +327,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   PRIVATE
   surge-lua-src
   surge-platform
+  taocpp::pegtl
   )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
