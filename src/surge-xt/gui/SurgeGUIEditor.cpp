@@ -76,10 +76,214 @@
 #include "filesystem/import.h"
 #include "RuntimeFont.h"
 
+#include "juce_core/juce_core.h"
+
 const int yofs = 10;
 
 using namespace std;
 using namespace Surge::ParamConfig;
+
+struct DroppedUserDataEntries
+{
+    std::vector<int> fxPresets;
+    std::vector<int> midiMappings;
+    std::vector<int> modulatorSettings;
+    std::vector<int> patches;
+    std::vector<std::vector<int>> skins;
+    std::vector<int> wavetables;
+
+    void clear()
+    {
+        fxPresets.clear();
+        midiMappings.clear();
+        modulatorSettings.clear();
+        patches.clear();
+        skins.clear();
+        wavetables.clear();
+    }
+
+    int totalSize() const
+    {
+        return fxPresets.size() + midiMappings.size() + modulatorSettings.size() + patches.size() +
+               skins.size() + wavetables.size();
+    }
+};
+
+class DroppedUserDataHandler
+{
+    std::unique_ptr<juce::ZipFile> zipFile;
+    DroppedUserDataEntries entries;
+
+    void initEntries()
+    {
+        if (zipFile == nullptr)
+        {
+            return;
+        }
+
+        entries.clear();
+        zipFile->sortEntriesByFilename();
+        int numEntries = zipFile->getNumEntries();
+        if (numEntries <= 0)
+        {
+            return;
+        }
+
+        int iEntry = 0;
+        while (iEntry < numEntries)
+        {
+            auto entry = zipFile->getEntry(iEntry);
+            if (!entry || entry->isSymbolicLink)
+            {
+                iEntry += 1;
+                continue;
+            }
+
+            if (entry->filename.endsWithIgnoreCase(".srgfx"))
+            {
+                entries.fxPresets.push_back(iEntry);
+            }
+            else if (entry->filename.endsWithIgnoreCase(".srgmid"))
+            {
+                entries.midiMappings.push_back(iEntry);
+            }
+            else if (entry->filename.endsWithIgnoreCase(".modpreset"))
+            {
+                entries.modulatorSettings.push_back(iEntry);
+            }
+            else if (entry->filename.endsWithIgnoreCase(".fxp"))
+            {
+                entries.patches.push_back(iEntry);
+            }
+            else if (entry->filename.endsWithIgnoreCase(".wt") ||
+                     entry->filename.endsWithIgnoreCase(".wav"))
+            {
+                entries.wavetables.push_back(iEntry);
+            }
+            else if (entry->filename.containsIgnoreCase(".surge-skin"))
+            {
+                /*
+                ** The topmost skin directory is not returned
+                ** by juce::ZipFile (at least on windows).
+                ** For example for a zip structure like
+                **
+                ** |- default.surge-skin/
+                **    |- SVG/
+                **       |- svgs
+                **       |- ...
+                **    |- skin.xml
+                **
+                ** the first ZipEntry returned is for 'default.surge-skin/SVG/'.
+                ** To find all files which belong to one skin, the starting directory name
+                ** is first searched for.
+                */
+                int endOfSkinDirectory = entry->filename.indexOfIgnoreCase(".surge-skin") +
+                                         std::string(".surge-skin/").length();
+                auto skinDirectoryName = entry->filename.substring(0, endOfSkinDirectory);
+                std::vector<int> skinEntries;
+                skinEntries.push_back(iEntry);
+                int iSkinEntry = iEntry + 1;
+                while (iSkinEntry < numEntries)
+                {
+                    entry = zipFile->getEntry(iSkinEntry);
+                    if (!entry->filename.startsWithIgnoreCase(skinDirectoryName))
+                    {
+                        break;
+                    }
+                    skinEntries.push_back(iSkinEntry);
+                    iSkinEntry += 1;
+                }
+                entries.skins.push_back(skinEntries);
+                iEntry = iSkinEntry - 1;
+            }
+            iEntry += 1;
+        }
+    }
+
+    bool uncompressEntry(int iEntry, fs::path uncompressTo)
+    {
+        auto res = zipFile->uncompressEntry(iEntry, juce::File(path_to_string(uncompressTo)));
+        if (res.failed())
+        {
+            std::cout << "patches unzip failed for entry " << iEntry << " to " << uncompressTo
+                      << std::endl;
+            return false;
+        }
+        return true;
+    }
+
+  public:
+    bool init(const std::string &fname)
+    {
+        juce::File file(fname);
+        zipFile = std::make_unique<juce::ZipFile>(file);
+        initEntries();
+        return true;
+    }
+
+    DroppedUserDataEntries getEntries() const { return entries; }
+
+    bool extractEntries(SurgeStorage *storage)
+    {
+        if (zipFile == nullptr)
+        {
+            return false;
+        }
+
+        for (int iEntry : entries.fxPresets)
+        {
+            if (!uncompressEntry(iEntry, storage->userFXPath))
+            {
+                return false;
+            }
+        }
+
+        for (int iEntry : entries.midiMappings)
+        {
+            if (!uncompressEntry(iEntry, storage->userMidiMappingsPath))
+            {
+                return false;
+            }
+        }
+
+        for (int iEntry : entries.modulatorSettings)
+        {
+            if (!uncompressEntry(iEntry, storage->userModulatorSettingsPath))
+            {
+                return false;
+            }
+        }
+
+        for (int iEntry : entries.patches)
+        {
+            if (!uncompressEntry(iEntry, storage->userPatchesPath))
+            {
+                return false;
+            }
+        }
+
+        for (auto skin : entries.skins)
+        {
+            for (int iEntry : skin)
+            {
+                if (!uncompressEntry(iEntry, storage->userSkinsPath))
+                {
+                    return false;
+                }
+            }
+        }
+
+        for (int iEntry : entries.wavetables)
+        {
+            if (!uncompressEntry(iEntry, storage->userWavetablesPath))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
 
 Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
 
@@ -4844,7 +5048,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     else if (fExt == ".surge-skin")
     {
         std::ostringstream oss;
-        oss << "Do you wisk to install skin from '" << fname << "' into your Surge User Directory?";
+        oss << "Do you wish to install skin from '" << fname << "' into your Surge User Directory?";
         auto cb = juce::ModalCallbackFunction::create([this, fPath](int okcs) {
             if (okcs)
             {
@@ -4866,6 +5070,89 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     }
     else if (fExt == ".zip")
     {
+        std::ostringstream oss;
+        std::shared_ptr<DroppedUserDataHandler> zipHandler =
+            std::make_shared<DroppedUserDataHandler>();
+        if (!zipHandler->init(fname))
+        {
+            return false;
+        }
+
+        auto entries = zipHandler->getEntries();
+        if (entries.totalSize() <= 0)
+        {
+            std::cout << "no entries in zip file" << std::endl;
+            return false;
+        }
+
+        oss << "Do you wish to install\n";
+        if (entries.fxPresets.size() > 0)
+        {
+            oss << entries.fxPresets.size() << " FX preset(s)\n";
+        }
+        if (entries.midiMappings.size() > 0)
+        {
+            oss << entries.midiMappings.size() << " midi mapping(s)\n";
+        }
+        if (entries.modulatorSettings.size() > 0)
+        {
+            oss << entries.modulatorSettings.size() << " modulator preset(s)\n";
+        }
+        if (entries.patches.size() > 0)
+        {
+            oss << entries.patches.size() << " patch(es)\n";
+        }
+        if (entries.skins.size() > 0)
+        {
+            oss << entries.skins.size() << " skin(s)\n";
+        }
+        if (entries.wavetables.size() > 0)
+        {
+            oss << entries.wavetables.size() << " wavetable(s)\n";
+        }
+        oss << "from '" << fname << "' into your Surge User Directory?";
+
+        auto cb = juce::ModalCallbackFunction::create([this, zipHandler](int okcs) {
+            if (okcs)
+            {
+                auto storage = &this->synth->storage;
+                if (!zipHandler->extractEntries(storage))
+                {
+                    return;
+                }
+
+                auto entries = zipHandler->getEntries();
+                if (entries.fxPresets.size() > 0)
+                {
+                    storage->fxUserPreset->doPresetRescan(storage, true);
+                    this->queueRebuildUI();
+                }
+
+                if (entries.modulatorSettings.size() > 0)
+                {
+                    storage->modulatorPreset->forcePresetRescan();
+                }
+
+                if (entries.patches.size() > 0)
+                {
+                    storage->refresh_patchlist();
+                }
+
+                if (entries.skins.size() > 0)
+                {
+                    auto db = Surge::GUI::SkinDB::get();
+                    db->rescanForSkins(storage);
+                }
+
+                if (entries.wavetables.size() > 0)
+                {
+                    storage->refresh_wtlist();
+                }
+            }
+        });
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install zip", oss.str(),
+
+                                           "Install", "Cancel", frame.get(), cb);
     }
     return true;
 }
