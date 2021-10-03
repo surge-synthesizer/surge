@@ -201,31 +201,25 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
     }
 }
 
-void NumberField::changeBy(float inc)
+void NumberField::changeBy(int inc)
 {
-    float dv = 1.f / (iMax - iMin);
-    value = limit01(value + dv * inc);
     bounceToInt();
-    if (iValue == iMin)
-    {
-        value = 0.005f;
-    }
-    else if (iValue == iMax)
-    {
-        value = 0.995f;
-    }
+    iValue = limit_range(iValue + inc, iMin, iMax);
+    value = limit01(Parameter::intScaledToFloat(iValue, iMax, iMin));
+
+    bounceToInt();
 
     notifyValueChanged();
     repaint();
 }
 
-float NumberField::getChangeMultiplier(const juce::MouseEvent &event)
+int NumberField::getChangeMultiplier(const juce::MouseEvent &event)
 {
     if (controlMode == Skin::Parameters::PB_DEPTH && extended && !event.mods.isShiftDown())
     {
-        return 99.f + 0.005f;
+        return 100;
     }
-    return 1.f;
+    return 1;
 }
 
 #if SURGE_JUCE_ACCESSIBLE
