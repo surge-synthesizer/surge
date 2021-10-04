@@ -51,7 +51,7 @@ fi
 
 # TODO Do we want to parameterize this?
 RPM_RELEASE=1
-ARCH=$(uname -i)
+ARCH=$(uname -m)
 
 # create and enter temporary build package directory.
 mkdir -p ./installer-tmp
