@@ -72,9 +72,7 @@ struct TypeAheadListBox : public juce::ListBox
 {
     TypeAheadListBox(const juce::String &s, juce::ListBoxModel *m) : juce::ListBox(s, m)
     {
-        setColour(outlineColourId, juce::Colours::black);
         setOutlineThickness(1);
-        setColour(backgroundColourId, juce::Colours::white);
     }
 
     bool keyPressed(const juce::KeyPress &press) override
@@ -98,6 +96,9 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
     lbox = std::make_unique<TypeAheadListBox>("TypeAhead", lboxmodel.get());
     lbox->setMultipleSelectionEnabled(false);
     lbox->setVisible(false);
+    lbox->setRowHeight(p->getRowHeight());
+    setColour(ColourIds::borderid, juce::Colours::black);
+    setColour(ColourIds::emptyBackgroundId, juce::Colours::white);
 }
 
 TypeAhead::~TypeAhead() = default;
@@ -202,6 +203,15 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
         return true;
     }
     return TextEditor::keyPressed(press);
+}
+
+void TypeAhead::colourChanged()
+{
+    if (isColourSpecified(emptyBackgroundId))
+        lbox->setColour(juce::ListBox::ColourIds::backgroundColourId,
+                        findColour(ColourIds::emptyBackgroundId));
+    if (isColourSpecified(ColourIds::borderid))
+        lbox->setColour(juce::ListBox::ColourIds::outlineColourId, findColour(ColourIds::borderid));
 }
 } // namespace Widgets
 } // namespace Surge

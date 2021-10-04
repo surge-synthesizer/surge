@@ -19,6 +19,7 @@
 #include <string>
 #include <set>
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "SkinSupport.h"
 
 namespace Surge
 {
@@ -31,12 +32,19 @@ struct TypeAheadDataProvider
     virtual ~TypeAheadDataProvider() = default;
     virtual std::vector<int> searchFor(const std::string &s) = 0;
     virtual std::string textBoxValueForIndex(int idx) = 0;
+    virtual int getRowHeight() { return 15; }
     virtual void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
                                bool rowIsSelected);
 };
 
 struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
 {
+    enum ColourIds
+    {
+        emptyBackgroundId = 0x370F001,
+        borderid
+    };
+
     TypeAhead(const std::string &l, TypeAheadDataProvider *p); // does not take ownership
     ~TypeAhead();
 
@@ -46,6 +54,8 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
         virtual void itemSelected(int providerIndex) = 0;
         virtual void typeaheadCanceled() = 0;
     };
+
+    void colourChanged() override;
 
     std::set<TypeAheadListener *> taList;
     void addTypeAheadListener(TypeAheadListener *l) { taList.insert(l); }

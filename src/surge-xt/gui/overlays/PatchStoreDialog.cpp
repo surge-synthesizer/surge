@@ -56,6 +56,26 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
         return res;
     }
 
+    juce::Font font{12};
+    juce::Colour hl, hlbg, txt, bg;
+    void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
+                       bool rowIsSelected) override
+    {
+        if (rowIsSelected)
+        {
+            g.fillAll(hlbg);
+            g.setColour(hl);
+        }
+        else
+        {
+            g.fillAll(bg);
+            g.setColour(txt);
+        }
+        g.setFont(font);
+        g.drawText(textBoxValueForIndex(searchIndex), 0, 0, width, height,
+                   juce::Justification::centredLeft);
+    }
+
     std::string textBoxValueForIndex(int idx) override
     {
         if (storage)
@@ -168,6 +188,17 @@ void PatchStoreDialog::onSkinChanged()
     resetColors(nameEd);
     resetColors(authorEd);
     resetColors(catEd);
+    catEd->setColour(Surge::Widgets::TypeAhead::ColourIds::emptyBackgroundId,
+                     skin->getColor(Colors::Dialog::Entry::Background));
+    catEd->setColour(Surge::Widgets::TypeAhead::ColourIds::borderid,
+                     skin->getColor(Colors::Dialog::Entry::Border));
+
+    categoryProvider->font = skin->getFont(Fonts::PatchStore::TextEntry);
+    categoryProvider->txt = skin->getColor(Colors::Dialog::Entry::Text);
+    categoryProvider->bg = skin->getColor(Colors::Dialog::Entry::Background);
+    categoryProvider->hl = categoryProvider->txt;
+    categoryProvider->hlbg = skin->getColor(Colors::Dialog::Entry::Focus);
+
 #if HAS_TAGS_FIELD
     resetColors(tagEd);
 #endif
