@@ -51,18 +51,21 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     void paintListBoxItem(int rowNumber, juce::Graphics &g, int width, int height,
                           bool rowIsSelected) override
     {
-        provider->paintDataItem(search[rowNumber], g, width, height, rowIsSelected);
+        if (rowNumber >= 0 && rowNumber < search.size())
+            provider->paintDataItem(search[rowNumber], g, width, height, rowIsSelected);
     }
 
     void returnKeyPressed(int lastRowSelected) override
     {
-        ta->dismissWithValue(lastRowSelected, provider->textBoxValueForIndex(lastRowSelected));
+        if (lastRowSelected < 0 || lastRowSelected >= search.size())
+        {
+            ta->dismissWithoutValue();
+            return;
+        }
+        ta->dismissWithValue(search[lastRowSelected],
+                             provider->textBoxValueForIndex(search[lastRowSelected]));
     }
-    void escapeKeyPressed()
-    {
-        std::cout << "B" << std::endl;
-        ta->dismissWithoutValue();
-    }
+    void escapeKeyPressed() { ta->dismissWithoutValue(); }
 };
 
 struct TypeAheadListBox : public juce::ListBox
@@ -80,7 +83,6 @@ struct TypeAheadListBox : public juce::ListBox
         {
             if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
             {
-                std::cout << "A" << std::endl;
                 m->escapeKeyPressed();
                 return true;
             }
@@ -111,7 +113,6 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s)
 
 void TypeAhead::dismissWithoutValue()
 {
-    std::cout << "C" << std::endl;
     lbox->setVisible(false);
     grabKeyboardFocus();
     for (auto l : taList)
