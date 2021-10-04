@@ -131,9 +131,9 @@ void TypeAhead::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
     lbox->setVisible(false);
 
-    if (setToElementZeroOnReturn && lboxmodel->getNumRows() > 1)
+    if (setToElementZeroOnReturn && lboxmodel->getNumRows() > 0)
     {
-        auto r = lboxmodel->provider->textBoxValueForIndex(0);
+        auto r = lboxmodel->provider->textBoxValueForIndex(lboxmodel->search[0]);
         setText(r, juce::NotificationType::dontSendNotification);
         for (auto l : taList)
         {
@@ -162,7 +162,11 @@ void TypeAhead::showLbox()
         p = p->getParentComponent();
     }
 
-    auto b = getLocalBounds().translated(0, getHeight()).withHeight(140);
+    auto b =
+        getLocalBounds()
+            .translated(0, getHeight())
+            .withHeight(
+                lboxmodel->provider->getRowHeight() * lboxmodel->provider->getDisplayedRows() + 4);
     if (p)
     {
         b = p->getLocalArea(this, b);

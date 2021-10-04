@@ -33,6 +33,7 @@ struct TypeAheadDataProvider
     virtual std::vector<int> searchFor(const std::string &s) = 0;
     virtual std::string textBoxValueForIndex(int idx) = 0;
     virtual int getRowHeight() { return 15; }
+    virtual int getDisplayedRows() { return 9; }
     virtual void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
                                bool rowIsSelected);
 };

@@ -39,7 +39,7 @@ namespace Entry
 {
 const Surge::Skin::Color Background("dialog.textfield.background", 255, 255, 255),
     Border("dialog.textfield.border", 160, 160, 160),
-    Caret("dialog.textfield.caret", 160, 160, 160), Focus("dialog.textfield.focus", 224, 224, 224),
+    Caret("dialog.textfield.caret", 160, 160, 160), Focus("dialog.textfield.focus", 214, 214, 255),
     Text("dialog.textfield.text", 0, 0, 0);
 }
 namespace Label
@@ -375,7 +375,20 @@ const Surge::Skin::Color Background("editor.overlay.background", 0, 0, 0, 204);
 namespace PatchBrowser
 {
 const Surge::Skin::Color Text("patchbrowser.text", 0, 0, 0);
+
+namespace TypeAheadList
+{
+const Surge::Skin::Color Border("patchbrowser.typeahead.border", 100, 100, 130),
+    Background("patchbrowser.typeahead.background", 255, 255, 255),
+    Text("patchbrowser.typeahead.text", 0, 0, 0),
+    HighlightBackground("patchbrowser.typeahead.background.highlight", 210, 210, 255),
+    HighlightText("patchbrowser.typeahead.text.highlight", 0, 0, 100),
+    SubText("patchbrowser.typeahead.subtext", 0, 0, 50),
+    HighlightSubText("patchbrowser.typeahead.subtext.highlight", 40, 40, 140),
+    Divider("patchbrowser.typeahead.divider", 140, 140, 140);
 }
+
+} // namespace PatchBrowser
 
 namespace Scene
 {
