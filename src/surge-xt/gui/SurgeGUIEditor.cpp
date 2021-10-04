@@ -1502,8 +1502,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 {
                     auto r = l->getRect();
                     auto db = bmp->getDrawableButUseWithCaution();
-                    db->setBounds(r);
-                    frame->addAndMakeVisible(db);
+                    if (db)
+                    {
+                        db->setBounds(r);
+                        frame->addAndMakeVisible(db);
+                    }
                 }
             }
         }

@@ -31,25 +31,34 @@ class SurgeImage
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
-        internalDrawableResolved()->draw(g, opacity, transform);
+        auto idr = internalDrawableResolved();
+        if (idr)
+            idr->draw(g, opacity, transform);
     }
     void drawAt(juce::Graphics &g, float x, float y, float opacity) const
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
-        internalDrawableResolved()->drawAt(g, x, y, opacity);
+        auto idr = internalDrawableResolved();
+        if (idr)
+            idr->drawAt(g, x, y, opacity);
     }
     void drawWithin(juce::Graphics &g, juce::Rectangle<float> destArea,
                     juce::RectanglePlacement placement, float opacity) const
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
-        internalDrawableResolved()->drawWithin(g, destArea, placement, opacity);
+        auto idr = internalDrawableResolved();
+        if (idr)
+            idr->drawWithin(g, destArea, placement, opacity);
     }
 
     std::unique_ptr<juce::Drawable> createCopy()
     {
-        return internalDrawableResolved()->createCopy();
+        auto idr = internalDrawableResolved();
+        if (idr)
+            return idr->createCopy();
+        return nullptr;
     }
 
     /*
