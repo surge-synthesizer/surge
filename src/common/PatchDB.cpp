@@ -1219,19 +1219,19 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
         oss << "( p.name LIKE '%" << t->content << "%' )";
         break;
     case PatchDBQueryParser::AND:
-        oss << "( ";
-        oss << sqlWhereClauseFor(t->children[0]);
-        oss << " AND ";
-        oss << sqlWhereClauseFor(t->children[1]);
-        oss << " )";
-        break;
     case PatchDBQueryParser::OR:
+    {
         oss << "( ";
-        oss << sqlWhereClauseFor(t->children[0]);
-        oss << " OR ";
-        oss << sqlWhereClauseFor(t->children[1]);
+        std::string inter = "";
+        for (auto &c : t->children)
+        {
+            oss << inter;
+            oss << sqlWhereClauseFor(c);
+            inter = t->type == PatchDBQueryParser::AND ? " AND " : " OR ";
+        }
         oss << " )";
         break;
+    }
     }
 
     return oss.str();

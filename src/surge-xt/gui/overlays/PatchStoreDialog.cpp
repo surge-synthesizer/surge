@@ -72,7 +72,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
             g.setColour(txt);
         }
         g.setFont(font);
-        g.drawText(textBoxValueForIndex(searchIndex), 0, 0, width, height,
+        g.drawText(textBoxValueForIndex(searchIndex), 4, 0, width - 4, height,
                    juce::Justification::centredLeft);
     }
 
@@ -105,8 +105,11 @@ PatchStoreDialog::PatchStoreDialog()
 #endif
 
     categoryProvider = std::make_unique<PatchStoreDialogCategoryProvider>();
-    catEd = std::make_unique<Surge::Widgets::TypeAhead>("patch category", categoryProvider.get());
-    catEd->setJustification(juce::Justification::centredLeft);
+    auto ta = std::make_unique<Surge::Widgets::TypeAhead>("patch category", categoryProvider.get());
+    ta->setJustification(juce::Justification::centredLeft);
+    ta->setToElementZeroOnReturn = true;
+
+    catEd = std::move(ta);
     addAndMakeVisible(*catEd);
 
     auto makeL = [this](const std::string &n) {

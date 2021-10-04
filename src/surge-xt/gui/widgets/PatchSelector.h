@@ -126,6 +126,8 @@ struct PatchSelector : public juce::Component,
 
     std::string getPatchNameAccessibleValue() { return pname + " by " + author; }
 
+    void onSkinChanged() override;
+
   protected:
     juce::Rectangle<int> favoritesRect, searchRect;
 

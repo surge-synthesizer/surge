@@ -274,7 +274,13 @@ extern const Surge::Skin::Color Background;
 namespace PatchBrowser
 {
 extern const Surge::Skin::Color Text;
+
+namespace TypeAheadList
+{
+extern const Surge::Skin::Color Border, Background, Text, HighlightBackground, HighlightText,
+    SubText, HighlightSubText, Divider;
 }
+} // namespace PatchBrowser
 
 namespace Scene
 {

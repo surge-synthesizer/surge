@@ -39,7 +39,54 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
         std::iota(res.begin(), res.end(), 0);
         return res;
     }
-    std::string textBoxValueForIndex(int idx) override { return lastSearchResult[idx].name; }
+    std::string textBoxValueForIndex(int idx) override
+    {
+        if (idx >= 0 && idx < lastSearchResult.size())
+            return lastSearchResult[idx].name;
+        return "<<ERROR>>";
+    }
+
+    int getRowHeight() override { return 23; }
+    int getDisplayedRows() override { return 12; }
+
+    juce::Colour rowBg{juce::Colours::white}, hlRowBg{juce::Colours::lightblue},
+        rowText{juce::Colours::black}, hlRowText{juce::Colours::red},
+        rowSubText{juce::Colours::orange}, hlRowSubText{juce::Colours::hotpink},
+        divider{juce::Colours::orchid};
+
+    void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
+                       bool rowIsSelected) override
+    {
+        g.fillAll(rowBg);
+        if (rowIsSelected)
+        {
+            auto r = juce::Rectangle<int>(0, 0, width, height).reduced(2, 2);
+            g.setColour(hlRowBg);
+            g.fillRect(r);
+        }
+
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
+        if (searchIndex >= 0 && searchIndex < lastSearchResult.size())
+        {
+            auto pr = lastSearchResult[searchIndex];
+            auto r = juce::Rectangle<int>(4, 0, width - 8, height - 1);
+            if (rowIsSelected)
+                g.setColour(hlRowText);
+            else
+                g.setColour(rowText);
+            g.drawText(pr.name, r, juce::Justification::centredTop);
+
+            if (rowIsSelected)
+                g.setColour(hlRowSubText);
+            else
+                g.setColour(rowSubText);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            g.drawText(pr.cat, r, juce::Justification::bottomLeft);
+            g.drawText(pr.author, r, juce::Justification::bottomRight);
+        }
+        g.setColour(divider);
+        g.drawLine(4, height, width - 4, height, 1);
+    }
 };
 
 PatchSelector::PatchSelector()
@@ -688,13 +735,48 @@ void PatchSelector::itemSelected(int providerIndex)
 }
 void PatchSelector::typeaheadCanceled() { toggleTypeAheadSearch(false); }
 
+void PatchSelector::onSkinChanged()
+{
+    auto transBlack = juce::Colours::black.withAlpha(0.f);
+    typeAhead->setColour(juce::TextEditor::outlineColourId, transBlack);
+    typeAhead->setColour(juce::TextEditor::backgroundColourId, transBlack);
+    typeAhead->setColour(juce::TextEditor::focusedOutlineColourId, transBlack);
+    typeAhead->setFont(Surge::GUI::getFontManager()->patchNameFont);
+
+    typeAhead->setColour(juce::TextEditor::textColourId,
+                         skin->getColor(Colors::Dialog::Entry::Text));
+    typeAhead->setColour(juce::TextEditor::highlightedTextColourId,
+                         skin->getColor(Colors::Dialog::Entry::Text));
+    typeAhead->setColour(juce::TextEditor::highlightColourId,
+                         skin->getColor(Colors::Dialog::Entry::Focus));
+
+    typeAhead->setColour(Surge::Widgets::TypeAhead::ColourIds::borderid,
+                         skin->getColor(Colors::PatchBrowser::TypeAheadList::Border));
+    typeAhead->setColour(Surge::Widgets::TypeAhead::ColourIds::emptyBackgroundId,
+                         skin->getColor(Colors::PatchBrowser::TypeAheadList::Background));
+
+    patchDbProvider->rowBg = skin->getColor(Colors::PatchBrowser::TypeAheadList::Background);
+    patchDbProvider->rowText = skin->getColor(Colors::PatchBrowser::TypeAheadList::Text);
+    patchDbProvider->hlRowBg =
+        skin->getColor(Colors::PatchBrowser::TypeAheadList::HighlightBackground);
+    patchDbProvider->hlRowText = skin->getColor(Colors::PatchBrowser::TypeAheadList::HighlightText);
+    patchDbProvider->rowSubText = skin->getColor(Colors::PatchBrowser::TypeAheadList::SubText);
+    patchDbProvider->hlRowSubText =
+        skin->getColor(Colors::PatchBrowser::TypeAheadList::HighlightSubText);
+    patchDbProvider->divider = skin->getColor(Colors::PatchBrowser::TypeAheadList::Divider);
+}
+
 void PatchSelector::toggleTypeAheadSearch(bool b)
 {
     isTypeaheadSearchOn = b;
     if (isTypeaheadSearchOn)
     {
+        typeAhead->setJustification(juce::Justification::centred);
         typeAhead->setText(pname, juce::NotificationType::dontSendNotification);
+        typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
+
         typeAhead->setVisible(true);
+
         typeAhead->grabKeyboardFocus();
         typeAhead->selectAll();
     }
