@@ -93,8 +93,10 @@ find ${PACKAGE_NAME}/usr/lib -print
 dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
 
 # create a tarball of the {PACKAGE_NAME}/usr contents.
+pigz="$(command -v pigz)"
+
 pushd ${PACKAGE_NAME}/usr
-    tar -czf ${TARGET_DIR}/${PACKAGE_NAME}-linux-x86_64-${VERSION}.tar.gz *
+    tar cf - ./* | "${pigz:-gzip}" > "${TARGET_DIR}/${PACKAGE_NAME}-linux-x86_64-${VERSION}.tar.gz"
 popd
 
 
