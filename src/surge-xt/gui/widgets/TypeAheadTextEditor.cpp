@@ -165,10 +165,10 @@ void TypeAhead::showLbox()
     if (p)
     {
         b = p->getLocalArea(this, b);
+        lbox->setBounds(b);
+        lbox->setVisible(true);
+        lbox->toFront(false);
     }
-    lbox->setBounds(b);
-    lbox->setVisible(true);
-    lbox->toFront(false);
 }
 
 void TypeAhead::textEditorTextChanged(TextEditor &editor)

@@ -1047,6 +1047,7 @@ std::vector<int> PatchDB::readAllFeatureValueInt(const std::string &feature)
     }
     return res;
 }
+
 // FIXME - push to worker perhaps?
 std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string &nameLikeThisP)
 {
@@ -1201,6 +1202,86 @@ int PatchDB::numberOfJobsOutstanding()
 {
     std::lock_guard<std::mutex> guard(worker->qLock);
     return worker->pathQ.size();
+}
+
+std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t)
+{
+    std::ostringstream oss;
+    switch (t->type)
+    {
+    case PatchDBQueryParser::INVALID:
+        oss << "(1 == 0)";
+        break;
+    case PatchDBQueryParser::KEYWORD_EQUALS:
+        oss << "(1 == 1)";
+        break;
+    case PatchDBQueryParser::LITERAL:
+        oss << "( p.name LIKE '%" << t->content << "%' )";
+        break;
+    case PatchDBQueryParser::AND:
+        oss << "( ";
+        oss << sqlWhereClauseFor(t->children[0]);
+        oss << " AND ";
+        oss << sqlWhereClauseFor(t->children[1]);
+        oss << " )";
+        break;
+    case PatchDBQueryParser::OR:
+        oss << "( ";
+        oss << sqlWhereClauseFor(t->children[0]);
+        oss << " OR ";
+        oss << sqlWhereClauseFor(t->children[1]);
+        oss << " )";
+        break;
+    }
+
+    return oss.str();
+}
+
+std::vector<PatchDB::patchRecord>
+PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &t)
+{
+    std::vector<PatchDB::patchRecord> res;
+
+    // FIXME - cache this by pushing it to the worker
+    std::string query = "select p.id, p.path, p.category, p.name, pf.feature_svalue from Patches "
+                        "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
+                        "'AUTHOR' and " +
+                        sqlWhereClauseFor(t) + " ORDER BY p.category_type, p.category, p.name";
+
+    std::cout << "QUERY IS \n" << query << "\n";
+    try
+    {
+        auto conn = worker->getReadOnlyConn(false);
+        if (!conn)
+            return res;
+
+        auto q = SQL::Statement(conn, query);
+
+        while (q.step())
+        {
+            int id = q.col_int(0);
+            auto path = q.col_str(1);
+            auto cat = q.col_str(2);
+            auto name = q.col_str(3);
+            auto auth = q.col_str(4);
+            res.emplace_back(id, path, cat, name, auth);
+        }
+
+        q.finalize();
+    }
+    catch (SQL::Exception &e)
+    {
+        if (e.rc == SQLITE_BUSY)
+        {
+            // Oh well
+        }
+        else
+        {
+            storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
+        }
+    }
+
+    return res;
 }
 
 } // namespace PatchStorage

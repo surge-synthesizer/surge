@@ -24,6 +24,7 @@ add_executable(${PROJECT_NAME}
   UnitTestsMOD.cpp
   UnitTestsMSEG.cpp
   UnitTestsPARAM.cpp
+  UnitTestsQUERY.cpp
   UnitTestsTUN.cpp
   main.cpp
   )

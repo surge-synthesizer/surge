@@ -34,7 +34,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
     std::vector<PatchStorage::PatchDB::patchRecord> lastSearchResult;
     std::vector<int> searchFor(const std::string &s) override
     {
-        lastSearchResult = storage->patchDB->rawQueryForNameLike(s);
+        lastSearchResult = storage->patchDB->queryFromQueryString(s);
         std::vector<int> res(lastSearchResult.size());
         std::iota(res.begin(), res.end(), 0);
         return res;
