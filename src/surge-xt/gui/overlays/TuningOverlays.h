@@ -60,6 +60,9 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
 
     void setStorage(SurgeStorage *s) { storage = s; }
 
+    void onNewSCLKBM(const std::string &scl, const std::string &kbm);
+    void onToneChanged(int tone, double newCentsValue);
+    void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resized() override;
 
@@ -74,6 +77,8 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
 
     Tunings::Tuning tuning;
     SurgeStorage *storage{nullptr};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningOverlay);
 };
 } // namespace Overlays
 } // namespace Surge
