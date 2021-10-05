@@ -32,6 +32,7 @@ struct FxUserPreset
     {
         std::string file;
         std::string name;
+        int streamingVersion{ff_revision};
         fs::path subPath{};
         bool isFactory{false};
         int type{-1};
