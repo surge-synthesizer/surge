@@ -94,6 +94,13 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
             if (!r)
                 goto badPreset;
 
+            preset.streamingVersion = ff_revision;
+            int sv;
+            if (r->QueryIntAttribute("streaming_version", &sv) == TIXML_SUCCESS)
+            {
+                preset.streamingVersion = sv;
+            }
+
             auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
 
             if (!s)
@@ -321,6 +328,8 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
     {
         t_fx->init_ctrltypes();
         t_fx->init_default_values();
+        if (p.streamingVersion != ff_revision)
+            t_fx->handleStreamingMismatches(p.streamingVersion, ff_revision);
         delete t_fx;
     }
 
