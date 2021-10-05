@@ -603,20 +603,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     Parameter *parameter = synth->storage.getPatch().param_ptr[md];
 
                     auto use_scene = 0;
+                    bool allScenes = true;
                     if (this->synth->isModulatorDistinctPerScene(thisms))
+                    {
+                        allScenes = false;
                         use_scene = current_scene;
+                    }
 
-                    if (((md < n_global_params) || ((parameter->scene - 1) == activeScene)) &&
+                    bool isGlobal = md < n_global_params;
+                    bool isActiveScene = parameter->scene - 1 == activeScene;
+
+                    if ((isGlobal || isActiveScene || allScenes) &&
                         synth->isAnyActiveModulation(md, thisms, use_scene))
                     {
-
                         auto indices = synth->getModulationIndicesBetween(md, thisms, use_scene);
                         auto hasIdx = synth->supportsIndexedModulator(use_scene, thisms);
                         char modtxt[TXT_SIZE];
 
                         for (auto modidx : indices)
                         {
-
                             if (first_destination)
                             {
                                 contextMenu.addSeparator();
@@ -642,6 +647,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             else
                             {
                                 targetName = parameter->get_full_name();
+                            }
+
+                            if (allScenes && (!isGlobal && !isActiveScene))
+                            {
+                                char sn[2];
+                                sn[0] = 'A' + (parameter->scene - 1);
+                                sn[1] = 0;
+                                targetName += std::string() + " (Scene " + sn + ")";
                             }
 
                             auto clearOp = [this, first_destination, md, n_total_md, thisms, modidx,
@@ -760,8 +773,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 if (n_md > 1)
                 {
+                    auto use_scene = 0;
+                    bool allScenes = true;
+                    if (this->synth->isModulatorDistinctPerScene(thisms))
+                    {
+                        allScenes = false;
+                        use_scene = current_scene;
+                    }
                     auto allThree = std::make_unique<Surge::Widgets::ModMenuForAllComponent>(
-                        [this, thisms, n_total_md,
+                        [this, thisms, use_scene, allScenes, n_total_md,
                          control](Surge::Widgets::ModMenuForAllComponent::AllAction action) {
                             switch (action)
                             {
@@ -770,10 +790,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 for (int md = 0; md < n_total_md; md++)
                                 {
                                     int scene = synth->storage.getPatch().param_ptr[md]->scene;
-                                    if (scene == 0 || scene == current_scene + 1)
+                                    if (scene == 0 || allScenes || scene == current_scene + 1)
                                         for (auto idx : synth->getModulationIndicesBetween(
-                                                 md, thisms, current_scene))
-                                            synth->clearModulation(md, thisms, current_scene, idx);
+                                                 md, thisms, use_scene))
+                                            synth->clearModulation(md, thisms, use_scene, idx);
                                 }
 
                                 refresh_mod();
@@ -1974,8 +1994,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             auto indices = synth->getModulationIndicesBetween(
                                                 ptag, (modsources)ms, sc);
                                             for (auto idx : indices)
-                                                synth->muteModulation(ptag, (modsources)ms, sc, idx,
-                                                                      false);
+                                                synth->clearModulation(ptag, (modsources)ms, sc,
+                                                                       idx, false);
                                         }
                                     }
                                 }
@@ -2797,15 +2817,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     // maybe setModValue here
                 }
 
-                auto sourceScene = 0; // midi and macros map as 'scene 0' always
-                if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
-                {
-                    sourceScene = current_scene; // just the LFOs split
-                }
-                synth->setModulation(ptag, thisms, current_scene, modsource_index, mv);
                 auto use_scene = 0;
                 if (this->synth->isModulatorDistinctPerScene(thisms))
                     use_scene = current_scene;
+                synth->setModulation(ptag, thisms, use_scene, modsource_index, mv);
 
                 mci->setModulationState(
                     synth->isModDestUsed(p->id),

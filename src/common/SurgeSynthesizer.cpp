@@ -2660,8 +2660,9 @@ void SurgeSynthesizer::updateUsedState()
         for (int i = 0; i < n; i++)
         {
             int id = modlist->at(i).source_id;
-            assert((id > 0) && (id < n_modsources));
-            modsourceused[id] = true;
+            if (!isModulatorDistinctPerScene((modsources)id) ||
+                modlist->at(i).source_scene == scene)
+                modsourceused[id] = true;
         }
     }
 }
@@ -2864,6 +2865,7 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
 bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsourceScene, int index,
                                      float val)
 {
+
     if (!isValidModulation(ptag, modsource))
         return false;
     float value = storage.getPatch().param_ptr[ptag]->set_modulation_f01(val);
