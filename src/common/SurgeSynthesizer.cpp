@@ -347,6 +347,8 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         }
     }
 
+    midiNoteEvents++;
+
     if (!storage.isStandardTuning)
     {
         if (!storage.currentTuning.isMidiNoteMapped(key))
@@ -817,6 +819,7 @@ void SurgeSynthesizer::releaseScene(int s)
 
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
 {
+    midiNoteEvents++;
     bool foundVoice[n_scenes];
     for (int sc = 0; sc < n_scenes; ++sc)
     {

@@ -169,6 +169,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::string nameOfStandardReturnToChangeTo(int pid);
     void activateFromCurrentFx();
 
+    uint64_t lastObservedMidiNoteEventCount{0};
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
