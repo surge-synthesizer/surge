@@ -348,6 +348,7 @@ class alignas(16) SurgeSynthesizer
 
     std::array<uint64_t, 128> midiKeyPressedForScene[n_scenes];
     uint64_t orderedMidiKey = 0;
+    std::atomic<uint64_t> midiNoteEvents{0};
 
     int current_category_id = 0;
     bool modsourceused[n_modsources];

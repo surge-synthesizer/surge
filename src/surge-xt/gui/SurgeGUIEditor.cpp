@@ -246,6 +246,11 @@ void SurgeGUIEditor::idle()
 
     if (editor_open && frame && !synth->halt_engine)
     {
+        if (lastObservedMidiNoteEventCount != synth->midiNoteEvents)
+        {
+            lastObservedMidiNoteEventCount = synth->midiNoteEvents;
+            // If there are things subscribed to keys update them here
+        }
         idleInfowindow();
         juceDeleteOnIdle.clear();
         /*
