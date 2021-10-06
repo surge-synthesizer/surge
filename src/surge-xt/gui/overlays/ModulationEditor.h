@@ -18,9 +18,9 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "OverlayComponent.h"
+#include "SurgeSynthesizer.h"
 
 class SurgeGUIEditor;
-class SurgeSynthesizer;
 
 namespace Surge
 {
@@ -28,7 +28,7 @@ namespace Overlays
 {
 class ModulationListBoxModel;
 
-class ModulationEditor : public OverlayComponent
+class ModulationEditor : public OverlayComponent, public SurgeSynthesizer::ModulationAPIListener
 {
   public:
     ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s);
@@ -40,8 +40,24 @@ class ModulationEditor : public OverlayComponent
     SurgeGUIEditor *ed;
     SurgeSynthesizer *synth;
 
+    std::unique_ptr<juce::Timer> idleTimer;
+    void idle();
+
     void paint(juce::Graphics &g) override;
     void resized() override;
+
+    struct SelfModulationGuard
+    {
+        SelfModulationGuard(ModulationEditor *ed) : moded(ed) { moded->selfModulation = true; }
+        ~SelfModulationGuard() { moded->selfModulation = false; }
+        ModulationEditor *moded;
+    };
+    std::atomic<bool> selfModulation{false}, needsModUpdate{false};
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                float value) override;
+    void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                  bool mute) override;
+    void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationEditor);
 };

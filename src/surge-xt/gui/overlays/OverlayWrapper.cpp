@@ -16,6 +16,7 @@
 #include "OverlayWrapper.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -26,7 +27,12 @@ OverlayWrapper::OverlayWrapper()
     closeButton = std::make_unique<juce::TextButton>("closeButton");
     closeButton->addListener(this);
     closeButton->setButtonText("X");
-    addAndMakeVisible(*closeButton);
+    addChildComponent(*closeButton);
+
+    tearOutButton = std::make_unique<juce::TextButton>("tearOut");
+    tearOutButton->addListener(this);
+    tearOutButton->setButtonText("^");
+    addChildComponent(*tearOutButton);
 }
 
 OverlayWrapper::OverlayWrapper(const juce::Rectangle<int> &cb) : OverlayWrapper()
@@ -37,6 +43,11 @@ OverlayWrapper::OverlayWrapper(const juce::Rectangle<int> &cb) : OverlayWrapper(
 
 void OverlayWrapper::paint(juce::Graphics &g)
 {
+    if (!hasInteriorDec)
+    {
+        return;
+    }
+
     auto sp = getLocalBounds();
     if (isModal)
     {
@@ -61,6 +72,7 @@ void OverlayWrapper::paint(juce::Graphics &g)
 
 void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
 {
+    hasInteriorDec = true;
     auto sp = getLocalBounds();
     if (isModal)
         sp = componentBounds;
@@ -74,14 +86,25 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     auto buttonSize = titlebarSize - 2;
     auto closeButtonBounds =
         getLocalBounds().withHeight(buttonSize).withLeft(getWidth() - buttonSize).translated(-2, 2);
-
+    auto tearOutButtonBounds = closeButtonBounds.translated(-buttonSize - 2, 0);
     if (showCloseButton)
     {
+        closeButton->setVisible(true);
         closeButton->setBounds(closeButtonBounds);
     }
     else
     {
         closeButton->setVisible(false);
+    }
+
+    if (canTearOut)
+    {
+        tearOutButton->setVisible(true);
+        tearOutButton->setBounds(tearOutButtonBounds);
+    }
+    else
+    {
+        tearOutButton->setVisible(false);
     }
 
     addAndMakeVisible(*primaryChild);
@@ -91,9 +114,71 @@ void OverlayWrapper::buttonClicked(juce::Button *button)
 {
     if (button == closeButton.get())
     {
-        closeOverlay();
+        onClose();
+    }
+
+    if (button == tearOutButton.get())
+    {
+        doTearOut();
     }
 }
 
+bool OverlayWrapper::isTornOut() { return tearOutParent != nullptr; }
+
+struct TearOutWindow : public juce::DocumentWindow
+{
+    TearOutWindow(const juce::String &s, int x) : juce::DocumentWindow(s, juce::Colours::black, x)
+    {
+    }
+
+    OverlayWrapper *wrapping{nullptr};
+    void closeButtonPressed()
+    {
+        if (wrapping)
+        {
+            wrapping->onClose();
+        }
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TearOutWindow);
+};
+
+void OverlayWrapper::supressInteriorDecoration()
+{
+    hasInteriorDec = false;
+    setSize(primaryChild->getWidth(), primaryChild->getHeight());
+    primaryChild->setBounds(getLocalBounds());
+}
+
+void OverlayWrapper::doTearOut()
+{
+    getParentComponent()->removeChildComponent(this);
+
+    auto w = getWidth();
+    auto h = getHeight();
+    if (editor)
+    {
+        auto sc = 1.0 * editor->getZoomFactor() / 100.0;
+        w *= sc;
+        h *= sc;
+        setSize(w, h);
+
+        primaryChild->setTransform(juce::AffineTransform::scale(sc));
+        primaryChild->setBounds(getLocalBounds());
+    }
+
+    std::string t = "Tear Out";
+    if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+    {
+        t = oc->getEnclosingParentTitle();
+    }
+    auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton);
+    dw->setContentNonOwned(this, false);
+    dw->setContentComponentSize(w, h);
+    dw->setVisible(true);
+    dw->toFront(true);
+    dw->wrapping = this;
+    supressInteriorDecoration();
+    tearOutParent = std::move(dw);
+}
 } // namespace Overlays
 } // namespace Surge

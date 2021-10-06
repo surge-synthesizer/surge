@@ -112,10 +112,19 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(juce::DocumentWindow &wind
 
     g.setColour(juce::Colours::white);
 
+    auto wt = window.getName();
+
     juce::String surgeLabel = "Surge XT";
     auto surgeVersion = Surge::Build::FullVersionStr;
     auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14);
     auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14);
+
+    if (wt != "Surge XT")
+    {
+        surgeLabel = wt;
+        surgeVersion = "Surge XT";
+        fontVersion = fontSurge;
+    }
 
     auto sw = fontSurge.getStringWidth(surgeLabel);
     auto vw = fontVersion.getStringWidth(surgeVersion);

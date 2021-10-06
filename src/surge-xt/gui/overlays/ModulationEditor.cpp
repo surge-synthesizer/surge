@@ -25,6 +25,11 @@ namespace Overlays
 {
 struct ModulationListBoxModel : public juce::ListBoxModel
 {
+    struct UpdateOnExternal
+    {
+        virtual ~UpdateOnExternal() = default;
+        virtual void update() {}
+    };
     struct Datum
     {
         enum RowType
@@ -65,7 +70,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         int row;
     };
 
-    struct ShowComponent : public juce::Component
+    struct ShowComponent : public juce::Component, UpdateOnExternal
     {
         ShowComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row) {}
         void paint(juce::Graphics &g) override
@@ -98,7 +103,8 @@ struct ModulationListBoxModel : public juce::ListBoxModel
 
     struct EditComponent : public juce::Component,
                            public juce::Slider::Listener,
-                           public juce::Button::Listener
+                           public juce::Button::Listener,
+                           public UpdateOnExternal
     {
         std::unique_ptr<juce::Button> clearButton;
         std::unique_ptr<juce::Button> muteButton;
@@ -114,24 +120,31 @@ struct ModulationListBoxModel : public juce::ListBoxModel
             muteButton->setButtonText("Mute");
             muteButton->addListener(this);
             // FIX THIS SCENE TREATMENT
-            muteButton->setToggleState(
-                mod->moded->synth->isModulationMuted(
-                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_scene, mod->rows[row].source_index),
-                juce::NotificationType::dontSendNotification);
             addAndMakeVisible(*muteButton);
 
             modSlider = std::make_unique<juce::Slider>("Modulation");
             modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
             modSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
             modSlider->setRange(-1, 1);
-            modSlider->setValue(mod->rows[row].p->get_modulation_f01(mod->rows[row].depth),
-                                juce::NotificationType::dontSendNotification);
             modSlider->addListener(this);
             addAndMakeVisible(*modSlider);
+
+            update();
+        }
+
+        virtual void update() override
+        {
+            muteButton->setToggleState(
+                mod->moded->synth->isModulationMuted(
+                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
+                    mod->rows[row].source_scene, mod->rows[row].source_index),
+                juce::NotificationType::dontSendNotification);
+            modSlider->setValue(mod->rows[row].p->get_modulation_f01(mod->rows[row].depth),
+                                juce::NotificationType::dontSendNotification);
         }
         void sliderValueChanged(juce::Slider *slider) override
         {
+            ModulationEditor::SelfModulationGuard g(mod->moded);
             auto rd = mod->rows[row];
             auto um = rd.p->set_modulation_f01(slider->getValue());
             mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id, rd.source_scene,
@@ -142,6 +155,7 @@ struct ModulationListBoxModel : public juce::ListBoxModel
         }
         void buttonClicked(juce::Button *button) override
         {
+            ModulationEditor::SelfModulationGuard g(mod->moded);
             if (button == clearButton.get())
             {
                 mod->moded->synth->clearModulation(
@@ -389,15 +403,77 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     listBox->setBounds(5, 5, 740, 440);
     listBox->setRowHeight(18);
     addAndMakeVisible(*listBox);
+
+    struct IdleTimer : juce::Timer
+    {
+        IdleTimer(ModulationEditor *ed) : moded(ed){};
+        void timerCallback() override { moded->idle(); }
+        ModulationEditor *moded;
+    };
+    idleTimer = std::make_unique<IdleTimer>(this);
+    idleTimer->startTimerHz(60);
+
+    synth->addModulationAPIListener(this);
 }
 
 void ModulationEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 void ModulationEditor::resized()
 {
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+
+    t.transformPoint(w, h);
+
     if (listBox)
-        listBox->setBounds(2, 2, getWidth() - 4, getHeight() - 4);
+        listBox->setBounds(2, 2, w - 4, h - 4);
 }
-ModulationEditor::~ModulationEditor() = default;
+
+ModulationEditor::~ModulationEditor()
+{
+    synth->removeModulationAPIListener(this);
+    idleTimer->stopTimer();
+}
+
+/*
+ * At a later date I can make this more efficient byt for now if any modulation changes
+ * in the main UI just rebuild the table.
+ */
+void ModulationEditor::idle()
+{
+    // fixme compare exchange week
+    if (needsModUpdate)
+    {
+        needsModUpdate = false;
+        listBoxModel->updateRows();
+        listBox->updateContent();
+        for (int i = 0; i < listBoxModel->getNumRows(); ++i)
+        {
+            auto c = dynamic_cast<ModulationListBoxModel::UpdateOnExternal *>(
+                listBox->getComponentForRowNumber(i));
+            if (c)
+                c->update();
+        }
+    }
+}
+
+void ModulationEditor::modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                              float value)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
+}
+void ModulationEditor::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                                bool mute)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
+}
+void ModulationEditor::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
+}
 
 } // namespace Overlays
 } // namespace Surge

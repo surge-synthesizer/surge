@@ -80,7 +80,7 @@ struct PatchStoreDialog;
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
                        public juce::KeyListener,
-                       public Surge::Overlays::TuningOverlay::TuningTextEditedListener
+                       public SurgeSynthesizer::ModulationAPIListener
 {
   public:
     SurgeGUIEditor(SurgeSynthEditor *juceEditor, SurgeSynthesizer *synth);
@@ -302,6 +302,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void scaleFileDropped(const std::string &fn);
     void mappingFileDropped(const std::string &fn);
     std::string tuningToHtml();
+    void tuningChanged();
 
     Surge::Widgets::ModulatableControlInterface *modSourceDragOverTarget{nullptr};
     Surge::Widgets::ModulatableControlInterface::ModulationState priorModulationState;
@@ -383,7 +384,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
     bool overlayConsumesKeyboard(OverlayTags);
     // I will be handed a pointer I need to keep around you know.
-    void addJuceEditorOverlay(
+    Surge::Overlays::OverlayWrapper *addJuceEditorOverlay(
         std::unique_ptr<juce::Component> c,
         std::string editorTitle, // A window display title - whatever you want
         OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
@@ -416,8 +417,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                Surge::Widgets::ModulationSourceButton *msb);
-
-    void scaleTextEdited(juce::String newScale) override;
 
     void lfoShapeChanged(int prior, int curr);
     void broadcastMSEGState();
@@ -528,6 +527,22 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
      */
     void setPatchAsFavorite(bool b);
     bool isPatchFavorite();
+
+    /*
+     * Modulation Client API
+     */
+    struct SelfModulationGuard
+    {
+        SelfModulationGuard(SurgeGUIEditor *ed) : moded(ed) { moded->selfModulation = true; }
+        ~SelfModulationGuard() { moded->selfModulation = false; }
+        SurgeGUIEditor *moded;
+    };
+    std::atomic<bool> selfModulation{false}, needsModUpdate{false};
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                float value) override;
+    void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                  bool mute) override;
+    void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
 
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;

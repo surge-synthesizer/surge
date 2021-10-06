@@ -113,6 +113,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto h = getWindowSizeY() - yPos - xBuf;
         pt->setEnclosingParentPosition(juce::Rectangle<int>(xBuf, yPos, w, h));
         pt->setEnclosingParentTitle("Patch Database");
+        pt->setCanTearOut(true);
         return pt;
     }
     break;
@@ -187,6 +188,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         // pt->addScaleTextEditedListener(this);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         pt->setEnclosingParentTitle("Tuning Editor");
+        pt->setCanTearOut(true);
         return pt;
     }
     break;
@@ -234,6 +236,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
         pt->setEnclosingParentTitle("Modulation List");
         pt->setEnclosingParentPosition(juce::Rectangle<int>(50, 50, 750, 450));
+        pt->setCanTearOut(true);
         return pt;
     }
     break;
@@ -333,7 +336,7 @@ void SurgeGUIEditor::closeOverlay(OverlayTags olt)
     }
 }
 
-void SurgeGUIEditor::addJuceEditorOverlay(
+Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     std::unique_ptr<juce::Component> c,
     std::string editorTitle, // A window display title - whatever you want
     OverlayTags editorTag,   // A tag by editor class. Please unique, no spaces.
@@ -362,11 +365,18 @@ void SurgeGUIEditor::addJuceEditorOverlay(
         onClose();
     });
 
+    auto olc = dynamic_cast<Surge::Overlays::OverlayComponent *>(c.get());
+    if (olc)
+    {
+        ol->setCanTearOut(olc->getCanTearOut());
+    }
+
     ol->addAndTakeOwnership(std::move(c));
     frame->addAndMakeVisible(*ol);
     juceOverlays[editorTag] = std::move(ol);
     if (overlayConsumesKeyboard(editorTag))
         vkbForward++;
+    return juceOverlays[editorTag].get();
 }
 
 void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)

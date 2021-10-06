@@ -18,6 +18,7 @@
 #include "SurgeVoice.h"
 #include "Effect.h"
 #include "BiquadFilter.h"
+#include <set>
 
 struct QuadFilterChainState;
 
@@ -290,6 +291,29 @@ class alignas(16) SurgeSynthesizer
                          bool clearEvenIfInvalid = false);
     void clear_osc_modulation(
         int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
+
+    /*
+     * The modulation API (setModulation etc...) is called from all sorts of places
+     * but mostly from the UI. This adds a listener which gets notified but this listener
+     * should just post a message over to the UI thread and be quick in case there
+     * are cases where the audio thread calls set/clear/mute modulation.
+     *
+     * Be super careful with threading here basically. It doesn't lock so make sure you
+     * are not in a situation where you add or remove a listener while a modulation is
+     * being changed.
+     */
+    struct ModulationAPIListener
+    {
+        virtual ~ModulationAPIListener() = default;
+        virtual void modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                            float value) = 0;
+        virtual void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                              bool mute) = 0;
+        virtual void modCleared(long ptag, modsources modsource, int modsourceScene, int index) = 0;
+    };
+    std::set<ModulationAPIListener *> modListeners;
+    void addModulationAPIListener(ModulationAPIListener *l) { modListeners.insert(l); }
+    void removeModulationAPIListener(ModulationAPIListener *l) { modListeners.erase(l); }
 
   public:
     std::atomic<bool> rawLoadEnqueued{false}, rawLoadNeedsUIDawExtraState{false};

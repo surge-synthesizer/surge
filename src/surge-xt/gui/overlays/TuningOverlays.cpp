@@ -597,8 +597,12 @@ TuningOverlay::~TuningOverlay() = default;
 
 void TuningOverlay::resized()
 {
+    auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
+
+    t.transformPoint(w, h);
+
     tuningKeyboardTable->setBounds(0, 0, 120, h);
 
     tabArea->setBounds(120, 0, w - 120, h);
