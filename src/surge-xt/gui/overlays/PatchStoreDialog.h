@@ -39,6 +39,7 @@ struct PatchStoreDialog : public OverlayComponent,
     ~PatchStoreDialog();
     void paint(juce::Graphics &g) override;
     void resized() override;
+    void parentHierarchyChanged() override;
 
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e);
