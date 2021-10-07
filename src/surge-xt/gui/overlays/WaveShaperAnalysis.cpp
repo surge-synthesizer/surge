@@ -130,6 +130,18 @@ void WaveShaperAnalysis::valueChanged(Surge::GUI::IComponentTagValue *p)
     repaint();
 }
 
+int32_t WaveShaperAnalysis::controlModifierClicked(Surge::GUI::IComponentTagValue *p,
+                                                   const juce::ModifierKeys &mods,
+                                                   bool isDoubleClickEvent)
+{
+    if (isDoubleClickEvent)
+    {
+        tryitSlider->setValue(0.5f);
+        valueChanged(tryitSlider.get());
+    }
+    return 0;
+}
+
 void WaveShaperAnalysis::recalcFromSlider()
 {
     sliderDrivenCurve.clear();
