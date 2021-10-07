@@ -38,6 +38,10 @@ struct WaveShaperAnalysis : public OverlayComponent,
     void resized() override;
 
     void valueChanged(Surge::GUI::IComponentTagValue *p) override;
+    int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *p,
+                                   const juce::ModifierKeys &mods,
+                                   bool isDoubleClickEvent) override;
+
     void recalcFromSlider();
 
     void setWSType(int wst);
