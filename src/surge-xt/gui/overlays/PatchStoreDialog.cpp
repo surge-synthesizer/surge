@@ -171,7 +171,7 @@ void PatchStoreDialog::paint(juce::Graphics &g)
 void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
 {
     editor = e;
-    if (!editor /*|| !editor->synth->storage.datapathOverriden*/)
+    if (!editor || !editor->synth->storage.datapathOverriden)
     {
         okOverButton->setVisible(false);
         resized();
