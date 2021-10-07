@@ -428,20 +428,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         refresh_wtlist();
         refresh_patchlist();
-        auto favorites = patchDB->readUserFavorites();
-        std::unordered_set<std::string> favSet;
-        for (auto f : favorites)
-        {
-            favSet.insert(f);
-        }
-        for (auto &p : patch_list)
-        {
-            auto ps = p.path.u8string();
-            if (favSet.find(ps) != favSet.end())
-                p.isFavorite = true;
-            else
-                p.isFavorite = false;
-        }
     }
 
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
@@ -732,6 +718,21 @@ void SurgeStorage::refresh_patchlist()
     for (int i = 0; i < patch_category.size(); i++)
     {
         patch_category[patchCategoryOrdering[i]].order = i;
+    }
+
+    auto favorites = patchDB->readUserFavorites();
+    std::unordered_set<std::string> favSet;
+    for (auto f : favorites)
+    {
+        favSet.insert(f);
+    }
+    for (auto &p : patch_list)
+    {
+        auto ps = p.path.u8string();
+        if (favSet.find(ps) != favSet.end())
+            p.isFavorite = true;
+        else
+            p.isFavorite = false;
     }
 }
 
