@@ -139,6 +139,13 @@ struct TearOutWindow : public juce::DocumentWindow
             wrapping->onClose();
         }
     }
+    void minimiseButtonPressed()
+    {
+        if (wrapping)
+        {
+            wrapping->doTearIn();
+        }
+    }
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TearOutWindow);
 };
 
@@ -151,6 +158,9 @@ void OverlayWrapper::supressInteriorDecoration()
 
 void OverlayWrapper::doTearOut()
 {
+    parentBeforeTearOut = getParentComponent();
+    locationBeforeTearOut = getBoundsInParent();
+    childLocationBeforeTearOut = primaryChild->getBounds();
     getParentComponent()->removeChildComponent(this);
 
     auto w = getWidth();
@@ -171,7 +181,8 @@ void OverlayWrapper::doTearOut()
     {
         t = oc->getEnclosingParentTitle();
     }
-    auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton);
+    auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton |
+                                                     juce::DocumentWindow::minimiseButton);
     dw->setContentNonOwned(this, false);
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
@@ -179,6 +190,24 @@ void OverlayWrapper::doTearOut()
     dw->wrapping = this;
     supressInteriorDecoration();
     tearOutParent = std::move(dw);
+}
+
+void OverlayWrapper::doTearIn()
+{
+    if (!isTornOut() || !parentBeforeTearOut)
+    {
+        // Should never happen but if it does
+        onClose();
+        return;
+    }
+    tearOutParent.reset(nullptr);
+    hasInteriorDec = true;
+
+    primaryChild->setTransform(juce::AffineTransform());
+    primaryChild->setBounds(childLocationBeforeTearOut);
+    setBounds(locationBeforeTearOut);
+    parentBeforeTearOut->addAndMakeVisible(*this);
+    parentBeforeTearOut = nullptr;
 }
 } // namespace Overlays
 } // namespace Surge

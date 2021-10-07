@@ -55,7 +55,10 @@ struct OverlayWrapper : public juce::Component,
     bool canTearOut{false};
     void setCanTearOut(bool b) { canTearOut = b; }
     void doTearOut();
+    void doTearIn();
     bool isTornOut();
+    juce::Rectangle<int> locationBeforeTearOut, childLocationBeforeTearOut;
+    juce::Component *parentBeforeTearOut{nullptr};
 
     bool hasInteriorDec{true};
     void supressInteriorDecoration();
