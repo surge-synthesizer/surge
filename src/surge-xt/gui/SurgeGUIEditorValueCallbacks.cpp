@@ -349,6 +349,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
+    SelfModulationGuard modGuard(this);
+
     if (button.isMiddleButtonDown())
     {
         toggle_mod_editing();
@@ -2384,6 +2386,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     juce::Rectangle<int> viewSize;
     auto bvf = control->asJuceComponent();
 
+    SelfModulationGuard modGuard(this);
+
     if (bvf)
     {
         viewSize = bvf->getBounds();
@@ -3094,4 +3098,22 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
         return true;
     }
     return false;
+}
+
+void SurgeGUIEditor::modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                            float value)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
+}
+void SurgeGUIEditor::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                              bool mute)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
+}
+void SurgeGUIEditor::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
+{
+    if (!selfModulation)
+        needsModUpdate = true;
 }

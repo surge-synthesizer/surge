@@ -2760,7 +2760,12 @@ void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, int modso
 
     ModulationRouting *r = getModRouting(ptag, modsource, modsourceScene, index);
     if (r)
+    {
         r->muted = mute;
+
+        for (auto l : modListeners)
+            l->modMuted(ptag, modsource, modsourceScene, index, mute);
+    }
 }
 
 void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
@@ -2860,6 +2865,10 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
             storage.modRoutingMutex.lock();
             modlist->erase(modlist->begin() + i);
             storage.modRoutingMutex.unlock();
+
+            for (auto l : modListeners)
+                l->modCleared(ptag, modsource, modsourceScene, index);
+
             return;
         }
     }
@@ -2868,7 +2877,6 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
 bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsourceScene, int index,
                                      float val)
 {
-
     if (!isValidModulation(ptag, modsource))
         return false;
     float value = storage.getPatch().param_ptr[ptag]->set_modulation_f01(val);
@@ -2933,6 +2941,8 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsou
     }
     storage.modRoutingMutex.unlock();
 
+    for (auto l : modListeners)
+        l->modSet(ptag, modsource, modsourceScene, index, val);
     return true;
 }
 

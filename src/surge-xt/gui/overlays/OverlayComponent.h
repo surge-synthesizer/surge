@@ -37,6 +37,10 @@ struct OverlayComponent : juce::Component
     bool hasIndependentClose{true};
     void setHasIndependentClose(bool b) { hasIndependentClose = b; }
     bool getHasIndependentClose() { return hasIndependentClose; }
+
+    bool canTearOut{false};
+    void setCanTearOut(bool b) { canTearOut = b; }
+    bool getCanTearOut() { return canTearOut; }
 };
 } // namespace Overlays
 } // namespace Surge

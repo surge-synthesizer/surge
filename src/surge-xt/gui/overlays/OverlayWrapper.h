@@ -46,20 +46,36 @@ struct OverlayWrapper : public juce::Component,
 
     std::unique_ptr<juce::Component> primaryChild;
     void addAndTakeOwnership(std::unique_ptr<juce::Component> c);
-    std::unique_ptr<juce::TextButton> closeButton;
+    std::unique_ptr<juce::TextButton> closeButton, tearOutButton;
     void buttonClicked(juce::Button *button) override;
 
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
+    bool canTearOut{false};
+    void setCanTearOut(bool b) { canTearOut = b; }
+    void doTearOut();
+    bool isTornOut();
+
+    bool hasInteriorDec{true};
+    void supressInteriorDecoration();
+
     bool showCloseButton{true};
     void setShowCloseButton(bool b) { showCloseButton = b; }
 
+    void onClose()
+    {
+        closeOverlay();
+        if (isTornOut())
+            tearOutParent.reset(nullptr);
+    }
     std::function<void()> closeOverlay = []() {};
     void setCloseOverlay(std::function<void()> f) { closeOverlay = std::move(f); }
 
     juce::Rectangle<int> componentBounds;
     bool isModal{false};
+
+    std::unique_ptr<juce::DocumentWindow> tearOutParent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
 };

@@ -185,10 +185,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     miniEdit = std::make_unique<Surge::Overlays::MiniEdit>();
     miniEdit->setVisible(false);
+
+    synth->addModulationAPIListener(this);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+    synth->removeModulationAPIListener(this);
     synth->storage.clearOkCancelProvider();
     auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
     populateDawExtraState(synth); // If I must die, leave my state for future generations
@@ -228,6 +231,12 @@ void SurgeGUIEditor::idle()
 
     if (pause_idle_updates)
         return;
+
+    if (needsModUpdate)
+    {
+        refresh_mod();
+        needsModUpdate = false;
+    }
 
     if (errorItemCount)
     {
@@ -1545,7 +1554,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     for (const auto &el : juceOverlays)
     {
-        frame->addAndMakeVisible(*(el.second));
+        if (!el.second->isTornOut())
+            frame->addAndMakeVisible(*(el.second));
     }
 
     if (showMSEGEditorOnNextIdleOrOpen)
@@ -1566,6 +1576,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
+    tuningChanged(); // a patch load could change tuning
     refresh_mod();
 
     editor_open = true;
@@ -1834,6 +1845,7 @@ void SurgeGUIEditor::scaleFileDropped(const string &fn)
         synth->storage.retuneTo12TETScaleC261Mapping();
         synth->storage.reportError(e.what(), "SCL Error");
     }
+    tuningChanged();
 }
 
 void SurgeGUIEditor::mappingFileDropped(const string &fn)
@@ -1847,6 +1859,17 @@ void SurgeGUIEditor::mappingFileDropped(const string &fn)
     {
         synth->storage.remapToConcertCKeyboard();
         synth->storage.reportError(e.what(), "KBM Error");
+    }
+    tuningChanged();
+}
+
+void SurgeGUIEditor::tuningChanged()
+{
+    auto tc = dynamic_cast<Surge::Overlays::TuningOverlay *>(getOverlayIfOpen(TUNING_EDITOR));
+    if (tc)
+    {
+        tc->setTuning(synth->storage.currentTuning);
+        tc->repaint();
     }
 }
 
@@ -2313,18 +2336,21 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                               this->synth->storage.retuneTo12TETScaleC261Mapping();
                               this->synth->storage.resetTuningToggle();
                               this->synth->refresh_editor = true;
+                              tuningChanged();
                           });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
                           (!this->synth->storage.isStandardScale), false, [this]() {
                               this->synth->storage.retuneTo12TETScale();
                               this->synth->refresh_editor = true;
+                              tuningChanged();
                           });
 
     tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"),
                           (!this->synth->storage.isStandardMapping), false, [this]() {
                               this->synth->storage.remapToConcertCKeyboard();
                               this->synth->refresh_editor = true;
+                              tuningChanged();
                           });
 
     tuningSubMenu.addSeparator();
@@ -2357,6 +2383,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 synth->storage.retuneTo12TETScaleC261Mapping();
                 synth->storage.reportError(e.what(), "Loading Error");
             }
+            tuningChanged();
         };
 
         auto scl_path = this->synth->storage.datapath / "tuning_library" / "SCL";
@@ -2414,6 +2441,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 synth->storage.remapToConcertCKeyboard();
                 synth->storage.reportError(e.what(), "Loading Error");
             }
+            tuningChanged();
         };
 
         auto kbm_path = this->synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
@@ -2467,6 +2495,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                                                  "File Format Error");
                                       return;
                                   }
+                                  tuningChanged();
                               });
         });
 
@@ -4945,20 +4974,6 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     setupAlternates(modsource_editor[current_scene]);
     // And now we have dynamic labels really anything
     frame->repaint();
-}
-
-void SurgeGUIEditor::scaleTextEdited(juce::String newScale)
-{
-    try
-    {
-        this->synth->storage.retuneToScale(Tunings::parseSCLData(newScale.toStdString()));
-        this->synth->refresh_editor = true;
-    }
-    catch (Tunings::TuningError &e)
-    {
-        synth->storage.retuneTo12TETScaleC261Mapping();
-        synth->storage.reportError(e.what(), "SCL Error");
-    }
 }
 
 /*
