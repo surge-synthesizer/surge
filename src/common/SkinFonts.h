@@ -28,10 +28,10 @@ namespace Surge
 namespace Skin
 {
 struct FontDesc // this isn't actually a font; it is a description of a desire to get a font
-                // also avoid name clashes with all the other thigns called "Font"
+                // also avoid name clashes with all the other things called "Font"
 {
-    // I don't want to couple to juce this early so let me do this here
-    // and then assert they are equal in Skin::getFont in case Juce changes
+    // I don't want to couple to JUCE this early so let me do this here
+    // and then assert they are equal in Skin::getFont in case JUCE changes
     enum FontStyleFlags
     {
         plain = 0,
@@ -95,9 +95,9 @@ namespace LuaEditor
 {
 extern const Surge::Skin::FontDesc Code;
 }
-namespace WaveShaperAnalysis
+namespace WaveshaperAnalysis
 {
-extern const Surge::Skin::FontDesc Title, DBAmount, DBLabel;
+extern const Surge::Skin::FontDesc Title, DriveAmount, DriveLabel;
 }
 
 } // namespace Fonts

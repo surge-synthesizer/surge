@@ -3596,11 +3596,31 @@ void SurgeGUIEditor::reloadFromSkin()
 
     setZoomFactor(getZoomFactor(), true);
 
-    // update MSEG editor if opened
+    // update overlays, if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
         showOverlay(SurgeGUIEditor::MSEG_EDITOR);
     }
+
+    // update waveshaper analyzer if opened
+    if (isAnyOverlayPresent(WAVESHAPER_ANALYZER))
+    {
+        showOverlay(SurgeGUIEditor::WAVESHAPER_ANALYZER);
+    }
+
+    /* TODO note for @baconpaul: make everything SkinConsumingComponent and fix the API
+    // update colors of any active overlays
+    for (int i = NO_EDITOR; i < n_overlay_tags; i++)
+    {
+        auto component =
+            dynamic_cast<Surge::GUI::SkinConsumingComponent *>(getOverlayIfOpen((OverlayTags)i));
+
+        if (component)
+        {
+            component->setSkin(currentSkin, bitmapStore);
+        }
+    }
+    */
 
     // adjust JUCE look and feel colors
     auto setJUCEColour = [this](int id, juce::Colour x) {

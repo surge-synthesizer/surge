@@ -262,7 +262,7 @@ extern const Surge::Skin::Color Dots, Wave, WaveHover;
 }
 namespace Analysis
 {
-extern const Surge::Skin::Color Border, Background, Title;
+extern const Surge::Skin::Color Border, Background, Text;
 }
 } // namespace Waveshaper
 
