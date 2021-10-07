@@ -90,7 +90,6 @@ PatchStoreDialog::PatchStoreDialog()
         auto ed = std::make_unique<juce::TextEditor>(n);
         ed->setJustification(juce::Justification::centredLeft);
         ed->setWantsKeyboardFocus(true);
-        ed->grabKeyboardFocus();
 
         addAndMakeVisible(*ed);
         return std::move(ed);
@@ -176,6 +175,12 @@ void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
         okOverButton->setVisible(false);
         resized();
     }
+}
+
+void PatchStoreDialog::parentHierarchyChanged()
+{
+    if (nameEd->isShowing() && isVisible())
+        nameEd->grabKeyboardFocus();
 }
 
 void PatchStoreDialog::onSkinChanged()
