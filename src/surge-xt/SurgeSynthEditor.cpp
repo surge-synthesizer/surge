@@ -153,21 +153,18 @@ void SurgeSynthEditor::resized()
         zfn = std::max(wR, hR);
     if ((wR - 1) * (hR - 1) < 0)
         zfn = std::min(zfn, 1.0);
-    auto wT = adapter->getWindowSizeX() * zfn;
-    auto hT = adapter->getWindowSizeY() * zfn +
-              (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0);
 
     bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
 
     if (drawExtendedControls)
     {
-        auto y = getHeight() - extraYSpaceForVirtualKeyboard;
+        auto y = adapter->getWindowSizeY();
         auto x = addTempo ? 50 : 0;
         int tempoHeight = 14, typeinHeight = 18, yOffset = -2;
         int tempoBlockHeight = tempoHeight + typeinHeight;
         int tempoBlockYPos = ((extraYSpaceForVirtualKeyboard - tempoBlockHeight) / 2) + yOffset;
 
-        keyboard->setBounds(x, y, getWidth() - x, extraYSpaceForVirtualKeyboard);
+        keyboard->setBounds(x, y, adapter->getWindowSizeX() - x, extraYSpaceForVirtualKeyboard);
         keyboard->setVisible(true);
 
         if (addTempo)
