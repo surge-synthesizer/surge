@@ -35,12 +35,14 @@ WaveShaperAnalysis::WaveShaperAnalysis(SurgeStorage *s)
 }
 
 void WaveShaperAnalysis::onSkinChanged() { tryitSlider->setSkin(skin, associatedBitmapStore); }
-void WaveShaperAnalysis::resized() { tryitSlider->setBounds(40 - 11 - 20, 25, 22, 84); }
+void WaveShaperAnalysis::resized() { tryitSlider->setBounds(8, 25, 22, 84); }
 
 void WaveShaperAnalysis::paint(juce::Graphics &g)
 {
     if (sliderDrivenCurve.empty())
+    {
         recalcFromSlider();
+    }
 
     g.fillAll(skin->getColor(Colors::Waveshaper::Analysis::Background));
 
@@ -74,53 +76,64 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         }
     }
 
+    re.expand(2, 2);
+
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
-        g.drawRect(re);
         g.setColour(skin->getColor(Colors::Waveshaper::Display::Dots));
+
         for (int yd = -4; yd <= 4; ++yd)
         {
             float yp = yd * 0.2;
             for (float xp = 0.05; xp < 1; xp += 0.05)
             {
                 auto cxp = xp, cyp = yp;
+
                 xf.transformPoint(cxp, cyp);
                 g.fillEllipse(cxp - 0.5, cyp - 0.5, 1, 1);
             }
         }
 
         g.drawLine(re.getX(), re.getCentreY(), re.getX() + re.getWidth(), re.getCentreY());
-        g.reduceClipRegion(re.toNearestIntEdges());
         g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
         g.strokePath(pInput, juce::PathStrokeType(1.0), xf);
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+
         if (wstype != wst_none)
+        {
+            g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
             g.strokePath(p, juce::PathStrokeType(1.25), xf);
+        }
     }
+
     g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Border));
     g.drawRect(re);
 
     {
-        float xpos = 2.0;
         auto ypos = tryitSlider->getBounds().getBottom() + 2.f;
-        auto tx = juce::Rectangle<float>{xpos, ypos, 40 - 4, 12.f};
+        auto tx = juce::Rectangle<float>{0, ypos, 40 - 4, 12.f};
 
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2) << sliderDb;
-        g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::DBAmount));
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+
+        g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveAmount));
+        g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
         g.drawText(oss.str(), tx, juce::Justification::centred);
 
-        g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::DBLabel));
         tx = tx.translated(0, 12);
+
+        g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveLabel));
+        g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
         g.drawText("Drive (dB)", tx, juce::Justification::centred);
     }
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Title));
-    g.setFont(skin->getFont(Fonts::WaveShaperAnalysis::Title));
-    auto txtr = getLocalBounds().withHeight(top - 2).reduced(1);
-    g.drawText(wst_names[wstype], txtr, juce::Justification::centred);
+    auto txtr = getLocalBounds().withHeight(top - 6);
+    std::ostringstream title;
+    title << "Current: " << wst_names[wstype];
+
+    g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
+    g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::Title));
+    g.drawText(title.str(), txtr, juce::Justification::centred);
 }
 
 void WaveShaperAnalysis::valueChanged(Surge::GUI::IComponentTagValue *p)
@@ -139,26 +152,31 @@ int32_t WaveShaperAnalysis::controlModifierClicked(Surge::GUI::IComponentTagValu
         tryitSlider->setValue(0.5f);
         valueChanged(tryitSlider.get());
     }
+
     return 0;
 }
 
 void WaveShaperAnalysis::recalcFromSlider()
 {
     sliderDrivenCurve.clear();
-    float dx = 1.f / (npts - 1);
 
     QuadFilterWaveshaperState wss;
+    float dx = 1.f / (npts - 1);
     float R[4];
+
     initializeWaveshaperRegister(wstype, R);
+
     for (int i = 0; i < n_waveshaper_registers; ++i)
     {
         wss.R[i] = _mm_set1_ps(R[i]);
     }
+
     wss.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
 
     auto wsop = GetQFPtrWaveshaper(wstype);
 
     sliderDb = tryitSlider->getValue() * 96 - 48;
+
     auto amp = powf(2.f, sliderDb / 18.f);
     auto d1 = _mm_set1_ps(amp);
 
@@ -168,10 +186,12 @@ void WaveShaperAnalysis::recalcFromSlider()
         float inval = std::sin(x * 4.0 * M_PI);
         auto ivs = _mm_set1_ps(inval);
         auto ov1 = ivs;
+
         if (wsop)
         {
             ov1 = wsop(&wss, ivs, d1);
         }
+
         float r alignas(16)[8];
         _mm_store_ps(r, ov1);
 

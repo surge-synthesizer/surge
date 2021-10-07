@@ -15,34 +15,36 @@
 
 #include "SkinFonts.h"
 
+using namespace Surge::Skin;
+
 namespace Fonts
 {
 namespace System
 {
-const Surge::Skin::FontDesc Display("fonts.system.display", 9);
+const FontDesc Display("fonts.system.display", 9);
 }
 
 namespace Widgets
 {
-const Surge::Skin::FontDesc NumberField("fonts.widgets.numberfield", System::Display),
+const FontDesc NumberField("fonts.widgets.numberfield", System::Display),
     EffectLabel("fonts.widgets.effectlabel", System::Display);
-const Surge::Skin::FontDesc TabButtonFont("fonts.widgets.tabbutton", System::Display);
+const FontDesc TabButtonFont("fonts.widgets.tabbutton", System::Display);
 
 } // namespace Widgets
 namespace PatchStore
 {
-const Surge::Skin::FontDesc Label("fonts.patchstore.label", 11),
-    TextEntry("fonts.patchstore.textentry", 11);
+const FontDesc Label("fonts.patchstore.label", 11), TextEntry("fonts.patchstore.textentry", 11);
 }
 namespace LuaEditor
 {
-const Surge::Skin::FontDesc Code("fonts.luaeditor.code", Surge::Skin::FontDesc::MONO, 9);
+const FontDesc Code("fonts.luaeditor.code", FontDesc::MONO, 9);
 }
 
-namespace WaveShaperAnalysis
+namespace WaveshaperAnalysis
 {
-const Surge::Skin::FontDesc Title("fonts.waveshaperanalysis.title", 12),
-    DBAmount("fonts.waveshaperanalysis.dbamout", 9), DBLabel("fonts.waveshaperanalysis.dblabel", 7);
+const FontDesc Title("fonts.waveshaper.analysis.title", 9, FontDesc::FontStyleFlags::bold),
+    DriveAmount("fonts.waveshaper.analysis.drive_amount", 9),
+    DriveLabel("fonts.waveshaper.analysis.drive_label", 7);
 }
 
 } // namespace Fonts
