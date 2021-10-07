@@ -23,6 +23,8 @@
 #include "widgets/MenuCustomComponents.h"
 #include "PatchDB.h"
 
+#define HIDE_PATCH_BROWSER false
+
 namespace Surge
 {
 namespace Widgets
@@ -188,7 +190,7 @@ void PatchSelector::resized()
                      .reduced(1, 1)
                      .translated(2, 1);
 
-    auto tad = getLocalBounds().reduced(fsize + 5, 2).translated(0, -1);
+    auto tad = getLocalBounds().reduced(fsize + 4, 0).translated(0, -2);
     typeAhead->setBounds(tad);
 }
 
@@ -440,6 +442,7 @@ void PatchSelector::showClassicMenu(bool single_category)
             storage->patch_category[current_category].isFactory ? "Factory" : "User");
     });
 
+#if HIDE_PATCH_BROWSER == false
     contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
@@ -450,10 +453,11 @@ void PatchSelector::showClassicMenu(bool single_category)
             sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
         }
     });
+#endif
 
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch List"),
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch Browser"),
                         [this]() { this->storage->refresh_patchlist(); });
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {

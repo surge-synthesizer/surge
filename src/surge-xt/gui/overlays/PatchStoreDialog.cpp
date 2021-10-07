@@ -89,13 +89,18 @@ PatchStoreDialog::PatchStoreDialog()
     auto makeEd = [this](const std::string &n) {
         auto ed = std::make_unique<juce::TextEditor>(n);
         ed->setJustification(juce::Justification::centredLeft);
-        // ed->setSelectAllWhenFocused(true);
+        ed->setWantsKeyboardFocus(true);
+        ed->grabKeyboardFocus();
 
         addAndMakeVisible(*ed);
         return std::move(ed);
     };
+
     nameEd = makeEd("patch name");
+    nameEd->setSelectAllWhenFocused(true);
+    nameEd->setWantsKeyboardFocus(true);
     authorEd = makeEd("patch author");
+    authorEd->setSelectAllWhenFocused(true);
     commentEd = makeEd("patch comment");
     commentEd->setMultiLine(true, true);
     commentEd->setReturnKeyStartsNewLine(true);
@@ -107,6 +112,7 @@ PatchStoreDialog::PatchStoreDialog()
     categoryProvider = std::make_unique<PatchStoreDialogCategoryProvider>();
     auto ta = std::make_unique<Surge::Widgets::TypeAhead>("patch category", categoryProvider.get());
     ta->setJustification(juce::Justification::centredLeft);
+    ta->setSelectAllWhenFocused(true);
     ta->setToElementZeroOnReturn = true;
 
     catEd = std::move(ta);
@@ -136,8 +142,8 @@ PatchStoreDialog::PatchStoreDialog()
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 
-    okOverButton = std::make_unique<juce::TextButton>("patchOK");
-    okOverButton->setButtonText("FacOver");
+    okOverButton = std::make_unique<juce::TextButton>("factoryOverwrite");
+    okOverButton->setButtonText("Factory Overwrite");
     okOverButton->addListener(this);
     addAndMakeVisible(*okOverButton);
 
@@ -165,7 +171,7 @@ void PatchStoreDialog::paint(juce::Graphics &g)
 void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
 {
     editor = e;
-    if (!editor || !editor->synth->storage.datapathOverriden)
+    if (!editor /*|| !editor->synth->storage.datapathOverriden*/)
     {
         okOverButton->setVisible(false);
         resized();
@@ -242,13 +248,14 @@ void PatchStoreDialog::resized()
     auto h = 25;
     auto commH = getHeight() - 5 * h + 8;
     auto xSplit = 70;
-    auto buttonWidth = 60;
-    auto margin = 2;
+    auto buttonWidth = 50;
+    auto margin = 4;
+    auto margin2 = 2;
     auto r = getLocalBounds().withHeight(h);
     auto ce = r.withTrimmedLeft(xSplit)
-                  .withTrimmedRight(margin * 3)
+                  .withTrimmedRight(margin2 * 3)
                   .reduced(margin)
-                  .translated(0, margin * 3);
+                  .translated(0, margin2 * 3);
 
     nameEd->setBounds(ce);
     nameEd->setIndents(4, (nameEd->getHeight() - nameEd->getTextHeight()) / 2);
@@ -258,6 +265,12 @@ void PatchStoreDialog::resized()
     ce = ce.translated(0, h);
     authorEd->setBounds(ce);
     authorEd->setIndents(4, (authorEd->getHeight() - authorEd->getTextHeight()) / 2);
+
+    if (isVisible())
+    {
+        nameEd->grabKeyboardFocus();
+    }
+
 #if HAS_TAGS_FIELD
     ce = ce.translated(0, h);
     tagEd->setBounds(ce);
@@ -270,18 +283,18 @@ void PatchStoreDialog::resized()
     commentEd->setBounds(q);
     ce = ce.translated(0, commH);
 
-    auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight()).translated(0, margin * 3);
+    auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight()).translated(0, margin2 * 3);
     cancelButton->setBounds(be);
     be = be.translated(-buttonWidth - margin, 0);
     okButton->setBounds(be);
 
     if (okOverButton->isVisible())
     {
-        be = be.translated(-buttonWidth - margin, 0);
-        okOverButton->setBounds(be);
+        be = be.translated(-buttonWidth - (margin * 2), 0);
+        okOverButton->setBounds(be.withLeft(be.getX() - buttonWidth));
     }
 
-    auto cl = r.withRight(xSplit).reduced(2).translated(0, margin * 3);
+    auto cl = r.withRight(xSplit).reduced(2).translated(0, margin2 * 3);
     nameEdL->setBounds(cl);
     cl = cl.translated(0, h);
     catEdL->setBounds(cl);
@@ -304,10 +317,10 @@ void PatchStoreDialog::resized()
     }
     else
     {
-        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth).translated(0, margin * 3);
+        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth).translated(0, margin2 * 3);
 
         auto fb = cl.withWidth(h);
-        auto lb = cl.withX(fb.getRight());
+        auto lb = cl.withX(fb.getRight() - margin2);
 
         storeTuningButton->setBounds(fb);
         storeTuningLabel->setBounds(lb);
