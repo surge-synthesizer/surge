@@ -44,6 +44,7 @@ namespace Overlays
 class TuningTableListBoxModel;
 class SCLKBMDisplay;
 class RadialScaleGraph;
+struct IntervalMatrix;
 
 struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsumingComponent
 {
@@ -74,6 +75,7 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
 
     std::unique_ptr<SCLKBMDisplay> sclKbmDisplay;
     std::unique_ptr<RadialScaleGraph> radialScaleGraph;
+    std::unique_ptr<IntervalMatrix> intervalMatrix;
 
     Tunings::Tuning tuning;
     SurgeStorage *storage{nullptr};
