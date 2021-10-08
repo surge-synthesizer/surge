@@ -98,6 +98,31 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay(OverlayTags olt)
 {
+    auto locationForMSFR = [this](Surge::Overlays::OverlayComponent *oc) {
+        auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
+        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
+        auto dl = skinCtrl->getRect().getTopLeft();
+
+        int sentinel = -1000004;
+        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                        Surge::Storage::MSEGFormulaOverlayLocation,
+                                                        std::make_pair(sentinel, sentinel));
+        if (ploc.first != sentinel && ploc.second != sentinel)
+        {
+            auto px = ploc.first;
+            auto py = ploc.second;
+            oc->setEnclosingParentPosition(juce::Rectangle<int>(
+                px, py, skinCtrl->getRect().getWidth(), skinCtrl->getRect().getHeight()));
+        }
+        else
+        {
+            oc->setEnclosingParentPosition(skinCtrl->getRect());
+        }
+        oc->defaultLocation = dl;
+        oc->setCanMoveAround(std::make_pair(true, Surge::Storage::MSEGFormulaOverlayLocation));
+    };
     switch (olt)
     {
     case PATCH_BROWSER:
@@ -139,22 +164,13 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         title += " Editor";
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
-        auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
-        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
         mse->setEnclosingParentTitle(title);
-        mse->setEnclosingParentPosition(skinCtrl->getRect());
-
+        locationForMSFR(mse.get());
         return mse;
     }
     break;
     case FORMULA_EDITOR:
     {
-        auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
-        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
         auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
 
@@ -167,8 +183,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         title += " Editor";
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("Formula"));
 
-        pt->setEnclosingParentPosition(skinCtrl->getRect());
         pt->setEnclosingParentTitle(title);
+        locationForMSFR(pt.get());
         return pt;
     }
     case STORE_PATCH:
@@ -179,16 +195,29 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         int w = 750, h = 500;
         auto px = (getWindowSizeX() - w) / 2;
         auto py = (getWindowSizeY() - h) / 2;
+
+        auto dl = juce::Point<int>(px, py);
+
+        int sentinel = -1000004;
+        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                        Surge::Storage::TuningOverlayLocation,
+                                                        std::make_pair(sentinel, sentinel));
+        if (ploc.first != sentinel && ploc.second != sentinel)
+        {
+            px = ploc.first;
+            py = ploc.second;
+        }
         auto r = juce::Rectangle<int>(px, py, w, h);
 
         auto pt = std::make_unique<Surge::Overlays::TuningOverlay>();
         pt->setStorage(&(this->synth->storage));
         pt->setSkin(currentSkin, bitmapStore);
         pt->setTuning(synth->storage.currentTuning);
-        // pt->addScaleTextEditedListener(this);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         pt->setEnclosingParentTitle("Tuning Editor");
         pt->setCanTearOut(true);
+        pt->defaultLocation = dl;
+        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::TuningOverlayLocation));
         return pt;
     }
     break;
@@ -222,11 +251,27 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         auto w = 300;
         auto h = 160;
+
         auto c = b.getCentreX() - w / 2;
         auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 2);
+
+        auto dl = p.getTopLeft();
+
+        int sentinel = -1000004;
+        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                        Surge::Storage::WSAnalysisOverlayLocation,
+                                                        std::make_pair(sentinel, sentinel));
+        if (ploc.first != sentinel && ploc.second != sentinel)
+        {
+            p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
+        }
+
         pt->setEnclosingParentPosition(p);
         pt->setEnclosingParentTitle("Waveshaper Analysis");
         pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
+        pt->defaultLocation = dl;
+        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::WSAnalysisOverlayLocation));
+
         return pt;
     }
     break;
@@ -234,9 +279,27 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
     case MODULATION_EDITOR:
     {
         auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
+        int w = 750, h = 500;
+        auto px = (getWindowSizeX() - w) / 2;
+        auto py = (getWindowSizeY() - h) / 2;
+
+        auto dl = juce::Point<int>(px, py);
+
+        int sentinel = -1000004;
+        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                        Surge::Storage::ModlistOverlayLocation,
+                                                        std::make_pair(sentinel, sentinel));
+        if (ploc.first != sentinel && ploc.second != sentinel)
+        {
+            px = ploc.first;
+            py = ploc.second;
+        }
+        auto r = juce::Rectangle<int>(px, py, w, h);
         pt->setEnclosingParentTitle("Modulation List");
-        pt->setEnclosingParentPosition(juce::Rectangle<int>(50, 50, 750, 450));
+        pt->setEnclosingParentPosition(r);
+        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::ModlistOverlayLocation));
         pt->setCanTearOut(true);
+        pt->defaultLocation = dl;
         return pt;
     }
     break;
@@ -358,6 +421,7 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     ol->setTitle(editorTitle);
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);
+    ol->setStorage(&(this->synth->storage));
     ol->setIcon(bitmapStore->getImage(IDB_SURGE_ICON));
     ol->setShowCloseButton(showCloseButton);
     ol->setCloseOverlay([this, editorTag, onClose]() {

@@ -22,11 +22,14 @@
 
 class SurgeGUIEditor;
 class SurgeImage;
+class SurgeStorage;
 
 namespace Surge
 {
 namespace Overlays
 {
+
+class OverlayComponent;
 struct OverlayWrapper : public juce::Component,
                         public Surge::GUI::SkinConsumingComponent,
                         public juce::Button::Listener
@@ -44,10 +47,21 @@ struct OverlayWrapper : public juce::Component,
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
 
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
+
     std::unique_ptr<juce::Component> primaryChild;
     void addAndTakeOwnership(std::unique_ptr<juce::Component> c);
     std::unique_ptr<juce::TextButton> closeButton, tearOutButton;
     void buttonClicked(juce::Button *button) override;
+
+    juce::Point<float> distanceFromCornerToMouseDown;
+    bool isDragging{false};
+    bool allowDrag{true};
+    void mouseDown(const juce::MouseEvent &) override;
+    void mouseUp(const juce::MouseEvent &) override;
+    void mouseDrag(const juce::MouseEvent &) override;
+    void mouseDoubleClick(const juce::MouseEvent &e) override;
 
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
@@ -79,6 +93,8 @@ struct OverlayWrapper : public juce::Component,
     bool isModal{false};
 
     std::unique_ptr<juce::DocumentWindow> tearOutParent;
+
+    OverlayComponent *getPrimaryChildAsOverlayComponent();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
 };

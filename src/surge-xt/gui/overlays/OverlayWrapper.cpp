@@ -17,6 +17,7 @@
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
+#include "OverlayComponent.h"
 
 namespace Surge
 {
@@ -209,5 +210,83 @@ void OverlayWrapper::doTearIn()
     parentBeforeTearOut->addAndMakeVisible(*this);
     parentBeforeTearOut = nullptr;
 }
+
+void OverlayWrapper::mouseDown(const juce::MouseEvent &e)
+{
+    if (isTornOut())
+        return;
+
+    auto c = getPrimaryChildAsOverlayComponent();
+    if (c && c->getCanMoveAround())
+    {
+        isDragging = true;
+        distanceFromCornerToMouseDown =
+            localPointToGlobal(e.position) - getBounds().getTopLeft().toFloat();
+        repaint();
+    }
+}
+
+void OverlayWrapper::mouseDoubleClick(const juce::MouseEvent &e)
+{
+    if (isTornOut())
+        return;
+
+    auto c = getPrimaryChildAsOverlayComponent();
+    if (c && c->getCanMoveAround() && editor)
+    {
+        auto p = c->defaultLocation;
+        auto b = getBounds();
+        auto q = juce::Rectangle<int>(p.x, p.y, b.getWidth(), b.getHeight());
+        setBounds(q);
+        Surge::Storage::updateUserDefaultValue(storage, c->getMoveAroundKey(),
+                                               std::make_pair(p.x, p.y));
+    }
+}
+
+void OverlayWrapper::mouseUp(const juce::MouseEvent &e)
+{
+    if (isTornOut())
+        return;
+
+    auto c = getPrimaryChildAsOverlayComponent();
+    if (c && c->getCanMoveAround() && editor)
+    {
+        isDragging = false;
+        repaint();
+
+        Surge::Storage::updateUserDefaultValue(storage, c->getMoveAroundKey(),
+                                               std::make_pair(getX(), getY()));
+    }
+}
+
+void OverlayWrapper::mouseDrag(const juce::MouseEvent &e)
+{
+    if (isTornOut())
+        return;
+
+    auto c = getPrimaryChildAsOverlayComponent();
+    if (c && c->getCanMoveAround())
+    {
+        auto gp = localPointToGlobal(e.position);
+        auto newTopLeft = gp - distanceFromCornerToMouseDown;
+        newTopLeft.x = std::max(0.f, newTopLeft.x);
+        newTopLeft.y = std::max(0.f, newTopLeft.y);
+
+        auto pw = 1.f * getParentComponent()->getWidth();
+        auto ph = 1.f * getParentComponent()->getHeight();
+        newTopLeft.x = std::min(newTopLeft.x, pw - getWidth());
+        newTopLeft.y = std::min(newTopLeft.y, ph - getHeight());
+
+        auto b = getBounds();
+        auto q = juce::Rectangle<int>(newTopLeft.x, newTopLeft.y, b.getWidth(), b.getHeight());
+        setBounds(q);
+    }
+}
+
+OverlayComponent *OverlayWrapper::getPrimaryChildAsOverlayComponent()
+{
+    return dynamic_cast<OverlayComponent *>(primaryChild.get());
+}
+
 } // namespace Overlays
 } // namespace Surge
