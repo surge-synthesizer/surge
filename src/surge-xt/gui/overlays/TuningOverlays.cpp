@@ -2,6 +2,7 @@
 #include "RuntimeFont.h"
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
+#include "SurgeGUIUtils.h"
 #include "fmt/core.h"
 #include <chrono>
 
@@ -458,6 +459,261 @@ void RadialScaleGraph::paint(Graphics &g)
     g.restoreState();
 }
 
+struct IntervalMatrix : public juce::Component
+{
+    IntervalMatrix(TuningOverlay *o) : overlay(o)
+    {
+        viewport = std::make_unique<juce::Viewport>();
+        intervalPainter = std::make_unique<IntervalPainter>(this);
+        viewport->setViewedComponent(intervalPainter.get(), false);
+
+        intervalButton = std::make_unique<juce::ToggleButton>("Show Interval");
+        intervalButton->setToggleState(true, juce::NotificationType::dontSendNotification);
+        intervalButton->onClick = [this]() {
+            intervalPainter->mode = IntervalPainter::INTERV;
+            intervalPainter->repaint();
+        };
+
+        distanceButton = std::make_unique<juce::ToggleButton>("Show Distance from Even");
+        distanceButton->onClick = [this]() {
+            intervalPainter->mode = IntervalPainter::DIST;
+            intervalPainter->repaint();
+        };
+
+        intervalButton->setRadioGroupId(100001, juce::NotificationType::dontSendNotification);
+        distanceButton->setRadioGroupId(100001, juce::NotificationType::dontSendNotification);
+
+        addAndMakeVisible(*viewport);
+        addAndMakeVisible(*intervalButton);
+        addAndMakeVisible(*distanceButton);
+    };
+    virtual ~IntervalMatrix() = default;
+
+    void setTuning(const Tunings::Tuning &t)
+    {
+        tuning = t;
+        intervalPainter->setSizeFromTuning();
+        intervalPainter->repaint();
+    }
+
+    struct IntervalPainter : public juce::Component
+    {
+        enum Mode
+        {
+            INTERV,
+            DIST
+        } mode;
+        IntervalPainter(IntervalMatrix *m) : matrix(m) {}
+
+        static constexpr int cellH{14}, cellW{35};
+        void setSizeFromTuning()
+        {
+            auto ic = matrix->tuning.scale.count + 2;
+            auto nh = ic * cellH;
+            auto nw = ic * cellW;
+
+            setSize(nw, nh);
+        }
+
+        void paint(juce::Graphics &g) override
+        {
+            auto ic = matrix->tuning.scale.count;
+            int mt = ic + 2;
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            for (int i = 0; i < mt; ++i)
+            {
+                for (int j = 0; j < mt; ++j)
+                {
+                    bool isHovered = false;
+                    if ((i == hoverI && j == hoverJ) || (i == 0 && j == hoverJ) ||
+                        (i == hoverI && j == 0))
+                    {
+                        isHovered = true;
+                    }
+                    auto bx = juce::Rectangle<int>(i * cellW, j * cellH, cellW - 1, cellH - 1);
+                    if ((i == 0 || j == 0) && (i + j))
+                    {
+                        g.setColour(juce::Colours::darkblue);
+                        g.fillRect(bx);
+                        auto lb = std::to_string(i + j - 1);
+                        if (isHovered)
+                            g.setColour(juce::Colours::white);
+                        else
+                            g.setColour(juce::Colours::lightblue);
+                        g.drawText(lb, bx, juce::Justification::centred);
+                    }
+                    else if (i == j)
+                    {
+                        g.setColour(juce::Colours::darkgrey);
+                        g.fillRect(bx);
+                    }
+                    else if (i > j)
+                    {
+                        auto centsi = 0.0;
+                        auto centsj = 0.0;
+                        if (i > 1)
+                            centsi = matrix->tuning.scale.tones[i - 2].cents;
+                        if (j > 1)
+                            centsj = matrix->tuning.scale.tones[j - 2].cents;
+
+                        auto cdiff = centsi - centsj;
+                        auto disNote = i - j;
+                        auto lastTone =
+                            matrix->tuning.scale.tones[matrix->tuning.scale.count - 1].cents;
+                        auto evenStep = lastTone / matrix->tuning.scale.count;
+                        auto desCents = disNote * evenStep;
+
+                        if (cdiff < desCents)
+                        {
+                            // we are flat of even
+                            auto dist = std::min((desCents - cdiff) / evenStep, 1.0);
+                            auto r = (int)((1.0 - dist) * 200);
+                            g.setColour(juce::Colour(255, 255, r));
+                        }
+                        else if (fabs(cdiff - desCents) < 0.1)
+                        {
+                            g.setColour(juce::Colours::white);
+                        }
+                        else
+                        {
+                            auto dist = std::min(-(desCents - cdiff) / evenStep, 1.0);
+                            auto b = (int)((1.0 - dist) * 100) + 130;
+                            g.setColour(juce::Colour(b, b, 255));
+                        }
+                        g.fillRect(bx);
+
+                        auto displayCents = cdiff;
+                        if (mode == DIST)
+                            displayCents = cdiff - desCents;
+                        auto lb = fmt::format("{:.1f}", displayCents);
+                        if (isHovered)
+                            g.setColour(juce::Colours::darkgreen);
+                        else
+                            g.setColour(juce::Colours::black);
+                        g.drawText(lb, bx, juce::Justification::centred);
+
+                        if (isHovered)
+                        {
+                            g.setColour(juce::Colour(255, 255, 255));
+                            g.drawRect(bx);
+                        }
+                    }
+                }
+            }
+        }
+
+        int hoverI{-1}, hoverJ{-1};
+
+        juce::Point<float> lastMousePos;
+        void mouseDown(const juce::MouseEvent &e) override
+        {
+            if (!Surge::GUI::showCursor(matrix->overlay->storage))
+            {
+                juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
+                    true);
+            }
+            lastMousePos = e.position;
+        }
+        void mouseUp(const juce::MouseEvent &e) override
+        {
+            if (!Surge::GUI::showCursor(matrix->overlay->storage))
+            {
+                juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
+                    false);
+                auto p = localPointToGlobal(e.mouseDownPosition);
+                juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+            }
+            // show
+        }
+        void mouseDrag(const juce::MouseEvent &e) override
+        {
+            auto dPos = e.position.getY() - lastMousePos.getY();
+            dPos = -dPos;
+            auto speed = 0.5;
+            if (e.mods.isShiftDown())
+                speed = 0.1;
+            dPos = dPos * speed;
+            lastMousePos = e.position;
+
+            auto i = hoverI;
+            if (i > 1)
+            {
+                auto centsi = matrix->tuning.scale.tones[i - 2].cents + dPos;
+                matrix->overlay->onToneChanged(i - 2, centsi);
+            }
+        }
+        void mouseEnter(const juce::MouseEvent &e) override { repaint(); }
+
+        void mouseExit(const juce::MouseEvent &e) override
+        {
+            hoverI = -1;
+            hoverJ = -1;
+            repaint();
+
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
+
+        void mouseMove(const juce::MouseEvent &e) override
+        {
+            if (setupHoverFrom(e.position))
+                repaint();
+            if (hoverI >= 1 && hoverI <= matrix->tuning.scale.count && hoverJ >= 1 &&
+                hoverJ <= matrix->tuning.scale.count && hoverI > hoverJ)
+            {
+                setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
+            }
+            else
+            {
+                setMouseCursor(juce::MouseCursor::NormalCursor);
+            }
+        }
+
+        bool setupHoverFrom(const juce::Point<float> &here)
+        {
+            int ohi = hoverI, ohj = hoverJ;
+
+            //  auto bx = juce::Rectangle<int>(i * cellW, j * cellH, cellW - 1, cellH - 1);
+            // box x is i*cellW to i*cellW + cellW
+            // box x / cellW is i to i + 1
+            // floor(box x / cellW ) is i
+            hoverI = floor(here.x / cellW);
+            hoverJ = floor(here.y / cellH);
+            if (ohi != hoverI || ohj != hoverJ)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        IntervalMatrix *matrix;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IntervalPainter);
+    };
+
+    void resized() override
+    {
+        std::cout << "IM Resized " << getLocalBounds().toString() << std::endl;
+        viewport->setBounds(getLocalBounds().reduced(2).withTrimmedBottom(20));
+        intervalPainter->setSizeFromTuning();
+
+        auto buttonStrip = getLocalBounds().reduced(2);
+        buttonStrip = buttonStrip.withTrimmedTop(buttonStrip.getHeight() - 20);
+
+        intervalButton->setBounds(buttonStrip.withTrimmedRight(getWidth() / 2));
+        distanceButton->setBounds(buttonStrip.withTrimmedLeft(getWidth() / 2));
+    }
+
+    std::unique_ptr<IntervalPainter> intervalPainter;
+    std::unique_ptr<juce::Viewport> viewport;
+
+    std::unique_ptr<juce::ToggleButton> intervalButton, distanceButton;
+
+    Tunings::Tuning tuning;
+    TuningOverlay *overlay{nullptr};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IntervalMatrix);
+};
+
 void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 {
     int ohsi = hotSpotIndex;
@@ -586,9 +842,11 @@ TuningOverlay::TuningOverlay()
     radialScaleGraph = std::make_unique<RadialScaleGraph>();
     radialScaleGraph->onToneChanged = [this](int note, double d) { this->onToneChanged(note, d); };
 
+    intervalMatrix = std::make_unique<IntervalMatrix>(this);
+
     tabArea->addTab("SCL/KBM", juce::Colours::black, sclKbmDisplay.get(), false);
     tabArea->addTab("Radial", juce::Colours::black, radialScaleGraph.get(), false);
-    tabArea->addTab("Interval", juce::Colours::black, new juce::Label("S"), true);
+    tabArea->addTab("Interval", juce::Colours::black, intervalMatrix.get(), false);
     tabArea->addTab("Generators", juce::Colours::black, new juce::Label("S"), true);
     addAndMakeVisible(*tabArea);
 }
@@ -678,6 +936,7 @@ void TuningOverlay::setTuning(const Tunings::Tuning &t)
     tuningKeyboardTableModel->tuningUpdated(tuning);
     sclKbmDisplay->setTuning(t);
     radialScaleGraph->setScale(t.scale);
+    intervalMatrix->setTuning(t);
     repaint();
 }
 
