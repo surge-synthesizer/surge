@@ -17,6 +17,7 @@
 #define SURGE_XT_OVERLAYCOMPONENT_H
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "UserDefaults.h"
 
 namespace Surge
 {
@@ -41,6 +42,12 @@ struct OverlayComponent : juce::Component
     bool canTearOut{false};
     void setCanTearOut(bool b) { canTearOut = b; }
     bool getCanTearOut() { return canTearOut; }
+
+    std::pair<bool, Surge::Storage::DefaultKey> canMoveAround{false, Surge::Storage::nKeys};
+    void setCanMoveAround(std::pair<bool, Surge::Storage::DefaultKey> b) { canMoveAround = b; }
+    bool getCanMoveAround() { return canMoveAround.first; }
+    juce::Point<int> defaultLocation;
+    Surge::Storage::DefaultKey getMoveAroundKey() { return canMoveAround.second; }
 };
 } // namespace Overlays
 } // namespace Surge

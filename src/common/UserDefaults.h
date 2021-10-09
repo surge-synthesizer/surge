@@ -64,6 +64,11 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     UseKeyboardShortcuts_Plugin,
     UseKeyboardShortcuts_Standalone,
 
+    TuningOverlayLocation,
+    ModlistOverlayLocation,
+    MSEGFormulaOverlayLocation,
+    WSAnalysisOverlayLocation,
+
     nKeys
 };
 /**
@@ -76,6 +81,8 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
 std::string getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
                                 const std::string &valueIfMissing);
 int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing);
+std::pair<int, int> getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
+                                        const std::pair<int, int> &valueIfMissing);
 inline fs::path getUserDefaultPath(SurgeStorage *storage, const DefaultKey &key,
                                    const fs::path &valueIfMissing)
 {
@@ -94,6 +101,8 @@ inline bool updateUserDefaultPath(SurgeStorage *storage, const DefaultKey &key,
 {
     return updateUserDefaultValue(storage, key, path_to_string(path));
 }
+bool updateUserDefaultValue(SurgeStorage *stoarge, const DefaultKey &key,
+                            const std::pair<int, int> &value);
 
 } // namespace Storage
 } // namespace Surge

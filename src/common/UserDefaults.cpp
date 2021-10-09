@@ -23,12 +23,14 @@ struct UserDefaultValue
     typedef enum ValueType
     {
         ud_string = 1,
-        ud_int = 2
+        ud_int = 2,
+        ud_pair = 3
     } ValueType;
 
     std::string keystring;
     DefaultKey key;
     std::string value;
+    std::pair<int, int> vpair;
     ValueType type;
 };
 
@@ -153,6 +155,19 @@ void initMaps()
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
                 break;
+
+            case TuningOverlayLocation:
+                r = "tuningOverlayLocation";
+                break;
+            case ModlistOverlayLocation:
+                r = "modlistOverlayLocation";
+                break;
+            case MSEGFormulaOverlayLocation:
+                r = "msegFormulaOverlayLocation";
+                break;
+            case WSAnalysisOverlayLocation:
+                r = "wsAnalysisOverlayLocation";
+                break;
             case nKeys:
                 break;
             }
@@ -200,11 +215,20 @@ void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
             while (def)
             {
                 UserDefaultValue v;
-                v.keystring = def->Attribute("key");
-                v.value = def->Attribute("value");
                 int vt;
                 def->Attribute("type", &vt);
                 v.type = (UserDefaultValue::ValueType)vt;
+                v.keystring = def->Attribute("key");
+
+                if (v.type == UserDefaultValue::ud_pair)
+                {
+                    v.vpair.first = std::atoi(def->Attribute("firstvalue"));
+                    v.vpair.second = std::atoi(def->Attribute("secondvalue"));
+                }
+                else
+                {
+                    v.value = def->Attribute("value");
+                }
 
                 // silently disregard default keys we don't recognize
                 if (stringsToKeys.find(v.keystring) != stringsToKeys.end())
@@ -219,6 +243,8 @@ void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
         haveReadDefaultsFile = true;
     }
 }
+
+bool streamDefaultsFile(SurgeStorage *storage);
 
 bool storeUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const std::string &val,
                            UserDefaultValue::ValueType type)
@@ -240,7 +266,39 @@ bool storeUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const s
     v.type = type;
 
     defaultsFileContents[v.key] = v;
+    return streamDefaultsFile(storage);
+}
 
+bool storeUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
+                           const std::pair<int, int> &val, UserDefaultValue::ValueType type)
+{
+    if (type != UserDefaultValue::ud_pair)
+    {
+        storage->reportError("Software Error: Streamed pair as type non ud_pair", "UserDefaults");
+        return false;
+    }
+    // Re-read the file in case another surge has updated it
+    readDefaultsFile(defaultsFileName(storage), true, storage);
+
+    /*
+    ** Surge has a habit of creating the user directories it needs.
+    ** See SurgeSytnehsizer::savePatch for instance
+    ** and so we have to do the same here
+    */
+    fs::create_directories(storage->userDefaultFilePath);
+
+    UserDefaultValue v;
+    v.key = key;
+    v.keystring = keysToStrings[key];
+    v.vpair = val;
+    v.type = type;
+
+    defaultsFileContents[v.key] = v;
+    return streamDefaultsFile(storage);
+}
+
+bool streamDefaultsFile(SurgeStorage *storage)
+{
     /*
     ** For now, the format of our defaults file is so simple that we don't need to mess
     ** around with tinyxml to create it, just to parse it
@@ -260,8 +318,17 @@ bool storeUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const s
 
     for (auto &el : defaultsFileContents)
     {
-        dFile << "  <default key=\"" << keysToStrings[el.first] << "\" value=\"" << el.second.value
-              << "\" type=\"" << (int)el.second.type << "\"/>\n";
+        if (el.second.type == UserDefaultValue::ud_pair)
+        {
+            dFile << "  <default key=\"" << keysToStrings[el.first] << "\" firstvalue=\""
+                  << el.second.vpair.first << "\" secondvalue=\"" << el.second.vpair.second
+                  << "\" type=\"" << (int)el.second.type << "\"/>\n";
+        }
+        else
+        {
+            dFile << "  <default key=\"" << keysToStrings[el.first] << "\" value=\""
+                  << el.second.value << "\" type=\"" << (int)el.second.type << "\"/>\n";
+        }
     }
 
     dFile << "</defaults>" << std::endl;
@@ -318,6 +385,23 @@ int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueI
     return valueIfMissing;
 }
 
+std::pair<int, int> getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
+                                        const std::pair<int, int> &valueIfMissing)
+{
+    readDefaultsFile(defaultsFileName(storage), false, storage);
+
+    if (defaultsFileContents.find(key) != defaultsFileContents.end())
+    {
+        auto vStruct = defaultsFileContents[key];
+        if (vStruct.type != UserDefaultValue::ud_pair)
+        {
+            return valueIfMissing;
+        }
+        return vStruct.vpair;
+    }
+    return valueIfMissing;
+}
+
 bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const std::string &value)
 {
     return storeUserDefaultValue(storage, key, value, UserDefaultValue::ud_string);
@@ -328,6 +412,12 @@ bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const 
     std::ostringstream oss;
     oss << value;
     return storeUserDefaultValue(storage, key, oss.str(), UserDefaultValue::ud_int);
+}
+
+bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
+                            const std::pair<int, int> &value)
+{
+    return storeUserDefaultValue(storage, key, value, UserDefaultValue::ud_pair);
 }
 
 } // namespace Storage
