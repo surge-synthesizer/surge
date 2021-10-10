@@ -2553,27 +2553,49 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     }
 
                     bool hadExtendedOverlay = false;
-                    if (isAnyOverlayPresent(MSEG_EDITOR))
+                    bool wasTornOut = false;
+                    juce::Point<int> tearOutLoc;
+                    for (auto otag : {MSEG_EDITOR, FORMULA_EDITOR})
                     {
-                        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                        hadExtendedOverlay = true;
+                        if (isAnyOverlayPresent(otag))
+                        {
+                            auto c = getOverlayWrapperIfOpen(otag);
+                            if (c)
+                            {
+                                wasTornOut = c->isTornOut();
+                                tearOutLoc = c->currentTearOutLocation();
+                            }
+                            closeOverlay(otag);
+                            hadExtendedOverlay = true;
+                        }
                     }
-                    if (isAnyOverlayPresent(FORMULA_EDITOR))
-                    {
-                        closeOverlay(FORMULA_EDITOR);
-                        hadExtendedOverlay = true;
-                    }
+
                     if (hadExtendedOverlay)
                     {
                         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[newsource -
                                                                                        ms_lfo1]);
+                        auto tag = MSEG_EDITOR;
+                        bool go = false;
                         if (ld->shape.val.i == lt_mseg)
                         {
-                            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                            go = true;
                         }
                         if (ld->shape.val.i == lt_formula)
                         {
-                            showOverlay(FORMULA_EDITOR);
+                            tag = FORMULA_EDITOR;
+                            go = true;
+                        }
+                        if (go)
+                        {
+                            showOverlay(tag);
+                            if (wasTornOut)
+                            {
+                                auto c = getOverlayWrapperIfOpen(tag);
+                                if (c)
+                                {
+                                    c->doTearOut(tearOutLoc);
+                                }
+                            }
                         }
                     }
 

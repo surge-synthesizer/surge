@@ -165,6 +165,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
         mse->setEnclosingParentTitle(title);
+        mse->setCanTearOut(true);
         locationForMSFR(mse.get());
         return mse;
     }
@@ -184,6 +185,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("Formula"));
 
         pt->setEnclosingParentTitle(title);
+        pt->setCanTearOut(true);
         locationForMSFR(pt.get());
         return pt;
     }
@@ -485,6 +487,17 @@ juce::Component *SurgeGUIEditor::getOverlayIfOpen(OverlayTags tag)
         return nullptr;
 
     return juceOverlays[tag]->primaryChild.get();
+}
+
+Surge::Overlays::OverlayWrapper *SurgeGUIEditor::getOverlayWrapperIfOpen(OverlayTags tag)
+{
+    if (juceOverlays.find(tag) == juceOverlays.end())
+        return nullptr;
+
+    if (!juceOverlays[tag])
+        return nullptr;
+
+    return dynamic_cast<Surge::Overlays::OverlayWrapper *>(juceOverlays[tag].get());
 }
 
 void SurgeGUIEditor::updateWaveshaperOverlay()
