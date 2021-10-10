@@ -407,6 +407,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
     bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
     juce::Component *getOverlayIfOpen(OverlayTags tag);
+    Surge::Overlays::OverlayWrapper *getOverlayWrapperIfOpen(OverlayTags tag);
 
     void updateWaveshaperOverlay(); // this is the only overlay which updates from patch values
 

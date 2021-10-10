@@ -313,16 +313,21 @@ void FormulaModulatorEditor::applyCode()
 
 void FormulaModulatorEditor::resized()
 {
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    t.transformPoint(w, h);
+
     int efdWidth = 14;
     if (efd->isOpen)
     {
         efdWidth = 200;
     }
     tabs->setTabBarDepth(14);
-    tabs->setBounds(2, 2, getWidth() - 8 - efdWidth, getHeight() - 4);
+    tabs->setBounds(2, 2, w - 8 - efdWidth, h - 4);
     auto b = tabs->getTabbedButtonBar().getLocalBounds();
     applyButton->setBounds(b.getWidth() - 80, 2, 80 - 2, b.getHeight() - 4);
-    efd->setBounds(getWidth() - 4 - efdWidth, 2, efdWidth, getHeight() - 4);
+    efd->setBounds(w - 4 - efdWidth, 2, efdWidth, h - 4);
 }
 
 struct WavetablePreviewComponent : juce::Component

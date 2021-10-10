@@ -692,7 +692,6 @@ struct IntervalMatrix : public juce::Component
 
     void resized() override
     {
-        std::cout << "IM Resized " << getLocalBounds().toString() << std::endl;
         viewport->setBounds(getLocalBounds().reduced(2).withTrimmedBottom(20));
         intervalPainter->setSizeFromTuning();
 

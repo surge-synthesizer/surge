@@ -3257,11 +3257,18 @@ void MSEGEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::orchid); }
 void MSEGEditor::resized()
 {
     int controlHeight = 35;
-    auto r = getLocalBounds();
+
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    t.transformPoint(w, h);
+    auto r = getLocalBounds().withWidth(w).withHeight(h);
+
     auto cvr = r.withTrimmedBottom(controlHeight);
     auto ctr = r.withTop(cvr.getBottom());
 
     canvas->setBounds(cvr);
+    canvas->recalcHotZones(juce::Point<int>(0, 0));
     controls->setBounds(ctr);
     // mained setbounds
 }
