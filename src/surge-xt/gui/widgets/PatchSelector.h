@@ -56,6 +56,14 @@ struct PatchSelector : public juce::Component,
         isFavorite = b;
         repaint();
     }
+
+    bool isUser{false};
+    void setIsUser(bool b)
+    {
+        isUser = b;
+        repaint();
+    }
+
     void setLabel(const std::string &l) { pname = l; }
     void setCategory(std::string l)
     {
