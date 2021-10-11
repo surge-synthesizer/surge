@@ -442,6 +442,16 @@ void PatchSelector::showClassicMenu(bool single_category)
             storage->patch_category[current_category].isFactory ? "Factory" : "User");
     });
 
+    if (isUser)
+    {
+        contextMenu.addItem("Rename Patch", [this]() {
+            storage->reportError("Coming Soon", "Function Not Implemented Yet");
+        });
+        contextMenu.addItem("Delete Patch", [this]() {
+            storage->reportError("Coming Soon", "Function Not Implemented Yet");
+        });
+    }
+
 #if HIDE_PATCH_BROWSER == false
     contextMenu.addSeparator();
 

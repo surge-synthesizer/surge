@@ -624,6 +624,7 @@ void SurgeGUIEditor::idle()
                 patchSelector->setAuthor(synth->storage.getPatch().author);
                 patchSelector->setComment(synth->storage.getPatch().comment);
                 patchSelector->setIsFavorite(isPatchFavorite());
+                patchSelector->setIsUser(isPatchUser());
                 patchSelector->setTags(synth->storage.getPatch().tags);
                 patchSelector->repaint();
             }
@@ -1483,6 +1484,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             patchSelector->setSkin(currentSkin, bitmapStore);
             patchSelector->setLabel(synth->storage.getPatch().name);
             patchSelector->setIsFavorite(isPatchFavorite());
+            patchSelector->setIsUser(isPatchUser());
             patchSelector->setCategory(synth->storage.getPatch().category);
             patchSelector->setIDs(synth->current_category_id, synth->patchid);
             patchSelector->setAuthor(synth->storage.getPatch().author);
@@ -5732,6 +5734,16 @@ bool SurgeGUIEditor::isPatchFavorite()
     if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
     {
         return synth->storage.patch_list[synth->patchid].isFavorite;
+    }
+    return false;
+}
+
+bool SurgeGUIEditor::isPatchUser()
+{
+    if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
+    {
+        auto p = synth->storage.patch_list[synth->patchid];
+        return !synth->storage.patch_category[p.category].isFactory;
     }
     return false;
 }
