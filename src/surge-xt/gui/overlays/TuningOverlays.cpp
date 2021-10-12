@@ -17,13 +17,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                                 public Surge::GUI::SkinConsumingComponent
 {
   public:
-    TuningTableListBoxModel()
-    {
-        for (int i = 0; i < 128; ++i)
-            notesOn[i] = false;
-
-        rmbMenu = std::make_unique<juce::PopupMenu>();
-    }
+    TuningTableListBoxModel() {}
     ~TuningTableListBoxModel() { table = nullptr; }
 
     void setTableListBox(juce::TableListBox *t) { table = t; }
@@ -124,7 +118,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                 if (rowNumber < 127 && notesOn[rowNumber + 1])
                 {
                     g.setColour(pressedColour);
-                    g.fillRect(0, height / 2, txtOff, height / 2);
+                    g.fillRect(0, height / 2, txtOff, height / 2 + 1);
                 }
                 g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
                 g.fillRect(0, height / 2, txtOff, 1);
@@ -223,22 +217,9 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         if (table)
             table->repaint();
     }
-    virtual void noteOn(int noteNum)
-    {
-        notesOn[noteNum] = true;
-        if (table)
-            table->repaint();
-    }
-    virtual void noteOff(int noteNum)
-    {
-        notesOn[noteNum] = false;
-        if (table)
-            table->repaint();
-    }
 
-  private:
     Tunings::Tuning tuning;
-    std::array<std::atomic<bool>, 128> notesOn;
+    std::bitset<128> notesOn;
     std::unique_ptr<juce::PopupMenu> rmbMenu;
     juce::TableListBox *table{nullptr};
 };
@@ -248,40 +229,46 @@ class RadialScaleGraph;
 class RadialScaleGraph : public juce::Component
 {
   public:
-    RadialScaleGraph() { setScale(Tunings::evenTemperament12NoteScale()); }
-
-    void setScale(const Tunings::Scale &s)
+    RadialScaleGraph()
     {
-        scale = s;
+        setTuning(Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::tuneA69To(440)));
+    }
+
+    void setTuning(const Tunings::Tuning &t)
+    {
+        tuning = t;
+        scale = t.scale;
         notesOn.clear();
         notesOn.resize(scale.count);
         for (int i = 0; i < scale.count; ++i)
-            notesOn[i] = 0;
+            notesOn[i] = false;
+        setNotesOn(bitset);
     }
 
     virtual void paint(juce::Graphics &g) override;
+    Tunings::Tuning tuning;
     Tunings::Scale scale;
     std::vector<juce::Rectangle<float>> screenHotSpots;
     int hotSpotIndex = -1;
-    std::vector<int> notesOn;
     double dInterval, centsAtMouseDown, dIntervalAtMouseDown;
 
     juce::AffineTransform screenTransform, screenTransformInverted;
     std::function<void(int index, double)> onToneChanged = [](int, double) {};
 
-    void noteOn(int sn)
+    std::vector<bool> notesOn;
+    std::bitset<128> bitset{0};
+    void setNotesOn(const std::bitset<128> &bs)
     {
-        if (sn < notesOn.size())
-            notesOn[sn]++;
-        repaint();
-    }
-    void noteOff(int sn)
-    {
-        if (sn < notesOn.size())
+        bitset = bs;
+        for (int i = 0; i < scale.count; ++i)
+            notesOn[i] = false;
+
+        for (int i = 0; i < 128; ++i)
         {
-            notesOn[sn]--;
-            if (notesOn[sn] < 0)
-                notesOn[sn] = 0;
+            if (bitset[i])
+            {
+                notesOn[tuning.scalePositionForMidiNote(i)] = true;
+            }
         }
         repaint();
     }
@@ -365,7 +352,7 @@ void RadialScaleGraph::paint(Graphics &g)
         double sx = std::sin(frac * 2.0 * MathConstants<double>::pi);
         double cx = std::cos(frac * 2.0 * MathConstants<double>::pi);
 
-        if (notesOn[i] > 0)
+        if (notesOn[i])
             g.setColour(Colour(255, 255, 255));
         else
             g.setColour(Colour(110, 110, 120));
@@ -378,7 +365,7 @@ void RadialScaleGraph::paint(Graphics &g)
         g.addTransform(AffineTransform::rotation(MathConstants<double>::pi * 0.5));
         g.addTransform(AffineTransform::scale(-1.0, 1.0));
 
-        if (notesOn[i] > 0)
+        if (notesOn[i])
             g.setColour(Colour(255, 255, 255));
         else
             g.setColour(Colour(200, 200, 240));
@@ -409,7 +396,7 @@ void RadialScaleGraph::paint(Graphics &g)
 
         float x0 = rx * sx - 0.05, y0 = rx * cx - 0.05, dx = 0.1, dy = 0.1;
 
-        if (notesOn[i] > 0)
+        if (notesOn[i])
         {
             g.setColour(Colour(255, 255, 255));
             g.drawLine(sx, cx, rx * sx, rx * cx, 0.03);
@@ -443,7 +430,7 @@ void RadialScaleGraph::paint(Graphics &g)
             g.drawEllipse(x0, y0, dx, dy, 0.01);
         }
 
-        if (notesOn[i % scale.count] > 0)
+        if (notesOn[i % scale.count])
         {
             g.setColour(Colour(255, 255, 255));
             g.drawEllipse(x0, y0, dx, dy, 0.02);
@@ -492,6 +479,7 @@ struct IntervalMatrix : public juce::Component
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
+        setNotesOn(bitset);
         intervalPainter->setSizeFromTuning();
         intervalPainter->repaint();
     }
@@ -533,9 +521,25 @@ struct IntervalMatrix : public juce::Component
                     auto bx = juce::Rectangle<int>(i * cellW, j * cellH, cellW - 1, cellH - 1);
                     if ((i == 0 || j == 0) && (i + j))
                     {
-                        g.setColour(juce::Colours::darkblue);
+                        auto no = false;
+                        if (i > 0)
+                            no = no || matrix->notesOn[i - 1];
+                        if (j > 0)
+                            no = no || matrix->notesOn[j - 1];
+
+                        if (no)
+                            g.setColour(juce::Colours::darkgreen);
+                        else
+                            g.setColour(juce::Colours::darkblue);
                         g.fillRect(bx);
+                        if (no)
+                        {
+                            g.setColour(juce::Colours::white);
+                            g.drawRect(bx);
+                        }
+
                         auto lb = std::to_string(i + j - 1);
+
                         if (isHovered)
                             g.setColour(juce::Colours::white);
                         else
@@ -700,6 +704,27 @@ struct IntervalMatrix : public juce::Component
 
         intervalButton->setBounds(buttonStrip.withTrimmedRight(getWidth() / 2));
         distanceButton->setBounds(buttonStrip.withTrimmedLeft(getWidth() / 2));
+    }
+
+    std::vector<bool> notesOn;
+    std::bitset<128> bitset{0};
+    void setNotesOn(const std::bitset<128> &bs)
+    {
+        bitset = bs;
+        notesOn.resize(tuning.scale.count + 1);
+        for (int i = 0; i < tuning.scale.count; ++i)
+            notesOn[i] = false;
+        notesOn[tuning.scale.count] = notesOn[0];
+
+        for (int i = 0; i < 128; ++i)
+        {
+            if (bitset[i])
+            {
+                notesOn[tuning.scalePositionForMidiNote(i)] = true;
+            }
+        }
+        intervalPainter->repaint();
+        repaint();
     }
 
     std::unique_ptr<IntervalPainter> intervalPainter;
@@ -899,6 +924,14 @@ void TuningOverlay::onNewSCLKBM(const std::string &scl, const std::string &kbm)
     }
 }
 
+void TuningOverlay::setMidiOnKeys(const std::bitset<128> &keys)
+{
+    tuningKeyboardTableModel->notesOn = keys;
+    tuningKeyboardTable->repaint();
+    radialScaleGraph->setNotesOn(keys);
+    intervalMatrix->setNotesOn(keys);
+}
+
 void TuningOverlay::recalculateScaleText()
 {
     std::ostringstream oss;
@@ -934,7 +967,7 @@ void TuningOverlay::setTuning(const Tunings::Tuning &t)
     tuning = t;
     tuningKeyboardTableModel->tuningUpdated(tuning);
     sclKbmDisplay->setTuning(t);
-    radialScaleGraph->setScale(t.scale);
+    radialScaleGraph->setTuning(t);
     intervalMatrix->setTuning(t);
     repaint();
 }

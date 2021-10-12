@@ -462,7 +462,24 @@ void SurgeGUIEditor::idle()
         if (lastObservedMidiNoteEventCount != synth->midiNoteEvents)
         {
             lastObservedMidiNoteEventCount = synth->midiNoteEvents;
-            // If there are things subscribed to keys update them here
+
+            auto tun = getOverlayIfOpenAs<Surge::Overlays::TuningOverlay>(TUNING_EDITOR);
+            if (tun)
+            {
+                // If there are things subscribed to keys update them here
+                std::bitset<128> keyOn{0};
+                for (int sc = 0; sc < n_scenes; ++sc)
+                {
+                    for (int k = 0; k < 128; ++k)
+                    {
+                        if (synth->midiKeyPressedForScene[sc][k] > 0)
+                        {
+                            keyOn[k] = 1;
+                        }
+                    }
+                }
+                tun->setMidiOnKeys(keyOn);
+            }
         }
         idleInfowindow();
         juceDeleteOnIdle.clear();

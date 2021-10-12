@@ -24,6 +24,7 @@
 #include <set>
 #include "OverlayComponent.h"
 #include "SkinSupport.h"
+#include <bitset>
 
 class SurgeStorage;
 
@@ -66,6 +67,8 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resized() override;
+
+    void setMidiOnKeys(const std::bitset<128> &keys);
 
     void onSkinChanged() override;
 
