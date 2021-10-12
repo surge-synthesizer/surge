@@ -149,6 +149,28 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         msegIsOpenInScene = current_scene;
 
         auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
+
+        if (lfodata->shape.val.i != lt_mseg)
+        {
+            lfodata = nullptr;
+            /*
+             * This can happen if restoring a torn out mseg when the current lfo is selected
+             * to a non mseg in open/close. In that case just find the first mseg.
+             */
+            for (int sc = 0; sc < n_scenes && !lfodata; ++sc)
+            {
+                for (int lf = 0; lf < n_lfos && !lfodata; ++lf)
+                {
+                    if (synth->storage.getPatch().scene[sc].lfo[lf].shape.val.i == lt_mseg)
+                    {
+                        lfodata = &(synth->storage.getPatch().scene[sc].lfo[lf]);
+                    }
+                }
+            }
+        }
+        if (!lfodata)
+            return nullptr;
+
         auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
         auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(
             &(synth->storage), lfodata, ms, &msegEditState[current_scene][lfo_id], currentSkin,
@@ -174,6 +196,29 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
     {
         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
         auto fs = &synth->storage.getPatch().formulamods[current_scene][lfo_id];
+        auto lfodata = &synth->storage.getPatch().scene[current_scene].lfo[lfo_id];
+
+        if (lfodata->shape.val.i != lt_formula)
+        {
+            lfodata = nullptr;
+            /*
+             * This can happen if restoring a torn out mseg when the current lfo is selected
+             * to a non mseg in open/close. In that case just find the first mseg.
+             */
+            for (int sc = 0; sc < n_scenes && !lfodata; ++sc)
+            {
+                for (int lf = 0; lf < n_lfos && !lfodata; ++lf)
+                {
+                    if (synth->storage.getPatch().scene[sc].lfo[lf].shape.val.i == lt_formula)
+                    {
+                        fs = &synth->storage.getPatch().formulamods[sc][lf];
+                        lfodata = &(synth->storage.getPatch().scene[sc].lfo[lf]);
+                    }
+                }
+            }
+        }
+        if (!fs)
+            return nullptr;
 
         auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
             this, &(this->synth->storage),
@@ -314,6 +359,11 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
                                  std::function<void(Surge::Overlays::OverlayComponent *)> setup)
 {
     auto ol = createOverlay(olt);
+    if (!ol)
+    {
+        juceOverlays.erase(olt);
+        return;
+    }
     // copy these before the std::move below
     auto t = ol->getEnclosingParentTitle();
     auto r = ol->getEnclosingParentPosition();
@@ -509,5 +559,48 @@ void SurgeGUIEditor::updateWaveshaperOverlay()
     {
         wso->setWSType(t);
         wso->repaint();
+    }
+}
+
+void SurgeGUIEditor::rezoomOverlays()
+{
+    for (const auto &p : juceOverlays)
+    {
+        if (p.second->isTornOut())
+        {
+            auto c = p.second->primaryChild.get();
+            auto w = c->getWidth();
+            auto h = c->getHeight();
+
+            c->getTransform().inverted().transformPoint(w, h);
+            c->setTransform(juce::AffineTransform::scale(zoomFactor / 100.0));
+            c->getTransform().transformPoint(w, h);
+
+            c->setSize(w, h);
+            p.second->tearOutParent->setContentComponentSize(w, h);
+        }
+    }
+}
+
+void SurgeGUIEditor::refreshOverlayWithOpenClose(OverlayTags tag)
+{
+    if (!isAnyOverlayPresent(tag))
+        return;
+
+    bool to{false};
+    juce::Point<int> tol{-1, -1};
+    auto olw = getOverlayWrapperIfOpen(tag);
+    if (olw)
+    {
+        to = olw->isTornOut();
+        tol = olw->currentTearOutLocation();
+    }
+    closeOverlay(tag);
+    showOverlay(tag);
+    if (to)
+    {
+        olw = getOverlayWrapperIfOpen(tag);
+        if (olw)
+            olw->doTearOut(tol);
     }
 }

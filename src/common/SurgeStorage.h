@@ -736,6 +736,14 @@ struct DAWExtraStateStorage
         {
             bool hasCustomEditor = false;
         } oscExtraEditState[n_scenes][n_lfos];
+
+        struct OverlayState
+        {
+            int whichOverlay{-1};
+            bool isTornOut{false};
+            std::pair<int, int> tearOutPosition{-1, -1};
+        };
+        std::vector<OverlayState> activeOverlays;
     } editor;
 
     bool mpeEnabled = false;
