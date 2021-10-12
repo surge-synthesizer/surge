@@ -39,6 +39,7 @@
 #include <thread>
 #include <atomic>
 #include <cstdarg>
+#include <bitset>
 
 class SurgeSynthEditor;
 
@@ -354,6 +355,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
     bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
     juce::Component *getOverlayIfOpen(OverlayTags tag);
+    template <typename T> T *getOverlayIfOpenAs(OverlayTags tag)
+    {
+        return dynamic_cast<T *>(getOverlayIfOpen(tag));
+    }
+
     Surge::Overlays::OverlayWrapper *getOverlayWrapperIfOpen(OverlayTags tag);
     void refreshOverlayWithOpenClose(OverlayTags tag);
 
