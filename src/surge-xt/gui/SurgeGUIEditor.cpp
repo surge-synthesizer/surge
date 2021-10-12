@@ -5525,6 +5525,25 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         return true;
     }
 
+    if (key.getKeyCode() == juce::KeyPress::escapeKey)
+    {
+        Surge::Overlays::OverlayWrapper *topOverlay{nullptr};
+
+        for (auto c : frame->getChildren())
+        {
+            auto q = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c);
+            if (q)
+            {
+                topOverlay = q;
+            }
+        }
+        if (topOverlay)
+        {
+            topOverlay->onClose();
+            return true;
+        }
+    }
+
     if (getUseKeyboardShortcuts())
     {
         // zoom actions
