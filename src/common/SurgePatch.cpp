@@ -2044,6 +2044,28 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 else
                     dawExtraState.editor.isMSEGOpen = false;
 
+                dawExtraState.editor.activeOverlays.clear();
+                auto overs = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("overlays"));
+                if (overs)
+                {
+                    auto curro = TINYXML_SAFE_TO_ELEMENT(overs->FirstChild("overlay"));
+                    while (curro)
+                    {
+                        DAWExtraStateStorage::EditorState::OverlayState os;
+                        int tv;
+                        if (curro->QueryIntAttribute("whichOverlay", &tv) == TIXML_SUCCESS)
+                            os.whichOverlay = tv;
+                        if (curro->QueryIntAttribute("isTornOut", &tv) == TIXML_SUCCESS)
+                            os.isTornOut = tv;
+                        if (curro->QueryIntAttribute("tearOut_x", &tv) == TIXML_SUCCESS)
+                            os.tearOutPosition.first = tv;
+                        if (curro->QueryIntAttribute("tearOut_y", &tv) == TIXML_SUCCESS)
+                            os.tearOutPosition.second = tv;
+                        dawExtraState.editor.activeOverlays.push_back(os);
+                        curro = TINYXML_SAFE_TO_ELEMENT(curro->NextSiblingElement("overlay"));
+                    }
+                }
+
                 // Just to be sure, even though constructor should do this
                 dawExtraState.editor.msegStateIsPopulated = false;
                 for (int sc = 0; sc < n_scenes; sc++)
@@ -2567,7 +2589,19 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         eds.SetAttribute("current_scene", dawExtraState.editor.current_scene);
         eds.SetAttribute("current_fx", dawExtraState.editor.current_fx);
         eds.SetAttribute("modsource", dawExtraState.editor.modsource);
-        eds.SetAttribute("isMSEGOpen", dawExtraState.editor.isMSEGOpen);
+
+        TiXmlElement over("overlays");
+        for (auto ol : dawExtraState.editor.activeOverlays)
+        {
+            TiXmlElement ox("overlay");
+            ox.SetAttribute("whichOverlay", ol.whichOverlay);
+            ox.SetAttribute("isTornOut", ol.isTornOut);
+            ox.SetAttribute("tearOut_x", ol.tearOutPosition.first);
+            ox.SetAttribute("tearOut_y", ol.tearOutPosition.second);
+            over.InsertEndChild(ox);
+        }
+        eds.InsertEndChild(over);
+
         for (int sc = 0; sc < n_scenes; sc++)
         {
             std::string con = "current_osc_" + std::to_string(sc);

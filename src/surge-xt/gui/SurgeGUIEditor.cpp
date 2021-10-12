@@ -541,6 +541,27 @@ void SurgeGUIEditor::idle()
             showMSEGEditorOnNextIdleOrOpen = false;
         }
 
+        if (!overlaysForNextIdle.empty())
+        {
+            for (auto ol : overlaysForNextIdle)
+            {
+                auto tag = (OverlayTags)ol.whichOverlay;
+                showOverlay(tag);
+                if (ol.isTornOut)
+                {
+                    auto olw = getOverlayWrapperIfOpen(tag);
+                    if (olw)
+                    {
+                        auto p =
+                            juce::Point<int>(ol.tearOutPosition.first, ol.tearOutPosition.second);
+                        olw->doTearOut(p);
+                    }
+                }
+            }
+
+            overlaysForNextIdle.clear();
+        }
+
         if (synth->storage.getPatch()
                 .scene[current_scene]
                 .osc[current_osc[current_scene]]
@@ -630,10 +651,12 @@ void SurgeGUIEditor::idle()
             }
         }
 
-        if (patchChanged && isAnyOverlayPresent(MODULATION_EDITOR))
+        if (patchChanged)
         {
-            closeOverlay(MODULATION_EDITOR);
-            showOverlay(MODULATION_EDITOR);
+            refreshOverlayWithOpenClose(MSEG_EDITOR);
+            refreshOverlayWithOpenClose(FORMULA_EDITOR);
+            refreshOverlayWithOpenClose(TUNING_EDITOR);
+            refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }
 
         bool vuInvalid = false;
@@ -1778,7 +1801,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[lfoidx]);
         if (ld->shape.val.i != lt_mseg)
         {
-            closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            auto olc = getOverlayWrapperIfOpen(MSEG_EDITOR);
+            if (olc && !olc->isTornOut())
+            {
+                closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            }
+        }
+        if (ld->shape.val.i != lt_formula)
+        {
+            auto olc = getOverlayWrapperIfOpen(FORMULA_EDITOR);
+            if (olc && !olc->isTornOut())
+            {
+                closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+            }
         }
     }
 
@@ -2136,6 +2171,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     }
     juceEditor->setScaleFactor(zoomFactor * 0.01);
     setBitmapZoomFactor(zoomFactor);
+    rezoomOverlays();
 }
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
@@ -5746,4 +5782,88 @@ bool SurgeGUIEditor::isPatchUser()
         return !synth->storage.patch_category[p.category].isFactory;
     }
     return false;
+}
+
+void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
+{
+    auto des = &(synth->storage.getPatch().dawExtraState);
+
+    des->isPopulated = true;
+    des->editor.instanceZoomFactor = zoomFactor;
+    des->editor.current_scene = current_scene;
+    des->editor.current_fx = current_fx;
+    des->editor.modsource = modsource;
+    for (int i = 0; i < n_scenes; ++i)
+    {
+        des->editor.current_osc[i] = current_osc[i];
+        des->editor.modsource_editor[i] = modsource_editor[i];
+
+        des->editor.msegStateIsPopulated = true;
+        for (int lf = 0; lf < n_lfos; ++lf)
+        {
+            des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
+        }
+    }
+    des->editor.isMSEGOpen = isAnyOverlayPresent(MSEG_EDITOR);
+
+    des->editor.activeOverlays.clear();
+    for (const auto &ol : juceOverlays)
+    {
+        auto olw = getOverlayWrapperIfOpen(ol.first);
+        if (olw)
+        {
+            DAWExtraStateStorage::EditorState::OverlayState os;
+            os.whichOverlay = ol.first;
+            os.isTornOut = olw->isTornOut();
+            os.tearOutPosition = std::make_pair(-1, -1);
+            if (olw->isTornOut())
+            {
+                auto ps = olw->currentTearOutLocation();
+                os.tearOutPosition = std::make_pair(ps.x, ps.y);
+            }
+            des->editor.activeOverlays.push_back(os);
+        }
+    }
+}
+
+void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
+{
+    auto des = &(synth->storage.getPatch().dawExtraState);
+    if (des->isPopulated)
+    {
+        auto sz = des->editor.instanceZoomFactor;
+        if (sz > 0)
+            setZoomFactor(sz);
+        current_scene = des->editor.current_scene;
+        current_fx = des->editor.current_fx;
+        modsource = des->editor.modsource;
+
+        activateFromCurrentFx();
+
+        for (int i = 0; i < n_scenes; ++i)
+        {
+            current_osc[i] = des->editor.current_osc[i];
+            modsource_editor[i] = des->editor.modsource_editor[i];
+            if (des->editor.msegStateIsPopulated)
+            {
+                for (int lf = 0; lf < n_lfos; ++lf)
+                {
+                    msegEditState[i][lf].timeEditMode =
+                        des->editor.msegEditState[i][lf].timeEditMode;
+                }
+            }
+        }
+        // This is mostly legacy treatment but I'm leaving it in for now
+        if (des->editor.isMSEGOpen)
+        {
+            showMSEGEditorOnNextIdleOrOpen = true;
+        }
+
+        overlaysForNextIdle.clear();
+        if (!des->editor.activeOverlays.empty())
+        {
+            showMSEGEditorOnNextIdleOrOpen = false;
+            overlaysForNextIdle = des->editor.activeOverlays;
+        }
+    }
 }

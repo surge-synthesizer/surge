@@ -2554,6 +2554,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
                     bool hadExtendedOverlay = false;
                     bool wasTornOut = false;
+                    auto wasTornOutTag = MSEG_EDITOR;
                     juce::Point<int> tearOutLoc;
                     for (auto otag : {MSEG_EDITOR, FORMULA_EDITOR})
                     {
@@ -2564,8 +2565,12 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                             {
                                 wasTornOut = c->isTornOut();
                                 tearOutLoc = c->currentTearOutLocation();
+                                wasTornOutTag = otag;
                             }
-                            closeOverlay(otag);
+                            if (!wasTornOut)
+                            {
+                                closeOverlay(otag);
+                            }
                             hadExtendedOverlay = true;
                         }
                     }
@@ -2587,6 +2592,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         }
                         if (go)
                         {
+                            if (wasTornOut)
+                            {
+                                closeOverlay(wasTornOutTag);
+                            }
                             showOverlay(tag);
                             if (wasTornOut)
                             {

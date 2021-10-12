@@ -214,62 +214,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int patchCountdown = -1;
 
   public:
-    void populateDawExtraState(SurgeSynthesizer *synth)
-    {
-        auto des = &(synth->storage.getPatch().dawExtraState);
-
-        des->isPopulated = true;
-        des->editor.instanceZoomFactor = zoomFactor;
-        des->editor.current_scene = current_scene;
-        des->editor.current_fx = current_fx;
-        des->editor.modsource = modsource;
-        for (int i = 0; i < n_scenes; ++i)
-        {
-            des->editor.current_osc[i] = current_osc[i];
-            des->editor.modsource_editor[i] = modsource_editor[i];
-
-            des->editor.msegStateIsPopulated = true;
-            for (int lf = 0; lf < n_lfos; ++lf)
-            {
-                des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
-            }
-        }
-        des->editor.isMSEGOpen = isAnyOverlayPresent(MSEG_EDITOR);
-    }
-
-    void loadFromDAWExtraState(SurgeSynthesizer *synth)
-    {
-        auto des = &(synth->storage.getPatch().dawExtraState);
-        if (des->isPopulated)
-        {
-            auto sz = des->editor.instanceZoomFactor;
-            if (sz > 0)
-                setZoomFactor(sz);
-            current_scene = des->editor.current_scene;
-            current_fx = des->editor.current_fx;
-            modsource = des->editor.modsource;
-
-            activateFromCurrentFx();
-
-            for (int i = 0; i < n_scenes; ++i)
-            {
-                current_osc[i] = des->editor.current_osc[i];
-                modsource_editor[i] = des->editor.modsource_editor[i];
-                if (des->editor.msegStateIsPopulated)
-                {
-                    for (int lf = 0; lf < n_lfos; ++lf)
-                    {
-                        msegEditState[i][lf].timeEditMode =
-                            des->editor.msegEditState[i][lf].timeEditMode;
-                    }
-                }
-            }
-            if (des->editor.isMSEGOpen)
-            {
-                showMSEGEditorOnNextIdleOrOpen = true;
-            }
-        }
-    }
+    void populateDawExtraState(SurgeSynthesizer *synth);
+    void loadFromDAWExtraState(SurgeSynthesizer *synth);
 
     void setZoomCallback(std::function<void(SurgeGUIEditor *, bool resizeWindow)> f)
     {
@@ -396,6 +342,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         std::function<void()> onClose = []() {}, bool forceModal = false);
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
     std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
+    void rezoomOverlays();
 
     void dismissEditorOfType(OverlayTags ofType);
     bool isAnyOverlayPresent(OverlayTags tag)
@@ -408,6 +355,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
     juce::Component *getOverlayIfOpen(OverlayTags tag);
     Surge::Overlays::OverlayWrapper *getOverlayWrapperIfOpen(OverlayTags tag);
+    void refreshOverlayWithOpenClose(OverlayTags tag);
 
     void updateWaveshaperOverlay(); // this is the only overlay which updates from patch values
 
@@ -427,6 +375,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void broadcastMSEGState();
     int msegIsOpenFor = -1, msegIsOpenInScene = -1;
     bool showMSEGEditorOnNextIdleOrOpen = false;
+
+    std::vector<DAWExtraStateStorage::EditorState::OverlayState> overlaysForNextIdle;
 
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
