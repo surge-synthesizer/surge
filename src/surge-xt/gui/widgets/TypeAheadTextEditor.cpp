@@ -217,5 +217,11 @@ void TypeAhead::colourChanged()
     if (isColourSpecified(ColourIds::borderid))
         lbox->setColour(juce::ListBox::ColourIds::outlineColourId, findColour(ColourIds::borderid));
 }
+void TypeAhead::focusLost(juce::Component::FocusChangeType type)
+{
+    lbox->setVisible(false);
+    for (auto l : taList)
+        l->typeaheadCanceled();
+}
 } // namespace Widgets
 } // namespace Surge
