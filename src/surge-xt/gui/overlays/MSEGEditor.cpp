@@ -2058,6 +2058,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
             }
 
+            repaint();
+
             return;
         }
 

@@ -18,12 +18,14 @@
 #include "RuntimeFont.h"
 #include <version.h>
 
+using namespace juce;
+
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEditor(&p), processor(p)
 {
     surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
 
-    juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
+    LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
 
     addKeyListener(this);
 
@@ -32,8 +34,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
 
-    keyboard = std::make_unique<juce::MidiKeyboardComponent>(
-        processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
+    keyboard = std::make_unique<MidiKeyboardComponent>(
+        processor.midiKeyboardState, MidiKeyboardComponent::Orientation::horizontalKeyboard);
     keyboard->setVelocity(midiKeyboardVelocity, true);
     keyboard->setOctaveForMiddleC(5 - mcValue);
     keyboard->setKeyPressBaseOctave(5);
@@ -41,7 +43,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
     // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
     keyboard->setWantsKeyboardFocus(false);
 
-    tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
+    tempoTypein = std::make_unique<TextEditor>("Tempo");
     tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
@@ -55,7 +57,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
 #endif
     };
 
-    tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
+    tempoLabel = std::make_unique<Label>("Tempo", "Tempo");
 
     addChildComponent(*keyboard);
     addChildComponent(*tempoLabel);
@@ -63,7 +65,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEdito
 
     drawExtendedControls = adapter->getShowVirtualKeyboard();
 
-    bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
+    bool addTempo = processor.wrapperType == AudioProcessor::wrapperType_Standalone;
     int yExtra = 0;
 
     if (drawExtendedControls)
@@ -118,22 +120,22 @@ void SurgeSynthEditor::idle() { adapter->idle(); }
 
 void SurgeSynthEditor::reapplySurgeComponentColours()
 {
-    tempoLabel->setColour(juce::Label::textColourId,
+    tempoLabel->setColour(Label::textColourId,
                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId));
 
     tempoTypein->setColour(
-        juce::TextEditor::backgroundColourId,
+        TextEditor::backgroundColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBackgroundId));
-    tempoTypein->setColour(juce::TextEditor::outlineColourId,
+    tempoTypein->setColour(TextEditor::outlineColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBorderId));
-    tempoTypein->setColour(juce::TextEditor::focusedOutlineColourId,
+    tempoTypein->setColour(TextEditor::focusedOutlineColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinBorderId));
     tempoTypein->setColour(
-        juce::TextEditor::highlightColourId,
+        TextEditor::highlightColourId,
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinHighlightId));
-    tempoTypein->setColour(juce::TextEditor::highlightedTextColourId,
+    tempoTypein->setColour(TextEditor::highlightedTextColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
-    tempoTypein->setColour(juce::TextEditor::textColourId,
+    tempoTypein->setColour(TextEditor::textColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
 
     repaint();
@@ -154,7 +156,7 @@ void SurgeSynthEditor::resized()
     if ((wR - 1) * (hR - 1) < 0)
         zfn = std::min(zfn, 1.0);
 
-    bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
+    bool addTempo = processor.wrapperType == AudioProcessor::wrapperType_Standalone;
 
     if (drawExtendedControls)
     {
@@ -170,8 +172,8 @@ void SurgeSynthEditor::resized()
         if (addTempo)
         {
             tempoLabel->setBounds(4, y + tempoBlockYPos, x - 8, tempoHeight);
-            tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
-            tempoLabel->setJustificationType(juce::Justification::centred);
+            tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, Font::bold));
+            tempoLabel->setJustificationType(Justification::centred);
             tempoLabel->setVisible(addTempo);
 
             tempoTypein->setBounds(4, y + tempoBlockYPos + tempoHeight, x - 8, typeinHeight);
@@ -179,7 +181,7 @@ void SurgeSynthEditor::resized()
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
             tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
             tempoTypein->setIndents(4, 0);
-            tempoTypein->setJustification(juce::Justification::centred);
+            tempoTypein->setJustification(Justification::centred);
             tempoTypein->setVisible(addTempo);
         }
     }
@@ -202,11 +204,17 @@ void SurgeSynthEditor::parentHierarchyChanged()
 {
     for (auto *p = getParentComponent(); p != nullptr; p = p->getParentComponent())
     {
-        if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
+        if (auto dw = dynamic_cast<DocumentWindow *>(p))
         {
             std::ostringstream oss;
             oss << "Surge XT - " << Surge::Build::FullVersionStr;
             dw->setName(oss.str());
+
+            if (processor.wrapperType == AudioProcessor::wrapperType_Standalone)
+            {
+                dw->setColour(DocumentWindow::backgroundColourId,
+                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
+            }
         }
     }
 }
