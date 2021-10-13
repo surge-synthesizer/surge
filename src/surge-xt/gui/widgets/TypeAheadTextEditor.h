@@ -72,6 +72,8 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     void parentHierarchyChanged() override;
     void textEditorTextChanged(juce::TextEditor &editor) override;
 
+    void focusLost(FocusChangeType type) override;
+
     bool setToElementZeroOnReturn{false};
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
