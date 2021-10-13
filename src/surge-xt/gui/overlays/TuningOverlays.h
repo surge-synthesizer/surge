@@ -27,6 +27,7 @@
 #include <bitset>
 
 class SurgeStorage;
+class SurgeGUIEditor;
 
 namespace Surge
 {
@@ -47,7 +48,9 @@ class SCLKBMDisplay;
 class RadialScaleGraph;
 struct IntervalMatrix;
 
-struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsumingComponent
+struct TuningOverlay : public OverlayComponent,
+                       public Surge::GUI::SkinConsumingComponent,
+                       public juce::FileDragAndDropTarget
 {
     class TuningTextEditedListener
     {
@@ -62,8 +65,12 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
 
     void setStorage(SurgeStorage *s) { storage = s; }
 
+    SurgeGUIEditor *editor{nullptr};
+    void setEditor(SurgeGUIEditor *ed) { editor = ed; }
+
     void onNewSCLKBM(const std::string &scl, const std::string &kbm);
     void onToneChanged(int tone, double newCentsValue);
+    void onToneStringChanged(int tone, const std::string &newCentsValue);
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resized() override;
@@ -71,6 +78,11 @@ struct TuningOverlay : public OverlayComponent, public Surge::GUI::SkinConsuming
     void setMidiOnKeys(const std::bitset<128> &keys);
 
     void onSkinChanged() override;
+    void onTearOutChanged(bool isTornOut) override;
+
+    bool doDnD{false};
+    bool isInterestedInFileDrag(const juce::StringArray &files) override;
+    void filesDropped(const juce::StringArray &files, int x, int y) override;
 
     std::unique_ptr<TuningTableListBoxModel> tuningKeyboardTableModel;
     std::unique_ptr<juce::TableListBox> tuningKeyboardTable;

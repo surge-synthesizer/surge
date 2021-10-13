@@ -258,6 +258,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         auto pt = std::make_unique<Surge::Overlays::TuningOverlay>();
         pt->setStorage(&(this->synth->storage));
+        pt->setEditor(this);
         pt->setSkin(currentSkin, bitmapStore);
         pt->setTuning(synth->storage.currentTuning);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));

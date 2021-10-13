@@ -603,11 +603,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     bool useDevMenu = false;
-
+    SurgeSynthEditor *juceEditor{nullptr};
+    
   private:
     float blinktimer = 0;
     bool blinkstate = false;
-    SurgeSynthEditor *juceEditor{nullptr};
     int firstIdleCountdown = 0;
 
     juce::PopupMenu makeSmoothMenu(const juce::Point<int> &where,
