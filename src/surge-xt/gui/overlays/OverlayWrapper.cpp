@@ -181,6 +181,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
         t = oc->getEnclosingParentTitle();
+        oc->onTearOutChanged(true);
     }
     auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton |
                                                      juce::DocumentWindow::minimiseButton);
@@ -219,6 +220,11 @@ void OverlayWrapper::doTearIn()
     setBounds(locationBeforeTearOut);
     parentBeforeTearOut->addAndMakeVisible(*this);
     parentBeforeTearOut = nullptr;
+
+    if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+    {
+        oc->onTearOutChanged(false);
+    }
 }
 
 void OverlayWrapper::mouseDown(const juce::MouseEvent &e)

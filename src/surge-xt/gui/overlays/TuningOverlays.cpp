@@ -3,6 +3,8 @@
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
 #include "SurgeGUIUtils.h"
+#include "SurgeGUIEditor.h"
+#include "SurgeSynthEditor.h" // bit gross but so I can do DnD
 #include "fmt/core.h"
 #include <chrono>
 
@@ -226,18 +228,56 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
 class RadialScaleGraph;
 
-class RadialScaleGraph : public juce::Component
+class RadialScaleGraph : public juce::Component, juce::TextEditor::Listener
 {
   public:
     RadialScaleGraph()
     {
+        toneList = std::make_unique<juce::Viewport>();
+        toneInterior = std::make_unique<juce::Component>();
+        toneList->setViewedComponent(toneInterior.get(), false);
+        addAndMakeVisible(*toneList);
+
         setTuning(Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::tuneA69To(440)));
     }
 
     void setTuning(const Tunings::Tuning &t)
     {
+        int priorLen = tuning.scale.count;
         tuning = t;
         scale = t.scale;
+
+        if (toneEditors.empty() || priorLen != scale.count || toneEditors.size() != scale.count + 1)
+        {
+            toneInterior->removeAllChildren();
+            auto w = usedForSidebar - 15;
+            auto m = 2;
+            auto h = 24;
+            toneInterior->setSize(w, (scale.count + 1) * (h + m));
+            toneEditors.clear();
+            for (int i = 0; i < scale.count + 1; ++i)
+            {
+                auto te = std::make_unique<juce::TextEditor>("tone");
+                te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
+                te->setBounds(m, i * (h + m) + m, w - 2 * m, h);
+                te->setEnabled(i != 0);
+                te->addListener(this);
+                toneInterior->addAndMakeVisible(*te);
+                toneEditors.push_back(std::move(te));
+            }
+        }
+
+        toneEditors[0]->setText("-", juce::NotificationType::dontSendNotification);
+        for (int i = 0; i < scale.count; ++i)
+        {
+            auto td = fmt::format("{:.5f}", scale.tones[i].cents);
+            if (scale.tones[i].type == Tunings::Tone::kToneRatio)
+            {
+                td = fmt::format("{:d}/{:d}", scale.tones[i].ratio_n, scale.tones[i].ratio_d);
+            }
+            toneEditors[i + 1]->setText(td, juce::NotificationType::dontSendNotification);
+        }
+
         notesOn.clear();
         notesOn.resize(scale.count);
         for (int i = 0; i < scale.count; ++i)
@@ -245,6 +285,10 @@ class RadialScaleGraph : public juce::Component
         setNotesOn(bitset);
     }
 
+  private:
+    void textEditorReturnKeyPressed(TextEditor &editor) override;
+
+  public:
     virtual void paint(juce::Graphics &g) override;
     Tunings::Tuning tuning;
     Tunings::Scale scale;
@@ -254,6 +298,15 @@ class RadialScaleGraph : public juce::Component
 
     juce::AffineTransform screenTransform, screenTransformInverted;
     std::function<void(int index, double)> onToneChanged = [](int, double) {};
+    std::function<void(int index, const std::string &s)> onToneStringChanged =
+        [](int, const std::string &) {};
+    static constexpr int usedForSidebar = 140;
+
+    std::unique_ptr<juce::Viewport> toneList;
+    std::unique_ptr<juce::Component> toneInterior;
+    std::vector<std::unique_ptr<juce::TextEditor>> toneEditors;
+
+    void resized() override { toneList->setBounds(0, 0, usedForSidebar, getHeight()); }
 
     std::vector<bool> notesOn;
     std::bitset<128> bitset{0};
@@ -270,6 +323,24 @@ class RadialScaleGraph : public juce::Component
                 notesOn[tuning.scalePositionForMidiNote(i)] = true;
             }
         }
+
+        for (int i = 0; i < scale.count + 1; ++i)
+        {
+            auto ni = i % (scale.count);
+            if (notesOn[ni])
+            {
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
+                                          juce::Colour(0xFFaaaa50));
+            }
+            else
+            {
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
+                                          juce::Colours::black);
+            }
+            toneEditors[i]->repaint();
+        }
+        toneInterior->repaint();
+        toneList->repaint();
         repaint();
     }
     virtual void mouseMove(const juce::MouseEvent &e) override;
@@ -287,7 +358,7 @@ void RadialScaleGraph::paint(Graphics &g)
             notesOn[i] = 0;
     }
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-    int w = getWidth();
+    int w = getWidth() - usedForSidebar;
     int h = getHeight();
     float r = std::min(w, h) / 2.1;
     float xo = (w - 2 * r) / 2.0;
@@ -296,10 +367,12 @@ void RadialScaleGraph::paint(Graphics &g)
 
     g.saveState();
 
-    screenTransform = AffineTransform::scale(1.0 / (1.0 + outerRadiusExtension * 1.1))
+    screenTransform = AffineTransform()
+                          .scaled(1.0 / (1.0 + outerRadiusExtension * 1.1))
                           .scaled(r, -r)
                           .translated(r, r)
-                          .translated(xo, yo);
+                          .translated(xo, yo)
+                          .translated(usedForSidebar, 0);
     screenTransformInverted = screenTransform.inverted();
 
     g.addTransform(screenTransform);
@@ -462,6 +535,7 @@ struct IntervalMatrix : public juce::Component
         };
 
         distanceButton = std::make_unique<juce::ToggleButton>("Show Distance from Even");
+        distanceButton->setToggleState(false, juce::NotificationType::dontSendNotification);
         distanceButton->onClick = [this]() {
             intervalPainter->mode = IntervalPainter::DIST;
             intervalPainter->repaint();
@@ -490,7 +564,7 @@ struct IntervalMatrix : public juce::Component
         {
             INTERV,
             DIST
-        } mode;
+        } mode{INTERV};
         IntervalPainter(IntervalMatrix *m) : matrix(m) {}
 
         static constexpr int cellH{14}, cellW{35};
@@ -783,12 +857,23 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
+void RadialScaleGraph::textEditorReturnKeyPressed(TextEditor &editor)
+{
+    for (int i = 1; i <= scale.count; ++i)
+    {
+        if (&editor == toneEditors[i].get())
+        {
+            onToneStringChanged(i - 1, editor.getText().toStdString());
+        }
+    }
+}
+
 struct SCLKBMDisplay : public juce::Component,
                        Surge::GUI::SkinConsumingComponent,
                        juce::TextEditor::Listener,
                        juce::Button::Listener
 {
-    SCLKBMDisplay()
+    SCLKBMDisplay(TuningOverlay *o) : overlay(o)
     {
         scl = std::make_unique<juce::TextEditor>();
         scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
@@ -808,6 +893,14 @@ struct SCLKBMDisplay : public juce::Component,
         apply->addListener(this);
         apply->setEnabled(false);
         addAndMakeVisible(*apply);
+
+        exportButton = std::make_unique<juce::TextButton>("Export HTML", "Export HTML");
+        exportButton->addListener(this);
+        addAndMakeVisible(*exportButton);
+
+        libButton = std::make_unique<juce::TextButton>("Tuning Library", "Tuning Library");
+        libButton->addListener(this);
+        addAndMakeVisible(*libButton);
     }
     void setTuning(const Tunings::Tuning &t)
     {
@@ -824,18 +917,36 @@ struct SCLKBMDisplay : public juce::Component,
         scl->setBounds(2, 2, w / 2 - 4, h - 4);
         kbm->setBounds(w / 2 + 2, 2, w / 2 - 4, h - 4);
         apply->setBounds(w - 102, h + 2, 100, 18);
+        exportButton->setBounds(w - 204, h + 2, 100, 18);
+        libButton->setBounds(w - 306, h + 2, 100, 18);
     }
 
     void textEditorTextChanged(TextEditor &editor) override { apply->setEnabled(true); }
     void buttonClicked(Button *button) override
     {
-        onTextChanged(scl->getText().toStdString(), kbm->getText().toStdString());
+        if (button == apply.get())
+        {
+            onTextChanged(scl->getText().toStdString(), kbm->getText().toStdString());
+        }
+        if (button == exportButton.get())
+        {
+            if (overlay && overlay->editor)
+            {
+                overlay->editor->showHTML(overlay->editor->tuningToHtml());
+            }
+        }
+        if (button == libButton.get())
+        {
+            auto path = overlay->storage->datapath / "tuning_library";
+            Surge::GUI::openFileOrFolder(path);
+        }
     }
     std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
         [](auto a, auto b) {};
 
     std::unique_ptr<juce::TextEditor> scl, kbm;
-    std::unique_ptr<juce::Button> apply;
+    std::unique_ptr<juce::Button> apply, exportButton, libButton;
+    TuningOverlay *overlay{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SCLKBMDisplay);
 };
@@ -858,20 +969,22 @@ TuningOverlay::TuningOverlay()
     tabArea =
         std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
 
-    sclKbmDisplay = std::make_unique<SCLKBMDisplay>();
+    sclKbmDisplay = std::make_unique<SCLKBMDisplay>(this);
     sclKbmDisplay->onTextChanged = [this](const std::string &s, const std::string &k) {
         this->onNewSCLKBM(s, k);
     };
 
     radialScaleGraph = std::make_unique<RadialScaleGraph>();
     radialScaleGraph->onToneChanged = [this](int note, double d) { this->onToneChanged(note, d); };
+    radialScaleGraph->onToneStringChanged = [this](int note, const std::string &d) {
+        this->onToneStringChanged(note, d);
+    };
 
     intervalMatrix = std::make_unique<IntervalMatrix>(this);
 
     tabArea->addTab("SCL/KBM", juce::Colours::black, sclKbmDisplay.get(), false);
     tabArea->addTab("Radial", juce::Colours::black, radialScaleGraph.get(), false);
     tabArea->addTab("Interval", juce::Colours::black, intervalMatrix.get(), false);
-    tabArea->addTab("Generators", juce::Colours::black, new juce::Label("S"), true);
     addAndMakeVisible(*tabArea);
 }
 
@@ -903,6 +1016,23 @@ void TuningOverlay::onToneChanged(int tone, double newCentsValue)
         storage->currentScale.tones[tone].type = Tunings::Tone::kToneCents;
         storage->currentScale.tones[tone].cents = newCentsValue;
         recalculateScaleText();
+    }
+}
+
+void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringValue)
+{
+    if (storage)
+    {
+        try
+        {
+            auto parsed = Tunings::toneFromString(newStringValue);
+            storage->currentScale.tones[tone] = parsed;
+            recalculateScaleText();
+        }
+        catch (Tunings::TuningError &e)
+        {
+            storage->reportError(e.what(), "Tuning Tone Conversion");
+        }
     }
 }
 
@@ -976,6 +1106,23 @@ void TuningOverlay::onSkinChanged()
 {
     tuningKeyboardTableModel->setSkin(skin, associatedBitmapStore);
     tuningKeyboardTable->repaint();
+}
+
+void TuningOverlay::onTearOutChanged(bool isTornOut) { doDnD = isTornOut; }
+bool TuningOverlay::isInterestedInFileDrag(const StringArray &files)
+{
+    if (!doDnD)
+        return false;
+    if (editor)
+        return editor->juceEditor->isInterestedInFileDrag(files);
+    return false;
+}
+void TuningOverlay::filesDropped(const StringArray &files, int x, int y)
+{
+    if (!doDnD)
+        return;
+    if (editor)
+        editor->juceEditor->filesDropped(files, x, y);
 }
 
 } // namespace Overlays

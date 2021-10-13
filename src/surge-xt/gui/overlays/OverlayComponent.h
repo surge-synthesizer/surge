@@ -42,6 +42,7 @@ struct OverlayComponent : juce::Component
     bool canTearOut{false};
     void setCanTearOut(bool b) { canTearOut = b; }
     bool getCanTearOut() { return canTearOut; }
+    virtual void onTearOutChanged(bool isTornOut) {}
 
     std::pair<bool, Surge::Storage::DefaultKey> canMoveAround{false, Surge::Storage::nKeys};
     void setCanMoveAround(std::pair<bool, Surge::Storage::DefaultKey> b) { canMoveAround = b; }
