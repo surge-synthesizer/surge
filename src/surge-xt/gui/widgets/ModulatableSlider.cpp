@@ -161,11 +161,16 @@ void ModulatableSlider::paint(juce::Graphics &g)
     {
         juce::Graphics::ScopedSaveState gs(g);
 
+        float dLX = 0.f, dLY = 0.f;
+        if (orientation == ParamConfig::kVertical)
+            dLX = 1;
+        else
+            dLY = 1;
         g.addTransform(trayPosition);
         g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
-        g.drawLine(handleCX, handleCY, handleMX, handleMY, 2);
+        g.drawLine(handleCX + dLX, handleCY + dLY, handleMX + dLX, handleMY + dLY, 2);
         g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
-        g.drawLine(handleCX, handleCY, barNMX, barNMY, 2);
+        g.drawLine(handleCX + dLX, handleCY + dLY, barNMX + dLX, barNMY + dLY, 2);
     }
     // Draw the label
     if (drawLabel)
