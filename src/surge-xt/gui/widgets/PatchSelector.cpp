@@ -785,6 +785,7 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     isTypeaheadSearchOn = b;
     if (isTypeaheadSearchOn)
     {
+        storage->initializePatchDb();
         typeAhead->setJustification(juce::Justification::centred);
         typeAhead->setText(pname, juce::NotificationType::dontSendNotification);
         typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
