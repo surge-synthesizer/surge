@@ -87,6 +87,14 @@ struct TypeAheadListBox : public juce::ListBox
         }
         return ListBox::keyPressed(press);
     }
+
+    void focusLost(FocusChangeType cause) override
+    {
+        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
+        {
+            m->ta->focusLost(cause);
+        }
+    }
 };
 
 TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
@@ -219,6 +227,12 @@ void TypeAhead::colourChanged()
 }
 void TypeAhead::focusLost(juce::Component::FocusChangeType type)
 {
+    if (hasKeyboardFocus(true))
+        return;
+
+    if (lbox->hasKeyboardFocus(true))
+        return;
+
     lbox->setVisible(false);
     for (auto l : taList)
         l->typeaheadCanceled();
