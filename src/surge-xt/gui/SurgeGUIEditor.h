@@ -604,7 +604,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     bool useDevMenu = false;
     SurgeSynthEditor *juceEditor{nullptr};
-    
+
   private:
     float blinktimer = 0;
     bool blinkstate = false;

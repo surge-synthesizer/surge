@@ -225,7 +225,6 @@ void OverlayWrapper::doTearIn()
     {
         oc->onTearOutChanged(false);
     }
-
 }
 
 void OverlayWrapper::mouseDown(const juce::MouseEvent &e)
