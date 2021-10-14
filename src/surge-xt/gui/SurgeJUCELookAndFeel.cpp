@@ -22,26 +22,29 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 
+// here and only here we using namespace juce so I can copy and override stuff from v4 easily
+using namespace juce;
+
 void SurgeJUCELookAndFeel::onSkinChanged()
 {
     setColour(topWindowBorderId, skin->getColor(Colors::Dialog::Titlebar::Background));
-    setColour(tempoTypeinTextId, juce::Colours::black);
-    setColour(tempoTypeinHighlightId, juce::Colours::red);
+    setColour(tempoTypeinTextId, Colours::black);
+    setColour(tempoTypeinHighlightId, Colours::red);
 
-    setColour(juce::DocumentWindow::backgroundColourId, juce::Colour(48, 48, 48));
-    setColour(juce::TextButton::buttonColourId, juce::Colour(32, 32, 32));
-    setColour(juce::CaretComponent::caretColourId, skin->getColor(Colors::Dialog::Entry::Caret));
-    setColour(juce::TextEditor::backgroundColourId, juce::Colour(32, 32, 32));
-    setColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
-    setColour(juce::ListBox::backgroundColourId, juce::Colour(32, 32, 32));
-    setColour(juce::ScrollBar::thumbColourId, juce::Colour(212, 212, 212));
-    setColour(juce::ScrollBar::trackColourId, juce::Colour(128, 128, 128));
-    setColour(juce::Slider::thumbColourId, juce::Colour(212, 212, 212));
-    setColour(juce::Slider::trackColourId, juce::Colour(128, 128, 128));
-    setColour(juce::Slider::backgroundColourId, juce::Colour((juce::uint8)255, 255, 255, 20.f));
-    setColour(juce::ComboBox::backgroundColourId, juce::Colour(32, 32, 32));
-    setColour(juce::PopupMenu::backgroundColourId, juce::Colour(48, 48, 48));
-    setColour(juce::PopupMenu::highlightedBackgroundColourId, juce::Colour(96, 96, 96));
+    setColour(DocumentWindow::backgroundColourId, Colour(48, 48, 48));
+    setColour(TextButton::buttonColourId, Colour(32, 32, 32));
+    setColour(CaretComponent::caretColourId, skin->getColor(Colors::Dialog::Entry::Caret));
+    setColour(TextEditor::backgroundColourId, Colour(32, 32, 32));
+    setColour(ListBox::backgroundColourId, Colour(32, 32, 32));
+    setColour(ListBox::backgroundColourId, Colour(32, 32, 32));
+    setColour(ScrollBar::thumbColourId, Colour(212, 212, 212));
+    setColour(ScrollBar::trackColourId, Colour(128, 128, 128));
+    setColour(Slider::thumbColourId, Colour(212, 212, 212));
+    setColour(Slider::trackColourId, Colour(128, 128, 128));
+    setColour(Slider::backgroundColourId, Colour((uint8)255, 255, 255, 20.f));
+    setColour(ComboBox::backgroundColourId, Colour(32, 32, 32));
+    setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
+    setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
 
     setColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoBackgroundId,
               skin->getColor(Colors::Dialog::Background));
@@ -56,46 +59,46 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     setColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId,
               skin->getColor(Colors::Dialog::Entry::Text));
 
-    setColour(juce::MidiKeyboardComponent::textLabelColourId,
+    setColour(MidiKeyboardComponent::textLabelColourId,
               skin->getColor(Colors::VirtualKeyboard::Text));
-    setColour(juce::MidiKeyboardComponent::shadowColourId,
+    setColour(MidiKeyboardComponent::shadowColourId,
               skin->getColor(Colors::VirtualKeyboard::Shadow));
-    setColour(juce::MidiKeyboardComponent::blackNoteColourId,
+    setColour(MidiKeyboardComponent::blackNoteColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::Black));
-    setColour(juce::MidiKeyboardComponent::whiteNoteColourId,
+    setColour(MidiKeyboardComponent::whiteNoteColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::White));
-    setColour(juce::MidiKeyboardComponent::keySeparatorLineColourId,
+    setColour(MidiKeyboardComponent::keySeparatorLineColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::Separator));
-    setColour(juce::MidiKeyboardComponent::mouseOverKeyOverlayColourId,
+    setColour(MidiKeyboardComponent::mouseOverKeyOverlayColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::MouseOver));
-    setColour(juce::MidiKeyboardComponent::keyDownOverlayColourId,
+    setColour(MidiKeyboardComponent::keyDownOverlayColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::Pressed));
-    setColour(juce::MidiKeyboardComponent::upDownButtonArrowColourId,
+    setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
-    setColour(juce::MidiKeyboardComponent::upDownButtonArrowColourId,
+    setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));
 }
 
-void SurgeJUCELookAndFeel::drawLabel(juce::Graphics &graphics, juce::Label &label)
+void SurgeJUCELookAndFeel::drawLabel(Graphics &graphics, Label &label)
 {
     LookAndFeel_V4::drawLabel(graphics, label);
 }
 
-int SurgeJUCELookAndFeel::getTabButtonBestWidth(juce::TabBarButton &b, int d)
+int SurgeJUCELookAndFeel::getTabButtonBestWidth(TabBarButton &b, int d)
 {
     auto f = skin->getFont(Fonts::Widgets::TabButtonFont);
     auto r = f.getStringWidth(b.getButtonText()) + 20;
     return r;
 }
 
-void SurgeJUCELookAndFeel::drawTabButton(juce::TabBarButton &button, juce::Graphics &g,
-                                         bool isMouseOver, bool isMouseDown)
+void SurgeJUCELookAndFeel::drawTabButton(TabBarButton &button, Graphics &g, bool isMouseOver,
+                                         bool isMouseDown)
 {
     auto o = button.getTabbedButtonBar().getOrientation();
 
-    if (o != juce::TabbedButtonBar::TabsAtBottom)
+    if (o != TabbedButtonBar::TabsAtBottom)
     {
-        juce::LookAndFeel_V4::drawTabButton(button, g, isMouseOver, isMouseDown);
+        LookAndFeel_V4::drawTabButton(button, g, isMouseOver, isMouseDown);
         return;
     }
 
@@ -123,42 +126,41 @@ void SurgeJUCELookAndFeel::drawTabButton(juce::TabBarButton &button, juce::Graph
     g.setColour(textColor);
     auto f = skin->getFont(Fonts::Widgets::TabButtonFont);
     g.setFont(f);
-    g.drawText(button.getButtonText(), activeArea, juce::Justification::centred);
+    g.drawText(button.getButtonText(), activeArea, Justification::centred);
 }
 
-void SurgeJUCELookAndFeel::drawTextEditorOutline(juce::Graphics &g, int width, int height,
-                                                 juce::TextEditor &textEditor)
+void SurgeJUCELookAndFeel::drawTextEditorOutline(Graphics &g, int width, int height,
+                                                 TextEditor &textEditor)
 {
-    if (dynamic_cast<juce::AlertWindow *>(textEditor.getParentComponent()) == nullptr)
+    if (dynamic_cast<AlertWindow *>(textEditor.getParentComponent()) == nullptr)
     {
         if (textEditor.isEnabled())
         {
             if (textEditor.hasKeyboardFocus(true) && !textEditor.isReadOnly())
             {
-                g.setColour(textEditor.findColour(juce::TextEditor::focusedOutlineColourId));
+                g.setColour(textEditor.findColour(TextEditor::focusedOutlineColourId));
                 // This is the only change from V4; use a 1 rather than 2 here
                 g.drawRect(0, 0, width, height, 1);
             }
             else
             {
-                g.setColour(textEditor.findColour(juce::TextEditor::outlineColourId));
+                g.setColour(textEditor.findColour(TextEditor::outlineColourId));
                 g.drawRect(0, 0, width, height);
             }
         }
     }
 }
 
-void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(juce::DocumentWindow &window,
-                                                      juce::Graphics &g, int w, int h,
-                                                      int titleSpaceX, int titleSpaceY,
-                                                      const juce::Image *image, bool iconOnLeft)
+void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Graphics &g, int w,
+                                                      int h, int titleSpaceX, int titleSpaceY,
+                                                      const Image *image, bool iconOnLeft)
 {
     g.fillAll(skin->getColor(Colors::Dialog::Titlebar::Background));
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
 
     auto wt = window.getName();
 
-    juce::String surgeLabel = "Surge XT";
+    String surgeLabel = "Surge XT";
     auto surgeVersion = Surge::Build::FullVersionStr;
     auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14);
     auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14);
@@ -185,91 +187,91 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(juce::DocumentWindow &wind
         ic->drawAt(g, titleCenter - (titleTextWidth / 2) - 14 - textMargin, h / 2 - 7, 1.0);
     }
 
-    auto boxSurge = juce::Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);
+    auto boxSurge = Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);
     g.setFont(fontSurge);
-    g.drawText(surgeLabel, boxSurge, juce::Justification::centredLeft);
+    g.drawText(surgeLabel, boxSurge, Justification::centredLeft);
 
     auto boxVersion =
-        juce::Rectangle<int>(titleCenter - (titleTextWidth / 2) + sw + textMargin, 0, vw, h);
+        Rectangle<int>(titleCenter - (titleTextWidth / 2) + sw + textMargin, 0, vw, h);
     g.setFont(fontVersion);
-    g.drawText(surgeVersion, boxVersion, juce::Justification::centredLeft);
+    g.drawText(surgeVersion, boxVersion, Justification::centredLeft);
 }
 
-class SurgeJUCELookAndFeel_DocumentWindowButton : public juce::Button
+class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
 {
   public:
-    SurgeJUCELookAndFeel_DocumentWindowButton(const juce::String &name, juce::Colour c,
-                                              const juce::Path &normal, const juce::Path &toggled)
+    SurgeJUCELookAndFeel_DocumentWindowButton(const String &name, Colour c, const Path &normal,
+                                              const Path &toggled)
         : Button(name), colour(c), normalShape(normal), toggledShape(toggled)
     {
     }
 
-    void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+    void paintButton(Graphics &g, bool shouldDrawButtonAsHighlighted,
                      bool shouldDrawButtonAsDown) override
     {
         if (shouldDrawButtonAsHighlighted)
         {
-            g.setColour(juce::Colour(96, 96, 96));
+            g.setColour(Colour(96, 96, 96));
             g.fillAll();
         }
 
         g.setColour(colour);
         auto &p = getToggleState() ? toggledShape : normalShape;
 
-        auto reducedRect = juce::Justification(juce::Justification::centred)
-                               .appliedToRectangle(juce::Rectangle<int>(getHeight(), getHeight()),
-                                                   getLocalBounds())
-                               .toFloat()
-                               .reduced((float)getHeight() * 0.3f);
+        auto reducedRect =
+            Justification(Justification::centred)
+                .appliedToRectangle(Rectangle<int>(getHeight(), getHeight()), getLocalBounds())
+                .toFloat()
+                .reduced((float)getHeight() * 0.3f);
 
         g.fillPath(p, p.getTransformToScaleToFit(reducedRect, true));
     }
 
   private:
-    juce::Colour colour;
-    juce::Path normalShape, toggledShape;
+    Colour colour;
+    Path normalShape, toggledShape;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeJUCELookAndFeel_DocumentWindowButton)
 };
 
-juce::Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
+Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 {
-    juce::Path shape;
+    Path shape;
     auto crossThickness = 0.25f;
 
-    if (buttonType == juce::DocumentWindow::closeButton)
+    if (buttonType == DocumentWindow::closeButton)
     {
         shape.addLineSegment({0.0f, 0.0f, 1.0f, 1.0f}, crossThickness);
         shape.addLineSegment({1.0f, 0.0f, 0.0f, 1.0f}, crossThickness);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("close", juce::Colour(212, 64, 64),
-                                                             shape, shape);
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("close", Colour(212, 64, 64), shape,
+                                                             shape);
     }
 
-    if (buttonType == juce::DocumentWindow::minimiseButton)
+    if (buttonType == DocumentWindow::minimiseButton)
     {
         shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimise", juce::Colour(255, 212, 32),
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimise", Colour(255, 212, 32),
                                                              shape, shape);
     }
 
-    if (buttonType == juce::DocumentWindow::maximiseButton)
+    if (buttonType == DocumentWindow::maximiseButton)
     {
         shape.addLineSegment({0.5f, 0.0f, 0.5f, 1.0f}, crossThickness);
         shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
 
-        juce::Path fullscreenShape;
+        Path fullscreenShape;
         fullscreenShape.startNewSubPath(45.0f, 100.0f);
         fullscreenShape.lineTo(0.0f, 100.0f);
         fullscreenShape.lineTo(0.0f, 0.0f);
         fullscreenShape.lineTo(100.0f, 0.0f);
         fullscreenShape.lineTo(100.0f, 45.0f);
         fullscreenShape.addRectangle(45.0f, 45.0f, 100.0f, 100.0f);
-        juce::PathStrokeType(30.0f).createStrokedPath(fullscreenShape, fullscreenShape);
+        PathStrokeType(30.0f).createStrokedPath(fullscreenShape, fullscreenShape);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("maximise", juce::Colour(0xff0A830A),
-                                                             shape, fullscreenShape);
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("maximise", Colour(0xff0A830A), shape,
+                                                             fullscreenShape);
     }
 
     jassertfalse;
