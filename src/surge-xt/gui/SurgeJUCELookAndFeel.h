@@ -42,6 +42,8 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
         componentBgStart = 0x3700001,
         componentBgEnd,
 
+        topWindowBorderId,
+
         tempoBackgroundId,
         tempoLabelId,
 

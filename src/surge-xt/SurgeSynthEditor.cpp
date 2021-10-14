@@ -19,7 +19,8 @@
 #include <version.h>
 
 //==============================================================================
-SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p) : AudioProcessorEditor(&p), processor(p)
+SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
+    : juce::AudioProcessorEditor(&p), processor(p)
 {
     surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
 
@@ -207,6 +208,12 @@ void SurgeSynthEditor::parentHierarchyChanged()
             std::ostringstream oss;
             oss << "Surge XT - " << Surge::Build::FullVersionStr;
             dw->setName(oss.str());
+
+            if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+            {
+                dw->setColour(juce::DocumentWindow::backgroundColourId,
+                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
+            }
         }
     }
 }
