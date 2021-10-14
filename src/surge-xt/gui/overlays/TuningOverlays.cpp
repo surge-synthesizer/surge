@@ -8,8 +8,6 @@
 #include "fmt/core.h"
 #include <chrono>
 
-using namespace juce;
-
 namespace Surge
 {
 namespace Overlays
@@ -178,40 +176,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
     }
 
-    virtual void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &e) override
-    {
-        if (e.mods.isRightButtonDown())
-        {
-            rmbMenu->clear();
-            rmbMenu->addItem("Export to CSV", [this]() { this->exportToCSV(); });
-            rmbMenu->showMenuAsync(juce::PopupMenu::Options());
-        }
-    }
-
-    std::unique_ptr<juce::FileChooser> fileChooser;
-    virtual void exportToCSV()
-    {
-        fileChooser =
-            std::make_unique<juce::FileChooser>("Export CSV to...", juce::File(), "*.csv");
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this](const juce::FileChooser &chooser) {
-                auto f = chooser.getResult();
-                std::ostringstream csvStream;
-                csvStream << "Midi Note, Frequency, Log(Freq/8.17)\n";
-                for (int i = 0; i < 128; ++i)
-                    csvStream << i << ", " << std::fixed << std::setprecision(4)
-                              << tuning.frequencyForMidiNote(i) << ", " << std::fixed
-                              << std::setprecision(6) << tuning.logScaledFrequencyForMidiNote(i)
-                              << "\n";
-                if (!f.replaceWithText(csvStream.str()))
-                {
-                    juce::AlertWindow::showMessageBoxAsync(
-                        juce::AlertWindow::AlertIconType::WarningIcon, "Error exporting file",
-                        "An unknown error occured streaming CSV data to file", "OK");
-                }
-            });
-    }
+    virtual void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &e) override {}
 
     virtual void tuningUpdated(const Tunings::Tuning &newTuning)
     {
@@ -286,7 +251,7 @@ class RadialScaleGraph : public juce::Component, juce::TextEditor::Listener
     }
 
   private:
-    void textEditorReturnKeyPressed(TextEditor &editor) override;
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
 
   public:
     virtual void paint(juce::Graphics &g) override;
@@ -348,7 +313,7 @@ class RadialScaleGraph : public juce::Component, juce::TextEditor::Listener
     virtual void mouseDrag(const juce::MouseEvent &e) override;
 };
 
-void RadialScaleGraph::paint(Graphics &g)
+void RadialScaleGraph::paint(juce::Graphics &g)
 {
     if (notesOn.size() != scale.count)
     {
@@ -367,7 +332,7 @@ void RadialScaleGraph::paint(Graphics &g)
 
     g.saveState();
 
-    screenTransform = AffineTransform()
+    screenTransform = juce::AffineTransform()
                           .scaled(1.0 / (1.0 + outerRadiusExtension * 1.1))
                           .scaled(r, -r)
                           .translated(r, r)
@@ -409,10 +374,10 @@ void RadialScaleGraph::paint(Graphics &g)
             float pos = 1.0 * std::abs(i) / ndn;
             float cpos = std::max(0.f, pos);
 
-            g.setColour(Colour(110, 110, 120)
-                            .interpolatedWith(
-                                getLookAndFeel().findColour(ResizableWindow::backgroundColourId),
-                                cpos * 0.8));
+            g.setColour(juce::Colour(110, 110, 120)
+                            .interpolatedWith(getLookAndFeel().findColour(
+                                                  juce::ResizableWindow::backgroundColourId),
+                                              cpos * 0.8));
 
             float rad = 1.0 + dInterval * i;
             g.drawEllipse(-rad, -rad, 2 * rad, 2 * rad, 0.01);
@@ -422,34 +387,35 @@ void RadialScaleGraph::paint(Graphics &g)
     for (int i = 0; i < scale.count; ++i)
     {
         double frac = 1.0 * i / (scale.count);
-        double sx = std::sin(frac * 2.0 * MathConstants<double>::pi);
-        double cx = std::cos(frac * 2.0 * MathConstants<double>::pi);
+        double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
+        double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
         if (notesOn[i])
-            g.setColour(Colour(255, 255, 255));
+            g.setColour(juce::Colour(255, 255, 255));
         else
-            g.setColour(Colour(110, 110, 120));
+            g.setColour(juce::Colour(110, 110, 120));
         g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
                    0.01);
 
         g.saveState();
-        g.addTransform(AffineTransform::rotation((-frac + 0.25) * 2.0 * MathConstants<double>::pi));
-        g.addTransform(AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
-        g.addTransform(AffineTransform::rotation(MathConstants<double>::pi * 0.5));
-        g.addTransform(AffineTransform::scale(-1.0, 1.0));
+        g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
+                                                       juce::MathConstants<double>::pi));
+        g.addTransform(juce::AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
+        g.addTransform(juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
+        g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
 
         if (notesOn[i])
-            g.setColour(Colour(255, 255, 255));
+            g.setColour(juce::Colour(255, 255, 255));
         else
-            g.setColour(Colour(200, 200, 240));
-        Rectangle<float> textPos(0, -0.1, 0.1, 0.1);
+            g.setColour(juce::Colour(200, 200, 240));
+        juce::Rectangle<float> textPos(0, -0.1, 0.1, 0.1);
         g.setFont(0.1);
-        g.drawText(juce::String(i), textPos, Justification::centred, 1);
+        g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
         g.restoreState();
     }
 
     // Draw the ring at 1.0
-    g.setColour(Colour(255, 255, 255));
+    g.setColour(juce::Colour(255, 255, 255));
     g.drawEllipse(-1, -1, 2, 2, 0.01);
 
     // Then draw ellipses for each note
@@ -458,8 +424,8 @@ void RadialScaleGraph::paint(Graphics &g)
     for (int i = 1; i <= scale.count; ++i)
     {
         double frac = 1.0 * i / (scale.count);
-        double sx = std::sin(frac * 2.0 * MathConstants<double>::pi);
-        double cx = std::cos(frac * 2.0 * MathConstants<double>::pi);
+        double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
+        double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
         auto t = scale.tones[i - 1];
         auto c = t.cents;
@@ -471,22 +437,22 @@ void RadialScaleGraph::paint(Graphics &g)
 
         if (notesOn[i])
         {
-            g.setColour(Colour(255, 255, 255));
+            g.setColour(juce::Colour(255, 255, 255));
             g.drawLine(sx, cx, rx * sx, rx * cx, 0.03);
         }
 
-        Colour drawColour(200, 200, 200);
+        juce::Colour drawColour(200, 200, 200);
 
         // FIXME - this colormap is bad
         if (rx < 0.99)
         {
             // use a blue here
-            drawColour = Colour(200 * (1.0 - 0.6 * rx), 200 * (1.0 - 0.6 * rx), 200);
+            drawColour = juce::Colour(200 * (1.0 - 0.6 * rx), 200 * (1.0 - 0.6 * rx), 200);
         }
         else if (rx > 1.01)
         {
             // Use a yellow here
-            drawColour = Colour(200, 200, 200 * (rx - 1.0));
+            drawColour = juce::Colour(200, 200, 200 * (rx - 1.0));
         }
 
         if (hotSpotIndex == i - 1)
@@ -505,7 +471,7 @@ void RadialScaleGraph::paint(Graphics &g)
 
         if (notesOn[i % scale.count])
         {
-            g.setColour(Colour(255, 255, 255));
+            g.setColour(juce::Colour(255, 255, 255));
             g.drawEllipse(x0, y0, dx, dy, 0.02);
         }
 
@@ -513,7 +479,7 @@ void RadialScaleGraph::paint(Graphics &g)
         dy += y0;
         screenTransform.transformPoint(x0, y0);
         screenTransform.transformPoint(dx, dy);
-        screenHotSpots.push_back(Rectangle<float>(x0, dy, dx - x0, y0 - dy));
+        screenHotSpots.push_back(juce::Rectangle<float>(x0, dy, dx - x0, y0 - dy));
     }
 
     g.restoreState();
@@ -857,7 +823,7 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
-void RadialScaleGraph::textEditorReturnKeyPressed(TextEditor &editor)
+void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
     for (int i = 1; i <= scale.count; ++i)
     {
@@ -921,8 +887,8 @@ struct SCLKBMDisplay : public juce::Component,
         libButton->setBounds(w - 306, h + 2, 100, 18);
     }
 
-    void textEditorTextChanged(TextEditor &editor) override { apply->setEnabled(true); }
-    void buttonClicked(Button *button) override
+    void textEditorTextChanged(juce::TextEditor &editor) override { apply->setEnabled(true); }
+    void buttonClicked(juce::Button *button) override
     {
         if (button == apply.get())
         {
@@ -1109,7 +1075,7 @@ void TuningOverlay::onSkinChanged()
 }
 
 void TuningOverlay::onTearOutChanged(bool isTornOut) { doDnD = isTornOut; }
-bool TuningOverlay::isInterestedInFileDrag(const StringArray &files)
+bool TuningOverlay::isInterestedInFileDrag(const juce::StringArray &files)
 {
     if (!doDnD)
         return false;
@@ -1117,7 +1083,7 @@ bool TuningOverlay::isInterestedInFileDrag(const StringArray &files)
         return editor->juceEditor->isInterestedInFileDrag(files);
     return false;
 }
-void TuningOverlay::filesDropped(const StringArray &files, int x, int y)
+void TuningOverlay::filesDropped(const juce::StringArray &files, int x, int y)
 {
     if (!doDnD)
         return;
