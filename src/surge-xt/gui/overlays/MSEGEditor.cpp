@@ -2738,8 +2738,10 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
             canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
 
             canvas->modelChanged(0, false);
+            canvas->repaint();
         }
 
+        repaint();
         break;
     }
     case tag_loop_mode:
@@ -2747,8 +2749,11 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         int m = floor((val * 2) + 0.1) + 1;
         ms->loopMode = (MSEGStorage::LoopMode)m;
         if (canvas)
+        {
             canvas->modelChanged();
-
+            canvas->repaint();
+        }
+        repaint();
         break;
     }
     case tag_segment_movement_mode:
@@ -2763,7 +2768,7 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
             canvas->recalcHotZones(juce::Point<int>(0, 0));
             canvas->repaint();
         }
-
+        repaint();
         break;
     }
     case tag_horizontal_snap:
