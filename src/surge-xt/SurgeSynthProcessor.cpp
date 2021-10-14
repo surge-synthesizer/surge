@@ -15,15 +15,13 @@
 #include "version.h"
 #include "CPUFeatures.h"
 
-using namespace juce;
-
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
-    : AudioProcessor(BusesProperties()
-                         .withOutput("Output", AudioChannelSet::stereo(), true)
-                         .withInput("Sidechain", AudioChannelSet::stereo(), true)
-                         .withOutput("Scene A", AudioChannelSet::stereo(), false)
-                         .withOutput("Scene B", AudioChannelSet::stereo(), false))
+    : juce::AudioProcessor(BusesProperties()
+                               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+                               .withInput("Sidechain", juce::AudioChannelSet::stereo(), true)
+                               .withOutput("Scene A", juce::AudioChannelSet::stereo(), false)
+                               .withOutput("Scene B", juce::AudioChannelSet::stereo(), false))
 {
     std::cout << "SurgeXT " << getWrapperTypeDescription(wrapperType) << "\n"
               << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
@@ -35,8 +33,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     std::cout << "  - Data         : " << surge->storage.datapath << "\n"
               << "  - User Data    : " << surge->storage.userDataPath << std::endl;
 
-    auto parent = std::make_unique<AudioProcessorParameterGroup>("Root", "Root", "|");
-    auto macroG = std::make_unique<AudioProcessorParameterGroup>("macros", "Macros", "|");
+    auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("Root", "Root", "|");
+    auto macroG = std::make_unique<juce::AudioProcessorParameterGroup>("macros", "Macros", "|");
     for (int mn = 0; mn < n_customcontrollers; ++mn)
     {
         auto nm = std::make_unique<SurgeMacroToJuceParamAdapter>(surge.get(), mn);
@@ -62,7 +60,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         auto clump = cv.first;
         std::string id = std::string("SRG_GRP_") + std::to_string(clump);
         auto name = paramClumpName(clump);
-        auto subg = std::make_unique<AudioProcessorParameterGroup>(id, name, "|");
+        auto subg = std::make_unique<juce::AudioProcessorParameterGroup>(id, name, "|");
         for (auto &p : cv.second)
         {
             subg->addChild(std::move(p));
@@ -96,7 +94,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 SurgeSynthProcessor::~SurgeSynthProcessor() {}
 
 //==============================================================================
-const String SurgeSynthProcessor::getName() const { return JucePlugin_Name; }
+const juce::String SurgeSynthProcessor::getName() const { return JucePlugin_Name; }
 
 bool SurgeSynthProcessor::acceptsMidi() const { return false; }
 
@@ -137,7 +135,7 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
 #endif
 }
 
-const String SurgeSynthProcessor::getProgramName(int index)
+const juce::String SurgeSynthProcessor::getProgramName(int index)
 {
 #ifdef SURGE_JUCE_PRESETS
     if (index == 0)
@@ -155,7 +153,7 @@ const String SurgeSynthProcessor::getProgramName(int index)
 #endif
 }
 
-void SurgeSynthProcessor::changeProgramName(int index, const String &newName) {}
+void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 //==============================================================================
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
@@ -175,10 +173,10 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
     auto mocs = layouts.getMainOutputChannelSet();
     auto mics = layouts.getMainInputChannelSet();
 
-    auto outputValid = (mocs == AudioChannelSet::stereo()) || (mocs == AudioChannelSet::mono()) ||
-                       (mocs.isDisabled());
-    auto inputValid = (mics == AudioChannelSet::stereo()) || (mics == AudioChannelSet::mono()) ||
-                      (mics.isDisabled());
+    auto outputValid = (mocs == juce::AudioChannelSet::stereo()) ||
+                       (mocs == juce::AudioChannelSet::mono()) || (mocs.isDisabled());
+    auto inputValid = (mics == juce::AudioChannelSet::stereo()) ||
+                      (mics == juce::AudioChannelSet::mono()) || (mics.isDisabled());
 
     /*
      * Check the 6 output shape
@@ -190,7 +188,8 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
     return outputValid && inputValid && sceneOut;
 }
 
-void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages)
+void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                       juce::MidiBuffer &midiMessages)
 {
     auto fpuguard = Surge::CPUFeatures::FPUStateGuard();
 
@@ -330,7 +329,7 @@ void SurgeSynthProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &m
 
 void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
 {
-    MidiMessage m = it.getMessage();
+    auto m = it.getMessage();
     const int ch = m.getChannel() - 1;
     juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
     midiKeyboardState.processNextMidiEvent(m);
@@ -377,10 +376,13 @@ bool SurgeSynthProcessor::hasEditor() const
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor *SurgeSynthProcessor::createEditor() { return new SurgeSynthEditor(*this); }
+juce::AudioProcessorEditor *SurgeSynthProcessor::createEditor()
+{
+    return new SurgeSynthEditor(*this);
+}
 
 //==============================================================================
-void SurgeSynthProcessor::getStateInformation(MemoryBlock &destData)
+void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     surge->populateDawExtraState();
     auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
@@ -458,14 +460,14 @@ std::string SurgeSynthProcessor::paramClumpName(int clumpid)
     return "";
 }
 
-void SurgeSynthProcessor::handleNoteOn(MidiKeyboardState *source, int midiChannel,
+void SurgeSynthProcessor::handleNoteOn(juce::MidiKeyboardState *source, int midiChannel,
                                        int midiNoteNumber, float velocity)
 {
     if (!isAddingFromMidi)
         midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), true));
 }
 
-void SurgeSynthProcessor::handleNoteOff(MidiKeyboardState *source, int midiChannel,
+void SurgeSynthProcessor::handleNoteOff(juce::MidiKeyboardState *source, int midiChannel,
                                         int midiNoteNumber, float velocity)
 {
     if (!isAddingFromMidi)
@@ -474,4 +476,4 @@ void SurgeSynthProcessor::handleNoteOff(MidiKeyboardState *source, int midiChann
 
 //==============================================================================
 // This creates new instances of the plugin..
-AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
