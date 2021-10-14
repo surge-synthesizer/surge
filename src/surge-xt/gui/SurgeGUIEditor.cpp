@@ -3659,19 +3659,15 @@ void SurgeGUIEditor::reloadFromSkin()
         showOverlay(SurgeGUIEditor::WAVESHAPER_ANALYZER);
     }
 
-    /* TODO note for @baconpaul: make everything SkinConsumingComponent and fix the API
-    // update colors of any active overlays
-    for (int i = NO_EDITOR; i < n_overlay_tags; i++)
+    for (const auto &ol : juceOverlays)
     {
-        auto component =
-            dynamic_cast<Surge::GUI::SkinConsumingComponent *>(getOverlayIfOpen((OverlayTags)i));
+        auto component = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(ol.second.get());
 
         if (component)
         {
             component->setSkin(currentSkin, bitmapStore);
         }
     }
-    */
 
     synth->refresh_editor = true;
     scanJuceSkinComponents = true;
