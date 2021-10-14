@@ -786,14 +786,28 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     if (isTypeaheadSearchOn)
     {
         storage->initializePatchDb();
+        bool enable = true;
+        auto txt = pname;
+        if (storage->patchDB->numberOfJobsOutstanding() > 0)
+        {
+            enable = false;
+            txt = "Updating Patch DB: " +
+                  std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " jobs";
+        }
         typeAhead->setJustification(juce::Justification::centred);
-        typeAhead->setText(pname, juce::NotificationType::dontSendNotification);
+        typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
         typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
 
         typeAhead->setVisible(true);
+        typeAhead->setEnabled(enable);
 
         typeAhead->grabKeyboardFocus();
         typeAhead->selectAll();
+
+        if (!enable)
+        {
+            juce::Timer::callAfterDelay(1000 / 30, [this]() { this->enableTypeAheadIfReady(); });
+        }
     }
     else
     {
@@ -801,6 +815,33 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     }
     repaint();
     return;
+}
+
+void PatchSelector::enableTypeAheadIfReady()
+{
+    if (!isTypeaheadSearchOn)
+        return;
+
+    bool enable = true;
+    auto txt = pname;
+    if (storage->patchDB->numberOfJobsOutstanding() > 0)
+    {
+        enable = false;
+        txt = "Updating Patch DB: " + std::to_string(storage->patchDB->numberOfJobsOutstanding()) +
+              " jobs";
+    }
+    typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
+    typeAhead->setEnabled(enable);
+
+    if (enable)
+    {
+        typeAhead->grabKeyboardFocus();
+        typeAhead->selectAll();
+    }
+    else
+    {
+        juce::Timer::callAfterDelay(1000 / 30, [this]() { this->enableTypeAheadIfReady(); });
+    }
 }
 
 #if SURGE_JUCE_ACCESSIBLE

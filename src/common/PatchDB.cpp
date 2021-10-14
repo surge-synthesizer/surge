@@ -290,6 +290,13 @@ CREATE TABLE IF NOT EXISTS Favorites (
         void go(WriterWorker &w) override { w.setFavorite(path, value); }
     };
 
+    struct EnQDelete : public EnQAble
+    {
+        int id;
+        EnQDelete(int i) : id(i) {}
+        void go(WriterWorker &w) override { w.erasePatch(id); }
+    };
+
     struct EnQCategory : public EnQAble
     {
         std::string name;
@@ -795,6 +802,26 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
     }
 
+    void erasePatch(int id)
+    {
+        try
+        {
+            auto there = SQL::Statement(dbh, "DELETE FROM Patches WHERE id=?");
+            there.bind(1, id);
+            there.step();
+            there.finalize();
+
+            auto feat = SQL::Statement(dbh, "DELETE FROM PatchFeature where patch_id=?");
+            feat.bind(1, id);
+            feat.step();
+            feat.finalize();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+        }
+    }
+
     void addDebug(const std::string &m)
     {
         try
@@ -1162,6 +1189,13 @@ void PatchDB::setUserFavorite(const std::string &path, bool isIt)
     prepareForWrites();
     worker->enqueueWorkItem(new WriterWorker::EnQFavorite(path, isIt));
 }
+
+void PatchDB::erasePatchByID(int id)
+{
+    prepareForWrites();
+    worker->enqueueWorkItem(new WriterWorker::EnQDelete(id));
+}
+
 std::vector<std::string> PatchDB::readUserFavorites()
 {
     auto conn = worker->getReadOnlyConn(false);
@@ -1196,6 +1230,35 @@ std::vector<std::string> PatchDB::readUserFavorites()
         storage->reportError(e.what(), "PatchDB - Loading Favorites");
     }
     return std::vector<std::string>();
+}
+
+std::unordered_map<std::string, std::pair<int, int64_t>>
+PatchDB::readAllPatchPathsWithIdAndModTime()
+{
+    std::unordered_map<std::string, std::pair<int, int64_t>> res;
+
+    auto conn = worker->getReadOnlyConn(false);
+    if (!conn)
+        return res;
+
+    try
+    {
+        auto st = SQL::Statement(conn, "select id, path, last_write_time from Patches;");
+        while (st.step())
+        {
+            auto id = st.col_int(0);
+            auto pt = st.col_str(1);
+            auto lw = st.col_int64(2);
+            res[pt] = std::make_pair(id, lw);
+        }
+        st.finalize();
+    }
+    catch (SQL::Exception &e)
+    {
+        // This error really doesn't matter most of the time
+        storage->reportError(e.what(), "PatchDB - Loading Favorites");
+    }
+    return res;
 }
 
 int PatchDB::numberOfJobsOutstanding()
