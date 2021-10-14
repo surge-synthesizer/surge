@@ -304,5 +304,14 @@ OverlayComponent *OverlayWrapper::getPrimaryChildAsOverlayComponent()
     return dynamic_cast<OverlayComponent *>(primaryChild.get());
 }
 
+void OverlayWrapper::onSkinChanged()
+{
+    auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(primaryChild.get());
+    if (skc)
+    {
+        skc->setSkin(skin, associatedBitmapStore);
+    }
+}
+
 } // namespace Overlays
 } // namespace Surge

@@ -95,6 +95,8 @@ struct OverlayWrapper : public juce::Component,
 
     std::unique_ptr<juce::DocumentWindow> tearOutParent;
 
+    void onSkinChanged() override;
+
     OverlayComponent *getPrimaryChildAsOverlayComponent();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
