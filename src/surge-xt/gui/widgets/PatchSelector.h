@@ -129,6 +129,7 @@ struct PatchSelector : public juce::Component,
 
     bool isTypeaheadSearchOn{false};
     void toggleTypeAheadSearch(bool);
+    void enableTypeAheadIfReady();
     std::unique_ptr<Surge::Widgets::TypeAhead> typeAhead;
     std::unique_ptr<PatchDBTypeAheadProvider> patchDbProvider;
 

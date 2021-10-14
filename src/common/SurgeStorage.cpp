@@ -623,6 +623,25 @@ void SurgeStorage::initializePatchDb()
         return;
 
     patchDBInitialized = true;
+
+    auto awid = patchDB->readAllPatchPathsWithIdAndModTime();
+    std::vector<Patch> addThese;
+    for (const auto p : patch_list)
+    {
+        if (awid.find(p.path.u8string()) == awid.end())
+        {
+            addThese.push_back(p);
+        }
+        else
+        {
+            if (awid[p.path.u8string()].second < p.lastModTime)
+            {
+                addThese.push_back(p);
+            }
+            awid.erase(p.path.u8string());
+        }
+    }
+
     patchDB->prepareForWrites();
 
     auto catToType = [this](int q) {
@@ -660,10 +679,15 @@ void SurgeStorage::initializePatchDb()
         }
     }
 
-    for (auto p : patch_list)
+    for (auto p : addThese)
     {
         auto t = catToType(p.category);
         patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name, t);
+    }
+
+    for (auto q : awid)
+    {
+        patchDB->erasePatchByID(q.second.first);
     }
 }
 
@@ -728,6 +752,10 @@ void SurgeStorage::refresh_patchlist()
     }
     for (auto &p : patch_list)
     {
+        auto qtime = fs::last_write_time(p.path);
+        p.lastModTime =
+            std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
+
         auto ps = p.path.u8string();
         if (favSet.find(ps) != favSet.end())
             p.isFavorite = true;

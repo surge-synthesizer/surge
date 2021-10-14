@@ -868,6 +868,7 @@ struct Patch
 {
     std::string name;
     fs::path path;
+    uint64_t lastModTime;
     int category;
     int order;
     bool isFavorite;

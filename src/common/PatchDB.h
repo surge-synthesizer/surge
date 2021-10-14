@@ -18,6 +18,7 @@
 #include <thread>
 #include <vector>
 #include <deque>
+#include <unordered_map>
 #include <condition_variable>
 #include "filesystem/import.h"
 #include <iostream>
@@ -108,6 +109,7 @@ struct PatchDB
     void addSubCategory(const std::string &name, const std::string &parent, CatType type);
     void addDebugMessage(const std::string &debug);
     void setUserFavorite(const std::string &path, bool isIt);
+    void erasePatchByID(int id);
 
     int numberOfJobsOutstanding();
 
@@ -116,6 +118,8 @@ struct PatchDB
     std::vector<std::string> readAllFeatureValueString(const std::string &feature);
     std::vector<int> readAllFeatureValueInt(const std::string &feature);
     std::vector<std::string> readUserFavorites();
+
+    std::unordered_map<std::string, std::pair<int, int64_t>> readAllPatchPathsWithIdAndModTime();
 
     // How the query string works
     static std::string sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t);
