@@ -13,23 +13,29 @@ project(LuaJIT C ASM)
 #
 
 if(APPLE AND NOT CMAKE_CROSSCOMPILING)
-  message( STATUS "Custom build for macOSX of luajit in fat mode" )
+  message(STATUS "Custom build for macOSX of luajit in fat mode")
   SET(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/LuaJIT)
   SET(LUAJIT_BLD ${CMAKE_CURRENT_BINARY_DIR}/luajit)
 
   add_library(luajit-5.1 INTERFACE)
-  target_link_libraries (luajit-5.1 INTERFACE ${LUAJIT_BLD}/bin/libluajit.a )
+  target_link_libraries(luajit-5.1 INTERFACE ${LUAJIT_BLD}/bin/libluajit.a)
   target_include_directories(luajit-5.1 INTERFACE ${LUAJIT_DIR}/src)
 
-  if( NOT EXISTS ${LUAJIT_BLD} )
-    message( STATUS "Building luajit at cmake time on macos right now" )
-    message( STATUS "./build-fat-luajit.sh \"${LUAJIT_BLD}\" in ${CMAKE_CURRENT_LIST_DIR}")
+  if(NOT EXISTS ${LUAJIT_BLD})
+    message(STATUS "Building luajit at cmake time on macos right now")
+    message(STATUS "./build-fat-luajit.sh \"${LUAJIT_BLD}\" in ${CMAKE_CURRENT_LIST_DIR}")
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-            COMMAND ./build-fat-luajit.sh "${LUAJIT_BLD}"
-            OUTPUT_VARIABLE O
-            ERROR_VARIABLE E)
+      COMMAND ./build-fat-luajit.sh "${LUAJIT_BLD}"
+      RESULT_VARIABLE LUAJIT_MAC_RESULT
+      OUTPUT_VARIABLE O
+      ERROR_VARIABLE E)
+    if(${LUAJIT_MAC_RESULT} GREATER 0)
+      message(WARNING ${O})
+      message(WARNING ${E})
+      message(FATAL_ERROR "MacOS Failed to build a universal luajit. Run 'build-fat-luajit' for more")
+    endif()
     file(GLOB_RECURSE LUACONTENTS "${LUAJIT_BLD}/bin/*")
-    message( STATUS ${LUACONTENTS})
+    message(STATUS ${LUACONTENTS})
   endif()
 else()
   include(CMakeParseArguments)
@@ -71,7 +77,7 @@ else()
       add_custom_command(TARGET ${name}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
         COMMAND ${LUAJIT_HOSTCC} -m${LUAJIT_BITNESS} -o ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${name} ${ARG_COMPILE_DEFINITIONS} ${ARG_INCLUDE_DIRECTORIES} ${ARG_SOURCES} ${ARG_LIBS}
-      )
+        )
     else()
       add_executable(${name} ${ARG_SOURCES})
       get_property(generatorIsMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -97,7 +103,7 @@ else()
         RESULT_VARIABLE status
         OUTPUT_QUIET
         ERROR_QUIET
-      )
+        )
       if(status AND NOT status EQUAL 0)
         set(status 0)
       else()
@@ -115,7 +121,7 @@ else()
     ${LUAJIT_DIR}
     ${LUAJIT_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
-  )
+    )
 
   OPTION(WITH_AMALG "Build eveything in one shot (needs memory)" ON)
 
@@ -164,14 +170,14 @@ else()
     ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
   ENDIF()
 
-  IF ( WIN32 AND NOT CYGWIN )
-    SET ( LJVM_MODE peobj )
-  elseIF ( APPLE )
-    SET ( CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000 ${CMAKE_EXE_LINKER_FLAGS}" )
-    SET ( LJVM_MODE machasm )
-  else ()
-    SET ( LJVM_MODE elfasm )
-  endIF ()
+  IF(WIN32 AND NOT CYGWIN)
+    SET(LJVM_MODE peobj)
+  elseIF(APPLE)
+    SET(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000 ${CMAKE_EXE_LINKER_FLAGS}")
+    SET(LJVM_MODE machasm)
+  else()
+    SET(LJVM_MODE elfasm)
+  endIF()
 
   IF(NOT WIN32)
     FIND_LIBRARY(DL_LIBRARY "dl")
@@ -192,17 +198,17 @@ else()
   ENDIF(NOT WIN32)
 
   check_library_exists(m sin "" LUA_USE_LIBM)
-  IF ( LUA_USE_LIBM )
-    list ( APPEND LIBS m )
-  endIF ()
+  IF(LUA_USE_LIBM)
+    list(APPEND LIBS m)
+  endIF()
 
-  IF ( CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-    list ( APPEND LIBS pthread c++abi )
-  endIF ()
+  IF(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+    list(APPEND LIBS pthread c++abi)
+  endIF()
 
   ## SOURCES
   MACRO(LJ_TEST_ARCH stuff)
-    MESSAGE( STATUS "Checking ${stuff} ${CMAKE_REQUIRED_INCLUDES}")
+    MESSAGE(STATUS "Checking ${stuff} ${CMAKE_REQUIRED_INCLUDES}")
     CHECK_C_SOURCE_COMPILES("
   #undef ${stuff}
   #include \"lj_arch.h\"
@@ -304,9 +310,9 @@ else()
   IF(MINILUA_USE_LIBM)
     set(MINILUA_LIBS m)
   ENDIF()
-  if (LINUX_ON_ARM)
-    message(STATUS "Forcing minilua libm on LINUX_ON_ARM" )
-    list( APPEND MINILUA_LIBS m )
+  if(LINUX_ON_ARM)
+    message(STATUS "Forcing minilua libm on LINUX_ON_ARM")
+    list(APPEND MINILUA_LIBS m)
   endif()
 
   luajit_add_host_executable(minilua
@@ -314,12 +320,12 @@ else()
     COMPILE_DEFINITIONS ${TARGET_ARCH}
     INCLUDE_DIRECTORIES ${CMAKE_REQUIRED_INCLUDES}
     LIBS ${MINILUA_LIBS}
-  )
+    )
 
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/minilua ${LUAJIT_DIR}/dynasm/dynasm.lua ${DASM_FLAGS} -o ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h ${LUAJIT_DIR}/src/vm_${DASM_ARCH}.dasc
     DEPENDS ${LUAJIT_DIR}/dynasm/dynasm.lua minilua
-  )
+    )
 
   ## Source Lists
   SET(SRC_LJLIB
@@ -334,45 +340,45 @@ else()
     ${LUAJIT_DIR}/src/lib_debug.c
     ${LUAJIT_DIR}/src/lib_jit.c
     ${LUAJIT_DIR}/src/lib_ffi.c
-  )
+    )
 
   SET(SRC_LIBAUX
     ${LUAJIT_DIR}/src/lib_aux.c
     ${LUAJIT_DIR}/src/lib_init.c
-  )
-  file (GLOB_RECURSE SRC_LJCORE   "${LUAJIT_DIR}/src/lj_*.c")
-  list (APPEND SRC_LJCORE ${SRC_LJLIB} ${SRC_LIBAUX})
-  file (GLOB_RECURSE SRC_BUILDVM  "${LUAJIT_DIR}/src/host/buildvm*.c")
-  list (APPEND SRC_BUILDVM ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h)
+    )
+  file(GLOB_RECURSE SRC_LJCORE "${LUAJIT_DIR}/src/lj_*.c")
+  list(APPEND SRC_LJCORE ${SRC_LJLIB} ${SRC_LIBAUX})
+  file(GLOB_RECURSE SRC_BUILDVM "${LUAJIT_DIR}/src/host/buildvm*.c")
+  list(APPEND SRC_BUILDVM ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h)
 
   ## GENERATE
   luajit_add_host_executable(buildvm
     SOURCES ${SRC_BUILDVM}
     COMPILE_DEFINITIONS ${TARGET_ARCH}
     INCLUDE_DIRECTORIES ${CMAKE_REQUIRED_INCLUDES}
-  )
+    )
 
   macro(add_buildvm_target _target _mode)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_target}
       COMMAND ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS buildvm ${ARGN}
-    )
+      )
   endmacro(add_buildvm_target)
 
-  IF (WIN32)
-    add_buildvm_target ( lj_vm.obj peobj )
-    SET (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.obj)
-  else ()
-    add_buildvm_target ( lj_vm.S ${LJVM_MODE} )
-    SET (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.S)
-  endIF ()
-  add_buildvm_target ( lj_ffdef.h   ffdef   ${SRC_LJLIB} )
-  add_buildvm_target ( lj_bcdef.h  bcdef  ${SRC_LJLIB} )
-  add_buildvm_target ( lj_folddef.h folddef ${LUAJIT_DIR}/src/lj_opt_fold.c )
-  add_buildvm_target ( lj_recdef.h  recdef  ${SRC_LJLIB} )
-  add_buildvm_target ( lj_libdef.h  libdef  ${SRC_LJLIB} )
-  add_buildvm_target ( vmdef.lua  vmdef  ${SRC_LJLIB} )
+  IF(WIN32)
+    add_buildvm_target(lj_vm.obj peobj)
+    SET(LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.obj)
+  else()
+    add_buildvm_target(lj_vm.S ${LJVM_MODE})
+    SET(LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.S)
+  endIF()
+  add_buildvm_target(lj_ffdef.h ffdef ${SRC_LJLIB})
+  add_buildvm_target(lj_bcdef.h bcdef ${SRC_LJLIB})
+  add_buildvm_target(lj_folddef.h folddef ${LUAJIT_DIR}/src/lj_opt_fold.c)
+  add_buildvm_target(lj_recdef.h recdef ${SRC_LJLIB})
+  add_buildvm_target(lj_libdef.h libdef ${SRC_LJLIB})
+  add_buildvm_target(vmdef.lua vmdef ${SRC_LJLIB})
 
   SET(DEPS
     ${LJ_VM_SRC}
@@ -392,23 +398,23 @@ else()
   )
 
   IF(WITH_SHARED_LUA)
-      IF(WITH_AMALG)
-      add_library(luajit-5.1 SHARED ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
-      ELSE()
-      add_library(luajit-5.1 SHARED ${SRC_LJCORE} ${DEPS} )
-      ENDIF()
-      SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES OUTPUT_NAME "lua51")
+    IF(WITH_AMALG)
+      add_library(luajit-5.1 SHARED ${LUAJIT_DIR}/src/ljamalg.c ${DEPS})
+    ELSE()
+      add_library(luajit-5.1 SHARED ${SRC_LJCORE} ${DEPS})
+    ENDIF()
+    SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES OUTPUT_NAME "lua51")
   ELSE()
-      IF(WITH_AMALG)
-      add_library(luajit-5.1 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS} )
-      ELSE()
-      add_library(luajit-5.1 STATIC ${SRC_LJCORE} ${DEPS} )
-      ENDIF()
-      SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES
+    IF(WITH_AMALG)
+      add_library(luajit-5.1 STATIC ${LUAJIT_DIR}/src/ljamalg.c ${DEPS})
+    ELSE()
+      add_library(luajit-5.1 STATIC ${SRC_LJCORE} ${DEPS})
+    ENDIF()
+    SET_TARGET_PROPERTIES(luajit-5.1 PROPERTIES
       PREFIX "lib" IMPORT_PREFIX "lib" OUTPUT_NAME "luajit")
   ENDIF()
 
-  target_link_libraries (luajit-5.1 ${LIBS} )
+  target_link_libraries(luajit-5.1 ${LIBS})
   target_include_directories(luajit-5.1 PUBLIC ${LUAJIT_DIR}/src)
 
   IF(WIN32)
@@ -455,8 +461,8 @@ else()
           DEPENDS luajit
           COMMAND luajit
           ARGS -bg
-            ${source_file}
-            ${generated_file}
+          ${source_file}
+          ${generated_file}
           COMMENT "Building Luajitted ${source_file}: ${generated_file}"
         )
 
