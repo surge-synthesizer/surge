@@ -36,6 +36,7 @@ struct TypeAheadDataProvider
     virtual int getDisplayedRows() { return 9; }
     virtual void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
                                bool rowIsSelected);
+    virtual void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) {}
 };
 
 struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener

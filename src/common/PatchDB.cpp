@@ -635,27 +635,22 @@ CREATE TABLE IF NOT EXISTS Favorites (
             const auto path(p.path.u8string());
             exists.bind(1, path);
 
+            // Drop all the ones with this path independent of time if I'm adding
             while (exists.step())
             {
                 auto id = exists.col_int(0);
                 auto t = exists.col_int64(1);
-                if (t < qtimeInt || (t == qtimeInt && patchLoaded))
-                {
-                    dropIds.push_back(id);
-                }
-                if (t >= qtimeInt)
-                    patchLoaded = true;
+                dropIds.push_back(id);
             }
 
             exists.finalize();
 
             if (!dropIds.empty())
             {
-                auto drop = SQL::Statement(
-                    dbh, "DELETE FROM Patches WHERE ID=?1; DELETE FROM PatchFeature WHERE ID=?1");
+                auto drop = SQL::Statement(dbh, "DELETE FROM Patches WHERE ID=?1;");
                 for (auto did : dropIds)
                 {
-                    drop.bindi64(1, did);
+                    drop.bind(1, did);
                     while (drop.step())
                     {
                     }
@@ -664,6 +659,19 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 }
 
                 drop.finalize();
+
+                auto dropF = SQL::Statement(dbh, "DELETE FROM PatchFeature WHERE PATCH_ID=?1;");
+                for (auto did : dropIds)
+                {
+                    dropF.bind(1, did);
+                    while (dropF.step())
+                    {
+                    }
+                    dropF.clearBindings();
+                    dropF.reset();
+                }
+
+                dropF.finalize();
             }
         }
         catch (const SQL::Exception &e)
@@ -980,7 +988,11 @@ PatchDB::PatchDB(SurgeStorage *s) : storage(s) { initialize(); }
 
 PatchDB::~PatchDB() = default;
 
-void PatchDB::initialize() { worker = std::make_unique<WriterWorker>(storage); }
+void PatchDB::initialize()
+{
+    if (!worker)
+        worker = std::make_unique<WriterWorker>(storage);
+}
 void PatchDB::prepareForWrites() { worker->openForWrite(); }
 
 void PatchDB::considerFXPForLoad(const fs::path &fxp, const std::string &name,
@@ -1311,7 +1323,7 @@ PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &
                         "'AUTHOR' and " +
                         sqlWhereClauseFor(t) + " ORDER BY p.category_type, p.category, p.name";
 
-    std::cout << "QUERY IS \n" << query << "\n";
+    // std::cout << "QUERY IS \n" << query << "\n";
     try
     {
         auto conn = worker->getReadOnlyConn(false);

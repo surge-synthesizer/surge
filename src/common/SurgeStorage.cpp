@@ -617,10 +617,13 @@ void SurgeStorage::createUserDirectory()
     }
 }
 
-void SurgeStorage::initializePatchDb()
+void SurgeStorage::initializePatchDb(bool force)
 {
-    if (patchDBInitialized)
+    if (patchDBInitialized && !force)
         return;
+
+    if (force)
+        std::cout << "FORCING PATCH RESCAN" << std::endl;
 
     patchDBInitialized = true;
 
@@ -681,6 +684,7 @@ void SurgeStorage::initializePatchDb()
 
     for (auto p : addThese)
     {
+        std::cout << "Adding " << p.name << " " << std::this_thread::get_id() << std::endl;
         auto t = catToType(p.category);
         patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name, t);
     }

@@ -586,6 +586,7 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename)
 
     // refresh list
     storage.refresh_patchlist();
+    storage.initializePatchDb(true);
     refresh_editor = true;
     midiprogramshavechanged = true;
 }

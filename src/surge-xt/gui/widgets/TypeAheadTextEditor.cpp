@@ -66,6 +66,11 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
                              provider->textBoxValueForIndex(search[lastRowSelected]));
     }
     void escapeKeyPressed() { ta->dismissWithoutValue(); }
+
+    void listBoxItemClicked(int row, const juce::MouseEvent &event) override
+    {
+        returnKeyPressed(row);
+    }
 };
 
 struct TypeAheadListBox : public juce::ListBox
@@ -75,6 +80,13 @@ struct TypeAheadListBox : public juce::ListBox
         setOutlineThickness(1);
     }
 
+    void paintOverChildren(juce::Graphics &graphics) override
+    {
+        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
+        {
+            m->provider->paintOverChildren(graphics, getLocalBounds());
+        }
+    }
     bool keyPressed(const juce::KeyPress &press) override
     {
         if (press.isKeyCode(juce::KeyPress::escapeKey))
@@ -115,7 +127,8 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s)
 {
     setText(s, juce::NotificationType::dontSendNotification);
     lbox->setVisible(false);
-    grabKeyboardFocus();
+    if (isVisible())
+        grabKeyboardFocus();
     for (auto l : taList)
         l->itemSelected(providerIdx);
 }

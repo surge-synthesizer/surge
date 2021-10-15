@@ -158,7 +158,6 @@ std::unique_ptr<PatchDBQueryParser::Token> PatchDBQueryParser::parseQuery(const 
     //  pegtl::parse<grammar::combo_op, pegtl::nothing, pegtl::tracer>(tin);
 
     pegtl::string_input<> in(q, "Provided Expression");
-    std::cout << "\nINPUT '" << q << "'" << std::endl;
 
     try
     {
@@ -169,7 +168,7 @@ std::unique_ptr<PatchDBQueryParser::Token> PatchDBQueryParser::parseQuery(const 
             if (root->children.size() == 1)
             {
                 auto t = treeToToken(*(root->children[0]));
-                printParseTree(std::cout, t);
+                // printParseTree(std::cout, t);
                 return t;
             }
 
@@ -177,7 +176,6 @@ std::unique_ptr<PatchDBQueryParser::Token> PatchDBQueryParser::parseQuery(const 
         }
         else
         {
-            std::cout << "PARSE FAILED" << std::endl;
             return std::make_unique<Token>();
         }
     }
