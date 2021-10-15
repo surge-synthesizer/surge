@@ -22,8 +22,7 @@
 #include "UserDefaults.h"
 #include "widgets/MenuCustomComponents.h"
 #include "PatchDB.h"
-
-#define HIDE_PATCH_BROWSER false
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -88,6 +87,15 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
         }
         g.setColour(divider);
         g.drawLine(4, height, width - 4, height, 1);
+    }
+
+    void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) override
+    {
+        auto q = bounds.reduced(2, 2);
+        g.setColour(rowText.withAlpha(0.5f));
+        auto txt = fmt::format("{:d}", lastSearchResult.size());
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+        g.drawText(txt, q, juce::Justification::topLeft);
     }
 };
 
@@ -452,7 +460,7 @@ void PatchSelector::showClassicMenu(bool single_category)
         });
     }
 
-#if HIDE_PATCH_BROWSER == false
+#if INCLUDE_PATCH_BROWSER
     contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
