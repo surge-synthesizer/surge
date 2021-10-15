@@ -48,12 +48,34 @@ class alignas(16) SurgeVoice
 
     bool process_block(QuadFilterChainState &, int);
     void GetQFB(); // Get the updated registers from the QuadFB
-    void legato(int key, int velocity, char detune);
+    void legato(char channel, int key, int velocity, char detune);
     void switch_toggled();
     void freeAllocatedElements();
     int osctype[n_oscs];
     SurgeVoiceState state;
     int age, age_release;
+
+    inline static int channelToOctaveShift(char channel) {
+        if (channel > 7)
+        {
+            return (channel - 16);
+        }
+        else
+        {
+            return channel;
+        }
+    }
+
+    inline static char octaveShiftToChannel(int shift) {
+        if (shift < 0)
+        {
+            return (16 - shift);
+        }
+        else
+        {
+            return shift;
+        }
+    }
 
     /*
     ** Given a note0 and an oscilator this returns the appropriate note.

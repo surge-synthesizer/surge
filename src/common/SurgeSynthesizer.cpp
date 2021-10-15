@@ -743,7 +743,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 SurgeVoice *v = *iter;
                 if ((v->state.scene_id == scene) && (v->state.gate))
                 {
-                    v->legato(key, velocity, detune);
+                    v->legato(channel, key, velocity, detune);
                     found_one = true;
                     if (mpeEnabled)
                     {
@@ -915,6 +915,8 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
     }
 }
 
+
+
 void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char key, char velocity)
 {
     channelState[channel].keyState[key].keystate = 0;
@@ -969,6 +971,11 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                 ** In normal MIDI mode, that means scanning the keystate of our
                 ** channel looking for another note.
                 **
+                ** In channel-per-octave mode, it's similar to normal MIDI mode
+                ** except we have to search all channels for the note to legato
+                ** to, and the lowest/highest key needs to be determined
+                ** taking the channel into consideration.
+                **
                 ** In MPE mode, where each note is per channel, that means
                 ** scanning all non-main channels rather than ourself for the
                 ** highest note
@@ -983,46 +990,108 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     auto priorityMode =
                         storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
-                    // v->release();
                     if (!mpeEnabled)
                     {
-                        int highest = -1, lowest = 128, latest = -1;
-                        int64_t lt = 0;
-                        for (k = hikey; k >= lowkey && !do_switch; k--) // search downwards
+
+                                                if (storage.mapChannelToOctave) // In this mode, we want to search all channels
                         {
-                            if (channelState[channel].keyState[k].keystate)
-                            {
-                                if (k >= highest)
-                                    highest = k;
-                                if (k <= lowest)
-                                    lowest = k;
-                                if (channelState[channel].keyState[k].voiceOrder >= lt)
+                            int s;
+                            int highest = -1, lowest = 128, latest = -1;
+                            signed char highestShift = -9, lowestShift = 8, latestShift = 0;
+                            int64_t lt = 0;
+                            for (int c = 0; c < 16; c++) { // scan all channels
+                                s = SurgeVoice::channelToOctaveShift(c);
+                                for (k = hikey; k >= lowkey; k--) // search downwards
                                 {
-                                    latest = k;
-                                    lt = channelState[channel].keyState[k].voiceOrder;
+                                    if (channelState[c].keyState[k].keystate)
+                                    {
+                                        if (s > highestShift || (s == highestShift && k >= highest)) {
+                                            highest = k;
+                                            highestShift = s;
+                                        }
+                                        if (s < lowestShift || (s == lowestShift && k <= lowest)){
+                                            lowest = k;
+                                            lowestShift = s;
+                                        }
+                                        if (channelState[c].keyState[k].voiceOrder >= lt)
+                                        {
+                                            latest = k;
+                                            latestShift = s;
+                                            lt = channelState[c].keyState[k].voiceOrder;
+                                        }
+                                    }
                                 }
                             }
-                        }
+                            cout << "highest: " << highest << " shift: " << (int) highestShift << "\n";
+                            cout << "lowest: " << lowest << " shift: " << (int) lowestShift << "\n";
+                            cout << "latest: " << latest << " shift: " << (int) latestShift << "\n";
 
-                        switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
-                        {
-                        case ALWAYS_HIGHEST:
-                        case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
-                            k = highest >= 0 ? highest : -1;
-                            break;
-                        case ALWAYS_LATEST:
-                            k = latest >= 0 ? latest : -1;
-                            break;
-                        case ALWAYS_LOWEST:
-                            k = lowest <= 127 ? lowest : -1;
-                            break;
-                        }
+                            switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                            {
+                            case ALWAYS_HIGHEST:
+                            case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                                k = highest >= 0 ? highest : -1;
+                                s = highestShift;
+                                break;
+                            case ALWAYS_LATEST:
+                                k = latest >= 0 ? latest : -1;
+                                s = latestShift;
+                                break;
+                            case ALWAYS_LOWEST:
+                                k = lowest <= 127 ? lowest : -1;
+                                s = lowestShift;
+                                break;
+                            }
 
-                        if (k >= 0)
+                            if (k >= 0)
+                            {
+                                do_switch = true;
+                                activateVoiceKey = k;
+                                activateVoiceChannel = SurgeVoice::octaveShiftToChannel(s);
+                            }
+
+                        }
+                        else
                         {
-                            do_switch = true;
-                            activateVoiceKey = k;
-                            activateVoiceChannel = channel;
+
+                            int highest = -1, lowest = 128, latest = -1;
+                            int64_t lt = 0;
+                            for (k = hikey; k >= lowkey && !do_switch; k--) // search downwards
+                            {
+                                if (channelState[channel].keyState[k].keystate)
+                                {
+                                    if (k >= highest)
+                                        highest = k;
+                                    if (k <= lowest)
+                                        lowest = k;
+                                    if (channelState[channel].keyState[k].voiceOrder >= lt)
+                                    {
+                                        latest = k;
+                                        lt = channelState[channel].keyState[k].voiceOrder;
+                                    }
+                                }
+                            }
+
+                            switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                            {
+                            case ALWAYS_HIGHEST:
+                            case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                                k = highest >= 0 ? highest : -1;
+                                break;
+                            case ALWAYS_LATEST:
+                                k = latest >= 0 ? latest : -1;
+                                break;
+                            case ALWAYS_LOWEST:
+                                k = lowest <= 127 ? lowest : -1;
+                                break;
+                            }
+
+                            if (k >= 0)
+                            {
+                                do_switch = true;
+                                activateVoiceKey = k;
+                                activateVoiceChannel = channel;
+                            }
                         }
                     }
                     else
@@ -1126,45 +1195,106 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     */
                     if (!mpeEnabled)
                     {
-                        int highest = -1, lowest = 128, latest = -1;
-                        int64_t lt = 0;
-                        for (k = hikey; k >= lowkey; k--) // search downwards
+
+                        if (storage.mapChannelToOctave) // In this mode, we want to search all channels
                         {
-                            if (k != key && channelState[channel].keyState[k].keystate)
-                            {
-                                if (k >= highest)
-                                    highest = k;
-                                if (k <= lowest)
-                                    lowest = k;
-                                if (channelState[channel].keyState[k].voiceOrder >= lt)
+                            int s;
+                            int highest = -1, lowest = 128, latest = -1;
+                            signed char highestShift = -9, lowestShift = 8, latestShift = 0;
+                            int64_t lt = 0;
+                            for (int c = 0; c < 16; c++) { // scan all channels
+                                s = SurgeVoice::channelToOctaveShift(c);
+                                for (k = hikey; k >= lowkey; k--) // search downwards
                                 {
-                                    latest = k;
-                                    lt = channelState[channel].keyState[k].voiceOrder;
+                                    if (channelState[c].keyState[k].keystate)
+                                    {
+                                        if (s > highestShift || (s == highestShift && k >= highest)) {
+                                            highest = k;
+                                            highestShift = s;
+                                        }
+                                        if (s < lowestShift || (s == lowestShift && k <= lowest)){
+                                            lowest = k;
+                                            lowestShift = s;
+                                        }
+                                        if (channelState[c].keyState[k].voiceOrder >= lt)
+                                        {
+                                            latest = k;
+                                            latestShift = s;
+                                            lt = channelState[c].keyState[k].voiceOrder;
+                                        }
+                                    }
                                 }
                             }
-                        }
+                            cout << "highest: " << highest << " shift: " << (int) highestShift << "\n";
+                            cout << "lowest: " << lowest << " shift: " << (int) lowestShift << "\n";
+                            cout << "latest: " << latest << " shift: " << (int) latestShift << "\n";
 
-                        switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
-                        {
-                        case ALWAYS_HIGHEST:
-                        case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
-                            k = highest >= 0 ? highest : -1;
-                            break;
-                        case ALWAYS_LATEST:
-                            k = latest >= 0 ? latest : -1;
-                            break;
-                        case ALWAYS_LOWEST:
-                            k = lowest <= 127 ? lowest : -1;
-                            break;
-                        }
+                            switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                            {
+                            case ALWAYS_HIGHEST:
+                            case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                                k = highest >= 0 ? highest : -1;
+                                s = highestShift;
+                                break;
+                            case ALWAYS_LATEST:
+                                k = latest >= 0 ? latest : -1;
+                                s = latestShift;
+                                break;
+                            case ALWAYS_LOWEST:
+                                k = lowest <= 127 ? lowest : -1;
+                                s = lowestShift;
+                                break;
+                            }
 
-                        if (k >= 0)
+                            if (k >= 0)
+                            {
+                                v->legato(SurgeVoice::octaveShiftToChannel(s), k, velocity, channelState[channel].keyState[k].lastdetune);
+                                do_release = false;
+                            }
+
+                        }
+                        else
                         {
-                            v->legato(k, velocity, channelState[channel].keyState[k].lastdetune);
-                            do_release = false;
+                            int highest = -1, lowest = 128, latest = -1;
+                            int64_t lt = 0;
+                            for (k = hikey; k >= lowkey; k--) // search downwards
+                            {
+                                if (k != key && channelState[channel].keyState[k].keystate)
+                                {
+                                    if (k >= highest)
+                                        highest = k;
+                                    if (k <= lowest)
+                                        lowest = k;
+                                    if (channelState[channel].keyState[k].voiceOrder >= lt)
+                                    {
+                                        latest = k;
+                                        lt = channelState[channel].keyState[k].voiceOrder;
+                                    }
+                                }
+                            }
+
+                            switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                            {
+                            case ALWAYS_HIGHEST:
+                            case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                                k = highest >= 0 ? highest : -1;
+                                break;
+                            case ALWAYS_LATEST:
+                                k = latest >= 0 ? latest : -1;
+                                break;
+                            case ALWAYS_LOWEST:
+                                k = lowest <= 127 ? lowest : -1;
+                                break;
+                            }
+
+                            if (k >= 0)
+                            {
+                                v->legato(channel, k, velocity, channelState[channel].keyState[k].lastdetune);
+                                do_release = false;
+                            }
                         }
                     }
-                    else
+                    else // MPE
                     {
                         int highest = -1, lowest = 128, latest = -1;
                         int hichan, lowchan, latechan;
@@ -1218,7 +1348,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                         if (k >= 0)
                         {
-                            v->legato(k, velocity, channelState[kchan].keyState[k].lastdetune);
+                            v->legato(channel, k, velocity, channelState[kchan].keyState[k].lastdetune);
                             do_release = false;
                             // See the comment above at the other _st legato spot
                             v->state.channel = kchan;

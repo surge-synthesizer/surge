@@ -73,18 +73,8 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
 
     if (storage->mapChannelToOctave)
     {
-        float shift;
-        if (channel > 7)
-        {
-            shift = channel - 16;
-        }
-        else
-        {
-            shift = channel;
-        }
-        res += 12 * shift;
+        res += 12 * (float) SurgeVoice::channelToOctaveShift(channel);
     }
-
     return res;
 }
 
@@ -285,8 +275,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
 SurgeVoice::~SurgeVoice() {}
 
-void SurgeVoice::legato(int key, int velocity, char detune)
+void SurgeVoice::legato(char channel, int key, int velocity, char detune)
 {
+    if (storage->mapChannelToOctave) state.channel = channel;
     if (state.portaphase > 1)
         state.portasrc_key = state.getPitch(storage);
     else
@@ -305,8 +296,9 @@ void SurgeVoice::legato(int key, int velocity, char detune)
             phase = glide_exp(state.portaphase);
             break;
         }
-
+        cout << "legato portasrc_key before: " << state.portasrc_key << "\n";
         state.portasrc_key = ((1 - phase) * state.portasrc_key + phase * state.getPitch(storage));
+        cout << "legato portasrc_key after: " << state.portasrc_key << "\n";
 
         if (scene->portamento.porta_gliss) // quantize portamento to keys
             state.pkey = floor(state.pkey + 0.5);
