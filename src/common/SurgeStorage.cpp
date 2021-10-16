@@ -622,9 +622,6 @@ void SurgeStorage::initializePatchDb(bool force)
     if (patchDBInitialized && !force)
         return;
 
-    if (force)
-        std::cout << "FORCING PATCH RESCAN" << std::endl;
-
     patchDBInitialized = true;
 
     auto awid = patchDB->readAllPatchPathsWithIdAndModTime();
@@ -684,7 +681,6 @@ void SurgeStorage::initializePatchDb(bool force)
 
     for (auto p : addThese)
     {
-        std::cout << "Adding " << p.name << " " << std::this_thread::get_id() << std::endl;
         auto t = catToType(p.category);
         patchDB->considerFXPForLoad(p.path, p.name, patch_category[p.category].name, t);
     }
