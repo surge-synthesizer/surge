@@ -16,8 +16,8 @@ surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 surge_add_lib_subdirectory(LuaJitLib)
 
-set(PEGTL_BUILD_TESTS OFF)
-set(PEGTL_BUILD_EXAMPLES OFF)
+set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
+set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
 surge_add_lib_subdirectory(PEGTL)
 
 juce_add_binary_data(surge-common-binary
