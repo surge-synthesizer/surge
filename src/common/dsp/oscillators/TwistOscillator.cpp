@@ -278,6 +278,15 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
 {
 #if SAMPLERATE_LANCZOS
     lancRes = std::make_unique<LanczosResampler>(48000, dsamplerate_os);
+    srcstate = nullptr;
+#else
+    int error;
+    srcstate = src_new(SRC_SINC_FASTEST, 2, &error);
+    // srcstate = src_new(SRC_LINEAR, 2, &error);
+    if (error != 0)
+    {
+        srcstate = nullptr;
+    }
 #endif
     voice = std::make_unique<plaits::Voice>();
     shared_buffer = new char[16384];
@@ -286,15 +295,8 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
     patch = std::make_unique<plaits::Patch>();
     mod = std::make_unique<plaits::Modulations>();
 
-    int error;
-    srcstate = src_new(SRC_SINC_FASTEST, 2, &error);
-    // srcstate = src_new(SRC_LINEAR, 2, &error);
-    if (error != 0)
-    {
-        srcstate = nullptr;
-    }
-
     // FM downsampling with a linear interpolator is absolutely fine
+    int error;
     fmdownsamplestate = src_new(SRC_LINEAR, 1, &error);
     if (error != 0)
     {
@@ -361,8 +363,10 @@ template <bool FM, bool throwaway>
 void TwistOscillator::process_block_internal(float pitch, float drift, bool stereo, float FMdepth,
                                              int throwawayBlocks)
 {
+#if SAMPLERATE_SRC
     if (!srcstate)
         return;
+#endif
 
     if (FM && !fmdownsamplestate)
         return;
