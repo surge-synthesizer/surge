@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+#include "SurgeMemoryPools.h"
 
 using namespace std;
 
@@ -417,6 +418,8 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
         setParameter01(storage.getPatch().scene[sc].f2_cutoff_is_offset.id,
                        storage.getPatch().scene[sc].f2_cutoff_is_offset.get_value_f01());
     }
+
+    storage.memoryPools->resetAllPools(&storage);
 
     halt_engine = false;
     patch_loaded = true;

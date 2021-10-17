@@ -37,6 +37,7 @@
  */
 
 #include "StringOscillator.h"
+#include "SurgeMemoryPools.h"
 
 int stringosc_excitations_count() { return 15; }
 
@@ -80,10 +81,40 @@ std::string stringosc_excitation_name(int i)
     return "Unknown";
 }
 
-StringOscillator::~StringOscillator() = default;
+StringOscillator::~StringOscillator()
+{
+    if (storage && !ownDelayLines)
+    {
+        storage->memoryPools->stringDelayLines.returnItem(delayLine[0]);
+        storage->memoryPools->stringDelayLines.returnItem(delayLine[1]);
+    }
+    else
+    {
+        if (delayLine[0])
+            delete delayLine[0];
+        if (delayLine[1])
+            delete delayLine[1];
+    }
+};
 
 void StringOscillator::init(float pitch, bool is_display, bool nzi)
 {
+    // fixme - alloc in is_display but for now just deal with the race
+    // delayLine[0] = std::make_unique<SSESincDelayLine<16384>>();
+    // delayLine[1] = std::make_unique<SSESincDelayLine<16384>>();
+    if (is_display)
+    {
+        ownDelayLines = true;
+        delayLine[0] = new SSESincDelayLine<16384>();
+        delayLine[1] = new SSESincDelayLine<16384>();
+    }
+    else
+    {
+        ownDelayLines = false;
+        delayLine[0] = storage->memoryPools->stringDelayLines.getItem();
+        delayLine[1] = storage->memoryPools->stringDelayLines.getItem();
+    }
+
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
 
     id_exciterlvl = oscdata->p[str_exciter_level].param_id_in_scene;

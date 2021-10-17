@@ -4,6 +4,7 @@
 #include "HeadlessUtils.h"
 #include "BiquadFilter.h"
 #include "QuadFilterUnit.h"
+#include "MemoryPool.h"
 
 #include "catch2/catch2.hpp"
 
@@ -77,5 +78,66 @@ TEST_CASE("QFU is Aligned", "[infra]")
             }
             delete[] f;
         }
+    }
+}
+
+// A is just a test index to separate the calsses
+template <int A> struct CountAlloc
+{
+    CountAlloc()
+    {
+        alloc++;
+        ct++;
+    }
+    ~CountAlloc() { ct--; }
+    static int ct, alloc;
+};
+template <int A> int CountAlloc<A>::ct{0};
+template <int A> int CountAlloc<A>::alloc{0};
+
+TEST_CASE("Memory Pool Works", "[infra]")
+{
+    SECTION("Lots of random gets and returns")
+    {
+        {
+            auto pool = std::make_unique<Surge::Memory::MemoryPool<CountAlloc<1>, 32, 4, 500>>();
+            std::deque<CountAlloc<1> *> tmp;
+            for (int i = 0; i < 100; ++i)
+            {
+                tmp.push_back(pool->getItem());
+            }
+
+            for (int i = 0; i < 100; ++i)
+            {
+                auto q = tmp.front();
+                tmp.pop_front();
+                pool->returnItem(q);
+            }
+        }
+        REQUIRE(CountAlloc<1>::alloc == 100);
+        REQUIRE(CountAlloc<1>::ct == 0);
+    }
+
+    SECTION("ReSize up")
+    {
+        {
+            auto pool = std::make_unique<Surge::Memory::MemoryPool<CountAlloc<2>, 32, 4, 500>>();
+            pool->setupPoolToSize(180);
+        }
+        REQUIRE(CountAlloc<2>::alloc == 180);
+        REQUIRE(CountAlloc<2>::ct == 0);
+    }
+
+    SECTION("ReSize up and ReAlloc down")
+    {
+        {
+            auto pool = std::make_unique<Surge::Memory::MemoryPool<CountAlloc<3>, 32, 4, 500>>();
+            pool->setupPoolToSize(160);
+            REQUIRE(CountAlloc<3>::ct == 160);
+            pool->returnToPreAllocSize();
+            REQUIRE(CountAlloc<3>::ct == 32);
+        }
+        REQUIRE(CountAlloc<3>::alloc == 160);
+        REQUIRE(CountAlloc<3>::ct == 0);
     }
 }

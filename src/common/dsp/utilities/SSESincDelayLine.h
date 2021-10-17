@@ -32,7 +32,7 @@ struct SSESincDelayLine
     float buffer alignas(16)[COMB_SIZE + FIRipol_N];
     int wp = 0;
 
-    SSESincDelayLine() { memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float)); }
+    SSESincDelayLine() { clear(); }
 
     inline void write(float f)
     {
@@ -80,7 +80,11 @@ struct SSESincDelayLine
         return buffer[RP] * (1 - frac) + buffer[RPP] * frac;
     }
 
-    inline void clear() { memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float)); }
+    inline void clear()
+    {
+        memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float));
+        wp = 0;
+    }
 };
 
 #endif // SURGE_SSESINCDELAYLINE_H

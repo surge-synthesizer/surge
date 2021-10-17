@@ -909,6 +909,10 @@ namespace Storage
 struct FxUserPreset;
 struct ModulatorPreset;
 } // namespace Storage
+namespace Memory
+{
+struct SurgeMemoryPools;
+}
 } // namespace Surge
 
 class alignas(16) SurgeStorage
@@ -1301,6 +1305,8 @@ class alignas(16) SurgeStorage
   public:
     // whether to skip loading, desired while exporting manifests. Only used by LV2 currently.
     static bool skipLoadWtAndPatch;
+
+    std::unique_ptr<Surge::Memory::SurgeMemoryPools> memoryPools;
 
 /*
  * An RNG which is decoupled from the non-Surge global state and is threadsafe.

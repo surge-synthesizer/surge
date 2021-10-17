@@ -52,6 +52,7 @@
 #include "libMTSClient.h"
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
+#include "SurgeMemoryPools.h"
 
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
@@ -582,6 +583,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     modulatorPreset = std::make_unique<Surge::Storage::ModulatorPreset>();
     modulatorPreset->forcePresetRescan();
+
+    memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>();
 }
 
 void SurgeStorage::createUserDirectory()

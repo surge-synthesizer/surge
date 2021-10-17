@@ -33,6 +33,7 @@
 #include <thread>
 #include <set>
 #include "libMTSClient.h"
+#include "SurgeMemoryPools.h"
 
 using namespace std;
 
@@ -2328,6 +2329,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
 bool SurgeSynthesizer::loadOscalgos()
 {
+    bool algosChanged{false};
     for (int s = 0; s < n_scenes; s++)
     {
         for (int i = 0; i < n_oscs; i++)
@@ -2336,6 +2338,7 @@ bool SurgeSynthesizer::loadOscalgos()
 
             if (storage.getPatch().scene[s].osc[i].queue_type > -1)
             {
+                algosChanged = true;
                 // clear assigned modulation if we change osc type, see issue #2224
                 if (storage.getPatch().scene[s].osc[i].queue_type !=
                     storage.getPatch().scene[s].osc[i].type.val.i)
@@ -2410,6 +2413,11 @@ bool SurgeSynthesizer::loadOscalgos()
                 storage.getPatch().scene[s].osc[i].queue_xmldata = 0;
             }
         }
+    }
+
+    if (algosChanged)
+    {
+        storage.memoryPools->resetOscillatorPools(&storage);
     }
     return true;
 }
