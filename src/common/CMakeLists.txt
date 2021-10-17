@@ -135,6 +135,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/ExciterEffect.h
   dsp/effects/chowdsp/NeuronEffect.cpp
   dsp/effects/chowdsp/NeuronEffect.h
+  dsp/effects/chowdsp/SpringReverbEffect.cpp
+  dsp/effects/chowdsp/SpringReverbEffect.h
   dsp/effects/chowdsp/TapeEffect.cpp
   dsp/effects/chowdsp/TapeEffect.h
   dsp/effects/chowdsp/bbd_utils/BBDCompander.h

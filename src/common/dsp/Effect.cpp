@@ -23,6 +23,7 @@
 #include "chowdsp/NeuronEffect.h"
 #include "chowdsp/CHOWEffect.h"
 #include "chowdsp/ExciterEffect.h"
+#include "chowdsp/SpringReverbEffect.h"
 #include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
 
@@ -86,6 +87,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new WaveShaperEffect(storage, fxdata, pd);
     case fxt_mstool:
         return new MSToolEffect(storage, fxdata, pd);
+    case fxt_spring_reverb:
+        return new chowdsp::SpringReverbEffect(storage, fxdata, pd);
     default:
         return 0;
     };
