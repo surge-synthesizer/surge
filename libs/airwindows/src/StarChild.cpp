@@ -20,13 +20,16 @@ StarChild::StarChild(audioMasterCallback audioMaster) :
 	C = 0.2;
 
 	int count;
-	
+
 	for(count = 0; count < 44101; count++) {d[count] = 0.0;}
-	
+
 	for(count = 0; count < 11; count++) {wearL[count] = 0.0; wearR[count] = 0.0; factor[count] = 0.0;}
-	
+
 	wearLPrev = 0.0; wearRPrev = 0.0;
-	
+
+        // Gotta do p[0] also to avoid valgrnd complaining. Set it to 1
+        p[0] = 1;
+
 	p[1] = 11; p[2] = 13; p[3] = 17; p[4] = 19; p[5] = 23; p[6] = 29; p[7] = 31; p[8] = 37; p[9] = 41;
 	p[10] = 43; p[11] = 47; p[12] = 53; p[13] = 59; p[14] = 61; p[15] = 67; p[16] = 71; p[17] = 73; p[18] = 79; p[19] = 83; p[20] = 89;
 	p[21] = 97; p[22] = 101; p[23] = 103; p[24] = 107; p[25] = 109; p[26] = 113; p[27] = 127; p[28] = 131; p[29] = 137; p[30] = 139;
@@ -44,7 +47,7 @@ StarChild::StarChild(audioMasterCallback audioMaster) :
 	p[141] = 829; p[142] = 839; p[143] = 853; p[144] = 857; p[145] = 859; p[146] = 863; p[147] = 877; p[148] = 881; p[149] = 883; p[150] = 887;
 	p[151] = 907; p[152] = 911; p[153] = 919; p[154] = 929; p[155] = 937; p[156] = 941; p[157] = 947; p[158] = 953; p[159] = 967; p[160] = 971;
 	p[161] = 977; p[162] = 983; p[163] = 991; p[164] = 997; p[165] = 998; p[166] = 999;
-	
+
 	int assign;
 	for(count = 0; count < 165; count++)
 	{
@@ -52,7 +55,7 @@ StarChild::StarChild(audioMasterCallback audioMaster) :
 		//these get assigned again but we'll give them real values in case of trouble. They are 32 bit unsigned ints
 		assign = p[count] % 10;
 		//give us the 1, 3, 7 or 9 on the end
-		
+
 		switch (assign){
 			case 1: outL[count] = 0.0; outR[count] = p[count]; break;
 			case 3: outL[count] = p[count] * 0.25; outR[count] = p[count] * 0.75; break;
@@ -67,14 +70,14 @@ StarChild::StarChild(audioMasterCallback audioMaster) :
 	pitchCounter = 2;
 	increment = 1;
 	dutyCycle = 1;
-	
+
 	fpNShapeL = 0.0;
 	fpNShapeR = 0.0;
 	//this is reset: values being initialized only once. Startup values, whatever they are.
-	
+
     _canDo.insert("plugAsChannelInsert"); // plug-in can be used as a channel insert effect.
     _canDo.insert("plugAsSend"); // plug-in can be used as a send effect.
-    _canDo.insert("x2in2out"); 
+    _canDo.insert("x2in2out");
     setNumInputs(kNumInputs);
     setNumOutputs(kNumOutputs);
     setUniqueID(kUniqueId);
@@ -105,22 +108,22 @@ VstInt32 StarChild::getChunk (void** data, bool isPreset)
 	chunkData[1] = B;
 	chunkData[2] = C;
 	/* Note: The way this is set up, it will break if you manage to save settings on an Intel
-	 machine and load them on a PPC Mac. However, it's fine if you stick to the machine you 
+	 machine and load them on a PPC Mac. However, it's fine if you stick to the machine you
 	 started with. */
-	
+
 	*data = chunkData;
 	return kNumParameters * sizeof(float);
 }
 
 VstInt32 StarChild::setChunk (void* data, VstInt32 byteSize, bool isPreset)
-{	
+{
 	float *chunkData = (float *)data;
 	A = pinParameter(chunkData[0]);
 	B = pinParameter(chunkData[1]);
 	C = pinParameter(chunkData[2]);
 	/* We're ignoring byteSize as we found it to be a filthy liar */
-	
-	/* calculate any other fields you need here - you could copy in 
+
+	/* calculate any other fields you need here - you could copy in
 	 code from setParameter() here. */
 	return 0;
 }
@@ -174,7 +177,7 @@ bool StarChild::parseParameterValueFromString(VstInt32 index, const char* str, f
    return true;
 }
 
-VstInt32 StarChild::canDo(char *text) 
+VstInt32 StarChild::canDo(char *text)
 { return (_canDo.find(text) == _canDo.end()) ? -1: 1; } // 1 = yes, -1 = no, 0 = don't know
 
 bool StarChild::getEffectName(char* name) {
