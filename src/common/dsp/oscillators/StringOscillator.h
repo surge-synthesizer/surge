@@ -60,8 +60,6 @@ class StringOscillator : public Oscillator
     StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
         : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s)
     {
-        delayLine[0] = std::make_unique<SSESincDelayLine<16384>>();
-        delayLine[1] = std::make_unique<SSESincDelayLine<16384>>();
     }
 
     ~StringOscillator();
@@ -82,7 +80,8 @@ class StringOscillator : public Oscillator
 
     lag<float, true> examp, tap[2], t2level, feedback[2], tone, fmdepth;
 
-    std::array<std::unique_ptr<SSESincDelayLine<16384>>, 2> delayLine;
+    std::array<SSESincDelayLine<16384> *, 2> delayLine{nullptr, nullptr};
+    bool ownDelayLines{false};
     float priorSample[2] = {0, 0};
     Surge::Oscillator::DriftLFO driftLFO[2];
     Surge::Oscillator::CharacterFilter<float> charFilt;
