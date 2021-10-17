@@ -460,6 +460,13 @@ CREATE TABLE IF NOT EXISTS Favorites (
             // clean up all the prepared statements
             if (dbh)
                 sqlite3_close(dbh);
+            dbh = nullptr;
+        }
+
+        if (rodbh)
+        {
+            sqlite3_close(rodbh);
+            rodbh = nullptr;
         }
     }
 
@@ -973,6 +980,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         << "'. The error was '" << sqlite3_errmsg(dbh) << "'.";
                     storage->reportError(oss.str(), "Surge Patch Database Error");
                 }
+                if (rodbh)
+                    sqlite3_close(rodbh);
                 rodbh = nullptr;
             }
         }
