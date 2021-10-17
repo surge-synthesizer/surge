@@ -154,10 +154,16 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/shared/Oversampling.h
   dsp/effects/chowdsp/shared/Shelf.h
   dsp/effects/chowdsp/shared/SmoothedValue.h
+  dsp/effects/chowdsp/shared/StateVariableFilter.cpp
+  dsp/effects/chowdsp/shared/StateVariableFilter.h
   dsp/effects/chowdsp/shared/chowdsp_IIR.h
   dsp/effects/chowdsp/shared/omega.h
   dsp/effects/chowdsp/shared/wdf.h
   dsp/effects/chowdsp/shared/wdf_sse.h
+  dsp/effects/chowdsp/spring_reverb/ReflectionNetwork.h
+  dsp/effects/chowdsp/spring_reverb/SchroederAllpass.h
+  dsp/effects/chowdsp/spring_reverb/SpringReverbProc.cpp
+  dsp/effects/chowdsp/spring_reverb/SpringReverbProc.h
   dsp/effects/chowdsp/tape/ChewDropout.h
   dsp/effects/chowdsp/tape/ChewProcessor.cpp
   dsp/effects/chowdsp/tape/ChewProcessor.h

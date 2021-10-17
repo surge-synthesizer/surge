@@ -44,24 +44,25 @@ DelayLine<SampleType, InterpolationType>::DelayLine(size_t maximumDelayInSamples
 
     this->bufferData.resize(nChannels);
     for (size_t ch = 0; ch < nChannels; ++ch)
-        this->bufferData[ch] = std::vector<SampleType>(totalSize);
+        this->bufferData[ch] = std::vector<SampleType>(2 * totalSize);
 }
 
 //==============================================================================
 template <typename SampleType, typename InterpolationType>
-void DelayLine<SampleType, InterpolationType>::setDelay(SampleType newDelayInSamples)
+void DelayLine<SampleType, InterpolationType>::setDelay(NumericType newDelayInSamples)
 {
-    auto upperLimit = (SampleType)(totalSize - 1);
+    auto upperLimit = (NumericType)(totalSize - 1);
 
-    delay = limit_range(newDelayInSamples, (SampleType)0, upperLimit);
+    delay = limit_range(newDelayInSamples, (NumericType)0, upperLimit);
     delayInt = static_cast<int>(std::floor(delay));
-    delayFrac = delay - (SampleType)delayInt;
+    delayFrac = delay - (NumericType)delayInt;
 
     interpolator.updateInternalVariables(delayInt, delayFrac);
 }
 
 template <typename SampleType, typename InterpolationType>
-SampleType DelayLine<SampleType, InterpolationType>::getDelay() const
+typename DelayLine<SampleType, InterpolationType>::NumericType
+DelayLine<SampleType, InterpolationType>::getDelay() const
 {
     return delay;
 }
@@ -81,43 +82,6 @@ void DelayLine<SampleType, InterpolationType>::prepare(double sampleRate, size_t
     reset();
 }
 
-template <typename SampleType, typename InterpolationType>
-void DelayLine<SampleType, InterpolationType>::reset()
-{
-    for (auto vec : {&this->writePos, &this->readPos})
-        std::fill(vec->begin(), vec->end(), 0);
-
-    std::fill(this->v.begin(), this->v.end(), static_cast<SampleType>(0));
-
-    for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
-        std::fill(this->bufferData[ch].begin(), this->bufferData[ch].end(),
-                  static_cast<SampleType>(0));
-}
-
-//==============================================================================
-template <typename SampleType, typename InterpolationType>
-void DelayLine<SampleType, InterpolationType>::pushSample(size_t channel, SampleType sample)
-{
-    this->bufferData[channel][this->writePos[channel]] = sample;
-    this->writePos[channel] = (this->writePos[channel] + totalSize - 1) % totalSize;
-}
-
-template <typename SampleType, typename InterpolationType>
-SampleType DelayLine<SampleType, InterpolationType>::popSample(size_t channel,
-                                                               SampleType delayInSamples,
-                                                               bool updateReadPointer)
-{
-    if (delayInSamples >= 0)
-        setDelay(delayInSamples);
-
-    auto result = interpolateSample(channel);
-
-    if (updateReadPointer)
-        this->readPos[channel] = (this->readPos[channel] + totalSize - 1) % totalSize;
-
-    return result;
-}
-
 //==============================================================================
 template class DelayLine<float, DelayLineInterpolationTypes::None>;
 template class DelayLine<double, DelayLineInterpolationTypes::None>;
@@ -129,5 +93,6 @@ template class DelayLine<float, DelayLineInterpolationTypes::Lagrange5th>;
 template class DelayLine<double, DelayLineInterpolationTypes::Lagrange5th>;
 template class DelayLine<float, DelayLineInterpolationTypes::Thiran>;
 template class DelayLine<double, DelayLineInterpolationTypes::Thiran>;
+template class DelayLine<__m128, DelayLineInterpolationTypes::Thiran>;
 
 } // namespace chowdsp

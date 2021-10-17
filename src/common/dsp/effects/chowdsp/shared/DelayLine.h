@@ -30,22 +30,39 @@
 
 namespace chowdsp
 {
+namespace SampleTypeHelpers // Internal classes needed for handling sample type classes
+{
+template <typename T, bool = std::is_floating_point<T>::value> struct ElementType
+{
+    using Type = T;
+};
+
+template <typename T> struct ElementType<T, false>
+{
+    using Type = float;
+};
+} // namespace SampleTypeHelpers
 
 /** Base class for delay lines with any interpolation type */
 template <typename SampleType> class DelayLineBase
 {
   public:
+    using NumericType = typename SampleTypeHelpers::ElementType<SampleType>::Type;
+
     DelayLineBase() = default;
 
-    virtual void setDelay(SampleType /* newDelayInSamples */) = 0;
-    virtual SampleType getDelay() const = 0;
+    virtual void setDelay(NumericType /* newDelayInSamples */) = 0;
+    virtual NumericType getDelay() const = 0;
 
-    virtual void prepare(double sampleRate, size_t blockSize) = 0;
-    virtual void reset() = 0;
+    virtual void prepare(double /*sampleRate*/, size_t /*blockSize*/) = 0;
+    virtual void reset(){};
 
-    virtual void pushSample(size_t /* channel */, SampleType /* sample */) = 0;
+    virtual void pushSample(size_t /* channel */, SampleType /* sample */) noexcept = 0;
     virtual SampleType popSample(size_t /* channel */, SampleType /* delayInSamples */,
-                                 bool /* updateReadPointer */) = 0;
+                                 bool /* updateReadPointer */) noexcept
+    {
+        return {};
+    }
 
     void copyState(const DelayLineBase<SampleType> &other)
     {
@@ -92,17 +109,41 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     /** Sets the delay in samples. */
-    void setDelay(SampleType newDelayInSamples) override;
+    void setDelay(NumericType newDelayInSamples) override;
 
     /** Returns the current delay in samples. */
-    SampleType getDelay() const override;
+    NumericType getDelay() const override;
 
     //==============================================================================
     /** Initialises the processor. */
     void prepare(double sampleRate, size_t blockSize) override;
 
     /** Resets the internal state variables of the processor. */
-    void reset() override;
+    template <typename C = SampleType>
+    typename std::enable_if<std::is_floating_point<C>::value, void>::type reset()
+    {
+        for (auto vec : {&this->writePos, &this->readPos})
+            std::fill(vec->begin(), vec->end(), 0);
+
+        std::fill(this->v.begin(), this->v.end(), static_cast<SampleType>(0));
+
+        for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
+            std::fill(this->bufferData[ch].begin(), this->bufferData[ch].end(),
+                      static_cast<SampleType>(0));
+    }
+
+    /** Resets the internal state variables of the processor. */
+    template <typename C = SampleType>
+    typename std::enable_if<std::is_same<C, __m128>::value, void>::type reset()
+    {
+        for (auto vec : {&this->writePos, &this->readPos})
+            std::fill(vec->begin(), vec->end(), 0);
+
+        std::fill(this->v.begin(), this->v.end(), _mm_setzero_ps());
+
+        for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
+            std::fill(this->bufferData[ch].begin(), this->bufferData[ch].end(), _mm_setzero_ps());
+    }
 
     //==============================================================================
     /** Pushes a single sample into one channel of the delay line.
@@ -113,7 +154,13 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, popSample, process
     */
-    void pushSample(size_t channel, SampleType sample) override;
+    inline void pushSample(size_t channel, SampleType sample) noexcept override
+    {
+        const auto writePtr = this->writePos[channel];
+        this->bufferData[channel][writePtr] = sample;
+        this->bufferData[channel][writePtr + totalSize] = sample;
+        this->writePos[channel] = (writePtr + totalSize - 1) % totalSize;
+    }
 
     /** Pops a single sample from one channel of the delay line.
 
@@ -132,8 +179,33 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, pushSample, process
     */
-    SampleType popSample(size_t channel, SampleType delayInSamples = -1,
-                         bool updateReadPointer = true) override;
+    template <typename C = SampleType>
+    inline typename std::enable_if<std::is_floating_point<C>::value, SampleType>::type
+    popSample(size_t channel, SampleType delayInSamples = -1,
+              bool updateReadPointer = true) noexcept
+    {
+        if (delayInSamples >= 0)
+            setDelay(delayInSamples);
+
+        auto result = interpolateSample(channel);
+
+        if (updateReadPointer)
+            this->readPos[channel] = (this->readPos[channel] + totalSize - 1) % totalSize;
+
+        return result;
+    }
+
+    template <typename C = SampleType>
+    inline typename std::enable_if<std::is_same<C, __m128>::value, SampleType>::type
+    popSample(size_t channel) noexcept
+    {
+        auto result = interpolateSample(channel);
+
+        // update read pointer
+        this->readPos[channel] = (this->readPos[channel] + totalSize - 1) % totalSize;
+
+        return result;
+    }
 
     //==============================================================================
     /** Processes the input and output samples supplied in the processing context.
@@ -163,7 +235,7 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     InterpolationType interpolator;
-    SampleType delay = 0.0, delayFrac = 0.0;
+    NumericType delay = 0.0, delayFrac = 0.0;
     int delayInt = 0;
     size_t totalSize = 4;
 };

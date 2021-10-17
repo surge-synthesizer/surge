@@ -15,6 +15,9 @@
 
 #pragma once
 #include "Effect.h"
+#include <vembertech/lipol.h>
+
+#include "spring_reverb/SpringReverbProc.h"
 
 namespace chowdsp
 {
@@ -64,5 +67,9 @@ class SpringReverbEffect : public Effect
     int group_label_ypos(int id) override;
 
   private:
+    SpringReverbProc proc;
+
+    lipol_ps mix alignas(16), makeup alignas(16);
+    float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 };
 } // namespace chowdsp

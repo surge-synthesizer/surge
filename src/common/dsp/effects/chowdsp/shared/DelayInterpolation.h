@@ -27,7 +27,7 @@ struct None
     template <typename T>
     inline T call(const T *buffer, int delayInt, T /*delayFrac*/, const T & /*state*/)
     {
-        return buffer[delayInt % totalSize];
+        return buffer[delayInt];
     }
 
     int totalSize;
@@ -52,12 +52,6 @@ struct Linear
     {
         auto index1 = delayInt;
         auto index2 = index1 + 1;
-
-        if (index2 >= totalSize)
-        {
-            index1 %= totalSize;
-            index2 %= totalSize;
-        }
 
         auto value1 = buffer[index1];
         auto value2 = buffer[index2];
@@ -94,14 +88,6 @@ struct Lagrange3rd
         auto index2 = index1 + 1;
         auto index3 = index2 + 1;
         auto index4 = index3 + 1;
-
-        if (index4 >= totalSize)
-        {
-            index1 %= totalSize;
-            index2 %= totalSize;
-            index3 %= totalSize;
-            index4 %= totalSize;
-        }
 
         auto value1 = buffer[index1];
         auto value2 = buffer[index2];
@@ -150,16 +136,6 @@ struct Lagrange5th
         auto index4 = index3 + 1;
         auto index5 = index4 + 1;
         auto index6 = index5 + 1;
-
-        if (index6 >= totalSize)
-        {
-            index1 %= totalSize;
-            index2 %= totalSize;
-            index3 %= totalSize;
-            index4 %= totalSize;
-            index5 %= totalSize;
-            index6 %= totalSize;
-        }
 
         auto value1 = buffer[index1];
         auto value2 = buffer[index2];
@@ -210,21 +186,32 @@ struct Thiran
         alpha = double((1 - delayFrac) / (1 + delayFrac));
     }
 
-    template <typename T> inline T call(const T *buffer, int delayInt, T delayFrac, T &state)
+    template <typename T> inline T call(const T *buffer, int delayInt, float delayFrac, T &state)
     {
         auto index1 = delayInt;
         auto index2 = index1 + 1;
 
-        if (index2 >= totalSize)
-        {
-            index1 %= totalSize;
-            index2 %= totalSize;
-        }
+        auto value1 = buffer[index1];
+        auto value2 = buffer[index2];
+
+        auto output = value2 + (T)alpha * (value1 - state);
+        state = output;
+
+        return output;
+    }
+
+    template <>
+    inline __m128 call(const __m128 *buffer, int delayInt, float delayFrac, __m128 &state)
+    {
+        auto index1 = delayInt;
+        auto index2 = index1 + 1;
 
         auto value1 = buffer[index1];
         auto value2 = buffer[index2];
 
-        auto output = delayFrac == 0 ? value1 : value2 + (T)alpha * (value1 - state);
+        float alphaF = (float)alpha;
+        auto output =
+            _mm_add_ps(value2, _mm_mul_ps(_mm_load1_ps(&alphaF), _mm_sub_ps(value1, state)));
         state = output;
 
         return output;
