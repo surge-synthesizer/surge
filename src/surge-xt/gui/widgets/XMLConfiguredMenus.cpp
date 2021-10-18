@@ -565,7 +565,7 @@ void FxMenu::populate()
     menu.addColumnBreak();
     menu.addSectionHeader("FUNCTIONS");
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Current FX Unit"), [this]() {
+    menu.addItem(Surge::GUI::toOSCaseForMenu("Clear Current FX Unit"), [this]() {
         loadSnapshot(fxt_off, nullptr, 0);
         if (getControlListener())
         {
@@ -578,22 +578,22 @@ void FxMenu::populate()
     {
         auto initSubmenu = juce::PopupMenu();
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene A Insert FX Chain"), true,
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Scene A Insert FX Chain"), true,
                             false, [this, sge]() { sge->enqueueFXChainClear(0); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Scene B Insert FX Chain"), true,
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Scene B Insert FX Chain"), true,
                             false, [this, sge]() { sge->enqueueFXChainClear(1); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Send FX Chain"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Send FX Chain"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(2); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Global FX Chain"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Global FX Chain"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(3); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize All FX Chains"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear All FX Chains"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(-1); });
 
-        menu.addSubMenu(Surge::GUI::toOSCaseForMenu("Initialize Chains"), initSubmenu);
+        menu.addSubMenu(Surge::GUI::toOSCaseForMenu("Clear Chains"), initSubmenu);
     }
 
     menu.addSeparator();
