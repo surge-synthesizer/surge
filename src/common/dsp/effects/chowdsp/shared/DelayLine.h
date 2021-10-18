@@ -109,14 +109,14 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     /** Sets the delay in samples. */
-    void setDelay(NumericType newDelayInSamples) override;
+    void setDelay(NumericType newDelayInSamples) final;
 
     /** Returns the current delay in samples. */
-    NumericType getDelay() const override;
+    NumericType getDelay() const final;
 
     //==============================================================================
     /** Initialises the processor. */
-    void prepare(double sampleRate, size_t blockSize) override;
+    void prepare(double sampleRate, size_t blockSize) final;
 
     /** Resets the internal state variables of the processor. */
     template <typename C = SampleType>
@@ -154,12 +154,18 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, popSample, process
     */
-    inline void pushSample(size_t channel, SampleType sample) noexcept override
+    inline void pushSample(size_t channel, SampleType sample) noexcept final
     {
         const auto writePtr = this->writePos[channel];
+
+        // push sample into double-buffered state
         this->bufferData[channel][writePtr] = sample;
         this->bufferData[channel][writePtr + totalSize] = sample;
-        this->writePos[channel] = (writePtr + totalSize - 1) % totalSize;
+
+        // update write pointer
+        auto newWritePtr = writePtr + totalSize - 1;
+        newWritePtr = newWritePtr > totalSize ? newWritePtr - totalSize : newWritePtr;
+        this->writePos[channel] = newWritePtr;
     }
 
     /** Pops a single sample from one channel of the delay line.
@@ -195,14 +201,14 @@ class DelayLine : public DelayLineBase<SampleType>
         return result;
     }
 
-    template <typename C = SampleType>
-    inline typename std::enable_if<std::is_same<C, __m128>::value, SampleType>::type
-    popSample(size_t channel) noexcept
+    inline SampleType popSample(size_t channel) noexcept
     {
         auto result = interpolateSample(channel);
 
         // update read pointer
-        this->readPos[channel] = (this->readPos[channel] + totalSize - 1) % totalSize;
+        auto newReadPtr = this->readPos[channel] + totalSize - 1;
+        newReadPtr = newReadPtr > totalSize ? newReadPtr - totalSize : newReadPtr;
+        this->readPos[channel] = newReadPtr;
 
         return result;
     }

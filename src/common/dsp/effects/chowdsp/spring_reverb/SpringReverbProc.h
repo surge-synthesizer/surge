@@ -50,7 +50,7 @@ class SpringReverbProc
 
     StateVariableFilter<float> dcBlocker;
 
-    static constexpr int allpassStages = 50;
+    static constexpr int allpassStages = 16;
     using APFCascade = std::array<SchroederAllpass<__m128, 2>, allpassStages>;
     APFCascade vecAPFs;
 

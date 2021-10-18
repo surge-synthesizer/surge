@@ -1,5 +1,6 @@
 #include <random>
 #include "SpringReverbProc.h"
+#include "utilities/FastMath.h"
 
 namespace chowdsp
 {
@@ -53,7 +54,7 @@ void SpringReverbProc::setParams(const Params &params, int numSamples)
     auto apfG = 0.5f - 0.4f * params.spin;
     float apfGVec alignas(16)[4] = {apfG, -apfG, apfG, -apfG};
     for (auto &apf : vecAPFs)
-        apf.setParams(msToSamples(0.35f + params.size), _mm_load_ps(apfGVec));
+        apf.setParams(msToSamples(0.35f + 3.0f * params.size), _mm_load_ps(apfGVec));
 
     constexpr float dampFreqLow = 4000.0f;
     constexpr float dampFreqHigh = 18000.0f;
@@ -73,7 +74,7 @@ void SpringReverbProc::processBlock(float *left, float *right, const int numSamp
     float simdReg alignas(16)[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
     auto doSpringInput = [=](int ch, float input) -> float {
-        auto output = std::tanh(input - feedbackGain * delay.popSample(ch));
+        auto output = Surge::DSP::fasttanh(input - feedbackGain * delay.popSample(ch));
         return dcBlocker.processSample<StateVariableFilterType::Highpass>(ch, output);
     };
 
