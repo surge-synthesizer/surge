@@ -136,6 +136,8 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
     tempoTypein->setColour(juce::TextEditor::textColourId,
                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId));
+    tempoTypein->applyColourToAllText(
+        findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId), true);
 
     repaint();
 }
@@ -205,9 +207,7 @@ void SurgeSynthEditor::parentHierarchyChanged()
     {
         if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
         {
-            std::ostringstream oss;
-            oss << "Surge XT - " << Surge::Build::FullVersionStr;
-            dw->setName(oss.str());
+            dw->setName("Surge XT");
 
             if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
             {

@@ -96,6 +96,17 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitch);
 };
+
+struct MultiSwitchSelfDraw : public MultiSwitch
+{
+    MultiSwitchSelfDraw() : MultiSwitch() {}
+    void paint(juce::Graphics &g);
+
+    std::vector<std::string> labels;
+    void setLabels(const std::vector<std::string> &l) { labels = l; }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchSelfDraw);
+};
 } // namespace Widgets
 } // namespace Surge
 #endif // SURGE_XT_MULTISWITCH_H

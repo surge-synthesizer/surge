@@ -57,6 +57,8 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
 
+    virtual void setApplyEnabled(bool) {}
+
     void paint(juce::Graphics &g) override;
     SurgeGUIEditor *editor;
     SurgeStorage *storage;
@@ -69,6 +71,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
 };
 
 struct ExpandingFormulaDebugger;
+struct FormulaControlArea;
 
 struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 {
@@ -76,15 +79,19 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
                            FormulaModulatorStorage *fs, Surge::GUI::Skin::ptr_t sk);
     ~FormulaModulatorEditor();
 
-    std::unique_ptr<juce::TabbedComponent> tabs;
     std::unique_ptr<ExpandingFormulaDebugger> efd;
+    std::unique_ptr<FormulaControlArea> controlArea;
     void resized() override;
     void applyCode() override;
+
+    void showModulatorCode();
+    void showPreludeCode();
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
 
-    virtual void onSkinChanged() override;
+    void onSkinChanged() override;
+    void setApplyEnabled(bool b) override;
 
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;

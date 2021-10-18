@@ -5,8 +5,10 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeSynthEditor.h" // bit gross but so I can do DnD
+#include "widgets/MultiSwitch.h"
 #include "fmt/core.h"
 #include <chrono>
+#include "juce_gui_extra/juce_gui_extra.h"
 
 namespace Surge
 {
@@ -37,13 +39,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         if (!table)
             return;
 
-        auto alternateColour =
-            table->getLookAndFeel()
-                .findColour(juce::ListBox::backgroundColourId)
-                .interpolatedWith(table->getLookAndFeel().findColour(juce::ListBox::textColourId),
-                                  0.03f);
-        if (rowNumber % 2)
-            g.fillAll(alternateColour);
+        g.fillAll(skin->getColor(Colors::TuningOverlay::FrequencyKeyboard::Separator));
     }
 
     int mcoff{1};
@@ -53,9 +49,11 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         if (table)
             table->repaint();
     }
+
     virtual void paintCell(juce::Graphics &g, int rowNumber, int columnID, int width, int height,
                            bool rowIsSelected) override
     {
+        namespace clr = Colors::TuningOverlay::FrequencyKeyboard;
         if (!table)
             return;
 
@@ -71,14 +69,12 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
             noblack = true;
 
         // Black Key
-        auto kbdColour = table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId);
+        auto kbdColour = skin->getColor(clr::BlackKey);
         if (whitekey)
-            kbdColour = kbdColour.interpolatedWith(
-                table->getLookAndFeel().findColour(juce::ListBox::textColourId), 0.3f);
+            kbdColour = skin->getColor(clr::WhiteKey);
 
-        bool no = true;
-        auto pressedColour = juce::Colour(0xFFaaaa50);
-
+        bool no = false;
+        auto pressedColour = skin->getColor(clr::PressedKey);
         if (notesOn[rowNumber])
         {
             no = true;
@@ -86,9 +82,9 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
 
         g.fillAll(kbdColour);
-        if (!whitekey && columnID != 1 && no)
+        if (!whitekey && columnID != 1)
         {
-            g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+            g.setColour(skin->getColor(clr::Separator));
             // draw an inset top and bottom
             g.fillRect(0, 0, width - 1, 1);
             g.fillRect(0, height - 1, width - 1, 1);
@@ -102,12 +98,10 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
             {
                 txtOff = 10;
                 // "Black Key"
-                auto kbdColour =
-                    table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId);
-                auto kbc = kbdColour.interpolatedWith(
-                    table->getLookAndFeel().findColour(juce::ListBox::textColourId), 0.3f);
+                auto kbdColour = skin->getColor(clr::BlackKey);
+                auto kbc = skin->getColor(clr::WhiteKey);
                 g.setColour(kbc);
-                g.fillRect(0, 0, txtOff, height);
+                g.fillRect(-1, 0, txtOff, height + 2);
 
                 // OK so now check neighbors
                 if (rowNumber > 0 && notesOn[rowNumber - 1])
@@ -120,7 +114,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                     g.setColour(pressedColour);
                     g.fillRect(0, height / 2, txtOff, height / 2 + 1);
                 }
-                g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+                g.setColour(skin->getColor(clr::BlackKey));
                 g.fillRect(0, height / 2, txtOff, 1);
 
                 if (no)
@@ -132,19 +126,19 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
             }
         }
 
-        g.setColour(table->getLookAndFeel().findColour(juce::ListBox::textColourId));
-
         auto mn = rowNumber;
         double fr = tuning.frequencyForMidiNote(mn);
 
         std::string notenum, notename, display;
 
-        g.setColour(table->getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
+        g.setColour(skin->getColor(clr::Separator));
         g.fillRect(width - 1, 0, 1, height);
         if (noblack)
             g.fillRect(0, height - 1, width, 1);
 
-        g.setColour(juce::Colours::white);
+        g.setColour(skin->getColor(clr::Text));
+        if (no)
+            g.setColour(skin->getColor(clr::PressedKeyText));
         auto just = juce::Justification::centredLeft;
         switch (columnID)
         {
@@ -193,7 +187,9 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
 class RadialScaleGraph;
 
-class RadialScaleGraph : public juce::Component, juce::TextEditor::Listener
+class RadialScaleGraph : public juce::Component,
+                         public juce::TextEditor::Listener,
+                         public Surge::GUI::SkinConsumingComponent
 {
   public:
     RadialScaleGraph()
@@ -485,7 +481,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     g.restoreState();
 }
 
-struct IntervalMatrix : public juce::Component
+struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     IntervalMatrix(TuningOverlay *o) : overlay(o)
     {
@@ -493,26 +489,7 @@ struct IntervalMatrix : public juce::Component
         intervalPainter = std::make_unique<IntervalPainter>(this);
         viewport->setViewedComponent(intervalPainter.get(), false);
 
-        intervalButton = std::make_unique<juce::ToggleButton>("Show Interval");
-        intervalButton->setToggleState(true, juce::NotificationType::dontSendNotification);
-        intervalButton->onClick = [this]() {
-            intervalPainter->mode = IntervalPainter::INTERV;
-            intervalPainter->repaint();
-        };
-
-        distanceButton = std::make_unique<juce::ToggleButton>("Show Distance from Even");
-        distanceButton->setToggleState(false, juce::NotificationType::dontSendNotification);
-        distanceButton->onClick = [this]() {
-            intervalPainter->mode = IntervalPainter::DIST;
-            intervalPainter->repaint();
-        };
-
-        intervalButton->setRadioGroupId(100001, juce::NotificationType::dontSendNotification);
-        distanceButton->setRadioGroupId(100001, juce::NotificationType::dontSendNotification);
-
         addAndMakeVisible(*viewport);
-        addAndMakeVisible(*intervalButton);
-        addAndMakeVisible(*distanceButton);
     };
     virtual ~IntervalMatrix() = default;
 
@@ -543,8 +520,10 @@ struct IntervalMatrix : public juce::Component
             setSize(nw, nh);
         }
 
+        // ToDo: Skin Colors Here
         void paint(juce::Graphics &g) override
         {
+            g.fillAll(juce::Colour(0xFF979797));
             auto ic = matrix->tuning.scale.count;
             int mt = ic + 2;
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
@@ -736,14 +715,8 @@ struct IntervalMatrix : public juce::Component
 
     void resized() override
     {
-        viewport->setBounds(getLocalBounds().reduced(2).withTrimmedBottom(20));
+        viewport->setBounds(getLocalBounds().reduced(2));
         intervalPainter->setSizeFromTuning();
-
-        auto buttonStrip = getLocalBounds().reduced(2);
-        buttonStrip = buttonStrip.withTrimmedTop(buttonStrip.getHeight() - 20);
-
-        intervalButton->setBounds(buttonStrip.withTrimmedRight(getWidth() / 2));
-        distanceButton->setBounds(buttonStrip.withTrimmedLeft(getWidth() / 2));
     }
 
     std::vector<bool> notesOn;
@@ -769,8 +742,6 @@ struct IntervalMatrix : public juce::Component
 
     std::unique_ptr<IntervalPainter> intervalPainter;
     std::unique_ptr<juce::Viewport> viewport;
-
-    std::unique_ptr<juce::ToggleButton> intervalButton, distanceButton;
 
     Tunings::Tuning tuning;
     TuningOverlay *overlay{nullptr};
@@ -837,85 +808,358 @@ void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
 struct SCLKBMDisplay : public juce::Component,
                        Surge::GUI::SkinConsumingComponent,
                        juce::TextEditor::Listener,
-                       juce::Button::Listener
+                       juce::CodeDocument::Listener
 {
     SCLKBMDisplay(TuningOverlay *o) : overlay(o)
     {
-        scl = std::make_unique<juce::TextEditor>();
+        sclDocument = std::make_unique<juce::CodeDocument>();
+        sclDocument->addListener(this);
+        sclTokeniser = std::make_unique<SCLKBMTokeniser>();
+        scl = std::make_unique<juce::CodeEditorComponent>(*sclDocument, sclTokeniser.get());
         scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
-        scl->setMultiLine(true, false);
-        scl->setReturnKeyStartsNewLine(true);
-        scl->addListener(this);
+        scl->setLineNumbersShown(false);
+        scl->setScrollbarThickness(5);
+        scl->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
+                       juce::Colour(0xFFE3E3E3));
         addAndMakeVisible(*scl);
 
-        kbm = std::make_unique<juce::TextEditor>();
+        kbmDocument = std::make_unique<juce::CodeDocument>();
+        kbmDocument->addListener(this);
+        kbmTokeniser = std::make_unique<SCLKBMTokeniser>(false);
+
+        kbm = std::make_unique<juce::CodeEditorComponent>(*kbmDocument, kbmTokeniser.get());
         kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
-        kbm->setMultiLine(true, false);
-        kbm->setReturnKeyStartsNewLine(true);
-        kbm->addListener(this);
+        kbm->setLineNumbersShown(false);
+        kbm->setScrollbarThickness(5);
+        kbm->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
+                       juce::Colour(0xFFE3E3E3));
         addAndMakeVisible(*kbm);
-
-        apply = std::make_unique<juce::TextButton>("Apply", "Apply");
-        apply->addListener(this);
-        apply->setEnabled(false);
-        addAndMakeVisible(*apply);
-
-        exportButton = std::make_unique<juce::TextButton>("Export HTML", "Export HTML");
-        exportButton->addListener(this);
-        addAndMakeVisible(*exportButton);
-
-        libButton = std::make_unique<juce::TextButton>("Tuning Library", "Tuning Library");
-        libButton->addListener(this);
-        addAndMakeVisible(*libButton);
     }
+
+    struct SCLKBMTokeniser : public juce::CodeTokeniser
+    {
+        enum
+        {
+            token_Error,
+            token_Comment,
+            token_Text,
+            token_Cents,
+            token_Ratio
+        };
+
+        bool isSCL{false};
+        SCLKBMTokeniser(bool s = true) : isSCL(s) {}
+
+        int readNextToken(juce::CodeDocument::Iterator &source) override
+        {
+            auto firstChar = source.peekNextChar();
+            if (firstChar == '!')
+            {
+                source.skipToEndOfLine();
+                return token_Comment;
+            }
+            if (!isSCL)
+            {
+                source.skipToEndOfLine();
+                return token_Text;
+            }
+            source.skipWhitespace();
+            auto nc = source.nextChar();
+            while (nc >= '0' && nc <= '9' && nc)
+            {
+                nc = source.nextChar();
+            }
+            source.previousChar(); // in case we are just numbers
+            source.skipToEndOfLine();
+            if (nc == '/')
+                return token_Ratio;
+            if (nc == '.')
+                return token_Cents;
+            return token_Text;
+        }
+
+        juce::CodeEditorComponent::ColourScheme getDefaultColourScheme() override
+        {
+            struct Type
+            {
+                const char *name;
+                uint32_t colour;
+            };
+
+            // clang-format off
+            const Type types[] = {
+                {"Error", 0xffcc0000},
+                {"Comment", 0xFF703000},
+                {"Text", 0xFF242424},
+                {"Cents", 0xFF1212A0},
+                {"Ratio", 0xFF12A012},
+            };
+            // clang-format on
+
+            juce::CodeEditorComponent::ColourScheme cs;
+
+            for (auto &t : types)
+                cs.set(t.name, juce::Colour(t.colour));
+
+            return cs;
+        }
+    };
+
+    std::unique_ptr<juce::CodeDocument> sclDocument, kbmDocument;
+    std::unique_ptr<SCLKBMTokeniser> sclTokeniser, kbmTokeniser;
+
     void setTuning(const Tunings::Tuning &t)
     {
-        scl->setText(t.scale.rawText, juce::NotificationType::dontSendNotification);
-        kbm->setText(t.keyboardMapping.rawText, juce::NotificationType::dontSendNotification);
-        kbm->setText(t.keyboardMapping.rawText, juce::NotificationType::dontSendNotification);
-        apply->setEnabled(false);
+        sclDocument->replaceAllContent(t.scale.rawText);
+        kbmDocument->replaceAllContent(t.keyboardMapping.rawText);
+        setApplyEnabled(false);
     }
 
     void resized() override
     {
         auto w = getWidth();
-        auto h = getHeight() - 22;
-        scl->setBounds(2, 2, w / 2 - 4, h - 4);
-        kbm->setBounds(w / 2 + 2, 2, w / 2 - 4, h - 4);
-        apply->setBounds(w - 102, h + 2, 100, 18);
-        exportButton->setBounds(w - 204, h + 2, 100, 18);
-        libButton->setBounds(w - 306, h + 2, 100, 18);
+        auto h = getHeight();
+        auto b = juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3);
+
+        scl->setBounds(b);
+        kbm->setBounds(b.translated(w / 2, 0));
     }
 
-    void textEditorTextChanged(juce::TextEditor &editor) override { apply->setEnabled(true); }
-    void buttonClicked(juce::Button *button) override
+    void setApplyEnabled(bool b);
+
+    void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override
     {
-        if (button == apply.get())
+        setApplyEnabled(true);
+    }
+    void codeDocumentTextDeleted(int startIndex, int endIndex) override { setApplyEnabled(true); }
+
+    void paint(juce::Graphics &g) override
+    {
+        g.fillAll(juce::Colour(0xFF979797));
+        g.setColour(juce::Colour(0xFF242424));
+        g.drawRect(scl->getBounds().expanded(1), 2);
+        g.drawRect(kbm->getBounds().expanded(1), 2);
+    }
+
+    void textEditorTextChanged(juce::TextEditor &editor) override { setApplyEnabled(true); }
+
+    std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
+        [](auto a, auto b) {};
+
+    std::unique_ptr<juce::CodeEditorComponent> scl;
+    std::unique_ptr<juce::CodeEditorComponent> kbm;
+    TuningOverlay *overlay{nullptr};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SCLKBMDisplay);
+};
+
+struct TuningControlArea : public juce::Component,
+                           public Surge::GUI::SkinConsumingComponent,
+                           public Surge::GUI::IComponentTagValue::Listener
+{
+    enum tags
+    {
+        tag_select_tab = 0x475200,
+        tag_select_interval,
+        tag_export_html,
+        tag_apply_sclkbm,
+        tag_open_library
+    };
+    TuningOverlay *overlay{nullptr};
+    TuningControlArea(TuningOverlay *ol) : overlay(ol) {}
+
+    void resized() override
+    {
+        if (skin)
+            rebuild();
+    }
+
+    void rebuild()
+    {
+        int labelHeight = 12;
+        int buttonHeight = 14;
+        int numfieldHeight = 12;
+        int margin = 2;
+        int xpos = 10;
+
+        removeAllChildren();
+        auto h = getHeight();
+
         {
-            onTextChanged(scl->getText().toStdString(), kbm->getText().toStdString());
+            int marginPos = xpos + margin;
+            int btnWidth = 130;
+            int ypos = 1 + labelHeight + margin;
+
+            selectL = newL("Editor Mode");
+            selectL->setBounds(xpos, 1, 100, labelHeight);
+            addAndMakeVisible(*selectL);
+
+            selectS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+
+            selectS->setBounds(btnrect);
+            selectS->setStorage(overlay->storage);
+            selectS->setLabels({"SCL/KBM", "Radial", "Interval"});
+            selectS->addListener(this);
+            selectS->setTag(tag_select_tab);
+            selectS->setHeightOfOneImage(buttonHeight);
+            selectS->setRows(1);
+            selectS->setColumns(3);
+            selectS->setDraggable(true);
+            selectS->setSkin(skin, associatedBitmapStore);
+            addAndMakeVisible(*selectS);
+            xpos += btnWidth + 10;
         }
-        if (button == exportButton.get())
+
+        {
+            int marginPos = xpos + margin;
+            int btnWidth = 130;
+            int ypos = 1 + labelHeight + margin;
+
+            intervalL = newL("Interval Display");
+            intervalL->setBounds(xpos, 1, 100, labelHeight);
+            addAndMakeVisible(*intervalL);
+
+            intervalS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+
+            intervalS->setBounds(btnrect);
+            intervalS->setStorage(overlay->storage);
+            intervalS->setLabels({"Absolute", "To Even"});
+            intervalS->addListener(this);
+            intervalS->setTag(tag_select_interval);
+            intervalS->setHeightOfOneImage(buttonHeight);
+            intervalS->setRows(1);
+            intervalS->setColumns(2);
+            intervalS->setDraggable(true);
+            intervalS->setSkin(skin, associatedBitmapStore);
+            addAndMakeVisible(*intervalS);
+            xpos += btnWidth + 10;
+        }
+
+        {
+            int marginPos = xpos + margin;
+            int btnWidth = 65;
+            int ypos = 1 + labelHeight + margin;
+
+            actionL = newL("Actions");
+            actionL->setBounds(xpos, 1, 100, labelHeight);
+            addAndMakeVisible(*actionL);
+
+            auto ma = [&](const std::string &l, tags t) {
+                auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+                auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+
+                res->setBounds(btnrect);
+                res->setStorage(overlay->storage);
+                res->setLabels({l});
+                res->addListener(this);
+                res->setTag(t);
+                res->setHeightOfOneImage(buttonHeight);
+                res->setRows(1);
+                res->setColumns(1);
+                res->setDraggable(false);
+                res->setSkin(skin, associatedBitmapStore);
+                res->setValue(0);
+                return res;
+            };
+
+            exportS = ma("Export HTML", tag_export_html);
+            addAndMakeVisible(*exportS);
+            marginPos += btnWidth + 5;
+
+            libraryS = ma("Tuning Library", tag_open_library);
+            addAndMakeVisible(*libraryS);
+            marginPos += btnWidth + 5;
+
+            applyS = ma("Apply SCL/KBM", tag_apply_sclkbm);
+            addAndMakeVisible(*applyS);
+            applyS->setEnabled(false);
+            xpos += btnWidth + 5;
+        }
+    }
+
+    std::unique_ptr<juce::Label> newL(const std::string &s)
+    {
+        auto res = std::make_unique<juce::Label>(s, s);
+        res->setText(s, juce::dontSendNotification);
+        res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+        res->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        return res;
+    }
+
+    void valueChanged(GUI::IComponentTagValue *c) override
+    {
+        auto tag = (tags)(c->getTag());
+        switch (tag)
+        {
+        case tag_select_tab:
+        {
+            int m = c->getValue() * 2;
+            overlay->showEditor(m);
+        }
+        break;
+        case tag_select_interval:
+        {
+            auto v = c->getValue();
+            if (v < 0.5)
+            {
+                overlay->intervalMatrix->intervalPainter->mode =
+                    IntervalMatrix::IntervalPainter::INTERV;
+            }
+            else
+            {
+                overlay->intervalMatrix->intervalPainter->mode =
+                    IntervalMatrix::IntervalPainter::DIST;
+            }
+            overlay->intervalMatrix->intervalPainter->repaint();
+        }
+        break;
+        case tag_open_library:
+        {
+            auto path = overlay->storage->datapath / "tuning_library";
+            Surge::GUI::openFileOrFolder(path);
+        }
+        break;
+        case tag_export_html:
         {
             if (overlay && overlay->editor)
             {
                 overlay->editor->showHTML(overlay->editor->tuningToHtml());
             }
         }
-        if (button == libButton.get())
+        break;
+        case tag_apply_sclkbm:
         {
-            auto path = overlay->storage->datapath / "tuning_library";
-            Surge::GUI::openFileOrFolder(path);
+            if (applyS->isEnabled())
+            {
+                auto *sck = overlay->sclKbmDisplay.get();
+                sck->onTextChanged(sck->sclDocument->getAllContent().toStdString(),
+                                   sck->kbmDocument->getAllContent().toStdString());
+                applyS->setEnabled(false);
+                applyS->repaint();
+            }
+        }
+        break;
         }
     }
-    std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
-        [](auto a, auto b) {};
 
-    std::unique_ptr<juce::TextEditor> scl, kbm;
-    std::unique_ptr<juce::Button> apply, exportButton, libButton;
-    TuningOverlay *overlay{nullptr};
+    std::unique_ptr<juce::Label> selectL, intervalL, actionL;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> selectS, intervalS, exportS, libraryS,
+        applyS;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SCLKBMDisplay);
+    void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
+
+    void onSkinChanged() override { rebuild(); }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningControlArea);
 };
+
+void SCLKBMDisplay::setApplyEnabled(bool b)
+{
+    overlay->controlArea->applyS->setEnabled(b);
+    overlay->controlArea->applyS->repaint();
+}
 
 TuningOverlay::TuningOverlay()
 {
@@ -932,9 +1176,6 @@ TuningOverlay::TuningOverlay()
     tuningKeyboardTable->getViewport()->setScrollBarsShown(true, false);
     tuningKeyboardTable->getViewport()->setViewPositionProportionately(0.0, 48.0 / 127.0);
 
-    tabArea =
-        std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
-
     sclKbmDisplay = std::make_unique<SCLKBMDisplay>(this);
     sclKbmDisplay->onTextChanged = [this](const std::string &s, const std::string &k) {
         this->onNewSCLKBM(s, k);
@@ -948,10 +1189,17 @@ TuningOverlay::TuningOverlay()
 
     intervalMatrix = std::make_unique<IntervalMatrix>(this);
 
-    tabArea->addTab("SCL/KBM", juce::Colours::black, sclKbmDisplay.get(), false);
-    tabArea->addTab("Radial", juce::Colours::black, radialScaleGraph.get(), false);
-    tabArea->addTab("Interval", juce::Colours::black, intervalMatrix.get(), false);
-    addAndMakeVisible(*tabArea);
+    controlArea = std::make_unique<TuningControlArea>(this);
+    addAndMakeVisible(*controlArea);
+
+    addChildComponent(*sclKbmDisplay);
+    sclKbmDisplay->setVisible(true);
+
+    addChildComponent(*radialScaleGraph);
+    radialScaleGraph->setVisible(false);
+
+    addChildComponent(*intervalMatrix);
+    intervalMatrix->setVisible(false);
 }
 
 TuningOverlay::~TuningOverlay() = default;
@@ -962,17 +1210,34 @@ void TuningOverlay::resized()
     auto h = getHeight();
     auto w = getWidth();
 
+    int kbWidth = 120;
+    int ctrlHeight = 35;
+
     t.transformPoint(w, h);
 
-    tuningKeyboardTable->setBounds(0, 0, 120, h);
+    tuningKeyboardTable->setBounds(0, 0, kbWidth, h);
 
-    tabArea->setBounds(120, 0, w - 120, h);
+    auto contentArea = juce::Rectangle<int>(kbWidth, 0, w - kbWidth, h - ctrlHeight);
+
+    sclKbmDisplay->setBounds(contentArea);
+    radialScaleGraph->setBounds(contentArea);
+    intervalMatrix->setBounds(contentArea);
+    controlArea->setBounds(kbWidth, h - ctrlHeight, w - kbWidth, ctrlHeight);
+
     // it's a bit of a hack to put this here but by this [oint i'm all set up
     if (storage)
     {
         auto mcoff = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         tuningKeyboardTableModel->setMiddleCOff(mcoff);
     }
+}
+
+void TuningOverlay::showEditor(int which)
+{
+    jassert(which >= 0 && which <= 2);
+    sclKbmDisplay->setVisible(which == 0);
+    radialScaleGraph->setVisible(which == 1);
+    intervalMatrix->setVisible(which == 2);
 }
 
 void TuningOverlay::onToneChanged(int tone, double newCentsValue)
@@ -1072,6 +1337,12 @@ void TuningOverlay::onSkinChanged()
 {
     tuningKeyboardTableModel->setSkin(skin, associatedBitmapStore);
     tuningKeyboardTable->repaint();
+
+    sclKbmDisplay->setSkin(skin, associatedBitmapStore);
+    radialScaleGraph->setSkin(skin, associatedBitmapStore);
+    intervalMatrix->setSkin(skin, associatedBitmapStore);
+
+    controlArea->setSkin(skin, associatedBitmapStore);
 }
 
 void TuningOverlay::onTearOutChanged(bool isTornOut) { doDnD = isTornOut; }

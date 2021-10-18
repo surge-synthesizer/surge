@@ -161,9 +161,13 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
     auto wt = window.getName();
 
     String surgeLabel = "Surge XT";
-    auto surgeVersion = Surge::Build::FullVersionStr;
+    std::string surgeVersion = Surge::Build::FullVersionStr;
     auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14);
     auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14);
+
+#if BUILD_IS_DEBUG
+    surgeVersion += " DEBUG";
+#endif
 
     if (wt != "Surge XT")
     {

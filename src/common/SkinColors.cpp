@@ -457,6 +457,41 @@ const Surge::Skin::Color ActiveTabBackground("tabbar.active.background", 100, 50
     Border("tabbar.border", 180, 100, 0), Text("tabbar.text", 255, 255, 255),
     TextHover("tabbar.text.hover", 255, 0x90, 0);
 }
+
+namespace TextMultiSwitch
+{
+const Surge::Skin::Color Background("textmultiswitch.background", 0xE3, 0xE3, 0xE3),
+    Border("textmultiswitch.border", 0x97, 0x97, 0x97),
+    Divider("textmultiswitch.divider", 0x97, 0x97, 0x97, 192),
+    DeactivatedText("textmultiswitch.deactivatedtext", 0x97, 0x97, 0x97),
+    Text("textmultiswitch.text", 0, 0, 0), OnText("textmultiswitch.ontext", 0, 0, 0),
+    HoverText("textmultiswitch.hovertext", 0, 0, 0),
+    HoverOnText("textmultiswitch.hoverontext", 0xFF, 0x93, 0x00),
+    HoverFill("textmultiswitch.hoverfill", 0xF1, 0xBB, 0x72),
+    HoverOutline("text.multiswitch.hoveroutline", 0, 0, 0, 0),
+    HoverOnFill("textmultiswitch.hoveronfill", 0x80, 0x49, 0x00),
+    HoverOnOutline("textmultiswitch.hoveronoutline", 0, 0, 0, 0),
+    OnFill("textmultiswitch.onfill", 0xFF, 0x9A, 0x10),
+    OnOutline("textmultiswitch.outlie", 0, 0, 0, 0);
+} // namespace TextMultiSwitch
 } // namespace JuceWidgets
+
+namespace TuningOverlay
+{
+namespace FrequencyKeyboard
+{
+const Surge::Skin::Color WhiteKey("tuning.freqkbd.whitekey", 0x97, 0x97, 0x97),
+    BlackKey("tuning.freqkbd,blackkey", 0x24, 0x24, 0x24),
+    Separator("tuning.freqkbd;separator", 0x00, 0x00, 0x00),
+    Text("tuning.freqkbd.text", 0xFF, 0xFF, 0xFF),
+    PressedKey("tuning.freqkbd.pressedkey", 0xFF, 0x93, 0x00),
+    PressedKeyText("tuning.freqkbd.pressedkey.text", 0x00, 0x00, 0x00);
+
+}
+namespace SCLKBM
+{
+
+}
+} // namespace TuningOverlay
 
 } // namespace Colors

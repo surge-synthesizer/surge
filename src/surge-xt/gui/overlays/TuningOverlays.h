@@ -48,6 +48,8 @@ class SCLKBMDisplay;
 class RadialScaleGraph;
 struct IntervalMatrix;
 
+struct TuningControlArea;
+
 struct TuningOverlay : public OverlayComponent,
                        public Surge::GUI::SkinConsumingComponent,
                        public juce::FileDragAndDropTarget
@@ -86,8 +88,10 @@ struct TuningOverlay : public OverlayComponent,
 
     std::unique_ptr<TuningTableListBoxModel> tuningKeyboardTableModel;
     std::unique_ptr<juce::TableListBox> tuningKeyboardTable;
-    std::unique_ptr<juce::TabbedComponent> tabArea;
 
+    std::unique_ptr<TuningControlArea> controlArea;
+
+    void showEditor(int which);
     std::unique_ptr<SCLKBMDisplay> sclKbmDisplay;
     std::unique_ptr<RadialScaleGraph> radialScaleGraph;
     std::unique_ptr<IntervalMatrix> intervalMatrix;

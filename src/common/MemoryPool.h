@@ -16,9 +16,6 @@
 #ifndef SURGE_MEMORYPOOL_H
 #define SURGE_MEMORYPOOL_H
 
-#include <unordered_set>
-#include <iostream>
-
 namespace Surge
 {
 namespace Memory
@@ -33,7 +30,6 @@ template <typename T, size_t preAlloc, size_t growBy, size_t capacity = 16384> s
     }
     ~MemoryPool()
     {
-        std::cout << "Cleaning Up MemProol with " << position << std::endl;
         for (size_t i = 0; i < position; ++i)
             delete pool[i];
     }
