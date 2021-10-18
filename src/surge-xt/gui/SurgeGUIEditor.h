@@ -300,7 +300,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     {
         NO_EDITOR,
         MSEG_EDITOR,
-        STORE_PATCH,
+        SAVE_PATCH,
         PATCH_BROWSER,
         MODULATION_EDITOR,
         FORMULA_EDITOR,

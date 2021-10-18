@@ -27,7 +27,7 @@
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatchDialog()
 {
-    auto npc = Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG;
+    auto npc = Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG;
     auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
     auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
@@ -90,7 +90,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
 
     // since it is now modal center in the window
     auto posRect = skinCtrl->getRect().withCentre(frame->getBounds().getCentre());
-    pb->setEnclosingParentTitle("Store Patch");
+    pb->setEnclosingParentTitle("Save Patch");
     pb->setEnclosingParentPosition(posRect);
     pb->setHasIndependentClose(false);
     return pb;
@@ -234,7 +234,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         locationForMSFR(pt.get());
         return pt;
     }
-    case STORE_PATCH:
+    case SAVE_PATCH:
         return makeStorePatchDialog();
         break;
     case TUNING_EDITOR:
@@ -394,7 +394,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     case WAVESHAPER_ANALYZER:
         onClose = [this]() { this->synth->refresh_editor = true; };
         break;
-    case STORE_PATCH:
+    case SAVE_PATCH:
         isModal = true;
         break;
     default:
@@ -520,7 +520,7 @@ bool SurgeGUIEditor::overlayConsumesKeyboard(OverlayTags ofType)
     switch (ofType)
     {
     case PATCH_BROWSER:
-    case STORE_PATCH:
+    case SAVE_PATCH:
     case FORMULA_EDITOR:
         return true;
     default:

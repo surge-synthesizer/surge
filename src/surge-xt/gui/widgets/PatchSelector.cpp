@@ -450,43 +450,32 @@ void PatchSelector::showClassicMenu(bool single_category)
             storage->patch_category[current_category].isFactory ? "Factory" : "User");
     });
 
-    if (isUser)
-    {
-        contextMenu.addItem("Rename Patch", [this]() {
-            storage->reportError("Coming Soon", "Function Not Implemented Yet");
-        });
-        contextMenu.addItem("Delete Patch", [this]() {
-            storage->reportError("Coming Soon", "Function Not Implemented Yet");
-        });
-    }
-
-#if INCLUDE_PATCH_BROWSER
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database..."), [this]() {
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Save Patch"), [this]() {
         auto sge = firstListenerOfType<SurgeGUIEditor>();
 
         if (sge)
         {
-            sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
+            sge->showOverlay(SurgeGUIEditor::SAVE_PATCH);
         }
     });
-#endif
 
-    contextMenu.addSeparator();
-
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch Browser"),
-                        [this]() { this->storage->refresh_patchlist(); });
-
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch From File..."), [this]() {
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch from File..."), [this]() {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
         auto patchPath = storage->userPatchesPath;
+
         patchPath =
             Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastPatchPath, patchPath);
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
         if (!sge)
+        {
             return;
+        }
+
         sge->fileChooser = std::make_unique<juce::FileChooser>(
             "Select Patch to Load", juce::File(path_to_string(patchPath)), "*.fxp");
+
         sge->fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
             [this, patchPath](const juce::FileChooser &c) {
@@ -502,7 +491,9 @@ void PatchSelector::showClassicMenu(bool single_category)
                 {
                     sge->queuePatchFileLoad(rString);
                 }
+
                 auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
                 if (dir != patchPath)
                 {
                     Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastPatchPath,
@@ -510,6 +501,35 @@ void PatchSelector::showClassicMenu(bool single_category)
                 }
             });
     });
+
+    contextMenu.addSeparator();
+
+    if (isUser)
+    {
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Patch"), [this]() {
+            storage->reportError("This function has not been implemented yet!", "Coming Soon");
+        });
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this]() {
+            storage->reportError("This function has not been implemented yet!", "Coming Soon");
+        });
+    }
+
+    contextMenu.addSeparator();
+
+#if INCLUDE_PATCH_BROWSER
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database"), [this]() {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        if (sge)
+        {
+            sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
+        }
+    });
+#endif
+
+    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch Browser"),
+                        [this]() { this->storage->refresh_patchlist(); });
 
     contextMenu.addSeparator();
 
@@ -531,13 +551,15 @@ void PatchSelector::showClassicMenu(bool single_category)
     if (sge)
     {
         auto hu = sge->helpURLForSpecial("patch-browser");
-
         auto lurl = hu;
+
         if (hu != "")
         {
             lurl = sge->fullyResolvedHelpURL(hu);
         }
+
         auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Patch Browser", lurl);
+
         hmen->setSkin(skin, associatedBitmapStore);
         hmen->setCenterBold(false);
         contextMenu.addCustomItem(-1, std::move(hmen));
@@ -554,17 +576,21 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
 {
     std::vector<std::pair<int, Patch>> favs;
     int i = 0;
+
     for (auto p : storage->patch_list)
     {
         if (p.isFavorite)
         {
             favs.emplace_back(i, p);
         }
+
         i++;
     }
 
     if (favs.empty())
+    {
         return false;
+    }
 
     std::sort(favs.begin(), favs.end(),
               [](const auto &a, const auto &b) { return a.second.name < b.second.name; });
@@ -597,6 +623,7 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
                       [this, f]() { this->loadPatch(f.first); });
         }
     }
+
     return true;
 }
 

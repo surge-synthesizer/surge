@@ -2669,7 +2669,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_category:
     {
-        closeOverlay(STORE_PATCH);
+        closeOverlay(SAVE_PATCH);
 
         if (control->getValue() > 0.5f)
             synth->incrementCategory(true);
@@ -2703,7 +2703,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_patch:
     {
-        closeOverlay(STORE_PATCH);
+        closeOverlay(SAVE_PATCH);
 
         auto insideCategory = Surge::Storage::getUserDefaultValue(
             &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
@@ -2811,7 +2811,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        showOverlay(STORE_PATCH);
+        showOverlay(SAVE_PATCH);
     }
     break;
 
