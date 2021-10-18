@@ -27,7 +27,7 @@ inline std::unordered_map<std::string, int> createIdNameMap()
     res["FX_GLOBAL_BYPASS"] = 144;
     res["ENV_SHAPE"] = 145;
     res["LFO_TRIGGER_MODE"] = 146;
-    res["STORE_PATCH"] = 148;
+    res["SAVE_PATCH"] = 148;
     res["PREVNEXT_JOG"] = 149;
     res["OSC_FM_ROUTING"] = 151;
     res["LFO_UNIPOLAR"] = 152;

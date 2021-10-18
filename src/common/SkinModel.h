@@ -245,8 +245,8 @@ struct Connector
         JOG_WAVESHAPE,
         ANALYZE_WAVESHAPE,
 
-        STORE_PATCH,
-        STORE_PATCH_DIALOG,
+        SAVE_PATCH,
+        SAVE_PATCH_DIALOG,
 
         STATUS_MPE,
         STATUS_TUNE,
@@ -419,7 +419,7 @@ namespace OtherControls
 {
 extern Surge::Skin::Connector surge_menu;
 // extern Surge::Skin::Connector fxSelect;
-extern Surge::Skin::Connector patch_category_jog, patch_jog, storePatch;
+extern Surge::Skin::Connector patch_category_jog, patch_jog, patch_save;
 
 extern Surge::Skin::Connector status_mpe, status_zoom, status_tune;
 
@@ -431,7 +431,7 @@ extern Surge::Skin::Connector patch_browser;
 
 extern Surge::Skin::Connector mseg_editor;
 
-extern Surge::Skin::Connector store_patch_dialog;
+extern Surge::Skin::Connector save_patch_dialog;
 
 // In surge 1.8, the modulation panel is moveable en-masse but individual modulators
 // are not relocatable. This item gives you the location of the modulators

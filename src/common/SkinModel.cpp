@@ -541,9 +541,9 @@ Connector patch_category_jog =
     Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
 Connector patch_jog =
     Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
-Connector patch_store = Connector("controls.patch.store", 510, 42, 37, 12, Components::MultiSwitch,
-                                  Connector::STORE_PATCH)
-                            .withHSwitch2Properties(IDB_STORE_PATCH, 1, 1, 1)
+Connector patch_save = Connector("controls.patch.save", 510, 42, 37, 12, Components::MultiSwitch,
+                                  Connector::SAVE_PATCH)
+                            .withHSwitch2Properties(IDB_SAVE_PATCH, 1, 1, 1)
                             .withProperty(Component::DRAGGABLE_HSWITCH, false);
 
 Connector status_panel = Connector("controls.status.panel", 562, 12, Components::Group);
@@ -566,8 +566,8 @@ Connector vu_meter =
 Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Components::Custom,
                                   Connector::MSEG_EDITOR_WINDOW);
 
-Connector store_patch_dialog = Connector("controls.patch.store.window", 157, 57, 390, 270,
-                                         Components::Custom, Connector::STORE_PATCH_DIALOG);
+Connector save_patch_dialog = Connector("controls.patch.save.window", 157, 57, 390, 270,
+                                         Components::Custom, Connector::SAVE_PATCH_DIALOG);
 
 // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in
 // SurgeGUIEditor

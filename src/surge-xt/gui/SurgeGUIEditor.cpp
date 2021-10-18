@@ -1450,11 +1450,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Configure");
             break;
         }
-        case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH:
+        case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Save Patch",
-                                                        "Store");
+                                                        "Save");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
@@ -1574,7 +1574,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
-        case Surge::Skin::Connector::NonParameterConnection::STORE_PATCH_DIALOG:
+        case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
@@ -5575,7 +5575,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         if (key.getModifiers().isShiftDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
                                                  key.getKeyCode() == juce::KeyPress::rightKey))
         {
-            closeOverlay(STORE_PATCH);
+            closeOverlay(SAVE_PATCH);
 
             synth->incrementCategory(key.getKeyCode() == juce::KeyPress::rightKey);
 
@@ -5586,7 +5586,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         if (key.getModifiers().isCommandDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
                                                    key.getKeyCode() == juce::KeyPress::rightKey))
         {
-            closeOverlay(STORE_PATCH);
+            closeOverlay(SAVE_PATCH);
 
             auto insideCategory = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
@@ -5621,7 +5621,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // store patch
         if (key.getModifiers().isCommandDown() && key.getKeyCode() == 83) // 's'
         {
-            showOverlay(SurgeGUIEditor::STORE_PATCH);
+            showOverlay(SurgeGUIEditor::SAVE_PATCH);
 
             return true;
         }
