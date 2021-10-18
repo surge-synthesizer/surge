@@ -1453,8 +1453,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Save Patch",
-                                                        "Save");
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Save Patch", "Save");
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
