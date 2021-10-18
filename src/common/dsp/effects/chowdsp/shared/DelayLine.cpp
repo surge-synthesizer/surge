@@ -49,19 +49,21 @@ DelayLine<SampleType, InterpolationType>::DelayLine(size_t maximumDelayInSamples
 
 //==============================================================================
 template <typename SampleType, typename InterpolationType>
-void DelayLine<SampleType, InterpolationType>::setDelay(NumericType newDelayInSamples)
+void DelayLine<SampleType, InterpolationType>::setDelay(
+    typename DelayLineBase<SampleType>::NumericType newDelayInSamples)
 {
-    auto upperLimit = (NumericType)(totalSize - 1);
+    using NType = typename DelayLineBase<SampleType>::NumericType;
+    auto upperLimit = (NType)(totalSize - 1);
 
-    delay = limit_range(newDelayInSamples, (NumericType)0, upperLimit);
+    delay = limit_range(newDelayInSamples, (NType)0, upperLimit);
     delayInt = static_cast<int>(std::floor(delay));
-    delayFrac = delay - (NumericType)delayInt;
+    delayFrac = delay - (NType)delayInt;
 
     interpolator.updateInternalVariables(delayInt, delayFrac);
 }
 
 template <typename SampleType, typename InterpolationType>
-typename DelayLine<SampleType, InterpolationType>::NumericType
+typename DelayLineBase<SampleType>::NumericType
 DelayLine<SampleType, InterpolationType>::getDelay() const
 {
     return delay;

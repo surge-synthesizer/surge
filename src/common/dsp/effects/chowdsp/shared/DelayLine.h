@@ -109,10 +109,10 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     /** Sets the delay in samples. */
-    void setDelay(NumericType newDelayInSamples) final;
+    void setDelay(typename DelayLineBase<SampleType>::NumericType newDelayInSamples) final;
 
     /** Returns the current delay in samples. */
-    NumericType getDelay() const final;
+    typename DelayLineBase<SampleType>::NumericType getDelay() const final;
 
     //==============================================================================
     /** Initialises the processor. */
@@ -241,7 +241,7 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     InterpolationType interpolator;
-    NumericType delay = 0.0, delayFrac = 0.0;
+    typename DelayLineBase<SampleType>::NumericType delay = 0.0, delayFrac = 0.0;
     int delayInt = 0;
     size_t totalSize = 4;
 };
