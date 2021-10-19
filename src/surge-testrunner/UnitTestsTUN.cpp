@@ -5,6 +5,7 @@
 
 #include "HeadlessUtils.h"
 #include "Player.h"
+#include "Tunings.h"
 
 #include "catch2/catch2.hpp"
 #include "Tunings.h"
@@ -1332,4 +1333,181 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
                 REQUIRE(ro == ru);
         }
     }
+}
+
+TEST_CASE("Octave Per Channel and Porta", "[tun]")
+{
+    namespace hs = Surge::Headless;
+
+    SECTION("BaseLine Different Note Same Channel")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+
+        auto events = hs::playerEvents_t();
+
+        int len = 20000;
+        auto on = hs::Event();
+        on.type = hs::Event::NOTE_ON;
+        on.channel = 0;
+        on.data1 = 60;
+        on.data2 = 100;
+        on.atSample = 0;
+        events.push_back(on);
+
+        on.data1 = 72;
+        on.atSample = len;
+        events.push_back(on);
+
+        on.data1 = 60;
+        on.type = hs::Event::NOTE_OFF;
+        on.atSample = len * 2;
+        events.push_back(on);
+
+        on.type = hs::Event::NO_EVENT;
+        on.atSample = len * 3;
+
+        float *buffer;
+        int nS, nC;
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+        delete[] buffer;
+
+        for (int sc = 0; sc < n_scenes; ++sc)
+        {
+            for (int k = 0; k < 128; ++k)
+            {
+                if (surge->midiKeyPressedForScene[sc][k] > 0)
+                {
+                    std::cout << "KEYON is " << k << std::endl;
+                }
+            }
+        }
+
+        events.clear();
+        on.data1 = 72;
+        on.atSample = len * 4;
+        on.type = hs::Event::NOTE_OFF;
+        events.push_back(on);
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+        int nSTrim = (int)(nS / 2 * 0.8);
+        int start = (int)(nS / 2 * 0.05);
+        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+        delete[] buffer;
+
+        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 64).margin(1));
+    }
+
+#if RESOLVED_5259
+    SECTION("BaseLine Different Note Different Channel")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+
+        auto events = hs::playerEvents_t();
+
+        int len = 20000;
+        auto on = hs::Event();
+        on.type = hs::Event::NOTE_ON;
+        on.channel = 0;
+        on.data1 = 60;
+        on.data2 = 100;
+        on.atSample = 0;
+        events.push_back(on);
+
+        on.data1 = 72;
+        on.atSample = len;
+        on.channel = 1;
+        events.push_back(on);
+
+        on.data1 = 60;
+        on.type = hs::Event::NOTE_OFF;
+        on.channel = 0;
+        on.atSample = len * 2;
+        events.push_back(on);
+
+        on.type = hs::Event::NO_EVENT;
+        on.atSample = len * 3;
+
+        float *buffer;
+        int nS, nC;
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+        delete[] buffer;
+
+        events.clear();
+        on.data1 = 72;
+        on.atSample = len * 4;
+        on.channel = 1;
+        on.type = hs::Event::NOTE_OFF;
+        events.push_back(on);
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+        int nSTrim = (int)(nS / 2 * 0.8);
+        int start = (int)(nS / 2 * 0.05);
+        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+        delete[] buffer;
+
+        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 4).margin(1));
+    }
+
+    SECTION("BaseLine Same Note Different Channel")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+
+        auto events = hs::playerEvents_t();
+
+        int len = 20000;
+        auto on = hs::Event();
+        on.type = hs::Event::NOTE_ON;
+        on.channel = 0;
+        on.data1 = 60;
+        on.data2 = 100;
+        on.atSample = 0;
+        events.push_back(on);
+
+        on.data1 = 60;
+        on.atSample = len;
+        on.channel = 1;
+        events.push_back(on);
+
+        on.data1 = 60;
+        on.type = hs::Event::NOTE_OFF;
+        on.channel = 0;
+        on.atSample = len * 2;
+        events.push_back(on);
+
+        on.type = hs::Event::NO_EVENT;
+        on.atSample = len * 3;
+
+        float *buffer;
+        int nS, nC;
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+        delete[] buffer;
+
+        events.clear();
+        on.data1 = 60;
+        on.atSample = len * 4;
+        on.channel = 1;
+        on.type = hs::Event::NOTE_OFF;
+        events.push_back(on);
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+        int nSTrim = (int)(nS / 2 * 0.8);
+        int start = (int)(nS / 2 * 0.05);
+        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+        delete[] buffer;
+
+        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 2).margin(1));
+    }
+#endif
 }
