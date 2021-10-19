@@ -20,6 +20,7 @@
 #include "SkinColors.h"
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
+#include "widgets/MultiSwitch.h"
 
 namespace Surge
 {
@@ -103,10 +104,12 @@ void CodeEditorContainerWithApply::codeDocumentTextInserted(const juce::String &
                                                             int insertIndex)
 {
     applyButton->setEnabled(true);
+    setApplyEnabled(true);
 }
 void CodeEditorContainerWithApply::codeDocumentTextDeleted(int startIndex, int endIndex)
 {
     applyButton->setEnabled(true);
+    setApplyEnabled(true);
 }
 bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::Component *o)
 {
@@ -123,21 +126,15 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
-struct ExpandingFormulaDebugger : public juce::Component, public juce::Button::Listener
+struct ExpandingFormulaDebugger : public juce::Component
 {
     bool isOpen{false};
     ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
     {
-        init = std::make_unique<juce::TextButton>("Init Modulator", "Init");
-        init->addListener(this);
-        step = std::make_unique<juce::TextButton>("Step Modulator", "Step");
-        step->addListener(this);
-        dPhase = std::make_unique<juce::TextEditor>("dPhase");
-        dPhase->setText("0.17", juce::NotificationType::dontSendNotification);
-        dPhaseLabel = std::make_unique<juce::Label>("dP");
         outputDump = std::make_unique<juce::TextEditor>("Output");
         outputDump->setMultiLine(true, false);
         outputDump->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+        addAndMakeVisible(*outputDump);
     }
     FormulaModulatorEditor *editor{nullptr};
 
@@ -178,69 +175,22 @@ struct ExpandingFormulaDebugger : public juce::Component, public juce::Button::L
             outputDump->setText(st, juce::NotificationType::dontSendNotification);
         }
     }
-    std::unique_ptr<juce::Button> init, step;
-    std::unique_ptr<juce::TextEditor> dPhase;
+
     std::unique_ptr<juce::TextEditor> outputDump;
     std::unique_ptr<juce::Label> dPhaseLabel;
     void paint(juce::Graphics &g) override
     {
-        if (isOpen)
-        {
-            g.fillAll(juce::Colours::orchid);
-            g.setColour(juce::Colours::white);
-            g.drawText("Debugger", getLocalBounds(), juce::Justification::centredTop);
-            juce::Path p;
-            p.addTriangle(getWidth() - 2, 2, getWidth() - 2, 14, getWidth() - 16, 7);
-            g.fillPath(p);
-        }
-        else
-        {
-            g.fillAll(juce::Colours::steelblue);
-            g.setColour(juce::Colours::white);
-
-            auto p = juce::Path();
-            p.addTriangle(2, 2, getWidth() - 2, 2, getWidth() / 2, getWidth() - 2);
-            g.fillPath(p);
-
-            juce::Graphics::ScopedSaveState gs(g);
-            auto at = juce::AffineTransform().rotated(juce::MathConstants<float>::halfPi);
-            g.addTransform(at);
-            auto b = juce::Rectangle<int>(16, -getWidth(), getHeight() - 16, getWidth());
-            g.drawText("Debugger", b, juce::Justification::topLeft);
-        }
+        g.fillAll(juce::Colour(0xFF242424));
+        g.setColour(juce::Colours::white);
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+        g.drawText("Debug ModState", getLocalBounds(), juce::Justification::centredTop);
     }
-    void mouseDown(const juce::MouseEvent &e) override { setOpen(!isOpen); }
 
     void setOpen(bool b)
     {
         isOpen = b;
-        if (isOpen)
-        {
-            addAndMakeVisible(*init);
-            addAndMakeVisible(*step);
-            addAndMakeVisible(*outputDump);
-        }
-        else
-        {
-            removeChildComponent(init.get());
-            removeChildComponent(step.get());
-            removeChildComponent(outputDump.get());
-        }
+        setVisible(b);
         editor->resized();
-    }
-
-    void buttonClicked(juce::Button *button) override
-    {
-        if (button == init.get())
-        {
-            initializeLfoDebugger();
-        }
-        if (button == step.get())
-        {
-            if (!lfoDebugger)
-                initializeLfoDebugger();
-            stepLfoDebugger();
-        }
     }
 
     void resized() override
@@ -248,15 +198,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public juce::Button::L
         if (isOpen)
         {
             int headerArea = 16;
-            int buttonHeight = 20;
             auto w = getWidth();
             auto m = 2;
-            auto r = juce::Rectangle<int>(0, headerArea, w, buttonHeight);
-            auto ri = r.withWidth(getWidth() / 2).reduced(2);
-            init->setBounds(ri);
-            ri = ri.translated(getWidth() / 2, 0);
-            step->setBounds(ri);
-            auto tx = getLocalBounds().withTop(headerArea + buttonHeight).reduced(2);
+            auto tx = getLocalBounds().withTop(headerArea).reduced(2);
             outputDump->setBounds(tx);
         }
     }
@@ -264,6 +208,200 @@ struct ExpandingFormulaDebugger : public juce::Component, public juce::Button::L
     std::unique_ptr<LFOModulationSource> lfoDebugger;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ExpandingFormulaDebugger);
+};
+
+struct FormulaControlArea : public juce::Component,
+                            public Surge::GUI::SkinConsumingComponent,
+                            public Surge::GUI::IComponentTagValue::Listener
+{
+    enum tags
+    {
+        tag_select_tab = 0x575200,
+        tag_code_apply,
+        tag_debugger_show,
+        tag_debugger_init,
+        tag_debugger_step
+    };
+    FormulaModulatorEditor *overlay{nullptr};
+    FormulaControlArea(FormulaModulatorEditor *ol) : overlay(ol) {}
+
+    void resized() override
+    {
+        if (skin)
+            rebuild();
+    }
+
+    void rebuild()
+    {
+        int labelHeight = 12;
+        int buttonHeight = 14;
+        int numfieldHeight = 12;
+        int margin = 2;
+        int xpos = 10;
+
+        removeAllChildren();
+        auto h = getHeight();
+
+        {
+            int marginPos = xpos + margin;
+            int btnWidth = 100;
+            int ypos = 1 + labelHeight + margin;
+
+            codeL = newL("Code");
+            codeL->setBounds(xpos, 1, 100, labelHeight);
+            addAndMakeVisible(*codeL);
+
+            codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+
+            codeS->setBounds(btnrect);
+            codeS->setStorage(overlay->storage);
+            codeS->setLabels({"Modulator", "Prelude"});
+            codeS->addListener(this);
+            codeS->setTag(tag_select_tab);
+            codeS->setHeightOfOneImage(buttonHeight);
+            codeS->setRows(1);
+            codeS->setColumns(2);
+            codeS->setDraggable(true);
+            codeS->setSkin(skin, associatedBitmapStore);
+            addAndMakeVisible(*codeS);
+            marginPos += btnWidth + margin;
+
+            applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, 60, buttonHeight);
+
+            applyS->setBounds(btnrect);
+            applyS->setStorage(overlay->storage);
+            applyS->setLabels({"Apply"});
+            applyS->addListener(this);
+            applyS->setTag(tag_code_apply);
+            applyS->setHeightOfOneImage(buttonHeight);
+            applyS->setRows(1);
+            applyS->setColumns(1);
+            applyS->setDraggable(true);
+            applyS->setSkin(skin, associatedBitmapStore);
+            applyS->setEnabled(false);
+            addAndMakeVisible(*applyS);
+            xpos += 60 + 10;
+        }
+
+        // Debugger Controls from the left
+        {
+            debugL = newL("Debugger");
+            debugL->setBounds(getWidth() - 10 - 100, 1, 100, labelHeight);
+            debugL->setJustificationType(juce::Justification::centredRight);
+            addAndMakeVisible(*debugL);
+
+            int btnWidth = 60;
+            int bpos = getWidth() - 10 - btnWidth;
+            int ypos = 1 + labelHeight + margin;
+
+            auto ma = [&](const std::string &l, tags t) {
+                auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+                auto btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
+
+                res->setBounds(btnrect);
+                res->setStorage(overlay->storage);
+                res->setLabels({l});
+                res->addListener(this);
+                res->setTag(t);
+                res->setHeightOfOneImage(buttonHeight);
+                res->setRows(1);
+                res->setColumns(1);
+                res->setDraggable(false);
+                res->setSkin(skin, associatedBitmapStore);
+                res->setValue(0);
+                return res;
+            };
+
+            showS = ma("Show", tag_debugger_show);
+            addAndMakeVisible(*showS);
+            bpos -= btnWidth + margin;
+
+            stepS = ma("Step", tag_debugger_step);
+            stepS->setEnabled(false);
+            addAndMakeVisible(*stepS);
+            bpos -= btnWidth + margin;
+
+            initS = ma("Init", tag_debugger_init);
+            initS->setEnabled(false);
+            addAndMakeVisible(*initS);
+            bpos -= btnWidth + margin;
+        }
+    }
+
+    std::unique_ptr<juce::Label> newL(const std::string &s)
+    {
+        auto res = std::make_unique<juce::Label>(s, s);
+        res->setText(s, juce::dontSendNotification);
+        res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+        res->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        return res;
+    }
+
+    void valueChanged(GUI::IComponentTagValue *c) override
+    {
+        auto tag = (tags)(c->getTag());
+        switch (tag)
+        {
+        case tag_select_tab:
+        {
+            int m = c->getValue();
+            if (m > 0.5)
+                overlay->showPreludeCode();
+            else
+                overlay->showModulatorCode();
+        }
+        break;
+        case tag_code_apply:
+        {
+            overlay->applyCode();
+        }
+        break;
+        case tag_debugger_show:
+        {
+            if (overlay->efd->isOpen)
+            {
+                overlay->efd->setOpen(false);
+                showS->setLabels({"Show"});
+                stepS->setEnabled(false);
+                initS->setEnabled(false);
+                repaint();
+            }
+            else
+            {
+                overlay->efd->setOpen(true);
+                showS->setLabels({"Hide"});
+                stepS->setEnabled(true);
+                initS->setEnabled(true);
+                repaint();
+            }
+        }
+        case tag_debugger_init:
+        {
+            overlay->efd->initializeLfoDebugger();
+        }
+        break;
+        case tag_debugger_step:
+        {
+            if (!overlay->efd->lfoDebugger)
+                overlay->efd->initializeLfoDebugger();
+            overlay->efd->stepLfoDebugger();
+        }
+        break;
+        default:
+            break;
+        }
+    }
+
+    std::unique_ptr<juce::Label> codeL, debugL;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, applyS, showS, initS, stepS;
+
+    void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
+
+    void onSkinChanged() override { rebuild(); }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaControlArea);
 };
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *ls,
@@ -281,17 +419,14 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay->setReadOnly(true);
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
-    tabs =
-        std::make_unique<juce::TabbedComponent>(juce::TabbedButtonBar::Orientation::TabsAtBottom);
-    tabs->addTab("Formula", juce::Colours::red, mainEditor.get(), false);
-    tabs->addTab("Prelude", juce::Colours::yellow, preludeDisplay.get(), false);
-    tabs->addTab("Help", juce::Colours::green, new juce::Label("Help", "Coming Soon"), true);
-    addAndMakeVisible(*tabs);
-
-    tabs->getTabbedButtonBar().addAndMakeVisible(*applyButton);
+    controlArea = std::make_unique<FormulaControlArea>(this);
+    addAndMakeVisible(*controlArea);
+    addAndMakeVisible(*mainEditor);
+    addChildComponent(*preludeDisplay);
 
     efd = std::make_unique<ExpandingFormulaDebugger>(this);
-    addAndMakeVisible(*efd);
+    efd->setVisible(false);
+    addChildComponent(*efd);
 }
 
 FormulaModulatorEditor::~FormulaModulatorEditor() = default;
@@ -301,14 +436,24 @@ void FormulaModulatorEditor::onSkinChanged()
     CodeEditorContainerWithApply::onSkinChanged();
     preludeDisplay->setFont(skin->getFont(Fonts::LuaEditor::Code));
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
+    controlArea->setSkin(skin, associatedBitmapStore);
 }
 
 void FormulaModulatorEditor::applyCode()
 {
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
-    applyButton->setEnabled(false);
     editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
+    setApplyEnabled(false);
+}
+
+void FormulaModulatorEditor::setApplyEnabled(bool b)
+{
+    if (controlArea)
+    {
+        controlArea->applyS->setEnabled(b);
+        controlArea->applyS->repaint();
+    }
 }
 
 void FormulaModulatorEditor::resized()
@@ -318,16 +463,34 @@ void FormulaModulatorEditor::resized()
     auto w = getWidth();
     t.transformPoint(w, h);
 
-    int efdWidth = 14;
-    if (efd->isOpen)
+    int controlHeight = 35;
+    int efdWidth = 0;
+    int efdMargin = 0;
+    if (efd->isVisible())
     {
         efdWidth = 200;
+        efdMargin = 2;
     }
-    tabs->setTabBarDepth(14);
-    tabs->setBounds(2, 2, w - 8 - efdWidth, h - 4);
-    auto b = tabs->getTabbedButtonBar().getLocalBounds();
-    applyButton->setBounds(b.getWidth() - 80, 2, 80 - 2, b.getHeight() - 4);
-    efd->setBounds(w - 4 - efdWidth, 2, efdWidth, h - 4);
+    auto edRect = juce::Rectangle<int>(2, 2, w - 4 - efdMargin - efdWidth, h - controlHeight - 4);
+    mainEditor->setBounds(edRect);
+    preludeDisplay->setBounds(edRect);
+    if (efd->isVisible())
+    {
+        efd->setBounds(w - 4 - efdWidth + efdMargin, 2, efdWidth, h - 4 - controlHeight);
+    }
+    controlArea->setBounds(0, h - controlHeight, w, controlHeight);
+}
+
+void FormulaModulatorEditor::showModulatorCode()
+{
+    preludeDisplay->setVisible(false);
+    mainEditor->setVisible(true);
+}
+
+void FormulaModulatorEditor::showPreludeCode()
+{
+    preludeDisplay->setVisible(true);
+    mainEditor->setVisible(false);
 }
 
 struct WavetablePreviewComponent : juce::Component

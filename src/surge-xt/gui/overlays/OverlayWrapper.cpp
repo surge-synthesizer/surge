@@ -311,6 +311,7 @@ void OverlayWrapper::onSkinChanged()
     {
         skc->setSkin(skin, associatedBitmapStore);
     }
+    icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
 }
 
 } // namespace Overlays

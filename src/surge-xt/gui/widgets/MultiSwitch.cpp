@@ -19,6 +19,7 @@
 #include "AccessibleHelpers.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIUtils.h"
+#include "RuntimeFont.h"
 
 namespace Surge
 {
@@ -369,5 +370,99 @@ std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHand
 void MultiSwitch::setupAccessibility() {}
 #endif
 
+void MultiSwitchSelfDraw::paint(juce::Graphics &g)
+{
+    namespace clr = Colors::JuceWidgets::TextMultiSwitch;
+
+    // these are the classic skin colors just for now
+    g.setColour(skin->getColor(clr::Background));
+    auto b = getLocalBounds().toFloat().reduced(0.5, 0.5);
+    auto corner = 2.f, cornerIn = 1.5f;
+    g.fillRoundedRectangle(b.toFloat(), corner);
+    g.setColour(skin->getColor(clr::Border));
+    g.drawRoundedRectangle(b.toFloat(), corner, 1);
+
+    auto cw = 1.f * (getWidth() - 2) / columns;
+    auto ch = 1.f * (getHeight() - 2) / rows;
+
+    bool solo = rows * columns == 1;
+
+    // Draw the dividers
+    g.setColour(skin->getColor(clr::Divider));
+    if (rows == 1)
+    {
+        for (int c = 1; c < columns; ++c)
+        {
+            auto r = juce::Rectangle<float>(cw * c - 0.5 + 1, 3, 1, getHeight() - 5);
+            g.fillRect(r);
+        }
+    }
+    else if (columns == 1)
+    {
+        jassert(false);
+    }
+
+    int idx = 0;
+    for (int r = 0; r < rows; ++r)
+    {
+        for (auto c = 0; c < columns; ++c)
+        {
+            auto rc = juce::Rectangle<float>(c * cw + 1, r * ch + 1, cw, ch);
+            auto fc = rc.reduced(1.5, 1.5);
+
+            auto isOn = idx == getIntegerValue() && !solo;
+            auto isHo = isHovered && hoverSelection == idx;
+            auto isEn = isEnabled();
+
+            auto fg = skin->getColor(clr::Text);
+            if (!isEn)
+            {
+                fg = juce::Colour(skin->getColor(clr::DeactivatedText));
+            }
+            else if (isOn && isHo)
+            {
+                g.setColour(skin->getColor(clr::HoverOnFill));
+                fg = skin->getColor(clr::HoverOnText);
+                g.fillRoundedRectangle(fc.toFloat(), cornerIn);
+                g.setColour(skin->getColor(clr::HoverOnOutline));
+                g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+            }
+            else if (isOn)
+            {
+                g.setColour(skin->getColor(clr::OnFill));
+                fg = skin->getColor(clr::OnText);
+                g.fillRoundedRectangle(fc.toFloat(), cornerIn);
+                g.setColour(skin->getColor(clr::OnOutline));
+                g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+            }
+            else if (isHo)
+            {
+                if (solo)
+                {
+                    g.setColour(skin->getColor(clr::HoverOnFill));
+                    g.fillRoundedRectangle(fc.toFloat(), cornerIn);
+
+                    fg = skin->getColor(clr::HoverOnText);
+                    g.setColour(skin->getColor(clr::HoverOnOutline));
+                    g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+                }
+                else
+                {
+                    g.setColour(skin->getColor(clr::HoverFill));
+                    g.fillRoundedRectangle(fc.toFloat(), cornerIn);
+
+                    fg = skin->getColor(clr::HoverText);
+                    g.setColour(skin->getColor(clr::HoverOutline));
+                    g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+                }
+            }
+
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            g.setColour(fg);
+            g.drawText(labels[idx], rc, juce::Justification::centred);
+            idx++;
+        }
+    }
+}
 } // namespace Widgets
 } // namespace Surge

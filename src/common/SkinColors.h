@@ -315,6 +315,19 @@ namespace VuMeter
 extern const Surge::Skin::Color Border, Background;
 }
 
+namespace TuningOverlay
+{
+namespace FrequencyKeyboard
+{
+extern const Surge::Skin::Color WhiteKey, BlackKey, Separator, Text, PressedKey, PressedKeyText;
+}
+namespace SCLKBM
+{
+extern const Surge::Skin::Color Background, EditorBorder, EditorBackground, EditorText,
+    EditorCommentText;
+}
+} // namespace TuningOverlay
+
 namespace VirtualKeyboard
 {
 extern const Surge::Skin::Color Text, Shadow;
@@ -334,6 +347,11 @@ namespace JuceWidgets
 namespace TabbedBar
 {
 extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Border, Text, TextHover;
+}
+namespace TextMultiSwitch
+{
+extern const Surge::Skin::Color Background, Border, Divider, DeactivatedText, Text, OnText, OnFill,
+    HoverText, HoverOnText, HoverFill, HoverOutline, HoverOnFill, HoverOnOutline, OnOutline;
 }
 } // namespace JuceWidgets
 } // namespace Colors
