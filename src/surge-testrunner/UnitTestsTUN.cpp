@@ -1358,6 +1358,7 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
 
         on.type = hs::Event::NO_EVENT;
         on.atSample = len * 3;
+        events.push_back(on);
 
         float *buffer;
         int nS, nC;
@@ -1377,80 +1378,156 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
         return freq;
     };
 
-    SECTION("BaseLine - Different Note Same Channel")
-    {
+    auto noteTwoOffFreq = [](auto surge, int key, int channel) {
+        auto events = hs::playerEvents_t();
+
+        int len = 20000;
+        auto on = hs::Event();
+        on.type = hs::Event::NOTE_ON;
+        on.channel = 0;
+        on.data1 = 60;
+        on.data2 = 100;
+        on.atSample = 0;
+        events.push_back(on);
+
+        on.data1 = key;
+        on.channel = channel;
+        on.atSample = len;
+        events.push_back(on);
+
+        on.type = hs::Event::NOTE_OFF;
+        on.atSample = len * 3;
+        events.push_back(on);
+
+        on.type = hs::Event::NO_EVENT;
+        on.atSample = len * 4;
+        events.push_back(on);
+
+        float *buffer;
+        int nS, nC;
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+        delete[] buffer;
+
+        events.clear();
+        events.push_back(on);
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+        int nSTrim = (int)(nS / 2 * 0.8);
+        int start = (int)(nS / 2 * 0.05);
+        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+        delete[] buffer;
+
+        return freq;
+    };
+
+    auto setupSurge = [](auto mode) {
         auto surge = surgeOnSine();
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
+        surge->storage.getPatch().scene[0].polymode.val.i = mode;
         surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
         surge->storage.mapChannelToOctave = true;
         surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        return surge;
+    };
 
-        auto freq = noteTwoFreq(surge, 72, 0);
-        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 64).margin(1));
-    }
-
-    SECTION("Different Note Different Channel")
+    for (auto mode : {/*pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp*/ pm_mono_st, pm_mono_st_fp})
     {
-        auto surge = surgeOnSine();
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "BaseLine - Different Note Same Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 72, 0);
 
-        auto freq = noteTwoFreq(surge, 72, 1);
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 64).margin(1));
+        }
 
-        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 4).margin(1));
-    }
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Different Note Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 72, 1);
 
-    SECTION("Same Note Different Channel")
-    {
-        auto surge = surgeOnSine();
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 4).margin(1));
+        }
 
-        auto freq = noteTwoFreq(surge, 60, 1);
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Same Note Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 60, 1);
 
-        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 2).margin(1));
-    }
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 2).margin(1));
+        }
 
-    SECTION("Same Key Lower Note Different Channel")
-    {
-        auto surge = surgeOnSine();
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Same Key Lower Note Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 60, 15);
 
-        auto freq = noteTwoFreq(surge, 60, 15);
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
 
-        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-    }
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Higher Key Lower Note Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 62, 15);
 
-    SECTION("Higher Key Lower Note Different Channel")
-    {
-        auto surge = surgeOnSine();
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
 
-        auto freq = noteTwoFreq(surge, 62, 15);
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Lower Key Higher Note Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoFreq(surge, 69 - 12, 1);
 
-        REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-    }
+            REQUIRE(freq == Approx(440.0).margin(1));
+        }
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "NoteAbove Off on Same Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoOffFreq(surge, 72, 0);
 
-    SECTION("Lower Key Higher Note Different Channel")
-    {
-        auto surge = surgeOnSine();
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.getPatch().scene[0].polymode.val.i = pm_mono_st;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
 
-        auto freq = noteTwoFreq(surge, 69 - 12, 1);
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "NoteAbove Off on Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoOffFreq(surge, 72, 1);
 
-        REQUIRE(freq == Approx(440.0).margin(1));
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
+
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Same Note on Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoOffFreq(surge, 60, 1);
+
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
+
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Higher Note Lower Pitch Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoOffFreq(surge, 64, 15);
+
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
+
+        DYNAMIC_SECTION("Mode " << mode << ": "
+                                << "Higher Note Higher Pitch Different Channel")
+        {
+            auto surge = setupSurge(mode);
+            auto freq = noteTwoOffFreq(surge, 87, 15);
+
+            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+        }
     }
 }
