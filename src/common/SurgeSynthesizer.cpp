@@ -721,6 +721,26 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     }
                 }
             }
+            else if (storage.mapChannelToOctave)
+            {
+                auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, &storage);
+
+                for (int k = lowkey; k < hikey; ++k)
+                {
+                    for (int ch = 0; ch < 16; ++ch)
+                    {
+                        if (channelState[ch].keyState[k].keystate)
+                        {
+                            auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, &storage);
+
+                            if (primode == ALWAYS_HIGHEST && kadj > keyadj)
+                                createVoice = false;
+                            if (primode == ALWAYS_LOWEST && kadj < keyadj)
+                                createVoice = false;
+                        }
+                    }
+                }
+            }
             else
             {
                 for (int k = lowkey; k < hikey; ++k)
@@ -746,14 +766,14 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 {
                     v->legato(key, velocity, detune);
                     found_one = true;
-                    if (mpeEnabled)
+                    if (mpeEnabled || storage.mapChannelToOctave)
                     {
                         /*
                         ** This voice was created on a channel but is being legato held to another
                         *channel
                         ** so it needs to borrow the channel and channelState. Obviously this can
                         *only
-                        ** happen in MPE mode.
+                        ** happen in MPE mode or channel to octave mode
                         */
                         v->state.channel = channel;
                         v->state.voiceChannelState = &channelState[channel];
