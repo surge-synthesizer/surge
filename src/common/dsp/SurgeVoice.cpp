@@ -82,7 +82,13 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         {
             shift = channel;
         }
-        res += 12 * shift;
+        if (storage->isStandardTuning)
+            res += 12 * shift;
+        else
+        {
+            auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
+            res += ct / 100 * shift;
+        }
     }
 
     return res;
