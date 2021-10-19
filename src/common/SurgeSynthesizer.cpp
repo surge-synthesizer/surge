@@ -2217,8 +2217,10 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             }
 
             if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
+            {
                 memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
                        sizeof(Parameter) * n_fx_params);
+            }
 
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
                                      &storage.getPatch().fx[s], storage.getPatch().globaldata));
@@ -2226,12 +2228,26 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             {
                 fx[s]->init_ctrltypes();
                 if (initp)
+                {
                     fx[s]->init_default_values();
+                }
                 else
                 {
                     for (int j = 0; j < n_fx_params; j++)
                     {
                         auto p = &(storage.getPatch().fx[s].p[j]);
+                        /*
+                         * Alright well what the heck is this. "I can remove this" you may be
+                         * thinking? Well - set_extend_range sets up the min and max for a value in
+                         * some cases, and when unstreaming at this point, it is totallyl unclear
+                         * whether it has been called correctly (and in many cases like move and
+                         * load when i come out as a none but transmogridy to the right type above
+                         * it hasn't) so we just set our extended status back onto ourselves and
+                         * then those side effects which didn't happen through the init path are
+                         * registered here and we can safely check against min and max values
+                         */
+                        p->set_extend_range(p->extend_range);
+
                         if (p->ctrltype != ct_none)
                         {
                             if (p->valtype == vt_float)
@@ -4109,11 +4125,11 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
      * values
      */
     auto cp = [](Parameter &to, const Parameter &from) {
-        to.val = from.val;
-        to.temposync = from.temposync;
         to.set_extend_range(from.extend_range);
+        to.temposync = from.temposync;
         to.deactivated = from.deactivated;
         to.absolute = from.absolute;
+        to.val = from.val;
     };
     for (int i = 0; i < n_fx_params; ++i)
     {
