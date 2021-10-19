@@ -7,6 +7,7 @@
 #include "Player.h"
 
 #include "catch2/catch2.hpp"
+#include "Tunings.h"
 
 #include "UnitTestUtilities.h"
 
@@ -568,7 +569,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
     }
 }
 
-TEST_CASE("Channel to Octave Mapping")
+TEST_CASE("Channel to Octave Mapping", "[tun]")
 {
     SECTION("When disabled and no tuning applied, channel 2 is the same as channel 1")
     {
@@ -643,6 +644,63 @@ TEST_CASE("Channel to Octave Mapping")
             f2 = frequencyForNote(surge, 60, 2, 0, (chanOff + 1 + 16) % 16);
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
+    }
+
+    SECTION("ED2-7 Confirm that it still doubles with short scale")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        auto scale = Tunings::evenDivisionOfSpanByM(2, 7);
+        surge->storage.retuneToScale(scale);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+        auto f0 = frequencyForNote(surge, 60, 2, 0, 0);
+        auto f1 = frequencyForNote(surge, 60, 2, 0, 1);
+        auto f2 = frequencyForNote(surge, 60, 2, 0, 2);
+        auto f15 = frequencyForNote(surge, 60, 2, 0, 15);
+        auto f14 = frequencyForNote(surge, 60, 2, 0, 14);
+
+        auto fr = Tunings::MIDI_0_FREQ * 32;
+        REQUIRE(f0 == Approx(fr).margin(1));
+        REQUIRE(f1 == Approx(fr * 2).margin(1));
+        REQUIRE(f2 == Approx(fr * 4).margin(1));
+        REQUIRE(f15 == Approx(fr / 2).margin(1));
+        REQUIRE(f14 == Approx(fr / 4).margin(1));
+    }
+
+    SECTION("ED3-7 Triples Frequency")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        auto scale = Tunings::evenDivisionOfSpanByM(3, 7);
+        surge->storage.retuneToScale(scale);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+        auto f0 = frequencyForNote(surge, 60, 2, 0, 0);
+        auto f1 = frequencyForNote(surge, 60, 2, 0, 1);
+
+        auto fr = Tunings::MIDI_0_FREQ * 32;
+        REQUIRE(f0 == Approx(fr).margin(1));
+        REQUIRE(f1 == Approx(fr * 3).margin(1));
+    }
+
+    SECTION("ED4-7 Quads Frequency")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        auto scale = Tunings::evenDivisionOfSpanByM(4, 7);
+        surge->storage.retuneToScale(scale);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+        auto f0 = frequencyForNote(surge, 60, 2, 0, 0);
+        auto f1 = frequencyForNote(surge, 60, 2, 0, 1);
+
+        auto fr = Tunings::MIDI_0_FREQ * 32;
+        REQUIRE(f0 == Approx(fr).margin(1));
+        REQUIRE(f1 == Approx(fr * 4).margin(1));
     }
 }
 
