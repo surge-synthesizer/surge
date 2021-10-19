@@ -133,6 +133,8 @@ class alignas(16) SurgeVoice
         }
     }
 
+    static float channelKeyEquvialent(float key, int channel, SurgeStorage *storage);
+
   private:
     template <bool first> void calc_ctrldata(QuadFilterChainState *, int);
     void update_portamento();

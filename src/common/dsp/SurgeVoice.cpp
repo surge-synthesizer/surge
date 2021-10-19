@@ -71,6 +71,14 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         res = (1.f - frac) * b0 + frac * b1;
     }
 
+    res = SurgeVoice::channelKeyEquvialent(res, channel, storage);
+
+    return res;
+}
+
+float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *storage)
+{
+    float res = key;
     if (storage->mapChannelToOctave)
     {
         float shift;
@@ -90,7 +98,6 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
             res += ct / 100 * shift;
         }
     }
-
     return res;
 }
 
