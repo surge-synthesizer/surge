@@ -95,6 +95,14 @@ template class DelayLine<float, DelayLineInterpolationTypes::Lagrange5th>;
 template class DelayLine<double, DelayLineInterpolationTypes::Lagrange5th>;
 template class DelayLine<float, DelayLineInterpolationTypes::Thiran>;
 template class DelayLine<double, DelayLineInterpolationTypes::Thiran>;
+
+#ifdef __GNUC__ // GCC doesn't like "ignored-attributes"...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
 template class DelayLine<__m128, DelayLineInterpolationTypes::Thiran>;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 } // namespace chowdsp

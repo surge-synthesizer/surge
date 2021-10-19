@@ -57,12 +57,6 @@ template <typename SampleType> class DelayLineBase
     virtual void prepare(double /*sampleRate*/, size_t /*blockSize*/) = 0;
     virtual void reset(){};
 
-    virtual void pushSample(size_t /* channel */, SampleType /* sample */) noexcept = 0;
-    virtual SampleType popSample(size_t /* channel */, SampleType /* delayInSamples */,
-                                 bool /* updateReadPointer */) noexcept
-    {
-        return {};
-    }
 
     void copyState(const DelayLineBase<SampleType> &other)
     {
@@ -132,9 +126,9 @@ class DelayLine : public DelayLineBase<SampleType>
                       static_cast<SampleType>(0));
     }
 
-    /** Resets the internal state variables of the processor. */
+    /** Resets the internal state variables of the processor (SIMD). */
     template <typename C = SampleType>
-    typename std::enable_if<std::is_same<C, __m128>::value, void>::type reset()
+    typename std::enable_if<! std::is_floating_point<C>::value, void>::type reset()
     {
         for (auto vec : {&this->writePos, &this->readPos})
             std::fill(vec->begin(), vec->end(), 0);
@@ -154,7 +148,7 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, popSample, process
     */
-    inline void pushSample(size_t channel, SampleType sample) noexcept final
+    inline void pushSample(size_t channel, SampleType sample) noexcept
     {
         const auto writePtr = this->writePos[channel];
 
@@ -196,7 +190,11 @@ class DelayLine : public DelayLineBase<SampleType>
         auto result = interpolateSample(channel);
 
         if (updateReadPointer)
-            this->readPos[channel] = (this->readPos[channel] + totalSize - 1) % totalSize;
+        {
+            auto newReadPtr = this->readPos[channel] + totalSize - 1;
+            newReadPtr = newReadPtr > totalSize ? newReadPtr - totalSize : newReadPtr;
+            this->readPos[channel] = newReadPtr;
+        }
 
         return result;
     }

@@ -50,9 +50,16 @@ class SpringReverbProc
 
     StateVariableFilter<float> dcBlocker;
 
+#ifdef __GNUC__ // GCC doesn't like "ignored-attributes"...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
     static constexpr int allpassStages = 16;
     using APFCascade = std::array<SchroederAllpass<__m128, 2>, allpassStages>;
     APFCascade vecAPFs;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
     std::function<float()> urng01; // A uniform 0,1 RNG
     SmoothedValue<float, ValueSmoothingTypes::Linear> chaosSmooth;

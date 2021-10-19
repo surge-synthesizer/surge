@@ -186,7 +186,9 @@ struct Thiran
         alpha = double((1 - delayFrac) / (1 + delayFrac));
     }
 
-    template <typename T> inline T call(const T *buffer, int delayInt, float delayFrac, T &state)
+    template <typename T>
+    inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
+    call(const T *buffer, int delayInt, float delayFrac, T &state)
     {
         auto index1 = delayInt;
         auto index2 = index1 + 1;
@@ -200,7 +202,6 @@ struct Thiran
         return output;
     }
 
-    template <>
     inline __m128 call(const __m128 *buffer, int delayInt, float delayFrac, __m128 &state)
     {
         auto index1 = delayInt;

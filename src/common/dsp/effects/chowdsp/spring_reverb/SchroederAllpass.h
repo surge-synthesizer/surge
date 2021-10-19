@@ -2,6 +2,11 @@
 
 #include "../shared/DelayLine.h"
 
+#ifdef __GNUC__ // GCC doesn't like "ignored-attributes"...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
+
 namespace chowdsp
 {
 
@@ -95,3 +100,7 @@ template <typename T> class SchroederAllpass<T, 1>
     T g;
 };
 } // namespace chowdsp
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
