@@ -844,7 +844,8 @@ struct SCLKBMDisplay : public juce::Component,
             token_Comment,
             token_Text,
             token_Cents,
-            token_Ratio
+            token_Ratio,
+            token_Playing
         };
 
         bool isSCL{false};
@@ -856,11 +857,13 @@ struct SCLKBMDisplay : public juce::Component,
             if (firstChar == '!')
             {
                 source.skipToEndOfLine();
+                notesOnLine.erase(source.getLine());
                 return token_Comment;
             }
             if (!isSCL)
             {
                 source.skipToEndOfLine();
+                notesOnLine.erase(source.getLine());
                 return token_Text;
             }
             source.skipWhitespace();
@@ -871,13 +874,47 @@ struct SCLKBMDisplay : public juce::Component,
             }
             source.previousChar(); // in case we are just numbers
             source.skipToEndOfLine();
+
+            auto isOn = [this, &source]() {
+                int idx = 0, res = -1;
+                for (auto s : notesOnLine)
+                {
+                    if (s == source.getLine())
+                        res = idx;
+                    idx++;
+                }
+                if (res >= 0 && res < notesOn.size())
+                {
+                    res = (res + 1) % notesOn.size();
+                    auto should = notesOn[res] ? true : false;
+                    return should;
+                }
+                return false;
+            };
             if (nc == '/')
+            {
+                notesOnLine.insert(source.getLine());
+
+                if (isOn())
+                    return token_Playing;
                 return token_Ratio;
+            }
             if (nc == '.')
+            {
+                notesOnLine.insert(source.getLine());
+
+                if (isOn())
+                    return token_Playing;
                 return token_Cents;
+            }
+
+            notesOnLine.erase(source.getLine());
             return token_Text;
         }
 
+        std::set<int> notesOnLine;
+        std::vector<bool> notesOn;
+        void setNotesOn(const std::vector<bool> &no) { notesOn = no; }
         juce::CodeEditorComponent::ColourScheme getDefaultColourScheme() override
         {
             struct Type
@@ -893,6 +930,7 @@ struct SCLKBMDisplay : public juce::Component,
                 {"Text", 0xFF242424},
                 {"Cents", 0xFF1212A0},
                 {"Ratio", 0xFF12A012},
+                { "Playing", 0xFFFF9300 }
             };
             // clang-format on
 
@@ -905,11 +943,37 @@ struct SCLKBMDisplay : public juce::Component,
         }
     };
 
+    std::vector<bool> notesOn;
+    std::bitset<128> bitset{0};
+    void setNotesOn(const std::bitset<128> &bs)
+    {
+        bitset = bs;
+        notesOn.resize(tuning.scale.count);
+        for (int i = 0; i < tuning.scale.count; ++i)
+            notesOn[i] = false;
+
+        for (int i = 0; i < 128; ++i)
+        {
+            if (bitset[i])
+            {
+                notesOn[tuning.scalePositionForMidiNote(i)] = true;
+            }
+        }
+
+        if (sclTokeniser)
+            sclTokeniser->setNotesOn(notesOn);
+        if (scl)
+            scl->retokenise(0, -1);
+        repaint();
+    }
+
     std::unique_ptr<juce::CodeDocument> sclDocument, kbmDocument;
     std::unique_ptr<SCLKBMTokeniser> sclTokeniser, kbmTokeniser;
 
+    Tunings::Tuning tuning;
     void setTuning(const Tunings::Tuning &t)
     {
+        tuning = t;
         sclDocument->replaceAllContent(t.scale.rawText);
         kbmDocument->replaceAllContent(t.keyboardMapping.rawText);
         setApplyEnabled(false);
@@ -1291,6 +1355,7 @@ void TuningOverlay::setMidiOnKeys(const std::bitset<128> &keys)
     tuningKeyboardTable->repaint();
     radialScaleGraph->setNotesOn(keys);
     intervalMatrix->setNotesOn(keys);
+    sclKbmDisplay->setNotesOn(keys);
 }
 
 void TuningOverlay::recalculateScaleText()
