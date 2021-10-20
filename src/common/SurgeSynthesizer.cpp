@@ -640,6 +640,26 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     }
                 }
             }
+            else if (storage.mapChannelToOctave)
+            {
+                auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, &storage);
+
+                for (int k = lowkey; k < hikey; ++k)
+                {
+                    for (int ch = 0; ch < 16; ++ch)
+                    {
+                        if (channelState[ch].keyState[k].keystate)
+                        {
+                            auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, &storage);
+
+                            if (primode == ALWAYS_HIGHEST && kadj > keyadj)
+                                createVoice = false;
+                            if (primode == ALWAYS_LOWEST && kadj < keyadj)
+                                createVoice = false;
+                        }
+                    }
+                }
+            }
             else
             {
                 for (int k = lowkey; k < hikey; ++k)
@@ -1005,7 +1025,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                         storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
                     // v->release();
-                    if (!mpeEnabled)
+                    if (!mpeEnabled && !storage.mapChannelToOctave)
                     {
                         int highest = -1, lowest = 128, latest = -1;
                         int64_t lt = 0;
@@ -1044,6 +1064,67 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             do_switch = true;
                             activateVoiceKey = k;
                             activateVoiceChannel = channel;
+                        }
+                    }
+                    else if (!mpeEnabled && storage.mapChannelToOctave)
+                    {
+                        auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, &storage);
+
+                        int highest = -1, lowest = 128, latest = -1;
+                        int highchan = 0, lowchan = 0, latechan = 0;
+                        int64_t lt = 0;
+
+                        for (int k = lowkey; k < hikey; ++k)
+                        {
+                            for (int ch = 0; ch < 16; ++ch)
+                            {
+                                if (channelState[ch].keyState[k].keystate)
+                                {
+                                    auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, &storage);
+
+                                    if (kadj >= highest)
+                                    {
+                                        highest = kadj;
+                                        highchan = ch;
+                                    }
+                                    if (kadj <= lowest)
+                                    {
+                                        lowest = kadj;
+                                        lowchan = ch;
+                                    }
+                                    if (channelState[channel].keyState[k].voiceOrder >= lt)
+                                    {
+                                        latest = k;
+                                        latechan = ch;
+                                        lt = channelState[channel].keyState[k].voiceOrder;
+                                    }
+                                }
+                            }
+                        }
+
+                        int ch = channel;
+                        switch (storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode)
+                        {
+                        case ALWAYS_HIGHEST:
+                        case NOTE_ON_LATEST_RETRIGGER_HIGHEST:
+                            k = highest >= 0 ? highest : -1;
+                            ch = highchan;
+                            break;
+                        case ALWAYS_LATEST:
+                            k = latest >= 0 ? latest : -1;
+                            ch = latechan;
+                            break;
+                        case ALWAYS_LOWEST:
+                            k = lowest <= 127 ? lowest : -1;
+                            ch = lowchan;
+                            break;
+                        }
+
+                        if (k >= 0)
+                        {
+                            do_switch = true;
+                            activateVoiceKey = k;
+                            activateVoiceChannel = ch;
                         }
                     }
                     else

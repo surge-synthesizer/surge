@@ -1430,7 +1430,7 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
         return surge;
     };
 
-    for (auto mode : {/*pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp*/ pm_mono_st, pm_mono_st_fp})
+    for (auto mode : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
     {
         DYNAMIC_SECTION("Mode " << mode << ": "
                                 << "BaseLine - Different Note Same Channel")
