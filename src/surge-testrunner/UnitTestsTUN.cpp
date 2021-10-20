@@ -1339,195 +1339,108 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
 {
     namespace hs = Surge::Headless;
 
-    auto noteTwoFreq = [](auto surge, int key, int channel) {
-        auto events = hs::playerEvents_t();
-
-        int len = 20000;
-        auto on = hs::Event();
-        on.type = hs::Event::NOTE_ON;
-        on.channel = 0;
-        on.data1 = 60;
-        on.data2 = 100;
-        on.atSample = 0;
-        events.push_back(on);
-
-        on.data1 = key;
-        on.channel = channel;
-        on.atSample = len;
-        events.push_back(on);
-
-        on.type = hs::Event::NO_EVENT;
-        on.atSample = len * 3;
-        events.push_back(on);
-
-        float *buffer;
-        int nS, nC;
-        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
-        delete[] buffer;
-
-        events.clear();
-        events.push_back(on);
-        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
-
-        int nSTrim = (int)(nS / 2 * 0.8);
-        int start = (int)(nS / 2 * 0.05);
-        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
-
-        delete[] buffer;
-
-        return freq;
+    struct TestCase
+    {
+        struct Note
+        {
+            Note(int note, int channel, bool isOn) : n(note), c(channel), on(isOn) {}
+            int n, c;
+            bool on;
+        };
+        TestCase(const std::string &n, MonoVoicePriorityMode prioritYMode, double result,
+                 bool shouldPass, const std::vector<Note> &notes)
+            : name(n), pri(prioritYMode), res(result), should(shouldPass), notes(notes)
+        {
+        }
+        std::string name;
+        MonoVoicePriorityMode pri;
+        double res;
+        bool should;
+        std::vector<Note> notes;
     };
 
-    auto noteTwoOffFreq = [](auto surge, int key, int channel) {
-        auto events = hs::playerEvents_t();
-
-        int len = 20000;
-        auto on = hs::Event();
-        on.type = hs::Event::NOTE_ON;
-        on.channel = 0;
-        on.data1 = 60;
-        on.data2 = 100;
-        on.atSample = 0;
-        events.push_back(on);
-
-        on.data1 = key;
-        on.channel = channel;
-        on.atSample = len;
-        events.push_back(on);
-
-        on.type = hs::Event::NOTE_OFF;
-        on.atSample = len * 3;
-        events.push_back(on);
-
-        on.type = hs::Event::NO_EVENT;
-        on.atSample = len * 4;
-        events.push_back(on);
-
-        float *buffer;
-        int nS, nC;
-        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
-        delete[] buffer;
-
-        events.clear();
-        events.push_back(on);
-        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
-
-        int nSTrim = (int)(nS / 2 * 0.8);
-        int start = (int)(nS / 2 * 0.05);
-        auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
-
-        delete[] buffer;
-
-        return freq;
-    };
-
-    auto setupSurge = [](auto mode) {
-        auto surge = surgeOnSine();
-        surge->storage.getPatch().scene[0].polymode.val.i = mode;
-        surge->storage.getPatch().scene[0].monoVoicePriorityMode = ALWAYS_HIGHEST;
-        surge->storage.mapChannelToOctave = true;
-        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
-        return surge;
-    };
+    auto mno = Tunings::MIDI_0_FREQ;
+    auto n60 = mno * 32;
+    // clang-format off
+    std::vector<TestCase> cases = {
+        {"Different Note Same Channel", ALWAYS_HIGHEST, n60 * 2, true,
+                {{60, 0, 1}, {72, 0, 1}}},
+        {"Different Note Different Channel", ALWAYS_HIGHEST, n60 * 4, true,
+         {{60, 0, 1}, {72, 1, 1}}},
+        {"Same Note Different Channel", ALWAYS_HIGHEST, n60 * 2, true,
+                {{60, 0, 1}, {60, 1, 1}}},
+        {"Same Key But Lower From Channel", ALWAYS_HIGHEST, n60, true,
+                      {{60, 0, 1}, {60, 15, 1}}},
+        {"Higher Key But Lower From Channel", ALWAYS_HIGHEST, n60, true,
+                      {{60, 0, 1}, {63, 15, 1}}},
+        {"Lower Key But Higher From Channel", ALWAYS_HIGHEST, 440.0, true,
+                     {{60, 0, 1}, {69 - 12, 1, 1}}},
+        {"Note Off Same Channel", ALWAYS_HIGHEST, n60, true,
+                           {{60, 0, 1}, {72, 0, 1}, {72, 0, 0}}},
+        {"Note Off Different Channel", ALWAYS_HIGHEST, n60, true,
+                   {{60, 0, 1}, {72, 1, 1}, {72, 1, 0}}},
+        {"Same Note Off Different Channel", ALWAYS_HIGHEST, n60, true,
+                   {{60, 0, 1}, {60, 1, 1}, {60, 1, 0}}},
+        {"Higher Note Lower Pitch Off Different Channel", ALWAYS_HIGHEST, n60, true,
+           {{60, 0, 1}, {64, 15, 1}, {64, 15, 0}}},
+        {"Higher Note Higher Pitch Off Different Channel", ALWAYS_HIGHEST, n60, true,
+           {{60, 0, 1}, {92, 15, 1}, {92, 15, 0}}},
+     };
+    // clang-format on
 
     for (auto mode : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
     {
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "BaseLine - Different Note Same Channel")
+        for (const auto &c : cases)
         {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 72, 0);
+            DYNAMIC_SECTION("Mode " << mode << " : Case : " << c.name)
+            {
+                auto surge = surgeOnSine();
+                surge->storage.getPatch().scene[0].monoVoicePriorityMode = c.pri;
+                surge->storage.getPatch().scene[0].polymode.val.i = mode;
+                surge->storage.mapChannelToOctave = true;
+                surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
 
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 64).margin(1));
-        }
+                int len = BLOCK_SIZE * 30;
+                int idx = 0;
+                auto events = hs::playerEvents_t();
+                for (const auto nt : c.notes)
+                {
+                    auto on = hs::Event();
+                    on.type = nt.on ? hs::Event::NOTE_ON : hs::Event::NOTE_OFF;
+                    on.channel = nt.c;
+                    on.data1 = nt.n;
+                    on.data2 = 100;
+                    on.atSample = len * idx;
+                    events.push_back(on);
+                    idx++;
+                }
 
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Different Note Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 72, 1);
+                auto on = hs::Event();
+                on.type = hs::Event::NO_EVENT;
+                on.atSample = len * idx;
+                events.push_back(on);
 
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 4).margin(1));
-        }
+                float *buffer;
+                int nS, nC;
+                hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+                delete[] buffer;
 
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Same Note Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 60, 1);
+                events.clear();
+                on.atSample = len * 3;
+                events.push_back(on);
+                hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
 
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32 * 2).margin(1));
-        }
+                int nSTrim = (int)(nS / 2 * 0.8);
+                int start = (int)(nS / 2 * 0.05);
+                auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
 
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Same Key Lower Note Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 60, 15);
+                delete[] buffer;
 
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Higher Key Lower Note Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 62, 15);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Lower Key Higher Note Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoFreq(surge, 69 - 12, 1);
-
-            REQUIRE(freq == Approx(440.0).margin(1));
-        }
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "NoteAbove Off on Same Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoOffFreq(surge, 72, 0);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "NoteAbove Off on Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoOffFreq(surge, 72, 1);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Same Note on Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoOffFreq(surge, 60, 1);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Higher Note Lower Pitch Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoOffFreq(surge, 64, 15);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
-        }
-
-        DYNAMIC_SECTION("Mode " << mode << ": "
-                                << "Higher Note Higher Pitch Different Channel")
-        {
-            auto surge = setupSurge(mode);
-            auto freq = noteTwoOffFreq(surge, 87, 15);
-
-            REQUIRE(freq == Approx(Tunings::MIDI_0_FREQ * 32).margin(1));
+                if (c.should)
+                    REQUIRE(freq == Approx(c.res).margin(1));
+                else
+                    REQUIRE_FALSE(freq == Approx(c.res).margin(1));
+            }
         }
     }
 }
