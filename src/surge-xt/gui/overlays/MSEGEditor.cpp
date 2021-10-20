@@ -3259,7 +3259,7 @@ void MSEGEditor::forceRefresh()
     }
 }
 
-void MSEGEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::orchid); }
+void MSEGEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
 void MSEGEditor::resized()
 {

@@ -24,6 +24,7 @@
 #include "overlays/OverlayWrapper.h"
 #include "widgets/MainFrame.h"
 #include "widgets/WaveShaperSelector.h"
+#include "UserDefaults.h"
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatchDialog()
 {
@@ -138,7 +139,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto h = getWindowSizeY() - yPos - xBuf;
         pt->setEnclosingParentPosition(juce::Rectangle<int>(xBuf, yPos, w, h));
         pt->setEnclosingParentTitle("Patch Database");
-        pt->setCanTearOut(true);
+        jassert(false); // Make a key for me please!
+        pt->setCanTearOut({true, Surge::Storage::nKeys});
         return pt;
     }
     break;
@@ -187,7 +189,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
         mse->setEnclosingParentTitle(title);
-        mse->setCanTearOut(true);
+        mse->setCanTearOut({true, Surge::Storage::MSEGFormulaOverlayLocationTearOut});
         locationForMSFR(mse.get());
         return mse;
     }
@@ -230,7 +232,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("Formula"));
 
         pt->setEnclosingParentTitle(title);
-        pt->setCanTearOut(true);
+        pt->setCanTearOut({true, Surge::Storage::MSEGFormulaOverlayLocationTearOut});
         locationForMSFR(pt.get());
         return pt;
     }
@@ -263,7 +265,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         pt->setTuning(synth->storage.currentTuning);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         pt->setEnclosingParentTitle("Tuning Editor");
-        pt->setCanTearOut(true);
+        pt->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut});
         pt->defaultLocation = dl;
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::TuningOverlayLocation));
         return pt;
@@ -346,7 +348,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         pt->setEnclosingParentTitle("Modulation List");
         pt->setEnclosingParentPosition(r);
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::ModlistOverlayLocation));
-        pt->setCanTearOut(true);
+        pt->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
         pt->defaultLocation = dl;
         return pt;
     }

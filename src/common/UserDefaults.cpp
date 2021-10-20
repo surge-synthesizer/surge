@@ -168,6 +168,15 @@ void initMaps()
             case WSAnalysisOverlayLocation:
                 r = "wsAnalysisOverlayLocation";
                 break;
+            case TuningOverlayLocationTearOut:
+                r = "tuningOverlayLocationTearOut";
+                break;
+            case ModlistOverlayLocationTearOut:
+                r = "modlistOverlayLocationTearOut";
+                break;
+            case MSEGFormulaOverlayLocationTearOut:
+                r = "msegFormulaOverlayLocationTearOut";
+                break;
             case nKeys:
                 break;
             }

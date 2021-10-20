@@ -39,9 +39,9 @@ struct OverlayComponent : juce::Component
     void setHasIndependentClose(bool b) { hasIndependentClose = b; }
     bool getHasIndependentClose() { return hasIndependentClose; }
 
-    bool canTearOut{false};
-    void setCanTearOut(bool b) { canTearOut = b; }
-    bool getCanTearOut() { return canTearOut; }
+    std::pair<bool, Surge::Storage::DefaultKey> canTearOut{false, Surge::Storage::nKeys};
+    void setCanTearOut(std::pair<bool, Surge::Storage::DefaultKey> b) { canTearOut = b; }
+    std::pair<bool, Surge::Storage::DefaultKey> getCanTearOut() { return canTearOut; }
     virtual void onTearOutChanged(bool isTornOut) {}
 
     std::pair<bool, Surge::Storage::DefaultKey> canMoveAround{false, Surge::Storage::nKeys};
