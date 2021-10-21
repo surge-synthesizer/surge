@@ -18,6 +18,7 @@
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
 #include "OverlayComponent.h"
+#include "widgets/MainFrame.h"
 
 namespace Surge
 {
@@ -133,18 +134,36 @@ struct TearOutWindow : public juce::DocumentWindow
     }
 
     OverlayWrapper *wrapping{nullptr};
-    void closeButtonPressed()
+    void closeButtonPressed() override
     {
         if (wrapping)
         {
             wrapping->onClose();
         }
     }
-    void minimiseButtonPressed()
+    void minimiseButtonPressed() override
     {
         if (wrapping)
         {
             wrapping->doTearIn();
+        }
+    }
+
+    int outstandingMoves = 0;
+    void moved() override
+    {
+        outstandingMoves++;
+        // writing every move would be "bad". Add a 1 second delay.
+        juce::Timer::callAfterDelay(1000, [this]() { this->moveUpdate(); });
+    }
+    void moveUpdate()
+    {
+        outstandingMoves--;
+        if (outstandingMoves == 0 && wrapping->storage)
+        {
+            auto tl = getBounds().getTopLeft();
+            Surge::Storage::updateUserDefaultValue(
+                wrapping->storage, wrapping->canTearOutPair.second, std::make_pair(tl.x, tl.y));
         }
     }
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TearOutWindow);
@@ -190,6 +209,24 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     dw->setVisible(true);
     if (showAt.x >= 0 && showAt.y >= 0)
         dw->setTopLeftPosition(showAt.x, showAt.y);
+    else
+    {
+        auto pt = std::make_pair(-1, -1);
+        if (storage)
+            pt = Surge::Storage::getUserDefaultValue(storage, canTearOutPair.second, pt);
+        auto dt = juce::Desktop::getInstance()
+                      .getDisplays()
+                      .getDisplayForPoint(editor->frame->getBounds().getTopLeft())
+                      ->userArea;
+        auto dtp = juce::Point<int>((dt.getWidth() - w) / 2, (dt.getHeight() - h) / 2);
+        if (pt.first > 0 && pt.second > 0 && pt.first < dt.getWidth() - w / 2 &&
+            pt.second < dt.getHeight() - h / 2)
+        {
+            dtp.x = pt.first;
+            dtp.y = pt.second;
+        }
+        dw->setTopLeftPosition(dtp);
+    }
     dw->toFront(true);
     dw->wrapping = this;
     supressInteriorDecoration();
@@ -236,8 +273,9 @@ void OverlayWrapper::mouseDown(const juce::MouseEvent &e)
     if (c && c->getCanMoveAround())
     {
         isDragging = true;
-        distanceFromCornerToMouseDown =
-            localPointToGlobal(e.position) - getBounds().getTopLeft().toFloat();
+
+        // This is borrowed from juce::ComponentDragger
+        mouseDownWithinTarget = e.getEventRelativeTo(this).getMouseDownPosition();
         repaint();
     }
 }
@@ -283,19 +321,11 @@ void OverlayWrapper::mouseDrag(const juce::MouseEvent &e)
     auto c = getPrimaryChildAsOverlayComponent();
     if (c && c->getCanMoveAround())
     {
-        auto gp = localPointToGlobal(e.position);
-        auto newTopLeft = gp - distanceFromCornerToMouseDown;
-        newTopLeft.x = std::max(0.f, newTopLeft.x);
-        newTopLeft.y = std::max(0.f, newTopLeft.y);
-
-        auto pw = 1.f * getParentComponent()->getWidth();
-        auto ph = 1.f * getParentComponent()->getHeight();
-        newTopLeft.x = std::min(newTopLeft.x, pw - getWidth());
-        newTopLeft.y = std::min(newTopLeft.y, ph - getHeight());
-
-        auto b = getBounds();
-        auto q = juce::Rectangle<int>(newTopLeft.x, newTopLeft.y, b.getWidth(), b.getHeight());
-        setBounds(q);
+        // Borrowed from juce::ComponentDragger
+        auto bounds = getBounds();
+        bounds += getLocalPoint(nullptr, e.source.getScreenPosition()).roundToInt() -
+                  mouseDownWithinTarget;
+        setBounds(bounds);
     }
 }
 

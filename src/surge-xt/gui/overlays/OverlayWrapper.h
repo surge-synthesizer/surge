@@ -17,6 +17,7 @@
 #define SURGE_XT_OVERLAYWRAPPER_H
 
 #include "SkinSupport.h"
+#include "UserDefaults.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -55,7 +56,8 @@ struct OverlayWrapper : public juce::Component,
     std::unique_ptr<juce::TextButton> closeButton, tearOutButton;
     void buttonClicked(juce::Button *button) override;
 
-    juce::Point<float> distanceFromCornerToMouseDown;
+    juce::Point<int> mouseDownWithinTarget;
+
     bool isDragging{false};
     bool allowDrag{true};
     void mouseDown(const juce::MouseEvent &) override;
@@ -66,8 +68,13 @@ struct OverlayWrapper : public juce::Component,
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
-    bool canTearOut{false};
-    void setCanTearOut(bool b) { canTearOut = b; }
+    std::pair<bool, Surge::Storage::DefaultKey> canTearOutPair{false, Surge::Storage::nKeys};
+    bool canTearOut;
+    void setCanTearOut(std::pair<bool, Surge::Storage::DefaultKey> b)
+    {
+        canTearOutPair = b;
+        canTearOut = b.first;
+    }
     void doTearOut(const juce::Point<int> &showAt = juce::Point<int>(-1, -1));
     void doTearIn();
     bool isTornOut();

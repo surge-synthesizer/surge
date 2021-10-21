@@ -3649,7 +3649,21 @@ void SurgeGUIEditor::reloadFromSkin()
     // update overlays, if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
+        bool tornOut = false;
+        juce::Point<int> tearOutPos;
+        auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+        if (olw && olw->isTornOut())
+        {
+            tornOut = true;
+            tearOutPos = olw->currentTearOutLocation();
+        }
         showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+        if (tornOut)
+        {
+            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+            if (olw)
+                olw->doTearOut(tearOutPos);
+        }
     }
 
     // update waveshaper analyzer if opened
@@ -5243,13 +5257,27 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     }
 
     bool hadExtendedEditor = false;
+    bool isTornOut = false;
+    juce::Point<int> tearOutPos;
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
+        auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+        if (olw && olw->isTornOut())
+        {
+            isTornOut = true;
+            tearOutPos = olw->currentTearOutLocation();
+        }
         closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
         hadExtendedEditor = true;
     }
     if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
+        auto olw = getOverlayWrapperIfOpen(FORMULA_EDITOR);
+        if (olw && olw->isTornOut())
+        {
+            isTornOut = true;
+            tearOutPos = olw->currentTearOutLocation();
+        }
         closeOverlay(FORMULA_EDITOR);
         hadExtendedEditor = true;
     }
@@ -5259,10 +5287,22 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         if (curr == lt_mseg)
         {
             showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            if (isTornOut)
+            {
+                auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+                if (olw)
+                    olw->doTearOut(tearOutPos);
+            }
         }
         if (curr == lt_formula)
         {
             showOverlay(FORMULA_EDITOR);
+            if (isTornOut)
+            {
+                auto olw = getOverlayWrapperIfOpen(FORMULA_EDITOR);
+                if (olw)
+                    olw->doTearOut(tearOutPos);
+            }
         }
     }
 
