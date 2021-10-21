@@ -162,8 +162,8 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
 
     String surgeLabel = "Surge XT";
     std::string surgeVersion = Surge::Build::FullVersionStr;
-    auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14);
-    auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14);
+    auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14, juce::Font::bold);
+    auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14, juce::Font::bold);
 
 #if BUILD_IS_DEBUG
     surgeVersion += " DEBUG";
@@ -256,7 +256,7 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
     {
         shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimise", Colour(255, 212, 32),
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("minimize", Colour(255, 212, 32),
                                                              shape, shape);
     }
 
@@ -274,7 +274,7 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
         fullscreenShape.addRectangle(45.0f, 45.0f, 100.0f, 100.0f);
         PathStrokeType(30.0f).createStrokedPath(fullscreenShape, fullscreenShape);
 
-        return new SurgeJUCELookAndFeel_DocumentWindowButton("maximise", Colour(0xff0A830A), shape,
+        return new SurgeJUCELookAndFeel_DocumentWindowButton("maximize", Colour(0xff0A830A), shape,
                                                              fullscreenShape);
     }
 

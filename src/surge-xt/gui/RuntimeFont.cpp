@@ -67,9 +67,9 @@ juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags st
     }
 }
 
-juce::Font DefaultFonts::getFiraMonoAtSize(float size) const
+juce::Font DefaultFonts::getFiraMonoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
-    return juce::Font(firaMonoRegularTypeface).withPointHeight(size);
+    return juce::Font(firaMonoRegularTypeface).withPointHeight(size).withStyle(style);
 }
 
 DefaultFonts *DefaultFonts::fmi{nullptr};

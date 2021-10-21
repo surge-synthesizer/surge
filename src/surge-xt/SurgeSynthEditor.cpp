@@ -326,7 +326,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
             return true;
         }
 
-        // increaseVKB velocity for QWERTY by 10%
+        // increase VKB velocity for QWERTY by 10%
         if (key.getTextCharacter() == 'c')
         {
             midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.1f, 0.f, 1.f);

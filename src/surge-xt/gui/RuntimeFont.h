@@ -20,7 +20,9 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::Font
     getLatoAtSize(float size,
                   juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;
-    juce::Font getFiraMonoAtSize(float size) const;
+    juce::Font
+    getFiraMonoAtSize(float size,
+                      juce::Font::FontStyleFlags style = juce::Font::FontStyleFlags::plain) const;
 
     bool useOSLato{false};
 
