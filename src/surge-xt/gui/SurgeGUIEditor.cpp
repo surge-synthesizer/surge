@@ -3066,20 +3066,27 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 
     patchDefMenu.addSeparator();
 
-    auto catCurId =
-        &(this->synth->storage).patch_category[patchSelector->getCurrentCategoryId()].name;
-    auto patchCurId = &(this->synth->storage).patch_list[patchSelector->getCurrentPatchId()].name;
+    auto pscid = patchSelector->getCurrentCategoryId();
+    auto pspid = patchSelector->getCurrentPatchId();
+    auto s = &(this->synth->storage);
+    if (pscid >= 0 && pscid < s->patch_category.size() && pspid >= 0 &&
+        pspid < s->patch_list.size())
+    {
+        auto catCurId =
+            &(this->synth->storage).patch_category[patchSelector->getCurrentCategoryId()].name;
+        auto patchCurId =
+            &(this->synth->storage).patch_list[patchSelector->getCurrentPatchId()].name;
 
-    patchDefMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"),
-        [this, catCurId, patchCurId]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::InitialPatchName, *patchCurId);
+        patchDefMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"),
+            [this, catCurId, patchCurId]() {
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchName, *patchCurId);
 
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::InitialPatchCategory, *catCurId);
-        });
-
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchCategory, *catCurId);
+            });
+    }
     return patchDefMenu;
 }
 
