@@ -1,6 +1,7 @@
 #include "SurgeGUIEditor.h"
 #include "UserDefaults.h"
 #include <set>
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -145,8 +146,8 @@ std::string SurgeGUIEditor::tuningToHtml()
             htmls << t.ratio_n << " / " << t.ratio_d;
         float interval = t.cents - priorCents;
         priorCents = t.cents;
-        htmls << "</td><td>" << t.floatValue << "</td><td>" << t.cents << "</td><td>" << interval
-              << "</td></tr>\n";
+        htmls << "</td><td>" << t.floatValue << "</td><td>" << fmt::format("{:.2f}", t.cents)
+              << "</td><td>" << fmt::format("{:.2f}", interval) << "</td></tr>\n";
     };
 
     htmls << R"HTML(
@@ -188,8 +189,9 @@ std::string SurgeGUIEditor::tuningToHtml()
             auto p = synth->storage.currentTuning.frequencyForMidiNote(i);
             auto lp = synth->storage.currentTuning.logScaledFrequencyForMidiNote(i);
 
-            htmls << "<td class=\"cnt\">" << tn << "</td><td class=\"cnt\">" << p << " Hz</td>"
-                  << "</td><td class=\"cnt\">" << lp << "</td>";
+            htmls << "<td class=\"cnt\">" << tn << "</td><td class=\"cnt\">"
+                  << fmt::format("{:.3f}", p) << " Hz</td>"
+                  << "</td><td class=\"cnt\">" << fmt::format("{:.4f}", lp) << "</td>";
         }
         else
         {
@@ -274,7 +276,8 @@ std::string SurgeGUIEditor::tuningToHtml()
 
             for (int p = 1; p <= w; ++p)
             {
-                htmls << "<td>" << std::setprecision(5) << cents[p + rd] - cents[rd] << "</td>";
+                htmls << "<td>" << std::setw(8) << std::setprecision(1) << std::fixed
+                      << cents[p + rd] - cents[rd] << "</td>";
             }
 
             htmls << "</tr>";
@@ -288,8 +291,8 @@ std::string SurgeGUIEditor::tuningToHtml()
 
             for (int p = 1; p <= w; ++p)
             {
-                htmls << "<td>" << std::setprecision(5) << cents[p + rd] - cents[p + rd - 1]
-                      << "</td>";
+                htmls << "<td>" << std::setw(8) << std::setprecision(1) << std::fixed
+                      << cents[p + rd] - cents[p + rd - 1] << "</td>";
             }
 
             htmls << "</tr>";
