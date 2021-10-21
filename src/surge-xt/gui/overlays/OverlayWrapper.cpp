@@ -325,6 +325,25 @@ void OverlayWrapper::mouseDrag(const juce::MouseEvent &e)
         auto bounds = getBounds();
         bounds += getLocalPoint(nullptr, e.source.getScreenPosition()).roundToInt() -
                   mouseDownWithinTarget;
+        auto tl = bounds.getTopLeft();
+        auto pw = 1.f * getParentComponent()->getWidth();
+        auto ph = 1.f * getParentComponent()->getHeight();
+        if (tl.x < 0)
+            bounds = bounds.translated(-tl.x, 0);
+        if (tl.x + bounds.getWidth() > pw)
+        {
+            // tlx + bgw = pw + q
+            // q = tlx + bgw - pw
+            auto q = tl.x + bounds.getWidth() - pw;
+            bounds = bounds.translated(-q, 0);
+        }
+        if (tl.y < 0)
+            bounds = bounds.translated(0, -tl.y);
+        if (tl.y + bounds.getHeight() > ph)
+        {
+            auto q = tl.y + bounds.getHeight() - ph;
+            bounds = bounds.translated(0, -q);
+        }
         setBounds(bounds);
     }
 }
