@@ -1833,6 +1833,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
+    // if the tuning is open and oddsound has activated (which causes a refrresh) then close it
+    if (synth->storage.oddsound_mts_active)
+    {
+        closeOverlay(TUNING_EDITOR);
+    }
+
     tuningChanged(); // a patch load could change tuning
     refresh_mod();
 
@@ -2555,6 +2561,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     bool isScaleEnabled = !synth->storage.isStandardScale;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
 
+    bool isOddsoundOn =
+        this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client;
+
     if (isScaleEnabled)
     {
         auto tuningLabel = Surge::GUI::toOSCaseForMenu("Current Tuning: ");
@@ -2579,204 +2588,221 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addItem(mappingLabel, false, false, []() {});
     }
 
-    if (isTuningEnabled || isMappingEnabled)
+    if (!isOddsoundOn)
     {
+        if (isTuningEnabled || isMappingEnabled)
+        {
+            tuningSubMenu.addSeparator();
+        }
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Tuning Editor..."), true, false,
+                              [this]() { this->toggleOverlay(TUNING_EDITOR); });
+
         tuningSubMenu.addSeparator();
-    }
 
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Tuning Editor..."), true, false,
-                          [this]() { this->toggleOverlay(TUNING_EDITOR); });
-
-    tuningSubMenu.addSeparator();
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
-                          (!this->synth->storage.isStandardTuning), false, [this]() {
-                              this->synth->storage.retuneTo12TETScaleC261Mapping();
-                              this->synth->storage.resetTuningToggle();
-                              this->synth->refresh_editor = true;
-                              tuningChanged();
-                          });
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
-                          (!this->synth->storage.isStandardScale), false, [this]() {
-                              this->synth->storage.retuneTo12TETScale();
-                              this->synth->refresh_editor = true;
-                              tuningChanged();
-                          });
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"),
-                          (!this->synth->storage.isStandardMapping), false, [this]() {
-                              this->synth->storage.remapToConcertCKeyboard();
-                              this->synth->refresh_editor = true;
-                              tuningChanged();
-                          });
-
-    tuningSubMenu.addSeparator();
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
-        auto cb = [this](std::string sf) {
-            std::string sfx = ".scl";
-            if (sf.length() >= sfx.length())
-            {
-                if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                {
-                    synth->storage.reportError("Please select only .scl files!", "Invalid Choice");
-                    std::cout << "FILE is [" << sf << "]" << std::endl;
-                    return;
-                }
-            }
-            try
-            {
-                auto sc = Tunings::readSCLFile(sf);
-
-                if (!this->synth->storage.retuneToScale(sc))
-                {
-                    synth->storage.reportError("This .scl file is not valid!", "File Format Error");
-                    return;
-                }
-                this->synth->refresh_editor = true;
-            }
-            catch (Tunings::TuningError &e)
-            {
-                synth->storage.retuneTo12TETScaleC261Mapping();
-                synth->storage.reportError(e.what(), "Loading Error");
-            }
-            tuningChanged();
-        };
-
-        auto scl_path = this->synth->storage.datapath / "tuning_library" / "SCL";
-
-        scl_path = Surge::Storage::getUserDefaultPath(&(this->synth->storage),
-                                                      Surge::Storage::LastSCLPath, scl_path);
-
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Select SCL Scale", juce::File(path_to_string(scl_path)), "*.scl");
-
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this, scl_path, cb](const juce::FileChooser &c) {
-                auto ress = c.getResults();
-                if (ress.size() != 1)
-                    return;
-                auto res = ress.getFirst();
-                auto rString = res.getFullPathName().toStdString();
-                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
-                cb(rString);
-                if (dir != scl_path)
-                {
-                    Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
-                                                          Surge::Storage::LastSCLPath, dir);
-                }
-            });
-    });
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
-        auto cb = [this](std::string sf) {
-            std::string sfx = ".kbm";
-            if (sf.length() >= sfx.length())
-            {
-                if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                {
-                    synth->storage.reportError("Please select only .kbm files!", "Invalid Choice");
-                    std::cout << "FILE is [" << sf << "]" << std::endl;
-                    return;
-                }
-            }
-            try
-            {
-                auto kb = Tunings::readKBMFile(sf);
-
-                if (!this->synth->storage.remapToKeyboard(kb))
-                {
-                    synth->storage.reportError("This .kbm file is not valid!", "File Format Error");
-                    return;
-                }
-
-                this->synth->refresh_editor = true;
-            }
-            catch (Tunings::TuningError &e)
-            {
-                synth->storage.remapToConcertCKeyboard();
-                synth->storage.reportError(e.what(), "Loading Error");
-            }
-            tuningChanged();
-        };
-
-        auto kbm_path = this->synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
-
-        kbm_path = Surge::Storage::getUserDefaultPath(&(this->synth->storage),
-                                                      Surge::Storage::LastKBMPath, kbm_path);
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Select KBM Mapping", juce::File(path_to_string(kbm_path)), "*.kbm");
-
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this, cb, kbm_path](const juce::FileChooser &c)
-
-            {
-                auto ress = c.getResults();
-                if (ress.size() != 1)
-                    return;
-
-                auto res = c.getResult();
-                auto rString = res.getFullPathName().toStdString();
-                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
-                cb(rString);
-                if (dir != kbm_path)
-                {
-                    Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
-                                                          Surge::Storage::LastKBMPath, dir);
-                }
-            });
-    });
-
-    int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::MiddleC, 1);
-    string middle_A = "A" + to_string(oct);
-
-    tuningSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
-        [this, middle_A, where]() {
-            char ma[256];
-            sprintf(ma, "Remap %s Frequency", middle_A.c_str());
-
-            char c[256];
-            snprintf(c, 256, "440.0");
-            promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma, where,
-                              [this](const std::string &s) {
-                                  float freq = ::atof(s.c_str());
-                                  auto kb = Tunings::tuneA69To(freq);
-                                  kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
-                                  if (!this->synth->storage.remapToKeyboard(kb))
-                                  {
-                                      synth->storage.reportError("This .kbm file is not valid!",
-                                                                 "File Format Error");
-                                      return;
-                                  }
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
+                              (!this->synth->storage.isStandardTuning) && !isOddsoundOn, false,
+                              [this]() {
+                                  this->synth->storage.retuneTo12TETScaleC261Mapping();
+                                  this->synth->storage.resetTuningToggle();
+                                  this->synth->refresh_editor = true;
                                   tuningChanged();
                               });
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
+                              (!this->synth->storage.isStandardScale), false, [this]() {
+                                  this->synth->storage.retuneTo12TETScale();
+                                  this->synth->refresh_editor = true;
+                                  tuningChanged();
+                              });
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Mapping (Concert C)"),
+                              (!this->synth->storage.isStandardMapping), false, [this]() {
+                                  this->synth->storage.remapToConcertCKeyboard();
+                                  this->synth->refresh_editor = true;
+                                  tuningChanged();
+                              });
+
+        tuningSubMenu.addSeparator();
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
+            auto cb = [this](std::string sf) {
+                std::string sfx = ".scl";
+                if (sf.length() >= sfx.length())
+                {
+                    if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
+                    {
+                        synth->storage.reportError("Please select only .scl files!",
+                                                   "Invalid Choice");
+                        std::cout << "FILE is [" << sf << "]" << std::endl;
+                        return;
+                    }
+                }
+                try
+                {
+                    auto sc = Tunings::readSCLFile(sf);
+
+                    if (!this->synth->storage.retuneToScale(sc))
+                    {
+                        synth->storage.reportError("This .scl file is not valid!",
+                                                   "File Format Error");
+                        return;
+                    }
+                    this->synth->refresh_editor = true;
+                }
+                catch (Tunings::TuningError &e)
+                {
+                    synth->storage.retuneTo12TETScaleC261Mapping();
+                    synth->storage.reportError(e.what(), "Loading Error");
+                }
+                tuningChanged();
+            };
+
+            auto scl_path = this->synth->storage.datapath / "tuning_library" / "SCL";
+
+            scl_path = Surge::Storage::getUserDefaultPath(&(this->synth->storage),
+                                                          Surge::Storage::LastSCLPath, scl_path);
+
+            fileChooser = std::make_unique<juce::FileChooser>(
+                "Select SCL Scale", juce::File(path_to_string(scl_path)), "*.scl");
+
+            fileChooser->launchAsync(
+                juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                [this, scl_path, cb](const juce::FileChooser &c) {
+                    auto ress = c.getResults();
+                    if (ress.size() != 1)
+                        return;
+                    auto res = ress.getFirst();
+                    auto rString = res.getFullPathName().toStdString();
+                    auto dir =
+                        string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+                    cb(rString);
+                    if (dir != scl_path)
+                    {
+                        Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
+                                                              Surge::Storage::LastSCLPath, dir);
+                    }
+                });
         });
 
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use MIDI Channel for Octave Shift"), true,
-                          (synth->storage.mapChannelToOctave), [this]() {
-                              this->synth->storage.mapChannelToOctave =
-                                  !(this->synth->storage.mapChannelToOctave);
-                          });
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Load .kbm Keyboard Mapping..."), [this]() {
+                auto cb = [this](std::string sf) {
+                    std::string sfx = ".kbm";
+                    if (sf.length() >= sfx.length())
+                    {
+                        if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
+                        {
+                            synth->storage.reportError("Please select only .kbm files!",
+                                                       "Invalid Choice");
+                            std::cout << "FILE is [" << sf << "]" << std::endl;
+                            return;
+                        }
+                    }
+                    try
+                    {
+                        auto kb = Tunings::readKBMFile(sf);
 
-    tuningSubMenu.addSeparator();
+                        if (!this->synth->storage.remapToKeyboard(kb))
+                        {
+                            synth->storage.reportError("This .kbm file is not valid!",
+                                                       "File Format Error");
+                            return;
+                        }
 
-    tuningSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Apply Tuning at MIDI Input"), true,
-        (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY), [this]() {
-            this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
-        });
+                        this->synth->refresh_editor = true;
+                    }
+                    catch (Tunings::TuningError &e)
+                    {
+                        synth->storage.remapToConcertCKeyboard();
+                        synth->storage.reportError(e.what(), "Loading Error");
+                    }
+                    tuningChanged();
+                };
 
-    tuningSubMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Apply Tuning After Modulation"), true,
-        (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL),
-        [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
+                auto kbm_path =
+                    this->synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
 
-    tuningSubMenu.addSeparator();
+                kbm_path = Surge::Storage::getUserDefaultPath(
+                    &(this->synth->storage), Surge::Storage::LastKBMPath, kbm_path);
+                fileChooser = std::make_unique<juce::FileChooser>(
+                    "Select KBM Mapping", juce::File(path_to_string(kbm_path)), "*.kbm");
+
+                fileChooser->launchAsync(
+                    juce::FileBrowserComponent::openMode |
+                        juce::FileBrowserComponent::canSelectFiles,
+                    [this, cb, kbm_path](const juce::FileChooser &c)
+
+                    {
+                        auto ress = c.getResults();
+                        if (ress.size() != 1)
+                            return;
+
+                        auto res = c.getResult();
+                        auto rString = res.getFullPathName().toStdString();
+                        auto dir = string_to_path(
+                            res.getParentDirectory().getFullPathName().toStdString());
+                        cb(rString);
+                        if (dir != kbm_path)
+                        {
+                            Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
+                                                                  Surge::Storage::LastKBMPath, dir);
+                        }
+                    });
+            });
+
+        int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                          Surge::Storage::MiddleC, 1);
+        string middle_A = "A" + to_string(oct);
+
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
+            [this, middle_A, where]() {
+                char ma[256];
+                sprintf(ma, "Remap %s Frequency", middle_A.c_str());
+
+                char c[256];
+                snprintf(c, 256, "440.0");
+                promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma, where,
+                                  [this](const std::string &s) {
+                                      float freq = ::atof(s.c_str());
+                                      auto kb = Tunings::tuneA69To(freq);
+                                      kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
+                                      if (!this->synth->storage.remapToKeyboard(kb))
+                                      {
+                                          synth->storage.reportError("This .kbm file is not valid!",
+                                                                     "File Format Error");
+                                          return;
+                                      }
+                                      tuningChanged();
+                                  });
+            });
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use MIDI Channel for Octave Shift"),
+                              true, (synth->storage.mapChannelToOctave), [this]() {
+                                  this->synth->storage.mapChannelToOctave =
+                                      !(this->synth->storage.mapChannelToOctave);
+                              });
+
+        tuningSubMenu.addSeparator();
+
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Apply Tuning at MIDI Input"), true,
+            (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY), [this]() {
+                this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            });
+
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCaseForMenu("Apply Tuning After Modulation"), true,
+            (synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL),
+            [this]() { this->synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL); });
+
+        tuningSubMenu.addSeparator();
+    }
+    else
+    {
+        tuningSubMenu.addSectionHeader("MTS-ESP Is Controlling Tuning");
+    }
 
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
@@ -2798,8 +2824,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     if (tsMode && !this->synth->storage.oddsound_mts_client)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"),
-                              [this]() { this->synth->storage.initialize_oddsound(); });
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"), [this]() {
+            this->synth->storage.initialize_oddsound();
+            this->synth->refresh_editor = true;
+        });
     }
 
     if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
@@ -2824,9 +2852,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
                 }
             });
-
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("MTS-ESP is Active"), false, false,
-                              []() {});
 
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
 

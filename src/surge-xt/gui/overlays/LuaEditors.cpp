@@ -319,13 +319,13 @@ struct FormulaControlArea : public juce::Component,
             bpos -= btnWidth + margin;
 
             stepS = ma("Step", tag_debugger_step);
-            stepS->setEnabled(false);
-            addAndMakeVisible(*stepS);
+            stepS->setVisible(false);
+            addChildComponent(*stepS);
             bpos -= btnWidth + margin;
 
             initS = ma("Init", tag_debugger_init);
-            initS->setEnabled(false);
-            addAndMakeVisible(*initS);
+            initS->setVisible(false);
+            addChildComponent(*initS);
             bpos -= btnWidth + margin;
         }
     }
@@ -364,16 +364,16 @@ struct FormulaControlArea : public juce::Component,
             {
                 overlay->efd->setOpen(false);
                 showS->setLabels({"Show"});
-                stepS->setEnabled(false);
-                initS->setEnabled(false);
+                stepS->setVisible(false);
+                initS->setVisible(false);
                 repaint();
             }
             else
             {
                 overlay->efd->setOpen(true);
                 showS->setLabels({"Hide"});
-                stepS->setEnabled(true);
-                initS->setEnabled(true);
+                stepS->setVisible(true);
+                initS->setVisible(true);
                 repaint();
             }
         }
