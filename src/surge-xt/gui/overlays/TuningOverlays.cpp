@@ -489,14 +489,74 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         intervalPainter = std::make_unique<IntervalPainter>(this);
         viewport->setViewedComponent(intervalPainter.get(), false);
 
+        whatLabel = std::make_unique<juce::Label>("Interval");
+        whatLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(12, juce::Font::bold));
+        addAndMakeVisible(*whatLabel);
+
+        explLabel = std::make_unique<juce::Label>("Interval");
+        explLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+        explLabel->setJustificationType(juce::Justification::centredRight);
+        addAndMakeVisible(*explLabel);
+
         addAndMakeVisible(*viewport);
+
+        setIntervalMode();
     };
     virtual ~IntervalMatrix() = default;
+
+    void setRotationMode()
+    {
+        whatLabel->setText("Scale Rotation Intervals",
+                           juce::NotificationType::dontSendNotification);
+        explLabel->setText("If you shift the scale root to note N\n"
+                           "what is the interval to note M.",
+                           juce::NotificationType::dontSendNotification);
+        intervalPainter->mode = IntervalMatrix::IntervalPainter::ROTATION;
+
+        repaint();
+    }
+
+    void setIntervalMode()
+    {
+        whatLabel->setText("Interval Between Notes", juce::NotificationType::dontSendNotification);
+        explLabel->setText(
+            "Given any two notes in the loaded scale\nshow the interval in cents betwen them.",
+            juce::NotificationType::dontSendNotification);
+        intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
+        repaint();
+    }
+
+    void setIntervalRelativeMode()
+    {
+        whatLabel->setText("Interval to Equal Division",
+                           juce::NotificationType::dontSendNotification);
+        explLabel->setText("Given any two notes in the loaded scale\nshow the distance to the "
+                           "equal division interval.",
+                           juce::NotificationType::dontSendNotification);
+        intervalPainter->mode = IntervalMatrix::IntervalPainter::DIST;
+
+        repaint();
+    }
+
+    std::vector<float> rcents;
 
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
         setNotesOn(bitset);
+
+        float lastc = 0;
+        rcents.clear();
+        rcents.push_back(0);
+        for (auto &t : t.scale.tones)
+        {
+            rcents.push_back(t.cents);
+            lastc = t.cents;
+        }
+        for (auto &t : t.scale.tones)
+        {
+            rcents.push_back(t.cents + lastc);
+        }
         intervalPainter->setSizeFromTuning();
         intervalPainter->repaint();
     }
@@ -506,7 +566,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         enum Mode
         {
             INTERV,
-            DIST
+            DIST,
+            ROTATION
         } mode{INTERV};
         IntervalPainter(IntervalMatrix *m) : matrix(m) {}
 
@@ -525,7 +586,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         {
             g.fillAll(juce::Colour(0xFF979797));
             auto ic = matrix->tuning.scale.count;
-            int mt = ic + 2;
+            int mt = ic + (mode == ROTATION ? 1 : 2);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             for (int i = 0; i < mt; ++i)
             {
@@ -565,12 +626,17 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             g.setColour(juce::Colours::lightblue);
                         g.drawText(lb, bx, juce::Justification::centred);
                     }
-                    else if (i == j)
+                    else if (i == j && mode != ROTATION)
                     {
                         g.setColour(juce::Colours::darkgrey);
                         g.fillRect(bx);
+                        if (mode == ROTATION && i != 0)
+                        {
+                            g.setColour(juce::Colours::lightgrey);
+                            g.drawText("0", bx, juce::Justification::centred);
+                        }
                     }
-                    else if (i > j)
+                    else if (i > j && mode != ROTATION)
                     {
                         auto centsi = 0.0;
                         auto centsj = 0.0;
@@ -621,6 +687,44 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             g.drawRect(bx);
                         }
                     }
+                    else if (mode == ROTATION && i > 0)
+                    {
+                        auto centsi = matrix->rcents[j - 1];
+                        auto centsj = matrix->rcents[i + j - 1];
+                        auto cdiff = centsj - centsi;
+
+                        auto disNote = i;
+                        auto lastTone =
+                            matrix->tuning.scale.tones[matrix->tuning.scale.count - 1].cents;
+                        auto evenStep = lastTone / matrix->tuning.scale.count;
+                        auto desCents = disNote * evenStep;
+
+                        if (cdiff < desCents)
+                        {
+                            // we are flat of even
+                            auto dist = std::min((desCents - cdiff) / evenStep, 1.0);
+                            auto r = (int)((1.0 - dist) * 200);
+                            g.setColour(juce::Colour(255, 255, r));
+                        }
+                        else if (fabs(cdiff - desCents) < 0.1)
+                        {
+                            g.setColour(juce::Colours::white);
+                        }
+                        else
+                        {
+                            auto dist = std::min(-(desCents - cdiff) / evenStep, 1.0);
+                            auto b = (int)((1.0 - dist) * 100) + 130;
+                            g.setColour(juce::Colour(b, b, 255));
+                        }
+                        g.fillRect(bx);
+
+                        if (isHovered)
+                            g.setColour(juce::Colours::darkgreen);
+                        else
+                            g.setColour(juce::Colours::black);
+
+                        g.drawText(fmt::format("{:.2f}", cdiff), bx, juce::Justification::centred);
+                    }
                 }
             }
         }
@@ -650,6 +754,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
+            if (mode == ROTATION)
+                return;
+
             auto dPos = e.position.getY() - lastMousePos.getY();
             dPos = -dPos;
             auto speed = 0.5;
@@ -715,7 +822,12 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
     void resized() override
     {
-        viewport->setBounds(getLocalBounds().reduced(2));
+        auto br = getLocalBounds().reduced(2);
+        auto tr = br.withHeight(25);
+        auto vr = br.withTrimmedTop(25);
+        whatLabel->setBounds(tr);
+        explLabel->setBounds(tr);
+        viewport->setBounds(vr);
         intervalPainter->setSizeFromTuning();
     }
 
@@ -742,6 +854,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
     std::unique_ptr<IntervalPainter> intervalPainter;
     std::unique_ptr<juce::Viewport> viewport;
+    std::unique_ptr<juce::Label> whatLabel;
+    std::unique_ptr<juce::Label> explLabel;
 
     Tunings::Tuning tuning;
     TuningOverlay *overlay{nullptr};
@@ -1024,7 +1138,6 @@ struct TuningControlArea : public juce::Component,
     enum tags
     {
         tag_select_tab = 0x475200,
-        tag_select_interval,
         tag_export_html,
         tag_apply_sclkbm,
         tag_open_library
@@ -1051,7 +1164,7 @@ struct TuningControlArea : public juce::Component,
 
         {
             int marginPos = xpos + margin;
-            int btnWidth = 130;
+            int btnWidth = 210;
             int ypos = 1 + labelHeight + margin;
 
             selectL = newL("Editor Mode");
@@ -1063,41 +1176,15 @@ struct TuningControlArea : public juce::Component,
 
             selectS->setBounds(btnrect);
             selectS->setStorage(overlay->storage);
-            selectS->setLabels({"SCL/KBM", "Radial", "Interval"});
+            selectS->setLabels({"SCL/KBM", "Radial", "Interval", "To Equal", "Rotation"});
             selectS->addListener(this);
             selectS->setTag(tag_select_tab);
             selectS->setHeightOfOneImage(buttonHeight);
             selectS->setRows(1);
-            selectS->setColumns(3);
+            selectS->setColumns(5);
             selectS->setDraggable(true);
             selectS->setSkin(skin, associatedBitmapStore);
             addAndMakeVisible(*selectS);
-            xpos += btnWidth + 10;
-        }
-
-        {
-            int marginPos = xpos + margin;
-            int btnWidth = 130;
-            int ypos = 1 + labelHeight + margin;
-
-            intervalL = newL("Interval Display");
-            intervalL->setBounds(xpos, 1, 100, labelHeight);
-            addAndMakeVisible(*intervalL);
-
-            intervalS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
-
-            intervalS->setBounds(btnrect);
-            intervalS->setStorage(overlay->storage);
-            intervalS->setLabels({"Absolute", "To Even"});
-            intervalS->addListener(this);
-            intervalS->setTag(tag_select_interval);
-            intervalS->setHeightOfOneImage(buttonHeight);
-            intervalS->setRows(1);
-            intervalS->setColumns(2);
-            intervalS->setDraggable(true);
-            intervalS->setSkin(skin, associatedBitmapStore);
-            addAndMakeVisible(*intervalS);
             xpos += btnWidth + 10;
         }
 
@@ -1159,24 +1246,8 @@ struct TuningControlArea : public juce::Component,
         {
         case tag_select_tab:
         {
-            int m = c->getValue() * 2;
+            int m = c->getValue() * 4;
             overlay->showEditor(m);
-        }
-        break;
-        case tag_select_interval:
-        {
-            auto v = c->getValue();
-            if (v < 0.5)
-            {
-                overlay->intervalMatrix->intervalPainter->mode =
-                    IntervalMatrix::IntervalPainter::INTERV;
-            }
-            else
-            {
-                overlay->intervalMatrix->intervalPainter->mode =
-                    IntervalMatrix::IntervalPainter::DIST;
-            }
-            overlay->intervalMatrix->intervalPainter->repaint();
         }
         break;
         case tag_open_library:
@@ -1298,10 +1369,26 @@ void TuningOverlay::resized()
 
 void TuningOverlay::showEditor(int which)
 {
-    jassert(which >= 0 && which <= 2);
+    jassert(which >= 0 && which <= 5);
+    if (which == 0)
+        controlArea->applyS->setVisible(true);
+    else
+        controlArea->applyS->setVisible(false);
     sclKbmDisplay->setVisible(which == 0);
     radialScaleGraph->setVisible(which == 1);
-    intervalMatrix->setVisible(which == 2);
+    intervalMatrix->setVisible(which >= 2);
+    if (which == 2)
+    {
+        intervalMatrix->setIntervalMode();
+    }
+    if (which == 3)
+    {
+        intervalMatrix->setIntervalRelativeMode();
+    }
+    if (which == 4)
+    {
+        intervalMatrix->setRotationMode();
+    }
 }
 
 void TuningOverlay::onToneChanged(int tone, double newCentsValue)
