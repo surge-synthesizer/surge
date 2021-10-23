@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Sun Plate B" 
+     type="11"
+     p0="-8"
+     p1="-1"
+     p2="1.3505"
+     p3="0.15"
+     p4="0"
+     p5="0"
+     p6="0.08"
+     p7="0.55"
+     p8="0"
+     p9="1"
+  />
+</single-fx>

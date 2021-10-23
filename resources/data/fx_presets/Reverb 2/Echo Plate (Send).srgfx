@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Echo Plate" 
+     type="11"
+     p0="-8"
+     p1="-0.95"
+     p2="0.765535"
+     p3="0.4"
+     p4="0.4"
+     p5="0"
+     p6="0"
+     p7="0.8"
+     p8="0"
+     p9="1"
+  />
+</single-fx>
