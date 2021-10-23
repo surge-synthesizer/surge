@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Dark Plate" 
+     type="11"
+     p0="-8"
+     p1="-1"
+     p2="0.584962"
+     p3="0.5"
+     p4="0.4"
+     p5="0"
+     p6="0.05"
+     p7="0.85"
+     p8="0"
+     p9="1"
+  />
+</single-fx>

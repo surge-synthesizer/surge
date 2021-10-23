@@ -1,0 +1,13 @@
+<single-fx streaming_version="17">
+  <snapshot name="Reverb" 
+     type="9"
+     p0="-4.32193"
+     p1="-6.64386"
+     p2="0.07"
+     p3="0.75"
+     p4="-23.625"
+     p5="70"
+     p6="0.599999"
+     p7="24"
+  />
+</single-fx>

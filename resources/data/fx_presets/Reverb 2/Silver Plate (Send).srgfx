@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Silver Plate" 
+     type="11"
+     p0="-8"
+     p1="-0.95"
+     p2="1"
+     p3="0.15"
+     p4="0.399999"
+     p5="0"
+     p6="0.08"
+     p7="0.6"
+     p8="0"
+     p9="1"
+  />
+</single-fx>

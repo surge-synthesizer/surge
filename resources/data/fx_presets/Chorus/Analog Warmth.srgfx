@@ -1,0 +1,13 @@
+<single-fx streaming_version="17">
+  <snapshot name="Analog Warmth" 
+     type="9"
+     p0="-6.74286"
+     p1="-2.78714"
+     p2="0.0500001"
+     p3="0.24"
+     p4="-60"
+     p5="50.2131"
+     p6="1"
+     p7="12"
+  />
+</single-fx>

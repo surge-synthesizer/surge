@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Deep Ambience" 
+     type="11"
+     p0="-8"
+     p1="-1"
+     p2="0"
+     p3="1"
+     p4="1"
+     p5="0"
+     p6="0.05"
+     p7="0.6"
+     p8="3"
+     p9="0.45"
+  />
+</single-fx>

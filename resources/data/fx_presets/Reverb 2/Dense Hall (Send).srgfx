@@ -1,0 +1,15 @@
+<single-fx streaming_version="17">
+  <snapshot name="Arty Dense Hall" 
+     type="11"
+     p0="-8"
+     p1="0.04"
+     p2="1"
+     p3="1"
+     p4="1"
+     p5="0"
+     p6="0.05"
+     p7="0.75"
+     p8="0"
+     p9="0.998214"
+  />
+</single-fx>
