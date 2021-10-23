@@ -73,6 +73,7 @@ struct TuningOverlay : public OverlayComponent,
     void onNewSCLKBM(const std::string &scl, const std::string &kbm);
     void onToneChanged(int tone, double newCentsValue);
     void onToneStringChanged(int tone, const std::string &newCentsValue);
+    void onScaleRescaled(double scaledBy);
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resized() override;
