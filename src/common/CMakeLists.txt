@@ -335,6 +335,7 @@ PUBLIC
   PRIVATE
   surge-lua-src
   surge-platform
+  surge-juce
   taocpp::pegtl
 PRIVATE
   juce::juce_dsp
