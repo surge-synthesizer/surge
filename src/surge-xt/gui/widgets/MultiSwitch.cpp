@@ -154,7 +154,7 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
             everDragged = true;
             setCursorToArrow();
 
-            if (!Surge::GUI::showCursor(storage))
+            if (storage && !Surge::GUI::showCursor(storage))
             {
                 juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
                     true);
@@ -173,7 +173,7 @@ void MultiSwitch::mouseUp(const juce::MouseEvent &event)
     isMouseDown = false;
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
-    if (!Surge::GUI::showCursor(storage))
+    if (storage && !Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
     }

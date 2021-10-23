@@ -187,9 +187,82 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
 class RadialScaleGraph;
 
+class InfiniteKnob : public juce::Component
+{
+  public:
+    InfiniteKnob() : juce::Component(), angle(0) {}
+
+    virtual void mouseDown(const juce::MouseEvent &event) override
+    {
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+
+        lastDrag = 0;
+        isDragging = true;
+        repaint();
+    }
+    virtual void mouseDrag(const juce::MouseEvent &event) override
+    {
+        int d = -(event.getDistanceFromDragStartX() + event.getDistanceFromDragStartY());
+        int diff = d - lastDrag;
+        lastDrag = d;
+        if (diff != 0)
+        {
+            float mul = 1.0;
+            if (event.mods.isShiftDown())
+            {
+                mul = 0.05;
+            }
+            angle += diff * mul;
+            onDragDelta(diff * mul);
+            repaint();
+        }
+    }
+
+    virtual void mouseUp(const juce::MouseEvent &e) override
+    {
+        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+        auto p = localPointToGlobal(e.mouseDownPosition);
+        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+
+        isDragging = false;
+        repaint();
+    }
+    virtual void paint(juce::Graphics &g) override
+    {
+        int w = getWidth();
+        int h = getHeight();
+        int b = std::min(w, h);
+        float r = b / 2.0;
+        float dx = (w - b) / 2.0;
+        float dy = (h - b) / 2.0;
+        g.saveState();
+        g.addTransform(juce::AffineTransform::translation(dx, dy));
+        g.addTransform(juce::AffineTransform::translation(r, r));
+        g.addTransform(
+            juce::AffineTransform::rotation(angle / 50.0 * 2.0 * juce::MathConstants<double>::pi));
+        g.setColour(getLookAndFeel().findColour(juce::Slider::rotarySliderFillColourId));
+        g.fillEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2);
+        g.setColour(getLookAndFeel().findColour(juce::GroupComponent::outlineColourId));
+        g.drawEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2, r / 5.0);
+        if (enabled)
+        {
+            g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
+            g.drawLine(0, -(r - 1), 0, r - 1, r / 3.0);
+        }
+        g.restoreState();
+    }
+
+    int lastDrag = 0;
+    bool isDragging = false;
+    float angle;
+    std::function<void(float)> onDragDelta = [](float f) {};
+    bool enabled = true;
+};
+
 class RadialScaleGraph : public juce::Component,
                          public juce::TextEditor::Listener,
-                         public Surge::GUI::SkinConsumingComponent
+                         public Surge::GUI::SkinConsumingComponent,
+                         public Surge::GUI::IComponentTagValue::Listener
 {
   public:
     RadialScaleGraph()
@@ -208,27 +281,78 @@ class RadialScaleGraph : public juce::Component,
         tuning = t;
         scale = t.scale;
 
-        if (toneEditors.empty() || priorLen != scale.count || toneEditors.size() != scale.count + 1)
+        if (toneEditors.empty() || priorLen != scale.count || toneEditors.size() != scale.count)
         {
             toneInterior->removeAllChildren();
-            auto w = usedForSidebar - 15;
+            auto w = usedForSidebar - 10;
             auto m = 2;
             auto h = 24;
+            auto labw = 18;
+
             toneInterior->setSize(w, (scale.count + 1) * (h + m));
             toneEditors.clear();
             for (int i = 0; i < scale.count + 1; ++i)
             {
-                auto te = std::make_unique<juce::TextEditor>("tone");
-                te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
-                te->setBounds(m, i * (h + m) + m, w - 2 * m, h);
-                te->setEnabled(i != 0);
-                te->addListener(this);
-                toneInterior->addAndMakeVisible(*te);
-                toneEditors.push_back(std::move(te));
+                auto totalR = juce::Rectangle<int>(m, i * (h + m) + m, w - 2 * m, h);
+
+                auto tl = std::make_unique<juce::Label>("tone index");
+                tl->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
+                tl->setBounds(totalR.withWidth(labw));
+                tl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+                tl->setJustificationType(juce::Justification::centredRight);
+                toneInterior->addAndMakeVisible(*tl);
+                toneLabels.push_back(std::move(tl));
+
+                if (i == 0)
+                {
+                    auto tk = std::make_unique<InfiniteKnob>();
+
+                    tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
+                    tk->onDragDelta = [this](float f) { onScaleRescaled(f); };
+                    toneInterior->addAndMakeVisible(*tk);
+                    toneKnobs.push_back(std::move(tk));
+
+                    showHideKnob = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+                    showHideKnob->setSkin(skin, associatedBitmapStore);
+                    showHideKnob->setRows(1);
+                    showHideKnob->setColumns(1);
+                    showHideKnob->setTag(12345);
+                    showHideKnob->setLabels({"Hide"});
+                    showHideKnob->addListener(this);
+
+                    showHideKnob->setBounds(
+                        totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m).reduced(3));
+
+                    toneInterior->addAndMakeVisible(*showHideKnob);
+                }
+                else
+                {
+                    auto te = std::make_unique<juce::TextEditor>("tone");
+                    te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
+                    te->setBounds(totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m));
+                    te->setEnabled(i != 0);
+                    te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+                    te->addListener(this);
+                    toneInterior->addAndMakeVisible(*te);
+                    toneEditors.push_back(std::move(te));
+
+                    auto tk = std::make_unique<InfiniteKnob>();
+
+                    tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
+                    tk->onDragDelta = [this, i](float f) {
+                        int idx = i;
+                        if (idx == 0)
+                            idx = scale.count;
+                        auto ct = scale.tones[idx - 1].cents;
+                        ct += f;
+                        onToneChanged(idx - 1, ct);
+                    };
+                    toneInterior->addAndMakeVisible(*tk);
+                    toneKnobs.push_back(std::move(tk));
+                }
             }
         }
 
-        toneEditors[0]->setText("-", juce::NotificationType::dontSendNotification);
         for (int i = 0; i < scale.count; ++i)
         {
             auto td = fmt::format("{:.5f}", scale.tones[i].cents);
@@ -236,7 +360,7 @@ class RadialScaleGraph : public juce::Component,
             {
                 td = fmt::format("{:d}/{:d}", scale.tones[i].ratio_n, scale.tones[i].ratio_d);
             }
-            toneEditors[i + 1]->setText(td, juce::NotificationType::dontSendNotification);
+            toneEditors[i]->setText(td, juce::NotificationType::dontSendNotification);
         }
 
         notesOn.clear();
@@ -244,6 +368,26 @@ class RadialScaleGraph : public juce::Component,
         for (int i = 0; i < scale.count; ++i)
             notesOn[i] = false;
         setNotesOn(bitset);
+    }
+
+    bool centsShowing{true};
+    void valueChanged(GUI::IComponentTagValue *p) override
+    {
+        if (p == showHideKnob.get())
+        {
+            centsShowing = !centsShowing;
+            for (const auto &t : toneEditors)
+            {
+                t->setPasswordCharacter(centsShowing ? 0 : 0x2022);
+            }
+            showHideKnob->setLabels({centsShowing ? "Hide" : "Show"});
+            showHideKnob->repaint();
+        }
+    }
+    void onSkinChanged() override
+    {
+        if (showHideKnob)
+            showHideKnob->setSkin(skin, associatedBitmapStore);
     }
 
   private:
@@ -261,11 +405,15 @@ class RadialScaleGraph : public juce::Component,
     std::function<void(int index, double)> onToneChanged = [](int, double) {};
     std::function<void(int index, const std::string &s)> onToneStringChanged =
         [](int, const std::string &) {};
-    static constexpr int usedForSidebar = 140;
+    std::function<void(double)> onScaleRescaled = [](double) {};
+    static constexpr int usedForSidebar = 160;
 
     std::unique_ptr<juce::Viewport> toneList;
     std::unique_ptr<juce::Component> toneInterior;
     std::vector<std::unique_ptr<juce::TextEditor>> toneEditors;
+    std::vector<std::unique_ptr<juce::Label>> toneLabels;
+    std::vector<std::unique_ptr<InfiniteKnob>> toneKnobs;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> showHideKnob;
 
     void resized() override { toneList->setBounds(0, 0, usedForSidebar, getHeight()); }
 
@@ -285,20 +433,32 @@ class RadialScaleGraph : public juce::Component,
             }
         }
 
-        for (int i = 0; i < scale.count + 1; ++i)
+        for (int i = 0; i < scale.count; ++i)
         {
-            auto ni = i % (scale.count);
+            auto ni = (i + 1) % (scale.count);
             if (notesOn[ni])
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
                                           juce::Colour(0xFFaaaa50));
+                toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
+                                             juce::Colour(0xFFaaaa50));
+                if (i == scale.count - 1)
+                    toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
+                                             juce::Colour(0xFFaaaa50));
             }
             else
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
                                           juce::Colours::black);
+                toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
+                                             juce::Colours::white);
+                if (i == scale.count - 1)
+                    toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
+                                             juce::Colours::white);
             }
             toneEditors[i]->repaint();
+            toneLabels[i + 1]->repaint();
+            toneLabels[0]->repaint();
         }
         toneInterior->repaint();
         toneList->repaint();
@@ -910,11 +1070,11 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 
 void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
-    for (int i = 1; i <= scale.count; ++i)
+    for (int i = 0; i <= scale.count - 1; ++i)
     {
         if (&editor == toneEditors[i].get())
         {
-            onToneStringChanged(i - 1, editor.getText().toStdString());
+            onToneStringChanged(i, editor.getText().toStdString());
         }
     }
 }
@@ -1321,6 +1481,7 @@ TuningOverlay::TuningOverlay()
     radialScaleGraph->onToneStringChanged = [this](int note, const std::string &d) {
         this->onToneStringChanged(note, d);
     };
+    radialScaleGraph->onScaleRescaled = [this](double d) { this->onScaleRescaled(d); };
 
     intervalMatrix = std::make_unique<IntervalMatrix>(this);
 
@@ -1399,6 +1560,28 @@ void TuningOverlay::onToneChanged(int tone, double newCentsValue)
         storage->currentScale.tones[tone].cents = newCentsValue;
         recalculateScaleText();
     }
+}
+
+void TuningOverlay::onScaleRescaled(double scaleBy)
+{
+    if (!storage)
+        return;
+
+    /*
+     * OK so we want a 1 cent move on top so that is top -> top+1 for scaleBy = 1
+     * top ( 1 + x * scaleBy ) = top+1
+     * x = top+1/top-1 since scaleBy is 1 in non shift mode
+     */
+    auto tCents = std::max(storage->currentScale.tones[storage->currentScale.count - 1].cents, 1.0);
+    double sFactor = (tCents + 1) / tCents - 1;
+
+    double scale = (1.0 + sFactor * scaleBy);
+    for (auto &t : storage->currentScale.tones)
+    {
+        t.type = Tunings::Tone::kToneCents;
+        t.cents *= scale;
+    }
+    recalculateScaleText();
 }
 
 void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringValue)
