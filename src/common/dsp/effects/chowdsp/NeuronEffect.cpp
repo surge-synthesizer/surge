@@ -41,8 +41,8 @@ void NeuronEffect::init()
 
     os.reset();
 
-    delay1.prepare(dsamplerate * os.getOSRatio(), BLOCK_SIZE);
-    delay2.prepare(dsamplerate * os.getOSRatio(), BLOCK_SIZE);
+    delay1.prepare({dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
+    delay2.prepare({dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
     delay1.setDelay(0.0f);
     delay2.setDelay(0.0f);
 

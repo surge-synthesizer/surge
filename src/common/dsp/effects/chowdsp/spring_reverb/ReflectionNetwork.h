@@ -21,7 +21,7 @@
 #include "UnitConversions.h"
 #include <vembertech/portable_intrinsics.h>
 
-#include "../shared/DelayLine.h"
+#include "../shared/chowdsp_DelayLine.h"
 #include "../shared/Shelf.h"
 
 namespace chowdsp
@@ -36,7 +36,7 @@ class ReflectionNetwork
         fs = sampleRate;
 
         for (auto &d : delays)
-            d.prepare(sampleRate, samplesPerBlock);
+            d.prepare({sampleRate, (juce::uint32)samplesPerBlock, 2});
 
         shelfFilter.reset();
     }
@@ -87,8 +87,8 @@ class ReflectionNetwork
     float fs = 48000.0f;
 
     using ReflectionDelay = DelayLine<float, chowdsp::DelayLineInterpolationTypes::Lagrange3rd>;
-    std::array<ReflectionDelay, 4> delays{ReflectionDelay{1 << 18, 2}, ReflectionDelay{1 << 18, 2},
-                                          ReflectionDelay{1 << 18, 2}, ReflectionDelay{1 << 18, 2}};
+    std::array<ReflectionDelay, 4> delays{ReflectionDelay{1 << 18}, ReflectionDelay{1 << 18},
+                                          ReflectionDelay{1 << 18}, ReflectionDelay{1 << 18}};
 
     __m128 feedback;
 

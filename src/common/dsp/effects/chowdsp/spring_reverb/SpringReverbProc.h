@@ -45,26 +45,25 @@ class SpringReverbProc
     void processBlock(float *left, float *right, const int numSamples);
 
   private:
-    DelayLine<float, DelayLineInterpolationTypes::Lagrange3rd> delay{1 << 18, 2};
+    DelayLine<float, DelayLineInterpolationTypes::Lagrange3rd> delay{1 << 18};
     float feedbackGain;
 
     StateVariableFilter<float> dcBlocker;
 
-#ifdef __GNUC__ // GCC doesn't like "ignored-attributes"...
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-attributes"
-#endif
     static constexpr int allpassStages = 16;
-    using APFCascade = std::array<SchroederAllpass<__m128, 2>, allpassStages>;
+    using VecType = juce::dsp::SIMDRegister<float>;
+    using APFCascade = std::array<SchroederAllpass<VecType, 2>, allpassStages>;
     APFCascade vecAPFs;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
     std::function<float()> urng01; // A uniform 0,1 RNG
     SmoothedValue<float, ValueSmoothingTypes::Linear> chaosSmooth;
 
-    float z[2];
+    // SIMD register for parallel allpass filter
+    // format:
+    //   [0]: y_left (feedforward path output)
+    //   [1]: z_left (feedback path)
+    //   [2-3]: same for right channel
+    float simdState alignas(16)[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     float fs = 48000.0f;
 
     StateVariableFilter<float> lpf;

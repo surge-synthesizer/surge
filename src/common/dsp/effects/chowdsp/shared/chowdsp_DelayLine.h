@@ -1,5 +1,3 @@
-#pragma once
-
 /*
   ==============================================================================
 
@@ -25,8 +23,10 @@
   ==============================================================================
 */
 
-#include <vector>
-#include "DelayInterpolation.h"
+#pragma once
+
+#include "juce_dsp/juce_dsp.h"
+#include "chowdsp_DelayInterpolation.h"
 
 namespace chowdsp
 {
@@ -39,30 +39,44 @@ template <typename T, bool = std::is_floating_point<T>::value> struct ElementTyp
 
 template <typename T> struct ElementType<T, false>
 {
-    using Type = float;
+    using Type = typename T::value_type;
 };
 } // namespace SampleTypeHelpers
 
 /** Base class for delay lines with any interpolation type */
 template <typename SampleType> class DelayLineBase
 {
-  public:
     using NumericType = typename SampleTypeHelpers::ElementType<SampleType>::Type;
 
+  public:
     DelayLineBase() = default;
+    virtual ~DelayLineBase() = default;
 
     virtual void setDelay(NumericType /* newDelayInSamples */) = 0;
     virtual NumericType getDelay() const = 0;
 
-    virtual void prepare(double /*sampleRate*/, size_t /*blockSize*/) = 0;
-    virtual void reset(){};
+    virtual void prepare(const juce::dsp::ProcessSpec & /* spec */) = 0;
+    virtual void reset() = 0;
 
+    virtual void pushSample(int /* channel */, SampleType /* sample */) noexcept = 0;
+    virtual SampleType popSample(int /* channel */) noexcept = 0;
+    virtual SampleType popSample(int /* channel */, NumericType /* delayInSamples */,
+                                 bool /* updateReadPointer */) noexcept = 0;
+    virtual void incrementReadPointer(int channel) noexcept = 0;
 
     void copyState(const DelayLineBase<SampleType> &other)
     {
-        for (size_t ch = 0; ch < bufferData.size(); ++ch)
-            std::copy(other.bufferData[ch].begin(), other.bufferData[ch].end(),
-                      bufferData[ch].begin());
+        const auto numChannels = other.bufferData.getNumChannels();
+        const auto numSamples = other.bufferData.getNumSamples();
+        if (numChannels != bufferData.getNumChannels() || numSamples != bufferData.getNumSamples())
+        {
+            bufferData = juce::dsp::AudioBlock<SampleType>(dataBlock, numChannels, numSamples);
+        }
+
+        bufferData.copyFrom(other.bufferData);
+
+        if (v.empty() || other.v.empty()) // nothing to copy!
+            return;
 
         std::copy(other.v.begin(), other.v.end(), v.begin());
         std::copy(other.writePos.begin(), other.writePos.end(), writePos.begin());
@@ -70,9 +84,10 @@ template <typename SampleType> class DelayLineBase
     }
 
   protected:
-    std::vector<std::vector<SampleType>> bufferData;
+    juce::HeapBlock<char> dataBlock;
+    juce::dsp::AudioBlock<SampleType> bufferData;
     std::vector<SampleType> v;
-    std::vector<size_t> writePos, readPos;
+    std::vector<int> writePos, readPos;
 };
 
 //==============================================================================
@@ -93,51 +108,29 @@ template <typename SampleType> class DelayLineBase
 template <typename SampleType, typename InterpolationType = DelayLineInterpolationTypes::Linear>
 class DelayLine : public DelayLineBase<SampleType>
 {
+    using NumericType = typename SampleTypeHelpers::ElementType<SampleType>::Type;
+
   public:
     //==============================================================================
     /** Default constructor. */
     DelayLine();
 
     /** Constructor. */
-    explicit DelayLine(size_t maximumDelayInSamples, size_t nChannels);
+    explicit DelayLine(int maximumDelayInSamples);
 
     //==============================================================================
     /** Sets the delay in samples. */
-    void setDelay(typename DelayLineBase<SampleType>::NumericType newDelayInSamples) final;
+    void setDelay(NumericType newDelayInSamples) final;
 
     /** Returns the current delay in samples. */
-    typename DelayLineBase<SampleType>::NumericType getDelay() const final;
+    NumericType getDelay() const final;
 
     //==============================================================================
     /** Initialises the processor. */
-    void prepare(double sampleRate, size_t blockSize) final;
+    void prepare(const juce::dsp::ProcessSpec &spec) final;
 
     /** Resets the internal state variables of the processor. */
-    template <typename C = SampleType>
-    typename std::enable_if<std::is_floating_point<C>::value, void>::type reset()
-    {
-        for (auto vec : {&this->writePos, &this->readPos})
-            std::fill(vec->begin(), vec->end(), 0);
-
-        std::fill(this->v.begin(), this->v.end(), static_cast<SampleType>(0));
-
-        for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
-            std::fill(this->bufferData[ch].begin(), this->bufferData[ch].end(),
-                      static_cast<SampleType>(0));
-    }
-
-    /** Resets the internal state variables of the processor (SIMD). */
-    template <typename C = SampleType>
-    typename std::enable_if<! std::is_floating_point<C>::value, void>::type reset()
-    {
-        for (auto vec : {&this->writePos, &this->readPos})
-            std::fill(vec->begin(), vec->end(), 0);
-
-        std::fill(this->v.begin(), this->v.end(), _mm_setzero_ps());
-
-        for (size_t ch = 0; ch < this->bufferData.size(); ++ch)
-            std::fill(this->bufferData[ch].begin(), this->bufferData[ch].end(), _mm_setzero_ps());
-    }
+    void reset() final;
 
     //==============================================================================
     /** Pushes a single sample into one channel of the delay line.
@@ -148,18 +141,29 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, popSample, process
     */
-    inline void pushSample(size_t channel, SampleType sample) noexcept
+    inline void pushSample(int channel, SampleType sample) noexcept final
     {
-        const auto writePtr = this->writePos[channel];
+        const auto writePtr = this->writePos[(size_t)channel];
+        bufferPtrs[(size_t)channel][writePtr] = sample;
+        bufferPtrs[(size_t)channel][writePtr + totalSize] = sample;
+        incrementWritePointer(channel);
+    }
 
-        // push sample into double-buffered state
-        this->bufferData[channel][writePtr] = sample;
-        this->bufferData[channel][writePtr + totalSize] = sample;
+    /** Pops a single sample from one channel of the delay line.
 
-        // update write pointer
-        auto newWritePtr = writePtr + totalSize - 1;
-        newWritePtr = newWritePtr > totalSize ? newWritePtr - totalSize : newWritePtr;
-        this->writePos[channel] = newWritePtr;
+        Use this function to modulate the delay in real time or implement standard
+        delay effects with feedback.
+
+        @param channel              the target channel for the delay line.
+
+        @see setDelay, pushSample, process
+    */
+    inline SampleType popSample(int channel) noexcept final
+    {
+        auto result = interpolateSample(channel);
+        incrementReadPointer(channel);
+
+        return result;
     }
 
     /** Pops a single sample from one channel of the delay line.
@@ -179,36 +183,25 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay, pushSample, process
     */
-    template <typename C = SampleType>
-    inline typename std::enable_if<std::is_floating_point<C>::value, SampleType>::type
-    popSample(size_t channel, SampleType delayInSamples = -1,
-              bool updateReadPointer = true) noexcept
+    inline SampleType popSample(int channel, NumericType delayInSamples,
+                                bool updateReadPointer) noexcept final
     {
-        if (delayInSamples >= 0)
-            setDelay(delayInSamples);
+        setDelay(delayInSamples);
 
         auto result = interpolateSample(channel);
 
         if (updateReadPointer)
-        {
-            auto newReadPtr = this->readPos[channel] + totalSize - 1;
-            newReadPtr = newReadPtr > totalSize ? newReadPtr - totalSize : newReadPtr;
-            this->readPos[channel] = newReadPtr;
-        }
+            incrementReadPointer(channel);
 
         return result;
     }
 
-    inline SampleType popSample(size_t channel) noexcept
+    /** Increment the read pointer without reading an interpolated sample (be careful...) */
+    inline void incrementReadPointer(int channel) noexcept final
     {
-        auto result = interpolateSample(channel);
-
-        // update read pointer
-        auto newReadPtr = this->readPos[channel] + totalSize - 1;
+        auto newReadPtr = this->readPos[(size_t)channel] + totalSize - 1;
         newReadPtr = newReadPtr > totalSize ? newReadPtr - totalSize : newReadPtr;
-        this->readPos[channel] = newReadPtr;
-
-        return result;
+        this->readPos[(size_t)channel] = newReadPtr;
     }
 
     //==============================================================================
@@ -219,29 +212,61 @@ class DelayLine : public DelayLineBase<SampleType>
 
         @see setDelay
     */
-    void process(const SampleType *inputSamples, SampleType *outputSamples, const size_t numSamples,
-                 size_t channel)
+    template <typename ProcessContext> void process(const ProcessContext &context) noexcept
     {
-        for (size_t i = 0; i < numSamples; ++i)
+        const auto &inputBlock = context.getInputBlock();
+        auto &outputBlock = context.getOutputBlock();
+        const auto numChannels = outputBlock.getNumChannels();
+        const auto numSamples = outputBlock.getNumSamples();
+
+        jassert(inputBlock.getNumChannels() == numChannels);
+        jassert(inputBlock.getNumChannels() == this->writePos.size());
+        jassert(inputBlock.getNumSamples() == numSamples);
+
+        if (context.isBypassed)
         {
-            pushSample(channel, inputSamples[i]);
-            outputSamples[i] = popSample(channel);
+            outputBlock.copyFrom(inputBlock);
+            return;
+        }
+
+        for (size_t channel = 0; channel < numChannels; ++channel)
+        {
+            auto *inputSamples = inputBlock.getChannelPointer(channel);
+            auto *outputSamples = outputBlock.getChannelPointer(channel);
+
+            for (size_t i = 0; i < numSamples; ++i)
+            {
+                pushSample((int)channel, inputSamples[i]);
+                outputSamples[i] = popSample((int)channel);
+            }
         }
     }
 
   private:
-    inline SampleType interpolateSample(size_t channel) noexcept
+    inline SampleType interpolateSample(int channel) noexcept
     {
-        auto index = (this->readPos[channel] + delayInt);
-        return interpolator.call(this->bufferData[channel].data(), index, delayFrac,
-                                 this->v[channel]);
+        auto index = (this->readPos[(size_t)channel] + delayInt);
+        return interpolator.call(bufferPtrs[(size_t)channel], index, delayFrac,
+                                 this->v[(size_t)channel]);
+    }
+
+    /** Increment the write pointer (be careful...) */
+    inline void incrementWritePointer(int channel) noexcept
+    {
+        auto newWritePtr = this->writePos[(size_t)channel] + totalSize - 1;
+        newWritePtr = newWritePtr > totalSize ? newWritePtr - totalSize : newWritePtr;
+        this->writePos[(size_t)channel] = newWritePtr;
     }
 
     //==============================================================================
     InterpolationType interpolator;
-    typename DelayLineBase<SampleType>::NumericType delay = 0.0, delayFrac = 0.0;
-    int delayInt = 0;
-    size_t totalSize = 4;
+    std::vector<SampleType *> bufferPtrs;
+    NumericType delay = 0.0, delayFrac = 0.0;
+    int delayInt = 0, totalSize = 4;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayLine)
 };
 
 } // namespace chowdsp
+
+#include "chowdsp_DelayLine.cpp"
