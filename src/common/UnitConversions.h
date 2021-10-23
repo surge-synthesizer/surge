@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <clocale>
+#include <cstring>
 
 static float env_phasemulti = 1000 / 44100.f;
 static float lfo_range = 1000;
