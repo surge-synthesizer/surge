@@ -293,6 +293,20 @@ Color::Color(const std::string &name, int r, int g, int b, int a)
     colMap->insert(std::make_pair(name, *this));
 }
 
+Color::Color(const std::string &name, uint32_t argb) : name(name)
+{
+    b = argb & 0xFF;
+    argb = argb >> 8;
+    g = argb & 0xFF;
+    argb = argb >> 8;
+    r = argb & 0xFF;
+    argb = argb >> 8;
+    a = argb & 0xFF;
+
+    guaranteeMap();
+    colMap->insert(std::make_pair(name, *this));
+}
+
 Color Color::colorByName(const std::string &n)
 {
     guaranteeMap();
