@@ -490,8 +490,58 @@ const Surge::Skin::Color WhiteKey("tuning.freqkbd.whitekey", 0x97, 0x97, 0x97),
 }
 namespace SCLKBM
 {
+const Surge::Skin::Color Background("tuning.sclkbm.background", 0xFF979797);
+namespace Editor
+{
+const Surge::Skin::Color Border("tuning.sclkbm.editor.border", 0xFFE3E3E3),
+    Background("tuning.sclkbm.editor.background", 0xFF151515),
+    Text("tuning.sclkbm.editor.text", 0xFFE3E3E3),
+    Comment("tuning.sclkbm.editor.comment", 0xFF979797),
+    Cents("tuning.sclkbm.editor.cents", 0xFFA3A3FF),
+    Ratio("tuning.sclkbm.editor.ratio", 0xFFA3FFA3),
+    Playing("tuning.sclkbm.editor.playing", 0xFFFF9000);
+} // namespace Editor
+} // namespace SCLKBM
 
-}
+namespace RadialGraph
+{
+const Surge::Skin::Color Background("tuning.radialgraph.background", 0xFF151515);
+const Surge::Skin::Color KnobCenter("tuning.radialgraph.knobcenter", 0xFF351500),
+    KnobCenterHover("tuning.radialgraph.knobcenterHover", 0xFF904000),
+    KnobOutline("tuning.radialgraph.knoboutline", 0xFFE3E3E3),
+    KnobThumb("tuning.radialgraph.knobthumb", 0xFFFFFFFF),
+    KnobPlayingThumb("tuning.radialgraph.knobplaying", 0xFFFF9000);
+
+const Surge::Skin::Color ToneLabel("tuning.radialgraph.tonelabel", 0xFF979797),
+    TonePlayingLabel("tuning.radialgraph.tonelabelplaying", 0xFFFF9000),
+    ToneOutline("tuning.radialgraph.tone.outline", 0xFF979797),
+    ToneBackground("tuning.radialgraph.tone.background", 0xFF151515),
+    ToneText("tuning.radialgraph.tone.text", 0xFFE3E3E3),
+    TonePlayingBackground("tuning.radialgraph.tone.backgroundplaying", 0xFFFF9000),
+    TonePlayingOutline("tuning.radialgraph.tone.outlineplaying", 0xFFE3E3E3),
+    TonePlayingText("tuning.radialgraph.tone.textplaying", 0xFF151515);
+
+} // namespace RadialGraph
+namespace Interval
+{
+const Surge::Skin::Color Background("tuning.interval.background", 0xFF151515);
+const Surge::Skin::Color NoteLabelBackground("tuning.interval.notelabel.background", 0xFF979797),
+    NoteLabelBackgroundPlaying("tuning.interval.notelabel.backgroundplaying", 0xFFFF9000),
+    NoteLabelForeground("tuning.interval.notelabel.foreground", 0xFF151515),
+    NoteLabelForegroundHovered("tuning.interval.notelabel.foreground.hovered", 0xFFE3E3E3),
+    NoteLabelForegroundPlaying("tuning.interval.notelabel.foreground.playing", 0xFF151515),
+    NoteLabelForegroundPlayingHovered("tuning.interval.notelabel.foreground.playinghovered",
+                                      0xFFFFFFFF),
+    SkippedInterval("tuning.interval,skippedinterval", 0xFFAAAAAA);
+const Surge::Skin::Color IntervalText("tuning.interval.text", 0xFF151515),
+    IntervalTextHovered("tuning.interval.text.hovered", 0xFF351500);
+
+const Surge::Skin::Color HeatmapZero("tuning.interval.heatmap.zero", 0xFFFFFFFF),
+    HeatmapNegFar("tuning.interval.heatmap.negative.far", 130, 130, 255),
+    HeatmapNegNear("tuning.interval.heatmap.negative.near", 230, 230, 255),
+    HeatmapPosFar("tuning.interval.heatmap.positive.far", 255, 255, 0),
+    HeatmapPosNear("tuning.interval.heatmap.positive.near", 255, 255, 200);
+} // namespace Interval
 } // namespace TuningOverlay
 
 } // namespace Colors

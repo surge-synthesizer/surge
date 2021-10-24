@@ -187,14 +187,17 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
 class RadialScaleGraph;
 
-class InfiniteKnob : public juce::Component
+class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
   public:
     InfiniteKnob() : juce::Component(), angle(0) {}
 
     virtual void mouseDown(const juce::MouseEvent &event) override
     {
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        if (!storage || !Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
 
         lastDrag = 0;
         isDragging = true;
@@ -220,15 +223,23 @@ class InfiniteKnob : public juce::Component
 
     virtual void mouseUp(const juce::MouseEvent &e) override
     {
-        juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-        auto p = localPointToGlobal(e.mouseDownPosition);
-        juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        if (!storage || !Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            auto p = localPointToGlobal(e.mouseDownPosition);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
 
         isDragging = false;
         repaint();
     }
     virtual void paint(juce::Graphics &g) override
     {
+        if (!skin)
+            return;
+
+        namespace clr = Colors::TuningOverlay::RadialGraph;
+
         int w = getWidth();
         int h = getHeight();
         int b = std::min(w, h);
@@ -240,23 +251,44 @@ class InfiniteKnob : public juce::Component
         g.addTransform(juce::AffineTransform::translation(r, r));
         g.addTransform(
             juce::AffineTransform::rotation(angle / 50.0 * 2.0 * juce::MathConstants<double>::pi));
-        g.setColour(getLookAndFeel().findColour(juce::Slider::rotarySliderFillColourId));
+        if (isHovered)
+            g.setColour(skin->getColor(clr::KnobCenterHover));
+        else
+            g.setColour(skin->getColor(clr::KnobCenter));
         g.fillEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2);
-        g.setColour(getLookAndFeel().findColour(juce::GroupComponent::outlineColourId));
+        g.setColour(skin->getColor(clr::KnobOutline));
         g.drawEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2, r / 5.0);
         if (enabled)
         {
-            g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
+            if (isPlaying)
+                g.setColour(skin->getColor(clr::KnobPlayingThumb));
+            else
+                g.setColour(skin->getColor(clr::KnobThumb));
             g.drawLine(0, -(r - 1), 0, r - 1, r / 3.0);
         }
         g.restoreState();
     }
 
+    bool isHovered = false;
+    void mouseEnter(const juce::MouseEvent &e) override
+    {
+        isHovered = true;
+        repaint();
+    }
+
+    void mouseExit(const juce::MouseEvent &e) override
+    {
+        isHovered = false;
+        repaint();
+    }
+
     int lastDrag = 0;
     bool isDragging = false;
+    bool isPlaying{false};
     float angle;
     std::function<void(float)> onDragDelta = [](float f) {};
     bool enabled = true;
+    SurgeStorage *storage{nullptr};
 };
 
 class RadialScaleGraph : public juce::Component,
@@ -275,6 +307,7 @@ class RadialScaleGraph : public juce::Component,
         setTuning(Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::tuneA69To(440)));
     }
 
+    SurgeStorage *storage{nullptr};
     void setTuning(const Tunings::Tuning &t)
     {
         int priorLen = tuning.scale.count;
@@ -306,6 +339,7 @@ class RadialScaleGraph : public juce::Component,
                 if (i == 0)
                 {
                     auto tk = std::make_unique<InfiniteKnob>();
+                    tk->storage = storage;
 
                     tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
                     tk->onDragDelta = [this](float f) { onScaleRescaled(f); };
@@ -388,6 +422,9 @@ class RadialScaleGraph : public juce::Component,
     {
         if (showHideKnob)
             showHideKnob->setSkin(skin, associatedBitmapStore);
+        for (const auto &k : toneKnobs)
+            k->setSkin(skin, associatedBitmapStore);
+        setNotesOn(bitset);
     }
 
   private:
@@ -421,6 +458,7 @@ class RadialScaleGraph : public juce::Component,
     std::bitset<128> bitset{0};
     void setNotesOn(const std::bitset<128> &bs)
     {
+        namespace clr = Colors::TuningOverlay::RadialGraph;
         bitset = bs;
         for (int i = 0; i < scale.count; ++i)
             notesOn[i] = false;
@@ -433,28 +471,50 @@ class RadialScaleGraph : public juce::Component,
             }
         }
 
+        if (!skin)
+            return;
+        for (auto &a : toneKnobs)
+        {
+            a->isPlaying = false;
+        }
         for (int i = 0; i < scale.count; ++i)
         {
             auto ni = (i + 1) % (scale.count);
             if (notesOn[ni])
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
-                                          juce::Colour(0xFFaaaa50));
+                                          skin->getColor(clr::TonePlayingBackground));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
+                                          skin->getColor(clr::TonePlayingOutline));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
+                                          skin->getColor(clr::TonePlayingText));
+                toneEditors[i]->applyColourToAllText(skin->getColor(clr::TonePlayingText), true);
+
                 toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
-                                             juce::Colour(0xFFaaaa50));
+                                             skin->getColor(clr::TonePlayingLabel));
+                toneKnobs[i + 1]->isPlaying = true;
                 if (i == scale.count - 1)
+                {
                     toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
-                                             juce::Colour(0xFFaaaa50));
+                                             skin->getColor(clr::TonePlayingLabel));
+                    toneKnobs[0]->isPlaying = true;
+                }
             }
             else
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
-                                          juce::Colours::black);
+                                          skin->getColor(clr::ToneBackground));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
+                                          skin->getColor(clr::ToneOutline));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
+                                          skin->getColor(clr::ToneText));
+                toneEditors[i]->applyColourToAllText(skin->getColor(clr::ToneText), true);
+
                 toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
-                                             juce::Colours::white);
+                                             skin->getColor(clr::ToneLabel));
                 if (i == scale.count - 1)
                     toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
-                                             juce::Colours::white);
+                                             skin->getColor(clr::ToneLabel));
             }
             toneEditors[i]->repaint();
             toneLabels[i + 1]->repaint();
@@ -471,6 +531,8 @@ class RadialScaleGraph : public juce::Component,
 
 void RadialScaleGraph::paint(juce::Graphics &g)
 {
+    namespace clr = Colors::TuningOverlay::RadialGraph;
+
     if (notesOn.size() != scale.count)
     {
         notesOn.clear();
@@ -478,7 +540,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         for (int i = 0; i < scale.count; ++i)
             notesOn[i] = 0;
     }
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillAll(skin->getColor(clr::Background));
     int w = getWidth() - usedForSidebar;
     int h = getHeight();
     float r = std::min(w, h) / 2.1;
@@ -669,7 +731,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         whatLabel->setText("Scale Rotation Intervals",
                            juce::NotificationType::dontSendNotification);
         explLabel->setText("If you shift the scale root to note N\n"
-                           "what is the interval to note M.",
+                           "show the interval to note M",
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::ROTATION;
 
@@ -680,7 +742,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     {
         whatLabel->setText("Interval Between Notes", juce::NotificationType::dontSendNotification);
         explLabel->setText(
-            "Given any two notes in the loaded scale\nshow the interval in cents betwen them.",
+            "Given any two notes in the loaded scale\nshow the interval in cents betwen them",
             juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
         repaint();
@@ -691,7 +753,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         whatLabel->setText("Interval to Equal Division",
                            juce::NotificationType::dontSendNotification);
         explLabel->setText("Given any two notes in the loaded scale\nshow the distance to the "
-                           "equal division interval.",
+                           "equal division interval",
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::DIST;
 
@@ -721,7 +783,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         intervalPainter->repaint();
     }
 
-    struct IntervalPainter : public juce::Component
+    struct IntervalPainter : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
         enum Mode
         {
@@ -744,7 +806,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         // ToDo: Skin Colors Here
         void paint(juce::Graphics &g) override
         {
-            g.fillAll(juce::Colour(0xFF979797));
+            if (!skin)
+                return;
+
+            namespace clr = Colors::TuningOverlay::Interval;
+            g.fillAll(skin->getColor(clr::Background));
             auto ic = matrix->tuning.scale.count;
             int mt = ic + (mode == ROTATION ? 1 : 2);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
@@ -768,22 +834,21 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             no = no || matrix->notesOn[j - 1];
 
                         if (no)
-                            g.setColour(juce::Colours::darkgreen);
+                            g.setColour(skin->getColor(clr::NoteLabelBackgroundPlaying));
                         else
-                            g.setColour(juce::Colours::darkblue);
+                            g.setColour(skin->getColor(clr::NoteLabelBackground));
                         g.fillRect(bx);
-                        if (no)
-                        {
-                            g.setColour(juce::Colours::white);
-                            g.drawRect(bx);
-                        }
 
                         auto lb = std::to_string(i + j - 1);
 
+                        if (isHovered && no)
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundPlayingHovered));
                         if (isHovered)
-                            g.setColour(juce::Colours::white);
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundHovered));
+                        else if (no)
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundPlaying));
                         else
-                            g.setColour(juce::Colours::lightblue);
+                            g.setColour(skin->getColor(clr::NoteLabelForeground));
                         g.drawText(lb, bx, juce::Justification::centred);
                     }
                     else if (i == j && mode != ROTATION)
@@ -792,7 +857,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         g.fillRect(bx);
                         if (mode == ROTATION && i != 0)
                         {
-                            g.setColour(juce::Colours::lightgrey);
+                            g.setColour(skin->getColor(clr::SkippedInterval));
                             g.drawText("0", bx, juce::Justification::centred);
                         }
                     }
@@ -812,22 +877,26 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         auto evenStep = lastTone / matrix->tuning.scale.count;
                         auto desCents = disNote * evenStep;
 
-                        if (cdiff < desCents)
+                        // ToDo: Skin these endpoints
+                        if (fabs(cdiff - desCents) < 0.1)
+                        {
+                            g.setColour(skin->getColor(clr::HeatmapZero));
+                        }
+                        else if (cdiff < desCents)
                         {
                             // we are flat of even
                             auto dist = std::min((desCents - cdiff) / evenStep, 1.0);
-                            auto r = (int)((1.0 - dist) * 200);
-                            g.setColour(juce::Colour(255, 255, r));
-                        }
-                        else if (fabs(cdiff - desCents) < 0.1)
-                        {
-                            g.setColour(juce::Colours::white);
+                            auto c1 = skin->getColor(clr::HeatmapNegFar);
+                            auto c2 = skin->getColor(clr::HeatmapNegNear);
+                            g.setColour(c1.interpolatedWith(c2, 1.0 - dist));
                         }
                         else
                         {
                             auto dist = std::min(-(desCents - cdiff) / evenStep, 1.0);
-                            auto b = (int)((1.0 - dist) * 100) + 130;
-                            g.setColour(juce::Colour(b, b, 255));
+                            auto b = 1.0 - dist;
+                            auto c1 = skin->getColor(clr::HeatmapPosFar);
+                            auto c2 = skin->getColor(clr::HeatmapPosNear);
+                            g.setColour(c1.interpolatedWith(c2, b));
                         }
                         g.fillRect(bx);
 
@@ -836,16 +905,10 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             displayCents = cdiff - desCents;
                         auto lb = fmt::format("{:.1f}", displayCents);
                         if (isHovered)
-                            g.setColour(juce::Colours::darkgreen);
+                            g.setColour(skin->getColor(clr::IntervalTextHovered));
                         else
-                            g.setColour(juce::Colours::black);
+                            g.setColour(skin->getColor(clr::IntervalText));
                         g.drawText(lb, bx, juce::Justification::centred);
-
-                        if (isHovered)
-                        {
-                            g.setColour(juce::Colour(255, 255, 255));
-                            g.drawRect(bx);
-                        }
                     }
                     else if (mode == ROTATION && i > 0)
                     {
@@ -859,31 +922,35 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         auto evenStep = lastTone / matrix->tuning.scale.count;
                         auto desCents = disNote * evenStep;
 
-                        if (cdiff < desCents)
+                        if (fabs(cdiff - desCents) < 0.1)
+                        {
+                            g.setColour(skin->getColor(clr::HeatmapZero));
+                        }
+                        else if (cdiff < desCents)
                         {
                             // we are flat of even
                             auto dist = std::min((desCents - cdiff) / evenStep, 1.0);
-                            auto r = (int)((1.0 - dist) * 200);
-                            g.setColour(juce::Colour(255, 255, r));
-                        }
-                        else if (fabs(cdiff - desCents) < 0.1)
-                        {
-                            g.setColour(juce::Colours::white);
+                            auto r = (1.0 - dist);
+                            auto c1 = skin->getColor(clr::HeatmapNegFar);
+                            auto c2 = skin->getColor(clr::HeatmapNegNear);
+                            g.setColour(c1.interpolatedWith(c2, r));
                         }
                         else
                         {
                             auto dist = std::min(-(desCents - cdiff) / evenStep, 1.0);
-                            auto b = (int)((1.0 - dist) * 100) + 130;
-                            g.setColour(juce::Colour(b, b, 255));
+                            auto b = 1.0 - dist;
+                            auto c1 = skin->getColor(clr::HeatmapPosFar);
+                            auto c2 = skin->getColor(clr::HeatmapPosNear);
+                            g.setColour(c1.interpolatedWith(c2, b));
                         }
                         g.fillRect(bx);
 
                         if (isHovered)
-                            g.setColour(juce::Colours::darkgreen);
+                            g.setColour(skin->getColor(clr::IntervalTextHovered));
                         else
-                            g.setColour(juce::Colours::black);
+                            g.setColour(skin->getColor(clr::IntervalText));
 
-                        g.drawText(fmt::format("{:.2f}", cdiff), bx, juce::Justification::centred);
+                        g.drawText(fmt::format("{:.1f}", cdiff), bx, juce::Justification::centred);
                     }
                 }
             }
@@ -997,6 +1064,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         intervalPainter->setSizeFromTuning();
     }
 
+    void onSkinChanged() override { intervalPainter->setSkin(skin, associatedBitmapStore); }
     std::vector<bool> notesOn;
     std::bitset<128> bitset{0};
     void setNotesOn(const std::bitset<128> &bs)
@@ -1016,6 +1084,13 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         intervalPainter->repaint();
         repaint();
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        if (!skin)
+            return;
+        g.fillAll(skin->getColor(Colors::TuningOverlay::Interval::Background));
     }
 
     std::unique_ptr<IntervalPainter> intervalPainter;
@@ -1099,8 +1174,6 @@ struct SCLKBMDisplay : public juce::Component,
         scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
         scl->setLineNumbersShown(false);
         scl->setScrollbarThickness(5);
-        scl->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
-                       juce::Colour(0xFFE3E3E3));
         addAndMakeVisible(*scl);
 
         kbmDocument = std::make_unique<juce::CodeDocument>();
@@ -1111,8 +1184,6 @@ struct SCLKBMDisplay : public juce::Component,
         kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
         kbm->setLineNumbersShown(false);
         kbm->setScrollbarThickness(5);
-        kbm->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
-                       juce::Colour(0xFFE3E3E3));
         addAndMakeVisible(*kbm);
     }
 
@@ -1203,11 +1274,11 @@ struct SCLKBMDisplay : public juce::Component,
             // clang-format off
             const Type types[] = {
                 {"Error", 0xffcc0000},
-                {"Comment", 0xFF703000},
-                {"Text", 0xFF242424},
-                {"Cents", 0xFF1212A0},
-                {"Ratio", 0xFF12A012},
-                { "Playing", 0xFFFF9300 }
+                {"Comment", 0xffff0000},
+                {"Text", 0xFFFF0000},
+                {"Cents", 0xFFFF0000},
+                {"Ratio", 0xFFFF0000},
+                { "Playing", 0xFFFF0000 }
             };
             // clang-format on
 
@@ -1277,13 +1348,36 @@ struct SCLKBMDisplay : public juce::Component,
 
     void paint(juce::Graphics &g) override
     {
-        g.fillAll(juce::Colour(0xFF979797));
-        g.setColour(juce::Colour(0xFF242424));
+        namespace clr = Colors::TuningOverlay::SCLKBM;
+        g.fillAll(skin->getColor(clr::Background));
+        g.setColour(skin->getColor(clr::Editor::Border));
         g.drawRect(scl->getBounds().expanded(1), 2);
         g.drawRect(kbm->getBounds().expanded(1), 2);
     }
 
     void textEditorTextChanged(juce::TextEditor &editor) override { setApplyEnabled(true); }
+
+    void onSkinChanged() override
+    {
+        namespace clr = Colors::TuningOverlay::SCLKBM::Editor;
+        scl->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
+                       skin->getColor(clr::Background));
+        kbm->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
+                       skin->getColor(clr::Background));
+
+        for (auto t : {scl.get(), kbm.get()})
+        {
+            auto cs = t->getColourScheme();
+
+            cs.set("Comment", skin->getColor(clr::Comment));
+            cs.set("Text", skin->getColor(clr::Text));
+            cs.set("Cents", skin->getColor(clr::Cents));
+            cs.set("Ratio", skin->getColor(clr::Ratio));
+            cs.set("Playing", skin->getColor(clr::Playing));
+
+            t->setColourScheme(cs);
+        }
+    }
 
     std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
         [](auto a, auto b) {};
@@ -1421,20 +1515,34 @@ struct TuningControlArea : public juce::Component,
         break;
         case tag_save_scl:
         {
+            if (applyS->isEnabled())
+            {
+                overlay->storage->reportError(
+                    "You have un-applied changes in your SCL/KBM. Please apply them before saving.",
+                    "SCL Save Error");
+                break;
+            }
             fileChooser = std::make_unique<juce::FileChooser>("Save SCL");
             fileChooser->launchAsync(
                 juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
                     juce::FileBrowserComponent::warnAboutOverwriting,
                 [this](const juce::FileChooser &c) {
-                    auto result = c.getURLResult();
-                    if (result.isEmpty())
+                    auto result = c.getResults();
+                    if (result.isEmpty() || result.size() > 1)
                         return;
 
-                    std::cout << "Saving File " << std::endl;
-                    std::unique_ptr<juce::OutputStream> wo(result.createOutputStream());
-                    if (wo)
+                    auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+                    fsp = fsp.replace_extension(".scl");
+
+                    std::ofstream ofs(fsp);
+                    if (ofs.is_open())
                     {
-                        wo->writeString(overlay->tuning.scale.rawText);
+                        ofs << overlay->tuning.scale.rawText;
+                        ofs.close();
+                    }
+                    else
+                    {
+                        overlay->storage->reportError("Unable to save SCL file", "SCL File Error");
                     }
                 });
         }
@@ -1680,7 +1788,8 @@ void TuningOverlay::recalculateScaleText()
 
     try
     {
-        storage->retuneToScale(Tunings::parseSCLData(oss.str()));
+        auto str = oss.str();
+        storage->retuneToScale(Tunings::parseSCLData(str));
         setTuning(storage->currentTuning);
     }
     catch (const Tunings::TuningError &e)
@@ -1705,6 +1814,8 @@ void TuningOverlay::onSkinChanged()
 
     sclKbmDisplay->setSkin(skin, associatedBitmapStore);
     radialScaleGraph->setSkin(skin, associatedBitmapStore);
+    radialScaleGraph->storage = storage;
+
     intervalMatrix->setSkin(skin, associatedBitmapStore);
 
     controlArea->setSkin(skin, associatedBitmapStore);

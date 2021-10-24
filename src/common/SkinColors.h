@@ -19,6 +19,7 @@ struct Color
 {
     Color(const std::string &name, int r, int g, int b);
     Color(const std::string &name, int r, int g, int b, int a);
+    Color(const std::string &name, uint32_t argb);
 
     static Color colorByName(const std::string &name);
     static std::vector<Color> getAllColors();
@@ -323,9 +324,31 @@ extern const Surge::Skin::Color WhiteKey, BlackKey, Separator, Text, PressedKey,
 }
 namespace SCLKBM
 {
-extern const Surge::Skin::Color Background, EditorBorder, EditorBackground, EditorText,
-    EditorCommentText;
-}
+extern const Surge::Skin::Color Background;
+namespace Editor
+{
+extern const Surge::Skin::Color Border, Background, Text, Comment, Cents, Ratio, Playing;
+} // namespace Editor
+} // namespace SCLKBM
+namespace RadialGraph
+{
+extern const Surge::Skin::Color Background;
+extern const Surge::Skin::Color KnobCenter, KnobCenterHover, KnobOutline, KnobThumb,
+    KnobPlayingThumb;
+extern const Surge::Skin::Color ToneLabel, TonePlayingLabel, ToneOutline, ToneBackground, ToneText,
+    TonePlayingBackground, TonePlayingOutline, TonePlayingText;
+} // namespace RadialGraph
+namespace Interval
+{
+extern const Surge::Skin::Color Background;
+extern const Surge::Skin::Color NoteLabelBackground, NoteLabelBackgroundPlaying,
+    NoteLabelForeground, NoteLabelForegroundHovered, NoteLabelForegroundPlaying,
+    NoteLabelForegroundPlayingHovered, SkippedInterval;
+extern const Surge::Skin::Color IntervalText, IntervalTextHovered;
+
+extern const Surge::Skin::Color HeatmapZero, HeatmapNegFar, HeatmapNegNear, HeatmapPosFar,
+    HeatmapPosNear;
+} // namespace Interval
 } // namespace TuningOverlay
 
 namespace VirtualKeyboard
