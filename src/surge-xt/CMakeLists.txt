@@ -86,8 +86,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/SurgeJUCEHelpers.h
   gui/SurgeJUCELookAndFeel.cpp
   gui/SurgeJUCELookAndFeel.h
-  gui/UIInstrumentation.cpp
-  gui/UIInstrumentation.h
   gui/overlays/AboutScreen.cpp
   gui/overlays/AboutScreen.h
   gui/overlays/CoveringMessageOverlay.cpp

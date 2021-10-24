@@ -174,7 +174,6 @@ add_library(${PROJECT_NAME}
   dsp/filters/AllpassFilter.h
   dsp/filters/BiquadFilter.cpp
   dsp/filters/BiquadFilter.h
-  dsp/filters/BiquadFilterSSE2.cpp
   dsp/filters/DiodeLadder.cpp
   dsp/filters/DiodeLadder.h
   dsp/filters/FilterCoefficientMaker.cpp
@@ -193,7 +192,6 @@ add_library(${PROJECT_NAME}
   dsp/filters/VectorizedSVFilter.h
   dsp/filters/VintageLadders.cpp
   dsp/filters/VintageLadders.h
-  dsp/modulators/ADSRModulationSource.cpp
   dsp/modulators/ADSRModulationSource.h
   dsp/modulators/FormulaModulationHelper.cpp
   dsp/modulators/FormulaModulationHelper.h
