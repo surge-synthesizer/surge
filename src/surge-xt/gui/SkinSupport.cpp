@@ -6,7 +6,6 @@
 #include "SurgeStorage.h"
 #include "SurgeImageStore.h"
 #include "UserDefaults.h"
-#include "UIInstrumentation.h"
 #include "SurgeImage.h"
 
 #include "filesystem/import.h"

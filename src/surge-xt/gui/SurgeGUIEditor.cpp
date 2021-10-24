@@ -22,7 +22,6 @@
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
-#include "UIInstrumentation.h"
 #include "SurgeGUIUtils.h"
 #include "DebugHelpers.h"
 #include "StringOps.h"
