@@ -914,8 +914,6 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
-            if (mode == ROTATION)
-                return;
 
             auto dPos = e.position.getY() - lastMousePos.getY();
             dPos = -dPos;
@@ -925,11 +923,19 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             dPos = dPos * speed;
             lastMousePos = e.position;
 
-            auto i = hoverI;
-            if (i > 1)
+            if (mode == ROTATION)
             {
-                auto centsi = matrix->tuning.scale.tones[i - 2].cents + dPos;
-                matrix->overlay->onToneChanged(i - 2, centsi);
+                int tonI = (hoverI - 1 + hoverJ - 1) % matrix->tuning.scale.count;
+                matrix->overlay->onToneChanged(tonI, matrix->tuning.scale.tones[tonI].cents + dPos);
+            }
+            else
+            {
+                auto i = hoverI;
+                if (i > 1)
+                {
+                    auto centsi = matrix->tuning.scale.tones[i - 2].cents + dPos;
+                    matrix->overlay->onToneChanged(i - 2, centsi);
+                }
             }
         }
         void mouseEnter(const juce::MouseEvent &e) override { repaint(); }
@@ -1131,13 +1137,11 @@ struct SCLKBMDisplay : public juce::Component,
             if (firstChar == '!')
             {
                 source.skipToEndOfLine();
-                notesOnLine.erase(source.getLine());
                 return token_Comment;
             }
             if (!isSCL)
             {
                 source.skipToEndOfLine();
-                notesOnLine.erase(source.getLine());
                 return token_Text;
             }
             source.skipWhitespace();
@@ -1149,45 +1153,44 @@ struct SCLKBMDisplay : public juce::Component,
             source.previousChar(); // in case we are just numbers
             source.skipToEndOfLine();
 
-            auto isOn = [this, &source]() {
-                int idx = 0, res = -1;
-                for (auto s : notesOnLine)
-                {
-                    if (s == source.getLine())
-                        res = idx;
-                    idx++;
-                }
-                if (res >= 0 && res < notesOn.size())
-                {
-                    res = (res + 1) % notesOn.size();
-                    auto should = notesOn[res] ? true : false;
-                    return should;
-                }
-                return false;
-            };
-            if (nc == '/')
+            auto ln = source.getLine();
+            int toneIdx = -1;
+            if (toneToLine.find(ln) != toneToLine.end())
             {
-                notesOnLine.insert(source.getLine());
-
-                if (isOn())
-                    return token_Playing;
-                return token_Ratio;
-            }
-            if (nc == '.')
-            {
-                notesOnLine.insert(source.getLine());
-
-                if (isOn())
-                    return token_Playing;
-                return token_Cents;
+                toneIdx = toneToLine[ln];
             }
 
-            notesOnLine.erase(source.getLine());
+            if (toneIdx >= 0 && toneIdx < scale.count)
+            {
+                if (notesOn.size() == scale.count)
+                {
+                    auto ni = (toneIdx + scale.count + 1) % scale.count;
+                    if (notesOn[ni])
+                        return token_Playing;
+                }
+                const auto &tone = scale.tones[toneIdx];
+                if (tone.type == Tunings::Tone::kToneCents)
+                    return token_Cents;
+                if (tone.type == Tunings::Tone::kToneRatio)
+                    return token_Ratio;
+            }
             return token_Text;
         }
 
-        std::set<int> notesOnLine;
         std::vector<bool> notesOn;
+        Tunings::Scale scale;
+        std::unordered_map<int, int> toneToLine;
+        void setScale(const Tunings::Scale &s)
+        {
+            scale = s;
+            toneToLine.clear();
+            int idx = 0;
+            for (const auto &t : scale.tones)
+            {
+                toneToLine[t.lineno] = idx++;
+            }
+        }
+
         void setNotesOn(const std::vector<bool> &no) { notesOn = no; }
         juce::CodeEditorComponent::ColourScheme getDefaultColourScheme() override
         {
@@ -1248,6 +1251,7 @@ struct SCLKBMDisplay : public juce::Component,
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
+        sclTokeniser->setScale(t.scale);
         sclDocument->replaceAllContent(t.scale.rawText);
         kbmDocument->replaceAllContent(t.keyboardMapping.rawText);
         setApplyEnabled(false);
@@ -1299,6 +1303,7 @@ struct TuningControlArea : public juce::Component,
     {
         tag_select_tab = 0x475200,
         tag_export_html,
+        tag_save_scl,
         tag_apply_sclkbm,
         tag_open_library
     };
@@ -1375,6 +1380,10 @@ struct TuningControlArea : public juce::Component,
                 return res;
             };
 
+            savesclS = ma("Save SCL", tag_save_scl);
+            addAndMakeVisible(*savesclS);
+            marginPos += btnWidth + 5;
+
             exportS = ma("Export HTML", tag_export_html);
             addAndMakeVisible(*exportS);
             marginPos += btnWidth + 5;
@@ -1410,6 +1419,26 @@ struct TuningControlArea : public juce::Component,
             overlay->showEditor(m);
         }
         break;
+        case tag_save_scl:
+        {
+            fileChooser = std::make_unique<juce::FileChooser>("Save SCL");
+            fileChooser->launchAsync(
+                juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
+                    juce::FileBrowserComponent::warnAboutOverwriting,
+                [this](const juce::FileChooser &c) {
+                    auto result = c.getURLResult();
+                    if (result.isEmpty())
+                        return;
+
+                    std::cout << "Saving File " << std::endl;
+                    std::unique_ptr<juce::OutputStream> wo(result.createOutputStream());
+                    if (wo)
+                    {
+                        wo->writeString(overlay->tuning.scale.rawText);
+                    }
+                });
+        }
+        break;
         case tag_open_library:
         {
             auto path = overlay->storage->datapath / "tuning_library";
@@ -1440,8 +1469,9 @@ struct TuningControlArea : public juce::Component,
     }
 
     std::unique_ptr<juce::Label> selectL, intervalL, actionL;
-    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> selectS, intervalS, exportS, libraryS,
-        applyS;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> selectS, intervalS, exportS, savesclS,
+        libraryS, applyS;
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
