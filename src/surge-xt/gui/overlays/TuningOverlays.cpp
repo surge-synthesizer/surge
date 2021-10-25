@@ -324,6 +324,9 @@ class RadialScaleGraph : public juce::Component,
 
             toneInterior->setSize(w, (scale.count + 1) * (h + m));
             toneEditors.clear();
+            toneKnobs.clear();
+            toneLabels.clear();
+
             for (int i = 0; i < scale.count + 1; ++i)
             {
                 auto totalR = juce::Rectangle<int>(m, i * (h + m) + m, w - 2 * m, h);
@@ -343,6 +346,8 @@ class RadialScaleGraph : public juce::Component,
 
                     tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
                     tk->onDragDelta = [this](float f) { onScaleRescaled(f); };
+                    if (skin)
+                        tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
                     toneKnobs.push_back(std::move(tk));
 
@@ -381,6 +386,8 @@ class RadialScaleGraph : public juce::Component,
                         ct += f;
                         onToneChanged(idx - 1, ct);
                     };
+                    if (skin)
+                        tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
                     toneKnobs.push_back(std::move(tk));
                 }
@@ -436,7 +443,7 @@ class RadialScaleGraph : public juce::Component,
     Tunings::Scale scale;
     std::vector<juce::Rectangle<float>> screenHotSpots;
     int hotSpotIndex = -1;
-    double dInterval, centsAtMouseDown, dIntervalAtMouseDown;
+    double dInterval, centsAtMouseDown, angleAtMouseDown, dIntervalAtMouseDown;
 
     juce::AffineTransform screenTransform, screenTransformInverted;
     std::function<void(int index, double)> onToneChanged = [](int, double) {};
@@ -1121,10 +1128,14 @@ void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
 {
     if (hotSpotIndex == -1)
+    {
         centsAtMouseDown = 0;
+        angleAtMouseDown = 0;
+    }
     else
     {
         centsAtMouseDown = scale.tones[hotSpotIndex].cents;
+        angleAtMouseDown = toneKnobs[hotSpotIndex + 1]->angle;
         dIntervalAtMouseDown = dInterval;
     }
 }
@@ -1145,6 +1156,8 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 
         auto dr = -sqrt(xd * xd + yd * yd) + sqrt(x * x + y * y);
         dr = dr * 0.7; // FIXME - make this a variable
+        toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
+        toneKnobs[hotSpotIndex + 1]->repaint();
         onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
     }
 }
