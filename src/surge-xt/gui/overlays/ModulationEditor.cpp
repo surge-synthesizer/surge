@@ -18,391 +18,619 @@
 #include "SurgeGUIEditor.h"
 #include "RuntimeFont.h"
 #include <sstream>
+#include "widgets/MenuCustomComponents.h"
+#include "widgets/ModulatableSlider.h"
+#include "widgets/MultiSwitch.h"
 
 namespace Surge
 {
 namespace Overlays
 {
-struct ModulationListBoxModel : public juce::ListBoxModel
+
+struct ModulationSideControls : public juce::Component,
+                                public Surge::GUI::IComponentTagValue::Listener,
+                                public Surge::GUI::SkinConsumingComponent
 {
-    struct UpdateOnExternal
+    enum Tags
     {
-        virtual ~UpdateOnExternal() = default;
-        virtual void update() {}
+        tag_sort_by = 0x147932,
+        tag_filter_by,
+        tag_add_source,
+        tag_add_target,
+        tag_add_go
     };
+
+    ModulationEditor *editor{nullptr};
+    ModulationSideControls(ModulationEditor *e) : editor(e) { create(); }
+    void create()
+    {
+        auto makeL = [this](const std::string &s) {
+            auto l = std::make_unique<juce::Label>(s);
+            l->setText(s, juce::dontSendNotification);
+            l->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            if (skin)
+                l->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            addAndMakeVisible(*l);
+            return l;
+        };
+
+        auto makeW = [this](const std::vector<std::string> &l, int tag, bool en) {
+            auto w = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            w->setRows(1);
+            w->setColumns(l.size());
+            w->setTag(tag);
+            w->setLabels(l);
+            w->setEnabled(en);
+            w->addListener(this);
+            addAndMakeVisible(*w);
+            return w;
+        };
+
+        sortL = makeL("Sort By");
+        sortW = makeW(
+            {
+                "By Source",
+                "By Target",
+            },
+            tag_sort_by, true);
+        filterL = makeL("Filter By");
+        filterW = makeW({"-"}, tag_filter_by, true);
+
+        addL = makeL("Add Modulation");
+        addSourceW = makeW({"Select Source"}, tag_add_source, true);
+        addTargetW = makeW({"Select Target"}, tag_add_target, false);
+        addGoW = makeW({"Add Modulation"}, tag_add_go, false);
+    }
+
+    void resized() override
+    {
+        float ypos = 4;
+        float xpos = 4;
+
+        auto h = 16.0;
+        auto m = 3;
+
+        auto b = juce::Rectangle<int>(xpos, ypos, getWidth() - 2 * xpos, h);
+        sortL->setBounds(b);
+        b = b.translated(0, h + m);
+        sortW->setBounds(b);
+        b = b.translated(0, h * 1.5 + m);
+
+        filterL->setBounds(b);
+        b = b.translated(0, h + m);
+        filterW->setBounds(b);
+        b = b.translated(0, h * 1.5 + m);
+
+        addL->setBounds(b);
+        b = b.translated(0, h + m);
+        addSourceW->setBounds(b);
+        b = b.translated(0, h + m);
+        addTargetW->setBounds(b);
+        b = b.translated(0, h + m);
+        addGoW->setBounds(b);
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        if (!skin)
+        {
+            g.fillAll(juce::Colours::red);
+            return;
+        }
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
+    }
+
+    void valueChanged(GUI::IComponentTagValue *c) override;
+
+    void onSkinChanged() override
+    {
+        for (auto c : getChildren())
+        {
+            auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(c);
+            if (skc)
+                skc->setSkin(skin, associatedBitmapStore);
+        }
+
+        if (sortL && skin)
+        {
+            sortL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            filterL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            addL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        }
+    }
+
+    std::unique_ptr<juce::Label> sortL, filterL, addL;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
+        addGoW;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
+};
+
+// TODO: Skin Colors
+struct ModulationListContents : public juce::Component, public Surge::GUI::SkinConsumingComponent
+{
+    ModulationEditor *editor{nullptr};
+    ModulationListContents(ModulationEditor *e) : editor(e) {}
+
+    void paint(juce::Graphics &g) override
+    {
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+    }
+
     struct Datum
     {
-        enum RowType
-        {
-            HEADER,
-            SHOW_ROW,
-            EDIT_ROW
-        } type;
-
-        explicit Datum(RowType t) : type(t) {}
-
-        std::string hLab;
-        int dest_id = -1, source_id = -1, source_index = -1, source_scene = -1;
-        std::string dest_name, source_name;
-        int modNum = -1;
-
-        float depth = 0;
-        bool isBipolar = false;
-        // const Parameter *p;
-        Parameter *p = nullptr; // When we do proper consting return to this
+        int source_scene, source_id, source_index, destination_id, inScene;
+        std::string pname, sname, moddepth;
+        bool isBipolar;
+        bool isPerScene;
+        int idBase;
+        float moddepth01;
+        bool isMuted;
         ModulationDisplayInfoWindowStrings mss;
     };
-    std::vector<Datum> rows;
-    std::string debugRows;
 
-    struct HeaderComponent : public juce::Component
+    struct DataRowEditor : public juce::Component,
+                           public Surge::GUI::SkinConsumingComponent,
+                           public Surge::GUI::IComponentTagValue::Listener
     {
-        HeaderComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row) {}
-        void paint(juce::Graphics &g) override
+        static constexpr int height = 30;
+        Datum datum;
+        ModulationListContents *contents{nullptr};
+        DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
         {
-            g.fillAll(juce::Colour(30, 30, 30));
-            auto r = getBounds().expanded(-1);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
-            g.setColour(juce::Colour(255, 255, 255));
-            g.drawText(mod->rows[row].hLab, r, juce::Justification::left);
-        }
-        ModulationListBoxModel *mod;
-        int row;
-    };
-
-    struct ShowComponent : public juce::Component, UpdateOnExternal
-    {
-        ShowComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row) {}
-        void paint(juce::Graphics &g) override
-        {
-            auto r = getBounds().withTrimmedLeft(15);
-
-            auto dat = mod->rows[row];
-
-            g.setColour(juce::Colour(48, 48, 48));
-            if (mod->rows[row].modNum % 2)
-                g.setColour(juce::Colour(32, 32, 32));
-            g.fillRect(r);
-
-            auto er = r.expanded(-1);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.setColour(juce::Colour(255, 255, 255));
-            g.drawText(dat.source_name, r, juce::Justification::left);
-            auto rR = r.withTrimmedRight(r.getWidth() / 2);
-            g.drawText(dat.dest_name, rR, juce::Justification::right);
-
-            auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
-            if (dat.isBipolar)
-                g.drawText(dat.mss.dvalminus, rL, juce::Justification::left);
-            g.drawText(dat.mss.val, rL, juce::Justification::centred);
-            g.drawText(dat.mss.dvalplus, rL, juce::Justification::right);
-        }
-        ModulationListBoxModel *mod;
-        int row;
-    };
-
-    struct EditComponent : public juce::Component,
-                           public juce::Slider::Listener,
-                           public juce::Button::Listener,
-                           public UpdateOnExternal
-    {
-        std::unique_ptr<juce::Button> clearButton;
-        std::unique_ptr<juce::Button> muteButton;
-        std::unique_ptr<juce::Slider> modSlider;
-        EditComponent(ModulationListBoxModel *mod, int row) : mod(mod), row(row)
-        {
-            clearButton = std::make_unique<juce::TextButton>("Clear");
-            clearButton->setButtonText("Clear");
-            clearButton->addListener(this);
+            clearButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(1, [this]() {
+                auto me = contents->editor;
+                ModulationEditor::SelfModulationGuard g(me);
+                me->synth->clearModulation(datum.destination_id + datum.idBase,
+                                           (modsources)datum.source_id, datum.source_scene,
+                                           datum.source_index);
+                // The rebuild may delete this so defer
+                auto c = contents;
+                juce::Timer::callAfterDelay(1, [c, me]() {
+                    c->rebuildFrom(me->synth);
+                    me->ed->queue_refresh = true;
+                });
+            });
             addAndMakeVisible(*clearButton);
 
-            muteButton = std::make_unique<juce::ToggleButton>("Mute");
-            muteButton->setButtonText("Mute");
-            muteButton->addListener(this);
-            // FIX THIS SCENE TREATMENT
-            addAndMakeVisible(*muteButton);
-
-            modSlider = std::make_unique<juce::Slider>("Modulation");
-            modSlider->setSliderStyle(juce::Slider::LinearHorizontal);
-            modSlider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-            modSlider->setRange(-1, 1);
-            modSlider->addListener(this);
-            addAndMakeVisible(*modSlider);
-
-            update();
-        }
-
-        virtual void update() override
-        {
-            muteButton->setToggleState(
-                mod->moded->synth->isModulationMuted(
-                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_scene, mod->rows[row].source_index),
-                juce::NotificationType::dontSendNotification);
-            modSlider->setValue(mod->rows[row].p->get_modulation_f01(mod->rows[row].depth),
-                                juce::NotificationType::dontSendNotification);
-        }
-        void sliderValueChanged(juce::Slider *slider) override
-        {
-            ModulationEditor::SelfModulationGuard g(mod->moded);
-            auto rd = mod->rows[row];
-            auto um = rd.p->set_modulation_f01(slider->getValue());
-            mod->moded->synth->setModulation(rd.dest_id, (modsources)rd.source_id, rd.source_scene,
-                                             rd.source_index, slider->getValue());
-            mod->updateRowByModnum(rd.modNum);
-            mod->moded->repaint();
-            // std::cout << "SVC " << slider->getValue() << std::endl;
-        }
-        void buttonClicked(juce::Button *button) override
-        {
-            ModulationEditor::SelfModulationGuard g(mod->moded);
-            if (button == clearButton.get())
-            {
-                mod->moded->synth->clearModulation(
-                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_scene, mod->rows[row].source_index);
-                mod->updateRows();
-                mod->moded->listBox->updateContent();
-                mod->moded->ed->queue_refresh = true;
-            }
-            if (button == muteButton.get())
-            {
+            muted = false;
+            muteButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(2, [this]() {
+                /*ModulationEditor::SelfModulationGuard g(mod->moded);
                 mod->moded->synth->muteModulation(
                     mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_scene, mod->rows[row].source_index,
-                    button->getToggleState());
-            }
+                    mod->rows[row].source_scene, mod->rows[row].source_index, !muted);
+                muted = !muted;
+                update();*/
+            });
+
+            addAndMakeVisible(*muteButton);
+
+            surgeLikeSlider = std::make_unique<Surge::Widgets::ModulatableSlider>();
+            surgeLikeSlider->setOrientation(Surge::ParamConfig::kHorizontal);
+            surgeLikeSlider->setBipolarFn([]() { return true; });
+            surgeLikeSlider->setIsLightStyle(true);
+            surgeLikeSlider->setStorage(&(contents->editor->synth->storage));
+            surgeLikeSlider->addListener(this);
+            addAndMakeVisible(*surgeLikeSlider);
+
+            resetValuesFromDatum();
         }
-        void resized() override
+
+        void resetValuesFromDatum()
         {
-            auto b = getBounds().withTrimmedLeft(15).expanded(-1).withRight(
-                getBounds().getTopLeft().getX() + 50);
-            clearButton->setBounds(b);
-
-            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(35).expanded(-1).withRight(
-                getBounds().getTopLeft().getX() + 97);
-            muteButton->setBounds(b);
-
-            b = getBounds().withTrimmedLeft(15).withTrimmedLeft(100 + 3).expanded(-1).withRight(
-                getWidth() / 2);
-            modSlider->setBounds(b);
-
-            Component::resized();
+            surgeLikeSlider->setValue((datum.moddepth01 + 1) * 0.5);
+            surgeLikeSlider->setQuantitizedDisplayValue((datum.moddepth01 + 1) * 0.5);
+            muteButton->offset = 2;
+            if (datum.isMuted)
+                muteButton->offset = 3;
+            repaint();
         }
+
+        bool firstInSort{false};
         void paint(juce::Graphics &g) override
         {
-            auto r = getBounds().withTrimmedLeft(15);
-
-            g.setColour(juce::Colour(48, 48, 48));
-            if (mod->rows[row].modNum % 2)
-                g.setColour(juce::Colour(32, 32, 32));
-
-            auto dat = mod->rows[row];
-
-            g.fillRect(r);
-
-            auto er = r.expanded(-1);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.setColour(juce::Colour(200, 200, 255));
-            // g.drawText("Edit Controls Coming Soon", r, juce::Justification::left);
-
-            g.setColour(juce::Colour(255, 255, 255));
-            auto rL = r.withTrimmedLeft(2 * r.getWidth() / 3).withTrimmedRight(4);
-            if (dat.isBipolar)
-                g.drawText(dat.mss.valminus, rL, juce::Justification::left);
-            g.drawText(dat.mss.valplus, rL, juce::Justification::right);
-        }
-        ModulationListBoxModel *mod;
-        int row;
-    };
-
-    ModulationListBoxModel(ModulationEditor *ed) : moded(ed) { updateRows(); }
-
-    void paintListBoxItem(int rowNumber, juce::Graphics &g, int width, int height,
-                          bool rowIsSelected) override
-    {
-        g.fillAll(juce::Colour(0, 0, 0));
-    }
-
-    int getNumRows() override { return rows.size(); }
-
-    void updateRowByModnum(int modnum)
-    {
-        // bit inefficient for now
-        for (auto &r : rows)
-        {
-            if (r.modNum == modnum)
+            static constexpr int indent = 1;
+            auto b = getLocalBounds().withTrimmedLeft(indent);
+            g.setColour(juce::Colour(0xFF979797));
+            if (firstInSort)
             {
-                char pdisp[TXT_SIZE];
-                int ptag = r.p->id;
-                modsources thisms = (modsources)r.source_id;
-                r.p->get_display_of_modulation_depth(
-                    pdisp, moded->synth->getModDepth(ptag, thisms, r.source_scene, r.source_index),
-                    moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(r.mss));
-                r.depth = moded->synth->getModDepth(ptag, thisms, r.source_scene, r.source_index);
+                // draw the top and the side
+                g.drawLine(indent, 0, getWidth(), 0, 1);
+            }
+            g.drawLine(indent, 0, indent, getHeight(), 1);
+            g.drawLine(getWidth() - indent, 0, getWidth() - indent, getHeight(), 1);
+
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.setColour(juce::Colours::white);
+            int fh = g.getCurrentFont().getHeight();
+            auto firstLab = datum.sname;
+            auto secondLab = datum.pname;
+            if (contents->sortOrder == BY_TARGET)
+                std::swap(firstLab, secondLab);
+            auto tb = b.reduced(3, 0).withHeight(fh).withRight(controlsStart);
+
+            if (firstInSort)
+                g.setColour(juce::Colours::white);
+            else
+                g.setColour(juce::Colours::grey);
+            g.drawText(firstLab, tb, juce::Justification::topLeft);
+            g.setColour(juce::Colours::white);
+
+            auto tbl = tb.getBottomLeft();
+            if (contents->sortOrder == BY_SOURCE)
+            {
+                g.drawLine(tbl.x + 7, tbl.y + 2, tbl.x + 7, tbl.y + fh / 2 + 2, 1);
+                g.drawArrow({tbl.x + 7.f, tbl.y + fh / 2.f + 2, tbl.x + 14.f, tbl.y + fh / 2.f + 2},
+                            1, 3, 4);
+            }
+            else
+            {
+                g.drawArrow({tbl.x + 7.f, tbl.y + 2.f + fh / 2, tbl.x + 7.f, tbl.y + 2.f}, 1, 3, 4);
+                g.drawLine(tbl.x + 7.f, tbl.y + fh / 2.f + 2, tbl.x + 14.f, tbl.y + fh / 2.f + 2,
+                           1);
+            }
+
+            tb = tb.translated(0, fh + 2);
+            g.drawText(secondLab, tb.withTrimmedLeft(15), juce::Justification::bottomLeft);
+
+            // And then the back
+            auto rB = b.withLeft(controlsEnd).reduced(2).withTrimmedRight(2);
+
+            // OK so
+            auto cp = rB.getCentre();
+            auto pr = juce::Rectangle<int>(cp.x, cp.y - 2, rB.getWidth() * datum.moddepth01 / 2, 5);
+            auto mr =
+                juce::Rectangle<int>(cp.x, cp.y - 2, -rB.getWidth() * datum.moddepth01 / 2, 5);
+
+            g.setColour(juce::Colours::green);
+            g.fillRect(pr);
+            if (datum.isBipolar)
+            {
+                g.setColour(juce::Colours::darkgreen);
+                g.fillRect(mr);
+            }
+
+            g.setColour(juce::Colours::white);
+            g.drawText(datum.mss.val, rB, juce::Justification::centredTop);
+            g.drawText(datum.mss.dvalplus, rB, juce::Justification::topRight);
+            if (datum.isBipolar)
+                g.drawText(datum.mss.dvalminus, rB, juce::Justification::topLeft);
+
+            g.setColour(juce::Colours::grey);
+            g.drawText(datum.mss.valplus, rB, juce::Justification::bottomRight);
+            if (datum.isBipolar)
+                g.drawText(datum.mss.valminus, rB, juce::Justification::bottomLeft);
+        }
+
+        static constexpr int controlsStart = 150;
+        static constexpr int controlsEnd = controlsStart + (14 + 2) * 2 + 140 + 2;
+
+        void resized() override
+        {
+            int startX = controlsStart;
+            int bh = 14;
+            int sh = 26;
+            int bY = (height - bh) / 2;
+            int sY = (height - sh) / 2;
+            muteButton->setBounds(startX, bY, bh, bh);
+            startX += bh + 2;
+            clearButton->setBounds(startX, bY, bh, bh);
+            startX += bh + 2;
+            surgeLikeSlider->setBounds(startX, sY, 140, sh);
+        }
+
+        void valueChanged(Surge::GUI::IComponentTagValue *v) override
+        {
+            if (v == surgeLikeSlider.get())
+            {
+                auto me = contents->editor;
+                ModulationEditor::SelfModulationGuard g(me);
+
+                auto nm01 = v->getValue() * 2.f - 1.f;
+                auto synth = contents->editor->synth;
+
+                auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
+
+                synth->setModulation(datum.destination_id + datum.idBase,
+                                     (modsources)datum.source_id, datum.source_scene,
+                                     datum.source_index, nm01);
+
+                contents->populateDatum(datum, synth);
+                resetValuesFromDatum();
             }
         }
-    }
-    void updateRows()
+
+        void onSkinChanged() override
+        {
+            clearButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
+            muteButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
+            surgeLikeSlider->setSkin(skin, associatedBitmapStore);
+        }
+
+        bool muted{false};
+        std::unique_ptr<Surge::Widgets::TinyLittleIconButton> clearButton;
+        std::unique_ptr<Surge::Widgets::TinyLittleIconButton> muteButton;
+        std::unique_ptr<Surge::Widgets::ModulatableSlider> surgeLikeSlider;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DataRowEditor);
+    };
+
+    enum SortOrder
     {
+        BY_SOURCE,
+        BY_TARGET
+    } sortOrder{BY_SOURCE};
+
+    std::string filterString;
+    enum FilterOn
+    {
+        NONE,
+        SOURCE,
+        TARGET
+    } filterOn{NONE};
+    void clearFilters()
+    {
+        if (filterOn != NONE)
+        {
+            filterOn = NONE;
+            rebuildFrom(editor->synth);
+        }
+    }
+
+    void filterBySource(const std::string &s)
+    {
+        filterOn = SOURCE;
+        filterString = s;
+        rebuildFrom(editor->synth);
+    }
+
+    void filterByTarget(const std::string &s)
+    {
+        filterOn = TARGET;
+        filterString = s;
+        rebuildFrom(editor->synth);
+    }
+
+    std::vector<std::unique_ptr<DataRowEditor>> rows;
+
+    void populateDatum(Datum &d, const SurgeSynthesizer *synth)
+    {
+        std::string sceneMod = "";
+        d.isPerScene = synth->isModulatorDistinctPerScene((modsources)d.source_id);
+
+        if (synth->isModulatorDistinctPerScene((modsources)d.source_id) &&
+            !isScenelevel((modsources)d.source_id))
+        {
+            sceneMod = std::string(" (") + (d.source_scene == 0 ? "A" : "B") + ")";
+        }
+
+        char nm[256];
+        SurgeSynthesizer::ID ptagid;
+        if (synth->fromSynthSideId(d.destination_id + d.idBase, ptagid))
+            synth->getParameterName(ptagid, nm);
+        std::string sname = editor->ed->modulatorName(d.source_id, false);
+        if (d.inScene < 0)
+            sname = editor->ed->modulatorName(d.source_id, false, d.source_scene);
+        if (d.inScene >= 0)
+            sname += editor->ed->modulatorIndexExtension(d.inScene, d.source_id, d.source_index);
+
+        d.sname = sname + sceneMod;
+        d.pname = nm;
+
+        char pdisp[256];
+        auto p = synth->storage.getPatch().param_ptr[d.destination_id + d.idBase];
+        int ptag = p->id;
+        auto thisms = (modsources)d.source_id;
+
+        d.moddepth01 =
+            p->get_modulation_f01(synth->getModDepth(ptag, thisms, d.source_scene, d.source_index));
+        d.isBipolar = synth->isBipolarModulation(thisms);
+        d.isMuted = synth->isModulationMuted(ptag, thisms, d.source_scene, d.source_index);
+        p->get_display_of_modulation_depth(
+            pdisp, synth->getModDepth(ptag, thisms, d.source_scene, d.source_index),
+            synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(d.mss));
+        d.moddepth = pdisp;
+    }
+
+    void rebuildFrom(SurgeSynthesizer *synth)
+    {
+        std::vector<Datum> dataRows;
+
+        removeAllChildren();
         rows.clear();
-        std::ostringstream oss;
-        int modNum = 0;
-        auto append = [&oss, &modNum, this](const std::string &type,
-                                            const std::vector<ModulationRouting> &r, int idBase,
-                                            int scene) {
+        int ypos = 0;
+        setSize(getWidth(), 10);
+        auto append = [this, synth, &dataRows](const std::string &type,
+                                               const std::vector<ModulationRouting> &r, int idBase,
+                                               int scene) {
             if (r.empty())
                 return;
 
-            oss << type << "\n";
-            auto h = Datum(Datum::HEADER);
-            h.hLab = type;
-            h.modNum = -1;
-            rows.push_back(h);
-
-            std::vector<Datum> trows;
-            char nm[TXT_SIZE], dst[TXT_SIZE];
             for (auto q : r)
             {
-                SurgeSynthesizer::ID ptagid;
-                if (moded->synth->fromSynthSideId(q.destination_id + idBase, ptagid))
-                    moded->synth->getParameterName(ptagid, nm);
-                std::string sname = moded->ed->modulatorName(q.source_id, false);
-                if (scene < 0)
-                    sname = moded->ed->modulatorName(q.source_id, false, q.source_scene);
-                if (scene >= 0)
-                    sname += moded->ed->modulatorIndexExtension(scene, q.source_id, q.source_index);
-
-                auto rDisp = Datum(Datum::SHOW_ROW);
-                rDisp.source_id = q.source_id;
-                rDisp.dest_id = q.destination_id + idBase;
-                rDisp.source_index = q.source_index;
-                rDisp.source_scene = q.source_scene;
-                rDisp.source_name = sname;
-                rDisp.dest_name = nm;
-                rDisp.modNum = modNum++;
-                rDisp.p = moded->synth->storage.getPatch().param_ptr[rDisp.dest_id];
-
-                char pdisp[256];
-                auto p = moded->synth->storage.getPatch().param_ptr[q.destination_id + idBase];
-                int ptag = p->id;
-                modsources thisms = (modsources)q.source_id;
-                p->get_display_of_modulation_depth(
-                    pdisp, moded->synth->getModDepth(ptag, thisms, q.source_scene, q.source_index),
-                    moded->synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(rDisp.mss));
-                rDisp.depth =
-                    moded->synth->getModDepth(ptag, thisms, q.source_scene, q.source_index);
-                rDisp.isBipolar = moded->synth->isBipolarModulation(thisms);
-                trows.push_back(rDisp);
-
-                rDisp.type = Datum::EDIT_ROW;
-                trows.push_back(rDisp);
-
-                oss << "    > " << this->moded->ed->modulatorName(q.source_id, false) << " to "
-                    << nm << " at " << q.depth << "\n";
+                Datum d;
+                d.source_scene = q.source_scene;
+                d.source_id = q.source_id;
+                d.source_index = q.source_index;
+                d.destination_id = q.destination_id;
+                d.idBase = idBase;
+                d.inScene = scene;
+                populateDatum(d, synth);
+                dataRows.push_back(d);
             }
+        };
 
-            std::sort(trows.begin(), trows.end(), [](const Datum &a, const Datum &b) -> bool {
-                if (a.source_scene != b.source_scene)
-                    return a.source_scene < b.source_scene;
+        {
+            std::lock_guard<std::recursive_mutex> modLock(synth->storage.modRoutingMutex);
+            // FIXME mutex lock
+            append("Global Modulators", synth->storage.getPatch().modulation_global, 0, -1);
+            append("Scene A - Voice Modulators",
+                   synth->storage.getPatch().scene[0].modulation_voice,
+                   synth->storage.getPatch().scene_start[0], 0);
+            append("Scene A - Scene Modulators",
+                   synth->storage.getPatch().scene[0].modulation_scene,
+                   synth->storage.getPatch().scene_start[0], 0);
+            append("Scene B - Voice Modulators",
+                   synth->storage.getPatch().scene[1].modulation_voice,
+                   synth->storage.getPatch().scene_start[1], 1);
+            append("Scene B - Scene Modulators",
+                   synth->storage.getPatch().scene[1].modulation_scene,
+                   synth->storage.getPatch().scene_start[1], 1);
+        }
+
+        std::sort(dataRows.begin(), dataRows.end(), [this](const Datum &a, const Datum &b) -> bool {
+            if (sortOrder == BY_SOURCE)
+            {
+                if (a.isPerScene && b.isPerScene)
+                    if (a.source_scene != b.source_scene)
+                        return a.source_scene < b.source_scene;
 
                 if (a.source_id != b.source_id)
                     return a.source_id < b.source_id;
 
-                if (a.dest_id != b.dest_id)
-                    return a.dest_id < b.dest_id;
+                if (a.destination_id != b.destination_id)
+                    return a.destination_id < b.destination_id;
+            }
+            else
+            {
+                if (a.destination_id != b.destination_id)
+                    return a.destination_id < b.destination_id;
 
-                if (a.type != b.type)
-                    return a.type < b.type;
+                if (a.isPerScene && b.isPerScene)
+                    if (a.source_scene != b.source_scene)
+                        return a.source_scene < b.source_scene;
 
-                return false;
-            });
-            for (const auto &d : trows)
-                rows.push_back(d);
-        };
-        append("Global Modulators", moded->synth->storage.getPatch().modulation_global, 0, -1);
-        append("Scene A - Voice Modulators",
-               moded->synth->storage.getPatch().scene[0].modulation_voice,
-               moded->synth->storage.getPatch().scene_start[0], 0);
-        append("Scene A - Scene Modulators",
-               moded->synth->storage.getPatch().scene[0].modulation_scene,
-               moded->synth->storage.getPatch().scene_start[0], 0);
-        append("Scene B - Voice Modulators",
-               moded->synth->storage.getPatch().scene[1].modulation_voice,
-               moded->synth->storage.getPatch().scene_start[1], 1);
-        append("Scene B - Scene Modulators",
-               moded->synth->storage.getPatch().scene[1].modulation_scene,
-               moded->synth->storage.getPatch().scene_start[1], 1);
-        debugRows = oss.str();
+                if (a.source_id != b.source_id)
+                    return a.source_id < b.source_id;
+            }
+            return false;
+        });
+
+        std::string priorN = "-";
+        for (const auto &d : dataRows)
+        {
+            auto l = std::make_unique<DataRowEditor>(d, this);
+            l->setSkin(skin, associatedBitmapStore);
+            auto sortName = sortOrder == BY_SOURCE ? d.sname : d.pname;
+            if (sortName != priorN)
+            {
+                priorN = sortName;
+                l->firstInSort = true;
+            }
+
+            if (filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
+                (filterOn == TARGET && d.pname == filterString))
+            {
+                l->setBounds(0, ypos, getWidth(), DataRowEditor::height);
+                ypos += DataRowEditor::height;
+                addAndMakeVisible(*l);
+            }
+            rows.push_back(std::move(l));
+        }
+        setSize(getWidth(), ypos);
     }
 
-    juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
-                                            juce::Component *existingComponentToUpdate) override
+    void updateAllValues(const SurgeSynthesizer *synth)
     {
-        auto row = existingComponentToUpdate;
-        if (rowNumber >= 0 && rowNumber < rows.size())
+        for (const auto &r : rows)
         {
-            if (row)
-            {
-                bool replace = false;
-                switch (rows[rowNumber].type)
-                {
-                case Datum::HEADER:
-                    replace = !dynamic_cast<HeaderComponent *>(row);
-                    break;
-                case Datum::SHOW_ROW:
-                    replace = !dynamic_cast<ShowComponent *>(row);
-                    break;
-                case Datum::EDIT_ROW:
-                    replace = !dynamic_cast<EditComponent *>(row);
-                    break;
-                }
-                if (replace)
-                {
-                    delete row;
-                    row = nullptr;
-                }
-            }
-            if (!row)
-            {
-                switch (rows[rowNumber].type)
-                {
-                case Datum::HEADER:
-                    row = new HeaderComponent(this, rowNumber);
-                    break;
-                case Datum::SHOW_ROW:
-                    row = new ShowComponent(this, rowNumber);
-                    break;
-                case Datum::EDIT_ROW:
-                    row = new EditComponent(this, rowNumber);
-                    break;
-                }
-            }
+            populateDatum(r->datum, synth);
+            r->resetValuesFromDatum();
         }
-        else
-        {
-            if (row)
-            {
-                // Nothing to display, free the custom component
-                delete row;
-                row = nullptr;
-            }
-        }
-
-        return row;
     }
 
-    ModulationEditor *moded;
+    void onSkinChanged() override
+    {
+        for (auto c : getChildren())
+        {
+            auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(c);
+            if (skc)
+                skc->setSkin(skin, associatedBitmapStore);
+            else
+                std::cout << "SKipping an element " << std::endl;
+        }
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationListContents);
 };
+
+void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
+
+{
+    auto tag = c->getTag();
+    switch (tag)
+    {
+    case tag_sort_by:
+    {
+        auto v = c->getValue();
+        if (v > 0.5)
+            editor->modContents->sortOrder = ModulationListContents::BY_TARGET;
+        else
+            editor->modContents->sortOrder = ModulationListContents::BY_SOURCE;
+        editor->modContents->rebuildFrom(editor->synth);
+    }
+    break;
+    case tag_filter_by:
+    {
+        /*
+         * Make a popup menu to filter
+         */
+        auto men = juce::PopupMenu();
+        std::set<std::string> sources, targets;
+        for (const auto &r : editor->modContents->rows)
+        {
+            sources.insert(r->datum.sname);
+            targets.insert(r->datum.pname);
+        }
+        // FIXME add help component
+
+        auto tcomp =
+            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Filter Modulation List", "");
+        tcomp->setSkin(skin, associatedBitmapStore);
+        men.addCustomItem(-1, std::move(tcomp));
+        men.addSeparator();
+        men.addItem("Clear Filter", [this]() {
+            editor->modContents->clearFilters();
+            filterW->setLabels({"-"});
+        });
+        men.addSeparator();
+        men.addSectionHeader("By Source");
+        for (auto s : sources)
+            men.addItem(s, [this, s]() {
+                editor->modContents->filterBySource(s);
+                filterW->setLabels({std::string("Source: ") + s});
+            });
+        men.addSectionHeader("By Target");
+        for (auto t : targets)
+            men.addItem(t, [this, t]() {
+                editor->modContents->filterByTarget(t);
+                filterW->setLabels({std::string("Target: ") + t});
+            });
+        men.showMenuAsync(juce::PopupMenu::Options());
+    }
+    break;
+    case tag_add_source:
+    {
+        auto men = juce::PopupMenu();
+
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation", "");
+        tcomp->setSkin(skin, associatedBitmapStore);
+        men.addCustomItem(-1, std::move(tcomp));
+        men.addSeparator();
+        men.addItem("Coming Soon", [this]() {});
+        men.showMenuAsync(juce::PopupMenu::Options());
+    }
+    break;
+    }
+}
 
 ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     : ed(ed), synth(s), OverlayComponent("Modulation Editor")
 {
-    listBoxModel = std::make_unique<ModulationListBoxModel>(this);
-    listBox = std::make_unique<juce::ListBox>("Mod Editor List", listBoxModel.get());
-    listBox->setBounds(5, 5, 740, 440);
-    listBox->setRowHeight(18);
-    addAndMakeVisible(*listBox);
+    modContents = std::make_unique<ModulationListContents>(this);
+    modContents->rebuildFrom(synth);
+    viewport = std::make_unique<juce::Viewport>();
+    viewport->setViewedComponent(modContents.get(), false);
+    addAndMakeVisible(*viewport);
 
     struct IdleTimer : juce::Timer
     {
@@ -414,6 +642,10 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     idleTimer->startTimerHz(60);
 
     synth->addModulationAPIListener(this);
+
+    sideControls = std::make_unique<ModulationSideControls>(this);
+
+    addAndMakeVisible(*sideControls);
 }
 
 void ModulationEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
@@ -425,13 +657,21 @@ void ModulationEditor::resized()
 
     t.transformPoint(w, h);
 
-    if (listBox)
-        listBox->setBounds(2, 2, w - 4, h - 4);
+    int bottomH = 35;
+    int sideW = 140;
+
+    sideControls->setBounds(0, 0, sideW, h);
+    auto vpr = juce::Rectangle<int>(sideW, 0, w - sideW, h).reduced(2);
+    viewport->setBounds(vpr);
+    modContents->setSize(vpr.getWidth() - viewport->getScrollBarThickness() - 1, 10);
+    modContents->rebuildFrom(synth);
 }
 
 ModulationEditor::~ModulationEditor()
 {
     synth->removeModulationAPIListener(this);
+    needsModUpdate = false;
+    needsModValueOnlyUpdate = false;
     idleTimer->stopTimer();
 }
 
@@ -445,34 +685,49 @@ void ModulationEditor::idle()
     if (needsModUpdate)
     {
         needsModUpdate = false;
-        listBoxModel->updateRows();
-        listBox->updateContent();
-        for (int i = 0; i < listBoxModel->getNumRows(); ++i)
-        {
-            auto c = dynamic_cast<ModulationListBoxModel::UpdateOnExternal *>(
-                listBox->getComponentForRowNumber(i));
-            if (c)
-                c->update();
-        }
+        modContents->rebuildFrom(synth);
+    }
+    if (needsModValueOnlyUpdate)
+    {
+        needsModValueOnlyUpdate = false;
+        modContents->updateAllValues(synth);
     }
 }
 
+void ModulationEditor::updateParameterById(const SurgeSynthesizer::ID &pid)
+{
+    modContents->updateAllValues(synth);
+}
+
 void ModulationEditor::modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                              float value)
+                              float value, bool isNew)
 {
     if (!selfModulation)
-        needsModUpdate = true;
+    {
+        if (isNew || value == 0)
+            needsModUpdate = true;
+        else
+            needsModValueOnlyUpdate = true;
+    }
 }
 void ModulationEditor::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                                 bool mute)
 {
     if (!selfModulation)
-        needsModUpdate = true;
+        needsModValueOnlyUpdate = true;
 }
 void ModulationEditor::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
 {
     if (!selfModulation)
         needsModUpdate = true;
+}
+
+void ModulationEditor::onSkinChanged()
+{
+    sideControls->setSkin(skin, associatedBitmapStore);
+    modContents->setSkin(skin, associatedBitmapStore);
+    modContents->rebuildFrom(synth);
+    repaint();
 }
 
 } // namespace Overlays

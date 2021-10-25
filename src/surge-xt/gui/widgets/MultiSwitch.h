@@ -103,7 +103,11 @@ struct MultiSwitchSelfDraw : public MultiSwitch
     void paint(juce::Graphics &g);
 
     std::vector<std::string> labels;
-    void setLabels(const std::vector<std::string> &l) { labels = l; }
+    void setLabels(const std::vector<std::string> &l)
+    {
+        labels = l;
+        repaint();
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchSelfDraw);
 };

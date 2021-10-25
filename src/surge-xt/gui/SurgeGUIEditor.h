@@ -504,8 +504,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         SurgeGUIEditor *moded;
     };
     std::atomic<bool> selfModulation{false}, needsModUpdate{false};
-    void modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                float value) override;
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index, float value,
+                bool isNew) override;
     void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;

@@ -39,6 +39,7 @@
 
 #include "overlays/TypeinParamEditor.h"
 #include "widgets/WaveShaperSelector.h"
+#include "overlays/ModulationEditor.h"
 
 std::string decodeControllerID(int id)
 {
@@ -2964,6 +2965,13 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     // The green line might change so...
                     refresh_mod();
                 }
+
+                // Finally we may have to update the modulation editor
+                auto me = getOverlayIfOpenAs<Surge::Overlays::ModulationEditor>(MODULATION_EDITOR);
+                if (me)
+                {
+                    me->updateParameterById(ptagid);
+                }
             }
             if (!queue_refresh)
             {
@@ -3132,7 +3140,7 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
 }
 
 void SurgeGUIEditor::modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                            float value)
+                            float value, bool isNew)
 {
     if (!selfModulation)
         needsModUpdate = true;

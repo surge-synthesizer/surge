@@ -329,7 +329,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
     case MODULATION_EDITOR:
     {
         auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
-        int w = 750, h = 500;
+        int w = 650, h = 500;
         auto px = (getWindowSizeX() - w) / 2;
         auto py = (getWindowSizeY() - h) / 2;
 
@@ -350,6 +350,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::ModlistOverlayLocation));
         pt->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
         pt->defaultLocation = dl;
+        pt->setSkin(currentSkin, bitmapStore);
+
         return pt;
     }
     break;

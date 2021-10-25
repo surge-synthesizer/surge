@@ -19,6 +19,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "OverlayComponent.h"
 #include "SurgeSynthesizer.h"
+#include "SkinSupport.h"
 
 class SurgeGUIEditor;
 
@@ -26,17 +27,18 @@ namespace Surge
 {
 namespace Overlays
 {
-class ModulationListBoxModel;
+// class ModulationListBoxModel;
+struct ModulationSideControls;
+struct ModulationListContents;
 
-class ModulationEditor : public OverlayComponent, public SurgeSynthesizer::ModulationAPIListener
+class ModulationEditor : public OverlayComponent,
+                         public Surge::GUI::SkinConsumingComponent,
+                         public SurgeSynthesizer::ModulationAPIListener
 {
   public:
     ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s);
     ~ModulationEditor();
 
-    std::unique_ptr<juce::ListBox> listBox;
-    std::unique_ptr<ModulationListBoxModel> listBoxModel;
-    std::unique_ptr<juce::TextEditor> textBox;
     SurgeGUIEditor *ed;
     SurgeSynthesizer *synth;
 
@@ -52,12 +54,20 @@ class ModulationEditor : public OverlayComponent, public SurgeSynthesizer::Modul
         ~SelfModulationGuard() { moded->selfModulation = false; }
         ModulationEditor *moded;
     };
-    std::atomic<bool> selfModulation{false}, needsModUpdate{false};
-    void modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                float value) override;
+    std::atomic<bool> selfModulation{false}, needsModUpdate{false}, needsModValueOnlyUpdate{false};
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index, float value,
+                bool isNew) override;
     void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
+
+    std::unique_ptr<ModulationSideControls> sideControls;
+    std::unique_ptr<ModulationListContents> modContents;
+    std::unique_ptr<juce::Viewport> viewport;
+
+    void onSkinChanged() override;
+
+    void updateParameterById(const SurgeSynthesizer::ID &pid);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationEditor);
 };

@@ -24,6 +24,39 @@ namespace Surge
 namespace Widgets
 {
 
+struct TinyLittleIconButton : public juce::Component
+{
+    TinyLittleIconButton(int off, std::function<void()> cb) : offset(off), callback(std::move(cb))
+    {
+    }
+
+    void setIcon(SurgeImage *img)
+    {
+        icons = img;
+        repaint();
+    }
+
+    void paint(juce::Graphics &g) override;
+    void mouseUp(const juce::MouseEvent &e) override { callback(); }
+    void mouseEnter(const juce::MouseEvent &e) override
+    {
+        isHovered = true;
+        repaint();
+    }
+    void mouseExit(const juce::MouseEvent &e) override
+    {
+        isHovered = false;
+        repaint();
+    }
+
+    bool isHovered{false};
+    std::function<void()> callback;
+    SurgeImage *icons{nullptr};
+    int offset{0};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TinyLittleIconButton);
+};
+
 struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::SkinConsumingComponent
 {
     MenuTitleHelpComponent(const std::string &l, const std::string &u)
