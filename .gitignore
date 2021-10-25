@@ -89,6 +89,7 @@ build_lv2
 buildiwyu/
 cmake-build-*/
 bwd/
+CMakeUserPresets.json
 
 # Reaper
 *.RPP-bak
