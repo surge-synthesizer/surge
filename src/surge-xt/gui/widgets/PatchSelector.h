@@ -111,7 +111,7 @@ struct PatchSelector : public juce::Component,
         favoritesHover = false;
         searchHover = false;
         tooltipCountdown = -1;
-        toggleCommentTooltip(false);
+        // toggleCommentTooltip(false);
         repaint();
     }
     void showClassicMenu(bool singleCategory = false);
@@ -150,6 +150,8 @@ struct PatchSelector : public juce::Component,
     int tooltipCountdown{-1};
     void toggleCommentTooltip(bool b);
     void shouldTooltip();
+    juce::Point<float> tooltipMouseLocation;
+    bool tooltipShowing{false};
 
     /**
      * populatePatchMenuForCategory
@@ -167,6 +169,19 @@ struct PatchSelector : public juce::Component,
 
   protected:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelector);
+};
+
+struct PatchSelectorCommentTooltip : public juce::Component,
+                                     public Surge::GUI::SkinConsumingComponent
+{
+    PatchSelectorCommentTooltip(){};
+    void paint(juce::Graphics &g) override;
+
+    std::string comment;
+    void positionForComment(const juce::Point<int> &topLeft, const std::string &comment);
+
+  protected:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelectorCommentTooltip);
 };
 } // namespace Widgets
 } // namespace Surge
