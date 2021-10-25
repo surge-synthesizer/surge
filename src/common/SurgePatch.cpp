@@ -813,9 +813,13 @@ void SurgePatch::update_controls(
             if (fx[i].type.val.i != fxt_off)
             {
                 Effect *t_fx = spawn_effect(fx[i].type.val.i, nullptr, &(fx[i]), nullptr);
-                t_fx->init_ctrltypes();
-                t_fx->handleStreamingMismatches(streamingRevision, currentSynthStreamingRevision);
-                delete t_fx;
+                if (t_fx)
+                {
+                    t_fx->init_ctrltypes();
+                    t_fx->handleStreamingMismatches(streamingRevision,
+                                                    currentSynthStreamingRevision);
+                    delete t_fx;
+                }
             }
         }
     }
