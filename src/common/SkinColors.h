@@ -276,6 +276,10 @@ namespace PatchBrowser
 {
 extern const Surge::Skin::Color Text;
 
+namespace CommentTooltip
+{
+extern const Surge::Skin::Color Border, Background, Text;
+}
 namespace TypeAheadList
 {
 extern const Surge::Skin::Color Border, Background, Text, HighlightBackground, HighlightText,

@@ -182,6 +182,10 @@
 
         <color id="patchbrowser.text" value="lightgray"/>
 
+        <color id="patchbrowser.commenttooltip.border" value="bordergray"/>
+        <color id="patchbrowser.commenttooltip.background" value="darkergray"/>
+        <color id="patchbrowser.commenttooltip.text" value="lightgray"/>
+
         <color id="slider.light.label" value="lightgray"/>
         <color id="slider.dark.label" value="lightgray"/>
         <color id="slider.modulation.positive" value="#82BF50"/>

@@ -382,6 +382,9 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     paramInfowindow = std::make_unique<Surge::Widgets::ParameterInfowindow>();
     paramInfowindow->setVisible(false);
 
+    patchSelectorComment = std::make_unique<Surge::Widgets::PatchSelectorCommentTooltip>();
+    patchSelectorComment->setVisible(false);
+
     typeinParamEditor = std::make_unique<Surge::Overlays::TypeinParamEditor>();
     typeinParamEditor->setVisible(false);
     typeinParamEditor->setSurgeGUIEditor(this);
@@ -1534,6 +1537,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Browse");
 
             frame->addAndMakeVisible(*patchSelector);
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
@@ -1694,6 +1698,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
     // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
     frame->addChildComponent(*paramInfowindow);
+
+    patchSelectorComment->setVisible(false);
+    frame->addChildComponent(*patchSelectorComment);
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
@@ -3654,6 +3661,7 @@ void SurgeGUIEditor::reloadFromSkin()
     bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
     paramInfowindow->setSkin(currentSkin, bitmapStore);
+    patchSelectorComment->setSkin(currentSkin, bitmapStore);
 
     auto bg = currentSkin->customBackgroundImage();
 
@@ -5910,5 +5918,25 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
             showMSEGEditorOnNextIdleOrOpen = false;
             overlaysForNextIdle = des->editor.activeOverlays;
         }
+    }
+}
+
+void SurgeGUIEditor::showPatchCommentTooltip(const std::string &comment)
+{
+    if (patchSelectorComment)
+    {
+        patchSelectorComment->setVisible(true);
+        patchSelectorComment->getParentComponent()->toFront(true);
+        patchSelectorComment->toFront(true);
+        patchSelectorComment->positionForComment(patchSelector->getBounds().getBottomLeft(),
+                                                 comment);
+    }
+}
+
+void SurgeGUIEditor::hidePatchCommentTooltip()
+{
+    if (patchSelectorComment && patchSelectorComment->isVisible())
+    {
+        patchSelectorComment->setVisible(false);
     }
 }

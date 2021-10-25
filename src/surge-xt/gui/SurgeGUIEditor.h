@@ -56,6 +56,7 @@ struct NumberField;
 struct OscillatorWaveformDisplay;
 struct ParameterInfowindow;
 struct PatchSelector;
+struct PatchSelectorCommentTooltip;
 struct Switch;
 struct VerticalLabel;
 struct VuMeter;
@@ -448,6 +449,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
+    std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
     std::unique_ptr<Surge::Widgets::WaveShaperSelector> waveshaperSelector;
@@ -459,6 +461,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setupAlternates(modsources ms);
 
   public:
+    void showPatchCommentTooltip(const std::string &comment);
+    void hidePatchCommentTooltip();
     void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void updateInfowindowContents(int ptag, bool isModulated);

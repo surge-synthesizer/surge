@@ -376,6 +376,13 @@ namespace PatchBrowser
 {
 const Surge::Skin::Color Text("patchbrowser.text", 0, 0, 0);
 
+namespace CommentTooltip
+{
+const Surge::Skin::Color Border("patchbrowser.commenttooltip.border", 0xFF979797),
+    Background("patchbrowser.commenttooltip.background", 0xFFE3E3E3),
+    Text("patchbrowser.commenttooltip.text", 0xFF151515);
+}
+
 namespace TypeAheadList
 {
 const Surge::Skin::Color Border("patchbrowser.typeahead.border", 100, 100, 130),

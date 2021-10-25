@@ -215,7 +215,12 @@ void PatchSelector::mouseMove(const juce::MouseEvent &e)
 {
     if (tooltipCountdown >= 0)
         tooltipCountdown = 5;
-    toggleCommentTooltip(false);
+    // todo : apply mouse tolerance here
+    if (tooltipShowing && e.position.getDistanceFrom(tooltipMouseLocation.toFloat()) > 1)
+        toggleCommentTooltip(false);
+    else
+        tooltipMouseLocation = e.position;
+
     auto pfh = favoritesHover;
     favoritesHover = false;
     if (favoritesRect.contains(e.position.toInt()))
@@ -306,8 +311,21 @@ void PatchSelector::shouldTooltip()
 
 void PatchSelector::toggleCommentTooltip(bool b)
 {
-    if (b && !comment.empty())
-        std::cout << "-------------\n" << comment << "---------------\n" << std::endl;
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        if (b && !comment.empty())
+        {
+            tooltipShowing = true;
+            sge->showPatchCommentTooltip(comment);
+        }
+        else
+        {
+            tooltipShowing = false;
+            sge->hidePatchCommentTooltip();
+        }
+    }
 }
 
 void PatchSelector::openPatchBrowser()
@@ -926,6 +944,48 @@ std::unique_ptr<juce::AccessibilityHandler> PatchSelector::createAccessibilityHa
     return std::make_unique<PatchSelectorAH>(this);
 }
 #endif
+
+void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
+{
+    namespace clr = Colors::PatchBrowser::CommentTooltip;
+    g.fillAll(skin->getColor(clr::Border));
+    g.setColour(skin->getColor(clr::Background));
+    g.fillRect(getLocalBounds().reduced(1));
+    g.setColour(skin->getColor(clr::Text));
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.drawMultiLineText(comment, 5, g.getCurrentFont().getHeight() + 2, getWidth(),
+                        juce::Justification::left);
+}
+
+void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &topLeft,
+                                                     const std::string &c)
+{
+    comment = c;
+
+    std::stringstream ss(comment);
+    std::string to;
+
+    int idx = 0;
+
+    auto ft = Surge::GUI::getFontManager()->getLatoAtSize(9);
+    auto width = 0;
+    while (std::getline(ss, to, '\n'))
+    {
+        auto w = ft.getStringWidth(to);
+        width = std::max(w, width);
+        idx++;
+    }
+
+    auto height = std::max(idx * (ft.getHeight() + 2), 30.f);
+
+    auto r = juce::Rectangle<int>()
+                 .withX(topLeft.x)
+                 .withY(topLeft.y)
+                 .withWidth(width + 12)
+                 .withHeight(height);
+    setBounds(r);
+    repaint();
+}
 
 } // namespace Widgets
 } // namespace Surge
