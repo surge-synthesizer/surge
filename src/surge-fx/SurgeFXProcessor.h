@@ -255,6 +255,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void resetFxType(int t, bool updateJuceParams = true);
     void resetFxParams(bool updateJuceParams = true);
 
+    // Members for the FX. If this looks a lot like surge-rack/SurgeFX.hpp that's not a coincidence
+    std::unique_ptr<SurgeStorage> storage;
+
   private:
     //==============================================================================
     juce::AudioProcessorParameter *fxBaseParams[2 * n_fx_params + 1];
@@ -290,9 +293,6 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         }
         ~SupressGuard() { *s = false; }
     };
-
-    // Members for the FX. If this looks a lot like surge-rack/SurgeFX.hpp that's not a coincidence
-    std::unique_ptr<SurgeStorage> storage;
 
     std::shared_ptr<Effect> surge_effect;
     std::shared_ptr<Effect> audio_thread_surge_effect;
