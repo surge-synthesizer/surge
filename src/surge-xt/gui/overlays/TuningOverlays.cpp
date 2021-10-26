@@ -233,6 +233,13 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         isDragging = false;
         repaint();
     }
+
+    virtual void mouseDoubleClick(const juce::MouseEvent &e) override
+    {
+        onDoubleClick();
+        angle = 0;
+        repaint();
+    }
     virtual void paint(juce::Graphics &g) override
     {
         if (!skin)
@@ -287,6 +294,7 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
     bool isPlaying{false};
     float angle;
     std::function<void(float)> onDragDelta = [](float f) {};
+    std::function<void()> onDoubleClick = []() {};
     bool enabled = true;
     SurgeStorage *storage{nullptr};
 };
@@ -346,6 +354,7 @@ class RadialScaleGraph : public juce::Component,
 
                     tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
                     tk->onDragDelta = [this](float f) { onScaleRescaled(f); };
+                    tk->onDoubleClick = [this]() { onScaleRescaledAbsolute(1200.0); };
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
@@ -386,6 +395,13 @@ class RadialScaleGraph : public juce::Component,
                         ct += f;
                         onToneChanged(idx - 1, ct);
                     };
+
+                    tk->onDoubleClick = [this, i]() {
+                        auto ri = scale.tones[scale.count - 1].cents;
+                        auto nc = ri / scale.count * i;
+                        onToneChanged(i - 1, nc);
+                    };
+
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
@@ -450,6 +466,7 @@ class RadialScaleGraph : public juce::Component,
     std::function<void(int index, const std::string &s)> onToneStringChanged =
         [](int, const std::string &) {};
     std::function<void(double)> onScaleRescaled = [](double) {};
+    std::function<void(double)> onScaleRescaledAbsolute = [](double) {};
     static constexpr int usedForSidebar = 160;
 
     std::unique_ptr<juce::Viewport> toneList;
@@ -1664,6 +1681,9 @@ TuningOverlay::TuningOverlay()
         this->onToneStringChanged(note, d);
     };
     radialScaleGraph->onScaleRescaled = [this](double d) { this->onScaleRescaled(d); };
+    radialScaleGraph->onScaleRescaledAbsolute = [this](double d) {
+        this->onScaleRescaledAbsolute(d);
+    };
 
     intervalMatrix = std::make_unique<IntervalMatrix>(this);
 
@@ -1758,6 +1778,27 @@ void TuningOverlay::onScaleRescaled(double scaleBy)
     double sFactor = (tCents + 1) / tCents - 1;
 
     double scale = (1.0 + sFactor * scaleBy);
+    for (auto &t : storage->currentScale.tones)
+    {
+        t.type = Tunings::Tone::kToneCents;
+        t.cents *= scale;
+    }
+    recalculateScaleText();
+}
+
+void TuningOverlay::onScaleRescaledAbsolute(double riTo)
+{
+    if (!storage)
+        return;
+
+    /*
+     * OK so we want a 1 cent move on top so that is top -> top+1 for scaleBy = 1
+     * top ( 1 + x * scaleBy ) = top+1
+     * x = top+1/top-1 since scaleBy is 1 in non shift mode
+     */
+    auto tCents = std::max(storage->currentScale.tones[storage->currentScale.count - 1].cents, 1.0);
+
+    double scale = riTo / tCents;
     for (auto &t : storage->currentScale.tones)
     {
         t.type = Tunings::Tone::kToneCents;
