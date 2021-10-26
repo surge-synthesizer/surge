@@ -20,6 +20,7 @@ struct Color
     Color(const std::string &name, int r, int g, int b);
     Color(const std::string &name, int r, int g, int b, int a);
     Color(const std::string &name, uint32_t argb);
+    Color(const std::string &name, uint32_t rgb, char alpha);
 
     static Color colorByName(const std::string &name);
     static std::vector<Color> getAllColors();

@@ -1,7 +1,5 @@
 #include "SkinColors.h"
 
-// We can use 0xRRGGBB for all colors instead of black, for which please use 0xFF000000 (ARGB)!
-
 namespace Colors
 {
 namespace AboutPage
@@ -24,10 +22,10 @@ const Surge::Skin::Color Background("dialog.titlebar.background", 0x979797),
 namespace Button
 {
 const Surge::Skin::Color Background("dialog.button.background", 0xE3E3E3),
-    Border("dialog.button.border", 0x979797), Text("dialog.button.text", 0xFF000000),
+    Border("dialog.button.border", 0x979797), Text("dialog.button.text", 0x000000, 0xFF),
     BackgroundHover("dialog.button.hover.background", 0xF1BB72),
     BorderHover("dialog.button.hover.border", 0x979797),
-    TextHover("dialog.button.hover.text", 0xFF000000),
+    TextHover("dialog.button.hover.text", 0x000000, 0xFF),
     BackgroundPressed("dialog.button.pressed.background", 0x804900),
     BorderPressed("dialog.button.pressed.border", 0x979797),
     TextPressed("dialog.button.pressed.text", 0xFF9300);
@@ -35,18 +33,18 @@ const Surge::Skin::Color Background("dialog.button.background", 0xE3E3E3),
 namespace Checkbox
 {
 const Surge::Skin::Color Background("dialog.checkbox.background", 0xFFFFFF),
-    Border("dialog.checkbox.border", 0xFF000000), Tick("dialog.checkbox.tick", 0xFF000000);
+    Border("dialog.checkbox.border", 0x000000, 0xFF), Tick("dialog.checkbox.tick", 0x000000, 0xFF);
 }
 namespace Entry
 {
 const Surge::Skin::Color Background("dialog.textfield.background", 0xFFFFFF),
     Border("dialog.textfield.border", 0xA0A0A0), Caret("dialog.textfield.caret", 0xA0A0A0),
-    Focus("dialog.textfield.focus", 0xD6D6FF), Text("dialog.textfield.text", 0xFF000000);
+    Focus("dialog.textfield.focus", 0xD6D6FF), Text("dialog.textfield.text", 0x000000, 0xFF);
 }
 namespace Label
 {
 const Surge::Skin::Color Error("dialog.label.text.error", 0xFF0000),
-    Text("dialog.label.text", 0xFF000000);
+    Text("dialog.label.text", 0x000000, 0xFF);
 }
 } // namespace Dialog
 
@@ -59,57 +57,60 @@ const Surge::Skin::Color Text("effect.label.text", 0x4C4C4C),
 }
 namespace Preset
 {
-const Surge::Skin::Color Name("effect.label.presetname", 0xFF000000);
+const Surge::Skin::Color Name("effect.label.presetname", 0x000000, 0xFF);
 }
 namespace Menu
 {
-const Surge::Skin::Color Text("effect.menu.text", 0xFF000000),
-    TextHover("effect.menu.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("effect.menu.text", 0x000000, 0xFF),
+    TextHover("effect.menu.text.hover", 0x000000, 0xFF);
 }
 namespace Grid
 {
-const Surge::Skin::Color Border("effect.grid.border", 0xFF000000);
+const Surge::Skin::Color Border("effect.grid.border", 0x000000, 0xFF);
 
 namespace Scene
 {
 const Surge::Skin::Color Background("effect.grid.scene.background", 0xFFFFFF),
-    Border("effect.grid.scene.border", 0xFF000000), Text("effect.grid.scene.text", 0xFF000000),
+    Border("effect.grid.scene.border", 0x000000, 0xFF),
+    Text("effect.grid.scene.text", 0x000000, 0xFF),
     BackgroundHover("effect.grid.scene.background.hover", 0xD4D4D4),
-    BorderHover("effect.grid.scene.border.hover", 0xFF000000),
-    TextHover("effect.grid.scene.text.hover", 0xFF000000);
+    BorderHover("effect.grid.scene.border.hover", 0x000000, 0xFF),
+    TextHover("effect.grid.scene.text.hover", 0x000000, 0xFF);
 }
 namespace Unselected
 {
 const Surge::Skin::Color Background("effect.grid.unselected.background", 0x979797),
-    Border("effect.grid.unselected.border", 0xFF000000),
+    Border("effect.grid.unselected.border", 0x000000, 0xFF),
     Text("effect.grid.unselected.text", 0xFFFFFF),
     BackgroundHover("effect.grid.unselected.background.hover", 0xD4D4D4),
-    BorderHover("effect.grid.unselected.border.hover", 0xFF000000),
+    BorderHover("effect.grid.unselected.border.hover", 0x000000, 0xFF),
     TextHover("effect.grid.unselected.text.hover", 0xFFFFFF);
 }
 namespace Selected
 {
 const Surge::Skin::Color Background("effect.grid.selected.background", 0xFFFFFF),
-    Border("effect.grid.selected.border", 0xFF000000), Text("effect.grid.selected.text", 0x202020),
+    Border("effect.grid.selected.border", 0x000000, 0xFF),
+    Text("effect.grid.selected.text", 0x202020),
     BackgroundHover("effect.grid.selected.background.hover", 0xD4D4D4),
-    BorderHover("effect.grid.selected.border.hover", 0xFF000000),
+    BorderHover("effect.grid.selected.border.hover", 0x000000, 0xFF),
     TextHover("effect.grid.selected.text.hover", 0x202020);
 }
 namespace Bypassed
 {
 const Surge::Skin::Color Background("effect.grid.bypassed.background", 0x393B45),
-    Border("effect.grid.bypassed.border", 0xFF000000), Text("effect.grid.bypassed.text", 0x979797),
+    Border("effect.grid.bypassed.border", 0x000000, 0xFF),
+    Text("effect.grid.bypassed.text", 0x979797),
     BackgroundHover("effect.grid.bypassed.background.hover", 0x60626C),
-    BorderHover("effect.grid.bypassed.border.hover", 0xFF000000),
+    BorderHover("effect.grid.bypassed.border.hover", 0x000000, 0xFF),
     TextHover("effect.grid.bypassed.text.hover", 0x979797);
 }
 namespace BypassedSelected
 {
 const Surge::Skin::Color Background("effect.grid.bypassed.selected.background", 0x393B45),
-    Border("effect.grid.bypassed.selected.border", 0xFF000000),
+    Border("effect.grid.bypassed.selected.border", 0x000000, 0xFF),
     Text("effect.grid.bypassed.selected.text", 0xFFFFFF),
     BackgroundHover("effect.grid.bypassed.selected.background.hover", 0x60626C),
-    BorderHover("effect.grid.bypassed.selected.border.hover", 0xFF000000),
+    BorderHover("effect.grid.bypassed.selected.border.hover", 0x000000, 0xFF),
     TextHover("effect.grid.bypassed.selected.text.hover", 0x979797);
 }
 } // namespace Grid
@@ -118,9 +119,9 @@ const Surge::Skin::Color Background("effect.grid.bypassed.selected.background", 
 namespace FormulaEditor
 {
 const Surge::Skin::Color Background("formulaeditor.background", 0xF5F6EE),
-    Highlight("formulaeditor.highlight", 0xD4D4D4), Text("formulaeditor.text", 0xFF000000),
+    Highlight("formulaeditor.highlight", 0xD4D4D4), Text("formulaeditor.text", 0x000000, 0xFF),
     LineNumBackground("formulaeditor.linenumber.background", 0x979797),
-    LineNumText("formulaeditor.linenumber.text", 0xFF000000);
+    LineNumText("formulaeditor.linenumber.text", 0x000000, 0xFF);
 
 namespace Lua
 {
@@ -136,14 +137,14 @@ const Surge::Skin::Color Bracket("formulaeditor.lua.comment", 0x393B45),
 namespace InfoWindow
 {
 const Surge::Skin::Color Background("infowindow.background", 0xFFFFFF),
-    Border("infowindow.border", 0xFF000000), Text("infowindow.text", 0xFF000000);
+    Border("infowindow.border", 0x000000, 0xFF), Text("infowindow.text", 0x000000, 0xFF);
 
 namespace Modulation
 {
-const Surge::Skin::Color Negative("infowindow.text.modulation.negative", 0xFF000000),
-    Positive("infowindow.text.modulation.positive", 0xFF000000),
-    ValueNegative("infowindow.text.modulation.value.negative", 0xFF000000),
-    ValuePositive("infowindow.text.modulation.value.positive", 0xFF000000);
+const Surge::Skin::Color Negative("infowindow.text.modulation.negative", 0x000000, 0xFF),
+    Positive("infowindow.text.modulation.positive", 0x000000, 0xFF),
+    ValueNegative("infowindow.text.modulation.value.negative", 0x000000, 0xFF),
+    ValuePositive("infowindow.text.modulation.value.positive", 0x000000, 0xFF);
 }
 } // namespace InfoWindow
 
@@ -156,8 +157,8 @@ const Surge::Skin::Color Text("lfo.title.text", 0xC0000000);
 
 namespace Type
 {
-const Surge::Skin::Color Text("lfo.type.unselected.text", 0xFF000000),
-    SelectedText("lfo.type.selected.text", 0xFF000000),
+const Surge::Skin::Color Text("lfo.type.unselected.text", 0x000000, 0xFF),
+    SelectedText("lfo.type.selected.text", 0x000000, 0xFF),
     SelectedBackground("lfo.type.selected.background", 0xFF9815);
 }
 namespace StepSeq
@@ -171,13 +172,14 @@ namespace Button
 {
 const Surge::Skin::Color Background("lfo.stepseq.button.background", 0xE3E3E3),
     Border("lfo.stepseq.button.border", 0x979797), Hover("lfo.stepseq.button.hover", 0xF1BB72),
-    Arrow("lfo.stepseq.button.arrow", 0xFF000000),
-    ArrowHover("lfo.stepseq.button.arrow.hover", 0xFF000000);
+    Arrow("lfo.stepseq.button.arrow", 0x000000, 0xFF),
+    ArrowHover("lfo.stepseq.button.arrow.hover", 0x000000, 0xFF);
 }
 namespace InfoWindow
 {
 const Surge::Skin::Color Background("lfo.stepseq.popup.background", 0xFFFFFF),
-    Border("lfo.stepseq.popup.border", 0xFF000000), Text("lfo.stepseq.popup.text", 0xFF000000);
+    Border("lfo.stepseq.popup.border", 0x000000, 0xFF),
+    Text("lfo.stepseq.popup.text", 0x000000, 0xFF);
 }
 namespace Loop
 {
@@ -199,14 +201,14 @@ namespace Waveform
 const Surge::Skin::Color Background("lfo.waveform.background", 0xFF9000),
     Bounds("lfo.waveform.bounds", 0xE08000), Center("lfo.waveform.center", 0xE08000),
     Dots("lfo.waveform.dots", 0xC07000), Envelope("lfo.waveform.envelope", 0xB06000),
-    Wave("lfo.waveform.wave", 0xFF000000),
+    Wave("lfo.waveform.wave", 0x000000, 0xFF),
     DeactivatedWave("lfo.waveform.wave.deactivated", 0x60000000),
     GhostedWave("lfo.waveform.wave.ghosted", 0x60000000);
 
 namespace Ruler
 {
-const Surge::Skin::Color Text("lfo.waveform.ruler.text", 0xFF000000),
-    Ticks("lfo.waveform.ruler.ticks", 0xFF000000),
+const Surge::Skin::Color Text("lfo.waveform.ruler.text", 0x000000, 0xFF),
+    Ticks("lfo.waveform.ruler.ticks", 0x000000, 0xFF),
     ExtendedTicks("lfo.waveform.ruler.ticks.extended", 0xE08000),
     SmallTicks("lfo.waveform.ruler.ticks.small", 0xB06000);
 }
@@ -215,8 +217,8 @@ const Surge::Skin::Color Text("lfo.waveform.ruler.text", 0xFF000000),
 
 namespace Menu
 {
-const Surge::Skin::Color Name("menu.name", 0xFF000000), NameHover("menu.name.hover", 0x3C1400),
-    NameDeactivated("menu.name.deactivated", 0xB4B4B4), Value("menu.value", 0xFF000000),
+const Surge::Skin::Color Name("menu.name", 0x000000, 0xFF), NameHover("menu.name.hover", 0x3C1400),
+    NameDeactivated("menu.name.deactivated", 0xB4B4B4), Value("menu.value", 0x000000, 0xFF),
     ValueHover("menu.value.hover", 0x3C1400), ValueDeactivated("menu.value.deactivated", 0xB4B4B4);
 
 const Surge::Skin::Color FilterValue("filtermenu.value", 0xFF9A10),
@@ -277,7 +279,7 @@ namespace MSEGEditor
 const Surge::Skin::Color Background("msegeditor.background", 0x111111),
     Curve("msegeditor.curve", 0xFFFFFF), DeformCurve("msegeditor.curve.deformed", 0x808080),
     CurveHighlight("msegeditor.curve.highlight", 0xFF9000), Panel("msegeditor.panel", 0xCDCED4),
-    Text("msegeditor.panel.text", 0xFF000000);
+    Text("msegeditor.panel.text", 0x000000, 0xFF);
 
 namespace Axis
 {
@@ -305,15 +307,15 @@ const Surge::Skin::Color Marker("msegeditor.loop.marker", 0x90FF9300),
 }
 namespace NumberField
 {
-const Surge::Skin::Color Text("msegeditor.numberfield.text", 0xFF000000),
-    TextHover("msegeditor.numberfield.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("msegeditor.numberfield.text", 0x000000, 0xFF),
+    TextHover("msegeditor.numberfield.text.hover", 0x000000, 0xFF);
 }
 } // namespace MSEGEditor
 
 namespace NumberField
 {
-const Surge::Skin::Color Text("numberfield.text", 0xFF000000),
-    TextHover("numberfield.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("numberfield.text", 0x000000, 0xFF),
+    TextHover("numberfield.text.hover", 0x000000, 0xFF);
 }
 
 namespace Osc
@@ -329,7 +331,7 @@ namespace Filename
 const Surge::Skin::Color Background("osc.wavename.background", 0xFFA010),
     BackgroundHover("osc.wavename.background.hover", 0xFFA010),
     Frame("osc.wavename.frame", 0xFFA010), FrameHover("osc.wavename.frame.hover", 0xFFA010),
-    Text("osc.wavename.text", 0xFF000000), TextHover("osc.wavename.text.hover", 0xFFFFFF);
+    Text("osc.wavename.text", 0x000000, 0xFF), TextHover("osc.wavename.text.hover", 0xFFFFFF);
 }
 namespace Type
 {
@@ -341,8 +343,8 @@ const Surge::Skin::Color Text("osc.type.text", 0xFF9E00),
 
 namespace Waveshaper
 {
-const Surge::Skin::Color Text("waveshaper.text", 0xFF000000),
-    TextHover("waveshaper.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("waveshaper.text", 0x000000, 0xFF),
+    TextHover("waveshaper.text.hover", 0x000000, 0xFF);
 namespace Display
 {
 const Surge::Skin::Color Dots("waveshaper.waveform.dots", 0x404040),
@@ -363,7 +365,7 @@ const Surge::Skin::Color Background("editor.overlay.background", 0xCC000000);
 
 namespace PatchBrowser
 {
-const Surge::Skin::Color Text("patchbrowser.text", 0xFF000000);
+const Surge::Skin::Color Text("patchbrowser.text", 0x000000, 0xFF);
 
 namespace CommentTooltip
 {
@@ -376,7 +378,7 @@ namespace TypeAheadList
 {
 const Surge::Skin::Color Border("patchbrowser.typeahead.border", 0x646482),
     Background("patchbrowser.typeahead.background", 0xFFFFFF),
-    Text("patchbrowser.typeahead.text", 0xFF000000),
+    Text("patchbrowser.typeahead.text", 0x000000, 0xFF),
     HighlightBackground("patchbrowser.typeahead.background.highlight", 0xD2D2FF),
     HighlightText("patchbrowser.typeahead.text.highlight", 0x000064),
     SubText("patchbrowser.typeahead.subtext", 0x000032),
@@ -395,13 +397,13 @@ const Surge::Skin::Color Text("scene.pbrange.text", 0xFF9300),
 }
 namespace SplitPoint
 {
-const Surge::Skin::Color Text("scene.split_poly.text", 0xFF000000),
-    TextHover("scene.split_poly.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("scene.split_poly.text", 0x000000, 0xFF),
+    TextHover("scene.split_poly.text.hover", 0x000000, 0xFF);
 }
 namespace KeytrackRoot
 {
-const Surge::Skin::Color Text("scene.keytrackroot.text", 0xFF000000),
-    TextHover("scene.keytrackroot.text.hover", 0xFF000000);
+const Surge::Skin::Color Text("scene.keytrackroot.text", 0x000000, 0xFF),
+    TextHover("scene.keytrackroot.text.hover", 0x000000, 0xFF);
 }
 } // namespace Scene
 
@@ -410,7 +412,7 @@ namespace Slider
 namespace Label
 {
 const Surge::Skin::Color Light("slider.light.label", 0xFFFFFF),
-    Dark("slider.dark.label", 0xFF000000);
+    Dark("slider.dark.label", 0x000000, 0xFF);
 }
 namespace Modulation
 {
@@ -428,11 +430,11 @@ const Surge::Skin::Color Background("vumeter.background", 0x151515),
 
 namespace VirtualKeyboard
 {
-const Surge::Skin::Color Text("vkb.text", 0xFF000000), Shadow("vkb.shadow", 0x40000000);
+const Surge::Skin::Color Text("vkb.text", 0x000000, 0xFF), Shadow("vkb.shadow", 0x40000000);
 
 namespace Key
 {
-const Surge::Skin::Color Black("vkb.key.black", 0xFF000000), White("vkb.key.white", 0xFFFFFF),
+const Surge::Skin::Color Black("vkb.key.black", 0x000000, 0xFF), White("vkb.key.white", 0xFFFFFF),
     Separator("vkb.key.separator", 0x60000000), MouseOver("vkb.key.mouse_over", 0x80FF9000),
     Pressed("vkb.key.pressed", 0xFF9000);
 }
@@ -440,7 +442,7 @@ const Surge::Skin::Color Black("vkb.key.black", 0xFF000000), White("vkb.key.whit
 namespace OctaveJog
 {
 const Surge::Skin::Color Background("vkb.octave.background", 0x979797),
-    Arrow("vkb.octave.arrow", 0xFF000000);
+    Arrow("vkb.octave.arrow", 0x000000, 0xFF);
 }
 } // namespace VirtualKeyboard
 
@@ -459,14 +461,14 @@ namespace TextMultiSwitch
 const Surge::Skin::Color Background("textmultiswitch.background", 0xE3E3E3),
     Border("textmultiswitch.border", 0x979797), Divider("textmultiswitch.divider", 0x9797972),
     DeactivatedText("textmultiswitch.deactivatedtext", 0x979797),
-    Text("textmultiswitch.text", 0xFF000000), OnText("textmultiswitch.ontext", 0xFF000000),
-    HoverText("textmultiswitch.hovertext", 0xFF000000),
+    Text("textmultiswitch.text", 0x000000, 0xFF), OnText("textmultiswitch.ontext", 0x000000, 0xFF),
+    HoverText("textmultiswitch.hovertext", 0x000000, 0xFF),
     HoverOnText("textmultiswitch.hoverontext", 0xFF9300),
     HoverFill("textmultiswitch.hoverfill", 0xF1BB72),
-    HoverOutline("text.multiswitch.hoveroutline", 0xFF000000),
+    HoverOutline("text.multiswitch.hoveroutline", 0x000000, 0xFF),
     HoverOnFill("textmultiswitch.hoveronfill", 0x804900),
-    HoverOnOutline("textmultiswitch.hoveronoutline", 0xFF000000),
-    OnFill("textmultiswitch.onfill", 0xFF9A10), OnOutline("textmultiswitch.outlie", 0xFF000000);
+    HoverOnOutline("textmultiswitch.hoveronoutline", 0x000000, 0xFF),
+    OnFill("textmultiswitch.onfill", 0xFF9A10), OnOutline("textmultiswitch.outlie", 0x000000, 0xFF);
 } // namespace TextMultiSwitch
 } // namespace JuceWidgets
 
@@ -476,9 +478,9 @@ namespace FrequencyKeyboard
 {
 const Surge::Skin::Color WhiteKey("tuning.freqkbd.whitekey", 0x979797),
     BlackKey("tuning.freqkbd,blackkey", 0x242424),
-    Separator("tuning.freqkbd;separator", 0xFF000000), Text("tuning.freqkbd.text", 0xFFFFFF),
+    Separator("tuning.freqkbd;separator", 0x000000, 0xFF), Text("tuning.freqkbd.text", 0xFFFFFF),
     PressedKey("tuning.freqkbd.pressedkey", 0xFF9300),
-    PressedKeyText("tuning.freqkbd.pressedkey.text", 0xFF000000);
+    PressedKeyText("tuning.freqkbd.pressedkey.text", 0x000000, 0xFF);
 
 }
 namespace SCLKBM
