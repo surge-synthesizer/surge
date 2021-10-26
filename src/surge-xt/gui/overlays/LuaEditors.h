@@ -79,7 +79,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
                            FormulaModulatorStorage *fs, Surge::GUI::Skin::ptr_t sk);
     ~FormulaModulatorEditor();
 
-    std::unique_ptr<ExpandingFormulaDebugger> efd;
+    std::unique_ptr<ExpandingFormulaDebugger> debugPanel;
     std::unique_ptr<FormulaControlArea> controlArea;
     void resized() override;
     void applyCode() override;

@@ -209,18 +209,17 @@
         <color id="vumeter.level.gr" value="surgeorange"/>
         <color id="vumeter.level.gr.notch" value="darkergray"/>
 
-        <color id="textmultiswitch.background" value="#242424"/>
-        <color id="textmultiswitch.border" value="#000000"/>
-        <color id="textmultiswitch.divider" value="#000000"/>
-        <color id="textmultiswitch.deactivatedtext" value="#646464"/>
-        <color id="textmultiswitch.text" value="#B4B4B4"/>
-        <color id="textmultiswitch.ontext" value="#ffffff"/>
-        <color id="textmultiswitch.hovertext" value="#000000"/>
-        <color id="textmultiswitch.hoverontext" value="#ffffff"/>
-        <color id="textmultiswitch.onfill" value="#399dff"/>
-        <color id="textmultiswitch.hoverfill" value="#ff9000"/>
-        <color id="textmultiswitch.hoveronfill" value="#399dff"/>
-        <color id="textmultiswitch.hoveronoutline" value="#ffffff"/>
+        <color id="multiswitch.background" value="bggray"/>
+        <color id="multiswitch.border" value="black"/>
+        <color id="multiswitch.divider" value="black"/>
+        <color id="multiswitch.text.deactivated" value="#505050"/>
+        <color id="multiswitch.text" value="lightgray"/>
+        <color id="multiswitch.on.text" value="white"/>
+        <color id="multiswitch.hover.text" value="black"/>
+        <color id="multiswitch.hoveron.text" value="white"/>
+        <color id="multiswitch.on.fill" value="#399dff"/>
+        <color id="multiswitch.hover.fill" value="#ff9000"/>
+        <color id="multiswitch.hoveron.fill" value="#399dff"/>
 
         <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
         <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>

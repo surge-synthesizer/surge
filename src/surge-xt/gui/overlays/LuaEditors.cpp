@@ -78,11 +78,13 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
+
     if (addComponents)
     {
         addAndMakeVisible(applyButton.get());
         addAndMakeVisible(mainEditor.get());
     }
+
     applyButton->setEnabled(false);
 }
 
@@ -126,16 +128,20 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
-struct ExpandingFormulaDebugger : public juce::Component
+struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     bool isOpen{false};
+
     ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
     {
         outputDump = std::make_unique<juce::TextEditor>("Output");
         outputDump->setMultiLine(true, false);
         outputDump->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+        outputDump->setCaretVisible(false);
+        outputDump->setReadOnly(true);
         addAndMakeVisible(*outputDump);
     }
+
     FormulaModulatorEditor *editor{nullptr};
 
     pdata tp[n_scene_params];
@@ -169,7 +175,9 @@ struct ExpandingFormulaDebugger : public juce::Component
     void stepLfoDebugger()
     {
         lfoDebugger->process_block();
+
         auto st = Surge::Formula::createDebugViewOfModState(lfoDebugger->formulastate);
+
         if (outputDump)
         {
             outputDump->setText(st, juce::NotificationType::dontSendNotification);
@@ -178,12 +186,10 @@ struct ExpandingFormulaDebugger : public juce::Component
 
     std::unique_ptr<juce::TextEditor> outputDump;
     std::unique_ptr<juce::Label> dPhaseLabel;
+
     void paint(juce::Graphics &g) override
     {
-        g.fillAll(juce::Colour(0xFF242424));
-        g.setColour(juce::Colours::white);
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-        g.drawText("Debug ModState", getLocalBounds(), juce::Justification::centredTop);
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
     }
 
     void setOpen(bool b)
@@ -197,11 +203,9 @@ struct ExpandingFormulaDebugger : public juce::Component
     {
         if (isOpen)
         {
-            int headerArea = 16;
-            auto w = getWidth();
-            auto m = 2;
-            auto tx = getLocalBounds().withTop(headerArea).reduced(2);
-            outputDump->setBounds(tx);
+            int margin = 4;
+
+            outputDump->setBounds(getLocalBounds().reduced(margin));
         }
     }
 
@@ -222,13 +226,16 @@ struct FormulaControlArea : public juce::Component,
         tag_debugger_init,
         tag_debugger_step
     };
+
     FormulaModulatorEditor *overlay{nullptr};
     FormulaControlArea(FormulaModulatorEditor *ol) : overlay(ol) {}
 
     void resized() override
     {
         if (skin)
+        {
             rebuild();
+        }
     }
 
     void rebuild()
@@ -347,6 +354,7 @@ struct FormulaControlArea : public juce::Component,
         case tag_select_tab:
         {
             int m = c->getValue();
+
             if (m > 0.5)
                 overlay->showPreludeCode();
             else
@@ -360,9 +368,9 @@ struct FormulaControlArea : public juce::Component,
         break;
         case tag_debugger_show:
         {
-            if (overlay->efd->isOpen)
+            if (overlay->debugPanel->isOpen)
             {
-                overlay->efd->setOpen(false);
+                overlay->debugPanel->setOpen(false);
                 showS->setLabels({"Show"});
                 stepS->setVisible(false);
                 initS->setVisible(false);
@@ -370,7 +378,7 @@ struct FormulaControlArea : public juce::Component,
             }
             else
             {
-                overlay->efd->setOpen(true);
+                overlay->debugPanel->setOpen(true);
                 showS->setLabels({"Hide"});
                 stepS->setVisible(true);
                 initS->setVisible(true);
@@ -379,14 +387,17 @@ struct FormulaControlArea : public juce::Component,
         }
         case tag_debugger_init:
         {
-            overlay->efd->initializeLfoDebugger();
+            overlay->debugPanel->initializeLfoDebugger();
         }
         break;
         case tag_debugger_step:
         {
-            if (!overlay->efd->lfoDebugger)
-                overlay->efd->initializeLfoDebugger();
-            overlay->efd->stepLfoDebugger();
+            if (!overlay->debugPanel->lfoDebugger)
+            {
+                overlay->debugPanel->initializeLfoDebugger();
+            }
+
+            overlay->debugPanel->stepLfoDebugger();
         }
         break;
         default:
@@ -409,6 +420,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
                                                Surge::GUI::Skin::ptr_t skin)
     : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs)
 {
+    mainEditor->setScrollbarThickness(8);
+
     mainDocument->insertText(0, fs->formulaString);
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
@@ -417,6 +430,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay = std::make_unique<juce::CodeEditorComponent>(*preludeDocument, tokenizer.get());
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
+    preludeDisplay->setScrollbarThickness(8);
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
     controlArea = std::make_unique<FormulaControlArea>(this);
@@ -424,9 +438,9 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     addAndMakeVisible(*mainEditor);
     addChildComponent(*preludeDisplay);
 
-    efd = std::make_unique<ExpandingFormulaDebugger>(this);
-    efd->setVisible(false);
-    addChildComponent(*efd);
+    debugPanel = std::make_unique<ExpandingFormulaDebugger>(this);
+    debugPanel->setVisible(false);
+    addChildComponent(*debugPanel);
 }
 
 FormulaModulatorEditor::~FormulaModulatorEditor() = default;
@@ -437,6 +451,7 @@ void FormulaModulatorEditor::onSkinChanged()
     preludeDisplay->setFont(skin->getFont(Fonts::LuaEditor::Code));
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
     controlArea->setSkin(skin, associatedBitmapStore);
+    debugPanel->setSkin(skin, associatedBitmapStore);
 }
 
 void FormulaModulatorEditor::applyCode()
@@ -464,19 +479,21 @@ void FormulaModulatorEditor::resized()
     t.transformPoint(w, h);
 
     int controlHeight = 35;
-    int efdWidth = 0;
-    int efdMargin = 0;
-    if (efd->isVisible())
+    int debugPanelWidth = 0;
+    int debugPanelMargin = 0;
+    if (debugPanel->isVisible())
     {
-        efdWidth = 200;
-        efdMargin = 2;
+        debugPanelWidth = 200;
+        debugPanelMargin = 2;
     }
-    auto edRect = juce::Rectangle<int>(2, 2, w - 4 - efdMargin - efdWidth, h - controlHeight - 4);
+    auto edRect = juce::Rectangle<int>(2, 2, w - 4 - debugPanelMargin - debugPanelWidth,
+                                       h - controlHeight - 4);
     mainEditor->setBounds(edRect);
     preludeDisplay->setBounds(edRect);
-    if (efd->isVisible())
+    if (debugPanel->isVisible())
     {
-        efd->setBounds(w - 4 - efdWidth + efdMargin, 2, efdWidth, h - 4 - controlHeight);
+        debugPanel->setBounds(w - 4 - debugPanelWidth + debugPanelMargin, 2, debugPanelWidth,
+                              h - 4 - controlHeight);
     }
     controlArea->setBounds(0, h - controlHeight, w, controlHeight);
 }

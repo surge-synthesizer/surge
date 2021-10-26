@@ -6,7 +6,7 @@ namespace AboutPage
 {
 const Surge::Skin::Color Text("about.page.text", 0xFFFFFF),
     ColumnText("about.page.column.text", 0xFF9000), Link("about.page.link", 0x2D86FE),
-    LinkHover("about.page.hover.link", 0x60C4FF);
+    Linkhover("about.page.hover.link", 0x60C4FF);
 }
 
 namespace Dialog
@@ -23,7 +23,7 @@ namespace Button
 {
 const Surge::Skin::Color Background("dialog.button.background", 0xE3E3E3),
     Border("dialog.button.border", 0x979797), Text("dialog.button.text", 0x000000, 0xFF),
-    BackgroundHover("dialog.button.hover.background", 0xF1BB72),
+    Backgroundhover("dialog.button.hover.background", 0xF1BB72),
     BorderHover("dialog.button.hover.border", 0x979797),
     TextHover("dialog.button.hover.text", 0x000000, 0xFF),
     BackgroundPressed("dialog.button.pressed.background", 0x804900),
@@ -458,17 +458,14 @@ const Surge::Skin::Color ActiveTabBackground("tabbar.active.background", 0x64320
 
 namespace TextMultiSwitch
 {
-const Surge::Skin::Color Background("textmultiswitch.background", 0xE3E3E3),
-    Border("textmultiswitch.border", 0x979797), Divider("textmultiswitch.divider", 0x9797972),
-    DeactivatedText("textmultiswitch.deactivatedtext", 0x979797),
-    Text("textmultiswitch.text", 0x000000, 0xFF), OnText("textmultiswitch.ontext", 0x000000, 0xFF),
-    HoverText("textmultiswitch.hovertext", 0x000000, 0xFF),
-    HoverOnText("textmultiswitch.hoverontext", 0xFF9300),
-    HoverFill("textmultiswitch.hoverfill", 0xF1BB72),
-    HoverOutline("text.multiswitch.hoveroutline", 0x000000, 0xFF),
-    HoverOnFill("textmultiswitch.hoveronfill", 0x804900),
-    HoverOnOutline("textmultiswitch.hoveronoutline", 0x000000, 0xFF),
-    OnFill("textmultiswitch.onfill", 0xFF9A10), OnOutline("textmultiswitch.outlie", 0x000000, 0xFF);
+const Surge::Skin::Color Background("multiswitch.background", 0xE3E3E3),
+    Border("multiswitch.border", 0x979797), Divider("multiswitch.divider", 0x979797),
+    DeactivatedText("multiswitch.text.deactivated", 0x979797),
+    Text("multiswitch.text", 0x000000, 0xFF), OnText("multiswitch.on.text", 0x000000, 0xFF),
+    HoverText("multiswitch.hover.text", 0x000000, 0xFF),
+    HoverOnText("multiswitch.hoveron.text", 0xFF9300),
+    HoverFill("multiswitch.hover.fill", 0xF1BB72),
+    HoverOnFill("multiswitch.hoveron.fill", 0x804900), OnFill("multiswitch.on.fill", 0xFF9A10);
 } // namespace TextMultiSwitch
 } // namespace JuceWidgets
 
@@ -476,66 +473,66 @@ namespace TuningOverlay
 {
 namespace FrequencyKeyboard
 {
-const Surge::Skin::Color WhiteKey("tuning.freqkbd.whitekey", 0x979797),
-    BlackKey("tuning.freqkbd,blackkey", 0x242424),
-    Separator("tuning.freqkbd;separator", 0x000000, 0xFF), Text("tuning.freqkbd.text", 0xFFFFFF),
-    PressedKey("tuning.freqkbd.pressedkey", 0xFF9300),
-    PressedKeyText("tuning.freqkbd.pressedkey.text", 0x000000, 0xFF);
+const Surge::Skin::Color WhiteKey("tuningeditor.keyboard.key.white", 0x979797),
+    BlackKey("tuningeditor.keyboard.key.black", 0x242424),
+    Separator("tuningeditor.keyboard.separator", 0x000000, 0xFF),
+    Text("tuningeditor.keyboard.text", 0xFFFFFF),
+    PressedKey("tuningeditor.keyboard.key.pressed", 0xFF9300),
+    PressedKeyText("tuningeditor.keyboard.text.pressed", 0x000000, 0xFF);
 
 }
 namespace SCLKBM
 {
-const Surge::Skin::Color Background("tuning.sclkbm.background", 0xFF979797);
+const Surge::Skin::Color Background("tuningeditor.scala.background", 0x151515);
 namespace Editor
 {
-const Surge::Skin::Color Border("tuning.sclkbm.editor.border", 0xFFE3E3E3),
-    Background("tuning.sclkbm.editor.background", 0xFF151515),
-    Text("tuning.sclkbm.editor.text", 0xFFE3E3E3),
-    Comment("tuning.sclkbm.editor.comment", 0xFF979797),
-    Cents("tuning.sclkbm.editor.cents", 0xFFA3A3FF),
-    Ratio("tuning.sclkbm.editor.ratio", 0xFFA3FFA3),
-    Playing("tuning.sclkbm.editor.playing", 0xFFFF9000);
+const Surge::Skin::Color Border("tuningeditor.scala.border", 0xE3E3E3),
+    Background("tuningeditor.scala.background", 0x151515),
+    Text("tuningeditor.scala.text", 0xE3E3E3), Comment("tuningeditor.scala.comment", 0x979797),
+    Cents("tuningeditor.scala.cents", 0xA3A3FF), Ratio("tuningeditor.scala.ratio", 0xA3FFA3),
+    Played("tuningeditor.scala.played", 0xFF9000);
 } // namespace Editor
 } // namespace SCLKBM
 
 namespace RadialGraph
 {
-const Surge::Skin::Color Background("tuning.radialgraph.background", 0xFF151515);
-const Surge::Skin::Color KnobCenter("tuning.radialgraph.knobcenter", 0xFF351500),
-    KnobCenterHover("tuning.radialgraph.knobcenterHover", 0xFF904000),
-    KnobOutline("tuning.radialgraph.knoboutline", 0xFFE3E3E3),
-    KnobThumb("tuning.radialgraph.knobthumb", 0xFFFFFF),
-    KnobPlayingThumb("tuning.radialgraph.knobplaying", 0xFFFF9000);
+const Surge::Skin::Color Background("tuningeditor.radial.background", 0x151515);
+const Surge::Skin::Color KnobFill("tuningeditor.radial.knob.fill", 0x351500),
+    KnobFillHover("tuningeditor.radial.knob.fill.hover", 0x904000),
+    KnobBorder("tuningeditor.radial.knob.border", 0xE3E3E3),
+    KnobThumb("tuningeditor.radial.knob.thumb", 0xFFFFFF),
+    KnobThumbPlayed("tuningeditor.radial.knob.played", 0xFF9000);
 
-const Surge::Skin::Color ToneLabel("tuning.radialgraph.tonelabel", 0xFF979797),
-    TonePlayingLabel("tuning.radialgraph.tonelabelplaying", 0xFFFF9000),
-    ToneOutline("tuning.radialgraph.tone.outline", 0xFF979797),
-    ToneBackground("tuning.radialgraph.tone.background", 0xFF151515),
-    ToneText("tuning.radialgraph.tone.text", 0xFFE3E3E3),
-    TonePlayingBackground("tuning.radialgraph.tone.backgroundplaying", 0xFFFF9000),
-    TonePlayingOutline("tuning.radialgraph.tone.outlineplaying", 0xFFE3E3E3),
-    TonePlayingText("tuning.radialgraph.tone.textplaying", 0xFF151515);
+const Surge::Skin::Color ToneLabel("tuningeditor.radial.tonelabel", 0x979797),
+    ToneLabelPlayed("tuningeditor.radial.tonelabel.played", 0xFF9000),
+    ToneLabelBorder("tuningeditor.radial.tonelabel.border", 0x979797),
+    ToneLabelBackground("tuningeditor.radial.tonelabel.background", 0x151515),
+    ToneLabelText("tuningeditor.radial.tonelabel.text", 0xE3E3E3),
+    ToneLabelBackgroundPlayed("tuningeditor.radial.tonelabel.background.played", 0xFF9000),
+    ToneLabelBorderPlayed("tuningeditor.radial.tonelabel.border.played", 0xE3E3E3),
+    ToneLabelTextPlayed("tuningeditor.radial.tonelabel.text.played", 0x151515);
 
 } // namespace RadialGraph
 namespace Interval
 {
-const Surge::Skin::Color Background("tuning.interval.background", 0xFF151515);
-const Surge::Skin::Color NoteLabelBackground("tuning.interval.notelabel.background", 0xFF979797),
-    NoteLabelBackgroundPlaying("tuning.interval.notelabel.backgroundplaying", 0xFFFF9000),
-    NoteLabelForeground("tuning.interval.notelabel.foreground", 0xFF151515),
-    NoteLabelForegroundHovered("tuning.interval.notelabel.foreground.hovered", 0xFFE3E3E3),
-    NoteLabelForegroundPlaying("tuning.interval.notelabel.foreground.playing", 0xFF151515),
-    NoteLabelForegroundPlayingHovered("tuning.interval.notelabel.foreground.playinghovered",
-                                      0xFFFFFF),
-    SkippedInterval("tuning.interval,skippedinterval", 0xFFAAAAAA);
-const Surge::Skin::Color IntervalText("tuning.interval.text", 0xFF151515),
-    IntervalTextHovered("tuning.interval.text.hovered", 0xFF351500);
+const Surge::Skin::Color Background("tuningeditor.interval.background", 0x151515);
+const Surge::Skin::Color NoteLabelBackground("tuningeditor.interval.notelabel.background",
+                                             0x979797),
+    NoteLabelBackgroundPlayed("tuningeditor.interval.notelabel.background.played", 0xFF9000),
+    NoteLabelForeground("tuningeditor.interval.notelabel.foreground", 0x151515),
+    NoteLabelForegroundHover("tuningeditor.interval.notelabel.foreground.hover", 0xE3E3E3),
+    NoteLabelForegroundPlayed("tuningeditor.interval.notelabel.foreground.played", 0x151515),
+    NoteLabelForegroundHoverPlayed("tuningeditor.interval.notelabel.foreground.hover.played",
+                                   0xFFFFFF);
+const Surge::Skin::Color IntervalText("tuningeditor.interval.text", 0x151515),
+    IntervalTextHover("tuningeditor.interval.text.hover", 0x351500),
+    IntervalSkipped("tuningeditor.interval.skipped", 0xAAAAAA);
 
-const Surge::Skin::Color HeatmapZero("tuning.interval.heatmap.zero", 0xFFFFFF),
-    HeatmapNegFar("tuning.interval.heatmap.negative.far", 0x8282FF),
-    HeatmapNegNear("tuning.interval.heatmap.negative.near", 0xE6E6FF),
-    HeatmapPosFar("tuning.interval.heatmap.positive.far", 0xFFFF00),
-    HeatmapPosNear("tuning.interval.heatmap.positive.near", 0xFFFFC8);
+const Surge::Skin::Color HeatmapZero("tuningeditor.interval.heatmap.zero", 0xFFFFFF),
+    HeatmapNegFar("tuningeditor.interval.heatmap.negative.far", 0x8282FF),
+    HeatmapNegNear("tuningeditor.interval.heatmap.negative.near", 0xE6E6FF),
+    HeatmapPosFar("tuningeditor.interval.heatmap.positive.far", 0xFFFF00),
+    HeatmapPosNear("tuningeditor.interval.heatmap.positive.near", 0xFFFFC8);
 } // namespace Interval
 } // namespace TuningOverlay
 

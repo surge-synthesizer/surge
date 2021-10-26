@@ -375,9 +375,10 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
     namespace clr = Colors::JuceWidgets::TextMultiSwitch;
 
     // these are the classic skin colors just for now
-    g.setColour(skin->getColor(clr::Background));
     auto b = getLocalBounds().toFloat().reduced(0.5, 0.5);
     auto corner = 2.f, cornerIn = 1.5f;
+
+    g.setColour(skin->getColor(clr::Background));
     g.fillRoundedRectangle(b.toFloat(), corner);
     g.setColour(skin->getColor(clr::Border));
     g.drawRoundedRectangle(b.toFloat(), corner, 1);
@@ -389,6 +390,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
     // Draw the dividers
     g.setColour(skin->getColor(clr::Divider));
+
     if (rows == 1)
     {
         for (int c = 1; c < columns; ++c)
@@ -403,6 +405,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
     }
 
     int idx = 0;
+
     for (int r = 0; r < rows; ++r)
     {
         for (auto c = 0; c < columns; ++c)
@@ -415,6 +418,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
             auto isEn = isEnabled();
 
             auto fg = skin->getColor(clr::Text);
+
             if (!isEn)
             {
                 fg = juce::Colour(skin->getColor(clr::DeactivatedText));
@@ -422,18 +426,16 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
             else if (isOn && isHo)
             {
                 g.setColour(skin->getColor(clr::HoverOnFill));
-                fg = skin->getColor(clr::HoverOnText);
                 g.fillRoundedRectangle(fc.toFloat(), cornerIn);
-                g.setColour(skin->getColor(clr::HoverOnOutline));
-                g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+
+                fg = skin->getColor(clr::HoverOnText);
             }
             else if (isOn)
             {
                 g.setColour(skin->getColor(clr::OnFill));
-                fg = skin->getColor(clr::OnText);
                 g.fillRoundedRectangle(fc.toFloat(), cornerIn);
-                g.setColour(skin->getColor(clr::OnOutline));
-                g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
+
+                fg = skin->getColor(clr::OnText);
             }
             else if (isHo)
             {
@@ -443,8 +445,6 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
                     g.fillRoundedRectangle(fc.toFloat(), cornerIn);
 
                     fg = skin->getColor(clr::HoverOnText);
-                    g.setColour(skin->getColor(clr::HoverOnOutline));
-                    g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
                 }
                 else
                 {
@@ -452,14 +452,13 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
                     g.fillRoundedRectangle(fc.toFloat(), cornerIn);
 
                     fg = skin->getColor(clr::HoverText);
-                    g.setColour(skin->getColor(clr::HoverOutline));
-                    g.drawRoundedRectangle(fc.toFloat(), cornerIn, 1);
                 }
             }
 
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
             g.setColour(fg);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8, juce::Font::bold));
             g.drawText(labels[idx], rc, juce::Justification::centred);
+
             idx++;
         }
     }
