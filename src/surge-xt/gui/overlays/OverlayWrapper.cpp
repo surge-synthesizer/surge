@@ -159,7 +159,7 @@ struct TearOutWindow : public juce::DocumentWindow
     void moveUpdate()
     {
         outstandingMoves--;
-        if (outstandingMoves == 0 && wrapping->storage)
+        if (outstandingMoves == 0 && wrapping && wrapping->storage)
         {
             auto tl = getBounds().getTopLeft();
             Surge::Storage::updateUserDefaultValue(

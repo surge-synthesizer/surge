@@ -993,7 +993,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             dPos = -dPos;
             auto speed = 0.5;
             if (e.mods.isShiftDown())
-                speed = 0.1;
+                speed = 0.05;
             dPos = dPos * speed;
             lastMousePos = e.position;
 
@@ -1009,6 +1009,32 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                 {
                     auto centsi = matrix->tuning.scale.tones[i - 2].cents + dPos;
                     matrix->overlay->onToneChanged(i - 2, centsi);
+                }
+            }
+        }
+
+        void mouseDoubleClick(const juce::MouseEvent &e) override
+        {
+            if (mode == ROTATION)
+            {
+                if (hoverI > 0 && hoverJ > 0)
+                {
+                    int tonI = (hoverI - 1 + hoverJ - 1) % matrix->tuning.scale.count;
+                    matrix->overlay->onToneChanged(
+                        tonI, (hoverI + hoverJ - 1) *
+                                  matrix->tuning.scale.tones[matrix->tuning.scale.count - 1].cents /
+                                  matrix->tuning.scale.count);
+                }
+            }
+            else
+            {
+                if (hoverI > 1 && hoverI > hoverJ)
+                {
+                    int tonI = (hoverI - 2) % matrix->tuning.scale.count;
+                    matrix->overlay->onToneChanged(
+                        tonI, (hoverI - 1) *
+                                  matrix->tuning.scale.tones[matrix->tuning.scale.count - 1].cents /
+                                  matrix->tuning.scale.count);
                 }
             }
         }
@@ -1155,7 +1181,10 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
         screenTransformInverted.transformPoint(x, y);
 
         auto dr = -sqrt(xd * xd + yd * yd) + sqrt(x * x + y * y);
-        dr = dr * 0.7; // FIXME - make this a variable
+        auto speed = 0.7;
+        if (e.mods.isShiftDown())
+            speed = speed * 0.1;
+        dr = dr * speed;
         toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
         toneKnobs[hotSpotIndex + 1]->repaint();
         onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
@@ -1450,6 +1479,7 @@ struct TuningControlArea : public juce::Component,
             selectS->setStorage(overlay->storage);
             selectS->setLabels({"SCL/KBM", "Radial", "Interval", "To Equal", "Rotation"});
             selectS->addListener(this);
+            selectS->setDraggable(true);
             selectS->setTag(tag_select_tab);
             selectS->setHeightOfOneImage(buttonHeight);
             selectS->setRows(1);
@@ -1524,6 +1554,7 @@ struct TuningControlArea : public juce::Component,
         {
             int m = c->getValue() * 4;
             overlay->showEditor(m);
+            selectS->repaint();
         }
         break;
         case tag_save_scl:
