@@ -136,6 +136,12 @@
     <snapshot name="Init (Send)" p0="-3.000000" p1="0.000000" p2="1.000000" p3="0.500000" p4="0.500000" p5="0.500000"
               p6="0.500000" p7="0.500000" p8="0.000000" p9="1.000000"/>
 </type>
+<type i="27" name="Spring Reverb">
+    <snapshot name="Init (Dry)" p0="0.500000" p1="0.500000" p2="1.000000" p3="0.500000" p4="0.500000" p5="0.000000"
+              p6="0.500000"/>
+    <snapshot name="Init (Send)" p0="0.500000" p1="0.500000" p2="1.000000" p3="0.500000" p4="0.500000" p5="0.000000"
+              p6="1.000000"/>
+</type>
 <sectionheader label="MULTIEFFECTS"/>
 <type i="14" name="Airwindows">
     <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>

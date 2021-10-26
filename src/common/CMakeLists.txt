@@ -135,6 +135,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/ExciterEffect.h
   dsp/effects/chowdsp/NeuronEffect.cpp
   dsp/effects/chowdsp/NeuronEffect.h
+  dsp/effects/chowdsp/SpringReverbEffect.cpp
+  dsp/effects/chowdsp/SpringReverbEffect.h
   dsp/effects/chowdsp/TapeEffect.cpp
   dsp/effects/chowdsp/TapeEffect.h
   dsp/effects/chowdsp/bbd_utils/BBDCompander.h
@@ -145,17 +147,22 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/exciter/LevelDetector.cpp
   dsp/effects/chowdsp/exciter/LevelDetector.h
   dsp/effects/chowdsp/shared/BilinearUtils.h
-  dsp/effects/chowdsp/shared/DelayInterpolation.h
-  dsp/effects/chowdsp/shared/DelayLine.cpp
-  dsp/effects/chowdsp/shared/DelayLine.h
+  dsp/effects/chowdsp/shared/chowdsp_DelayInterpolation.h
+  dsp/effects/chowdsp/shared/chowdsp_DelayLine.h
   dsp/effects/chowdsp/shared/FIRFIlter.h
   dsp/effects/chowdsp/shared/Oversampling.h
   dsp/effects/chowdsp/shared/Shelf.h
   dsp/effects/chowdsp/shared/SmoothedValue.h
+  dsp/effects/chowdsp/shared/StateVariableFilter.cpp
+  dsp/effects/chowdsp/shared/StateVariableFilter.h
   dsp/effects/chowdsp/shared/chowdsp_IIR.h
   dsp/effects/chowdsp/shared/omega.h
   dsp/effects/chowdsp/shared/wdf.h
   dsp/effects/chowdsp/shared/wdf_sse.h
+  dsp/effects/chowdsp/spring_reverb/ReflectionNetwork.h
+  dsp/effects/chowdsp/spring_reverb/SchroederAllpass.h
+  dsp/effects/chowdsp/spring_reverb/SpringReverbProc.cpp
+  dsp/effects/chowdsp/spring_reverb/SpringReverbProc.h
   dsp/effects/chowdsp/tape/ChewDropout.h
   dsp/effects/chowdsp/tape/ChewProcessor.cpp
   dsp/effects/chowdsp/tape/ChewProcessor.h
@@ -309,7 +316,8 @@ endif()
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
 
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(${PROJECT_NAME}
+PUBLIC
   fmt
   luajit-5.1
   samplerate
@@ -325,7 +333,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   PRIVATE
   surge-lua-src
   surge-platform
+  surge-juce
   taocpp::pegtl
+PRIVATE
+  juce::juce_dsp
+  )
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+  JUCE_STANDALONE_APPLICATION=0
   )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
