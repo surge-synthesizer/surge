@@ -293,6 +293,8 @@ Color::Color(const std::string &name, int r, int g, int b, int a)
     colMap->insert(std::make_pair(name, *this));
 }
 
+// if alpha is not defined in argb consider it as full opacity
+// if we need something with alpha = 0, use the rgb+alpha overload below
 Color::Color(const std::string &name, uint32_t argb) : name(name)
 {
     b = argb & 0xFF;
@@ -302,6 +304,24 @@ Color::Color(const std::string &name, uint32_t argb) : name(name)
     r = argb & 0xFF;
     argb = argb >> 8;
     a = argb & 0xFF;
+
+    if (a == 0)
+    {
+        a = 0xFF;
+    }
+
+    guaranteeMap();
+    colMap->insert(std::make_pair(name, *this));
+}
+
+Color::Color(const std::string &name, uint32_t rgb, char alpha) : name(name)
+{
+    b = rgb & 0xFF;
+    rgb = rgb >> 8;
+    g = rgb & 0xFF;
+    rgb = rgb >> 8;
+    r = rgb & 0xFF;
+    a = alpha;
 
     guaranteeMap();
     colMap->insert(std::make_pair(name, *this));
