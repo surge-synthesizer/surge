@@ -3592,9 +3592,8 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
                        [this](auto md) { this->resetSmoothing(md); });
     midiSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Controller Smoothing"), smen);
 
-    // TODO: include this after going through the parameter RMB context menu forest!
-    // auto mmom = makeMonoModeOptionsMenu(where, true);
-    // midiSubMenu->addEntry(mmom, Surge::GUI::toOSCaseForMenu("Sustain Pedal In Mono Mode"));
+    auto mmom = makeMonoModeOptionsMenu(where, true);
+    midiSubMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Sustain Pedal In Mono Mode"), mmom);
 
     midiSubMenu.addSeparator();
 

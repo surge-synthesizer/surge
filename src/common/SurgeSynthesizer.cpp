@@ -1481,28 +1481,25 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
         channelState[channel].pitchBend = value;
 
         /*
-        ** TODO: handling of channel 0 and mpeGlobalPitchBendRange was broken with the addition
-        ** of smoothing. we should probably add that back in if it turns out someone actually uses
-        *it :)
-        ** currently channelState[].pitchBendInSemitones is now unused, but it hasn't been removed
-        *from
+        ** TODO: Handling of channel 0 and mpeGlobalPitchBendRange was broken with the addition of
+        ** smoothing. We should probably add that back, if it turns out someone actually uses it :)
+        **
+        ** Currently, channelState[].pitchBendInSemitones is unused, but it hasn't been removed from
         ** the code yet for this reason.
+        **
         ** For now, we ignore channel zero here so it functions like the old code did in practice
-        *when
-        ** mpeGlobalPitchBendRange remained at zero.
+        ** when mpeGlobalPitchBendRange remained at zero.
         */
     }
 
     /*
     ** So here's the thing. We want global pitch bend modulation to work for other things in MPE
-    *mode.
-    ** This code has been here forever. But that means we need to ignore the channel[0] MPE
-    *pitchbend
-    ** elsewhere, especially since the range was hardwired to 2 (but is now 0). As far as I know the
-    ** main MPE devices don't have a global pitch bend anyway so this just screws up regular
-    *keyboards
-    ** sending channel 0 pitch bend in MPE mode.
+    ** mode. This code has been here forever. But that means we need to ignore the channel[0] MPE
+    ** pitchbend elsewhere, especially since the range was hardwired to 2 (but is now 0).
+    ** As far as I know, the main MPE devices don't have a global pitch bend anyway, so this just
+    ** screws up regular keyboards sending channel 0 pitch bend in MPE mode.
     */
+
     if (!mpeEnabled || channel == 0)
     {
         storage.pitch_bend = value / 8192.f;

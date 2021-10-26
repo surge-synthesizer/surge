@@ -303,6 +303,11 @@ Color::Color(const std::string &name, uint32_t argb) : name(name)
     argb = argb >> 8;
     a = argb & 0xFF;
 
+    if (a == 0 && (r != 0 || g != 0 || b != 0))
+    {
+        a = 0xFF;
+    }
+
     guaranteeMap();
     colMap->insert(std::make_pair(name, *this));
 }
