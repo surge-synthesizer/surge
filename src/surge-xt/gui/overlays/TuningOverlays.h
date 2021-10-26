@@ -74,6 +74,7 @@ struct TuningOverlay : public OverlayComponent,
     void onToneChanged(int tone, double newCentsValue);
     void onToneStringChanged(int tone, const std::string &newCentsValue);
     void onScaleRescaled(double scaledBy);
+    void onScaleRescaledAbsolute(double setRITo);
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
     void resized() override;
