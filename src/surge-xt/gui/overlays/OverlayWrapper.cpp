@@ -150,8 +150,12 @@ struct TearOutWindow : public juce::DocumentWindow
     }
 
     int outstandingMoves = 0;
+    bool supressMoveUpdates{false};
     void moved() override
     {
+        if (supressMoveUpdates)
+            return;
+
         outstandingMoves++;
         // writing every move would be "bad". Add a 1 second delay.
         juce::Timer::callAfterDelay(1000, [this]() { this->moveUpdate(); });
@@ -204,6 +208,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     }
     auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton |
                                                      juce::DocumentWindow::minimiseButton);
+    dw->supressMoveUpdates = true;
     dw->setContentNonOwned(this, false);
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
@@ -229,6 +234,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     }
     dw->toFront(true);
     dw->wrapping = this;
+    dw->supressMoveUpdates = false;
     supressInteriorDecoration();
     tearOutParent = std::move(dw);
 }
