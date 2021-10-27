@@ -26,10 +26,13 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
     void setupDefaultHeaders(juce::TableListBox *table)
     {
-        table->setHeaderHeight(15);
-        table->setRowHeight(13);
-        table->getHeader().addColumn("Note", 1, 50);
-        table->getHeader().addColumn("Freq (hz)", 2, 50);
+        table->setHeaderHeight(12);
+        table->setRowHeight(12);
+        table->getHeader().addColumn("Note", 1, 30, 30, 30,
+                                     juce::TableHeaderComponent::ColumnPropertyFlags::visible);
+        table->getHeader().addColumn("Frequency (Hz)", 2, 50, 50, 50,
+                                     juce::TableHeaderComponent::ColumnPropertyFlags::visible);
+        table->getHeader().setPopupMenuActive(false);
     }
 
     virtual int getNumRows() override { return 128; }
@@ -43,38 +46,53 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
     }
 
     int mcoff{1};
+
     void setMiddleCOff(int m)
     {
         mcoff = m;
+
         if (table)
+        {
             table->repaint();
+        }
     }
 
     virtual void paintCell(juce::Graphics &g, int rowNumber, int columnID, int width, int height,
                            bool rowIsSelected) override
     {
         namespace clr = Colors::TuningOverlay::FrequencyKeyboard;
+
         if (!table)
+        {
             return;
+        }
 
         int noteInScale = rowNumber % 12;
         bool whitekey = true;
         bool noblack = false;
+
         if ((noteInScale == 1 || noteInScale == 3 || noteInScale == 6 || noteInScale == 8 ||
              noteInScale == 10))
         {
             whitekey = false;
         }
-        if (noteInScale == 4 || noteInScale == 11)
-            noblack = true;
 
-        // Black Key
+        if (noteInScale == 4 || noteInScale == 11)
+        {
+            noblack = true;
+        }
+
+        // black key
         auto kbdColour = skin->getColor(clr::BlackKey);
+
         if (whitekey)
+        {
             kbdColour = skin->getColor(clr::WhiteKey);
+        }
 
         bool no = false;
         auto pressedColour = skin->getColor(clr::PressedKey);
+
         if (notesOn[rowNumber])
         {
             no = true;
@@ -82,6 +100,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
 
         g.fillAll(kbdColour);
+
         if (!whitekey && columnID != 1)
         {
             g.setColour(skin->getColor(clr::Separator));
@@ -91,15 +110,17 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
 
         int txtOff = 0;
+
         if (columnID == 1)
         {
-            // Black Key
+            // black key
             if (!whitekey)
             {
                 txtOff = 10;
-                // "Black Key"
+                // "black key"
                 auto kbdColour = skin->getColor(clr::BlackKey);
                 auto kbc = skin->getColor(clr::WhiteKey);
+
                 g.setColour(kbc);
                 g.fillRect(-1, 0, txtOff, height + 2);
 
@@ -109,11 +130,13 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                     g.setColour(pressedColour);
                     g.fillRect(0, 0, txtOff, height / 2);
                 }
+
                 if (rowNumber < 127 && notesOn[rowNumber + 1])
                 {
                     g.setColour(pressedColour);
                     g.fillRect(0, height / 2, txtOff, height / 2 + 1);
                 }
+
                 g.setColour(skin->getColor(clr::BlackKey));
                 g.fillRect(0, height / 2, txtOff, 1);
 
@@ -133,38 +156,43 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
 
         g.setColour(skin->getColor(clr::Separator));
         g.fillRect(width - 1, 0, 1, height);
+
         if (noblack)
+        {
             g.fillRect(0, height - 1, width, 1);
+        }
 
         g.setColour(skin->getColor(clr::Text));
+
         if (no)
+        {
             g.setColour(skin->getColor(clr::PressedKeyText));
-        auto just = juce::Justification::centredLeft;
+        }
+
+        int margin = 5;
+        auto just_l = juce::Justification::centredLeft;
+        auto just_r = juce::Justification::centredRight;
+
         switch (columnID)
         {
         case 1:
         {
             notenum = std::to_string(mn);
             notename = noteInScale % 12 == 0 ? fmt::format("C{:d}", rowNumber / 12 - mcoff) : "";
-            static std::vector<std::string> nn = {
-                {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}};
 
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.drawText(notename, 2 + txtOff, 0, width - 4, height, juce::Justification::centredLeft,
-                       false);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, juce::Font::bold));
+            g.drawText(notename, 2 + txtOff, 0, width - margin, height, just_l, false);
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
-            g.drawText(notenum, 2 + txtOff, 0, width - 2 - txtOff - 2, height,
+            g.drawText(notenum, 2 + txtOff, 0, width - txtOff - margin, height,
                        juce::Justification::centredRight, false);
 
             break;
         }
         case 2:
         {
-            just = juce::Justification::centredRight;
             display = fmt::format("{:.2f}", fr);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.drawText(display, 2 + txtOff, 0, width - 4, height, juce::Justification::centredRight,
-                       false);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            g.drawText(display, 2 + txtOff, 0, width - margin, height, just_r, false);
             break;
         }
         }
@@ -259,16 +287,16 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         g.addTransform(
             juce::AffineTransform::rotation(angle / 50.0 * 2.0 * juce::MathConstants<double>::pi));
         if (isHovered)
-            g.setColour(skin->getColor(clr::KnobCenterHover));
+            g.setColour(skin->getColor(clr::KnobFillHover));
         else
-            g.setColour(skin->getColor(clr::KnobCenter));
+            g.setColour(skin->getColor(clr::KnobFill));
         g.fillEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2);
-        g.setColour(skin->getColor(clr::KnobOutline));
+        g.setColour(skin->getColor(clr::KnobBorder));
         g.drawEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2, r / 5.0);
         if (enabled)
         {
             if (isPlaying)
-                g.setColour(skin->getColor(clr::KnobPlayingThumb));
+                g.setColour(skin->getColor(clr::KnobThumbPlayed));
             else
                 g.setColour(skin->getColor(clr::KnobThumb));
             g.drawLine(0, -(r - 1), 0, r - 1, r / 3.0);
@@ -342,7 +370,7 @@ class RadialScaleGraph : public juce::Component,
                 auto tl = std::make_unique<juce::Label>("tone index");
                 tl->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                 tl->setBounds(totalR.withWidth(labw));
-                tl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+                tl->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
                 tl->setJustificationType(juce::Justification::centredRight);
                 toneInterior->addAndMakeVisible(*tl);
                 toneLabels.push_back(std::move(tl));
@@ -507,32 +535,33 @@ class RadialScaleGraph : public juce::Component,
             if (notesOn[ni])
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
-                                          skin->getColor(clr::TonePlayingBackground));
+                                          skin->getColor(clr::ToneLabelBackgroundPlayed));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
-                                          skin->getColor(clr::TonePlayingOutline));
+                                          skin->getColor(clr::ToneLabelBorderPlayed));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
-                                          skin->getColor(clr::TonePlayingText));
-                toneEditors[i]->applyColourToAllText(skin->getColor(clr::TonePlayingText), true);
+                                          skin->getColor(clr::ToneLabelTextPlayed));
+                toneEditors[i]->applyColourToAllText(skin->getColor(clr::ToneLabelTextPlayed),
+                                                     true);
 
                 toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
-                                             skin->getColor(clr::TonePlayingLabel));
+                                             skin->getColor(clr::ToneLabelPlayed));
                 toneKnobs[i + 1]->isPlaying = true;
                 if (i == scale.count - 1)
                 {
                     toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
-                                             skin->getColor(clr::TonePlayingLabel));
+                                             skin->getColor(clr::ToneLabelPlayed));
                     toneKnobs[0]->isPlaying = true;
                 }
             }
             else
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
-                                          skin->getColor(clr::ToneBackground));
+                                          skin->getColor(clr::ToneLabelBackground));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
-                                          skin->getColor(clr::ToneOutline));
+                                          skin->getColor(clr::ToneLabelBorder));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
-                                          skin->getColor(clr::ToneText));
-                toneEditors[i]->applyColourToAllText(skin->getColor(clr::ToneText), true);
+                                          skin->getColor(clr::ToneLabelText));
+                toneEditors[i]->applyColourToAllText(skin->getColor(clr::ToneLabelText), true);
 
                 toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
                                              skin->getColor(clr::ToneLabel));
@@ -827,7 +856,6 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             setSize(nw, nh);
         }
 
-        // ToDo: Skin Colors Here
         void paint(juce::Graphics &g) override
         {
             if (!skin)
@@ -858,7 +886,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             no = no || matrix->notesOn[j - 1];
 
                         if (no)
-                            g.setColour(skin->getColor(clr::NoteLabelBackgroundPlaying));
+                            g.setColour(skin->getColor(clr::NoteLabelBackgroundPlayed));
                         else
                             g.setColour(skin->getColor(clr::NoteLabelBackground));
                         g.fillRect(bx);
@@ -866,11 +894,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         auto lb = std::to_string(i + j - 1);
 
                         if (isHovered && no)
-                            g.setColour(skin->getColor(clr::NoteLabelForegroundPlayingHovered));
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundHoverPlayed));
                         if (isHovered)
-                            g.setColour(skin->getColor(clr::NoteLabelForegroundHovered));
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundHover));
                         else if (no)
-                            g.setColour(skin->getColor(clr::NoteLabelForegroundPlaying));
+                            g.setColour(skin->getColor(clr::NoteLabelForegroundPlayed));
                         else
                             g.setColour(skin->getColor(clr::NoteLabelForeground));
                         g.drawText(lb, bx, juce::Justification::centred);
@@ -881,7 +909,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         g.fillRect(bx);
                         if (mode == ROTATION && i != 0)
                         {
-                            g.setColour(skin->getColor(clr::SkippedInterval));
+                            g.setColour(skin->getColor(clr::IntervalSkipped));
                             g.drawText("0", bx, juce::Justification::centred);
                         }
                     }
@@ -929,7 +957,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             displayCents = cdiff - desCents;
                         auto lb = fmt::format("{:.1f}", displayCents);
                         if (isHovered)
-                            g.setColour(skin->getColor(clr::IntervalTextHovered));
+                            g.setColour(skin->getColor(clr::IntervalTextHover));
                         else
                             g.setColour(skin->getColor(clr::IntervalText));
                         g.drawText(lb, bx, juce::Justification::centred);
@@ -970,7 +998,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         g.fillRect(bx);
 
                         if (isHovered)
-                            g.setColour(skin->getColor(clr::IntervalTextHovered));
+                            g.setColour(skin->getColor(clr::IntervalTextHover));
                         else
                             g.setColour(skin->getColor(clr::IntervalText));
 
@@ -1230,9 +1258,9 @@ struct SCLKBMDisplay : public juce::Component,
         sclDocument->addListener(this);
         sclTokeniser = std::make_unique<SCLKBMTokeniser>();
         scl = std::make_unique<juce::CodeEditorComponent>(*sclDocument, sclTokeniser.get());
-        scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
+        scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
         scl->setLineNumbersShown(false);
-        scl->setScrollbarThickness(5);
+        scl->setScrollbarThickness(8);
         addAndMakeVisible(*scl);
 
         kbmDocument = std::make_unique<juce::CodeDocument>();
@@ -1240,9 +1268,9 @@ struct SCLKBMDisplay : public juce::Component,
         kbmTokeniser = std::make_unique<SCLKBMTokeniser>(false);
 
         kbm = std::make_unique<juce::CodeEditorComponent>(*kbmDocument, kbmTokeniser.get());
-        kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(10));
+        kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
         kbm->setLineNumbersShown(false);
-        kbm->setScrollbarThickness(5);
+        kbm->setScrollbarThickness(8);
         addAndMakeVisible(*kbm);
     }
 
@@ -1337,7 +1365,7 @@ struct SCLKBMDisplay : public juce::Component,
                 {"Text", 0xFFFF0000},
                 {"Cents", 0xFFFF0000},
                 {"Ratio", 0xFFFF0000},
-                { "Playing", 0xFFFF0000 }
+                {"Played", 0xFFFF0000 }
             };
             // clang-format on
 
@@ -1432,7 +1460,7 @@ struct SCLKBMDisplay : public juce::Component,
             cs.set("Text", skin->getColor(clr::Text));
             cs.set("Cents", skin->getColor(clr::Cents));
             cs.set("Ratio", skin->getColor(clr::Ratio));
-            cs.set("Playing", skin->getColor(clr::Playing));
+            cs.set("Played", skin->getColor(clr::Played));
 
             t->setColourScheme(cs);
         }
@@ -1485,7 +1513,7 @@ struct TuningControlArea : public juce::Component,
             int btnWidth = 210;
             int ypos = 1 + labelHeight + margin;
 
-            selectL = newL("Editor Mode");
+            selectL = newL("Edit Mode");
             selectL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*selectL);
 
@@ -1494,7 +1522,7 @@ struct TuningControlArea : public juce::Component,
 
             selectS->setBounds(btnrect);
             selectS->setStorage(overlay->storage);
-            selectS->setLabels({"SCL/KBM", "Radial", "Interval", "To Equal", "Rotation"});
+            selectS->setLabels({"Scala", "Radial", "Interval", "To Equal", "Rotation"});
             selectS->addListener(this);
             selectS->setDraggable(true);
             selectS->setTag(tag_select_tab);
@@ -1534,19 +1562,19 @@ struct TuningControlArea : public juce::Component,
                 return res;
             };
 
-            savesclS = ma("Save SCL", tag_save_scl);
+            savesclS = ma("Save Scale...", tag_save_scl);
             addAndMakeVisible(*savesclS);
             marginPos += btnWidth + 5;
 
-            exportS = ma("Export HTML", tag_export_html);
+            exportS = ma("Export HTML...", tag_export_html);
             addAndMakeVisible(*exportS);
             marginPos += btnWidth + 5;
 
-            libraryS = ma("Tuning Library", tag_open_library);
+            libraryS = ma("Tuning Library...", tag_open_library);
             addAndMakeVisible(*libraryS);
             marginPos += btnWidth + 5;
 
-            applyS = ma("Apply SCL/KBM", tag_apply_sclkbm);
+            applyS = ma("Apply", tag_apply_sclkbm);
             addAndMakeVisible(*applyS);
             applyS->setEnabled(false);
             xpos += btnWidth + 5;
@@ -1579,7 +1607,7 @@ struct TuningControlArea : public juce::Component,
             if (applyS->isEnabled())
             {
                 overlay->storage->reportError(
-                    "You have un-applied changes in your SCL/KBM. Please apply them before saving.",
+                    "You have unapplied changes in your SCL/KBM. Please apply them before saving!",
                     "SCL Save Error");
                 break;
             }
@@ -1708,12 +1736,14 @@ void TuningOverlay::resized()
     auto h = getHeight();
     auto w = getWidth();
 
-    int kbWidth = 120;
+    int kbWidth = 87;
     int ctrlHeight = 35;
 
     t.transformPoint(w, h);
 
     tuningKeyboardTable->setBounds(0, 0, kbWidth, h);
+    tuningKeyboardTable->getHeader().setColour(
+        juce::TableHeaderComponent::ColourIds::highlightColourId, juce::Colours::transparentWhite);
 
     auto contentArea = juce::Rectangle<int>(kbWidth, 0, w - kbWidth, h - ctrlHeight);
 
@@ -1722,7 +1752,7 @@ void TuningOverlay::resized()
     intervalMatrix->setBounds(contentArea);
     controlArea->setBounds(kbWidth, h - ctrlHeight, w - kbWidth, ctrlHeight);
 
-    // it's a bit of a hack to put this here but by this [oint i'm all set up
+    // it's a bit of a hack to put this here but by this point I'm all set up
     if (storage)
     {
         auto mcoff = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);

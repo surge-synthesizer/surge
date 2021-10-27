@@ -332,24 +332,22 @@ namespace SCLKBM
 extern const Surge::Skin::Color Background;
 namespace Editor
 {
-extern const Surge::Skin::Color Border, Background, Text, Comment, Cents, Ratio, Playing;
+extern const Surge::Skin::Color Border, Background, Text, Comment, Cents, Ratio, Played;
 } // namespace Editor
 } // namespace SCLKBM
 namespace RadialGraph
 {
 extern const Surge::Skin::Color Background;
-extern const Surge::Skin::Color KnobCenter, KnobCenterHover, KnobOutline, KnobThumb,
-    KnobPlayingThumb;
-extern const Surge::Skin::Color ToneLabel, TonePlayingLabel, ToneOutline, ToneBackground, ToneText,
-    TonePlayingBackground, TonePlayingOutline, TonePlayingText;
+extern const Surge::Skin::Color KnobFill, KnobFillHover, KnobBorder, KnobThumb, KnobThumbPlayed;
+extern const Surge::Skin::Color ToneLabel, ToneLabelPlayed, ToneLabelBorder, ToneLabelBackground,
+    ToneLabelText, ToneLabelBackgroundPlayed, ToneLabelBorderPlayed, ToneLabelTextPlayed;
 } // namespace RadialGraph
 namespace Interval
 {
 extern const Surge::Skin::Color Background;
-extern const Surge::Skin::Color NoteLabelBackground, NoteLabelBackgroundPlaying,
-    NoteLabelForeground, NoteLabelForegroundHovered, NoteLabelForegroundPlaying,
-    NoteLabelForegroundPlayingHovered, SkippedInterval;
-extern const Surge::Skin::Color IntervalText, IntervalTextHovered;
+extern const Surge::Skin::Color NoteLabelBackground, NoteLabelBackgroundPlayed, NoteLabelForeground,
+    NoteLabelForegroundHover, NoteLabelForegroundPlayed, NoteLabelForegroundHoverPlayed;
+extern const Surge::Skin::Color IntervalText, IntervalTextHover, IntervalSkipped;
 
 extern const Surge::Skin::Color HeatmapZero, HeatmapNegFar, HeatmapNegNear, HeatmapPosFar,
     HeatmapPosNear;
@@ -379,7 +377,7 @@ extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Bord
 namespace TextMultiSwitch
 {
 extern const Surge::Skin::Color Background, Border, Divider, DeactivatedText, Text, OnText, OnFill,
-    HoverText, HoverOnText, HoverFill, HoverOutline, HoverOnFill, HoverOnOutline, OnOutline;
+    HoverText, HoverOnText, HoverFill, HoverOnFill;
 }
 } // namespace JuceWidgets
 } // namespace Colors
