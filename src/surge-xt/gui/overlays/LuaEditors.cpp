@@ -187,10 +187,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     std::unique_ptr<juce::TextEditor> outputDump;
     std::unique_ptr<juce::Label> dPhaseLabel;
 
-    void paint(juce::Graphics &g) override
-    {
-        g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
-    }
+    void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
     void setOpen(bool b)
     {
