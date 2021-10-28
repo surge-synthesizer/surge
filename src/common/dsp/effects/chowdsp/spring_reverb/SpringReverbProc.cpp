@@ -40,9 +40,8 @@ void SpringReverbProc::setParams(const Params &params, int numSamples)
 
     constexpr float lowT60 = 0.5f;
     constexpr float highT60 = 4.5f;
-    float t60Seconds =
-        lowT60 *
-        std::pow(highT60 / lowT60, params.decay - 0.7f * (1.0f - std::pow(params.size, 2.0f)));
+    const auto decayCorr = 0.7f * (1.0f - params.size * params.size);
+    float t60Seconds = lowT60 * std::pow(highT60 / lowT60, 0.95f * params.decay - decayCorr);
 
     float delaySamples = 1000.0f + std::pow(params.size * 0.099f, 1.0f) * fs;
     chaosSmooth.setTargetValue(urng01() * delaySamples * 0.07f);
@@ -61,7 +60,8 @@ void SpringReverbProc::setParams(const Params &params, int numSamples)
     auto dampFreq = dampFreqLow * std::pow(dampFreqHigh / dampFreqLow, 1.0f - params.damping);
     lpf.setCutoffFrequency(dampFreq);
 
-    reflectionNetwork.setParams(params.size, t60Seconds, params.reflections * 0.5f, params.damping);
+    auto reflSkew = 0.95f * params.reflections * params.reflections;
+    reflectionNetwork.setParams(params.size, t60Seconds, reflSkew, params.damping);
 }
 
 void SpringReverbProc::processBlock(float *left, float *right, const int numSamples)
