@@ -1959,6 +1959,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (lasso)
         {
             lasso->dragLasso(event);
+
+            /*
+             * You may think 'hey you can repaint locally' and try something like
+             * this
+             * auto lassoR = juce::Rectangle<float>(event.mouseDownPosition, event.position);
+             * auto repaintR = lassoR.toNearestIntEdges().expanded(20);
+             * repaint(repaintR);
+             *
+             * but control points can be arbitrarily far away. We could just
+             * repaint the boxes of all points selected and their control points but
+             * that is a hard list to find. So instead, when the lasso changes, we just:
+             */
+            repaint();
             return;
         }
 
