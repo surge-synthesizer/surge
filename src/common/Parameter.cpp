@@ -2428,8 +2428,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     case Decibel:
     {
         float v = amp_to_db(val.f);
-        float mp = amp_to_db(val.f + modulationDepth);
-        float mn = amp_to_db(val.f - modulationDepth);
+        float mp = amp_to_db(std::max(val.f + modulationDepth, 1.e-7f));
+        float mn = amp_to_db(std::max(val.f - modulationDepth, 1.e-7f));
 
         char posval[TXT_SIZE];
         char negval[TXT_SIZE];

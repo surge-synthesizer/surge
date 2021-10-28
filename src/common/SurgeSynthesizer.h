@@ -268,7 +268,7 @@ class alignas(16) SurgeSynthesizer
     bool isBipolarModulation(modsources modsources) const;
     bool isModsourceUsed(modsources modsource); // FIXME - this should be const
     bool isModDestUsed(long moddest) const;
-    bool isModulatorDistinctPerScene(modsources modsource); // ModWheel no; SLFO2 yes. etc...
+    bool isModulatorDistinctPerScene(modsources modsource) const; // ModWheel no; SLFO2 yes. etc...
 
     bool supportsIndexedModulator(int scene, modsources modsource) const;
     int getMaxModulationIndex(int scene, modsources modsource) const;
@@ -306,7 +306,7 @@ class alignas(16) SurgeSynthesizer
     {
         virtual ~ModulationAPIListener() = default;
         virtual void modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                            float value) = 0;
+                            float value, bool isNewModulation) = 0;
         virtual void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                               bool mute) = 0;
         virtual void modCleared(long ptag, modsources modsource, int modsourceScene, int index) = 0;

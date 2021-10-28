@@ -134,9 +134,15 @@ void ModulatableSlider::updateLocationState()
 
 void ModulatableSlider::paint(juce::Graphics &g)
 {
+    jassert(skin);
     jassert(pTray);
     if (!pTray)
         return;
+    if (!skin)
+    {
+        std::cout << "No skin on " << this << std::endl;
+        return;
+    }
 
     float activationOpacity = 1.0;
     if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)

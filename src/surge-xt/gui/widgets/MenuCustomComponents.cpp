@@ -24,46 +24,18 @@ namespace Widgets
 int mg = 1;
 int xp = 16;
 
-struct TinyLittleIconButton : public juce::Component
+void TinyLittleIconButton::paint(juce::Graphics &g)
 {
-    TinyLittleIconButton(int off, std::function<void()> cb) : offset(off), callback(std::move(cb))
-    {
-    }
-
-    void setIcon(SurgeImage *img)
-    {
-        icons = img;
-        repaint();
-    }
-
-    void paint(juce::Graphics &g) override
-    {
-        auto yp = offset * 20;
-        auto xp = isHovered ? 20 : 0;
-        g.reduceClipRegion(getLocalBounds());
-        auto t = juce::AffineTransform().translated(-xp, -yp);
-        if (icons)
-            icons->draw(g, 1.0, t);
-    }
-    void mouseUp(const juce::MouseEvent &e) override { callback(); }
-    void mouseEnter(const juce::MouseEvent &e) override
-    {
-        isHovered = true;
-        repaint();
-    }
-    void mouseExit(const juce::MouseEvent &e) override
-    {
-        isHovered = false;
-        repaint();
-    }
-
-    bool isHovered{false};
-    std::function<void()> callback;
-    SurgeImage *icons{nullptr};
-    int offset{0};
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TinyLittleIconButton);
-};
+    auto yp = offset * 20;
+    auto xp = isHovered ? 20 : 0;
+    g.reduceClipRegion(getLocalBounds());
+    auto t = juce::AffineTransform();
+    t = t.translated(-xp, -yp);
+    if (getWidth() < 20 || getHeight() < 20)
+        t = t.scaled(getWidth() / 20.f);
+    if (icons)
+        icons->draw(g, 1.0, t);
+}
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {

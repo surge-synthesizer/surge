@@ -2599,7 +2599,7 @@ bool SurgeSynthesizer::loadOscalgos()
     return true;
 }
 
-bool SurgeSynthesizer::isModulatorDistinctPerScene(modsources modsource)
+bool SurgeSynthesizer::isModulatorDistinctPerScene(modsources modsource) const
 {
     if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
         return true;
@@ -3127,7 +3127,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsou
     storage.modRoutingMutex.unlock();
 
     for (auto l : modListeners)
-        l->modSet(ptag, modsource, modsourceScene, index, val);
+        l->modSet(ptag, modsource, modsourceScene, index, val, found_id < 0);
     return true;
 }
 
