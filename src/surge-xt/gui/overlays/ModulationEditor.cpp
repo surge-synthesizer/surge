@@ -226,7 +226,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             repaint();
         }
 
-        bool firstInSort{false};
+        bool firstInSort{false}, hasFollower{false};
+        bool isTop{false}, isAfterTop{false};
         void paint(juce::Graphics &g) override
         {
             static constexpr int indent = 1;
@@ -249,29 +250,53 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 std::swap(firstLab, secondLab);
             auto tb = b.reduced(3, 0).withHeight(fh).withRight(controlsStart);
 
+            bool longArrow = true;
             if (firstInSort)
+            {
+                longArrow = false;
                 g.setColour(juce::Colours::white);
-            else
-                g.setColour(juce::Colours::grey);
-            g.drawText(firstLab, tb, juce::Justification::topLeft);
+                g.drawText(firstLab, tb, juce::Justification::topLeft);
+            }
             g.setColour(juce::Colours::white);
 
             auto tbl = tb.getBottomLeft();
+            if (!longArrow)
+                tb = tb.translated(0, fh + 4); // fix this to be a bit lower
+            else
+                tb = tb.withY((getHeight() - fh) / 2.0);
+            tb = tb.withTrimmedLeft(15);
+            auto tbe = juce::Point<float>(tb.getX(), tb.getCentreY());
+
+            auto xStart = tbl.x + 7.f;
+            auto xEnd = tbe.x;
+            auto yStart = longArrow ? 0 : tbl.y + 2.0f;
+            auto yEnd = tbe.y;
             if (contents->sortOrder == BY_SOURCE)
             {
-                g.drawLine(tbl.x + 7, tbl.y + 2, tbl.x + 7, tbl.y + fh / 2 + 2, 1);
-                g.drawArrow({tbl.x + 7.f, tbl.y + fh / 2.f + 2, tbl.x + 14.f, tbl.y + fh / 2.f + 2},
-                            1, 3, 4);
+                g.drawLine(xStart, yStart, xStart, yEnd, 1);
+                g.drawArrow({xStart, yEnd, xEnd, yEnd}, 1, 3, 4);
             }
             else
             {
-                g.drawArrow({tbl.x + 7.f, tbl.y + 2.f + fh / 2, tbl.x + 7.f, tbl.y + 2.f}, 1, 3, 4);
-                g.drawLine(tbl.x + 7.f, tbl.y + fh / 2.f + 2, tbl.x + 14.f, tbl.y + fh / 2.f + 2,
-                           1);
+                if (firstInSort)
+                    g.drawArrow({xStart, yEnd, xStart, yStart}, 1, 3, 4);
+                else
+                    g.drawLine(xStart, yEnd, xStart, yStart, 1);
+                g.drawLine(xStart, yEnd, xEnd, yEnd, 1);
             }
 
-            tb = tb.translated(0, fh + 2);
-            g.drawText(secondLab, tb.withTrimmedLeft(15), juce::Justification::bottomLeft);
+            if (hasFollower)
+                g.drawLine(xStart, yEnd, xStart, getHeight(), 1);
+
+            g.drawText(secondLab, tb.withTrimmedLeft(2), juce::Justification::centredLeft);
+
+            if ((isTop || isAfterTop) && !firstInSort)
+            {
+                g.setColour(juce::Colours::grey);
+                g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+                tb = tb.withTop(0);
+                g.drawText(firstLab, tb.withTrimmedLeft(2), juce::Justification::topLeft);
+            }
 
             // And then the back
             auto rB = b.withLeft(controlsEnd).reduced(2).withTrimmedRight(2);
@@ -353,6 +378,32 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         std::unique_ptr<Surge::Widgets::ModulatableSlider> surgeLikeSlider;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DataRowEditor);
     };
+
+    void moved() override
+    {
+        auto yPos = getBounds().getY();
+        auto cmp = getComponentAt(3, -yPos);
+        for (auto &r : rows)
+        {
+            r->isTop = false;
+            r->isAfterTop = false;
+        }
+        if (cmp)
+        {
+            auto dre = dynamic_cast<DataRowEditor *>(cmp);
+            if (dre)
+            {
+                dre->isTop = true;
+            }
+        }
+        bool prior = false;
+        for (auto &r : rows)
+        {
+            r->isAfterTop = prior;
+            prior = r->isTop;
+        }
+        repaint();
+    }
 
     enum SortOrder
     {
@@ -524,9 +575,20 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 ypos += DataRowEditor::height;
                 addAndMakeVisible(*l);
             }
+            l->hasFollower = false;
             rows.push_back(std::move(l));
         }
+
+        // this is a bit gross but i can't think of a better way
+        for (int i = 1; i < rows.size(); ++i)
+        {
+            auto sni = sortOrder == BY_SOURCE ? rows[i]->datum.sname : rows[i]->datum.pname;
+            auto snm = sortOrder == BY_SOURCE ? rows[i - 1]->datum.sname : rows[i - 1]->datum.pname;
+            if (sni == snm)
+                rows[i - 1]->hasFollower = true;
+        }
         setSize(getWidth(), ypos);
+        moved(); // to refresh the 'istop'
     }
 
     void updateAllValues(const SurgeSynthesizer *synth)
