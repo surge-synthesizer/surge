@@ -51,7 +51,7 @@ class ReflectionNetwork
             auto delaySamples = baseDelaysSec[i] * reverbSize * fs;
             delays[i].setDelay(delaySamples);
             feedbackArr[i] = std::pow(0.001f, delaySamples / (t60 * fs));
-            feedbackArr[i] *= mix * (0.5f * (0.33f + 1.67f * reverbSize));
+            feedbackArr[i] *= 0.23f * mix * (0.735f + 0.235f * reverbSize);
         }
 
         feedback = _mm_load_ps(feedbackArr);
