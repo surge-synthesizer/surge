@@ -90,6 +90,13 @@ struct ModulatableSlider : public juce::Component,
     float legacyMoveRate{1.0};
     virtual void setMoveRate(float f) { legacyMoveRate = f; }
 
+    bool forceModHandle{false};
+    void setAlwaysUseModHandle(bool b)
+    {
+        forceModHandle = b;
+        repaint();
+    }
+
     float value{0.f};
     float getValue() const override { return value; }
     void setValue(float f) override
