@@ -205,6 +205,10 @@ void ModulatableSlider::paint(juce::Graphics &g)
         auto q = handleSize.withCentre(juce::Point<int>(handleCX, handleCY));
         auto moveTo = juce::AffineTransform().translated(q.getTopLeft());
         auto t = juce::AffineTransform().translated(-1, -1);
+
+        if (forceModHandle)
+            t = juce::AffineTransform().translated(-1 - modHandleX, -1);
+
         g.addTransform(moveTo);
         g.reduceClipRegion(handleSize.expanded(2));
         pHandle->draw(g, activationOpacity, t);

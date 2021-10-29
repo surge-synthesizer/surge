@@ -69,8 +69,8 @@ struct ModulationSideControls : public juce::Component,
         sortL = makeL("Sort By");
         sortW = makeW(
             {
-                "By Source",
-                "By Target",
+                "Source",
+                "Target",
             },
             tag_sort_by, true);
         filterL = makeL("Filter By");
@@ -210,6 +210,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             surgeLikeSlider->setBipolarFn([]() { return true; });
             surgeLikeSlider->setIsLightStyle(true);
             surgeLikeSlider->setStorage(&(contents->editor->synth->storage));
+            surgeLikeSlider->setAlwaysUseModHandle(true);
             surgeLikeSlider->addListener(this);
             addAndMakeVisible(*surgeLikeSlider);
 
@@ -472,12 +473,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         int ptag = p->id;
         auto thisms = (modsources)d.source_id;
 
-        d.moddepth01 =
-            p->get_modulation_f01(synth->getModDepth(ptag, thisms, d.source_scene, d.source_index));
+        d.moddepth01 = synth->getModulation(ptag, thisms, d.source_scene, d.source_index);
         d.isBipolar = synth->isBipolarModulation(thisms);
         d.isMuted = synth->isModulationMuted(ptag, thisms, d.source_scene, d.source_index);
         p->get_display_of_modulation_depth(
-            pdisp, synth->getModDepth(ptag, thisms, d.source_scene, d.source_index),
+            pdisp, synth->getModulation(ptag, thisms, d.source_scene, d.source_index),
             synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(d.mss));
         d.moddepth = pdisp;
     }
@@ -652,6 +652,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         men.addSeparator();
         men.addItem("Clear Filter", [this]() {
             editor->modContents->clearFilters();
+            filterL->setText("Filter By:", juce::NotificationType::dontSendNotification);
             filterW->setLabels({"-"});
         });
         men.addSeparator();
@@ -659,13 +660,15 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         for (auto s : sources)
             men.addItem(s, [this, s]() {
                 editor->modContents->filterBySource(s);
-                filterW->setLabels({std::string("Source: ") + s});
+                filterL->setText("Filter By Source:", juce::NotificationType::dontSendNotification);
+                filterW->setLabels({s});
             });
         men.addSectionHeader("By Target");
         for (auto t : targets)
             men.addItem(t, [this, t]() {
                 editor->modContents->filterByTarget(t);
-                filterW->setLabels({std::string("Target: ") + t});
+                filterL->setText("Filter By Target:", juce::NotificationType::dontSendNotification);
+                filterW->setLabels({t});
             });
         men.showMenuAsync(juce::PopupMenu::Options());
     }
