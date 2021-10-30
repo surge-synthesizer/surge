@@ -19,6 +19,7 @@
 #include "SurgeStorage.h"
 #include "StringOps.h"
 #include "LuaSupport.h"
+#include <variant>
 
 namespace Surge
 {
@@ -63,6 +64,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs]);
 
 std::string createDebugViewOfModState(const EvaluatorState &s);
+
+/*
+ * Our test harness wants to send bits of lua to the modstate to get results out for
+ * regtests. Send a function query(modstate) which returns somethign leaf like
+ */
+std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,
+                                                                 const EvaluatorState &s);
 
 void createInitFormula(FormulaModulatorStorage *fs);
 
