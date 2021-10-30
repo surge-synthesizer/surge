@@ -249,6 +249,35 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         }
     }
 
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        /*
+         * If I choose based on horiz/vert it only works on trackpads, so just add
+         */
+        float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
+        if (delta == 0)
+            return;
+
+#if MAC
+        float speed = 1.2;
+#else
+        float speed = 0.42666;
+#endif
+        if (event.mods.isShiftDown())
+        {
+            speed = speed / 10;
+        }
+
+        // This is callibrated to give us reasonable speed on a 0-1 basis from the slider
+        // but in this widget '1' is the small motion so speed it up some
+        speed *= 30;
+
+        angle += delta * speed;
+        onDragDelta(delta * speed);
+        repaint();
+    }
+
     virtual void mouseUp(const juce::MouseEvent &e) override
     {
         if (!storage || !Surge::GUI::showCursor(storage))
@@ -381,8 +410,16 @@ class RadialScaleGraph : public juce::Component,
                     tk->storage = storage;
 
                     tk->setBounds(totalR.withX(totalR.getWidth() - h).withWidth(h).reduced(2));
-                    tk->onDragDelta = [this](float f) { onScaleRescaled(f); };
-                    tk->onDoubleClick = [this]() { onScaleRescaledAbsolute(1200.0); };
+                    tk->onDragDelta = [this](float f) {
+                        selfEditGuard++;
+                        onScaleRescaled(f);
+                        selfEditGuard--;
+                    };
+                    tk->onDoubleClick = [this]() {
+                        selfEditGuard++;
+                        onScaleRescaledAbsolute(1200.0);
+                        selfEditGuard--;
+                    };
                     if (skin)
                         tk->setSkin(skin, associatedBitmapStore);
                     toneInterior->addAndMakeVisible(*tk);
@@ -421,13 +458,17 @@ class RadialScaleGraph : public juce::Component,
                             idx = scale.count;
                         auto ct = scale.tones[idx - 1].cents;
                         ct += f;
+                        selfEditGuard++;
                         onToneChanged(idx - 1, ct);
+                        selfEditGuard--;
                     };
 
                     tk->onDoubleClick = [this, i]() {
                         auto ri = scale.tones[scale.count - 1].cents;
                         auto nc = ri / scale.count * i;
+                        selfEditGuard++;
                         onToneChanged(i - 1, nc);
+                        selfEditGuard--;
                     };
 
                     if (skin)
@@ -453,6 +494,16 @@ class RadialScaleGraph : public juce::Component,
         for (int i = 0; i < scale.count; ++i)
             notesOn[i] = false;
         setNotesOn(bitset);
+
+        if (selfEditGuard == 0)
+        {
+            // Someone dragged something onto me or somehing. Reset the tuning knobs
+            for (const auto &tk : toneKnobs)
+            {
+                tk->angle = 0;
+                tk->repaint();
+            }
+        }
     }
 
     bool centsShowing{true};
@@ -486,8 +537,10 @@ class RadialScaleGraph : public juce::Component,
     Tunings::Tuning tuning;
     Tunings::Scale scale;
     std::vector<juce::Rectangle<float>> screenHotSpots;
-    int hotSpotIndex = -1;
+    int hotSpotIndex = -1, wheelHotSpotIndex = -1;
     double dInterval, centsAtMouseDown, angleAtMouseDown, dIntervalAtMouseDown;
+
+    int selfEditGuard{0};
 
     juce::AffineTransform screenTransform, screenTransformInverted;
     std::function<void(int index, double)> onToneChanged = [](int, double) {};
@@ -577,9 +630,11 @@ class RadialScaleGraph : public juce::Component,
         toneList->repaint();
         repaint();
     }
-    virtual void mouseMove(const juce::MouseEvent &e) override;
-    virtual void mouseDown(const juce::MouseEvent &e) override;
-    virtual void mouseDrag(const juce::MouseEvent &e) override;
+    void mouseMove(const juce::MouseEvent &e) override;
+    void mouseDown(const juce::MouseEvent &e) override;
+    void mouseDrag(const juce::MouseEvent &e) override;
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override;
 };
 
 void RadialScaleGraph::paint(juce::Graphics &g)
@@ -1193,6 +1248,10 @@ void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
             hotSpotIndex = h;
         h++;
     }
+
+    if (hotSpotIndex >= 0)
+        wheelHotSpotIndex = hotSpotIndex;
+
     if (ohsi != hotSpotIndex)
         repaint();
 }
@@ -1230,19 +1289,57 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
         if (e.mods.isShiftDown())
             speed = speed * 0.1;
         dr = dr * speed;
+
         toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
         toneKnobs[hotSpotIndex + 1]->repaint();
+        selfEditGuard++;
         onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+        selfEditGuard--;
     }
 }
 
+void RadialScaleGraph::mouseWheelMove(const juce::MouseEvent &event,
+                                      const juce::MouseWheelDetails &wheel)
+{
+    if (wheelHotSpotIndex != -1)
+    {
+        float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
+        if (delta == 0)
+            return;
+
+#if MAC
+        float speed = 1.2;
+#else
+        float speed = 0.42666;
+#endif
+        if (event.mods.isShiftDown())
+        {
+            speed = speed / 10;
+        }
+
+        // This is callibrated to give us reasonable speed on a 0-1 basis from the slider
+        // but in this widget '1' is the small motion so speed it up some
+        auto dr = speed * delta;
+
+        toneKnobs[wheelHotSpotIndex + 1]->angle =
+            toneKnobs[wheelHotSpotIndex + 1]->angle + 100 * dr / dInterval;
+        toneKnobs[wheelHotSpotIndex + 1]->repaint();
+        auto newCents = scale.tones[wheelHotSpotIndex].cents + 100 * dr / dInterval;
+
+        selfEditGuard++;
+        onToneChanged(wheelHotSpotIndex, newCents);
+        selfEditGuard--;
+    }
+}
 void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
     for (int i = 0; i <= scale.count - 1; ++i)
     {
         if (&editor == toneEditors[i].get())
         {
+            selfEditGuard++;
             onToneStringChanged(i, editor.getText().toStdString());
+            selfEditGuard--;
         }
     }
 }
