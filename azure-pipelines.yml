@@ -69,7 +69,7 @@ jobs:
         linux-clang-juce-lv2:
           imageName: 'ubuntu-18.04'
           isLinux: True
-          aptGetExtras: "clang"
+          aptGetExtras: "clang-10"
           needsLV2: True
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
           cmakeTarget: "surge-xt_LV2"

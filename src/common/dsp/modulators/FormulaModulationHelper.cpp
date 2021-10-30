@@ -526,5 +526,44 @@ void createInitFormula(FormulaModulatorStorage *fs)
 end)FN");
     fs->interpreter = FormulaModulatorStorage::LUA;
 }
+
+std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,
+                                                                 const EvaluatorState &es)
+{
+    Surge::LuaSupport::SGLD guard("runOverModStateForTesting", es.L);
+
+    std::string emsg;
+    bool r0 = Surge::LuaSupport::parseStringDefiningFunction(es.L, query, "query", emsg);
+    if (!r0)
+    {
+        return false;
+    }
+
+    lua_getglobal(es.L, es.stateName);
+    if (!lua_istable(es.L, -1))
+    {
+        lua_pop(es.L, -1);
+        return false;
+    }
+
+    lua_pcall(es.L, 1, 1, 0);
+
+    if (lua_isnumber(es.L, -1))
+    {
+        auto res = lua_tonumber(es.L, -1);
+        lua_pop(es.L, -1);
+        return (float)res;
+    }
+
+    if (lua_isstring(es.L, -1))
+    {
+        auto res = lua_tostring(es.L, -1);
+        lua_pop(es.L, -1);
+        return res;
+    }
+    lua_pop(es.L, -1);
+    return false;
+}
+
 } // namespace Formula
 } // namespace Surge
