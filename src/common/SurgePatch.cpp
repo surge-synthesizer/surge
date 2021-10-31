@@ -579,6 +579,25 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         }
     }
 
+    // Set up the storages just in case
+    for (int s = 0; s < n_scenes; ++s)
+        for (int m = 0; m < n_lfos; ++m)
+        {
+            auto *ms = &(msegs[s][m]);
+            if (ms_lfo1 + m >= ms_slfo1 && ms_lfo1 + m <= ms_slfo6)
+            {
+                Surge::MSEG::createInitSceneMSEG(ms);
+            }
+            else
+            {
+                Surge::MSEG::createInitVoiceMSEG(ms);
+            }
+            Surge::MSEG::rebuildCache(ms);
+
+            auto *fs = &(formulamods[s][m]);
+            Surge::Formula::createInitFormula(fs);
+        }
+
 #if 0
    // DEBUG CODE WHICH WILL DIE
    std::map<std::string, int> idToParam;
