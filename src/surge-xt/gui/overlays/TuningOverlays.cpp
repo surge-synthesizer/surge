@@ -517,8 +517,8 @@ class RadialScaleGraph : public juce::Component,
                 t->setPasswordCharacter(centsShowing ? 0 : 0x2022);
             }
             showHideKnob->setLabels({centsShowing ? "Hide" : "Show"});
-            showHideKnob->repaint();
         }
+        repaint();
     }
     void onSkinChanged() override
     {
@@ -633,6 +633,7 @@ class RadialScaleGraph : public juce::Component,
     void mouseMove(const juce::MouseEvent &e) override;
     void mouseDown(const juce::MouseEvent &e) override;
     void mouseDrag(const juce::MouseEvent &e) override;
+    void mouseDoubleClick(const juce::MouseEvent &e) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
 };
@@ -673,10 +674,15 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     // So first things first - scan for range.
     double ETInterval = scale.tones.back().cents / scale.count;
     double dIntMin = 0, dIntMax = 0;
+    double pCents = 0;
+    std::vector<float> intervals; // between tone i and i-1
     for (int i = 0; i < scale.count; ++i)
     {
         auto t = scale.tones[i];
         auto c = t.cents;
+        auto in = c - pCents;
+        pCents = c;
+        intervals.push_back(in);
 
         auto intervalDistance = (c - ETInterval * (i + 1)) / ETInterval;
         dIntMax = std::max(intervalDistance, dIntMax);
@@ -713,6 +719,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     for (int i = 0; i < scale.count; ++i)
     {
         double frac = 1.0 * i / (scale.count);
+        double hfrac = 0.5 / scale.count;
         double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
         double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
@@ -722,6 +729,23 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             g.setColour(juce::Colour(110, 110, 120));
         g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
                    0.01);
+
+        if (centsShowing)
+        {
+            juce::Graphics::ScopedSaveState gs(g);
+            auto t = juce::AffineTransform()
+                         .scaled(-0.7, 0.7)
+                         .rotated(juce::MathConstants<double>::pi / 2)
+                         .translated(1.05, 0.0)
+                         .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
+
+            g.addTransform(t);
+            g.setColour(juce::Colours::white);
+            g.setFont(0.1);
+            auto msg = fmt::format("{:.2f}", intervals[i]);
+            g.drawText(msg, juce::Rectangle<float>(-0.1f, 0.f, 0.2f, 0.1f),
+                       juce::Justification::centred);
+        }
 
         g.saveState();
         g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
@@ -1294,6 +1318,19 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
         toneKnobs[hotSpotIndex + 1]->repaint();
         selfEditGuard++;
         onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+        selfEditGuard--;
+    }
+}
+
+void RadialScaleGraph::mouseDoubleClick(const juce::MouseEvent &e)
+{
+    if (hotSpotIndex != -1)
+    {
+        auto newCents = (hotSpotIndex + 1) * scale.tones[scale.count - 1].cents / scale.count;
+        toneKnobs[hotSpotIndex + 1]->angle = 0;
+        toneKnobs[hotSpotIndex + 1]->repaint();
+        selfEditGuard++;
+        onToneChanged(hotSpotIndex, newCents);
         selfEditGuard--;
     }
 }
