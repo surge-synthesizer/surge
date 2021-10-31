@@ -732,19 +732,47 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
         if (centsShowing)
         {
-            juce::Graphics::ScopedSaveState gs(g);
-            auto t = juce::AffineTransform()
-                         .scaled(-0.7, 0.7)
-                         .rotated(juce::MathConstants<double>::pi / 2)
-                         .translated(1.05, 0.0)
-                         .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
+            if (scale.count > 48)
+            {
+                // we just don't have room to draw the intervals
+            }
+            if (scale.count > 18)
+            {
+                // draw them sideways
+                juce::Graphics::ScopedSaveState gs(g);
+                auto t =
+                    juce::AffineTransform()
+                        .scaled(-0.7, 0.7)
+                        .rotated(juce::MathConstants<double>::pi)
+                        .translated(1.05, 0.0)
+                        .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
 
-            g.addTransform(t);
-            g.setColour(juce::Colours::white);
-            g.setFont(0.1);
-            auto msg = fmt::format("{:.2f}", intervals[i]);
-            g.drawText(msg, juce::Rectangle<float>(-0.1f, 0.f, 0.2f, 0.1f),
-                       juce::Justification::centred);
+                g.addTransform(t);
+                g.setColour(juce::Colours::white);
+                g.setFont(0.1);
+                auto msg = fmt::format("{:.2f}", intervals[i]);
+                auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
+                g.setColour(juce::Colours::white);
+                g.drawText(msg, tr, juce::Justification::centredLeft);
+            }
+            else
+            {
+                juce::Graphics::ScopedSaveState gs(g);
+                auto t =
+                    juce::AffineTransform()
+                        .scaled(-0.7, 0.7)
+                        .rotated(juce::MathConstants<double>::pi / 2)
+                        .translated(1.05, 0.0)
+                        .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
+
+                g.addTransform(t);
+                g.setColour(juce::Colours::white);
+                g.setFont(0.1);
+                auto msg = fmt::format("{:.2f}", intervals[i]);
+                auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+                g.setColour(juce::Colours::white);
+                g.drawText(msg, tr, juce::Justification::centred);
+            }
         }
 
         g.saveState();
