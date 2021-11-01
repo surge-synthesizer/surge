@@ -63,6 +63,14 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
         return drawBeats;
     }
 
+    int lfoid{-1};
+    void setLFOID(int l) // from 0
+    {
+        lfoid = l;
+    }
+
+    void populateLFOMS(LFOModulationSource *s);
+
     void setStepToDefault(const juce::MouseEvent &event);
     void setStepValue(const juce::MouseEvent &event);
 

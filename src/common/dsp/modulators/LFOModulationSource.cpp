@@ -882,6 +882,8 @@ void LFOModulationSource::process_block()
         formulastate.tempo = storage->temposyncratio * 120.0;
         formulastate.songpos = storage->songpos;
 
+        formulastate.isVoice = isVoice;
+
         float tmpout[Surge::Formula::max_formula_outputs] = {0, 0, 0, 0, 0, 0, 0, 0};
         Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate, tmpout);
 

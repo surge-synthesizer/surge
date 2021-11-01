@@ -152,6 +152,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
                          0, &patch.stepsequences[sc][n_lfos_voice + l],
                          &patch.msegs[sc][n_lfos_voice + l],
                          &patch.formulamods[sc][n_lfos_voice + l]);
+            ((LFOModulationSource *)scene.modsources[ms_slfo1 + l])->setIsVoice(false);
         }
 
         for (int k = 0; k < 128; ++k)

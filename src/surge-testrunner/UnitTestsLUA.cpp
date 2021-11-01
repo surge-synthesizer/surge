@@ -615,3 +615,65 @@ end
         REQUIRE(*ival == 10);
     }
 }
+
+TEST_CASE("Synth Sets IsVoice", "[formula]")
+{
+    SECTION("Run Formula on Voice and Scene")
+    {
+        auto surge = Surge::Test::surgeOnSine();
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+        surge->storage.getPatch().scene[0].lfo[6].shape.val.i = lt_formula;
+        auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModulation(pitchId, ms_slfo1, 0, 0, 0.1);
+
+        surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
+function init(modstate)
+   modstate["depth"] = 0.2
+   modstate["count"] = -1   -- There is an initial attack which will also run process once
+   return modstate
+end
+
+function process(modstate)
+    modstate["output"] = (modstate["phase"] * 2 - 1) * modstate["depth" ]
+    modstate["count"] = modstate["count"] + 1
+    return modstate
+end)FN");
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 100, 0);
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        REQUIRE(!surge->voices[0].empty());
+        auto ms = surge->voices[0].front()->modsources[ms_lfo1];
+        REQUIRE(ms);
+        auto lms = dynamic_cast<LFOModulationSource *>(ms);
+        REQUIRE(lms);
+
+        auto c = Surge::Formula::runOverModStateForTesting(R"FN(
+function query(modstate)
+   return modstate["is_voice"];
+end
+)FN",
+                                                           lms->formulastate);
+        auto ival = std::get_if<float>(&c);
+        REQUIRE(ival);
+        REQUIRE(*ival == 1);
+
+        auto sms = dynamic_cast<LFOModulationSource *>(
+            surge->storage.getPatch().scene[0].modsources[ms_slfo1]);
+        REQUIRE(sms);
+
+        auto cs = Surge::Formula::runOverModStateForTesting(R"FN(
+function query(modstate)
+   return modstate["is_voice"];
+end
+)FN",
+                                                            sms->formulastate);
+        auto sval = std::get_if<float>(&cs);
+        REQUIRE(sval);
+        REQUIRE(*sval == 0);
+    }
+}

@@ -4782,6 +4782,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setTag(p->id + start_paramtags);
             lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
             lfoDisplay->setModSource((modsources)p->ctrlgroup_entry);
+            lfoDisplay->setLFOID(lfo_id);
 
             auto msi = 0;
             if (gui_modsrc[p->ctrlgroup_entry])

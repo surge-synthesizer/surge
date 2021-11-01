@@ -198,6 +198,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                       &storage->getPatch().stepsequences[state.scene_id][i],
                       &storage->getPatch().msegs[state.scene_id][i],
                       &storage->getPatch().formulamods[state.scene_id][i]);
+        lfo[i].setIsVoice(true);
         modsources[ms_lfo1 + i] = &lfo[i];
     }
     modsources[ms_velocity] = &velocitySource;

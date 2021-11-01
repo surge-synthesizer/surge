@@ -167,6 +167,10 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         lfoDebugger = std::make_unique<LFOModulationSource>();
         lfoDebugger->assign(editor->storage, editor->lfos, tp, 0, nullptr, nullptr,
                             editor->formulastorage, true);
+        if (editor->lfo_id < 6)
+            lfoDebugger->setIsVoice(true);
+        else
+            lfoDebugger->setIsVoice(false);
         lfoDebugger->attack();
 
         stepLfoDebugger();
@@ -413,9 +417,9 @@ struct FormulaControlArea : public juce::Component,
 };
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *ls,
-                                               FormulaModulatorStorage *fs,
+                                               FormulaModulatorStorage *fs, int lid,
                                                Surge::GUI::Skin::ptr_t skin)
-    : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs)
+    : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs), lfo_id(lid)
 {
     mainEditor->setScrollbarThickness(8);
 

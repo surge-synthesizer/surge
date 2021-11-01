@@ -297,6 +297,12 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         lua_settable(s->L, -3);
     };
 
+    auto addb = [s](const char *q, bool b) {
+        lua_pushstring(s->L, q);
+        lua_pushboolean(s->L, b);
+        lua_settable(s->L, -3);
+    };
+
     auto addnil = [s](const char *q) {
         lua_pushstring(s->L, q);
         lua_pushnil(s->L);
@@ -315,6 +321,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     addn("deform", s->deform);
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
+
+    addb("is_voice", s->isVoice);
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
@@ -551,6 +559,13 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     if (lua_isnumber(es.L, -1))
     {
         auto res = lua_tonumber(es.L, -1);
+        lua_pop(es.L, -1);
+        return (float)res;
+    }
+
+    if (lua_isboolean(es.L, -1))
+    {
+        auto res = lua_toboolean(es.L, -1);
         lua_pop(es.L, -1);
         return (float)res;
     }
