@@ -42,6 +42,7 @@ struct EvaluatorState
     float tempo, songpos;
 
     bool retrigger_AEG, retrigger_FEG;
+    bool isVoice;
 
     std::string error;
     bool raisedError = false;

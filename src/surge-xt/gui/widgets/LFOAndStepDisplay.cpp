@@ -142,6 +142,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     LFOModulationSource *tlfo = new LFOModulationSource();
     LFOModulationSource *tFullWave = nullptr;
     tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
+    populateLFOMS(tlfo);
     tlfo->attack();
 
     LFOStorage deactivateStorage;
@@ -166,6 +167,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         tpd[lfodata->rate.param_id_in_scene].f = desiredRate;
         tFullWave = new LFOModulationSource();
         tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
+        populateLFOMS(tFullWave);
         tFullWave->attack();
     }
     else if (lfodata->magnitude.val.f != lfodata->magnitude.val_max.f && skin->getVersion() >= 2)
@@ -183,6 +185,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
             tpd[lfodata->magnitude.param_id_in_scene].f = 1.f;
             tFullWave = new LFOModulationSource();
             tFullWave->assign(storage, &deactivateStorage, tpd, 0, ss, ms, fs, true);
+            populateLFOMS(tFullWave);
             tFullWave->attack();
         }
     }
@@ -855,6 +858,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
     LFOModulationSource *tlfo = new LFOModulationSource();
     tlfo->assign(storage, lfodata, tp, 0, ss, ms, fs, true);
+    populateLFOMS(tlfo);
     tlfo->attack();
     auto boxo = rect_steps;
 
@@ -1880,6 +1884,14 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                         });
 
     contextMenu.showMenuAsync(juce::PopupMenu::Options());
+}
+
+void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
+{
+    if (lfoid < 6)
+        s->setIsVoice(true);
+    else
+        s->setIsVoice(false);
 }
 
 } // namespace Widgets

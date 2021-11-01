@@ -224,7 +224,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
             this, &(this->synth->storage),
-            &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], fs, currentSkin);
+            &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], fs, lfo_id, currentSkin);
         pt->setSkin(currentSkin, bitmapStore);
 
         std::string title = modsource_names[modsource_editor[current_scene]];

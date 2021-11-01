@@ -61,6 +61,9 @@ class LFOModulationSource : public ModulationSource
         output_multi[which] = f;
     }
 
+    bool isVoice{false};
+    void setIsVoice(bool b) { isVoice = b; }
+
     virtual const char *get_title() override { return "LFO"; }
     virtual int get_type() override { return mst_lfo; }
     virtual bool is_bipolar() override { return true; }
