@@ -199,6 +199,11 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                       &storage->getPatch().msegs[state.scene_id][i],
                       &storage->getPatch().formulamods[state.scene_id][i]);
         lfo[i].setIsVoice(true);
+        if (scene->lfo[i].shape.val.i == lt_formula)
+        {
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch());
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
+        }
         modsources[ms_lfo1 + i] = &lfo[i];
     }
     modsources[ms_velocity] = &velocitySource;
@@ -563,9 +568,15 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     // Always process LFO1 so the gate retrigger always work
     lfo[0].process_block();
 
-    for (int i = 1; i < 6; i++)
+    for (int i = 0; i < 6; i++)
     {
-        if (scene->modsource_doprocess[ms_lfo1 + i])
+        if (scene->lfo[i].shape.val.i == lt_formula)
+        {
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch());
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
+        }
+
+        if (i != 0 && scene->modsource_doprocess[ms_lfo1 + i])
             lfo[i].process_block();
     }
 

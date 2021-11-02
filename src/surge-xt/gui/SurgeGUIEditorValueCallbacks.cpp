@@ -2484,6 +2484,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                  .modsources[t])
                 ->set_target01(control->getValue(), false);
             synth->getParent()->surgeMacroUpdated(t - ms_ctrl1, control->getValue());
+
+            lfoDisplay->repaint();
             return;
         }
         else
@@ -2613,6 +2615,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 }
             }
         }
+
         return;
     }
 

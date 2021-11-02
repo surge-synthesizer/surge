@@ -553,6 +553,15 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     {
         for (int l = 0; l < n_lfos_scene; l++)
         {
+            if (storage.getPatch().scene[scene].lfo[n_lfos_voice + l].shape.val.i == lt_formula)
+            {
+                auto lms = dynamic_cast<LFOModulationSource *>(
+                    storage.getPatch().scene[scene].modsources[ms_slfo1 + l]);
+                if (lms)
+                {
+                    Surge::Formula::setupEvaluatorStateFrom(lms->formulastate, storage.getPatch());
+                }
+            }
             storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
         }
     }
@@ -3508,7 +3517,19 @@ void SurgeSynthesizer::processControl()
             }
 
             for (int i = 0; i < n_lfos_scene; i++)
+            {
+                if (storage.getPatch().scene[s].lfo[n_lfos_voice + i].shape.val.i == lt_formula)
+                {
+                    auto lms = dynamic_cast<LFOModulationSource *>(
+                        storage.getPatch().scene[s].modsources[ms_slfo1 + i]);
+                    if (lms)
+                    {
+                        Surge::Formula::setupEvaluatorStateFrom(lms->formulastate,
+                                                                storage.getPatch());
+                    }
+                }
                 storage.getPatch().scene[s].modsources[ms_slfo1 + i]->process_block();
+            }
         }
     }
 

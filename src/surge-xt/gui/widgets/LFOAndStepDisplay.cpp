@@ -1892,6 +1892,11 @@ void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
         s->setIsVoice(true);
     else
         s->setIsVoice(false);
+
+    if (s->isVoice)
+        s->formulastate.velocity = 100;
+
+    Surge::Formula::setupEvaluatorStateFrom(s->formulastate, storage->getPatch());
 }
 
 } // namespace Widgets

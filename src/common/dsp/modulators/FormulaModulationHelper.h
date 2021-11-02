@@ -21,6 +21,8 @@
 #include "LuaSupport.h"
 #include <variant>
 
+class SurgeVoice;
+
 namespace Surge
 {
 namespace Formula
@@ -37,12 +39,21 @@ struct EvaluatorState
     bool isvalid = false;
     bool useEnvelope = true;
 
+    bool subVoice{false}, subLfoParams{true}, subLfoEnvelope{false}, subTiming{true};
+    bool subMacros[n_customcontrollers], subAnyMacro{false};
+
     float del, a, h, dec, s, r;
     float rate, amp, phase, deform;
     float tempo, songpos;
 
     bool retrigger_AEG, retrigger_FEG;
+
+    // voice features
     bool isVoice;
+    int key{60}, channel{0}, velocity{0};
+
+    // patch features
+    float macrovalues[n_customcontrollers];
 
     std::string error;
     bool raisedError = false;
@@ -61,6 +72,9 @@ bool initEvaluatorState(EvaluatorState &s);
 bool cleanEvaluatorState(EvaluatorState &s);
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display);
 
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p);
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
+
 void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs]);
 
@@ -72,6 +86,9 @@ std::string createDebugViewOfModState(const EvaluatorState &s);
  */
 std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,
                                                                  const EvaluatorState &s);
+
+std::variant<float, std::string, bool> extractModStateKeyForTesting(const std::string &key,
+                                                                    const EvaluatorState &s);
 
 void createInitFormula(FormulaModulatorStorage *fs);
 

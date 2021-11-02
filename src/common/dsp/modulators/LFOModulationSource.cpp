@@ -374,7 +374,7 @@ void LFOModulationSource::release()
         env_releasestart = env_val;
         env_phase = 0;
     }
-    else if (lfo->shape.val.i == lt_mseg)
+    else if (lfo->shape.val.i == lt_mseg || lfo->shape.val.i == lt_formula)
     {
         env_state = lfoeg_msegrelease;
     }

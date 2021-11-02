@@ -604,21 +604,16 @@ end)FN");
         auto lms = dynamic_cast<LFOModulationSource *>(ms);
         REQUIRE(lms);
 
-        auto c = Surge::Formula::runOverModStateForTesting(R"FN(
-function query(modstate)
-   return modstate["count"];
-end
-)FN",
-                                                           lms->formulastate);
+        auto c = Surge::Formula::extractModStateKeyForTesting("count", lms->formulastate);
         auto ival = std::get_if<float>(&c);
         REQUIRE(ival);
         REQUIRE(*ival == 10);
     }
 }
 
-TEST_CASE("Synth Sets IsVoice", "[formula]")
+TEST_CASE("Voice Features and Flags", "[formula]")
 {
-    SECTION("Run Formula on Voice and Scene")
+    SECTION("IsVoice is set correctly")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -629,14 +624,12 @@ TEST_CASE("Synth Sets IsVoice", "[formula]")
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)
-   modstate["depth"] = 0.2
-   modstate["count"] = -1   -- There is an initial attack which will also run process once
+   modstate["subscriptions"]["voice"] = true
    return modstate
 end
 
 function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1) * modstate["depth" ]
-    modstate["count"] = modstate["count"] + 1
+    modstate["output"] = (modstate["phase"] * 2 - 1)
     return modstate
 end)FN");
         for (int i = 0; i < 10; ++i)
@@ -652,12 +645,7 @@ end)FN");
         auto lms = dynamic_cast<LFOModulationSource *>(ms);
         REQUIRE(lms);
 
-        auto c = Surge::Formula::runOverModStateForTesting(R"FN(
-function query(modstate)
-   return modstate["is_voice"];
-end
-)FN",
-                                                           lms->formulastate);
+        auto c = Surge::Formula::extractModStateKeyForTesting("is_voice", lms->formulastate);
         auto ival = std::get_if<float>(&c);
         REQUIRE(ival);
         REQUIRE(*ival == 1);
@@ -666,14 +654,88 @@ end
             surge->storage.getPatch().scene[0].modsources[ms_slfo1]);
         REQUIRE(sms);
 
-        auto cs = Surge::Formula::runOverModStateForTesting(R"FN(
-function query(modstate)
-   return modstate["is_voice"];
-end
-)FN",
-                                                            sms->formulastate);
+        auto cs = Surge::Formula::extractModStateKeyForTesting("is_voice", sms->formulastate);
         auto sval = std::get_if<float>(&cs);
-        REQUIRE(sval);
-        REQUIRE(*sval == 0);
+        REQUIRE(!sval); // a change - we don't even set is_voice if not voice subscribed
     }
+
+    SECTION("Gate and Channel")
+    {
+        auto surge = Surge::Test::surgeOnSine();
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+        surge->storage.getPatch().scene[0].lfo[6].shape.val.i = lt_formula;
+        surge->storage.getPatch().scene[0].adsr[0].r.val.f = 2;
+        auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModulation(pitchId, ms_slfo1, 0, 0, 0.1);
+
+        surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
+function init(modstate)
+   modstate["subscriptions"]["voice"] = true
+   return modstate
+end
+
+function process(modstate)
+    modstate["output"] = (modstate["phase"] * 2 - 1)
+    return modstate
+end)FN");
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        surge->playNote(0, 87, 92, 0);
+        for (int i = 0; i < 20; ++i)
+            surge->process();
+
+        REQUIRE(!surge->voices[0].empty());
+        auto ms = surge->voices[0].front()->modsources[ms_lfo1];
+        REQUIRE(ms);
+        auto lms = dynamic_cast<LFOModulationSource *>(ms);
+        REQUIRE(lms);
+        auto sms = dynamic_cast<LFOModulationSource *>(
+            surge->storage.getPatch().scene[0].modsources[ms_slfo1]);
+        REQUIRE(sms);
+
+        auto check = [](const std::string &key, float val, LFOModulationSource *ms) {
+            auto c = Surge::Formula::extractModStateKeyForTesting(key, ms->formulastate);
+            auto ival = std::get_if<float>(&c);
+            INFO("Confirming that " << key << " is " << val);
+            REQUIRE(ival);
+            REQUIRE(*ival == val);
+        };
+        auto checkMissing = [](const std::string &key, LFOModulationSource *ms) {
+            auto c = Surge::Formula::extractModStateKeyForTesting(key, ms->formulastate);
+            auto ival = std::get_if<float>(&c);
+            INFO("Confirming that " << key << " is missing");
+            REQUIRE(!ival);
+        };
+        check("is_voice", 1, lms);
+        checkMissing("is_voice", sms);
+        check("released", 0, lms);
+        check("key", 87, lms);
+        checkMissing("key", sms);
+        check("channel", 0, lms);
+        checkMissing("channel", sms);
+        check("velocity", 92, lms);
+        checkMissing("velocity", sms);
+
+        surge->releaseNote(0, 87, 100);
+        for (int i = 0; i < 20; ++i)
+            surge->process();
+
+        check("is_voice", 1, lms);
+        checkMissing("is_voice", sms);
+        check("released", 1, lms);
+        check("key", 87, lms);
+    }
+}
+
+TEST_CASE("Macros Are Available", "[formula]")
+{
+    auto surge = Surge::Test::surgeOnSine();
+    surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+    surge->storage.getPatch().scene[0].adsr[0].r.val.f = 2;
+    auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+    surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+    REQUIRE(1);
 }
