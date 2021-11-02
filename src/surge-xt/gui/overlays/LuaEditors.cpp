@@ -134,12 +134,14 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
     ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
     {
-        outputDump = std::make_unique<juce::TextEditor>("Output");
-        outputDump->setMultiLine(true, false);
-        outputDump->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
-        outputDump->setCaretVisible(false);
-        outputDump->setReadOnly(true);
-        addAndMakeVisible(*outputDump);
+        debugTableDataModel = std::make_unique<DebugDataModel>();
+        debugTable = std::make_unique<juce::TableListBox>("Debug", debugTableDataModel.get());
+        debugTable->getHeader().addColumn("key", 1, 50);
+        debugTable->getHeader().addColumn("value", 2, 50);
+        debugTable->setHeaderHeight(0);
+        debugTable->getHeader().setVisible(false);
+        debugTable->setRowHeight(14);
+        addAndMakeVisible(*debugTable);
     }
 
     FormulaModulatorEditor *editor{nullptr};
@@ -184,15 +186,70 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
                                                 editor->storage->getPatch());
         lfoDebugger->process_block();
 
-        auto st = Surge::Formula::createDebugViewOfModState(lfoDebugger->formulastate);
+        auto st = Surge::Formula::createDebugDataOfModState(lfoDebugger->formulastate);
 
-        if (outputDump)
+        if (debugTableDataModel && debugTable)
         {
-            outputDump->setText(st, juce::NotificationType::dontSendNotification);
+            debugTableDataModel->setRows(st);
+            debugTable->updateContent();
+            debugTable->repaint();
         }
     }
 
-    std::unique_ptr<juce::TextEditor> outputDump;
+    std::unique_ptr<juce::TableListBox> debugTable;
+    struct DebugDataModel : public juce::TableListBoxModel
+    {
+        std::vector<Surge::Formula::DebugRow> rows;
+        void setRows(const std::vector<Surge::Formula::DebugRow> &r) { rows = r; }
+        int getNumRows() override { return rows.size(); }
+        void paintRowBackground(juce::Graphics &g, int rowNumber, int width, int height,
+                                bool rowIsSelected) override
+        {
+            if (rowNumber % 2 == 0)
+                g.fillAll(juce::Colour(0xFF404040));
+            else
+                g.fillAll(juce::Colour(0xFF151515));
+        }
+        void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
+                       bool rowIsSelected) override
+        {
+            auto r = rows[rowNumber];
+            auto b = juce::Rectangle<int>(0, 0, w, h);
+            g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+            if (r.isInternal)
+                g.setColour(juce::Colours::lightgrey);
+            else
+                g.setColour(juce::Colours::white);
+
+            if (columnId == 1)
+            {
+                b = b.withTrimmedLeft(r.depth * 10);
+                g.drawText(r.label, b, juce::Justification::centredLeft);
+            }
+            else if (columnId == 2)
+            {
+                if (!r.hasValue)
+                {
+                }
+                else if (auto fv = std::get_if<float>(&r.value))
+                {
+                    g.drawText(std::to_string(*fv), b, juce::Justification::centredRight);
+                }
+                else if (auto sv = std::get_if<std::string>(&r.value))
+                {
+                    g.drawText(*sv, b, juce::Justification::centredRight);
+                }
+            }
+            else
+            {
+                g.setColour(juce::Colours::red);
+                g.fillRect(b);
+            }
+        }
+    };
+
+    std::unique_ptr<DebugDataModel> debugTableDataModel;
+
     std::unique_ptr<juce::Label> dPhaseLabel;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
@@ -210,7 +267,10 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         {
             int margin = 4;
 
-            outputDump->setBounds(getLocalBounds().reduced(margin));
+            debugTable->setBounds(getLocalBounds().reduced(margin));
+            auto w = getLocalBounds().reduced(margin).getWidth() - 10;
+            debugTable->getHeader().setColumnWidth(1, w / 2);
+            debugTable->getHeader().setColumnWidth(2, w / 2);
         }
     }
 
