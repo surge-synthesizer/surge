@@ -171,6 +171,8 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             lfoDebugger->setIsVoice(true);
         else
             lfoDebugger->setIsVoice(false);
+        if (lfoDebugger->isVoice)
+            lfoDebugger->formulastate.velocity = 100;
         lfoDebugger->attack();
 
         stepLfoDebugger();
@@ -178,6 +180,8 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
     void stepLfoDebugger()
     {
+        Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
+                                                editor->storage->getPatch());
         lfoDebugger->process_block();
 
         auto st = Surge::Formula::createDebugViewOfModState(lfoDebugger->formulastate);
@@ -365,6 +369,10 @@ struct FormulaControlArea : public juce::Component,
         case tag_code_apply:
         {
             overlay->applyCode();
+            if (overlay->debugPanel->isOpen)
+            {
+                overlay->debugPanel->initializeLfoDebugger();
+            }
         }
         break;
         case tag_debugger_show:

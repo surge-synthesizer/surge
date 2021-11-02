@@ -15,8 +15,10 @@
 
 #include "FormulaModulationHelper.h"
 #include "LuaSupport.h"
+#include "SurgeVoice.h"
 #include <thread>
 #include <functional>
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -158,18 +160,107 @@ end
         // Create my state object each time
         lua_getglobal(s.L, s.funcNameInit);
         lua_createtable(s.L, 0, 10);
+
+        // add subscription hooks
+        lua_pushstring(s.L, "subscriptions");
+        lua_createtable(s.L, 0, 5);
+        lua_pushstring(s.L, "macros");
+        lua_createtable(s.L, n_customcontrollers, 0);
+        for (int i = 0; i < n_customcontrollers; ++i)
+        {
+            lua_pushnumber(s.L, i + 1);
+            lua_pushboolean(s.L, false);
+            lua_settable(s.L, -3);
+        }
+        lua_settable(s.L, -3);
+
+        lua_pushstring(s.L, "lfo_envelope");
+        lua_pushboolean(s.L, false);
+        lua_settable(s.L, -3);
+
+        lua_pushstring(s.L, "lfo_params");
+        lua_pushboolean(s.L, true);
+        lua_settable(s.L, -3);
+
+        lua_pushstring(s.L, "voice");
+        lua_pushboolean(s.L, false);
+        lua_settable(s.L, -3);
+
+        lua_pushstring(s.L, "timing");
+        lua_pushboolean(s.L, true);
+        lua_settable(s.L, -3);
+
+        lua_settable(s.L, -3);
+
         if (lua_isfunction(s.L, -2))
         {
             lua_pcall(s.L, 1, 1, 0);
             if (!lua_istable(s.L, -1))
             {
                 s.isvalid = false;
+                std::cout << "Init function did not return a table" << std::endl;
                 // s.adderror( "Init function did not return a table" );
             }
         }
+
         lua_setglobal(s.L,
                       s.stateName); // FIXME - we have to clean this up when evaluat is done
-        lua_pop(s.L, -1);
+
+        lua_pop(s.L, -1); // the modstate which is nouw bound to the statename
+
+        {
+            auto sub = Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions", s.L);
+
+            lua_getglobal(s.L, s.stateName);
+            if (!lua_istable(s.L, -1))
+            {
+                lua_pop(s.L, -1);
+                std::cout << "Not a table" << std::endl;
+            }
+            else
+            {
+                // now lets read off those subscriptions
+                lua_pushstring(s.L, "subscriptions");
+                lua_gettable(s.L, -2);
+
+                auto gv = [&s](const char *k) -> bool {
+                    auto gv =
+                        Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions::gv", s.L);
+
+                    auto res = false;
+                    lua_pushstring(s.L, k);
+                    lua_gettable(s.L, -2);
+                    if (lua_isboolean(s.L, -1))
+                    {
+                        res = lua_toboolean(s.L, -1);
+                    }
+                    lua_pop(s.L, 1);
+                    return res;
+                };
+                s.subLfoEnvelope = gv("lfo_envelope");
+                s.subLfoParams = gv("lfo_params");
+                s.subVoice = gv("voice");
+                s.subTiming = gv("timing");
+
+                lua_pushstring(s.L, "macros");
+                lua_gettable(s.L, -2);
+                for (int i = 0; i < n_customcontrollers; ++i)
+                {
+                    lua_pushnumber(s.L, i + 1);
+                    lua_gettable(s.L, -2);
+                    bool res = false;
+                    if (lua_isboolean(s.L, -1))
+                        res = lua_toboolean(s.L, -1);
+                    lua_pop(s.L, 1);
+                    s.subAnyMacro = s.subAnyMacro | res;
+                    s.subMacros[i] = res;
+                }
+                lua_pop(s.L, 1);
+
+                lua_pop(s.L, 1); // the subscriptions
+                lua_pop(s.L, 1); // the modstate
+            }
+        }
     }
 
     if (is_display)
@@ -310,22 +401,57 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     };
 
     addn("phase", phaseFracPart);
-    addn("delay", s->del);
-    addn("attack", s->a);
-    addn("hold", s->h);
-    addn("sustain", s->s);
-    addn("release", s->r);
-    addn("rate", s->rate);
-    addn("amplitude", s->amp);
-    addn("startphase", s->phase);
-    addn("deform", s->deform);
-    addn("tempo", s->tempo);
-    addn("songpos", s->songpos);
 
-    addb("is_voice", s->isVoice);
+    if (s->subLfoEnvelope)
+    {
+        addn("delay", s->del);
+        addn("attack", s->a);
+        addn("hold", s->h);
+        addn("sustain", s->s);
+        addn("release", s->r);
+    }
+    if (s->subLfoParams)
+    {
+        addn("rate", s->rate);
+        addn("amplitude", s->amp);
+        addn("startphase", s->phase);
+        addn("deform", s->deform);
+    }
+
+    if (s->subTiming)
+    {
+        addn("tempo", s->tempo);
+        addn("songpos", s->songpos);
+        addb("released", s->released);
+    }
+
+    if (s->subVoice && s->isVoice)
+    {
+        addb("is_voice", s->isVoice);
+        addn("key", s->key);
+        addn("velocity", s->velocity);
+        addn("channel", s->channel);
+    }
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
+
+    if (s->subAnyMacro)
+    {
+        // load the macros
+        lua_pushstring(s->L, "macros");
+        lua_createtable(s->L, n_customcontrollers, 0);
+        for (int i = 0; i < n_customcontrollers; ++i)
+        {
+            if (s->subMacros[i])
+            {
+                lua_pushinteger(s->L, i + 1);
+                lua_pushnumber(s->L, s->macrovalues[i]);
+                lua_settable(s->L, -3);
+            }
+        }
+        lua_settable(s->L, -3);
+    }
 
     auto lres = lua_pcall(s->L, 1, 1, 0);
     // stack is now just the result
@@ -535,6 +661,25 @@ end)FN");
     fs->interpreter = FormulaModulatorStorage::LUA;
 }
 
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p)
+{
+    for (int i = 0; i < n_customcontrollers; ++i)
+    {
+        auto ms = p.scene[0].modsources[ms_ctrl1 + i];
+        auto cms = dynamic_cast<ControllerModulationSource *>(ms);
+        if (cms)
+        {
+            s.macrovalues[i] = cms->get_output(0);
+        }
+    }
+}
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
+{
+    s.key = v->state.key;
+    s.channel = v->state.channel;
+    s.velocity = v->state.velocity;
+}
+
 std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,
                                                                  const EvaluatorState &es)
 {
@@ -578,6 +723,18 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     }
     lua_pop(es.L, -1);
     return false;
+}
+
+std::variant<float, std::string, bool> extractModStateKeyForTesting(const std::string &key,
+                                                                    const EvaluatorState &s)
+{
+    auto query = fmt::format(R"FN(
+function query(modstate)
+   return modstate["{}"];
+end
+)FN",
+                             key);
+    return runOverModStateForTesting(query, s);
 }
 
 } // namespace Formula
