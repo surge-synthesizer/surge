@@ -345,6 +345,7 @@ void PatchSelector::showClassicMenu(bool single_category)
     int last_category = current_category;
     auto patch_cat_size = storage->patch_category.size();
 
+    int tutorialCat = -1;
     if (single_category)
     {
         /*
@@ -425,7 +426,15 @@ void PatchSelector::showClassicMenu(bool single_category)
             // remap index to the corresponding category in alphabetical order.
             int c = storage->patchCategoryOrdering[i];
 
-            populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
+            if (storage->patch_category[c].isFactory &&
+                storage->patch_category[c].name == "Tutorials")
+            {
+                tutorialCat = c;
+            }
+            else
+            {
+                populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
+            }
         }
         if (!addedFavorites)
         {
@@ -564,6 +573,10 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
+    if (tutorialCat)
+    {
+        populatePatchMenuForCategory(tutorialCat, contextMenu, single_category, main_e, true);
+    }
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     if (sge)
