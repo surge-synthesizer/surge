@@ -25,6 +25,8 @@ namespace Surge
 namespace Formula
 {
 
+std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
+
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display)
 {
     static lua_State *audioState = nullptr, *displayState = nullptr;
@@ -114,6 +116,11 @@ end
         lua_getglobal(s.L, s.funcName);
         s.isvalid = lua_isfunction(s.L, -1);
         lua_pop(s.L, 1);
+
+        if (knownBadFunctions.find(s.funcName) != knownBadFunctions.end())
+        {
+            s.isvalid = false;
+        }
     }
     else
     {
@@ -146,8 +153,9 @@ end
         }
         else
         {
-            s.adderror(emsg);
-            lua_pop(s.L, 1);
+            s.adderror("Unable to deteremine 'process' or 'init' function : " + emsg);
+            lua_pop(s.L, 1); // process
+            lua_pop(s.L, 1); // init
         }
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
@@ -514,8 +522,11 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         }
         else
         {
-            s->adderror("You must define the  'output' field in the returned table as a number or "
-                        "float array");
+            if (knownBadFunctions.find(s->funcName) != knownBadFunctions.end())
+                s->adderror(
+                    "You must define the 'output' field in the returned table as a number or "
+                    "float array");
+            knownBadFunctions.insert(s->funcName);
             s->isvalid = false;
         };
         // pop the result and the function
@@ -678,12 +689,17 @@ std::string createDebugViewOfModState(const EvaluatorState &es)
 
 void createInitFormula(FormulaModulatorStorage *fs)
 {
-    fs->setFormula(R"FN(function process(modstate)
-    -- this is a short lua script for a modulator. it must define
-    -- a function called 'process'. input will contain keys 'phase' 'intphase',
-    -- 'deform'. You must set the output value and return it. See the manual for more.
+    fs->setFormula(R"FN(function init(modstate)
+    -- this function is called at the creation of each LFO (so voice on etc...)
+    -- and allows you to adjust the modstate with pre-calculated values
+    return modstate
+end
 
-    -- simple saw
+function process(modstate)
+    -- this is the per-block'process'. input will contain keys 'phase' 'intphase',
+    -- 'deform'. You must set the output value and return it. See the manual or
+    -- tutorials for more
+
     modstate["output"] = modstate["phase"] * 2 - 1
     return modstate
 end)FN");
