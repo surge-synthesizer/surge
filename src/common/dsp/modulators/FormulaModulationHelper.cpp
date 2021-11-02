@@ -553,20 +553,20 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     }
 }
 
-std::string createDebugViewOfModState(const EvaluatorState &es)
+std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
 {
+    std::vector<DebugRow> rows;
     Surge::LuaSupport::SGLD guard("debugViewGuard", es.L);
     lua_getglobal(es.L, es.stateName);
     if (!lua_istable(es.L, -1))
     {
         lua_pop(es.L, -1);
-        return "NOT A TABLE";
+        rows.emplace_back(0, "Error", "Not a Table");
+        return rows;
     }
-
-    std::ostringstream oss;
-    std::function<void(const std::string &)> rec;
-    rec = [&oss, &es, &rec](const std::string &pfx) {
-        Surge::LuaSupport::SGLD guardR("rec[" + pfx + "]", es.L);
+    std::function<void(const int, bool)> rec;
+    rec = [&rows, &es, &rec](const int depth, bool internal) {
+        Surge::LuaSupport::SGLD guardR("rec[" + std::to_string(depth) + "]", es.L);
 
         if (lua_istable(es.L, -1))
         {
@@ -590,60 +590,89 @@ std::string createDebugViewOfModState(const EvaluatorState &es)
             }
 
             if (!skeys.empty())
-                std::sort(skeys.begin(), skeys.end());
+                std::sort(skeys.begin(), skeys.end(), [](const auto &a, const auto &b) {
+                    if (a == "subscriptions")
+                        return false;
+                    if (b == "subscriptions")
+                        return true;
+                    return a < b;
+                });
             if (!ikeys.empty())
                 std::sort(ikeys.begin(), ikeys.end());
 
-            auto guts = [&]() {
+            auto guts = [&](const std::string &lab) {
                 if (lua_isnumber(es.L, -1))
                 {
-                    oss << lua_tonumber(es.L, -1) << "\n";
+                    rows.emplace_back(depth, lab, lua_tonumber(es.L, -1));
                 }
                 else if (lua_isstring(es.L, -1))
                 {
-                    oss << lua_tostring(es.L, -1) << "\n";
+                    rows.emplace_back(depth, lab, lua_tostring(es.L, -1));
                 }
                 else if (lua_isnil(es.L, -1))
                 {
-                    oss << "(nil)"
-                        << "\n";
+                    rows.emplace_back(depth, lab, "(nil)");
                 }
                 else if (lua_isboolean(es.L, -1))
                 {
-                    oss << (lua_toboolean(es.L, -1) ? "true" : "false") << "\n";
+                    rows.emplace_back(depth, lab, (lua_toboolean(es.L, -1) ? "true" : "false"));
                 }
                 else if (lua_istable(es.L, -1))
                 {
-                    oss << "\n";
-                    rec(pfx + "  ");
+                    rows.emplace_back(depth, lab);
+                    internal = internal || (lab == "subscriptions");
+                    rows.back().isInternal = internal;
+                    rec(depth + 1, internal);
                 }
                 else
                 {
-                    oss << "(unknown)\n";
+                    rows.emplace_back(depth, lab, "(unknown)");
                 }
+                rows.back().isInternal = internal;
             };
             for (auto k : ikeys)
             {
-                oss << pfx << "." << k << ": ";
+                std::ostringstream oss;
+                oss << "." << k;
                 lua_pushinteger(es.L, k);
                 lua_gettable(es.L, -2);
-                guts();
+                guts(oss.str());
                 lua_pop(es.L, 1);
             }
 
             for (auto s : skeys)
             {
-                oss << pfx << s << ": ";
                 lua_pushstring(es.L, s.c_str());
                 lua_gettable(es.L, -2);
-                guts();
+                guts(s);
                 lua_pop(es.L, 1);
             }
         }
     };
 
-    rec("");
+    rec(0, false);
     lua_pop(es.L, -1);
+    return rows;
+}
+std::string createDebugViewOfModState(const EvaluatorState &es)
+{
+    auto r = createDebugDataOfModState(es);
+    std::ostringstream oss;
+    for (const auto d : r)
+    {
+        oss << std::string(d.depth, ' ') << std::string(d.depth, ' ') << d.label << ": ";
+        if (!d.hasValue)
+        {
+        }
+        else if (auto fv = std::get_if<float>(&d.value))
+            oss << *fv;
+        else if (auto sv = std::get_if<std::string>(&d.value))
+            oss << *sv;
+        else
+            oss << "(error)";
+
+        oss << "\n";
+    }
     return oss.str();
 }
 

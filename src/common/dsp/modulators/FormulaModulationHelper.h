@@ -78,6 +78,24 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
 void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs]);
 
+struct DebugRow
+{
+    explicit DebugRow(int r, const std::string &s, const std::string &v)
+        : depth(r), label(s), value(v)
+    {
+    }
+
+    explicit DebugRow(int r, const std::string &s, const float f) : depth(r), label(s), value(f) {}
+
+    explicit DebugRow(int r, const std::string &s) : depth(r), label(s), hasValue(false) {}
+
+    int depth;
+    std::string label;
+    bool hasValue{true};
+    bool isInternal{false};
+    std::variant<float, std::string> value;
+};
+std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s);
 std::string createDebugViewOfModState(const EvaluatorState &s);
 
 /*
