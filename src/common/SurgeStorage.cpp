@@ -286,8 +286,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         {
             datapathOverriden = true;
             datapath = buildOverrideDataPath;
-            std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
-            std::cout << "         Only use this in build pipelines please!" << std::endl;
+            static bool warnOver = false;
+            if (!warnOver)
+            {
+                std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
+                std::cout << "         Only use this in build pipelines please!" << std::endl;
+                warnOver = true;
+            }
         }
     }
     else

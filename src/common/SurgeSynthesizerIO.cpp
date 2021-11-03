@@ -421,6 +421,14 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 
     storage.memoryPools->resetAllPools(&storage);
 
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        for (int m = 0; m < n_lfos; ++m)
+        {
+            Surge::Formula::removeFunctionsAssociatedWith(&(storage.getPatch().formulamods[sc][m]));
+        }
+    }
+
     halt_engine = false;
     patch_loaded = true;
     refresh_editor = true;

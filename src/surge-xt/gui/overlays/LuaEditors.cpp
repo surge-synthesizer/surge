@@ -219,18 +219,20 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     }
 
     std::unique_ptr<juce::TableListBox> debugTable;
-    struct DebugDataModel : public juce::TableListBoxModel
+    struct DebugDataModel : public juce::TableListBoxModel,
+                            public Surge::GUI::SkinConsumingComponent
     {
         std::vector<Surge::Formula::DebugRow> rows;
         void setRows(const std::vector<Surge::Formula::DebugRow> &r) { rows = r; }
         int getNumRows() override { return rows.size(); }
+
         void paintRowBackground(juce::Graphics &g, int rowNumber, int width, int height,
                                 bool rowIsSelected) override
         {
             if (rowNumber % 2 == 0)
-                g.fillAll(juce::Colour(0xFF404040));
+                g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::LightRow));
             else
-                g.fillAll(juce::Colour(0xFF151515));
+                g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::Row));
         }
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
@@ -239,9 +241,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             auto b = juce::Rectangle<int>(0, 0, w, h);
             g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
             if (r.isInternal)
-                g.setColour(juce::Colours::lightgrey);
+                g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::InternalText));
             else
-                g.setColour(juce::Colours::white);
+                g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::Text));
 
             if (columnId == 1)
             {
@@ -275,6 +277,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     std::unique_ptr<juce::Label> dPhaseLabel;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
+    void onSkinChanged() override { debugTableDataModel->setSkin(skin, associatedBitmapStore); }
 
     void setOpen(bool b)
     {

@@ -404,6 +404,7 @@ struct formulaObservation
     int iPhase;
     float fPhase;
     float v;
+    float vVec[Surge::Formula::max_formula_outputs];
     float phase;
 };
 
@@ -427,6 +428,9 @@ std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dP
         float r[Surge::Formula::max_formula_outputs];
         Surge::Formula::valueAt(iphase, phase, fs, &es, r);
         res.push_back(formulaObservation(iphase, phase, r[0]));
+        for (int i = 0; i < Surge::Formula::max_formula_outputs; ++i)
+            res.back().vVec[i] = r[i];
+
         phase += dPhase;
         if (phase > 1)
         {
@@ -509,6 +513,38 @@ end)FN");
             {
                 auto q = pow(c.fPhase, pe) * 2 - 1;
                 REQUIRE(q == Approx(c.v));
+            }
+        }
+    }
+
+    SECTION("Vector Output")
+    {
+        FormulaModulatorStorage fs;
+        fs.setFormula(R"FN(
+function process(modstate)
+    -- a bipolar saw
+    p = modstate["phase"]
+    r = { }
+    r[1] = p < 0.5 and 1 or -1
+    r[2] = p < 0.5 and -1 or 1
+    r[3] = 0.72;
+
+    modstate["output"] = r
+    return modstate
+end)FN");
+
+        for (int id = 0; id <= 10; id++)
+        {
+            float pe = 0;
+            auto runIt = runFormula(&fs, 0.0321, 5, 0.f);
+            for (auto c : runIt)
+            {
+                auto p = c.fPhase;
+                auto s1 = p < 0.5 ? 1.f : -1.f;
+                auto s2 = p < 0.5 ? -1.f : 1.f;
+                REQUIRE(c.vVec[0] == Approx(s1));
+                REQUIRE(c.vVec[1] == Approx(s2));
+                REQUIRE(c.vVec[2] == Approx(0.72));
             }
         }
     }

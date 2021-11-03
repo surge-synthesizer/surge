@@ -70,6 +70,7 @@ struct EvaluatorState
 
 bool initEvaluatorState(EvaluatorState &s);
 bool cleanEvaluatorState(EvaluatorState &s);
+void removeFunctionsAssociatedWith(FormulaModulatorStorage *fs); // audio thread only please
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display);
 
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p);

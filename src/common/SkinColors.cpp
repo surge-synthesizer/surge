@@ -123,6 +123,13 @@ const Surge::Skin::Color Background("formulaeditor.background", 0xF5F6EE),
     LineNumBackground("formulaeditor.linenumber.background", 0x979797),
     LineNumText("formulaeditor.linenumber.text", 0x000000, 0xFF);
 
+namespace Debugger
+{
+const Surge::Skin::Color Row("formulaeditor.debugger.row", 0x151515),
+    LightRow("formulaeditor.debugger.lightrow", 0x404040),
+    Text("formulaeditor.debugger.text", 0xE3E3E3),
+    InternalText("formulaeditor.debugger.internaltext", 0x979797);
+}
 namespace Lua
 {
 const Surge::Skin::Color Bracket("formulaeditor.lua.comment", 0x393B45),
