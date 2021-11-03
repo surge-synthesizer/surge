@@ -521,7 +521,7 @@ TEST_CASE("Init Functions", "[formula]")
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function init(modstate)
-   modstate["av"] = 1.234
+   modstate["av"] = 0.762
    return modstate
 end
 
@@ -536,12 +536,64 @@ end)FN");
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
-                REQUIRE(1.234 == Approx(c.v));
+                REQUIRE(0.762 == Approx(c.v));
             }
         }
     }
 }
 
+TEST_CASE("Clamping", "[formula]")
+{
+    SECTION("Test Clamped Function")
+    {
+        FormulaModulatorStorage fs;
+        fs.setFormula(R"FN(
+function process(modstate)
+    modstate["output"] = modstate["phase"] * 3 - 1.5
+    return modstate
+end)FN");
+
+        for (int id = 0; id <= 10; id++)
+        {
+            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            REQUIRE(!runIt.empty());
+            for (auto c : runIt)
+            {
+                REQUIRE(c.v <= 1.0);
+                REQUIRE(c.v >= -1.0);
+            }
+        }
+    }
+    SECTION("Test Clamped Function")
+    {
+        FormulaModulatorStorage fs;
+        fs.setFormula(R"FN(
+function init(modstate)
+    modstate["clamp_output"] = false
+    return modstate
+end
+
+function process(modstate)
+    modstate["output"] = modstate["phase"] * 3 - 1.5
+    return modstate
+end)FN");
+
+        int outOfBounds = 0;
+        for (int id = 0; id <= 10; id++)
+        {
+            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            REQUIRE(!runIt.empty());
+            for (auto c : runIt)
+            {
+                if (c.v > 1 || c.v < -1)
+                    outOfBounds++;
+                REQUIRE(c.v <= 1.5);
+                REQUIRE(c.v >= -1.5);
+            }
+        }
+        REQUIRE(outOfBounds > 0);
+    }
+}
 TEST_CASE("WavetableScript", "[formula]")
 {
     SECTION("Just the Sins")

@@ -87,6 +87,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
     void showModulatorCode();
     void showPreludeCode();
 
+    void escapeKeyPressed();
+
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
     int lfo_id;

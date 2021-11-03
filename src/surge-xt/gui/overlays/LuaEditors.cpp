@@ -26,6 +26,28 @@ namespace Surge
 {
 namespace Overlays
 {
+
+struct SurgeCodeEditorComponent : public juce::CodeEditorComponent
+{
+    SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t)
+        : juce::CodeEditorComponent(d, t)
+    {
+    }
+
+    void handleEscapeKey() override
+    {
+        juce::Component *c = this;
+        while (c)
+        {
+            if (auto fm = dynamic_cast<FormulaModulatorEditor *>(c))
+            {
+                fm->escapeKeyPressed();
+                return;
+            }
+            c = c->getParentComponent();
+        }
+    }
+};
 struct EditorColors
 {
     static void setColorsFromSkin(juce::CodeEditorComponent *comp,
@@ -74,7 +96,7 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainDocument->addListener(this);
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
-    mainEditor = std::make_unique<juce::CodeEditorComponent>(*mainDocument, tokenizer.get());
+    mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get());
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
@@ -496,7 +518,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getSurgePrelude());
 
-    preludeDisplay = std::make_unique<juce::CodeEditorComponent>(*preludeDocument, tokenizer.get());
+    preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
     preludeDisplay->setScrollbarThickness(8);
@@ -577,6 +599,47 @@ void FormulaModulatorEditor::showPreludeCode()
 {
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
+}
+
+void FormulaModulatorEditor::escapeKeyPressed()
+{
+    if (controlArea->applyS->isEnabled())
+    {
+        auto cb = juce::ModalCallbackFunction::create([this](int okcs) {
+            if (okcs)
+            {
+                auto c = getParentComponent();
+                while (c)
+                {
+                    if (auto olw = dynamic_cast<OverlayWrapper *>(c))
+                    {
+                        olw->onClose();
+                        return;
+                    }
+                }
+            }
+        });
+
+        juce::AlertWindow::showOkCancelBox(
+            juce::AlertWindow::InfoIcon, "Close Window",
+            "You pressed escape with un-applied changes. Are you sure "
+            "you want to abandon them?",
+
+            "Abandon", "Cancel", this, cb);
+    }
+    else
+    {
+        auto c = getParentComponent();
+        while (c)
+        {
+            if (auto olw = dynamic_cast<OverlayWrapper *>(c))
+            {
+                olw->onClose();
+                return;
+            }
+        }
+    }
+    return;
 }
 
 struct WavetablePreviewComponent : juce::Component
