@@ -573,7 +573,7 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
-    if (tutorialCat)
+    if (tutorialCat >= 0)
     {
         populatePatchMenuForCategory(tutorialCat, contextMenu, single_category, main_e, true);
     }
