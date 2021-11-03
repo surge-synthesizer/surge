@@ -2697,7 +2697,6 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         if (this->waveshaperSelector)
         {
-            control->asJuceComponent()->getParentComponent()->toFront(false);
             if (control->getValue() > 0.5f)
                 showOverlay(WAVESHAPER_ANALYZER);
             else
