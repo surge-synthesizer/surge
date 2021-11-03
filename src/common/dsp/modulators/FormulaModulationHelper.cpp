@@ -26,10 +26,11 @@ namespace Formula
 {
 
 std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
+std::unordered_map<FormulaModulatorStorage *, std::unordered_set<std::string>> functionsPerFMS;
+lua_State *audioState = nullptr, *displayState = nullptr;
 
 bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display)
 {
-    static lua_State *audioState = nullptr, *displayState = nullptr;
 
     bool firstTimeThrough = false;
     if (!is_display)
@@ -148,6 +149,9 @@ end
             lua_getglobal(s.L, s.funcNameInit);
             Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
             lua_pop(s.L, 1);
+
+            functionsPerFMS[fs].insert(s.funcName);
+            functionsPerFMS[fs].insert(s.funcNameInit);
 
             s.isvalid = true;
         }
@@ -333,6 +337,26 @@ end
     if (s.raisedError)
         std::cout << "ERROR: " << s.error << std::endl;
     return true;
+}
+
+void removeFunctionsAssociatedWith(FormulaModulatorStorage *fs)
+{
+
+    auto S = audioState;
+    if (!S)
+        return;
+    if (functionsPerFMS.find(fs) == functionsPerFMS.end())
+        return;
+
+#if 0
+    for (const auto &fn : functionsPerFMS[fs])
+    {
+        lua_pushnil(S);
+        lua_setglobal(S, fn.c_str());
+    }
+#endif
+
+    functionsPerFMS.erase(fs);
 }
 
 bool cleanEvaluatorState(EvaluatorState &s)

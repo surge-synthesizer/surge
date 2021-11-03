@@ -112,6 +112,11 @@ namespace FormulaEditor
 {
 extern const Surge::Skin::Color Background, Highlight, Text, LineNumBackground, LineNumText;
 
+namespace Debugger
+{
+extern const Surge::Skin::Color Row, LightRow, Text, InternalText;
+}
+
 namespace Lua
 {
 extern const Surge::Skin::Color Bracket, Comment, Error, Identifier, Interpunction, Number, Keyword,
