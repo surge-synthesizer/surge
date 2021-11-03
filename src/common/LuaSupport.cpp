@@ -135,6 +135,10 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_pushcfunction(L, lua_limitRange);
     lua_settable(L, -3);
 
+    lua_pushstring(L, "clamp");
+    lua_pushcfunction(L, lua_limitRange);
+    lua_settable(L, -3);
+
     // stack is now func > table again *BUT* now load math in stripped
     lua_getglobal(L, "math");
     lua_pushnil(L);

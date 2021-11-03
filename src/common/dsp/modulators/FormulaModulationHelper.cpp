@@ -125,10 +125,10 @@ end
     else
     {
         std::string emsg;
-        bool res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
+        int res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
             s.L, fs->formulaString, {"process", "init"}, emsg);
 
-        if (res)
+        if (res >= 1)
         {
             // Great - rename it and nuke process
             lua_setglobal(s.L, s.funcName);
@@ -155,7 +155,8 @@ end
         {
             s.adderror("Unable to deteremine 'process' or 'init' function : " + emsg);
             lua_pop(s.L, 1); // process
-            lua_pop(s.L, 1); // init
+            lua_pop(s.L, 1); // process
+            knownBadFunctions.insert(s.funcName);
         }
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
@@ -202,12 +203,25 @@ end
 
         if (lua_isfunction(s.L, -2))
         {
-            lua_pcall(s.L, 1, 1, 0);
-            if (!lua_istable(s.L, -1))
+            auto cres = lua_pcall(s.L, 1, 1, 0);
+            if (cres == LUA_OK)
+            {
+                if (!lua_istable(s.L, -1))
+                {
+                    s.isvalid = false;
+                    s.adderror("Your 'init' function must return a table. This usually means "
+                               "that you didnt' end your init function with 'return modstate' "
+                               "before the end statement.");
+                    knownBadFunctions.insert(s.funcName);
+                }
+            }
+            else
             {
                 s.isvalid = false;
-                std::cout << "Init function did not return a table" << std::endl;
-                // s.adderror( "Init function did not return a table" );
+                std::ostringstream oss;
+                oss << "Failed to evaluate 'init' function. " << lua_tostring(s.L, -1);
+                s.adderror(oss.str());
+                knownBadFunctions.insert(s.funcName);
             }
         }
 
@@ -547,6 +561,15 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         s->useEnvelope = getBoolDefault("use_envelope", true);
         s->retrigger_AEG = getBoolDefault("retrigger_AEG", false);
         s->retrigger_FEG = getBoolDefault("retrigger_FEG", false);
+
+        auto doClamp = getBoolDefault("clamp_output", true);
+        if (doClamp)
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                output[i] = limitpm1(output[i]);
+            }
+        }
 
         // Finally pop the table result
         lua_pop(s->L, 1);
