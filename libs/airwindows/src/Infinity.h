@@ -22,7 +22,8 @@ enum {
 	kParamB = 1,
 	kParamC = 2,
 	kParamD = 3,
-  kNumParameters = 4
+	kParamE = 4,
+  kNumParameters = 5
 }; //
 
 const int kNumPrograms = 0;
@@ -133,6 +134,8 @@ private:
     float E;
     float F;
     float G;
+    bool clearState = true;
+    void resetTail();
 };
 
 } // end namespace Infinity
