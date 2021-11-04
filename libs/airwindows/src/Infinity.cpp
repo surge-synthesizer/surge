@@ -106,7 +106,7 @@ void Infinity::getParameterName(VstInt32 index, char *text) {
 		case kParamC: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
                 case kParamE:
-                    vst_strncpy(text, "Clear reverb", kVstMaxParamStrLen);
+                    vst_strncpy(text, "Clear Reverb", kVstMaxParamStrLen);
                     break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
@@ -119,14 +119,15 @@ void Infinity::getParameterDisplay(VstInt32 index, char *text, float extVal, boo
         case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamE:
-            float2string(EXTV(E) * 100.0, text, kVstMaxParamStrLen);
+            vst_strncpy(text, EXTV(E) < 0.5 ? "Off" : "On", kVstMaxParamStrLen);
             break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
 
 void Infinity::getParameterLabel(VstInt32 index, char *text) {
-    vst_strncpy(text, "%", kVstMaxParamStrLen);
+    if (index != kParamE)
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
 }
 
 VstInt32 Infinity::canDo(char *text) 
