@@ -451,6 +451,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     if (s->subLfoEnvelope)
     {
         addn("delay", s->del);
+        addn("decay", s->dec);
         addn("attack", s->a);
         addn("hold", s->h);
         addn("sustain", s->s);
