@@ -237,6 +237,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
         {
+            if (rowNumber < 0 || rowNumber >= rows.size())
+                return;
+
             auto r = rows[rowNumber];
             auto b = juce::Rectangle<int>(0, 0, w, h);
             g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
