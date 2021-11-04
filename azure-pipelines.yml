@@ -24,8 +24,8 @@ jobs:
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
           xcodePath: "/Applications/Xcode_12.2.app"
-        windows-x86-vs2017:
-          imageName: 'vs2017-win2016'
+        windows-x86-32bit:
+          imageName: 'windows-2019'
           isWindows: True
           cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
@@ -53,7 +53,7 @@ jobs:
           cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
         windows-unittest:
-          imageName: 'vs2017-win2016'
+          imageName: 'windows-2019'
           isWindows: True
           isWindowsUnitTest: True
           cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
