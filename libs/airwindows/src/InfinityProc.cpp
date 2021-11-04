@@ -9,10 +9,141 @@
 
 namespace Infinity {
 
+void Infinity::resetTail() {
+    for (int x = 0; x < 11; x++)
+    {
+        biquadA[x] = 0.0;
+        biquadB[x] = 0.0;
+        biquadC[x] = 0.0;
+    }
+
+    feedbackAL = feedbackAR = 0.0;
+    feedbackBL = feedbackBR = 0.0;
+    feedbackCL = feedbackCR = 0.0;
+    feedbackDL = feedbackDR = 0.0;
+    feedbackEL = feedbackER = 0.0;
+    feedbackFL = feedbackFR = 0.0;
+    feedbackGL = feedbackGR = 0.0;
+    feedbackHL = feedbackHR = 0.0;
+
+    int count;
+    for (count = 0; count < 8110; count++)
+    {
+        aAL[count] = aAR[count] = 0.0;
+    }
+    for (count = 0; count < 7510; count++)
+    {
+        aBL[count] = aBR[count] = 0.0;
+    }
+    for (count = 0; count < 7310; count++)
+    {
+        aCL[count] = aCR[count] = 0.0;
+    }
+    for (count = 0; count < 6910; count++)
+    {
+        aDL[count] = aDR[count] = 0.0;
+    }
+    for (count = 0; count < 6310; count++)
+    {
+        aEL[count] = aER[count] = 0.0;
+    }
+    for (count = 0; count < 6110; count++)
+    {
+        aFL[count] = aFR[count] = 0.0;
+    }
+    for (count = 0; count < 5510; count++)
+    {
+        aGL[count] = aGR[count] = 0.0;
+    }
+    for (count = 0; count < 4910; count++)
+    {
+        aHL[count] = aHR[count] = 0.0;
+    }
+    // maximum value needed will be delay * 100, plus 206 (absolute max vibrato depth)
+    for (count = 0; count < 4510; count++)
+    {
+        aIL[count] = aIR[count] = 0.0;
+    }
+    for (count = 0; count < 4310; count++)
+    {
+        aJL[count] = aJR[count] = 0.0;
+    }
+    for (count = 0; count < 3910; count++)
+    {
+        aKL[count] = aKR[count] = 0.0;
+    }
+    for (count = 0; count < 3310; count++)
+    {
+        aLL[count] = aLR[count] = 0.0;
+    }
+    // maximum value will be delay * 100
+    countA = 1;
+    delayA = 79;
+    countB = 1;
+    delayB = 73;
+    countC = 1;
+    delayC = 71;
+    countD = 1;
+    delayD = 67;
+    countE = 1;
+    delayE = 61;
+    countF = 1;
+    delayF = 59;
+    countG = 1;
+    delayG = 53;
+    countH = 1;
+    delayH = 47;
+    // the householder matrices
+    countI = 1;
+    delayI = 43;
+    countJ = 1;
+    delayJ = 41;
+    countK = 1;
+    delayK = 37;
+    countL = 1;
+    delayL = 31;
+    // the allpasses
+
+    A = 1.0;
+    B = 0.0;
+    C = 0.5;
+    D = 1.0;
+    E = 0.0f;
+    fpdL = 1.0;
+    while (fpdL < 16386)
+        fpdL = rand() * UINT32_MAX;
+    fpdR = 1.0;
+    while (fpdR < 16386)
+        fpdR = rand() * UINT32_MAX;
+}
 
 void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) 
 {
-    float* in1  =  inputs[0];
+    bool doClear = false;
+    if (clearState)
+    {
+        // HIGH to LOW
+        if (E < 0.5f)
+        {
+            clearState = false;
+            
+        }
+        
+    }
+    else
+    {
+        // LOW to HIGH
+        if (E >= 0.5f)
+        {
+            clearState = true;
+            doClear = true;
+        }
+        
+   }
+   if (doClear) 
+	   resetTail();
+
+	float* in1  =  inputs[0];
     float* in2  =  inputs[1];
     float* out1 = outputs[0];
     float* out2 = outputs[1];

@@ -15,55 +15,7 @@ namespace Infinity {
 Infinity::Infinity(audioMasterCallback audioMaster) :
     AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-	for (int x = 0; x < 11; x++) {biquadA[x] = 0.0; biquadB[x] = 0.0; biquadC[x] = 0.0;}
-	
-	feedbackAL = feedbackAR = 0.0;
-	feedbackBL = feedbackBR = 0.0;
-	feedbackCL = feedbackCR = 0.0;
-	feedbackDL = feedbackDR = 0.0;
-	feedbackEL = feedbackER = 0.0;
-	feedbackFL = feedbackFR = 0.0;
-	feedbackGL = feedbackGR = 0.0;
-	feedbackHL = feedbackHR = 0.0;
-	
-	int count;
-	for(count = 0; count < 8110; count++) {aAL[count] = aAR[count] = 0.0;}
-	for(count = 0; count < 7510; count++) {aBL[count] = aBR[count] = 0.0;}
-	for(count = 0; count < 7310; count++) {aCL[count] = aCR[count] = 0.0;}
-	for(count = 0; count < 6910; count++) {aDL[count] = aDR[count] = 0.0;}
-	for(count = 0; count < 6310; count++) {aEL[count] = aER[count] = 0.0;}
-	for(count = 0; count < 6110; count++) {aFL[count] = aFR[count] = 0.0;}
-	for(count = 0; count < 5510; count++) {aGL[count] = aGR[count] = 0.0;}
-	for(count = 0; count < 4910; count++) {aHL[count] = aHR[count] = 0.0;}
-	//maximum value needed will be delay * 100, plus 206 (absolute max vibrato depth)
-	for(count = 0; count < 4510; count++) {aIL[count] = aIR[count] = 0.0;}
-	for(count = 0; count < 4310; count++) {aJL[count] = aJR[count] = 0.0;}
-	for(count = 0; count < 3910; count++) {aKL[count] = aKR[count] = 0.0;}
-	for(count = 0; count < 3310; count++) {aLL[count] = aLR[count] = 0.0;}
-	//maximum value will be delay * 100
-	countA = 1; delayA = 79;
-	countB = 1; delayB = 73;
-	countC = 1; delayC = 71;
-	countD = 1; delayD = 67;	
-	countE = 1; delayE = 61;
-	countF = 1; delayF = 59;
-	countG = 1; delayG = 53;
-	countH = 1; delayH = 47;
-	//the householder matrices
-	countI = 1; delayI = 43;
-	countJ = 1; delayJ = 41;
-	countK = 1; delayK = 37;
-	countL = 1; delayL = 31;
-	//the allpasses
-
-	A = 1.0;
-	B = 0.0;
-	C = 0.5;
-	D = 1.0;
-	
-	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
-	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
-	//this is reset: values being initialized only once. Startup values, whatever they are.
+    resetTail();
 	
     _canDo.insert("plugAsChannelInsert"); // plug-in can be used as a channel insert effect.
     _canDo.insert("plugAsSend"); // plug-in can be used as a send effect.
@@ -113,6 +65,7 @@ VstInt32 Infinity::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 	B = pinParameter(chunkData[1]);
 	C = pinParameter(chunkData[2]);
 	D = pinParameter(chunkData[3]);
+    E = 0.0f;
 	/* We're ignoring byteSize as we found it to be a filthy liar */
 	
 	/* calculate any other fields you need here - you could copy in 
@@ -126,6 +79,9 @@ void Infinity::setParameter(VstInt32 index, float value) {
         case kParamB: B = value; break;
         case kParamC: C = value; break;
         case kParamD: D = value; break;
+        case kParamE:
+            E = value;
+            break;
         default: throw; // unknown parameter, shouldn't happen!
     }
 }
@@ -136,6 +92,9 @@ float Infinity::getParameter(VstInt32 index) {
         case kParamB: return B; break;
         case kParamC: return C; break;
         case kParamD: return D; break;
+        case kParamE:
+            return E;
+            break;
         default: break; // unknown parameter, shouldn't happen!
     } return 0.0; //we only need to update the relevant name, this is simple to manage
 }
@@ -146,6 +105,9 @@ void Infinity::getParameterName(VstInt32 index, char *text) {
 		case kParamB: vst_strncpy (text, "Damping", kVstMaxParamStrLen); break;
 		case kParamC: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
 		case kParamD: vst_strncpy (text, "Mix", kVstMaxParamStrLen); break;
+                case kParamE:
+                    vst_strncpy(text, "Clear reverb", kVstMaxParamStrLen);
+                    break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
 }
@@ -156,6 +118,9 @@ void Infinity::getParameterDisplay(VstInt32 index, char *text, float extVal, boo
         case kParamB: float2string (EXTV(B) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamC: float2string (EXTV(C) * 100.0, text, kVstMaxParamStrLen); break;
         case kParamD: float2string (EXTV(D) * 100.0, text, kVstMaxParamStrLen); break;
+        case kParamE:
+            float2string(EXTV(E) * 100.0, text, kVstMaxParamStrLen);
+            break;
         default: break; // unknown parameter, shouldn't happen!
 	} //this displays the values and handles 'popups' where it's discrete choices
 }
