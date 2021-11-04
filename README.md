@@ -142,12 +142,12 @@ cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
 
 On Linux, using a community fork of JUCE, you can build an LV2. Here's how. We assume you have checked out Surge and can build.
 
-First, clone https://github.com/lv2-porting-project/JUCE/tree/6.1.1-lv2 on branch 6.1.1-lv2, to some directory of your chosing.
+First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your chosing.
 
 ```
 sudo apt-get install -y lv2-dev
 cd /some/location
-git clone --branch 6.1.1-lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
+git clone --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
 ```
 
 then run a fresh CMake to (1) point to that JUCE fork and (2) activate LV2
