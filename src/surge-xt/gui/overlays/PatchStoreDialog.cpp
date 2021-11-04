@@ -402,6 +402,9 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
             synth->savePatch();
         }
 
+        onOK();
+
+        // make this last in case it ends up destroying me
         editor->closeOverlay(SurgeGUIEditor::SAVE_PATCH);
     }
 }

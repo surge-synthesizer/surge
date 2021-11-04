@@ -61,6 +61,14 @@ struct PatchStoreDialog : public OverlayComponent,
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
 
+    bool isRename{false};
+    void setIsRename(bool b)
+    {
+        isRename = b;
+        okButton->setButtonText(isRename ? "Rename" : "OK");
+    }
+    std::function<void()> onOK = []() {};
+
     std::unique_ptr<PatchStoreDialogCategoryProvider> categoryProvider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchStoreDialog);

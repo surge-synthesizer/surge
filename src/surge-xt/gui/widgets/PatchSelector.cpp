@@ -21,6 +21,7 @@
 #include "RuntimeFont.h"
 #include "UserDefaults.h"
 #include "widgets/MenuCustomComponents.h"
+#include "overlays/PatchStoreDialog.h"
 #include "PatchDB.h"
 #include "fmt/core.h"
 
@@ -534,11 +535,45 @@ void PatchSelector::showClassicMenu(bool single_category)
     if (isUser)
     {
         contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Patch"), [this]() {
-            storage->reportError("This function has not been implemented yet!", "Coming Soon");
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+            if (sge)
+            {
+                sge->showOverlay(
+                    SurgeGUIEditor::SAVE_PATCH, [this](Overlays::OverlayComponent *co) {
+                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+                        if (!psd)
+                            return;
+                        psd->setIsRename(true);
+                        const auto priorPath = storage->patch_list[current_patch].path;
+                        psd->onOK = [this, priorPath]() {
+                            fs::remove(priorPath);
+                            storage->refresh_patchlist();
+                            storage->initializePatchDb(true);
+                        };
+                    });
+            }
         });
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this]() {
-            storage->reportError("This function has not been implemented yet!", "Coming Soon");
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this, initAction]() {
+            auto cb = juce::ModalCallbackFunction::create([this, initAction](int okcs) {
+                if (okcs)
+                {
+                    fs::remove(storage->patch_list[current_patch].path);
+                    storage->refresh_patchlist();
+                    storage->initializePatchDb(true);
+                    initAction();
+                }
+            });
+
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            juce::AlertWindow::showOkCancelBox(
+                juce::AlertWindow::InfoIcon, "Delete Patch",
+                std::string("Do you want to delete patch '") +
+                    storage->patch_list[current_patch].name + "' from '" +
+                    storage->patch_list[current_patch].path.u8string() + "'",
+
+                "Delete", "Cancel", sge->frame.get(), cb);
         });
     }
 
