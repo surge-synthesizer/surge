@@ -388,8 +388,8 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
     bool solo = rows * columns == 1;
 
-    // Draw the dividers
-    g.setColour(skin->getColor(clr::Divider));
+    // Draw the separators
+    g.setColour(skin->getColor(clr::Separator));
 
     if (rows == 1)
     {

@@ -300,8 +300,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
             auto r = isOk ? SurgeStorage::OK : SurgeStorage::CANCEL;
             callback(r);
         });
-        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg, "OK",
-                                                      "Cancel", nullptr, cb);
+        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg,
+                                                      "Yes", "No", nullptr, cb);
     };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
@@ -5245,7 +5245,8 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 }
             }
         });
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install zip", oss.str(),
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install from ZIP",
+                                           oss.str(),
 
                                            "Install", "Cancel", frame.get(), cb);
     }
@@ -5925,11 +5926,12 @@ void SurgeGUIEditor::showPatchCommentTooltip(const std::string &comment)
 {
     if (patchSelectorComment)
     {
+        auto psb = patchSelector->getBounds();
+
         patchSelectorComment->setVisible(true);
         patchSelectorComment->getParentComponent()->toFront(true);
         patchSelectorComment->toFront(true);
-        patchSelectorComment->positionForComment(patchSelector->getBounds().getBottomLeft(),
-                                                 comment);
+        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment);
     }
 }
 

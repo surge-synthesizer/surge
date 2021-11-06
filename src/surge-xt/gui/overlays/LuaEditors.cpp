@@ -626,12 +626,11 @@ void FormulaModulatorEditor::escapeKeyPressed()
             }
         });
 
-        juce::AlertWindow::showOkCancelBox(
-            juce::AlertWindow::InfoIcon, "Close Window",
-            "You pressed escape with un-applied changes. Are you sure "
-            "you want to abandon them?",
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Close Window",
+                                           "Are you sure you want to close the formula editor? Any "
+                                           "unapplied changes will be lost!",
 
-            "Abandon", "Cancel", this, cb);
+                                           "Yes", "No", this, cb);
     }
     else
     {
