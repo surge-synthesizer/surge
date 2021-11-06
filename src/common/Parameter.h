@@ -185,6 +185,7 @@ enum ctrltypes
     ct_lfophaseshuffle,
     ct_mscodec,
     ct_percent_bipolar_pan, // bipolar with special text strings at -100% +100% and 0%
+    ct_spring_decay,
     num_ctrltypes,
 };
 
