@@ -26,6 +26,7 @@
 #include "SkinModel.h"
 #include "UserDefaults.h"
 #include "version.h"
+#include "fmt/core.h"
 
 using namespace std;
 using namespace Surge::ParamConfig;
@@ -1108,9 +1109,18 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     TiXmlDocument doc;
     int j;
     double d;
+    if (datasize >= (1 << 22))
+    {
+        auto msg = fmt::format("Your patch has loaded with a very alrge size of {:d} bytes, "
+                               "larger than our safety threshold of 2^22. This almost definitely "
+                               "means your patch header is corrupted somehow, and surge will not "
+                               "load this patch.",
+                               datasize);
+        storage->reportError(msg, "Patch Load Error");
+        return;
+    }
     if (datasize)
     {
-        assert(datasize < (1 << 22)); // something is weird if the patch is this big
         char *temp = (char *)malloc(datasize + 1);
         memcpy(temp, data, datasize);
         *(temp + datasize) = 0;
