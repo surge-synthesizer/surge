@@ -208,7 +208,7 @@ void PatchSelector::mouseEnter(const juce::MouseEvent &)
     if (tooltipCountdown < 0)
     {
         tooltipCountdown = 5;
-        juce::Timer::callAfterDelay(200, [this]() { shouldTooltip(); });
+        juce::Timer::callAfterDelay(100, [this]() { shouldTooltip(); });
     }
 }
 
@@ -292,7 +292,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
 void PatchSelector::shouldTooltip()
 {
-    if (tooltipCountdown < 0)
+    if (tooltipCountdown < 0 || typeAhead->isVisible())
     {
         return;
     }
@@ -437,6 +437,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                 populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
             }
         }
+
         if (!addedFavorites)
         {
             optionallyAddFavorites(contextMenu, true);
@@ -569,11 +570,10 @@ void PatchSelector::showClassicMenu(bool single_category)
 
             juce::AlertWindow::showOkCancelBox(
                 juce::AlertWindow::InfoIcon, "Delete Patch",
-                std::string("Do you want to delete patch '") +
-                    storage->patch_list[current_patch].name + "' from '" +
-                    storage->patch_list[current_patch].path.u8string() + "'",
+                std::string("Do you want to delete ") +
+                    storage->patch_list[current_patch].path.u8string() + "?",
 
-                "Delete", "Cancel", sge->frame.get(), cb);
+                "Yes", "No", sge->frame.get(), cb);
         });
     }
 
@@ -616,6 +616,8 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     if (sge)
     {
+        contextMenu.addSeparator();
+
         auto hu = sge->helpURLForSpecial("patch-browser");
         auto lurl = hu;
 
@@ -878,7 +880,7 @@ void PatchSelector::onSkinChanged()
     patchDbProvider->rowSubText = skin->getColor(Colors::PatchBrowser::TypeAheadList::SubText);
     patchDbProvider->hlRowSubText =
         skin->getColor(Colors::PatchBrowser::TypeAheadList::HighlightSubText);
-    patchDbProvider->divider = skin->getColor(Colors::PatchBrowser::TypeAheadList::Divider);
+    patchDbProvider->divider = skin->getColor(Colors::PatchBrowser::TypeAheadList::Separator);
 }
 
 void PatchSelector::toggleTypeAheadSearch(bool b)
@@ -892,8 +894,8 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         if (storage->patchDB->numberOfJobsOutstanding() > 0)
         {
             enable = false;
-            txt = "Updating Patch DB: " +
-                  std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " jobs";
+            txt = "Updating Patch Database: " +
+                  std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
         }
         typeAhead->setJustification(juce::Justification::centred);
         typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
@@ -907,7 +909,7 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
 
         if (!enable)
         {
-            juce::Timer::callAfterDelay(1000 / 30, [this]() { this->enableTypeAheadIfReady(); });
+            juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
         }
     }
     else
@@ -925,12 +927,14 @@ void PatchSelector::enableTypeAheadIfReady()
 
     bool enable = true;
     auto txt = pname;
+
     if (storage->patchDB->numberOfJobsOutstanding() > 0)
     {
         enable = false;
-        txt = "Updating Patch DB: " + std::to_string(storage->patchDB->numberOfJobsOutstanding()) +
-              " jobs";
+        txt = "Updating patch database: " +
+              std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
     }
+
     typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
     typeAhead->setEnabled(enable);
 
@@ -941,7 +945,7 @@ void PatchSelector::enableTypeAheadIfReady()
     }
     else
     {
-        juce::Timer::callAfterDelay(1000 / 30, [this]() { this->enableTypeAheadIfReady(); });
+        juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
     }
 }
 
@@ -1005,7 +1009,7 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
                         juce::Justification::left);
 }
 
-void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &topLeft,
+void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &centerPoint,
                                                      const std::string &c)
 {
     comment = c;
@@ -1017,6 +1021,7 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &top
 
     auto ft = Surge::GUI::getFontManager()->getLatoAtSize(9);
     auto width = 0;
+
     while (std::getline(ss, to, '\n'))
     {
         auto w = ft.getStringWidth(to);
@@ -1027,10 +1032,9 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &top
     auto height = std::max(idx * (ft.getHeight() + 2), 30.f);
 
     auto r = juce::Rectangle<int>()
-                 .withX(topLeft.x)
-                 .withY(topLeft.y)
-                 .withWidth(width + 12)
-                 .withHeight(height);
+                 .withCentre(juce::Point(centerPoint.x, centerPoint.y))
+                 .withSizeKeepingCentre(width + 12, height)
+                 .translated(0, height / 2);
     setBounds(r);
     repaint();
 }

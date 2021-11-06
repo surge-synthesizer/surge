@@ -289,7 +289,7 @@ extern const Surge::Skin::Color Border, Background, Text;
 namespace TypeAheadList
 {
 extern const Surge::Skin::Color Border, Background, Text, HighlightBackground, HighlightText,
-    SubText, HighlightSubText, Divider;
+    SubText, HighlightSubText, Separator;
 }
 } // namespace PatchBrowser
 
@@ -381,8 +381,8 @@ extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Bord
 }
 namespace TextMultiSwitch
 {
-extern const Surge::Skin::Color Background, Border, Divider, DeactivatedText, Text, OnText, OnFill,
-    HoverText, HoverOnText, HoverFill, HoverOnFill;
+extern const Surge::Skin::Color Background, Border, Separator, DeactivatedText, Text, OnText,
+    OnFill, HoverText, HoverOnText, HoverFill, HoverOnFill;
 }
 } // namespace JuceWidgets
 } // namespace Colors

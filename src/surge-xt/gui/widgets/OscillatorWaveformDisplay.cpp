@@ -358,7 +358,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         {
             std::string message = "Wavetable was successfully exported to '" + fn + "'";
             juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon,
-                                                   "Wavetable Exported!", message);
+                                                   "Wavetable Export", message);
         }
     };
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Export Wavetable to File..."), exportAction);
