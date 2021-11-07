@@ -119,29 +119,29 @@ void Infinity::resetTail() {
 
 void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) 
 {
-    bool doClear = false;
-    if (clearState)
+    if (tailFadeOutCounter == -1) // don't change the clear state if tail fade out already in progress
     {
-        // HIGH to LOW
-        if (E < 0.5f)
+        if (clearState)
         {
-            clearState = false;
-            
+            // HIGH to LOW
+            if (E < 0.5f)
+            {
+                clearState = false;
+            }
         }
-        
+        else
+        {
+            // LOW to HIGH
+            if (E >= 0.5f)
+            {
+                clearState = true;
+                tailFadeOutCounter = 0;
+                tailFadeOutLen = sr * 0.02; // fade for 20 ms, ideally this would be configurable...
+            }
+        }
+   
     }
-    else
-    {
-        // LOW to HIGH
-        if (E >= 0.5f)
-        {
-            clearState = true;
-            doClear = true;
-        }
-        
-   }
-   if (doClear) 
-	   resetTail();
+	
 
 	float* in1  =  inputs[0];
     float* in2  =  inputs[1];
@@ -196,7 +196,7 @@ void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sample
 	delayJ = 41*size;
 	delayK = 37*size;
 	delayL = 31*size;
-	
+    
     while (--sampleFrames >= 0)
     {
 		long double inputSampleL = *in1;
@@ -401,12 +401,26 @@ void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sample
 		biquadC[9] = (inputSampleR * biquadC[3]) - (tempSampleR * biquadC[5]) + biquadC[10];
 		biquadC[10] = (inputSampleR * biquadC[4]) - (tempSampleR * biquadC[6]);
 		inputSampleR = tempSampleR; //note: 9 and 10 store the R channel
-		
-		if (wet !=1.0) {
-			inputSampleL = (inputSampleL * wet) + (drySampleL * (1.0-wet));
-			inputSampleR = (inputSampleR * wet) + (drySampleR * (1.0-wet));
-		}
-		
+        
+        if (tailFadeOutCounter >=0 )
+        {
+            float fadeGain = 1.0f - 1.0f / tailFadeOutLen * tailFadeOutCounter;
+            inputSampleL = (inputSampleL * wet * fadeGain) + (drySampleL * (1.0 - wet));
+            inputSampleR = (inputSampleR * wet * fadeGain) + (drySampleR * (1.0 - wet));
+            ++tailFadeOutCounter;
+            if (tailFadeOutCounter == tailFadeOutLen)
+            {
+                tailFadeOutCounter = -1;
+                resetTail();
+			}
+		} else
+        {
+            if (wet !=1.0) {
+                    inputSampleL = (inputSampleL * wet) + (drySampleL * (1.0-wet));
+                    inputSampleR = (inputSampleR * wet) + (drySampleR * (1.0-wet));
+            }
+        }
+        
 		//begin 32 bit stereo floating point dither
 		int expon; frexpf((float)inputSampleL, &expon);
 		fpdL ^= fpdL << 13; fpdL ^= fpdL >> 17; fpdL ^= fpdL << 5;
@@ -424,6 +438,7 @@ void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sample
 		out1++;
 		out2++;
     }
+	
 }
 
 void Infinity::processDoubleReplacing(double **inputs, double **outputs, VstInt32 sampleFrames) 
