@@ -136,7 +136,7 @@ void Infinity::processReplacing(float **inputs, float **outputs, VstInt32 sample
             {
                 clearState = true;
                 tailFadeOutCounter = 0;
-                tailFadeOutLen = sr * 0.2; // fade for 200 ms, ideally this would be configurable...
+                tailFadeOutLen = sr * 0.02; // fade for 20 ms, ideally this would be configurable...
             }
         }
    
