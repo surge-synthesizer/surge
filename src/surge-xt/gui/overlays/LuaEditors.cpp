@@ -237,6 +237,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
         {
+            if (rowNumber < 0 || rowNumber >= rows.size())
+                return;
+
             auto r = rows[rowNumber];
             auto b = juce::Rectangle<int>(0, 0, w, h);
             g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
@@ -623,12 +626,11 @@ void FormulaModulatorEditor::escapeKeyPressed()
             }
         });
 
-        juce::AlertWindow::showOkCancelBox(
-            juce::AlertWindow::InfoIcon, "Close Window",
-            "You pressed escape with un-applied changes. Are you sure "
-            "you want to abandon them?",
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Close Window",
+                                           "Are you sure you want to close the formula editor? Any "
+                                           "unapplied changes will be lost!",
 
-            "Abandon", "Cancel", this, cb);
+                                           "Yes", "No", this, cb);
     }
     else
     {

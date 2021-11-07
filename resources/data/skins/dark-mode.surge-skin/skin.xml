@@ -182,9 +182,18 @@
 
         <color id="patchbrowser.text" value="lightgray"/>
 
-        <color id="patchbrowser.commenttooltip.border" value="bordergray"/>
-        <color id="patchbrowser.commenttooltip.background" value="darkergray"/>
-        <color id="patchbrowser.commenttooltip.text" value="lightgray"/>
+        <color id="patchbrowser.tooltip.border" value="bordergray"/>
+        <color id="patchbrowser.tooltip.background" value="darkergray"/>
+        <color id="patchbrowser.tooltip.text" value="lightgray"/>
+
+        <color id="patchbrowser.typeahead.border" value="bordergray"/>
+        <color id="patchbrowser.typeahead.background" value="darkergray"/>
+        <color id="patchbrowser.typeahead.background.highlight" value="black"/>
+        <color id="patchbrowser.typeahead.text" value="lightgray"/>
+        <color id="patchbrowser.typeahead.text.highlight" value="lightgray"/>
+        <color id="patchbrowser.typeahead.subtext" value="gray"/>
+        <color id="patchbrowser.typeahead.subtext.highlight" value="gray"/>
+        <color id="patchbrowser.typeahead.separator" value="moregray"/>
 
         <color id="slider.light.label" value="lightgray"/>
         <color id="slider.dark.label" value="lightgray"/>
@@ -211,7 +220,7 @@
 
         <color id="multiswitch.background" value="bggray"/>
         <color id="multiswitch.border" value="black"/>
-        <color id="multiswitch.divider" value="black"/>
+        <color id="multiswitch.separator" value="black"/>
         <color id="multiswitch.text.deactivated" value="#505050"/>
         <color id="multiswitch.text" value="lightgray"/>
         <color id="multiswitch.on.text" value="white"/>

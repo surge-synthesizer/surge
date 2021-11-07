@@ -64,7 +64,7 @@ void SpringReverbEffect::init_ctrltypes()
     fxdata->p[spring_reverb_size].posy_offset = 1;
 
     fxdata->p[spring_reverb_decay].set_name("Decay");
-    fxdata->p[spring_reverb_decay].set_type(ct_percent);
+    fxdata->p[spring_reverb_decay].set_type(ct_spring_decay);
     fxdata->p[spring_reverb_decay].val_default.f = 0.5f;
     fxdata->p[spring_reverb_decay].posy_offset = 1;
 

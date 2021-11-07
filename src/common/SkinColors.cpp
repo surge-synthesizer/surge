@@ -376,9 +376,9 @@ const Surge::Skin::Color Text("patchbrowser.text", 0x000000, 0xFF);
 
 namespace CommentTooltip
 {
-const Surge::Skin::Color Border("patchbrowser.commenttooltip.border", 0xFF979797),
-    Background("patchbrowser.commenttooltip.background", 0xFFE3E3E3),
-    Text("patchbrowser.commenttooltip.text", 0xFF151515);
+const Surge::Skin::Color Border("patchbrowser.tooltip.border", 0xFF979797),
+    Background("patchbrowser.tooltip.background", 0xFFE3E3E3),
+    Text("patchbrowser.tooltip.text", 0xFF151515);
 }
 
 namespace TypeAheadList
@@ -388,9 +388,9 @@ const Surge::Skin::Color Border("patchbrowser.typeahead.border", 0x646482),
     Text("patchbrowser.typeahead.text", 0x000000, 0xFF),
     HighlightBackground("patchbrowser.typeahead.background.highlight", 0xD2D2FF),
     HighlightText("patchbrowser.typeahead.text.highlight", 0x000064),
-    SubText("patchbrowser.typeahead.subtext", 0x000032),
-    HighlightSubText("patchbrowser.typeahead.subtext.highlight", 0x28288C),
-    Divider("patchbrowser.typeahead.divider", 0x8C8C8C);
+    SubText("patchbrowser.typeahead.subtext", 0x000000, 0xFF),
+    HighlightSubText("patchbrowser.typeahead.subtext.highlight", 0x000064),
+    Separator("patchbrowser.typeahead.separator", 0x8C8C8C);
 }
 
 } // namespace PatchBrowser
@@ -466,7 +466,7 @@ const Surge::Skin::Color ActiveTabBackground("tabbar.active.background", 0x64320
 namespace TextMultiSwitch
 {
 const Surge::Skin::Color Background("multiswitch.background", 0xE3E3E3),
-    Border("multiswitch.border", 0x979797), Divider("multiswitch.divider", 0x979797),
+    Border("multiswitch.border", 0x979797), Separator("multiswitch.separator", 0x979797),
     DeactivatedText("multiswitch.text.deactivated", 0x979797),
     Text("multiswitch.text", 0x000000, 0xFF), OnText("multiswitch.on.text", 0x000000, 0xFF),
     HoverText("multiswitch.hover.text", 0x000000, 0xFF),

@@ -1267,6 +1267,13 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 30.0f;
         break;
 
+    case ct_spring_decay:
+        valtype = vt_float;
+        val_min.f = 0.0f;
+        val_max.f = 1.0f;
+        val_default.f = 0.5f;
+        break;
+
     case ct_none:
     default:
         snprintf(dispname, NAMECHARS, "-");
@@ -1555,6 +1562,13 @@ void Parameter::set_type(int ctrltype)
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "ips");
         break;
+
+    case ct_spring_decay:
+        displayType = ATwoToTheBx;
+        displayInfo.a = 0.5f;
+        displayInfo.b = std::log2(4.5f / 0.5f);
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
     }
 
     switch (ctrltype)
@@ -3934,6 +3948,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_tape_drive:
     case ct_tape_microns:
     case ct_tape_speed:
+    case ct_spring_decay:
     {
         return true;
         break;
