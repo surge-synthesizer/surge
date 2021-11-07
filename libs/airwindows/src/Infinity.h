@@ -135,6 +135,8 @@ private:
     float F;
     float G;
     bool clearState = true;
+    int tailFadeOutLen = 44100;
+    int tailFadeOutCounter = -1;
     void resetTail();
 };
 
