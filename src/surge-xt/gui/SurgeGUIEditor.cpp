@@ -4138,7 +4138,20 @@ void SurgeGUIEditor::sliderHoverEnd(int tag)
 std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
 {
     if (tag < start_paramtags)
-        return "Non-param tag";
+    {
+        std::string res = "";
+        switch (tag)
+        {
+        case tag_mp_category:
+        case tag_mp_patch:
+        case tag_mp_jogwaveshape:
+            res = (f < 0.5) ? "Down" : "Up";
+            break;
+        default:
+            res = "Non-param tag " + std::to_string(tag) + "=" + std::to_string(f);
+        }
+        return res;
+    }
 
     int ptag = tag - start_paramtags;
     if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
