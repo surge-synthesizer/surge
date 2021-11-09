@@ -16,6 +16,7 @@
 #include "ModulationEditor.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeGUIUtils.h"
 #include "RuntimeFont.h"
 #include <sstream>
 #include "widgets/MenuCustomComponents.h"
@@ -233,25 +234,31 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         {
             static constexpr int indent = 1;
             auto b = getLocalBounds().withTrimmedLeft(indent);
+
             g.setColour(juce::Colour(0xFF979797));
+
             if (firstInSort)
             {
                 // draw the top and the side
                 g.drawLine(indent, 0, getWidth(), 0, 1);
             }
+
             g.drawLine(indent, 0, indent, getHeight(), 1);
             g.drawLine(getWidth() - indent, 0, getWidth() - indent, getHeight(), 1);
 
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             g.setColour(juce::Colours::white);
+
             int fh = g.getCurrentFont().getHeight();
             auto firstLab = datum.sname;
             auto secondLab = datum.pname;
+
             if (contents->sortOrder == BY_TARGET)
                 std::swap(firstLab, secondLab);
-            auto tb = b.reduced(3, 0).withHeight(fh).withRight(controlsStart);
 
+            auto tb = b.reduced(3, 0).withHeight(fh).withRight(controlsStart);
             bool longArrow = true;
+
             if (firstInSort)
             {
                 longArrow = false;
@@ -308,22 +315,25 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             auto mr =
                 juce::Rectangle<int>(cp.x, cp.y - 2, -rB.getWidth() * datum.moddepth01 / 2, 5);
 
-            g.setColour(juce::Colours::green);
+            g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
             g.fillRect(pr);
+
             if (datum.isBipolar)
             {
-                g.setColour(juce::Colours::darkgreen);
+                g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
                 g.fillRect(mr);
             }
 
             g.setColour(juce::Colours::white);
             g.drawText(datum.mss.val, rB, juce::Justification::centredTop);
             g.drawText(datum.mss.dvalplus, rB, juce::Justification::topRight);
+
             if (datum.isBipolar)
                 g.drawText(datum.mss.dvalminus, rB, juce::Justification::topLeft);
 
             g.setColour(juce::Colours::grey);
             g.drawText(datum.mss.valplus, rB, juce::Justification::bottomRight);
+
             if (datum.isBipolar)
                 g.drawText(datum.mss.valminus, rB, juce::Justification::bottomLeft);
         }
@@ -334,13 +344,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         void resized() override
         {
             int startX = controlsStart;
-            int bh = 14;
+            int bh = 12;
             int sh = 26;
-            int bY = (height - bh) / 2;
+            int bY = ((height - bh) / 2) - 1;
             int sY = (height - sh) / 2;
-            muteButton->setBounds(startX, bY, bh, bh);
-            startX += bh + 2;
             clearButton->setBounds(startX, bY, bh, bh);
+            startX += bh + 2;
+            muteButton->setBounds(startX, bY, bh, bh);
             startX += bh + 2;
             surgeLikeSlider->setBounds(startX, sY, 140, sh);
         }
@@ -384,11 +394,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     {
         auto yPos = getBounds().getY();
         auto cmp = getComponentAt(3, -yPos);
+
         for (auto &r : rows)
         {
             r->isTop = false;
             r->isAfterTop = false;
         }
+
         if (cmp)
         {
             auto dre = dynamic_cast<DataRowEditor *>(cmp);
@@ -397,12 +409,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 dre->isTop = true;
             }
         }
+
         bool prior = false;
+
         for (auto &r : rows)
         {
             r->isAfterTop = prior;
             prior = r->isTop;
         }
+
         repaint();
     }
 
@@ -413,12 +428,14 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     } sortOrder{BY_SOURCE};
 
     std::string filterString;
+
     enum FilterOn
     {
         NONE,
         SOURCE,
         TARGET
     } filterOn{NONE};
+
     void clearFilters()
     {
         if (filterOn != NONE)
@@ -512,6 +529,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         {
             std::lock_guard<std::recursive_mutex> modLock(synth->storage.modRoutingMutex);
+
             // FIXME mutex lock
             append("Global Modulators", synth->storage.getPatch().modulation_global, 0, -1);
             append("Scene A - Voice Modulators",
@@ -553,15 +571,19 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 if (a.source_id != b.source_id)
                     return a.source_id < b.source_id;
             }
+
             return false;
         });
 
         std::string priorN = "-";
+
         for (const auto &d : dataRows)
         {
             auto l = std::make_unique<DataRowEditor>(d, this);
-            l->setSkin(skin, associatedBitmapStore);
             auto sortName = sortOrder == BY_SOURCE ? d.sname : d.pname;
+
+            l->setSkin(skin, associatedBitmapStore);
+
             if (sortName != priorN)
             {
                 priorN = sortName;
@@ -575,6 +597,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 ypos += DataRowEditor::height;
                 addAndMakeVisible(*l);
             }
+
             l->hasFollower = false;
             rows.push_back(std::move(l));
         }
@@ -605,10 +628,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         for (auto c : getChildren())
         {
             auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(c);
+
             if (skc)
                 skc->setSkin(skin, associatedBitmapStore);
             else
-                std::cout << "SKipping an element " << std::endl;
+                std::cout << "Skipping an element " << std::endl;
         }
     }
 
@@ -650,24 +674,24 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         tcomp->setSkin(skin, associatedBitmapStore);
         men.addCustomItem(-1, std::move(tcomp));
         men.addSeparator();
-        men.addItem("Clear Filter", [this]() {
+        men.addItem(Surge::GUI::toOSCaseForMenu("Clear Filter"), [this]() {
             editor->modContents->clearFilters();
-            filterL->setText("Filter By:", juce::NotificationType::dontSendNotification);
+            filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
             filterW->setLabels({"-"});
         });
         men.addSeparator();
-        men.addSectionHeader("By Source");
+        men.addSectionHeader("BY SOURCE");
         for (auto s : sources)
             men.addItem(s, [this, s]() {
                 editor->modContents->filterBySource(s);
-                filterL->setText("Filter By Source:", juce::NotificationType::dontSendNotification);
+                filterL->setText("Filter By Source", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({s});
             });
-        men.addSectionHeader("By Target");
+        men.addSectionHeader("BY TARGET");
         for (auto t : targets)
             men.addItem(t, [this, t]() {
                 editor->modContents->filterByTarget(t);
-                filterL->setText("Filter By Target:", juce::NotificationType::dontSendNotification);
+                filterL->setText("Filter By Target", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({t});
             });
         men.showMenuAsync(juce::PopupMenu::Options());
@@ -681,7 +705,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         tcomp->setSkin(skin, associatedBitmapStore);
         men.addCustomItem(-1, std::move(tcomp));
         men.addSeparator();
-        men.addItem("Coming Soon", [this]() {});
+        men.addItem("Coming soon!", [this]() {});
         men.showMenuAsync(juce::PopupMenu::Options());
     }
     break;
@@ -741,7 +765,7 @@ ModulationEditor::~ModulationEditor()
 }
 
 /*
- * At a later date I can make this more efficient byt for now if any modulation changes
+ * At a later date I can make this more efficient but for now if any modulation changes
  * in the main UI just rebuild the table.
  */
 void ModulationEditor::idle()

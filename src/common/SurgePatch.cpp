@@ -72,9 +72,9 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     param_ptr.push_back(polylimit.assign(p_id.next(), 0, "polylimit", "Polyphony Limit",
                                          ct_polylimit, Surge::Skin::Scene::polylimit, 0, cg_GLOBAL,
                                          0, false, kHorizontal | kNoPopup));
-    param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Bypass", ct_fxbypass,
-                                         Surge::Skin::Global::fx_bypass, 0, cg_GLOBAL, 0, false,
-                                         kHorizontal | kNoPopup));
+    param_ptr.push_back(fx_bypass.assign(p_id.next(), 0, "fx_bypass", "FX Chain Bypass",
+                                         ct_fxbypass, Surge::Skin::Global::fx_bypass, 0, cg_GLOBAL,
+                                         0, false, kHorizontal | kNoPopup));
 
     polylimit.val.i = DEFAULT_POLYLIMIT;
     splitpoint.val.i = 60;
