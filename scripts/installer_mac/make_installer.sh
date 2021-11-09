@@ -52,7 +52,16 @@ build_flavor()
     cp -r "$INDIR/$flavorprod" "$workdir"
     ls -l $workdir
 
-    pkgbuild --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
+
+    if [[ ! -z $MAC_SIGNING_CERT ]]; then
+      [[ -z $MAC_INSTALLING_CERT ]] && echo "You need an installing cert too " && exit 2
+      codesign --force -s "$MAC_SIGNING_CERT" -o runtime --deep "$workdir/$flavorprod"
+      codesign -vvv "$workdir/$flavorprod"
+
+      pkgbuild --sign "$MAC_INSTALLING_CERT" --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
+    else
+      pkgbuild --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
+    fi
 
     rm -rf $workdir
 }
@@ -87,7 +96,11 @@ fi
 # Build the resources pagkage
 RSRCS=${SOURCEDIR}/resources/data
 echo --- BUILDING Resources pkg ---
-pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+if [[ ! -z $MAC_INSTALLING_CERT ]]; then
+  pkgbuild --sign "$MAC_INSTALLING_CERT" --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+else
+  pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+fi
 
 echo --- Sub Packages Created ---
 ls -l "${TMPDIR}"
@@ -165,7 +178,12 @@ XMLEND
 # build installation bundle
 
 pushd ${TMPDIR}
-productbuild --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/scripts/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
+if [[ ! -z $MAC_INSTALLING_CERT ]]; then
+  productbuild --sign "$MAC_INSTALLING_CERT" --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/scripts/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
+else
+  productbuild --distribution "distribution.xml" --package-path "." --resources ${SOURCEDIR}/scripts/installer_mac/Resources "$OUTPUT_BASE_FILENAME.pkg"
+fi
+
 popd
 
 Rez -append ${SOURCEDIR}/scripts/installer_mac/Resources/icns.rsrc -o "${TMPDIR}/${OUTPUT_BASE_FILENAME}.pkg"
@@ -179,6 +197,13 @@ if [[ -f "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg" ]]; then
 fi
 hdiutil create /tmp/tmp.dmg -ov -volname "$OUTPUT_BASE_FILENAME" -fs HFS+ -srcfolder "${TMPDIR}/Surge XT/"
 hdiutil convert /tmp/tmp.dmg -format UDZO -o "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
+
+if [[ ! -z $MAC_SIGNING_CERT ]]; then
+  codesign --force -s "$MAC_SIGNING_CERT" --timestamp "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
+  codesign -vvv "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg"
+  xcrun notarytool submit "${TARGET_DIR}/$OUTPUT_BASE_FILENAME.dmg" --apple-id ${MAC_SIGNING_ID} --team-id ${MAC_SIGNING_TEAM} --password ${MAC_SIGNING_1UPW} --wait
+  xcrun stapler staple "${TARGET_DIR}/${OUTPUT_BASE_FILENAME}.dmg"
+fi
 
 # clean up
 
