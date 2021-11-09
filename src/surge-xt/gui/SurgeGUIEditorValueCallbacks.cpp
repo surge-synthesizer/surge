@@ -144,15 +144,12 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
         }
 
         std::string name =
-            fmt::format("CC {:d} ... {:d}", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
+            fmt::format("{:d} ... {:d}", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
 
         midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
     }
 
-    std::string what = isForMacro ? "Macro" : "Parameter";
-    std::string assigntxt = fmt::format("Assign {} to MIDI", what);
-
-    parentMenu.addSubMenu(Surge::GUI::toOSCaseForMenu(assigntxt), midiSub);
+    parentMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign to MIDI CC"), midiSub);
 
     bool cancellearn = false;
 
@@ -167,11 +164,11 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
 
     if (cancellearn)
     {
-        learntxt = fmt::format("Abort {} MIDI Learn", what);
+        learntxt = "Abort MIDI Learn";
     }
     else
     {
-        learntxt = fmt::format("MIDI Learn {}", what);
+        learntxt = "MIDI Learn...";
     }
 
     parentMenu.addItem(Surge::GUI::toOSCaseForMenu(learntxt),
@@ -590,8 +587,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             int detailedMode = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, 0);
 
-            // should start at 0, but started at 1 before.. might be a reason but don't remember
-            // why...
+            // should start at 0, but it started at 1 before
+            // there might be a reason but I don't remember why
             std::vector<modsources> possibleSources;
             possibleSources.push_back(modsource);
 
@@ -629,7 +626,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 contextMenu.addSeparator();
                                 Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu,
-                                                                                 "Targets");
+                                                                                 "TARGETS");
                             }
 
                             parameter->get_display_of_modulation_depth(
@@ -856,21 +853,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     showOverlay(MODULATION_EDITOR);
             });
 
-            contextMenu.addSeparator();
-
-            if (cms->needsHamburger())
-            {
-                auto hamSub = juce::PopupMenu();
-                cms->buildHamburgerMenu(hamSub, false);
-                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
-                contextMenu.addSeparator();
-            }
-
+            // for macros only
             if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
             {
-                /*
-                ** This is the menu for the controls
-                */
+                contextMenu.addSeparator();
+
+                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
 
                 ccid = modsource - ms_ctrl1;
 
@@ -879,6 +867,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 .modsources[modsource]);
 
                 contextMenu.addSeparator();
+
                 char vtxt[1024];
                 snprintf(vtxt, 1024, "%s: %.*f %%",
                          Surge::GUI::toOSCaseForMenu("Edit Value").c_str(), (detailedMode ? 6 : 2),
@@ -888,12 +877,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             0,  // controllers arent per scene
                                             0); // controllers aren't indexed
                 });
-
-                contextMenu.addSeparator();
-
-                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
-
-                contextMenu.addSeparator();
 
                 bool ibp = synth->storage.getPatch()
                                .scene[current_scene]
@@ -935,28 +918,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         openMacroRenameDialog(ccid, pos, msb);
                     });
+            }
 
-                auto jpm = juceEditor->hostMenuForMacro(ccid);
+            contextMenu.addSeparator();
 
-                if (jpm.getNumItems() > 0)
-                {
-                    contextMenu.addSeparator();
-
-                    juce::PopupMenu::MenuItemIterator iterator(jpm);
-
-                    while (iterator.next())
-                    {
-                        contextMenu.addItem(iterator.getItem());
-                    }
-                }
+            if (cms->needsHamburger())
+            {
+                auto hamSub = juce::PopupMenu();
+                cms->buildHamburgerMenu(hamSub, false);
+                contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
+                contextMenu.addSeparator();
             }
 
             int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
 
+            contextMenu.addSeparator();
+
             if (lfo_id >= 0)
             {
-                contextMenu.addSeparator();
-
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator"),
                                     [this, sc, lfo_id]() {
                                         synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
@@ -1012,6 +991,26 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
+            // for macros only (VST3 host side menu)
+            if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
+            {
+                contextMenu.addSeparator();
+
+                auto jpm = juceEditor->hostMenuForMacro(ccid);
+
+                if (jpm.getNumItems() > 0)
+                {
+                    contextMenu.addSeparator();
+
+                    juce::PopupMenu::MenuItemIterator iterator(jpm);
+
+                    while (iterator.next())
+                    {
+                        contextMenu.addItem(iterator.getItem());
+                    }
+                }
+            }
+
             contextMenu.showMenuAsync(juce::PopupMenu::Options(),
                                       [control](int opt) { control->endHover(); });
             return 1;
@@ -1040,15 +1039,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
     }
-
-    /* ED: unsure why this is here, it prevents key modifiers from reaching the following
-       section of code? */
-    /*
-    if (!(button.isRightButtonDown() || isDoubleClickEvent))
-    {
-        return 0;
-    }
-    */
 
     int ptag = tag - start_paramtags;
 
@@ -1902,7 +1892,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 if (n_ms)
                 {
                     contextMenu.addSeparator();
-                    Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu, "Modulations");
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu, "MODULATIONS");
 
                     for (int k = 1; k < n_modsources; k++)
                     {
