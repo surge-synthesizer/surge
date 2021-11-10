@@ -28,7 +28,7 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     iout = 0;
     output = 0;
     step = 0;
-    env_state = lfoeg_delay;
+    env_state = lfoeg_stuck; // in the case we process this without an attack, we want to be 'done'
     env_val = 0.f;
     env_phase = 0;
     shuffle_id = 0;
