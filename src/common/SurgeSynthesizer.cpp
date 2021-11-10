@@ -2011,6 +2011,14 @@ void SurgeSynthesizer::setSamplerate(float sr)
 {
     storage.setSamplerate(sr);
     sinus.set_rate(1000.0 * dsamplerate_inv);
+
+    for (const auto &f : fx)
+    {
+        if (f)
+        {
+            f->sampleRateReset();
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------

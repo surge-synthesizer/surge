@@ -51,6 +51,14 @@ class alignas(16) AirWindowsEffect : public Effect
     std::unique_ptr<AirWinBaseClass> airwin;
     int lastSelected = -1;
 
+    void sampleRateReset() override
+    {
+        if (airwin)
+        {
+            airwin->sr = samplerate;
+        }
+    }
+
     static std::vector<AirWinBaseClass::Registration> fxreg;
     static std::vector<int> fxregOrdering;
 

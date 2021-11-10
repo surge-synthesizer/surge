@@ -63,6 +63,10 @@ class alignas(16) Effect
     virtual void suspend() { return; }
     float vu[KNumVuSlots]; // stereo pairs, just use every other when mono
 
+    // Most of the fx read the sample rate at sample time but airwindows
+    // keeps a cache so give loaded fx a notice when the sample rate cahnges
+    virtual void sampleRateReset() {}
+
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
     {
         // No-op here.
