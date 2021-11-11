@@ -2355,7 +2355,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
     for (int s = 0; s < n_fx_slots; s++)
     {
         bool something_changed = false;
-        if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all)
+        if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all ||
+            fx_reload[s])
         {
             fx_reload[s] = false;
 
@@ -2464,9 +2465,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (auto &t : fxmodsync[s])
                         {
-                            setModulation(storage.getPatch().fx[s].p[std::get<2>(t)].id,
+                            setModulation(storage.getPatch().fx[s].p[std::get<3>(t)].id,
                                           (modsources)std::get<0>(t), std::get<1>(t),
-                                          std::get<2>(t), std::get<3>(t));
+                                          std::get<2>(t), std::get<4>(t));
                         }
                         fxmodsync[s].clear();
                         fx_reload_mod[s] = false;
@@ -4313,6 +4314,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     std::vector<ModulationRouting> *mv = nullptr;
     mv = &(storage.getPatch().modulation_global);
     int n = mv->size();
+    std::vector<int> deleteThese;
     for (int i = 0; i < n; ++i)
     {
         if (mv->at(i).destination_id >= fxsync[source].p[0].id &&
@@ -4356,6 +4358,28 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                                     mv->at(i).source_scene, whichForReal, depth));
             }
         }
+
+        // Any residual target modulation has to go
+        if (mv->at(i).destination_id >= fxsync[target].p[0].id &&
+            mv->at(i).destination_id <= fxsync[target].p[n_fx_params - 1].id)
+        {
+            deleteThese.push_back(i);
+        }
+
+        if (m == FXReorderMode::MOVE || m == SWAP)
+        {
+            // and if we are moving or swapping delete anything we left behind
+            if (mv->at(i).destination_id >= fxsync[source].p[0].id &&
+                mv->at(i).destination_id <= fxsync[source].p[n_fx_params - 1].id)
+            {
+                deleteThese.push_back(i);
+            }
+        }
+    }
+
+    for (auto dt = deleteThese.rbegin(); dt != deleteThese.rend(); dt++)
+    {
+        mv->erase(mv->begin() + *dt);
     }
 
     load_fx_needed = true;

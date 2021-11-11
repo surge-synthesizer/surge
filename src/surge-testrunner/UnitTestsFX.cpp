@@ -24,7 +24,7 @@ TEST_CASE("Airwindows Loud", "[fx]")
             surge->process();
 
         auto *pt = &(surge->storage.getPatch().fx[0].type);
-        auto awv = fxt_airwindows / (pt->val_max.i - pt->val_min.i);
+        auto awv = 1.f * fxt_airwindows / (pt->val_max.i - pt->val_min.i);
 
         auto did = surge->idForParameter(pt);
         surge->setParameter01(did, awv, false);
@@ -59,5 +59,175 @@ TEST_CASE("Airwindows Loud", "[fx]")
                 surge->process();
             }
         }
+    }
+}
+
+TEST_CASE("FX Move with Modulation", "[fx]")
+{
+    auto setFX = [](auto surge, auto slot, auto type) {
+        auto *pt = &(surge->storage.getPatch().fx[slot].type);
+        auto awv = 1.f * fxt_chorus4 / (pt->val_max.i - pt->val_min.i);
+
+        auto did = surge->idForParameter(pt);
+        surge->setParameter01(did, awv, false);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+    };
+    auto step = [](auto surge) {
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+    };
+
+    auto confirmDestinations = [](auto surge, const std::vector<std::pair<int, int>> &fxp) {
+        std::map<int, int> destinations;
+        for (const auto &mg : surge->storage.getPatch().modulation_global)
+        {
+            if (destinations.find(mg.destination_id) == destinations.end())
+                destinations[mg.destination_id] = 0;
+            destinations[mg.destination_id]++;
+        }
+
+        auto rd = [surge, &destinations](auto f, auto p) {
+            auto id = surge->storage.getPatch().fx[f].p[p].id;
+            if (destinations.find(id) == destinations.end())
+                destinations[id] = 0;
+            destinations[id]--;
+        };
+
+        for (auto p : fxp)
+        {
+            rd(p.first, p.second);
+        }
+
+        for (auto p : destinations)
+        {
+            INFO("Confirming destination " << p.first);
+            REQUIRE(p.second == 0);
+        }
+        return true;
+    };
+
+    SECTION("Setup a Modulated Combulator and Move It")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
+        step(surge);
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::MOVE);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
+
+        confirmDestinations(surge, {{1, 2}});
+    }
+
+    SECTION("Setup a Modulated Combulator With Two Mods and another Move It")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+        setFX(surge, 4, fxt_chorus4);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModulation(surge->storage.getPatch().fx[0].p[3].id, ms_slfo2, 0, 0, 0.2);
+        surge->setModulation(surge->storage.getPatch().fx[4].p[3].id, ms_slfo1, 0, 0, 0.3);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 3);
+        step(surge);
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::MOVE);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 3);
+
+        REQUIRE(confirmDestinations(surge, {{1, 2}, {1, 3}, {4, 3}}));
+    }
+
+    SECTION("Setup a Modulated Combulator and Copy It")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
+        step(surge);
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::COPY);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+
+        REQUIRE(confirmDestinations(surge, {{0, 2}, {1, 2}}));
+    }
+
+    SECTION("Move over a modulated FX")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+        setFX(surge, 1, fxt_chorus4);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+        confirmDestinations(surge, {{0, 2}, {1, 3}});
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::MOVE);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
+        confirmDestinations(surge, {{1, 2}});
+    }
+
+    SECTION("Copy over a modulated FX")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+        setFX(surge, 1, fxt_chorus4);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+        confirmDestinations(surge, {{0, 2}, {1, 3}});
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::COPY);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+        confirmDestinations(surge, {{0, 2}, {1, 2}});
+    }
+
+    SECTION("Swap Two modulated FX")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        step(surge);
+        setFX(surge, 0, fxt_combulator);
+        setFX(surge, 1, fxt_chorus4);
+
+        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+        confirmDestinations(surge, {{0, 2}, {1, 3}});
+
+        surge->reorderFx(0, 1, SurgeSynthesizer::SWAP);
+        step(surge);
+        REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
+        confirmDestinations(surge, {{0, 3}, {1, 2}});
     }
 }
