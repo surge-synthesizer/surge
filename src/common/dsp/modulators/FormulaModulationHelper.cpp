@@ -234,6 +234,8 @@ end
 
         lua_pop(s.L, -1); // the modstate which is nouw bound to the statename
 
+        s.useEnvelope = true;
+
         {
             auto sub = Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions", s.L);
 
@@ -245,6 +247,17 @@ end
             }
             else
             {
+                {
+                    // read off the envelope control
+                    auto gv = Surge::LuaSupport::SGLD("prepareForEvaluation::enveloperead", s.L);
+                    lua_pushstring(s.L, "use_envelope");
+                    lua_gettable(s.L, -2);
+                    if (lua_isboolean(s.L, -1))
+                    {
+                        s.useEnvelope = lua_toboolean(s.L, -1);
+                    }
+                    lua_pop(s.L, 1);
+                }
                 // now lets read off those subscriptions
                 lua_pushstring(s.L, "subscriptions");
                 lua_gettable(s.L, -2);
@@ -319,8 +332,6 @@ end
         // math or nil so
         lua_pop(s.L, 1);
     }
-
-    s.useEnvelope = true;
 
     s.del = 0;
     s.dec = 0;
