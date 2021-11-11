@@ -51,8 +51,13 @@ struct TinyLittleIconButton : public juce::Component
 
     bool isHovered{false};
     std::function<void()> callback;
+    std::string accLabel;
     SurgeImage *icons{nullptr};
     int offset{0};
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TinyLittleIconButton);
 };
@@ -74,6 +79,11 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     SurgeImage *icons{nullptr};
     bool centerBold{true};
     void setCenterBold(bool b) { centerBold = b; }
+    void launchHelp();
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MenuTitleHelpComponent);
 };
@@ -88,6 +98,10 @@ struct MenuCenteredBoldLabel : juce::PopupMenu::CustomComponent
 
     std::string label;
     static void addToMenu(juce::PopupMenu &m, const std::string label);
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 };
 
 struct TinyLittleIconButton;
@@ -117,6 +131,10 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
     std::string source, amount;
     std::function<void(OpType)> callback;
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModMenuCustomComponent);
 };
