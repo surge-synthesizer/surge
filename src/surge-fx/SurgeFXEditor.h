@@ -24,6 +24,22 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
     ~SurgefxAudioProcessorEditor();
 
+    struct FxMenu
+    {
+        enum Type
+        {
+            SECTION,
+            FX
+        } type;
+        bool isBreak{false};
+        std::string name;
+        int fxtype{-1};
+    };
+    std::vector<FxMenu> menu;
+    std::unique_ptr<juce::Component> picker;
+    void makeMenu();
+    void showMenu();
+
     //==============================================================================
     void paint(juce::Graphics &) override;
     void resized() override;
@@ -38,21 +54,17 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
         FxTypeGroup = 1776
     };
 
-  private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
 
+  private:
     juce::Slider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
     SurgeTempoSyncSwitch fxExtended[n_fx_params];
     SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
-
-    juce::TextButton
-        selectType[n_fx_types]; // this had better match the list of fxnames in the constructor
-    int typeByButtonIndex[n_fx_types];
 
     void blastToggleState(int i);
     void resetLabels();

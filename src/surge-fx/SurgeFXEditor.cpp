@@ -10,37 +10,52 @@
 
 #include "SurgeFXProcessor.h"
 #include "SurgeFXEditor.h"
+#include "FxPresetAndClipboardManager.h"
+#include "tinyxml/tinyxml.h"
 
-static std::vector<std::vector<std::string>> fxnm = {
-    {"EQ", "Graphic EQ", "Resonator", "Exciter", "CHOW", "Distortion", "Neuron", "Tape"},
-    {"Chorus", "Ensemble", "Flanger", "Phaser", "Rotary", "Delay", "Reverb 1", "Reverb 2"},
-    {"Combulator", "Freq Shifter", "Nimbus", "Ring Modulator", "Treemonster", "Vocoder",
-     "Airwindows", "Conditioner"}};
+struct Picker : public juce::Component
+{
+    Picker(SurgefxAudioProcessorEditor *ed) : editor(ed) {}
+    void paint(juce::Graphics &g) override
+    {
+        auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
+        auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
 
-static std::vector<std::vector<int>> fxt = {
-    {fxt_eq, fxt_geq11, fxt_resonator, fxt_exciter, fxt_chow, fxt_distortion, fxt_neuron, fxt_tape},
-    {fxt_chorus4, fxt_ensemble, fxt_flanger, fxt_phaser, fxt_rotaryspeaker, fxt_delay, fxt_reverb,
-     fxt_reverb2},
-    {fxt_combulator, fxt_freqshift, fxt_nimbus, fxt_ringmod, fxt_treemonster, fxt_vocoder,
-     fxt_airwindows, fxt_conditioner}};
+        g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledBg));
+        g.fillRoundedRectangle(bounds, 5);
+        g.setColour(edge);
+        g.drawRoundedRectangle(bounds, 5, 1);
+        g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
+        g.setFont(28);
+        g.drawText(fx_type_names[editor->processor.getEffectType()], bounds.reduced(8, 3),
+                   juce::Justification::centred);
 
-static std::vector<std::vector<int>> fxgroup = {
-    {0, 0, 0, 0, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 3, 3, 3}, {4, 4, 4, 4, 4, 4, 5, 5}};
+        auto p = juce::Path();
+        int sz = 15;
+        int xp = -10;
+        int yp = (getHeight() - sz) / 2;
+        p.addTriangle(bounds.getTopRight().translated(xp - sz, yp),
+                      bounds.getTopRight().translated(xp, yp),
+                      bounds.getTopRight().translated(xp - sz / 2, yp + sz));
+        g.fillPath(p);
+    }
 
-// https://piccianeri.com/wp-content/uploads/2016/10/Complementary-palette-f27400.jpg
-static std::vector<juce::Colour> fxbuttoncolors = {
-    juce::Colour(0xFF106060), juce::Colour(0xFFE03400), juce::Colour(0xFF104B60),
-    juce::Colour(0xFFF06000), juce::Colour(0xFF103560), juce::Colour(0xFFFF9000)};
+    void mouseDown(const juce::MouseEvent &e) override { editor->showMenu(); }
+    SurgefxAudioProcessorEditor *editor{nullptr};
+};
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p), processor(p)
 {
+    makeMenu();
     surgeLookFeel.reset(new SurgeLookAndFeel());
     setLookAndFeel(surgeLookFeel.get());
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(650, 55 * 6 + 80 + 50 * fxt.size());
+    int topSection = 80;
+
+    setSize(600, 55 * 6 + 80 + topSection);
     setResizable(false, false); // For now
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge FX Bank");
@@ -51,7 +66,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(fxNameLabel.get());
 
-    int ypos0 = 50 * fxt.size() - 5;
+    int ypos0 = topSection - 5;
     int byoff = 7;
 
     for (int i = 0; i < n_fx_params; ++i)
@@ -171,99 +186,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         addAndMakeVisible(fxParamDisplay[i]);
     }
 
-    int en = processor.getEffectType();
-    int maxButtonsPerRow = 0;
-
-    for (auto &e : fxt)
-    {
-        maxButtonsPerRow = std::max(maxButtonsPerRow, (int)e.size());
-    }
-
-    int buttonsPerRow = maxButtonsPerRow;
-    int i = 0;
-
-    for (int row = 0; row < fxt.size(); ++row)
-    {
-        std::unordered_set<int> groupsPerRow;
-
-        for (auto g : fxgroup[row])
-        {
-            groupsPerRow.insert(g);
-        }
-
-        auto nGroups = groupsPerRow.size();
-
-        int bxsz = (getWidth() - 40) / buttonsPerRow;
-        int bxmg = 10;
-        int bysz = 38;
-        int bymg = 10;
-
-        int xPos = bxmg;
-
-        if (nGroups > 2)
-        {
-            xPos -= bxmg / 3 * (nGroups - 2);
-        }
-
-        if (fxt[row].size() < buttonsPerRow)
-        {
-            xPos += bxsz * (buttonsPerRow - fxt[row].size()) * 0.5;
-        }
-
-        int currGrp = fxgroup[row][0];
-
-        for (int col = 0; col < fxt[row].size(); ++col)
-        {
-            auto nm = fxnm[row][col];
-            auto ty = fxt[row][col];
-
-            selectType[i].setButtonText(nm);
-            selectType[i].setColour(SurgeLookAndFeel::fxButtonFill,
-                                    fxbuttoncolors[fxgroup[row][col]]);
-            typeByButtonIndex[i] = ty;
-
-            if (fxgroup[row][col] != currGrp)
-            {
-                currGrp = fxgroup[row][col];
-                xPos += bxsz / 3;
-            }
-
-            juce::Rectangle<int> bpos{xPos, row * bysz + bymg, bxsz, bysz};
-            xPos += bxsz;
-
-            selectType[i].setRadioGroupId(FxTypeGroup);
-            selectType[i].setBounds(bpos);
-            selectType[i].setClickingTogglesState(true);
-            selectType[i].onClick = [this, ty] { this->setEffectType(ty); };
-
-            // gross but works just so we don't see those ellipses
-            if (fxt[row][col] == fxt_treemonster || fxt[row][col] == fxt_rotaryspeaker)
-            {
-                bpos.setRight(bpos.getRight() + 4);
-                selectType[i].setBounds(bpos);
-            }
-            if (fxt[row][col] == fxt_vocoder)
-            {
-                auto pos = bpos.getPosition();
-                pos.setX(pos.x + 4);
-                bpos.setPosition(pos);
-                selectType[i].setBounds(bpos);
-            }
-
-            if (ty == en)
-            {
-                selectType[i].setToggleState(true, juce::NotificationType::dontSendNotification);
-            }
-            else
-            {
-                selectType[i].setToggleState(false, juce::NotificationType::dontSendNotification);
-            }
-
-            addAndMakeVisible(selectType[i]);
-
-            ++i;
-        }
-    }
+    picker = std::make_unique<Picker>(this);
+    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
+    addAndMakeVisible(*picker);
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
 }
@@ -305,20 +230,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
 
     int row = 0, col = 0;
 
-    // not elegant but works
-    for (int i = 0; i < fxt.size(); ++i)
-    {
-        for (int j = 0; j < fxt[row].size(); ++j)
-        {
-            if (fxt[i][j] == processor.getEffectType())
-            {
-                row = i;
-                col = j;
-            }
-        }
-    }
-
-    auto nm = fxnm[row][col];
+    std::string nm = fx_type_names[processor.getEffectType()];
 
     fxNameLabel->setText(juce::String("Surge FX: " + nm), juce::dontSendNotification);
 }
@@ -328,6 +240,7 @@ void SurgefxAudioProcessorEditor::setEffectType(int i)
     processor.resetFxType(i);
     blastToggleState(i - 1);
     resetLabels();
+    picker->repaint();
 }
 
 void SurgefxAudioProcessorEditor::handleAsyncUpdate() { paramsChangedCallback(); }
@@ -354,14 +267,7 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         }
 }
 
-void SurgefxAudioProcessorEditor::blastToggleState(int w)
-{
-    for (auto i = 0; i < n_fx_types; ++i)
-    {
-        selectType[i].setToggleState(typeByButtonIndex[i] == w + 1,
-                                     juce::NotificationType::dontSendNotification);
-    }
-}
+void SurgefxAudioProcessorEditor::blastToggleState(int w) {}
 
 //==============================================================================
 void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
@@ -373,4 +279,64 @@ void SurgefxAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+}
+
+void SurgefxAudioProcessorEditor::makeMenu()
+{
+    auto storage = processor.storage.get();
+    auto fxConfiguration = storage->getSnapshotSection("fx");
+    auto c = fxConfiguration->FirstChildElement();
+    while (c)
+    {
+        FxMenu men;
+        auto a = c->Attribute("name");
+        if (!a)
+        {
+            a = c->Attribute("label");
+        }
+        if (a)
+        {
+            men.name = a;
+        }
+        if (std::string(c->Value()) == "type")
+        {
+            men.type = FxMenu::FX;
+            auto t = -1;
+            c->QueryIntAttribute("i", &t);
+            men.fxtype = t;
+        }
+        else
+        {
+            men.type = FxMenu::SECTION;
+            int bk = 0;
+            c->QueryIntAttribute("columnbreak", &bk);
+            men.isBreak = bk;
+        }
+        menu.push_back(men);
+
+        c = c->NextSiblingElement();
+    }
+}
+
+void SurgefxAudioProcessorEditor::showMenu()
+{
+    auto p = juce::PopupMenu();
+    for (const auto &m : menu)
+    {
+        if (m.isBreak)
+            p.addColumnBreak();
+        if (m.type == FxMenu::SECTION)
+            p.addSectionHeader(m.name);
+        if (m.type == FxMenu::FX)
+            p.addItem(m.name, [this, m]() {
+                if (m.fxtype > 0)
+                    setEffectType(m.fxtype);
+            });
+    }
+    auto o = juce::PopupMenu::Options();
+    auto r = juce::Rectangle<int>().withPosition(
+        localPointToGlobal(picker->getBounds().getBottomLeft()));
+    o = o.withTargetScreenArea(r).withPreferredPopupDirection(
+        juce::PopupMenu::Options::PopupDirection::downwards);
+    p.showMenuAsync(o);
 }
