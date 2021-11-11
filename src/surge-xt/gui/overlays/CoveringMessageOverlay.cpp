@@ -22,17 +22,18 @@ namespace Overlays
 {
 void CoveringMessageOverlay::paint(juce::Graphics &g)
 {
-    g.fillAll(juce::Colours::black.withAlpha(0.7f));
-    auto rT = getLocalBounds().withHeight(40).translated(0, 10);
-    auto rM = getLocalBounds().withTrimmedTop(75);
+    auto area = getLocalBounds();
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(30));
+    g.fillAll(juce::Colours::black.withAlpha(0.8f));
+
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(36, juce::Font::bold));
     g.setColour(juce::Colours::white);
-    g.drawText(pt, rT, juce::Justification::centred);
+    g.drawText(pt, area.translated(0, -80), juce::Justification::centred);
 
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
     g.setColour(juce::Colours::white);
-    g.drawMultiLineText(et, 20, rM.getY(), getWidth() - 40, juce::Justification::centred);
+    g.drawMultiLineText(et, 20, area.getCentreY() - 20, getWidth() - 40,
+                        juce::Justification::centred);
 }
 } // namespace Overlays
 } // namespace Surge
