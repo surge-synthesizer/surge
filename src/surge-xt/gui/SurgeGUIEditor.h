@@ -551,6 +551,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool scanJuceSkinComponents{false};
     std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, std::unique_ptr<juce::Component>>
         juceSkinComponents;
+    std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, juce::Component *>
+        juceSkinComponentsWeak;
+
+    /*
+     * This form of the component creator assumes that after you get the unique ptr you
+     * will externally stow it away in juceSkinComponents with a move later and the ownership
+     * pattern comes through the collective array
+     */
     template <typename T>
     std::unique_ptr<T> componentForSkinSession(const Surge::GUI::Skin::Control::sessionid_t id)
     {
@@ -578,6 +586,26 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
             hsw = std::make_unique<T>();
         }
         return std::move(hsw);
+    }
+
+    /*
+     * This form of the component creator assumes that you hold the unique in a named
+     * member and don't cache it in the shared array, but we maintain a weak reference array
+     * to make sure the value we expect is still the correct one.
+     */
+    template <typename T>
+    void componentForSkinSessionOwnedByMember(const Surge::GUI::Skin::Control::sessionid_t id,
+                                              std::unique_ptr<T> &res)
+    {
+        if (juceSkinComponentsWeak.find(id) != juceSkinComponentsWeak.end())
+        {
+            if (juceSkinComponentsWeak[id] == res.get())
+            {
+                return;
+            }
+        }
+        res = std::make_unique<T>();
+        juceSkinComponentsWeak[id] = res.get();
     }
 
   private:

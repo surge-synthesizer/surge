@@ -1485,9 +1485,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL:
         {
-            // Room for improvement, obviously
-            lfoNameLabel =
-                componentForSkinSession<Surge::Widgets::VerticalLabel>(skinCtrl->sessionid);
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, lfoNameLabel);
             frame->addAndMakeVisible(*lfoNameLabel);
             lfoNameLabel->setBounds(skinCtrl->getRect());
             lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
@@ -1517,8 +1515,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
         {
-            patchSelector =
-                componentForSkinSession<Surge::Widgets::PatchSelector>(skinCtrl->sessionid);
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, patchSelector);
             patchSelector->addListener(this);
             patchSelector->setStorage(&(this->synth->storage));
             patchSelector->setTag(tag_patchname);
@@ -1542,32 +1539,33 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
         {
-            auto fc = componentForSkinSession<Surge::Widgets::EffectChooser>(skinCtrl->sessionid);
-            fc->addListener(this);
-            fc->setBounds(skinCtrl->getRect());
-            fc->setTag(tag_fx_select);
-            fc->setSkin(currentSkin, bitmapStore);
-            fc->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID));
-            fc->setCurrentEffect(current_fx);
+            // FIXOWN
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, effectChooser);
+            effectChooser->addListener(this);
+            effectChooser->setBounds(skinCtrl->getRect());
+            effectChooser->setTag(tag_fx_select);
+            effectChooser->setSkin(currentSkin, bitmapStore);
+            effectChooser->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID));
+            effectChooser->setCurrentEffect(current_fx);
 
             for (int fxi = 0; fxi < n_fx_slots; fxi++)
             {
-                fc->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
+                effectChooser->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
             }
-            fc->setBypass(synth->storage.getPatch().fx_bypass.val.i);
-            fc->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
+            effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
+            effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 
-            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fc);
+            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*effectChooser);
 
-            setAccessibilityInformationByTitleAndAction(fc->asJuceComponent(), "FX Slots",
-                                                        "Select");
+            setAccessibilityInformationByTitleAndAction(effectChooser->asJuceComponent(),
+                                                        "FX Slots", "Select");
 
-            effectChooser = std::move(fc);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
-        { // main vu-meter
-            vu[0] = componentForSkinSession<Surge::Widgets::VuMeter>(skinCtrl->sessionid);
+        {
+            // main vu-meter
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, vu[0]);
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
@@ -4882,16 +4880,17 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
         case ct_polylimit:
             pbd = std::move(polydisp);
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, pbd);
             break;
         case ct_midikey_or_channel:
             pbd = std::move(splitpointControl);
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, pbd);
             break;
         default:
+            pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
             break;
         }
 
-        if (!pbd)
-            pbd = componentForSkinSession<Surge::Widgets::NumberField>(skinCtrl->sessionid);
         pbd->addListener(this);
         pbd->setSkin(currentSkin, bitmapStore, skinCtrl);
         pbd->setTag(tag);

@@ -11,9 +11,10 @@ patches = [["Leads", "Sharpish"],
            ["Keys", "DX EP"],
            ["Plucks", "Bell 1"]
            ]
+ps = sxttest.firstChildByTitle(mf, "Patch Selector")
+
 for patchPair in patches:
     print("LOADING ----", patchPair)
-    ps = sxttest.firstChildByTitle(mf, "Patch Selector")
     ps.ShowMenu()
     patchMenu = sxttest.findAllMenus(sxt)[0]
 
