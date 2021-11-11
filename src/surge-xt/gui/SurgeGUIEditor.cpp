@@ -370,6 +370,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     }
 
     zoom_callback = [](SurgeGUIEditor *f, bool) {};
+    auto rg = SurgeSynthEditor::BlockRezoom(juceEditor);
     setZoomFactor(initialZoomFactor);
     zoomInvalid = (initialZoomFactor != 100);
 
@@ -550,6 +551,7 @@ void SurgeGUIEditor::idle()
 
         if (zoomInvalid)
         {
+            auto rg = SurgeSynthEditor::BlockRezoom(juceEditor);
             setZoomFactor(getZoomFactor());
             zoomInvalid = false;
         }
@@ -2186,6 +2188,7 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
     zoomFactor = std::max(zf, 25.f);
+    float zff = zoomFactor * 0.01;
     if (currentSkin && resizeWindow)
     {
         int yExtra = 0;
@@ -2193,9 +2196,14 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
         {
             yExtra = SurgeSynthEditor::extraYSpaceForVirtualKeyboard;
         }
-        juceEditor->setSize(currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY() + yExtra);
+        juceEditor->setSize(zff * currentSkin->getWindowSizeX(),
+                            zff * (currentSkin->getWindowSizeY() + yExtra));
     }
-    juceEditor->setScaleFactor(zoomFactor * 0.01);
+
+    if (frame)
+    {
+        frame->setTransform(juce::AffineTransform().scaled(zff));
+    }
     setBitmapZoomFactor(zoomFactor);
     rezoomOverlays();
 }
@@ -3680,7 +3688,10 @@ void SurgeGUIEditor::reloadFromSkin()
 
     frame->setSize(wsx * sf, wsy * sf);
 
-    setZoomFactor(getZoomFactor(), true);
+    {
+        auto rg = SurgeSynthEditor::BlockRezoom(juceEditor);
+        setZoomFactor(getZoomFactor(), true);
+    }
 
     // update overlays, if opened
     if (isAnyOverlayPresent(MSEG_EDITOR))

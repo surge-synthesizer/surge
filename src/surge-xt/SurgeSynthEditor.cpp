@@ -84,6 +84,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         yExtra = 0;
     }
 
+    auto rg = BlockRezoom(this);
     setSize(BASE_WINDOW_SIZE_X, BASE_WINDOW_SIZE_Y + yExtra);
     setResizable(true, false); // For now
 
@@ -147,7 +148,9 @@ void SurgeSynthEditor::resized()
     drawExtendedControls = adapter->getShowVirtualKeyboard();
 
     auto w = getWidth();
-    auto h = getHeight() - (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0);
+    auto h = getHeight() - (drawExtendedControls
+                                ? 0.01 * adapter->getZoomFactor() * extraYSpaceForVirtualKeyboard
+                                : 0);
     auto wR = 1.0 * w / adapter->getWindowSizeX();
     auto hR = 1.0 * h / adapter->getWindowSizeY();
 
@@ -156,6 +159,12 @@ void SurgeSynthEditor::resized()
         zfn = std::max(wR, hR);
     if ((wR - 1) * (hR - 1) < 0)
         zfn = std::min(zfn, 1.0);
+
+    zfn = 100.0 * zfn / adapter->getZoomFactor();
+
+    float applyZoomFactor = adapter->getZoomFactor() * 0.01;
+    if (!rezoomGuard)
+        applyZoomFactor *= zfn;
 
     bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
 
@@ -167,7 +176,14 @@ void SurgeSynthEditor::resized()
         int tempoBlockHeight = tempoHeight + typeinHeight;
         int tempoBlockYPos = ((extraYSpaceForVirtualKeyboard - tempoBlockHeight) / 2) + yOffset;
 
-        keyboard->setBounds(x, y, adapter->getWindowSizeX() - x, extraYSpaceForVirtualKeyboard);
+        auto xf = juce::AffineTransform().scaled(applyZoomFactor);
+        auto r = juce::Rectangle<int>(x, y, adapter->getWindowSizeX() - x,
+                                      extraYSpaceForVirtualKeyboard);
+        // std::cout << "B4 " << r.toString() << std::endl;
+        // r = r.transformedBy(xf);
+        // std::cout << "AT " << r.toString() << std::endl;
+        keyboard->setBounds(r);
+        keyboard->setTransform(xf); // juce::AffineTransform().scaled(1.05));
         keyboard->setVisible(true);
 
         if (addTempo)
@@ -175,6 +191,7 @@ void SurgeSynthEditor::resized()
             tempoLabel->setBounds(4, y + tempoBlockYPos, x - 8, tempoHeight);
             tempoLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             tempoLabel->setJustificationType(juce::Justification::centred);
+            tempoLabel->setTransform(xf);
             tempoLabel->setVisible(addTempo);
 
             tempoTypein->setBounds(4, y + tempoBlockYPos + tempoHeight, x - 8, typeinHeight);
@@ -183,6 +200,7 @@ void SurgeSynthEditor::resized()
             tempoTypein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
             tempoTypein->setIndents(4, 0);
             tempoTypein->setJustification(juce::Justification::centred);
+            tempoTypein->setTransform(xf);
             tempoTypein->setVisible(addTempo);
         }
     }
@@ -195,9 +213,8 @@ void SurgeSynthEditor::resized()
 
     if (zfn != 1.0 && rezoomGuard == 0)
     {
-        rezoomGuard++;
+        auto br = BlockRezoom(this);
         adapter->setZoomFactor(adapter->getZoomFactor() * zfn, false);
-        rezoomGuard--;
     }
 }
 
@@ -239,7 +256,6 @@ bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)
 
     for (auto i = files.begin(); i != files.end(); ++i)
     {
-        std::cout << *i << std::endl;
         if (adapter->canDropTarget(i->toStdString()))
             return true;
     }

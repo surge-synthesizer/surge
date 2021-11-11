@@ -36,6 +36,12 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void paint(juce::Graphics &) override;
     void resized() override;
     int rezoomGuard{0};
+    struct BlockRezoom
+    {
+        BlockRezoom(SurgeSynthEditor *ed) : editor(ed) { editor->rezoomGuard++; }
+        ~BlockRezoom() { editor->rezoomGuard--; }
+        SurgeSynthEditor *editor{nullptr};
+    };
     void parentHierarchyChanged() override;
 
     void paramsChangedCallback();
