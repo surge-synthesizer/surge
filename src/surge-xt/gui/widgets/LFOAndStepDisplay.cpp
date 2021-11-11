@@ -190,6 +190,14 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         }
     }
 
+    if (lfodata->shape.val.i == lt_formula)
+    {
+        if (!tlfo->formulastate.useEnvelope)
+        {
+            totalEnvTime = 5.5;
+        }
+    }
+
     bool drawEnvelope = !lfodata->delay.deactivated;
 
     if (skin->hasColor(Colors::LFO::Waveform::Background))
