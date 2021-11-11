@@ -37,6 +37,31 @@ void TinyLittleIconButton::paint(juce::Graphics &g)
         icons->draw(g, 1.0, t);
 }
 
+#if SURGE_JUCE_ACCESSIBLE
+struct TinyLittleIconButtonAH : public juce::AccessibilityHandler
+{
+    explicit TinyLittleIconButtonAH(TinyLittleIconButton &itemComponentToWrap)
+        : AccessibilityHandler(
+              itemComponentToWrap, juce::AccessibilityRole::menuItem,
+              juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
+                                                     [this]() { this->itemComponent.callback(); })),
+          itemComponent(itemComponentToWrap)
+    {
+    }
+
+    void onPress() {}
+
+    juce::String getTitle() const override { return itemComponent.accLabel; }
+
+    TinyLittleIconButton &itemComponent;
+};
+
+std::unique_ptr<juce::AccessibilityHandler> TinyLittleIconButton::createAccessibilityHandler()
+{
+    return std::make_unique<TinyLittleIconButtonAH>(*this);
+}
+#endif
+
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     auto standardMenuItemHeight = 20;
@@ -113,11 +138,38 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         icons->drawAt(g, clipBox.getX() - xp, clipBox.getY() - yp, 1.0);
 }
 
-void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e)
+void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e) { launchHelp(); }
+
+void MenuTitleHelpComponent::launchHelp()
 {
     juce::URL(url).launchInDefaultBrowser();
     triggerMenuItem();
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+struct MenuTitleHelpComponentAH : public juce::AccessibilityHandler
+{
+    explicit MenuTitleHelpComponentAH(MenuTitleHelpComponent &itemComponentToWrap)
+        : AccessibilityHandler(
+              itemComponentToWrap, juce::AccessibilityRole::menuItem,
+              juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
+                                                     [this]() { this->showHelp(); })),
+          itemComponent(itemComponentToWrap)
+    {
+    }
+
+    void showHelp() { itemComponent.launchHelp(); }
+
+    juce::String getTitle() const override { return itemComponent.label; }
+
+    MenuTitleHelpComponent &itemComponent;
+};
+
+std::unique_ptr<juce::AccessibilityHandler> MenuTitleHelpComponent::createAccessibilityHandler()
+{
+    return std::make_unique<MenuTitleHelpComponentAH>(*this);
+}
+#endif
 
 void MenuCenteredBoldLabel::getIdealSize(int &idealWidth, int &idealHeight)
 {
@@ -139,6 +191,28 @@ void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string labe
     m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label));
 }
 
+#if SURGE_JUCE_ACCESSIBLE
+//==============================================================================
+struct MenuCenteredBoldLabelAH : public juce::AccessibilityHandler
+{
+    explicit MenuCenteredBoldLabelAH(MenuCenteredBoldLabel &itemComponentToWrap)
+        : AccessibilityHandler(itemComponentToWrap, juce::AccessibilityRole::menuItem,
+                               juce::AccessibilityActions()),
+          itemComponent(itemComponentToWrap)
+    {
+    }
+
+    juce::String getTitle() const override { return itemComponent.label; }
+
+    MenuCenteredBoldLabel &itemComponent;
+};
+
+std::unique_ptr<juce::AccessibilityHandler> MenuCenteredBoldLabel::createAccessibilityHandler()
+{
+    return std::make_unique<MenuCenteredBoldLabelAH>(*this);
+}
+#endif
+
 ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::string &a,
                                                std::function<void(OpType)> cb)
     : juce::PopupMenu::CustomComponent(false), source(s), amount(a), callback(std::move(cb))
@@ -149,6 +223,7 @@ ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::
     });
     addAndMakeVisible(*tb);
     clear = std::move(tb);
+    clear->accLabel = "Clear " + s;
 
     tb = std::make_unique<TinyLittleIconButton>(2, [this]() {
         callback(MUTE);
@@ -156,6 +231,7 @@ ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::
     });
     addAndMakeVisible(*tb);
     mute = std::move(tb);
+    mute->accLabel = "Mute " + s;
 
     tb = std::make_unique<TinyLittleIconButton>(0, [this]() {
         callback(EDIT);
@@ -163,6 +239,7 @@ ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::
     });
     addAndMakeVisible(*tb);
     edit = std::move(tb);
+    edit->accLabel = "Edit " + s;
 }
 
 ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
@@ -200,9 +277,15 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
 void ModMenuCustomComponent::setIsMuted(bool b)
 {
     if (b)
+    {
+        mute->accLabel = "UnMute " + source;
         mute->offset = 3; // use the 2nd (mute with bar) icon
+    }
     else
+    {
+        mute->accLabel = "Mute " + source;
         mute->offset = 2; // use the 2rd (speaker) icon
+    }
 }
 
 void ModMenuCustomComponent::resized()
@@ -229,6 +312,38 @@ void ModMenuCustomComponent::onSkinChanged()
     edit->icons = icons;
     mute->icons = icons;
 }
+
+#if SURGE_JUCE_ACCESSIBLE
+struct ModMenuCustomComponentAH : public juce::AccessibilityHandler
+{
+    explicit ModMenuCustomComponentAH(ModMenuCustomComponent &itemComponentToWrap)
+        : AccessibilityHandler(
+              itemComponentToWrap, juce::AccessibilityRole::menuItem,
+              juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
+                                                     [this]() { this->onPress(); })),
+          itemComponent(itemComponentToWrap)
+    {
+    }
+
+    void onPress()
+    {
+        itemComponent.callback(ModMenuCustomComponent::EDIT);
+        itemComponent.triggerMenuItem();
+    }
+
+    juce::String getTitle() const override
+    {
+        return itemComponent.source + " by " + itemComponent.amount;
+    }
+
+    ModMenuCustomComponent &itemComponent;
+};
+
+std::unique_ptr<juce::AccessibilityHandler> ModMenuCustomComponent::createAccessibilityHandler()
+{
+    return std::make_unique<ModMenuCustomComponentAH>(*this);
+}
+#endif
 
 // bit of a hack - the menus mean something different so do a cb on a cb
 ModMenuForAllComponent::ModMenuForAllComponent(std::function<void(AllAction)> cb)
