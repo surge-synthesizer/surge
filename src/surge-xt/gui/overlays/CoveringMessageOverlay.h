@@ -44,18 +44,18 @@ struct AudioEngineNotRunningOverlay : public CoveringMessageOverlay
 {
     AudioEngineNotRunningOverlay() : CoveringMessageOverlay()
     {
-        setPrimaryTitle("Audio Engine Not Running");
+        setPrimaryTitle("AUDIO ENGINE NOT RUNNING");
         setExplanatoryText(
-            R"MSG(The Surge UI requires the audio engine to be running in order for the UI to
+            R"MSG(Surge XT requires the audio engine to be running in order for the GUI to
 interact with the synth. A running audio engine is required to provide several
-core features, including modifying oscillator and FX types and loading patches.
+core features, including selecting oscillator or FX types and loading patches.
 
 This instance of Surge does not have a running audio engine. Either the audio engine
 in your DAW is suspended, your instance of Surge is suspended, or in the standalone
-Surge application, you have not connected your output to at least a stereo output bus.
+application you haven't connected your output to at least one stereo output bus.
 
 To dismiss this message, start your audio engine, unsuspend this instance of Surge,
-or set up your standalone output routing appropriately.
+or set up output routing in standalone application appropriately.
 )MSG");
 
 #if SURGE_JUCE_ACCESSIBLE
