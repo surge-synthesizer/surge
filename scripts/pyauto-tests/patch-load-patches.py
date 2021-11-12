@@ -1,3 +1,6 @@
+# Load patches by a path. The function that is explicitly tested here
+# is also available in sxttest as a helper function
+
 import sxttest
 import time
 
@@ -5,7 +8,6 @@ sxt = sxttest.getSXT()
 mf = sxttest.getMainFrame(sxt)
 mf.activate()
 
-# test the 'depth 1' patch menus
 patches = [["Leads", "Sharpish"],
            ["Sequences", "Gate Chord"],
            ["Keys", "DX EP"],
@@ -24,4 +26,4 @@ for patchPair in patches:
     subMen = sxttest.findAllMenus(sxt)[0]
     loadPatch = sxttest.firstChildByTitle(subMen, patchPair[1])
     loadPatch.Press()
-    time.sleep(2)
+    time.sleep(0.5)

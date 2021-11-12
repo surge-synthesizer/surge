@@ -21,6 +21,7 @@
 #include "RuntimeFont.h"
 #include <chrono>
 #include "widgets/MenuCustomComponents.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -45,7 +46,22 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
-LFOAndStepDisplay::LFOAndStepDisplay() {}
+LFOAndStepDisplay::LFOAndStepDisplay()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    setTitle("LFO Type And Display");
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+
+    for (int i = 0; i < n_lfo_types; ++i)
+    {
+        auto q = std::make_unique<OverlayAsRadioButton<LFOAndStepDisplay>>(this, lt_names[i]);
+        q->onPress = [this, i](auto *t) { updateShapeTo(i); };
+        addAndMakeVisible(*q);
+        typeAccOverlays[i] = std::move(q);
+    }
+#endif
+}
 
 void LFOAndStepDisplay::resized()
 {
@@ -58,6 +74,16 @@ void LFOAndStepDisplay::resized()
         juce::Point<float>(main_panel.getX() + 10, main_panel.getCentreY()));
     ss_shift_left = ss_shift_bg.reduced(1, 1).withBottom(ss_shift_bg.getY() + 16);
     ss_shift_right = ss_shift_left.translated(0, 16);
+
+    for (int i = 0; i < n_lfo_types; ++i)
+    {
+        int xp = (i % 2) * 25 + left_panel.getX();
+        int yp = (i / 2) * 15 + left_panel.getY();
+        shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
+#if SURGE_JUCE_ACCESSIBLE
+        typeAccOverlays[i]->setBounds(shaperect[i]);
+#endif
+    }
 }
 
 void LFOAndStepDisplay::paint(juce::Graphics &g)
@@ -1254,19 +1280,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 return;
             }
 
-            if (i != lfodata->shape.val.i)
-            {
-                auto prior = lfodata->shape.val.i;
-
-                lfodata->shape.val.i = i;
-
-                sge->refresh_mod();
-                sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
-
-                repaint();
-
-                sge->lfoShapeChanged(prior, i);
-            }
+            updateShapeTo(i);
 
             return;
         }
@@ -1906,6 +1920,50 @@ void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
 
     Surge::Formula::setupEvaluatorStateFrom(s->formulastate, storage->getPatch());
 }
+
+void LFOAndStepDisplay::updateShapeTo(int i)
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (i != lfodata->shape.val.i)
+    {
+        auto prior = lfodata->shape.val.i;
+
+        lfodata->shape.val.i = i;
+
+        sge->refresh_mod();
+        sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
+
+        repaint();
+
+        sge->lfoShapeChanged(prior, i);
+    }
+}
+
+#if SURGE_JUCE_ACCESSIBLE
+template <> struct DiscreteAHRange<LFOAndStepDisplay>
+{
+    static int iMaxV(LFOAndStepDisplay *t) { return n_lfo_types; }
+    static int iMinV(LFOAndStepDisplay *t) { return 0; }
+};
+
+template <> struct DiscreteAHStringValue<LFOAndStepDisplay>
+{
+    static std::string stringValue(LFOAndStepDisplay *comp, double ahValue)
+    {
+        return lt_names[comp->lfodata->shape.val.i];
+    }
+};
+
+template <> struct DiscreteRO<LFOAndStepDisplay>
+{
+    static bool isReadOnly(LFOAndStepDisplay *comp) { return true; }
+};
+std::unique_ptr<juce::AccessibilityHandler> LFOAndStepDisplay::createAccessibilityHandler()
+{
+    return std::make_unique<DiscreteAH<LFOAndStepDisplay, juce::AccessibilityRole::group>>(this);
+}
+#endif
 
 } // namespace Widgets
 } // namespace Surge

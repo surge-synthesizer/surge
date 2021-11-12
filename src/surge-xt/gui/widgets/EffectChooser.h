@@ -119,6 +119,7 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
                           juce::Colour &txtcol);
 
 #if SURGE_JUCE_ACCESSIBLE
+    std::array<std::unique_ptr<juce::Component>, n_fx_slots> slotAccOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 #endif
 

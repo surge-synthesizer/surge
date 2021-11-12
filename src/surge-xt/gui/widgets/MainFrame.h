@@ -70,6 +70,24 @@ struct MainFrame : public juce::Component
 
     void mouseDown(const juce::MouseEvent &event) override;
 
+    struct OverlayComponent : public juce::Component
+    {
+#if SURGE_JUCE_ACCESSIBLE
+        OverlayComponent()
+        {
+            setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+            setAccessible(true);
+        }
+
+        std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+        {
+            return std::make_unique<juce::AccessibilityHandler>(*this,
+                                                                juce::AccessibilityRole::group);
+        }
+#endif
+    };
+
+    void addChildComponentThroughEditor(juce::Component &comp);
     std::array<std::unique_ptr<juce::Component>, endCG> cgOverlays;
     std::unique_ptr<juce::Component> modGroup, synthControls;
 

@@ -14,6 +14,11 @@ def getMainFrame(sxt):
 
 def recursiveDump(w, pf):
     l = "{0} '{1}' ({2} actions={3})".format(pf, w.AXTitle, w.AXRole, w.getActions())
+    try:
+        r = " value=" + w.AXValue
+        l += r
+    except:
+        pass
     print(l)
     kids = w.AXChildrenInNavigationOrder
     for k in kids:
@@ -46,3 +51,13 @@ def findAllMenus(sxt):
         except:
             pass
     return res
+
+
+def loadPatchByPath(sxt, path):
+    mf = getMainFrame(sxt)
+    ps = firstChildByTitle(mf, "Patch Selector")
+    ps.ShowMenu()
+    for p in path:
+        patchMenu = findAllMenus(sxt)[0]
+        temp = firstChildByTitle(patchMenu, p)
+        temp.Press()

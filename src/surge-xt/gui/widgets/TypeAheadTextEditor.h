@@ -25,6 +25,7 @@ namespace Surge
 {
 namespace Widgets
 {
+struct TypeAheadListBox;
 struct TypeAheadListBoxModel;
 
 struct TypeAheadDataProvider

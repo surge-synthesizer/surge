@@ -117,6 +117,10 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
     lbox->setMultipleSelectionEnabled(false);
     lbox->setVisible(false);
     lbox->setRowHeight(p->getRowHeight());
+#if SURGE_JUCE_ACCESSIBLE
+    setTitle(l);
+    lbox->setTitle(l);
+#endif
     setColour(ColourIds::borderid, juce::Colours::black);
     setColour(ColourIds::emptyBackgroundId, juce::Colours::white);
 }
@@ -172,7 +176,13 @@ void TypeAhead::parentHierarchyChanged()
         p = p->getParentComponent();
     }
     if (p)
-        p->addChildComponent(*lbox);
+    {
+        auto mf = dynamic_cast<Surge::Widgets::MainFrame *>(p);
+        if (mf)
+        {
+            mf->addChildComponentThroughEditor(*lbox);
+        }
+    }
 }
 
 void TypeAhead::showLbox()

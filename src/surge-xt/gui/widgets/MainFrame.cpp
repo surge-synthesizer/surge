@@ -48,23 +48,6 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
         editor->showSettingsMenu(juce::Point<int>{}, nullptr);
     }
 }
-
-struct OverlayComponent : public juce::Component
-{
-#if SURGE_JUCE_ACCESSIBLE
-    OverlayComponent()
-    {
-        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-        setAccessible(true);
-    }
-
-    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
-    {
-        return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
-    }
-#endif
-};
-
 juce::Component *MainFrame::getSynthControlsLayer()
 {
     if (!synthControls)
@@ -81,7 +64,7 @@ juce::Component *MainFrame::getSynthControlsLayer()
 
     if (getIndexOfChildComponent(synthControls.get()) < 0)
     {
-        addAndMakeVisible(*synthControls);
+        editor->addAndMakeVisibleWithTracking(this, *synthControls);
     }
 
     return synthControls.get();
@@ -102,7 +85,7 @@ juce::Component *MainFrame::getModButtonLayer()
 
     if (getIndexOfChildComponent(modGroup.get()) < 0)
     {
-        addAndMakeVisible(*modGroup.get());
+        editor->addAndMakeVisibleWithTracking(this, *modGroup);
     }
 
     return modGroup.get();
@@ -152,10 +135,15 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
 
     if (getIndexOfChildComponent(cgOverlays[cg].get()) < 0)
     {
-        addAndMakeVisible(*cgOverlays[cg]);
+        editor->addAndMakeVisibleWithTracking(this, *cgOverlays[cg]);
     }
 
     return cgOverlays[cg].get();
+}
+
+void MainFrame::addChildComponentThroughEditor(juce::Component &c)
+{
+    editor->addComponentWithTracking(this, c);
 }
 
 #if SURGE_JUCE_ACCESSIBLE

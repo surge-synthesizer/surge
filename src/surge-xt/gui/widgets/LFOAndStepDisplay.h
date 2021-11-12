@@ -151,6 +151,12 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     int stepSeqShiftHover{-1};
     bool overWaveform{false};
     void enterExitWaveform(bool isInWF);
+    void updateShapeTo(int i);
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::array<std::unique_ptr<juce::Component>, n_lfo_types> typeAccOverlays;
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };

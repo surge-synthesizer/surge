@@ -429,7 +429,7 @@ void SurgeGUIEditor::idle()
                 noProcessingOverlay =
                     std::make_unique<Surge::Overlays::AudioEngineNotRunningOverlay>();
                 noProcessingOverlay->setBounds(frame->getBounds());
-                frame->addAndMakeVisible(*noProcessingOverlay);
+                addAndMakeVisibleWithTracking(frame.get(), *noProcessingOverlay);
                 synth->processRunning = 1;
             }
             processRunningCheckEvery = 0;
@@ -1198,22 +1198,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     if (editor_open)
     {
+        hideMidiLearnOverlay();
         close_editor();
     }
 
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
-
-    /*
-    ** There are a collection of member states we need to reset
-    */
-    polydisp = nullptr;
-    lfoEditSwitch = nullptr;
-    lfoNameLabel = nullptr;
-    midiLearnOverlay = nullptr;
-
-    for (int i = 0; i < 16; ++i)
-        vu[i] = nullptr;
-
     current_scene = synth->storage.getPatch().scene_active.val.i;
 
     /*
@@ -1264,7 +1253,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                              ->get_target01(0));
             }
 
-            frame->getModButtonLayer()->addAndMakeVisible(*gui_modsrc[ms]);
+            addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *gui_modsrc[ms]);
             if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
@@ -1272,11 +1261,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
     auto moRect = positionForModOverview();
-    auto mol = std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(this);
-    mol->setBounds(moRect);
-    mol->setSkin(currentSkin);
-    modOverviewLauncher = std::move(mol);
-    frame->getModButtonLayer()->addAndMakeVisible(*modOverviewLauncher);
+    if (!modOverviewLauncher)
+        modOverviewLauncher =
+            std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(this);
+    modOverviewLauncher->setBounds(moRect);
+    modOverviewLauncher->setSkin(currentSkin);
+    addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *modOverviewLauncher);
 
     // fx vu-meters & labels. This is all a bit hacky still
     {
@@ -1300,7 +1290,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     vu[i + 1]->setBounds(vr);
                     vu[i + 1]->setSkin(currentSkin, bitmapStore);
                     vu[i + 1]->setType(t);
-                    frame->addAndMakeVisible(*vu[i + 1]);
+                    addAndMakeVisibleWithTracking(frame.get(), *vu[i + 1]);
                 }
                 else
                 {
@@ -1322,7 +1312,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     effectLabels[i]->setBounds(vr);
                     effectLabels[i]->setLabel(label);
                     effectLabels[i]->setSkin(currentSkin, bitmapStore);
-                    frame->addAndMakeVisible(*effectLabels[i]);
+                    addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
                 }
                 else
                 {
@@ -1377,7 +1367,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             setAccessibilityInformationByTitleAndAction(oscWaveform.get(), "Oscillator Waveform",
                                                         "Display");
 
-            frame->getControlGroupLayer(cg_OSC)->addAndMakeVisible(*oscWaveform);
+            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_OSC), *oscWaveform);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
@@ -1488,7 +1478,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL:
         {
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, lfoNameLabel);
-            frame->addAndMakeVisible(*lfoNameLabel);
+            addAndMakeVisibleWithTracking(frame.get(), *lfoNameLabel);
             lfoNameLabel->setBounds(skinCtrl->getRect());
             lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
@@ -1512,7 +1502,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             fxPresetLabel->setBounds(skinCtrl->getRect());
             setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
 
-            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fxPresetLabel);
+            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *fxPresetLabel);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
@@ -1535,7 +1525,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             setAccessibilityInformationByTitleAndAction(patchSelector.get(), "Patch Selector",
                                                         "Browse");
 
-            frame->addAndMakeVisible(*patchSelector);
+            addAndMakeVisibleWithTracking(frame.get(), *patchSelector);
 
             break;
         }
@@ -1557,7 +1547,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
             effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 
-            frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*effectChooser);
+            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *effectChooser);
 
             setAccessibilityInformationByTitleAndAction(effectChooser->asJuceComponent(),
                                                         "FX Slots", "Select");
@@ -1571,7 +1561,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
-            frame->addAndMakeVisible(*vu[0]);
+            addAndMakeVisibleWithTracking(frame.get(), *vu[0]);
 
             break;
         }
@@ -1697,10 +1687,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
-    frame->addChildComponent(*paramInfowindow);
+    addComponentWithTracking(frame.get(), *paramInfowindow);
 
     patchSelectorComment->setVisible(false);
-    frame->addChildComponent(*patchSelectorComment);
+    addComponentWithTracking(frame.get(), *patchSelectorComment);
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
@@ -1754,7 +1744,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lb->setBounds(l->getRect());
             lb->setText(*mtext, juce::dontSendNotification);
 
-            frame->addAndMakeVisible(*lb);
+            addAndMakeVisibleWithTracking(frame.get(), *lb);
             juceSkinComponents[l->sessionid] = std::move(lb);
         }
         else
@@ -1770,7 +1760,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     if (db)
                     {
                         db->setBounds(r);
-                        frame->addAndMakeVisible(db);
+                        addAndMakeVisibleWithTracking(frame.get(), *db);
                     }
                 }
             }
@@ -1799,14 +1789,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
     debugLabel->setAccessible(false);
 #endif
 
-    frame->addAndMakeVisible(*debugLabel);
+    addAndMakeVisibleWithTracking(frame.get(), *debugLabel);
 
 #endif
 
     for (const auto &el : juceOverlays)
     {
         if (!el.second->isTornOut())
-            frame->addAndMakeVisible(*(el.second));
+            addAndMakeVisibleWithTracking(frame.get(), *(el.second));
     }
 
     if (showMSEGEditorOnNextIdleOrOpen)
@@ -1848,6 +1838,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     tuningChanged(); // a patch load could change tuning
     refresh_mod();
 
+    removeUnusedTrackedComponents();
     editor_open = true;
     queue_refresh = false;
 
@@ -1857,8 +1848,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 void SurgeGUIEditor::close_editor()
 {
     editor_open = false;
-    frame->removeAllChildren();
-    frame->clearGroupLayers();
+    // frame->removeAllChildren();
+    // frame->clearGroupLayers();
+    resetComponentTracking();
     setzero(param);
 }
 
@@ -3886,10 +3878,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setEditedParam(p);
     typeinParamEditor->setModulation(p && ms > 0, (modsources)ms, modScene, modidx);
 
-    if (frame->getIndexOfChildComponent(typeinParamEditor.get()) < 0)
-    {
-        frame->addAndMakeVisible(*typeinParamEditor);
-    }
+    addAndMakeVisibleWithTracking(frame.get(), *typeinParamEditor);
 
     typeinParamEditor->setBoundsToAccompany(c->getBounds(), frame->getBounds());
     typeinParamEditor->setVisible(true);
@@ -4154,7 +4143,14 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
         case tag_mp_category:
         case tag_mp_patch:
         case tag_mp_jogwaveshape:
+        case tag_mp_jogfx:
             res = (f < 0.5) ? "Down" : "Up";
+            break;
+        case tag_scene_select:
+            res = (f < 0.5) ? "Scene A" : "Scene B";
+            break;
+        case tag_osc_select:
+            res = (f < 0.3333) ? "Osc 1" : ((f < 0.6666) ? "Osc 2" : "Osc 3");
             break;
         default:
             res = "Non-param tag " + std::to_string(tag) + "=" + std::to_string(f);
@@ -4203,10 +4199,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 {
     miniEdit->setSkin(currentSkin, bitmapStore);
     miniEdit->setEditor(this);
-    if (frame->getIndexOfChildComponent(miniEdit.get()) < 0)
-    {
-        frame->addChildComponent(*miniEdit);
-    }
+    addComponentWithTracking(frame.get(), *miniEdit);
     miniEdit->setTitle(title);
     miniEdit->setLabel(prompt);
     miniEdit->setValue(value);
@@ -4457,7 +4450,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
             param[p->id] = hs.get();
-            frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
+            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(p->ctrlgroup), *hs);
             juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
 
             return dynamic_cast<Surge::GUI::IComponentTagValue *>(
@@ -4569,7 +4562,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         param[p->id] = hs.get();
 
-        frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hs);
+        addAndMakeVisibleWithTracking(frame->getControlGroupLayer(p->ctrlgroup), *hs);
         juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
@@ -4641,7 +4634,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             if (p)
             {
-                frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hsw);
+                addAndMakeVisibleWithTracking(frame->getControlGroupLayer(p->ctrlgroup), *hsw);
             }
             else
             {
@@ -4652,6 +4645,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_osc_select:
                     cg = cg_OSC;
                     break;
+                case tag_mp_jogwaveshape:
+                    cg = cg_FILTER;
+                    break;
+
                     /* keep these up top
                 case tag_mp_category:
                 case tag_mp_patch:
@@ -4669,16 +4666,16 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 }
                 if (cg != endCG)
                 {
-                    frame->getControlGroupLayer(cg)->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg), *hsw);
                 }
                 else if (addToGlobalControls)
                 {
-                    frame->getSynthControlsLayer()->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
                 }
                 else
                 {
                     // Really just the main menu
-                    frame->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTracking(frame.get(), *hsw);
                 }
             }
 
@@ -4707,7 +4704,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
             if (p)
             {
-                frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*hsw);
+                addAndMakeVisibleWithTrackingInCG(p->ctrlgroup, *hsw);
             }
             else
             {
@@ -4716,20 +4713,20 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_status_mpe:
                 case tag_status_zoom:
                 case tag_status_tune:
-                    frame->getSynthControlsLayer()->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
                     break;
                 case tag_mseg_edit:
                 case tag_lfo_menu:
-                    frame->getControlGroupLayer(cg_LFO)->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTrackingInCG(cg_LFO, *hsw);
                     break;
                 case tag_analyzewaveshape:
-                    frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTrackingInCG(cg_FILTER, *hsw);
                     break;
 
                 default:
                     std::cout << tag << std::endl;
                     jassert(false);
-                    frame->addAndMakeVisible(*hsw);
+                    addAndMakeVisibleWithTracking(frame.get(), *hsw);
                     break;
                 }
             }
@@ -4819,7 +4816,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setCanEditEnvelopes(lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1));
 
             lfoDisplay->addListener(this);
-            frame->getControlGroupLayer(cg_LFO)->addAndMakeVisible(*lfoDisplay);
+            addAndMakeVisibleWithTrackingInCG(cg_LFO, *lfoDisplay);
             nonmod_param[paramIndex] = lfoDisplay.get();
             return lfoDisplay.get();
         }
@@ -4856,7 +4853,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         oscMenu->text_voffset = std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_VOFFSET, "0")
                 .c_str());
-        frame->getControlGroupLayer(cg_OSC)->addAndMakeVisible(*oscMenu);
+        addAndMakeVisibleWithTrackingInCG(cg_OSC, *oscMenu);
         return oscMenu.get();
     }
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FxMenu)
@@ -4879,7 +4876,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         // TODO set the fxs fxb, cfx
 
         fxMenu->populate();
-        frame->getControlGroupLayer(cg_FX)->addAndMakeVisible(*fxMenu);
+        addAndMakeVisibleWithTrackingInCG(cg_FX, *fxMenu);
         return fxMenu.get();
     }
 
@@ -4932,11 +4929,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (p)
         {
             setAccessibilityInformationByParameter(pbd.get(), p, "Set");
-            frame->getControlGroupLayer(p->ctrlgroup)->addAndMakeVisible(*pbd);
+            addAndMakeVisibleWithTrackingInCG(p->ctrlgroup, *pbd);
         }
         else
         {
-            frame->addAndMakeVisible(*pbd);
+            addAndMakeVisibleWithTracking(frame.get(), *pbd);
         }
 
         nonmod_param[paramIndex] = pbd.get();
@@ -5068,7 +5065,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
         }
 
-        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*hsw);
+        addAndMakeVisibleWithTrackingInCG(cg_FILTER, *hsw);
         nonmod_param[paramIndex] = hsw.get();
 
         juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
@@ -5104,7 +5101,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             waveshaperSelector->setIntOrdering(parm->totalIndexOrdering());
 
         setAccessibilityInformationByParameter(waveshaperSelector.get(), p, "Select");
-        frame->getControlGroupLayer(cg_FILTER)->addAndMakeVisible(*waveshaperSelector);
+        addAndMakeVisibleWithTrackingInCG(cg_FILTER, *waveshaperSelector);
         nonmod_param[paramIndex] = waveshaperSelector.get();
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(waveshaperSelector.get());
@@ -5418,6 +5415,7 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
     aboutScreen->populateData();
 
     aboutScreen->setBounds(frame->getLocalBounds());
+    // this is special - it can't make a rebuild so just add it normally
     frame->addAndMakeVisible(*aboutScreen);
 }
 
@@ -5428,7 +5426,7 @@ void SurgeGUIEditor::showMidiLearnOverlay(const juce::Rectangle<int> &r)
     midiLearnOverlay = bitmapStore->getImage(IDB_MIDI_LEARN)->createCopy();
     midiLearnOverlay->setInterceptsMouseClicks(false, false);
     midiLearnOverlay->setBounds(r);
-    frame->addAndMakeVisible(midiLearnOverlay.get());
+    addAndMakeVisibleWithTracking(frame.get(), *midiLearnOverlay);
 }
 
 void SurgeGUIEditor::hideMidiLearnOverlay()
@@ -5964,4 +5962,74 @@ void SurgeGUIEditor::hidePatchCommentTooltip()
     {
         patchSelectorComment->setVisible(false);
     }
+}
+
+void SurgeGUIEditor::addComponentWithTracking(juce::Component *target, juce::Component &source)
+{
+    if (target->getIndexOfChildComponent(&source) >= 0)
+    {
+        // std::cout << "Not double adding component " << source.getTitle() << std::endl;
+    }
+    else
+    {
+        // std::cout << "Primary Adding Component " << source.getTitle() << std::endl;
+        target->addChildComponent(source);
+    }
+    auto cf = containedComponents.find(&source);
+    if (cf != containedComponents.end())
+        containedComponents.erase(cf);
+}
+void SurgeGUIEditor::addAndMakeVisibleWithTracking(juce::Component *target, juce::Component &source)
+{
+    addComponentWithTracking(target, source);
+    source.setVisible(true);
+}
+void SurgeGUIEditor::addAndMakeVisibleWithTrackingInCG(ControlGroup cg, juce::Component &source)
+{
+    addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg), source);
+}
+
+void SurgeGUIEditor::resetComponentTracking()
+{
+    containedComponents.clear();
+
+    std::function<void(juce::Component * comp)> rec;
+    rec = [this, &rec](juce::Component *comp) {
+        bool track = true;
+        bool recurse = true;
+
+        if (dynamic_cast<Surge::Widgets::MainFrame::OverlayComponent *>(comp))
+            track = false;
+        if (dynamic_cast<Surge::Widgets::MainFrame *>(comp))
+            track = false;
+
+        if (dynamic_cast<Surge::GUI::IComponentTagValue *>(comp))
+            recurse = false;
+        if (dynamic_cast<Surge::Overlays::OverlayWrapper *>(comp))
+            recurse = false;
+        if (dynamic_cast<juce::ListBox *>(comp)) // special case of the typeahead
+        {
+            recurse = false;
+            track = false;
+        }
+
+        if (track)
+        {
+            containedComponents[comp] = comp->getParentComponent();
+        }
+
+        if (recurse)
+            for (auto c : comp->getChildren())
+                rec(c);
+    };
+    rec(frame.get());
+}
+void SurgeGUIEditor::removeUnusedTrackedComponents()
+{
+    for (auto c : containedComponents)
+    {
+        auto p = c.second;
+        p->removeChildComponent(c.first);
+    }
+    frame->repaint();
 }

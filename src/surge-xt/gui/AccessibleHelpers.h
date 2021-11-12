@@ -51,6 +51,26 @@ template <typename T> struct DiscreteRO
     static bool isReadOnly(T *comp) { return false; }
 };
 
+template <typename T> struct DiscreteAHGetSetValue
+{
+    static double getCurrentValue(T *comp)
+    {
+        auto cv = Parameter::intUnscaledFromFloat(comp->getValue(), DiscreteAHRange<T>::iMaxV(comp),
+                                                  DiscreteAHRange<T>::iMinV(comp));
+        return cv;
+    }
+
+    static void setValue(T *comp, double newValue)
+    {
+        comp->notifyBeginEdit();
+        comp->setValue(Parameter::intScaledToFloat(newValue, DiscreteAHRange<T>::iMaxV(comp),
+                                                   DiscreteAHRange<T>::iMinV(comp)));
+        comp->notifyValueChanged();
+        comp->notifyEndEdit();
+        comp->repaint();
+    }
+};
+
 template <typename T, juce::AccessibilityRole R = juce::AccessibilityRole::slider>
 struct DiscreteAH : public juce::AccessibilityHandler
 {
@@ -63,18 +83,11 @@ struct DiscreteAH : public juce::AccessibilityHandler
         bool isReadOnly() const override { return DiscreteRO<T>::isReadOnly(comp); }
         double getCurrentValue() const override
         {
-            auto cv = Parameter::intUnscaledFromFloat(
-                comp->getValue(), DiscreteAHRange<T>::iMaxV(comp), DiscreteAHRange<T>::iMinV(comp));
-            return cv;
+            return DiscreteAHGetSetValue<T>::getCurrentValue(comp);
         }
         void setValue(double newValue) override
         {
-            comp->notifyBeginEdit();
-            comp->setValue(Parameter::intScaledToFloat(newValue, DiscreteAHRange<T>::iMaxV(comp),
-                                                       DiscreteAHRange<T>::iMinV(comp)));
-            comp->notifyValueChanged();
-            comp->notifyEndEdit();
-            comp->repaint();
+            DiscreteAHGetSetValue<T>::setValue(comp, newValue);
         }
         juce::String getCurrentValueAsString() const override
         {
@@ -111,6 +124,44 @@ struct DiscreteAH : public juce::AccessibilityHandler
 
     T *comp;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DiscreteAH);
+};
+
+template <typename T> struct OverlayAsRadioButton : public juce::Component
+{
+    OverlayAsRadioButton(T *s, const std::string &label) : mswitch(s)
+    {
+        setDescription(label);
+        setTitle(label);
+        setInterceptsMouseClicks(false, false);
+        setAccessible(true);
+    }
+
+    T *mswitch;
+
+    struct RBAH : public juce::AccessibilityHandler
+    {
+        explicit RBAH(OverlayAsRadioButton<T> *b, T *s)
+            : button(b),
+              mswitch(s), juce::AccessibilityHandler(*b, juce::AccessibilityRole::radioButton,
+                                                     juce::AccessibilityActions().addAction(
+                                                         juce::AccessibilityActionType::press,
+                                                         [this]() { this->press(); }))
+        {
+        }
+        void press() { button->onPress(mswitch); }
+
+        T *mswitch;
+        OverlayAsRadioButton<T> *button;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
+    };
+
+    std::function<void(T *)> onPress = [](T *) {};
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<RBAH>(this, mswitch);
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsRadioButton<T>);
 };
 
 } // namespace Widgets

@@ -52,6 +52,7 @@ struct EffectLabel;
 struct LFOAndStepDisplay;
 struct ModulationSourceButton;
 struct ModulatableControlInterface;
+struct ModulationOverviewLaunchButton;
 struct NumberField;
 struct OscillatorWaveformDisplay;
 struct ParameterInfowindow;
@@ -403,7 +404,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
     juce::Rectangle<int> positionForModOverview();
-    std::unique_ptr<juce::Component> modOverviewLauncher;
+    std::unique_ptr<Surge::Widgets::ModulationOverviewLaunchButton> modOverviewLauncher;
 
     int wsx = BASE_WINDOW_SIZE_X;
     int wsy = BASE_WINDOW_SIZE_Y;
@@ -690,6 +691,18 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     static std::string fullyResolvedHelpURL(const std::string &helpurl);
 
   private:
+    /*
+     * the add remove handlers
+     */
+    friend class Surge::Widgets::MainFrame;
+    std::unordered_map<juce::Component *, juce::Component *> containedComponents;
+    void addComponentWithTracking(juce::Component *target, juce::Component &source);
+    void addAndMakeVisibleWithTracking(juce::Component *target, juce::Component &source);
+    void addAndMakeVisibleWithTrackingInCG(ControlGroup cg, juce::Component &source);
+
+    void resetComponentTracking();
+    void removeUnusedTrackedComponents();
+
     void promptForUserValueEntry(Parameter *p, juce::Component *c)
     {
         promptForUserValueEntry(p, c, -1, -1, -1);
