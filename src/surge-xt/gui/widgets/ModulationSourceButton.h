@@ -189,7 +189,8 @@ struct ModulationOverviewLaunchButton : public juce::Button,
                                         juce::Button::Listener,
                                         Surge::GUI::SkinConsumingComponent
 {
-    ModulationOverviewLaunchButton(SurgeGUIEditor *ed) : juce::Button("modov"), editor(ed)
+    ModulationOverviewLaunchButton(SurgeGUIEditor *ed)
+        : juce::Button("Open Modulation Overview"), editor(ed)
     {
         addListener(this);
     }

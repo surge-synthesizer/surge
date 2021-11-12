@@ -493,7 +493,8 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     }
 
     ol->addAndTakeOwnership(std::move(c));
-    frame->addAndMakeVisible(*ol);
+    addAndMakeVisibleWithTracking(frame.get(), *ol);
+
     juceOverlays[editorTag] = std::move(ol);
     if (overlayConsumesKeyboard(editorTag))
         vkbForward++;

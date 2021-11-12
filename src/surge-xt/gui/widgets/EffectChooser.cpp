@@ -23,11 +23,29 @@ namespace Surge
 {
 namespace Widgets
 {
+
 EffectChooser::EffectChooser()
 {
     setRepaintsOnMouseActivity(true);
+#if SURGE_JUCE_ACCESSIBLE
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+#endif
+
     for (int i = 0; i < n_fx_slots; ++i)
+    {
         fxTypes[i] = fxt_off;
+#if SURGE_JUCE_ACCESSIBLE
+        auto q = std::make_unique<OverlayAsRadioButton<EffectChooser>>(this, fxslot_names[i]);
+        q->setBounds(getEffectRectangle(i));
+        q->onPress = [this, i](auto *t) {
+            this->currentEffect = i;
+            this->notifyValueChanged();
+        };
+        addAndMakeVisible(*q);
+        slotAccOverlays[i] = std::move(q);
+#endif
+    }
 };
 EffectChooser::~EffectChooser() = default;
 
@@ -414,58 +432,28 @@ void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colo
 
 #if SURGE_JUCE_ACCESSIBLE
 
-struct EffectChooserAH : public juce::AccessibilityHandler
+template <> struct DiscreteAHRange<EffectChooser>
 {
-    using T = EffectChooser;
-    struct ECAHValue : public juce::AccessibilityValueInterface
+    static int iMaxV(EffectChooser *t) { return n_fx_slots; }
+    static int iMinV(EffectChooser *t) { return 0; }
+};
+
+template <> struct DiscreteAHStringValue<EffectChooser>
+{
+    static std::string stringValue(EffectChooser *comp, double ahValue)
     {
-        explicit ECAHValue(T *s) : comp(s) {}
-
-        T *comp;
-
-        bool isReadOnly() const override { return false; }
-        double getCurrentValue() const override { return comp->getCurrentEffect(); }
-        void setValue(double newValue) override
-        {
-            comp->setCurrentEffect(newValue);
-            comp->notifyValueChanged();
-            comp->repaint();
-        }
-        juce::String getCurrentValueAsString() const override
-        {
-            return fxslot_names[comp->getCurrentEffect()];
-        }
-        void setValueAsString(const juce::String &newValue) override
-        {
-            setValue(newValue.getDoubleValue());
-        }
-        AccessibleValueRange getRange() const override { return {{0.0, (double)n_fx_slots}, 1}; }
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ECAHValue);
-    };
-
-    explicit EffectChooserAH(T *s)
-        : comp(s), juce::AccessibilityHandler(
-                       *s, juce::AccessibilityRole::slider,
-                       juce::AccessibilityActions().addAction(
-                           juce::AccessibilityActionType::showMenu, [this]() { this->showMenu(); }),
-                       AccessibilityHandler::Interfaces{std::make_unique<ECAHValue>(s)})
-    {
+        return fxslot_names[comp->getCurrentEffect()];
     }
+};
 
-    void showMenu()
-    {
-        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
-        comp->notifyControlModifierClicked(m);
-    }
-
-    T *comp;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectChooserAH);
+template <> struct DiscreteRO<EffectChooser>
+{
+    static bool isReadOnly(EffectChooser *comp) { return true; }
 };
 
 std::unique_ptr<juce::AccessibilityHandler> EffectChooser::createAccessibilityHandler()
 {
-    return std::make_unique<EffectChooserAH>(this);
+    return std::make_unique<DiscreteAH<EffectChooser, juce::AccessibilityRole::group>>(this);
 }
 #endif
 } // namespace Widgets

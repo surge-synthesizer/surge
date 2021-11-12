@@ -1,3 +1,5 @@
+# Using the patch selector menu, find and press the 'open factory patches' folder
+
 import sxttest
 
 sxt = sxttest.getSXT()
@@ -7,9 +9,7 @@ mf.activate()
 ps = sxttest.firstChildByTitle(mf, "Patch Selector")
 ps.ShowMenu()
 
-menus = sxttest.findAllMenus(sxt)
-patchMenu = menus[0]
-
+patchMenu = sxttest.findAllMenus(sxt)[0]
 sxttest.recursiveDump(patchMenu, "MENU:--")
 
 temp = sxttest.firstChildByTitle(patchMenu, "Open Factory Patches Folder...")
