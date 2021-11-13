@@ -191,6 +191,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
+    surge->audio_processing_active = true;
     auto fpuguard = Surge::CPUFeatures::FPUStateGuard();
 
     auto playhead = getPlayHead();

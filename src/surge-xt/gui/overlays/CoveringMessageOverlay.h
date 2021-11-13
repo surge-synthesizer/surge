@@ -17,6 +17,8 @@
 #define SURGE_XT_COVERINGMESSAGEOVERLAY_H
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "SurgeGUIEditor.h"
+
 namespace Surge
 {
 namespace Overlays
@@ -42,20 +44,16 @@ struct CoveringMessageOverlay : public juce::Component
 
 struct AudioEngineNotRunningOverlay : public CoveringMessageOverlay
 {
-    AudioEngineNotRunningOverlay() : CoveringMessageOverlay()
+    AudioEngineNotRunningOverlay(SurgeGUIEditor *e) : CoveringMessageOverlay(), editor(e)
     {
         setPrimaryTitle("AUDIO ENGINE NOT RUNNING");
         setExplanatoryText(
-            R"MSG(Surge XT requires the audio engine to be running in order for the GUI to
-interact with the synth. A running audio engine is required to provide several
-core features, including selecting oscillator or FX types and loading patches.
-
-This instance of Surge does not have a running audio engine. Either the audio engine
+            R"MSG(This instance of Surge does not have a running audio engine. Either the audio engine
 in your DAW is suspended, your instance of Surge is suspended, or in the standalone
 application you haven't connected your output to at least one stereo output bus.
 
-To dismiss this message, start your audio engine, unsuspend this instance of Surge,
-or set up output routing in standalone application appropriately.
+You can click to dismiss this message and the Surge UI will continue to operate, but
+no sound will be produced under MIDI input unless you activate your audio system.
 )MSG");
 
 #if SURGE_JUCE_ACCESSIBLE
@@ -64,6 +62,9 @@ or set up output routing in standalone application appropriately.
         setAccessible(true);
 #endif
     }
+
+    void mouseUp(const juce::MouseEvent &e) override { editor->clearNoProcessingOverlay(); }
+    SurgeGUIEditor *editor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioEngineNotRunningOverlay);
 };
 

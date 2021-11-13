@@ -50,12 +50,13 @@ class alignas(16) SurgeSynthesizer
 
     float input alignas(16)[N_INPUTS][BLOCK_SIZE];
     timedata time_data;
-    bool audio_processing_active;
 
     // aligned stuff
     SurgeStorage storage alignas(16);
     lipol_ps FX alignas(16)[n_send_slots], amp alignas(16), amp_mute alignas(16),
         send alignas(16)[n_send_slots][n_scenes];
+
+    std::atomic<bool> audio_processing_active;
 
     // methods
   public:
