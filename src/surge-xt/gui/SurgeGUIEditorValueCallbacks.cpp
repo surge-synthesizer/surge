@@ -1753,6 +1753,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         bool enable = true;
                         bool visible = true;
+
                         std::string txt = "Extend Range";
 
                         switch (p->ctrltype)
@@ -1762,10 +1763,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             break;
                         case ct_freq_audible_with_tunability:
                         case ct_freq_audible_with_very_low_lowerbound:
-                            txt = "Apply SCL/KBM Tuning to Filter Cutoff";
+                        {
+                            auto hasmts = synth->storage.oddsound_mts_client &&
+                                          synth->storage.oddsound_mts_active;
+
+                            std::string tuningmode = hasmts ? "MTS" : "SCL/KBM";
+
+                            txt = "Apply " + tuningmode + " Tuning to Filter Cutoff";
                             visible =
                                 synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
                             break;
+                        }
                         case ct_percent_oscdrift:
                             txt = "Randomize Initial Drift Phase";
                             break;
