@@ -225,6 +225,7 @@ void AboutScreen::resized()
                 lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
                 lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
                 lb->setFont(font);
+                lb->setSkin(skin, associatedBitmapStore);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
@@ -262,6 +263,7 @@ void AboutScreen::resized()
                 lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
                 lb->setBounds(rightSide + colW, h1, getWidth() - margin - colW, lHeight);
                 lb->setFont(font);
+                lb->setSkin(skin, associatedBitmapStore);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
