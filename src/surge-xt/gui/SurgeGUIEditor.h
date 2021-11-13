@@ -145,6 +145,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void refreshSkin();
 
+    bool showNoProcessingOverlay{true};
+
+  public:
+    void clearNoProcessingOverlay();
+
   public:
     // to make file chooser async it has to stick around
     std::unique_ptr<juce::FileChooser> fileChooser;

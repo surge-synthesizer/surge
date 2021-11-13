@@ -424,10 +424,14 @@ void SurgeGUIEditor::idle()
         if (processRunningCheckEvery++ > 3 || processRunningCheckEvery < 0)
         {
             synth->processRunning++;
-            if (synth->processRunning > 20)
+            if (synth->processRunning > 10)
+            {
+                synth->audio_processing_active = false;
+            }
+            if (synth->processRunning > 10 && showNoProcessingOverlay)
             {
                 noProcessingOverlay =
-                    std::make_unique<Surge::Overlays::AudioEngineNotRunningOverlay>();
+                    std::make_unique<Surge::Overlays::AudioEngineNotRunningOverlay>(this);
                 noProcessingOverlay->setBounds(frame->getBounds());
                 addAndMakeVisibleWithTracking(frame.get(), *noProcessingOverlay);
                 synth->processRunning = 1;
@@ -5898,6 +5902,16 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
             }
             des->editor.activeOverlays.push_back(os);
         }
+    }
+}
+
+void SurgeGUIEditor::clearNoProcessingOverlay()
+{
+    if (noProcessingOverlay)
+    {
+        showNoProcessingOverlay = false;
+        frame->removeChildComponent(noProcessingOverlay.get());
+        noProcessingOverlay.reset(nullptr);
     }
 }
 
