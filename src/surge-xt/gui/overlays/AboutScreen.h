@@ -58,7 +58,7 @@ struct AboutScreen : public juce::Component,
     int logoW{555}, logoH{179};
 
     // label, value, url
-    std::vector<std::tuple<std::string, std::string, std::string>> lowerLeft;
+    std::vector<std::tuple<std::string, std::string, std::string>> lowerLeft, lowerRight;
 
     std::vector<std::unique_ptr<juce::Label>> labels;
     std::vector<std::unique_ptr<juce::Button>> buttons;
@@ -66,7 +66,7 @@ struct AboutScreen : public juce::Component,
 
     std::unique_ptr<juce::Button> copyButton;
 
-    juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.8f)};
+    juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.85f)};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AboutScreen);
 };

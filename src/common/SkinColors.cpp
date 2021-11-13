@@ -6,7 +6,7 @@ namespace AboutPage
 {
 const Surge::Skin::Color Text("about.page.text", 0xFFFFFF),
     ColumnText("about.page.column.text", 0xFF9000), Link("about.page.link", 0x2D86FE),
-    Linkhover("about.page.hover.link", 0x60C4FF);
+    LinkHover("about.page.hover.link", 0x60C4FF);
 }
 
 namespace Dialog
