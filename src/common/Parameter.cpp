@@ -1398,6 +1398,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.decimals = 2;
         displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
         displayInfo.supportsNoteName = true;
+        displayInfo.customFeatures = ParamDisplayFeatures::kAllowsModulationsInNotesAndCents;
         break;
 
     case ct_freq_shift:
@@ -4409,6 +4410,32 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             auto mv = (float)std::atof(s.c_str()) / 100.0;
             auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
             return rmv;
+        }
+
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsModulationsInNotesAndCents)
+        {
+            if (s[0] == 'N' || s[0] == 'C' || s[0] == 'n' || s[0] == 'c')
+            {
+                auto mv = (float)std::atof(s.c_str() + 1);
+                if (s[0] == 'C' || s[0] == 'c')
+                    mv = mv / 100.0;
+
+                auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+                return rmv;
+            }
+            if (s[0] == 'T' || s[0] == 't')
+            {
+                try
+                {
+                    auto a = Tunings::toneFromString(s.c_str() + 1);
+                    auto mv = a.cents / 100.0;
+                    auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+                    return rmv;
+                }
+                catch (const Tunings::TuningError &e)
+                {
+                }
+            }
         }
 
         /* modulation is displayed as

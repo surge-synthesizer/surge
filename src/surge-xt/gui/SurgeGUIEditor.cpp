@@ -6020,6 +6020,8 @@ void SurgeGUIEditor::resetComponentTracking()
 
         if (dynamic_cast<Surge::GUI::IComponentTagValue *>(comp))
             recurse = false;
+        if (dynamic_cast<Surge::Overlays::TypeinParamEditor *>(comp))
+            recurse = false;
         if (dynamic_cast<Surge::Overlays::OverlayWrapper *>(comp))
             recurse = false;
         if (dynamic_cast<juce::ListBox *>(comp)) // special case of the typeahead
