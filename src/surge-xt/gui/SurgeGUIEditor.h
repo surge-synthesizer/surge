@@ -145,7 +145,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void refreshSkin();
 
-    bool showNoProcessingOverlay{true};
+    bool showNoProcessingOverlay{false}; // this basically means it never shows
 
   public:
     void clearNoProcessingOverlay();

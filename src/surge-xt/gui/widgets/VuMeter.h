@@ -43,6 +43,15 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
 
     void paint(juce::Graphics &g) override;
 
+    bool isAudioActive{true};
+    void setIsAudioActive(bool isIn)
+    {
+        auto was = isAudioActive;
+        isAudioActive = isIn;
+        if (was != isAudioActive)
+            repaint();
+    }
+
     void onSkinChanged() override;
     SurgeImage *hVuBars;
 

@@ -323,7 +323,7 @@ extern const Surge::Skin::Color Positive, Negative;
 
 namespace VuMeter
 {
-extern const Surge::Skin::Color Border, Background;
+extern const Surge::Skin::Color Border, Background, UnavailableText;
 }
 
 namespace TuningOverlay
