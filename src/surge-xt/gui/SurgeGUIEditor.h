@@ -379,6 +379,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     {
         strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
         synth->has_patchid_file = true;
+        synth->processThreadunsafeOperations();
     }
 
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
