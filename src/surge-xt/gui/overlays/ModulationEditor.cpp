@@ -194,14 +194,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             });
             addAndMakeVisible(*clearButton);
 
-            muted = false;
+            muted = d.isMuted;
             muteButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(2, [this]() {
-                /*ModulationEditor::SelfModulationGuard g(mod->moded);
-                mod->moded->synth->muteModulation(
-                    mod->rows[row].dest_id, (modsources)mod->rows[row].source_id,
-                    mod->rows[row].source_scene, mod->rows[row].source_index, !muted);
+                auto me = contents->editor;
+                ModulationEditor::SelfModulationGuard g(me);
+                me->synth->muteModulation(datum.destination_id + datum.idBase,
+                                          (modsources)datum.source_id, datum.source_scene,
+                                          datum.source_index, !muted);
                 muted = !muted;
-                update();*/
+                contents->rebuildFrom(me->synth);
             });
 
             addAndMakeVisible(*muteButton);
@@ -301,9 +302,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if ((isTop || isAfterTop) && !firstInSort)
             {
                 g.setColour(juce::Colours::grey);
+                auto tf = g.getCurrentFont();
                 g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
                 tb = tb.withTop(0);
                 g.drawText(firstLab, tb.withTrimmedLeft(2), juce::Justification::topLeft);
+                g.setFont(tf);
             }
 
             // And then the back
@@ -694,7 +697,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 filterL->setText("Filter By Target", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({t});
             });
-        men.showMenuAsync(juce::PopupMenu::Options());
+        men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { filterW->endHover(); });
     }
     break;
     case tag_add_source:
@@ -706,7 +709,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         men.addCustomItem(-1, std::move(tcomp));
         men.addSeparator();
         men.addItem("Coming soon!", [this]() {});
-        men.showMenuAsync(juce::PopupMenu::Options());
+        men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { addSourceW->endHover(); });
     }
     break;
     }
