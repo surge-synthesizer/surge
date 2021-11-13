@@ -17,6 +17,7 @@
 #include "SurgeImageStore.h"
 #include "basic_dsp.h"
 #include "SurgeImage.h"
+#include "RuntimeFont.h"
 
 namespace Surge
 {
@@ -44,6 +45,14 @@ void VuMeter::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::VuMeter::Border));
     g.drawRoundedRectangle(getLocalBounds().toFloat(), 3, 1);
 
+    if (!isAudioActive)
+    {
+        g.setColour(skin->getColor(Colors::VuMeter::UnavailableText));
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+        g.drawText("Audio Output Unavailable", getLocalBounds().withTrimmedBottom(1),
+                   juce::Justification::centred);
+        return;
+    }
     int offi;
     bool stereo = false;
     switch (vu_type)

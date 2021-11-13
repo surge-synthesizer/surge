@@ -695,6 +695,7 @@ void SurgeGUIEditor::idle()
             vu[0]->setValueR(synth->vu_peak[1]);
             vuInvalid = true;
         }
+        vu[0]->setIsAudioActive(synth->audio_processing_active);
         if (vuInvalid)
             vu[0]->repaint();
 
