@@ -3361,6 +3361,32 @@ void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
             patchid_queue = -1;
         }
 
+        if (has_patchid_file)
+        {
+            auto p(string_to_path(patchid_file));
+            auto s = path_to_string(p.stem());
+            has_patchid_file = false;
+
+            int ptid = -1, ct = 0;
+            for (const auto &pti : storage.patch_list)
+            {
+                if (path_to_string(pti.path) == patchid_file)
+                {
+                    ptid = ct;
+                }
+                ct++;
+            }
+            if (ptid >= 0)
+            {
+                loadPatch(ptid);
+            }
+            else
+            {
+                loadPatchByPath(patchid_file, -1, s.c_str());
+            }
+            patchid_file[0] = 0;
+        }
+
         if (load_fx_needed)
             loadFx(false, false);
 

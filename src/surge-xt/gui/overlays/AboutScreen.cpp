@@ -21,6 +21,7 @@
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "platform/Paths.h"
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -107,8 +108,17 @@ void AboutScreen::populateData()
     lowerLeft.emplace_back("Version", version, "");
     lowerLeft.emplace_back("Build", buildinfo, "");
     lowerLeft.emplace_back("System", system, "");
+
+    auto srString = fmt::format("{:.1f} kHz", samplerate / 1000.0);
     if (host != "Unknown")
-        lowerLeft.emplace_back("Host", host, "");
+    {
+        auto hstr = host + " @ " + srString;
+        lowerLeft.emplace_back("Host", hstr, "");
+    }
+    else
+    {
+        lowerLeft.emplace_back("Sample Rate", srString, "");
+    }
     lowerLeft.emplace_back("", "", "");
     lowerLeft.emplace_back("Factory Data", storage->datapath.u8string(),
                            storage->datapath.u8string());

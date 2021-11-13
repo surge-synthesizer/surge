@@ -255,6 +255,9 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         {
             juce::PopupMenu menu;
 
+            tooltipCountdown = -1;
+            toggleCommentTooltip(false);
+
             menu.addSectionHeader("FAVORITES");
             auto haveFavs = optionallyAddFavorites(menu, false, false);
 
@@ -281,12 +284,17 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
     if (e.mods.isShiftDown() || searchRect.contains(e.position.toInt()))
     {
+        tooltipCountdown = -1;
+        toggleCommentTooltip(false);
+
         toggleTypeAheadSearch(!isTypeaheadSearchOn);
         return;
     }
 
     // if RMB is down, only show the current category
     bool single_category = e.mods.isRightButtonDown() || e.mods.isCommandDown();
+    tooltipCountdown = -1;
+    toggleCommentTooltip(false);
     showClassicMenu(single_category);
 }
 
