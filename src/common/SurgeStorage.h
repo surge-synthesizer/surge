@@ -1139,7 +1139,9 @@ class alignas(16) SurgeStorage
     {
         RETUNE_ALL = 0, // These values are streamed so don't change them if you add
         RETUNE_MIDI_ONLY = 1
-    } tuningApplicationMode = RETUNE_MIDI_ONLY; // This is the default as of 1.9/sv16
+    } tuningApplicationMode = RETUNE_MIDI_ONLY,
+      patchStoredTuningApplicationMode =
+          tuningApplicationMode; // This is the default as of 1.9/sv16
 
     float tuningPitch = 32.0f, tuningPitchInv = 0.03125f;
 
@@ -1241,6 +1243,7 @@ class alignas(16) SurgeStorage
     void deinitialize_oddsound();
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active;
+    void setOddsoundMTSActiveTo(bool b);
     uint32_t oddsound_mts_on_check = 0;
     enum OddsoundRetuneMode
     {

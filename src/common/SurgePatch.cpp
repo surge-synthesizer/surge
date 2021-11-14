@@ -2481,7 +2481,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
     // Revision 16 adds the TAM
     TiXmlElement tam("tuningApplicationMode");
-    tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
+    if (storage->oddsound_mts_active)
+    {
+        tam.SetAttribute("v", (int)(storage->patchStoredTuningApplicationMode));
+    }
+    else
+    {
+        tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
+    }
     nonparamconfig.InsertEndChild(tam);
 
     patch.InsertEndChild(nonparamconfig);

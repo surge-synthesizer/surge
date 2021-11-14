@@ -2093,7 +2093,12 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
 void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
 {
     tuningApplicationMode = m;
+    patchStoredTuningApplicationMode = m;
     resetToCurrentScaleAndMapping();
+    if (oddsound_mts_active)
+    {
+        tuningApplicationMode = RETUNE_MIDI_ONLY;
+    }
 }
 
 bool SurgeStorage::skipLoadWtAndPatch = false;
@@ -2250,7 +2255,7 @@ void SurgeStorage::initialize_oddsound()
     oddsound_mts_client = MTS_RegisterClient();
     if (oddsound_mts_client)
     {
-        oddsound_mts_active = MTS_HasMaster(oddsound_mts_client);
+        setOddsoundMTSActiveTo(MTS_HasMaster(oddsound_mts_client));
     }
 }
 
@@ -2261,7 +2266,23 @@ void SurgeStorage::deinitialize_oddsound()
         MTS_DeregisterClient(oddsound_mts_client);
     }
     oddsound_mts_client = nullptr;
-    oddsound_mts_active = false;
+    setOddsoundMTSActiveTo(false);
+}
+
+void SurgeStorage::setOddsoundMTSActiveTo(bool b)
+{
+    bool poa = oddsound_mts_active;
+    oddsound_mts_active = b;
+    if (b && b != poa)
+    {
+        // Oddsound right now is MIDI_ONLY so force that to avoid
+        // lingering problems
+        tuningApplicationMode = RETUNE_MIDI_ONLY;
+    }
+    if (!b && b != poa)
+    {
+        tuningApplicationMode = patchStoredTuningApplicationMode;
+    }
 }
 
 void SurgeStorage::toggleTuningToCache()
