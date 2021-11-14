@@ -487,9 +487,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                      [control](int i) { control->endHover(); });
-
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                          [control](int i) { control->endHover(); });
+            }
             return 1;
         }
 
@@ -532,9 +534,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                      [control](int i) { control->endHover(); });
-
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                          [control](int i) { control->endHover(); });
+            }
             return 1;
         }
     }
@@ -1021,8 +1025,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                      [control](int opt) { control->endHover(); });
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                          [control](int opt) { control->endHover(); });
+            }
             return 1;
         }
 
@@ -2224,9 +2231,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                      [control](int i) { control->endHover(); });
-
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                          [control](int i) { control->endHover(); });
+            }
             return 1;
         }
         // reset to default value
@@ -2437,12 +2446,15 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             auto m = makeTuningMenu(where, true);
 
             auto launchFrom = control;
-            m.showMenuAsync(juce::PopupMenu::Options(), [launchFrom](int i) {
-                if (launchFrom)
-                {
-                    launchFrom->endHover();
-                }
-            });
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                m.showMenuAsync(juce::PopupMenu::Options(), [launchFrom](int i) {
+                    if (launchFrom)
+                    {
+                        launchFrom->endHover();
+                    }
+                });
+            }
         }
 
         return;

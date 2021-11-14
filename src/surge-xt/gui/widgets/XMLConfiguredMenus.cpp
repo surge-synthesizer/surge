@@ -372,10 +372,13 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) {
-        isHovered = false;
-        repaint();
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) {
+            isHovered = false;
+            repaint();
+        });
+    }
 }
 
 void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
@@ -481,10 +484,13 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    menu.showMenuAsync(juce::PopupMenu::Options(), [this](int i) {
-        isHovered = false;
-        repaint();
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        menu.showMenuAsync(juce::PopupMenu::Options(), [this](int i) {
+            isHovered = false;
+            repaint();
+        });
+    }
 }
 
 void FxMenu::mouseEnter(const juce::MouseEvent &event)

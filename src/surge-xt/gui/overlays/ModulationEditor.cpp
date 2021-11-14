@@ -695,7 +695,10 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 filterL->setText("Filter By Target", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({t});
             });
-        men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { filterW->endHover(); });
+        if (!juce::PopupMenu::dismissAllActiveMenus())
+        {
+            men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { filterW->endHover(); });
+        }
     }
     break;
     case tag_add_source:
@@ -707,7 +710,10 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         men.addCustomItem(-1, std::move(tcomp));
         men.addSeparator();
         men.addItem("Coming soon!", [this]() {});
-        men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { addSourceW->endHover(); });
+        if (!juce::PopupMenu::dismissAllActiveMenus())
+        {
+            men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { addSourceW->endHover(); });
+        }
     }
     break;
     }
