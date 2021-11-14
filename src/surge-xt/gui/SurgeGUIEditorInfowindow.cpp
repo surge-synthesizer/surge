@@ -93,9 +93,7 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
         SurgeSynthesizer::ID ptagid;
         if (synth->fromSynthSideId(pid, ptagid))
             synth->getParameterName(ptagid, txt);
-        auto mn = modulatorName(modsource, true);
-        if (synth->supportsIndexedModulator(current_scene, modsource))
-            mn += modulatorIndexExtension(current_scene, modsource, modsource_index, true);
+        auto mn = modulatorNameWithIndex(current_scene, modsource, modsource_index, true, false);
 
         sprintf(pname, "%s -> %s", mn.c_str(), txt);
         ModulationDisplayInfoWindowStrings mss;

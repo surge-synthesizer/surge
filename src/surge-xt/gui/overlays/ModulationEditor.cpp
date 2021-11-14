@@ -479,11 +479,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         SurgeSynthesizer::ID ptagid;
         if (synth->fromSynthSideId(d.destination_id + d.idBase, ptagid))
             synth->getParameterName(ptagid, nm);
-        std::string sname = editor->ed->modulatorName(d.source_id, false);
-        if (d.inScene < 0)
-            sname = editor->ed->modulatorName(d.source_id, false, d.source_scene);
-        if (d.inScene >= 0)
-            sname += editor->ed->modulatorIndexExtension(d.inScene, d.source_id, d.source_index);
+
+        std::string sname = editor->ed->modulatorNameWithIndex(
+            d.source_scene, d.source_id, d.source_index, false, d.inScene < 0);
 
         d.sname = sname + sceneMod;
         d.pname = nm;

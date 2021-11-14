@@ -3872,8 +3872,8 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     if (ismod)
     {
-        std::string mls = std::string("by ") + modulatorName(ms, true) +
-                          modulatorIndexExtension(current_scene, ms, modidx);
+        std::string mls =
+            std::string("by ") + modulatorNameWithIndex(current_scene, ms, modidx, true, false);
         typeinParamEditor->setModByLabel(mls);
     }
 
@@ -5503,6 +5503,31 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
     return "";
 }
 
+std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index, bool forButton,
+                                                   bool useScene)
+{
+    if (synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index][0] == 0)
+    {
+        auto base = modulatorName(ms, forButton, useScene ? scene : -1);
+        if (synth->supportsIndexedModulator(scene, (modsources)ms))
+            base += modulatorIndexExtension(scene, ms, index, forButton);
+        return base;
+    }
+    else
+    {
+        if (forButton)
+            return synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index];
+
+        // Long name is alias (button name)
+        auto base = modulatorName(ms, true, useScene ? scene : -1);
+        if (synth->supportsIndexedModulator(scene, (modsources)ms))
+            base += modulatorIndexExtension(scene, ms, index, true);
+        std::string res = synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index];
+        res = res + " (" + base + ")";
+        return res;
+    }
+}
+
 void SurgeGUIEditor::setupAlternates(modsources ms)
 {
     jassert(gui_modsrc[ms]);
@@ -5518,21 +5543,13 @@ void SurgeGUIEditor::setupAlternates(modsources ms)
 
     for (auto a : traverse)
     {
-        auto baseLabel = modulatorName(a, true);
-        auto baseLongName = modulatorName(a, false);
-
         int idxc = 1;
         if (synth->supportsIndexedModulator(current_scene, a))
             idxc = synth->getMaxModulationIndex(current_scene, a);
         for (int q = 0; q < idxc; ++q)
         {
-            auto tl = baseLabel;
-            auto ll = baseLongName;
-            if (idxc > 1)
-            {
-                tl += modulatorIndexExtension(current_scene, a, q, true);
-                ll += modulatorIndexExtension(current_scene, a, q, false);
-            }
+            auto tl = modulatorNameWithIndex(current_scene, a, q, true, false);
+            auto ll = modulatorNameWithIndex(current_scene, a, q, false, false);
             indexedAlternates.emplace_back(a, q, tl, ll);
         }
     }
