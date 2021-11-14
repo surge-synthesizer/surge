@@ -26,6 +26,7 @@
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
+#include "ModulationSource.h"
 
 #include "SurgeSynthEditor.h"
 #include "SurgeJUCELookAndFeel.h"
@@ -5506,7 +5507,11 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
 std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index, bool forButton,
                                                    bool useScene)
 {
-    if (synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index][0] == 0)
+    int lfo_id = ms - ms_lfo1;
+    bool hasOverride = isLFO((modsources)ms) &&
+                       synth->storage.getPatch().LFOBankLabel[scene][lfo_id][index][0] != 0;
+
+    if (!hasOverride)
     {
         auto base = modulatorName(ms, forButton, useScene ? scene : -1);
         if (synth->supportsIndexedModulator(scene, (modsources)ms))
@@ -5516,13 +5521,13 @@ std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index,
     else
     {
         if (forButton)
-            return synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index];
+            return synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
 
         // Long name is alias (button name)
         auto base = modulatorName(ms, true, useScene ? scene : -1);
         if (synth->supportsIndexedModulator(scene, (modsources)ms))
             base += modulatorIndexExtension(scene, ms, index, true);
-        std::string res = synth->storage.getPatch().LFOBankLabel[ms - ms_lfo1][index];
+        std::string res = synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
         res = res + " (" + base + ")";
         return res;
     }

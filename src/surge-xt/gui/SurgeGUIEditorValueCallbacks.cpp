@@ -934,17 +934,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (lfo_id >= 0)
             {
                 auto msi = modsource_index;
-                contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu("Rename Modulator"), [this, lfo_id, msi, cms]() {
-                        auto mecb = [this, lfo_id, msi](const std::string &nv) {
-                            auto cp = synth->storage.getPatch().LFOBankLabel[lfo_id][msi];
-                            strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
-                            synth->refresh_editor = true;
-                        };
-                        promptForMiniEdit(synth->storage.getPatch().LFOBankLabel[lfo_id][msi],
-                                          "Set Modulator Name", "Rename Modulator",
-                                          juce::Point<int>(10, 10), mecb);
-                    });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Modulator"), [this, lfo_id,
+                                                                                      msi, cms]() {
+                    auto mecb = [this, lfo_id, msi](const std::string &nv) {
+                        auto cp =
+                            synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
+                        strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
+                        synth->refresh_editor = true;
+                    };
+                    promptForMiniEdit(
+                        synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
+                        "Set Modulator Name", "Rename Modulator", juce::Point<int>(10, 10), mecb);
+                });
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator"),
                                     [this, sc, lfo_id]() {
                                         synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);

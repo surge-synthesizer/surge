@@ -766,13 +766,14 @@ void SurgePatch::init_default_values()
     {
         strxcpy(CustomControllerLabel[i], "-", CUSTOM_CONTROLLER_LABEL_SIZE);
     }
-    for (int i = 0; i < n_lfos; ++i)
-    {
-        for (int d = 0; d < max_lfo_indices; ++d)
+    for (int s = 0; s < n_scenes; ++s)
+        for (int i = 0; i < n_lfos; ++i)
         {
-            LFOBankLabel[i][d][0] = 0;
+            for (int d = 0; d < max_lfo_indices; ++d)
+            {
+                LFOBankLabel[s][i][d][0] = 0;
+            }
         }
-    }
 }
 
 SurgePatch::~SurgePatch() { free(patchptr); }
@@ -2022,13 +2023,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("entry"));
     }
 
-    for (int i = 0; i < n_lfos; ++i)
-    {
-        for (int d = 0; d < max_lfo_indices; ++d)
+    for (int s = 0; s < n_scenes; ++s)
+        for (int i = 0; i < n_lfos; ++i)
         {
-            LFOBankLabel[i][d][0] = 0;
+            for (int d = 0; d < max_lfo_indices; ++d)
+            {
+                LFOBankLabel[s][i][d][0] = 0;
+            }
         }
-    }
 
     TiXmlElement *lflb = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("lfobanklabels"));
     if (lflb)
@@ -2036,10 +2038,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         auto lb = TINYXML_SAFE_TO_ELEMENT(lflb->FirstChild("label"));
         while (lb)
         {
-            int lfo, idx;
+            int lfo, idx, scene;
             if (lb->QueryIntAttribute("lfo", &lfo) == TIXML_SUCCESS &&
-                lb->QueryIntAttribute("idx", &idx) == TIXML_SUCCESS)
-                strxcpy(LFOBankLabel[lfo][idx], lb->Attribute("v"), CUSTOM_CONTROLLER_LABEL_SIZE);
+                lb->QueryIntAttribute("idx", &idx) == TIXML_SUCCESS &&
+                lb->QueryIntAttribute("scene", &scene) == TIXML_SUCCESS)
+                strxcpy(LFOBankLabel[scene][lfo][idx], lb->Attribute("v"),
+                        CUSTOM_CONTROLLER_LABEL_SIZE);
             lb = TINYXML_SAFE_TO_ELEMENT(lb->NextSibling("label"));
         }
     }
@@ -2594,18 +2598,20 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     patch.InsertEndChild(cc);
 
     TiXmlElement lfobank("lfobanklabels");
-    for (int i = 0; i < n_lfos; ++i)
-        for (int d = 0; d < max_lfo_indices; ++d)
-        {
-            if (LFOBankLabel[i][d][0] != 0)
+    for (int s = 0; s < n_scenes; ++s)
+        for (int i = 0; i < n_lfos; ++i)
+            for (int d = 0; d < max_lfo_indices; ++d)
             {
-                TiXmlElement L("label");
-                L.SetAttribute("lfo", i);
-                L.SetAttribute("idx", d);
-                L.SetAttribute("v", LFOBankLabel[i][d]);
-                lfobank.InsertEndChild(L);
+                if (LFOBankLabel[s][i][d][0] != 0)
+                {
+                    TiXmlElement L("label");
+                    L.SetAttribute("lfo", i);
+                    L.SetAttribute("idx", d);
+                    L.SetAttribute("scene", s);
+                    L.SetAttribute("v", LFOBankLabel[s][i][d]);
+                    lfobank.InsertEndChild(L);
+                }
             }
-        }
     patch.InsertEndChild(lfobank);
 
     {
