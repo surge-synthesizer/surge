@@ -78,13 +78,13 @@ struct HyperlinkLabel : public juce::Label, public Surge::GUI::SkinConsumingComp
 
     void mouseEnter(const juce::MouseEvent &e) override
     {
-        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::LinkHover));
         repaint();
     }
 
     void mouseExit(const juce::MouseEvent &e) override
     {
-        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::LinkHover));
+        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
         repaint();
     }
 
@@ -182,7 +182,7 @@ void AboutScreen::resized()
     {
         int lHeight = 16;
         int margin = 16;
-        auto rightSide = getWidth() - margin - 240;
+        auto rightSide = getWidth() - margin - 252;
         auto lls = lowerLeft.size();
         auto lrs = lowerRight.size();
         auto h0 = getHeight() - lls * lHeight - margin;
@@ -212,21 +212,25 @@ void AboutScreen::resized()
             {
                 auto lb = std::make_unique<juce::Label>();
                 lb->setInterceptsMouseClicks(false, true);
-                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
-                lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
                 lb->setFont(font);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+                lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
+
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
             }
             else
             {
                 auto lb = std::make_unique<HyperlinkLabel>(std::get<2>(l));
-                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
-                lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
-                lb->setFont(font);
                 lb->setSkin(skin, associatedBitmapStore);
+                lb->setFont(font);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+
+                auto strw = font.getStringWidth(std::get<1>(l)) + 8;
+                lb->setBounds(margin + colW, h0, strw, lHeight);
+
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
             }
@@ -250,21 +254,25 @@ void AboutScreen::resized()
             {
                 auto lb = std::make_unique<juce::Label>();
                 lb->setInterceptsMouseClicks(false, true);
-                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
-                lb->setBounds(rightSide + colW, h1, getWidth() - margin - colW, lHeight);
                 lb->setFont(font);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+                lb->setBounds(rightSide + colW, h1, getWidth() - margin - colW, lHeight);
+
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
             }
             else
             {
                 auto lb = std::make_unique<HyperlinkLabel>(std::get<2>(l));
-                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
-                lb->setBounds(rightSide + colW, h1, getWidth() - margin - colW, lHeight);
-                lb->setFont(font);
                 lb->setSkin(skin, associatedBitmapStore);
+                lb->setFont(font);
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+
+                auto strw = font.getStringWidth(std::get<1>(l)) + 8;
+                lb->setBounds(rightSide + colW, h1, strw, lHeight);
+
                 addAndMakeVisible(*lb);
                 labels.push_back(std::move(lb));
             }
@@ -339,7 +347,7 @@ void AboutScreen::resized()
         {
             auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx]);
 
-            bt->setBounds(rightSide + (x * 40), margin, 36, 36);
+            bt->setBounds(rightSide + (x * 42), margin, 36, 36);
             addAndMakeVisible(*bt);
             icons.push_back(std::move(bt));
 
