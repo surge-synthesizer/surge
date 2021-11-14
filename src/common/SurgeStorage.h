@@ -849,7 +849,7 @@ class SurgePatch
 #define CUSTOM_CONTROLLER_LABEL_SIZE 20
     char CustomControllerLabel[n_customcontrollers][CUSTOM_CONTROLLER_LABEL_SIZE];
 
-    char LFOBankLabel[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE];
+    char LFOBankLabel[n_scenes][n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE];
 
     int streamingRevision;
     int currentSynthStreamingRevision;
