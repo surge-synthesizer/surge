@@ -490,7 +490,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (!juce::PopupMenu::dismissAllActiveMenus())
             {
                 contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                          [control](int i) { control->endHover(); });
+                                          Surge::GUI::makeEndHoverCallback(control));
             }
             return 1;
         }
@@ -537,7 +537,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (!juce::PopupMenu::dismissAllActiveMenus())
             {
                 contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                          [control](int i) { control->endHover(); });
+                                          Surge::GUI::makeEndHoverCallback(control));
             }
             return 1;
         }
@@ -1028,7 +1028,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (!juce::PopupMenu::dismissAllActiveMenus())
             {
                 contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                          [control](int opt) { control->endHover(); });
+                                          Surge::GUI::makeEndHoverCallback(control));
             }
             return 1;
         }
@@ -2234,7 +2234,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (!juce::PopupMenu::dismissAllActiveMenus())
             {
                 contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                          [control](int i) { control->endHover(); });
+                                          Surge::GUI::makeEndHoverCallback(control));
             }
             return 1;
         }
@@ -2448,12 +2448,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             auto launchFrom = control;
             if (!juce::PopupMenu::dismissAllActiveMenus())
             {
-                m.showMenuAsync(juce::PopupMenu::Options(), [launchFrom](int i) {
-                    if (launchFrom)
-                    {
-                        launchFrom->endHover();
-                    }
-                });
+                m.showMenuAsync(juce::PopupMenu::Options(),
+                                Surge::GUI::makeEndHoverCallback(launchFrom));
             }
         }
 

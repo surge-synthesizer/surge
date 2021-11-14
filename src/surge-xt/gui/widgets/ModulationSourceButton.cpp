@@ -21,6 +21,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeImage.h"
 #include "SurgeGUIUtils.h"
+#include "SurgeJUCEHelpers.h"
 
 namespace Surge
 {
@@ -323,7 +324,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 
         if (!juce::PopupMenu::dismissAllActiveMenus())
         {
-            menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) { endHover(); });
+            menu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(this));
         }
         return;
     }

@@ -118,6 +118,7 @@ struct OscillatorMenu : public juce::Component,
                         public WidgetBaseMixin<OscillatorMenu>
 {
     OscillatorMenu();
+    ~OscillatorMenu();
     void loadSnapshot(int type, TiXmlElement *e, int idx) override;
 
     Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; };

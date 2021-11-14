@@ -17,11 +17,45 @@
 #define SURGE_XT_JUCEHELPERS_H
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "SurgeGUICallbackInterfaces.h"
 
 namespace Surge
 {
 namespace GUI
 {
+
+template <typename T>
+inline std::function<void(int)> makeAsyncCallback(T *that, std::function<void(T *, int)> cb)
+{
+    return [safethat = juce::Component::SafePointer<T>(that), cb](int x) {
+        if (safethat)
+            cb(safethat, x);
+    };
+}
+
+template <typename T> inline std::function<void(int)> makeEndHoverCallback(T *that)
+{
+    return [safethat = juce::Component::SafePointer<T>(that)](int x) {
+        if (safethat)
+        {
+            safethat->endHover();
+        }
+    };
+}
+
+template <>
+inline std::function<void(int)> makeEndHoverCallback(Surge::GUI::IComponentTagValue *that)
+{
+    return
+        [safethat = juce::Component::SafePointer<juce::Component>(that->asJuceComponent())](int x) {
+            if (safethat)
+            {
+                auto igtv = dynamic_cast<Surge::GUI::IComponentTagValue *>(safethat.getComponent());
+                if (igtv)
+                    igtv->endHover();
+            }
+        };
+}
 struct WheelAccumulationHelper
 {
     float accum{0};

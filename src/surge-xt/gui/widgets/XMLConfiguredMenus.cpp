@@ -324,6 +324,8 @@ OscillatorMenu::OscillatorMenu()
 #endif
 }
 
+OscillatorMenu::~OscillatorMenu() = default;
+
 void OscillatorMenu::paint(juce::Graphics &g)
 {
     bg->draw(g, 1.0);
@@ -374,10 +376,11 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
 
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
-        menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) {
-            isHovered = false;
-            repaint();
-        });
+        menu.showMenuAsync(juce::PopupMenu::Options(),
+                           Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
+                               that->isHovered = false;
+                               that->repaint();
+                           }));
     }
 }
 
@@ -486,10 +489,11 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
 
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
-        menu.showMenuAsync(juce::PopupMenu::Options(), [this](int i) {
-            isHovered = false;
-            repaint();
-        });
+        menu.showMenuAsync(juce::PopupMenu::Options(),
+                           Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
+                               that->isHovered = false;
+                               that->repaint();
+                           }));
     }
 }
 

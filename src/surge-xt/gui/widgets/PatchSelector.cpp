@@ -24,6 +24,7 @@
 #include "overlays/PatchStoreDialog.h"
 #include "PatchDB.h"
 #include "fmt/core.h"
+#include "SurgeJUCEHelpers.h"
 
 namespace Surge
 {
@@ -266,7 +267,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
                 if (!juce::PopupMenu::dismissAllActiveMenus())
                 {
                     menu.showMenuAsync(juce::PopupMenu::Options(),
-                                       [this](int) { this->endHover(); });
+                                       Surge::GUI::makeEndHoverCallback(this));
                 }
             }
 
