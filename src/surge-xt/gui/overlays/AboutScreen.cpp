@@ -27,11 +27,6 @@ namespace Surge
 {
 namespace Overlays
 {
-struct NoUrlHyperlinkButton : public juce::HyperlinkButton
-{
-    NoUrlHyperlinkButton() : HyperlinkButton("", juce::URL()) {}
-    void clicked() override {}
-};
 
 struct ClickURLImage : public juce::Component
 {
@@ -44,7 +39,9 @@ struct ClickURLImage : public juce::Component
     {
         int ys = isHovered ? imgsz : 0;
         int xs = offset * imgsz;
+
         juce::Graphics::ScopedSaveState gs(g);
+
         auto t = juce::AffineTransform();
         t = t.translated(-xs, -ys);
 
@@ -70,10 +67,33 @@ struct ClickURLImage : public juce::Component
     }
 
     bool isHovered{false};
+    int offset, imgsz = 36;
     std::string url;
-    int offset;
     SurgeImage *img;
-    int imgsz = 36;
+};
+
+struct HyperlinkLabel : public juce::Label, public Surge::GUI::SkinConsumingComponent
+{
+    HyperlinkLabel(const std::string &URL) : url(URL) {}
+
+    void mouseEnter(const juce::MouseEvent &e) override
+    {
+        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::LinkHover));
+        repaint();
+    }
+
+    void mouseExit(const juce::MouseEvent &e) override
+    {
+        setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+        repaint();
+    }
+
+    void mouseUp(const juce::MouseEvent &event) override
+    {
+        juce::URL(url).launchInDefaultBrowser();
+    }
+
+    std::string url;
 };
 
 AboutScreen::AboutScreen() {}
@@ -86,7 +106,8 @@ void AboutScreen::populateData()
     std::ostringstream oss;
     oss << Surge::Build::BuildDate << " @ " << Surge::Build::BuildTime << " on '"
         << Surge::Build::BuildHost << "/" << Surge::Build::BuildLocation << "' with '"
-        << Surge::Build::BuildCompiler << "' using JUCE " << std::hex << JUCE_VERSION << std::dec;
+        << Surge::Build::BuildCompiler << "' using JUCE " << JUCE_MAJOR_VERSION << "."
+        << JUCE_MINOR_VERSION << "." << JUCE_BUILDNUMBER;
 
     std::string buildinfo = oss.str();
 
@@ -105,33 +126,34 @@ void AboutScreen::populateData()
         platform + " " + bitness + " " + wrapper + " on " + Surge::CPUFeatures::cpuBrand();
 
     lowerLeft.clear();
-    lowerLeft.emplace_back("Version", version, "");
-    lowerLeft.emplace_back("Build", buildinfo, "");
-    lowerLeft.emplace_back("System", system, "");
+    lowerLeft.emplace_back("Version:", version, "");
+    lowerLeft.emplace_back("Build:", buildinfo, "");
+    lowerLeft.emplace_back("System:", system, "");
 
     auto srString = fmt::format("{:.1f} kHz", samplerate / 1000.0);
+
     if (host != "Unknown")
     {
         auto hstr = host + " @ " + srString;
-        lowerLeft.emplace_back("Host", hstr, "");
+        lowerLeft.emplace_back("Host:", hstr, "");
     }
     else
     {
-        lowerLeft.emplace_back("Sample Rate", srString, "");
+        lowerLeft.emplace_back("Sample Rate:", srString, "");
     }
-    lowerLeft.emplace_back("", "", "");
-    lowerLeft.emplace_back("Factory Data", storage->datapath.u8string(),
-                           storage->datapath.u8string());
-    lowerLeft.emplace_back("User Data", storage->userDataPath.u8string(),
-                           storage->userDataPath.u8string());
-    lowerLeft.emplace_back("Plugin", Paths::appPath().u8string(), "");
-    lowerLeft.emplace_back("Current Skin", skin->displayName, skin->root + skin->name);
-    lowerLeft.emplace_back("Skin Author", skin->author, skin->authorURL);
 
-    for (auto &l : lowerLeft)
-    {
-        std::cout << std::get<0>(l) << "  -   " << std::get<1>(l) << std::endl;
-    }
+    lowerLeft.emplace_back("", "", "");
+
+    lowerLeft.emplace_back("Executable:", Paths::appPath().u8string(),
+                           Paths::appPath().parent_path().u8string());
+    lowerLeft.emplace_back("Factory Data:", storage->datapath.u8string(),
+                           storage->datapath.u8string());
+    lowerLeft.emplace_back("User Data:", storage->userDataPath.u8string(),
+                           storage->userDataPath.u8string());
+
+    lowerRight.clear();
+    lowerRight.emplace_back("Current Skin:", skin->displayName, skin->root + skin->name);
+    lowerRight.emplace_back("Skin Author:", skin->author, skin->authorURL);
 }
 
 void AboutScreen::buttonClicked(juce::Button *button)
@@ -139,12 +161,17 @@ void AboutScreen::buttonClicked(juce::Button *button)
     if (button == copyButton.get())
     {
         std::ostringstream oss;
+
         for (auto l : lowerLeft)
         {
             if (std::get<0>(l).empty())
+            {
                 break;
-            oss << std::get<0>(l) << ":  " << std::get<1>(l) << "\n";
+            }
+
+            oss << std::get<0>(l) << " " << std::get<1>(l) << "\n";
         }
+
         juce::SystemClipboard::copyTextToClipboard(oss.str());
     }
 }
@@ -153,18 +180,21 @@ void AboutScreen::resized()
 {
     if (labels.empty())
     {
-        std::cout << "Building on resize " << getWidth() << " " << getHeight() << std::endl;
-
         int lHeight = 16;
-        int margin = 5;
+        int margin = 16;
+        auto rightSide = getWidth() - margin - 252;
         auto lls = lowerLeft.size();
+        auto lrs = lowerRight.size();
         auto h0 = getHeight() - lls * lHeight - margin;
+        auto h1 = getHeight() - lrs * lHeight - margin;
         auto colW = 66;
+        auto font = Surge::GUI::getFontManager()->getLatoAtSize(10);
 
         copyButton = std::make_unique<juce::TextButton>();
-        copyButton->setButtonText("Copy to Clipboard");
-        copyButton->setBounds(margin, h0 - 20 - margin, 100, 20);
+        copyButton->setButtonText("Copy Version Info");
+        copyButton->setBounds(margin + 4, h0 - lHeight - 10, 100, 20);
         copyButton->addListener(this);
+
         addAndMakeVisible(*copyButton);
 
         for (auto l : lowerLeft)
@@ -173,21 +203,81 @@ void AboutScreen::resized()
             lb->setInterceptsMouseClicks(false, true);
             lb->setText(std::get<0>(l), juce::NotificationType::dontSendNotification);
             lb->setBounds(margin, h0, colW, lHeight);
-            lb->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+            lb->setFont(font);
             lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::ColumnText));
             addAndMakeVisible(*lb);
             labels.push_back(std::move(lb));
 
-            lb = std::make_unique<juce::Label>();
+            if (std::get<2>(l).empty())
+            {
+                auto lb = std::make_unique<juce::Label>();
+                lb->setInterceptsMouseClicks(false, true);
+                lb->setFont(font);
+                lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+                lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
+
+                addAndMakeVisible(*lb);
+                labels.push_back(std::move(lb));
+            }
+            else
+            {
+                auto lb = std::make_unique<HyperlinkLabel>(std::get<2>(l));
+                lb->setSkin(skin, associatedBitmapStore);
+                lb->setFont(font);
+                lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+
+                auto strw = font.getStringWidth(std::get<1>(l)) + 8;
+                lb->setBounds(margin + colW, h0, strw, lHeight);
+
+                addAndMakeVisible(*lb);
+                labels.push_back(std::move(lb));
+            }
+
+            h0 += lHeight;
+        }
+
+        for (auto l : lowerRight)
+        {
+            auto lb = std::make_unique<juce::Label>();
+
             lb->setInterceptsMouseClicks(false, true);
-            lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
-            lb->setBounds(margin + colW, h0, getWidth() - margin - colW, lHeight);
-            lb->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
-            lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
+            lb->setText(std::get<0>(l), juce::NotificationType::dontSendNotification);
+            lb->setBounds(rightSide, h1, colW, lHeight);
+            lb->setFont(font);
+            lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::ColumnText));
             addAndMakeVisible(*lb);
             labels.push_back(std::move(lb));
 
-            h0 += lHeight;
+            if (std::get<2>(l).empty())
+            {
+                auto lb = std::make_unique<juce::Label>();
+                lb->setInterceptsMouseClicks(false, true);
+                lb->setFont(font);
+                lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+                lb->setBounds(rightSide + colW, h1, getWidth() - margin - colW, lHeight);
+
+                addAndMakeVisible(*lb);
+                labels.push_back(std::move(lb));
+            }
+            else
+            {
+                auto lb = std::make_unique<HyperlinkLabel>(std::get<2>(l));
+                lb->setSkin(skin, associatedBitmapStore);
+                lb->setFont(font);
+                lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
+                lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
+
+                auto strw = font.getStringWidth(std::get<1>(l)) + 8;
+                lb->setBounds(rightSide + colW, h1, strw, lHeight);
+
+                addAndMakeVisible(*lb);
+                labels.push_back(std::move(lb));
+            }
+
+            h1 += lHeight;
         }
 
         auto xp = margin;
@@ -210,8 +300,6 @@ void AboutScreen::resized()
                 " by Vember Audio and individual contributors in the Surge Synth Team, released "
                 "under the GNU GPL v3 license",
             600);
-        yp += lblvs;
-        addLabel("Built using the JUCE framework.", 600);
         yp += lblvs;
         addLabel("VST is a trademark of Steinberg Media Technologies GmbH;Audio Units is a "
                  "trademark of Apple Inc.",
@@ -243,31 +331,27 @@ void AboutScreen::resized()
             600);
 
         auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
+        auto idxes = {0, 4, 3, 1, 2, 5};
 
-        // so 'github / discord / gpl3'
-        // th 'juce / au / vst3'
-        auto idxes = {0, 4, 3, 5, 1, 2};
         std::vector<std::string> urls = {
-            // icon order so gh, vst, au, gpl, discord, juce
             "https://github.com/surge-synthesizer/surge/",
+            "https://discord.gg/aFQDdMV",
+            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
             "https://www.steinberg.net/en/company/technologies/vst3.html",
             "https://developer.apple.com/documentation/audiounit",
-            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
-            "https://discord.gg/aFQDdMV",
             "https://juce.com"};
-        int xi = 0, yi = 0;
+
+        int x = 0;
+
         for (auto idx : idxes)
         {
             auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx]);
-            bt->setBounds(getWidth() - 40 * 3 + xi * 40, 10 + yi * 40, 36, 36);
+
+            bt->setBounds(rightSide + (x * 42), margin, 36, 36);
             addAndMakeVisible(*bt);
             icons.push_back(std::move(bt));
-            xi++;
-            if (xi == 3)
-            {
-                xi = 0;
-                yi++;
-            }
+
+            x++;
         }
     }
 }
@@ -286,10 +370,25 @@ void AboutScreen::paint(juce::Graphics &g)
 void AboutScreen::mouseUp(const juce::MouseEvent &e)
 {
     if (editor)
+    {
         editor->hideAboutScreen();
+    }
 }
 
-void AboutScreen::onSkinChanged() { logo = associatedBitmapStore->getImage(IDB_ABOUT_BG); }
+void AboutScreen::onSkinChanged()
+{
+    logo = associatedBitmapStore->getImage(IDB_ABOUT_BG);
+
+    for (const auto &l : labels)
+    {
+        auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(l.get());
+
+        if (skc)
+        {
+            skc->setSkin(skin, associatedBitmapStore);
+        }
+    }
+}
 
 } // namespace Overlays
 } // namespace Surge
