@@ -3611,7 +3611,8 @@ void SurgeSynthesizer::processControl()
         if (storage.oddsound_mts_on_check == 0)
         {
             bool prior = storage.oddsound_mts_active;
-            storage.oddsound_mts_active = MTS_HasMaster(storage.oddsound_mts_client);
+            storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
+
             if (prior != storage.oddsound_mts_active)
             {
                 refresh_editor = true;
