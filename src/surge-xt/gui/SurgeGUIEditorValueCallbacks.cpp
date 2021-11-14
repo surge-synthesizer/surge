@@ -571,7 +571,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (lurl != "")
                 lurl = fullyResolvedHelpURL(lurl);
             auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                modulatorName(modsource, false), lurl);
+                modulatorNameWithIndex(current_scene, modsource, modsource_index, false, false),
+                lurl);
             hmen->setSkin(currentSkin, bitmapStore);
             contextMenu.addCustomItem(-1, std::move(hmen));
 
@@ -622,6 +623,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         for (auto modidx : indices)
                         {
+                            if (hasIdx && modidx != modsource_index)
+                                continue;
+
                             if (first_destination)
                             {
                                 contextMenu.addSeparator();
@@ -846,13 +850,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
 
-            contextMenu.addSeparator();
-
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
-                if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                    showOverlay(MODULATION_EDITOR);
-            });
-
             // for macros only
             if (within_range(ms_ctrl1, modsource, ms_ctrl1 + n_customcontrollers - 1))
             {
@@ -936,6 +933,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             if (lfo_id >= 0)
             {
+                auto msi = modsource_index;
+                contextMenu.addItem(
+                    Surge::GUI::toOSCaseForMenu("Rename Modulator"), [this, lfo_id, msi, cms]() {
+                        auto mecb = [this, lfo_id, msi](const std::string &nv) {
+                            auto cp = synth->storage.getPatch().LFOBankLabel[lfo_id][msi];
+                            strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
+                            synth->refresh_editor = true;
+                        };
+                        promptForMiniEdit(synth->storage.getPatch().LFOBankLabel[lfo_id][msi],
+                                          "Set Modulator Name", "Rename Modulator",
+                                          juce::Point<int>(10, 10), mecb);
+                    });
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Modulator"),
                                     [this, sc, lfo_id]() {
                                         synth->storage.clipboard_copy(cp_lfo, sc, lfo_id);
@@ -1929,13 +1938,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
                                         synth->isBipolarModulation(ms), Parameter::Menu);
 
-                                    char srctxt[512];
-
-                                    sprintf(
-                                        srctxt, "%s%s",
-                                        (char *)modulatorName(ms, true, showScene ? sc : -1)
-                                            .c_str(),
-                                        modulatorIndexExtension(current_scene, ms, modidx).c_str());
+                                    std::string srctxt = modulatorNameWithIndex(
+                                        current_scene, ms, modidx, true, showScene);
 
                                     auto comp =
                                         std::make_unique<Surge::Widgets::ModMenuCustomComponent>(
@@ -2087,8 +2091,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 auto subm = juce::PopupMenu();
                                 for (int i = 0; i < maxidx; ++i)
                                 {
-                                    auto subn = modulatorName(ms, false) +
-                                                modulatorIndexExtension(current_scene, ms, i);
+                                    auto subn =
+                                        modulatorNameWithIndex(current_scene, ms, i, false, false);
                                     subm.addItem(subn, [this, p, bvf, ms, i]() {
                                         this->promptForUserValueEntry(p, bvf, ms, current_scene, i);
                                     });
@@ -2140,11 +2144,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                addModSub);
                     }
                 }
-
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Modulation List..."), [this]() {
-                    if (!isAnyOverlayPresent(MODULATION_EDITOR))
-                        showOverlay(MODULATION_EDITOR);
-                });
 
                 contextMenu.addSeparator();
                 createMIDILearnMenuEntries(contextMenu, false, p->id, control);

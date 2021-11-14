@@ -27,7 +27,7 @@ namespace Surge
 {
 namespace Formula
 {
-static constexpr int max_formula_outputs{8};
+static constexpr int max_formula_outputs{max_lfo_indices};
 
 struct EvaluatorState
 {

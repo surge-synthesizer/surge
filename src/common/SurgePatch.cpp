@@ -766,6 +766,13 @@ void SurgePatch::init_default_values()
     {
         strxcpy(CustomControllerLabel[i], "-", CUSTOM_CONTROLLER_LABEL_SIZE);
     }
+    for (int i = 0; i < n_lfos; ++i)
+    {
+        for (int d = 0; d < max_lfo_indices; ++d)
+        {
+            LFOBankLabel[i][d][0] = 0;
+        }
+    }
 }
 
 SurgePatch::~SurgePatch() { free(patchptr); }
@@ -2015,6 +2022,28 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         p = TINYXML_SAFE_TO_ELEMENT(p->NextSibling("entry"));
     }
 
+    for (int i = 0; i < n_lfos; ++i)
+    {
+        for (int d = 0; d < max_lfo_indices; ++d)
+        {
+            LFOBankLabel[i][d][0] = 0;
+        }
+    }
+
+    TiXmlElement *lflb = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("lfobanklabels"));
+    if (lflb)
+    {
+        auto lb = TINYXML_SAFE_TO_ELEMENT(lflb->FirstChild("label"));
+        while (lb)
+        {
+            int lfo, idx;
+            if (lb->QueryIntAttribute("lfo", &lfo) == TIXML_SUCCESS &&
+                lb->QueryIntAttribute("idx", &idx) == TIXML_SUCCESS)
+                strxcpy(LFOBankLabel[lfo][idx], lb->Attribute("v"), CUSTOM_CONTROLLER_LABEL_SIZE);
+            lb = TINYXML_SAFE_TO_ELEMENT(lb->NextSibling("label"));
+        }
+    }
+
     patchTuning.tuningStoredInPatch = false;
     patchTuning.scaleContents = "";
     patchTuning.mappingContents = "";
@@ -2563,6 +2592,21 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         cc.InsertEndChild(p);
     }
     patch.InsertEndChild(cc);
+
+    TiXmlElement lfobank("lfobanklabels");
+    for (int i = 0; i < n_lfos; ++i)
+        for (int d = 0; d < max_lfo_indices; ++d)
+        {
+            if (LFOBankLabel[i][d][0] != 0)
+            {
+                TiXmlElement L("label");
+                L.SetAttribute("lfo", i);
+                L.SetAttribute("idx", d);
+                L.SetAttribute("v", LFOBankLabel[i][d]);
+                lfobank.InsertEndChild(L);
+            }
+        }
+    patch.InsertEndChild(lfobank);
 
     {
         char txt[TXT_SIZE];
