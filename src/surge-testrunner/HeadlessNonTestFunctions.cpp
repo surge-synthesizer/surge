@@ -13,6 +13,18 @@ namespace Headless
 namespace NonTest
 {
 
+void initializePatchDB()
+{
+    using namespace std::chrono_literals;
+    auto surge = createSurge(44100);
+    surge->storage.initializePatchDb();
+    while (surge->storage.patchDB->numberOfJobsOutstanding() > 0)
+    {
+        std::cout << surge->storage.patchDB->numberOfJobsOutstanding() << std::endl;
+        std::this_thread::sleep_for(100ms);
+    }
+}
+
 void restreamTemplatesWithModifications()
 {
     auto templatesDir = string_to_path("resources/data/patches_factory/Templates");

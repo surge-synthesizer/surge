@@ -7,6 +7,7 @@ namespace Headless
 {
 namespace NonTest
 {
+void initializePatchDB();
 void restreamTemplatesWithModifications();
 void statsFromPlayingEveryPatch();
 void filterAnalyzer(int ft, int fst, std::ostream &os);

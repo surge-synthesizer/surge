@@ -21,6 +21,10 @@ int main(int argc, char **argv)
     if (argc > 2 && strcmp(argv[1], "--non-test") == 0)
     {
         std::cout << "# Running in non-test mode : " << argv[2] << std::endl;
+        if (strcmp(argv[2], "--initialize-pdb") == 0)
+        {
+            Surge::Headless::NonTest::initializePatchDB();
+        }
         if (strcmp(argv[2], "--stats-from-every-patch") == 0)
         {
             Surge::Headless::NonTest::statsFromPlayingEveryPatch();
