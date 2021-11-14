@@ -1969,7 +1969,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
 
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
-        fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), [c](int i) { c->endHover(); });
+        fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(c));
     }
 }
 
@@ -2046,12 +2046,7 @@ void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
         auto m = makeZoomMenu(where, true);
-        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-            if (launchFrom)
-            {
-                launchFrom->endHover();
-            }
-        });
+        m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
     }
 }
 
@@ -2061,12 +2056,7 @@ void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where,
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
         auto m = makeMpeMenu(where, true);
-        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-            if (launchFrom)
-            {
-                launchFrom->endHover();
-            }
-        });
+        m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
     }
 }
 void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
@@ -2075,12 +2065,7 @@ void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
         auto m = makeLfoMenu(where);
-        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-            if (launchFrom)
-            {
-                launchFrom->endHover();
-            }
-        });
+        m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
     }
 }
 
@@ -2103,12 +2088,7 @@ void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
     {
         auto m = makeTuningMenu(where, true);
 
-        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-            if (launchFrom)
-            {
-                launchFrom->endHover();
-            }
-        });
+        m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
     }
 }
 
@@ -2338,12 +2318,8 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
 
     if (!juce::PopupMenu::dismissAllActiveMenus())
     {
-        settingsMenu.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-            if (launchFrom != nullptr)
-            {
-                launchFrom->endHover();
-            }
-        });
+        settingsMenu.showMenuAsync(optionsForPosition(where),
+                                   Surge::GUI::makeEndHoverCallback(launchFrom));
     }
 }
 

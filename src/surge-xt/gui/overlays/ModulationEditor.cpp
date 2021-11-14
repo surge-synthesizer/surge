@@ -22,6 +22,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
+#include "SurgeJUCEHelpers.h"
 
 namespace Surge
 {
@@ -697,7 +698,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             });
         if (!juce::PopupMenu::dismissAllActiveMenus())
         {
-            men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { filterW->endHover(); });
+            men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(filterW.get()));
         }
     }
     break;
@@ -712,7 +713,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         men.addItem("Coming soon!", [this]() {});
         if (!juce::PopupMenu::dismissAllActiveMenus())
         {
-            men.showMenuAsync(juce::PopupMenu::Options(), [this](int) { addSourceW->endHover(); });
+            men.showMenuAsync(juce::PopupMenu::Options(),
+                              GUI::makeEndHoverCallback(addSourceW.get()));
         }
     }
     break;
