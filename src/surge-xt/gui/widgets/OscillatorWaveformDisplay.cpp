@@ -503,7 +503,10 @@ void OscillatorWaveformDisplay::showWavetableMenu()
         int id = oscdata->wt.current_id;
         juce::PopupMenu menu;
         populateMenu(menu, id);
-        menu.showMenuAsync(juce::PopupMenu::Options());
+        if (!juce::PopupMenu::dismissAllActiveMenus())
+        {
+            menu.showMenuAsync(juce::PopupMenu::Options());
+        }
     }
 }
 
@@ -537,9 +540,12 @@ void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event)
         }
         else if (waveTableName.contains(event.position))
         {
-            juce::PopupMenu menu;
-            populateMenu(menu, id);
-            menu.showMenuAsync(juce::PopupMenu::Options());
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                juce::PopupMenu menu;
+                populateMenu(menu, id);
+                menu.showMenuAsync(juce::PopupMenu::Options());
+            }
         }
     }
 
@@ -770,7 +776,10 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                 contextMenu.addItem("Reverse", action);
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            }
             return;
         }
 

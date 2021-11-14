@@ -2605,7 +2605,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            if (!juce::PopupMenu::dismissAllActiveMenus())
+            {
+                contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            }
         }
     }
 
@@ -2995,7 +2998,11 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
             };
             contextMenu.addItem("Edit Value", true, false, showTypein);
         }
-        contextMenu.showMenuAsync(juce::PopupMenu::Options());
+
+        if (!juce::PopupMenu::dismissAllActiveMenus())
+        {
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+        }
     }
     return 1;
 }

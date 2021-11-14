@@ -1966,7 +1966,10 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
             this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_18DBFS;
         });
 
-    fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), [c](int i) { c->endHover(); });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), [c](int i) { c->endHover(); });
+    }
 }
 
 void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
@@ -2039,36 +2042,45 @@ juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<in
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
                                   Surge::GUI::IComponentTagValue *launchFrom)
 {
-    auto m = makeZoomMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-        if (launchFrom)
-        {
-            launchFrom->endHover();
-        }
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        auto m = makeZoomMenu(where, true);
+        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+            if (launchFrom)
+            {
+                launchFrom->endHover();
+            }
+        });
+    }
 }
 
 void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where,
                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
-    auto m = makeMpeMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-        if (launchFrom)
-        {
-            launchFrom->endHover();
-        }
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        auto m = makeMpeMenu(where, true);
+        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+            if (launchFrom)
+            {
+                launchFrom->endHover();
+            }
+        });
+    }
 }
 void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
-    auto m = makeLfoMenu(where);
-    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-        if (launchFrom)
-        {
-            launchFrom->endHover();
-        }
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        auto m = makeLfoMenu(where);
+        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+            if (launchFrom)
+            {
+                launchFrom->endHover();
+            }
+        });
+    }
 }
 
 void SurgeGUIEditor::toggleTuning()
@@ -2086,14 +2098,17 @@ void SurgeGUIEditor::toggleTuning()
 void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
                                     Surge::GUI::IComponentTagValue *launchFrom)
 {
-    auto m = makeTuningMenu(where, true);
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        auto m = makeTuningMenu(where, true);
 
-    m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-        if (launchFrom)
-        {
-            launchFrom->endHover();
-        }
-    });
+        m.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+            if (launchFrom)
+            {
+                launchFrom->endHover();
+            }
+        });
+    }
 }
 
 void SurgeGUIEditor::scaleFileDropped(const string &fn)
@@ -2320,12 +2335,15 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
 
     settingsMenu.addItem("About Surge", [this]() { this->showAboutScreen(); });
 
-    settingsMenu.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
-        if (launchFrom != nullptr)
-        {
-            launchFrom->endHover();
-        }
-    });
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        settingsMenu.showMenuAsync(optionsForPosition(where), [launchFrom](int i) {
+            if (launchFrom != nullptr)
+            {
+                launchFrom->endHover();
+            }
+        });
+    }
 }
 
 juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)

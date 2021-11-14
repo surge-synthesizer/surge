@@ -263,7 +263,11 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
             if (haveFavs)
             {
-                menu.showMenuAsync(juce::PopupMenu::Options(), [this](int) { this->endHover(); });
+                if (!juce::PopupMenu::dismissAllActiveMenus())
+                {
+                    menu.showMenuAsync(juce::PopupMenu::Options(),
+                                       [this](int) { this->endHover(); });
+                }
             }
 
             return;
@@ -644,7 +648,10 @@ void PatchSelector::showClassicMenu(bool single_category)
     auto o = juce::PopupMenu::Options();
     if (sge)
         o = sge->optionsForPosition(getBounds().getBottomLeft());
-    contextMenu.showMenuAsync(o);
+    if (!juce::PopupMenu::dismissAllActiveMenus())
+    {
+        contextMenu.showMenuAsync(o);
+    }
 }
 
 bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak,
