@@ -5499,28 +5499,50 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
 }
 
 std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index, bool forButton,
-                                                   bool useScene)
+                                                   bool useScene, bool baseNameOnly)
 {
     int lfo_id = ms - ms_lfo1;
     bool hasOverride = isLFO((modsources)ms) &&
                        synth->storage.getPatch().LFOBankLabel[scene][lfo_id][index][0] != 0;
 
+    if (baseNameOnly)
+    {
+        auto base = modulatorName(ms, true, useScene ? scene : -1);
+
+        if (synth->supportsIndexedModulator(scene, (modsources)ms))
+        {
+            base += modulatorIndexExtension(scene, ms, index, true);
+        }
+
+        return base;
+    }
+
     if (!hasOverride)
     {
         auto base = modulatorName(ms, forButton, useScene ? scene : -1);
+
         if (synth->supportsIndexedModulator(scene, (modsources)ms))
+        {
             base += modulatorIndexExtension(scene, ms, index, forButton);
+        }
+
         return base;
     }
     else
     {
         if (forButton)
+        {
             return synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
+        }
 
         // Long name is alias (button name)
         auto base = modulatorName(ms, true, useScene ? scene : -1);
+
         if (synth->supportsIndexedModulator(scene, (modsources)ms))
+        {
             base += modulatorIndexExtension(scene, ms, index, true);
+        }
+
         std::string res = synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
         res = res + " (" + base + ")";
         return res;

@@ -950,7 +950,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         promptForMiniEdit(
                             synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
                             fmt::format("Enter a new name for {:s}:",
-                                        modulatorName(modsource, true)),
+                                        modulatorNameWithIndex(current_scene, modsource, msi, false,
+                                                               false, true)),
                             "Rename Modulator", juce::Point<int>(10, 10), mecb);
                     });
 
