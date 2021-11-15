@@ -46,6 +46,9 @@ template <typename T> inline std::function<void(int)> makeEndHoverCallback(T *th
 template <>
 inline std::function<void(int)> makeEndHoverCallback(Surge::GUI::IComponentTagValue *that)
 {
+    if (!that)
+        return [](int) {};
+
     return
         [safethat = juce::Component::SafePointer<juce::Component>(that->asJuceComponent())](int x) {
             if (safethat)
