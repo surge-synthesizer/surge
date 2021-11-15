@@ -286,22 +286,28 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
 
         menu.addSeparator();
     }
+
     if (modlist.size() > 1)
     {
         for (auto e : modlist)
         {
             auto modName = std::get<3>(e);
 
-            if (addedToModbuttonContextMenu)
-                modName = "Switch to " + modName;
+            if (this->modlistIndex != idx)
+            {
+                if (addedToModbuttonContextMenu)
+                {
+                    modName = "Switch to " + modName;
+                }
 
-            menu.addItem(modName, [this, idx]() {
-                this->modlistIndex = idx;
-                mouseMode = HAMBURGER;
-                notifyValueChanged();
-                mouseMode = NONE;
-                repaint();
-            });
+                menu.addItem(modName, [this, idx]() {
+                    this->modlistIndex = idx;
+                    mouseMode = HAMBURGER;
+                    notifyValueChanged();
+                    mouseMode = NONE;
+                    repaint();
+                });
+            }
 
             idx++;
         }

@@ -4340,7 +4340,7 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
     }
 
     promptForMiniEdit(
-        pval, "Enter a new name for the macro:", "Rename Macro", where,
+        pval, fmt::format("Enter a new name for Macro {:d}:", ccid + 1), "Rename Macro", where,
         [this, ccid, msb](const std::string &s) {
             auto useS = s;
 
