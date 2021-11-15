@@ -401,7 +401,11 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
     }
     else if (columns == 1)
     {
-        jassert(false);
+        for (int r = 1; r < rows; ++r)
+        {
+            auto q = juce::Rectangle<float>(4, ch * r - 0.5 + 1, getWidth() - 9, 1);
+            g.fillRect(q);
+        }
     }
 
     int idx = 0;

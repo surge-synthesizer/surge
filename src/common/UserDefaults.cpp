@@ -177,6 +177,9 @@ void initMaps()
             case MSEGFormulaOverlayLocationTearOut:
                 r = "msegFormulaOverlayLocationTearOut";
                 break;
+            case ModulationEditorValueDisplay:
+                r = "modulationEditorValueDisplay";
+                break;
             case nKeys:
                 break;
             }
