@@ -622,7 +622,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     std::string modulatorName(int ms, bool forButton, int forScene = -1);
     std::string modulatorIndexExtension(int scene, int ms, int index, bool shortV = false);
-    std::string modulatorNameWithIndex(int scene, int ms, int index, bool forButton, bool useScene, bool baseNameOnly = false);
+    std::string modulatorNameWithIndex(int scene, int ms, int index, bool forButton, bool useScene,
+                                       bool baseNameOnly = false);
 
   private:
     Parameter *typeinEditTarget = nullptr;
