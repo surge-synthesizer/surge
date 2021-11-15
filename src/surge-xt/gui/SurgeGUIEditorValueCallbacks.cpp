@@ -3128,6 +3128,16 @@ bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources m
         synth->setModulation(p->id, ms, modsourceScene, modidx, mv);
         synth->refresh_editor = true;
     }
+
+    if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers)
+    {
+        if (strcmp(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1], "-") == 0)
+        {
+            strncpy(synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1], p->get_name(),
+                    CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+            synth->refresh_editor = true;
+        }
+    }
     return true;
 }
 bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
