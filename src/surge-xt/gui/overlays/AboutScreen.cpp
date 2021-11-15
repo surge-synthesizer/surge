@@ -96,6 +96,29 @@ struct HyperlinkLabel : public juce::Label, public Surge::GUI::SkinConsumingComp
     std::string url;
 };
 
+struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingComponent
+{
+    ClipboardCopyButton() : juce::TextButton() {}
+
+    void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+                     bool shouldDrawButtonAsDown) override
+    {
+        assert(skin.get());
+
+        if (isOver())
+        {
+            g.setColour(skin->getColor(Colors::AboutPage::LinkHover));
+        }
+        else
+        {
+            g.setColour(skin->getColor(Colors::AboutPage::Link));
+        }
+
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+        g.drawText("Copy Version Info", getLocalBounds(), juce::Justification::centred, false);
+    }
+};
+
 AboutScreen::AboutScreen() {}
 
 AboutScreen::~AboutScreen() noexcept = default;
@@ -190,9 +213,9 @@ void AboutScreen::resized()
         auto colW = 66;
         auto font = Surge::GUI::getFontManager()->getLatoAtSize(10);
 
-        copyButton = std::make_unique<juce::TextButton>();
-        copyButton->setButtonText("Copy Version Info");
-        copyButton->setBounds(margin + 4, h0 - lHeight - 10, 100, 20);
+        copyButton = std::make_unique<ClipboardCopyButton>();
+        copyButton->setSkin(skin, associatedBitmapStore);
+        copyButton->setBounds(margin + 4, h0 - lHeight - 4, 80, 16);
         copyButton->addListener(this);
 
         addAndMakeVisible(*copyButton);
@@ -300,31 +323,47 @@ void AboutScreen::resized()
                 " by Vember Audio and individual contributors in the Surge Synth Team, released "
                 "under the GNU GPL v3 license",
             600);
+
         yp += lblvs;
+
         addLabel("VST is a trademark of Steinberg Media Technologies GmbH;Audio Units is a "
                  "trademark of Apple Inc.",
                  600);
+
         yp += lblvs;
+
         addLabel("Airwindows open source effects by Chris Johnson, licensed under MIT license",
                  600);
+
         yp += lblvs;
+
         addLabel("OB-Xd filters by Vadim Filatov, licensed under GNU GPL v3 license", 600);
+
         yp += lblvs;
+
         addLabel("K35 and Diode Ladder filters by Will Pirkle (implementation by TheWaveWarden), "
                  "licensed under GNU GPL v3 license",
                  600);
+
         yp += lblvs;
+
         addLabel("Cutoff Warp and Resonance Warp filters; CHOW, Neuron and Tape effects by Jatin "
                  "Chowdhury, licensed under GNU GPL v3 license",
                  600);
+
         yp += lblvs;
+
         addLabel(
             "Exciter effect and BBD delay line emulation by Jatin Chowdhury, licensed under BSD "
             "3-clause license",
             600);
+
         yp += lblvs;
+
         addLabel("OJD waveshaper by Janos Buttgereit, licensed under GNU GPL v3 license", 600);
+
         yp += lblvs;
+
         addLabel(
             "Nimbus effect and Twist oscillator based on firmware for Eurorack hardware modules "
             "by Émilie Gillet, licensed under MIT license",
@@ -335,10 +374,10 @@ void AboutScreen::resized()
 
         std::vector<std::string> urls = {
             "https://github.com/surge-synthesizer/surge/",
-            "https://discord.gg/aFQDdMV",
-            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
             "https://www.steinberg.net/en/company/technologies/vst3.html",
             "https://developer.apple.com/documentation/audiounit",
+            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
+            "https://discord.gg/aFQDdMV",
             "https://juce.com"};
 
         int x = 0;
@@ -378,6 +417,13 @@ void AboutScreen::mouseUp(const juce::MouseEvent &e)
 void AboutScreen::onSkinChanged()
 {
     logo = associatedBitmapStore->getImage(IDB_ABOUT_BG);
+
+    auto skcb = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(copyButton.get());
+
+    if (skcb)
+    {
+        skcb->setSkin(skin, associatedBitmapStore);
+    }
 
     for (const auto &l : labels)
     {

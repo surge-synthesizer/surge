@@ -27,6 +27,8 @@ namespace Surge
 {
 namespace Overlays
 {
+struct ClipboardCopyButton;
+
 struct AboutScreen : public juce::Component,
                      public Surge::GUI::SkinConsumingComponent,
                      public juce::Button::Listener
@@ -64,7 +66,7 @@ struct AboutScreen : public juce::Component,
     std::vector<std::unique_ptr<juce::Button>> buttons;
     std::vector<std::unique_ptr<juce::Component>> icons;
 
-    std::unique_ptr<juce::Button> copyButton;
+    std::unique_ptr<ClipboardCopyButton> copyButton;
 
     juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.85f)};
 
