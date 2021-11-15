@@ -94,10 +94,10 @@ struct ModulationSideControls : public juce::Component,
         addGoW = makeW({"Add Modulation"}, tag_add_go, false);
 
         dispL = makeL("Value Display");
-        dispW = makeW({"All", "Value and Depth", "Depth Only", "None"}, tag_value_disp, true, true);
+        dispW = makeW({"None", "Depth Only", "Value and Depth", "All"}, tag_value_disp, true, true);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
-                                                       Storage::ModulationEditorValueDisplay, 0);
+                                                       Storage::ModulationEditorValueDisplay, 3);
         dispW->setValue(dwv / 3.0);
         valueChanged(dispW.get());
     }
@@ -760,16 +760,16 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         switch (v)
         {
         case 0:
-            editor->modContents->valueDisplay = ModulationListContents::ALL;
+            editor->modContents->valueDisplay = ModulationListContents::NOMOD;
             break;
         case 1:
-            editor->modContents->valueDisplay = ModulationListContents::CTR_PLUS_MOD;
-            break;
-        case 2:
             editor->modContents->valueDisplay = ModulationListContents::MOD_ONLY;
             break;
+        case 2:
+            editor->modContents->valueDisplay = ModulationListContents::CTR_PLUS_MOD;
+            break;
         case 3:
-            editor->modContents->valueDisplay = ModulationListContents::NOMOD;
+            editor->modContents->valueDisplay = ModulationListContents::ALL;
             break;
         }
         editor->repaint();
