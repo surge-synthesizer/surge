@@ -4203,6 +4203,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->callback = std::move(onOK);
     miniEdit->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     miniEdit->setVisible(true);
+    miniEdit->toFront(true);
     miniEdit->grabFocus();
 }
 
