@@ -81,6 +81,9 @@ void ModulatableSlider::updateLocationState()
         handleCX = 7;
         handleMX = handleCX;
         barNMX = handleMX;
+        barFM0X = handleMX;
+        barFMNX = handleMX;
+
         modHandleX = 24;
 
         handleCY = (1 - quantizedDisplayValue) * range + handleY0;
@@ -89,6 +92,11 @@ void ModulatableSlider::updateLocationState()
         barNMY = limit01(1 - (value - modValue)) * range + handleY0;
         if (!isModulationBipolar)
             barNMY = handleMY;
+
+        barFM0Y = 0.5 * range + handleY0;
+        barFMNY = limit01(value) * range + handleY0; // in the force case value is the mod dept
+        if (!isModulationBipolar)
+            barFMNY = barFM0Y;
 
         labelRect = juce::Rectangle<int>();
         handleSize = juce::Rectangle<int>().withWidth(15).withHeight(20);
@@ -109,9 +117,17 @@ void ModulatableSlider::updateLocationState()
         if (!isModulationBipolar)
             barNMX = handleMX;
 
+        barFM0X = 0.5 * range + handleX0;
+        barFMNX = limit01(1.0 - value) * range + handleX0; // in force, value is depth
+        if (!isModulationBipolar)
+            barFMNX = barFM0X;
+
         handleCY = 6;
         handleMY = handleCY;
         barNMY = handleMY;
+        barFM0Y = handleMY;
+        barFMNY = handleMY;
+
         modHandleX = 28;
         drawLabel = true;
         // This calculation is a little dicey but is correct
@@ -177,6 +193,22 @@ void ModulatableSlider::paint(juce::Graphics &g)
         g.drawLine(handleCX + dLX, handleCY + dLY, handleMX + dLX, handleMY + dLY, 2);
         g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
         g.drawLine(handleCX + dLX, handleCY + dLY, barNMX + dLX, barNMY + dLY, 2);
+    }
+
+    if (forceModHandle)
+    {
+        juce::Graphics::ScopedSaveState gs(g);
+
+        float dLX = 0.f, dLY = 0.f;
+        if (orientation == ParamConfig::kVertical)
+            dLX = 1;
+        else
+            dLY = 1;
+        g.addTransform(trayPosition);
+        g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
+        g.drawLine(barFM0X + dLX, barFM0Y + dLY, handleMX + dLX, handleMY + dLY, 2);
+        g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
+        g.drawLine(barFM0X + dLX, barFM0Y + dLY, barFMNX + dLX, barFMNY + dLY, 2);
     }
     // Draw the label
     if (drawLabel)

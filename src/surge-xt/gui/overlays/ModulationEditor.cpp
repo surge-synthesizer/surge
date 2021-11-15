@@ -39,7 +39,8 @@ struct ModulationSideControls : public juce::Component,
         tag_filter_by,
         tag_add_source,
         tag_add_target,
-        tag_add_go
+        tag_add_go,
+        tag_value_disp
     };
 
     ModulationEditor *editor{nullptr};
@@ -56,10 +57,19 @@ struct ModulationSideControls : public juce::Component,
             return l;
         };
 
-        auto makeW = [this](const std::vector<std::string> &l, int tag, bool en) {
+        auto makeW = [this](const std::vector<std::string> &l, int tag, bool en,
+                            bool vert = false) {
             auto w = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            w->setRows(1);
-            w->setColumns(l.size());
+            if (vert)
+            {
+                w->setRows(l.size());
+                w->setColumns(1);
+            }
+            else
+            {
+                w->setRows(1);
+                w->setColumns(l.size());
+            }
             w->setTag(tag);
             w->setLabels(l);
             w->setEnabled(en);
@@ -82,6 +92,14 @@ struct ModulationSideControls : public juce::Component,
         addSourceW = makeW({"Select Source"}, tag_add_source, true);
         addTargetW = makeW({"Select Target"}, tag_add_target, false);
         addGoW = makeW({"Add Modulation"}, tag_add_go, false);
+
+        dispL = makeL("Value Display");
+        dispW = makeW({"All", "Value and Depth", "Depth Only", "None"}, tag_value_disp, true, true);
+
+        auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
+                                                       Storage::ModulationEditorValueDisplay, 0);
+        dispW->setValue(dwv / 3.0);
+        valueChanged(dispW.get());
     }
 
     void resized() override
@@ -110,6 +128,11 @@ struct ModulationSideControls : public juce::Component,
         addTargetW->setBounds(b);
         b = b.translated(0, h + m);
         addGoW->setBounds(b);
+        b = b.translated(0, h * 1.5 + m);
+
+        dispL->setBounds(b);
+        b = b.translated(0, h + m);
+        dispW->setBounds(b.withHeight(h * 4));
     }
 
     void paint(juce::Graphics &g) override
@@ -138,12 +161,13 @@ struct ModulationSideControls : public juce::Component,
             sortL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
             filterL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
             addL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            dispL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
         }
     }
 
-    std::unique_ptr<juce::Label> sortL, filterL, addL;
+    std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
-        addGoW;
+        addGoW, dispW;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
@@ -171,11 +195,22 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         ModulationDisplayInfoWindowStrings mss;
     };
 
+    enum ValueDisplay
+    {
+        NOMOD = 0,
+        MOD_ONLY = 1,
+        CTR = 2,
+        EXTRAS = 4,
+
+        CTR_PLUS_MOD = MOD_ONLY | CTR,
+        ALL = CTR_PLUS_MOD | EXTRAS
+    } valueDisplay = ALL;
+
     struct DataRowEditor : public juce::Component,
                            public Surge::GUI::SkinConsumingComponent,
                            public Surge::GUI::IComponentTagValue::Listener
     {
-        static constexpr int height = 30;
+        static constexpr int height = 32;
         Datum datum;
         ModulationListContents *contents{nullptr};
         DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
@@ -224,6 +259,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         {
             surgeLikeSlider->setValue((datum.moddepth01 + 1) * 0.5);
             surgeLikeSlider->setQuantitizedDisplayValue((datum.moddepth01 + 1) * 0.5);
+            surgeLikeSlider->setIsModulationBipolar(datum.isBipolar);
+
             muteButton->offset = 2;
             if (datum.isMuted)
                 muteButton->offset = 3;
@@ -310,36 +347,35 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 g.setFont(tf);
             }
 
-            // And then the back
-            auto rB = b.withLeft(controlsEnd).reduced(2).withTrimmedRight(2);
+            if (contents->valueDisplay == NOMOD)
+                return;
 
-            // OK so
-            auto cp = rB.getCentre();
-            auto pr = juce::Rectangle<int>(cp.x, cp.y - 2, rB.getWidth() * datum.moddepth01 / 2, 5);
-            auto mr =
-                juce::Rectangle<int>(cp.x, cp.y - 2, -rB.getWidth() * datum.moddepth01 / 2, 5);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            auto sb = surgeLikeSlider->getBounds();
+            auto bb = sb.withY(0).withHeight(getHeight()).reduced(0, 1);
 
-            g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
-            g.fillRect(pr);
-
-            if (datum.isBipolar)
-            {
-                g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
-                g.fillRect(mr);
-            }
+            auto shift = 60, over = 13;
+            auto lb = bb.translated(-shift, 0).withWidth(shift + over -
+                                                         3); // damn thing isn't very symmetric
+            auto rb = bb.withX(bb.getX() + bb.getWidth() - over).withWidth(shift + over);
+            auto cb = bb.withTrimmedLeft(over).withTrimmedRight(over);
 
             g.setColour(juce::Colours::white);
-            g.drawText(datum.mss.val, rB, juce::Justification::centredTop);
-            g.drawText(datum.mss.dvalplus, rB, juce::Justification::topRight);
+            if (contents->valueDisplay & CTR)
+                g.drawFittedText(datum.mss.val, cb, juce::Justification::centredTop, 1, 0.1);
+            if (contents->valueDisplay & MOD_ONLY)
+                g.drawFittedText(datum.mss.dvalplus, rb, juce::Justification::topLeft, 1, 0.1);
 
+            if ((contents->valueDisplay & EXTRAS) == 0)
+                return;
             if (datum.isBipolar)
-                g.drawText(datum.mss.dvalminus, rB, juce::Justification::topLeft);
+                g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1, 0.1);
 
             g.setColour(juce::Colours::grey);
-            g.drawText(datum.mss.valplus, rB, juce::Justification::bottomRight);
+            g.drawFittedText(datum.mss.valplus, rb, juce::Justification::bottomLeft, 1, 0.1);
 
             if (datum.isBipolar)
-                g.drawText(datum.mss.valminus, rB, juce::Justification::bottomLeft);
+                g.drawFittedText(datum.mss.valminus, lb, juce::Justification::bottomRight, 1, 0.1);
         }
 
         static constexpr int controlsStart = 150;
@@ -351,11 +387,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             int bh = 12;
             int sh = 26;
             int bY = ((height - bh) / 2) - 1;
-            int sY = (height - sh) / 2;
+            int sY = (height - sh) / 2 + 2;
             clearButton->setBounds(startX, bY, bh, bh);
             startX += bh + 2;
             muteButton->setBounds(startX, bY, bh, bh);
-            startX += bh + 2;
+            startX += bh + 70;
             surgeLikeSlider->setBounds(startX, sY, 140, sh);
         }
 
@@ -716,6 +752,29 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             men.showMenuAsync(juce::PopupMenu::Options(),
                               GUI::makeEndHoverCallback(addSourceW.get()));
         }
+    }
+    break;
+    case tag_value_disp:
+    {
+        int v = round(c->getValue() * 3);
+        switch (v)
+        {
+        case 0:
+            editor->modContents->valueDisplay = ModulationListContents::ALL;
+            break;
+        case 1:
+            editor->modContents->valueDisplay = ModulationListContents::CTR_PLUS_MOD;
+            break;
+        case 2:
+            editor->modContents->valueDisplay = ModulationListContents::MOD_ONLY;
+            break;
+        case 3:
+            editor->modContents->valueDisplay = ModulationListContents::NOMOD;
+            break;
+        }
+        editor->repaint();
+        Surge::Storage::updateUserDefaultValue(&(editor->synth->storage),
+                                               Storage::ModulationEditorValueDisplay, v);
     }
     break;
     }

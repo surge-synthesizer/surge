@@ -125,10 +125,11 @@ struct ModulatableSlider : public juce::Component,
     int trayw{0}, trayh{0}; // How large is the tray
     float range{0};         // how big in logical pixels is the
     // What are the XY positions for the handle center, the mod handle center, the
-    // other end of the bar.
+    // other end of the bar, and the bar positions in force mode to zero
     float handleCX{0}, handleCY{0};
     float handleMX{0}, handleMY{0};
     float barNMX{0}, barNMY{0};
+    float barFM0X{0}, barFM0Y{0}, barFMNX{0}, barFMNY{0};
     float handleX0{0}, handleY0{0};
 
     // how far logically do we move in tray space for our curent state
