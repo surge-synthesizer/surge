@@ -1385,6 +1385,21 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
            {{60, 0, 1}, {64, 15, 1}, {64, 15, 0}}},
         {"Higher Note Higher Pitch Off Different Channel", ALWAYS_HIGHEST, n60, true,
            {{60, 0, 1}, {92, 15, 1}, {92, 15, 0}}},
+
+        {"Different Note Same Channel", ALWAYS_LOWEST, n60, true,
+                {{60, 0, 1}, {72, 0, 1}}},
+        {"Different Note Same Channel Drop", ALWAYS_LOWEST, n60/2, true,
+        {{60, 0, 1}, {48, 0, 1}}},
+        {"Same Note Different Channel", ALWAYS_LOWEST, n60, true,
+                {{60, 0, 1}, {60, 1, 1}}},
+        {"Drop Note Different Channel", ALWAYS_LOWEST, n60/2, true,
+                    {{60, 0, 1}, {60-24, 1, 1}}},
+        {"Drop Note Different Channel Release", ALWAYS_LOWEST, n60, true,
+                    {{60, 0, 1}, {60-24, 1, 1}, {60-24, 1, 0}}},
+        {"Drop Note Higher Different Channel", ALWAYS_LOWEST, n60, true,
+                    {{60, 0, 1}, {57, 1, 1}}},
+        {"Drop Note Higher Different Channel Release", ALWAYS_LOWEST, n60, true,
+            {{60, 0, 1}, {57, 1, 1}, {57,1,0}}},
      };
     // clang-format on
 
@@ -1392,7 +1407,7 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
     {
         for (const auto &c : cases)
         {
-            DYNAMIC_SECTION("Mode " << mode << " : Case : " << c.name)
+            DYNAMIC_SECTION("Mode " << mode << " : Pri : " << c.pri << " : Case : " << c.name)
             {
                 auto surge = surgeOnSine();
                 surge->storage.getPatch().scene[0].monoVoicePriorityMode = c.pri;
