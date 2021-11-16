@@ -396,9 +396,9 @@ void SurgefxAudioProcessor::reorderSurgeParams()
         }
         else
         {
-            int fpos = i + fxstorage->p[fx_param_remap[i]].posy / 10 +
+            int fpos = fxstorage->p[fx_param_remap[i]].posy / 10 +
                        fxstorage->p[fx_param_remap[i]].posy_offset;
-            for (auto j = 0; j < n_fx_params; ++j)
+            for (auto j = 0; j < n_fx_params && surge_effect->group_label(j); ++j)
             {
                 if (surge_effect->group_label(j) &&
                     surge_effect->group_label_ypos(j) <= fpos // constants for SurgeGUIEditor. Sigh.
