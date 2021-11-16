@@ -859,9 +859,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             {
                 contextMenu.addSeparator();
 
-                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
-
                 ccid = modsource - ms_ctrl1;
+
+                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
 
                 auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                                 .scene[current_scene]
@@ -2161,6 +2161,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
 
                 contextMenu.addSeparator();
+
                 createMIDILearnMenuEntries(contextMenu, false, p->id, control);
 
             } // end vt_float if statement
