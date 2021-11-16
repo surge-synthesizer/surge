@@ -630,6 +630,8 @@ class RadialScaleGraph : public juce::Component,
         toneList->repaint();
         repaint();
     }
+    int whichSideOfZero = 0;
+
     void mouseMove(const juce::MouseEvent &e) override;
     void mouseDown(const juce::MouseEvent &e) override;
     void mouseDrag(const juce::MouseEvent &e) override;
@@ -811,7 +813,15 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
         auto rx = 1.0 + dInterval * (c - expectedC * i) / expectedC;
 
-        float x0 = rx * sx - 0.05, y0 = rx * cx - 0.05, dx = 0.1, dy = 0.1;
+        float dx = 0.1, dy = 0.1;
+
+        if (i == scale.count)
+        {
+            dx = 0.15;
+            dy = 0.15;
+        }
+
+        float x0 = rx * sx - 0.5 * dx, y0 = rx * cx - 0.5 * dy;
 
         if (notesOn[i])
         {
@@ -833,18 +843,44 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             drawColour = juce::Colour(200, 200, 200 * (rx - 1.0));
         }
 
+        auto originalDrawColor = drawColour;
         if (hotSpotIndex == i - 1)
             drawColour = drawColour.brighter(0.6);
 
-        g.setColour(drawColour);
-
-        g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
-        g.fillEllipse(x0, y0, dx, dy);
-
-        if (hotSpotIndex != i - 1)
+        if (i == scale.count)
         {
-            g.setColour(drawColour.brighter(0.6));
-            g.drawEllipse(x0, y0, dx, dy, 0.01);
+            g.setColour(drawColour);
+            g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
+            g.fillEllipse(x0, y0, dx, dy);
+
+            if (hotSpotIndex == i - 1)
+            {
+                auto p = juce::Path();
+                if (whichSideOfZero < 0)
+                {
+                    p.addArc(x0, y0, dx, dy, juce::MathConstants<float>::pi,
+                             juce::MathConstants<float>::twoPi);
+                }
+                else
+                {
+                    p.addArc(x0, y0, dx, dy, 0, juce::MathConstants<float>::pi);
+                }
+                g.setColour(juce::Colour(200, 200, 100));
+                g.fillPath(p);
+            }
+        }
+        else
+        {
+            g.setColour(drawColour);
+
+            g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
+            g.fillEllipse(x0, y0, dx, dy);
+
+            if (hotSpotIndex != i - 1)
+            {
+                g.setColour(drawColour.brighter(0.6));
+                g.drawEllipse(x0, y0, dx, dy, 0.01);
+            }
         }
 
         if (notesOn[i % scale.count])
@@ -902,7 +938,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     {
         whatLabel->setText("Interval Between Notes", juce::NotificationType::dontSendNotification);
         explLabel->setText(
-            "Given any two notes in the loaded scale\nshow the interval in cents betwen them",
+            "Given any two notes in the loaded scale\nshow the interval in cents between them",
             juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
         repaint();
@@ -983,7 +1019,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                     {
                         isHovered = true;
                     }
-                    auto bx = juce::Rectangle<int>(i * cellW, j * cellH, cellW - 1, cellH - 1);
+                    auto bx = juce::Rectangle<float>(i * cellW, j * cellH, cellW - 1, cellH - 1);
                     if ((i == 0 || j == 0) && (i + j))
                     {
                         auto no = false;
@@ -1291,20 +1327,34 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
 void RadialScaleGraph::mouseMove(const juce::MouseEvent &e)
 {
+    int owso = whichSideOfZero;
     int ohsi = hotSpotIndex;
     hotSpotIndex = -1;
     int h = 0;
     for (auto r : screenHotSpots)
     {
         if (r.contains(e.getPosition().toFloat()))
+        {
             hotSpotIndex = h;
+            if (h == scale.count - 1)
+            {
+                if (e.position.x < r.getCentreX())
+                {
+                    whichSideOfZero = -1;
+                }
+                else
+                {
+                    whichSideOfZero = 1;
+                }
+            }
+        }
         h++;
     }
 
     if (hotSpotIndex >= 0)
         wheelHotSpotIndex = hotSpotIndex;
 
-    if (ohsi != hotSpotIndex)
+    if (ohsi != hotSpotIndex || owso != whichSideOfZero)
         repaint();
 }
 void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
@@ -1345,7 +1395,15 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
         toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
         toneKnobs[hotSpotIndex + 1]->repaint();
         selfEditGuard++;
-        onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+        if (hotSpotIndex == scale.count - 1 && whichSideOfZero > 0)
+        {
+            auto ct = e.mods.isShiftDown() ? 0.05 : 1;
+            onScaleRescaled(dr > 0 ? ct : -ct);
+        }
+        else
+        {
+            onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+        }
         selfEditGuard--;
     }
 }
@@ -1724,15 +1782,15 @@ struct TuningControlArea : public juce::Component,
                 return res;
             };
 
-            savesclS = ma("Save Scale...", tag_save_scl);
+            savesclS = ma("Save Scale", tag_save_scl);
             addAndMakeVisible(*savesclS);
             marginPos += btnWidth + 5;
 
-            exportS = ma("Export HTML...", tag_export_html);
+            exportS = ma("Export HTML", tag_export_html);
             addAndMakeVisible(*exportS);
             marginPos += btnWidth + 5;
 
-            libraryS = ma("Tuning Library...", tag_open_library);
+            libraryS = ma("Tuning Library", tag_open_library);
             addAndMakeVisible(*libraryS);
             marginPos += btnWidth + 5;
 
