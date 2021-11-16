@@ -66,9 +66,16 @@ std::string decodeControllerID(int id)
 void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, bool isForMacro,
                                                 int idx, Surge::GUI::IComponentTagValue *control)
 {
-    long tag = control->getTag();
-    int ptag = tag - start_paramtags;
-    Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+    long tag;
+    int ptag;
+    Parameter *p;
+
+    if (!isForMacro)
+    {
+        tag = control->getTag();
+        ptag = tag - start_paramtags;
+        p = synth->storage.getPatch().param_ptr[ptag];
+    }
 
     // construct submenus for explicit controller mapping
     auto midiSub = juce::PopupMenu();
