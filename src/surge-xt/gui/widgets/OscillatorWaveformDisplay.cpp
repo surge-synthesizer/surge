@@ -22,12 +22,45 @@
 #include "SurgeGUIEditor.h"
 #include "AliasOscillator.h"
 #include "widgets/MenuCustomComponents.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
 namespace Widgets
 {
-OscillatorWaveformDisplay::OscillatorWaveformDisplay() = default;
+OscillatorWaveformDisplay::OscillatorWaveformDisplay()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    setAccessible(true);
+    setFocusContainerType(FocusContainerType::focusContainer);
+
+    auto ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
+        this, "WT Menu", juce::AccessibilityRole::button);
+    addChildComponent(*ol);
+    ol->onPress = [this](OscillatorWaveformDisplay *d) { showWavetableMenu(); };
+    menuOverlays[0] = std::move(ol);
+
+    ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
+        this, "WT Next", juce::AccessibilityRole::button);
+    ol->onPress = [this](OscillatorWaveformDisplay *d) {
+        auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
+        if (id >= 0)
+            oscdata->wt.queue_id = id;
+    };
+    addChildComponent(*ol);
+    menuOverlays[1] = std::move(ol);
+
+    ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
+        this, "WT Prev", juce::AccessibilityRole::button);
+    addChildComponent(*ol);
+    ol->onPress = [this](OscillatorWaveformDisplay *d) {
+        auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
+        if (id >= 0)
+            oscdata->wt.queue_id = id;
+    };
+    menuOverlays[2] = std::move(ol);
+#endif
+}
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
 
 void OscillatorWaveformDisplay::paint(juce::Graphics &g)
@@ -238,6 +271,17 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     {
         drawEditorBox(g, "EDIT");
     }
+}
+
+void OscillatorWaveformDisplay::resized()
+{
+    auto wtr = getLocalBounds().withTop(getHeight() - wtbheight).withTrimmedBottom(1).toFloat();
+    leftJog = wtr.withRight(wtbheight);
+    menuOverlays[1]->setBounds(leftJog.toNearestInt());
+    rightJog = wtr.withLeft(wtr.getWidth() - wtbheight);
+    menuOverlays[2]->setBounds(rightJog.toNearestInt());
+    waveTableName = wtr.withTrimmedRight(wtbheight).withTrimmedLeft(wtbheight);
+    menuOverlays[0]->setBounds(waveTableName.toNearestInt());
 }
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
@@ -963,26 +1007,29 @@ void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
     repaint();
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-struct OscWFAH : public juce::AccessibilityHandler
+void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 {
-    explicit OscWFAH(OscillatorWaveformDisplay *s)
-        : od(s), juce::AccessibilityHandler(
-                     *s, juce::AccessibilityRole::button,
-                     juce::AccessibilityActions().addAction(juce::AccessibilityActionType::showMenu,
-                                                            [this]() { this->showMenu(); }))
-    {
-    }
-    void showMenu() { od->showWavetableMenu(); }
 
-    OscillatorWaveformDisplay *od;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscWFAH);
-};
-std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
-{
-    return std::make_unique<OscWFAH>(this);
+    std::cout << "Oscillator Type Maybe Changed" << std::endl;
+    bool vis = false;
+    if (uses_wavetabledata(oscdata->type.val.i))
+    {
+        std::cout << "To a WTO" << std::endl;
+        vis = true;
+    }
+#if SURGE_JUCE_ACCESSIBLE
+    for (const auto &ao : menuOverlays)
+    {
+        ao->setVisible(vis);
+    }
+#endif
 }
 
+#if SURGE_JUCE_ACCESSIBLE
+std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
+{
+    return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
+}
 #endif
 
 } // namespace Widgets

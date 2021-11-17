@@ -36,7 +36,7 @@ EffectChooser::EffectChooser()
     {
         fxTypes[i] = fxt_off;
 #if SURGE_JUCE_ACCESSIBLE
-        auto q = std::make_unique<OverlayAsRadioButton<EffectChooser>>(this, fxslot_names[i]);
+        auto q = std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[i]);
         q->setBounds(getEffectRectangle(i));
         q->onPress = [this, i](auto *t) {
             this->currentEffect = i;

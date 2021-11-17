@@ -61,3 +61,10 @@ def loadPatchByPath(sxt, path):
         patchMenu = findAllMenus(sxt)[0]
         temp = firstChildByTitle(patchMenu, p)
         temp.Press()
+
+
+def traverseMenuByPath(sxt, path):
+    for p in path:
+        patchMenu = findAllMenus(sxt)[0]
+        temp = firstChildByTitle(patchMenu, p)
+        temp.Press()
