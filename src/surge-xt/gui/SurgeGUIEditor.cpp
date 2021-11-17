@@ -1366,6 +1366,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                              .scene[synth->storage.getPatch().scene_active.val.i]
                                              .osc[current_osc[current_scene]]));
             oscWaveform->setSurgeGUIEditor(this);
+            oscWaveform->onOscillatorTypeChanged();
 
             setAccessibilityInformationByTitleAndAction(oscWaveform.get(), "Oscillator Waveform",
                                                         "Display");
@@ -6036,6 +6037,10 @@ void SurgeGUIEditor::resetComponentTracking()
         if (dynamic_cast<Surge::Widgets::MainFrame *>(comp))
             track = false;
 
+        if (dynamic_cast<Surge::Widgets::OscillatorWaveformDisplay *>(comp))
+            recurse = false;
+        if (dynamic_cast<Surge::Widgets::ModulationSourceButton *>(comp))
+            recurse = false;
         if (dynamic_cast<Surge::GUI::IComponentTagValue *>(comp))
             recurse = false;
         if (dynamic_cast<Surge::Overlays::TypeinParamEditor *>(comp))

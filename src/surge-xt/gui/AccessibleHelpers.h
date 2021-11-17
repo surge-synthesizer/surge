@@ -126,9 +126,11 @@ struct DiscreteAH : public juce::AccessibilityHandler
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DiscreteAH);
 };
 
-template <typename T> struct OverlayAsRadioButton : public juce::Component
+template <typename T> struct OverlayAsAccessibleButton : public juce::Component
 {
-    OverlayAsRadioButton(T *s, const std::string &label) : mswitch(s)
+    OverlayAsAccessibleButton(T *s, const std::string &label,
+                              juce::AccessibilityRole r = juce::AccessibilityRole::radioButton)
+        : under(s), role(r)
     {
         setDescription(label);
         setTitle(label);
@@ -136,13 +138,13 @@ template <typename T> struct OverlayAsRadioButton : public juce::Component
         setAccessible(true);
     }
 
-    T *mswitch;
+    T *under;
 
     struct RBAH : public juce::AccessibilityHandler
     {
-        explicit RBAH(OverlayAsRadioButton<T> *b, T *s)
+        explicit RBAH(OverlayAsAccessibleButton<T> *b, T *s)
             : button(b),
-              mswitch(s), juce::AccessibilityHandler(*b, juce::AccessibilityRole::radioButton,
+              mswitch(s), juce::AccessibilityHandler(*b, b->role,
                                                      juce::AccessibilityActions().addAction(
                                                          juce::AccessibilityActionType::press,
                                                          [this]() { this->press(); }))
@@ -151,17 +153,18 @@ template <typename T> struct OverlayAsRadioButton : public juce::Component
         void press() { button->onPress(mswitch); }
 
         T *mswitch;
-        OverlayAsRadioButton<T> *button;
+        OverlayAsAccessibleButton<T> *button;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
     };
 
+    juce::AccessibilityRole role;
     std::function<void(T *)> onPress = [](T *) {};
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
     {
-        return std::make_unique<RBAH>(this, mswitch);
+        return std::make_unique<RBAH>(this, under);
     }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsRadioButton<T>);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton<T>);
 };
 
 } // namespace Widgets

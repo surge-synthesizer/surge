@@ -55,7 +55,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
 
     for (int i = 0; i < n_lfo_types; ++i)
     {
-        auto q = std::make_unique<OverlayAsRadioButton<LFOAndStepDisplay>>(this, lt_names[i]);
+        auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, lt_names[i]);
         q->onPress = [this, i](auto *t) { updateShapeTo(i); };
         addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);

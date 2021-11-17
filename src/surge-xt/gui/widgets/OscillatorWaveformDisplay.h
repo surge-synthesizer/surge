@@ -58,12 +58,15 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     SurgeGUIEditor *sge;
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
 
+    void onOscillatorTypeChanged();
+
     void repaintIfIdIsInRange(int id);
 
     ::Oscillator *setupOscillator();
     unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
 
     void paint(juce::Graphics &g) override;
+    void resized() override;
 
     pdata tp[n_scene_params];
     juce::Rectangle<float> leftJog, rightJog, waveTableName;
@@ -90,6 +93,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     std::unique_ptr<juce::Component> customEditor;
 
 #if SURGE_JUCE_ACCESSIBLE
+    std::array<std::unique_ptr<juce::Component>, 3> menuOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 #endif
 
