@@ -494,11 +494,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            if (!juce::PopupMenu::dismissAllActiveMenus())
-            {
-                contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                          Surge::GUI::makeEndHoverCallback(control));
-            }
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
 
@@ -541,11 +538,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            if (!juce::PopupMenu::dismissAllActiveMenus())
-            {
-                contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                          Surge::GUI::makeEndHoverCallback(control));
-            }
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
     }
@@ -1039,11 +1033,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            if (!juce::PopupMenu::dismissAllActiveMenus())
-            {
-                contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                          Surge::GUI::makeEndHoverCallback(control));
-            }
+            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
 
@@ -2246,11 +2237,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            if (!juce::PopupMenu::dismissAllActiveMenus())
-            {
-                contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                          Surge::GUI::makeEndHoverCallback(control));
-            }
+            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
         // reset to default value
@@ -2461,11 +2449,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             auto m = makeTuningMenu(where, true);
 
             auto launchFrom = control;
-            if (!juce::PopupMenu::dismissAllActiveMenus())
-            {
-                m.showMenuAsync(juce::PopupMenu::Options(),
-                                Surge::GUI::makeEndHoverCallback(launchFrom));
-            }
+            m.showMenuAsync(juce::PopupMenu::Options(),
+                            Surge::GUI::makeEndHoverCallback(launchFrom));
         }
 
         return;

@@ -264,11 +264,8 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
             if (haveFavs)
             {
-                if (!juce::PopupMenu::dismissAllActiveMenus())
-                {
-                    menu.showMenuAsync(juce::PopupMenu::Options(),
-                                       Surge::GUI::makeEndHoverCallback(this));
-                }
+                menu.showMenuAsync(juce::PopupMenu::Options(),
+                                   Surge::GUI::makeEndHoverCallback(this));
             }
 
             return;
@@ -649,10 +646,7 @@ void PatchSelector::showClassicMenu(bool single_category)
     auto o = juce::PopupMenu::Options();
     if (sge)
         o = sge->optionsForPosition(getBounds().getBottomLeft());
-    if (!juce::PopupMenu::dismissAllActiveMenus())
-    {
-        contextMenu.showMenuAsync(o);
-    }
+    contextMenu.showMenuAsync(o);
 }
 
 bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak,
