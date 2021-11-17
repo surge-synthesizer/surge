@@ -374,14 +374,11 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    if (!juce::PopupMenu::dismissAllActiveMenus())
-    {
-        menu.showMenuAsync(juce::PopupMenu::Options(),
-                           Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
-                               that->isHovered = false;
-                               that->repaint();
-                           }));
-    }
+    menu.showMenuAsync(juce::PopupMenu::Options(),
+                       Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
+                           that->isHovered = false;
+                           that->repaint();
+                       }));
 }
 
 void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
@@ -487,14 +484,11 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    if (!juce::PopupMenu::dismissAllActiveMenus())
-    {
-        menu.showMenuAsync(juce::PopupMenu::Options(),
-                           Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
-                               that->isHovered = false;
-                               that->repaint();
-                           }));
-    }
+    menu.showMenuAsync(juce::PopupMenu::Options(),
+                       Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
+                           that->isHovered = false;
+                           that->repaint();
+                       }));
 }
 
 void FxMenu::mouseEnter(const juce::MouseEvent &event)

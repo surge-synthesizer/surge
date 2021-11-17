@@ -1905,10 +1905,7 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
                             repaint();
                         });
 
-    if (!juce::PopupMenu::dismissAllActiveMenus())
-    {
-        contextMenu.showMenuAsync(juce::PopupMenu::Options());
-    }
+    contextMenu.showMenuAsync(juce::PopupMenu::Options());
 }
 
 void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
