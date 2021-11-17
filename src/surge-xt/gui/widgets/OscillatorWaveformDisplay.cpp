@@ -1009,8 +1009,6 @@ void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
 
 void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 {
-
-    std::cout << "Oscillator Type Maybe Changed" << std::endl;
     bool vis = false;
     if (uses_wavetabledata(oscdata->type.val.i))
     {

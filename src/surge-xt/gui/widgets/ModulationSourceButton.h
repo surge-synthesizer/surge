@@ -81,6 +81,13 @@ struct ModulationSourceButton : public juce::Component,
         modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
         modlist = m;
         setAccessibleLabel(getCurrentModLabel());
+#if SURGE_JUCE_ACCESSIBLE
+        selectAccButton->setVisible(true);
+        if (isLFO())
+        {
+            targetAccButton->setVisible(true);
+        }
+#endif
     }
     bool isMeta{false}, isBipolar{false};
     void setIsMeta(bool b) { isMeta = b; }
@@ -181,6 +188,10 @@ struct ModulationSourceButton : public juce::Component,
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
     void resized() override;
+
+#if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::Component> targetAccButton, selectAccButton;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };

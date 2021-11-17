@@ -22,6 +22,7 @@
 #include "SurgeImage.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeJUCEHelpers.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -31,6 +32,26 @@ ModulationSourceButton::ModulationSourceButton()
 {
 #if SURGE_JUCE_ACCESSIBLE
     setDescription("Modulator");
+    setAccessible(true);
+    setFocusContainerType(FocusContainerType::focusContainer);
+
+    auto ol = std::make_unique<OverlayAsAccessibleButton<ModulationSourceButton>>(
+        this, "Select", juce::AccessibilityRole::button);
+    ol->onPress = [this](auto *t) {
+        mouseMode = CLICK;
+        notifyValueChanged();
+    };
+    addChildComponent(*ol);
+    selectAccButton = std::move(ol);
+
+    ol = std::make_unique<OverlayAsAccessibleButton<ModulationSourceButton>>(
+        this, "Target", juce::AccessibilityRole::button);
+    ol->onPress = [this](auto *t) {
+        mouseMode = CLICK_ARROW;
+        notifyValueChanged();
+    };
+    addChildComponent(*ol);
+    targetAccButton = std::move(ol);
 #endif
 }
 void ModulationSourceButton::paint(juce::Graphics &g)
@@ -598,6 +619,18 @@ void ModulationSourceButton::mouseWheelMove(const juce::MouseEvent &event,
 void ModulationSourceButton::resized()
 {
     hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
+
+    auto b = getLocalBounds().withWidth(getHeight()).translated(getHeight(), 0);
+    selectAccButton->setBounds(b);
+    b = b.translated(getHeight(), 0);
+    targetAccButton->setBounds(b);
+    b = b.translated(getHeight(), 0);
+
+    selectAccButton->setVisible(true);
+    if (isLFO())
+    {
+        targetAccButton->setVisible(true);
+    }
 }
 
 void ModulationOverviewLaunchButton::buttonClicked(Button *button)
