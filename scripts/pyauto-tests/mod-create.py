@@ -10,4 +10,12 @@ mf.activate()
 sxttest.loadPatchByPath(sxt, ["Templates", "Init Sine"])
 time.sleep(1)
 
-sxttest.recursiveDump(mf, "")
+mods = sxttest.firstChildByTitle(mf, "Modulators")
+
+sxttest.recursiveDump(mods, "MOD>")
+l1 = sxttest.firstChildByTitle(mods, "LFO 1");
+arm = sxttest.firstChildByTitle(l1, "Select");
+arm.Press()
+arm.Press()
+
+sxttest.recursiveDump(mf, "TOP>");

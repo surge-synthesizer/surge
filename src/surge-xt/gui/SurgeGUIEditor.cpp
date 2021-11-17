@@ -1020,6 +1020,11 @@ void SurgeGUIEditor::refresh_mod()
         {
             auto s = param[i];
 
+            auto p = synth->storage.getPatch().param_ptr[i];
+            if (p)
+            {
+                s->setIsValidToModulate(synth->isValidModulation(p->id, thisms));
+            }
             if (s->getIsValidToModulate())
             {
                 auto use_scene = 0;
@@ -4705,7 +4710,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                     break;
 
                 default:
-                    std::cout << tag << std::endl;
+                    std::cout << "Unable to figure out home for tag = " << tag << std::endl;
                     jassert(false);
                     addAndMakeVisibleWithTracking(frame.get(), *hsw);
                     break;

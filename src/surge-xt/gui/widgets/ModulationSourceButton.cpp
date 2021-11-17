@@ -314,14 +314,10 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
         {
             auto modName = std::get<3>(e);
 
-            if (this->modlistIndex != idx)
+            if (this->modlistIndex != idx || !addedToModbuttonContextMenu)
             {
-                if (addedToModbuttonContextMenu)
-                {
-                    modName = "Switch to " + modName;
-                }
-
-                menu.addItem(modName, [this, idx]() {
+                bool ticked = !addedToModbuttonContextMenu && this->modlistIndex == idx;
+                menu.addItem(modName, true, ticked, [this, idx]() {
                     this->modlistIndex = idx;
                     mouseMode = HAMBURGER;
                     notifyValueChanged();
