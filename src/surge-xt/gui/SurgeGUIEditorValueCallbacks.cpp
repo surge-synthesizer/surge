@@ -744,7 +744,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             auto cb = [this, parameter, use_scene, bvf, thisms, modidx,
                                        clearOp](Surge::Widgets::ModMenuCustomComponent::OpType op) {
-                                std::cout << op << std::endl;
                                 auto ptag = parameter->id;
                                 switch (op)
                                 {
@@ -927,7 +926,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (cms->needsHamburger())
             {
                 auto hamSub = juce::PopupMenu();
-                cms->buildHamburgerMenu(hamSub, false);
+                cms->buildHamburgerMenu(hamSub, true);
                 contextMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Switch To"), hamSub);
                 contextMenu.addSeparator();
             }
