@@ -373,6 +373,11 @@ extern const Surge::Skin::Color Background, Arrow;
 } // namespace OctaveJog
 } // namespace VirtualKeyboard
 
+namespace ModulationListOverlay
+{
+extern const Surge::Skin::Color Border, Text, DimText, Arrows;
+}
+
 namespace JuceWidgets
 {
 namespace TabbedBar

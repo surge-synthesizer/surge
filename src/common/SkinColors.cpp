@@ -543,4 +543,9 @@ const Surge::Skin::Color HeatmapZero("tuningeditor.interval.heatmap.zero", 0xFFF
 } // namespace Interval
 } // namespace TuningOverlay
 
+namespace ModulationListOverlay
+{
+const Surge::Skin::Color Border("modlist.border", 0x979797), Text("modlist.text", 0xFFFFFF),
+    DimText("modlist.dimtext", 0x979797), Arrows("modlist.arrows", 0xE3E3E3);
+}
 } // namespace Colors
