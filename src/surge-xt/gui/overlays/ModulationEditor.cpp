@@ -139,13 +139,20 @@ struct ModulationSideControls : public juce::Component,
     {
         if (!skin)
         {
-            g.fillAll(juce::Colours::red);
             return;
         }
         g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
     }
 
     void valueChanged(GUI::IComponentTagValue *c) override;
+
+    modsources add_ms;
+    int add_ms_idx, add_ms_sc;
+    int dest_id;
+
+    void showAddSourceMenu();
+    void showAddTargetMenu();
+    void doAdd();
 
     void onSkinChanged() override
     {
@@ -181,6 +188,12 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     void paint(juce::Graphics &g) override
     {
         g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+        if (rows.empty())
+        {
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
+            g.drawText("No Modulations", getLocalBounds(), juce::Justification::centredTop);
+        }
     }
 
     struct Datum
@@ -205,6 +218,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         CTR_PLUS_MOD = MOD_ONLY | CTR,
         ALL = CTR_PLUS_MOD | EXTRAS
     } valueDisplay = ALL;
+
+    int viewportWidth{100};
+    void setViewportWidth(int w) { viewportWidth = w; }
 
     struct DataRowEditor : public juce::Component,
                            public Surge::GUI::SkinConsumingComponent,
@@ -268,25 +284,29 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         }
 
         bool firstInSort{false}, hasFollower{false};
-        bool isTop{false}, isAfterTop{false};
+        bool isTop{false}, isAfterTop{false}, isLast{false};
         void paint(juce::Graphics &g) override
         {
             static constexpr int indent = 1;
             auto b = getLocalBounds().withTrimmedLeft(indent);
 
-            g.setColour(juce::Colour(0xFF979797));
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Border));
 
             if (firstInSort)
             {
                 // draw the top and the side
                 g.drawLine(indent, 0, getWidth(), 0, 1);
             }
+            if (isLast)
+            {
+                g.drawLine(indent, getHeight() - 1, getWidth(), getHeight() - 1, 1);
+            }
 
             g.drawLine(indent, 0, indent, getHeight(), 1);
             g.drawLine(getWidth() - indent, 0, getWidth() - indent, getHeight(), 1);
 
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-            g.setColour(juce::Colours::white);
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
 
             int fh = g.getCurrentFont().getHeight();
             auto firstLab = datum.sname;
@@ -301,10 +321,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (firstInSort)
             {
                 longArrow = false;
-                g.setColour(juce::Colours::white);
+                g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
+
                 g.drawText(firstLab, tb, juce::Justification::topLeft);
             }
-            g.setColour(juce::Colours::white);
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Arrows));
 
             auto tbl = tb.getBottomLeft();
             if (!longArrow)
@@ -335,11 +356,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (hasFollower)
                 g.drawLine(xStart, yEnd, xStart, getHeight(), 1);
 
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
+
             g.drawText(secondLab, tb.withTrimmedLeft(2), juce::Justification::centredLeft);
 
             if ((isTop || isAfterTop) && !firstInSort)
             {
-                g.setColour(juce::Colours::grey);
+                g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
                 auto tf = g.getCurrentFont();
                 g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
                 tb = tb.withTop(0);
@@ -360,7 +383,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             auto rb = bb.withX(bb.getX() + bb.getWidth() - over).withWidth(shift + over);
             auto cb = bb.withTrimmedLeft(over).withTrimmedRight(over);
 
-            g.setColour(juce::Colours::white);
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
             if (contents->valueDisplay & CTR)
                 g.drawFittedText(datum.mss.val, cb, juce::Justification::centredTop, 1, 0.1);
             if (contents->valueDisplay & MOD_ONLY)
@@ -371,7 +394,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (datum.isBipolar)
                 g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1, 0.1);
 
-            g.setColour(juce::Colours::grey);
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
             g.drawFittedText(datum.mss.valplus, rb, juce::Justification::bottomLeft, 1, 0.1);
 
             if (datum.isBipolar)
@@ -499,7 +522,12 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         rebuildFrom(editor->synth);
     }
 
+    /*
+     * Rows is the visible UI, dataRows is the entire set of data. In the case of filtered
+     * displays, it is not the case that rows[i].datum == dataRows[i]
+     */
     std::vector<std::unique_ptr<DataRowEditor>> rows;
+    std::vector<Datum> dataRows;
 
     void populateDatum(Datum &d, const SurgeSynthesizer *synth)
     {
@@ -539,15 +567,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
     void rebuildFrom(SurgeSynthesizer *synth)
     {
-        std::vector<Datum> dataRows;
-
         removeAllChildren();
+        dataRows.clear();
         rows.clear();
         int ypos = 0;
-        setSize(getWidth(), 10);
-        auto append = [this, synth, &dataRows](const std::string &type,
-                                               const std::vector<ModulationRouting> &r, int idBase,
-                                               int scene) {
+        auto append = [this, synth](const std::string &type,
+                                    const std::vector<ModulationRouting> &r, int idBase,
+                                    int scene) {
             if (r.empty())
                 return;
 
@@ -594,6 +620,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 if (a.source_id != b.source_id)
                     return a.source_id < b.source_id;
 
+                if (a.source_index != b.source_index)
+                    return a.source_index < b.source_index;
+
                 if (a.destination_id != b.destination_id)
                     return a.destination_id < b.destination_id;
             }
@@ -608,6 +637,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
                 if (a.source_id != b.source_id)
                     return a.source_id < b.source_id;
+
+                if (a.source_index != b.source_index)
+                    return a.source_index < b.source_index;
             }
 
             return false;
@@ -617,6 +649,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         for (const auto &d : dataRows)
         {
+            if (!(filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
+                  (filterOn == TARGET && d.pname == filterString)))
+            {
+                continue;
+            }
             auto l = std::make_unique<DataRowEditor>(d, this);
             auto sortName = sortOrder == BY_SOURCE ? d.sname : d.pname;
 
@@ -648,7 +685,34 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (sni == snm)
                 rows[i - 1]->hasFollower = true;
         }
-        setSize(getWidth(), ypos);
+        if (!rows.empty())
+            rows.back()->isLast = true;
+
+        bool needVSB = true;
+        int sbw = 10;
+        if (editor && editor->viewport && editor->viewport->getHeight() > 0)
+        {
+            if (ypos > editor->viewport->getHeight())
+            {
+                needVSB = true;
+            }
+            else
+            {
+                needVSB = false;
+            }
+            sbw = editor->viewport->getScrollBarThickness() + 2;
+            editor->viewport->setScrollBarsShown(sbw, false);
+        }
+
+        if (rows.empty())
+            ypos = 100;
+        auto w = viewportWidth - (needVSB ? sbw : 0) - 3;
+        setSize(w, ypos);
+        for (const auto &r : rows)
+        {
+            auto b = r->getBounds().withWidth(w - 1);
+            r->setBounds(b);
+        }
         moved(); // to refresh the 'istop'
     }
 
@@ -700,10 +764,10 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
          */
         auto men = juce::PopupMenu();
         std::set<std::string> sources, targets;
-        for (const auto &r : editor->modContents->rows)
+        for (const auto &r : editor->modContents->dataRows)
         {
-            sources.insert(r->datum.sname);
-            targets.insert(r->datum.pname);
+            sources.insert(r.sname);
+            targets.insert(r.pname);
         }
         // FIXME add help component
 
@@ -737,14 +801,12 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     break;
     case tag_add_source:
     {
-        auto men = juce::PopupMenu();
-
-        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation", "");
-        tcomp->setSkin(skin, associatedBitmapStore);
-        men.addCustomItem(-1, std::move(tcomp));
-        men.addSeparator();
-        men.addItem("Coming soon!", [this]() {});
-        men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addSourceW.get()));
+        showAddSourceMenu();
+    }
+    break;
+    case tag_add_target:
+    {
+        showAddTargetMenu();
     }
     break;
     case tag_value_disp:
@@ -771,6 +833,209 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     }
     break;
     }
+}
+
+void ModulationSideControls::showAddSourceMenu()
+{
+    auto men = juce::PopupMenu();
+
+    auto tcomp =
+        std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation From", "");
+    tcomp->setSkin(skin, associatedBitmapStore);
+    men.addCustomItem(-1, std::move(tcomp));
+    men.addSeparator();
+
+    auto addMacroSub = juce::PopupMenu();
+    auto addVLFOASub = juce::PopupMenu();
+    auto addSLFOASub = juce::PopupMenu();
+    auto addVLFOBSub = juce::PopupMenu();
+    auto addSLFOBSub = juce::PopupMenu();
+    auto addEGSub = juce::PopupMenu();
+    auto addMIDISub = juce::PopupMenu();
+    auto addMiscSub = juce::PopupMenu();
+
+    juce::PopupMenu *popMenu{nullptr};
+    auto synth = editor->synth;
+    auto sge = editor->ed;
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        for (int k = 1; k < n_modsources; k++)
+        {
+            modsources ms = (modsources)modsource_display_order[k];
+            popMenu = nullptr;
+            if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers - 1 && sc == 0)
+            {
+                popMenu = &addMacroSub;
+            }
+            else if (ms >= ms_lfo1 && ms <= ms_lfo1 + n_lfos_voice - 1)
+            {
+                if (sc == 0)
+                    popMenu = &addVLFOASub;
+                else
+                    popMenu = &addVLFOBSub;
+            }
+            else if (ms >= ms_slfo1 && ms <= ms_slfo1 + n_lfos_scene - 1)
+            {
+                if (sc == 0)
+                    popMenu = &addSLFOASub;
+                else
+                    popMenu = &addSLFOBSub;
+            }
+            else if (ms >= ms_ampeg && ms <= ms_filtereg && sc == 0)
+            {
+                popMenu = &addEGSub;
+            }
+            else if (ms >= ms_random_bipolar && ms <= ms_alternate_unipolar && sc == 0)
+            {
+                popMenu = &addMiscSub;
+            }
+            else if (sc == 0)
+            {
+                popMenu = &addMIDISub;
+            }
+
+            if (popMenu)
+            {
+                if (synth->supportsIndexedModulator(sc, ms))
+                {
+                    int maxidx = synth->getMaxModulationIndex(sc, ms);
+                    auto subm = juce::PopupMenu();
+                    for (int i = 0; i < maxidx; ++i)
+                    {
+                        auto subn = sge->modulatorNameWithIndex(sc, ms, i, false, false);
+                        subm.addItem(subn, [this, ms, i, sc, subn]() {
+                            add_ms = ms;
+                            add_ms_idx = i;
+                            add_ms_sc = sc;
+                            addSourceW->setLabels({subn});
+                            addTargetW->setEnabled(true);
+                            addTargetW->setLabels({"Select Target"});
+                            dest_id = -1;
+                            addGoW->setEnabled(false);
+                        });
+                    }
+                    popMenu->addSubMenu(sge->modulatorName(ms, false), subm);
+                }
+                else
+                {
+                    auto sn = sge->modulatorNameWithIndex(sc, ms, 0, false, false);
+                    popMenu->addItem(sn, [this, sn, sc, ms]() {
+                        add_ms = ms;
+                        add_ms_idx = 0;
+                        add_ms_sc = sc;
+                        addSourceW->setLabels({sn});
+                        addTargetW->setEnabled(true);
+                        addTargetW->setLabels({"Select Target"});
+                        dest_id = -1;
+                        addGoW->setEnabled(false);
+                    });
+                }
+            }
+        }
+    }
+    men.addSubMenu("Macros", addMacroSub);
+    men.addSubMenu("Voice LFOs A", addVLFOASub);
+    men.addSubMenu("Scene LFOs A", addSLFOASub);
+    men.addSubMenu("Voice LFOs B", addVLFOBSub);
+    men.addSubMenu("Scene LFOs B", addSLFOBSub);
+    men.addSubMenu("Envelopes", addEGSub);
+    men.addSubMenu("MIDI", addMIDISub);
+    men.addSubMenu("Internal", addMiscSub);
+
+    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addSourceW.get()));
+}
+
+void ModulationSideControls::showAddTargetMenu()
+{
+    if (!addTargetW->isEnabled())
+        return;
+
+    auto men = juce::PopupMenu();
+#if 0
+    auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation To", "");
+    tcomp->setSkin(skin, associatedBitmapStore);
+    men.addCustomItem(-1, std::move(tcomp));
+    men.addSeparator();
+
+    auto synth = editor->synth;
+    std::map<int, std::array<std::map<int, std::vector<std::pair<int, std::string>>>, n_scenes + 1>>
+        parByCGCGE;
+    for (const auto *p : synth->storage.getPatch().param_ptr)
+    {
+        if (synth->isValidModulation(p->id, add_ms) &&
+            ((!synth->isModulatorDistinctPerScene(add_ms)) || (p->scene == add_ms_sc + 1)))
+        {
+            parByCGCGE[p->ctrlgroup][p->scene][p->ctrlgroup_entry].emplace_back(p->id,
+                                                                                p->get_name());
+        }
+    }
+
+    for (const auto &topPair : parByCGCGE)
+    {
+        std::string mainN, subN;
+        switch ((ControlGroup)topPair.first)
+        {
+        case cg_GLOBAL:
+            mainN = "Global";
+            break;
+        case cg_OSC:
+            mainN = "Oscillators";
+            subN = "Osc";
+            break;
+        case cg_MIX:
+            mainN = "Mixer";
+            break;
+        case cg_FILTER:
+            mainN = "Filters";
+            subN = "Filter";
+            break;
+        case cg_ENV:
+            mainN = "Envelopes";
+            break;
+        case cg_LFO:
+            mainN = "LFOs";
+            subN = "LFO";
+            break;
+        case cg_FX:
+            mainN = "FX";
+            break;
+        default:
+            mainN = "ERROR";
+        }
+        auto sceneMen = juce::PopupMenu();
+
+        for (const auto &sceneMap : topPair.second)
+        {
+            auto cgMen = juce::PopupMenu();
+            bool hasEntries = sceneMap.size() != 1;
+            for (const auto &groupPair : sceneMap)
+            {
+
+                auto subMen = juce::PopupMenu();
+                juce::PopupMenu *addTo = &subMen;
+                if (!hasEntries)
+                {
+                    addTo = &cgMen;
+                }
+
+                for (const auto &itemPair : groupPair.second)
+                {
+                    auto f = itemPair.first;
+                    addTo->addItem(itemPair.second,
+                                   [f]() { std::cout << "You picked " << f << std::endl; });
+                }
+
+                if (hasEntries)
+                    cgMen.addSubMenu(subN + " " + std::to_string(groupPair.first), subMen);
+            }
+            sceneMen.addSubMenu("SCENE", cgMen);
+        }
+        men.addSubMenu(mainN, sceneMen);
+    }
+#else
+    men.addItem("Coming Soon", []() {});
+#endif
+    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
 }
 
 ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
@@ -813,7 +1078,9 @@ void ModulationEditor::resized()
     sideControls->setBounds(0, 0, sideW, h);
     auto vpr = juce::Rectangle<int>(sideW, 0, w - sideW, h).reduced(2);
     viewport->setBounds(vpr);
-    modContents->setSize(vpr.getWidth() - viewport->getScrollBarThickness() - 1, 10);
+    viewport->setScrollBarsShown(true, false);
+    modContents->setViewportWidth(w - sideW);
+    // modContents->setSize(vpr.getWidth() - viewport->getScrollBarThickness() - 1, 10);
     modContents->rebuildFrom(synth);
 }
 
