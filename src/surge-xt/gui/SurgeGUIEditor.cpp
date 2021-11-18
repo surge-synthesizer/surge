@@ -5510,7 +5510,7 @@ std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index,
     {
         auto base = modulatorName(ms, forButton, useScene ? scene : -1);
 
-        if (synth->supportsIndexedModulator(scene, (modsources)ms))
+        if (index >= 0 && synth->supportsIndexedModulator(scene, (modsources)ms))
         {
             base += modulatorIndexExtension(scene, ms, index, forButton);
         }
