@@ -2623,6 +2623,9 @@ bool SurgeSynthesizer::isModulatorDistinctPerScene(modsources modsource) const
     if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
         return true;
 
+    if (modsource == ms_ampeg || modsource == ms_filtereg)
+        return true;
+
     if (modsource == ms_lowest_key || modsource == ms_highest_key || modsource == ms_latest_key)
         return true;
 

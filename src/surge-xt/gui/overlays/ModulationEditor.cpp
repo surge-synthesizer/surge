@@ -534,8 +534,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         std::string sceneMod = "";
         d.isPerScene = synth->isModulatorDistinctPerScene((modsources)d.source_id);
 
-        if (synth->isModulatorDistinctPerScene((modsources)d.source_id) &&
-            !isScenelevel((modsources)d.source_id))
+        if (synth->isModulatorDistinctPerScene((modsources)d.source_id))
         {
             sceneMod = std::string(" (") + (d.source_scene == 0 ? "A" : "B") + ")";
         }
@@ -809,6 +808,11 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         showAddTargetMenu();
     }
     break;
+    case tag_add_go:
+    {
+        doAdd();
+    }
+    break;
     case tag_value_disp:
     {
         int v = round(c->getValue() * 3);
@@ -850,8 +854,11 @@ void ModulationSideControls::showAddSourceMenu()
     auto addSLFOASub = juce::PopupMenu();
     auto addVLFOBSub = juce::PopupMenu();
     auto addSLFOBSub = juce::PopupMenu();
-    auto addEGSub = juce::PopupMenu();
+    auto addEGASub = juce::PopupMenu();
+    auto addEGBSub = juce::PopupMenu();
     auto addMIDISub = juce::PopupMenu();
+    auto addMIDIASub = juce::PopupMenu();
+    auto addMIDIBSub = juce::PopupMenu();
     auto addMiscSub = juce::PopupMenu();
 
     juce::PopupMenu *popMenu{nullptr};
@@ -881,13 +888,23 @@ void ModulationSideControls::showAddSourceMenu()
                 else
                     popMenu = &addSLFOBSub;
             }
-            else if (ms >= ms_ampeg && ms <= ms_filtereg && sc == 0)
+            else if (ms >= ms_ampeg && ms <= ms_filtereg)
             {
-                popMenu = &addEGSub;
+                if (sc == 0)
+                    popMenu = &addEGASub;
+                else
+                    popMenu = &addEGBSub;
             }
             else if (ms >= ms_random_bipolar && ms <= ms_alternate_unipolar && sc == 0)
             {
                 popMenu = &addMiscSub;
+            }
+            else if (synth->isModulatorDistinctPerScene(ms))
+            {
+                if (sc == 0)
+                    popMenu = &addMIDIASub;
+                else
+                    popMenu = &addMIDIBSub;
             }
             else if (sc == 0)
             {
@@ -912,9 +929,11 @@ void ModulationSideControls::showAddSourceMenu()
                             addTargetW->setLabels({"Select Target"});
                             dest_id = -1;
                             addGoW->setEnabled(false);
+                            repaint();
                         });
                     }
-                    popMenu->addSubMenu(sge->modulatorName(ms, false), subm);
+                    popMenu->addSubMenu(sge->modulatorNameWithIndex(ms, sc, 0, false, false, true),
+                                        subm);
                 }
                 else
                 {
@@ -933,14 +952,20 @@ void ModulationSideControls::showAddSourceMenu()
             }
         }
     }
+    men.addSectionHeader("GLOBAL");
     men.addSubMenu("Macros", addMacroSub);
-    men.addSubMenu("Voice LFOs A", addVLFOASub);
-    men.addSubMenu("Scene LFOs A", addSLFOASub);
-    men.addSubMenu("Voice LFOs B", addVLFOBSub);
-    men.addSubMenu("Scene LFOs B", addSLFOBSub);
-    men.addSubMenu("Envelopes", addEGSub);
     men.addSubMenu("MIDI", addMIDISub);
     men.addSubMenu("Internal", addMiscSub);
+    men.addSectionHeader("SCENE A");
+    men.addSubMenu("Voice LFOs", addVLFOASub);
+    men.addSubMenu("Scene LFOs", addSLFOASub);
+    men.addSubMenu("Envelopes", addEGASub);
+    men.addSubMenu("MIDI", addMIDIASub);
+    men.addSectionHeader("SCENE B");
+    men.addSubMenu("Voice LFOs", addVLFOBSub);
+    men.addSubMenu("Scene LFOs", addSLFOBSub);
+    men.addSubMenu("Envelopes", addEGBSub);
+    men.addSubMenu("MIDI", addMIDIBSub);
 
     men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addSourceW.get()));
 }
@@ -951,7 +976,7 @@ void ModulationSideControls::showAddTargetMenu()
         return;
 
     auto men = juce::PopupMenu();
-#if 0
+
     auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation To", "");
     tcomp->setSkin(skin, associatedBitmapStore);
     men.addCustomItem(-1, std::move(tcomp));
@@ -963,16 +988,18 @@ void ModulationSideControls::showAddTargetMenu()
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
         if (synth->isValidModulation(p->id, add_ms) &&
-            ((!synth->isModulatorDistinctPerScene(add_ms)) || (p->scene == add_ms_sc + 1)))
+            ((!synth->isModulatorDistinctPerScene(add_ms)) || (p->scene == add_ms_sc + 1) ||
+             (p->scene == 0)))
         {
-            parByCGCGE[p->ctrlgroup][p->scene][p->ctrlgroup_entry].emplace_back(p->id,
-                                                                                p->get_name());
+            if (!synth->isActiveModulation(p->id, add_ms, add_ms_sc, add_ms_idx))
+                parByCGCGE[p->ctrlgroup][p->scene][p->ctrlgroup_entry].emplace_back(
+                    p->id, p->get_full_name());
         }
     }
 
     for (const auto &topPair : parByCGCGE)
     {
-        std::string mainN, subN;
+        std::string mainN, subN = "SUB";
         switch ((ControlGroup)topPair.first)
         {
         case cg_GLOBAL:
@@ -1004,38 +1031,92 @@ void ModulationSideControls::showAddTargetMenu()
         }
         auto sceneMen = juce::PopupMenu();
 
+        int idx = 0;
+        int hasSceneEntryCount = 0;
+        for (const auto &sceneMap : topPair.second)
+        {
+            if (!sceneMap.empty())
+                hasSceneEntryCount++;
+        }
+        bool hasSceneEntries = hasSceneEntryCount > 1;
+
         for (const auto &sceneMap : topPair.second)
         {
             auto cgMen = juce::PopupMenu();
+
+            auto addCG = &cgMen;
+            if (!hasSceneEntries)
+                addCG = &sceneMen;
+
             bool hasEntries = sceneMap.size() != 1;
             for (const auto &groupPair : sceneMap)
             {
 
                 auto subMen = juce::PopupMenu();
                 juce::PopupMenu *addTo = &subMen;
-                if (!hasEntries)
+                if (!hasEntries &&
+                    topPair.first != cg_FX) // special case - always push FX into a submen
                 {
-                    addTo = &cgMen;
+                    addTo = addCG;
                 }
 
                 for (const auto &itemPair : groupPair.second)
                 {
                     auto f = itemPair.first;
-                    addTo->addItem(itemPair.second,
-                                   [f]() { std::cout << "You picked " << f << std::endl; });
+                    addTo->addItem(itemPair.second, [this, f]() {
+                        dest_id = f;
+                        addGoW->setEnabled(true);
+                        repaint();
+                    });
                 }
 
-                if (hasEntries)
-                    cgMen.addSubMenu(subN + " " + std::to_string(groupPair.first), subMen);
+                std::string menuName = subN + " " + std::to_string(groupPair.first + 1);
+                auto cg = topPair.first;
+                switch (cg)
+                {
+                case cg_FX:
+                    menuName = fxslot_names[groupPair.first];
+                    break;
+                case cg_ENV:
+                    menuName = (groupPair.first == 0 ? "AEG" : "FEG");
+                    break;
+                case cg_LFO:
+                    menuName = editor->ed->modulatorNameWithIndex(idx - 1, groupPair.first, -1,
+                                                                  false, false);
+                    break;
+                }
+
+                if (hasEntries || topPair.first == cg_FX)
+                    addCG->addSubMenu(menuName, *addTo);
             }
-            sceneMen.addSubMenu("SCENE", cgMen);
+            if (hasSceneEntries && cgMen.getNumItems())
+            {
+                auto scLabel = "Global";
+                if (idx == 1)
+                    scLabel = "Scene A";
+                if (idx == 2)
+                    scLabel = "Scene B";
+                sceneMen.addSubMenu(scLabel, cgMen);
+            }
+            idx++;
         }
         men.addSubMenu(mainN, sceneMen);
     }
-#else
-    men.addItem("Coming Soon", []() {});
-#endif
     men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
+}
+
+void ModulationSideControls::doAdd()
+{
+    if (!addGoW->isEnabled())
+        return;
+
+    auto synth = editor->synth;
+    synth->setModulation(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
+    addSourceW->setLabels({"Select Source"});
+    addTargetW->setLabels({"Select Target"});
+    addTargetW->setEnabled(false);
+    addGoW->setEnabled(false);
+    repaint();
 }
 
 ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
