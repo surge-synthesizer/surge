@@ -91,7 +91,6 @@ struct ModulationSideControls : public juce::Component,
         addL = makeL("Add Modulation");
         addSourceW = makeW({"Select Source"}, tag_add_source, true);
         addTargetW = makeW({"Select Target"}, tag_add_target, false);
-        addGoW = makeW({"Add Modulation"}, tag_add_go, false);
 
         dispL = makeL("Value Display");
         dispW = makeW({"None", "Depth Only", "Value and Depth", "All"}, tag_value_disp, true, true);
@@ -99,6 +98,7 @@ struct ModulationSideControls : public juce::Component,
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
                                                        Storage::ModulationEditorValueDisplay, 3);
         dispW->setValue(dwv / 3.0);
+        dispW->setDraggable(true);
         valueChanged(dispW.get());
     }
 
@@ -127,8 +127,6 @@ struct ModulationSideControls : public juce::Component,
         b = b.translated(0, h + m);
         addTargetW->setBounds(b);
         b = b.translated(0, h + m);
-        addGoW->setBounds(b);
-        b = b.translated(0, h * 1.5 + m);
 
         dispL->setBounds(b);
         b = b.translated(0, h + m);
@@ -174,7 +172,7 @@ struct ModulationSideControls : public juce::Component,
 
     std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
-        addGoW, dispW;
+        dispW;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
@@ -928,12 +926,11 @@ void ModulationSideControls::showAddSourceMenu()
                             addTargetW->setEnabled(true);
                             addTargetW->setLabels({"Select Target"});
                             dest_id = -1;
-                            addGoW->setEnabled(false);
                             repaint();
                         });
                     }
-                    popMenu->addSubMenu(sge->modulatorNameWithIndex(ms, sc, 0, false, false, true),
-                                        subm);
+                    popMenu->addSubMenu(
+                        sge->modulatorNameWithIndex(sc, ms, -1, false, false, false), subm);
                 }
                 else
                 {
@@ -946,7 +943,6 @@ void ModulationSideControls::showAddSourceMenu()
                         addTargetW->setEnabled(true);
                         addTargetW->setLabels({"Select Target"});
                         dest_id = -1;
-                        addGoW->setEnabled(false);
                     });
                 }
             }
@@ -1065,7 +1061,7 @@ void ModulationSideControls::showAddTargetMenu()
                     auto f = itemPair.first;
                     addTo->addItem(itemPair.second, [this, f]() {
                         dest_id = f;
-                        addGoW->setEnabled(true);
+                        doAdd();
                         repaint();
                     });
                 }
@@ -1107,15 +1103,11 @@ void ModulationSideControls::showAddTargetMenu()
 
 void ModulationSideControls::doAdd()
 {
-    if (!addGoW->isEnabled())
-        return;
-
     auto synth = editor->synth;
     synth->setModulation(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
     addSourceW->setLabels({"Select Source"});
     addTargetW->setLabels({"Select Target"});
     addTargetW->setEnabled(false);
-    addGoW->setEnabled(false);
     repaint();
 }
 
