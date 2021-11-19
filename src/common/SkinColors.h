@@ -387,7 +387,7 @@ extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Bord
 namespace TextMultiSwitch
 {
 extern const Surge::Skin::Color Background, Border, Separator, DeactivatedText, Text, OnText,
-    OnFill, HoverText, HoverOnText, HoverFill, HoverOnFill;
+    OnFill, HoverText, HoverOnText, HoverFill, HoverOnFill, HoverOnBorder, UnpressedHighlight;
 }
 } // namespace JuceWidgets
 } // namespace Colors

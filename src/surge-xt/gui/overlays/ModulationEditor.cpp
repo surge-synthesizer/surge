@@ -50,7 +50,7 @@ struct ModulationSideControls : public juce::Component,
         auto makeL = [this](const std::string &s) {
             auto l = std::make_unique<juce::Label>(s);
             l->setText(s, juce::dontSendNotification);
-            l->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            l->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             if (skin)
                 l->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
             addAndMakeVisible(*l);
@@ -108,28 +108,28 @@ struct ModulationSideControls : public juce::Component,
         float xpos = 4;
 
         auto h = 16.0;
-        auto m = 3;
+        auto m = 4;
 
         auto b = juce::Rectangle<int>(xpos, ypos, getWidth() - 2 * xpos, h);
         sortL->setBounds(b);
-        b = b.translated(0, h + m);
+        b = b.translated(0, h);
         sortW->setBounds(b);
         b = b.translated(0, h * 1.5 + m);
 
         filterL->setBounds(b);
-        b = b.translated(0, h + m);
+        b = b.translated(0, h);
         filterW->setBounds(b);
         b = b.translated(0, h * 1.5 + m);
 
         addL->setBounds(b);
-        b = b.translated(0, h + m);
+        b = b.translated(0, h);
         addSourceW->setBounds(b);
         b = b.translated(0, h + m);
         addTargetW->setBounds(b);
-        b = b.translated(0, h + m);
+        b = b.translated(0, h * 1.5 + m);
 
         dispL->setBounds(b);
-        b = b.translated(0, h + m);
+        b = b.translated(0, h);
         dispW->setBounds(b.withHeight(h * 4));
     }
 

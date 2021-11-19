@@ -472,7 +472,10 @@ const Surge::Skin::Color Background("multiswitch.background", 0xE3E3E3),
     HoverText("multiswitch.hover.text", 0x000000, 0xFF),
     HoverOnText("multiswitch.hoveron.text", 0xFF9300),
     HoverFill("multiswitch.hover.fill", 0xF1BB72),
-    HoverOnFill("multiswitch.hoveron.fill", 0x804900), OnFill("multiswitch.on.fill", 0xFF9A10);
+    HoverOnFill("multiswitch.hoveron.fill", 0x804900), OnFill("multiswitch.on.fill", 0xFF9A10),
+    HoverOnBorder("multiswitch.hoveron.border", 0, 0, 0, 0),
+    UnpressedHighlight("multiswitch.unpressedhighlight", 0, 0, 0,
+                       0); // special: if this is not transparent change drawing style
 } // namespace TextMultiSwitch
 } // namespace JuceWidgets
 
