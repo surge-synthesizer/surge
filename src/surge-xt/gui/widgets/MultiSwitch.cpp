@@ -374,12 +374,29 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 {
     namespace clr = Colors::JuceWidgets::TextMultiSwitch;
 
+    auto uph = skin->getColor(clr::UnpressedHighlight);
+    bool royalMode = false;
+    if (uph.getAlpha() > 0)
+    {
+        royalMode = true;
+    }
+
     // these are the classic skin colors just for now
     auto b = getLocalBounds().toFloat().reduced(0.5, 0.5);
     auto corner = 2.f, cornerIn = 1.5f;
 
-    g.setColour(skin->getColor(clr::Background));
-    g.fillRoundedRectangle(b.toFloat(), corner);
+    if (royalMode)
+    {
+        g.setColour(skin->getColor(clr::UnpressedHighlight));
+        g.fillRoundedRectangle(b.toFloat(), corner);
+        g.setColour(skin->getColor(clr::Background));
+        g.fillRoundedRectangle(b.toFloat().reduced(0, 1), corner);
+    }
+    else
+    {
+        g.setColour(skin->getColor(clr::Background));
+        g.fillRoundedRectangle(b.toFloat(), corner);
+    }
     g.setColour(skin->getColor(clr::Border));
     g.drawRoundedRectangle(b.toFloat(), corner, 1);
 
@@ -391,11 +408,13 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
     // Draw the separators
     g.setColour(skin->getColor(clr::Separator));
 
+    float yInsetMul = royalMode ? 0.f : 1.f;
     if (rows == 1)
     {
         for (int c = 1; c < columns; ++c)
         {
-            auto r = juce::Rectangle<float>(cw * c - 0.5 + 1, 3, 1, getHeight() - 5);
+            auto r = juce::Rectangle<float>(cw * c - 0.5 + 1, yInsetMul * 3, 1,
+                                            getHeight() - yInsetMul * 5);
             g.fillRect(r);
         }
     }
@@ -403,7 +422,8 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
     {
         for (int r = 1; r < rows; ++r)
         {
-            auto q = juce::Rectangle<float>(4, ch * r - 0.5 + 1, getWidth() - 9, 1);
+            auto q = juce::Rectangle<float>(yInsetMul * 4, ch * r - 0.5 + 1,
+                                            getWidth() - yInsetMul * 9, 1);
             g.fillRect(q);
         }
     }
@@ -416,6 +436,8 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
         {
             auto rc = juce::Rectangle<float>(c * cw + 1, r * ch + 1, cw, ch);
             auto fc = rc.reduced(1.5, 1.5);
+            if (royalMode)
+                fc = rc;
 
             auto isOn = idx == getIntegerValue() && !solo;
             auto isHo = isHovered && hoverSelection == idx;
@@ -431,6 +453,9 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
             {
                 g.setColour(skin->getColor(clr::HoverOnFill));
                 g.fillRoundedRectangle(fc.toFloat(), cornerIn);
+
+                g.setColour(skin->getColor(clr::HoverOnBorder));
+                g.drawRoundedRectangle(fc.toFloat().reduced(0.5), cornerIn, 1);
 
                 fg = skin->getColor(clr::HoverOnText);
             }
@@ -454,7 +479,6 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
                 {
                     g.setColour(skin->getColor(clr::HoverFill));
                     g.fillRoundedRectangle(fc.toFloat(), cornerIn);
-
                     fg = skin->getColor(clr::HoverText);
                 }
             }

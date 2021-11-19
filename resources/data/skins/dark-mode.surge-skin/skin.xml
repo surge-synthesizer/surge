@@ -229,6 +229,7 @@
         <color id="multiswitch.on.fill" value="#399dff"/>
         <color id="multiswitch.hover.fill" value="#ff9000"/>
         <color id="multiswitch.hoveron.fill" value="#399dff"/>
+        <color id="multiswitch.hoveron.border" value="white"/>
 
         <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="SVG/bmpTS00153.svg"/>
         <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="SVG/bmpTS00157.svg"/>
