@@ -43,7 +43,9 @@ struct binary : pegtl::seq<expression, pegtl::plus<pegtl::space>, bin_op, pegtl:
 
 struct author : TAO_PEGTL_STRING( "AUTHOR" ) {};
 struct category : TAO_PEGTL_STRING( "CATEGORY" ) {};
-struct subsearch_keyword : pegtl::sor<author, category> {};
+struct auth : TAO_PEGTL_STRING( "AUTH" ) {};
+struct cat : TAO_PEGTL_STRING( "CAT" ) {};
+struct subsearch_keyword : pegtl::sor<author, category, auth, cat> {};
 
 struct subsearch : pegtl::seq< subsearch_keyword, pegtl::one< '=' >, value >{};
 
