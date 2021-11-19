@@ -34,9 +34,12 @@ struct Exception : public std::runtime_error
 {
     explicit Exception(sqlite3 *h) : std::runtime_error(sqlite3_errmsg(h)), rc(sqlite3_errcode(h))
     {
-        // Surge::Debug::stackTraceToStdout();
+        Surge::Debug::stackTraceToStdout();
     }
-    Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc) {}
+    Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc)
+    {
+        Surge::Debug::stackTraceToStdout();
+    }
     const char *what() const noexcept override
     {
         static char msg[1024];
@@ -222,11 +225,7 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "10"; // I will rebuild if this is not my verion
-
-    /*
-     * Obviously a lot of thought needs to go into this
-     */
+    static constexpr const char *schema_version = "11"; // I will rebuild if this is not my verion
 
     // language=SQL
     static constexpr const char *setup_sql = R"SQL(
@@ -390,14 +389,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
     struct EnQSetup : EnQAble
     {
         EnQSetup() {}
-        void go(WriterWorker &w) { w.setupDatabase(); }
+        void go(WriterWorker &w)
+        {
+            w.setupDatabase();
+            std::cout << "Done with EnQSetup" << std::endl;
+        }
     };
 
     std::atomic<bool> hasSetup{false};
     void setupDatabase()
     {
         std::cout << "PatchDB : Setup Database " << dbname << std::endl;
-        hasSetup = true;
         /*
          * OK check my version
          */
@@ -450,6 +452,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 storage->reportError(e.what(), "PatchDB Setup Error");
             }
         }
+
+        hasSetup = true;
     }
 
     bool haveOpenedForWriteOnce{false};
@@ -466,7 +470,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             pathQ.push_back(new EnQSetup());
         }
         qCV.notify_all();
-        while (!hasSetup)
+        while (!waiting)
         {
         }
     }
@@ -585,6 +589,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
     /*
      * Functions for the write thread
      */
+    std::atomic<bool> waiting{false};
     void loadQueueFunction()
     {
         static constexpr auto transChunkSize = 10; // How many FXP to load in a single txn
@@ -599,7 +604,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 {
                     if (dbh)
                         closeDb();
+                    waiting = true;
                     qCV.wait(lk);
+                    waiting = false;
                 }
 
                 if (keepRunning)
@@ -634,15 +641,12 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     }
                     catch (SQL::LockedException &le)
                     {
-                        std::cout << "LOCKED EXCEPTION" << std::endl;
                         storage->reportError(le.what(), "Patch DB");
                         // OK so in this case, we reload the doThis onto the front of the queue
                         // and sleep
                         lock_retries++;
                         if (lock_retries < 10)
                         {
-                            std::cout << "Pushing and retrying - sleep for " << lock_retries * 3
-                                      << std::endl;
                             {
                                 std::unique_lock<std::mutex> lk(qLock);
                                 std::reverse(doThis.begin(), doThis.end());
@@ -1347,7 +1351,19 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
         oss << "(1 == 0)";
         break;
     case PatchDBQueryParser::KEYWORD_EQUALS:
-        oss << "(1 == 1)";
+        if ((t->content == "AUTHOR" || t->content == "AUTH") && !t->children[0]->content.empty())
+        {
+            oss << "(author LIKE '%" << t->children[0]->content << "%' )";
+        }
+        else if ((t->content == "CATEGORY" || t->content == "CAT") &&
+                 !t->children[0]->content.empty())
+        {
+            oss << "(category LIKE '%" << t->children[0]->content << "%' )";
+        }
+        else
+        {
+            oss << "(1 == 1)";
+        }
         break;
     case PatchDBQueryParser::LITERAL:
         oss << "( p.name LIKE '%" << t->content << "%' )";
@@ -1377,7 +1393,8 @@ PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &
     std::vector<PatchDB::patchRecord> res;
 
     // FIXME - cache this by pushing it to the worker
-    std::string query = "select p.id, p.path, p.category, p.name, pf.feature_svalue from Patches "
+    std::string query = "select p.id, p.path, p.category as category, p.name, pf.feature_svalue as "
+                        "author from Patches "
                         "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
                         "'AUTHOR' and " +
                         sqlWhereClauseFor(t) + " ORDER BY p.category_type, p.category, p.name";

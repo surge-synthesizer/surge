@@ -632,6 +632,12 @@ void SurgeStorage::initializePatchDb(bool force)
 
     patchDBInitialized = true;
 
+    /*
+     * We do this here because if there is a schema upgrade we need to do it before
+     * we do a patch read, even though our next activity is a read
+     */
+    patchDB->prepareForWrites();
+
     auto awid = patchDB->readAllPatchPathsWithIdAndModTime();
     std::vector<Patch> addThese;
     for (const auto p : patch_list)
@@ -649,8 +655,6 @@ void SurgeStorage::initializePatchDb(bool force)
             awid.erase(p.path.u8string());
         }
     }
-
-    patchDB->prepareForWrites();
 
     auto catToType = [this](int q) {
         auto t = Surge::PatchStorage::PatchDB::CatType::FACTORY;
