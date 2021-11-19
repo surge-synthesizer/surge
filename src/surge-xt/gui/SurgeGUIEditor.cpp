@@ -5491,7 +5491,7 @@ std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index,
                                                    bool useScene, bool baseNameOnly)
 {
     int lfo_id = ms - ms_lfo1;
-    bool hasOverride = isLFO((modsources)ms) &&
+    bool hasOverride = isLFO((modsources)ms) && index >= 0 &&
                        synth->storage.getPatch().LFOBankLabel[scene][lfo_id][index][0] != 0;
 
     if (baseNameOnly)

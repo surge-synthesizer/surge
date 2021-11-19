@@ -327,10 +327,11 @@ void Wavetable::MipMapWT()
                 }
             }
             // float2i16_block(this->TableF32WeakPointers[l][s],this->TableI16WeakPointers[l][s],lsize);
+            auto toCopy = std::min(FIRoffsetI16, lsize);
             memcpy(&this->TableI16WeakPointers[l][s][lsize + FIRoffsetI16],
-                   &this->TableI16WeakPointers[l][s][FIRoffsetI16], FIRoffsetI16 * sizeof(short));
+                   &this->TableI16WeakPointers[l][s][FIRoffsetI16], toCopy * sizeof(short));
             memcpy(&this->TableI16WeakPointers[l][s][0], &this->TableI16WeakPointers[l][s][lsize],
-                   FIRoffsetI16 * sizeof(short));
+                   toCopy * sizeof(short));
         }
         // fwrite(this->TableI16WeakPointers[l][0],lsize*sizeof(short),1,F);
     }

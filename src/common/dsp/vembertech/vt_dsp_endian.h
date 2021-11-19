@@ -10,14 +10,15 @@ inline int vt_write_int32LE(int t) { return t; }
 
 inline float vt_write_float32LE(float f) { return f; }
 
-inline int vt_write_int32BE(int t)
+inline int vt_write_int32BE(uint32_t ti)
 {
 #if (LINUX || MAC || _M_X64)
     // this was `swap_endian`:
+    uint64_t t = ti;
     return ((t << 24) & 0xff000000) | ((t << 8) & 0x00ff0000) | ((t >> 8) & 0x0000ff00) |
            ((t >> 24) & 0x000000ff);
 #else
-    return _byteswap_ulong(t);
+    return _byteswap_ulong(ti);
 #endif
 }
 
