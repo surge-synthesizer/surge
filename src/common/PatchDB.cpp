@@ -21,6 +21,7 @@
 #include <iterator>
 #include "vt_dsp_endian.h"
 #include "DebugHelpers.h"
+#include <chrono>
 
 namespace Surge
 {
@@ -40,6 +41,22 @@ struct Exception : public std::runtime_error
     {
         static char msg[1024];
         snprintf(msg, 1024, "SQL Error[%d]: %s", rc, std::runtime_error::what());
+        return msg;
+    }
+    int rc;
+};
+
+struct LockedException : public Exception
+{
+    explicit LockedException(sqlite3 *h) : Exception(h)
+    {
+        // Surge::Debug::stackTraceToStdout();
+    }
+    LockedException(int rc, const std::string &msg) : Exception(rc, msg) {}
+    const char *what() const noexcept override
+    {
+        static char msg[1024];
+        snprintf(msg, 1024, "SQL Locked Error[%d]: %s", rc, std::runtime_error::what());
         return msg;
     }
     int rc;
@@ -171,8 +188,12 @@ struct TxnGuard
     bool open{false};
     explicit TxnGuard(sqlite3 *e) : d(e)
     {
-        auto rc = sqlite3_exec(d, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
-        if (rc != SQLITE_OK)
+        auto rc = sqlite3_exec(d, "BEGIN IMMEDIATE TRANSACTION", nullptr, nullptr, nullptr);
+        if (rc == SQLITE_LOCKED || rc == SQLITE_BUSY)
+        {
+            throw LockedException(d);
+        }
+        else if (rc != SQLITE_OK)
         {
             throw Exception(d);
         }
@@ -567,6 +588,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
     void loadQueueFunction()
     {
         static constexpr auto transChunkSize = 10; // How many FXP to load in a single txn
+        int lock_retries{0};
         while (keepRunning)
         {
             std::vector<EnQAble *> doThis;
@@ -609,6 +631,34 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         }
 
                         tg.end();
+                    }
+                    catch (SQL::LockedException &le)
+                    {
+                        std::cout << "LOCKED EXCEPTION" << std::endl;
+                        storage->reportError(le.what(), "Patch DB");
+                        // OK so in this case, we reload the doThis onto the front of the queue
+                        // and sleep
+                        lock_retries++;
+                        if (lock_retries < 10)
+                        {
+                            std::cout << "Pushing and retrying - sleep for " << lock_retries * 3
+                                      << std::endl;
+                            {
+                                std::unique_lock<std::mutex> lk(qLock);
+                                std::reverse(doThis.begin(), doThis.end());
+                                for (auto p : doThis)
+                                {
+                                    pathQ.push_front(p);
+                                }
+                            }
+                            std::this_thread::sleep_for(std::chrono::seconds(lock_retries * 3));
+                        }
+                        else
+                        {
+                            storage->reportError(
+                                "Database is locked and unwritable after multiple backoffs",
+                                "Patch DB");
+                        }
                     }
                     catch (SQL::Exception &e)
                     {
