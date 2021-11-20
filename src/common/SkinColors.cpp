@@ -120,19 +120,19 @@ namespace FormulaEditor
 {
 const Surge::Skin::Color Background("formulaeditor.background", 0xF5F6EE),
     Highlight("formulaeditor.highlight", 0xD4D4D4), Text("formulaeditor.text", 0x000000, 0xFF),
-    LineNumBackground("formulaeditor.linenumber.background", 0x979797),
+    LineNumBackground("formulaeditor.linenumber.background", 0xCDCED4),
     LineNumText("formulaeditor.linenumber.text", 0x000000, 0xFF);
 
 namespace Debugger
 {
-const Surge::Skin::Color Row("formulaeditor.debugger.row", 0x151515),
-    LightRow("formulaeditor.debugger.lightrow", 0x404040),
-    Text("formulaeditor.debugger.text", 0xE3E3E3),
-    InternalText("formulaeditor.debugger.internaltext", 0x979797);
+const Surge::Skin::Color Row("formulaeditor.debugger.row.primary", 0xCDCED4),
+    LightRow("formulaeditor.debugger.row.secondary", 0xBABBC0),
+    Text("formulaeditor.debugger.text", 0x000000, 0xFF),
+    InternalText("formulaeditor.debugger.text.subscriptions", 0x606060);
 }
 namespace Lua
 {
-const Surge::Skin::Color Bracket("formulaeditor.lua.comment", 0x393B45),
+const Surge::Skin::Color Bracket("formulaeditor.lua.bracket", 0x393B45),
     Comment("formulaeditor.lua.comment", 0x979797), Error("formulaeditor.lua.error", 0xFF0000),
     Identifier("formulaeditor.lua.identifier", 0x266DBE),
     Interpunction("formulaeditor.lua.interpunction", 0x111111),
@@ -342,7 +342,6 @@ const Surge::Skin::Color Background("osc.wavename.background", 0xFFA010),
 }
 namespace Type
 {
-// 158 should be 144 but VSTGUI for some reason makes text come off more reddish than it should be
 const Surge::Skin::Color Text("osc.type.text", 0xFF9E00),
     TextHover("osc.type.text.hover", 0xFFFFFF);
 } // namespace Type
@@ -474,8 +473,8 @@ const Surge::Skin::Color Background("multiswitch.background", 0xE3E3E3),
     HoverFill("multiswitch.hover.fill", 0xF1BB72),
     HoverOnFill("multiswitch.hoveron.fill", 0x804900), OnFill("multiswitch.on.fill", 0xFF9A10),
     HoverOnBorder("multiswitch.hoveron.border", 0, 0, 0, 0),
-    UnpressedHighlight("multiswitch.unpressedhighlight", 0, 0, 0,
-                       0); // special: if this is not transparent change drawing style
+    // special: if below color is not transparent, change drawing style
+    UnpressedHighlight("multiswitch.unpressed.highlight", 0, 0, 0, 0);
 } // namespace TextMultiSwitch
 } // namespace JuceWidgets
 
@@ -549,6 +548,6 @@ const Surge::Skin::Color HeatmapZero("tuningeditor.interval.heatmap.zero", 0xFFF
 namespace ModulationListOverlay
 {
 const Surge::Skin::Color Border("modlist.border", 0x979797), Text("modlist.text", 0xFFFFFF),
-    DimText("modlist.dimtext", 0x979797), Arrows("modlist.arrows", 0xE3E3E3);
+    DimText("modlist.text.dimmed", 0x979797), Arrows("modlist.arrows", 0xE3E3E3);
 }
 } // namespace Colors
