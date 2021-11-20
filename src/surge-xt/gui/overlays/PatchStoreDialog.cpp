@@ -18,6 +18,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIUtils.h"
 #include "widgets/TypeAheadTextEditor.h"
+#include "widgets/SurgeTextButton.h"
 
 namespace Surge
 {
@@ -131,17 +132,17 @@ PatchStoreDialog::PatchStoreDialog()
     catEdL = makeL("Category");
     commentEdL = makeL("Comment");
 
-    okButton = std::make_unique<juce::TextButton>("patchOK");
+    okButton = std::make_unique<Widgets::SurgeTextButton>("patchOK");
     okButton->setButtonText("OK");
     okButton->addListener(this);
     addAndMakeVisible(*okButton);
 
-    cancelButton = std::make_unique<juce::TextButton>("patchCancel");
+    cancelButton = std::make_unique<Widgets::SurgeTextButton>("patchCancel");
     cancelButton->setButtonText("Cancel");
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 
-    okOverButton = std::make_unique<juce::TextButton>("factoryOverwrite");
+    okOverButton = std::make_unique<Widgets::SurgeTextButton>("factoryOverwrite");
     okOverButton->setButtonText("Factory Overwrite");
     okOverButton->addListener(this);
     addAndMakeVisible(*okOverButton);
@@ -232,20 +233,15 @@ void PatchStoreDialog::onSkinChanged()
     resetLabel(commentEdL);
     resetLabel(storeTuningLabel);
 
-    auto resetButton = [this](const auto &button) {
-        button->setColour(juce::TextButton::buttonColourId,
-                          skin->getColor(Colors::Dialog::Button::Background));
-        button->setColour(juce::TextButton::buttonOnColourId,
-                          skin->getColor(Colors::Dialog::Button::BackgroundPressed));
-        button->setColour(juce::TextButton::textColourOffId,
-                          skin->getColor(Colors::Dialog::Button::Text));
-        button->setColour(juce::TextButton::textColourOnId,
-                          skin->getColor(Colors::Dialog::Button::TextPressed));
-    };
+    okButton->setSkin(skin, associatedBitmapStore);
+    cancelButton->setSkin(skin, associatedBitmapStore);
+    okOverButton->setSkin(skin, associatedBitmapStore);
+}
 
-    resetButton(okButton);
-    resetButton(cancelButton);
-    resetButton(okOverButton);
+void PatchStoreDialog::setIsRename(bool b)
+{
+    isRename = b;
+    okButton->setButtonText(isRename ? "Rename" : "OK");
 }
 
 void PatchStoreDialog::resized()

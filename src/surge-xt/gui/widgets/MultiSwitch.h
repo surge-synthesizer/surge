@@ -100,7 +100,7 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 struct MultiSwitchSelfDraw : public MultiSwitch
 {
     MultiSwitchSelfDraw() : MultiSwitch() {}
-    void paint(juce::Graphics &g);
+    void paint(juce::Graphics &g) override;
 
     std::vector<std::string> labels;
     void setLabels(const std::vector<std::string> &l)

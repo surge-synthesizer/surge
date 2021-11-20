@@ -24,6 +24,11 @@ class SurgeGUIEditor;
 
 namespace Surge
 {
+namespace Widgets
+{
+struct SurgeTextButton;
+}
+
 namespace Overlays
 {
 struct MiniEdit : public juce::Component,
@@ -47,8 +52,8 @@ struct MiniEdit : public juce::Component,
     void buttonClicked(juce::Button *button) override;
     juce::Rectangle<int> getDisplayRegion();
     std::unique_ptr<juce::TextEditor> typein;
-    std::unique_ptr<juce::TextButton> okButton;
-    std::unique_ptr<juce::TextButton> cancelButton;
+    std::unique_ptr<Widgets::SurgeTextButton> okButton;
+    std::unique_ptr<Widgets::SurgeTextButton> cancelButton;
 
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;

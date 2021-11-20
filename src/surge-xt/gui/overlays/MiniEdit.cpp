@@ -19,6 +19,7 @@
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
+#include "widgets/SurgeTextButton.h"
 
 namespace Surge
 {
@@ -34,12 +35,12 @@ MiniEdit::MiniEdit()
     typein->addListener(this);
     addAndMakeVisible(*typein);
 
-    okButton = std::make_unique<juce::TextButton>("minieditOK");
+    okButton = std::make_unique<Surge::Widgets::SurgeTextButton>("minieditOK");
     okButton->setButtonText("OK");
     okButton->addListener(this);
     addAndMakeVisible(*okButton);
 
-    cancelButton = std::make_unique<juce::TextButton>("minieditOK");
+    cancelButton = std::make_unique<Surge::Widgets::SurgeTextButton>("minieditOK");
     cancelButton->setButtonText("Cancel");
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
@@ -110,6 +111,9 @@ void MiniEdit::onSkinChanged()
                       skin->getColor(Colors::Dialog::Entry::Border));
     typein->setColour(juce::TextEditor::focusedOutlineColourId,
                       skin->getColor(Colors::Dialog::Entry::Border));
+
+    okButton->setSkin(skin, associatedBitmapStore);
+    cancelButton->setSkin(skin, associatedBitmapStore);
 
     repaint();
 }

@@ -23,8 +23,8 @@ namespace Button
 {
 const Surge::Skin::Color Background("dialog.button.background", 0xE3E3E3),
     Border("dialog.button.border", 0x979797), Text("dialog.button.text", 0x000000, 0xFF),
-    Backgroundhover("dialog.button.hover.background", 0xF1BB72),
-    BorderHover("dialog.button.hover.border", 0x979797),
+    BackgroundHover("dialog.button.hover.background", 0xF1BB72),
+    BorderHover("dialog.button.hover.border", 0, 0, 0, 0),
     TextHover("dialog.button.hover.text", 0x000000, 0xFF),
     BackgroundPressed("dialog.button.pressed.background", 0x804900),
     BorderPressed("dialog.button.pressed.border", 0x979797),

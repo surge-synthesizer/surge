@@ -27,6 +27,10 @@ class SurgeStorage;
 
 namespace Surge
 {
+namespace Widgets
+{
+struct SurgeTextButton;
+}
 namespace Overlays
 {
 struct PatchStoreDialogCategoryProvider;
@@ -57,16 +61,12 @@ struct PatchStoreDialog : public OverlayComponent,
     void buttonClicked(juce::Button *button) override;
     std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, tagEd, commentEd;
     std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, tagEdL, commentEdL;
-    std::unique_ptr<juce::TextButton> okButton, okOverButton, cancelButton;
+    std::unique_ptr<Widgets::SurgeTextButton> okButton, okOverButton, cancelButton;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
 
     bool isRename{false};
-    void setIsRename(bool b)
-    {
-        isRename = b;
-        okButton->setButtonText(isRename ? "Rename" : "OK");
-    }
+    void setIsRename(bool b);
     std::function<void()> onOK = []() {};
 
     std::unique_ptr<PatchStoreDialogCategoryProvider> categoryProvider;
