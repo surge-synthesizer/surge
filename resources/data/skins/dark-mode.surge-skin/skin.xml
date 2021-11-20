@@ -102,6 +102,25 @@
         <color id="msegeditor.loop.region.border" value="#40ADFF90"/>
         <color id="msegeditor.loop.region.fill" value="#FFFFFF0C"/>
 
+        <color id="formulaeditor.background" value="#151515"/>
+        <color id="formulaeditor.text" value="#E3E3E3"/>
+        <color id="formulaeditor.highlight" value="#303030"/>
+        <color id="formulaeditor.linenumber.background" value="#2D2D2D"/>
+        <color id="formulaeditor.linenumber.text" value="#808080"/>
+
+        <color id="formulaeditor.lua.bracket" value="#CCCCCC"/>
+        <color id="formulaeditor.lua.comment" value="#808080"/>
+        <color id="formulaeditor.lua.identifier" value="#0090FF"/>
+        <color id="formulaeditor.lua.interpunction" value="#CCCCCC"/>
+        <color id="formulaeditor.lua.keyword" value="#60E060"/>
+        <color id="formulaeditor.lua.number" value="#A3A3FF"/>
+        <color id="formulaeditor.lua.string" value="surgeorange"/>
+
+        <color id="formulaeditor.debugger.row.primary" value="#2D2D2D"/>
+        <color id="formulaeditor.debugger.row.secondary" value="#242424"/>
+        <color id="formulaeditor.debugger.text" value="#808080"/>
+        <color id="formulaeditor.debugger.text.subscriptions" value="#606060"/>
+
         <color id="dialog.background" value="bggray"/>
         <color id="dialog.border" value="bordergray"/>
 
