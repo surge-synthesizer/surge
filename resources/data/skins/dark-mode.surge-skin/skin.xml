@@ -113,7 +113,7 @@
         <color id="dialog.button.text" value="lightgray"/>
 
         <color id="dialog.button.hover.background" value="#399DFF"/>
-        <color id="dialog.button.hover.border" value="black"/>
+        <color id="dialog.button.hover.border" value="white"/>
         <color id="dialog.button.hover.text" value="white"/>
 
         <color id="dialog.button.pressed.background" value="surgeorange"/>
