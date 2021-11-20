@@ -151,23 +151,6 @@ void PatchSelector::paint(juce::Graphics &g)
     g.drawRect(auth);
 #endif
 
-    // patch browser text color
-    g.setColour(skin->getColor(Colors::PatchBrowser::Text));
-
-    // patch name
-    if (!isTypeaheadSearchOn)
-    {
-        g.setFont(Surge::GUI::getFontManager()->patchNameFont);
-        g.drawText(pname, pbrowser, juce::Justification::centred);
-
-        // category/author name
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
-        g.drawText(category, cat, juce::Justification::centredLeft);
-        g.drawText(author, auth,
-                   skin->getVersion() >= 2 ? juce::Justification::centredRight
-                                           : juce::Justification::centredLeft);
-    }
-
     // favorites rect
     {
         juce::Graphics::ScopedSaveState gs(g);
@@ -177,12 +160,33 @@ void PatchSelector::paint(juce::Graphics &g)
         img->drawAt(g, favoritesRect.getX(), favoritesRect.getY() - yShift, 1.0);
     }
 
+    // search rect
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.reduceClipRegion(searchRect);
         auto img = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
         int yShift = 13 * ((searchHover ? 1 : 0));
         img->drawAt(g, searchRect.getX(), searchRect.getY() - yShift, 1.0);
+    }
+
+    // patch browser text color
+    g.setColour(skin->getColor(Colors::PatchBrowser::Text));
+
+    // patch name
+    if (!isTypeaheadSearchOn)
+    {
+        auto pnRect =
+            pbrowser.withLeft(searchRect.getRight()).withRight(favoritesRect.getX()).reduced(4, 0);
+
+        g.setFont(Surge::GUI::getFontManager()->patchNameFont);
+        g.drawFittedText(pname, pnRect, juce::Justification::centred, 1);
+
+        // category/author name
+        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.drawText(category, cat, juce::Justification::centredLeft);
+        g.drawText(author, auth,
+                   skin->getVersion() >= 2 ? juce::Justification::centredRight
+                                           : juce::Justification::centredLeft);
     }
 }
 
