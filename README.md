@@ -284,7 +284,7 @@ Most Linux systems have CMake, Git and a modern C++ compiler installed. Make sur
 older than 7 or so and clangs after 9 or 10. You will also need to install a set of dependencies. If you use `apt` do:
 
 ```bash
-sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-dev
+sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
 # Continuous Integration
