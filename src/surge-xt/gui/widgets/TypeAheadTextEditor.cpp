@@ -82,9 +82,11 @@ struct TypeAheadListBox : public juce::ListBox
 
     void paintOverChildren(juce::Graphics &graphics) override
     {
+        juce::ListBox::paintOverChildren(graphics);
         if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
         {
-            m->provider->paintOverChildren(graphics, getLocalBounds());
+            m->provider->paintOverChildren(graphics,
+                                           getLocalBounds().reduced(getOutlineThickness()));
         }
     }
     bool keyPressed(const juce::KeyPress &press) override
