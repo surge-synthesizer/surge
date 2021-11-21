@@ -88,7 +88,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
             g.drawText(pr.author, r, juce::Justification::bottomRight);
         }
         g.setColour(divider);
-        g.drawLine(4, height, width - 4, height, 1);
+        g.drawLine(4, height - 1, width - 4, height - 1, 1);
     }
 
     void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) override
