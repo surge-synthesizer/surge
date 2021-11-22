@@ -2885,9 +2885,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
         std::string lab = "Zoom to " + std::to_string(s) + "%";
-        printf("%d | %.5f\n", s, zoomFactor);
-        zoomSubMenu.addItem(lab, true, (s == floor(zoomFactor + 0.5f)),
-                            [this, s]() { resizeWindow(s); });
+        zoomSubMenu.addItem(lab, true, (s == zoomFactor), [this, s]() { resizeWindow(s); });
     }
 
     zoomSubMenu.addSeparator();
@@ -2950,7 +2948,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         zoomSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."), [this, where]() {
                 char c[256];
-                snprintf(c, 256, "%d", (int)floor(zoomFactor + 0.5f));
+                snprintf(c, 256, "%d", (int)zoomFactor);
                 promptForMiniEdit(c, "Enter a new value:", "Set Default Zoom Level", where,
                                   [this](const std::string &s) {
                                       int newVal = ::atoi(s.c_str());

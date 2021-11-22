@@ -586,8 +586,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                 juce::AlertWindow::InfoIcon, "Delete Patch",
                 std::string("Do you want to delete ") +
                     storage->patch_list[current_patch].path.u8string() + "?",
-
-                "Yes", "No", sge->frame.get(), cb);
+                "Yes", "No", nullptr, cb);
         });
     }
 
