@@ -1348,8 +1348,9 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
             bool on;
         };
         TestCase(const std::string &n, MonoVoicePriorityMode prioritYMode, double result,
-                 bool shouldPass, const std::vector<Note> &notes)
-            : name(n), pri(prioritYMode), res(result), should(shouldPass), notes(notes)
+                 bool shouldPass, const std::vector<Note> &notes, int scaleLen = 12)
+            : name(n), pri(prioritYMode), res(result), should(shouldPass), notes(notes),
+              scaleLen(scaleLen)
         {
         }
         std::string name;
@@ -1357,6 +1358,7 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
         double res;
         bool should;
         std::vector<Note> notes;
+        int scaleLen;
     };
 
     auto mno = Tunings::MIDI_0_FREQ;
@@ -1400,22 +1402,45 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
                     {{60, 0, 1}, {57, 1, 1}}},
         {"Drop Note Higher Different Channel Release", ALWAYS_LOWEST, n60, true,
             {{60, 0, 1}, {57, 1, 1}, {57,1,0}}},
-     };
+        {"Different Note Same Channel ED2-31", ALWAYS_HIGHEST, n60 * 2, true,
+             {{60, 0, 1}, {60+31, 0, 1}}, 31},
+        {"Note on off Same Channel ED2-12", ALWAYS_HIGHEST, n60, true,
+     {{60, 0, 1}, {60+31, 0, 1}, {60+31, 0, 0 }}, 12},
+        {"Note on off Same Channel ED2-24", ALWAYS_HIGHEST, n60 , true,
+      {{60, 0, 1}, {60+31, 0, 1}, {60+31, 0, 0 }}, 24},
+        {"Note on off Same Channel ED2-31", ALWAYS_HIGHEST, n60, true,
+             {{60, 0, 1}, {60+31, 0, 1}, {60+31, 0, 0 }}, 31},
+        {"Note on pure play ED2-31", ALWAYS_HIGHEST, 547.340, true,
+        {{0, 3, 1}}, 31},
+        {"Note on off ED2-31", ALWAYS_HIGHEST, 547.340, true,
+            {{0, 3, 1}, {10, 3, 1}, {10, 3, 0 }}, 31},
+        {"Note on off ED2-31 on Ch 0", ALWAYS_HIGHEST, 547.340, true,
+                 {{31 * 3, 0, 1}, {31 * 3 + 10, 0, 1}, {31 * 3 + 10, 0, 0 }}, 31},
+        {"Note on off ED2-31 on Ch 1", ALWAYS_HIGHEST, 547.340, true,
+              {{31 * 2, 1, 1}, {31 * 2 + 10, 1, 1}, {31 * 2 + 10, 1, 0 }}, 31},
+        {"Note on 1 pure play ED2-31", ALWAYS_HIGHEST, 559.863, true,
+            {{1, 3, 1}}, 31},
+        {"Note on off 1 ED2-31", ALWAYS_HIGHEST, 559.863, true,
+            {{1, 3, 1}, {10, 3, 1}, {10, 3, 0 }}, 31},
+    };
     // clang-format on
 
     for (auto mode : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
     {
         for (const auto &c : cases)
         {
-            DYNAMIC_SECTION("Mode " << mode << " : Pri : " << c.pri << " : Case : " << c.name)
+            DYNAMIC_SECTION("Mode " << mode << " : Pri : " << c.pri << " : Case : " << c.name
+                                    << " : Scale : ED2-" << c.scaleLen
+                                    << (c.should ? "" : " - SKIPPING"))
             {
                 auto surge = surgeOnSine();
                 surge->storage.getPatch().scene[0].monoVoicePriorityMode = c.pri;
                 surge->storage.getPatch().scene[0].polymode.val.i = mode;
                 surge->storage.mapChannelToOctave = true;
                 surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+                surge->storage.retuneToScale(Tunings::evenDivisionOfSpanByM(2, c.scaleLen));
 
-                int len = BLOCK_SIZE * 30;
+                int len = BLOCK_SIZE * 20;
                 int idx = 0;
                 auto events = hs::playerEvents_t();
                 for (const auto nt : c.notes)

@@ -1094,12 +1094,19 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                                     if (kadj >= highest)
                                     {
-                                        highest = kadj;
+                                        /*
+                                         * Why k and not kadj here? Well this is the key which maps
+                                         * to the highest voice, but when we play it we play it as
+                                         * if we had pressed the key. So we want to *search* in
+                                         * adjusted space then *play* in keyboard space otherwise we
+                                         * will apply the adjustment twice.
+                                         */
+                                        highest = k;
                                         highchan = ch;
                                     }
                                     if (kadj <= lowest)
                                     {
-                                        lowest = kadj;
+                                        lowest = k;
                                         lowchan = ch;
                                     }
                                     if (channelState[channel].keyState[k].voiceOrder >= lt)
@@ -1294,12 +1301,12 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                                     if (kadj >= highest)
                                     {
-                                        highest = kadj;
+                                        highest = k; // this is not kadj on purpose. See above.
                                         highchan = ch;
                                     }
                                     if (kadj <= lowest)
                                     {
-                                        lowest = kadj;
+                                        lowest = k;
                                         lowchan = ch;
                                     }
                                     if (channelState[channel].keyState[k].voiceOrder >= lt)
