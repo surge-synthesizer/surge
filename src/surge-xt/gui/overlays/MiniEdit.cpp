@@ -79,7 +79,7 @@ void MiniEdit::paint(juce::Graphics &g)
 
     if (d)
     {
-        d->drawAt(g, fullRect.getX(), fullRect.getY() + 2, 1.0);
+        d->drawAt(g, fullRect.getX() + 2, fullRect.getY() + 2, 1.0);
     }
 
     auto bodyRect = fullRect.withTrimmedTop(18);
@@ -90,7 +90,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
 
-    auto labelRect = bodyRect.withHeight(20).reduced(4, 0);
+    auto labelRect = bodyRect.withHeight(20).reduced(6, 0);
 
     g.drawText(label, labelRect, juce::Justification::centredLeft);
 
@@ -126,8 +126,8 @@ void MiniEdit::resized()
     auto dialogCenter = fullRect.getWidth() / 2;
     auto typeinBox = fullRect.translated(0, 2 * typeinHeight + margin * 2)
                          .withHeight(typeinHeight)
-                         .withTrimmedLeft(2 * margin)
-                         .withTrimmedRight(2 * margin);
+                         .withTrimmedLeft(3 * margin)
+                         .withTrimmedRight(3 * margin);
 
     typein->setBounds(typeinBox);
     typein->setIndents(4, (typein->getHeight() - typein->getTextHeight()) / 2);

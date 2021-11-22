@@ -76,16 +76,17 @@ void TypeinParamEditor::paint(juce::Graphics &g)
 
 juce::Rectangle<int> TypeinParamEditor::getRequiredSize()
 {
-    int ht = 56 + (isMod ? 22 : 0);
+    int ht = 50 + (isMod ? 24 : 0);
     auto r = juce::Rectangle<int>(0, 0, 144, ht);
     return r;
 }
+
 void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &controlRect,
                                              const juce::Rectangle<int> &parentRect)
 {
     auto r = getRequiredSize();
     r = r.withX(controlRect.getX()).withY(controlRect.getY() - r.getHeight());
-    ;
+
     if (!parentRect.contains(r))
     {
         r = r.withY(controlRect.getBottom());
@@ -96,7 +97,7 @@ void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &control
 
 void TypeinParamEditor::resized()
 {
-    auto ter = juce::Rectangle<int>(0, getHeight() - 22, 144, 22).reduced(2);
+    auto ter = juce::Rectangle<int>(0, getHeight() - 24, 144, 22).reduced(4, 2);
     textEd->setBounds(ter);
 }
 

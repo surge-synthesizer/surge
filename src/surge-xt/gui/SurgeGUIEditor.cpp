@@ -2347,7 +2347,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " Preset As..."),
                        [this, currentLfoId, what]() {
                            promptForMiniEdit(
-                               "", "Enter the name for " + what + " preset:", what + " Preset Name",
+                               "", "Enter the preset name:", what + " Preset Name",
                                juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
                                    this->synth->storage.modulatorPreset->savePresetToUser(
                                        string_to_path(s), &(this->synth->storage), current_scene,
@@ -2455,7 +2455,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss.str().c_str()), [this, where]() {
         // FIXME! This won't work on Linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-        promptForMiniEdit(c, "Enter new MPE pitch bend range:", "MPE Pitch Bend Range", where,
+        promptForMiniEdit(c, "Enter a new value:", "MPE Pitch Bend Range", where,
                           [this](const std::string &c) {
                               int newVal = ::atoi(c.c_str());
                               this->synth->storage.mpePitchBendRange = newVal;
@@ -2470,8 +2470,8 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss2.str().c_str()), [this, where]() {
         // FIXME! This won't work on linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-        promptForMiniEdit(c, "Enter default MPE pitch bend range:", "Default MPE Pitch Bend Range",
-                          where, [this](const std::string &s) {
+        promptForMiniEdit(c, "Enter a default value:", "Default MPE Pitch Bend Range", where,
+                          [this](const std::string &s) {
                               int newVal = ::atoi(s.c_str());
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::MPEPitchBendRange,
@@ -2747,16 +2747,15 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
             [this, middle_A, where]() {
-                char ma[256];
-                sprintf(ma, "Remap %s Frequency", middle_A.c_str());
-
                 char c[256];
                 snprintf(c, 256, "440.0");
-                promptForMiniEdit(c, "Remap MIDI note 69 frequency to: ", ma, where,
+                promptForMiniEdit(c, fmt::format("Enter a new frequency for {:s}:", middle_A),
+                                  fmt::format("Remap {:s} Frequency", middle_A), where,
                                   [this](const std::string &s) {
                                       float freq = ::atof(s.c_str());
                                       auto kb = Tunings::tuneA69To(freq);
                                       kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
+
                                       if (!this->synth->storage.remapToKeyboard(kb))
                                       {
                                           synth->storage.reportError("This .kbm file is not valid!",
@@ -2886,8 +2885,9 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
         std::string lab = "Zoom to " + std::to_string(s) + "%";
-
-        zoomSubMenu.addItem(lab, true, (s == zoomFactor), [this, s]() { resizeWindow(s); });
+        printf("%d | %.5f\n", s, zoomFactor);
+        zoomSubMenu.addItem(lab, true, (s == floor(zoomFactor + 0.5f)),
+                            [this, s]() { resizeWindow(s); });
     }
 
     zoomSubMenu.addSeparator();
@@ -2950,9 +2950,9 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         zoomSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."), [this, where]() {
                 char c[256];
-                snprintf(c, 256, "%d", (int)zoomFactor);
-                promptForMiniEdit(c, "Enter a default zoom level value:", "Set Default Zoom Level",
-                                  where, [this](const std::string &s) {
+                snprintf(c, 256, "%d", (int)floor(zoomFactor + 0.5f));
+                promptForMiniEdit(c, "Enter a new value:", "Set Default Zoom Level", where,
+                                  [this](const std::string &s) {
                                       int newVal = ::atoi(s.c_str());
                                       Surge::Storage::updateUserDefaultValue(
                                           &(synth->storage), Surge::Storage::DefaultZoom, newVal);
@@ -3056,8 +3056,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
         txt[0] = 0;
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter a default patch author name:", "Set Default Patch Author",
-                          where, [this](const std::string &s) {
+        promptForMiniEdit(txt, "Enter a default text:", "Set Default Patch Author", where,
+                          [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, s);
                           });
@@ -3071,7 +3071,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
         txt[0] = 0;
         if (Surge::Storage::isValidUTF8(s))
             strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter a default patch comment:", "Set Default Patch Comment", where,
+        promptForMiniEdit(txt, "Enter a default text:", "Set Default Patch Comment", where,
                           [this](const std::string &s) {
                               Surge::Storage::updateUserDefaultValue(
                                   &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
@@ -3405,7 +3405,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         skinSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."), [this, pxres]() {
                 this->promptForMiniEdit(
-                    std::to_string(pxres), "Enter new resolution:", "Layout Grid Resolution",
+                    std::to_string(pxres), "Enter a new value:", "Layout Grid Resolution",
                     juce::Point<int>{400, 400}, [this](const std::string &s) {
                         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                                Surge::Storage::LayoutGridResolution,
@@ -3585,7 +3585,7 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         char msn[256];
         msn[0] = 0;
         promptForMiniEdit(
-            msn, "Enter a name for the MIDI mapping:", "Save MIDI Mapping", where,
+            msn, "Enter the preset name:", "Save MIDI Mapping", where,
             [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); });
     });
 

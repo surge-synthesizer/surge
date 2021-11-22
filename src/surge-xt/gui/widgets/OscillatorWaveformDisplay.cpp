@@ -375,12 +375,12 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
         if (sge)
         {
-            sge->promptForMiniEdit(
-                c, "Enter a custom wavetable display name:", "Wavetable Display Name",
-                juce::Point<int>{}, [this](const std::string &s) {
-                    strncpy(this->oscdata->wavetable_display_name, s.c_str(), 256);
-                    this->repaint();
-                });
+            sge->promptForMiniEdit(c, "Enter a new name:", "Wavetable Display Name",
+                                   juce::Point<int>{}, [this](const std::string &s) {
+                                       strncpy(this->oscdata->wavetable_display_name, s.c_str(),
+                                               256);
+                                       this->repaint();
+                                   });
         }
     };
 
