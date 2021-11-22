@@ -39,7 +39,6 @@ public:
     virtual bool getVendorString(char* text);                     // Vendor info
     virtual VstInt32 getVendorVersion();                          // Version number
     virtual void processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames);
-    virtual void processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames);
     virtual void getProgramName(char *name);                      // read the name from the host
     virtual void setProgramName(char *name);                      // changes the name of the preset displayed in the host
 	virtual VstInt32 getChunk (void** data, bool isPreset);
