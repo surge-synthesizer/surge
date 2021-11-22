@@ -66,6 +66,7 @@ class ModulationEditor : public OverlayComponent,
     std::unique_ptr<juce::Viewport> viewport;
 
     void onSkinChanged() override;
+    void rebuildContents();
 
     void updateParameterById(const SurgeSynthesizer::ID &pid);
 

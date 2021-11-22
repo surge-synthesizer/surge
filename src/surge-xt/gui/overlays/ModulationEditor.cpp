@@ -1165,6 +1165,11 @@ ModulationEditor::~ModulationEditor()
     idleTimer->stopTimer();
 }
 
+void ModulationEditor::rebuildContents()
+{
+    if (synth && modContents)
+        modContents->rebuildFrom(synth);
+}
 /*
  * At a later date I can make this more efficient but for now if any modulation changes
  * in the main UI just rebuild the table.

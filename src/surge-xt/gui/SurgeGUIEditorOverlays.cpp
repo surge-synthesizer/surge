@@ -601,12 +601,50 @@ void SurgeGUIEditor::refreshOverlayWithOpenClose(OverlayTags tag)
         to = olw->isTornOut();
         tol = olw->currentTearOutLocation();
     }
-    closeOverlay(tag);
-    showOverlay(tag);
-    if (to)
+    /*
+     * Some editors can do better than a forced open-clsoe
+     */
+    bool couldRefresh = true;
+    switch (tag)
     {
-        olw = getOverlayWrapperIfOpen(tag);
-        if (olw)
-            olw->doTearOut(tol);
+    case TUNING_EDITOR:
+    {
+        auto tunol = dynamic_cast<Surge::Overlays::TuningOverlay *>(getOverlayIfOpen(tag));
+        if (tunol)
+        {
+            tunol->setTuning(synth->storage.currentTuning);
+        }
+        break;
+    }
+    case MODULATION_EDITOR:
+    {
+        auto modol = dynamic_cast<Surge::Overlays::ModulationEditor *>(getOverlayIfOpen(tag));
+
+        if (modol)
+        {
+            modol->rebuildContents();
+        }
+        break;
+    }
+    case WAVESHAPER_ANALYZER:
+    {
+        updateWaveshaperOverlay();
+        break;
+    }
+    default:
+        couldRefresh = false;
+        break;
+    }
+
+    if (!couldRefresh)
+    {
+        closeOverlay(tag);
+        showOverlay(tag);
+        if (to)
+        {
+            olw = getOverlayWrapperIfOpen(tag);
+            if (olw)
+                olw->doTearOut(tol);
+        }
     }
 }
