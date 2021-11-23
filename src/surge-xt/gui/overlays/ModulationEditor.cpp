@@ -139,6 +139,7 @@ struct ModulationSideControls : public juce::Component,
         {
             return;
         }
+
         g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
     }
 
@@ -177,7 +178,6 @@ struct ModulationSideControls : public juce::Component,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
 
-// TODO: Skin Colors
 struct ModulationListContents : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     ModulationEditor *editor{nullptr};
@@ -185,12 +185,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
     void paint(juce::Graphics &g) override
     {
-        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
         if (rows.empty())
         {
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
-            g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
-            g.drawText("No Modulations", getLocalBounds(), juce::Justification::centredTop);
+            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(20));
+            g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
+            g.drawText("No Modulations Assigned!", getLocalBounds(), juce::Justification::centred);
         }
     }
 
@@ -283,10 +282,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         bool firstInSort{false}, hasFollower{false};
         bool isTop{false}, isAfterTop{false}, isLast{false};
+
         void paint(juce::Graphics &g) override
         {
             static constexpr int indent = 1;
             auto b = getLocalBounds().withTrimmedLeft(indent);
+
+            g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
             g.setColour(skin->getColor(Colors::ModulationListOverlay::Border));
 
@@ -337,6 +339,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             auto xEnd = tbe.x;
             auto yStart = longArrow ? 0 : tbl.y + 2.0f;
             auto yEnd = tbe.y;
+
             if (contents->sortOrder == BY_SOURCE)
             {
                 g.drawLine(xStart, yStart, xStart, yEnd, 1);
@@ -345,14 +348,21 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             else
             {
                 if (firstInSort)
+                {
                     g.drawArrow({xStart, yEnd, xStart, yStart}, 1, 3, 4);
+                }
                 else
+                {
                     g.drawLine(xStart, yEnd, xStart, yStart, 1);
+                }
+
                 g.drawLine(xStart, yEnd, xEnd, yEnd, 1);
             }
 
             if (hasFollower)
+            {
                 g.drawLine(xStart, yEnd, xStart, getHeight(), 1);
+            }
 
             g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
 
@@ -369,7 +379,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             }
 
             if (contents->valueDisplay == NOMOD)
+            {
                 return;
+            }
 
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             auto sb = surgeLikeSlider->getBounds();
@@ -382,21 +394,37 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             auto cb = bb.withTrimmedLeft(over).withTrimmedRight(over);
 
             g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
+
             if (contents->valueDisplay & CTR)
+            {
                 g.drawFittedText(datum.mss.val, cb, juce::Justification::centredTop, 1, 0.1);
+            }
+
             if (contents->valueDisplay & MOD_ONLY)
+            {
+                g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
                 g.drawFittedText(datum.mss.dvalplus, rb, juce::Justification::topLeft, 1, 0.1);
+            }
 
             if ((contents->valueDisplay & EXTRAS) == 0)
+            {
                 return;
-            if (datum.isBipolar)
-                g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1, 0.1);
+            }
 
-            g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
+            if (datum.isBipolar)
+            {
+                g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
+                g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1, 0.1);
+            }
+
+            g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
             g.drawFittedText(datum.mss.valplus, rb, juce::Justification::bottomLeft, 1, 0.1);
 
             if (datum.isBipolar)
+            {
+                g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
                 g.drawFittedText(datum.mss.valminus, lb, juce::Justification::bottomRight, 1, 0.1);
+            }
         }
 
         static constexpr int controlsStart = 150;
@@ -409,6 +437,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             int sh = 26;
             int bY = ((height - bh) / 2) - 1;
             int sY = (height - sh) / 2 + 2;
+
             clearButton->setBounds(startX, bY, bh, bh);
             startX += bh + 2;
             muteButton->setBounds(startX, bY, bh, bh);
@@ -682,11 +711,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (sni == snm)
                 rows[i - 1]->hasFollower = true;
         }
+
         if (!rows.empty())
+        {
             rows.back()->isLast = true;
+        }
 
         bool needVSB = true;
         int sbw = 10;
+
         if (editor && editor->viewport && editor->viewport->getHeight() > 0)
         {
             if (ypos > editor->viewport->getHeight())
@@ -699,17 +732,23 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             }
             sbw = editor->viewport->getScrollBarThickness() + 2;
             editor->viewport->setScrollBarsShown(sbw, false);
+
+            if (rows.empty())
+            {
+                ypos = editor->viewport->getHeight();
+            }
         }
 
-        if (rows.empty())
-            ypos = 100;
         auto w = viewportWidth - (needVSB ? sbw : 0) - 3;
+
         setSize(w, ypos);
+
         for (const auto &r : rows)
         {
             auto b = r->getBounds().withWidth(w - 1);
             r->setBounds(b);
         }
+
         moved(); // to refresh the 'istop'
     }
 
@@ -729,9 +768,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(c);
 
             if (skc)
+            {
                 skc->setSkin(skin, associatedBitmapStore);
+            }
             else
+            {
                 std::cout << "Skipping an element " << std::endl;
+            }
         }
     }
 
@@ -1137,6 +1180,7 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
 }
 
 void ModulationEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
+
 void ModulationEditor::resized()
 {
     auto t = getTransform().inverted();

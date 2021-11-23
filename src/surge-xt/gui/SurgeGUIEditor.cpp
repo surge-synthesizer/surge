@@ -3674,24 +3674,24 @@ void SurgeGUIEditor::reloadFromSkin()
         bool tornOut = false;
         juce::Point<int> tearOutPos;
         auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+
         if (olw && olw->isTornOut())
         {
             tornOut = true;
             tearOutPos = olw->currentTearOutLocation();
         }
+
         showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+
         if (tornOut)
         {
             auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-            if (olw)
-                olw->doTearOut(tearOutPos);
-        }
-    }
 
-    // update waveshaper analyzer if opened
-    if (isAnyOverlayPresent(WAVESHAPER_ANALYZER))
-    {
-        showOverlay(SurgeGUIEditor::WAVESHAPER_ANALYZER);
+            if (olw)
+            {
+                olw->doTearOut(tearOutPos);
+            }
+        }
     }
 
     for (const auto &ol : juceOverlays)
