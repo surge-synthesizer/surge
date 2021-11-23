@@ -145,9 +145,8 @@
         <color id="dialog.textfield.text" value="lightgray"/>
         <color id="dialog.label.text" value="lightgray"/>
 
-        <color id="dialog.checkbox.background" value="white"/>
         <color id="dialog.checkbox.border" value="lightgray"/>
-        <color id="dialog.checkbox.tick" value="darkergray"/>
+        <color id="dialog.checkbox.tick" value="lightgray"/>
 
         <color id="effect.label.separator" value="#5E5E5E"/>
         <color id="effect.label.text" value="lightgray"/>
