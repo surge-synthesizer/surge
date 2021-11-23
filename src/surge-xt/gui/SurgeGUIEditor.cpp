@@ -3701,6 +3701,7 @@ void SurgeGUIEditor::reloadFromSkin()
         if (component)
         {
             component->setSkin(currentSkin, bitmapStore);
+            ol.second->repaint();
         }
     }
 

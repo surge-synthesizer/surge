@@ -19,6 +19,7 @@
 #include "SurgeGUIEditor.h"
 #include "OverlayComponent.h"
 #include "widgets/MainFrame.h"
+#include "SurgeJUCELookAndFeel.h"
 
 namespace Surge
 {
@@ -237,6 +238,8 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     dw->supressMoveUpdates = false;
     supressInteriorDecoration();
     tearOutParent = std::move(dw);
+    tearOutParent->setColour(juce::DocumentWindow::backgroundColourId,
+                             findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
 }
 
 juce::Point<int> OverlayWrapper::currentTearOutLocation()
@@ -367,6 +370,14 @@ void OverlayWrapper::onSkinChanged()
         skc->setSkin(skin, associatedBitmapStore);
     }
     icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
+    if (tearOutParent)
+    {
+        tearOutParent->setColour(
+            juce::DocumentWindow::backgroundColourId,
+            findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
+        tearOutParent->repaint();
+    }
+    repaint();
 }
 
 } // namespace Overlays
