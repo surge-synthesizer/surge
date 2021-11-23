@@ -200,9 +200,32 @@ void PatchStoreDialog::onSkinChanged()
                           skin->getColor(Colors::Dialog::Entry::Border));
     };
 
+    auto resetLabel = [this](const auto &label) {
+        label->setFont(skin->getFont(Fonts::PatchStore::Label));
+        label->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Label::Text));
+    };
+
     resetColors(nameEd);
     resetColors(authorEd);
     resetColors(catEd);
+    resetColors(commentEd);
+
+    resetLabel(nameEdL);
+    resetLabel(authorEdL);
+    resetLabel(catEdL);
+    resetLabel(commentEdL);
+    resetLabel(storeTuningLabel);
+
+#if HAS_TAGS_FIELD
+    resetLabel(tagEdL);
+    resetColors(tagEd);
+#endif
+
+    storeTuningButton->setColour(juce::ToggleButton::tickDisabledColourId,
+                                 skin->getColor(Colors::Dialog::Checkbox::Border));
+    storeTuningButton->setColour(juce::ToggleButton::tickColourId,
+                                 skin->getColor(Colors::Dialog::Checkbox::Tick));
+
     catEd->setColour(Surge::Widgets::TypeAhead::ColourIds::emptyBackgroundId,
                      skin->getColor(Colors::Dialog::Entry::Background));
     catEd->setColour(Surge::Widgets::TypeAhead::ColourIds::borderid,
@@ -213,25 +236,6 @@ void PatchStoreDialog::onSkinChanged()
     categoryProvider->bg = skin->getColor(Colors::Dialog::Entry::Background);
     categoryProvider->hl = categoryProvider->txt;
     categoryProvider->hlbg = skin->getColor(Colors::Dialog::Entry::Focus);
-
-#if HAS_TAGS_FIELD
-    resetColors(tagEd);
-#endif
-    resetColors(commentEd);
-
-    auto resetLabel = [this](const auto &label) {
-        label->setFont(skin->getFont(Fonts::PatchStore::Label));
-        label->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Label::Text));
-    };
-
-    resetLabel(nameEdL);
-    resetLabel(authorEdL);
-#if HAS_TAGS_FIELD
-    resetLabel(tagEdL);
-#endif
-    resetLabel(catEdL);
-    resetLabel(commentEdL);
-    resetLabel(storeTuningLabel);
 
     okButton->setSkin(skin, associatedBitmapStore);
     cancelButton->setSkin(skin, associatedBitmapStore);
