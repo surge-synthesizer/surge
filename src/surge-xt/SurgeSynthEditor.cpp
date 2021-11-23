@@ -140,6 +140,20 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
     tempoTypein->applyColourToAllText(
         findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId), true);
 
+    for (auto *p = getParentComponent(); p != nullptr; p = p->getParentComponent())
+    {
+        if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
+        {
+            dw->setName("Surge XT");
+
+            if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+            {
+                dw->setColour(juce::DocumentWindow::backgroundColourId,
+                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
+            }
+        }
+    }
+
     repaint();
 }
 
@@ -218,22 +232,7 @@ void SurgeSynthEditor::resized()
     }
 }
 
-void SurgeSynthEditor::parentHierarchyChanged()
-{
-    for (auto *p = getParentComponent(); p != nullptr; p = p->getParentComponent())
-    {
-        if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
-        {
-            dw->setName("Surge XT");
-
-            if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
-            {
-                dw->setColour(juce::DocumentWindow::backgroundColourId,
-                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
-            }
-        }
-    }
-}
+void SurgeSynthEditor::parentHierarchyChanged() { reapplySurgeComponentColours(); }
 
 void SurgeSynthEditor::IdleTimer::timerCallback() { ed->idle(); }
 

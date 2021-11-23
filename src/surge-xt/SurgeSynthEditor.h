@@ -43,6 +43,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
         SurgeSynthEditor *editor{nullptr};
     };
     void parentHierarchyChanged() override;
+    void resetWindowFromSkin();
 
     void paramsChangedCallback();
     void setEffectType(int i);
