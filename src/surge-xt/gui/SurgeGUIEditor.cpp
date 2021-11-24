@@ -5625,7 +5625,10 @@ void SurgeGUIEditor::activateFromCurrentFx()
 }
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-    if (key.getTextCharacter() == juce::KeyPress::tabKey)
+    auto textChar = key.getTextCharacter();
+    auto keyCode = key.getKeyCode();
+
+    if (textChar == juce::KeyPress::tabKey)
     {
         auto tk = Surge::Storage::getUserDefaultValue(
             &(this->synth->storage), Surge::Storage::DefaultKey::TabKeyArmsModulators, 0);
@@ -5645,7 +5648,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         return true;
     }
 
-    if (key.getKeyCode() == juce::KeyPress::escapeKey)
+    if (keyCode == juce::KeyPress::escapeKey)
     {
         Surge::Overlays::OverlayWrapper *topOverlay{nullptr};
 
@@ -5671,12 +5674,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         {
             int jog = 0;
 
-            if (key.getTextCharacter() == '+')
+            if (textChar == '+')
             {
                 jog = key.getModifiers().isShiftDown() ? 25 : 10;
             }
 
-            if (key.getTextCharacter() == '-')
+            if (textChar == '-')
             {
                 jog = key.getModifiers().isShiftDown() ? -25 : -10;
             }
@@ -5688,7 +5691,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
 
-            if (key.getTextCharacter() == '/')
+            if (textChar == '/')
             {
                 auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                                Surge::Storage::DefaultZoom, 0);
@@ -5700,32 +5703,32 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // prev-next category
-        if (key.getModifiers().isShiftDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
-                                                 key.getKeyCode() == juce::KeyPress::rightKey))
+        if (key.getModifiers().isShiftDown() &&
+            (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
             closeOverlay(SAVE_PATCH);
 
-            synth->incrementCategory(key.getKeyCode() == juce::KeyPress::rightKey);
+            synth->incrementCategory(keyCode == juce::KeyPress::rightKey);
 
             return true;
         }
 
         // prev-next patch
-        if (key.getModifiers().isCommandDown() && (key.getKeyCode() == juce::KeyPress::leftKey ||
-                                                   key.getKeyCode() == juce::KeyPress::rightKey))
+        if (key.getModifiers().isCommandDown() &&
+            (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
             closeOverlay(SAVE_PATCH);
 
             auto insideCategory = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
 
-            synth->incrementPatch(key.getKeyCode() == juce::KeyPress::rightKey, insideCategory);
+            synth->incrementPatch(keyCode == juce::KeyPress::rightKey, insideCategory);
 
             return true;
         }
 
         // toggle scene
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 's')
+        if (key.getModifiers().isAltDown() && textChar == 's')
         {
             // TODO fix scene assumption! If we ever increase number of scenes, we will need
             // individual key combinations for selecting a particular scene
@@ -5736,18 +5739,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // select oscillator
-        if (key.getModifiers().isAltDown() &&
-            (key.getTextCharacter() >= '1' && key.getTextCharacter() <= '1' + n_oscs - 1))
+        if (key.getModifiers().isAltDown() && (textChar >= '1' && textChar <= '1' + n_oscs - 1))
         {
             // juce::getTextCharacter() returns ASCII code of the char
             // so subtract the first one we need to get the ordinal number of the osc, 0-based
-            changeSelectedOsc(key.getTextCharacter() - '1');
+            changeSelectedOsc(textChar - '1');
 
             return true;
         }
 
         // store patch
-        if (key.getModifiers().isCommandDown() && key.getKeyCode() == 83) // 's'
+        if (key.getModifiers().isCommandDown() && keyCode == 83) // 's'
         {
             showOverlay(SurgeGUIEditor::SAVE_PATCH);
 
@@ -5755,7 +5757,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle patch search typeahead
-        if (key.getModifiers().isCommandDown() && key.getKeyCode() == 70) // 'f'
+        if (key.getModifiers().isCommandDown() && keyCode == 70) // 'f'
         {
             patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
             patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
@@ -5764,7 +5766,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle tuning editor
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 't')
+        if (key.getModifiers().isAltDown() && textChar == 't')
         {
             toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
 
@@ -5774,7 +5776,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle patch browser
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'p')
+        if (key.getModifiers().isAltDown() && textChar == 'p')
         {
             toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
 
@@ -5784,13 +5786,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle a valid editor (MSEG, formula...)
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'e')
+        if (key.getModifiers().isAltDown() && textChar == 'e')
         {
             return true;
         }
 
         // toggle setting patch as favorite
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'f')
+        if (key.getModifiers().isAltDown() && textChar == 'f')
         {
             setPatchAsFavorite(!isPatchFavorite());
             patchSelector->setIsFavorite(isPatchFavorite());
@@ -5799,7 +5801,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle modulation list
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'm')
+        if (key.getModifiers().isAltDown() && textChar == 'm')
         {
             toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
 
@@ -5809,7 +5811,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle debug console
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'd')
+        if (key.getModifiers().isAltDown() && textChar == 'd')
         {
             Surge::Debug::toggleConsole();
 
@@ -5817,7 +5819,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle virtual keyboard
-        if (key.getModifiers().isAltDown() && key.getTextCharacter() == 'k')
+        if (key.getModifiers().isAltDown() && textChar == 'k')
         {
             toggleVirtualKeyboard();
 
@@ -5825,7 +5827,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // open manual
-        if (key.getKeyCode() == juce::KeyPress::F1Key)
+        if (keyCode == juce::KeyPress::F1Key)
         {
             juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
 
@@ -5833,7 +5835,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // reload current skin
-        if (key.getKeyCode() == juce::KeyPress::F5Key)
+        if (keyCode == juce::KeyPress::F5Key)
         {
             refreshSkin();
 
@@ -5841,7 +5843,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle about screen
-        if (key.getKeyCode() == juce::KeyPress::F12Key)
+        if (keyCode == juce::KeyPress::F12Key)
         {
             if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
             {

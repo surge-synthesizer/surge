@@ -37,7 +37,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
     keyboard->setVelocity(midiKeyboardVelocity, true);
     keyboard->setOctaveForMiddleC(5 - mcValue);
-    keyboard->setKeyPressBaseOctave(5);
+    keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
     keyboard->setLowestVisibleKey(24);
     // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
     keyboard->setWantsKeyboardFocus(false);
@@ -332,8 +332,41 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
      */
     if (adapter->getShowVirtualKeyboard())
     {
+        auto textChar = key.getTextCharacter();
+
+        // shift VKB note input one octave up
+        if (textChar == 'x')
+        {
+            midiKeyboardOctave = std::clamp(midiKeyboardOctave + 1, 0, 9);
+            keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
+
+            return true;
+        }
+
+        // shift VKB note input one octave down
+        if (textChar == 'c')
+        {
+            midiKeyboardOctave = std::clamp(midiKeyboardOctave - 1, 0, 9);
+            keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
+
+            return true;
+        }
+
+        // set VKB velocity to basic dynamic levels (ppp, pp, p, mp, mf, f, ff, fff)
+        if (textChar >= '1' && textChar <= '8')
+        {
+            float const velJump = 16.f / 127.f;
+
+            // juce::getTextCharacter() returns ASCII code of the char
+            // so subtract the first one we need to get our factor
+            midiKeyboardVelocity = std::clamp(velJump * (textChar - '1' + 1), 0.f, 1.f);
+            keyboard->setVelocity(midiKeyboardVelocity, true);
+
+            return true;
+        }
+
         // reduce VKB velocity for QWERTY by 10%
-        if (key.getTextCharacter() == 'x')
+        if (textChar == '9')
         {
             midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.1f, 0.f, 1.f);
             keyboard->setVelocity(midiKeyboardVelocity, true);
@@ -342,7 +375,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
         }
 
         // increase VKB velocity for QWERTY by 10%
-        if (key.getTextCharacter() == 'c')
+        if (textChar == '0')
         {
             midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.1f, 0.f, 1.f);
             keyboard->setVelocity(midiKeyboardVelocity, true);
