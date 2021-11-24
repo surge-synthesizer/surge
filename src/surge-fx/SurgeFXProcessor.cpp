@@ -199,7 +199,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
             if (is_aligned(outL, 16) && is_aligned(outR, 16))
             {
-                audio_thread_surge_effect->process(outL, outR);
+                audio_thread_surge_effect->process_ringout(outL, outR, true);
             }
             else
             {
@@ -211,7 +211,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 memcpy(bufferL, inL, BLOCK_SIZE * sizeof(float));
                 memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
 
-                audio_thread_surge_effect->process(bufferL, bufferR);
+                audio_thread_surge_effect->process_ringout(bufferL, bufferR, true);
 
                 memcpy(outL, bufferL, BLOCK_SIZE * sizeof(float));
                 memcpy(outR, bufferR, BLOCK_SIZE * sizeof(float));
@@ -265,7 +265,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 }
                 copyGlobaldataSubset(storage_id_start, storage_id_end);
 
-                audio_thread_surge_effect->process(input_buffer[0], input_buffer[1]);
+                audio_thread_surge_effect->process_ringout(input_buffer[0], input_buffer[1], true);
                 memcpy(output_buffer, input_buffer, 2 * BLOCK_SIZE * sizeof(float));
                 input_position = 0;
                 output_position = 0;
