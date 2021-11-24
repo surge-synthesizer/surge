@@ -125,7 +125,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                 rpath = f.first.lexically_relative(storage->userFXPath).parent_path();
 
             auto startCatPath = rpath.begin();
-            if (*(startCatPath) == fx_type_names[t])
+            if (*(startCatPath) == fx_type_shortnames[t])
             {
                 startCatPath++;
             }
@@ -244,7 +244,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 
     int ti = fx->type.val.i;
 
-    auto storagePath = storage->userFXPath / fs::path(fx_type_names[ti]);
+    auto storagePath = storage->userFXPath / fs::path(fx_type_shortnames[ti]);
 
     if (!spp.empty())
         storagePath /= spp;

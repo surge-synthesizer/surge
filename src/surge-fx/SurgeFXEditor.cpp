@@ -58,7 +58,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setSize(600, 55 * 6 + 80 + topSection);
     setResizable(false, false); // For now
 
-    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge FX Bank");
+    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(28);
     fxNameLabel->setColour(juce::Label::textColourId,
                            surgeLookFeel->findColour(SurgeLookAndFeel::blue));

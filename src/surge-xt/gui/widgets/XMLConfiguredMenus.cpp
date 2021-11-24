@@ -474,7 +474,7 @@ void FxMenu::paint(juce::Graphics &g)
     g.setColour(fgc);
     auto r = getLocalBounds().reduced(2).withTrimmedLeft(4).withTrimmedRight(12);
     g.drawText(fxslot_names[current_fx], r, juce::Justification::centredLeft);
-    g.drawText(fx_type_names[fx->type.val.i], r, juce::Justification::centredRight);
+    g.drawText(fx_type_shortnames[fx->type.val.i], r, juce::Justification::centredRight);
 }
 
 void FxMenu::mouseDown(const juce::MouseEvent &event)
@@ -658,7 +658,7 @@ void FxMenu::pasteFX()
 {
     Surge::FxClipboard::pasteFx(storage, fxbuffer, fxClipboard);
 
-    selectedName = std::string("Copied ") + fx_type_names[fxbuffer->type.val.i];
+    selectedName = std::string("Copied ") + fx_type_shortnames[fxbuffer->type.val.i];
 
     notifyValueChanged();
 }
@@ -759,7 +759,7 @@ template <> struct XMLValue<FxMenu>
 {
     static std::string value(FxMenu *comp)
     {
-        std::string r = fx_type_names[comp->fx->type.val.i];
+        std::string r = fx_type_shortnames[comp->fx->type.val.i];
         r += " in ";
         r += fxslot_names[comp->current_fx];
         return r;

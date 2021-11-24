@@ -564,7 +564,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 {
                     if (sm != 0)
                     {
-                        res.emplace_back("FX", STRING, 0, fx_type_names[sm]);
+                        res.emplace_back("FX", STRING, 0, fx_type_shortnames[sm]);
                     }
                 }
             }
