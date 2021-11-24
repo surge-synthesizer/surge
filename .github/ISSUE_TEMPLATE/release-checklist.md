@@ -2,7 +2,7 @@
 name: Release Checklist
 about: Clone this template to make a release checklist for each release
 title: Release Checklist for version A.B.C
-labels: ''
+labels: 'Release Plan'
 assignees: ''
 
 ---
