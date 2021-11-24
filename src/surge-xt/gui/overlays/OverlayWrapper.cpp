@@ -27,14 +27,14 @@ namespace Overlays
 {
 OverlayWrapper::OverlayWrapper()
 {
-    closeButton = std::make_unique<juce::TextButton>("closeButton");
+    closeButton.reset(
+        getLookAndFeel().createDocumentWindowButton(juce::DocumentWindow::closeButton));
     closeButton->addListener(this);
-    closeButton->setButtonText("X");
     addChildComponent(*closeButton);
 
-    tearOutButton = std::make_unique<juce::TextButton>("tearOut");
+    tearOutButton.reset(
+        getLookAndFeel().createDocumentWindowButton(juce::DocumentWindow::maximiseButton));
     tearOutButton->addListener(this);
-    tearOutButton->setButtonText("^");
     addChildComponent(*tearOutButton);
 }
 
@@ -86,7 +86,7 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     primaryChild = std::move(c);
     primaryChild->setBounds(q);
 
-    auto buttonSize = titlebarSize - 2;
+    auto buttonSize = titlebarSize;
     auto closeButtonBounds =
         getLocalBounds().withHeight(buttonSize).withLeft(getWidth() - buttonSize).translated(-2, 2);
     auto tearOutButtonBounds = closeButtonBounds.translated(-buttonSize - 2, 0);
