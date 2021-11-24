@@ -53,7 +53,7 @@ struct OverlayWrapper : public juce::Component,
 
     std::unique_ptr<juce::Component> primaryChild;
     void addAndTakeOwnership(std::unique_ptr<juce::Component> c);
-    std::unique_ptr<juce::TextButton> closeButton, tearOutButton;
+    std::unique_ptr<juce::Button> closeButton, tearOutButton;
     void buttonClicked(juce::Button *button) override;
 
     juce::Point<int> mouseDownWithinTarget;

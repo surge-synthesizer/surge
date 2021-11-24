@@ -1206,7 +1206,9 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
     {
         auto r = steprect[i];
 
-        if (r.contains(event.position))
+        float rx0 = r.getX();
+        float rx1 = r.getX() + r.getWidth();
+        if (event.position.x >= rx0 && event.position.x < rx1)
         {
             draggedStep = i;
 
