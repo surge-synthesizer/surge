@@ -899,6 +899,8 @@ void PatchSelector::onSkinChanged()
 void PatchSelector::toggleTypeAheadSearch(bool b)
 {
     isTypeaheadSearchOn = b;
+    auto *sge = firstListenerOfType<SurgeGUIEditor>();
+
     if (isTypeaheadSearchOn)
     {
         storage->initializePatchDb();
@@ -914,6 +916,9 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
         typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
 
+        if (!typeAhead->isVisible() && sge)
+            sge->vkbForward++;
+
         typeAhead->setVisible(true);
         typeAhead->setEnabled(enable);
 
@@ -927,6 +932,8 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     }
     else
     {
+        if (typeAhead->isVisible() && sge)
+            sge->vkbForward--;
         typeAhead->setVisible(false);
     }
     repaint();
