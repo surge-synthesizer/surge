@@ -134,7 +134,7 @@ void EffectChooser::paint(juce::Graphics &g)
 void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r,
                                  const juce::Colour &txtcol, int fxid)
 {
-    auto fxname = fx_type_shortnames[fxid];
+    auto fxname = fx_type_acronyms[fxid];
 
     g.setColour(txtcol);
 
@@ -147,7 +147,7 @@ void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &
     }
     else
     {
-        g.drawText(fx_type_shortnames[fxid], r, juce::Justification::centred);
+        g.drawText(fx_type_acronyms[fxid], r, juce::Justification::centred);
     }
 }
 

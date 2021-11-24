@@ -3255,7 +3255,8 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%d voice%s", i, (i > 1 ? "s" : ""));
             break;
         case ct_fxtype:
-            snprintf(txt, TXT_SIZE, "%s", fx_type_names[limit_range(i, 0, (int)n_fx_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)]);
             break;
         case ct_reverbshape:
             snprintf(txt, TXT_SIZE, "Type %d", i + 1);

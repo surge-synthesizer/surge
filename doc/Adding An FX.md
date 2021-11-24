@@ -21,7 +21,9 @@ Note that we have chosen the effect ID `fxt_myeffect` for our example effect.
 3. In SurgeStorage.h:
 * Add an enum to `fx_type` with your effect ID.
 * Add the name of your effect to `fx_type_names`.
-* Add a 3 or 4 character shorthand name of your effect to `fx_type_shortnames`.
+* Add the shorter name of your effect to `fx_type_shortnames`. This is used in Surge XT effect type menu itself (right side),
+  so make sure it fits there!
+* Add a 3 or 4 character acronym of your effect to `fx_type_acronyms`.
   Verify if this fits properly in the FX grid boxes on the GUI!
 
 4. In `resources/surge-shared/configuration.xml` add your effect to the `fx` XML group.
