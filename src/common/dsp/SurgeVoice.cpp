@@ -71,16 +71,27 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         res = (1.f - frac) * b0 + frac * b1;
     }
 
-    res = SurgeVoice::channelKeyEquvialent(res, channel, storage);
+    res = SurgeVoice::channelKeyEquvialent(res, channel, storage, false);
 
     return res;
 }
 
-float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *storage)
+float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *storage,
+                                       bool remapKeyForTuning)
 {
     float res = key;
     if (storage->mapChannelToOctave)
     {
+        if (remapKeyForTuning && !storage->isStandardTuning &&
+            storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+        {
+            auto idx = (int)floor(res);
+            float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+            float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+            float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+            res = (1.f - frac) * b0 + frac * b1;
+        }
+
         float shift;
         if (channel > 7)
         {
