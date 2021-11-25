@@ -63,12 +63,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     else if (!storage->isStandardTuning &&
              storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
     {
-        // Then we tune here
-        auto idx = (int)floor(res);
-        float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
-        float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
-        float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
-        res = (1.f - frac) * b0 + frac * b1;
+        res = storage->remapKeyInMidiOnlyMode(res);
     }
 
     res = SurgeVoice::channelKeyEquvialent(res, channel, storage, false);
@@ -82,14 +77,9 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *sto
     float res = key;
     if (storage->mapChannelToOctave)
     {
-        if (remapKeyForTuning && !storage->isStandardTuning &&
-            storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+        if (remapKeyForTuning)
         {
-            auto idx = (int)floor(res);
-            float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
-            float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
-            float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
-            res = (1.f - frac) * b0 + frac * b1;
+            res = storage->remapKeyInMidiOnlyMode(res);
         }
 
         float shift;
@@ -160,7 +150,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
         (scene->portamento.val.f == scene->portamento.val_min.f))
         state.portasrc_key = state.getPitch(storage);
     else
-        state.portasrc_key = storage->last_key[scene_id];
+    {
+        state.portasrc_key = storage->remapKeyInMidiOnlyMode(storage->last_key[scene_id]);
+    }
     state.priorpkey = state.portasrc_key;
 
     storage->last_key[scene_id] = key;

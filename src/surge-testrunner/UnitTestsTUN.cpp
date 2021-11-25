@@ -1433,23 +1433,24 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
     };
     // clang-format on
 
-    for (auto tuningstyle : {SurgeStorage::RETUNE_ALL, SurgeStorage::RETUNE_MIDI_ONLY})
+    // for (auto tuningstyle : {SurgeStorage::RETUNE_ALL, SurgeStorage::RETUNE_MIDI_ONLY})
+    auto tuningstyle = SurgeStorage::RETUNE_MIDI_ONLY;
     {
         for (auto mode : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
         {
             for (const auto &c : cases)
             {
-                DYNAMIC_SECTION("Mode " << mode << " : Pri : " << c.pri << " : Case : " << c.name
-                                        << " : Scale : ED2-" << c.scaleLen
-                                        << " TuningApplication : " << tuningstyle
-                                        << (c.should ? "" : " - SKIPPING"))
+                DYNAMIC_SECTION("Mode "
+                                << mode << " : Pri : " << c.pri << " : Case : " << c.name
+                                << " : Scale : ED2-" << c.scaleLen << " TuningApplication : "
+                                << (tuningstyle == SurgeStorage::RETUNE_ALL ? "All" : "MIDI")
+                                << (c.should ? "" : " - SKIPPING"))
                 {
                     auto surge = surgeOnSine();
                     surge->storage.getPatch().scene[0].monoVoicePriorityMode = c.pri;
                     surge->storage.getPatch().scene[0].polymode.val.i = mode;
                     surge->storage.mapChannelToOctave = true;
-                    surge->storage.tuningApplicationMode = tuningstyle;
-                    surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+                    surge->storage.setTuningApplicationMode(tuningstyle);
                     surge->storage.retuneToScale(Tunings::evenDivisionOfSpanByM(2, c.scaleLen));
 
                     int len = BLOCK_SIZE * 20;
@@ -1493,6 +1494,101 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
                     else
                         REQUIRE_FALSE(freq == Approx(c.res).margin(1));
                 }
+            }
+        }
+    }
+}
+
+TEST_CASE("Portamento With Repeated Notes", "[tun]")
+{
+    for (auto tuningstyle : {SurgeStorage::RETUNE_ALL, SurgeStorage::RETUNE_MIDI_ONLY})
+    {
+        DYNAMIC_SECTION("Repeated note with porta in "
+                        << (tuningstyle == SurgeStorage::RETUNE_ALL ? "All" : "MIDI"))
+        {
+            auto surge = surgeOnSine();
+            surge->storage.setTuningApplicationMode(tuningstyle);
+            surge->storage.retuneToScale(Tunings::evenDivisionOfSpanByM(2, 31));
+            surge->storage.getPatch().scene[0].portamento.val.f = 1;
+
+            namespace hs = Surge::Headless;
+            auto events = hs::playerEvents_t();
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NOTE_ON;
+                on.channel = 0;
+                on.data1 = 90;
+                on.data2 = 100;
+                on.atSample = 0;
+                events.push_back(on);
+            }
+
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NOTE_OFF;
+                on.channel = 0;
+                on.data1 = 90;
+                on.data2 = 100;
+                on.atSample = 44100 * 3;
+                events.push_back(on);
+            }
+
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NO_EVENT;
+                on.channel = 0;
+                on.data1 = 90;
+                on.data2 = 100;
+                on.atSample = 44100 * 3 + BLOCK_SIZE * 10;
+                events.push_back(on);
+            }
+
+            float *buffer;
+            int nS, nC;
+            hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+            delete[] buffer;
+
+            for (int i = 0; i < 10; ++i)
+            {
+                events.clear();
+                {
+                    auto on = hs::Event();
+                    on.type = hs::Event::NOTE_ON;
+                    on.channel = 0;
+                    on.data1 = 90;
+                    on.data2 = 100;
+                    on.atSample = 0;
+                    events.push_back(on);
+                }
+
+                {
+                    auto on = hs::Event();
+                    on.type = hs::Event::NOTE_OFF;
+                    on.channel = 0;
+                    on.data1 = 90;
+                    on.data2 = 100;
+                    on.atSample = BLOCK_SIZE * 80;
+                    events.push_back(on);
+                }
+                {
+                    auto on = hs::Event();
+                    on.type = hs::Event::NO_EVENT;
+                    on.channel = 0;
+                    on.data1 = 90;
+                    on.data2 = 100;
+                    on.atSample = BLOCK_SIZE * 90;
+                    events.push_back(on);
+                }
+                hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+                int nSTrim = (int)(nS / 2 * 0.8);
+                int start = (int)(nS / 2 * 0.05);
+                auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+                delete[] buffer;
+
+                REQUIRE(freq ==
+                        Approx(surge->storage.currentTuning.frequencyForMidiNote(90)).margin(2));
             }
         }
     }

@@ -1266,6 +1266,8 @@ class alignas(16) SurgeStorage
         return tuningPitchInv;
     } // Obviously that's the inverse of the above
 
+    float remapKeyInMidiOnlyMode(float inKey);
+
     void setTuningApplicationMode(const TuningApplicationMode m);
 
     void initialize_oddsound();

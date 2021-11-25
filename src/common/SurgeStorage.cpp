@@ -2342,6 +2342,19 @@ void SurgeStorage::reportError(const std::string &msg, const std::string &title)
         l->onSurgeError(msg, title);
 }
 
+float SurgeStorage::remapKeyInMidiOnlyMode(float res)
+{
+    if (!isStandardTuning && tuningApplicationMode == RETUNE_MIDI_ONLY)
+    {
+        auto idx = (int)floor(res);
+        float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+        float b0 = currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
+        float b1 = currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
+        res = (1.f - frac) * b0 + frac * b1;
+    }
+    return res;
+}
+
 namespace Surge
 {
 namespace Storage
