@@ -16,7 +16,7 @@ function(surge_juce_package target product_name)
   foreach(format ${SURGE_JUCE_FORMATS})
     add_dependencies(${pkg_target} ${target}_${format})
   endforeach()
-  foreach(format AU Standalone VST VST3)
+  foreach(format AU LV2 Standalone VST VST3)
     if(NOT SURGE_COPY_TO_PRODUCTS)
       # Add the copy rule to the pkg_target
       if(TARGET ${target}_${format})
