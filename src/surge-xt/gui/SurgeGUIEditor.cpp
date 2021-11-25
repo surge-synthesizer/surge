@@ -4591,6 +4591,27 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
             hsw->setHoverOnSwitchDrawable(std::get<2>(drawables));
 
+            auto bg = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::IMAGE);
+            if (bg.has_value())
+            {
+                auto hdb = bitmapStore->getImageByStringID(*bg);
+                hsw->setSwitchDrawable(hdb);
+            }
+
+            auto ho = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::HOVER_IMAGE);
+            if (ho.has_value())
+            {
+                auto hdb = bitmapStore->getImageByStringID(*ho);
+                hsw->setHoverSwitchDrawable(hdb);
+            }
+
+            auto hoo = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::HOVER_ON_IMAGE);
+            if (hoo.has_value())
+            {
+                auto hdb = bitmapStore->getImageByStringID(*hoo);
+                hsw->setHoverOnSwitchDrawable(hdb);
+            }
+
             hsw->setBounds(rect);
             hsw->setSkin(currentSkin, bitmapStore, skinCtrl);
 
