@@ -142,6 +142,7 @@ class alignas(16) SurgeVoice
     void set_path(bool osc1, bool osc2, bool osc3, int FMmode, bool ring12, bool ring23,
                   bool noise);
     int routefilter(int);
+    void retriggerPortaIfKeyChanged();
 
     LFOModulationSource lfo[6];
 
