@@ -5775,6 +5775,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             return true;
         }
 
+#if INCLUDE_PATCH_BROWSER
         // toggle patch browser
         if (key.getModifiers().isAltDown() && textChar == 'p')
         {
@@ -5784,8 +5785,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+#endif
 
-        // toggle a valid editor (MSEG, formula...)
+        // toggle an applicable LFO editor (MSEG, formula...)
         if (key.getModifiers().isAltDown() && textChar == 'e')
         {
             return true;
