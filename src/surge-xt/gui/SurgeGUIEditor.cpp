@@ -2533,19 +2533,6 @@ juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(const juce::Point<int> &
 
 juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bool showhelp)
 {
-    auto tuningSubMenu = juce::PopupMenu();
-
-    auto hu = helpURLForSpecial("tun-menu");
-
-    if (hu != "" && showhelp)
-    {
-        auto lurl = fullyResolvedHelpURL(hu);
-
-        addHelpHeaderTo("Tuning", lurl, tuningSubMenu);
-
-        tuningSubMenu.addSeparator();
-    }
-
     bool isTuningEnabled = !synth->storage.isStandardTuning;
     bool isScaleEnabled = !synth->storage.isStandardScale;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
@@ -2553,32 +2540,54 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     bool isOddsoundOn =
         this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client;
 
-    if (isScaleEnabled)
+    auto tuningSubMenu = juce::PopupMenu();
+    auto hu = helpURLForSpecial("tun-menu");
+
+    if (hu != "" && showhelp)
     {
-        auto tuningLabel = Surge::GUI::toOSCaseForMenu("Current Tuning: ");
+        auto lurl = fullyResolvedHelpURL(hu);
 
-        if (synth->storage.currentScale.description.empty())
-        {
-            tuningLabel += path_to_string(fs::path(synth->storage.currentScale.name).stem());
-        }
-        else
-        {
-            tuningLabel += synth->storage.currentScale.description;
-        }
+        addHelpHeaderTo(isOddsoundOn ? "Tuning (MTS-ESP)" : "Tuning", lurl, tuningSubMenu);
 
-        tuningSubMenu.addItem(tuningLabel, false, false, []() {});
+        tuningSubMenu.addSeparator();
     }
 
-    if (isMappingEnabled)
+    if (isOddsoundOn)
     {
-        auto mappingLabel = Surge::GUI::toOSCaseForMenu("Current Keyboard Mapping: ");
-        mappingLabel += path_to_string(fs::path(synth->storage.currentMapping.name).stem());
+        std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
 
-        tuningSubMenu.addItem(mappingLabel, false, false, []() {});
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Current Tuning: ") + mtsScale, false,
+                              false, []() {});
+
+        tuningSubMenu.addSeparator();
     }
 
     if (!isOddsoundOn)
     {
+        if (isScaleEnabled)
+        {
+            auto tuningLabel = Surge::GUI::toOSCaseForMenu("Current Tuning: ");
+
+            if (synth->storage.currentScale.description.empty())
+            {
+                tuningLabel += path_to_string(fs::path(synth->storage.currentScale.name).stem());
+            }
+            else
+            {
+                tuningLabel += synth->storage.currentScale.description;
+            }
+
+            tuningSubMenu.addItem(tuningLabel, false, false, []() {});
+        }
+
+        if (isMappingEnabled)
+        {
+            auto mappingLabel = Surge::GUI::toOSCaseForMenu("Current Keyboard Mapping: ");
+            mappingLabel += path_to_string(fs::path(synth->storage.currentMapping.name).stem());
+
+            tuningSubMenu.addItem(mappingLabel, false, false, []() {});
+        }
+
         if (isTuningEnabled || isMappingEnabled)
         {
             tuningSubMenu.addSeparator();
@@ -2590,17 +2599,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
 
         tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
-                              (!this->synth->storage.isStandardTuning) && !isOddsoundOn, false,
-                              [this]() {
+                              this->synth->storage.isStandardTuning, false, [this]() {
                                   this->synth->storage.retuneTo12TETScaleC261Mapping();
                                   this->synth->storage.resetTuningToggle();
-                                  this->synth->refresh_editor = true;
-                                  tuningChanged();
-                              });
-
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
-                              (!this->synth->storage.isStandardScale), false, [this]() {
-                                  this->synth->storage.retuneTo12TETScale();
                                   this->synth->refresh_editor = true;
                                   tuningChanged();
                               });
@@ -2612,9 +2613,16 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                   tuningChanged();
                               });
 
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Scale (12-TET)"),
+                              (!this->synth->storage.isStandardScale), false, [this]() {
+                                  this->synth->storage.retuneTo12TETScale();
+                                  this->synth->refresh_editor = true;
+                                  tuningChanged();
+                              });
+
         tuningSubMenu.addSeparator();
 
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .scl Scale..."), [this]() {
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load .scl Tuning..."), [this]() {
             auto cb = [this](std::string sf) {
                 std::string sfx = ".scl";
                 if (sf.length() >= sfx.length())
@@ -2740,6 +2748,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     });
             });
 
+        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
+            auto path = this->synth->storage.datapath / "tuning_library";
+            Surge::GUI::openFileOrFolder(path);
+        });
+
+        tuningSubMenu.addSeparator();
+
         int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                           Surge::Storage::MiddleC, 1);
         string middle_A = "A" + to_string(oct);
@@ -2787,10 +2802,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         tuningSubMenu.addSeparator();
     }
-    else
-    {
-        tuningSubMenu.addSectionHeader("MTS-ESP Is Controlling Tuning");
-    }
 
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
@@ -2801,7 +2812,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                                !tsMode);
         if (tsMode)
         {
-            // We toggled to false
             this->synth->storage.deinitialize_oddsound();
         }
         else
@@ -2827,6 +2837,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             MTS_DeregisterClient(q);
         });
 
+        tuningSubMenu.addSeparator();
+
         tuningSubMenu.addItem(
             Surge::GUI::toOSCaseForMenu("Query Tuning at Note On Only"), true,
             (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
@@ -2841,19 +2853,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 }
             });
 
-        std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
-
-        tuningSubMenu.addItem(mtsScale, false, false, []() {});
-
         return tuningSubMenu;
     }
-
-    tuningSubMenu.addSeparator();
-
-    tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
-        auto path = this->synth->storage.datapath / "tuning_library";
-        Surge::GUI::openFileOrFolder(path);
-    });
 
     return tuningSubMenu;
 }
