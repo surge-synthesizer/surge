@@ -43,7 +43,7 @@
  * vintage ladder are no-ops in remap) at the cost of an oddly ordered filter name list. That's the
  * right choice, but when you curse me for the odd name list, you can come back and read this
  * comment and feel slightly better. Finally, items which split and changed meaning got a new name
- * (so fut_comb is now fut_comp_pos and fut_comb_neg, say), which requires us to go and fix up any
+ * (so fut_comb is now fut_comb_pos and fut_comb_neg, say), which requires us to go and fix up any
  * code which refered to the old values.
  */
 
@@ -107,7 +107,7 @@ enum fu_type
     fut_resonancewarp_n,
     fut_resonancewarp_bp,
     fut_resonancewarp_ap,
-    fut_threeler,
+    fut_tripole,
     n_fu_types,
 };
 
@@ -151,7 +151,7 @@ const char fut_names[n_fu_types][32] = {
     "N Res Warp",        // fut_resonancewarp_n
     "BP Res Warp",       // fut_resonancewarp_bp
     "FX Res Warp AP",    // fut_resonancewarp_ap
-    "FX Threeler",       // fut_threeler
+    "FX Tri-pole",       // fut_tripole
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -191,7 +191,7 @@ const char fut_menu_names[n_fu_types][32] = {
     "Resonance Warp", // N
     "Resonance Warp", // BP
     "Resonance Warp Allpass",
-    "Threeler",
+    "Tri-pole",
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -261,14 +261,14 @@ const char fut_nlf_saturators[4][16] = {
     "Sine",
 };
 
-const char fut_threeler_subtypes[4][32] = {
+const char fut_tripole_subtypes[4][32] = {
     "Low -> Low -> Low",
     "Low -> High -> Low",
     "High -> Low -> High",
     "High -> High -> High",
 };
 
-const char fut_threeler_output_stage[4][16]{
+const char fut_tripole_output_stage[4][16]{
     "First",
     "Second",
     "Third",
@@ -308,7 +308,7 @@ const int fut_subcount[n_fu_types] = {
     8,  // fut_resonancewarp_n
     8,  // fut_resonancewarp_bp
     8,  // fut_resonancewarp_ap
-    12, // fut_threeler
+    12, // fut_tripole
 };
 
 enum fu_subtype
@@ -360,7 +360,7 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         p(fut_cutoffwarp_n, "Notch");
         p(fut_resonancewarp_n, "Notch");
 
-        p(fut_threeler, "Multi");
+        p(fut_tripole, "Multi");
 
         p(fut_apf, "Effect");
         p(fut_cutoffwarp_ap, "Effect");
@@ -447,7 +447,7 @@ const int fut_glyph_index[n_fu_types][2] = {
     {4, nrow},  // fut_resonancewarp_n
     {4, bprow}, // fut_resonancewarp_bp
     {0, fxrow}, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
-    {0, fxrow}, // fut_threeler (also temporarily set to just use the regular AP glyph)
+    {0, fxrow}, // fut_tripole (also temporarily set to just use the regular AP glyph)
 };
 
 enum ws_type

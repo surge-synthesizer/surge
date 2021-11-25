@@ -3343,13 +3343,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                             case fut_SNH:
                                 snprintf(txt, TXT_SIZE, "%s", fut_def_subtypes[i]);
                                 break;
-                            case fut_threeler:
+                            case fut_tripole:
                                 // "i & 3" selects the lower two bits that represent the filter
                                 // mode.
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // output stage.
-                                snprintf(txt, TXT_SIZE, "%s, %s", fut_threeler_subtypes[i & 3],
-                                         fut_threeler_output_stage[(i >> 2) & 3]);
+                                snprintf(txt, TXT_SIZE, "%s, %s", fut_tripole_subtypes[i & 3],
+                                         fut_tripole_output_stage[(i >> 2) & 3]);
                                 break;
                             case n_fu_types:
                                 snprintf(txt, TXT_SIZE, "ERROR");

@@ -282,7 +282,7 @@ static inline __m128 res_deriv_ps(__m128 x)
 }
 } // namespace ResWaveshaper
 
-namespace ThreelerFilter
+namespace TriPoleFilter
 {
 enum thr_coeffs
 {
@@ -476,4 +476,4 @@ __m128 process(QuadFilterUnitState *__restrict f, __m128 in)
         return M(F(out_gain), estimate);
     };
 }
-} // namespace ThreelerFilter
+} // namespace TriPoleFilter

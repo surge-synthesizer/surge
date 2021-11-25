@@ -8,7 +8,7 @@
 #include "filters/DiodeLadder.h"
 #include "filters/NonlinearFeedback.h"
 #include "filters/NonlinearStates.h"
-#include "filters/ThreelerFilter.h"
+#include "filters/TriPoleFilter.h"
 
 #include "DebugHelpers.h"
 
@@ -162,8 +162,8 @@ void FilterCoefficientMaker::MakeCoeffs(float Freq, float Reso, int Type, int Su
         NonlinearStatesFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
         break;
 
-    case fut_threeler:
-        ThreelerFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
+    case fut_tripole:
+        TriPoleFilter::makeCoefficients(this, Freq, Reso, Type, storageI);
         break;
 
     case n_fu_types:

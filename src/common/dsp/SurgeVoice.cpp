@@ -1170,7 +1170,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
                 case fut_resonancewarp_n:
                 case fut_resonancewarp_bp:
                 case fut_resonancewarp_ap:
-                case fut_threeler:
+                case fut_tripole:
                     // subtype is stored in WP[0] for the entire quad.
                     // this is fine because integer parameters like this are not modulatable, and
                     // quads are only parallel across voices, so the quad would have identical
@@ -1211,7 +1211,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
                     case fut_resonancewarp_n:
                     case fut_resonancewarp_bp:
                     case fut_resonancewarp_ap:
-                    case fut_threeler:
+                    case fut_tripole:
                         Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
                         break;
                     default:
