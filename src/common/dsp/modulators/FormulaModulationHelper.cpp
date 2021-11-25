@@ -283,16 +283,26 @@ end
 
                 lua_pushstring(s.L, "macros");
                 lua_gettable(s.L, -2);
-                for (int i = 0; i < n_customcontrollers; ++i)
+                if (lua_isboolean(s.L, -1))
                 {
-                    lua_pushnumber(s.L, i + 1);
-                    lua_gettable(s.L, -2);
-                    bool res = false;
-                    if (lua_isboolean(s.L, -1))
-                        res = lua_toboolean(s.L, -1);
-                    lua_pop(s.L, 1);
-                    s.subAnyMacro = s.subAnyMacro | res;
-                    s.subMacros[i] = res;
+                    auto b = lua_toboolean(s.L, -1);
+                    s.subAnyMacro = b;
+                    for (int i = 0; i < n_customcontrollers; ++i)
+                        s.subMacros[i] = b;
+                }
+                else if (lua_istable(s.L, -1))
+                {
+                    for (int i = 0; i < n_customcontrollers; ++i)
+                    {
+                        lua_pushnumber(s.L, i + 1);
+                        lua_gettable(s.L, -2);
+                        bool res = false;
+                        if (lua_isboolean(s.L, -1))
+                            res = lua_toboolean(s.L, -1);
+                        lua_pop(s.L, 1);
+                        s.subAnyMacro = s.subAnyMacro | res;
+                        s.subMacros[i] = res;
+                    }
                 }
                 lua_pop(s.L, 1);
 
