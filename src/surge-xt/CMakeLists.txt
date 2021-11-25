@@ -154,23 +154,23 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
   set(SURGE_JUCE_ACCESSIBLE TRUE)
-  message(STATUS "Including JUCE Accessibility Support")
+  message(STATUS "Including JUCE accessibility support")
 else()
-  message(STATUS "No JUCE Accessibility Support in this version")
+  message(STATUS "No JUCE accessibility support in this version")
 endif()
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_processors/processors/juce_AudioProcessorEditorHostContext.h)
   set(SURGE_JUCE_HOST_CONTEXT TRUE)
-  message(STATUS "Including JUCE Host Context Support")
+  message(STATUS "Including JUCE VST3 host-side context menu support")
 else()
-  message(STATUS "No JUCE Host Context Support in this version")
+  message(STATUS "No JUCE VST3 host-side context menu support in this version")
 endif()
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_processors/utilities/juce_VST3ClientExtensions.h)
   set(SURGE_JUCE_VST3_EXTENSIONS TRUE)
-  message(STATUS "Including JUCE VST3 Client Extensions")
+  message(STATUS "Including JUCE VST3 client extensions")
 else()
-  message(STATUS "No JUCE VST3 Client Extensions")
+  message(STATUS "No JUCE VST3 client extensions")
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC

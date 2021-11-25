@@ -16,7 +16,7 @@ function(surge_juce_package target product_name)
   foreach(format ${SURGE_JUCE_FORMATS})
     add_dependencies(${pkg_target} ${target}_${format})
   endforeach()
-  foreach(format AU Standalone VST3)
+  foreach(format AU LV2 Standalone VST VST3)
     if(NOT SURGE_COPY_TO_PRODUCTS)
       # Add the copy rule to the pkg_target
       if(TARGET ${target}_${format})
@@ -24,7 +24,7 @@ function(surge_juce_package target product_name)
           TARGET ${pkg_target}
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          COMMAND echo "${target}: Re-locating ${format} components"
+          COMMAND echo "${target}: Relocating ${format} component"
           COMMAND ${CMAKE_COMMAND} -E copy_directory ${output_dir}/${format} ${SURGE_PRODUCT_DIR}/
         )
       endif()
@@ -35,7 +35,7 @@ function(surge_juce_package target product_name)
           TARGET ${target}_${format}
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          COMMAND echo "${target}: Re-locating ${format} components"
+          COMMAND echo "${target}: Relocating ${format} component"
           COMMAND ${CMAKE_COMMAND} -E copy_directory ${output_dir}/${format} ${SURGE_PRODUCT_DIR}/
         )
       endif()

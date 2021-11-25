@@ -114,13 +114,13 @@ low-latency audio driver.
 Unfortunately, due to licensing conflicts, binaries of Surge that are built with ASIO **may not** be re-distributed.
 However, you can build Surge with ASIO for your own personal use, provided you do not re-distribute those builds.
 
-If you already have a copy of the ASIO SDK, simply set the following environment variable:
+If you already have a copy of the ASIO SDK, simply set the following environment variable and you're good to go!
 
 ```
 set ASIOSDK_DIR=c:\path\to\asio
 ```
 
-If you do not have a copy of the ASIO SDK, CMake can download it for you, and allow you to build with ASIO under your
+If you DON'T have a copy of the ASIO SDK at hand, CMake can download it for you, and allow you to build with ASIO under your
 own personal license. To enable this functionality, run your CMake configuration command as follows:
 
 ```
