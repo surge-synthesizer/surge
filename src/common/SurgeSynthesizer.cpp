@@ -13,6 +13,8 @@
 ** open source in September 2018.
 */
 
+#define NOMINMAX
+
 #include "SurgeSynthesizer.h"
 #include "DSPUtils.h"
 #include <ctime>
