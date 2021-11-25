@@ -164,6 +164,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool canRemoveBus(bool isInput) const override { return canRemoveBusValue; }
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
     void applyMidi(const juce::MidiMessageMetadata &);
+    bool supportsMPE() const override { return true; }
 
     //==============================================================================
     juce::AudioProcessorEditor *createEditor() override;
