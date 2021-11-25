@@ -151,7 +151,16 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
         state.portasrc_key = state.getPitch(storage);
     else
     {
-        state.portasrc_key = storage->remapKeyInMidiOnlyMode(storage->last_key[scene_id]);
+        float lk = storage->last_key[scene_id];
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        {
+            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
+            state.portasrc_key = lk;
+        }
+        else
+        {
+            state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
+        }
     }
     state.priorpkey = state.portasrc_key;
 
