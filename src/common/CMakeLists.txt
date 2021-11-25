@@ -193,8 +193,8 @@ add_library(${PROJECT_NAME}
   dsp/filters/NonlinearStates.h
   dsp/filters/OBXDFilter.cpp
   dsp/filters/OBXDFilter.h
-  dsp/filters/ThreelerFilter.cpp
-  dsp/filters/ThreelerFilter.h
+  dsp/filters/TriPoleFilter.cpp
+  dsp/filters/TriPoleFilter.h
   dsp/filters/VectorizedSVFilter.cpp
   dsp/filters/VectorizedSVFilter.h
   dsp/filters/VintageLadders.cpp
