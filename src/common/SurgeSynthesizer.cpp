@@ -20,6 +20,7 @@
 #if MAC || LINUX
 #include <pthread.h>
 #else
+#define NOMINMAX
 #include <windows.h>
 #include <process.h>
 #endif
