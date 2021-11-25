@@ -4,7 +4,7 @@ option(SURGE_BUILD_FX "Build Surge FX bank" ON)
 option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
-option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to System Plugin area after build" OFF)
+option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
 
 set(SURGE_JUCE_PATH "${CMAKE_SOURCE_DIR}/libs/JUCE" CACHE STRING "Path to JUCE library source tree")
 
@@ -63,28 +63,25 @@ if(DEFINED ENV{VST2SDK_DIR})
   file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
   juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
   list(APPEND SURGE_JUCE_FORMATS VST)
-  message(STATUS "JUCE VST2 SDK Path is $ENV{VST2SDK_DIR}")
+  message(STATUS "VST2 SDK path is $ENV{VST2SDK_DIR}")
   # VST2 headers are invalid UTF-8
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
 endif()
 
 if(JUCE_SUPPORTS_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
-  message(STATUS "Including JUCE LV2 support. You will need a different JUCE than the submodule")
-  message(STATUS "Turning off deprecation warning to error since JUCE LV2 uses deprecated APIs")
+  message(STATUS "Including JUCE LV2 support. You will need the LV2 fork of JUCE!")
+  message(STATUS "Turning off deprecation warning to error, since JUCE LV2 uses deprecated APIs")
   add_compile_options(-Wno-error=deprecated-declarations)
 endif()
 
-if(BUILD_USING_MY_ASIO_LICENSE)
-  message(STATUS "** BUILD WITH YOUR ASIO LICENSE **")
-  message(STATUS "   Downloading ASIO SDK from Steinberg")
-  message(STATUS "   The resulting Surge Standalones are not licensed for distribution")
 
-  if(DEFINED ENV{ASIOSDK_DIR})
-    file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
-    message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
-  else()
-    message(STATUS "Fetching ASIO SDK")
+if(DEFINED ENV{ASIOSDK_DIR} OR BUILD_USING_MY_ASIO_LICENSE)
+  if(BUILD_USING_MY_ASIO_LICENSE)
+    message(STATUS "** BUILD USING OWN ASIO LICENSE **")
+    message(STATUS "The resulting Surge standalone executable is not licensed for distribution!")
+    message(STATUS "Fetching ASIO SDK...")
+
     set(ASIOSDK_DIR ${CMAKE_BINARY_DIR}/asio/asiosdk)
     add_custom_target(surge-get-local-asio)
     add_custom_command(
@@ -93,14 +90,20 @@ if(BUILD_USING_MY_ASIO_LICENSE)
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/asio
       COMMAND ${CMAKE_COMMAND} -D ASIO_SDK_DESTINATION=${CMAKE_BINARY_DIR}/asio -P cmake/get-asio.cmake
     )
+  
     add_dependencies(surge-juce surge-get-local-asio)
+  else()
+    file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
+    message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
+    message(STATUS "The resulting Surge standalone executable is not licensed for distribution!")
   endif()
+
   target_compile_definitions(surge-juce INTERFACE JUCE_ASIO=1)
   target_include_directories(surge-juce INTERFACE ${ASIOSDK_DIR}/common)
   set(JUCE_ASIO_SUPPORT TRUE)
 endif()
 
-message(STATUS "Building Surge JUCE as ${SURGE_JUCE_FORMATS}")
+message(STATUS "Building Surge XT using the following JUCE wrappers: ${SURGE_JUCE_FORMATS}")
 
 add_subdirectory(common)
 add_subdirectory(lua)

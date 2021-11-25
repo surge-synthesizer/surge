@@ -16,12 +16,12 @@ endif()
 project(Surge VERSION 0.99.0 LANGUAGES C CXX ASM)
 
 # Banner {{{
-message(STATUS "Its Surge-XT Folks! Version is ${PROJECT_VERSION}")
+message(STATUS "It's Surge XT, folks! Version is ${PROJECT_VERSION}")
 message(STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-message(STATUS "CMake Version is ${CMAKE_VERSION}")
-message(STATUS "Compiler Version is ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "CMake version is ${CMAKE_VERSION}")
+message(STATUS "Compiler version is ${CMAKE_CXX_COMPILER_VERSION}")
 math(EXPR SURGE_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
-message(STATUS "Targeting ${SURGE_BITNESS} bit configuration")
+message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration")
 # }}}
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
