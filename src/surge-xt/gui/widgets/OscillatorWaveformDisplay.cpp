@@ -1012,7 +1012,6 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
     bool vis = false;
     if (uses_wavetabledata(oscdata->type.val.i))
     {
-        std::cout << "To a WTO" << std::endl;
         vis = true;
     }
 #if SURGE_JUCE_ACCESSIBLE

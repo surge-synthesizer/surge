@@ -280,10 +280,9 @@ elseif(UNIX)
 elseif(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC
     WINDOWS=1
-    NOMINMAX=1
     WIN32
     _USE_MATH_DEFINES
-    _WIN32_WINNT=0x0601
+    _WIN32_WINNT=0x0602
     _USRDLL
     VA_SUBTRACTIVE_EXPORTS
     USE_LIBPNG
