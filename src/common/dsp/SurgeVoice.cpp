@@ -344,11 +344,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
         state.porta_doretrigger = false;
         if (scene->portamento.porta_retrigger)
-            if (floor(state.pkey + 0.5) != state.priorpkey)
-            {
-                state.priorpkey = floor(state.pkey + 0.5);
-                state.porta_doretrigger = true;
-            }
+            retriggerPortaIfKeyChanged();
     }
 
     state.key = key;
@@ -357,6 +353,60 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
     /*state.velocity = velocity;
     state.fvel = velocity/127.f;*/
+}
+
+void SurgeVoice::retriggerPortaIfKeyChanged()
+{
+    if (!storage->oddsound_mts_active &&
+        (storage->isStandardTuning || storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL))
+    {
+        if (floor(state.pkey + 0.5) != state.priorpkey)
+        {
+            state.priorpkey = floor(state.pkey + 0.5);
+            state.porta_doretrigger = true;
+        }
+    }
+    else
+    {
+        std::function<float(int)> v4k = [this](int k) {
+            return storage->currentTuning.logScaledFrequencyForMidiNote(k) * 12;
+        };
+
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        {
+            v4k = [this](int k) {
+                return log2f(MTS_NoteToFrequency(storage->oddsound_mts_client, k, state.channel) /
+                             Tunings::MIDI_0_FREQ) *
+                       12;
+            };
+        }
+
+        auto ckey = state.pkey;
+        auto start = state.priorpkey - 2;
+        auto prior = v4k(start);
+        while (prior > ckey && start > -250)
+        {
+            start -= 10;
+            prior = v4k(start);
+        }
+        for (int i = start; i < 256; ++i)
+        {
+            auto next = v4k(i);
+            if (next > state.pkey && prior <= state.pkey)
+            {
+                auto frac = (state.pkey - prior) / (next - prior);
+                ckey = i + frac;
+                break;
+            }
+            prior = next;
+        }
+
+        if (floor(ckey + 0.5) != state.priorpkey)
+        {
+            state.priorpkey = floor(ckey + 0.5);
+            state.porta_doretrigger = true;
+        }
+    }
 }
 
 void SurgeVoice::switch_toggled()
@@ -551,11 +601,7 @@ void SurgeVoice::update_portamento()
 
         state.porta_doretrigger = false;
         if (scene->portamento.porta_retrigger)
-            if (floor(state.pkey + 0.5) != state.priorpkey)
-            {
-                state.priorpkey = floor(state.pkey + 0.5);
-                state.porta_doretrigger = true;
-            }
+            retriggerPortaIfKeyChanged();
     }
     else
         state.pkey = state.getPitch(storage);
