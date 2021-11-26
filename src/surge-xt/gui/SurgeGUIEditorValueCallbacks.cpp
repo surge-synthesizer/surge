@@ -2248,19 +2248,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 auto *cms = gui_modsrc[modsource].get();
                 modsources thisms = modsource;
 
-                synth->clearModulation(ptag, thisms, current_scene, modsource_index);
+                auto use_scene = 0;
+
+                if (this->synth->isModulatorDistinctPerScene(thisms))
+                {
+                    use_scene = current_scene;
+                }
+
+                synth->clearModulation(ptag, thisms, use_scene, modsource_index);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
                 jassert(ctrms);
 
                 if (ctrms)
                 {
-                    auto use_scene = 0;
-
-                    if (this->synth->isModulatorDistinctPerScene(thisms))
-                    {
-                        use_scene = current_scene;
-                    }
-
                     ctrms->setModValue(
                         synth->getModulation(p->id, thisms, use_scene, modsource_index));
                     ctrms->setModulationState(

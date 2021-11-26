@@ -189,7 +189,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         {
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(20));
             g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
-            g.drawText("No Modulations Assigned!", getLocalBounds(), juce::Justification::centred);
+            g.drawText("No Modulations Assigned", getLocalBounds(), juce::Justification::centred);
         }
     }
 
