@@ -449,6 +449,9 @@
         <control ui_identifier="fx.param.panel" x="758"/>
 
         <!-- Misc -->
-        <control ui_identifier="msegeditor.window" w="748"/>
+        <control ui_identifier="msegeditor.window" y="57" w="748"/>
+        <control ui_identifier="formulaeditor.window" y="57" w="748"/>
+        <control ui_identifier="tuningeditor.window" y="57" w="748" h="512"/>
+        <control ui_identifier="modlist.window" x="146" y="57" h="512"/>
     </controls>
 </surge-skin>

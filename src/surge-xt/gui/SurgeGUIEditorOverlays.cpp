@@ -99,17 +99,17 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
 
 std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay(OverlayTags olt)
 {
-    auto locationForMSFR = [this](Surge::Overlays::OverlayComponent *oc) {
-        auto npc = Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW;
+    auto locationGet = [this](Surge::Overlays::OverlayComponent *oc,
+                              Surge::Skin::Connector::NonParameterConnection npc,
+                              Surge::Storage::DefaultKey defKey) {
         auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
         auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-
         auto dl = skinCtrl->getRect().getTopLeft();
 
         int sentinel = -1000004;
-        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                        Surge::Storage::MSEGFormulaOverlayLocation,
+        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage), defKey,
                                                         std::make_pair(sentinel, sentinel));
+
         if (ploc.first != sentinel && ploc.second != sentinel)
         {
             auto px = ploc.first;
@@ -121,15 +121,16 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         {
             oc->setEnclosingParentPosition(skinCtrl->getRect());
         }
+
         oc->defaultLocation = dl;
-        oc->setCanMoveAround(std::make_pair(true, Surge::Storage::MSEGFormulaOverlayLocation));
+        oc->setCanMoveAround(std::make_pair(true, defKey));
     };
+
     switch (olt)
     {
     case PATCH_BROWSER:
     {
         auto pt = std::make_unique<Surge::Overlays::PatchDBViewer>(this, &(this->synth->storage));
-
         auto npc = Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER;
         auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
         auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
@@ -137,16 +138,21 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto xBuf = 25;
         auto w = getWindowSizeX() - xBuf * 2;
         auto h = getWindowSizeY() - yPos - xBuf;
+
         pt->setEnclosingParentPosition(juce::Rectangle<int>(xBuf, yPos, w, h));
         pt->setEnclosingParentTitle("Patch Database");
+
         jassert(false); // Make a key for me please!
+
         pt->setCanTearOut({true, Surge::Storage::nKeys});
+
         return pt;
     }
     break;
     case MSEG_EDITOR:
     {
         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+
         msegIsOpenFor = lfo_id;
         msegIsOpenInScene = current_scene;
 
@@ -155,10 +161,9 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         if (lfodata->shape.val.i != lt_mseg)
         {
             lfodata = nullptr;
-            /*
-             * This can happen if restoring a torn out mseg when the current lfo is selected
-             * to a non mseg in open/close. In that case just find the first mseg.
-             */
+
+            // This can happen if restoring a torn out MSEG when the current LFO is selected
+            // to a non-MSEG in open/close - in that case just find the first MSEG
             for (int sc = 0; sc < n_scenes && !lfodata; ++sc)
             {
                 for (int lf = 0; lf < n_lfos && !lfodata; ++lf)
@@ -170,13 +175,17 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
                 }
             }
         }
+
         if (!lfodata)
+        {
             return nullptr;
+        }
 
         auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
         auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(
             &(synth->storage), lfodata, ms, &msegEditState[current_scene][lfo_id], currentSkin,
             bitmapStore);
+
         mse->onModelChanged = [this]() {
             if (lfoDisplayRepaintCountdown == 0)
             {
@@ -189,8 +198,10 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
         mse->setEnclosingParentTitle(title);
-        mse->setCanTearOut({true, Surge::Storage::MSEGFormulaOverlayLocationTearOut});
-        locationForMSFR(mse.get());
+        mse->setCanTearOut({true, Surge::Storage::MSEGOverlayLocationTearOut});
+        locationGet(mse.get(), Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW,
+                    Surge::Storage::MSEGOverlayLocation);
+
         return mse;
     }
     break;
@@ -203,10 +214,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         if (lfodata->shape.val.i != lt_formula)
         {
             lfodata = nullptr;
-            /*
-             * This can happen if restoring a torn out mseg when the current lfo is selected
-             * to a non mseg in open/close. In that case just find the first mseg.
-             */
+
+            // as above in MSEG_EDITOR case
             for (int sc = 0; sc < n_scenes && !lfodata; ++sc)
             {
                 for (int lf = 0; lf < n_lfos && !lfodata; ++lf)
@@ -219,56 +228,46 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
                 }
             }
         }
-        if (!fs)
-            return nullptr;
 
-        auto pt = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
+        if (!fs)
+        {
+            return nullptr;
+        }
+
+        auto fme = std::make_unique<Surge::Overlays::FormulaModulatorEditor>(
             this, &(this->synth->storage),
             &synth->storage.getPatch().scene[current_scene].lfo[lfo_id], fs, lfo_id, currentSkin);
-        pt->setSkin(currentSkin, bitmapStore);
 
         std::string title = modsource_names[modsource_editor[current_scene]];
         title += " Editor";
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("Formula"));
 
-        pt->setEnclosingParentTitle(title);
-        pt->setCanTearOut({true, Surge::Storage::MSEGFormulaOverlayLocationTearOut});
-        locationForMSFR(pt.get());
-        return pt;
+        fme->setSkin(currentSkin, bitmapStore);
+        fme->setEnclosingParentTitle(title);
+        fme->setCanTearOut({true, Surge::Storage::FormulaOverlayLocationTearOut});
+        locationGet(fme.get(),
+                    Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW,
+                    Surge::Storage::FormulaOverlayLocation);
+
+        return fme;
     }
     case SAVE_PATCH:
         return makeStorePatchDialog();
         break;
     case TUNING_EDITOR:
     {
-        int w = 750, h = 500;
-        auto px = (getWindowSizeX() - w) / 2;
-        auto py = (getWindowSizeY() - h) / 2;
+        auto te = std::make_unique<Surge::Overlays::TuningOverlay>();
 
-        auto dl = juce::Point<int>(px, py);
+        te->setStorage(&(this->synth->storage));
+        te->setEditor(this);
+        te->setSkin(currentSkin, bitmapStore);
+        te->setTuning(synth->storage.currentTuning);
+        te->setEnclosingParentTitle("Tuning Editor");
+        te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut});
+        locationGet(te.get(), Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW,
+                    Surge::Storage::TuningOverlayLocation);
 
-        int sentinel = -1000004;
-        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                        Surge::Storage::TuningOverlayLocation,
-                                                        std::make_pair(sentinel, sentinel));
-        if (ploc.first != sentinel && ploc.second != sentinel)
-        {
-            px = ploc.first;
-            py = ploc.second;
-        }
-        auto r = juce::Rectangle<int>(px, py, w, h);
-
-        auto pt = std::make_unique<Surge::Overlays::TuningOverlay>();
-        pt->setStorage(&(this->synth->storage));
-        pt->setEditor(this);
-        pt->setSkin(currentSkin, bitmapStore);
-        pt->setTuning(synth->storage.currentTuning);
-        pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
-        pt->setEnclosingParentTitle("Tuning Editor");
-        pt->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut});
-        pt->defaultLocation = dl;
-        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::TuningOverlayLocation));
-        return pt;
+        return te;
     }
     break;
     case WAVETABLESCRIPTING_EDITOR:
@@ -328,31 +327,14 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     case MODULATION_EDITOR:
     {
-        auto pt = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
-        int w = 600, h = 500;
-        auto px = (getWindowSizeX() - w) / 2;
-        auto py = (getWindowSizeY() - h) / 2;
+        auto me = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
+        me->setEnclosingParentTitle("Modulation List");
+        me->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
+        me->setSkin(currentSkin, bitmapStore);
+        locationGet(me.get(), Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW,
+                    Surge::Storage::ModlistOverlayLocation);
 
-        auto dl = juce::Point<int>(px, py);
-
-        int sentinel = -1000004;
-        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                        Surge::Storage::ModlistOverlayLocation,
-                                                        std::make_pair(sentinel, sentinel));
-        if (ploc.first != sentinel && ploc.second != sentinel)
-        {
-            px = ploc.first;
-            py = ploc.second;
-        }
-        auto r = juce::Rectangle<int>(px, py, w, h);
-        pt->setEnclosingParentTitle("Modulation List");
-        pt->setEnclosingParentPosition(r);
-        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::ModlistOverlayLocation));
-        pt->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
-        pt->defaultLocation = dl;
-        pt->setSkin(currentSkin, bitmapStore);
-
-        return pt;
+        return me;
     }
     break;
     default:

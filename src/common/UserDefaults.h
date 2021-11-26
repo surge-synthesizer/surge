@@ -66,14 +66,16 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
 
     TuningOverlayLocation,
     ModlistOverlayLocation,
-    MSEGFormulaOverlayLocation,
+    MSEGOverlayLocation,
+    FormulaOverlayLocation,
     WSAnalysisOverlayLocation,
 
     TuningOverlayLocationTearOut,
     ModlistOverlayLocationTearOut,
-    MSEGFormulaOverlayLocationTearOut,
+    MSEGOverlayLocationTearOut,
+    FormulaOverlayLocationTearOut,
 
-    ModulationEditorValueDisplay,
+    ModListValueDisplay,
 
     nKeys
 };

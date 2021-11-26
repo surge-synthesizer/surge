@@ -564,8 +564,17 @@ Connector status_zoom =
 Connector vu_meter =
     Connector("controls.vu_meter", 767, 15, 123, 13, Components::VuMeter, Connector::MAIN_VU_METER);
 
-Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 365, Components::Custom,
+Connector mseg_editor = Connector("msegeditor.window", 0, 58, 750, 365, Components::Custom,
                                   Connector::MSEG_EDITOR_WINDOW);
+
+Connector formula_editor = Connector("formulaeditor.window", 0, 58, 750, 365, Components::Custom,
+                                     Connector::FORMULA_EDITOR_WINDOW);
+
+Connector tuning_editor = Connector("tuningeditor.window", 0, 58, 750, 511, Components::Custom,
+                                    Connector::TUNING_EDITOR_WINDOW);
+
+Connector mod_list =
+    Connector("modlist.window", 148, 58, 602, 511, Components::Custom, Connector::MOD_LIST_WINDOW);
 
 Connector save_patch_dialog = Connector("controls.patch.save.window", 157, 57, 390, 270,
                                         Components::Custom, Connector::SAVE_PATCH_DIALOG);
