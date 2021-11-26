@@ -75,7 +75,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *sto
                                        bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave)
+    if (storage->mapChannelToOctave && !storage->oddsound_mts_active)
     {
         if (remapKeyForTuning)
         {
@@ -91,12 +91,21 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *sto
         {
             shift = channel;
         }
-        if (storage->isStandardTuning)
-            res += 12 * shift;
+        if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+        {
+            // keys are in scale space so move scale.count
+            res += storage->currentScale.count * shift;
+        }
         else
         {
-            auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
-            res += ct / 100 * shift;
+            // keys are in tuning space so move cents worth of keys
+            if (storage->isStandardTuning)
+                res += 12 * shift;
+            else
+            {
+                auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
+                res += ct / 100 * shift;
+            }
         }
     }
     return res;
