@@ -2378,11 +2378,31 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
                 if (isAnyOverlayPresent(MSEG_EDITOR))
                 {
+                    bool tornOut = false;
+                    juce::Point<int> tearOutPos;
+
+                    auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+
+                    if (olw && olw->isTornOut())
+                    {
+                        tornOut = true;
+                        tearOutPos = olw->currentTearOutLocation();
+                    }
+
                     closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
 
                     if (newshape == lt_mseg)
                     {
                         showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                        if (tornOut)
+                        {
+                            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+
+                            if (olw)
+                            {
+                                olw->doTearOut(tearOutPos);
+                            }
+                        }
                     }
                 }
 
