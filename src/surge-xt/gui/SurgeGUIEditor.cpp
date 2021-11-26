@@ -1577,6 +1577,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED:
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
         }

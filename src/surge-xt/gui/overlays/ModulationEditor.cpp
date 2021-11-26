@@ -96,7 +96,7 @@ struct ModulationSideControls : public juce::Component,
         dispW = makeW({"None", "Depth Only", "Value and Depth", "All"}, tag_value_disp, true, true);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
-                                                       Storage::ModulationEditorValueDisplay, 3);
+                                                       Storage::ModListValueDisplay, 3);
         dispW->setValue(dwv / 3.0);
         dispW->setDraggable(true);
         valueChanged(dispW.get());
@@ -891,7 +891,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         }
         editor->repaint();
         Surge::Storage::updateUserDefaultValue(&(editor->synth->storage),
-                                               Storage::ModulationEditorValueDisplay, v);
+                                               Storage::ModListValueDisplay, v);
     }
     break;
     }

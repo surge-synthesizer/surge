@@ -265,6 +265,10 @@ struct Connector
 
         LFO_MENU,
 
+        FORMULA_EDITOR_WINDOW,
+        TUNING_EDITOR_WINDOW,
+        MOD_LIST_WINDOW,
+
         N_NONCONNECTED
     };
 
@@ -429,11 +433,13 @@ extern Surge::Skin::Connector vu_meter;
 
 extern Surge::Skin::Connector patch_browser;
 
-extern Surge::Skin::Connector mseg_editor;
+extern Surge::Skin::Connector mseg_editor, formula_editor, tuning_editor;
+
+extern Surge::Skin::Connector mod_list;
 
 extern Surge::Skin::Connector save_patch_dialog;
 
-// In surge 1.8, the modulation panel is moveable en-masse but individual modulators
+// In Surge 1.8, the modulation panel is moveable en-masse but individual modulators
 // are not relocatable. This item gives you the location of the modulators
 extern Surge::Skin::Connector modulation_panel;
 }; // namespace OtherControls

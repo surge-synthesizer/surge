@@ -162,8 +162,11 @@ void initMaps()
             case ModlistOverlayLocation:
                 r = "modlistOverlayLocation";
                 break;
-            case MSEGFormulaOverlayLocation:
-                r = "msegFormulaOverlayLocation";
+            case MSEGOverlayLocation:
+                r = "msegOverlayLocation";
+                break;
+            case FormulaOverlayLocation:
+                r = "formulaOverlayLocation";
                 break;
             case WSAnalysisOverlayLocation:
                 r = "wsAnalysisOverlayLocation";
@@ -174,11 +177,14 @@ void initMaps()
             case ModlistOverlayLocationTearOut:
                 r = "modlistOverlayLocationTearOut";
                 break;
-            case MSEGFormulaOverlayLocationTearOut:
-                r = "msegFormulaOverlayLocationTearOut";
+            case MSEGOverlayLocationTearOut:
+                r = "msegOverlayLocationTearOut";
                 break;
-            case ModulationEditorValueDisplay:
-                r = "modulationEditorValueDisplay";
+            case FormulaOverlayLocationTearOut:
+                r = "FormulaOverlayLocationTearOut";
+                break;
+            case ModListValueDisplay:
+                r = "modListValueDisplay";
                 break;
             case nKeys:
                 break;
