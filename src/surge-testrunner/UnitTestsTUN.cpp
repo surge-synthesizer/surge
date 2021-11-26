@@ -1429,15 +1429,15 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
            {{10, 3, 1}, {23, 2, 1}}, 31},
         { "ED2-31 10/3 to 18/2", ALWAYS_HIGHEST, 684.203, true,
             {{10, 3, 1}, {18, 2, 1}}, 31},
-        { "ED2-31 high prio release last note after 29/2, 3/3, 8/3", ALWAYS_HIGHEST, 585.398, false,
+
+        { "ED2-31 high prio release last note after 29/2, 3/3, 8/3", ALWAYS_HIGHEST, 585.398, true,
             {{29, 2, 1}, {3, 3, 1}, {8, 3, 1}, {8, 3, 0}}, 31},
-        { "ED2-31 low prio release last note after 0/3, 26/2, 21/2", ALWAYS_LOWEST, 489.320, false,
+        { "ED2-31 low prio release last note after 0/3, 26/2, 21/2", ALWAYS_LOWEST, 489.320, true,
             {{0, 3, 1}, {26, 2, 1}, {21, 2, 1}, {21, 2, 0}}, 31},
     };
     // clang-format on
 
-    // for (auto tuningstyle : {SurgeStorage::RETUNE_ALL, SurgeStorage::RETUNE_MIDI_ONLY})
-    auto tuningstyle = SurgeStorage::RETUNE_MIDI_ONLY;
+    for (auto tuningstyle : {SurgeStorage::RETUNE_ALL, SurgeStorage::RETUNE_MIDI_ONLY})
     {
         for (auto mode : {pm_mono, pm_mono_fp, pm_mono_st, pm_mono_st_fp})
         {

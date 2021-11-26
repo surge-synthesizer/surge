@@ -1082,6 +1082,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                         auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, &storage);
 
                         int highest = -1, lowest = 128, latest = -1;
+                        int highestadj = -100, lowestadj = 1000;
                         int highchan = 0, lowchan = 0, latechan = 0;
                         int64_t lt = 0;
 
@@ -1092,8 +1093,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                                 if (channelState[ch].keyState[k].keystate)
                                 {
                                     auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, &storage);
-
-                                    if (kadj >= highest)
+                                    if (kadj >= highestadj)
                                     {
                                         /*
                                          * Why k and not kadj here? Well this is the key which maps
@@ -1104,11 +1104,13 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                                          */
                                         highest = k;
                                         highchan = ch;
+                                        highestadj = kadj;
                                     }
-                                    if (kadj <= lowest)
+                                    if (kadj <= lowestadj)
                                     {
                                         lowest = k;
                                         lowchan = ch;
+                                        lowestadj = kadj;
                                     }
                                     if (channelState[channel].keyState[k].voiceOrder >= lt)
                                     {
@@ -1289,6 +1291,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                         auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, &storage);
 
                         int highest = -1, lowest = 128, latest = -1;
+                        int highestadj = -1000, lowestadj = 1000;
                         int highchan = 0, lowchan = 0, latechan = 0;
                         int64_t lt = 0;
 
@@ -1300,15 +1303,17 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                                 {
                                     auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, &storage);
 
-                                    if (kadj >= highest)
+                                    if (kadj >= highestadj)
                                     {
                                         highest = k; // this is not kadj on purpose. See above.
                                         highchan = ch;
+                                        highestadj = kadj;
                                     }
-                                    if (kadj <= lowest)
+                                    if (kadj <= lowestadj)
                                     {
                                         lowest = k;
                                         lowchan = ch;
+                                        lowestadj = kadj;
                                     }
                                     if (channelState[channel].keyState[k].voiceOrder >= lt)
                                     {
