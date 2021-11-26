@@ -804,38 +804,55 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
          */
         auto men = juce::PopupMenu();
         std::set<std::string> sources, targets;
+
         for (const auto &r : editor->modContents->dataRows)
         {
             sources.insert(r.sname);
             targets.insert(r.pname);
         }
+
         // FIXME add help component
 
         auto tcomp =
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Filter Modulation List", "");
+
         tcomp->setSkin(skin, associatedBitmapStore);
+
         men.addCustomItem(-1, std::move(tcomp));
-        men.addSeparator();
-        men.addItem(Surge::GUI::toOSCaseForMenu("Clear Filter"), [this]() {
-            editor->modContents->clearFilters();
-            filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
-            filterW->setLabels({"-"});
-        });
-        men.addSeparator();
-        men.addSectionHeader("BY SOURCE");
-        for (auto s : sources)
-            men.addItem(s, [this, s]() {
-                editor->modContents->filterBySource(s);
-                filterL->setText("Filter By Source", juce::NotificationType::dontSendNotification);
-                filterW->setLabels({s});
+
+        if (!sources.empty() && !targets.empty())
+        {
+            men.addSeparator();
+
+            men.addItem(Surge::GUI::toOSCaseForMenu("Clear Filter"), [this]() {
+                editor->modContents->clearFilters();
+                filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
+                filterW->setLabels({"-"});
             });
-        men.addSectionHeader("BY TARGET");
-        for (auto t : targets)
-            men.addItem(t, [this, t]() {
-                editor->modContents->filterByTarget(t);
-                filterL->setText("Filter By Target", juce::NotificationType::dontSendNotification);
-                filterW->setLabels({t});
-            });
+
+            men.addSeparator();
+
+            men.addSectionHeader("BY SOURCE");
+
+            for (auto s : sources)
+                men.addItem(s, [this, s]() {
+                    editor->modContents->filterBySource(s);
+                    filterL->setText("Filter By Source",
+                                     juce::NotificationType::dontSendNotification);
+                    filterW->setLabels({s});
+                });
+
+            men.addSectionHeader("BY TARGET");
+
+            for (auto t : targets)
+                men.addItem(t, [this, t]() {
+                    editor->modContents->filterByTarget(t);
+                    filterL->setText("Filter By Target",
+                                     juce::NotificationType::dontSendNotification);
+                    filterW->setLabels({t});
+                });
+        }
+
         men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(filterW.get()));
     }
     break;
