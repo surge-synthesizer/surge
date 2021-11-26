@@ -37,6 +37,8 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    editor->hideTypeinParamEditor();
+
     if (event.mods.isMiddleButtonDown())
     {
         editor->toggle_mod_editing();
