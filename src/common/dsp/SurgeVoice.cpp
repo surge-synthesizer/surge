@@ -168,7 +168,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
         }
         else
         {
-            state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
+            if (storage->mapChannelToOctave)
+                state.portasrc_key = channelKeyEquvialent(lk, state.channel, storage, true);
+            else
+                state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
         }
     }
     state.priorpkey = state.portasrc_key;

@@ -1595,4 +1595,93 @@ TEST_CASE("Portamento With Repeated Notes", "[tun]")
             }
         }
     }
+
+    SECTION("Porta in OPC")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        surge->storage.mapChannelToOctave = true;
+        surge->storage.retuneToScale(Tunings::evenDivisionOfSpanByM(2, 31));
+        surge->storage.getPatch().scene[0].portamento.val.f = 1;
+
+        namespace hs = Surge::Headless;
+        auto events = hs::playerEvents_t();
+        {
+            auto on = hs::Event();
+            on.type = hs::Event::NOTE_ON;
+            on.channel = 3;
+            on.data1 = 0;
+            on.data2 = 100;
+            on.atSample = 0;
+            events.push_back(on);
+        }
+
+        {
+            auto on = hs::Event();
+            on.type = hs::Event::NOTE_OFF;
+            on.channel = 3;
+            on.data1 = 0;
+            on.data2 = 100;
+            on.atSample = 44100 * 3;
+            events.push_back(on);
+        }
+
+        {
+            auto on = hs::Event();
+            on.type = hs::Event::NO_EVENT;
+            on.channel = 3;
+            on.data1 = 0;
+            on.data2 = 100;
+            on.atSample = 44100 * 3 + BLOCK_SIZE * 10;
+            events.push_back(on);
+        }
+
+        float *buffer;
+        int nS, nC;
+        hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+        delete[] buffer;
+
+        for (int i = 0; i < 10; ++i)
+        {
+            events.clear();
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NOTE_ON;
+                on.channel = 3;
+                on.data1 = 0;
+                on.data2 = 100;
+                on.atSample = 0;
+                events.push_back(on);
+            }
+
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NOTE_OFF;
+                on.channel = 3;
+                on.data1 = 0;
+                on.data2 = 100;
+                on.atSample = BLOCK_SIZE * 80;
+                events.push_back(on);
+            }
+            {
+                auto on = hs::Event();
+                on.type = hs::Event::NO_EVENT;
+                on.channel = 3;
+                on.data1 = 0;
+                on.data2 = 100;
+                on.atSample = BLOCK_SIZE * 90;
+                events.push_back(on);
+            }
+            hs::playAsConfigured(surge, events, &buffer, &nS, &nC);
+
+            int nSTrim = (int)(nS / 2 * 0.8);
+            int start = (int)(nS / 2 * 0.05);
+            auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+
+            delete[] buffer;
+
+            REQUIRE(freq ==
+                    Approx(surge->storage.currentTuning.frequencyForMidiNote(31 * 3)).margin(2));
+        }
+    }
 }
