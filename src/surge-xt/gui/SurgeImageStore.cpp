@@ -71,7 +71,6 @@ void SurgeImageStore::setupBuiltinBitmaps()
     addEntry(IDB_LFO_UNIPOLAR);
     addEntry(IDB_OSC_CHARACTER);
     addEntry(IDB_SAVE_PATCH);
-    addEntry(IDB_MODSOURCE_BG);
     addEntry(IDB_FX_GRID);
     addEntry(IDB_FX_TYPE_ICONS);
     addEntry(IDB_OSC_MENU);
