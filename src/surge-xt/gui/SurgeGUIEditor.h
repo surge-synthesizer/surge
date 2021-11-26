@@ -535,6 +535,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool setParameterModulationFromString(Parameter *p, modsources ms, int modsourceScene,
                                           int modidx, const std::string &s);
     bool setControlFromString(modsources ms, const std::string &s);
+    void hideTypeinParamEditor();
     friend struct Surge::Overlays::TypeinParamEditor;
     friend struct Surge::Overlays::PatchStoreDialog;
     friend struct Surge::Widgets::MainFrame;

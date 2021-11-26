@@ -5622,6 +5622,8 @@ bool SurgeGUIEditor::isAHiddenSendOrReturn(Parameter *p)
     return false;
 }
 
+void SurgeGUIEditor::hideTypeinParamEditor() { typeinParamEditor->setVisible(false); }
+
 void SurgeGUIEditor::activateFromCurrentFx()
 {
     switch (current_fx)
