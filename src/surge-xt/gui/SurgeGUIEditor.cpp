@@ -38,6 +38,7 @@
 #include "overlays/CoveringMessageOverlay.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
+#include "overlays/ModulationEditor.h"
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/OverlayWrapper.h"
 
@@ -3890,6 +3891,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     typeinParamEditor->setBoundsToAccompany(c->getBounds(), frame->getBounds());
     typeinParamEditor->setVisible(true);
+    typeinParamEditor->toFront(true);
     typeinParamEditor->grabFocus();
 }
 
@@ -5403,6 +5405,13 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 
     setupAlternates(modsource_editor[current_scene]);
     // And now we have dynamic labels really anything
+    auto modol =
+        dynamic_cast<Surge::Overlays::ModulationEditor *>(getOverlayIfOpen(MODULATION_EDITOR));
+    if (modol)
+    {
+        modol->rebuildContents();
+    }
+
     frame->repaint();
 }
 
