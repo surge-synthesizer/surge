@@ -88,6 +88,26 @@ struct WheelAccumulationHelper
         return 0;
     }
 };
+
+inline void addMenuWithShortcut(juce::PopupMenu &m, const std::string &lab,
+                                const std::string &shortcut, bool enabled, bool ticked,
+                                std::function<void()> action)
+{
+    auto i = juce::PopupMenu::Item(lab)
+                 .setAction(std::move(action))
+                 .setEnabled(enabled)
+                 .setTicked(ticked);
+
+    i.shortcutKeyDescription = shortcut;
+    m.addItem(i);
+}
+
+inline void addMenuWithShortcut(juce::PopupMenu &m, const std::string &lab,
+                                const std::string &shortcut, std::function<void()> action)
+{
+    addMenuWithShortcut(m, lab, shortcut, true, false, action);
+}
+
 } // namespace GUI
 } // namespace Surge
 

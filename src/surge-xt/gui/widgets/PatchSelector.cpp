@@ -359,8 +359,8 @@ void PatchSelector::showClassicMenu(bool single_category)
     bool has_3rdparty = false;
     int last_category = current_category;
     auto patch_cat_size = storage->patch_category.size();
-
     int tutorialCat = -1;
+
     if (single_category)
     {
         /*
@@ -479,6 +479,8 @@ void PatchSelector::showClassicMenu(bool single_category)
         }
     };
 
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"), [this]() {
@@ -495,64 +497,50 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Save Patch"), [this]() {
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-        if (sge)
-        {
-            sge->showOverlay(SurgeGUIEditor::SAVE_PATCH);
-        }
-    });
-
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch from File..."), [this]() {
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-        auto patchPath = storage->userPatchesPath;
-
-        patchPath =
-            Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastPatchPath, patchPath);
-
-        if (!sge)
-        {
-            return;
-        }
-
-        sge->fileChooser = std::make_unique<juce::FileChooser>(
-            "Select Patch to Load", juce::File(path_to_string(patchPath)), "*.fxp");
-
-        sge->fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this, patchPath](const juce::FileChooser &c) {
-                auto ress = c.getResults();
-                if (ress.size() != 1)
-                    return;
-
-                auto res = c.getResult();
-                auto rString = res.getFullPathName().toStdString();
-                auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-                if (sge)
-                {
-                    sge->queuePatchFileLoad(rString);
-                }
-
-                auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
-
-                if (dir != patchPath)
-                {
-                    Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastPatchPath,
-                                                          dir);
-                }
-            });
-    });
-
-    contextMenu.addSeparator();
-
-    if (isUser)
+    if (sge)
     {
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Patch"), [this]() {
-            auto sge = firstListenerOfType<SurgeGUIEditor>();
-            if (sge)
-            {
+        Surge::GUI::addMenuWithShortcut(
+            contextMenu, Surge::GUI::toOSCaseForMenu("Save Patch"),
+            sge->showShortcutDescription("Ctrl + S", u8"\U00002318S"),
+            [this, sge]() { sge->showOverlay(SurgeGUIEditor::SAVE_PATCH); });
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch from File..."), [this, sge]() {
+            auto patchPath = storage->userPatchesPath;
+
+            patchPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastPatchPath,
+                                                           patchPath);
+
+            sge->fileChooser = std::make_unique<juce::FileChooser>(
+                "Select Patch to Load", juce::File(path_to_string(patchPath)), "*.fxp");
+
+            sge->fileChooser->launchAsync(
+                juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                [this, patchPath, sge](const juce::FileChooser &c) {
+                    auto ress = c.getResults();
+                    if (ress.size() != 1)
+                        return;
+
+                    auto res = c.getResult();
+                    auto rString = res.getFullPathName().toStdString();
+
+                    sge->queuePatchFileLoad(rString);
+
+                    auto dir =
+                        string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+                    if (dir != patchPath)
+                    {
+                        Surge::Storage::updateUserDefaultPath(storage,
+                                                              Surge::Storage::LastPatchPath, dir);
+                    }
+                });
+        });
+
+        contextMenu.addSeparator();
+
+        if (isUser)
+        {
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Patch"), [this, sge]() {
                 sge->showOverlay(
                     SurgeGUIEditor::SAVE_PATCH, [this](Overlays::OverlayComponent *co) {
                         auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
@@ -566,42 +554,36 @@ void PatchSelector::showClassicMenu(bool single_category)
                             storage->initializePatchDb(true);
                         };
                     });
-            }
-        });
-
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this, initAction]() {
-            auto cb = juce::ModalCallbackFunction::create([this, initAction](int okcs) {
-                if (okcs)
-                {
-                    fs::remove(storage->patch_list[current_patch].path);
-                    storage->refresh_patchlist();
-                    storage->initializePatchDb(true);
-                    initAction();
-                }
             });
 
-            auto sge = firstListenerOfType<SurgeGUIEditor>();
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this, initAction]() {
+                auto cb = juce::ModalCallbackFunction::create([this, initAction](int okcs) {
+                    if (okcs)
+                    {
+                        fs::remove(storage->patch_list[current_patch].path);
+                        storage->refresh_patchlist();
+                        storage->initializePatchDb(true);
+                        initAction();
+                    }
+                });
 
-            juce::AlertWindow::showOkCancelBox(
-                juce::AlertWindow::InfoIcon, "Delete Patch",
-                std::string("Do you want to delete ") +
-                    storage->patch_list[current_patch].path.u8string() + "?",
-                "Yes", "No", nullptr, cb);
-        });
-    }
+                juce::AlertWindow::showOkCancelBox(
+                    juce::AlertWindow::InfoIcon, "Delete Patch",
+                    std::string("Do you want to delete ") +
+                        storage->patch_list[current_patch].path.u8string() + "?",
+                    "Yes", "No", nullptr, cb);
+            });
+        }
 
-    contextMenu.addSeparator();
+        contextMenu.addSeparator();
 
 #if INCLUDE_PATCH_BROWSER
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Patch Database"), [this]() {
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-        if (sge)
-        {
-            sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
-        }
-    });
+        Surge::GUI::addMenuWithShortcut(
+            contextMenu, Surge::GUI::toOSCaseForMenu("Patch Database..."),
+            sge->showShortcutDescription("Alt + P", u8"\U00002325P"),
+            [this, sge]() { sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER); });
 #endif
+    }
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch Browser"),
                         [this]() { this->storage->refresh_patchlist(); });
@@ -625,7 +607,6 @@ void PatchSelector::showClassicMenu(bool single_category)
     {
         populatePatchMenuForCategory(tutorialCat, contextMenu, single_category, main_e, true);
     }
-    auto sge = firstListenerOfType<SurgeGUIEditor>();
 
     if (sge)
     {
@@ -647,8 +628,12 @@ void PatchSelector::showClassicMenu(bool single_category)
     }
 
     auto o = juce::PopupMenu::Options();
+
     if (sge)
+    {
         o = sge->optionsForPosition(getBounds().getBottomLeft());
+    }
+
     contextMenu.showMenuAsync(o);
 }
 
