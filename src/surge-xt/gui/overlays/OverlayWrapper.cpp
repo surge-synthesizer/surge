@@ -66,7 +66,7 @@ void OverlayWrapper::paint(juce::Graphics &g)
 
     if (icon)
     {
-        icon->drawAt(g, sp.getX() + 3, sp.getY() + 1, 1);
+        icon->drawAt(g, sp.getX() + 2, sp.getY() + 1, 1);
     }
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
