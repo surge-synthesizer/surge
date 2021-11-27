@@ -311,6 +311,7 @@ void OverlayWrapper::mouseUp(const juce::MouseEvent &e)
     if (isTornOut())
         return;
 
+    toFront(true);
     auto c = getPrimaryChildAsOverlayComponent();
     if (c && c->getCanMoveAround() && editor)
     {
