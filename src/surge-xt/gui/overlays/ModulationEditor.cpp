@@ -566,10 +566,20 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             sceneMod = std::string(" (") + (d.source_scene == 0 ? "A" : "B") + ")";
         }
 
-        char nm[256];
+        char nm[1024];
         SurgeSynthesizer::ID ptagid;
-        if (synth->fromSynthSideId(d.destination_id + d.idBase, ptagid))
-            synth->getParameterName(ptagid, nm);
+        auto p = synth->storage.getPatch().param_ptr[d.destination_id + d.idBase];
+        if (p->ctrlgroup == cg_LFO)
+        {
+            std::string pfx = p->scene == 1 ? "A " : "B ";
+            p->create_fullname(p->get_name(), nm, p->ctrlgroup, p->ctrlgroup_entry,
+                               (pfx + editor->ed->modulatorName(p->ctrlgroup_entry, true)).c_str());
+        }
+        else
+        {
+            if (synth->fromSynthSideId(d.destination_id + d.idBase, ptagid))
+                synth->getParameterName(ptagid, nm);
+        }
 
         std::string sname = editor->ed->modulatorNameWithIndex(
             d.source_scene, d.source_id, d.source_index, false, d.inScene < 0);
@@ -578,7 +588,6 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         d.pname = nm;
 
         char pdisp[256];
-        auto p = synth->storage.getPatch().param_ptr[d.destination_id + d.idBase];
         int ptag = p->id;
         auto thisms = (modsources)d.source_id;
 
@@ -1059,7 +1068,7 @@ void ModulationSideControls::showAddTargetMenu()
         switch ((ControlGroup)topPair.first)
         {
         case cg_GLOBAL:
-            mainN = "Global";
+            mainN = "Patch";
             break;
         case cg_OSC:
             mainN = "Oscillators";
@@ -1085,7 +1094,8 @@ void ModulationSideControls::showAddTargetMenu()
         default:
             mainN = "ERROR";
         }
-        auto sceneMen = juce::PopupMenu();
+        // auto sceneMen = juce::PopupMenu();
+        men.addSectionHeader(mainN);
 
         int idx = 0;
         int hasSceneEntryCount = 0;
@@ -1102,7 +1112,7 @@ void ModulationSideControls::showAddTargetMenu()
 
             auto addCG = &cgMen;
             if (!hasSceneEntries)
-                addCG = &sceneMen;
+                addCG = &men; // &sceneMen
 
             bool hasEntries = sceneMap.size() != 1;
             for (const auto &groupPair : sceneMap)
@@ -1152,11 +1162,11 @@ void ModulationSideControls::showAddTargetMenu()
                     scLabel = "Scene A";
                 if (idx == 2)
                     scLabel = "Scene B";
-                sceneMen.addSubMenu(scLabel, cgMen);
+                men.addSubMenu(scLabel, cgMen); // was sceheMen
             }
             idx++;
         }
-        men.addSubMenu(mainN, sceneMen);
+        // men.addSubMenu(mainN, sceneMen);
     }
     men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
 }
