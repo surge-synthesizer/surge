@@ -1808,7 +1808,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
     for (const auto &el : juceOverlays)
     {
         if (!el.second->isTornOut())
+        {
             addAndMakeVisibleWithTracking(frame.get(), *(el.second));
+        }
     }
 
     if (showMSEGEditorOnNextIdleOrOpen)
@@ -1845,6 +1847,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
     if (synth->storage.oddsound_mts_active)
     {
         closeOverlay(TUNING_EDITOR);
+    }
+
+    /*
+     * Finally make sure the Z-Order fronting for our overlays is still OK
+     */
+    std::vector<juce::Component *> frontthese;
+    for (auto c : frame->getChildren())
+    {
+        if (auto ol = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c))
+        {
+            frontthese.push_back(c);
+        }
+    }
+    for (auto c : frontthese)
+    {
+        c->toFront(true);
     }
 
     tuningChanged(); // a patch load could change tuning
