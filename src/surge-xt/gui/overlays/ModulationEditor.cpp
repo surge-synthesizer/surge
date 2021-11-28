@@ -1048,126 +1048,176 @@ void ModulationSideControls::showAddTargetMenu()
     men.addSeparator();
 
     auto synth = editor->synth;
-    std::map<int, std::array<std::map<int, std::vector<std::pair<int, std::string>>>, n_scenes + 1>>
-        parByCGCGE;
+    std::array<std::map<int, std::map<int, std::vector<std::pair<int, std::string>>>>, n_scenes + 1>
+        parsBySceneThenCGThenCGE;
+    int SENTINEL_ENTRY = 10000001;
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
         if (synth->isValidModulation(p->id, add_ms) &&
             ((!synth->isModulatorDistinctPerScene(add_ms)) || (p->scene == add_ms_sc + 1) ||
              (p->scene == 0)))
         {
+            auto sc = p->scene;
+            auto cg = p->ctrlgroup;
+            auto cge = p->ctrlgroup_entry;
+
+            /*
+             * This is so gross. See #5518. Basically some parameters which are in the objet
+             * model in cg_global belong in the UI in cg_something else. So lets hunt em down
+             */
+            if (sc > 0)
+            {
+                if (p->id == editor->synth->storage.getPatch().scene[sc - 1].pitch.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].portamento.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].fm_depth.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].drift.id)
+                {
+                    cg = cg_OSC;
+                    cge = SENTINEL_ENTRY;
+                }
+                if (p->id == editor->synth->storage.getPatch().scene[sc - 1].noise_colour.id)
+                {
+                    cg = cg_MIX;
+                    cge = SENTINEL_ENTRY;
+                }
+                if (p->id == editor->synth->storage.getPatch().scene[sc - 1].vca_level.id)
+                {
+                    cg = cg_ENV;
+                    cge = SENTINEL_ENTRY;
+                }
+                if (p->id == editor->synth->storage.getPatch().scene[sc - 1].feedback.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].lowcut.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].filter_balance.id ||
+                    p->id == editor->synth->storage.getPatch().scene[sc - 1].wsunit.drive.id)
+                {
+                    cg = cg_FILTER;
+                    cge = SENTINEL_ENTRY;
+                }
+            }
+
             if (!synth->isActiveModulation(p->id, add_ms, add_ms_sc, add_ms_idx))
-                parByCGCGE[p->ctrlgroup][p->scene][p->ctrlgroup_entry].emplace_back(
-                    p->id, p->get_full_name());
+                parsBySceneThenCGThenCGE[sc][cg][cge].emplace_back(p->id, p->get_full_name());
         }
     }
 
-    for (const auto &topPair : parByCGCGE)
-    {
-        std::string mainN, subN = "SUB";
-        switch ((ControlGroup)topPair.first)
+    auto cgEntryName = [this](auto scene, auto cg, auto cge) -> std::string {
+        switch (cg)
         {
-        case cg_GLOBAL:
-            mainN = "Patch";
-            break;
         case cg_OSC:
-            mainN = "Oscillators";
-            subN = "Osc";
-            break;
-        case cg_MIX:
-            mainN = "Mixer";
-            break;
-        case cg_FILTER:
-            mainN = "Filters";
-            subN = "Filter";
+            return std::string("Osc ") + std::to_string(cge + 1) + " (" +
+                   osc_type_names
+                       [this->editor->synth->storage.getPatch().scene[scene].osc[cge].type.val.i] +
+                   ")";
             break;
         case cg_ENV:
-            mainN = "Envelopes";
-            break;
-        case cg_LFO:
-            mainN = "LFOs";
-            subN = "LFO";
+            return cge == 0 ? "AEG" : "FEG";
             break;
         case cg_FX:
-            mainN = "FX";
+            return fxslot_names[cge] + std::string(" (") +
+                   fx_type_shortnames[this->editor->synth->storage.getPatch().fx[cge].type.val.i] +
+                   ")";
+            break;
+        case cg_FILTER:
+            return std::string("Filter ") + std::to_string(cge + 1) + +" (" +
+                   fut_names[this->editor->synth->storage.getPatch()
+                                 .scene[scene]
+                                 .filterunit[cge]
+                                 .type.val.i] +
+                   ")";
+            break;
+        case cg_LFO:
+            return editor->ed->modulatorName(cge, false);
             break;
         default:
-            mainN = "ERROR";
+            return std::string("CGE=") + std::to_string(cge);
+            break;
         }
-        // auto sceneMen = juce::PopupMenu();
-        men.addSectionHeader(mainN);
+        return "ERROR";
+    };
 
-        int idx = 0;
-        int hasSceneEntryCount = 0;
-        for (const auto &sceneMap : topPair.second)
+    int si = 0;
+    for (const auto &scene : parsBySceneThenCGThenCGE)
+    {
+        if (!scene.empty())
         {
-            if (!sceneMap.empty())
-                hasSceneEntryCount++;
+            switch (si)
+            {
+            case 0:
+                men.addSectionHeader("GLOBAL");
+                break;
+            default:
+                char ai = 'A';
+                ai += si;
+                ai -= 1;
+                men.addSectionHeader(std::string("SCENE ") + ai);
+                break;
+            }
         }
-        bool hasSceneEntries = hasSceneEntryCount > 1;
 
-        for (const auto &sceneMap : topPair.second)
+        for (const auto &controlGroup : scene)
         {
             auto cgMen = juce::PopupMenu();
-
-            auto addCG = &cgMen;
-            if (!hasSceneEntries)
-                addCG = &men; // &sceneMen
-
-            bool hasEntries = sceneMap.size() != 1;
-            for (const auto &groupPair : sceneMap)
+            bool makeSub = (controlGroup.second.size() > 1 || controlGroup.first == cg_FX) &&
+                           controlGroup.first != cg_MIX;
+            for (const auto &controlGroupEntry : controlGroup.second)
             {
+                auto subMenu = juce::PopupMenu();
+                auto *addToThis = &cgMen;
 
-                auto subMen = juce::PopupMenu();
-                juce::PopupMenu *addTo = &subMen;
-                if (!hasEntries &&
-                    topPair.first != cg_FX) // special case - always push FX into a submen
-                {
-                    addTo = addCG;
-                }
+                if (controlGroupEntry.first == SENTINEL_ENTRY && makeSub)
+                    cgMen.addSeparator();
 
-                for (const auto &itemPair : groupPair.second)
+                if (makeSub && controlGroupEntry.first != SENTINEL_ENTRY)
+                    addToThis = &subMenu;
+
+                for (const auto &paramPair : controlGroupEntry.second)
                 {
-                    auto f = itemPair.first;
-                    addTo->addItem(itemPair.second, [this, f]() {
+                    auto f = paramPair.first;
+                    addToThis->addItem(paramPair.second, [this, f]() {
                         dest_id = f;
                         doAdd();
                         repaint();
                     });
                 }
 
-                std::string menuName = subN + " " + std::to_string(groupPair.first + 1);
-                auto cg = topPair.first;
-                switch (cg)
-                {
-                case cg_FX:
-                    menuName = fxslot_names[groupPair.first];
-                    break;
-                case cg_ENV:
-                    menuName = (groupPair.first == 0 ? "AEG" : "FEG");
-                    break;
-                case cg_LFO:
-                    menuName = editor->ed->modulatorNameWithIndex(idx - 1, groupPair.first, -1,
-                                                                  false, false);
-                    break;
-                }
+                if (makeSub && controlGroupEntry.first != SENTINEL_ENTRY)
+                    cgMen.addSubMenu(
+                        cgEntryName(si - 1, controlGroup.first, controlGroupEntry.first), subMenu);
+            }
 
-                if (hasEntries || topPair.first == cg_FX)
-                    addCG->addSubMenu(menuName, *addTo);
-            }
-            if (hasSceneEntries && cgMen.getNumItems())
+            std::string mainN = "";
+            switch ((ControlGroup)controlGroup.first)
             {
-                auto scLabel = "Global";
-                if (idx == 1)
-                    scLabel = "Scene A";
-                if (idx == 2)
-                    scLabel = "Scene B";
-                men.addSubMenu(scLabel, cgMen); // was sceheMen
+            case cg_GLOBAL:
+                mainN = "Patch";
+                break;
+            case cg_OSC:
+                mainN = "Oscillators";
+                break;
+            case cg_MIX:
+                mainN = "Mixer";
+                break;
+            case cg_FILTER:
+                mainN = "Filters";
+                break;
+            case cg_ENV:
+                mainN = "Envelopes";
+                break;
+            case cg_LFO:
+                mainN = "LFOs";
+                break;
+            case cg_FX:
+                mainN = "FX";
+                break;
+            default:
+                mainN = "ERROR";
             }
-            idx++;
+            men.addSubMenu(mainN, cgMen);
         }
-        // men.addSubMenu(mainN, sceneMen);
+
+        si++;
     }
+
     men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
 }
 
