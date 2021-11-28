@@ -40,6 +40,7 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
             clamp01(*f[spring_reverb_spin]),
             clamp01(*f[spring_reverb_damping]),
             clamp01(*f[spring_reverb_chaos]),
+            fxdata->p[spring_reverb_shake].val.b,
         },
         BLOCK_SIZE);
 
@@ -88,6 +89,11 @@ void SpringReverbEffect::init_ctrltypes()
     fxdata->p[spring_reverb_chaos].val_default.f = 0.0f;
     fxdata->p[spring_reverb_chaos].posy_offset = 3;
 
+    fxdata->p[spring_reverb_shake].set_name("Shake");
+    fxdata->p[spring_reverb_shake].set_type(ct_bool);
+    fxdata->p[spring_reverb_shake].val_default.b = false;
+    fxdata->p[spring_reverb_shake].posy_offset = 3;
+
     fxdata->p[spring_reverb_mix].set_name("Mix");
     fxdata->p[spring_reverb_mix].set_type(ct_percent);
     fxdata->p[spring_reverb_mix].val_default.f = 0.5f;
@@ -102,6 +108,7 @@ void SpringReverbEffect::init_default_values()
     fxdata->p[spring_reverb_damping].val.f = 0.5f;
     fxdata->p[spring_reverb_spin].val.f = 0.5f;
     fxdata->p[spring_reverb_chaos].val.f = 0.0f;
+    fxdata->p[spring_reverb_shake].val.b = false;
     fxdata->p[spring_reverb_mix].val.f = 0.5f;
 }
 
@@ -128,7 +135,7 @@ int SpringReverbEffect::group_label_ypos(int id)
     case 1:
         return 11;
     case 2:
-        return 17;
+        return 19;
     }
     return 0;
 }

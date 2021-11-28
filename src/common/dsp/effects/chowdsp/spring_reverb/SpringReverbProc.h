@@ -38,6 +38,7 @@ class SpringReverbProc
         float spin = 0.5f;
         float damping = 0.5f;
         float chaos = 0.0f;
+        bool shake = false;
     };
 
     void prepare(float sampleRate, int samplesPerBlock);
@@ -69,5 +70,10 @@ class SpringReverbProc
     StateVariableFilter<float> lpf;
 
     ReflectionNetwork reflectionNetwork; // early reflections
+
+    int shakeCounter = -1;
+    std::vector<float> shakeBuffer;
+    int shakeBufferSize = 0;
+    float shortShakeBuffer[BLOCK_SIZE];
 };
 } // namespace chowdsp
