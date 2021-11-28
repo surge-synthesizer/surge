@@ -25,11 +25,11 @@ cp -r LuaJIT/ "${SD}"
 
 cd "${SD}"
 MACOSX_DEPLOYMENT_TARGET=10.11 make clean
-MACOSX_DEPLOYMENT_TARGET=10.11 make HOST_CC="clang -target `uname -m`-apple-macos10.11" TARGET_CC="xcrun --toolchain arm64 clang -target arm64-apply-macos10.11 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
+MACOSX_DEPLOYMENT_TARGET=10.11 make -j HOST_CC="clang -target `uname -m`-apple-macos10.11" TARGET_CC="xcrun --toolchain arm64 clang -target arm64-apply-macos10.11 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
 mv src/lib*a "${OD}/arm64"
 
 MACOSX_DEPLOYMENT_TARGET=10.11 make clean
-MACOSX_DEPLOYMENT_TARGET=10.11 make HOST_CC="clang -target `uname -m`-apple-macos10.11" TARGET_CC="xcrun --toolchain x86_64 clang -target x86_64-apply-macos10.11 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
+MACOSX_DEPLOYMENT_TARGET=10.11 make -j HOST_CC="clang -target `uname -m`-apple-macos10.11" TARGET_CC="xcrun --toolchain x86_64 clang -target x86_64-apply-macos10.11 -isysroot $(xcrun --sdk macosx --show-sdk-path)"  || echo "That's OK though"
 
 mv src/lib*a "${OD}/x86_64"
 
