@@ -1051,6 +1051,7 @@ void ModulationSideControls::showAddTargetMenu()
     std::array<std::map<int, std::map<int, std::vector<std::pair<int, std::string>>>>, n_scenes + 1>
         parsBySceneThenCGThenCGE;
     int SENTINEL_ENTRY = 10000001;
+
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
         if (synth->isValidModulation(p->id, add_ms) &&
@@ -1062,8 +1063,8 @@ void ModulationSideControls::showAddTargetMenu()
             auto cge = p->ctrlgroup_entry;
 
             /*
-             * This is so gross. See #5518. Basically some parameters which are in the objet
-             * model in cg_global belong in the UI in cg_something else. So lets hunt em down
+             * This is so gross. See #5518. Basically some parameters which are in the object
+             * model in cg_global belong in the UI in cg_something else. So let's hunt them down
              */
             if (sc > 0)
             {
@@ -1092,6 +1093,18 @@ void ModulationSideControls::showAddTargetMenu()
                 {
                     cg = cg_FILTER;
                     cge = SENTINEL_ENTRY;
+                }
+
+                if (cg == cg_LFO)
+                {
+                    if (cge >= ms_lfo1 && cge <= ms_lfo6)
+                    {
+                        cg = (ControlGroup)1000;
+                    }
+                    else
+                    {
+                        cg = (ControlGroup)1001;
+                    }
                 }
             }
 
@@ -1125,7 +1138,8 @@ void ModulationSideControls::showAddTargetMenu()
                                  .type.val.i] +
                    ")";
             break;
-        case cg_LFO:
+        case 1000:
+        case 1001:
             return editor->ed->modulatorName(cge, false);
             break;
         default:
@@ -1136,6 +1150,7 @@ void ModulationSideControls::showAddTargetMenu()
     };
 
     int si = 0;
+
     for (const auto &scene : parsBySceneThenCGThenCGE)
     {
         if (!scene.empty())
@@ -1159,6 +1174,7 @@ void ModulationSideControls::showAddTargetMenu()
             auto cgMen = juce::PopupMenu();
             bool makeSub = (controlGroup.second.size() > 1 || controlGroup.first == cg_FX) &&
                            controlGroup.first != cg_MIX;
+
             for (const auto &controlGroupEntry : controlGroup.second)
             {
                 auto subMenu = juce::PopupMenu();
@@ -1186,10 +1202,11 @@ void ModulationSideControls::showAddTargetMenu()
             }
 
             std::string mainN = "";
-            switch ((ControlGroup)controlGroup.first)
+
+            switch (controlGroup.first)
             {
             case cg_GLOBAL:
-                mainN = "Patch";
+                mainN = (si == 0) ? "Patch" : "Scene";
                 break;
             case cg_OSC:
                 mainN = "Oscillators";
@@ -1203,8 +1220,11 @@ void ModulationSideControls::showAddTargetMenu()
             case cg_ENV:
                 mainN = "Envelopes";
                 break;
-            case cg_LFO:
-                mainN = "LFOs";
+            case 1000:
+                mainN = "Voice LFOs";
+                break;
+            case 1001:
+                mainN = "Scene LFOs";
                 break;
             case cg_FX:
                 mainN = "FX";
