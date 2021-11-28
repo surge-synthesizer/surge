@@ -37,6 +37,13 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                        bool isMouseDown) override;
 
     void onSkinChanged() override;
+
+    void drawPopupMenuItem(juce::Graphics &g, const juce::Rectangle<int> &area,
+                           const bool isSeparator, const bool isActive, const bool isHighlighted,
+                           const bool isTicked, const bool hasSubMenu, const juce::String &text,
+                           const juce::String &shortcutKeyText, const juce::Drawable *icon,
+                           const juce::Colour *const textColourToUse) override;
+
     enum SurgeColourIds
     {
         componentBgStart = 0x3700001,
