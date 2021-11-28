@@ -46,6 +46,16 @@ target_compile_definitions(surge-juce INTERFACE
 
 set(SURGE_JUCE_FORMATS VST3)
 
+
+if(SURGE_CLAP_ROOT)
+  message( STATUS "Gathering CLAP from ${SURGE_CLAP_ROOT}")
+  if (NOT EXISTS "${SURGE_JUCE_PATH}/modules/juce_audio_plugin_client/juce_audio_plugin_client_CLAP.cpp")
+    message(FATAL_ERROR "To use CLAP you need to both set SURGE_CLAP_ROOT and have SURGE_JUCE_PATH point at a clap-enabled juce")
+  endif()
+  juce_set_clap_sdk_path("${SURGE_CLAP_ROOT}/clap" "${SURGE_CLAP_ROOT}/clap-helpers")
+  list(APPEND SURGE_JUCE_FORMATS CLAP)
+endif()
+
 if(NOT SURGE_SKIP_STANDALONE)
   list(APPEND SURGE_JUCE_FORMATS Standalone)
 endif()
@@ -90,7 +100,6 @@ if(DEFINED ENV{ASIOSDK_DIR} OR BUILD_USING_MY_ASIO_LICENSE)
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/asio
       COMMAND ${CMAKE_COMMAND} -D ASIO_SDK_DESTINATION=${CMAKE_BINARY_DIR}/asio -P cmake/get-asio.cmake
     )
-  
     add_dependencies(surge-juce surge-get-local-asio)
   else()
     file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
@@ -130,5 +139,5 @@ if(SURGE_BUILD_FX AND SURGE_BUILD_XT AND NOT CMAKE_CROSSCOMPILING)
 endif()
 
 if(NOT CMAKE_CROSSCOMPILING)
-    include(cmake/pluginval.cmake)
+  include(cmake/pluginval.cmake)
 endif()
