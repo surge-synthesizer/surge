@@ -2,6 +2,12 @@
 #include "SpringReverbProc.h"
 #include "utilities/FastMath.h"
 
+namespace
+{
+constexpr float smallShakeSeconds = 0.0005f;
+constexpr float largeShakeSeconds = 0.001f;
+} // namespace
+
 namespace chowdsp
 {
 SpringReverbProc::SpringReverbProc()
@@ -30,6 +36,10 @@ void SpringReverbProc::prepare(float sampleRate, int samplesPerBlock)
 
     chaosSmooth.reset((double)sampleRate, 0.05);
 
+    shakeCounter = -1;
+    shakeBufferSize = int(fs * largeShakeSeconds * 3.0f) + BLOCK_SIZE;
+    shakeBuffer.resize(shakeBufferSize, 0.0f);
+
     for (auto &val : simdState)
         val = 0.0f;
 }
@@ -37,6 +47,25 @@ void SpringReverbProc::prepare(float sampleRate, int samplesPerBlock)
 void SpringReverbProc::setParams(const Params &params, int numSamples)
 {
     auto msToSamples = [=](float ms) { return (ms / 1000.0f) * fs; };
+
+    if (params.shake && shakeCounter < 0) // start shaking
+    {
+        float shakeAmount = urng01();
+        float shakeSeconds =
+            smallShakeSeconds + (largeShakeSeconds - smallShakeSeconds) * shakeAmount;
+        shakeSeconds *= 1.0f + 0.5f * params.size;
+        shakeCounter = int(fs * shakeSeconds);
+
+        shakeBufferSize = shakeCounter + BLOCK_SIZE;
+        std::fill(shakeBuffer.begin(), shakeBuffer.end(), 0.0f);
+        for (int i = 0; i < shakeCounter; ++i)
+            shakeBuffer[i] =
+                2.0f * std::sin(2.0f * (float)M_PI * (float)i / (2.0f * (float)shakeCounter));
+    }
+    else if (!params.shake && shakeCounter == 0) // reset shake for next time
+    {
+        shakeCounter = -1;
+    }
 
     constexpr float lowT60 = 0.5f;
     constexpr float highT60 = 4.5f;
@@ -66,9 +95,21 @@ void SpringReverbProc::setParams(const Params &params, int numSamples)
 
 void SpringReverbProc::processBlock(float *left, float *right, const int numSamples)
 {
-    auto doSpringInput = [=](int ch, float input) -> float {
+    std::fill(shortShakeBuffer, shortShakeBuffer + BLOCK_SIZE, 0.0f);
+
+    // add shakeBuffer
+    if (shakeCounter > 0)
+    {
+        int startSample = shakeBufferSize - shakeCounter - BLOCK_SIZE;
+        std::copy(shakeBuffer.begin() + startSample, shakeBuffer.begin() + startSample + numSamples,
+                  shortShakeBuffer);
+        shakeCounter = std::max(shakeCounter - numSamples, 0);
+    }
+
+    auto doSpringInput = [=](int ch, float input, int n) -> float {
         auto output = Surge::DSP::fasttanh(input - feedbackGain * delay.popSample(ch));
-        return dcBlocker.processSample<StateVariableFilterType::Highpass>(ch, output);
+        return dcBlocker.processSample<StateVariableFilterType::Highpass>(ch, output) +
+               shortShakeBuffer[n];
     };
 
     auto doAPFProcess = [&]() {
@@ -91,8 +132,8 @@ void SpringReverbProc::processBlock(float *left, float *right, const int numSamp
 
     for (int n = 0; n < numSamples; ++n)
     {
-        simdState[0] = doSpringInput(0, left[n]);
-        simdState[2] = doSpringInput(1, right[n]);
+        simdState[0] = doSpringInput(0, left[n], n);
+        simdState[2] = doSpringInput(1, right[n], n);
 
         doAPFProcess();
 

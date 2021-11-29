@@ -46,6 +46,7 @@ class SpringReverbEffect : public Effect
 
         spring_reverb_spin,
         spring_reverb_chaos,
+        spring_reverb_knock,
 
         spring_reverb_mix,
 

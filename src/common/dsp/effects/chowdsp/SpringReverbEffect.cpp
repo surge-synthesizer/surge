@@ -40,6 +40,7 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
             clamp01(*f[spring_reverb_spin]),
             clamp01(*f[spring_reverb_damping]),
             clamp01(*f[spring_reverb_chaos]),
+            *f[spring_reverb_knock] > 0.5f,
         },
         BLOCK_SIZE);
 
@@ -88,6 +89,11 @@ void SpringReverbEffect::init_ctrltypes()
     fxdata->p[spring_reverb_chaos].val_default.f = 0.0f;
     fxdata->p[spring_reverb_chaos].posy_offset = 3;
 
+    fxdata->p[spring_reverb_knock].set_name("Knock");
+    fxdata->p[spring_reverb_knock].set_type(ct_float_toggle);
+    fxdata->p[spring_reverb_knock].val_default.f = 0.0f;
+    fxdata->p[spring_reverb_knock].posy_offset = 3;
+
     fxdata->p[spring_reverb_mix].set_name("Mix");
     fxdata->p[spring_reverb_mix].set_type(ct_percent);
     fxdata->p[spring_reverb_mix].val_default.f = 0.5f;
@@ -102,6 +108,7 @@ void SpringReverbEffect::init_default_values()
     fxdata->p[spring_reverb_damping].val.f = 0.5f;
     fxdata->p[spring_reverb_spin].val.f = 0.5f;
     fxdata->p[spring_reverb_chaos].val.f = 0.0f;
+    fxdata->p[spring_reverb_knock].val.f = 0.0f;
     fxdata->p[spring_reverb_mix].val.f = 0.5f;
 }
 
@@ -128,7 +135,7 @@ int SpringReverbEffect::group_label_ypos(int id)
     case 1:
         return 11;
     case 2:
-        return 17;
+        return 19;
     }
     return 0;
 }
