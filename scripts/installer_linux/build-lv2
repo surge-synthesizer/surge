@@ -1,0 +1,21 @@
+#!/bin/bash
+
+OUTDIR=$1
+TMPDIR=$2
+
+mkdir -p ${TMPDIR}
+pushd libs/
+
+git clone --depth 1 --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
+cd JUCE-lv2
+git checkout lv2
+popd
+
+BT=Release
+cmake -GNinja -B${TMPDIR}/build-lv2 -DCMAKE_BUILD_TYPE=${BT} -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2
+#cmake --build ${TMPDIR}/build-lv2 --target surge-xt_LV2 surge-fx_LV2 --parallel
+
+rm -rf "${OUTDIR}/*.lv2"
+mv "${TMPDIR}/build-lv2/src/surge-xt/surge-xt_artefacts/${BT}/LV2/Surge XT.lv2" "${OUTDIR}/surge_xt_products"
+mv "${TMPDIR}/build-lv2/src/surge-fx/surge-fx_artefacts/${BT}/LV2/Surge XT Effects.lv2" "${OUTDIR}/surge_xt_products"
+
