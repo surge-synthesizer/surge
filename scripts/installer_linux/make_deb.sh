@@ -30,6 +30,7 @@ PACKAGE_NAME="$SURGE_NAME"
 # Cleanup from failed prior runs
 rm -rf ${PACKAGE_NAME} product
 mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
+mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
 mkdir -p ${PACKAGE_NAME}/usr/bin
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
@@ -52,7 +53,7 @@ Provides: vst-plugin
 Section: sound
 Priority: optional
 Description: Subtractive hybrid synthesizer virtual instrument
- Surge XT includes VST3 instrument formats for use in compatible hosts and a standalone executable
+ Surge XT includes VST3 and LV2 instrument formats for use in compatible hosts and a standalone executable
 EOT
 
 touch ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
@@ -79,12 +80,15 @@ cp -r "${INDIR}/Surge XT Effects.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
 cp -r "${INDIR}/Surge XT" ${PACKAGE_NAME}/usr/bin/
 cp -r "${INDIR}/Surge XT Effects" ${PACKAGE_NAME}/usr/bin/
 
-# copy the lv2 bundle
-# cp -r ../build/surge_products/Surge.lv2 ${PACKAGE_NAME}/usr/lib/lv2/
-
 # set permissions on shared libraries
 find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
-# find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" -exec chmod 0644 {} +
+
+if [[ -d "${INDIR}/Surge XT.lv2" ]]; then
+  cp -r "${INDIR}/Surge XT.lv2" ${PACKAGE_NAME}/usr/lib/lv2/
+  cp -r "${INDIR}/Surge XT Effects.lv2" ${PACKAGE_NAME}/usr/lib/lv2/
+  find ${PACKAGE_NAME}/usr/lib/lv2/ -type f -iname "*.so" -exec chmod 0644 {} +
+fi
+
 
 echo "----- LIBRARY CONTENTS (except resource) -----"
 find ${PACKAGE_NAME}/usr/lib -print

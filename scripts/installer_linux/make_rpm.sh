@@ -105,6 +105,7 @@ install -m 0755 -d %{buildroot}%{_bindir}/
 install -m 0755 -d %{buildroot}%{_datadir}/
 install -m 0755 -d %{buildroot}%{_defaultdocdir}/
 install -m 0755 -d %{buildroot}%{_libdir}/vst3/
+install -m 0755 -d %{buildroot}%{_libdir}/lv2/
 install -m 0755 -d %{buildroot}%{_datarootdir}
 install -m 0755 -d %{buildroot}%{_datarootdir}/surge-xt/
 install -m 0755 -d %{buildroot}%{_datarootdir}/surge-xt/doc
@@ -114,6 +115,8 @@ install -m 0644 $(pwd)/changelog.txt %{buildroot}%{_datarootdir}/surge-xt/doc/ch
 cp -r ${SOURCEDIR}/resources/data/* %{buildroot}%{_datarootdir}/surge-xt/
 cp -r "${INDIR}/Surge XT.vst3" %{buildroot}%{_libdir}/vst3/
 cp -r "${INDIR}/Surge XT Effects.vst3" %{buildroot}%{_libdir}/vst3/
+cp -r "${INDIR}/Surge XT.lv2" %{buildroot}%{_libdir}/lv2/
+cp -r "${INDIR}/Surge XT Effects.lv2" %{buildroot}%{_libdir}/lv2/
 
 # install executable files as executable
 install -m 0755 "${INDIR}/Surge XT" %{buildroot}/%{_bindir}
@@ -126,6 +129,7 @@ find %{buildroot}%{_libdir}/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
 %files
 %{_bindir}
 %{_libdir}/vst3/
+%{_libdir}/lv2/
 %{_datarootdir}/surge-xt/
 
 
