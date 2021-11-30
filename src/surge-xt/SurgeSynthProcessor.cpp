@@ -263,8 +263,6 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         auto outL = mainOutput.getWritePointer(0, i);
         auto outR = mainOutput.getWritePointer(1, i);
 
-        surge->time_data.ppqPos += (double)BLOCK_SIZE * surge->time_data.tempo / (60. * samplerate);
-
         if (blockPos == 0 && mainInput.getNumChannels() > 0)
         {
             auto inL = mainInput.getReadPointer(0, i);
@@ -284,6 +282,8 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (blockPos == 0)
         {
             surge->process();
+            surge->time_data.ppqPos +=
+                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * samplerate);
         }
         *outL = surge->output[0][blockPos];
         *outR = surge->output[1][blockPos];
