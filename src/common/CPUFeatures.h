@@ -33,7 +33,11 @@ struct FPUStateGuard
     FPUStateGuard();
     ~FPUStateGuard();
 
+#if defined(__aarch64__)
+    uint64_t priorS;
+#else
     int priorS;
+#endif
 };
 }; // namespace CPUFeatures
 } // namespace Surge

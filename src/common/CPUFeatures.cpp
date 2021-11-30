@@ -15,6 +15,8 @@
 
 #include "CPUFeatures.h"
 #include "globals.h"
+#include <iostream>
+#include <iomanip>
 
 #if MAC
 #include <sys/types.h>
@@ -55,15 +57,20 @@ std::string cpuBrand()
     size_t bufsz = sizeof(buffer);
     if (sysctlbyname("machdep.cpu.brand_string", (void *)(&buffer), &bufsz, nullptr, (size_t)0) < 0)
     {
-#if ARM_NEON
-        arch = "Apple Silicon";
-#endif
+        arch = "Unknown";
     }
     else
     {
         arch = buffer;
-#if ARM_NEON
-        arch += " (Apple Silicon)";
+    }
+
+    if (sysctlbyname("hw.optional.arm64", (void *)(&buffer), &bufsz, nullptr, (size_t)0) == 0)
+    {
+        // So I am on an ARM but I am built both ways. Lets let folks know which one they run
+#if defined(__aarch64__)
+        // arch += " (Native)";
+#else
+        arch += " (Using Rosetta)";
 #endif
     }
 
@@ -120,7 +127,7 @@ std::string cpuBrand()
 
 bool isArm()
 {
-#if ARM_NEON
+#if ARM_NEON || defined(__aarch64__)
     return true;
 #else
     return false;
@@ -128,7 +135,7 @@ bool isArm()
 }
 bool isX86()
 {
-#if ARM_NEON
+#if ARM_NEON || defined(__aarch64__)
     return false;
 #else
     return true;
@@ -137,7 +144,7 @@ bool isX86()
 bool hasSSE2() { return true; }
 bool hasAVX()
 {
-#if ARM_NEON
+#if ARM_NEON || defined(__aarch64__)
     return true; // thanks simde
 #else
 #if MAC
@@ -183,12 +190,26 @@ FPUStateGuard::FPUStateGuard()
 
     _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
 #endif
+
+#if defined(__aarch64__)
+    uint64_t FPSR = 0;
+    asm volatile("MRS %0, FPSR " : "=r"(FPSR));
+
+    uint64_t FPCR = FPSR | (1ULL << 24);
+    asm volatile("MSR FPCR, %0 " : : "r"(FPCR));
+
+    priorS = FPSR;
+#endif
 }
 
 FPUStateGuard::~FPUStateGuard()
 {
 #ifndef ARM_NEON
     _mm_setcsr(priorS);
+#endif
+
+#if defined(__aarch64__)
+    asm volatile("MSR FPCR, %0 " : : "r"(priorS));
 #endif
 }
 } // namespace CPUFeatures
