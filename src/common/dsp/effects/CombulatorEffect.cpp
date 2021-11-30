@@ -337,6 +337,9 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     lp.process_block(L, R);
     hp.process_block(L, R);
 
+    lp.flush_sample_denormal();
+    hp.flush_sample_denormal();
+
     auto cm = clamp01(*f[combulator_mix]);
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
