@@ -76,8 +76,30 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             t->controlEndEdit(this);
     }
 
-    void enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction place)
+    juce::Point<float> enqueueStartPosition{-18.f, -18.f};
+    void enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction place,
+                                 const juce::Point<float> &fromPosition = juce::Point<float>{-17.f,
+                                                                                             -17.f})
     {
+        /*
+         * So what the heck is this you may ask? Well when juce shows the info window on the
+         * very first go round, since it is a hierarchy change, juce sends us a zero-distance
+         * mouse moved event. So we need ot make sure, in the case of a start and only a start,
+         * that if we get two in a row they are from different places. See #5487
+         */
+        if (place == SurgeGUIEditor::InfoQAction::START)
+        {
+            jassert(fromPosition.x != -17 && fromPosition.y != -17);
+            if (enqueueStartPosition == fromPosition)
+            {
+                return;
+            }
+            enqueueStartPosition = fromPosition;
+        }
+        else
+        {
+            enqueueStartPosition = juce::Point<float>{-18.f, -18.f};
+        }
         auto t = getTag();
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         if (sge)

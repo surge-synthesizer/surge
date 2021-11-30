@@ -335,7 +335,7 @@ void ModulatableSlider::onSkinChanged()
 
 void ModulatableSlider::mouseEnter(const juce::MouseEvent &event)
 {
-    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START);
+    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, event.position);
     isHovered = true;
     auto sge = firstListenerOfType<SurgeGUIEditor>();
     if (sge)
@@ -450,7 +450,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 
 void ModulatableSlider::mouseMove(const juce::MouseEvent &event)
 {
-    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START);
+    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, event.position);
 }
 
 void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
