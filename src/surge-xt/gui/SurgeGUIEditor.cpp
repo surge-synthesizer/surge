@@ -5820,7 +5820,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle scene
-        if (key.getModifiers().isAltDown() && textChar == 's')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'S')
         {
             // TODO fix scene assumption! If we ever increase number of scenes, we will need
             // individual key combinations for selecting a particular scene
@@ -5841,7 +5841,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // store patch
-        if (key.getModifiers().isCommandDown() && keyCode == 83) // 's'
+        if (key.getModifiers().isCommandDown() && keyCode == (int)'S')
         {
             showOverlay(SurgeGUIEditor::SAVE_PATCH);
 
@@ -5849,7 +5849,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle patch search typeahead
-        if (key.getModifiers().isCommandDown() && keyCode == 70) // 'f'
+        if (key.getModifiers().isCommandDown() && keyCode == (int)'F')
         {
             patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
             patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
@@ -5858,7 +5858,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle tuning editor
-        if (key.getModifiers().isAltDown() && textChar == 't')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'T')
         {
             toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
 
@@ -5880,13 +5880,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 #endif
 
         // toggle an applicable LFO editor (MSEG, formula...)
-        if (key.getModifiers().isAltDown() && textChar == 'e')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'E')
         {
             return true;
         }
 
         // toggle setting patch as favorite
-        if (key.getModifiers().isAltDown() && textChar == 'f')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'F')
         {
             setPatchAsFavorite(!isPatchFavorite());
             patchSelector->setIsFavorite(isPatchFavorite());
@@ -5895,7 +5895,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle modulation list
-        if (key.getModifiers().isAltDown() && textChar == 'm')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'M')
         {
             toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
 
@@ -5905,7 +5905,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle debug console
-        if (key.getModifiers().isAltDown() && textChar == 'd')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'D')
         {
             Surge::Debug::toggleConsole();
 
@@ -5913,7 +5913,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // toggle virtual keyboard
-        if (key.getModifiers().isAltDown() && textChar == 'k')
+        if (key.getModifiers().isAltDown() && keyCode == (int)'K')
         {
             toggleVirtualKeyboard();
 
