@@ -5831,11 +5831,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
 
         // select oscillator
-        if (key.getModifiers().isAltDown() && (textChar >= '1' && textChar <= '1' + n_oscs - 1))
+        if (key.getModifiers().isAltDown() &&
+            (keyCode >= (int)'1' && keyCode <= (int)('1' + n_oscs - 1)))
         {
             // juce::getTextCharacter() returns ASCII code of the char
             // so subtract the first one we need to get the ordinal number of the osc, 0-based
-            changeSelectedOsc(textChar - '1');
+            changeSelectedOsc(keyCode - (int)'1');
 
             return true;
         }
