@@ -432,7 +432,7 @@ std::string SurgeSynthProcessor::paramClumpName(int clumpid)
     case 1:
         return "Macro Parameters";
     case 2:
-        return "Global / FX";
+        return "Global and FX";
     case 3:
         return "Scene A Common";
     case 4:

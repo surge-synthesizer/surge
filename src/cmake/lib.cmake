@@ -56,6 +56,7 @@ function(surge_juce_package target product_name)
     if(TARGET ${target}_VST3)
       install(DIRECTORY "${output_dir}/VST3/${product_name}.vst3" DESTINATION lib/vst3)
     endif()
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/resources/data/" DESTINATION share/surge-xt)
   endif()
 endfunction()
 
