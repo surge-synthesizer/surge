@@ -309,8 +309,13 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     ** Compensating for whether your distro makes you a ~/Documents or not
     */
 
-    // FIXME: This "if" chain makes no sense. It's only here as a 1:1 mapping from the old code.
-    if (auto documentsSurge = homePath / "Documents/Surge XT"; fs::is_directory(documentsSurge))
+    if (auto xdgdd = getenv("XDG_DOCUMENTS_DIR"))
+    {
+        auto xdgpath = fs::path{xdgdd} / "Surge XT";
+        userDataPath = std::move(xdgpath);
+    }
+    else if (auto documentsSurge = homePath / "Documents/Surge XT";
+             fs::is_directory(documentsSurge))
     {
         userDataPath = std::move(documentsSurge);
     }
