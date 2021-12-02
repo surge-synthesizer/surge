@@ -129,10 +129,10 @@ find %{buildroot}%{_libdir}/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
 %files
 "%{_bindir}/Surge XT"
 "%{_bindir}/Surge XT Effects"
-"%{_libdir}/vst3/Surge XT.vst3/*"
-"%{_libdir}/lv2/Surge XT.lv2/*"
-"%{_libdir}/vst3/Surge XT Effects.vst3/*"
-"%{_libdir}/lv2/Surge XT Effects.lv2/*"
+"%{_libdir}/vst3/Surge XT.vst3"
+"%{_libdir}/lv2/Surge XT.lv2"
+"%{_libdir}/vst3/Surge XT Effects.vst3"
+"%{_libdir}/lv2/Surge XT Effects.lv2"
 "%{_datarootdir}/surge-xt/*"
 
 
