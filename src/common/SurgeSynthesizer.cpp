@@ -3370,6 +3370,8 @@ void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
 {
     if (!audio_processing_active || dangerMode)
     {
+        processEnqueuedPatchIfNeeded();
+
         // if the audio processing is inactive, patchloading should occur anyway
         if (patchid_queue >= 0)
         {

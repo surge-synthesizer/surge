@@ -359,15 +359,13 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     return true;
 }
 
-void SurgeSynthesizer::enqueuePatchForLoad(void *data, int size)
+void SurgeSynthesizer::enqueuePatchForLoad(const void *data, int size)
 {
     {
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
 
-        if (enqueuedLoadData) // this means we missed one because we only free under the lock
-            free(enqueuedLoadData);
-
-        enqueuedLoadData = data;
+        enqueuedLoadData.reset(new char[size]);
+        memcpy(enqueuedLoadData.get(), data, size);
         enqueuedLoadSize = size;
         rawLoadEnqueued = true;
         rawLoadNeedsUIDawExtraState = false;
@@ -377,20 +375,15 @@ void SurgeSynthesizer::enqueuePatchForLoad(void *data, int size)
 void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 {
     bool expected = true;
-    void *freeThis = nullptr;
     if (rawLoadEnqueued.compare_exchange_weak(expected, true) && expected)
     {
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
         rawLoadEnqueued = false;
-        loadRaw(enqueuedLoadData, enqueuedLoadSize);
+        loadRaw(enqueuedLoadData.get(), enqueuedLoadSize);
         loadFromDawExtraState();
 
-        freeThis = enqueuedLoadData;
-        enqueuedLoadData = nullptr;
         rawLoadNeedsUIDawExtraState = true;
     }
-    if (freeThis)
-        free(freeThis); // do this outside the lock
 }
 
 void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)

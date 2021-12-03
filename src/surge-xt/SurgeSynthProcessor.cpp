@@ -400,15 +400,8 @@ void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 
 void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
-    // FIXME - casting away constness is gross
-    surge->loadRaw(data, sizeInBytes, false);
-
-    surge->loadFromDawExtraState();
-    auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
-    if (sse)
-    {
-        sse->populateFromStreaming(surge.get());
-    }
+    surge->enqueuePatchForLoad(data, sizeInBytes);
+    surge->processThreadunsafeOperations();
 }
 
 void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)
