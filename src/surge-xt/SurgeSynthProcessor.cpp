@@ -232,14 +232,6 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         return;
     }
     surge->audio_processing_active = true;
-
-    if (haveWaitingState)
-    {
-        surge->halt_engine = true;
-        surge->allNotesOff();
-        haveWaitingState = false;
-    }
-
     auto mainOutput = getBusBuffer(buffer, false, 0);
 
     auto mainInput = getBusBuffer(buffer, true, 0);
@@ -408,21 +400,10 @@ void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 
 void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
-    if (surge->audio_processing_active)
-    {
-        /* If audio is running we need to halt the engine from here using atomics
-         * Internal loads do this with the thread creation in SSIO but this uses the loadRaw
-         * path directly so do this in collaboratio with ::processBlock
-         */
-        haveWaitingState = true;
-        while (haveWaitingState)
-        {
-        };
-    }
-
+    // FIXME - casting away constness is gross
     surge->loadRaw(data, sizeInBytes, false);
-    surge->loadFromDawExtraState();
 
+    surge->loadFromDawExtraState();
     auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
     if (sse)
     {

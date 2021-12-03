@@ -203,7 +203,6 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     //==============================================================================
     void getStateInformation(juce::MemoryBlock &destData) override;
     void setStateInformation(const void *data, int sizeInBytes) override;
-    std::atomic<bool> haveWaitingState{false};
 
     void surgeParameterUpdated(const SurgeSynthesizer::ID &id, float value) override;
     void surgeMacroUpdated(long macroNum, float d) override;
