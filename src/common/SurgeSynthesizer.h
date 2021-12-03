@@ -319,10 +319,10 @@ class alignas(16) SurgeSynthesizer
   public:
     std::atomic<bool> rawLoadEnqueued{false}, rawLoadNeedsUIDawExtraState{false};
     std::mutex rawLoadQueueMutex;
-    void *enqueuedLoadData{nullptr}; // if this is set I need to free it
+    std::unique_ptr<char[]> enqueuedLoadData{nullptr}; // if this is set I need to free it
     int enqueuedLoadSize{0};
-    void enqueuePatchForLoad(void *data, int size); // safe from any thread
-    void processEnqueuedPatchIfNeeded();            // only safe from audio thread
+    void enqueuePatchForLoad(const void *data, int size); // safe from any thread
+    void processEnqueuedPatchIfNeeded();                  // only safe from audio thread
 
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
