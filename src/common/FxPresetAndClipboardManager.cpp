@@ -195,6 +195,11 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                     return a.isFactory;
                 }
 
+                if (a.subPath != b.subPath)
+                {
+                    return a.subPath < b.subPath;
+                }
+
                 return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
             }
             else
