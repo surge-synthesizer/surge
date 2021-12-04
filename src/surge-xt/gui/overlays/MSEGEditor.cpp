@@ -1492,10 +1492,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     if (cx >= drawArea.getX() && cx <= drawArea.getRight())
                     {
                         juce::Graphics::ScopedSaveState gs(g);
-                        g.reduceClipRegion(r.toNearestIntEdges());
-                        auto at = juce::AffineTransform()
-                                      .translated(-offx * sz, -offy * sz)
-                                      .translated(r.getTopLeft());
+                        auto movet = juce::AffineTransform().translated(r.getTopLeft());
+                        g.addTransform(movet);
+                        // g.reduceClipRegion(r.toNearestInt());
+                        g.reduceClipRegion(juce::Rectangle<int>(0, 0, sz, sz));
+                        auto at = juce::AffineTransform().translated(-offx * sz, -offy * sz);
+
                         handleDrawable->draw(g, 1.0, at);
                     }
                 }
