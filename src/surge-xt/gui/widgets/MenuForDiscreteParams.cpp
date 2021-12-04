@@ -239,7 +239,7 @@ void MenuForDiscreteParams::mouseWheelMove(const juce::MouseEvent &e,
 float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
 {
     int iv = Parameter::intUnscaledFromFloat(v, iMax, iMin);
-    if (!intOrdering.empty() && iMax == intOrdering.size())
+    if (!intOrdering.empty())
     {
         int pidx = 0;
 
@@ -279,6 +279,16 @@ float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
         }
 
         iv = intOrdering[nidx];
+
+        if (iv < 0)
+        {
+            iv = iMax;
+        }
+
+        if (iv > iMax)
+        {
+            iv = 0;
+        }
     }
     else
     {
