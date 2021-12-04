@@ -1854,14 +1854,26 @@ void SurgeGUIEditor::openOrRecreateEditor()
      * Finally make sure the Z-Order fronting for our overlays is still OK
      */
     std::vector<juce::Component *> frontthese;
+    std::vector<juce::Component *> thenFrontThese;
     for (auto c : frame->getChildren())
     {
         if (auto ol = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c))
         {
-            frontthese.push_back(c);
+            if (ol->getIsModal())
+            {
+                thenFrontThese.push_back(c);
+            }
+            else
+            {
+                frontthese.push_back(c);
+            }
         }
     }
     for (auto c : frontthese)
+    {
+        c->toFront(true);
+    }
+    for (auto c : thenFrontThese)
     {
         c->toFront(true);
     }
