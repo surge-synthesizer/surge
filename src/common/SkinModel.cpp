@@ -286,8 +286,8 @@ Connector osc_display =
     Connector("osc.display", 4, 81, 141, 99, Components::Custom, Connector::OSCILLATOR_DISPLAY);
 
 Connector keytrack =
-    Connector("osc.keytrack", 4, 180, 45, 9, Components::Switch).withBackground(IDB_OSC_KEYTRACK);
-Connector retrigger = Connector("osc.retrigger", 51, 180, 45, 9, Components::Switch)
+    Connector("osc.keytrack", 3, 181, 47, 10, Components::Switch).withBackground(IDB_OSC_KEYTRACK);
+Connector retrigger = Connector("osc.retrigger", 51, 181, 47, 10, Components::Switch)
                           .withBackground(IDB_OSC_RETRIGGER);
 
 Connector octave = Connector("osc.octave", 0, 194, 96, 18, Components::MultiSwitch)

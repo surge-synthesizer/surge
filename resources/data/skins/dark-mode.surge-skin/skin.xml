@@ -318,8 +318,8 @@
 
         <!-- OSC -->
         <control ui_identifier="osc.display" x="4" y="81" w="141" h="99"/>
-        <control ui_identifier="osc.keytrack" x="4" y="181" w="45" h="9"/>
-        <control ui_identifier="osc.retrigger" x="51" y="181" w="45" h="9"/>
+        <control ui_identifier="osc.keytrack" x="3" y="181" w="47" h="10"/>
+        <control ui_identifier="osc.retrigger" x="50" y="181" w="47" h="10"/>
         <control ui_identifier="osc.octave" x="0" y="194" w="96" h="18"/>
         <control ui_identifier="osc.type" x="96" y="194" w="49" h="18"/>
         <control ui_identifier="osc.select" x="66" y="61" w="75" h="13"/>
