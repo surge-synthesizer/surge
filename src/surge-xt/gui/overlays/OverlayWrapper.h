@@ -99,6 +99,7 @@ struct OverlayWrapper : public juce::Component,
 
     juce::Rectangle<int> componentBounds;
     bool isModal{false};
+    bool getIsModal() const { return isModal; }
 
     std::unique_ptr<juce::DocumentWindow> tearOutParent;
 
