@@ -29,6 +29,12 @@
 
 #endif
 
+#if LINUX
+#if defined(__aarch64__)
+#define ARM_NEON 1
+#endif
+#endif
+
 #if defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #include <emmintrin.h>

@@ -273,10 +273,7 @@ elseif(UNIX)
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
     target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)
   endif()
-  if(LINUX_ON_ARM)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ARM_NEON=1)
-    target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
-  endif()
+  target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
 elseif(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC
     WINDOWS=1
