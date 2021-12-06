@@ -95,7 +95,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.drawText(label, labelRect, juce::Justification::centredLeft);
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
-    g.drawRect(fullRect);
+    g.drawRect(fullRect.expanded(1), 2);
 }
 
 void MiniEdit::onSkinChanged()
