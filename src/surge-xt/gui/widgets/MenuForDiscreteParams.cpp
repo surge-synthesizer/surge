@@ -26,6 +26,7 @@ namespace Widgets
 {
 MenuForDiscreteParams::MenuForDiscreteParams() = default;
 MenuForDiscreteParams::~MenuForDiscreteParams() = default;
+
 void MenuForDiscreteParams::paint(juce::Graphics &g)
 {
     auto imgt = juce::AffineTransform();
@@ -37,14 +38,17 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
     {
         imgt = imgt.translated(0, 2);
         glyphMenuBounds = glyphMenuBounds.withTrimmedTop(2).withTrimmedBottom(2);
+
         switch (glyphLocation)
         {
         case LEFT:
         {
+            float db = 0.5 * (getHeight() - dragGlyphBoxSize);
+
             imgt = imgt.translated(dragRegion.getWidth(), 0);
             glyphMenuBounds = glyphMenuBounds.withTrimmedLeft(dragRegion.getWidth());
-            float db = 0.5 * (getHeight() - dragGlyphBoxSize);
             glyphBoxTransform = glyphBoxTransform.translated(0, db);
+
             break;
         }
         default:
@@ -57,11 +61,14 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
     if (bg)
     {
         float dOp = 1.0;
+
         if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
         {
             dOp = 0.5;
         }
+
         bg->draw(g, dOp, imgt);
+
         if (isHovered && bghover)
         {
             bghover->draw(g, dOp, imgt);
@@ -69,10 +76,14 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
     }
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     if (!sge)
+    {
         return;
+    }
 
     auto dt = sge->getDisplayForTag(getTag());
+
     if (glyphMode)
     {
         // draw the glyph
@@ -83,27 +94,35 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
             int iv = floor(getValue() * (iMax - iMin) + 0.5);
             int yv = iv;
             int xv = 0;
+
             if (!gli.empty())
             {
                 auto gim = gli[iv];
                 xv = gim.first;
                 yv = gim.second;
             }
+
             auto gt =
                 juce::AffineTransform().translated(-xv * dragGlyphBoxSize, -yv * dragGlyphBoxSize);
+
             g.reduceClipRegion(glyphBox);
+
             if (dragGlyph)
             {
                 auto opacity = 1.0;
+
                 if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
                 {
                     opacity = 0.5;
                 }
-                dragGlyph->draw(g, opacity, gt);
 
                 if (isHovered && dragGlyphHover)
                 {
                     dragGlyphHover->draw(g, opacity, gt);
+                }
+                else
+                {
+                    dragGlyph->draw(g, opacity, gt);
                 }
             }
             else
@@ -113,18 +132,20 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
         }
 
         auto r = glyphMenuBounds.withTrimmedLeft(6);
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
-
         auto valcol = skin->getColor(Colors::Menu::FilterValue);
+
+        g.setFont(Surge::GUI::getFontManager()->displayFont);
 
         if (isHovered)
         {
             valcol = skin->getColor(Colors::Menu::FilterValueHover);
         }
+
         if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
         {
             valcol = valcol.withAlpha(0.5f);
         }
+
         g.setColour(valcol);
         g.drawText(dt, r, juce::Justification::centredLeft);
     }
@@ -139,16 +160,19 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
 
         auto labcol = skin->getColor(Colors::Menu::Name);
         auto valcol = skin->getColor(Colors::Menu::Value);
+
         if (isHovered)
         {
             labcol = skin->getColor(Colors::Menu::NameHover);
             valcol = skin->getColor(Colors::Menu::ValueHover);
         }
+
         if ((hasDeactivatedFn && isDeactivatedFn()) || isDeactivated)
         {
             labcol = skin->getColor(Colors::Menu::NameDeactivated);
             valcol = skin->getColor(Colors::Menu::ValueDeactivated);
         }
+
         g.setColour(labcol);
         g.drawText(label, r, juce::Justification::centredLeft);
         g.setColour(valcol);
