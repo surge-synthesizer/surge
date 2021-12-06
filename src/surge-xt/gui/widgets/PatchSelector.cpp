@@ -906,6 +906,7 @@ void PatchSelector::onSkinChanged()
     typeAhead->setColour(juce::TextEditor::backgroundColourId, transBlack);
     typeAhead->setColour(juce::TextEditor::focusedOutlineColourId, transBlack);
     typeAhead->setFont(Surge::GUI::getFontManager()->patchNameFont);
+    typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
 
     typeAhead->setColour(juce::TextEditor::textColourId,
                          skin->getColor(Colors::Dialog::Entry::Text));
@@ -947,8 +948,8 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
                   std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
         }
         typeAhead->setJustification(juce::Justification::centred);
-        typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
         typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
+        typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
 
         if (!typeAhead->isVisible() && sge)
             sge->vkbForward++;
