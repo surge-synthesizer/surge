@@ -41,6 +41,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
         &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, "");
     auto defaultComment = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::DefaultPatchComment, "");
+    bool appendOGPatchBy = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::AppendOriginalPatchBy, true);
     auto oldAuthor = std::string("");
 
     if (!Surge::Storage::isValidUTF8(defaultAuthor))
@@ -71,7 +73,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
         comments = defaultComment;
     }
 
-    if (oldAuthor != "")
+    if (oldAuthor != "" && appendOGPatchBy)
     {
         if (comments == "")
             comments += "Original patch by " + oldAuthor;

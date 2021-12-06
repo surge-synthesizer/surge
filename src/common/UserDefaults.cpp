@@ -110,6 +110,9 @@ void initMaps()
             case DefaultPatchComment:
                 r = "defaultPatchComment";
                 break;
+            case AppendOriginalPatchBy:
+                r = "appendOriginalPatchBy";
+                break;
             case ModWindowShowsValues:
                 r = "modWindowShowsValues";
                 break;
