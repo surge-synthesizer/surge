@@ -2529,6 +2529,32 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     break;
                 };
             }
+            else if (cms->getMouseMode() ==
+                     Surge::Widgets::ModulationSourceButton::CLICK_TOGGLE_ARM)
+            {
+                modsource = newsource;
+                modsource_index = newindex;
+                if ((state & 3) == 0)
+                {
+                    mod_editor = true;
+                    queue_refresh = true;
+                }
+                else
+                {
+                    mod_editor = !mod_editor;
+                }
+                refresh_mod();
+            }
+            else if (cms->getMouseMode() ==
+                     Surge::Widgets::ModulationSourceButton::CLICK_SELECT_ONLY)
+            {
+                modsource = newsource;
+                modsource_index = newindex;
+                mod_editor = false;
+                if ((state & 3) == 0)
+                    queue_refresh = true;
+                refresh_mod();
+            }
             else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::HAMBURGER)
             {
                 updated = true;

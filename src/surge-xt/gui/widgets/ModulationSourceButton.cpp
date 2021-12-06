@@ -38,11 +38,20 @@ ModulationSourceButton::ModulationSourceButton()
     auto ol = std::make_unique<OverlayAsAccessibleButton<ModulationSourceButton>>(
         this, "Select", juce::AccessibilityRole::button);
     ol->onPress = [this](auto *t) {
-        mouseMode = CLICK;
+        mouseMode = CLICK_SELECT_ONLY;
         notifyValueChanged();
     };
     addChildComponent(*ol);
     selectAccButton = std::move(ol);
+
+    ol = std::make_unique<OverlayAsAccessibleButton<ModulationSourceButton>>(
+        this, "Arm", juce::AccessibilityRole::button);
+    ol->onPress = [this](auto *t) {
+        mouseMode = CLICK_TOGGLE_ARM;
+        notifyValueChanged();
+    };
+    addChildComponent(*ol);
+    toggleArmAccButton = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<ModulationSourceButton>>(
         this, "Target", juce::AccessibilityRole::button);
@@ -621,8 +630,10 @@ void ModulationSourceButton::resized()
     b = b.translated(getHeight(), 0);
     targetAccButton->setBounds(b);
     b = b.translated(getHeight(), 0);
+    toggleArmAccButton->setBounds(b);
 
     selectAccButton->setVisible(true);
+    toggleArmAccButton->setVisible(true);
     if (isLFO())
     {
         targetAccButton->setVisible(true);
