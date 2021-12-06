@@ -93,7 +93,8 @@ struct ModulationSideControls : public juce::Component,
         addTargetW = makeW({"Select Target"}, tag_add_target, false);
 
         dispL = makeL("Value Display");
-        dispW = makeW({"None", "Depth Only", "Value and Depth", "All"}, tag_value_disp, true, true);
+        dispW = makeW({"None", "Depths", "Values and Depths", "Values, Depths and Ranges"},
+                      tag_value_disp, true, true);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
                                                        Storage::ModListValueDisplay, 3);
@@ -226,6 +227,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         static constexpr int height = 32;
         Datum datum;
         ModulationListContents *contents{nullptr};
+
         DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
         {
             clearButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(1, [this]() {
@@ -464,6 +466,19 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 contents->populateDatum(datum, synth);
                 resetValuesFromDatum();
             }
+        }
+
+        int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *p,
+                                       const juce::ModifierKeys &mods,
+                                       bool isDoubleClickEvent) override
+        {
+            if (isDoubleClickEvent)
+            {
+                surgeLikeSlider->setValue(0.5f);
+                valueChanged(surgeLikeSlider.get());
+            }
+
+            return 0;
         }
 
         void onSkinChanged() override
