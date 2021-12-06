@@ -2079,7 +2079,8 @@ juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<in
     auto o = juce::PopupMenu::Options();
     if (where.x > 0 && where.y > 0)
     {
-        auto r = juce::Rectangle<int>().withPosition(frame->localPointToGlobal(where));
+        auto r = juce::Rectangle<int>().withWidth(1).withHeight(1).withPosition(
+            frame->localPointToGlobal(where));
         o = o.withTargetScreenArea(r);
     }
     return o;
