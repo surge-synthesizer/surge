@@ -41,7 +41,8 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
             int idx = 0;
             for (auto &c : storage->patch_category)
             {
-                if (!c.isFactory)
+                if (!c.isFactory || (idx < storage->firstThirdPartyCategory &&
+                                     c.name.find("Tutorial") == std::string::npos))
                 {
                     auto it = std::search(
                         c.name.begin(), c.name.end(), s.begin(), s.end(),
@@ -54,6 +55,21 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                 idx++;
             }
         }
+        // Now sort that res
+        std::sort(res.begin(), res.end(), [this](const auto &a, const auto &b) {
+            const auto pa = storage->patch_category[a];
+            const auto pb = storage->patch_category[b];
+
+            if (pa.isFactory == pb.isFactory)
+            {
+                return pa.name < pb.name;
+            }
+            else
+            {
+                // putting b here puts the user patches first
+                return pb.isFactory;
+            }
+        });
         return res;
     }
 
