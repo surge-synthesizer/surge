@@ -610,7 +610,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         d.isBipolar = synth->isBipolarModulation(thisms);
         d.isMuted = synth->isModulationMuted(ptag, thisms, d.source_scene, d.source_index);
         p->get_display_of_modulation_depth(
-            pdisp, synth->getModulation(ptag, thisms, d.source_scene, d.source_index),
+            pdisp, synth->getModDepth(ptag, thisms, d.source_scene, d.source_index),
             synth->isBipolarModulation(thisms), Parameter::InfoWindow, &(d.mss));
         d.moddepth = pdisp;
     }
