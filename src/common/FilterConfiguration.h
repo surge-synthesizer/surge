@@ -151,7 +151,7 @@ const char fut_names[n_fu_types][32] = {
     "N Res Warp",        // fut_resonancewarp_n
     "BP Res Warp",       // fut_resonancewarp_bp
     "FX Res Warp AP",    // fut_resonancewarp_ap
-    "FX Tri-pole",       // fut_tripole
+    "MULTI Tri-pole",    // fut_tripole
     /* this is a ruler to ensure names do not exceed 31 characters
      0123456789012345678901234567890
     */
@@ -412,42 +412,44 @@ const int lprow = 1;
 const int bprow = 2;
 const int hprow = 3;
 const int nrow = 4;
-const int fxrow = 5;
+const int multirow = 5;
+const int fxrow = 6;
+
 const int fut_glyph_index[n_fu_types][2] = {
-    {0, 0},     // fut_none
-    {0, lprow}, // fut_lp12
-    {1, lprow}, // fut_lp24
-    {3, lprow}, // fut_lpmoog
-    {0, hprow}, // fut_hp12
-    {1, hprow}, // fut_hp24
-    {0, bprow}, // fut_bp12
-    {0, nrow},  // fut_notch12
-    {1, fxrow}, // fut_comb_pos
-    {3, fxrow}, // fut_SNH
-    {4, lprow}, // fut_vintageladder
-    {6, lprow}, // fut_obxd_2pole
-    {7, lprow}, // fut_obxd_4pole
-    {2, lprow}, // fut_k35_lp
-    {2, hprow}, // fut_k35_hp
-    {5, lprow}, // fut_diode
-    {8, lprow}, // fut_cutoffwarp_lp
-    {4, hprow}, // fut_cutoffwarp_hp
-    {3, nrow},  // fut_cutoffwarp_n
-    {3, bprow}, // fut_cutoffwarp_bp
-    {3, hprow}, // fut_obxd_2pole_hp,
-    {2, nrow},  // fut_obxd_2pole_n,
-    {2, bprow}, // fut_obxd_2pole_bp,
-    {1, bprow}, // fut_bp24,
-    {1, nrow},  // fut_notch24,
-    {2, fxrow}, // fut_comb_neg,
-    {0, fxrow}, // fut_apf
-    {0, fxrow}, // fut_cutoffwarp_ap (this is temporarily set to just use the regular AP glyph)
-    {9, lprow}, // fut_resonancewarp_lp
-    {5, hprow}, // fut_resonancewarp_hp
-    {4, nrow},  // fut_resonancewarp_n
-    {4, bprow}, // fut_resonancewarp_bp
-    {0, fxrow}, // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
-    {0, fxrow}, // fut_tripole (also temporarily set to just use the regular AP glyph)
+    {0, 0},        // fut_none
+    {0, lprow},    // fut_lp12
+    {1, lprow},    // fut_lp24
+    {3, lprow},    // fut_lpmoog
+    {0, hprow},    // fut_hp12
+    {1, hprow},    // fut_hp24
+    {0, bprow},    // fut_bp12
+    {0, nrow},     // fut_notch12
+    {1, fxrow},    // fut_comb_pos
+    {3, fxrow},    // fut_SNH
+    {4, lprow},    // fut_vintageladder
+    {6, lprow},    // fut_obxd_2pole
+    {7, lprow},    // fut_obxd_4pole
+    {2, lprow},    // fut_k35_lp
+    {2, hprow},    // fut_k35_hp
+    {5, lprow},    // fut_diode
+    {8, lprow},    // fut_cutoffwarp_lp
+    {4, hprow},    // fut_cutoffwarp_hp
+    {3, nrow},     // fut_cutoffwarp_n
+    {3, bprow},    // fut_cutoffwarp_bp
+    {3, hprow},    // fut_obxd_2pole_hp,
+    {2, nrow},     // fut_obxd_2pole_n,
+    {2, bprow},    // fut_obxd_2pole_bp,
+    {1, bprow},    // fut_bp24,
+    {1, nrow},     // fut_notch24,
+    {2, fxrow},    // fut_comb_neg,
+    {0, fxrow},    // fut_apf
+    {0, fxrow},    // fut_cutoffwarp_ap (this is temporarily set to just use the regular AP glyph)
+    {9, lprow},    // fut_resonancewarp_lp
+    {5, hprow},    // fut_resonancewarp_hp
+    {4, nrow},     // fut_resonancewarp_n
+    {4, bprow},    // fut_resonancewarp_bp
+    {0, fxrow},    // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
+    {0, multirow}, // fut_tripole
 };
 
 enum ws_type
