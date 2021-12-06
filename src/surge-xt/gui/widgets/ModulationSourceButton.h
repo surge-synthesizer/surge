@@ -120,7 +120,20 @@ struct ModulationSourceButton : public juce::Component,
 
     int state{0};
 
-    void setState(int s) { state = s; }
+    void setState(int s)
+    {
+        state = s;
+#if SURGE_JUCE_ACCESSIBLE
+        if ((state & 3) == 2)
+        {
+            toggleArmAccButton->setTitle("Disarm");
+        }
+        else
+        {
+            toggleArmAccButton->setTitle("Arm");
+        }
+#endif
+    }
     int getState() const { return state; }
     bool transientArmed{false}; // armed in drop state
 
@@ -163,6 +176,8 @@ struct ModulationSourceButton : public juce::Component,
     {
         NONE,
         CLICK,
+        CLICK_TOGGLE_ARM,
+        CLICK_SELECT_ONLY,
         CLICK_ARROW,
         PREDRAG_VALUE,
         DRAG_VALUE,
@@ -190,7 +205,7 @@ struct ModulationSourceButton : public juce::Component,
     void resized() override;
 
 #if SURGE_JUCE_ACCESSIBLE
-    std::unique_ptr<juce::Component> targetAccButton, selectAccButton;
+    std::unique_ptr<juce::Component> targetAccButton, selectAccButton, toggleArmAccButton;
 #endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);

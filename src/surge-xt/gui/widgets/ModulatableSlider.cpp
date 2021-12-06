@@ -591,8 +591,15 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
         double getCurrentValue() const override { return slider->getValue(); }
         void setValue(double newValue) override
         {
-            slider->setValue(newValue);
-            slider->setQuantitizedDisplayValue(newValue);
+            if (slider->isEditingModulation)
+            {
+                slider->setModValue(newValue);
+            }
+            else
+            {
+                slider->setValue(newValue);
+                slider->setQuantitizedDisplayValue(newValue);
+            }
             slider->repaint();
             slider->notifyValueChanged();
         }
@@ -607,12 +614,23 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
         }
         virtual void setValueAsString(const juce::String &newValue) override
         {
+            // FIXME - deal with modulation
             auto sge = slider->firstListenerOfType<SurgeGUIEditor>();
             if (sge)
             {
-                float f = sge->getF01FromString(slider->getTag(), newValue.toStdString());
-                setValue(f);
-                return;
+                if (slider->isEditingModulation)
+                {
+                    float f =
+                        sge->getModulationF01FromString(slider->getTag(), newValue.toStdString());
+                    setValue(f);
+                    return;
+                }
+                else
+                {
+                    float f = sge->getF01FromString(slider->getTag(), newValue.toStdString());
+                    setValue(f);
+                    return;
+                }
             }
             setValue(newValue.getDoubleValue());
         }

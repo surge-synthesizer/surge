@@ -1205,8 +1205,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
         return;
     assert(frame);
 
+    bool somethingHasFocus{false};
     if (editor_open)
     {
+        somethingHasFocus = (juce::Component::getCurrentlyFocusedComponent() != nullptr);
         hideMidiLearnOverlay();
         close_editor();
     }
@@ -1884,6 +1886,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
     removeUnusedTrackedComponents();
     editor_open = true;
     queue_refresh = false;
+
+    if (!somethingHasFocus && patchSelector && patchSelector->isShowing())
+    {
+        patchSelector->grabKeyboardFocus();
+    }
 
     frame->repaint();
 }
@@ -4244,6 +4251,27 @@ float SurgeGUIEditor::getF01FromString(long tag, const std::string &s)
             pdata pd;
             p->set_value_from_string_onto(s, pd);
             return p->value_to_normalized(pd.f);
+        }
+    }
+
+    return 0.f;
+}
+
+float SurgeGUIEditor::getModulationF01FromString(long tag, const std::string &s)
+{
+    if (tag < start_paramtags)
+        return 0.f;
+
+    int ptag = tag - start_paramtags;
+    if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
+    {
+        Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+        if (p)
+        {
+            bool valid = false;
+            float mv = p->calculate_modulation_value_from_string(s, valid);
+            if (valid)
+                return mv;
         }
     }
 
