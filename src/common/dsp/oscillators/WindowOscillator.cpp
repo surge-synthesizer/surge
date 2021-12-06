@@ -467,7 +467,6 @@ void WindowOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->p[win_lowcut].deactivated = true;
         oscdata->p[win_highcut].val.f = oscdata->p[win_highcut].val_max.f; // low cut at the top
         oscdata->p[win_highcut].deactivated = true;
-        oscdata->p[win_formant].set_type(ct_osc_feedback);
     }
 
     if (streamingRevision <= 15)
