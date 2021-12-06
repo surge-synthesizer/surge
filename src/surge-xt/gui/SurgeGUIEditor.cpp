@@ -3152,12 +3152,12 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                                   &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
                           });
     });
-
     patchDefMenu.addSeparator();
 
     auto pscid = patchSelector->getCurrentCategoryId();
     auto pspid = patchSelector->getCurrentPatchId();
     auto s = &(this->synth->storage);
+
     if (pscid >= 0 && pscid < s->patch_category.size() && pspid >= 0 &&
         pspid < s->patch_list.size())
     {
@@ -3176,6 +3176,19 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                     &(this->synth->storage), Surge::Storage::InitialPatchCategory, *catCurId);
             });
     }
+
+    patchDefMenu.addSeparator();
+
+    bool appendOGPatchBy = Surge::Storage::getUserDefaultValue(
+        &(synth->storage), Surge::Storage::AppendOriginalPatchBy, true);
+
+    patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Append Original Author to Modified Patches"),
+                         true, appendOGPatchBy, [this, appendOGPatchBy]() {
+                             Surge::Storage::updateUserDefaultValue(
+                                 &(this->synth->storage), Surge::Storage::AppendOriginalPatchBy,
+                                 !appendOGPatchBy);
+                         });
+
     return patchDefMenu;
 }
 
