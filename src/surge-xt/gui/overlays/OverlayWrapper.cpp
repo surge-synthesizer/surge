@@ -26,27 +26,6 @@ namespace Surge
 namespace Overlays
 {
 
-// right now this is just the tearout
-struct OverlayWrapperToolbarButton : public juce::Button
-{
-    OverlayWrapperToolbarButton(const juce::String &name) : juce::Button(name) {}
-
-    void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
-                     bool shouldDrawButtonAsDown) override
-    {
-        if (shouldDrawButtonAsHighlighted)
-        {
-            g.fillAll(juce::Colours::grey.withAlpha(0.6f));
-        }
-
-        g.setColour(juce::Colour(0xff0A830A));
-        auto r = getLocalBounds().reduced(2, 4);
-        g.drawRect(r);
-
-        g.drawLine(r.getX(), r.getY(), r.getRight(), r.getY(), 2);
-    }
-};
-
 OverlayWrapper::OverlayWrapper()
 {
     closeButton.reset(
@@ -54,7 +33,8 @@ OverlayWrapper::OverlayWrapper()
     closeButton->addListener(this);
     addChildComponent(*closeButton);
 
-    tearOutButton.reset(new OverlayWrapperToolbarButton("Tear Out"));
+    tearOutButton.reset(
+        getLookAndFeel().createDocumentWindowButton(juce::DocumentWindow::maximiseButton));
     tearOutButton->addListener(this);
     addChildComponent(*tearOutButton);
 }

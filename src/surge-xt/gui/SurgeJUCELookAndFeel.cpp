@@ -226,7 +226,7 @@ class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
             Justification(Justification::centred)
                 .appliedToRectangle(Rectangle<int>(getHeight(), getHeight()), getLocalBounds())
                 .toFloat()
-                .reduced((float)getHeight() * 0.3f);
+                .reduced((float)getHeight() * 0.25f);
 
         g.fillPath(p, p.getTransformToScaleToFit(reducedRect, true));
     }
@@ -254,7 +254,9 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 
     if (buttonType == DocumentWindow::minimiseButton)
     {
-        shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
+        // HACK: fake a top line so that we get minimize aligned to the bottom
+        shape.addLineSegment({0.0f, 0.0f, 1.0f, 0.0f}, 0.0f);
+        shape.addLineSegment({0.0f, 0.9f, 1.0f, 0.9f}, crossThickness);
 
         return new SurgeJUCELookAndFeel_DocumentWindowButton("minimize", Colour(255, 212, 32),
                                                              shape, shape);
@@ -262,8 +264,9 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 
     if (buttonType == DocumentWindow::maximiseButton)
     {
-        shape.addLineSegment({0.5f, 0.0f, 0.5f, 1.0f}, crossThickness);
-        shape.addLineSegment({0.0f, 0.5f, 1.0f, 0.5f}, crossThickness);
+        shape.addLineSegment({0.0f, 0.0f, 1.0f, 0.0f}, crossThickness); // top
+        shape.addRectangle(0.0f, 0.0f, 1.0f, 1.0f);
+        PathStrokeType(crossThickness).createStrokedPath(shape, shape);
 
         Path fullscreenShape;
         fullscreenShape.startNewSubPath(45.0f, 100.0f);
