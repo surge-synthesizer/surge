@@ -69,7 +69,7 @@ struct PatchSelector : public juce::Component,
     {
         if (l.length())
         {
-            category = "Category: " + path_to_string(string_to_path(l).filename());
+            category = path_to_string(string_to_path(l).filename());
         }
         else
         {
@@ -83,7 +83,7 @@ struct PatchSelector : public juce::Component,
     {
         if (l.length())
         {
-            author = "By: " + l;
+            author = l;
         }
         else
         {

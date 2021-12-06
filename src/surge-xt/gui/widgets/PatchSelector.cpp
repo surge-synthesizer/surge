@@ -186,16 +186,54 @@ void PatchSelector::paint(juce::Graphics &g)
     // patch name
     if (!isTypeaheadSearchOn)
     {
+        auto catsz = Surge::GUI::getFontManager()->displayFont.getStringWidthFloat(category);
+        auto authsz = Surge::GUI::getFontManager()->displayFont.getStringWidthFloat(author);
+
+        auto catszwith =
+            Surge::GUI::getFontManager()->displayFont.getStringWidthFloat("Category: " + category);
+        auto authszwith =
+            Surge::GUI::getFontManager()->displayFont.getStringWidthFloat("By: " + author);
+        auto mainsz = Surge::GUI::getFontManager()->patchNameFont.getStringWidthFloat(pname);
+
+        bool useCatAndBy{false}, alignTop{false};
+
+        /*
+         * Would the main text overlap with the category or author if we add "Category: " or "By: "?
+         * That's the same as if the category with + half the size is less that the width / 2.
+         * Add a 3 px extra buffer too just to stop exact hits
+         */
+        if ((catszwith + mainsz / 2) < getWidth() / 2 - 3 &&
+            (authszwith + mainsz / 2) < getWidth() / 2 - 3)
+        {
+            useCatAndBy = true;
+        }
+
+        /*
+         * Alternately if the category without and the name clash then the name will
+         * draw fitted but since the rectangles overlap we need to push it to the top
+         * of the box
+         */
+        if ((catsz + mainsz / 2) > getWidth() / 2 || (authsz + mainsz / 2) > getWidth() / 2)
+        {
+            alignTop = true;
+        }
+
         auto pnRect =
             pbrowser.withLeft(searchRect.getRight()).withRight(favoritesRect.getX()).reduced(4, 0);
 
         g.setFont(Surge::GUI::getFontManager()->patchNameFont);
-        g.drawFittedText(pname, pnRect, juce::Justification::centred, 1);
+        g.drawFittedText(pname, pnRect,
+                         alignTop ? juce::Justification::centredTop : juce::Justification::centred,
+                         1, 0.1);
+
+        g.setColour(skin->getColor(Colors::PatchBrowser::Text));
 
         // category/author name
         g.setFont(Surge::GUI::getFontManager()->displayFont);
-        g.drawText(category, cat, juce::Justification::centredLeft);
-        g.drawText(author, auth,
+
+        g.drawText((useCatAndBy ? "Category: " : "") + category, cat,
+                   juce::Justification::centredLeft);
+        g.drawText((useCatAndBy ? "By: " : "") + author, auth,
                    skin->getVersion() >= 2 ? juce::Justification::centredRight
                                            : juce::Justification::centredLeft);
     }
