@@ -525,12 +525,22 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
     // stack is now just the result
     if (lres == LUA_OK)
     {
+        s->isFinite = true;
+        auto checkFinite = [s](float f) {
+            if (!std::isfinite(f))
+            {
+                s->isFinite = false;
+                return 0.f;
+            }
+            return f;
+        };
+
         if (lua_isnumber(s->L, -1))
         {
             // OK so you returned a value. Just use it
             auto r = lua_tonumber(s->L, -1);
             lua_pop(s->L, 1);
-            output[0] = r;
+            output[0] = checkFinite(r);
             return;
         }
         if (!lua_istable(s->L, -1))
@@ -552,7 +562,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         float res = 0.0;
         if (lua_isnumber(s->L, -1))
         {
-            output[0] = lua_tonumber(s->L, -1);
+            output[0] = checkFinite(lua_tonumber(s->L, -1));
         }
         else if (lua_istable(s->L, -1))
         {
@@ -574,7 +584,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
                 }
 
                 // Remember - LUA is 0 based
-                output[idx - 1] = lua_tonumber(s->L, -1);
+                output[idx - 1] = checkFinite(lua_tonumber(s->L, -1));
                 lua_pop(s->L, 1);
                 len = std::max(len, idx - 1);
             }

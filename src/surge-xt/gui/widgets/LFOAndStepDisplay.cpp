@@ -244,6 +244,9 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
 
     float priorval = 0.f, priorwval = 0.f;
 
+    bool warnForInvalid{false};
+    std::string invalidMessage;
+
     for (int i = 0; i < totalSamples; i += averagingWindow)
     {
         float val = 0;
@@ -261,6 +264,16 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
             if (tFullWave)
             {
                 tFullWave->process_block();
+            }
+
+            if (lfodata->shape.val.i == lt_formula)
+            {
+                if (!tlfo->formulastate.isFinite ||
+                    (tFullWave && !tFullWave->formulastate.isFinite))
+                {
+                    warnForInvalid = true;
+                    invalidMessage = "Formula produced nan or inf";
+                }
             }
 
             if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
@@ -605,6 +618,14 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         dc->setFrameColor(juce::Colours::red);
         dc->drawLine(sp, ep);
 #endif
+    }
+
+    if (warnForInvalid)
+    {
+        g.setColour(skin->getColor(Colors::LFO::Waveform::Wave));
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(14, juce::Font::bold));
+        g.drawText(invalidMessage, waveform_display.withTrimmedBottom(30),
+                   juce::Justification::centred);
     }
 }
 

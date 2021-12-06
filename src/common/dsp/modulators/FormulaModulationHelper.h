@@ -38,6 +38,7 @@ struct EvaluatorState
 
     bool isvalid = false;
     bool useEnvelope = true;
+    bool isFinite = true;
 
     bool subVoice{false}, subLfoParams{true}, subLfoEnvelope{false}, subTiming{true};
     bool subMacros[n_customcontrollers], subAnyMacro{false};
