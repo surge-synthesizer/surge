@@ -827,3 +827,73 @@ TEST_CASE("Macros Are Available", "[formula]")
     surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
     REQUIRE(1);
 }
+
+TEST_CASE("Nan Clampsr", "[formula]")
+{
+    SECTION("Nan Formula")
+    {
+        auto surge = Surge::Test::surgeOnSine();
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+        auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+
+        surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
+function init(modstate)
+   modstate["depth"] = 0
+   return modstate
+end
+
+function process(modstate)
+    modstate["output"] = (modstate["phase"] * 2 - 1) / modstate["depth" ]
+    return modstate
+end)FN");
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 100, 0);
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        REQUIRE(!surge->voices[0].empty());
+        auto ms = surge->voices[0].front()->modsources[ms_lfo1];
+        REQUIRE(ms);
+        auto lms = dynamic_cast<LFOModulationSource *>(ms);
+        REQUIRE(lms);
+
+        REQUIRE(lms->get_output(0) == 0.f);
+        REQUIRE(!lms->formulastate.isFinite);
+    }
+
+    SECTION("Not Nan Formula")
+    {
+        auto surge = Surge::Test::surgeOnSine();
+        surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
+        auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+
+        surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
+function init(modstate)
+   modstate["depth"] = 1
+   return modstate
+end
+
+function process(modstate)
+    modstate["output"] = (modstate["phase"] * 2 - 1) / modstate["depth" ]
+    return modstate
+end)FN");
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 100, 0);
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        REQUIRE(!surge->voices[0].empty());
+        auto ms = surge->voices[0].front()->modsources[ms_lfo1];
+        REQUIRE(ms);
+        auto lms = dynamic_cast<LFOModulationSource *>(ms);
+        REQUIRE(lms);
+
+        REQUIRE(lms->formulastate.isFinite);
+    }
+}
