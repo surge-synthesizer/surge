@@ -335,7 +335,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
         auto textChar = key.getTextCharacter();
 
         // shift VKB note input one octave up
-        if (textChar == 'x')
+        if (textChar == 'c')
         {
             midiKeyboardOctave = std::clamp(midiKeyboardOctave + 1, 0, 9);
             keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
@@ -344,7 +344,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
         }
 
         // shift VKB note input one octave down
-        if (textChar == 'c')
+        if (textChar == 'x')
         {
             midiKeyboardOctave = std::clamp(midiKeyboardOctave - 1, 0, 9);
             keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
