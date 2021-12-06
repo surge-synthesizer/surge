@@ -205,6 +205,14 @@ end
 
         lua_settable(s.L, -3);
 
+        lua_pushstring(s.L, "samplerate");
+        lua_pushnumber(s.L, samplerate);
+        lua_settable(s.L, -3);
+
+        lua_pushstring(s.L, "block_size");
+        lua_pushnumber(s.L, BLOCK_SIZE);
+        lua_settable(s.L, -3);
+
         if (lua_isfunction(s.L, -2))
         {
             auto cres = lua_pcall(s.L, 1, 1, 0);
