@@ -94,9 +94,20 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
     void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) override
     {
         auto q = bounds.reduced(2, 2);
-        g.setColour(rowText.withAlpha(0.5f));
-        auto txt = fmt::format("{:d}", lastSearchResult.size());
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+        auto res = lastSearchResult.size();
+        std::string txt;
+
+        if (res <= 0)
+        {
+            txt = "No results";
+        }
+        else
+        {
+            txt = fmt::format("{:d} result{:s}", res, (res > 1 ? "s" : ""));
+        }
+
+        g.setColour(rowText.withAlpha(0.666f));
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, juce::Font::bold));
         g.drawText(txt, q, juce::Justification::topLeft);
     }
 };
