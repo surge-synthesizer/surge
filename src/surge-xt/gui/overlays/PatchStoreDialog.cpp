@@ -121,6 +121,7 @@ PatchStoreDialog::PatchStoreDialog()
     commentEd->setMultiLine(true, true);
     commentEd->setReturnKeyStartsNewLine(true);
     commentEd->setJustification(juce::Justification::topLeft);
+
 #if HAS_TAGS_FIELD
     tagEd = makeEd("patch tags");
 #endif
@@ -213,6 +214,8 @@ void PatchStoreDialog::onSkinChanged()
         typein->setColour(juce::TextEditor::highlightColourId,
                           skin->getColor(Colors::Dialog::Entry::Focus));
         typein->setColour(juce::TextEditor::outlineColourId,
+                          skin->getColor(Colors::Dialog::Entry::Border));
+        typein->setColour(juce::TextEditor::focusedOutlineColourId,
                           skin->getColor(Colors::Dialog::Entry::Border));
     };
 

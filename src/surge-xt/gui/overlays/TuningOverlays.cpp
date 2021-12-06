@@ -373,6 +373,7 @@ class RadialScaleGraph : public juce::Component,
     }
 
     SurgeStorage *storage{nullptr};
+
     void setTuning(const Tunings::Tuning &t)
     {
         int priorLen = tuning.scale.count;
@@ -383,8 +384,8 @@ class RadialScaleGraph : public juce::Component,
         {
             toneInterior->removeAllChildren();
             auto w = usedForSidebar - 10;
-            auto m = 2;
-            auto h = 24;
+            auto m = 4;
+            auto h = 20;
             auto labw = 18;
 
             toneInterior->setSize(w, (scale.count + 1) * (h + m));
@@ -441,11 +442,14 @@ class RadialScaleGraph : public juce::Component,
                 else
                 {
                     auto te = std::make_unique<juce::TextEditor>("tone");
-                    te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                     te->setBounds(totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m));
-                    te->setEnabled(i != 0);
                     te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+                    te->setJustification((juce::Justification::verticallyCentred));
+                    te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
+                    te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
+                    te->setEnabled(i != 0);
                     te->addListener(this);
+                    te->onEscapeKey = [this]() { giveAwayKeyboardFocus(); };
                     toneInterior->addAndMakeVisible(*te);
                     toneEditors.push_back(std::move(te));
 
@@ -585,11 +589,14 @@ class RadialScaleGraph : public juce::Component,
         for (int i = 0; i < scale.count; ++i)
         {
             auto ni = (i + 1) % (scale.count);
+
             if (notesOn[ni])
             {
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::backgroundColourId,
                                           skin->getColor(clr::ToneLabelBackgroundPlayed));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
+                                          skin->getColor(clr::ToneLabelBorderPlayed));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::focusedOutlineColourId,
                                           skin->getColor(clr::ToneLabelBorderPlayed));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
                                           skin->getColor(clr::ToneLabelTextPlayed));
@@ -599,6 +606,7 @@ class RadialScaleGraph : public juce::Component,
                 toneLabels[i + 1]->setColour(juce::Label::ColourIds::textColourId,
                                              skin->getColor(clr::ToneLabelPlayed));
                 toneKnobs[i + 1]->isPlaying = true;
+
                 if (i == scale.count - 1)
                 {
                     toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
@@ -612,6 +620,8 @@ class RadialScaleGraph : public juce::Component,
                                           skin->getColor(clr::ToneLabelBackground));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::outlineColourId,
                                           skin->getColor(clr::ToneLabelBorder));
+                toneEditors[i]->setColour(juce::TextEditor::ColourIds::focusedOutlineColourId,
+                                          skin->getColor(clr::ToneLabelBorder));
                 toneEditors[i]->setColour(juce::TextEditor::ColourIds::textColourId,
                                           skin->getColor(clr::ToneLabelText));
                 toneEditors[i]->applyColourToAllText(skin->getColor(clr::ToneLabelText), true);
@@ -622,14 +632,17 @@ class RadialScaleGraph : public juce::Component,
                     toneLabels[0]->setColour(juce::Label::ColourIds::textColourId,
                                              skin->getColor(clr::ToneLabel));
             }
+
             toneEditors[i]->repaint();
             toneLabels[i + 1]->repaint();
             toneLabels[0]->repaint();
         }
+
         toneInterior->repaint();
         toneList->repaint();
         repaint();
     }
+
     int whichSideOfZero = 0;
 
     void mouseMove(const juce::MouseEvent &e) override;
@@ -1626,6 +1639,7 @@ struct SCLKBMDisplay : public juce::Component,
     std::unique_ptr<SCLKBMTokeniser> sclTokeniser, kbmTokeniser;
 
     Tunings::Tuning tuning;
+
     void setTuning(const Tunings::Tuning &t)
     {
         tuning = t;
