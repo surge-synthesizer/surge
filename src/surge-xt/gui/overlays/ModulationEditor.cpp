@@ -85,8 +85,21 @@ struct ModulationSideControls : public juce::Component,
                 "Target",
             },
             tag_sort_by, true);
+        auto sortOrder =
+            editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.sortOrder;
+        sortW->setValue(sortOrder);
+
         filterL = makeL("Filter By");
         filterW = makeW({"-"}, tag_filter_by, true);
+
+        auto fo =
+            editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn;
+        if (fo != 0)
+        {
+            auto fs = editor->synth->storage.getPatch()
+                          .dawExtraState.editor.modulationEditorState.filterString;
+            filterW->setLabels({fs});
+        }
 
         addL = makeL("Add Modulation");
         addSourceW = makeW({"Select Source"}, tag_add_source, true);
@@ -182,7 +195,28 @@ struct ModulationSideControls : public juce::Component,
 struct ModulationListContents : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     ModulationEditor *editor{nullptr};
-    ModulationListContents(ModulationEditor *e) : editor(e) {}
+    ModulationListContents(ModulationEditor *e) : editor(e)
+    {
+        sortOrder = (SortOrder)e->synth->storage.getPatch()
+                        .dawExtraState.editor.modulationEditorState.sortOrder;
+
+        filterOn = (FilterOn)editor->synth->storage.getPatch()
+                       .dawExtraState.editor.modulationEditorState.filterOn;
+        switch (filterOn)
+        {
+        case NONE:
+            clearFilters();
+            break;
+        case SOURCE:
+            filterBySource(editor->synth->storage.getPatch()
+                               .dawExtraState.editor.modulationEditorState.filterString);
+            break;
+        case TARGET:
+            filterByTarget(editor->synth->storage.getPatch()
+                               .dawExtraState.editor.modulationEditorState.filterString);
+            break;
+        }
+    }
 
     void paint(juce::Graphics &g) override
     {
@@ -528,7 +562,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
     enum SortOrder
     {
-        BY_SOURCE,
+        BY_SOURCE = 0,
         BY_TARGET
     } sortOrder{BY_SOURCE};
 
@@ -547,6 +581,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         {
             filterOn = NONE;
             rebuildFrom(editor->synth);
+
+            editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn =
+                (int)NONE;
         }
     }
 
@@ -555,6 +592,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         filterOn = SOURCE;
         filterString = s;
         rebuildFrom(editor->synth);
+
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn =
+            (int)SOURCE;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterString =
+            s;
     }
 
     void filterByTarget(const std::string &s)
@@ -562,6 +604,11 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         filterOn = TARGET;
         filterString = s;
         rebuildFrom(editor->synth);
+
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn =
+            (int)TARGET;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterString =
+            s;
     }
 
     /*
@@ -818,6 +865,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             editor->modContents->sortOrder = ModulationListContents::BY_TARGET;
         else
             editor->modContents->sortOrder = ModulationListContents::BY_SOURCE;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.sortOrder =
+            editor->modContents->sortOrder;
         editor->modContents->rebuildFrom(editor->synth);
     }
     break;

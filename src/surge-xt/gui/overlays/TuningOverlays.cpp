@@ -1765,6 +1765,9 @@ struct TuningControlArea : public juce::Component,
             selectS->setColumns(5);
             selectS->setDraggable(true);
             selectS->setSkin(skin, associatedBitmapStore);
+            selectS->setValue(
+                overlay->storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode /
+                4.f);
             addAndMakeVisible(*selectS);
             xpos += btnWidth + 10;
         }
@@ -1962,6 +1965,8 @@ TuningOverlay::TuningOverlay()
     intervalMatrix->setVisible(false);
 }
 
+void TuningOverlay::setStorage(SurgeStorage *s) { storage = s; }
+
 TuningOverlay::~TuningOverlay() = default;
 
 void TuningOverlay::resized()
@@ -1991,6 +1996,8 @@ void TuningOverlay::resized()
     {
         auto mcoff = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         tuningKeyboardTableModel->setMiddleCOff(mcoff);
+
+        showEditor(storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode);
     }
 }
 
@@ -2015,6 +2022,11 @@ void TuningOverlay::showEditor(int which)
     if (which == 4)
     {
         intervalMatrix->setRotationMode();
+    }
+
+    if (storage)
+    {
+        storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode = which;
     }
 }
 

@@ -76,7 +76,8 @@ struct FormulaControlArea;
 struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 {
     FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *lfos,
-                           FormulaModulatorStorage *fs, int lfoid, Surge::GUI::Skin::ptr_t sk);
+                           FormulaModulatorStorage *fs, int lfoid, int scene,
+                           Surge::GUI::Skin::ptr_t sk);
     ~FormulaModulatorEditor();
 
     std::unique_ptr<ExpandingFormulaDebugger> debugPanel;
@@ -91,10 +92,12 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
-    int lfo_id;
+    int lfo_id, scene;
 
     void onSkinChanged() override;
     void setApplyEnabled(bool b) override;
+
+    DAWExtraStateStorage::EditorState::FormulaEditState &getEditState();
 
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
