@@ -763,6 +763,12 @@ struct DAWExtraStateStorage
             int timeEditMode = 0;
         } msegEditState[n_scenes][n_lfos];
 
+        struct FormulaEditState
+        {
+            int codeOrPrelude{0};
+            bool debuggerOpen{false};
+        } formulaEditState[n_scenes][n_lfos];
+
         struct
         {
             bool hasCustomEditor = false;
@@ -775,6 +781,18 @@ struct DAWExtraStateStorage
             std::pair<int, int> tearOutPosition{-1, -1};
         };
         std::vector<OverlayState> activeOverlays;
+
+        struct ModulationEditorState
+        {
+            int sortOrder = 0;
+            int filterOn = 0;
+            std::string filterString{""};
+        } modulationEditorState;
+
+        struct TuningOverlayState
+        {
+            int editMode = 0;
+        } tuningOverlayState;
     } editor;
 
     bool mpeEnabled = false;

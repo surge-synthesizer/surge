@@ -2182,8 +2182,65 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                                 q->timeEditMode = vv;
                         }
                     }
+                    for (int lf = 0; lf < n_lfos; ++lf)
+                    {
+                        std::string fsns =
+                            "formula_state_" + std::to_string(sc) + "_" + std::to_string(lf);
+                        auto fss = TINYXML_SAFE_TO_ELEMENT(p->FirstChild(fsns));
+                        if (fss)
+                        {
+                            auto q = &(dawExtraState.editor.formulaEditState[sc][lf]);
+                            int vv;
+                            q->codeOrPrelude = 0;
+                            q->debuggerOpen = false;
+                            if (fss->QueryIntAttribute("codeOrPrelude", &vv) == TIXML_SUCCESS)
+                                q->codeOrPrelude = vv;
+                            if (fss->QueryIntAttribute("debuggerOpen", &vv) == TIXML_SUCCESS)
+                                q->debuggerOpen = vv;
+                        }
+                    }
+                } // end of scene loop
+
+                {
+                    auto mes = &(dawExtraState.editor.modulationEditorState);
+                    auto node = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("modulation_editor"));
+                    mes->sortOrder = 0;
+                    mes->filterOn = 0;
+                    mes->filterString = "";
+                    if (node)
+                    {
+                        int val;
+                        if (node->QueryIntAttribute("sortOrder", &val) == TIXML_SUCCESS)
+                        {
+                            mes->sortOrder = val;
+                        }
+
+                        if (node->QueryIntAttribute("filterOn", &val) == TIXML_SUCCESS)
+                        {
+                            mes->filterOn = val;
+                        }
+
+                        if (node->Attribute("filterString"))
+                        {
+                            mes->filterString = std::string(node->Attribute("filterString"));
+                        }
+                    }
                 }
-            }
+
+                {
+                    auto tes = &(dawExtraState.editor.tuningOverlayState);
+                    auto node = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("tuning_overlay"));
+                    tes->editMode = 0;
+                    if (node)
+                    {
+                        int val;
+                        if (node->QueryIntAttribute("editMode", &val) == TIXML_SUCCESS)
+                        {
+                            tes->editMode = val;
+                        }
+                    }
+                }
+            } // end of editor populated block
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
@@ -2717,6 +2774,29 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     eds.InsertEndChild(mss);
                 }
             }
+
+            for (int lf = 0; lf < n_lfos; ++lf)
+            {
+                auto q = &(dawExtraState.editor.formulaEditState[sc][lf]);
+                std::string fsns = "formula_state_" + std::to_string(sc) + "_" + std::to_string(lf);
+                TiXmlElement fss(fsns);
+
+                fss.SetAttribute("codeOrPrelude", q->codeOrPrelude);
+                fss.SetAttribute("debuggerOpen", q->debuggerOpen);
+
+                eds.InsertEndChild(fss);
+            }
+
+            TiXmlElement modEd("modulation_editor");
+            modEd.SetAttribute("sortOrder", dawExtraState.editor.modulationEditorState.sortOrder);
+            modEd.SetAttribute("filterOn", dawExtraState.editor.modulationEditorState.filterOn);
+            modEd.SetAttribute("filterString",
+                               dawExtraState.editor.modulationEditorState.filterString.c_str());
+            eds.InsertEndChild(modEd);
+
+            TiXmlElement tunOl("tuning_overlay");
+            tunOl.SetAttribute("editMode", dawExtraState.editor.tuningOverlayState.editMode);
+            eds.InsertEndChild(tunOl);
         }
 
         dawExtraXML.InsertEndChild(eds);

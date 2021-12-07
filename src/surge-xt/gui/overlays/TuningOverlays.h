@@ -65,7 +65,7 @@ struct TuningOverlay : public OverlayComponent,
     TuningOverlay();
     ~TuningOverlay();
 
-    void setStorage(SurgeStorage *s) { storage = s; }
+    void setStorage(SurgeStorage *s);
 
     SurgeGUIEditor *editor{nullptr};
     void setEditor(SurgeGUIEditor *ed) { editor = ed; }

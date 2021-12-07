@@ -285,6 +285,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     void setOpen(bool b)
     {
         isOpen = b;
+        editor->getEditState().debuggerOpen = b;
         setVisible(b);
         editor->resized();
     }
@@ -363,6 +364,7 @@ struct FormulaControlArea : public juce::Component,
             codeS->setRows(1);
             codeS->setColumns(2);
             codeS->setDraggable(true);
+            codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
             addAndMakeVisible(*codeS);
             marginPos += btnWidth + margin;
@@ -414,17 +416,18 @@ struct FormulaControlArea : public juce::Component,
                 return res;
             };
 
-            showS = ma("Show", tag_debugger_show);
+            auto isOpen = overlay->debugPanel->isOpen;
+            showS = ma(isOpen ? "Hide" : "Show", tag_debugger_show);
             addAndMakeVisible(*showS);
             bpos -= btnWidth + margin;
 
             stepS = ma("Step", tag_debugger_step);
-            stepS->setVisible(false);
+            stepS->setVisible(isOpen);
             addChildComponent(*stepS);
             bpos -= btnWidth + margin;
 
             initS = ma("Init", tag_debugger_init);
-            initS->setVisible(false);
+            initS->setVisible(isOpen);
             addChildComponent(*initS);
             bpos -= btnWidth + margin;
         }
@@ -513,9 +516,10 @@ struct FormulaControlArea : public juce::Component,
 };
 
 FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *ls,
-                                               FormulaModulatorStorage *fs, int lid,
+                                               FormulaModulatorStorage *fs, int lid, int scene,
                                                Surge::GUI::Skin::ptr_t skin)
-    : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), formulastorage(fs), lfo_id(lid)
+    : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), scene(scene), formulastorage(fs),
+      lfo_id(lid)
 {
     mainEditor->setScrollbarThickness(8);
 
@@ -538,10 +542,31 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     debugPanel = std::make_unique<ExpandingFormulaDebugger>(this);
     debugPanel->setVisible(false);
     addChildComponent(*debugPanel);
+
+    switch (getEditState().codeOrPrelude)
+    {
+    case 0:
+        showModulatorCode();
+        break;
+    case 1:
+        showPreludeCode();
+        break;
+    }
+
+    if (getEditState().debuggerOpen)
+    {
+        debugPanel->setOpen(true);
+        debugPanel->initializeLfoDebugger();
+        repaint();
+    }
 }
 
 FormulaModulatorEditor::~FormulaModulatorEditor() = default;
 
+DAWExtraStateStorage::EditorState::FormulaEditState &FormulaModulatorEditor::getEditState()
+{
+    return storage->getPatch().dawExtraState.editor.formulaEditState[scene][lfo_id];
+}
 void FormulaModulatorEditor::onSkinChanged()
 {
     CodeEditorContainerWithApply::onSkinChanged();
@@ -599,12 +624,14 @@ void FormulaModulatorEditor::showModulatorCode()
 {
     preludeDisplay->setVisible(false);
     mainEditor->setVisible(true);
+    getEditState().codeOrPrelude = 0;
 }
 
 void FormulaModulatorEditor::showPreludeCode()
 {
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
+    getEditState().codeOrPrelude = 1;
 }
 
 void FormulaModulatorEditor::escapeKeyPressed()
