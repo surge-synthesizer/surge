@@ -590,6 +590,17 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename)
     // refresh list
     storage.refresh_patchlist();
     storage.initializePatchDb(true);
+
+    int idx = 0;
+    for (auto p : storage.patch_list)
+    {
+        if (p.path == filename)
+        {
+            patchid = idx;
+            current_category_id = p.category;
+        }
+        idx++;
+    }
     refresh_editor = true;
     midiprogramshavechanged = true;
 }
