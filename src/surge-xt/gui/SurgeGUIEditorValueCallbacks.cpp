@@ -286,7 +286,7 @@ void SurgeGUIEditor::changeSelectedScene(int value)
 
         if (ld->shape.val.i == lt_mseg)
         {
-            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            refreshOverlayWithOpenClose(SurgeGUIEditor::MSEG_EDITOR);
         }
         else
         {
@@ -302,7 +302,7 @@ void SurgeGUIEditor::changeSelectedScene(int value)
 
         if (ld->shape.val.i == lt_formula)
         {
-            showOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+            refreshOverlayWithOpenClose(SurgeGUIEditor::FORMULA_EDITOR);
         }
         else
         {
