@@ -2943,6 +2943,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     bool isFixed = false;
+    std::string lab;
 
     if (currentSkin->hasFixedZooms())
     {
@@ -2952,7 +2953,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
-        std::string lab = "Zoom to " + std::to_string(s) + "%";
+        lab = fmt::format("Zoom to {:d}%", s);
         zoomSubMenu.addItem(lab, true, (s == zoomFactor), [this, s]() { resizeWindow(s); });
     }
 
@@ -2975,18 +2976,16 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         for (int i = 0; i < jog.size(); i++)
         {
-            std::string lab;
-
             if (jog[i] > 0)
             {
-                lab = "Grow by " + std::to_string(jog[i]);
+                lab = fmt::format("Grow by {:d}%", jog[i]);
             }
             else
             {
-                lab = "Shrink by " + std::to_string(-jog[i]);
+                lab = fmt::format("Shrink by {:d}%", -jog[i]);
             }
 
-            Surge::GUI::addMenuWithShortcut(zoomSubMenu, lab + "%", sdesc[i], [this, jog, i]() {
+            Surge::GUI::addMenuWithShortcut(zoomSubMenu, lab, sdesc[i], [this, jog, i]() {
                 resizeWindow(getZoomFactor() + jog[i]);
             });
         }
@@ -3008,15 +3007,16 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                        Surge::Storage::DefaultZoom, zoomFactor);
 
-        std::string dss =
-            Surge::GUI::toOSCaseForMenu("Zoom to Default (") + std::to_string(dzf) + "%)";
+        lab = fmt::format("Zoom to Default ({:d}%)", dzf);
 
-        Surge::GUI::addMenuWithShortcut(zoomSubMenu, dss,
+        Surge::GUI::addMenuWithShortcut(zoomSubMenu, Surge::GUI::toOSCaseForMenu(lab),
                                         showShortcutDescription("Shift + /", u8"\U000021E7/"),
                                         [this, dzf]() { resizeWindow(dzf); });
     }
 
-    zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Current Zoom Level as Default"), [this]() {
+    lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
+
+    zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu(lab), [this]() {
         Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom,
                                                zoomFactor);
     });
@@ -5818,24 +5818,6 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // zoom actions
         if (key.getModifiers().isShiftDown())
         {
-            int jog = 0;
-
-            if (textChar == '+')
-            {
-                jog = key.getModifiers().isShiftDown() ? 25 : 10;
-            }
-
-            if (textChar == '-')
-            {
-                jog = key.getModifiers().isShiftDown() ? -25 : -10;
-            }
-
-            if (jog != 0)
-            {
-                resizeWindow(getZoomFactor() + jog);
-
-                return true;
-            }
 
             if (textChar == '/')
             {
@@ -5846,6 +5828,25 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                 return true;
             }
+        }
+
+        int jog = 0;
+
+        if (textChar == '+')
+        {
+            jog = key.getModifiers().isShiftDown() ? 25 : 10;
+        }
+
+        if (textChar == '-')
+        {
+            jog = key.getModifiers().isShiftDown() ? -25 : -10;
+        }
+
+        if (jog != 0)
+        {
+            resizeWindow(getZoomFactor() + jog);
+
+            return true;
         }
 
         // prev-next category
