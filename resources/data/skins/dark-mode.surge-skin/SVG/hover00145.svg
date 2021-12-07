@@ -1,11 +1,11 @@
-<svg width="20" height="160" viewBox="0 0 20 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path opacity="0.75" d="M6 0H0V16H6V0Z" fill="#399DFF"/>
-<path opacity="0.75" d="M13 16H7V32H13V16Z" fill="#399DFF"/>
-<path opacity="0.75" d="M20 32H14V48H20V32Z" fill="#399DFF"/>
-<path opacity="0.75" d="M6 48H0V64H6V48Z" fill="#399DFF"/>
-<path opacity="0.75" d="M13 64H7V80H13V64Z" fill="#399DFF"/>
-<path opacity="0.75" d="M20 80H14V96H20V80Z" fill="#399DFF"/>
-<path opacity="0.75" d="M6 96H0V112H6V96Z" fill="#399DFF"/>
-<path opacity="0.75" d="M13 112H7V128H13V112Z" fill="#399DFF"/>
-<path opacity="0.75" d="M20 128H14V144H20V128Z" fill="#399DFF"/>
+<svg width="20" height="180" viewBox="0 0 20 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path opacity="0.75" d="M6 1H0V17H6V1Z" fill="#399DFF"/>
+<path opacity="0.75" d="M13 19H7V35H13V19Z" fill="#399DFF"/>
+<path opacity="0.75" d="M20 37H14V53H20V37Z" fill="#399DFF"/>
+<path opacity="0.75" d="M6 55H0V71H6V55Z" fill="#399DFF"/>
+<path opacity="0.75" d="M13 73H7V89H13V73Z" fill="#399DFF"/>
+<path opacity="0.75" d="M20 91H14V107H20V91Z" fill="#399DFF"/>
+<path opacity="0.75" d="M6 109H0V125H6V109Z" fill="#399DFF"/>
+<path opacity="0.75" d="M13 127H7V143H13V127Z" fill="#399DFF"/>
+<path opacity="0.75" d="M20 145H14V161H20V145Z" fill="#399DFF"/>
 </svg>

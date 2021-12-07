@@ -1,22 +1,41 @@
-<svg width="20" height="160" viewBox="0 0 20 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="20" height="160" fill="#2D2D2E"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M20 16H0C4.4795 5.33337 11.146 0 20 0V16Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M6 0H0V16H6V0Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 32L20 16V32H0Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M13 16H7V32H13V16Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M20 48H0C8 48 14.667 42.6666 20 32V48Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M20 32H14V48H20V32Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 48V64H20V56L0 48Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M6 48H0V64H6V48Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 64V80H20V72C14 72 7.333 69.3334 0 64H0Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M13 64H7V80H13V64Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 80V96H20V88C9.333 88 2.667 85.3334 0 80H0Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M20 80H14V96H20V80Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 104V112H20L0 104Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M6 96H0V112H6V96Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 120V128H20C9.282 125.621 3.333 123.243 0 120Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M13 112H7V128H13V112Z" fill="#FF9000"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M0 136V144H20C9.333 142.667 2.667 140 0 136Z" fill="#0B5FB3"/>
-<path opacity="0.35" d="M20 128H14V144H20V128Z" fill="#FF9000"/>
-<rect y="152" width="20" height="8" fill="#0B5FB3"/>
+<svg width="20" height="180" viewBox="0 0 20 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="20" height="16" transform="translate(0 1)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 1H0V17H20V1Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 17H0C4.4795 6.33337 11.146 1 20 1V17Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M6 1H0V17H6V1Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 19)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 19H0V35H20V19Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 35L20 19V35H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 19H7V35H13V19Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 37)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 37H0V53H20V37Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M20 53H0C8 53 14.667 47.6666 20 37V53Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M20 37H14V53H20V37Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 55)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 55H0V71H20V55Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 55V71H20V63L0 55Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M6 55H0V71H6V55Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 73)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 73H0V89H20V73Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 73V89H20V81C14 81 7.333 78.3334 0 73H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 73H7V89H13V73Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 91)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 91H0V107H20V91Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 91V107H20V99C9.333 99 2.667 96.3334 0 91H0Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M20 91H14V107H20V91Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 109)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 109H0V125H20V109Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 117V125H20L0 117Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M6 109H0V125H6V109Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 127)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 127H0V143H20V127Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 135V143H20C9.282 140.621 3.333 138.243 0 135Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M13 127H7V143H13V127Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 145)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 145H0V161H20V145Z" fill="#2D2D2E"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0 153V161H20C9.333 159.667 2.667 157 0 153Z" fill="#0B5FB3"/>
+<path opacity="0.35" d="M20 145H14V161H20V145Z" fill="#FF9000"/>
+<rect width="20" height="16" transform="translate(0 163)" fill="#2D2D2E"/>
+<path opacity="0.35" d="M20 163H0V179H20V163Z" fill="#2D2D2E"/>
+<rect y="171" width="20" height="8" fill="#0B5FB3"/>
 </svg>
