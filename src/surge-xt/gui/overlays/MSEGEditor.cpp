@@ -3039,7 +3039,6 @@ void MSEGControlRegion::rebuild()
         // button
         auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
 
-        jassert(!movementMode);
         movementMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         movementMode->setBounds(btnrect);
         movementMode->setStorage(storage);
@@ -3091,7 +3090,6 @@ void MSEGControlRegion::rebuild()
         // button
         auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, btnWidth, buttonHeight);
 
-        jassert(!editMode);
         editMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         editMode->setBounds(btnrect);
         editMode->setStorage(storage);
@@ -3132,7 +3130,6 @@ void MSEGControlRegion::rebuild()
 
         // button
         auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, btnWidth, buttonHeight);
-        jassert(!loopMode);
         loopMode = std::make_unique<Surge::Widgets::MultiSwitch>();
         loopMode->setBounds(btnrect);
         loopMode->setStorage(storage);
