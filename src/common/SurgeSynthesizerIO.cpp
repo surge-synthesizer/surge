@@ -389,6 +389,9 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 {
     halt_engine = true;
+    // See other comments in SS.cpp
+    blocks_since_unhalt = 0;
+
     allNotesOff();
     for (int s = 0; s < n_scenes; s++)
         for (int i = 0; i < n_customcontrollers; i++)

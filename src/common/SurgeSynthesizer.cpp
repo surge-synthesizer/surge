@@ -350,6 +350,11 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         }
     }
 
+    /*
+     * Force the denormalizer to clear with noise even if we are still waiting, since we have a
+     * voice
+     */
+    blocks_since_unhalt = blocks_until_first_denorm_noise + 1;
     midiNoteEvents++;
 
     if (!storage.isStandardTuning)
@@ -3665,6 +3670,11 @@ void SurgeSynthesizer::process()
             // spawn patch-loading thread
             allNotesOff();
             halt_engine = true;
+            /*
+             * Resetting this here means that the next time we process we will start with
+             * pure clear, as per #4900
+             */
+            blocks_since_unhalt = 0;
 
 #if MAC || LINUX
             pthread_t thread;
@@ -3703,6 +3713,23 @@ void SurgeSynthesizer::process()
         }
     }
 
+    /*
+     * See the discussion in #4900. The AirWindows effect "derez" in its warmup stage deals
+     * very badly with the denormal noise we use to initialize our blocks. But those denormal
+     * noises are important for the operating of the synth when we have voices playing.
+     *
+     * The somewhat pragmatic (aka hacky) solution to that is to clear the blocks fully at the
+     * outset of a patch load for the first few blocks, then swap back to the denorm version. But
+     * also if we play a voice, we want to start the noise version (which is done in playNote
+     * above).
+     */
+    auto clearfunc = clear_block_antidenormalnoise;
+    if (blocks_since_unhalt < blocks_until_first_denorm_noise)
+    {
+        clearfunc = clear_block;
+        blocks_since_unhalt++;
+    }
+
     // process inputs (upsample & halfrate)
     if (process_input)
     {
@@ -3714,10 +3741,10 @@ void SurgeSynthesizer::process()
     }
     else
     {
-        clear_block_antidenormalnoise(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        clearfunc(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
+        clearfunc(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
+        clearfunc(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        clearfunc(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
     }
 
     // TODO: FIX SCENE ASSUMPTION
@@ -3725,15 +3752,15 @@ void SurgeSynthesizer::process()
     bool play_scene[n_scenes];
 
     {
-        clear_block_antidenormalnoise(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+        clearfunc(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+        clearfunc(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+        clearfunc(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+        clearfunc(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
 
         for (int i = 0; i < n_send_slots; ++i)
         {
-            clear_block_antidenormalnoise(fxsendout[i][0], BLOCK_SIZE_QUAD);
-            clear_block_antidenormalnoise(fxsendout[i][1], BLOCK_SIZE_QUAD);
+            clearfunc(fxsendout[i][0], BLOCK_SIZE_QUAD);
+            clearfunc(fxsendout[i][1], BLOCK_SIZE_QUAD);
         }
     }
 

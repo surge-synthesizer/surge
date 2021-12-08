@@ -366,6 +366,8 @@ class alignas(16) SurgeSynthesizer
     std::list<SurgeVoice *> voices[n_scenes];
     std::unique_ptr<Effect> fx[n_fx_slots];
     std::atomic<bool> halt_engine;
+    int blocks_since_unhalt{0};
+    static constexpr int blocks_until_first_denorm_noise{500};
     MidiChannelState channelState[16];
     bool mpeEnabled = false;
     int mpeVoices = 0;
