@@ -60,6 +60,28 @@ LFOAndStepDisplay::LFOAndStepDisplay()
         addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);
     }
+
+    for (int i = 0; i < n_stepseqsteps; ++i)
+    {
+        {
+            std::string sn = "Step Value " + std::to_string(i + 1);
+            auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
+            q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
+            q->onSetValue = [this, i](auto *T, float f) {
+                ss->steps[i] = f;
+                repaint();
+                return;
+            };
+            addChildComponent(*q);
+            stepSliderOverlays[i] = std::move(q);
+        }
+        {
+            std::string sn = "Trigger Envelopes " + std::to_string(i + 1);
+            auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, sn);
+            addChildComponent(*q);
+            stepTriggerOverlays[i] = std::move(q);
+        }
+    }
 #endif
 }
 
@@ -83,6 +105,22 @@ void LFOAndStepDisplay::resized()
 #if SURGE_JUCE_ACCESSIBLE
         typeAccOverlays[i]->setBounds(shaperect[i]);
 #endif
+    }
+
+    auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
+    auto ssr = waveform_display.withWidth(wfw);
+    for (const auto &q : stepSliderOverlays)
+    {
+        q->setBounds(ssr);
+        if (lfodata && lfodata->shape.val.i == lt_stepseq)
+        {
+            q->setVisible(true);
+        }
+        else
+        {
+            q->setVisible(false);
+        }
+        ssr = ssr.translated(wfw, 0);
     }
 }
 
@@ -1970,6 +2008,8 @@ void LFOAndStepDisplay::updateShapeTo(int i)
 
         lfodata->shape.val.i = i;
 
+        setupAccessibility();
+
         sge->refresh_mod();
         sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
 
@@ -1979,6 +2019,28 @@ void LFOAndStepDisplay::updateShapeTo(int i)
     }
 }
 
+void LFOAndStepDisplay::setupAccessibility()
+{
+#if SURGE_JUCE_ACCESSIBLE
+    bool showStepSliders{false}, showTriggers{false};
+    if (lfodata->shape.val.i == lt_stepseq)
+    {
+        if (lfoid < 6)
+        {
+            showTriggers = true;
+        }
+        showStepSliders = true;
+    }
+
+    for (const auto &s : stepSliderOverlays)
+        if (s)
+            s->setVisible(showStepSliders);
+
+    for (const auto &s : stepTriggerOverlays)
+        if (s)
+            s->setVisible(showTriggers);
+#endif
+}
 #if SURGE_JUCE_ACCESSIBLE
 template <> struct DiscreteAHRange<LFOAndStepDisplay>
 {
