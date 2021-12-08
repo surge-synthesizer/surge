@@ -59,11 +59,16 @@
 
 namespace
 {
+
+template <typename T> constexpr bool requiresDenorm() { return false; }
+template <> constexpr bool requiresDenorm<DeRez2::DeRez2>() { return true; }
+
 template <typename T> std::unique_ptr<AirWinBaseClass> create(int id, double sr, int dp)
 {
     auto res = std::make_unique<T>(id);
     res->sr = sr;
     res->displayPrecision = dp;
+    res->denormBeforeProcess = requiresDenorm<T>();
     return res;
 }
 } // anonymous namespace

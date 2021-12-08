@@ -114,6 +114,8 @@ struct AirWinBaseClass {
    };
    static std::vector<Registration> pluginRegistry();
    static std::vector<int> pluginRegistryOrdering();
+
+   bool denormBeforeProcess{false};
 };
 
 /*
