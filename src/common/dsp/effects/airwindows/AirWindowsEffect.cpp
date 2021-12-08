@@ -209,6 +209,18 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
     if (!airwin)
         return;
 
+    // See #4900
+    if (airwin->denormBeforeProcess)
+    {
+        for (int i = 0; i < BLOCK_SIZE; ++i)
+        {
+            if (fabs(dataL[i]) <= 2e-15)
+                dataL[i] = 0;
+            if (fabs(dataR[i]) <= 2e-15)
+                dataR[i] = 0;
+        }
+    }
+
     constexpr int QBLOCK = BLOCK_SIZE >> subblock_factor;
     float outL alignas(16)[BLOCK_SIZE], outR alignas(16)[BLOCK_SIZE];
 
