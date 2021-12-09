@@ -5941,6 +5941,16 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // toggle an applicable LFO editor (MSEG, formula...)
         if (key.getModifiers().isAltDown() && keyCode == (int)'E')
         {
+            if (lfoDisplay->isMSEG())
+            {
+                toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            }
+
+            if (lfoDisplay->isFormula())
+            {
+                toggleOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+            }
+
             return true;
         }
 
