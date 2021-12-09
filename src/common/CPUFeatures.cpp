@@ -192,13 +192,13 @@ FPUStateGuard::FPUStateGuard()
 #endif
 
 #if defined(__aarch64__)
-    uint64_t FPSR = 0;
-    asm volatile("MRS %0, FPSR " : "=r"(FPSR));
+    uint64_t FPCR = 0;
+    asm volatile("MRS %0, FPCR " : "=r"(FPCR));
 
-    uint64_t FPCR = FPSR | (1ULL << 24);
-    asm volatile("MSR FPCR, %0 " : : "r"(FPCR));
+    uint64_t FPCR_new = FPCR | (1ULL << 24);
+    asm volatile("MSR FPCR, %0 " : : "r"(FPCR_new));
 
-    priorS = FPSR;
+    priorS = FPCR;
 #endif
 }
 
