@@ -1528,6 +1528,8 @@ void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
         }
     }
 
+    // reset for the step hover
+    nextHover = -1;
     if (ss_shift_left.contains(event.position))
     {
         nextHover = 0;
@@ -1670,6 +1672,12 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             setStepToDefault(event);
             return;
         }
+        else
+        {
+            dragMode = VALUES;
+            setStepValue(event);
+            return;
+        }
         break;
     }
     case TRIGGERS:
@@ -1700,6 +1708,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     {
         if (event.mods.isCommandDown())
         {
+            dragMode = RESET_VALUE;
             setStepToDefault(event);
         }
         else

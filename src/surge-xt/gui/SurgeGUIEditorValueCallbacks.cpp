@@ -278,35 +278,37 @@ void SurgeGUIEditor::changeSelectedScene(int value)
     synth->release_if_latched[synth->storage.getPatch().scene_active.val.i] = true;
     synth->storage.getPatch().scene_active.val.i = current_scene;
 
-    if (isAnyOverlayPresent(MSEG_EDITOR))
+    bool hasMSEG = isAnyOverlayPresent(MSEG_EDITOR);
+    bool hasForm = isAnyOverlayPresent(FORMULA_EDITOR);
+
+    if (hasForm || hasMSEG)
     {
         auto ld = &(synth->storage.getPatch()
                         .scene[current_scene]
                         .lfo[modsource_editor[current_scene] - ms_lfo1]);
 
-        if (ld->shape.val.i == lt_mseg)
+        if (ld->shape.val.i == lt_mseg && hasMSEG)
         {
             refreshOverlayWithOpenClose(SurgeGUIEditor::MSEG_EDITOR);
         }
-        else
-        {
-            closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-        }
-    }
-
-    if (isAnyOverlayPresent(FORMULA_EDITOR))
-    {
-        auto ld = &(synth->storage.getPatch()
-                        .scene[current_scene]
-                        .lfo[modsource_editor[current_scene] - ms_lfo1]);
-
-        if (ld->shape.val.i == lt_formula)
+        else if (ld->shape.val.i == lt_formula && hasForm)
         {
             refreshOverlayWithOpenClose(SurgeGUIEditor::FORMULA_EDITOR);
         }
+        else if (ld->shape.val.i == lt_mseg && hasForm)
+        {
+            refreshAndMorphOverlayWithOpenClose(FORMULA_EDITOR, MSEG_EDITOR);
+        }
+        else if (ld->shape.val.i == lt_formula && hasMSEG)
+        {
+            refreshAndMorphOverlayWithOpenClose(MSEG_EDITOR, FORMULA_EDITOR);
+        }
         else
         {
-            closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+            if (hasForm)
+                closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+            if (hasMSEG)
+                closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
         }
     }
 
