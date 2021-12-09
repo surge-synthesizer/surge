@@ -4937,6 +4937,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setFormulaStorage(
                 &synth->storage.getPatch().formulamods[current_scene][lfo_id]);
             lfoDisplay->setCanEditEnvelopes(lfo_id >= 0 && lfo_id <= (ms_lfo6 - ms_lfo1));
+            lfoDisplay->setupAccessibility();
 
             lfoDisplay->addListener(this);
             addAndMakeVisibleWithTrackingInCG(cg_LFO, *lfoDisplay);

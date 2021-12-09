@@ -41,16 +41,8 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     /*
      * These aren't used but are part of the interface. The callback casts.
      */
-    float getValue() const override
-    {
-        jassert(false);
-        return value;
-    }
-    void setValue(float f) override
-    {
-        jassert(false);
-        value = f;
-    }
+    float getValue() const override { return value; }
+    void setValue(float f) override { value = f; }
     float value{0.f};
 
     void setCurrentEffect(int c) { currentEffect = c; }

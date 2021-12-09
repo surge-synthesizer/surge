@@ -167,6 +167,71 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton<T>);
 };
 
+template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
+{
+    OverlayAsAccessibleSlider(T *s, const std::string &label,
+                              juce::AccessibilityRole r = juce::AccessibilityRole::slider)
+        : under(s), role(r)
+    {
+        setDescription(label);
+        setTitle(label);
+        setInterceptsMouseClicks(false, false);
+        setAccessible(true);
+    }
+
+    T *under;
+
+    float getValue() { return 0; }
+    void setValue(float f) {}
+
+    struct SValue : public juce::AccessibilityValueInterface
+    {
+        explicit SValue(OverlayAsAccessibleSlider<T> *s) : slider(s) {}
+
+        OverlayAsAccessibleSlider<T> *slider;
+
+        bool isReadOnly() const override { return false; }
+        double getCurrentValue() const override { return slider->onGetValue(slider->under); }
+        void setValue(double newValue) override { slider->onSetValue(slider->under, newValue); }
+        virtual juce::String getCurrentValueAsString() const override
+        {
+            return std::to_string(getCurrentValue());
+        }
+        virtual void setValueAsString(const juce::String &newValue) override
+        {
+            setValue(newValue.getDoubleValue());
+        }
+        AccessibleValueRange getRange() const override { return {{-1, 1}, 0.01}; }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SValue);
+    };
+
+    struct RBAH : public juce::AccessibilityHandler
+    {
+        explicit RBAH(OverlayAsAccessibleSlider<T> *s, T *u)
+            : slider(s),
+              under(u), juce::AccessibilityHandler(
+                            *s, s->role, juce::AccessibilityActions(),
+                            AccessibilityHandler::Interfaces{std::make_unique<SValue>(s)})
+        {
+        }
+
+        T *under;
+        OverlayAsAccessibleSlider<T> *slider;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
+    };
+
+    juce::AccessibilityRole role;
+    std::function<float(T *)> onGetValue = [](T *) { return 0.f; };
+    std::function<void(T *, float f)> onSetValue = [](T *, float f) { return; };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<RBAH>(this, under);
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleSlider<T>);
+};
+
 } // namespace Widgets
 } // namespace Surge
 
