@@ -553,7 +553,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         for (auto &r : rows)
         {
-            r->isAfterTop = prior;
+            r->isAfterTop = prior && yPos < -4; // that's about scroll for first. #5602
             prior = r->isTop;
         }
 
