@@ -4232,6 +4232,10 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         ** log2(v/a) = bx
         ** log2(v/a)/b = x;
         */
+        if (nv <= 0 || !std::isfinite(nv))
+        {
+            return false;
+        }
         float res = log2f(nv / displayInfo.a) / displayInfo.b;
 
         if (res < val_min.f || res > val_max.f)

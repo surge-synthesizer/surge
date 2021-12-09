@@ -371,7 +371,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     Surge::Overlays::OverlayWrapper *getOverlayWrapperIfOpen(OverlayTags tag);
-    void refreshOverlayWithOpenClose(OverlayTags tag);
+    void refreshOverlayWithOpenClose(OverlayTags tag)
+    {
+        refreshAndMorphOverlayWithOpenClose(tag, tag);
+    }
+    void refreshAndMorphOverlayWithOpenClose(OverlayTags tag, OverlayTags newTag);
 
     void updateWaveshaperOverlay(); // this is the only overlay which updates from patch values
 
