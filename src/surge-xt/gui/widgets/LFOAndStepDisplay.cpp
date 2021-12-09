@@ -1698,7 +1698,14 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     }
     case VALUES:
     {
-        setStepValue(event);
+        if (event.mods.isCommandDown())
+        {
+            setStepToDefault(event);
+        }
+        else
+        {
+            setStepValue(event);
+        }
         break;
     }
     }
