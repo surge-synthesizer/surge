@@ -52,6 +52,7 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
     void setEffectType(int index, int type) { fxTypes[index] = type; }
     std::array<int, n_fx_slots> fxTypes;
 
+    void mouseDoubleClick(const juce::MouseEvent &event) override;
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseDrag(const juce::MouseEvent &event) override;
