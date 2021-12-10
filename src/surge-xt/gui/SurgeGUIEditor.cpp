@@ -2211,6 +2211,11 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
     zoomFactor = std::max(zf, 25.f);
+#if LINUX
+    if (zoomFactor == 150)
+        zoomFactor = 149;
+#endif
+
     float zff = zoomFactor * 0.01;
     if (currentSkin && resizeWindow)
     {
@@ -2956,7 +2961,12 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
         lab = fmt::format("Zoom to {:d}%", s);
-        zoomSubMenu.addItem(lab, true, (s == zoomFactor), [this, s]() { resizeWindow(s); });
+        bool ticked = (s == zoomFactor);
+#if LINUX
+        if (s == 150 && zoomFactor == 149)
+            ticked = true;
+#endif
+        zoomSubMenu.addItem(lab, true, ticked, [this, s]() { resizeWindow(s); });
     }
 
     zoomSubMenu.addSeparator();
