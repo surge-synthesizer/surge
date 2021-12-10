@@ -209,6 +209,15 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
     return r;
 }
 
+void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
+{
+    if (!hasDragged && currentClicked >= 0)
+    {
+        deactivatedBitmask ^= (1 << currentClicked);
+        notifyValueChanged();
+    }
+}
+
 void EffectChooser::mouseDown(const juce::MouseEvent &event)
 {
     if (forwardedMainFrameMouseDowns(event))
