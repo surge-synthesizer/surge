@@ -232,6 +232,17 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleSlider<T>);
 };
 
+struct OverlayAsAccessibleContainer : public juce::Component
+{
+    OverlayAsAccessibleContainer(const std::string &desc) : juce::Component()
+    {
+        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+        setAccessible(true);
+        setDescription(desc);
+        setTitle(desc);
+    }
+};
+
 } // namespace Widgets
 } // namespace Surge
 

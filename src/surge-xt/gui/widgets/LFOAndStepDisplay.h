@@ -155,6 +155,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void setupAccessibility();
 
 #if SURGE_JUCE_ACCESSIBLE
+    std::unique_ptr<juce::Component> typeLayer, stepLayer;
     std::array<std::unique_ptr<juce::Component>, n_lfo_types> typeAccOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
