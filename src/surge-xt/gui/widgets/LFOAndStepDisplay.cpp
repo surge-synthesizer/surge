@@ -53,14 +53,18 @@ LFOAndStepDisplay::LFOAndStepDisplay()
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
+    typeLayer = std::make_unique<OverlayAsAccessibleContainer>("LFO Type");
+    addAndMakeVisible(*typeLayer);
     for (int i = 0; i < n_lfo_types; ++i)
     {
         auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, lt_names[i]);
         q->onPress = [this, i](auto *t) { updateShapeTo(i); };
-        addAndMakeVisible(*q);
+        typeLayer->addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);
     }
 
+    stepLayer = std::make_unique<OverlayAsAccessibleContainer>("Step Sequencer");
+    addChildComponent(*stepLayer);
     for (int i = 0; i < n_stepseqsteps; ++i)
     {
         {
@@ -72,13 +76,13 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                 repaint();
                 return;
             };
-            addChildComponent(*q);
+            stepLayer->addChildComponent(*q);
             stepSliderOverlays[i] = std::move(q);
         }
         {
             std::string sn = "Trigger Envelopes " + std::to_string(i + 1);
             auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, sn);
-            addChildComponent(*q);
+            stepLayer->addChildComponent(*q);
             stepTriggerOverlays[i] = std::move(q);
         }
     }
@@ -97,6 +101,8 @@ void LFOAndStepDisplay::resized()
     ss_shift_left = ss_shift_bg.reduced(1, 1).withBottom(ss_shift_bg.getY() + 16);
     ss_shift_right = ss_shift_left.translated(0, 16);
 
+    typeLayer->setBounds(getLocalBounds());
+    stepLayer->setBounds(getLocalBounds());
     for (int i = 0; i < n_lfo_types; ++i)
     {
         int xp = (i % 2) * 25 + left_panel.getX();
@@ -108,13 +114,31 @@ void LFOAndStepDisplay::resized()
     }
 
     auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
-    auto ssr = waveform_display.withWidth(wfw);
+    auto ssr = waveform_display.withWidth(wfw).withTrimmedTop(10);
+    bool showtrig = false;
+    if (lfoid < n_lfos_voice)
+        showtrig = true;
     for (const auto &q : stepSliderOverlays)
     {
         q->setBounds(ssr);
         if (lfodata && lfodata->shape.val.i == lt_stepseq)
         {
             q->setVisible(true);
+        }
+        else
+        {
+            q->setVisible(false);
+        }
+        ssr = ssr.translated(wfw, 0);
+    }
+
+    ssr = waveform_display.withWidth(wfw).withHeight(10);
+    for (const auto &q : stepTriggerOverlays)
+    {
+        q->setBounds(ssr);
+        if (lfodata && lfodata->shape.val.i == lt_stepseq)
+        {
+            q->setVisible(showtrig);
         }
         else
         {
@@ -2031,6 +2055,8 @@ void LFOAndStepDisplay::setupAccessibility()
         }
         showStepSliders = true;
     }
+
+    stepLayer->setVisible(showStepSliders);
 
     for (const auto &s : stepSliderOverlays)
         if (s)
