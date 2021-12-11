@@ -459,7 +459,9 @@ void ModulationSourceButton::onSkinChanged()
 void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 {
     setMouseCursor(juce::MouseCursor::NormalCursor);
+
     transientArmed = false;
+
     if (mouseMode == CLICK || mouseMode == CLICK_ARROW)
     {
         notifyValueChanged();
@@ -488,6 +490,12 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
             p = localPointToGlobal(p);
             juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
+        }
+
+        if (event.mods.isAltDown())
+        {
+            value = valAtMouseDown;
+            notifyValueChanged();
         }
 
         notifyEndEdit();
