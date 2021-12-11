@@ -240,6 +240,7 @@ struct OverlayAsAccessibleContainer : public juce::Component
         setAccessible(true);
         setDescription(desc);
         setTitle(desc);
+        setInterceptsMouseClicks(false, false);
     }
 };
 
