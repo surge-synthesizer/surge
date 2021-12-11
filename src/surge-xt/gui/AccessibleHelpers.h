@@ -242,6 +242,13 @@ struct OverlayAsAccessibleContainer : public juce::Component
         setTitle(desc);
         setInterceptsMouseClicks(false, false);
     }
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
+    }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleContainer);
 };
 
 } // namespace Widgets
