@@ -3165,6 +3165,7 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                                   &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
                           });
     });
+
     patchDefMenu.addSeparator();
 
     auto pscid = patchSelector->getCurrentCategoryId();
@@ -3201,6 +3202,48 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                                  &(this->synth->storage), Surge::Storage::AppendOriginalPatchBy,
                                  !appendOGPatchBy);
                          });
+
+    patchDefMenu.addSeparator();
+
+    auto tuningOnLoadMenu = juce::PopupMenu();
+
+    bool overrideTuningOnLoad = Surge::Storage::getUserDefaultValue(
+        &(synth->storage), Surge::Storage::OverrideTuningOnPatchLoad, false);
+
+    tuningOnLoadMenu.addItem(Surge::GUI::toOSCaseForMenu("Keep Current Tuning"), true,
+                             !overrideTuningOnLoad, [this, overrideTuningOnLoad]() {
+                                 Surge::Storage::updateUserDefaultValue(
+                                     &(this->synth->storage),
+                                     Surge::Storage::OverrideTuningOnPatchLoad, false);
+                             });
+
+    tuningOnLoadMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Override With Embedded Tuning if Available"), true,
+        overrideTuningOnLoad, [this, overrideTuningOnLoad]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::OverrideTuningOnPatchLoad, true);
+        });
+
+    tuningOnLoadMenu.addSeparator();
+
+    bool overrideMappingOnLoad = Surge::Storage::getUserDefaultValue(
+        &(synth->storage), Surge::Storage::OverrideMappingOnPatchLoad, false);
+
+    tuningOnLoadMenu.addItem(Surge::GUI::toOSCaseForMenu("Keep Current Mapping"), true,
+                             !overrideMappingOnLoad, [this, overrideMappingOnLoad]() {
+                                 Surge::Storage::updateUserDefaultValue(
+                                     &(this->synth->storage),
+                                     Surge::Storage::OverrideMappingOnPatchLoad, false);
+                             });
+
+    tuningOnLoadMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Override With Embedded Mapping if Available"), true,
+        overrideMappingOnLoad, [this, overrideMappingOnLoad]() {
+            Surge::Storage::updateUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::OverrideMappingOnPatchLoad, true);
+        });
+
+    patchDefMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Tuning on Patch Load"), tuningOnLoadMenu);
 
     return patchDefMenu;
 }

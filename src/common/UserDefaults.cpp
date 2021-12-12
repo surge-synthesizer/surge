@@ -104,6 +104,12 @@ void initMaps()
             case PatchJogWraparound:
                 r = "patchJogWraparound";
                 break;
+            case OverrideTuningOnPatchLoad:
+                r = "overrideTuningOnPatchLoad";
+                break;
+            case OverrideMappingOnPatchLoad:
+                r = "overrideMappingOnPatchLoad";
+                break;
             case DefaultPatchAuthor:
                 r = "defaultPatchAuthor";
                 break;
@@ -158,7 +164,6 @@ void initMaps()
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
                 break;
-
             case TuningOverlayLocation:
                 r = "tuningOverlayLocation";
                 break;

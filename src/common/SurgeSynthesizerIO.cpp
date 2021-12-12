@@ -285,6 +285,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                 {
                     storage.retuneTo12TETScale();
                 }
+
                 if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                 {
                     auto kb = Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
@@ -301,7 +302,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
             }
             catch (Tunings::TuningError &e)
             {
-                storage.reportError(e.what(), "Error restoring tuning!");
+                storage.reportError(e.what(), "Error applying tuning!");
                 storage.retuneTo12TETScaleC261Mapping();
             }
         }
@@ -310,7 +311,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
             storage.okCancelProvider(
                 std::string("Loaded patch contains a custom tuning, but there is ") +
                     "already a user-selected tuning in place. Do you want to replace the currently "
-                    "loaded tuning with the tuning stored in the patch?" +
+                    "loaded tuning with the tuning stored in the patch? " +
                     "The rest of the patch will load normally.",
                 "Replace Tuning", SurgeStorage::CANCEL, [this](SurgeStorage::OkCancel okc) {
                     if (okc == SurgeStorage::OK)
@@ -326,6 +327,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                             {
                                 storage.retuneTo12TETScale();
                             }
+
                             if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                             {
                                 auto kb = Tunings::parseKBMData(
@@ -343,7 +345,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                         }
                         catch (Tunings::TuningError &e)
                         {
-                            storage.reportError(e.what(), "Error Restoring Tuning");
+                            storage.reportError(e.what(), "Error applying tuning!");
                             storage.retuneTo12TETScaleC261Mapping();
                         }
                     }
