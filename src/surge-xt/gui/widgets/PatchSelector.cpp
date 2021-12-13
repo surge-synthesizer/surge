@@ -120,6 +120,8 @@ PatchSelector::PatchSelector()
     typeAhead->addTypeAheadListener(this);
     typeAhead->setToElementZeroOnReturn = true;
     addChildComponent(*typeAhead);
+
+    setWantsKeyboardFocus(true);
 };
 PatchSelector::~PatchSelector() = default;
 

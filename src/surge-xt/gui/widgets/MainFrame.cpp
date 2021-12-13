@@ -24,7 +24,7 @@ namespace Widgets
 MainFrame::MainFrame()
 {
 #if SURGE_JUCE_ACCESSIBLE
-    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
     setAccessible(true);
     setDescription("Surge XT");
     setTitle("Main Frame");
