@@ -1180,6 +1180,9 @@ class alignas(16) SurgeStorage
     Tunings::KeyboardMapping currentMapping;
     bool isStandardTuning = true, isStandardScale = true, isStandardMapping = true;
 
+    Tunings::Tuning patchStoredTuning;
+    bool hasPatchStoredTuning{false};
+
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
 
     enum TuningApplicationMode

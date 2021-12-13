@@ -272,32 +272,54 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     */
     if (storage.getPatch().patchTuning.tuningStoredInPatch)
     {
-        if (storage.isStandardTuning)
+        /*
+         * This code changed radically at the end of the XT 1.0 cycle. Previously we would
+         * check and prompt. Now the semantic is:
+         *
+         * 1. If the patch has a tuning, always parse it onto the patchStreamedTuning member
+         *    (which we reset below if the patch doesn't have it)
+         * 2. based on the tuning setting, override the tuning if there's a patch tuning
+         */
+        bool ot = Surge::Storage::getUserDefaultValue(
+            &storage, Surge::Storage::OverrideTuningOnPatchLoad, false);
+        bool om = Surge::Storage::getUserDefaultValue(
+            &storage, Surge::Storage::OverrideMappingOnPatchLoad, false);
+
+        if (ot || om)
         {
             try
             {
-                if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                if (ot)
                 {
-                    storage.retuneToScale(
-                        Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents));
-                }
-                else
-                {
-                    storage.retuneTo12TETScale();
+                    std::cout << "Resetting Tuning" << std::endl;
+                    if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+                    {
+                        storage.retuneToScale(
+                            Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents));
+                    }
+                    else
+                    {
+                        storage.retuneTo12TETScale();
+                    }
                 }
 
-                if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+                if (om)
                 {
-                    auto kb = Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
-                    if (storage.getPatch().patchTuning.mappingName.size() > 1)
-                        kb.name = storage.getPatch().patchTuning.mappingName;
+                    if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+                    {
+                        std::cout << "Resetting Mapping" << std::endl;
+                        auto kb =
+                            Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
+                        if (storage.getPatch().patchTuning.mappingName.size() > 1)
+                            kb.name = storage.getPatch().patchTuning.mappingName;
+                        else
+                            kb.name = storage.guessAtKBMName(kb);
+                        storage.remapToKeyboard(kb);
+                    }
                     else
-                        kb.name = storage.guessAtKBMName(kb);
-                    storage.remapToKeyboard(kb);
-                }
-                else
-                {
-                    storage.remapToConcertCKeyboard();
+                    {
+                        storage.remapToConcertCKeyboard();
+                    }
                 }
             }
             catch (Tunings::TuningError &e)
@@ -306,51 +328,32 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                 storage.retuneTo12TETScaleC261Mapping();
             }
         }
-        else
-        {
-            storage.okCancelProvider(
-                std::string("Loaded patch contains a custom tuning, but there is ") +
-                    "already a user-selected tuning in place. Do you want to replace the currently "
-                    "loaded tuning with the tuning stored in the patch? " +
-                    "The rest of the patch will load normally.",
-                "Replace Tuning", SurgeStorage::CANCEL, [this](SurgeStorage::OkCancel okc) {
-                    if (okc == SurgeStorage::OK)
-                    {
-                        try
-                        {
-                            if (storage.getPatch().patchTuning.scaleContents.size() > 1)
-                            {
-                                storage.retuneToScale(Tunings::parseSCLData(
-                                    storage.getPatch().patchTuning.scaleContents));
-                            }
-                            else
-                            {
-                                storage.retuneTo12TETScale();
-                            }
 
-                            if (storage.getPatch().patchTuning.mappingContents.size() > 1)
-                            {
-                                auto kb = Tunings::parseKBMData(
-                                    storage.getPatch().patchTuning.mappingContents);
-                                if (storage.getPatch().patchTuning.mappingName.size() > 1)
-                                    kb.name = storage.getPatch().patchTuning.mappingName;
-                                else
-                                    kb.name = storage.guessAtKBMName(kb);
-                                storage.remapToKeyboard(kb);
-                            }
-                            else
-                            {
-                                storage.remapToConcertCKeyboard();
-                            }
-                        }
-                        catch (Tunings::TuningError &e)
-                        {
-                            storage.reportError(e.what(), "Error applying tuning!");
-                            storage.retuneTo12TETScaleC261Mapping();
-                        }
-                    }
-                });
+        try
+        {
+            auto s = Tunings::evenTemperament12NoteScale();
+            auto m = Tunings::KeyboardMapping();
+            if (storage.getPatch().patchTuning.scaleContents.size() > 1)
+            {
+                s = Tunings::parseSCLData(storage.getPatch().patchTuning.scaleContents);
+            }
+            if (storage.getPatch().patchTuning.mappingContents.size() > 1)
+            {
+                m = Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
+            }
+            storage.patchStoredTuning = Tunings::Tuning(s, m);
+            storage.hasPatchStoredTuning = true;
         }
+        catch (Tunings::TuningError &e)
+        {
+            storage.hasPatchStoredTuning = false;
+            storage.patchStoredTuning = Tunings::Tuning();
+        }
+    }
+    else
+    {
+        storage.hasPatchStoredTuning = false;
+        storage.patchStoredTuning = Tunings::Tuning();
     }
 
     masterfade = 1.f;

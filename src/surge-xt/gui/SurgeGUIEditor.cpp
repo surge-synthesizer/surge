@@ -2671,7 +2671,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
 
         tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set to Standard Tuning"),
-                              this->synth->storage.isStandardTuning, false, [this]() {
+                              !this->synth->storage.isStandardTuning, false, [this]() {
                                   this->synth->storage.retuneTo12TETScaleC261Mapping();
                                   this->synth->storage.resetTuningToggle();
                                   this->synth->refresh_editor = true;
@@ -2819,6 +2819,16 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                         }
                     });
             });
+
+        if (synth->storage.hasPatchStoredTuning)
+        {
+            tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Apply Patch-Stored Tuning"),
+                                  [this]() {
+                                      synth->storage.retuneAndRemapToScaleAndMapping(
+                                          synth->storage.patchStoredTuning.scale,
+                                          synth->storage.patchStoredTuning.keyboardMapping);
+                                  });
+        }
 
         tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Factory Tuning Library..."), [this]() {
             auto path = this->synth->storage.datapath / "tuning_library";
