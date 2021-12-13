@@ -2085,6 +2085,7 @@ juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<in
     }
     return o;
 }
+
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
                                   Surge::GUI::IComponentTagValue *launchFrom)
 {
@@ -2098,6 +2099,7 @@ void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where,
     auto m = makeMpeMenu(where, true);
     m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
 }
+
 void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
@@ -2117,6 +2119,7 @@ void SurgeGUIEditor::toggleTuning()
 
     this->synth->refresh_editor = true;
 }
+
 void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
                                     Surge::GUI::IComponentTagValue *launchFrom)
 {
@@ -2822,7 +2825,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         if (synth->storage.hasPatchStoredTuning)
         {
-            tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Apply Patch-Stored Tuning"),
+            tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Tuning Embedded in Patch"),
                                   [this]() {
                                       synth->storage.retuneAndRemapToScaleAndMapping(
                                           synth->storage.patchStoredTuning.scale,
@@ -2885,57 +2888,60 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
-    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::UseODDMTS, false);
-    std::string txt = "Use ODDSound" + Surge::GUI::toOSCaseForMenu(" MTS-ESP (if Loaded in DAW)");
-
-    tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
-                                               !tsMode);
-        if (tsMode)
-        {
-            this->synth->storage.deinitialize_oddsound();
-        }
-        else
-        {
-            this->synth->storage.initialize_oddsound();
-        }
-    });
-
-    if (tsMode && !this->synth->storage.oddsound_mts_client)
+    if (synth->juceWrapperType.compare("Standalone") != 0)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"), [this]() {
-            this->synth->storage.initialize_oddsound();
-            this->synth->refresh_editor = true;
-        });
-    }
+        bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                          Surge::Storage::UseODDMTS, false);
+        std::string txt = "Use ODDSound" + Surge::GUI::toOSCaseForMenu(" MTS-ESP");
 
-    if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
-    {
-        tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Disconnect from MTS-ESP"), [this]() {
-            auto q = this->synth->storage.oddsound_mts_client;
-            this->synth->storage.oddsound_mts_active = false;
-            this->synth->storage.oddsound_mts_client = nullptr;
-            MTS_DeregisterClient(q);
+        tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::UseODDMTS, !tsMode);
+            if (tsMode)
+            {
+                this->synth->storage.deinitialize_oddsound();
+            }
+            else
+            {
+                this->synth->storage.initialize_oddsound();
+            }
         });
 
-        tuningSubMenu.addSeparator();
+        if (tsMode && !this->synth->storage.oddsound_mts_client)
+        {
+            tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Reconnect to MTS-ESP"), [this]() {
+                this->synth->storage.initialize_oddsound();
+                this->synth->refresh_editor = true;
+            });
+        }
 
-        tuningSubMenu.addItem(
-            Surge::GUI::toOSCaseForMenu("Query Tuning at Note On Only"), true,
-            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
-            [this]() {
-                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
-                }
-                else
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
-                }
+        if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
+        {
+            tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Disconnect from MTS-ESP"), [this]() {
+                auto q = this->synth->storage.oddsound_mts_client;
+                this->synth->storage.oddsound_mts_active = false;
+                this->synth->storage.oddsound_mts_client = nullptr;
+                MTS_DeregisterClient(q);
             });
 
-        return tuningSubMenu;
+            tuningSubMenu.addSeparator();
+
+            tuningSubMenu.addItem(
+                Surge::GUI::toOSCaseForMenu("Query Tuning at Note On Only"), true,
+                (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
+                [this]() {
+                    if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                    {
+                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                    }
+                    else
+                    {
+                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                    }
+                });
+
+            return tuningSubMenu;
+        }
     }
 
     return tuningSubMenu;
