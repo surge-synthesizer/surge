@@ -4313,6 +4313,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
 
     fxsync[target].type.val.i = so.type.val.i;
     Effect *t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
+
     if (t_fx)
     {
         t_fx->init_ctrltypes();
@@ -4348,6 +4349,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         to.absolute = from.absolute;
         to.val = from.val;
     };
+
     for (int i = 0; i < n_fx_params; ++i)
     {
         if (m == FXReorderMode::SWAP)
@@ -4360,6 +4362,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     mv = &(storage.getPatch().modulation_global);
     int n = mv->size();
     std::vector<int> deleteThese;
+
     for (int i = 0; i < n; ++i)
     {
         if (mv->at(i).destination_id >= fxsync[source].p[0].id &&
@@ -4367,6 +4370,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         {
             fx_reload_mod[target] = true;
             int whichForReal = -1;
+
             for (int q = 0; q < n_fx_params; ++q)
             {
                 if (mv->at(i).destination_id == fxsync[source].p[q].id)
@@ -4374,6 +4378,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                     whichForReal = q;
                 }
             }
+
             auto depth =
                 getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
                               mv->at(i).source_scene, mv->at(i).source_index);
@@ -4381,6 +4386,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                                                         mv->at(i).source_scene, whichForReal,
                                                         depth));
         }
+
         if (m == FXReorderMode::SWAP)
         {
             if (mv->at(i).destination_id >= fxsync[target].p[0].id &&
@@ -4388,6 +4394,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             {
                 fx_reload_mod[source] = true;
                 int whichForReal = -1;
+
                 for (int q = 0; q < n_fx_params; ++q)
                 {
                     if (mv->at(i).destination_id == fxsync[target].p[q].id)
@@ -4395,6 +4402,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                         whichForReal = q;
                     }
                 }
+
                 auto depth = getModulation(fxsync[target].p[whichForReal].id,
                                            (modsources)mv->at(i).source_id, mv->at(i).source_scene,
                                            mv->at(i).source_index);
@@ -4427,9 +4435,13 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         mv->erase(mv->begin() + *dt);
     }
 
-    load_fx_needed = true;
-    fx_reload[source] = true;
+    if (m != FXReorderMode::COPY)
+    {
+        fx_reload[source] = true;
+    }
+
     fx_reload[target] = true;
+    load_fx_needed = true;
     refresh_editor = true;
 }
 
