@@ -136,6 +136,7 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
         setTitle(label);
         setInterceptsMouseClicks(false, false);
         setAccessible(true);
+        setWantsKeyboardFocus(true);
     }
 
     T *under;
@@ -177,6 +178,7 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
         setTitle(label);
         setInterceptsMouseClicks(false, false);
         setAccessible(true);
+        setWantsKeyboardFocus(true);
     }
 
     T *under;
