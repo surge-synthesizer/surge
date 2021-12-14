@@ -1359,6 +1359,7 @@ class alignas(16) SurgeStorage
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
     char clipboard_wt_names[n_oscs][256];
+    char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
 
   public:
