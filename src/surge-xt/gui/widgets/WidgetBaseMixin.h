@@ -47,6 +47,11 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
     {
         for (auto t : listeners)
             t->valueChanged(this);
+
+        if (auto *handler = asT()->getAccessibilityHandler(); handler->getValueInterface())
+        {
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        }
     }
     void notifyControlModifierClicked(const juce::ModifierKeys &k, bool addRMB = false)
     {
