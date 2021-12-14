@@ -1343,6 +1343,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_msegs[0] = getPatch().msegs[scene][entry];
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
             clipboard_formulae[0] = getPatch().formulamods[scene][entry];
+        for (int idx = 0; idx < max_lfo_indices; ++idx)
+        {
+            strncpy(clipboard_modulator_names[0][idx], getPatch().LFOBankLabel[scene][entry][idx],
+                    CUSTOM_CONTROLLER_LABEL_SIZE);
+        }
     }
     if (type & cp_scene)
     {
@@ -1355,6 +1360,12 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                    sizeof(StepSequencerStorage));
             clipboard_msegs[i] = getPatch().msegs[scene][i];
             clipboard_formulae[i] = getPatch().formulamods[scene][i];
+
+            for (int idx = 0; idx < max_lfo_indices; ++idx)
+            {
+                strncpy(clipboard_modulator_names[i][idx], getPatch().LFOBankLabel[scene][i][idx],
+                        CUSTOM_CONTROLLER_LABEL_SIZE);
+            }
         }
         for (int i = 0; i < n_oscs; i++)
         {
@@ -1515,6 +1526,12 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                    sizeof(StepSequencerStorage));
             getPatch().msegs[scene][i] = clipboard_msegs[i];
             getPatch().formulamods[scene][i] = clipboard_formulae[i];
+
+            for (int idx = 0; idx < max_lfo_indices; ++idx)
+            {
+                strncpy(getPatch().LFOBankLabel[scene][i][idx], clipboard_modulator_names[i][idx],
+                        CUSTOM_CONTROLLER_LABEL_SIZE);
+            }
         }
 
         for (int i = 0; i < n_oscs; i++)
@@ -1595,6 +1612,12 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 getPatch().msegs[scene][entry] = clipboard_msegs[0];
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
                 getPatch().formulamods[scene][entry] = clipboard_formulae[0];
+
+            for (int idx = 0; idx < max_lfo_indices; ++idx)
+            {
+                strncpy(getPatch().LFOBankLabel[scene][entry][idx],
+                        clipboard_modulator_names[0][idx], CUSTOM_CONTROLLER_LABEL_SIZE);
+            }
         }
         if (type & cp_modulator_target)
         {
