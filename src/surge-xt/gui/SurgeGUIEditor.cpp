@@ -1892,6 +1892,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
         patchSelector->grabKeyboardFocus();
     }
 
+    if (auto *handler = frame->getAccessibilityHandler())
+    {
+        handler->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
     frame->repaint();
 }
 
@@ -6279,6 +6283,16 @@ void SurgeGUIEditor::addComponentWithTracking(juce::Component *target, juce::Com
     auto cf = containedComponents.find(&source);
     if (cf != containedComponents.end())
         containedComponents.erase(cf);
+
+    /* Place this accessibility invalidation here in either case */
+    if (auto *handler = source.getAccessibilityHandler())
+    {
+        if (handler->getValueInterface())
+        {
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        }
+        handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+    }
 }
 void SurgeGUIEditor::addAndMakeVisibleWithTracking(juce::Component *target, juce::Component &source)
 {
