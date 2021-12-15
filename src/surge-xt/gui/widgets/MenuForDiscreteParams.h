@@ -117,6 +117,11 @@ struct MenuForDiscreteParams : public juce::Component,
 
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
 
+    void startHover(const juce::Point<float> &p) override
+    {
+        isHovered = true;
+        repaint();
+    }
     void endHover() override
     {
         isHovered = false;
@@ -126,6 +131,18 @@ struct MenuForDiscreteParams : public juce::Component,
             setMouseCursor(juce::MouseCursor::NormalCursor);
         }
 
+        repaint();
+    }
+
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
         repaint();
     }
 

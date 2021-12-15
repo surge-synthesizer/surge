@@ -74,8 +74,20 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     void mouseUp(const juce::MouseEvent &event) override;
     void setCursorToArrow();
 
+    void startHover(const juce::Point<float> &) override;
     void endHover() override;
 
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        // fixme - probably use the location of the current element
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;

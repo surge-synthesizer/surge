@@ -287,10 +287,38 @@ class DroppedUserDataHandler
 };
 
 Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
+/*
+ * See the comment in SurgeGUIUtils.cpp
+ */
+namespace Surge
+{
+namespace GUI
+{
+extern void setIsStandalone(bool b);
+}
+} // namespace Surge
+
+#ifdef DEBUG_FOCUS
+struct FocusDebugListener : public juce::FocusChangeListener
+{
+    void globalFocusChanged(juce::Component *fc) override
+    {
+        std::cout << "FC [" << fc << "] ";
+        if (fc)
+            std::cout << fc->getTitle() << " " << typeid(*fc).name();
+        std::cout << std::endl;
+    }
+};
+#endif
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
     jassert(Surge::GUI::ModulationGrid::getModulationGrid());
+
+#ifdef DEBUG_FOCUS
+    // it's just debug who cares about the leak (for now)
+    juce::Desktop::getInstance().addFocusChangeListener(new FocusDebugListener());
+#endif
 
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
@@ -326,6 +354,9 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     juceEditor = jEd;
     this->synth = synth;
+
+    Surge::GUI::setIsStandalone(juceEditor->processor.wrapperType ==
+                                juce::AudioProcessor::wrapperType_Standalone);
 
     minimumZoom = 50;
 #if LINUX
@@ -3410,6 +3441,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Keyboard Shortcuts"), true, kbShortcuts,
                    [this]() { toggleUseKeyboardShortcuts(); });
 
+    bool kbAcc = getUseKeyboardAccEditors();
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Arrow Keys Modify Values"), true, kbAcc,
+                   [this]() { toggleUseKeyboardAccEditors(); });
+
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -3454,6 +3490,37 @@ void SurgeGUIEditor::toggleVirtualKeyboard()
 
     setShowVirtualKeyboard(!getShowVirtualKeyboard());
     resizeWindow(zoomFactor);
+}
+
+bool SurgeGUIEditor::getUseKeyboardAccEditors()
+{
+    auto key = Surge::Storage::UseKeyboardAccEditors_Plugin;
+    bool defaultVal = false;
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::UseKeyboardAccEditors_Standalone;
+        defaultVal = true;
+    }
+
+    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
+}
+
+void SurgeGUIEditor::setUseKeyboardAccEditors(bool b)
+{
+    auto key = Surge::Storage::UseKeyboardAccEditors_Plugin;
+
+    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+    {
+        key = Surge::Storage::UseKeyboardAccEditors_Standalone;
+    }
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+}
+
+void SurgeGUIEditor::toggleUseKeyboardAccEditors()
+{
+    setUseKeyboardAccEditors(!getUseKeyboardAccEditors());
 }
 
 bool SurgeGUIEditor::getUseKeyboardShortcuts()
@@ -4898,6 +4965,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (std::get<0>(drawables))
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
+            hsw->setStorage(&(synth->storage));
             if (p)
             {
                 addAndMakeVisibleWithTrackingInCG(p->ctrlgroup, *hsw);

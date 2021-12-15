@@ -16,6 +16,7 @@
 #include "SurgeGUIEditor.h"
 #include "Switch.h"
 #include "SurgeImage.h"
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -115,6 +116,50 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
             }
         }
     }
+}
+
+bool Switch::keyPressed(const juce::KeyPress &key)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return false;
+
+    bool got{false};
+    int mul = 1;
+    if (key.getKeyCode() == juce::KeyPress::leftKey)
+    {
+        got = true;
+        mul = -1;
+    }
+    if (key.getKeyCode() == juce::KeyPress::rightKey)
+    {
+        got = true;
+    }
+
+    if (got)
+    {
+
+        if (isMultiIntegerValued())
+        {
+            setValueDirection(mul);
+            notifyBeginEdit();
+            notifyValueChanged();
+            notifyEndEdit();
+        }
+        else
+        {
+            auto ov = value;
+            value = mul > 0 ? 1 : 0;
+
+            if (ov != value)
+            {
+                notifyBeginEdit();
+                notifyValueChanged();
+                notifyEndEdit();
+            }
+        }
+        repaint();
+    }
+    return got;
 }
 
 #if SURGE_JUCE_ACCESSIBLE

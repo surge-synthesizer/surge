@@ -23,6 +23,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 
 class SurgeImage;
+class SurgeStorage;
 
 namespace Surge
 {
@@ -74,6 +75,27 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
         isHovered = false;
         repaint();
     }
+
+    void startHover(const juce::Point<float> &) override
+    {
+        isHovered = true;
+        repaint();
+    }
+    bool keyPressed(const juce::KeyPress &key) override;
+
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
+
+    SurgeStorage *storage;
+    void setStorage(SurgeStorage *s) { storage = s; }
 
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,

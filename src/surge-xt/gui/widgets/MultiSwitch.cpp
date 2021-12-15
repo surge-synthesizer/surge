@@ -179,9 +179,11 @@ void MultiSwitch::mouseUp(const juce::MouseEvent &event)
     }
 }
 
-void MultiSwitch::mouseEnter(const juce::MouseEvent &event)
+void MultiSwitch::mouseEnter(const juce::MouseEvent &event) { startHover(event.position); }
+
+void MultiSwitch::startHover(const juce::Point<float> &p)
 {
-    hoverSelection = coordinateToSelection(event.x, event.y);
+    hoverSelection = coordinateToSelection(p.x, p.y);
 
     isHovered = true;
 }

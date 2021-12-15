@@ -109,9 +109,25 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         setMouseCursor(juce::MouseCursor::NormalCursor);
         repaint();
     }
+    void startHover(const juce::Point<float> &p) override
+    {
+        isHover = true;
+        repaint();
+    }
     void endHover() override
     {
         isHover = false;
+        repaint();
+    }
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
         repaint();
     }
 

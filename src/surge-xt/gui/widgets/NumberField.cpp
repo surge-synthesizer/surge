@@ -201,6 +201,39 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
     }
 }
 
+bool NumberField::keyPressed(const juce::KeyPress &key)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return false;
+
+    bool got{false};
+    int amt = 1;
+    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        got = true;
+        amt = -1;
+    }
+    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        got = true;
+    }
+
+    if (got)
+    {
+        if (controlMode == Skin::Parameters::PB_DEPTH && extended &&
+            !key.getModifiers().isShiftDown())
+        {
+            amt = amt * 100;
+        }
+
+        notifyBeginEdit();
+        changeBy(amt);
+        notifyEndEdit();
+        repaint();
+    }
+    return got;
+}
+
 void NumberField::changeBy(int inc)
 {
     bounceToInt();
