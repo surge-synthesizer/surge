@@ -94,7 +94,6 @@ CMakeUserPresets.json
 # Reaper
 *.RPP-bak
 
-surge-fx
 VERSION_GIT_INFO
 .clang-tidy
 
