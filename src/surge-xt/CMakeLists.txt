@@ -42,6 +42,7 @@ juce_add_plugin(${PROJECT_NAME}
   VST3_CATEGORIES Instrument Synth
   VST2_CATEGORY kPlugCategSynth
   AU_MAIN_TYPE kAudioUnitType_MusicDevice
+  AU_SANDBOX_SAFE TRUE
 
   LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt
   LV2_SHARED_LIBRARY_NAME SurgeXT
