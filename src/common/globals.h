@@ -30,7 +30,7 @@
 #endif
 
 #if LINUX
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(__arm__)
 #define ARM_NEON 1
 #endif
 #endif
