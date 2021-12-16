@@ -544,6 +544,13 @@ void PatchSelector::showClassicMenu(bool single_category)
         Surge::Storage::updateUserDefaultValue(
             storage, Surge::Storage::InitialPatchCategoryType,
             storage->patch_category[current_category].isFactory ? "Factory" : "User");
+
+        storage->initPatchName = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::InitialPatchName, "Init Saw");
+        storage->initPatchCategory = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::InitialPatchCategory, "Templates");
+        storage->initPatchCategoryType = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::InitialPatchCategoryType, "Factory");
     });
 
     contextMenu.addSeparator();

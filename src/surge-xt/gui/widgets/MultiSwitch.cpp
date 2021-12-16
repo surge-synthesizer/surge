@@ -221,6 +221,36 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
     }
 }
 
+bool MultiSwitch::keyPressed(const juce::KeyPress &key)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return false;
+
+    bool got{false};
+    int dir = 1;
+    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        got = true;
+        dir = -1;
+    }
+    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        got = true;
+    }
+
+    if (got)
+    {
+        auto iv = limit_range(getIntegerValue() + dir, 0, rows * columns - 1);
+
+        setValue(1.f * iv / (rows * columns - 1));
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+    }
+    return got;
+}
+
 #if SURGE_JUCE_ACCESSIBLE
 
 struct MultiSwitchRadioButton : public juce::Component

@@ -94,7 +94,7 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
         repaint();
     }
 
-    SurgeStorage *storage;
+    SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
     Surge::GUI::WheelAccumulationHelper wheelHelper;

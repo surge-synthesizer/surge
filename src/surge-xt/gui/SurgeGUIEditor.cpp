@@ -2067,7 +2067,7 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
     }
     else
     {
-        jassert(false);
+        // jassert(false);
     }
 }
 
@@ -2088,7 +2088,7 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     }
     else
     {
-        jassert(false);
+        // jassert(false);
     }
 }
 
