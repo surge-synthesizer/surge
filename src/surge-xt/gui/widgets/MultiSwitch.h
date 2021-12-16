@@ -88,6 +88,7 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
         endHover();
         repaint();
     }
+    bool keyPressed(const juce::KeyPress &key) override;
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
