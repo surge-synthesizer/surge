@@ -333,9 +333,10 @@ void ModulatableSlider::onSkinChanged()
 #endif
 }
 
-void ModulatableSlider::mouseEnter(const juce::MouseEvent &event)
+void ModulatableSlider::mouseEnter(const juce::MouseEvent &event) { startHover(event.position); }
+void ModulatableSlider::startHover(const juce::Point<float> &p)
 {
-    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, event.position);
+    enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, p);
     isHovered = true;
     auto sge = firstListenerOfType<SurgeGUIEditor>();
     if (sge)
@@ -670,6 +671,47 @@ std::unique_ptr<juce::AccessibilityHandler> ModulatableSlider::createAccessibili
     return std::make_unique<ModulatableSliderAH>(this);
 }
 #endif
+
+bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return false;
+
+    bool got{false};
+    float dv{0};
+    if (key.getKeyCode() == juce::KeyPress::leftKey)
+    {
+        got = true;
+        dv = -0.05;
+    }
+    if (key.getKeyCode() == juce::KeyPress::rightKey)
+    {
+        got = true;
+        dv = 0.05;
+    }
+
+    if (got)
+    {
+        if (key.getModifiers().isShiftDown())
+            dv *= 0.1;
+
+        if (isEditingModulation)
+        {
+            modValue = limitpm1(modValue + dv);
+        }
+        else
+        {
+            value = limit01(value + dv);
+        }
+
+        notifyBeginEdit();
+        notifyValueChanged();
+        updateInfowindowContents(isEditingModulation);
+        notifyEndEdit();
+        repaint();
+    }
+    return got;
+}
 
 } // namespace Widgets
 } // namespace Surge

@@ -79,8 +79,19 @@ struct ModulatableSlider : public juce::Component,
     void mouseDoubleClick(const juce::MouseEvent &event) override;
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
+    void startHover(const juce::Point<float> &) override;
     void endHover() override;
-
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 

@@ -693,6 +693,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
 
+    bool getUseKeyboardAccEditors();
+    void setUseKeyboardAccEditors(bool b);
+    void toggleUseKeyboardAccEditors();
+
   private:
     bool scannedForMidiPresets = false;
 

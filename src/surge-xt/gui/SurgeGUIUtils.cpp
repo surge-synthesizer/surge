@@ -1,6 +1,7 @@
 #include "SurgeGUIUtils.h"
 
 #include "juce_core/juce_core.h"
+#include "UserDefaults.h"
 
 #if LINUX
 #include <sys/types.h>
@@ -36,6 +37,34 @@ bool showCursor(SurgeStorage *storage)
 
     return sc || tm;
 };
+
+/*
+ * We kinda want to know if we are standalone here, but don't have reference to the processor
+ * but that's a constant for a process (you can't mix standalone and not) so make it a static
+ * and explicitly grab this symbol in the SGE startup path
+ */
+static bool isStandalone{false};
+void setIsStandalone(bool b) { isStandalone = b; }
+
+bool allowKeyboardEdits(SurgeStorage *storage)
+{
+    if (!storage)
+        return false;
+
+    bool res{false};
+    if (isStandalone)
+    {
+        res = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::UseKeyboardAccEditors_Standalone, true);
+    }
+    else
+    {
+        res = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::UseKeyboardAccEditors_Plugin, false);
+    }
+
+    return res;
+}
 
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
 // intersect, the intersection point may be stored in the floats i_x and i_y.

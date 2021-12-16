@@ -28,6 +28,7 @@ struct IComponentTagValue
     virtual float getValue() const = 0;
     virtual void setValue(float) = 0;
 
+    virtual void startHover(const juce::Point<float> &) {}
     virtual void endHover() {}
 
     juce::Component *asJuceComponent()

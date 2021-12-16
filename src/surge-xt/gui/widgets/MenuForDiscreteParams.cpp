@@ -342,5 +342,34 @@ std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessi
     return std::make_unique<DiscreteAH<MenuForDiscreteParams>>(this);
 }
 #endif
+
+bool MenuForDiscreteParams::keyPressed(const juce::KeyPress &key)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return false;
+
+    bool got{false};
+    int dir = -1;
+    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        got = true;
+    }
+    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        got = true;
+        dir = 1;
+    }
+
+    if (got)
+    {
+        notifyBeginEdit();
+        setValue(nextValueInOrder(value, -dir));
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+    }
+    return got;
+}
+
 } // namespace Widgets
 } // namespace Surge
