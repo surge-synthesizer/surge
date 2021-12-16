@@ -37,6 +37,8 @@ juce_add_plugin(${PROJECT_NAME}
   VST3_CATEGORIES Fx
   VST2_CATEGORY kPlugCategEffect
   AU_MAIN_TYPE kAudioUnitType_Effect
+  AU_SANDBOX_SAFE TRUE
+
 
   LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
   LV2_SHARED_LIBRARY_NAME SurgeXT_FX
