@@ -17,6 +17,7 @@
 #include "Switch.h"
 #include "SurgeImage.h"
 #include "SurgeGUIUtils.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -120,46 +121,47 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
 
 bool Switch::keyPressed(const juce::KeyPress &key)
 {
-    if (!Surge::GUI::allowKeyboardEdits(storage))
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
         return false;
 
-    bool got{false};
-    int mul = 1;
-    if (key.getKeyCode() == juce::KeyPress::leftKey)
+    if (action == OpenMenu)
     {
-        got = true;
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
+    }
+
+    if (action != Increase && action != Decrease)
+        return false;
+
+    int mul = 1;
+    if (action == Decrease)
+    {
         mul = -1;
     }
-    if (key.getKeyCode() == juce::KeyPress::rightKey)
+
+    if (isMultiIntegerValued())
     {
-        got = true;
+        setValueDirection(mul);
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
     }
-
-    if (got)
+    else
     {
+        auto ov = value;
+        value = mul > 0 ? 1 : 0;
 
-        if (isMultiIntegerValued())
+        if (ov != value)
         {
-            setValueDirection(mul);
             notifyBeginEdit();
             notifyValueChanged();
             notifyEndEdit();
         }
-        else
-        {
-            auto ov = value;
-            value = mul > 0 ? 1 : 0;
-
-            if (ov != value)
-            {
-                notifyBeginEdit();
-                notifyValueChanged();
-                notifyEndEdit();
-            }
-        }
-        repaint();
     }
-    return got;
+    repaint();
+    return true;
 }
 
 #if SURGE_JUCE_ACCESSIBLE

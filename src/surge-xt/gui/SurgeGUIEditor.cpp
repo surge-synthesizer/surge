@@ -3443,8 +3443,9 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     bool kbAcc = getUseKeyboardAccEditors();
 
-    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Arrow Keys Modify Values"), true, kbAcc,
-                   [this]() { toggleUseKeyboardAccEditors(); });
+    wfMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Use Accessible Editor KeyBindings (Arrow Keys, etc)"), true,
+        kbAcc, [this]() { toggleUseKeyboardAccEditors(); });
 
     wfMenu.addSeparator();
 

@@ -19,6 +19,7 @@
 #include "basic_dsp.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeImage.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -674,43 +675,58 @@ std::unique_ptr<juce::AccessibilityHandler> ModulatableSlider::createAccessibili
 
 bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
 {
-    if (!Surge::GUI::allowKeyboardEdits(storage))
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
         return false;
 
-    bool got{false};
-    float dv{0};
-    if (key.getKeyCode() == juce::KeyPress::leftKey)
+    if (action == OpenMenu)
     {
-        got = true;
-        dv = -0.05;
-    }
-    if (key.getKeyCode() == juce::KeyPress::rightKey)
-    {
-        got = true;
-        dv = 0.05;
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
     }
 
-    if (got)
+    float dv{0.05};
+    switch (action)
     {
-        if (key.getModifiers().isShiftDown())
-            dv *= 0.1;
-
-        if (isEditingModulation)
-        {
-            modValue = limitpm1(modValue + dv);
-        }
-        else
-        {
-            value = limit01(value + dv);
-        }
-
-        notifyBeginEdit();
-        notifyValueChanged();
-        updateInfowindowContents(isEditingModulation);
-        notifyEndEdit();
-        repaint();
+    case Increase:
+        break;
+    case Decrease:
+        dv = -dv;
+        break;
+    default:
+        dv = 0;       // should never happen
+        return false; // but bail out if it does
+        break;
     }
-    return got;
+
+    switch (mod)
+    {
+    case NoModifier:
+        break;
+    case Fine:
+        dv *= 0.1;
+        break;
+    case Quantized:
+        // the value set handler handles this, oddly
+        break;
+    }
+
+    if (isEditingModulation)
+    {
+        modValue = limitpm1(modValue + dv);
+    }
+    else
+    {
+        value = limit01(value + dv);
+    }
+
+    notifyBeginEdit();
+    notifyValueChanged();
+    updateInfowindowContents(isEditingModulation);
+    notifyEndEdit();
+    repaint();
+    return true;
 }
 
 } // namespace Widgets

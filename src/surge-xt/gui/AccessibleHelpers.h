@@ -19,6 +19,8 @@
 #if SURGE_JUCE_ACCESSIBLE
 #include "Parameter.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeStorage.h"
+#include "SurgeGUIUtils.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -252,6 +254,53 @@ struct OverlayAsAccessibleContainer : public juce::Component
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleContainer);
 };
+
+enum AccessibleKeyEditAction
+{
+    None,
+    Increase,
+    Decrease,
+    OpenMenu
+};
+
+enum AccessibleKeyModifier
+{
+    NoModifier,
+    Fine,
+    Quantized
+};
+
+inline std::tuple<AccessibleKeyEditAction, AccessibleKeyModifier>
+accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return {None, NoModifier};
+
+    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce ::KeyPress::downKey)
+    {
+        if (key.getModifiers().isShiftDown())
+            return {Decrease, Fine};
+        if (key.getModifiers().isCtrlDown())
+            return {Decrease, Quantized};
+        return {Decrease, NoModifier};
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce ::KeyPress::upKey)
+    {
+        if (key.getModifiers().isShiftDown())
+            return {Increase, Fine};
+        if (key.getModifiers().isCtrlDown())
+            return {Increase, Quantized};
+        return {Increase, NoModifier};
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::F10Key && key.getModifiers().isShiftDown())
+    {
+        return {OpenMenu, NoModifier};
+    }
+
+    return {None, NoModifier};
+}
 
 } // namespace Widgets
 } // namespace Surge
