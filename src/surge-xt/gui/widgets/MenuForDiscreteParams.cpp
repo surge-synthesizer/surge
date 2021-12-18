@@ -345,30 +345,32 @@ std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessi
 
 bool MenuForDiscreteParams::keyPressed(const juce::KeyPress &key)
 {
-    if (!Surge::GUI::allowKeyboardEdits(storage))
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
         return false;
 
-    bool got{false};
-    int dir = -1;
-    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::downKey)
+    if (action == OpenMenu)
     {
-        got = true;
-    }
-    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce::KeyPress::upKey)
-    {
-        got = true;
-        dir = 1;
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
     }
 
-    if (got)
+    if (action != Increase && action != Decrease)
+        return false;
+
+    int dir = 1;
+    if (action == Decrease)
     {
-        notifyBeginEdit();
-        setValue(nextValueInOrder(value, -dir));
-        notifyValueChanged();
-        notifyEndEdit();
-        repaint();
+        dir = -1;
     }
-    return got;
+
+    notifyBeginEdit();
+    setValue(nextValueInOrder(value, -dir));
+    notifyValueChanged();
+    notifyEndEdit();
+    repaint();
+    return true;
 }
 
 } // namespace Widgets

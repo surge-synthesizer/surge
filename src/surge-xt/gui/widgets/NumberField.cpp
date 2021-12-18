@@ -203,35 +203,36 @@ void NumberField::mouseWheelMove(const juce::MouseEvent &event,
 
 bool NumberField::keyPressed(const juce::KeyPress &key)
 {
-    if (!Surge::GUI::allowKeyboardEdits(storage))
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
         return false;
 
-    bool got{false};
-    int amt = 1;
-    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce::KeyPress::downKey)
+    if (action == OpenMenu)
     {
-        got = true;
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
+    }
+
+    if (action != Increase && action != Decrease)
+        return false;
+
+    int amt = 1;
+    if (action == Decrease)
+    {
         amt = -1;
     }
-    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce::KeyPress::upKey)
+
+    if (controlMode == Skin::Parameters::PB_DEPTH && extended && !key.getModifiers().isShiftDown())
     {
-        got = true;
+        amt = amt * 100;
     }
 
-    if (got)
-    {
-        if (controlMode == Skin::Parameters::PB_DEPTH && extended &&
-            !key.getModifiers().isShiftDown())
-        {
-            amt = amt * 100;
-        }
-
-        notifyBeginEdit();
-        changeBy(amt);
-        notifyEndEdit();
-        repaint();
-    }
-    return got;
+    notifyBeginEdit();
+    changeBy(amt);
+    notifyEndEdit();
+    repaint();
+    return true;
 }
 
 void NumberField::changeBy(int inc)
