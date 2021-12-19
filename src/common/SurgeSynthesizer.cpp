@@ -402,10 +402,12 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         {
             for (auto &h : holdbuffer[sc])
             {
-                if (h.first == channel && h.second == key)
+                if (h.channel == channel && h.key == key)
                 {
-                    h.first = -1;
-                    h.second = -1;
+                    h.channel = -1;
+                    h.key = -1;
+                    h.originalChannel = channel;
+                    h.originalKey = key;
                 }
             }
         }
@@ -963,7 +965,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
             releaseNotePostHoldCheck(sc, channel, key, velocity);
         else
             holdbuffer[sc].push_back(
-                std::make_pair(channel, key)); // hold pedal is down, add to bufffer
+                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to bufffer
     }
 }
 
@@ -1953,15 +1955,26 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
-    std::list<std::pair<int, int>> retainBuffer;
+    std::list<HoldBufferItem> retainBuffer;
+
     for (auto hp : holdbuffer[scene])
     {
-        auto channel = hp.first;
-        auto key = hp.second;
+        auto channel = hp.channel;
+        auto key = hp.key;
 
         if (channel < 0 || key < 0)
         {
-            // std::cout << "Caught tricky double releease condition!" << std::endl;
+            /* this is the 'tricky repeated repease while hold is down' case.
+             * In the mono modes the right thing happens (we have a pile of tests)
+             * and in mpe it can't happen because each note is on a different channel
+             * (in theory) but in poly mode it can.
+             */
+            auto polymode = storage.getPatch().scene[scene].polymode.val.i;
+            if (polymode == pm_poly && !mpeEnabled)
+            {
+                // The mpe and mono modes and latch have a variety of very difficult handlings
+                purgeDuplicateHeldVoicesInPolyMode(scene, hp.originalChannel, hp.originalKey);
+            }
         }
         else
         {
@@ -1976,6 +1989,35 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
         }
     }
     holdbuffer[scene] = retainBuffer;
+}
+
+void SurgeSynthesizer::purgeDuplicateHeldVoicesInPolyMode(int scene, int channel, int key)
+{
+    /* If we end up here we know there's multiple voices in the voice structure on this key and
+     * channel probably
+     */
+    std::vector<SurgeVoice *> candidates;
+    for (const auto &v : voices[scene])
+    {
+        if (v->state.key == key && v->state.channel == channel && v->state.gate)
+        {
+            candidates.push_back(v);
+        }
+    }
+    if (candidates.size() > 1)
+    {
+        // make sure latest is first
+        std::sort(candidates.begin(), candidates.end(), [](const auto &a, const auto &b) {
+            return a->state.voiceOrderAtCreate > b->state.voiceOrderAtCreate;
+        });
+        bool r = false;
+        for (auto &v : candidates)
+        {
+            if (r)
+                v->release();
+            r = true;
+        }
+    }
 }
 
 void SurgeSynthesizer::allNotesOff()

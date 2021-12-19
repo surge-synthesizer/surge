@@ -28,7 +28,7 @@ TEST_CASE("Channel Split Routes on Channel", "[midi]")
             surge->storage.getPatch().splitpoint.val.i = smc;
             for (auto mc = 0; mc < 16; ++mc)
             {
-                auto fr = frequencyForNote(surge, 69, 2, 0, mc);
+                auto fr = frequencyForNote(surge, 69, 1, 0, mc);
                 auto targetfr = mc <= splitChan ? 440 : 440 * 4;
                 REQUIRE(fr == Approx(targetfr).margin(0.1));
             }
@@ -44,7 +44,7 @@ TEST_CASE("Channel Split Routes on Channel", "[midi]")
             surge->storage.getPatch().splitpoint.val.i = smc;
             for (auto mc = 0; mc < 16; ++mc)
             {
-                auto fr = frequencyForNote(surge, 69, 2, 0, mc);
+                auto fr = frequencyForNote(surge, 69, 1, 0, mc);
                 auto targetfr = mc <= splitChan ? 440 : 440 * 4;
                 REQUIRE(fr == Approx(targetfr).margin(0.1));
             }
@@ -1393,5 +1393,124 @@ TEST_CASE("Voice Stealing", "[midi]")
                 }
             }
         }
+    }
+}
+
+TEST_CASE("Single Key Pedal Voice Count", "[midi]") // #1459
+{
+    auto playingVoiceCount = [](std::shared_ptr<SurgeSynthesizer> surge) {
+        int ct = 0;
+        for (auto v : surge->voices[0])
+        {
+            if (v->state.gate)
+                ct++;
+        }
+        return ct;
+    };
+
+    SECTION("In C, in Various Forms")
+    {
+        auto step = [](auto surge) {
+            for (int i = 0; i < 25; ++i)
+                surge->process();
+        };
+        auto testInSurge = [](auto kernel) {
+            auto surge = Surge::Headless::createSurge(44100);
+            REQUIRE(surge);
+            surge->storage.getPatch().scene[0].polymode.val.i = pm_poly;
+            kernel(surge);
+        };
+
+        testInSurge([&](auto surge) {
+            // Case one - no pedal play and release
+            INFO("Single Pedal On Off");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            surge->channelController(0, 64, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 0);
+        });
+
+        testInSurge([&](auto surge) {
+            // Case one - no pedal play and release
+            INFO("Single Pedal On Off Pedal Down");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 1);
+        });
+
+        testInSurge([&](auto surge) {
+            // Case one - no pedal play and release
+            INFO("Single Pedal Double Strike Pedal Down");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 2);
+        });
+
+        testInSurge([&](auto surge) {
+            INFO("Single Pedal Double Strike Pedal Up");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            surge->channelController(0, 64, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 0);
+        });
+
+        testInSurge([&](auto surge) {
+            INFO("Single Pedal Single Release Pedal Up");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            surge->playNote(0, 60, 120, 0);
+            step(surge);
+            surge->releaseNote(0, 60, 0);
+            step(surge);
+            surge->playNote(0, 60, 120, 0); // critically don't release this
+            step(surge);
+            surge->channelController(0, 64, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 1);
+        });
+
+        testInSurge([&](auto surge) {
+            INFO("Single Pedal Single Release Pedal Up");
+            surge->channelController(0, 64, 127);
+            step(surge);
+            for (int i = 0; i < 5; ++i)
+            {
+                surge->playNote(0, 60, 120, 0);
+                step(surge);
+                surge->releaseNote(0, 60, 0);
+                step(surge);
+            }
+            surge->playNote(0, 60, 120, 0); // critically don't release this
+            step(surge);
+            surge->channelController(0, 64, 0);
+            step(surge);
+            REQUIRE(playingVoiceCount(surge) == 1);
+        });
     }
 }

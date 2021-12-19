@@ -137,6 +137,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.key = key;
     state.keyRetuningForKey = -1000;
     state.channel = channel;
+    state.voiceOrderAtCreate = voiceOrder;
 
     state.velocity = velocity;
     state.fvel = velocity / 127.f;
