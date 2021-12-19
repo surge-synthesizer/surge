@@ -55,12 +55,12 @@ bool allowKeyboardEdits(SurgeStorage *storage)
     if (isStandalone)
     {
         res = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::UseKeyboardAccEditors_Standalone, true);
+            storage, Surge::Storage::UseKeyboardShortcuts_Standalone, true);
     }
     else
     {
         res = Surge::Storage::getUserDefaultValue(
-            storage, Surge::Storage::UseKeyboardAccEditors_Plugin, false);
+            storage, Surge::Storage::UseKeyboardShortcuts_Plugin, false);
     }
 
     return res;

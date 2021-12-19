@@ -440,6 +440,12 @@ void ModulationSourceButton::mouseEnter(const juce::MouseEvent &event)
 
 void ModulationSourceButton::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
+void ModulationSourceButton::startHover(const juce::Point<float> &f)
+{
+    isHovered = true;
+    repaint();
+}
+
 void ModulationSourceButton::endHover()
 {
     bool oh = isHovered;
@@ -449,6 +455,46 @@ void ModulationSourceButton::endHover()
     {
         repaint();
     }
+}
+
+bool ModulationSourceButton::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
+    }
+
+    if (action != Increase && action != Decrease)
+        return false;
+
+    if (isMeta)
+    {
+        float delta = 0.05;
+        if (mod == Fine)
+        {
+            delta = 0.01;
+        }
+        if (action == Decrease)
+            delta = -delta;
+
+        value = limit01(value + delta);
+        mouseMode = DRAG_VALUE;
+
+        notifyValueChanged();
+
+        mouseMode = NONE;
+
+        repaint();
+        return true;
+    }
+
+    return false;
 }
 
 void ModulationSourceButton::onSkinChanged()
@@ -633,7 +679,10 @@ void ModulationSourceButton::resized()
 {
     hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
 
-    auto b = getLocalBounds().withWidth(getHeight()).translated(getHeight(), 0);
+    auto b = getLocalBounds()
+                 .withWidth(getHeight())
+                 .translated(getHeight(), 0)
+                 .translated(getBounds().getX(), getBounds().getY());
     selectAccButton->setBounds(b);
     b = b.translated(getHeight(), 0);
     targetAccButton->setBounds(b);

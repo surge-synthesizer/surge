@@ -131,6 +131,16 @@ void EffectChooser::paint(juce::Graphics &g)
     }
 }
 
+void EffectChooser::resized()
+{
+    int i = 0;
+    for (const auto &q : slotAccOverlays)
+    {
+        q->setBounds(getEffectRectangle(i).translated(getBounds().getX(), getBounds().getY()));
+        i++;
+    }
+}
+
 void EffectChooser::drawSlotText(juce::Graphics &g, const juce::Rectangle<int> &r,
                                  const juce::Colour &txtcol, int fxid)
 {

@@ -109,7 +109,8 @@ void LFOAndStepDisplay::resized()
         int yp = (i / 2) * 15 + left_panel.getY();
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
 #if SURGE_JUCE_ACCESSIBLE
-        typeAccOverlays[i]->setBounds(shaperect[i]);
+        typeAccOverlays[i]->setBounds(
+            shaperect[i].translated(getBounds().getX(), getBounds().getY()));
 #endif
     }
 

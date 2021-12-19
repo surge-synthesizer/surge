@@ -298,27 +298,9 @@ extern void setIsStandalone(bool b);
 }
 } // namespace Surge
 
-#ifdef DEBUG_FOCUS
-struct FocusDebugListener : public juce::FocusChangeListener
-{
-    void globalFocusChanged(juce::Component *fc) override
-    {
-        std::cout << "FC [" << fc << "] ";
-        if (fc)
-            std::cout << fc->getTitle() << " " << typeid(*fc).name();
-        std::cout << std::endl;
-    }
-};
-#endif
-
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
     jassert(Surge::GUI::ModulationGrid::getModulationGrid());
-
-#ifdef DEBUG_FOCUS
-    // it's just debug who cares about the leak (for now)
-    juce::Desktop::getInstance().addFocusChangeListener(new FocusDebugListener());
-#endif
 
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
@@ -427,10 +409,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     miniEdit->setVisible(false);
 
     synth->addModulationAPIListener(this);
+
+    juce::Desktop::getInstance().addFocusChangeListener(this);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+    juce::Desktop::getInstance().removeFocusChangeListener(this);
     synth->removeModulationAPIListener(this);
     synth->storage.clearOkCancelProvider();
     auto isPop = synth->storage.getPatch().dawExtraState.isPopulated;
@@ -3441,12 +3426,6 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Keyboard Shortcuts"), true, kbShortcuts,
                    [this]() { toggleUseKeyboardShortcuts(); });
 
-    bool kbAcc = getUseKeyboardAccEditors();
-
-    wfMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Use Accessible Editor KeyBindings (Arrow Keys, etc)"), true,
-        kbAcc, [this]() { toggleUseKeyboardAccEditors(); });
-
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -3491,37 +3470,6 @@ void SurgeGUIEditor::toggleVirtualKeyboard()
 
     setShowVirtualKeyboard(!getShowVirtualKeyboard());
     resizeWindow(zoomFactor);
-}
-
-bool SurgeGUIEditor::getUseKeyboardAccEditors()
-{
-    auto key = Surge::Storage::UseKeyboardAccEditors_Plugin;
-    bool defaultVal = false;
-
-    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
-    {
-        key = Surge::Storage::UseKeyboardAccEditors_Standalone;
-        defaultVal = true;
-    }
-
-    return Surge::Storage::getUserDefaultValue(&(this->synth->storage), key, defaultVal);
-}
-
-void SurgeGUIEditor::setUseKeyboardAccEditors(bool b)
-{
-    auto key = Surge::Storage::UseKeyboardAccEditors_Plugin;
-
-    if (juceEditor->processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
-    {
-        key = Surge::Storage::UseKeyboardAccEditors_Standalone;
-    }
-
-    Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
-}
-
-void SurgeGUIEditor::toggleUseKeyboardAccEditors()
-{
-    setUseKeyboardAccEditors(!getUseKeyboardAccEditors());
 }
 
 bool SurgeGUIEditor::getUseKeyboardShortcuts()
@@ -3955,6 +3903,13 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
                                     showShortcutDescription("Alt + D", u8"\U00002325D"),
                                     []() { Surge::Debug::toggleConsole(); });
 #endif
+
+    devSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Focus Debugger"), true, debugFocus,
+                       [this]() {
+                           debugFocus = !debugFocus;
+                           frame->debugFocus = debugFocus;
+                           frame->repaint();
+                       });
 
 #ifdef INSTRUMENT_UI
     devSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Show UI Instrumentation..."),
@@ -6424,4 +6379,29 @@ void SurgeGUIEditor::removeUnusedTrackedComponents()
         p->removeChildComponent(c.first);
     }
     frame->repaint();
+}
+
+void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
+{
+    if (!frame)
+        return;
+
+    if (fc)
+    {
+        frame->focusRectangle = fc->getBounds();
+    }
+    else
+    {
+        frame->focusRectangle = juce::Rectangle<int>();
+    }
+    if (debugFocus)
+    {
+        frame->repaint();
+
+        std::cout << "FC [" << fc << "] ";
+        if (fc)
+            std::cout << fc->getTitle() << " " << typeid(*fc).name() << " "
+                      << fc->getBounds().toString();
+        std::cout << std::endl;
+    }
 }
