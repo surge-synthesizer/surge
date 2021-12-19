@@ -68,6 +68,9 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
         isHovered = false;
         repaint();
     }
+
+    void resized() override;
+
     // State for mouse events
     bool isHovered{false}, hasDragged{false};
     int currentHover{-1}, currentSceneHover{-1}, currentClicked{-1};

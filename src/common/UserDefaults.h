@@ -70,10 +70,6 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     UseKeyboardShortcuts_Plugin,
     UseKeyboardShortcuts_Standalone,
 
-    // These allow arrow keys to edit sliders, switches, etc...
-    UseKeyboardAccEditors_Plugin,
-    UseKeyboardAccEditors_Standalone,
-
     TuningOverlayLocation,
     ModlistOverlayLocation,
     MSEGOverlayLocation,

@@ -161,12 +161,6 @@ void initMaps()
             case UseKeyboardShortcuts_Standalone:
                 r = "useKeyboardShortcutsStandalone";
                 break;
-            case UseKeyboardAccEditors_Plugin:
-                r = "useKeyboardAccEditorsPlugin";
-                break;
-            case UseKeyboardAccEditors_Standalone:
-                r = "useKeyboardAccEditorsStandalone";
-                break;
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
                 break;

@@ -276,7 +276,7 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     if (!Surge::GUI::allowKeyboardEdits(storage))
         return {None, NoModifier};
 
-    if (key.getKeyCode() == juce::KeyPress::leftKey || key.getKeyCode() == juce ::KeyPress::downKey)
+    if (key.getKeyCode() == juce ::KeyPress::downKey)
     {
         if (key.getModifiers().isShiftDown())
             return {Decrease, Fine};
@@ -285,7 +285,7 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
         return {Decrease, NoModifier};
     }
 
-    if (key.getKeyCode() == juce::KeyPress::rightKey || key.getKeyCode() == juce ::KeyPress::upKey)
+    if (key.getKeyCode() == juce ::KeyPress::upKey)
     {
         if (key.getModifiers().isShiftDown())
             return {Increase, Fine};
@@ -295,6 +295,11 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     }
 
     if (key.getKeyCode() == juce::KeyPress::F10Key && key.getModifiers().isShiftDown())
+    {
+        return {OpenMenu, NoModifier};
+    }
+
+    if (key.getKeyCode() == 93)
     {
         return {OpenMenu, NoModifier};
     }

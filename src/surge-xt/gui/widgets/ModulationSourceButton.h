@@ -151,7 +151,19 @@ struct ModulationSourceButton : public juce::Component,
 
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+    void startHover(const juce::Point<float> &f) override;
     void endHover() override;
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
 
     void onSkinChanged() override;
 

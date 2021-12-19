@@ -83,6 +83,7 @@ struct PatchStoreDialog;
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
                        public juce::KeyListener,
+                       public juce::FocusChangeListener,
                        public SurgeSynthesizer::ModulationAPIListener
 {
   public:
@@ -128,6 +129,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::string showShortcutDescription(const std::string &shortcutDesc,
                                         const std::string &shortcutDescMac);
     std::string showShortcutDescription(const std::string &shortcutDesc);
+
+    bool debugFocus{false};
+    void globalFocusChanged(juce::Component *fc) override;
 
   protected:
     virtual void setParameter(long index, float value);
@@ -692,10 +696,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getUseKeyboardShortcuts();
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
-
-    bool getUseKeyboardAccEditors();
-    void setUseKeyboardAccEditors(bool b);
-    void toggleUseKeyboardAccEditors();
 
   private:
     bool scannedForMidiPresets = false;
