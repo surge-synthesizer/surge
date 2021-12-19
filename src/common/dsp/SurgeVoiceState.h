@@ -37,6 +37,7 @@ struct SurgeVoiceState
     // pitch
     ControllerModulationSource mpePitchBend;
     float mpePitchBendRange;
+    int64_t voiceOrderAtCreate{-1};
 
     float getPitch(SurgeStorage *storage);
 };

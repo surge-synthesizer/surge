@@ -391,8 +391,16 @@ class alignas(16) SurgeSynthesizer
 
     // hold pedal stuff
 
-    std::list<std::pair<int, int>> holdbuffer[n_scenes];
+    struct HoldBufferItem
+    {
+        int channel;
+        int key;
+        int originalChannel;
+        int originalKey;
+    };
+    std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);
+    void purgeDuplicateHeldVoicesInPolyMode(int scehe, int channel, int key);
     quadr_osc sinus;
     int demo_counter = 0;
 
