@@ -85,6 +85,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     surge->hostProgram = juce::PluginHostType().getHostDescription();
     surge->juceWrapperType = getWrapperTypeDescription(wrapperType);
+    surge->setupActivateExtraOutputs();
 
     midiKeyboardState.addListener(this);
 
