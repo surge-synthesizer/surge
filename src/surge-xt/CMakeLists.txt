@@ -50,6 +50,12 @@ juce_add_plugin(${PROJECT_NAME}
   FORMATS ${SURGE_JUCE_FORMATS}
   )
 
+if (CLAP_JUCE_EXTENSIONS_ROOT)
+  clap_juce_extensions_plugin(TARGET surge-xt
+          CLAP_ID "org.surge-synth-team.surge-xt")
+  target_sources(${PROJECT_NAME}_CLAP PRIVATE plugin_type_extensions/SurgeSynthClapExtensions.cpp)
+endif()
+
 if(JUCE_ASIO_SUPPORT)
   target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_ASIO=1)
 endif()

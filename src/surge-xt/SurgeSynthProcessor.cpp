@@ -23,7 +23,15 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                                .withOutput("Scene A", juce::AudioChannelSet::stereo(), false)
                                .withOutput("Scene B", juce::AudioChannelSet::stereo(), false))
 {
-    std::cout << "SurgeXT " << getWrapperTypeDescription(wrapperType) << "\n"
+    // Since we are using 'external clap' this is the one JUCE API we can't override
+    std::string wrapperTypeString = getWrapperTypeDescription(wrapperType);
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+    if (wrapperType == wrapperType_Undefined && is_clap)
+        wrapperTypeString = "Clap";
+#endif
+
+    std::cout << "SurgeXT " << wrapperTypeString << "\n"
               << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
               << JUCE_VERSION << std::dec << "\n"
               << "  - Build Info   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
@@ -84,7 +92,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     }
 
     surge->hostProgram = juce::PluginHostType().getHostDescription();
-    surge->juceWrapperType = getWrapperTypeDescription(wrapperType);
+    surge->juceWrapperType = wrapperTypeString;
     surge->setupActivateExtraOutputs();
 
     midiKeyboardState.addListener(this);
