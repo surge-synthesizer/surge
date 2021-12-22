@@ -46,14 +46,8 @@ target_compile_definitions(surge-juce INTERFACE
 
 set(SURGE_JUCE_FORMATS VST3)
 
-
-if(SURGE_CLAP_ROOT)
-  message( STATUS "Gathering CLAP from ${SURGE_CLAP_ROOT}")
-  if (NOT EXISTS "${SURGE_JUCE_PATH}/modules/juce_audio_plugin_client/juce_audio_plugin_client_CLAP.cpp")
-    message(FATAL_ERROR "To use CLAP you need to both set SURGE_CLAP_ROOT and have SURGE_JUCE_PATH point at a clap-enabled juce")
-  endif()
-  juce_set_clap_sdk_path("${SURGE_CLAP_ROOT}/clap" "${SURGE_CLAP_ROOT}/clap-helpers")
-  list(APPEND SURGE_JUCE_FORMATS CLAP)
+if (CLAP_JUCE_EXTENSIONS_ROOT)
+  add_subdirectory(${CLAP_JUCE_EXTENSIONS_ROOT} clap-extensions)
 endif()
 
 if(NOT SURGE_SKIP_STANDALONE)

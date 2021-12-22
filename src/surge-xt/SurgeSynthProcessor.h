@@ -16,6 +16,10 @@
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+#include "clap-juce-extensions/clap-juce-extensions.h"
+#endif
+
 #include <unordered_map>
 
 #if MAC
@@ -146,6 +150,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 #if SURGE_JUCE_VST3_EXTENSIONS
                             public juce::VST3ClientExtensions,
 #endif
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+                            public clap_juce_extensions::clap_properties,
+#endif
+
                             public SurgeSynthesizer::PluginLayer,
                             public juce::MidiKeyboardState::Listener
 
