@@ -1,0 +1,18 @@
+<single-fx streaming_version="17">
+  <snapshot name="Vintage Digital Smooth"
+     type="1"
+     p0="-2.05889"
+     p1="-1"
+     p1_temposync="1"
+     p1_deactivated="1"
+     p2="0.75"
+     p3="0"
+     p4="-60"
+     p5="42.0762"
+     p6="0"
+     p7="0"
+     p8="0"
+     p10="0.2"
+     p11="0"
+  />
+</single-fx>

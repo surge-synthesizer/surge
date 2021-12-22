@@ -1,0 +1,18 @@
+<single-fx streaming_version="17">
+  <snapshot name="Feet In The Air"
+     type="1"
+     p0="-1"
+     p0_temposync="1"
+     p1="-1.41504"
+     p1_temposync="1"
+     p2="0.45"
+     p3="0.8"
+     p4="-60"
+     p5="70"
+     p6="0"
+     p7="0"
+     p8="0"
+     p10="0.2"
+     p11="0"
+  />
+</single-fx>

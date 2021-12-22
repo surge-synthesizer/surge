@@ -1,0 +1,19 @@
+<single-fx streaming_version="17">
+  <snapshot name="Dreamy" 
+     type="1"
+     p0="-2"
+     p0_temposync="1"
+     p1="-1"
+     p1_temposync="1"
+     p1_deactivated="1"
+     p2="0.75"
+     p3="0.36"
+     p4="-60"
+     p5="70"
+     p6="-2.32193"
+     p7="0.18"
+     p8="0"
+     p10="0.2"
+     p11="6"
+  />
+</single-fx>
