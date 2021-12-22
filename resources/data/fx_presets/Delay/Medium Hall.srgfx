@@ -1,0 +1,16 @@
+<single-fx streaming_version="17">
+  <snapshot name="Medium Hall" 
+     type="1"
+     p0="-0.321928"
+     p1="-0.736966"
+     p2="0.706251"
+     p3="0.741965"
+     p4="-60"
+     p5="70"
+     p6="-2.32193"
+     p7="0"
+     p8="0"
+     p10="0.2"
+     p11="0"
+  />
+</single-fx>

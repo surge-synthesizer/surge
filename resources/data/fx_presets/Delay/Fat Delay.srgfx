@@ -1,0 +1,19 @@
+<single-fx streaming_version="17">
+  <snapshot name="Fat Delay"
+     type="1"
+     p0="-1"
+     p0_temposync="1"
+     p1="-1"
+     p1_temposync="1"
+     p1_deactivated="1"
+     p2="0.75"
+     p3="0.25"
+     p4="-60"
+     p5="70"
+     p6="-2.73697"
+     p7="0.12"
+     p8="0"
+     p10="0.18"
+     p11="0"
+  />
+</single-fx>
