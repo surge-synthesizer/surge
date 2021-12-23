@@ -1391,8 +1391,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
             oscWaveform->setSurgeGUIEditor(this);
             oscWaveform->onOscillatorTypeChanged();
 
-            setAccessibilityInformationByTitleAndAction(oscWaveform.get(), "Oscillator Waveform",
-                                                        "Display");
+            setAccessibilityInformationByTitleAndAction(oscWaveform.get(),
+                                                        "Oscillator Waveform Display", "Display");
 
             addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_OSC), *oscWaveform);
             break;

@@ -30,9 +30,12 @@ namespace Overlays
 
 struct ClickURLImage : public juce::Component
 {
-    ClickURLImage(SurgeImage *img, int offset, const std::string &URL)
+    ClickURLImage(SurgeImage *img, int offset, const std::string &URL, const std::string &title)
         : url(URL), offset(offset), img(img)
     {
+        setAccessible(true);
+        setTitle(title);
+        setDescription(title);
     }
 
     void paint(juce::Graphics &g) override
@@ -64,6 +67,15 @@ struct ClickURLImage : public juce::Component
     void mouseUp(const juce::MouseEvent &event) override
     {
         juce::URL(url).launchInDefaultBrowser();
+    }
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(
+            *this, juce::AccessibilityRole::button,
+            juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press, [this]() {
+                juce::URL(url).launchInDefaultBrowser();
+            }));
     }
 
     bool isHovered{false};
@@ -98,7 +110,13 @@ struct HyperlinkLabel : public juce::Label, public Surge::GUI::SkinConsumingComp
 
 struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingComponent
 {
-    ClipboardCopyButton() : juce::TextButton() {}
+    ClipboardCopyButton() : juce::TextButton()
+    {
+        setAccessible(true);
+        setWantsKeyboardFocus(true);
+        setDescription("Copy Version Info");
+        setTitle("Copy Version Info");
+    }
 
     void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
                      bool shouldDrawButtonAsDown) override
@@ -119,7 +137,15 @@ struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingC
     }
 };
 
-AboutScreen::AboutScreen() {}
+AboutScreen::AboutScreen()
+{
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    setWantsKeyboardFocus(true);
+    std::string version = std::string("About Surge XT ") + Surge::Build::FullVersionStr;
+    setTitle(version);
+    setDescription(version);
+}
 
 AboutScreen::~AboutScreen() noexcept = default;
 
@@ -380,11 +406,13 @@ void AboutScreen::resized()
             "https://discord.gg/aFQDdMV",
             "https://juce.com"};
 
+        std::vector<std::string> urllabels = {
+            "Surge GitHub", "VST3", "Apple Audio Units", "Gnu GPL3", "Join our Discord", "JUCE"};
         int x = 0;
 
         for (auto idx : idxes)
         {
-            auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx]);
+            auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx], urllabels[idx]);
 
             bt->setBounds(rightSide + (x * 42), margin, 36, 36);
             addAndMakeVisible(*bt);

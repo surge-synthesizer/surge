@@ -434,8 +434,11 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
     explicit XMLMenuAH(T *s)
         : comp(s), juce::AccessibilityHandler(
                        *s, juce::AccessibilityRole::button,
-                       juce::AccessibilityActions().addAction(
-                           juce::AccessibilityActionType::showMenu, [this]() { this->showMenu(); }),
+                       juce::AccessibilityActions()
+                           .addAction(juce::AccessibilityActionType::showMenu,
+                                      [this]() { this->showMenu(); })
+                           .addAction(juce::AccessibilityActionType::press,
+                                      [this]() { this->showMenu(); }),
                        AccessibilityHandler::Interfaces{std::make_unique<XMLMenuTextValue>(s)})
     {
     }
