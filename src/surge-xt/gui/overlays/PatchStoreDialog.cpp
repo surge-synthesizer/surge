@@ -36,6 +36,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
     std::vector<int> searchFor(const std::string &s) override
     {
         std::vector<int> res;
+        std::map<std::string, int> alreadySeen;
         if (storage)
         {
             int idx = 0;
@@ -49,7 +50,27 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                         [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
                     if (it != c.name.end())
                     {
+                        // De-duplicate if factory and user are both there.
+                        // Replies on fact that factory comes before yser in order.
+                        if (alreadySeen.find(c.name) != alreadySeen.end())
+                        {
+                            auto didx = alreadySeen[c.name];
+
+                            for (auto it = res.begin(); it != res.end();)
+                            {
+                                if (*it == didx)
+                                {
+                                    it = res.erase(it);
+                                    break;
+                                }
+                                else
+                                {
+                                    it++;
+                                }
+                            }
+                        }
                         res.push_back(idx);
+                        alreadySeen[c.name] = idx;
                     }
                 }
                 idx++;
