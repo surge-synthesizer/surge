@@ -653,11 +653,10 @@ void FormulaModulatorEditor::escapeKeyPressed()
             }
         });
 
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Close Window",
-                                           "Are you sure you want to close the formula editor? Any "
-                                           "unapplied changes will be lost!",
-
-                                           "Yes", "No", this, cb);
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Close Formula Editor",
+                                           "Do you really want to close the formula editor? Any "
+                                           "changes that were not applied will be lost!",
+                                           "Yes", "No", nullptr, cb);
     }
     else
     {

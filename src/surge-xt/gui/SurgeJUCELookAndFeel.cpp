@@ -46,6 +46,10 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
     setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
 
+    setColour(AlertWindow::backgroundColourId, skin->getColor(Colors::Dialog::Background));
+    setColour(AlertWindow::outlineColourId, skin->getColor(Colors::Dialog::Border));
+    setColour(AlertWindow::textColourId, skin->getColor(Colors::Dialog::Label::Text));
+
     setColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoBackgroundId,
               skin->getColor(Colors::Dialog::Background));
     setColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId,
