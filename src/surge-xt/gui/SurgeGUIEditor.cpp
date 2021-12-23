@@ -307,13 +307,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     synth->storage.okCancelProvider = [](const std::string &msg, const std::string &title,
                                          SurgeStorage::OkCancel def,
                                          std::function<void(SurgeStorage::OkCancel)> callback) {
-        // think about threading one day probably
+        // TODO: think about threading one day probably
         auto cb = juce::ModalCallbackFunction::create([callback](int isOk) {
             auto r = isOk ? SurgeStorage::OK : SurgeStorage::CANCEL;
             callback(r);
         });
-        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, title, msg,
-                                                      "Yes", "No", nullptr, cb);
+        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, title, msg, "Yes",
+                                                      "No", nullptr, cb);
     };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
@@ -477,8 +477,7 @@ void SurgeGUIEditor::idle()
         }
         for (const auto &p : cp)
         {
-            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, p.second,
-                                                   p.first);
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, p.second, p.first);
         }
     }
 
@@ -5384,7 +5383,8 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
     else if (fExt == ".surge-skin")
     {
         std::ostringstream oss;
-        oss << "Do you wish to install skin from '" << fname << "' into your Surge User Directory?";
+        oss << "Would you like to install the skin from \n"
+            << fname << "\n into Surge XT user folder?";
         auto cb = juce::ModalCallbackFunction::create([this, fPath](int okcs) {
             if (okcs)
             {
@@ -5396,13 +5396,13 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 }
                 else
                 {
-                    std::cout << "Could not find skin after load" << std::endl;
+                    std::cout << "Could not find the skin after loading!" << std::endl;
                 }
             }
         });
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install Skin", oss.str(),
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install Skin", oss.str(),
 
-                                           "Install", "Cancel", frame.get(), cb);
+                                           "Yes", "No", frame.get(), cb);
     }
     else if (fExt == ".zip")
     {
@@ -5415,38 +5415,46 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
         }
 
         auto entries = zipHandler->getEntries();
+
         if (entries.totalSize() <= 0)
         {
-            std::cout << "no entries in zip file" << std::endl;
+            std::cout << "No entries in ZIP file!" << std::endl;
             return false;
         }
 
-        oss << "Do you wish to install\n";
+        oss << "Would you like to install ";
+
         if (entries.fxPresets.size() > 0)
         {
-            oss << entries.fxPresets.size() << " FX preset(s)\n";
+            auto sz = entries.fxPresets.size();
+            oss << fmt::format("{:1} FX preset{:2}", sz, sz != 1 ? "s" : "");
         }
         if (entries.midiMappings.size() > 0)
         {
-            oss << entries.midiMappings.size() << " midi mapping(s)\n";
+            auto sz = entries.midiMappings.size();
+            oss << fmt::format("{:1} MIDI mapping{:2}", sz, sz != 1 ? "s" : "");
         }
         if (entries.modulatorSettings.size() > 0)
         {
-            oss << entries.modulatorSettings.size() << " modulator preset(s)\n";
+            auto sz = entries.modulatorSettings.size();
+            oss << fmt::format("{:1} modulator preset{:2}", sz, sz != 1 ? "s" : "");
         }
         if (entries.patches.size() > 0)
         {
-            oss << entries.patches.size() << " patch(es)\n";
+            auto sz = entries.patches.size();
+            oss << fmt::format("{:1} patch{:2}", sz, sz != 1 ? "es" : "");
         }
         if (entries.skins.size() > 0)
         {
-            oss << entries.skins.size() << " skin(s)\n";
+            auto sz = entries.skins.size();
+            oss << fmt::format("{:1} skin{:2}", sz, sz != 1 ? "s" : "");
         }
         if (entries.wavetables.size() > 0)
         {
-            oss << entries.wavetables.size() << " wavetable(s)\n";
+            auto sz = entries.wavetables.size();
+            oss << fmt::format("{:1} wavetable{:2}", sz, sz != 1 ? "s" : "");
         }
-        oss << "from '" << fname << "' into your Surge User Directory?";
+        oss << "from \n" << fname << "\n into Surge XT user folder?";
 
         auto cb = juce::ModalCallbackFunction::create([this, zipHandler](int okcs) {
             if (okcs)
@@ -5486,10 +5494,10 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 }
             }
         });
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::InfoIcon, "Install from ZIP",
+        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install from ZIP archive",
                                            oss.str(),
 
-                                           "Install", "Cancel", frame.get(), cb);
+                                           "Yes", "No", frame.get(), cb);
     }
     return true;
 }

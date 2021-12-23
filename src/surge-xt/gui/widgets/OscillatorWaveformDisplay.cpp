@@ -400,8 +400,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
         if (!fn.empty())
         {
-            std::string message = "Wavetable was successfully exported to '" + fn + "'";
-            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon, "Wavetable Export",
+            std::string message = "Wavetable was successfully exported to\n" + fn + "!";
+            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, "Wavetable Export",
                                                    message);
         }
     };

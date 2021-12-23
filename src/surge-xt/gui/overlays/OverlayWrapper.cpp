@@ -53,17 +53,25 @@ void OverlayWrapper::paint(juce::Graphics &g)
     }
 
     auto sp = getLocalBounds();
+
     if (isModal)
     {
         sp = componentBounds;
         g.fillAll(skin->getColor(Colors::Overlay::Background));
     }
 
+    auto paintTitle = title;
+
+    if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+    {
+        paintTitle = oc->getEnclosingParentTitle();
+    }
+
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Background));
     g.fillRect(sp);
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
     g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
-    g.drawText(title, sp.withHeight(titlebarSize + margin), juce::Justification::centred);
+    g.drawText(paintTitle, sp.withHeight(titlebarSize + margin), juce::Justification::centred);
 
     if (icon)
     {

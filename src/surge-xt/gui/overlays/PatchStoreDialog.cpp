@@ -261,11 +261,7 @@ void PatchStoreDialog::onSkinChanged()
     okOverButton->setSkin(skin, associatedBitmapStore);
 }
 
-void PatchStoreDialog::setIsRename(bool b)
-{
-    isRename = b;
-    okButton->setButtonText(isRename ? "Rename" : "OK");
-}
+void PatchStoreDialog::setIsRename(bool b) { isRename = b; }
 
 void PatchStoreDialog::resized()
 {

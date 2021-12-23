@@ -605,6 +605,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                         if (!psd)
                             return;
                         psd->setIsRename(true);
+                        psd->setEnclosingParentTitle("Rename Patch");
                         const auto priorPath = storage->patch_list[current_patch].path;
                         psd->onOK = [this, priorPath]() {
                             fs::remove(priorPath);
@@ -626,9 +627,10 @@ void PatchSelector::showClassicMenu(bool single_category)
                 });
 
                 juce::AlertWindow::showOkCancelBox(
-                    juce::AlertWindow::InfoIcon, "Delete Patch",
-                    std::string("Do you want to delete ") +
-                        storage->patch_list[current_patch].path.u8string() + "?",
+                    juce::AlertWindow::NoIcon, "Delete Patch",
+                    std::string("Do you really want to delete\n") +
+                        storage->patch_list[current_patch].path.u8string() +
+                        "?\n\nThis cannot be undone!",
                     "Yes", "No", nullptr, cb);
             });
         }

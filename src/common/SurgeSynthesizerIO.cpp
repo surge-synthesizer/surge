@@ -547,7 +547,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
         storage.okCancelProvider(std::string("The patch '" + storage.getPatch().name +
                                              "' already exists in '" + storage.getPatch().category +
                                              "'. Are you sure you want to overwrite it?"),
-                                 std::string("Overwrite patch"), SurgeStorage::OK,
+                                 std::string("Overwrite Patch"), SurgeStorage::OK,
                                  [filename, this](SurgeStorage::OkCancel okc) {
                                      if (okc == SurgeStorage::OK)
                                      {
