@@ -315,6 +315,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
             toggleCommentTooltip(false);
 
             menu.addSectionHeader("FAVORITES");
+
             auto haveFavs = optionallyAddFavorites(menu, false, false);
 
             if (haveFavs)
@@ -730,8 +731,6 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
     if (addToSubMenu)
     {
         auto subMenu = juce::PopupMenu();
-
-        subMenu.addSectionHeader("FAVORITES");
 
         for (auto f : favs)
         {
