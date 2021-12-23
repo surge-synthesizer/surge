@@ -40,10 +40,10 @@ for i in range(1000):
     time.sleep(0.002)
 
 ot = sxttest.firstChildByTitle(osc, "Oscillator Type")
-ot.ShowMenu()
+ot.Press()
 oscMenu = sxttest.findAllMenus(sxt)[0]
 wt = sxttest.firstChildByTitle(oscMenu, "Wavetable")
 wt.Press()
-
+time.sleep(0.1)
 osc = sxttest.firstChildByTitle(mf, "Oscillator Controls")
 sxttest.recursiveDump(osc, "OSC Post>")
