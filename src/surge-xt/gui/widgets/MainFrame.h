@@ -99,6 +99,7 @@ struct MainFrame : public juce::Component
             return std::make_unique<juce::AccessibilityHandler>(*this,
                                                                 juce::AccessibilityRole::group);
         }
+        std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
 #endif
     };
 

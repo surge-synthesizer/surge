@@ -679,10 +679,7 @@ void ModulationSourceButton::resized()
 {
     hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
 
-    auto b = getLocalBounds()
-                 .withWidth(getHeight())
-                 .translated(getHeight(), 0)
-                 .translated(getBounds().getX(), getBounds().getY());
+    auto b = getLocalBounds().withWidth(getHeight());
     selectAccButton->setBounds(b);
     b = b.translated(getHeight(), 0);
     targetAccButton->setBounds(b);
