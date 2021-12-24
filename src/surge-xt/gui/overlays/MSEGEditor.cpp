@@ -2448,7 +2448,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             createMenu.addSeparator();
 
-            int stepCounts[3] = {8, 16, 32};
+            int stepCounts[] = {8, 16, 32, 64, 128};
 
             for (int i : stepCounts)
             {
@@ -2456,21 +2456,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Step Sequencer"),
                     [this, i]() {
                         Surge::MSEG::createStepseqMSEG(this->ms, i);
-                        this->zoomToFull();
-                        if (controlregion)
-                            controlregion->rebuild();
-                        modelChanged();
-                    });
-            }
-
-            createMenu.addSeparator();
-
-            for (int i : stepCounts)
-            {
-                createMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
-                    [this, i]() {
-                        Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
                         this->zoomToFull();
                         if (controlregion)
                             controlregion->rebuild();
@@ -2490,6 +2475,25 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                            controlregion->rebuild();
                                        modelChanged();
                                    });
+            }
+
+            createMenu.addSeparator();
+
+            for (int i : stepCounts)
+            {
+                // we're fine with a max of 32 sawtooth plucks methinks - ED
+                if (i <= 32)
+                {
+                    createMenu.addItem(
+                        Surge::GUI::toOSCaseForMenu(std::to_string(i) + " Sawtooth Plucks"),
+                        [this, i]() {
+                            Surge::MSEG::createSawMSEG(this->ms, i, 0.5);
+                            this->zoomToFull();
+                            if (controlregion)
+                                controlregion->rebuild();
+                            modelChanged();
+                        });
+                }
             }
 
             contextMenu.addSubMenu("Create", createMenu);
