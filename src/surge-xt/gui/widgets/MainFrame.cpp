@@ -16,6 +16,7 @@
 #include "MainFrame.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUICallbackInterfaces.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -149,70 +150,17 @@ void MainFrame::addChildComponentThroughEditor(juce::Component &c)
 }
 
 #if SURGE_JUCE_ACCESSIBLE
-struct mfKT : public juce::ComponentTraverser
-{
-    /*
-     * This is a crude implementation which just sorts all components
-     */
-    juce::Component *on{nullptr};
-    mfKT(juce::Component *c) : on(c) {}
-    juce::Component *getDefaultComponent(juce::Component *parentComponent) override
-    {
-        return nullptr;
-    }
-    juce::Component *getNextComponent(juce::Component *current) override { return nullptr; }
-    juce::Component *getPreviousComponent(juce::Component *current) override { return nullptr; }
-    std::vector<juce::Component *> getAllComponents(juce::Component *parentComponent) override
-    {
-        std::vector<juce::Component *> res;
-        for (auto c : on->getChildren())
-            res.push_back(c);
-        std::sort(res.begin(), res.end(), [this](auto a, auto b) { return lessThan(a, b); });
-        return res;
-    }
-
-    bool lessThan(const juce::Component *a, const juce::Component *b)
-    {
-        int acg = -1, bcg = -1;
-        auto ap = a->getProperties().getVarPointer("ControlGroup");
-        auto bp = b->getProperties().getVarPointer("ControlGroup");
-        if (ap)
-            acg = *ap;
-        if (bp)
-            bcg = *bp;
-
-        if (acg != bcg)
-            return acg < bcg;
-
-        auto at = dynamic_cast<const Surge::GUI::IComponentTagValue *>(a);
-        auto bt = dynamic_cast<const Surge::GUI::IComponentTagValue *>(b);
-
-        if (at && bt)
-            return at->getTag() < bt->getTag();
-
-        if (at && !bt)
-            return false;
-
-        if (!at && bt)
-            return true;
-
-#if SURGE_JUCE_ACCESSIBLE
-        auto cd = a->getDescription().compare(b->getDescription());
-        if (cd < 0)
-            return true;
-        if (cd > 0)
-            return false;
-#endif
-
-        // so what the hell else to do?
-        return a < b;
-    }
-};
 
 std::unique_ptr<juce::ComponentTraverser> MainFrame::createFocusTraverser()
 {
-    return std::make_unique<mfKT>(this);
+    return std::make_unique<Surge::Widgets::GroupTagTraverser>(this);
 }
+
+std::unique_ptr<juce::ComponentTraverser> MainFrame::OverlayComponent::createFocusTraverser()
+{
+    return std::make_unique<Surge::Widgets::GroupTagTraverser>(this);
+}
+
 #endif
 
 } // namespace Widgets

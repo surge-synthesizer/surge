@@ -108,10 +108,7 @@ void LFOAndStepDisplay::resized()
         int xp = (i % 2) * 25 + left_panel.getX();
         int yp = (i / 2) * 15 + left_panel.getY();
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
-#if SURGE_JUCE_ACCESSIBLE
-        typeAccOverlays[i]->setBounds(
-            shaperect[i].translated(getBounds().getX(), getBounds().getY()));
-#endif
+        typeAccOverlays[i]->setBounds(shaperect[i]);
     }
 
     auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
