@@ -159,11 +159,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/XMLConfiguredMenus.h
   )
 
-if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
-  set(SURGE_JUCE_ACCESSIBLE TRUE)
-  message(STATUS "Including JUCE accessibility support")
-else()
-  message(STATUS "No JUCE accessibility support in this version")
+if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
+  message(FATAL_ERROR "You must build against at least a Juce 6.1 with Accessibility support")
 endif()
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_processors/processors/juce_AudioProcessorEditorHostContext.h)
@@ -181,7 +178,6 @@ else()
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
-  SURGE_JUCE_ACCESSIBLE=$<BOOL:${SURGE_JUCE_ACCESSIBLE}>
   SURGE_JUCE_HOST_CONTEXT=$<BOOL:${SURGE_JUCE_HOST_CONTEXT}>
   SURGE_JUCE_VST3_EXTENSIONS=$<BOOL:${SURGE_JUCE_VST3_EXTENSIONS}>
 

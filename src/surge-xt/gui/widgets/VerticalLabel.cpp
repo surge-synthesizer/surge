@@ -23,9 +23,7 @@ namespace Widgets
 VerticalLabel::VerticalLabel()
 {
     setRepaintsOnMouseActivity(true);
-#if SURGE_JUCE_ACCESSIBLE
     setAccessible(false); // it's just derocative
-#endif
     setInterceptsMouseClicks(false, false);
 }
 VerticalLabel::~VerticalLabel() = default;

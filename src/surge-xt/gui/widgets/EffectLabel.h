@@ -31,9 +31,7 @@ struct EffectLabel : public juce::Component, public Surge::GUI::SkinConsumingCom
 {
     EffectLabel()
     {
-#if SURGE_JUCE_ACCESSIBLE
         setAccessible(false); // the param full name contains what we need
-#endif
     }
     ~EffectLabel() = default;
 

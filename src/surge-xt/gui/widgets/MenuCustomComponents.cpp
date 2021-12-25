@@ -37,7 +37,6 @@ void TinyLittleIconButton::paint(juce::Graphics &g)
         icons->draw(g, 1.0, t);
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 struct TinyLittleIconButtonAH : public juce::AccessibilityHandler
 {
     explicit TinyLittleIconButtonAH(TinyLittleIconButton &itemComponentToWrap)
@@ -60,7 +59,6 @@ std::unique_ptr<juce::AccessibilityHandler> TinyLittleIconButton::createAccessib
 {
     return std::make_unique<TinyLittleIconButtonAH>(*this);
 }
-#endif
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
@@ -146,9 +144,9 @@ void MenuTitleHelpComponent::launchHelp()
     triggerMenuItem();
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 struct MenuTitleHelpComponentAH : public juce::AccessibilityHandler
 {
+
     explicit MenuTitleHelpComponentAH(MenuTitleHelpComponent &itemComponentToWrap)
         : AccessibilityHandler(
               itemComponentToWrap, juce::AccessibilityRole::menuItem,
@@ -160,8 +158,6 @@ struct MenuTitleHelpComponentAH : public juce::AccessibilityHandler
 
     void showHelp() { itemComponent.launchHelp(); }
 
-    juce::String getTitle() const override { return itemComponent.label; }
-
     MenuTitleHelpComponent &itemComponent;
 };
 
@@ -169,7 +165,6 @@ std::unique_ptr<juce::AccessibilityHandler> MenuTitleHelpComponent::createAccess
 {
     return std::make_unique<MenuTitleHelpComponentAH>(*this);
 }
-#endif
 
 void MenuCenteredBoldLabel::getIdealSize(int &idealWidth, int &idealHeight)
 {
@@ -191,7 +186,6 @@ void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string labe
     m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label));
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 //==============================================================================
 struct MenuCenteredBoldLabelAH : public juce::AccessibilityHandler
 {
@@ -211,7 +205,6 @@ std::unique_ptr<juce::AccessibilityHandler> MenuCenteredBoldLabel::createAccessi
 {
     return std::make_unique<MenuCenteredBoldLabelAH>(*this);
 }
-#endif
 
 ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::string &a,
                                                std::function<void(OpType)> cb)
@@ -313,7 +306,6 @@ void ModMenuCustomComponent::onSkinChanged()
     mute->icons = icons;
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 struct ModMenuCustomComponentAH : public juce::AccessibilityHandler
 {
     explicit ModMenuCustomComponentAH(ModMenuCustomComponent &itemComponentToWrap)
@@ -343,7 +335,6 @@ std::unique_ptr<juce::AccessibilityHandler> ModMenuCustomComponent::createAccess
 {
     return std::make_unique<ModMenuCustomComponentAH>(*this);
 }
-#endif
 
 // bit of a hack - the menus mean something different so do a cb on a cb
 ModMenuForAllComponent::ModMenuForAllComponent(std::function<void(AllAction)> cb)

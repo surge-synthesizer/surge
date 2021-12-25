@@ -51,9 +51,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         float newT = std::atof(tempoTypein->getText().toRawUTF8());
 
         processor.standaloneTempo = newT;
-#if SURGE_JUCE_ACCESSIBLE
         tempoTypein->giveAwayKeyboardFocus();
-#endif
     };
 
     tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");

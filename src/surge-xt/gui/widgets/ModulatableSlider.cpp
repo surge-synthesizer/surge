@@ -579,8 +579,6 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
     repaint();
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-
 struct ModulatableSliderAH : public juce::AccessibilityHandler
 {
     struct MSValue : public juce::AccessibilityValueInterface
@@ -671,7 +669,6 @@ std::unique_ptr<juce::AccessibilityHandler> ModulatableSlider::createAccessibili
 {
     return std::make_unique<ModulatableSliderAH>(this);
 }
-#endif
 
 bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
 {

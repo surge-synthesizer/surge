@@ -107,9 +107,7 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
     void setSwitchDrawable(SurgeImage *d) { switchD = d; }
     void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Switch);
 };

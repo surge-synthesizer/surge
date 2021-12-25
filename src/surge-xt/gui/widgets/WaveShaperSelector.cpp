@@ -354,8 +354,6 @@ void WaveShaperSelector::onSkinChanged()
         skin->hoverImageIdForResource(IDB_WAVESHAPER_BG, GUI::Skin::HOVER));
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-
 template <> struct DiscreteAHRange<WaveShaperSelector>
 {
     static int iMaxV(WaveShaperSelector *t) { return n_ws_types - 1; }
@@ -377,7 +375,32 @@ std::unique_ptr<juce::AccessibilityHandler> WaveShaperSelector::createAccessibil
 {
     return std::make_unique<DiscreteAH<WaveShaperSelector>>(this);
 }
-#endif
+
+bool WaveShaperSelector::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
+    }
+
+    if (action != Increase && action != Decrease)
+        return false;
+
+    int dir = (action == Increase ? 1 : -1);
+    notifyBeginEdit();
+    setValue(nextValueInOrder(value, dir));
+    notifyValueChanged();
+    notifyEndEdit();
+    repaint();
+
+    return true;
+}
 
 } // namespace Widgets
 } // namespace Surge

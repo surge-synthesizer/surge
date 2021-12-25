@@ -48,7 +48,6 @@ struct TimeB
 
 LFOAndStepDisplay::LFOAndStepDisplay()
 {
-#if SURGE_JUCE_ACCESSIBLE
     setTitle("LFO Type And Display");
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
@@ -86,7 +85,6 @@ LFOAndStepDisplay::LFOAndStepDisplay()
             stepTriggerOverlays[i] = std::move(q);
         }
     }
-#endif
 }
 
 void LFOAndStepDisplay::resized()
@@ -106,7 +104,7 @@ void LFOAndStepDisplay::resized()
     for (int i = 0; i < n_lfo_types; ++i)
     {
         int xp = (i % 2) * 25 + left_panel.getX();
-        int yp = (i / 2) * 15 + left_panel.getY();
+        int yp = (i / 2) * 15 + left_panel.getY() + margin + 2;
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
         typeAccOverlays[i]->setBounds(shaperect[i]);
     }
@@ -2043,7 +2041,6 @@ void LFOAndStepDisplay::updateShapeTo(int i)
 
 void LFOAndStepDisplay::setupAccessibility()
 {
-#if SURGE_JUCE_ACCESSIBLE
     bool showStepSliders{false}, showTriggers{false};
     if (lfodata->shape.val.i == lt_stepseq)
     {
@@ -2063,9 +2060,7 @@ void LFOAndStepDisplay::setupAccessibility()
     for (const auto &s : stepTriggerOverlays)
         if (s)
             s->setVisible(showTriggers);
-#endif
 }
-#if SURGE_JUCE_ACCESSIBLE
 template <> struct DiscreteAHRange<LFOAndStepDisplay>
 {
     static int iMaxV(LFOAndStepDisplay *t) { return n_lfo_types; }
@@ -2088,7 +2083,22 @@ std::unique_ptr<juce::AccessibilityHandler> LFOAndStepDisplay::createAccessibili
 {
     return std::make_unique<DiscreteAH<LFOAndStepDisplay, juce::AccessibilityRole::group>>(this);
 }
-#endif
+
+bool LFOAndStepDisplay::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        notifyControlModifierClicked(juce::ModifierKeys(), true);
+        return true;
+    }
+
+    return false;
+}
 
 } // namespace Widgets
 } // namespace Surge

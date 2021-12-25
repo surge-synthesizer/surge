@@ -172,16 +172,19 @@ PatchStoreDialog::PatchStoreDialog()
 
     okButton = std::make_unique<Widgets::SurgeTextButton>("patchOK");
     okButton->setButtonText("OK");
+    okButton->setWantsKeyboardFocus(true);
     okButton->addListener(this);
     addAndMakeVisible(*okButton);
 
     cancelButton = std::make_unique<Widgets::SurgeTextButton>("patchCancel");
     cancelButton->setButtonText("Cancel");
+    cancelButton->setWantsKeyboardFocus(true);
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 
     okOverButton = std::make_unique<Widgets::SurgeTextButton>("factoryOverwrite");
     okOverButton->setButtonText("Factory Overwrite");
+    okOverButton->setWantsKeyboardFocus(true);
     okOverButton->addListener(this);
     addAndMakeVisible(*okOverButton);
 
@@ -216,7 +219,7 @@ void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
     }
 }
 
-void PatchStoreDialog::parentHierarchyChanged()
+void PatchStoreDialog::shownInParent()
 {
     if (nameEd->isShowing() && isVisible())
         nameEd->grabKeyboardFocus();

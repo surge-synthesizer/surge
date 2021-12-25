@@ -25,6 +25,7 @@
 #include "PatchDB.h"
 #include "fmt/core.h"
 #include "SurgeJUCEHelpers.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -1014,7 +1015,18 @@ void PatchSelector::enableTypeAheadIfReady()
     }
 }
 
-#if SURGE_JUCE_ACCESSIBLE
+bool PatchSelector::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == OpenMenu)
+    {
+        showClassicMenu();
+        return true;
+    }
+    return false;
+}
+
 class PatchSelectorAH : public juce::AccessibilityHandler
 {
   public:
@@ -1060,7 +1072,6 @@ std::unique_ptr<juce::AccessibilityHandler> PatchSelector::createAccessibilityHa
 {
     return std::make_unique<PatchSelectorAH>(this);
 }
-#endif
 
 void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
 {

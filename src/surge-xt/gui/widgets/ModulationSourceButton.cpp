@@ -30,7 +30,6 @@ namespace Widgets
 {
 ModulationSourceButton::ModulationSourceButton()
 {
-#if SURGE_JUCE_ACCESSIBLE
     setDescription("Modulator");
     setAccessible(true);
     setFocusContainerType(FocusContainerType::focusContainer);
@@ -61,7 +60,6 @@ ModulationSourceButton::ModulationSourceButton()
     };
     addChildComponent(*ol);
     targetAccButton = std::move(ol);
-#endif
 }
 void ModulationSourceButton::paint(juce::Graphics &g)
 {

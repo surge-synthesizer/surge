@@ -149,15 +149,35 @@ struct OscillatorMenu : public juce::Component,
 
     void paint(juce::Graphics &g) override;
 
+    void startHover(const juce::Point<float> &) override
+    {
+        isHovered = true;
+        repaint();
+    }
+    void endHover() override
+    {
+        isHovered = false;
+        repaint();
+    }
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
+
     bool text_allcaps{false};
     juce::Font::FontStyleFlags font_style{juce::Font::plain};
 
     int font_size{8}, text_hoffset{0}, text_voffset{0};
     juce::Justification text_align{juce::Justification::centred};
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorMenu);
 };
@@ -212,9 +232,29 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };
     void setHoverBackgroundDrawable(SurgeImage *bgh) { bgHover = bgh; }
 
-#if SURGE_JUCE_ACCESSIBLE
+    void startHover(const juce::Point<float> &) override
+    {
+        isHovered = true;
+        repaint();
+    }
+    void endHover() override
+    {
+        isHovered = false;
+        repaint();
+    }
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
+
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FxMenu);
 };

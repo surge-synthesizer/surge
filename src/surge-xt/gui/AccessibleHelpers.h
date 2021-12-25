@@ -16,7 +16,6 @@
 #ifndef SURGE_XT_ACCESSIBLEHELPERS_H
 #define SURGE_XT_ACCESSIBLEHELPERS_H
 
-#if SURGE_JUCE_ACCESSIBLE
 #include "Parameter.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
@@ -76,18 +75,17 @@ struct GroupTagTraverser : public juce::ComponentTraverser
         if (!at && bt)
             return true;
 
-#if SURGE_JUCE_ACCESSIBLE
         auto cd = a->getDescription().compare(b->getDescription());
         if (cd < 0)
             return true;
         if (cd > 0)
             return false;
-#endif
 
         // so what the hell else to do?
         return a < b;
     }
 };
+
 template <typename T> struct DiscreteAHRange
 {
     static int iMaxV(T *t) { return t->iMax; }
@@ -247,6 +245,8 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     float getValue() { return 0; }
     void setValue(float f) {}
 
+    bool keyPressed(const juce::KeyPress &key) override;
+
     struct SValue : public juce::AccessibilityValueInterface
     {
         explicit SValue(OverlayAsAccessibleSlider<T> *s) : slider(s) {}
@@ -366,9 +366,27 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     return {None, NoModifier};
 }
 
+template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::KeyPress &key)
+{
+    if (!under->storage)
+        return false;
+
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, under->storage);
+
+    if (action == Increase)
+    {
+        std::cout << "Handle Slider Increase" << std::endl;
+        return true;
+    }
+    if (action == Decrease)
+    {
+        std::cout << "Handle Slider Decreaase" << std::endl;
+        return true;
+    }
+    return false;
+}
+
 } // namespace Widgets
 } // namespace Surge
-
-#endif
 
 #endif // SURGE_XT_ACCESSIBLEHELPERS_H

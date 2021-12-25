@@ -135,6 +135,16 @@ void OverlayWrapper::buttonClicked(juce::Button *button)
     }
 }
 
+void OverlayWrapper::visibilityChanged()
+{
+    if (!isVisible() && !isShowing())
+        return;
+    if (auto olc = getPrimaryChildAsOverlayComponent())
+    {
+        olc->shownInParent();
+    }
+}
+
 bool OverlayWrapper::isTornOut() { return tearOutParent != nullptr; }
 
 struct TearOutWindow : public juce::DocumentWindow

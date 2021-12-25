@@ -335,13 +335,10 @@ float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
     return r;
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-
 std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessibilityHandler()
 {
     return std::make_unique<DiscreteAH<MenuForDiscreteParams>>(this);
 }
-#endif
 
 bool MenuForDiscreteParams::keyPressed(const juce::KeyPress &key)
 {

@@ -56,11 +56,9 @@ You can click to dismiss this message and the Surge UI will continue to operate,
 no sound will be produced under MIDI input unless you activate your audio system.
 )MSG");
 
-#if SURGE_JUCE_ACCESSIBLE
         setTitle(pt);
         setDescription(pt);
         setAccessible(true);
-#endif
     }
 
     void mouseUp(const juce::MouseEvent &e) override { editor->clearNoProcessingOverlay(); }

@@ -318,10 +318,8 @@ void XMLMenuPopulator::populate()
 OscillatorMenu::OscillatorMenu()
 {
     strcpy(mtype, "osc");
-#if SURGE_JUCE_ACCESSIBLE
     setDescription("Oscillator Type");
     setTitle("Oscillator Type");
-#endif
 }
 
 OscillatorMenu::~OscillatorMenu() = default;
@@ -403,7 +401,36 @@ void OscillatorMenu::mouseExit(const juce::MouseEvent &event)
     repaint();
 }
 
-#if SURGE_JUCE_ACCESSIBLE
+bool OscillatorMenu::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        menu.showMenuAsync(juce::PopupMenu::Options());
+        return true;
+    }
+
+    switch (action)
+    {
+    case Increase:
+        jogBy(+1);
+        return true;
+        break;
+    case Decrease:
+        jogBy(-1);
+        return true;
+        break;
+    default:
+        return false; // but bail out if it does
+        break;
+    }
+
+    return false;
+}
 
 template <typename T> struct XMLValue
 {
@@ -451,15 +478,12 @@ std::unique_ptr<juce::AccessibilityHandler> OscillatorMenu::createAccessibilityH
 {
     return std::make_unique<XMLMenuAH<OscillatorMenu>>(this);
 }
-#endif
 
 FxMenu::FxMenu()
 {
     strcpy(mtype, "fx");
-#if SURGE_JUCE_ACCESSIBLE
     setDescription("FX Type");
     setTitle("FX Type");
-#endif
 }
 
 void FxMenu::paint(juce::Graphics &g)
@@ -756,7 +780,36 @@ void FxMenu::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
     }
 }
 
-#if SURGE_JUCE_ACCESSIBLE
+bool FxMenu::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        menu.showMenuAsync(juce::PopupMenu::Options());
+        return true;
+    }
+
+    switch (action)
+    {
+    case Increase:
+        jogBy(+1);
+        return true;
+        break;
+    case Decrease:
+        jogBy(-1);
+        return true;
+        break;
+    default:
+        return false; // but bail out if it does
+        break;
+    }
+
+    return false;
+}
 
 template <> struct XMLValue<FxMenu>
 {
@@ -773,7 +826,6 @@ std::unique_ptr<juce::AccessibilityHandler> FxMenu::createAccessibilityHandler()
 {
     return std::make_unique<XMLMenuAH<FxMenu>>(this);
 }
-#endif
 
 } // namespace Widgets
 } // namespace Surge

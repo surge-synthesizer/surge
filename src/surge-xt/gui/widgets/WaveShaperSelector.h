@@ -77,6 +77,23 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
         repaint();
     }
 
+    void startHover(const juce::Point<float> &f) override
+    {
+        isWaveHovered = true;
+        repaint();
+    }
+    bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override
+    {
+        startHover(getBounds().getBottomLeft().toFloat());
+        repaint();
+    }
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
+
     void jog(int by);
 
     void parentHierarchyChanged() override;
@@ -105,9 +122,7 @@ struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveS
     bool isLabelHovered{false}, isWaveHovered{false}, isDeactivated{false};
     void setDeactivated(bool b) { isDeactivated = b; }
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WaveShaperSelector);
 };
