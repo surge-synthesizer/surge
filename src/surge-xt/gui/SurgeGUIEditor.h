@@ -197,6 +197,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool mod_editor = false;
     modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
     int modsource_index{0};
+    int modsource_index_cache[n_scenes][n_lfos];
     int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0, filterblock_tag = 0, fmconfig_tag = 0;
     double lastTempo = 0;
     int lastTSNum = 0, lastTSDen = 0;

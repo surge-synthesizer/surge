@@ -334,6 +334,10 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
         fxPresetName[i] = "";
     }
 
+    for (auto i = 0; i < n_scenes; ++i)
+        for (auto j = 0; j < n_lfos; ++j)
+            modsource_index_cache[i][j] = 0;
+
     juceEditor = jEd;
     this->synth = synth;
 
@@ -5535,6 +5539,29 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
+    bool needs_refresh{false};
+    // Currently only formula is indexed
+    if (prior == lt_formula && curr != lt_formula)
+    {
+        auto lfoid = modsource - ms_lfo1;
+        modsource_index_cache[current_scene][lfoid] = modsource_index;
+        modsource_index = 0;
+        lfoDisplay->setModIndex(modsource_index);
+        needs_refresh = true;
+    }
+    else if (curr == lt_formula && prior != lt_formula)
+    {
+        auto lfoid = modsource - ms_lfo1;
+        modsource_index = modsource_index_cache[current_scene][lfoid];
+        if (gui_modsrc[modsource])
+        {
+            gui_modsrc[modsource]->modlistIndex = modsource_index;
+            gui_modsrc[modsource]->repaint();
+        }
+        lfoDisplay->setModIndex(modsource_index);
+        needs_refresh = true;
+    }
+
     if (prior != curr || prior == lt_mseg || curr == lt_mseg || prior == lt_formula ||
         curr == lt_formula)
     {
@@ -5607,6 +5634,11 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     if (modol)
     {
         modol->rebuildContents();
+    }
+
+    if (needs_refresh)
+    {
+        refresh_mod();
     }
 
     frame->repaint();
