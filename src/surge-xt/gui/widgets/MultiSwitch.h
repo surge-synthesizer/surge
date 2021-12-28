@@ -102,10 +102,8 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
     void setHoverOnSwitchDrawable(SurgeImage *d) { hoverOnSwitchD = d; }
 
     void setupAccessibility();
-#if SURGE_JUCE_ACCESSIBLE
     std::vector<std::unique_ptr<juce::Component>> selectionComponents;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitch);
 };

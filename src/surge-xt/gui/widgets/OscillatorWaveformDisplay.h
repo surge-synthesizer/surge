@@ -92,10 +92,8 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void drawEditorBox(juce::Graphics &g, const std::string &s);
     std::unique_ptr<juce::Component> customEditor;
 
-#if SURGE_JUCE_ACCESSIBLE
     std::array<std::unique_ptr<juce::Component>, 3> menuOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };

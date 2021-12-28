@@ -51,14 +51,12 @@ struct ModulationSourceButton : public juce::Component,
 
     void setAccessibleLabel(const std::string &s)
     {
-#if SURGE_JUCE_ACCESSIBLE
 #if MAC
         setDescription(std::string("Modulator ") + s);
         setTitle(s);
 #else
         setDescription("Modulator");
         setTitle(s);
-#endif
 #endif
     }
 
@@ -81,13 +79,11 @@ struct ModulationSourceButton : public juce::Component,
         modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
         modlist = m;
         setAccessibleLabel(getCurrentModLabel());
-#if SURGE_JUCE_ACCESSIBLE
         selectAccButton->setVisible(true);
         if (isLFO())
         {
             targetAccButton->setVisible(true);
         }
-#endif
     }
     bool isMeta{false}, isBipolar{false};
     void setIsMeta(bool b) { isMeta = b; }
@@ -123,7 +119,6 @@ struct ModulationSourceButton : public juce::Component,
     void setState(int s)
     {
         state = s;
-#if SURGE_JUCE_ACCESSIBLE
         if ((state & 3) == 2)
         {
             toggleArmAccButton->setTitle("Disarm");
@@ -132,7 +127,6 @@ struct ModulationSourceButton : public juce::Component,
         {
             toggleArmAccButton->setTitle("Arm");
         }
-#endif
     }
     int getState() const { return state; }
     bool transientArmed{false}; // armed in drop state
@@ -216,9 +210,7 @@ struct ModulationSourceButton : public juce::Component,
 
     void resized() override;
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::Component> targetAccButton, selectAccButton, toggleArmAccButton;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };

@@ -132,6 +132,8 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
 
     void onSkinChanged() override;
 
+    bool keyPressed(const juce::KeyPress &key) override;
+
     SurgeImage *typeImg{nullptr}, *typeImgHover{nullptr}, *typeImgHoverOn{nullptr};
 
     const static int margin = 2;
@@ -154,14 +156,12 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     void updateShapeTo(int i);
     void setupAccessibility();
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::Component> typeLayer, stepLayer;
     std::array<std::unique_ptr<juce::Component>, n_lfo_types> typeAccOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepSliderOverlays;
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepTriggerOverlays;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };

@@ -143,9 +143,7 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
         repaint();
     }
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NumberField);
 };

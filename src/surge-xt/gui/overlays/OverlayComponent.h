@@ -39,6 +39,12 @@ struct OverlayComponent : juce::Component
     void setHasIndependentClose(bool b) { hasIndependentClose = b; }
     bool getHasIndependentClose() { return hasIndependentClose; }
 
+    /*
+     * This is called when a parent wrapper finally decides to show me, which will
+     * be after I am added visibly to a hidden element. Basically use it to grab focus.
+     */
+    virtual void shownInParent() {}
+
     std::pair<bool, Surge::Storage::DefaultKey> canTearOut{false, Surge::Storage::nKeys};
     void setCanTearOut(std::pair<bool, Surge::Storage::DefaultKey> b) { canTearOut = b; }
     std::pair<bool, Surge::Storage::DefaultKey> getCanTearOut() { return canTearOut; }

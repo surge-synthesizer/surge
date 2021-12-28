@@ -25,9 +25,8 @@ namespace Widgets
 {
 VuMeter::VuMeter()
 {
-#if SURGE_JUCE_ACCESSIBLE
     setAccessible(false);
-#endif
+    setWantsKeyboardFocus(false);
     setInterceptsMouseClicks(false, false);
 }
 VuMeter::~VuMeter() = default;

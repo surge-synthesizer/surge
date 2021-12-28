@@ -256,11 +256,9 @@ int NumberField::getChangeMultiplier(const juce::MouseEvent &event)
     return 1;
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 std::unique_ptr<juce::AccessibilityHandler> NumberField::createAccessibilityHandler()
 {
     return std::make_unique<DiscreteAH<NumberField>>(this);
 }
-#endif
 } // namespace Widgets
 } // namespace Surge

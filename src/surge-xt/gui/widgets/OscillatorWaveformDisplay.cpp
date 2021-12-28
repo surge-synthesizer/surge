@@ -30,7 +30,6 @@ namespace Widgets
 {
 OscillatorWaveformDisplay::OscillatorWaveformDisplay()
 {
-#if SURGE_JUCE_ACCESSIBLE
     setAccessible(true);
     setFocusContainerType(FocusContainerType::focusContainer);
 
@@ -59,7 +58,6 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             oscdata->wt.queue_id = id;
     };
     menuOverlays[2] = std::move(ol);
-#endif
 }
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
 
@@ -1014,20 +1012,16 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
     {
         vis = true;
     }
-#if SURGE_JUCE_ACCESSIBLE
     for (const auto &ao : menuOverlays)
     {
         ao->setVisible(vis);
     }
-#endif
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
 {
     return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
 }
-#endif
 
 } // namespace Widgets
 } // namespace Surge

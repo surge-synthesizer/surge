@@ -79,15 +79,13 @@ struct MainFrame : public juce::Component
     juce::Component *getModButtonLayer();
     juce::Component *getSynthControlsLayer();
 
-#if SURGE_JUCE_ACCESSIBLE
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
-#endif
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     void mouseDown(const juce::MouseEvent &event) override;
 
     struct OverlayComponent : public juce::Component
     {
-#if SURGE_JUCE_ACCESSIBLE
         OverlayComponent()
         {
             setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
@@ -100,7 +98,6 @@ struct MainFrame : public juce::Component
                                                                 juce::AccessibilityRole::group);
         }
         std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
-#endif
     };
 
     void addChildComponentThroughEditor(juce::Component &comp);

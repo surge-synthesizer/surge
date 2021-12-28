@@ -254,8 +254,6 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
     return true;
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-
 struct MultiSwitchRadioButton : public juce::Component
 {
     MultiSwitchRadioButton(MultiSwitch *s, float value, int ival, const std::string &label)
@@ -265,6 +263,7 @@ struct MultiSwitchRadioButton : public juce::Component
         setTitle(label);
         setInterceptsMouseClicks(false, false);
         setAccessible(true);
+        setWantsKeyboardFocus(true);
     }
 
     MultiSwitch *mswitch;
@@ -401,9 +400,6 @@ std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHand
         return std::make_unique<DiscreteAH<MultiSwitch, juce::AccessibilityRole::group>>(this);
     }
 }
-#else
-void MultiSwitch::setupAccessibility() {}
-#endif
 
 void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 {

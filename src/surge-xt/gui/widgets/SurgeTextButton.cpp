@@ -41,9 +41,10 @@ void SurgeTextButton::paint(juce::Graphics &g)
 
     auto fc = getLocalBounds().toFloat().reduced(1.5, 1.5);
 
-    auto isHo = isOver();
+    auto isHo = isOver() || hasKeyboardFocus(false);
     auto isEn = isEnabled();
     auto isPr = isDown();
+    auto isFo = hasKeyboardFocus(false);
 
     auto fg = skin->getColor(clr::Text);
 

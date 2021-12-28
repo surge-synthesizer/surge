@@ -1819,9 +1819,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     debugLabel->setColour(juce::Label::textColourId, juce::Colours::white);
     debugLabel->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
     debugLabel->setJustificationType(juce::Justification::centred);
-#if SURGE_JUCE_ACCESSIBLE
     debugLabel->setAccessible(false);
-#endif
 
     addAndMakeVisibleWithTracking(frame.get(), *debugLabel);
 
@@ -5737,15 +5735,12 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
                                                                  const std::string &title,
                                                                  const std::string &action)
 {
-#if SURGE_JUCE_ACCESSIBLE
 #if MAC
     c->setDescription(title);
     c->setTitle(title);
 #else
     c->setDescription(action);
     c->setTitle(title);
-#endif
-
 #endif
 }
 
@@ -6436,9 +6431,11 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
     if (!frame)
         return;
 
+    auto newRect = juce::Rectangle<int>();
     if (fc)
     {
-        frame->focusRectangle = fc->getBounds();
+        newRect = frame->getLocalArea(fc->getParentComponent(), fc->getBounds());
+        frame->focusRectangle = newRect;
     }
     else
     {
@@ -6450,8 +6447,9 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
 
         std::cout << "FC [" << fc << "] ";
         if (fc)
-            std::cout << fc->getTitle() << " " << typeid(*fc).name() << " "
-                      << fc->getBounds().toString();
+        {
+            std::cout << fc->getTitle() << " " << typeid(*fc).name() << " " << newRect.toString();
+        }
         std::cout << std::endl;
     }
 }

@@ -27,15 +27,12 @@ namespace Widgets
 EffectChooser::EffectChooser()
 {
     setRepaintsOnMouseActivity(true);
-#if SURGE_JUCE_ACCESSIBLE
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
-#endif
 
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fxTypes[i] = fxt_off;
-#if SURGE_JUCE_ACCESSIBLE
         auto q = std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[i]);
         q->setBounds(getEffectRectangle(i));
         q->onPress = [this, i](auto *t) {
@@ -44,7 +41,6 @@ EffectChooser::EffectChooser()
         };
         addAndMakeVisible(*q);
         slotAccOverlays[i] = std::move(q);
-#endif
     }
 };
 EffectChooser::~EffectChooser() = default;
@@ -136,7 +132,7 @@ void EffectChooser::resized()
     int i = 0;
     for (const auto &q : slotAccOverlays)
     {
-        q->setBounds(getEffectRectangle(i).translated(getBounds().getX(), getBounds().getY()));
+        q->setBounds(getEffectRectangle(i));
         i++;
     }
 }
@@ -449,8 +445,6 @@ void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colo
     }
 }
 
-#if SURGE_JUCE_ACCESSIBLE
-
 template <> struct DiscreteAHRange<EffectChooser>
 {
     static int iMaxV(EffectChooser *t) { return n_fx_slots; }
@@ -474,6 +468,5 @@ std::unique_ptr<juce::AccessibilityHandler> EffectChooser::createAccessibilityHa
 {
     return std::make_unique<DiscreteAH<EffectChooser, juce::AccessibilityRole::group>>(this);
 }
-#endif
 } // namespace Widgets
 } // namespace Surge

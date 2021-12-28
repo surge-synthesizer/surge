@@ -65,6 +65,8 @@ struct OverlayWrapper : public juce::Component,
     void mouseDrag(const juce::MouseEvent &) override;
     void mouseDoubleClick(const juce::MouseEvent &e) override;
 
+    void visibilityChanged() override;
+
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
@@ -106,6 +108,16 @@ struct OverlayWrapper : public juce::Component,
     void onSkinChanged() override;
 
     OverlayComponent *getPrimaryChildAsOverlayComponent();
+
+    /*
+     * All overlays should use default focus order not the wonky tag first and
+     * then description and so on order for the main frame (which is laying out controls
+     * in a differently structured way).
+     */
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<juce::KeyboardFocusTraverser>();
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayWrapper);
 };

@@ -27,9 +27,7 @@ namespace Widgets
 Switch::Switch()
 {
     setRepaintsOnMouseActivity(true);
-#if SURGE_JUCE_ACCESSIBLE
     setDescription("Switch");
-#endif
 }
 Switch::~Switch() = default;
 
@@ -164,7 +162,6 @@ bool Switch::keyPressed(const juce::KeyPress &key)
     return true;
 }
 
-#if SURGE_JUCE_ACCESSIBLE
 struct SwitchAH : public juce::AccessibilityHandler
 {
     explicit SwitchAH(Switch *s)
@@ -221,7 +218,6 @@ std::unique_ptr<juce::AccessibilityHandler> Switch::createAccessibilityHandler()
 {
     return std::make_unique<SwitchAH>(this);
 }
-#endif
 
 } // namespace Widgets
 } // namespace Surge

@@ -48,6 +48,15 @@ struct PatchSelector : public juce::Component,
     {
         current_category = category;
         current_patch = patch;
+
+        if (auto *handler = getAccessibilityHandler())
+        {
+            if (handler->getValueInterface())
+            {
+                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+            }
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
     }
 
     bool isFavorite{false};
@@ -114,6 +123,7 @@ struct PatchSelector : public juce::Component,
         // toggleCommentTooltip(false);
         repaint();
     }
+    bool keyPressed(const juce::KeyPress &key) override;
     void showClassicMenu(bool singleCategory = false);
     bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader,
                                 bool addToSubmenu = true);
@@ -162,10 +172,8 @@ struct PatchSelector : public juce::Component,
     bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
                                       int &main_e, bool rootCall);
 
-#if SURGE_JUCE_ACCESSIBLE
   private:
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
-#endif
 
   protected:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelector);
