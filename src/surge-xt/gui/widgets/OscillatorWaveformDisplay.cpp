@@ -34,13 +34,13 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     setFocusContainerType(FocusContainerType::focusContainer);
 
     auto ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "WT Menu", juce::AccessibilityRole::button);
+        this, "WaveTable: (Name Unknown)", juce::AccessibilityRole::button);
     addChildComponent(*ol);
     ol->onPress = [this](OscillatorWaveformDisplay *d) { showWavetableMenu(); };
     menuOverlays[0] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "WT Next", juce::AccessibilityRole::button);
+        this, "WaveTable: Next", juce::AccessibilityRole::button);
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
         if (id >= 0)
@@ -50,7 +50,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     menuOverlays[1] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "WT Prev", juce::AccessibilityRole::button);
+        this, "WaveTable: Prev", juce::AccessibilityRole::button);
     addChildComponent(*ol);
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
@@ -193,6 +193,21 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     if (usesWT)
     {
+        /*
+         * It's a bit unsatisfactory to put this here but we don't reallyu get notified
+         * once the wavetable change is done other than through repaint
+         */
+        if (oscdata->wt.current_id != lastWavetableId)
+        {
+            std::cout << "Got new OSCDATA ID " << getCurrentWavetableName() << std::endl;
+            auto nd = std::string("WaveTable: ") + getCurrentWavetableName();
+            menuOverlays[0]->setTitle(nd);
+            menuOverlays[0]->setDescription(nd);
+            if (auto ah = menuOverlays[0]->getAccessibilityHandler())
+            {
+                ah->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            }
+        }
         auto fgcol = skin->getColor(Colors::Osc::Filename::Background);
         auto fgframe = skin->getColor(Colors::Osc::Filename::Frame);
         auto fgtext = skin->getColor(Colors::Osc::Filename::Text);
@@ -238,37 +253,45 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         g.drawRect(waveTableName);
 
         g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-        char wttxt[256];
 
-        storage->waveTableDataMutex.lock();
-
-        int wtid = oscdata->wt.current_id;
-        if (oscdata->wavetable_display_name[0] != '\0')
-        {
-            strcpy(wttxt, oscdata->wavetable_display_name);
-        }
-        else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
-        {
-            strcpy(wttxt, storage->wt_list.at(wtid).name.c_str());
-        }
-        else if (oscdata->wt.flags & wtf_is_sample)
-        {
-            strcpy(wttxt, "(Patch Sample)");
-        }
-        else
-        {
-            strcpy(wttxt, "(Patch Wavetable)");
-        }
-        storage->waveTableDataMutex.unlock();
+        auto wtn = getCurrentWavetableName();
 
         g.setColour(isWtNameHovered ? fgtextHov : fgtext);
-        g.drawText(wttxt, waveTableName, juce::Justification::centred);
+        g.drawText(wtn.c_str(), waveTableName, juce::Justification::centred);
     }
 
     if (supportsCustomEditor())
     {
         drawEditorBox(g, "EDIT");
     }
+}
+
+std::string OscillatorWaveformDisplay::getCurrentWavetableName()
+{
+    storage->waveTableDataMutex.lock();
+
+    char wttxt[256];
+
+    int wtid = oscdata->wt.current_id;
+    if (oscdata->wavetable_display_name[0] != '\0')
+    {
+        strncpy(wttxt, oscdata->wavetable_display_name, 256);
+    }
+    else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
+    {
+        strncpy(wttxt, storage->wt_list.at(wtid).name.c_str(), 256);
+    }
+    else if (oscdata->wt.flags & wtf_is_sample)
+    {
+        strncpy(wttxt, "(Patch Sample)", 256);
+    }
+    else
+    {
+        strncpy(wttxt, "(Patch Wavetable)", 256);
+    }
+    storage->waveTableDataMutex.unlock();
+
+    return wttxt;
 }
 
 void OscillatorWaveformDisplay::resized()
@@ -1012,6 +1035,7 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
     {
         vis = true;
     }
+    setAccessible(vis);
     for (const auto &ao : menuOverlays)
     {
         ao->setVisible(vis);

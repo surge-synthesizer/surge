@@ -59,6 +59,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
 
     void onOscillatorTypeChanged();
+    std::string getCurrentWavetableName();
 
     void repaintIfIdIsInRange(int id);
 
@@ -94,6 +95,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
 
     std::array<std::unique_ptr<juce::Component>, 3> menuOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+    int lastWavetableId{-1};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };
