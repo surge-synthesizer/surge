@@ -19,7 +19,7 @@ struct EvaluatorState
     }
     int lastEval = -1;
     float lastOutput = 0;
-    float msegState[6] = {0};
+    float msegState[n_lfos_voice] = {0};
     bool released = false, retrigger_FEG = false, retrigger_AEG = false, has_triggered = false;
     enum LoopState
     {
