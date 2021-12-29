@@ -1335,7 +1335,7 @@ void SurgeVoice::GetQFB()
 
 void SurgeVoice::freeAllocatedElements()
 {
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < n_oscs; ++i)
     {
         osc[i]->~Oscillator();
         osc[i] = nullptr;
