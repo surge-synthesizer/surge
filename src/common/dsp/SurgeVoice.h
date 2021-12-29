@@ -144,7 +144,7 @@ class alignas(16) SurgeVoice
     int routefilter(int);
     void retriggerPortaIfKeyChanged();
 
-    LFOModulationSource lfo[6];
+    LFOModulationSource lfo[n_lfos_voice];
 
     // Filterblock state storage
     void SetQFB(QuadFilterChainState *, int); // Set the parameters & registers

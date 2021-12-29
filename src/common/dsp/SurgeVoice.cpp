@@ -217,20 +217,23 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     pitch_id = scene->pitch.param_id_in_scene;
     octave_id = scene->octave.param_id_in_scene;
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < n_lfos_voice; i++)
     {
         lfo[i].assign(storage, &scene->lfo[i], localcopy, &state,
                       &storage->getPatch().stepsequences[state.scene_id][i],
                       &storage->getPatch().msegs[state.scene_id][i],
                       &storage->getPatch().formulamods[state.scene_id][i]);
         lfo[i].setIsVoice(true);
+
         if (scene->lfo[i].shape.val.i == lt_formula)
         {
             Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch());
             Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
         }
+
         modsources[ms_lfo1 + i] = &lfo[i];
     }
+
     modsources[ms_velocity] = &velocitySource;
     modsources[ms_releasevelocity] = &releaseVelocitySource;
     modsources[ms_keytrack] = &keytrackSource;
@@ -301,8 +304,11 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     ampEGSource.attack();
     filterEGSource.attack();
-    for (int i = 0; i < 6; i++)
+
+    for (int i = 0; i < n_lfos_voice; i++)
+    {
         lfo[i].attack();
+    }
 
     calc_ctrldata<true>(0, 0); // init interpolators
     SetQFB(0, 0);              // init Quad-Filterblock parameter interpolators
@@ -557,8 +563,10 @@ void SurgeVoice::release()
     ampEGSource.release();
     filterEGSource.release();
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < n_lfos_voice; i++)
+    {
         lfo[i].release();
+    }
 
     state.gate = false;
     releaseVelocitySource.set_output(0, state.releasevelocity / 127.0f);
@@ -639,7 +647,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     // Always process LFO1 so the gate retrigger always work
     lfo[0].process_block();
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < n_lfos_voice; i++)
     {
         if (scene->lfo[i].shape.val.i == lt_formula)
         {
@@ -648,10 +656,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         }
 
         if (i != 0 && scene->modsource_doprocess[ms_lfo1 + i])
+        {
             lfo[i].process_block();
+        }
     }
 
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < n_lfos_voice; ++i)
     {
         if (lfo[i].retrigger_AEG)
         {
@@ -665,8 +675,11 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
     modsources[ms_ampeg]->process_block();
     modsources[ms_filtereg]->process_block();
+
     if (((ADSRModulationSource *)modsources[ms_ampeg])->is_idle())
+    {
         state.keep_playing = false;
+    }
 
     // TODO memcpy is bottleneck
     memcpy(localcopy, paramptr, sizeof(localcopy));

@@ -191,12 +191,21 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         lfoDebugger = std::make_unique<LFOModulationSource>();
         lfoDebugger->assign(editor->storage, editor->lfos, tp, 0, nullptr, nullptr,
                             editor->formulastorage, true);
-        if (editor->lfo_id < 6)
+
+        if (editor->lfo_id < n_lfos_voice)
+        {
             lfoDebugger->setIsVoice(true);
+        }
         else
+        {
             lfoDebugger->setIsVoice(false);
+        }
+
         if (lfoDebugger->isVoice)
+        {
             lfoDebugger->formulastate.velocity = 100;
+        }
+
         lfoDebugger->attack();
 
         stepLfoDebugger();

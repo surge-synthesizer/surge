@@ -19,6 +19,8 @@ struct EvaluatorState
     }
     int lastEval = -1;
     float lastOutput = 0;
+    // 6 is NOT the number of LFOs, but number of MSEG state elements!
+    // TODO replace 6 with a constexpr!
     float msegState[6] = {0};
     bool released = false, retrigger_FEG = false, retrigger_AEG = false, has_triggered = false;
     enum LoopState

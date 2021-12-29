@@ -101,10 +101,12 @@ void LFOAndStepDisplay::resized()
 
     typeLayer->setBounds(getLocalBounds());
     stepLayer->setBounds(getLocalBounds());
+
     for (int i = 0; i < n_lfo_types; ++i)
     {
         int xp = (i % 2) * 25 + left_panel.getX();
         int yp = (i / 2) * 15 + left_panel.getY() + margin + 2;
+
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
         typeAccOverlays[i]->setBounds(shaperect[i]);
     }
@@ -112,11 +114,16 @@ void LFOAndStepDisplay::resized()
     auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
     auto ssr = waveform_display.withWidth(wfw).withTrimmedTop(10);
     bool showtrig = false;
+
     if (lfoid < n_lfos_voice)
+    {
         showtrig = true;
+    }
+
     for (const auto &q : stepSliderOverlays)
     {
         q->setBounds(ssr);
+
         if (lfodata && lfodata->shape.val.i == lt_stepseq)
         {
             q->setVisible(true);
@@ -125,13 +132,16 @@ void LFOAndStepDisplay::resized()
         {
             q->setVisible(false);
         }
+
         ssr = ssr.translated(wfw, 0);
     }
 
     ssr = waveform_display.withWidth(wfw).withHeight(10);
+
     for (const auto &q : stepTriggerOverlays)
     {
         q->setBounds(ssr);
+
         if (lfodata && lfodata->shape.val.i == lt_stepseq)
         {
             q->setVisible(showtrig);
@@ -140,6 +150,7 @@ void LFOAndStepDisplay::resized()
         {
             q->setVisible(false);
         }
+
         ssr = ssr.translated(wfw, 0);
     }
 }
@@ -2007,7 +2018,7 @@ void LFOAndStepDisplay::showMSEGPopupMenu()
 
 void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
 {
-    if (lfoid < 6)
+    if (lfoid < n_lfos_voice)
         s->setIsVoice(true);
     else
         s->setIsVoice(false);
@@ -2042,12 +2053,14 @@ void LFOAndStepDisplay::updateShapeTo(int i)
 void LFOAndStepDisplay::setupAccessibility()
 {
     bool showStepSliders{false}, showTriggers{false};
+
     if (lfodata->shape.val.i == lt_stepseq)
     {
-        if (lfoid < 6)
+        if (lfoid < n_lfos_voice)
         {
             showTriggers = true;
         }
+
         showStepSliders = true;
     }
 
