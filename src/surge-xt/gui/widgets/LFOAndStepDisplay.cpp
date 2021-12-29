@@ -46,6 +46,42 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
+template <>
+void jogOverlaySlider<LFOAndStepDisplay>(LFOAndStepDisplay *under,
+                                         OverlayAsAccessibleSlider<LFOAndStepDisplay> *that,
+                                         int dir, bool isShift, bool isCtrl)
+{
+    /*
+     * A bit off but this is only on keypress so the compares are OK
+     */
+    int step = -1;
+    for (auto i = 0; i < n_stepseqsteps; ++i)
+    {
+        if (under->stepSliderOverlays[i].get() == that)
+        {
+            step = i;
+        }
+    }
+    if (step >= 0)
+    {
+        auto f = under->ss->steps[step];
+        auto delt = 0.05;
+        if (isShift)
+            delt = 0.01;
+        if (isCtrl)
+            delt = (under->isUnipolar() ? 1.0 : 0.5) / 12.0;
+        if (dir < 0)
+            delt *= -1;
+
+        if (under->isUnipolar())
+            f = limit01(f + delt);
+        else
+            f = limitpm1(f + delt);
+        under->ss->steps[step] = f;
+        under->repaint();
+    }
+}
+
 LFOAndStepDisplay::LFOAndStepDisplay()
 {
     setTitle("LFO Type And Display");

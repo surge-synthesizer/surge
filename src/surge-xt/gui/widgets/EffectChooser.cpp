@@ -39,6 +39,11 @@ EffectChooser::EffectChooser()
             this->currentEffect = i;
             this->notifyValueChanged();
         };
+        q->onReturnKey = [this, i](auto *t) {
+            this->currentEffect = i;
+            this->notifyValueChanged();
+            return true;
+        };
         addAndMakeVisible(*q);
         slotAccOverlays[i] = std::move(q);
     }

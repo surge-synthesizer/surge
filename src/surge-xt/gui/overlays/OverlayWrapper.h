@@ -41,7 +41,12 @@ struct OverlayWrapper : public juce::Component,
     static constexpr int titlebarSize = 14, margin = 1;
 
     std::string title;
-    void setTitle(const std::string t) { title = t; }
+    void setWindowTitle(const std::string &t)
+    {
+        title = t;
+        setTitle(t);
+        setDescription(t);
+    }
 
     void paint(juce::Graphics &g) override;
 

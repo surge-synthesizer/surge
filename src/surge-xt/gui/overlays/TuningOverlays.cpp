@@ -1723,7 +1723,13 @@ struct TuningControlArea : public juce::Component,
         tag_open_library
     };
     TuningOverlay *overlay{nullptr};
-    TuningControlArea(TuningOverlay *ol) : overlay(ol) {}
+    TuningControlArea(TuningOverlay *ol) : overlay(ol)
+    {
+        setAccessible(true);
+        setTitle("Controls");
+        setDescription("Controls");
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
 
     void resized() override
     {

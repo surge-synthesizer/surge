@@ -219,6 +219,10 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
 
     juce::AccessibilityRole role;
     std::function<void(T *)> onPress = [](T *) {};
+    std::function<bool(T *)> onMenuKey = [](T *) { return false; };
+    std::function<bool(T *)> onReturnKey = [](T *) { return false; };
+
+    bool keyPressed(const juce::KeyPress &) override;
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
     {
@@ -226,6 +230,15 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     }
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton<T>);
 };
+
+template <typename T> struct OverlayAsAccessibleSlider;
+
+template <typename T>
+void jogOverlaySlider(T *under, OverlayAsAccessibleSlider<T> *over, int dir, bool isShift,
+                      bool isCtrl)
+{
+    jassert(false);
+}
 
 template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
 {
@@ -319,7 +332,8 @@ enum AccessibleKeyEditAction
     None,
     Increase,
     Decrease,
-    OpenMenu
+    OpenMenu,
+    Return
 };
 
 enum AccessibleKeyModifier
@@ -363,6 +377,11 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
         return {OpenMenu, NoModifier};
     }
 
+    if (key.getKeyCode() == juce::KeyPress::returnKey)
+    {
+        return {Return, NoModifier};
+    }
+
     return {None, NoModifier};
 }
 
@@ -375,13 +394,34 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
 
     if (action == Increase)
     {
-        std::cout << "Handle Slider Increase" << std::endl;
+        jogOverlaySlider(under, this, +1, key.getModifiers().isShiftDown(),
+                         key.getModifiers().isCtrlDown());
         return true;
     }
     if (action == Decrease)
     {
-        std::cout << "Handle Slider Decreaase" << std::endl;
+        jogOverlaySlider(under, this, -1, key.getModifiers().isShiftDown(),
+                         key.getModifiers().isCtrlDown());
         return true;
+    }
+    return false;
+}
+
+template <typename T> bool OverlayAsAccessibleButton<T>::keyPressed(const juce::KeyPress &key)
+{
+    if (!under->storage)
+        return false;
+
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, under->storage);
+
+    if (action == OpenMenu)
+    {
+        return onMenuKey(under);
+    }
+
+    if (action == Return)
+    {
+        return onReturnKey(under);
     }
     return false;
 }

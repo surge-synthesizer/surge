@@ -25,6 +25,8 @@
 
 #include <array>
 
+class SurgeStorage;
+
 namespace Surge
 {
 namespace Widgets
@@ -113,6 +115,9 @@ struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChoo
 
     void getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colour &frcol,
                           juce::Colour &txtcol);
+
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
 
     std::array<std::unique_ptr<juce::Component>, n_fx_slots> slotAccOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;

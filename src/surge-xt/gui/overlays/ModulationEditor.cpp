@@ -44,7 +44,14 @@ struct ModulationSideControls : public juce::Component,
     };
 
     ModulationEditor *editor{nullptr};
-    ModulationSideControls(ModulationEditor *e) : editor(e) { create(); }
+    ModulationSideControls(ModulationEditor *e) : editor(e)
+    {
+        setAccessible(true);
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+        setTitle("Controls");
+        setDescription("Controls");
+        create();
+    }
     void create()
     {
         auto makeL = [this](const std::string &s) {
@@ -53,12 +60,16 @@ struct ModulationSideControls : public juce::Component,
             l->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             if (skin)
                 l->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            l->setAccessible(true);
+            l->setTitle(s);
+            l->setDescription(s);
+            l->setWantsKeyboardFocus(false);
             addAndMakeVisible(*l);
             return l;
         };
 
         auto makeW = [this](const std::vector<std::string> &l, int tag, bool en,
-                            bool vert = false) {
+                            const std::string &acctitle, bool vert = false) {
             auto w = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             if (vert)
             {
@@ -74,6 +85,10 @@ struct ModulationSideControls : public juce::Component,
             w->setLabels(l);
             w->setEnabled(en);
             w->addListener(this);
+            w->setAccessible(true);
+            w->setWantsKeyboardFocus(true);
+            w->setTitle(acctitle);
+            w->setDescription(acctitle);
             addAndMakeVisible(*w);
             return w;
         };
@@ -84,13 +99,13 @@ struct ModulationSideControls : public juce::Component,
                 "Source",
                 "Target",
             },
-            tag_sort_by, true);
+            tag_sort_by, true, "Sort List By...");
         auto sortOrder =
             editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.sortOrder;
         sortW->setValue(sortOrder);
 
         filterL = makeL("Filter By");
-        filterW = makeW({"-"}, tag_filter_by, true);
+        filterW = makeW({"-"}, tag_filter_by, true, "Filter List By...");
 
         auto fo =
             editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn;
@@ -102,12 +117,12 @@ struct ModulationSideControls : public juce::Component,
         }
 
         addL = makeL("Add Modulation");
-        addSourceW = makeW({"Select Source"}, tag_add_source, true);
-        addTargetW = makeW({"Select Target"}, tag_add_target, false);
+        addSourceW = makeW({"Select Source"}, tag_add_source, true, "Select Source");
+        addTargetW = makeW({"Select Target"}, tag_add_target, false, "Select Target");
 
         dispL = makeL("Value Display");
         dispW = makeW({"None", "Depths", "Values and Depths", "Values, Depths and Ranges"},
-                      tag_value_disp, true, true);
+                      tag_value_disp, true, "Value Displays", true);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
                                                        Storage::ModListValueDisplay, 3);
@@ -194,6 +209,21 @@ struct ModulationSideControls : public juce::Component,
 
 struct ModulationListContents : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
+    struct ModListIconButton : public Surge::Widgets::TinyLittleIconButton
+    {
+        ModListIconButton(int off, std::function<void()> cb)
+            : Surge::Widgets::TinyLittleIconButton(off, std::move(cb))
+        {
+        }
+
+        std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler()
+        {
+            return std::make_unique<juce::AccessibilityHandler>(
+                *this, juce::AccessibilityRole::button,
+                juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
+                                                       [this]() { this->callback(); }));
+        }
+    };
     ModulationEditor *editor{nullptr};
     ModulationListContents(ModulationEditor *e) : editor(e)
     {
@@ -264,7 +294,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
         {
-            clearButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(1, [this]() {
+            clearButton = std::make_unique<ModListIconButton>(1, [this]() {
                 auto me = contents->editor;
                 ModulationEditor::SelfModulationGuard g(me);
                 me->synth->clearModulation(datum.destination_id + datum.idBase,
@@ -277,10 +307,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                     me->ed->queue_refresh = true;
                 });
             });
+            clearButton->setAccessible(true);
+            clearButton->setTitle("Clear");
+            clearButton->setDescription("Clear");
             addAndMakeVisible(*clearButton);
 
             muted = d.isMuted;
-            muteButton = std::make_unique<Surge::Widgets::TinyLittleIconButton>(2, [this]() {
+            muteButton = std::make_unique<ModListIconButton>(2, [this]() {
                 auto me = contents->editor;
                 ModulationEditor::SelfModulationGuard g(me);
                 me->synth->muteModulation(datum.destination_id + datum.idBase,
@@ -289,7 +322,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 muted = !muted;
                 contents->rebuildFrom(me->synth);
             });
-
+            muteButton->setAccessible(true);
             addAndMakeVisible(*muteButton);
 
             surgeLikeSlider = std::make_unique<Surge::Widgets::ModulatableSlider>();
@@ -299,8 +332,13 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             surgeLikeSlider->setStorage(&(contents->editor->synth->storage));
             surgeLikeSlider->setAlwaysUseModHandle(true);
             surgeLikeSlider->addListener(this);
+            surgeLikeSlider->setAccessible(true);
+            surgeLikeSlider->setTitle("Depth");
+            surgeLikeSlider->setDescription("Depth");
             addAndMakeVisible(*surgeLikeSlider);
 
+            setAccessible(true);
+            setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
             resetValuesFromDatum();
         }
 
@@ -311,8 +349,19 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             surgeLikeSlider->setIsModulationBipolar(datum.isBipolar);
 
             muteButton->offset = 2;
+            muteButton->setTitle("Mute");
+            muteButton->setDescription("Mute");
             if (datum.isMuted)
+            {
+                muteButton->setTitle("UnMute");
+                muteButton->setDescription("UnMute");
                 muteButton->offset = 3;
+            }
+
+            auto t = std::string("Source: ") + datum.sname + (" to  Target: ") + datum.pname;
+            setTitle(t);
+            setDescription(t);
+
             repaint();
         }
 
@@ -523,8 +572,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         }
 
         bool muted{false};
-        std::unique_ptr<Surge::Widgets::TinyLittleIconButton> clearButton;
-        std::unique_ptr<Surge::Widgets::TinyLittleIconButton> muteButton;
+        std::unique_ptr<ModListIconButton> clearButton;
+        std::unique_ptr<ModListIconButton> muteButton;
         std::unique_ptr<Surge::Widgets::ModulatableSlider> surgeLikeSlider;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DataRowEditor);
     };

@@ -76,6 +76,10 @@ struct MSEGControlRegion : public juce::Component,
         this->lfodata = lfos;
         this->canvas = c;
         this->storage = storage;
+        setAccessible(true);
+        setTitle("Controls");
+        setDescription("Controls");
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
         rebuild();
     };
 
@@ -128,6 +132,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         handleDrawable = b->getImage(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
         setOpaque(true);
+        setTitle("MSEG Display and Edit Canvas");
+        setDescription("MSEG Display and Edit Canvas");
     };
 
     /*
