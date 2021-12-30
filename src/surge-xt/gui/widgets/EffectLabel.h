@@ -32,7 +32,9 @@ struct EffectLabel : public juce::Component, public Surge::GUI::SkinConsumingCom
     EffectLabel()
     {
         setAccessible(false); // the param full name contains what we need
+        setInterceptsMouseClicks(false, false);
     }
+
     ~EffectLabel() = default;
 
     std::string label;
