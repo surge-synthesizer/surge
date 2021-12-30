@@ -604,33 +604,33 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_with_tunability:
         valtype = vt_float;
-        val_min.f = -60;
-        val_max.f = 70;
-        val_default.f = 3;
+        val_min.f = -60;   // 13.75 Hz
+        val_max.f = 70;    // 25087.71 Hz
+        val_default.f = 3; // 523.25 Hz
         break;
     case ct_freq_audible_deactivatable_hp:
         valtype = vt_float;
-        val_min.f = -60;
-        val_max.f = 70;
-        val_default.f = -60;
+        val_min.f = -60;     // 13.75 Hz
+        val_max.f = 70;      // 25087.71 Hz
+        val_default.f = -60; // 13.75 Hz
         break;
     case ct_freq_audible_deactivatable_lp:
         valtype = vt_float;
-        val_min.f = -60;
-        val_max.f = 70;
-        val_default.f = 70;
+        val_min.f = -60;    // 13.75 Hz
+        val_max.f = 70;     // 25087.71 Hz
+        val_default.f = 70; // 25087.71 Hz
         break;
     case ct_freq_audible_with_very_low_lowerbound:
         valtype = vt_float;
         val_min.f = -117.3763; // 0.5 Hz
-        val_max.f = 70;
-        val_default.f = 3;
+        val_max.f = 70;        // 25087.71 Hz
+        val_default.f = 3;     // 523.25 Hz
         break;
     case ct_freq_hpf:
         valtype = vt_float;
-        val_min.f = -72;
-        val_max.f = 15;
-        val_default.f = -72;
+        val_min.f = -72;     // 6.88 Hz
+        val_max.f = 15;      // 1046.5 Hz
+        val_default.f = -72; // 6.88 Hz
         break;
     case ct_freq_reson_band1:
         valtype = vt_float;
@@ -652,34 +652,34 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_vocoder_low:
         valtype = vt_float;
-        val_min.f = -36; // 55 Hz
-        val_max.f = 36;  // 3520 Hz
-        val_default.f = -3;
+        val_min.f = -36;    // 55 Hz
+        val_max.f = 36;     // 3520 Hz
+        val_default.f = -3; // 370 Hz
         break;
     case ct_freq_vocoder_high:
         valtype = vt_float;
         val_min.f = 0;      // 440 Hz
-        val_max.f = 60;     // ~14.3 kHz
-        val_default.f = 49; // ~7.4 kHz
+        val_max.f = 60;     // 14080 kHz
+        val_default.f = 49; // 7458.62 kHz
         break;
     case ct_freq_mod:
         valtype = vt_float;
-        val_min.f = -96;
-        val_max.f = 96;
-        val_default.f = 0;
+        val_min.f = -96;   // semitones
+        val_max.f = 96;    // semitones
+        val_default.f = 0; // semitones
         moverate = 0.5f;
         break;
     case ct_freq_shift:
         valtype = vt_float;
-        val_min.f = -10;
-        val_max.f = 10;
-        val_default.f = 0;
+        val_min.f = -10;   // Hz
+        val_max.f = 10;    // Hz
+        val_default.f = 0; // Hz
         break;
     case ct_freq_ringmod:
         valtype = vt_float;
-        val_min.f = 0;
-        val_max.f = 127;
-        val_default.f = 60;
+        val_min.f = 0;      // 8.18 Hz
+        val_max.f = 127;    // 12543.86 Hz
+        val_default.f = 60; // 261.63 Hz
         break;
     case ct_bandwidth:
         valtype = vt_float;
