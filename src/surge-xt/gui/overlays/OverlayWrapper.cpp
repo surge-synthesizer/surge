@@ -37,12 +37,17 @@ OverlayWrapper::OverlayWrapper()
         getLookAndFeel().createDocumentWindowButton(juce::DocumentWindow::maximiseButton));
     tearOutButton->addListener(this);
     addChildComponent(*tearOutButton);
+
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
 
 OverlayWrapper::OverlayWrapper(const juce::Rectangle<int> &cb) : OverlayWrapper()
 {
     componentBounds = cb;
     isModal = true;
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
 
 void OverlayWrapper::paint(juce::Graphics &g)
@@ -120,6 +125,15 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     }
 
     addAndMakeVisible(*primaryChild);
+
+    auto paintTitle = title;
+    if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+    {
+        paintTitle = oc->getEnclosingParentTitle();
+    }
+    std::cout << "Setting accessible title to " << paintTitle << std::endl;
+    setTitle(paintTitle);
+    setDescription(paintTitle);
 }
 
 void OverlayWrapper::buttonClicked(juce::Button *button)

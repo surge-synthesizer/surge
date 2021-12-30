@@ -27,12 +27,15 @@ namespace Overlays
 {
 MiniEdit::MiniEdit()
 {
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    setAccessible(true);
     typein = std::make_unique<juce::TextEditor>("minieditTypein");
     typein->setJustification(juce::Justification::centred);
     typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     typein->setSelectAllWhenFocused(true);
     typein->setWantsKeyboardFocus(true);
     typein->addListener(this);
+    typein->setTitle("Value");
     addAndMakeVisible(*typein);
 
     okButton = std::make_unique<Surge::Widgets::SurgeTextButton>("minieditOK");

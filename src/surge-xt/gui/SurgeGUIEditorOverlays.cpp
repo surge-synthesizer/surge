@@ -460,7 +460,7 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
         ol = std::make_unique<Surge::Overlays::OverlayWrapper>();
         ol->setBounds(containerSize);
     }
-    ol->setTitle(editorTitle);
+    ol->setWindowTitle(editorTitle);
     ol->setSkin(currentSkin, bitmapStore);
     ol->setSurgeGUIEditor(this);
     ol->setStorage(&(this->synth->storage));

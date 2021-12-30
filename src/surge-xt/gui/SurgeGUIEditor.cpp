@@ -1565,6 +1565,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             // FIXOWN
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, effectChooser);
             effectChooser->addListener(this);
+            effectChooser->setStorage(&(synth->storage));
             effectChooser->setBounds(skinCtrl->getRect());
             effectChooser->setTag(tag_fx_select);
             effectChooser->setSkin(currentSkin, bitmapStore);
@@ -4397,8 +4398,11 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 {
     miniEdit->setSkin(currentSkin, bitmapStore);
     miniEdit->setEditor(this);
+    miniEdit->setDescription(title);
+    miniEdit->setWindowTitle(title);
+
     addComponentWithTracking(frame.get(), *miniEdit);
-    miniEdit->setTitle(title);
+    miniEdit->setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
     miniEdit->setLabel(prompt);
     miniEdit->setValue(value);
     miniEdit->callback = std::move(onOK);

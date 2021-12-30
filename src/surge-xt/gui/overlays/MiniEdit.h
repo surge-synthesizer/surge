@@ -43,9 +43,13 @@ struct MiniEdit : public juce::Component,
     void onSkinChanged() override;
     void visibilityChanged() override;
     std::string title, label;
-    void setTitle(const std::string t) { title = t; }
-    void setLabel(const std::string t) { label = t; }
-    void setValue(const std::string t) { typein->setText(t, juce::dontSendNotification); }
+    void setWindowTitle(const std::string &t)
+    {
+        title = t;
+        setTitle(title);
+    }
+    void setLabel(const std::string &t) { label = t; }
+    void setValue(const std::string &t) { typein->setText(t, juce::dontSendNotification); }
     std::function<void(const std::string &s)> callback;
 
     void resized() override;

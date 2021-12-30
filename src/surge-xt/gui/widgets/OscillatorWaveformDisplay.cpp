@@ -37,6 +37,10 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
         this, "WaveTable: (Name Unknown)", juce::AccessibilityRole::button);
     addChildComponent(*ol);
     ol->onPress = [this](OscillatorWaveformDisplay *d) { showWavetableMenu(); };
+    ol->onMenuKey = [this](OscillatorWaveformDisplay *d) {
+        showWavetableMenu();
+        return true;
+    };
     menuOverlays[0] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
@@ -199,7 +203,6 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
          */
         if (oscdata->wt.current_id != lastWavetableId)
         {
-            std::cout << "Got new OSCDATA ID " << getCurrentWavetableName() << std::endl;
             auto nd = std::string("WaveTable: ") + getCurrentWavetableName();
             menuOverlays[0]->setTitle(nd);
             menuOverlays[0]->setDescription(nd);

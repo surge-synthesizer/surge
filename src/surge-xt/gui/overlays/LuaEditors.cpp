@@ -331,7 +331,13 @@ struct FormulaControlArea : public juce::Component,
     };
 
     FormulaModulatorEditor *overlay{nullptr};
-    FormulaControlArea(FormulaModulatorEditor *ol) : overlay(ol) {}
+    FormulaControlArea(FormulaModulatorEditor *ol) : overlay(ol)
+    {
+        setAccessible(true);
+        setTitle("Controls");
+        setDescription("Controls");
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
 
     void resized() override
     {
@@ -366,6 +372,8 @@ struct FormulaControlArea : public juce::Component,
 
             codeS->setBounds(btnrect);
             codeS->setStorage(overlay->storage);
+            codeS->setTitle("Code Selection");
+            codeS->setDescription("Code Selection");
             codeS->setLabels({"Modulator", "Prelude"});
             codeS->addListener(this);
             codeS->setTag(tag_select_tab);
@@ -382,6 +390,8 @@ struct FormulaControlArea : public juce::Component,
             btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, 60, buttonHeight);
 
             applyS->setBounds(btnrect);
+            applyS->setTitle("Apply");
+            applyS->setDescription("Apply");
             applyS->setStorage(overlay->storage);
             applyS->setLabels({"Apply"});
             applyS->addListener(this);
@@ -531,6 +541,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
       lfo_id(lid)
 {
     mainEditor->setScrollbarThickness(8);
+    mainEditor->setTitle("LUA Modulator Code");
+    mainEditor->setDescription("LUA Modulator Code");
 
     mainDocument->insertText(0, fs->formulaString);
 
@@ -541,6 +553,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
     preludeDisplay->setScrollbarThickness(8);
+    preludeDisplay->setTitle("LUA Prelude Code");
+    preludeDisplay->setDescription("LUA Prelude Code");
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
     controlArea = std::make_unique<FormulaControlArea>(this);
