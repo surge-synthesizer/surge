@@ -101,7 +101,11 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
     everDragged = false;
     isMouseDown = true;
 
-    juce::Timer::callAfterDelay(250, [this]() { this->setCursorToArrow(); });
+    if (draggable)
+    {
+        juce::Timer::callAfterDelay(250, [this]() { this->setCursorToArrow(); });
+    }
+
     setValue(coordinateToValue(event.x, event.y));
     notifyValueChanged();
 }
