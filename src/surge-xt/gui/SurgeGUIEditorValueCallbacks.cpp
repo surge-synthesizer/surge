@@ -1232,19 +1232,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
 
                     if (p->can_extend_range())
-                        contextMenu.addItem("Extend", true, p->extend_range, [this, p, control]() {
-                            auto wasExtended = p->extend_range;
-                            p->set_extend_range(!p->extend_range);
-                            if (p->ctrltype == ct_pbdepth)
-                            {
-                                if (wasExtended)
-                                    p->val.i = p->val.i / 100;
-                                else
-                                    p->val.i = p->val.i * 100;
-                            }
+                        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Extend Range"), true,
+                                            p->extend_range, [this, p, control]() {
+                                                auto wasExtended = p->extend_range;
+                                                p->set_extend_range(!p->extend_range);
+                                                if (p->ctrltype == ct_pbdepth)
+                                                {
+                                                    if (wasExtended)
+                                                        p->val.i = p->val.i / 100;
+                                                    else
+                                                        p->val.i = p->val.i * 100;
+                                                }
 
-                            synth->refresh_editor = true;
-                        });
+                                                synth->refresh_editor = true;
+                                            });
                 }
                 else
                 {
@@ -1454,12 +1455,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     if (p->can_deactivate())
                     {
                         contextMenu.addSeparator();
-                        std::string txt = "Deactivate";
-                        if (p->deactivated)
-                        {
-                            txt = "Activate";
-                        }
-                        contextMenu.addItem(txt, [this, p]() {
+
+                        contextMenu.addItem("Enabled", true, !p->deactivated, [this, p]() {
                             p->deactivated = !p->deactivated;
                             this->synth->refresh_editor = true;
                         });
@@ -1640,10 +1637,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             contextMenu.addSeparator();
 
+                            contextMenu.addSectionHeader("DEFORM");
+
                             for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
                             {
                                 char title[32];
-                                sprintf(title, "Deform Type %d", (i + 1));
+                                sprintf(title, "Type %d", (i + 1));
 
                                 bool isChecked = p->deform_type == i;
 
@@ -1671,6 +1670,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         bool isChecked = false;
 
+                        contextMenu.addSectionHeader("WAVEFORM");
+
                         for (int m : waves)
                         {
                             isChecked = ((p->deform_type & 0x0F) == m);
@@ -1682,14 +1683,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                 });
                         }
 
-                        contextMenu.addSeparator();
-
                         int subosc = ModernOscillator::mo_submask::mo_subone;
 
                         isChecked = (p->deform_type & subosc);
 
+                        contextMenu.addSectionHeader("SUB-OSCILLATOR");
+
                         contextMenu.addItem(
-                            Surge::GUI::toOSCaseForMenu("Sub-oscillator Mode"), true, isChecked,
+                            Surge::GUI::toOSCaseForMenu("Enabled"), true, isChecked,
                             [p, subosc, this]() {
                                 auto usubosc = subosc;
                                 int usubskipsync =
@@ -1710,8 +1711,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         isChecked = (p->deform_type & subskipsync);
 
                         contextMenu.addItem(
-                            Surge::GUI::toOSCaseForMenu("Disable Hardsync in Sub-oscillator Mode"),
-                            true, isChecked, [p, subskipsync, this]() {
+                            Surge::GUI::toOSCaseForMenu("Disable Hardsync"), true, isChecked,
+                            [p, subskipsync, this]() {
                                 auto usubskipsync = subskipsync;
                                 int usubosc =
                                     p->deform_type & ModernOscillator::mo_submask::mo_subone;
@@ -1751,12 +1752,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         juce::StringArray tapeHysteresisModes{"Normal", "Medium", "High",
                                                               "Very High"};
 
+                        contextMenu.addSectionHeader("PRECISION");
+
                         for (int i = 0; i < tapeHysteresisModes.size(); ++i)
                         {
                             bool isChecked = p->deform_type == i;
-                            contextMenu.addItem(
-                                "Precision: " + tapeHysteresisModes[i].toStdString(), true,
-                                isChecked, [this, p, i]() { p->deform_type = i; });
+
+                            contextMenu.addItem(tapeHysteresisModes[i].toStdString(), true,
+                                                isChecked, [this, p, i]() { p->deform_type = i; });
                         }
 
                         contextMenu.addSeparator();
@@ -1864,38 +1867,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     std::string txt;
 
-                    if (q->deactivated)
-                    {
-                        if (q->ctrltype == ct_envtime_linkable_delay)
-                        {
-                            txt = Surge::GUI::toOSCaseForMenu("Unlink from Left Channel");
-                        }
-                        else
-                        {
-                            txt = Surge::GUI::toOSCaseForMenu("Activate");
-                        }
+                    bool isChecked = q->deactivated;
 
-                        contextMenu.addItem(txt, [this, q]() {
-                            q->deactivated = false;
-                            this->synth->refresh_editor = true;
-                        });
+                    if (q->ctrltype == ct_envtime_linkable_delay)
+                    {
+                        txt = Surge::GUI::toOSCaseForMenu("Link to Left Channel");
                     }
                     else
                     {
-                        if (q->ctrltype == ct_envtime_linkable_delay)
-                        {
-                            txt = Surge::GUI::toOSCaseForMenu("Link to Left Channel");
-                        }
-                        else
-                        {
-                            txt = Surge::GUI::toOSCaseForMenu("Deactivate");
-                        }
-
-                        contextMenu.addItem(txt, [this, q]() {
-                            q->deactivated = true;
-                            this->synth->refresh_editor = true;
-                        });
+                        isChecked = !isChecked;
+                        txt = Surge::GUI::toOSCaseForMenu("Enabled");
                     }
+
+                    contextMenu.addSeparator();
+
+                    contextMenu.addItem(txt, true, isChecked, [this, q]() {
+                        q->deactivated = !q->deactivated;
+                        this->synth->refresh_editor = true;
+                    });
                 }
 
                 int n_ms = 0;
