@@ -388,7 +388,7 @@
         <control ui_identifier="filter.highpass" y="301"/>
         <control ui_identifier="filter.waveshaper_drive" y="301"/>
         <control ui_identifier="filter.waveshaper_type" x="384"/>
-        <control ui_identifier="filter.waveshaper_jog" x="385"/>
+        <control ui_identifier="filter.waveshaper_prevnext" x="385"/>
         <control ui_identifier="filter.waveshaper_analyze" x="406"/>
 
         <!-- FEG -->
