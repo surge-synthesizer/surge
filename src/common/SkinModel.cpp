@@ -394,9 +394,8 @@ Connector waveshaper_drive = Connector("filter.waveshaper_drive", 421, 301).asVe
 Connector waveshaper_type =
     Connector("filter.waveshaper_type", 386, 310, 34, 47, Components::WaveShaperSelector)
         .withHSwitch2Properties(IDB_WAVESHAPER_MODE, 6, 6, 1);
-Connector waveshaper_jog = Connector("filter.waveshaper_jog", 387, 359, Connector::JOG_WAVESHAPE)
-                               .asJogPlusMinus()
-                               .withProperty(Component::DRAGGABLE_HSWITCH, false);
+Connector waveshaper_jog =
+    Connector("filter.waveshaper_jog", 387, 359, Connector::JOG_WAVESHAPE).asJogPlusMinus();
 Connector waveshaper_analyze = Connector("filter.waveshaper_analyze", 408, 375, 11, 11,
                                          Components::Switch, Connector::ANALYZE_WAVESHAPE)
                                    .withBackground(IDB_WAVESHAPER_ANALYSIS);
@@ -470,9 +469,7 @@ Connector fx_type = Connector("fx.type", 765, 194, 133, 18, Components::FxMenu);
 
 Connector fx_preset =
     Connector("fx.preset.name", 766, 212, 95, 12, Components::Custom, Connector::FXPRESET_LABEL);
-Connector fx_jog = Connector("fx.preset.prevnext", 864, 212, Connector::JOG_FX)
-                       .asJogPlusMinus()
-                       .withProperty(Component::DRAGGABLE_HSWITCH, false);
+Connector fx_jog = Connector("fx.preset.prevnext", 864, 212, Connector::JOG_FX).asJogPlusMinus();
 
 Connector fx_param_panel = Connector("fx.param.panel", 763, 224, Components::Group);
 Connector param_1 = Connector("fx.param_1", 0, 0).inParent("fx.param.panel");
@@ -542,12 +539,9 @@ Connector surge_menu = Connector("controls.surge_menu", 848, 550, 50, 15, Compon
 Connector patch_browser = Connector("controls.patch_browser", 157, 12, 390, 28, Components::Custom,
                                     Connector::PATCH_BROWSER);
 Connector patch_category_jog =
-    Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY)
-        .asJogPlusMinus()
-        .withProperty(Component::DRAGGABLE_HSWITCH, false);
-Connector patch_jog = Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH)
-                          .asJogPlusMinus()
-                          .withProperty(Component::DRAGGABLE_HSWITCH, false);
+    Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
+Connector patch_jog =
+    Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
 Connector patch_save = Connector("controls.patch.save", 510, 42, 37, 12, Components::MultiSwitch,
                                  Connector::SAVE_PATCH)
                            .withHSwitch2Properties(IDB_SAVE_PATCH, 1, 1, 1)
