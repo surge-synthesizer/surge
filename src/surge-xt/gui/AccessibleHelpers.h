@@ -332,6 +332,9 @@ enum AccessibleKeyEditAction
     None,
     Increase,
     Decrease,
+    ToMax,
+    ToMin,
+    ToDefault,
     OpenMenu,
     Return
 };
@@ -380,6 +383,22 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     if (key.getKeyCode() == juce::KeyPress::returnKey)
     {
         return {Return, NoModifier};
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::homeKey)
+    {
+        std::cout << "homeKey" << std::endl;
+        return {ToMax, NoModifier};
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::endKey)
+    {
+        return {ToMin, NoModifier};
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::deleteKey)
+    {
+        return {ToDefault, NoModifier};
     }
 
     return {None, NoModifier};
