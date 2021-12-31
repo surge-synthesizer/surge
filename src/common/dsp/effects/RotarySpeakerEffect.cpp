@@ -196,6 +196,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     if (wsi < 0 || wsi >= n_fxws)
         wsi = 0;
     auto ws = FXWaveShapers[wsi];
+    // FX WaveShapers has values ike wst_soft and stuff so don't add +1 below
 
     /*
     ** This is a set of completely empirical scaling settings to offset gain being too crazy
@@ -205,7 +206,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     float compensateStartsAt = 0.18;
     bool square_drive_comp = false;
 
-    switch (ws + 1)
+    switch (ws)
     {
     case wst_hard:
     {
@@ -253,9 +254,9 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
             gain_comp_factor = 1.f + ((drive.v - compensateStartsAt) * compensate);
     }
 
-    bool useSSEShaper = (ws + wst_soft >= wst_sine);
+    bool useSSEShaper = (ws >= wst_sine);
 
-    auto wsop = GetQFPtrWaveshaper(wst_soft + ws);
+    auto wsop = GetQFPtrWaveshaper(ws);
 
     for (k = 0; k < BLOCK_SIZE; k++)
     {
@@ -270,13 +271,12 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
                 auto wsres = wsop(&wsState, inp, _mm_set1_ps(drive_factor));
                 float r[4];
                 _mm_store_ps(r, wsres);
-                input = r[0] * gain_tweak; // ws + 1 to start on wst_soft
+                input = r[0] * gain_tweak;
             }
             else
             {
                 input =
-                    lookup_waveshape(wst_soft + ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) *
-                    gain_tweak; // ws + 1 to start on wst_soft
+                    lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;
             }
             input /= gain_comp_factor;
 
