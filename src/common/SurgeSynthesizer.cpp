@@ -2898,6 +2898,8 @@ bool SurgeSynthesizer::isModDestUsed(long ptag) const
 
 void SurgeSynthesizer::updateUsedState()
 {
+    storage.modRoutingMutex.lock();
+
     // intended for GUI only
     for (int i = 0; i < n_modsources; i++)
         modsourceused[i] = false;
@@ -2930,6 +2932,8 @@ void SurgeSynthesizer::updateUsedState()
                 modsourceused[id] = true;
         }
     }
+
+    storage.modRoutingMutex.unlock();
 }
 
 void SurgeSynthesizer::prepareModsourceDoProcess(int scenemask)
