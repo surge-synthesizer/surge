@@ -683,6 +683,14 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
+    if (action == ToDefault)
+    {
+        notifyControlModifierDoubleClicked(juce::ModifierKeys());
+        setQuantitizedDisplayValue(getValue());
+        repaint();
+        return true;
+    }
+
     float dv{0.05};
     switch (action)
     {
@@ -690,6 +698,9 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
         break;
     case Decrease:
         dv = -dv;
+        break;
+    case ToMax:
+    case ToMin:
         break;
     default:
         dv = 0;       // should never happen
@@ -711,11 +722,21 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
 
     if (isEditingModulation)
     {
-        modValue = limitpm1(modValue + dv);
+        if (action == Increase || action == Decrease)
+            modValue = limitpm1(modValue + dv);
+        else if (action == ToMax)
+            modValue = 1;
+        else if (action == ToMin)
+            modValue = -1;
     }
     else
     {
-        value = limit01(value + dv);
+        if (action == Increase || action == Decrease)
+            value = limit01(value + dv);
+        else if (action == ToMax)
+            value = 1;
+        else if (action == ToMin)
+            value = -1;
     }
 
     notifyBeginEdit();
