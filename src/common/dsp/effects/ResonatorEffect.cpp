@@ -90,9 +90,9 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     }
     bi = (bi + 1) & slowrate_m1;
 
-    // Upsample phase. This works and needs no more attention.
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
 
+    // Upsample the input
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
 
     /*
@@ -245,7 +245,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         dataOS[1][s] = mixr;
     }
 
-    /* and preserve those registers and stuff. This all works */
+    /* preserve those registers and stuff */
     for (int c = 0; c < 2; ++c)
     {
         for (int i = 0; i < n_cm_coeffs; i++)
@@ -264,20 +264,11 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    /*    for (int e = 0; e < 3; ++e)
-        {
-            for (int c = 0; c < 2; ++c)
-            {
-                WP[e][c] = qfus[c].WP[e];
-            }
-        } */
-
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 
-    // And gain and mix
     gain.set_target_smoothed(db_to_linear(*f[resonator_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
