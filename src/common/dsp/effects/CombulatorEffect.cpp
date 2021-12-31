@@ -163,7 +163,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    // Upsample phase. This works and needs no more attention.
+    // Upsample the input
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
 
@@ -281,8 +281,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;
 
-        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every other
-        // sample
+        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every
+        // other sample
         if (s % 2 == 0)
         {
             for (auto i = 0; i < 3; ++i)
@@ -302,7 +302,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         }
     }
 
-    /* and preserve those registers and stuff. This all works */
+    /* preserve those registers and stuff */
     for (int c = 0; c < 2; ++c)
     {
         for (int i = 0; i < n_cm_coeffs; i++)

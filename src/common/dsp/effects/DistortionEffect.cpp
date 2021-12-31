@@ -89,7 +89,6 @@ void DistortionEffect::process(float *dataL, float *dataR)
     if (wsi < 0 || wsi >= n_fxws)
         wsi = 0;
     auto ws = FXWaveShapers[wsi];
-    // FXWaveShapers have value at wst_soft for 0; so don't add wst_soft
 
     float bL alignas(16)[BLOCK_SIZE << dist_OS_bits];
     float bR alignas(16)[BLOCK_SIZE << dist_OS_bits];
@@ -97,12 +96,12 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
     drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
+    // FX waveshapers have value at wst_soft for 0; so don't add wst_soft here (like we did in 1.9)
     bool useSSEShaper = (ws >= wst_sine);
-
     auto wsop = GetQFPtrWaveshaper(ws);
-
     float dD = 0.f;
     float dNow = dS;
+
     if (useSSEShaper)
     {
         dD = (dE - dS) / (BLOCK_SIZE * dist_OS_bits);
