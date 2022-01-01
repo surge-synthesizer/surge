@@ -15,7 +15,13 @@
 
 struct Picker : public juce::Component
 {
-    Picker(SurgefxAudioProcessorEditor *ed) : editor(ed) {}
+    Picker(SurgefxAudioProcessorEditor *ed) : editor(ed)
+    {
+        setAccessible(true);
+        setTitle("Select FX Type");
+        setDescription("Select FX Type");
+        setWantsKeyboardFocus(true);
+    }
     void paint(juce::Graphics &g) override
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
@@ -40,14 +46,70 @@ struct Picker : public juce::Component
         g.fillPath(p);
     }
 
+    bool keyPressed(const juce::KeyPress &p) override
+    {
+        if (p.getKeyCode() == juce::KeyPress::returnKey ||
+            (p.getKeyCode() == juce::KeyPress::F10Key && p.getModifiers().isShiftDown()))
+        {
+            editor->showMenu();
+            return true;
+        }
+        return false;
+    }
     void mouseDown(const juce::MouseEvent &e) override { editor->showMenu(); }
     SurgefxAudioProcessorEditor *editor{nullptr};
+
+    struct AH : public juce::AccessibilityHandler
+    {
+        struct AHV : public juce::AccessibilityValueInterface
+        {
+            explicit AHV(Picker *s) : comp(s) {}
+
+            Picker *comp;
+
+            bool isReadOnly() const override { return true; }
+            double getCurrentValue() const override { return 0.; }
+
+            void setValue(double) override {}
+            void setValueAsString(const juce::String &newValue) override {}
+            AccessibleValueRange getRange() const override { return {{0, 1}, 1}; }
+            juce::String getCurrentValueAsString() const override
+            {
+                return fx_type_names[comp->editor->processor.getEffectType()];
+            }
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AHV);
+        };
+
+        explicit AH(Picker *s)
+            : comp(s), juce::AccessibilityHandler(
+                           *s, juce::AccessibilityRole::button,
+                           juce::AccessibilityActions()
+                               .addAction(juce::AccessibilityActionType::press,
+                                          [this]() { comp->editor->showMenu(); })
+                               .addAction(juce::AccessibilityActionType::showMenu,
+                                          [this]() { comp->editor->showMenu(); }),
+                           AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
+        {
+        }
+
+        Picker *comp;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AH);
+    };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<AH>(this);
+    }
 };
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p), processor(p)
 {
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+
     makeMenu();
     surgeLookFeel.reset(new SurgeLookAndFeel());
     setLookAndFeel(surgeLookFeel.get());
@@ -58,13 +120,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setSize(600, 55 * 6 + 80 + topSection);
     setResizable(false, false); // For now
 
-    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
-    fxNameLabel->setFont(28);
-    fxNameLabel->setColour(juce::Label::textColourId,
-                           surgeLookFeel->findColour(SurgeLookAndFeel::blue));
-    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
-    fxNameLabel->setJustificationType(juce::Justification::centredLeft);
-    addAndMakeVisible(fxNameLabel.get());
+    picker = std::make_unique<Picker>(this);
+    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
+    addAndMakeVisibleRecordOrder(picker.get());
 
     int ypos0 = topSection - 5;
     int byoff = 7;
@@ -92,7 +150,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].onDragEnd = [i, this]() {
             this->processor.setUserEditingFXParam(i, false);
         };
-        addAndMakeVisible(&(fxParamSliders[i]));
+        fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
+        addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
 
         int buttonSize = 19;
         int buttonMargin = 1;
@@ -113,7 +172,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
-        addAndMakeVisible(&(fxTempoSync[i]));
+
+        fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
+        addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
         juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
                                    (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + buttonSize,
@@ -132,7 +193,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->resetLabels();
             this->processor.setUserEditingParamFeature(i, false);
         };
-        addAndMakeVisible(&(fxDeactivated[i]));
+        fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
+        addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
         juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
                                    (i % 6) * 60 + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize,
@@ -152,7 +214,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
-        addAndMakeVisible(&(fxExtended[i]));
+        fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
+        addAndMakeVisibleRecordOrder(&(fxExtended[i]));
 
         juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
                                    (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize,
@@ -172,7 +235,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
-        addAndMakeVisible(&(fxAbsoluted[i]));
+
+        fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
+        addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
         juce::Rectangle<int> dispPos{
             (i / 6) * getWidth() / 2 + 4 + 55 + 2 * buttonMargin + 2 * buttonSize,
@@ -183,14 +248,21 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamDisplay[i].setDisplay(processor.getParamValue(i));
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
 
-        addAndMakeVisible(fxParamDisplay[i]);
+        addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
 
-    picker = std::make_unique<Picker>(this);
-    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
-    addAndMakeVisible(*picker);
+    fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
+    fxNameLabel->setFont(28);
+    fxNameLabel->setColour(juce::Label::textColourId,
+                           surgeLookFeel->findColour(SurgeLookAndFeel::blue));
+    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
+    fxNameLabel->setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisibleRecordOrder(fxNameLabel.get());
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
+
+    setTitle("Surge FX");
+    setDescription("Surge FX");
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -213,6 +285,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
                                      !processor.getFXStorageAppearsDeactivated(i));
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
+        fxTempoSync[i].setAccessible(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
 
@@ -220,12 +293,17 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      juce::NotificationType::dontSendNotification);
+        fxExtended[i].setAccessible(processor.canExtend(i));
+
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
+        fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
+
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
+        fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
     }
 
     int row = 0, col = 0;
@@ -233,6 +311,13 @@ void SurgefxAudioProcessorEditor::resetLabels()
     std::string nm = fx_type_names[processor.getEffectType()];
 
     fxNameLabel->setText(juce::String("Surge FX: " + nm), juce::dontSendNotification);
+    setTitle(fxNameLabel->getText());
+    setDescription(fxNameLabel->getText());
+
+    if (auto h = getAccessibilityHandler())
+    {
+        h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
 }
 
 void SurgefxAudioProcessorEditor::setEffectType(int i)
@@ -339,4 +424,56 @@ void SurgefxAudioProcessorEditor::showMenu()
     o = o.withTargetScreenArea(r).withPreferredPopupDirection(
         juce::PopupMenu::Options::PopupDirection::downwards);
     p.showMenuAsync(o);
+}
+
+struct FxFocusTrav : public juce::ComponentTraverser
+{
+    FxFocusTrav(SurgefxAudioProcessorEditor *ed) : editor(ed) {}
+    juce::Component *getDefaultComponent(juce::Component *parentComponent) override
+    {
+        return editor->picker.get();
+    }
+    juce::Component *searchDir(juce::Component *from, int dir)
+    {
+
+        const auto iter = std::find(editor->accessibleOrderWeakRefs.cbegin(),
+                                    editor->accessibleOrderWeakRefs.cend(), from);
+        if (iter == editor->accessibleOrderWeakRefs.cend())
+            return nullptr;
+
+        switch (dir)
+        {
+        case 1:
+            if (iter != std::prev(editor->accessibleOrderWeakRefs.cend()))
+            {
+                return *std::next(iter);
+            }
+            break;
+        case -1:
+            if (iter != editor->accessibleOrderWeakRefs.cbegin())
+            {
+                return *std::prev(iter);
+            }
+            break;
+        }
+        return nullptr;
+    }
+    juce::Component *getNextComponent(juce::Component *current) override
+    {
+        return searchDir(current, 1);
+    }
+    juce::Component *getPreviousComponent(juce::Component *current) override
+    {
+        return searchDir(current, -1);
+    }
+    std::vector<juce::Component *> getAllComponents(juce::Component *parentComponent) override
+    {
+        return editor->accessibleOrderWeakRefs;
+    }
+    SurgefxAudioProcessorEditor *editor{nullptr};
+};
+
+std::unique_ptr<juce::ComponentTraverser> SurgefxAudioProcessorEditor::createFocusTraverser()
+{
+    return std::make_unique<FxFocusTrav>(this);
 }

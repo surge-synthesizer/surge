@@ -59,7 +59,43 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     SurgefxAudioProcessor &processor;
 
   private:
-    juce::Slider fxParamSliders[n_fx_params];
+    struct AccSlider : public juce::Slider
+    {
+        AccSlider() { setWantsKeyboardFocus(true); }
+        bool keyPressed(const juce::KeyPress &key) override
+        {
+            float amt = 0.05;
+            if (key.getModifiers().isShiftDown())
+                amt = 0.01;
+            if (key.getKeyCode() == juce::KeyPress::upKey)
+            {
+                setValue(std::clamp(getValue() + amt, 0., 1.),
+                         juce::NotificationType::sendNotification);
+                return true;
+            }
+
+            if (key.getKeyCode() == juce::KeyPress::downKey)
+            {
+                setValue(std::clamp(getValue() - amt, 0., 1.),
+                         juce::NotificationType::sendNotification);
+                return true;
+            }
+
+            if (key.getKeyCode() == juce::KeyPress::homeKey)
+            {
+                setValue(1., juce::NotificationType::sendNotification);
+                return true;
+            }
+
+            if (key.getKeyCode() == juce::KeyPress::endKey)
+            {
+                setValue(0., juce::NotificationType::sendNotification);
+                return true;
+            }
+            return false;
+        }
+    };
+    AccSlider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
@@ -72,5 +108,18 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;
 
+    void addAndMakeVisibleRecordOrder(juce::Component *c)
+    {
+        accessibleOrderWeakRefs.push_back(c);
+        addAndMakeVisible(c);
+    }
+
+  public:
+    std::vector<juce::Component *> accessibleOrderWeakRefs;
+
+  public:
+    std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
+
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessorEditor)
 };
