@@ -22,7 +22,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     nonLatentBlockMode = !juce::PluginHostType().isFruityLoops();
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
 
-    effectNum = fxt_delay;
+    effectNum = fxt_off;
     storage.reset(new SurgeStorage());
     storage->userPrefOverrides[Surge::Storage::HighPrecisionReadouts] = std::make_pair(0, "");
 
@@ -108,6 +108,8 @@ void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     storage->setSamplerate(sr);
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
+    if (effectNum == fxt_off)
+        resetFxType(fxt_delay, true);
 }
 
 void SurgefxAudioProcessor::releaseResources()
@@ -118,10 +120,15 @@ void SurgefxAudioProcessor::releaseResources()
 
 bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
-    // the sidechain can take any layout, the main bus needs to be the same on the input and output
-    return layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet() &&
-           !layouts.getMainInputChannelSet().isDisabled() &&
-           layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
+    bool inputValid = layouts.getMainInputChannelSet() == juce::AudioChannelSet::mono() ||
+                      layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
+
+    bool outputValid = layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+
+    bool sidechainValid = layouts.getChannelSet(true, 1).isDisabled() ||
+                          layouts.getChannelSet(true, 1) == juce::AudioChannelSet::stereo();
+
+    return inputValid && outputValid && sidechainValid;
 }
 
 #define is_aligned(POINTER, BYTE_COUNT) (((uintptr_t)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
@@ -155,7 +162,14 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         storage->temposyncratio_inv = 1.f / storage->temposyncratio;
     }
 
-    auto mainInputOutput = getBusBuffer(buffer, true, 0);
+    auto mainInput = getBusBuffer(buffer, true, 0);
+
+    int inChanL = 0;
+    int inChanR = 1;
+    if (mainInput.getNumChannels() == 1)
+        inChanR = 0;
+
+    auto mainOutput = getBusBuffer(buffer, false, 0);
     auto sideChainInput = getBusBuffer(buffer, true, 1);
 
     // FIXME: Check: has type changed?
@@ -178,8 +192,8 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
         for (int outPos = 0; outPos < buffer.getNumSamples() && !resettingFx; outPos += BLOCK_SIZE)
         {
-            auto outL = mainInputOutput.getWritePointer(0, outPos);
-            auto outR = mainInputOutput.getWritePointer(1, outPos);
+            auto outL = mainOutput.getWritePointer(0, outPos);
+            auto outR = mainOutput.getWritePointer(1, outPos);
 
             if (effectNum == fxt_vocoder && sideChainBus && sideChainBus->isEnabled())
             {
@@ -197,16 +211,16 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             }
             copyGlobaldataSubset(storage_id_start, storage_id_end);
 
-            if (is_aligned(outL, 16) && is_aligned(outR, 16))
+            auto inL = mainInput.getReadPointer(inChanL, outPos);
+            auto inR = mainInput.getReadPointer(inChanR, outPos);
+
+            if (is_aligned(outL, 16) && is_aligned(outR, 16) && inL == outL && inR == outR)
             {
                 audio_thread_surge_effect->process_ringout(outL, outR, true);
             }
             else
             {
                 float bufferL alignas(16)[BLOCK_SIZE], bufferR alignas(16)[BLOCK_SIZE];
-
-                auto inL = mainInputOutput.getReadPointer(0, outPos);
-                auto inR = mainInputOutput.getReadPointer(1, outPos);
 
                 memcpy(bufferL, inL, BLOCK_SIZE * sizeof(float));
                 memcpy(bufferR, inR, BLOCK_SIZE * sizeof(float));
@@ -220,11 +234,11 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     }
     else
     {
-        auto outL = mainInputOutput.getWritePointer(0, 0);
-        auto outR = mainInputOutput.getWritePointer(1, 0);
+        auto outL = mainOutput.getWritePointer(0, 0);
+        auto outR = mainOutput.getWritePointer(1, 0);
 
-        auto inL = mainInputOutput.getReadPointer(0, 0);
-        auto inR = mainInputOutput.getReadPointer(1, 0);
+        auto inL = mainInput.getReadPointer(inChanL, 0);
+        auto inR = mainInput.getReadPointer(inChanR, 0);
 
         const float *sideL = nullptr, *sideR = nullptr;
 
@@ -384,6 +398,13 @@ void SurgefxAudioProcessor::reorderSurgeParams()
         for (auto a : orderTrack)
         {
             fx_param_remap[idx++] = a.first;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < n_fx_params; ++i)
+        {
+            fx_param_remap[i] = i;
         }
     }
 
