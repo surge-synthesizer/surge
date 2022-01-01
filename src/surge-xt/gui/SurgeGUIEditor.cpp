@@ -4575,6 +4575,23 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
         });
 }
 
+void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int> where)
+{
+    auto msi = modsource_index;
+
+    auto callback = [this, lfo_id, msi](const std::string &nv) {
+        auto cp = synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
+        strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
+        synth->refresh_editor = true;
+    };
+
+    promptForMiniEdit(
+        synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
+        fmt::format("Enter a new name for {:s}:",
+                    modulatorNameWithIndex(current_scene, modsource, msi, false, false, true)),
+        "Rename Modulator", juce::Point<int>(10, 10), callback);
+}
+
 void SurgeGUIEditor::resetSmoothing(Modulator::SmoothingMode t)
 {
     // Reset the default value and tell the synth it is updated

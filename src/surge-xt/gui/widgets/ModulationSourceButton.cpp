@@ -428,6 +428,21 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             return;
         }
     }
+    else
+    {
+        auto rect = getLocalBounds();
+
+        // rename LFO on double-click
+        if (isLFO() && rect.contains(event.position.toInt()))
+        {
+            int lfo_id = getCurrentModSource() - ms_lfo1;
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            sge->openLFORenameDialog(lfo_id, rect.getTopLeft());
+
+            return;
+        }
+    }
 }
 
 void ModulationSourceButton::mouseEnter(const juce::MouseEvent &event)

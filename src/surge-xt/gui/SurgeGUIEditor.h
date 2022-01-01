@@ -397,6 +397,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                Surge::Widgets::ModulationSourceButton *msb);
+    void openLFORenameDialog(const int lfo_id, const juce::Point<int> where);
 
     void lfoShapeChanged(int prior, int curr);
     void broadcastMSEGState();
