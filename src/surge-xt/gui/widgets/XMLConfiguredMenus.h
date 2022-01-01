@@ -106,7 +106,7 @@ struct XMLMenuPopulator
 
             if (idx >= (int)allPresets.size())
                 idx = 0;
-        } while (allPresets[idx].isSeparator);
+        } while (allPresets[idx].isSeparator || allPresets[idx].isSectionHeader);
         loadByIndex(idx);
     }
     int maxIdx;
