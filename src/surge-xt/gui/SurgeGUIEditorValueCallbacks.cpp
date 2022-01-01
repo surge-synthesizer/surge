@@ -933,28 +933,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 contextMenu.addSeparator();
             }
 
-            int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
-
             contextMenu.addSeparator();
+
+            int lfo_id = isLFO(modsource) ? modsource - ms_lfo1 : -1;
 
             if (lfo_id >= 0)
             {
-                auto msi = modsource_index;
                 contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu("Rename Modulator..."),
-                    [this, lfo_id, modsource, msi, cms]() {
-                        auto mecb = [this, lfo_id, msi](const std::string &nv) {
-                            auto cp =
-                                synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
-                            strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
-                            synth->refresh_editor = true;
-                        };
-                        promptForMiniEdit(
-                            synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
-                            fmt::format("Enter a new name for {:s}:",
-                                        modulatorNameWithIndex(current_scene, modsource, msi, false,
-                                                               false, true)),
-                            "Rename Modulator", juce::Point<int>(10, 10), mecb);
+                    Surge::GUI::toOSCaseForMenu("Rename Modulator..."), [this, control, lfo_id]() {
+                        auto pos = control->asJuceComponent()->getBounds().getTopLeft();
+
+                        openLFORenameDialog(lfo_id, pos);
                     });
 
                 contextMenu.addSeparator();
