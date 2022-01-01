@@ -222,7 +222,7 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
 
 void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
 {
-    if (!hasDragged && currentClicked >= 0)
+    if (!event.mods.isRightButtonDown() && !hasDragged && currentClicked >= 0)
     {
         deactivatedBitmask ^= (1 << currentClicked);
         notifyValueChanged();
@@ -321,7 +321,7 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
-    if (event.getDistanceFromDragStart() > 2)
+    if (event.getDistanceFromDragStart() > 3 && event.mods.isLeftButtonDown())
     {
         if (!hasDragged)
         {
@@ -329,11 +329,12 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
         }
 
         hasDragged = true;
-    }
 
-    dragX = event.getDistanceFromDragStartX();
-    dragY = event.getDistanceFromDragStartY();
-    repaint();
+        dragX = event.getDistanceFromDragStartX();
+        dragY = event.getDistanceFromDragStartY();
+
+        repaint();
+    }
 }
 
 void EffectChooser::mouseMove(const juce::MouseEvent &event)
