@@ -231,20 +231,41 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
 class SurgeFXParamDisplay : public juce::Component
 {
   public:
+    SurgeFXParamDisplay() : juce::Component() { setAccessible(true); }
     virtual void setGroup(std::string grp)
     {
         group = grp;
+        setTitle(name + " " + group);
+        setDescription(name + " " + group);
+        if (auto *handler = getAccessibilityHandler())
+        {
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
         repaint();
     };
     virtual void setName(std::string nm)
     {
         name = nm;
+        setTitle(name + " " + group);
+        setDescription(name + " " + group);
+        if (auto *handler = getAccessibilityHandler())
+        {
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
         repaint();
     }
     virtual void setDisplay(std::string dis)
     {
         display = dis;
         repaint();
+
+        if (auto *handler = getAccessibilityHandler())
+        {
+            if (handler->getValueInterface())
+            {
+                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+            }
+        }
     };
 
     virtual void setAppearsDeactivated(bool b)
@@ -253,7 +274,7 @@ class SurgeFXParamDisplay : public juce::Component
         repaint();
     }
 
-    virtual void paint(juce::Graphics &g)
+    virtual void paint(juce::Graphics &g) override
     {
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
@@ -282,6 +303,41 @@ class SurgeFXParamDisplay : public juce::Component
             g.drawSingleLineText(display, bounds.getX() + 5,
                                  bounds.getY() + bounds.getHeight() - 5);
         }
+    }
+
+    struct AH : public juce::AccessibilityHandler
+    {
+        struct AHV : public juce::AccessibilityValueInterface
+        {
+            explicit AHV(SurgeFXParamDisplay *s) : comp(s) {}
+
+            SurgeFXParamDisplay *comp;
+
+            bool isReadOnly() const override { return true; }
+            double getCurrentValue() const override { return 0.; }
+
+            void setValue(double) override {}
+            void setValueAsString(const juce::String &newValue) override {}
+            AccessibleValueRange getRange() const override { return {{0, 1}, 1}; }
+            juce::String getCurrentValueAsString() const override { return comp->display; }
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AHV);
+        };
+
+        explicit AH(SurgeFXParamDisplay *s)
+            : comp(s), juce::AccessibilityHandler(
+                           *s, juce::AccessibilityRole::staticText, juce::AccessibilityActions(),
+                           AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
+        {
+        }
+
+        SurgeFXParamDisplay *comp;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AH);
+    };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<AH>(this);
     }
 
   private:
