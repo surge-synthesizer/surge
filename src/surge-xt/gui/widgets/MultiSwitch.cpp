@@ -95,6 +95,12 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
     if (event.mods.isPopupMenu() || event.mods.isCommandDown())
     {
         notifyControlModifierClicked(event.mods);
+
+        if (isHovered)
+        {
+            hoverSelection = coordinateToSelection(event.x, event.y);
+        }
+
         return;
     }
 
@@ -108,6 +114,11 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 
     setValue(coordinateToValue(event.x, event.y));
     notifyValueChanged();
+
+    if (isHovered)
+    {
+        hoverSelection = getIntegerValue();
+    }
 }
 
 void MultiSwitch::mouseMove(const juce::MouseEvent &event)
