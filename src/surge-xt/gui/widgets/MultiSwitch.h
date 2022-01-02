@@ -18,6 +18,7 @@
 
 #include "SurgeJUCEHelpers.h"
 #include "WidgetBaseMixin.h"
+#include "AccessibleHelpers.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -32,7 +33,9 @@ namespace Widgets
  * MultiSwitch (f.k.a CHSwitch2 in VSTGUI land) takes a
  * glyph with rows and columns to allow multiple selection
  */
-struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
+struct MultiSwitch : public juce::Component,
+                     public WidgetBaseMixin<MultiSwitch>,
+                     public Surge::Widgets::HasAccessibleSubComponentForFocus
 {
     MultiSwitch();
     ~MultiSwitch();
@@ -103,6 +106,7 @@ struct MultiSwitch : public juce::Component, public WidgetBaseMixin<MultiSwitch>
 
     void setupAccessibility();
     std::vector<std::unique_ptr<juce::Component>> selectionComponents;
+    juce::Component *getCurrentAccessibleSelectionComponent() override;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitch);

@@ -20,6 +20,7 @@
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
 #include "widgets/SurgeTextButton.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -36,6 +37,8 @@ MiniEdit::MiniEdit()
     typein->setWantsKeyboardFocus(true);
     typein->addListener(this);
     typein->setTitle("Value");
+    Surge::Widgets::fixupJuceTextEditorAccessibility(*typein);
+
     addAndMakeVisible(*typein);
 
     okButton = std::make_unique<Surge::Widgets::SurgeTextButton>("minieditOK");

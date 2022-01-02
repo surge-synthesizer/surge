@@ -60,7 +60,12 @@ struct TypeinParamEditor : public juce::Component,
     }
 
     std::string mainLabel;
-    void setMainLabel(const std::string &s) { mainLabel = s; }
+    void setMainLabel(const std::string &s)
+    {
+        mainLabel = s;
+        setTitle("Edit " + mainLabel);
+        setDescription("Edit " + mainLabel);
+    }
     std::string primaryVal, secondaryVal;
     void setValueLabels(const std::string &pri, const std::string &sec)
     {

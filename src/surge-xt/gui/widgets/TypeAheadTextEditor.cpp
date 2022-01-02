@@ -15,6 +15,7 @@
 
 #include "TypeAheadTextEditor.h"
 #include "MainFrame.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -123,6 +124,7 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
     lbox->setTitle(l);
     setColour(ColourIds::borderid, juce::Colours::black);
     setColour(ColourIds::emptyBackgroundId, juce::Colours::white);
+    fixupJuceTextEditorAccessibility(*this);
 }
 
 TypeAhead::~TypeAhead() = default;

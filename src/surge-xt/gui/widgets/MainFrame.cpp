@@ -17,6 +17,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUICallbackInterfaces.h"
 #include "AccessibleHelpers.h"
+#include "MultiSwitch.h"
 
 namespace Surge
 {
@@ -192,38 +193,62 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
         // Sort here
         for (auto *c : localComponents)
         {
-            components.push_back(c);
+            if (auto dc = dynamic_cast<Surge::Widgets::HasAccessibleSubComponentForFocus *>(c); dc)
+            {
+                components.push_back(dc->getCurrentAccessibleSelectionComponent());
+            }
+            else
+            {
+                components.push_back(c);
 
-            if (!(c->isKeyboardFocusContainer()))
-                findAllComponents(c, components);
+                if (!(c->isKeyboardFocusContainer()))
+                    findAllComponents(c, components);
+            }
         }
     }
 
     juce::Component *navigate(juce::Component *c, int dir)
     {
+        if (!c)
+            return nullptr;
         std::vector<juce::Component *> v;
         findAllComponents(top, v);
 
+        if (auto dc = dynamic_cast<HasAccessibleSubComponentForFocus *>(c))
+        {
+            c = dc->getCurrentAccessibleSelectionComponent();
+        }
+
+        if (auto dcp = dynamic_cast<HasAccessibleSubComponentForFocus *>(c->getParentComponent()))
+        {
+            c = dcp->getCurrentAccessibleSelectionComponent();
+        }
+
         const auto iter = std::find(v.cbegin(), v.cend(), c);
         if (iter == v.cend())
-            return nullptr;
+        {
 
+            return nullptr;
+        }
+
+        juce::Component *res{nullptr};
         switch (dir)
         {
         case 1:
             if (iter != std::prev(v.cend()))
             {
-                return *std::next(iter);
+                res = *std::next(iter);
             }
             break;
         case -1:
             if (iter != v.cbegin())
             {
-                return *std::prev(iter);
+                res = *std::prev(iter);
             }
             break;
         }
-        return nullptr;
+
+        return res;
     }
 
     juce::Component *traverse(juce::Component *c, int dir)

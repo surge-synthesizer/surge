@@ -19,6 +19,7 @@
 #include "SurgeGUIUtils.h"
 #include "widgets/TypeAheadTextEditor.h"
 #include "widgets/SurgeTextButton.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -128,7 +129,8 @@ PatchStoreDialog::PatchStoreDialog()
         auto ed = std::make_unique<juce::TextEditor>(n);
         ed->setJustification(juce::Justification::centredLeft);
         ed->setWantsKeyboardFocus(true);
-
+        Surge::Widgets::fixupJuceTextEditorAccessibility(*ed);
+        ed->setTitle(n);
         addAndMakeVisible(*ed);
         return std::move(ed);
     };
@@ -141,7 +143,9 @@ PatchStoreDialog::PatchStoreDialog()
     commentEd = makeEd("patch comment");
     commentEd->setMultiLine(true, true);
     commentEd->setReturnKeyStartsNewLine(true);
+    commentEd->setTitle("patch comment");
     commentEd->setJustification(juce::Justification::topLeft);
+    Surge::Widgets::fixupJuceTextEditorAccessibility(*commentEd);
 
 #if HAS_TAGS_FIELD
     tagEd = makeEd("patch tags");
@@ -191,6 +195,8 @@ PatchStoreDialog::PatchStoreDialog()
     storeTuningButton = std::make_unique<juce::ToggleButton>();
     storeTuningButton->setToggleState(false, juce::dontSendNotification);
     storeTuningButton->setButtonText("");
+    storeTuningButton->setTitle("Store Patch In Tuning");
+    storeTuningButton->setDescription("Store Patch In Tuning");
     addAndMakeVisible(*storeTuningButton);
 
     storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu("Store Tuning in Patch"));
