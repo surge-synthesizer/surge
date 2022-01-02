@@ -1950,7 +1950,7 @@ float SurgeStorage::note_to_pitch_inv(float x)
 
 float SurgeStorage::note_to_pitch_ignoring_tuning(float x)
 {
-    x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
+    x = limit_range(x + 256, 1.e-4f, tuning_table_size - (float)1.e-4);
     // x += 256;
     int e = (int)x;
     float a = x - (float)e;

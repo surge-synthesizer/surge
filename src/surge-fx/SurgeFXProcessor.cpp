@@ -107,9 +107,14 @@ void SurgefxAudioProcessor::changeProgramName(int index, const juce::String &new
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     storage->setSamplerate(sr);
+    storage->songpos = 0.;
+
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
+
     if (effectNum == fxt_off)
+    {
         resetFxType(fxt_delay, true);
+    }
 }
 
 void SurgefxAudioProcessor::releaseResources()
@@ -141,25 +146,34 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     juce::ScopedNoDenormals noDenormals;
 
-    if (surge_effect->checkHasInvalidatedUI())
-    {
-        resetFxParams(true);
-    }
-
     float thisBPM = 120.0;
+    bool havePlayhead{false};
     auto playhead = getPlayHead();
     if (playhead)
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
         playhead->getCurrentPosition(cp);
         thisBPM = cp.bpm;
+        havePlayhead = true;
     }
 
     if (storage && thisBPM != lastBPM)
     {
+        bool reInit = false;
+        if (storage->temposyncratio_inv == 0.f)
+        {
+            reInit = true;
+        }
         lastBPM = thisBPM;
         storage->temposyncratio = thisBPM / 120.0;
         storage->temposyncratio_inv = 1.f / storage->temposyncratio;
+        if (reInit)
+            surge_effect->init();
+    }
+
+    if (surge_effect->checkHasInvalidatedUI())
+    {
+        resetFxParams(true);
     }
 
     auto mainInput = getBusBuffer(buffer, true, 0);
@@ -296,6 +310,20 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 outL[smp] = 0;
                 outR[smp] = 0;
             }
+        }
+    }
+
+    // While chasing that mac error put this in
+    bool doHardClip{true};
+    if (doHardClip)
+    {
+        auto outL = mainOutput.getWritePointer(0, 0);
+        auto outR = mainOutput.getWritePointer(1, 0);
+
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            outL[i] = std::clamp(outL[i], -2.f, 2.f);
+            outR[i] = std::clamp(outR[i], -2.f, 2.f);
         }
     }
 }
