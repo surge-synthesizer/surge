@@ -159,16 +159,9 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     if (storage && thisBPM != lastBPM)
     {
-        bool reInit = false;
-        if (storage->temposyncratio_inv == 0.f)
-        {
-            reInit = true;
-        }
         lastBPM = thisBPM;
         storage->temposyncratio = thisBPM / 120.0;
         storage->temposyncratio_inv = 1.f / storage->temposyncratio;
-        if (reInit)
-            surge_effect->init();
     }
 
     if (surge_effect->checkHasInvalidatedUI())
@@ -475,6 +468,8 @@ void SurgefxAudioProcessor::resetFxType(int type, bool updateJuceParams)
                                     storage->getPatch().globaldata));
     if (surge_effect)
     {
+        copyGlobaldataSubset(storage_id_start, storage_id_end);
+
         surge_effect->init();
         surge_effect->init_ctrltypes();
         surge_effect->init_default_values();
