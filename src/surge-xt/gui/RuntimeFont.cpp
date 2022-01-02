@@ -43,6 +43,13 @@ DefaultFonts::DefaultFonts()
 #else
     latoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
         SurgeXTBinary::LatoRegular_ttf, SurgeXTBinary::LatoRegular_ttfSize);
+    latoBoldTypeface = juce::Typeface::createSystemTypefaceFor(SurgeXTBinary::LatoBold_ttf,
+                                                               SurgeXTBinary::LatoBold_ttfSize);
+    latoItalicTypeface = juce::Typeface::createSystemTypefaceFor(SurgeXTBinary::LatoItalic_ttf,
+                                                                 SurgeXTBinary::LatoItalic_ttfSize);
+    latoBoldItalicTypeface = juce::Typeface::createSystemTypefaceFor(
+        SurgeXTBinary::LatoBoldItalic_ttf, SurgeXTBinary::LatoBoldItalic_ttfSize);
+
 #endif
 
     firaMonoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
@@ -63,7 +70,20 @@ juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags st
     }
     else
     {
-        return juce::Font(latoRegularTypeface).withPointHeight(size).withStyle(style);
+        auto tf = latoRegularTypeface;
+        if (style & juce::Font::bold && style & juce::Font::italic)
+        {
+            tf = latoBoldItalicTypeface;
+        }
+        else if (style & juce::Font::bold)
+        {
+            tf = latoBoldTypeface;
+        }
+        else if (style & juce::Font::italic)
+        {
+            tf = latoItalicTypeface;
+        }
+        return juce::Font(tf).withPointHeight(size).withStyle(style);
     }
 }
 

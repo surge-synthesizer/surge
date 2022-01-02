@@ -31,7 +31,8 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::Font lfoTypeFont;
     juce::Font aboutFont;
 
-    juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface;
+    juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface, latoBoldTypeface,
+        latoItalicTypeface, latoBoldItalicTypeface;
     juce::ReferenceCountedObjectPtr<juce::Typeface> firaMonoRegularTypeface;
 
     static DefaultFonts *fmi;
