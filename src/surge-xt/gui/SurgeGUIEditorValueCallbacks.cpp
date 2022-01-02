@@ -881,6 +881,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             0); // controllers aren't indexed
                 });
 
+                contextMenu.addSeparator();
+
                 bool ibp = synth->storage.getPatch()
                                .scene[current_scene]
                                .modsources[ms_ctrl1 + ccid]
@@ -1149,28 +1151,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     contextMenu.addSubMenu("Straight", tsMenuR);
                     contextMenu.addSubMenu("Dotted", tsMenuD);
                     contextMenu.addSubMenu("Triplet", tsMenuT);
-
-                    contextMenu.addSeparator();
                 }
                 else
                 {
                     contextMenu.addItem(
                         txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
+
+                    contextMenu.addSeparator();
                 }
             }
             else if (p->valtype == vt_bool)
             {
-                // FIXME - make this a checked toggle
-                contextMenu.addItem(txt2, true, p->val.b, [this, p, control]() {
-                    SurgeSynthesizer::ID pid;
+                // // FIXME - make this a checked toggle
+                // contextMenu.addItem(txt2, true, p->val.b, [this, p, control]() {
+                //     SurgeSynthesizer::ID pid;
 
-                    if (synth->fromSynthSideId(p->id, pid))
-                    {
-                        synth->setParameter01(pid, !p->val.b, false, false);
-                        repushAutomationFor(p);
-                        synth->refresh_editor = true;
-                    }
-                });
+                //     if (synth->fromSynthSideId(p->id, pid))
+                //     {
+                //         synth->setParameter01(pid, !p->val.b, false, false);
+                //         repushAutomationFor(p);
+                //         synth->refresh_editor = true;
+                //     }
+                // });
 
                 if (p->ctrltype == ct_bool_keytrack || p->ctrltype == ct_bool_retrigger)
                 {
@@ -1219,6 +1221,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     contextMenu.addItem(
                         txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
+
+                    contextMenu.addSeparator();
 
                     if (p->can_extend_range())
                         contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Extend Range"), true,
@@ -1417,20 +1421,19 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
                                 NOTE_ON_LATEST_RETRIGGER_HIGHEST};
 
-                            contextMenu.addSeparator();
+                            contextMenu.addSectionHeader("NOTE PRIORITY");
 
                             for (int i = 0; i < 4; ++i)
                             {
                                 bool isChecked = (vals[i] == synth->storage.getPatch()
                                                                  .scene[current_scene]
                                                                  .monoVoicePriorityMode);
-                                contextMenu.addItem(
-                                    Surge::GUI::toOSCaseForMenu(labels[i] + " Note Priority"), true,
-                                    isChecked, [this, vals, i]() {
-                                        synth->storage.getPatch()
-                                            .scene[current_scene]
-                                            .monoVoicePriorityMode = vals[i];
-                                    });
+                                contextMenu.addItem(Surge::GUI::toOSCaseForMenu(labels[i]), true,
+                                                    isChecked, [this, vals, i]() {
+                                                        synth->storage.getPatch()
+                                                            .scene[current_scene]
+                                                            .monoVoicePriorityMode = vals[i];
+                                                    });
                             }
 
                             contextMenu.addSeparator();
@@ -1458,9 +1461,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             // Modulation and Learn semantics only apply to vt_float types in Surge right now
             if (p->valtype == vt_float)
             {
-                // if(p->can_temposync() || p->can_extend_range()) contextMenu->addSeparator(eid++);
                 if (p->can_temposync())
                 {
+                    if (!p->temposync)
+                    {
+                        contextMenu.addSeparator();
+                    }
+
                     contextMenu.addItem(
                         Surge::GUI::toOSCaseForMenu("Tempo Sync"), true, (p->temposync),
                         [this, p, control]() {
@@ -1576,6 +1583,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     contextMenu.addSeparator();
 
+                    contextMenu.addSectionHeader("OPTIONS");
+
                     bool isChecked = p->porta_constrate;
 
                     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Constant Rate"), true,
@@ -1593,22 +1602,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         true, isChecked,
                                         [this, p]() { p->porta_retrigger = !p->porta_retrigger; });
 
-                    contextMenu.addSeparator();
+                    contextMenu.addSectionHeader("CURVE");
 
                     isChecked = (p->porta_curve == -1);
 
-                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Logarithmic Curve"), true,
-                                        isChecked, [this, p]() { p->porta_curve = -1; });
+                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Logarithmic"), true, isChecked,
+                                        [this, p]() { p->porta_curve = -1; });
 
                     isChecked = (p->porta_curve == 0);
 
-                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Linear Curve"), true,
-                                        isChecked, [this, p]() { p->porta_curve = 0; });
+                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Linear"), true, isChecked,
+                                        [this, p]() { p->porta_curve = 0; });
 
                     isChecked = (p->porta_curve == 1);
 
-                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Exponential Curve"), true,
-                                        isChecked, [this, p]() { p->porta_curve = 1; });
+                    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Exponential"), true, isChecked,
+                                        [this, p]() { p->porta_curve = 1; });
                 }
 
                 if (p->has_deformoptions())
