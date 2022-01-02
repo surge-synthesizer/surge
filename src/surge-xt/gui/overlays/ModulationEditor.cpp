@@ -47,7 +47,6 @@ struct ModulationSideControls : public juce::Component,
     ModulationSideControls(ModulationEditor *e) : editor(e)
     {
         setAccessible(true);
-        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
         setTitle("Controls");
         setDescription("Controls");
         create();
@@ -246,6 +245,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                                .dawExtraState.editor.modulationEditorState.filterString);
             break;
         }
+
+        setAccessible(true);
     }
 
     void paint(juce::Graphics &g) override
@@ -310,6 +311,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             clearButton->setAccessible(true);
             clearButton->setTitle("Clear");
             clearButton->setDescription("Clear");
+            clearButton->setWantsKeyboardFocus(true);
             addAndMakeVisible(*clearButton);
 
             muted = d.isMuted;
@@ -323,6 +325,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 contents->rebuildFrom(me->synth);
             });
             muteButton->setAccessible(true);
+            muteButton->setWantsKeyboardFocus(true);
             addAndMakeVisible(*muteButton);
 
             surgeLikeSlider = std::make_unique<Surge::Widgets::ModulatableSlider>();
@@ -335,10 +338,10 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             surgeLikeSlider->setAccessible(true);
             surgeLikeSlider->setTitle("Depth");
             surgeLikeSlider->setDescription("Depth");
+            surgeLikeSlider->setWantsKeyboardFocus(true);
             addAndMakeVisible(*surgeLikeSlider);
 
             setAccessible(true);
-            setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
             resetValuesFromDatum();
         }
 
@@ -1371,6 +1374,8 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
     modContents->rebuildFrom(synth);
     viewport = std::make_unique<juce::Viewport>();
     viewport->setViewedComponent(modContents.get(), false);
+    viewport->setAccessible(true);
+
     addAndMakeVisible(*viewport);
 
     struct IdleTimer : juce::Timer

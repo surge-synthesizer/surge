@@ -445,6 +445,22 @@ template <typename T> bool OverlayAsAccessibleButton<T>::keyPressed(const juce::
     return false;
 }
 
+inline void fixupJuceTextEditorAccessibility(const juce::Component &te)
+{
+#if MAC
+    for (auto c : te.getChildren())
+    {
+        c->setAccessible(false);
+    }
+#endif
+}
+
+struct HasAccessibleSubComponentForFocus
+{
+    virtual ~HasAccessibleSubComponentForFocus() = default;
+    virtual juce::Component *getCurrentAccessibleSelectionComponent() = 0;
+};
+
 } // namespace Widgets
 } // namespace Surge
 

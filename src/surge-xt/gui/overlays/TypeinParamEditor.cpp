@@ -16,6 +16,7 @@
 #include "TypeinParamEditor.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -23,13 +24,20 @@ namespace Overlays
 {
 TypeinParamEditor::TypeinParamEditor()
 {
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+
     textEd = std::make_unique<juce::TextEditor>("typeinParamEditor");
     textEd->addListener(this);
     textEd->setSelectAllWhenFocused(true);
     textEd->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     textEd->setIndents(4, (textEd->getHeight() - textEd->getTextHeight()) / 2);
     textEd->setJustification(juce::Justification::centred);
+    textEd->setTitle("New Value");
+    textEd->setDescription("New Value");
+    Surge::Widgets::fixupJuceTextEditorAccessibility(*textEd);
     addAndMakeVisible(*textEd);
+
     textEd->setWantsKeyboardFocus(true);
 }
 

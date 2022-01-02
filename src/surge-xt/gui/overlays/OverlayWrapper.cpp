@@ -131,7 +131,6 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     {
         paintTitle = oc->getEnclosingParentTitle();
     }
-    std::cout << "Setting accessible title to " << paintTitle << std::endl;
     setTitle(paintTitle);
     setDescription(paintTitle);
 }

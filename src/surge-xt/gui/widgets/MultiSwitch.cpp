@@ -378,6 +378,15 @@ void MultiSwitch::setupAccessibility()
     }
 }
 
+juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
+{
+    if (getIntegerValue() < 0 || getIntegerValue() >= selectionComponents.size())
+    {
+        return nullptr;
+    }
+    return selectionComponents[getIntegerValue()].get();
+}
+
 template <> struct DiscreteAHRange<MultiSwitch>
 {
     static int iMaxV(MultiSwitch *t) { return t->rows * t->columns - 1; }
