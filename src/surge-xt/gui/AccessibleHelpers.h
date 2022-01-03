@@ -231,14 +231,62 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton<T>);
 };
 
-template <typename T> struct OverlayAsAccessibleSlider;
-
 template <typename T>
-void jogOverlaySlider(T *under, OverlayAsAccessibleSlider<T> *over, int dir, bool isShift,
-                      bool isCtrl)
+struct OverlayAsAccessibleButtonWithValue : public OverlayAsAccessibleButton<T>
 {
-    jassert(false);
-}
+    OverlayAsAccessibleButtonWithValue(
+        T *s, const std::string &label,
+        juce::AccessibilityRole r = juce::AccessibilityRole::radioButton)
+        : OverlayAsAccessibleButton<T>(s, label, r)
+    {
+    }
+
+    struct BValue : public juce::AccessibilityValueInterface
+    {
+        explicit BValue(OverlayAsAccessibleButtonWithValue<T> *s) : slider(s) {}
+
+        OverlayAsAccessibleButtonWithValue<T> *slider;
+
+        bool isReadOnly() const override { return true; }
+        double getCurrentValue() const override { return slider->onGetValue(slider->under); }
+        void setValue(double newValue) override {}
+        virtual juce::String getCurrentValueAsString() const override
+        {
+            return std::to_string(getCurrentValue());
+        }
+        virtual void setValueAsString(const juce::String &newValue) override {}
+        AccessibleValueRange getRange() const override { return {{0, slider->range}, 1}; }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BValue);
+    };
+
+    struct RBAHV : public juce::AccessibilityHandler
+    {
+        explicit RBAHV(OverlayAsAccessibleButtonWithValue<T> *b, T *s)
+            : button(b),
+              mswitch(s), juce::AccessibilityHandler(
+                              *b, b->role,
+                              juce::AccessibilityActions().addAction(
+                                  juce::AccessibilityActionType::press,
+                                  [this]() { this->press(); }),
+                              AccessibilityHandler::Interfaces{std::make_unique<BValue>(b)})
+        {
+        }
+        void press() { button->onPress(mswitch); }
+
+        T *mswitch;
+        OverlayAsAccessibleButtonWithValue<T> *button;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAHV);
+    };
+
+    std::function<float(T *)> onGetValue = [](T *) { return -1; };
+    double range{1};
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<RBAHV>(this, OverlayAsAccessibleButton<T>::under);
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButtonWithValue<T>);
+};
 
 template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
 {
@@ -271,13 +319,16 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
         void setValue(double newValue) override { slider->onSetValue(slider->under, newValue); }
         virtual juce::String getCurrentValueAsString() const override
         {
-            return std::to_string(getCurrentValue());
+            return slider->onValueToString(slider->under, getCurrentValue());
         }
         virtual void setValueAsString(const juce::String &newValue) override
         {
             setValue(newValue.getDoubleValue());
         }
-        AccessibleValueRange getRange() const override { return {{-1, 1}, 0.01}; }
+        AccessibleValueRange getRange() const override
+        {
+            return {{slider->min, slider->max}, slider->step};
+        }
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SValue);
     };
@@ -300,6 +351,14 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     juce::AccessibilityRole role;
     std::function<float(T *)> onGetValue = [](T *) { return 0.f; };
     std::function<void(T *, float f)> onSetValue = [](T *, float f) { return; };
+    std::function<std::string(T *, float f)> onValueToString = [](T *, float f) {
+        return std::to_string(f);
+    };
+    std::function<void(T *, int, bool, bool)> onJogValue = [](T *, int, bool, bool) {
+        jassert(false);
+    };
+
+    double min{-1}, max{1}, step{0.01};
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
     {
@@ -413,14 +472,12 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
 
     if (action == Increase)
     {
-        jogOverlaySlider(under, this, +1, key.getModifiers().isShiftDown(),
-                         key.getModifiers().isCtrlDown());
+        onJogValue(under, +1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());
         return true;
     }
     if (action == Decrease)
     {
-        jogOverlaySlider(under, this, -1, key.getModifiers().isShiftDown(),
-                         key.getModifiers().isCtrlDown());
+        onJogValue(under, -1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());
         return true;
     }
     return false;

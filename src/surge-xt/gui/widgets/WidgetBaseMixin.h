@@ -54,6 +54,7 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             {
                 handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
             }
+            updateAccessibleStateOnUserValueChange();
         }
     }
     void notifyControlModifierClicked(const juce::ModifierKeys &k, bool addRMB = false)
@@ -84,6 +85,8 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         for (auto t : listeners)
             t->controlEndEdit(this);
     }
+
+    virtual void updateAccessibleStateOnUserValueChange() {}
 
     juce::Point<float> enqueueStartPosition{-18.f, -18.f};
     void enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction place,

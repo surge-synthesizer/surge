@@ -342,6 +342,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             addAndMakeVisible(*surgeLikeSlider);
 
             setAccessible(true);
+            setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
             resetValuesFromDatum();
         }
 

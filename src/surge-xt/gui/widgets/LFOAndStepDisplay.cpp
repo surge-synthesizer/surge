@@ -46,42 +46,6 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
-template <>
-void jogOverlaySlider<LFOAndStepDisplay>(LFOAndStepDisplay *under,
-                                         OverlayAsAccessibleSlider<LFOAndStepDisplay> *that,
-                                         int dir, bool isShift, bool isCtrl)
-{
-    /*
-     * A bit off but this is only on keypress so the compares are OK
-     */
-    int step = -1;
-    for (auto i = 0; i < n_stepseqsteps; ++i)
-    {
-        if (under->stepSliderOverlays[i].get() == that)
-        {
-            step = i;
-        }
-    }
-    if (step >= 0)
-    {
-        auto f = under->ss->steps[step];
-        auto delt = 0.05;
-        if (isShift)
-            delt = 0.01;
-        if (isCtrl)
-            delt = (under->isUnipolar() ? 1.0 : 0.5) / 12.0;
-        if (dir < 0)
-            delt *= -1;
-
-        if (under->isUnipolar())
-            f = limit01(f + delt);
-        else
-            f = limitpm1(f + delt);
-        under->ss->steps[step] = f;
-        under->repaint();
-    }
-}
-
 LFOAndStepDisplay::LFOAndStepDisplay()
 {
     setTitle("LFO Type And Display");
@@ -92,8 +56,10 @@ LFOAndStepDisplay::LFOAndStepDisplay()
     addAndMakeVisible(*typeLayer);
     for (int i = 0; i < n_lfo_types; ++i)
     {
-        auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, lt_names[i]);
+        auto q = std::make_unique<OverlayAsAccessibleButtonWithValue<LFOAndStepDisplay>>(
+            this, lt_names[i]);
         q->onPress = [this, i](auto *t) { updateShapeTo(i); };
+        q->onGetValue = [this, i](auto *t) { return (i == lfodata->shape.val.i) ? 1 : 0; };
         typeLayer->addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);
     }
@@ -111,12 +77,111 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                 repaint();
                 return;
             };
+            q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
+                int step = i;
+                if (step >= 0)
+                {
+                    auto f = ss->steps[step];
+                    auto delt = 0.05;
+                    if (isShift)
+                        delt = 0.01;
+                    if (isControl)
+                        delt = (isUnipolar() ? 1.0 : 0.5) / 12.0;
+                    if (dir < 0)
+                        delt *= -1;
+
+                    if (isUnipolar())
+                        f = limit01(f + delt);
+                    else
+                        f = limitpm1(f + delt);
+                    ss->steps[step] = f;
+                    repaint();
+                }
+            };
             stepLayer->addChildComponent(*q);
             stepSliderOverlays[i] = std::move(q);
         }
         {
             std::string sn = "Trigger Envelopes " + std::to_string(i + 1);
-            auto q = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(this, sn);
+            auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
+            q->min = 0;
+            q->max = 3;
+            q->step = 1;
+
+            q->onGetValue = [this, i](auto *) {
+                uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
+                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
+                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+
+                if (maski)
+                    return 1.f;
+                if (maski16)
+                    return 2.f;
+                if (maski32)
+                    return 3.f;
+                return 0.f;
+            };
+            q->onSetValue = [this, i](auto *, float f) {
+                int q = round(f);
+                uint64_t b1 = (UINT64_C(1) << i);
+                uint64_t b2 = (UINT64_C(1) << (i + 16));
+                uint64_t b3 = (UINT64_C(1) << (i + 32));
+                uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
+                uint64_t maskOn = 0;
+
+                if (q == 0)
+                {
+                    maskOff = maskOff & ~b1 & ~b2 & ~b3;
+                }
+                if (q == 1)
+                {
+                    maskOff = maskOff & ~b2 & ~b3;
+                    maskOn = b1;
+                }
+                if (q == 2)
+                {
+                    maskOff = maskOff & ~b1 & ~b3;
+                    maskOn = b2;
+                }
+                if (q == 3)
+                {
+                    maskOff = maskOff & ~b1 & ~b2;
+                    maskOn = b3;
+                }
+                ss->trigmask &= maskOff;
+                ss->trigmask |= maskOn;
+                repaint();
+            };
+
+            q->onJogValue = [this, i](auto *, int dir, auto, auto) {
+                auto s = dynamic_cast<OverlayAsAccessibleSlider<LFOAndStepDisplay> *>(
+                    stepTriggerOverlays[i].get());
+                if (s)
+                {
+                    auto v = s->onGetValue(this);
+                    v = v + dir;
+                    if (v < 0)
+                        v = 3;
+                    if (v > 3)
+                        v = 0;
+                    s->onSetValue(this, v);
+                }
+            };
+
+            q->onValueToString = [](auto *, float v) {
+                auto q = (int)round(v);
+                switch (q)
+                {
+                case 1:
+                    return "Trigger FEG + AEG";
+                case 2:
+                    return "Trigger FEG";
+                case 3:
+                    return "Trigger AEG";
+                }
+                return "No Triggers";
+            };
+
             stepLayer->addChildComponent(*q);
             stepTriggerOverlays[i] = std::move(q);
         }
@@ -2101,6 +2166,15 @@ void LFOAndStepDisplay::setupAccessibility()
     }
 
     stepLayer->setVisible(showStepSliders);
+
+    for (int i = 0; i < n_lfo_types; ++i)
+    {
+        auto t = std::string(lt_names[i]);
+        if (i == lfodata->shape.val.i)
+            t += "  active";
+        typeAccOverlays[i]->setTitle(t);
+        typeAccOverlays[i]->setDescription(t);
+    }
 
     for (const auto &s : stepSliderOverlays)
         if (s)
