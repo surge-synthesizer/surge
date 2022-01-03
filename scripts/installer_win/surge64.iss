@@ -52,12 +52,12 @@ Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
 
 [Files]
 Source: {#SURGE_SRC}\resources\data\*; DestDir: {commonappdata}\Surge XT\; Components: Data; Flags: recursesubdirs; Excludes: "*.git,windows.wt,configuration.xml,paramdocumentation.xml";
-Source: {#SURGE_SRC}\resources\fonts\FiraMono-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Fira Mono"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\IndieFlower.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Indie Flower"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\FiraMono-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Fira Mono"; Flags: uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\IndieFlower.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Indie Flower"; Flags: uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: uninsneveruninstall
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT.vst3\*; DestDir: {commoncf64}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects.vst3\*; DestDir: {commoncf64}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT.exe; DestDir: {commonpf64}\Surge Synth Team\; Components: SA; Flags: ignoreversion
