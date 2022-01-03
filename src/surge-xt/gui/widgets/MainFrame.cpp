@@ -216,7 +216,11 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
 
         if (auto dc = dynamic_cast<HasAccessibleSubComponentForFocus *>(c))
         {
-            c = dc->getCurrentAccessibleSelectionComponent();
+            auto q = dc->getCurrentAccessibleSelectionComponent();
+            if (q)
+            {
+                c = q;
+            }
         }
 
         if (auto dcp = dynamic_cast<HasAccessibleSubComponentForFocus *>(c->getParentComponent()))
@@ -224,10 +228,12 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
             c = dcp->getCurrentAccessibleSelectionComponent();
         }
 
+        if (!c)
+            return nullptr;
+
         const auto iter = std::find(v.cbegin(), v.cend(), c);
         if (iter == v.cend())
         {
-
             return nullptr;
         }
 

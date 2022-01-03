@@ -387,6 +387,16 @@ juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
     return selectionComponents[getIntegerValue()].get();
 }
 
+void MultiSwitch::updateAccessibleStateOnUserValueChange()
+{
+    std::cout << "MS updateAccessibleState " << getTitle() << " " << getIntegerValue() << std::endl;
+    if (getIntegerValue() < 0 || getIntegerValue() >= selectionComponents.size())
+    {
+        return;
+    }
+    selectionComponents[getIntegerValue()]->grabKeyboardFocus();
+}
+
 template <> struct DiscreteAHRange<MultiSwitch>
 {
     static int iMaxV(MultiSwitch *t) { return t->rows * t->columns - 1; }
