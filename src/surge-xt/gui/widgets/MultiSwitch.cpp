@@ -389,7 +389,6 @@ juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
 
 void MultiSwitch::updateAccessibleStateOnUserValueChange()
 {
-    std::cout << "MS updateAccessibleState " << getTitle() << " " << getIntegerValue() << std::endl;
     if (getIntegerValue() < 0 || getIntegerValue() >= selectionComponents.size())
     {
         return;
