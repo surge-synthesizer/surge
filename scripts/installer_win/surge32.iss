@@ -56,8 +56,8 @@ Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Compo
 Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: uninsneveruninstall
-Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: VST3; Flags: ignoreversion recursesubdirs
-Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\Surge XT (32-bit).vst3\; Components: VST3; Flags: ignoreversion recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\Surge Synth Team\Surge XT Effects (32-bit).vst3\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: SA; Flags: ignoreversion
 Source: {#SURGE_BIN}\surge_xt_products\Surge XT Effects (32-bit).exe; DestDir: {commonpf32}\Surge Synth Team\; Components: EffectsSA; Flags: ignoreversion
 
