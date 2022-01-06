@@ -2688,8 +2688,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             tuningSubMenu.addSeparator();
         }
 
+        std::string openname = isAnyOverlayPresent(TUNING_EDITOR) ? "Close " : "Open ";
+
         Surge::GUI::addMenuWithShortcut(tuningSubMenu,
-                                        Surge::GUI::toOSCaseForMenu("Open Tuning Editor..."),
+                                        Surge::GUI::toOSCaseForMenu(openname + "Tuning Editor..."),
                                         showShortcutDescription("Alt+T", "⌥T"),
                                         [this]() { this->toggleOverlay(TUNING_EDITOR); });
 

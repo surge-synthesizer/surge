@@ -2848,24 +2848,21 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
     // Basically all the menus are a list of options with values
     std::vector<std::pair<std::string, float>> options;
 
-    /*  tag_loop_mode,
-        tag_edit_mode,
-        */
-
     bool isOnOff = false;
     bool hasTypein = false;
     std::string menuName = "";
+
     switch (tag)
     {
     case tag_segment_movement_mode:
-        menuName = "Movement Mode";
+        menuName = "MSEG Movement Mode";
         options.push_back(std::make_pair("Single", 0));
         options.push_back(std::make_pair("Shift", 0.5));
         options.push_back(std::make_pair("Draw", 1.0));
         break;
 
     case tag_loop_mode:
-        menuName = "Loop Mode";
+        menuName = "MSEG Loop Mode";
         options.push_back(std::make_pair("Off", 0));
         options.push_back(std::make_pair("Loop", 0.5));
         options.push_back(
@@ -2873,32 +2870,39 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         break;
 
     case tag_edit_mode:
-        menuName = "Edit Mode";
+        menuName = "MSEG Edit Mode";
         options.push_back(std::make_pair("Envelope", 0));
         options.push_back(std::make_pair("LFO", 1.0));
         break;
 
     case tag_vertical_snap:
-        menuName = "Vertical Snap";
+        menuName = "MSEG Vertical Snap";
     case tag_horizontal_snap:
         if (menuName == "")
-            menuName = "Horizontal Snap";
+        {
+            menuName = "MSEG Horizontal Snap";
+        }
+
         isOnOff = true;
         break;
 
     case tag_vertical_value:
-        menuName = "Vertical Snap Value";
+        menuName = "MSEG Vertical Snap Grid";
     case tag_horizontal_value:
     {
         hasTypein = true;
+
         if (menuName == "")
-            menuName = "Horizontal Snap Value";
+        {
+            menuName = "MSEG Horizontal Snap Grid";
+        }
 
         auto addStop = [&options](int v) {
             options.push_back(
                 std::make_pair(std::to_string(v), Parameter::intScaledToFloat(v, 100, 1)));
         };
 
+        addStop(1);
         addStop(2);
         addStop(3);
         addStop(4);
@@ -2925,73 +2929,75 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
 
         auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor");
         auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
-
         auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
+
         tcomp->setSkin(skin, associatedBitmapStore);
+
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
         contextMenu.addSeparator();
 
-        if (isOnOff)
-        {
-            bool ctrlVal = pControl->getValue() > 0.5;
-            auto val = ctrlVal ? 0.f : 1.f;
-            std::string onOff = ctrlVal ? "Off" : "On";
-
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value: ") + onOff,
-                                [pControl, val, this]() {
-                                    pControl->setValue(val);
-                                    auto iv = pControl->asJuceComponent();
-                                    if (iv)
-                                        iv->repaint();
-                                    canvas->repaint();
-                                    repaint();
-                                });
-        }
-        else
+        if (!isOnOff)
         {
             for (auto op : options)
             {
                 auto val = op.second;
+
                 contextMenu.addItem(op.first, true, (val == pControl->getValue()),
-                                    [val, pControl]() {
+                                    [val, pControl, this]() {
                                         pControl->setValue(val);
+                                        valueChanged(pControl);
+
                                         auto iv = pControl->asJuceComponent();
+
                                         if (iv)
+                                        {
                                             iv->repaint();
+                                        }
                                     });
             }
         }
+
         if (hasTypein)
         {
             contextMenu.addSeparator();
 
             auto handleTypein = [pControl, this](const std::string &s) {
                 auto i = std::atoi(s.c_str());
-                if (i > 1 && i <= 100)
+
+                if (i >= 1 && i <= 100)
                 {
                     pControl->setValue(Parameter::intScaledToFloat(i, 100, 1));
+                    valueChanged(pControl);
+
                     auto iv = pControl->asJuceComponent();
+
                     if (iv)
+                    {
                         iv->repaint();
+                    }
+
                     return true;
                 }
                 return false;
             };
 
-            auto showTypein = [this, handleTypein, menuName, pControl]() {
+            auto val =
+                std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 100, 1));
+
+            auto showTypein = [this, handleTypein, menuName, pControl, val]() {
                 if (!typeinEditor)
                 {
                     typeinEditor =
                         std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
                     getParentComponent()->addChildComponent(*typeinEditor);
                 }
+
                 typeinEditor->callback = handleTypein;
                 typeinEditor->setMainLabel(menuName);
-                typeinEditor->setValueLabels("Enter new value", "");
+                typeinEditor->setValueLabels("current: " + val, "");
                 typeinEditor->setSkin(skin, associatedBitmapStore);
-                typeinEditor->setEditableText(
-                    std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 100, 1)));
+                typeinEditor->setEditableText(val);
 
                 auto topOfControl = pControl->asJuceComponent()->getParentComponent()->getY();
                 auto pb = pControl->asJuceComponent()->getBounds();
@@ -3005,7 +3011,9 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                 typeinEditor->setVisible(true);
                 typeinEditor->grabFocus();
             };
-            contextMenu.addItem("Edit Value", true, false, showTypein);
+
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Value: ") + val, true, false,
+                                showTypein);
         }
 
         contextMenu.showMenuAsync(juce::PopupMenu::Options());

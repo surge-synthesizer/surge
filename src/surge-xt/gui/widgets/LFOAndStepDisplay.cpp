@@ -18,6 +18,7 @@
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIUtils.h"
+#include "SurgeJUCEHelpers.h"
 #include "RuntimeFont.h"
 #include <chrono>
 #include "widgets/MenuCustomComponents.h"
@@ -1481,21 +1482,18 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 
     if (waveform_display.contains(event.position.toInt()) && sge)
     {
-        if (isMSEG())
+        if (isMSEG() || isFormula())
         {
+            auto tag = isMSEG() ? SurgeGUIEditor::MSEG_EDITOR : SurgeGUIEditor::FORMULA_EDITOR;
+
             if (event.mods.isPopupMenu())
             {
-                showMSEGPopupMenu();
+                showLFODisplayPopupMenu(tag);
             }
             else
             {
-                sge->toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                sge->toggleOverlay(tag);
             }
-        }
-
-        if (isFormula())
-        {
-            sge->toggleOverlay(SurgeGUIEditor::FORMULA_EDITOR);
         }
     }
 
@@ -2053,66 +2051,77 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
     }
 }
 
-void LFOAndStepDisplay::showMSEGPopupMenu()
+void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 {
     auto contextMenu = juce::PopupMenu();
 
-    auto msurl =
-        storage ? SurgeGUIEditor::helpURLForSpecial(storage, "mseg-editor") : std::string();
+    std::string olname = isMSEG() ? "MSEG Editor" : "Formula Editor";
+    std::string helpname = isMSEG() ? "mseg-editor" : "formula-editor";
+
+    auto msurl = storage ? SurgeGUIEditor::helpURLForSpecial(storage, helpname) : std::string();
     auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
 
-    auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("MSEG Settings", hurl);
+    auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(olname, hurl);
     hmen->setSkin(skin, associatedBitmapStore);
     contextMenu.addCustomItem(-1, std::move(hmen));
 
     contextMenu.addSeparator();
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     if (!sge)
+    {
         return;
+    }
 
-    std::string openname = (sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-                               ? "Close MSEG Editor"
-                               : "Open MSEG Editor";
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu(openname), [this, sge]() {
-        if (sge)
-            sge->toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
-    });
+    std::string openname = (sge->isAnyOverlayPresent(tag)) ? "Close " : "Open ";
 
-    contextMenu.addSeparator();
+    Surge::GUI::addMenuWithShortcut(
+        contextMenu, Surge::GUI::toOSCaseForMenu(openname + olname + "..."),
+        sge->showShortcutDescription("Alt+E", "⌥E"), [this, sge, tag]() {
+            if (sge)
+            {
+                sge->toggleOverlay(tag);
+            }
+        });
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true,
-                        ms->loopMode == MSEGStorage::ONESHOT, [this, sge]() {
-                            ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
-                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-                            {
-                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                            }
-                            repaint();
-                        });
+    if (isMSEG())
+    {
+        contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true,
-                        ms->loopMode == MSEGStorage::LOOP, [this, sge]() {
-                            ms->loopMode = MSEGStorage::LoopMode::LOOP;
-                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-                            {
-                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                            }
-                            repaint();
-                        });
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true,
+                            ms->loopMode == MSEGStorage::ONESHOT, [this, sge]() {
+                                ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+                                if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                                {
+                                    sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                    sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                }
+                                repaint();
+                            });
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true,
-                        ms->loopMode == MSEGStorage::GATED_LOOP, [this, sge]() {
-                            ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
-                            if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
-                            {
-                                sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                                sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                            }
-                            repaint();
-                        });
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true,
+                            ms->loopMode == MSEGStorage::LOOP, [this, sge]() {
+                                ms->loopMode = MSEGStorage::LoopMode::LOOP;
+                                if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                                {
+                                    sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                    sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                }
+                                repaint();
+                            });
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true,
+                            ms->loopMode == MSEGStorage::GATED_LOOP, [this, sge]() {
+                                ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+                                if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
+                                {
+                                    sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                    sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                                }
+                                repaint();
+                            });
+    }
 
     contextMenu.showMenuAsync(juce::PopupMenu::Options());
 }
