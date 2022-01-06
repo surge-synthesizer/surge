@@ -18,6 +18,7 @@
 #include "SurgeGUICallbackInterfaces.h"
 #include "AccessibleHelpers.h"
 #include "MultiSwitch.h"
+#include "SurgeGUIEditorTags.h"
 
 namespace Surge
 {
@@ -25,7 +26,7 @@ namespace Widgets
 {
 MainFrame::MainFrame()
 {
-    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
     setAccessible(true);
     setDescription("Surge XT");
     setTitle("Main Frame");
@@ -183,7 +184,14 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
             auto bt = dynamic_cast<const Surge::GUI::IComponentTagValue *>(b);
 
             if (at && bt)
+            {
+                if (at->getTag() == tag_settingsmenu)
+                    return true;
+                if (bt->getTag() == tag_settingsmenu)
+                    return false;
+
                 return at->getTag() < bt->getTag();
+            }
 
             return false;
         };
@@ -231,8 +239,8 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
         if (!c)
             return nullptr;
 
-        const auto iter = std::find(v.cbegin(), v.cend(), c);
-        if (iter == v.cend())
+        auto iter = std::find(v.begin(), v.end(), c);
+        if (iter == v.end())
         {
             return nullptr;
         }
@@ -241,15 +249,25 @@ struct GlobalKeyboardTraverser : public juce::KeyboardFocusTraverser
         switch (dir)
         {
         case 1:
-            if (iter != std::prev(v.cend()))
+            while (!res && iter != std::prev(v.cend()))
             {
                 res = *std::next(iter);
+                iter++;
+            }
+            if (!res)
+            {
+                res = *(v.cbegin());
             }
             break;
         case -1:
-            if (iter != v.cbegin())
+            while (!res && iter != v.cbegin())
             {
                 res = *std::prev(iter);
+                iter--;
+            }
+            if (!res)
+            {
+                res = *(std::prev(v.cend()));
             }
             break;
         }
