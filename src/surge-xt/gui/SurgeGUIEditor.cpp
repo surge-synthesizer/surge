@@ -1934,7 +1934,7 @@ bool SurgeGUIEditor::open(void *parent)
     frame = std::make_unique<Surge::Widgets::MainFrame>();
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
-    frame->setWantsKeyboardFocus(true);
+    // frame->setWantsKeyboardFocus(true);
     juceEditor->addAndMakeVisible(*frame);
     juceEditor->addKeyListener(this);
 
@@ -6469,7 +6469,8 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
         std::cout << "FC [" << fc << "] ";
         if (fc)
         {
-            std::cout << fc->getTitle() << " " << typeid(*fc).name() << " " << newRect.toString();
+            std::cout << fc->getTitle() << " " << typeid(*fc).name() << " " << newRect.toString()
+                      << " " << fc->getAccessibilityHandler() << " " << fc->getTitle();
         }
         std::cout << std::endl;
     }

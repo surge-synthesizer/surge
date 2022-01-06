@@ -26,7 +26,12 @@ namespace Surge
 namespace Widgets
 {
 
-MultiSwitch::MultiSwitch() { setRepaintsOnMouseActivity(true); }
+MultiSwitch::MultiSwitch()
+{
+    setRepaintsOnMouseActivity(true);
+    setAccessible(true);
+    setWantsKeyboardFocus(true);
+}
 MultiSwitch::~MultiSwitch() = default;
 
 void MultiSwitch::paint(juce::Graphics &g)
@@ -380,6 +385,9 @@ void MultiSwitch::setupAccessibility()
 
 juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
 {
+    if (rows * columns <= 1)
+        return this;
+
     if (getIntegerValue() < 0 || getIntegerValue() >= selectionComponents.size())
     {
         return nullptr;
