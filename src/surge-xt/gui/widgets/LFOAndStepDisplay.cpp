@@ -99,6 +99,15 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                     repaint();
                 }
             };
+            q->onMinMaxDef = [this, i](auto *t, int mmd) {
+                if (mmd == 1)
+                    ss->steps[i] = 1.f;
+                if (mmd == -1)
+                    ss->steps[i] = isUnipolar() ? 0.f : -1.f;
+                if (mmd == 0)
+                    ss->steps[i] = 0.f;
+                repaint();
+            };
             stepLayer->addChildComponent(*q);
             stepSliderOverlays[i] = std::move(q);
         }
@@ -186,6 +195,55 @@ LFOAndStepDisplay::LFOAndStepDisplay()
             stepLayer->addChildComponent(*q);
             stepTriggerOverlays[i] = std::move(q);
         }
+
+        auto l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(
+            this, "Loop Start Point");
+        l0->min = 0;
+        l0->max = 16;
+        l0->step = 1;
+        l0->onGetValue = [this](auto *) { return ss->loop_start; };
+        l0->onSetValue = [this](auto *, float f) {
+            return ss->loop_start = (int)round(f);
+            repaint();
+        };
+        l0->onJogValue = [this](auto *, int dir, bool, bool) {
+            auto n = limit_range(ss->loop_start + dir, 0, 15);
+            ss->loop_start = n;
+            repaint();
+        };
+        l0->onMinMaxDef = [this](auto *, int mmd) {
+            if (mmd == 1)
+                ss->loop_start = ss->loop_end;
+            else
+                ss->loop_start = 0;
+            repaint();
+        };
+        loopEndOverlays[0] = std::move(l0);
+        stepLayer->addChildComponent(*loopEndOverlays[0]);
+
+        l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop End Point");
+        l0->min = 0;
+        l0->max = 16;
+        l0->step = 1;
+        l0->onGetValue = [this](auto *) { return ss->loop_end; };
+        l0->onSetValue = [this](auto *, float f) {
+            return ss->loop_end = (int)round(f);
+            repaint();
+        };
+        l0->onJogValue = [this](auto *, int dir, bool, bool) {
+            auto n = limit_range(ss->loop_end + dir, 0, 15);
+            ss->loop_end = n;
+            repaint();
+        };
+        l0->onMinMaxDef = [this](auto *, int mmd) {
+            if (mmd == -1)
+                ss->loop_end = ss->loop_end;
+            else
+                ss->loop_end = 15;
+            repaint();
+        };
+        loopEndOverlays[1] = std::move(l0);
+        stepLayer->addChildComponent(*loopEndOverlays[1]);
     }
 }
 
@@ -212,6 +270,8 @@ void LFOAndStepDisplay::resized()
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
         typeAccOverlays[i]->setBounds(shaperect[i]);
     }
+    loopEndOverlays[0]->setBounds(left_panel.getX(), waveform_display.getHeight(), 10, 10);
+    loopEndOverlays[1]->setBounds(left_panel.getX() + 10, waveform_display.getHeight(), 10, 10);
 
     auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
     auto ssr = waveform_display.withWidth(wfw).withTrimmedTop(10);
@@ -2186,6 +2246,10 @@ void LFOAndStepDisplay::setupAccessibility()
     }
 
     for (const auto &s : stepSliderOverlays)
+        if (s)
+            s->setVisible(showStepSliders);
+
+    for (const auto &s : loopEndOverlays)
         if (s)
             s->setVisible(showStepSliders);
 

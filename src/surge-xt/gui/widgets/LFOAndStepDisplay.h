@@ -162,6 +162,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
 
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepSliderOverlays;
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepTriggerOverlays;
+    std::array<std::unique_ptr<juce::Component>, 2> loopEndOverlays;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };
