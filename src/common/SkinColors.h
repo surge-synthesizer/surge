@@ -267,7 +267,7 @@ namespace Display
 {
 extern const Surge::Skin::Color Dots, Wave, WaveHover;
 }
-namespace Analysis
+namespace Preview
 {
 extern const Surge::Skin::Color Border, Background, Text;
 }

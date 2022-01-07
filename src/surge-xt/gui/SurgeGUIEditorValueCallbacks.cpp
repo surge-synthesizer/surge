@@ -546,6 +546,37 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
     }
 
+    if (tag == tag_mseg_edit)
+    {
+        if (lfoDisplay->isMSEG() || lfoDisplay->isFormula())
+        {
+            auto tag = lfoDisplay->isMSEG() ? MSEG_EDITOR : FORMULA_EDITOR;
+            lfoDisplay->showLFODisplayPopupMenu(tag);
+        }
+    }
+
+    if (tag == tag_analyzewaveshape)
+    {
+        auto contextMenu = juce::PopupMenu();
+        auto hu = helpURLForSpecial("waveshaper-preview");
+        auto lurl = hu;
+
+        if (lurl != "")
+            lurl = fullyResolvedHelpURL(hu);
+
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+            Surge::GUI::toOSCaseForMenu("Waveshaper Analysis"), lurl);
+
+        tcomp->setSkin(currentSkin, bitmapStore);
+        contextMenu.addCustomItem(-1, std::move(tcomp));
+
+        juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
+        contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                  Surge::GUI::makeEndHoverCallback(control));
+
+        return 1;
+    }
+
     if ((tag >= tag_mod_source0) && (tag < tag_mod_source_end))
     {
         auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
@@ -681,14 +712,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             synth->storage.getPatch().param_ptr[md]->get_name(),
                                             CUSTOM_CONTROLLER_LABEL_SIZE - 1) == 0)
                                     {
-                                        // So my modulator is named after my short name. I haven't
-                                        // been renamed. So I want to reset at least to "-" unless
-                                        // someone is after me
+                                        // So my modulator is named after my short name. I
+                                        // haven't been renamed. So I want to reset at least to
+                                        // "-" unless someone is after me
                                         resetName = true;
                                         newName = "-";
 
-                                        // Now we have to find if there's another modulation below
-                                        // me
+                                        // Now we have to find if there's another modulation
+                                        // below me
                                         int nextmd = md + 1;
 
                                         while (nextmd < n_total_md &&
@@ -1162,18 +1193,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
             else if (p->valtype == vt_bool)
             {
-                // // FIXME - make this a checked toggle
-                // contextMenu.addItem(txt2, true, p->val.b, [this, p, control]() {
-                //     SurgeSynthesizer::ID pid;
-
-                //     if (synth->fromSynthSideId(p->id, pid))
-                //     {
-                //         synth->setParameter01(pid, !p->val.b, false, false);
-                //         repushAutomationFor(p);
-                //         synth->refresh_editor = true;
-                //     }
-                // });
-
                 if (p->ctrltype == ct_bool_keytrack || p->ctrltype == ct_bool_retrigger)
                 {
                     std::vector<Parameter *> impactedParms;

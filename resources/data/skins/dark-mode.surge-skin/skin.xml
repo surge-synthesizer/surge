@@ -80,10 +80,9 @@
         <color id="waveshaper.text.hover" value="white"/>
         <color id="waveshaper.waveform.hover" value="white"/>
         <color id="waveshaper.waveform.dots" value="black"/>
-        <color id="waveshaper.analysis.background" value="#202020"/>
-        <color id="waveshaper.analysis.border" value="black"/>
-        <color id="waveshaper.analysis.dots" value="black"/>
-        <color id="waveshaper.analysis.text" value="lightgray"/>
+        <color id="waveshaper.preview.background" value="#202020"/>
+        <color id="waveshaper.preview.border" value="black"/>
+        <color id="waveshaper.preview.text" value="lightgray"/>
 
         <color id="msegeditor.background" value="#202020"/>
         <color id="msegeditor.curve" value="modblue"/>
@@ -389,7 +388,7 @@
         <control ui_identifier="filter.waveshaper_drive" y="301"/>
         <control ui_identifier="filter.waveshaper_type" x="384"/>
         <control ui_identifier="filter.waveshaper_prevnext" x="385"/>
-        <control ui_identifier="filter.waveshaper_analyze" x="406"/>
+        <control ui_identifier="filter.waveshaper_preview" x="406"/>
 
         <!-- FEG -->
         <control ui_identifier="feg.panel" y="266"/>
