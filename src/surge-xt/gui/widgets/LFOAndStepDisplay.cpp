@@ -203,7 +203,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
         l0->step = 1;
         l0->onGetValue = [this](auto *) { return ss->loop_start; };
         l0->onSetValue = [this](auto *, float f) {
-            return ss->loop_start = (int)round(f);
+            ss->loop_start = (int)round(f);
             repaint();
         };
         l0->onJogValue = [this](auto *, int dir, bool, bool) {
@@ -227,7 +227,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
         l0->step = 1;
         l0->onGetValue = [this](auto *) { return ss->loop_end; };
         l0->onSetValue = [this](auto *, float f) {
-            return ss->loop_end = (int)round(f);
+            ss->loop_end = (int)round(f);
             repaint();
         };
         l0->onJogValue = [this](auto *, int dir, bool, bool) {
@@ -270,8 +270,9 @@ void LFOAndStepDisplay::resized()
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
         typeAccOverlays[i]->setBounds(shaperect[i]);
     }
-    loopEndOverlays[0]->setBounds(left_panel.getX(), waveform_display.getHeight(), 10, 10);
-    loopEndOverlays[1]->setBounds(left_panel.getX() + 10, waveform_display.getHeight(), 10, 10);
+    loopEndOverlays[0]->setBounds(left_panel.getX(), waveform_display.getHeight() - 10, 10, 10);
+    loopEndOverlays[1]->setBounds(left_panel.getX() + 10, waveform_display.getHeight() - 10, 10,
+                                  10);
 
     auto wfw = waveform_display.getWidth() * 1.f / n_stepseqsteps;
     auto ssr = waveform_display.withWidth(wfw).withTrimmedTop(10);
