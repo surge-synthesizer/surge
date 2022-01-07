@@ -357,6 +357,8 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     std::function<void(T *, int, bool, bool)> onJogValue = [](T *, int, bool, bool) {
         jassert(false);
     };
+    // called with 1 0 -1 for max default min
+    std::function<void(T *, int)> onMinMaxDef = [](T *, int) {};
 
     double min{-1}, max{1}, step{0.01};
 
@@ -446,7 +448,6 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
 
     if (key.getKeyCode() == juce::KeyPress::homeKey)
     {
-        std::cout << "homeKey" << std::endl;
         return {ToMax, NoModifier};
     }
 
@@ -478,6 +479,24 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
     if (action == Decrease)
     {
         onJogValue(under, -1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());
+        return true;
+    }
+
+    if (action == ToMax)
+    {
+        onMinMaxDef(under, 1);
+        return true;
+    }
+
+    if (action == ToMin)
+    {
+        onMinMaxDef(under, -1);
+        return true;
+    }
+
+    if (action == ToDefault)
+    {
+        onMinMaxDef(under, 0);
         return true;
     }
     return false;
