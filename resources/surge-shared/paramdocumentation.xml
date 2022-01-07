@@ -16,6 +16,7 @@
   <special id="patch-browser" help_url="#patch-browser"/>
   <special id="wavetables" help_url="#wavetable"/>
   <special id="mseg-editor" help_url="#multi-segment-envelope-generator-mseg"/>
+  <special id="formula-editor" help_url="#formula-editor"/>
   <special id="macro-modbutton" help_url="#macros"/>
   <special id="lfo-modbutton" help_url="#lfos"/>
   <special id="internalmod-modbutton" help_url="#internal-modulators"/>
@@ -23,6 +24,7 @@
   <special id="lfo-presets" help_url="#lfo-presets"/>
   <special id="fx-selector" help_url="#effect-unit-selector"/>
   <special id="fx-presets" help_url="#effect-and-preset-picker"/>
+  <special id="waveshaper-preview" help_url="#other-sound-shaping-parameters"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>
@@ -103,7 +105,7 @@
   <param id="osc.param_6" type="2" help_url="#wavetable"/>
   <param id="osc.param_7" type="2" help_url="#wavetable"/>
 
-  <!-- special case oscillator params for SHNoise (3) -->
+  <!-- special case oscillator params for S&H Noise (3) -->
   <param id="osc.param_1" type="3" help_url="#sh-noise"/>
   <param id="osc.param_2" type="3" help_url="#sh-noise"/>
   <param id="osc.param_3" type="3" help_url="#sh-noise"/>
@@ -112,7 +114,7 @@
   <param id="osc.param_6" type="3" help_url="#sh-noise"/>
   <param id="osc.param_7" type="3" help_url="#sh-noise"/>
 
-  <!-- special case oscillator params for Audio Input (4) -->
+  <!-- special case oscillator params for Audio In (4) -->
   <param id="osc.param_1" type="4" help_url="#audio-input"/>
   <param id="osc.param_2" type="4" help_url="#audio-input"/>
   <param id="osc.param_3" type="4" help_url="#audio-input"/>
@@ -139,7 +141,7 @@
   <param id="osc.param_6" type="6" help_url="#fm2"/>
   <param id="osc.param_7" type="6" help_url="#fm2"/>
 
-  <!-- special case oscillator params for WINDOW (7) -->
+  <!-- special case oscillator params for Window (7) -->
   <param id="osc.param_1" type="7" help_url="#window"/>
   <param id="osc.param_2" type="7" help_url="#window"/>
   <param id="osc.param_3" type="7" help_url="#window"/>
@@ -147,6 +149,42 @@
   <param id="osc.param_5" type="7" help_url="#window"/>
   <param id="osc.param_6" type="7" help_url="#window"/>
   <param id="osc.param_7" type="7" help_url="#window"/>
+
+  <!-- special case oscillator params for Modern (8) -->
+  <param id="osc.param_1" type="8" help_url="#modern"/>
+  <param id="osc.param_2" type="8" help_url="#modern"/>
+  <param id="osc.param_3" type="8" help_url="#modern"/>
+  <param id="osc.param_4" type="8" help_url="#modern"/>
+  <param id="osc.param_5" type="8" help_url="#modern"/>
+  <param id="osc.param_6" type="8" help_url="#modern"/>
+  <param id="osc.param_7" type="8" help_url="#modern"/>
+
+  <!-- special case oscillator params for String (9) -->
+  <param id="osc.param_1" type="9" help_url="#string"/>
+  <param id="osc.param_2" type="9" help_url="#string"/>
+  <param id="osc.param_3" type="9" help_url="#string"/>
+  <param id="osc.param_4" type="9" help_url="#string"/>
+  <param id="osc.param_5" type="9" help_url="#string"/>
+  <param id="osc.param_6" type="9" help_url="#string"/>
+  <param id="osc.param_7" type="9" help_url="#string"/>
+
+  <!-- special case oscillator params for Twist (10) -->
+  <param id="osc.param_1" type="10" help_url="#twist"/>
+  <param id="osc.param_2" type="10" help_url="#twist"/>
+  <param id="osc.param_3" type="10" help_url="#twist"/>
+  <param id="osc.param_4" type="10" help_url="#twist"/>
+  <param id="osc.param_5" type="10" help_url="#twist"/>
+  <param id="osc.param_6" type="10" help_url="#twist"/>
+  <param id="osc.param_7" type="10" help_url="#twist"/>
+
+  <!-- special case oscillator params for Alias (11) -->
+  <param id="osc.param_1" type="11" help_url="#alias"/>
+  <param id="osc.param_2" type="11" help_url="#alias"/>
+  <param id="osc.param_3" type="11" help_url="#alias"/>
+  <param id="osc.param_4" type="11" help_url="#alias"/>
+  <param id="osc.param_5" type="11" help_url="#alias"/>
+  <param id="osc.param_6" type="11" help_url="#alias"/>
+  <param id="osc.param_7" type="11" help_url="#alias"/>
 
   <!-- Params for CG 3 -->
   <param id="mix.level_noise" help_url="#mixer-channels"/>
@@ -225,9 +263,6 @@
   <!-- Params for CG 7 -->
   <param id="fx.type" help_url=""/>
   <param id="fx.param_1" help_url=""/>
-  <param id="fx.param_10" help_url=""/>
-  <param id="fx.param_11" help_url=""/>
-  <param id="fx.param_12" help_url=""/>
   <param id="fx.param_2" help_url=""/>
   <param id="fx.param_3" help_url=""/>
   <param id="fx.param_4" help_url=""/>
@@ -236,12 +271,12 @@
   <param id="fx.param_7" help_url=""/>
   <param id="fx.param_8" help_url=""/>
   <param id="fx.param_9" help_url=""/>
+  <param id="fx.param_10" help_url=""/>
+  <param id="fx.param_11" help_url=""/>
+  <param id="fx.param_12" help_url=""/>
 
-  <!-- special case FX Param for fxt_delay(1) -->
+  <!-- special case FX params for Delay (1) -->
   <param id="fx.param_1" type="1" help_url="#delay"/>
-  <param id="fx.param_10" type="1" help_url="#delay"/>
-  <param id="fx.param_11" type="1" help_url="#delay"/>
-  <param id="fx.param_12" type="1" help_url="#delay"/>
   <param id="fx.param_2" type="1" help_url="#delay"/>
   <param id="fx.param_3" type="1" help_url="#delay"/>
   <param id="fx.param_4" type="1" help_url="#delay"/>
@@ -250,12 +285,12 @@
   <param id="fx.param_7" type="1" help_url="#delay"/>
   <param id="fx.param_8" type="1" help_url="#delay"/>
   <param id="fx.param_9" type="1" help_url="#delay"/>
+  <param id="fx.param_10" type="1" help_url="#delay"/>
+  <param id="fx.param_11" type="1" help_url="#delay"/>
+  <param id="fx.param_12" type="1" help_url="#delay"/>
 
-  <!-- special case FX Param for fxt_reverb(2) -->
+  <!-- special case FX params for Reverb 1 (2) -->
   <param id="fx.param_1" type="2" help_url="#reverb"/>
-  <param id="fx.param_10" type="2" help_url="#reverb"/>
-  <param id="fx.param_11" type="2" help_url="#reverb"/>
-  <param id="fx.param_12" type="2" help_url="#reverb"/>
   <param id="fx.param_2" type="2" help_url="#reverb"/>
   <param id="fx.param_3" type="2" help_url="#reverb"/>
   <param id="fx.param_4" type="2" help_url="#reverb"/>
@@ -264,12 +299,12 @@
   <param id="fx.param_7" type="2" help_url="#reverb"/>
   <param id="fx.param_8" type="2" help_url="#reverb"/>
   <param id="fx.param_9" type="2" help_url="#reverb"/>
+  <param id="fx.param_10" type="2" help_url="#reverb"/>
+  <param id="fx.param_11" type="2" help_url="#reverb"/>
+  <param id="fx.param_12" type="2" help_url="#reverb"/>
 
-  <!-- special case FX Param for fxt_phaser(3) -->
+  <!-- special case FX params for Phaser (3) -->
   <param id="fx.param_1" type="3" help_url="#phaser"/>
-  <param id="fx.param_10" type="3" help_url="#phaser"/>
-  <param id="fx.param_11" type="3" help_url="#phaser"/>
-  <param id="fx.param_12" type="3" help_url="#phaser"/>
   <param id="fx.param_2" type="3" help_url="#phaser"/>
   <param id="fx.param_3" type="3" help_url="#phaser"/>
   <param id="fx.param_4" type="3" help_url="#phaser"/>
@@ -278,12 +313,12 @@
   <param id="fx.param_7" type="3" help_url="#phaser"/>
   <param id="fx.param_8" type="3" help_url="#phaser"/>
   <param id="fx.param_9" type="3" help_url="#phaser"/>
+  <param id="fx.param_10" type="3" help_url="#phaser"/>
+  <param id="fx.param_11" type="3" help_url="#phaser"/>
+  <param id="fx.param_12" type="3" help_url="#phaser"/>
 
-  <!-- special case FX Param for fxt_rotaryspeaker(4) -->
+  <!-- special case FX params for Rotary Speaker (4) -->
   <param id="fx.param_1" type="4" help_url="#rotary-speaker"/>
-  <param id="fx.param_10" type="4" help_url="#rotary-speaker"/>
-  <param id="fx.param_11" type="4" help_url="#rotary-speaker"/>
-  <param id="fx.param_12" type="4" help_url="#rotary-speaker"/>
   <param id="fx.param_2" type="4" help_url="#rotary-speaker"/>
   <param id="fx.param_3" type="4" help_url="#rotary-speaker"/>
   <param id="fx.param_4" type="4" help_url="#rotary-speaker"/>
@@ -292,12 +327,12 @@
   <param id="fx.param_7" type="4" help_url="#rotary-speaker"/>
   <param id="fx.param_8" type="4" help_url="#rotary-speaker"/>
   <param id="fx.param_9" type="4" help_url="#rotary-speaker"/>
+  <param id="fx.param_10" type="4" help_url="#rotary-speaker"/>
+  <param id="fx.param_11" type="4" help_url="#rotary-speaker"/>
+  <param id="fx.param_12" type="4" help_url="#rotary-speaker"/>
 
-  <!-- special case FX Param for fxt_distortion(5) -->
+  <!-- special case FX params for Distortion (5) -->
   <param id="fx.param_1" type="5" help_url="#distortion"/>
-  <param id="fx.param_10" type="5" help_url="#distortion"/>
-  <param id="fx.param_11" type="5" help_url="#distortion"/>
-  <param id="fx.param_12" type="5" help_url="#distortion"/>
   <param id="fx.param_2" type="5" help_url="#distortion"/>
   <param id="fx.param_3" type="5" help_url="#distortion"/>
   <param id="fx.param_4" type="5" help_url="#distortion"/>
@@ -306,12 +341,12 @@
   <param id="fx.param_7" type="5" help_url="#distortion"/>
   <param id="fx.param_8" type="5" help_url="#distortion"/>
   <param id="fx.param_9" type="5" help_url="#distortion"/>
+  <param id="fx.param_10" type="5" help_url="#distortion"/>
+  <param id="fx.param_11" type="5" help_url="#distortion"/>
+  <param id="fx.param_12" type="5" help_url="#distortion"/>
 
-  <!-- special case FX Param for fxt_eq(6) -->
+  <!-- special case FX params for EQ (6) -->
   <param id="fx.param_1" type="6" help_url="#eq"/>
-  <param id="fx.param_10" type="6" help_url="#eq"/>
-  <param id="fx.param_11" type="6" help_url="#eq"/>
-  <param id="fx.param_12" type="6" help_url="#eq"/>
   <param id="fx.param_2" type="6" help_url="#eq"/>
   <param id="fx.param_3" type="6" help_url="#eq"/>
   <param id="fx.param_4" type="6" help_url="#eq"/>
@@ -320,12 +355,12 @@
   <param id="fx.param_7" type="6" help_url="#eq"/>
   <param id="fx.param_8" type="6" help_url="#eq"/>
   <param id="fx.param_9" type="6" help_url="#eq"/>
+  <param id="fx.param_10" type="6" help_url="#eq"/>
+  <param id="fx.param_11" type="6" help_url="#eq"/>
+  <param id="fx.param_12" type="6" help_url="#eq"/>
 
-  <!-- special case FX Param for fxt_freqshift(7) -->
+  <!-- special case FX params for Frequency Shifter (7) -->
   <param id="fx.param_1" type="7" help_url="#frequency-shifter"/>
-  <param id="fx.param_10" type="7" help_url="#frequency-shifter"/>
-  <param id="fx.param_11" type="7" help_url="#frequency-shifter"/>
-  <param id="fx.param_12" type="7" help_url="#frequency-shifter"/>
   <param id="fx.param_2" type="7" help_url="#frequency-shifter"/>
   <param id="fx.param_3" type="7" help_url="#frequency-shifter"/>
   <param id="fx.param_4" type="7" help_url="#frequency-shifter"/>
@@ -334,12 +369,12 @@
   <param id="fx.param_7" type="7" help_url="#frequency-shifter"/>
   <param id="fx.param_8" type="7" help_url="#frequency-shifter"/>
   <param id="fx.param_9" type="7" help_url="#frequency-shifter"/>
+  <param id="fx.param_10" type="7" help_url="#frequency-shifter"/>
+  <param id="fx.param_11" type="7" help_url="#frequency-shifter"/>
+  <param id="fx.param_12" type="7" help_url="#frequency-shifter"/>
 
-  <!-- special case FX Param for fxt_conditioner(8) -->
+  <!-- special case FX params for Conditioner (8) -->
   <param id="fx.param_1" type="8" help_url="#conditioner"/>
-  <param id="fx.param_10" type="8" help_url="#conditioner"/>
-  <param id="fx.param_11" type="8" help_url="#conditioner"/>
-  <param id="fx.param_12" type="8" help_url="#conditioner"/>
   <param id="fx.param_2" type="8" help_url="#conditioner"/>
   <param id="fx.param_3" type="8" help_url="#conditioner"/>
   <param id="fx.param_4" type="8" help_url="#conditioner"/>
@@ -348,12 +383,12 @@
   <param id="fx.param_7" type="8" help_url="#conditioner"/>
   <param id="fx.param_8" type="8" help_url="#conditioner"/>
   <param id="fx.param_9" type="8" help_url="#conditioner"/>
+  <param id="fx.param_10" type="8" help_url="#conditioner"/>
+  <param id="fx.param_11" type="8" help_url="#conditioner"/>
+  <param id="fx.param_12" type="8" help_url="#conditioner"/>
 
-  <!-- special case FX Param for fxt_chorus4(9) -->
+  <!-- special case FX params for Chorus (9) -->
   <param id="fx.param_1" type="9" help_url="#chorus"/>
-  <param id="fx.param_10" type="9" help_url="#chorus"/>
-  <param id="fx.param_11" type="9" help_url="#chorus"/>
-  <param id="fx.param_12" type="9" help_url="#chorus"/>
   <param id="fx.param_2" type="9" help_url="#chorus"/>
   <param id="fx.param_3" type="9" help_url="#chorus"/>
   <param id="fx.param_4" type="9" help_url="#chorus"/>
@@ -362,12 +397,12 @@
   <param id="fx.param_7" type="9" help_url="#chorus"/>
   <param id="fx.param_8" type="9" help_url="#chorus"/>
   <param id="fx.param_9" type="9" help_url="#chorus"/>
+  <param id="fx.param_10" type="9" help_url="#chorus"/>
+  <param id="fx.param_11" type="9" help_url="#chorus"/>
+  <param id="fx.param_12" type="9" help_url="#chorus"/>
 
-  <!-- special case FX Param for fxt_vocoder(10) -->
+  <!-- special case FX params for Vocoder (10) -->
   <param id="fx.param_1" type="10" help_url="#vocoder"/>
-  <param id="fx.param_10" type="10" help_url="#vocoder"/>
-  <param id="fx.param_11" type="10" help_url="#vocoder"/>
-  <param id="fx.param_12" type="10" help_url="#vocoder"/>
   <param id="fx.param_2" type="10" help_url="#vocoder"/>
   <param id="fx.param_3" type="10" help_url="#vocoder"/>
   <param id="fx.param_4" type="10" help_url="#vocoder"/>
@@ -376,12 +411,12 @@
   <param id="fx.param_7" type="10" help_url="#vocoder"/>
   <param id="fx.param_8" type="10" help_url="#vocoder"/>
   <param id="fx.param_9" type="10" help_url="#vocoder"/>
+  <param id="fx.param_10" type="10" help_url="#vocoder"/>
+  <param id="fx.param_11" type="10" help_url="#vocoder"/>
+  <param id="fx.param_12" type="10" help_url="#vocoder"/>
 
-  <!-- special case FX Param for fxt_reverb2(11) -->
+  <!-- special case FX params for Reverb 2 (11) -->
   <param id="fx.param_1" type="11" help_url="#reverb-2"/>
-  <param id="fx.param_10" type="11" help_url="#reverb-2"/>
-  <param id="fx.param_11" type="11" help_url="#reverb-2"/>
-  <param id="fx.param_12" type="11" help_url="#reverb-2"/>
   <param id="fx.param_2" type="11" help_url="#reverb-2"/>
   <param id="fx.param_3" type="11" help_url="#reverb-2"/>
   <param id="fx.param_4" type="11" help_url="#reverb-2"/>
@@ -390,12 +425,12 @@
   <param id="fx.param_7" type="11" help_url="#reverb-2"/>
   <param id="fx.param_8" type="11" help_url="#reverb-2"/>
   <param id="fx.param_9" type="11" help_url="#reverb-2"/>
+  <param id="fx.param_10" type="11" help_url="#reverb-2"/>
+  <param id="fx.param_11" type="11" help_url="#reverb-2"/>
+  <param id="fx.param_12" type="11" help_url="#reverb-2"/>
 
-  <!-- special case FX Param for fxt_flanger(12) -->
+  <!-- special case FX params for Flanger (12) -->
   <param id="fx.param_1" type="12" help_url="#flanger"/>
-  <param id="fx.param_10" type="12" help_url="#flanger"/>
-  <param id="fx.param_11" type="12" help_url="#flanger"/>
-  <param id="fx.param_12" type="12" help_url="#flanger"/>
   <param id="fx.param_2" type="12" help_url="#flanger"/>
   <param id="fx.param_3" type="12" help_url="#flanger"/>
   <param id="fx.param_4" type="12" help_url="#flanger"/>
@@ -404,12 +439,12 @@
   <param id="fx.param_7" type="12" help_url="#flanger"/>
   <param id="fx.param_8" type="12" help_url="#flanger"/>
   <param id="fx.param_9" type="12" help_url="#flanger"/>
+  <param id="fx.param_10" type="12" help_url="#flanger"/>
+  <param id="fx.param_11" type="12" help_url="#flanger"/>
+  <param id="fx.param_12" type="12" help_url="#flanger"/>
 
-  <!-- special case FX Param for fxt_ringmod(13) -->
+  <!-- special case FX params for Ring Modulator (13) -->
   <param id="fx.param_1" type="13" help_url="#ring-modulator"/>
-  <param id="fx.param_10" type="13" help_url="#ring-modulator"/>
-  <param id="fx.param_11" type="13" help_url="#ring-modulator"/>
-  <param id="fx.param_12" type="13" help_url="#ring-modulator"/>
   <param id="fx.param_2" type="13" help_url="#ring-modulator"/>
   <param id="fx.param_3" type="13" help_url="#ring-modulator"/>
   <param id="fx.param_4" type="13" help_url="#ring-modulator"/>
@@ -418,4 +453,203 @@
   <param id="fx.param_7" type="13" help_url="#ring-modulator"/>
   <param id="fx.param_8" type="13" help_url="#ring-modulator"/>
   <param id="fx.param_9" type="13" help_url="#ring-modulator"/>
+  <param id="fx.param_10" type="13" help_url="#ring-modulator"/>
+  <param id="fx.param_11" type="13" help_url="#ring-modulator"/>
+  <param id="fx.param_12" type="13" help_url="#ring-modulator"/>
+
+  <!-- special case FX params for Ring Modulator (14) -->
+  <param id="fx.param_1" type="14" help_url="#airwindows"/>
+  <param id="fx.param_2" type="14" help_url="#airwindows"/>
+  <param id="fx.param_3" type="14" help_url="#airwindows"/>
+  <param id="fx.param_4" type="14" help_url="#airwindows"/>
+  <param id="fx.param_5" type="14" help_url="#airwindows"/>
+  <param id="fx.param_6" type="14" help_url="#airwindows"/>
+  <param id="fx.param_7" type="14" help_url="#airwindows"/>
+  <param id="fx.param_8" type="14" help_url="#airwindows"/>
+  <param id="fx.param_9" type="14" help_url="#airwindows"/>
+  <param id="fx.param_10" type="14" help_url="#airwindows"/>
+  <param id="fx.param_11" type="14" help_url="#airwindows"/>
+  <param id="fx.param_12" type="14" help_url="#airwindows"/>
+
+  <!-- special case FX params for Neuron (15) -->
+  <param id="fx.param_1" type="15" help_url="#neuron"/>
+  <param id="fx.param_2" type="15" help_url="#neuron"/>
+  <param id="fx.param_3" type="15" help_url="#neuron"/>
+  <param id="fx.param_4" type="15" help_url="#neuron"/>
+  <param id="fx.param_5" type="15" help_url="#neuron"/>
+  <param id="fx.param_6" type="15" help_url="#neuron"/>
+  <param id="fx.param_7" type="15" help_url="#neuron"/>
+  <param id="fx.param_8" type="15" help_url="#neuron"/>
+  <param id="fx.param_9" type="15" help_url="#neuron"/>
+  <param id="fx.param_10" type="15" help_url="#neuron"/>
+  <param id="fx.param_11" type="15" help_url="#neuron"/>
+  <param id="fx.param_12" type="15" help_url="#neuron"/>
+
+  <!-- special case FX params for Graphic EQ (16) -->
+  <param id="fx.param_1" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_2" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_3" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_4" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_5" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_6" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_7" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_8" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_9" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_10" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_11" type="16" help_url="#graphic-eq"/>
+  <param id="fx.param_12" type="16" help_url="#graphic-eq"/>
+
+  <!-- special case FX params for Resonator (17) -->
+  <param id="fx.param_1" type="17" help_url="#resonator"/>
+  <param id="fx.param_2" type="17" help_url="#resonator"/>
+  <param id="fx.param_3" type="17" help_url="#resonator"/>
+  <param id="fx.param_4" type="17" help_url="#resonator"/>
+  <param id="fx.param_5" type="17" help_url="#resonator"/>
+  <param id="fx.param_6" type="17" help_url="#resonator"/>
+  <param id="fx.param_7" type="17" help_url="#resonator"/>
+  <param id="fx.param_8" type="17" help_url="#resonator"/>
+  <param id="fx.param_9" type="17" help_url="#resonator"/>
+  <param id="fx.param_10" type="17" help_url="#resonator"/>
+  <param id="fx.param_11" type="17" help_url="#resonator"/>
+  <param id="fx.param_12" type="17" help_url="#resonator"/>
+
+  <!-- special case FX params for CHOW (18) -->
+  <param id="fx.param_1" type="18" help_url="#chow"/>
+  <param id="fx.param_2" type="18" help_url="#chow"/>
+  <param id="fx.param_3" type="18" help_url="#chow"/>
+  <param id="fx.param_4" type="18" help_url="#chow"/>
+  <param id="fx.param_5" type="18" help_url="#chow"/>
+  <param id="fx.param_6" type="18" help_url="#chow"/>
+  <param id="fx.param_7" type="18" help_url="#chow"/>
+  <param id="fx.param_8" type="18" help_url="#chow"/>
+  <param id="fx.param_9" type="18" help_url="#chow"/>
+  <param id="fx.param_10" type="18" help_url="#chow"/>
+  <param id="fx.param_11" type="18" help_url="#chow"/>
+  <param id="fx.param_12" type="18" help_url="#chow"/>
+
+  <!-- special case FX params for Exciter (19) -->
+  <param id="fx.param_1" type="19" help_url="#exciter"/>
+  <param id="fx.param_2" type="19" help_url="#exciter"/>
+  <param id="fx.param_3" type="19" help_url="#exciter"/>
+  <param id="fx.param_4" type="19" help_url="#exciter"/>
+  <param id="fx.param_5" type="19" help_url="#exciter"/>
+  <param id="fx.param_6" type="19" help_url="#exciter"/>
+  <param id="fx.param_7" type="19" help_url="#exciter"/>
+  <param id="fx.param_8" type="19" help_url="#exciter"/>
+  <param id="fx.param_9" type="19" help_url="#exciter"/>
+  <param id="fx.param_10" type="19" help_url="#exciter"/>
+  <param id="fx.param_11" type="19" help_url="#exciter"/>
+  <param id="fx.param_12" type="19" help_url="#exciter"/>
+
+  <!-- special case FX params for Ensemble (20) -->
+  <param id="fx.param_1" type="20" help_url="#ensemble"/>
+  <param id="fx.param_2" type="20" help_url="#ensemble"/>
+  <param id="fx.param_3" type="20" help_url="#ensemble"/>
+  <param id="fx.param_4" type="20" help_url="#ensemble"/>
+  <param id="fx.param_5" type="20" help_url="#ensemble"/>
+  <param id="fx.param_6" type="20" help_url="#ensemble"/>
+  <param id="fx.param_7" type="20" help_url="#ensemble"/>
+  <param id="fx.param_8" type="20" help_url="#ensemble"/>
+  <param id="fx.param_9" type="20" help_url="#ensemble"/>
+  <param id="fx.param_10" type="20" help_url="#ensemble"/>
+  <param id="fx.param_11" type="20" help_url="#ensemble"/>
+  <param id="fx.param_12" type="20" help_url="#ensemble"/>
+
+  <!-- special case FX params for Combulator (21) -->
+  <param id="fx.param_1" type="21" help_url="#combulator"/>
+  <param id="fx.param_2" type="21" help_url="#combulator"/>
+  <param id="fx.param_3" type="21" help_url="#combulator"/>
+  <param id="fx.param_4" type="21" help_url="#combulator"/>
+  <param id="fx.param_5" type="21" help_url="#combulator"/>
+  <param id="fx.param_6" type="21" help_url="#combulator"/>
+  <param id="fx.param_7" type="21" help_url="#combulator"/>
+  <param id="fx.param_8" type="21" help_url="#combulator"/>
+  <param id="fx.param_9" type="21" help_url="#combulator"/>
+  <param id="fx.param_10" type="21" help_url="#combulator"/>
+  <param id="fx.param_11" type="21" help_url="#combulator"/>
+  <param id="fx.param_12" type="21" help_url="#combulator"/>
+
+  <!-- special case FX params for Nimbus (22) -->
+  <param id="fx.param_1" type="22" help_url="#nimbus"/>
+  <param id="fx.param_2" type="22" help_url="#nimbus"/>
+  <param id="fx.param_3" type="22" help_url="#nimbus"/>
+  <param id="fx.param_4" type="22" help_url="#nimbus"/>
+  <param id="fx.param_5" type="22" help_url="#nimbus"/>
+  <param id="fx.param_6" type="22" help_url="#nimbus"/>
+  <param id="fx.param_7" type="22" help_url="#nimbus"/>
+  <param id="fx.param_8" type="22" help_url="#nimbus"/>
+  <param id="fx.param_9" type="22" help_url="#nimbus"/>
+  <param id="fx.param_10" type="22" help_url="#nimbus"/>
+  <param id="fx.param_11" type="22" help_url="#nimbus"/>
+  <param id="fx.param_12" type="22" help_url="#nimbus"/>
+
+  <!-- special case FX params for Tape (23) -->
+  <param id="fx.param_1" type="23" help_url="#tape"/>
+  <param id="fx.param_2" type="23" help_url="#tape"/>
+  <param id="fx.param_3" type="23" help_url="#tape"/>
+  <param id="fx.param_4" type="23" help_url="#tape"/>
+  <param id="fx.param_5" type="23" help_url="#tape"/>
+  <param id="fx.param_6" type="23" help_url="#tape"/>
+  <param id="fx.param_7" type="23" help_url="#tape"/>
+  <param id="fx.param_8" type="23" help_url="#tape"/>
+  <param id="fx.param_9" type="23" help_url="#tape"/>
+  <param id="fx.param_10" type="23" help_url="#tape"/>
+  <param id="fx.param_11" type="23" help_url="#tape"/>
+  <param id="fx.param_12" type="23" help_url="#tape"/>
+
+  <!-- special case FX params for Treemonster (24) -->
+  <param id="fx.param_1" type="24" help_url="#treemonster"/>
+  <param id="fx.param_2" type="24" help_url="#treemonster"/>
+  <param id="fx.param_3" type="24" help_url="#treemonster"/>
+  <param id="fx.param_4" type="24" help_url="#treemonster"/>
+  <param id="fx.param_5" type="24" help_url="#treemonster"/>
+  <param id="fx.param_6" type="24" help_url="#treemonster"/>
+  <param id="fx.param_7" type="24" help_url="#treemonster"/>
+  <param id="fx.param_8" type="24" help_url="#treemonster"/>
+  <param id="fx.param_9" type="24" help_url="#treemonster"/>
+  <param id="fx.param_10" type="24" help_url="#treemonster"/>
+  <param id="fx.param_11" type="24" help_url="#treemonster"/>
+  <param id="fx.param_12" type="24" help_url="#treemonster"/>
+
+  <!-- special case FX params for Waveshaper (25) -->
+  <param id="fx.param_1" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_2" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_3" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_4" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_5" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_6" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_7" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_8" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_9" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_10" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_11" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_12" type="25" help_url="#waveshaper"/>
+
+  <!-- special case FX params for Mid-Side Tool (26) -->
+  <param id="fx.param_1" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_2" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_3" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_4" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_5" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_6" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_7" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_8" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_9" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_10" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_11" type="26" help_url="#mid-side-tool"/>
+  <param id="fx.param_12" type="26" help_url="#mid-side-tool"/>
+
+  <!-- special case FX params for Spring Reverb (27) -->
+  <param id="fx.param_1" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_2" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_3" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_4" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_5" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_6" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_7" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_8" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_9" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_10" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_11" type="27" help_url="#spring-reverb"/>
+  <param id="fx.param_12" type="27" help_url="#spring-reverb"/>
 </param-doc>

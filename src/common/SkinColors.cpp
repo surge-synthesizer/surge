@@ -356,11 +356,11 @@ namespace Display
 const Surge::Skin::Color Dots("waveshaper.waveform.dots", 0x404040),
     Wave("waveshaper.waveform", 0xFF9000), WaveHover("waveshaper.waveform.hover", 0xFFFFFF);
 }
-namespace Analysis
+namespace Preview
 {
-const Surge::Skin::Color Border("waveshaper.analysis.border", 0xFFFFFF),
-    Background("waveshaper.analysis.background", 0x0A0A14),
-    Text("waveshaper.analysis.text", 0xFFFFFF);
+const Surge::Skin::Color Border("waveshaper.preview.border", 0xFFFFFF),
+    Background("waveshaper.preview.background", 0x0A0A14),
+    Text("waveshaper.preview.text", 0xFFFFFF);
 }
 } // namespace Waveshaper
 

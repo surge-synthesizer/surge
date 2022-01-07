@@ -109,6 +109,19 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
                         const juce::MouseWheelDetails &wheel) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
+    void endHover() override
+    {
+        lfoTypeHover = -1;
+        stepSeqShiftHover = -1;
+        repaint();
+    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override
+    {
+        endHover();
+        repaint();
+    }
+
     enum DragMode
     {
         NONE,

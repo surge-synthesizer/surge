@@ -44,7 +44,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         recalcFromSlider();
     }
 
-    g.fillAll(skin->getColor(Colors::Waveshaper::Analysis::Background));
+    g.fillAll(skin->getColor(Colors::Waveshaper::Preview::Background));
 
     // OK so this path is in x=0,1 y=-1,1
     const auto sideOne = 45.f, sideTwo = 2.f, top = 25.f;
@@ -106,7 +106,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         }
     }
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Border));
+    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Border));
     g.drawRect(re);
 
     {
@@ -117,13 +117,13 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         oss << std::fixed << std::setprecision(2) << sliderDb;
 
         g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveAmount));
-        g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
+        g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
         g.drawText(oss.str(), tx, juce::Justification::centred);
 
         tx = tx.translated(0, 12);
 
         g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveLabel));
-        g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
+        g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
         g.drawText("Drive (dB)", tx, juce::Justification::centred);
     }
 
@@ -131,7 +131,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     std::ostringstream title;
     title << "Current: " << wst_names[wstype];
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Analysis::Text));
+    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
     g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::Title));
     g.drawText(title.str(), txtr, juce::Justification::centred);
 }
