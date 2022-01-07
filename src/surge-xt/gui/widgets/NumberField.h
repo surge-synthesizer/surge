@@ -49,7 +49,7 @@ struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
     int getIntValue() const { return iValue; }
     void setIntValue(int v)
     {
-        value = 1.f * (v - iMin) / (iMax - iMin);
+        value = Parameter::intScaledToFloat(v, iMax, iMin);
         bounceToInt();
         notifyValueChanged();
         repaint();

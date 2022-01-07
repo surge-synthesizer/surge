@@ -939,8 +939,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     {
         whatLabel->setText("Scale Rotation Intervals",
                            juce::NotificationType::dontSendNotification);
-        explLabel->setText("If you shift the scale root to note N\n"
-                           "show the interval to note M",
+        explLabel->setText("If you shift the scale root to note N, show the interval to note M",
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::ROTATION;
 
@@ -951,7 +950,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     {
         whatLabel->setText("Interval Between Notes", juce::NotificationType::dontSendNotification);
         explLabel->setText(
-            "Given any two notes in the loaded scale\nshow the interval in cents between them",
+            "Given any two notes in the loaded scale, show the interval in cents between them",
             juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
         repaint();
@@ -961,7 +960,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     {
         whatLabel->setText("Interval to Equal Division",
                            juce::NotificationType::dontSendNotification);
-        explLabel->setText("Given any two notes in the loaded scale\nshow the distance to the "
+        explLabel->setText("Given any two notes in the loaded scale, show the distance to the "
                            "equal division interval",
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::DIST;

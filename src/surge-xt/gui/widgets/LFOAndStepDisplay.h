@@ -128,7 +128,7 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     bool edit_trigmask{false};
     void setCanEditEnvelopes(bool b) { edit_trigmask = b; }
 
-    void showMSEGPopupMenu();
+    void showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag);
 
     void onSkinChanged() override;
 
