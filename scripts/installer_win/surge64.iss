@@ -32,16 +32,22 @@ UsePreviousAppDir=yes
 Compression=lzma
 SolidCompression=yes
 UninstallFilesDir={commonappdata}\Surge XT\uninstall
+CloseApplicationsFilter=*.exe,*.dll,*.vst3,*.ttf
 
 [InstallDelete]
-;; clean up factory data folder, except tuning_library folder (users might link to their own custom tunings into this folder)
+; clean up factory data folders
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\fx_presets"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\modulator_presets"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_3rdparty"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\patches_factory"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\skins"
+Type: filesandordirs; Name: "{commonappdata}\Surge XT\tuning_library"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\wavetables"
 Type: filesandordirs; Name: "{commonappdata}\Surge XT\wavetables_3rdparty"
+; clean up the mess from Surge XT 1.0 nightlies prior to PR #5727
+Type: filesandordirs; Name: "{commoncf64}\VST3\Surge Synth Team\Contents"
+Type: filesandordirs; Name: "{commoncf64}\VST3\Surge Synth Team\desktop.ini"
+Type: filesandordirs; Name: "{commoncf64}\VST3\Surge Synth Team\plugin.ico"
 
 [Components]
 Name: VST3; Description: Surge XT VST3 (64-bit); Types: full compact custom; Flags: checkablealone
