@@ -4260,7 +4260,7 @@ std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
     std::string lurl = helpurl;
     if (helpurl[0] == '#')
     {
-        lurl = "https://surge-synthesizer.github.io/manual/" + helpurl;
+        lurl = "https://surge-synthesizer.github.io/manual-xt/" + helpurl;
     }
     return lurl;
 }
