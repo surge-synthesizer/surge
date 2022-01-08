@@ -28,7 +28,7 @@ This readme serves as the root of developer documentation for Surge.
 # Developing Surge XT
 
 We welcome developers! Our workflow revolves around GitHub issues in this repository and conversations at our Discord
-server and IRC chatroom. You can read our developer guidelines
+server. You can read our developer guidelines
 in [our developer guide document](doc/Developer%20Guide.md). If you want to contribute and are new to Git, we also have
 a [Git How To](doc/How%20to%20Git.md), tailored at Surge development.
 
@@ -60,8 +60,7 @@ to do a build.
 
 Our [Git How To](doc/How%20to%20Git.md) explains how we are using Git. If you want to develop from your own fork, please
 consult there, but the short version is (1) fork this project on GitHub and (2) clone your fork, rather than the main
-repo as described above. So press the `Fork`
-button here and then:
+repo as described above. So press the `Fork` button here and then:
 
 ```
 git clone git@github.com:youruserid/surge.git
@@ -80,7 +79,7 @@ can work properly with the software.
 
 ## Building a VST2
 
-Due to licensing restrictions, VST2 builds of Surge **may not** be re-distributed. However, it is possible to build a
+Due to licensing restrictions, VST2 builds of Surge **may not** be redistributed. However, it is possible to build a
 VST2 of Surge for your own personal use. First, obtain a local copy of the VST2 SDK, and unzip it to a folder of your
 choice. Then set `VST2SDK_DIR` to point to that folder:
 
@@ -94,7 +93,7 @@ or, in the Windows command prompt:
 set VST2SDK_DIR=c:\path\to\VST2SDK
 ```
 
-Finally, run a fresh CMake, and build the VST2 targets:
+Finally, run CMake afresh, and build the VST2 targets:
 
 ```
 cmake -Bbuild_vst2
@@ -111,8 +110,8 @@ process by modifying the value of `--parallel` argument.
 On Windows, building with ASIO is often preferred for Surge standalone, since it enables users to use the ASIO
 low-latency audio driver.
 
-Unfortunately, due to licensing conflicts, binaries of Surge that are built with ASIO **may not** be re-distributed.
-However, you can build Surge with ASIO for your own personal use, provided you do not re-distribute those builds.
+Unfortunately, due to licensing conflicts, binaries of Surge that are built with ASIO **may not** be redistributed.
+However, you can build Surge with ASIO for your own personal use, provided you do not redistribute those builds.
 
 If you already have a copy of the ASIO SDK, simply set the following environment variable and you're good to go!
 
@@ -129,7 +128,7 @@ cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
 
 ## Building an LV2
 
-On Linux, using a community fork of JUCE, you can build an LV2. Here's how. We assume you have checked out Surge and can
+On Linux, using a community fork of JUCE, you can build an LV2. Here's how! We assume you have checked out Surge and can
 build.
 
 First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your chosing.
@@ -149,8 +148,7 @@ cmake --build build_lv2 --config Release --target surge-fx_LV2 --parallel 4
 ```
 
 You will then have LV2s in `build_lv2/src/surge-xt/surge-xt_artefacts/Release/LV2`
-and  `build_lv2/src/surge-xt/surge-fx_artefacts/Release/LV2`
-respectively.
+and  `build_lv2/src/surge-xt/surge-fx_artefacts/Release/LV2` respectively.
 
 ## Building an Installer
 
@@ -160,20 +158,20 @@ InnoSetup, so you will need the [nuget.exe CLI](https://nuget.org/) in your path
 
 ## Using CMake on the Command Line for More
 
-We have a variety of other cmake options and targets which can allow you to develop and install surge more easily
+We have a variety of other CMake options and targets which can allow you to develop and install Surge more easily.
 
 ### Plugin Development
 
 JUCE supports a mode where a plugin (AU, VST3, etc...) is copied to a local install area after a build. This is off by
-default with CMake JUCE but you can turn it on with `-DSURGE_COPY_AFTER_BUILD=True` at
-`cmake` time. If you do this on unixes, building the VST3 or AU targets will copy them to the appropriate local area
-(`~/.vst3` on linux, '~/Library/Audio/Plugins` on mac). On windows it will attempt to install the VST3 so setting this
-option may require admin privileges in your build environment.
+default with CMake, but you can turn it on with `-DSURGE_COPY_AFTER_BUILD=True` at `cmake` time.
+If you do this on Unixes, building the VST3 or AU targets will copy them to the appropriate local area
+(`~/.vst3` on Linux, `~/Library/Audio/Plugins` on Mac). On Windows it will attempt to install the VST3, so setting this
+option may require administrator privileges in your build environment.
 
-### CMake Install Targets (Linux and other non-apple unixes only)
+### CMake Install Targets (Linux and other non-Apple Unixes only)
 
-On systems which are `UNIX AND NOT APPLE`, the cmake file provides an install target which will install all needed
-assets to the `CMAKE_INSTALL_PREFIX`. This means a complete install can be accomplished by
+On systems which are `UNIX AND NOT APPLE`, the CMake file provides an install target which will install all needed
+assets to the `CMAKE_INSTALL_PREFIX`. This means a complete install can be accomplished by:
 
 ```
 cmake -Bignore/sxt -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
@@ -187,7 +185,7 @@ and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`
 
 ### Building 32- vs 64-bit on Windows
 
-If you are building with Visual Studio 2019, then use the `-A` flag in your CMake command to specify 32/64-bit:
+If you are building with Visual Studio 2019, use the `-A` flag in your CMake command to specify 32/64-bit:
 
 ```bash
 # 64-bit
@@ -197,8 +195,7 @@ cmake -Bbuild -G"Visual Studio 16 2019" -A x64
 cmake -Bbuild -G"Visual Studio 16 2019" -A Win32
 ```
 
-If you are using an older version of Visual Studio, you must specify your preference with your choice of CMake
-generator:
+If you are using an older version of Visual Studio, you must specify your preference with your choice of CMake generator:
 
 ```bash
 # 64-bit
@@ -210,7 +207,7 @@ cmake -Bbuild -G"Visual Studio 15 2017"
 
 ### Building a Mac Fat Binary (ARM/Intel)
 
-To build a fat binary on a mac, simply add the following CMAKE argument to your intiial cmake run.
+To build a fat binary on a Mac, simply add the following CMake argument to your initial CMake run:
 
 ```
 -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
@@ -226,21 +223,21 @@ cmake -Bbuild -DLINUX_ON_ARM=True
 cmake --build build --config Release --target surge-staged-assets
 ```
 
-### Cross Compiling for aarch64
+### Cross-compiling for aarch64
 
-To cross compile for aarch64 us the cmake linux toolchain for aarch4, as shown in the azure pipeline here.
+To cross-compile for aarch64, use the CMake Linux toolchain for aarch64, as shown in the Azure pipeline here:
 
 ```
 cmake -Bignore/xc64 -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake -DCMAKE_BUILD_TYPE=DEBUG -GNinja
 cmake --build ignore/xc64 --config Debug --target surge-headless
 ```
 
-Of course that toolchain makes specific choices. You can make other choices as long as (1) you set the CMAKE variable
-LINUX_ON_ARM and (2) you make sure your host and your target compiler are both 64 bit.
+Of course, that toolchain makes specific choices. You can make other choices as long as (1) you set the CMake variable
+`LINUX_ON_ARM` and (2) you make sure your host and your target compiler are both 64-bit.
 
-### Cross Compiling for macOS
+### Cross-compiling for macOS
 
-Surge cross compiles to macOS Intel from Linux and BSD.
+Surge cross-compiles to macOS Intel from Linux and BSD.
 
 1. Install [osxcross](https://github.com/tpoechtrager/osxcross). Make sure to also install the `libclang_rt` library
    built by their `build_compiler_rt.sh` script.
@@ -261,7 +258,7 @@ You need to install the following:
 * Install [Git](https://git-scm.com/downloads)
   , [Visual Studio 2017 or newer](https://visualstudio.microsoft.com/downloads/)
 * When you install Visual Studio, make sure to include CLI tools and CMake, which are included in
-  'Optional CLI support' and 'Toolset for Desktop' install bundles
+  'Optional CLI support' and 'Toolset for desktop' install bundles
 
 ## macOS
 
@@ -272,7 +269,7 @@ To build on macOS, you need `Xcode`, `Xcode Command Line Utilities`, and CMake. 
 xcode-select --install
 ```
 
-There are a variety of ways to install CMake. If you use [homebrew](https://brew.sh) you can:
+There are a variety of ways to install CMake. If you use [homebrew](https://brew.sh), you can:
 
 ```
 brew install cmake
@@ -281,18 +278,18 @@ brew install cmake
 ## Linux
 
 Most Linux systems have CMake, Git and a modern C++ compiler installed. Make sure yours does. We test with most gccs
-older than 7 or so and clangs after 9 or 10. You will also need to install a set of dependencies. If you use `apt` do:
+older than 7 or so and clangs after 9 or 10. You will also need to install a set of dependencies. If you use `apt`, do:
 
 ```bash
 sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
-*You can find more infos about Surge on Linux and other Unix-like distros in* [this wiki article](https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Surge-on-various-unix-like-distributions).
+*You can find more info about Surge on Linux and other Unix-like distros in* [this wiki article](https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Surge-on-various-unix-like-distributions).
 
 # Continuous Integration
 
 In addition to the build commands above, we use Azure pipelines for continuous integration. This means that each and
-every pull request will be automatically built on all our environments, and a clean build on all platforms is an obvious
+every pull request will be automatically built across all our environments, and a clean build on all platforms is an obvious
 pre-requisite. If you have questions about our CI tools, don't hesitate to ask on
 our [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
 server. We are grateful to Microsoft for providing Azure pipelines for free to the open-source community!
@@ -301,6 +298,4 @@ server. We are grateful to Microsoft for providing Azure pipelines for free to t
 
 * Most Surge-related conversation happens on the Surge Synthesizer Discord server. You can join
   via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
-* IRC channel at `#surgesynth` at [irc.freenode.net](https://irc.freenode.net). The logs are available
-  at https://freenode.logbot.info/surgesynth/.
 * Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
