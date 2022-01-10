@@ -211,22 +211,27 @@ void ModulatableSlider::paint(juce::Graphics &g)
         g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
         g.drawLine(barFM0X + dLX, barFM0Y + dLY, barFMNX + dLX, barFMNY + dLY, 2);
     }
+
     // Draw the label
     if (drawLabel)
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(trayPosition);
         auto tl = label;
+
         if (hasLabelFn)
         {
             tl = labelFn();
         }
+
         // FIXME FONT AND JUSTIFICATION
         g.setFont(font);
+
         if (isLightStyle)
             g.setColour(skin->getColor(Colors::Slider::Label::Light));
         else
             g.setColour(skin->getColor(Colors::Slider::Label::Dark));
+
         g.drawText(tl, labelRect, juce::Justification::top | juce::Justification::right);
     }
 
@@ -246,14 +251,17 @@ void ModulatableSlider::paint(juce::Graphics &g)
         g.reduceClipRegion(handleSize.expanded(2));
         pHandle->draw(g, activationOpacity, t);
 
-        if (isHovered && pHandleHover)
-            pHandleHover->draw(g, activationOpacity, t);
+        if (!isEditingModulation)
+        {
+            if (isHovered && pHandleHover)
+                pHandleHover->draw(g, activationOpacity, t);
 
-        if (pTempoSyncHandle && isTemposync)
-            pTempoSyncHandle->draw(g, activationOpacity, t);
+            if (pTempoSyncHandle && isTemposync)
+                pTempoSyncHandle->draw(g, activationOpacity, t);
 
-        if (isHovered && isTemposync && pTempoSyncHoverHandle)
-            pTempoSyncHoverHandle->draw(g, activationOpacity, t);
+            if (isHovered && isTemposync && pTempoSyncHoverHandle)
+                pTempoSyncHoverHandle->draw(g, activationOpacity, t);
+        }
     }
 
     if (isEditingModulation)
@@ -264,9 +272,19 @@ void ModulatableSlider::paint(juce::Graphics &g)
         auto q = handleSize.withCentre(juce::Point<int>(handleMX, handleMY));
         auto moveTo = juce::AffineTransform().translated(q.getTopLeft());
         auto t = juce::AffineTransform().translated(-1 - modHandleX, -1);
+
         g.addTransform(moveTo);
-        g.reduceClipRegion(handleSize);
+        g.reduceClipRegion(handleSize.expanded(2));
         pHandle->draw(g, activationOpacity, t);
+
+        if (isHovered && pHandleHover)
+            pHandleHover->draw(g, activationOpacity, t);
+
+        if (pTempoSyncHandle && isTemposync)
+            pTempoSyncHandle->draw(g, activationOpacity, t);
+
+        if (isHovered && isTemposync && pTempoSyncHoverHandle)
+            pTempoSyncHoverHandle->draw(g, activationOpacity, t);
     }
 }
 
