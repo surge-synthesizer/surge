@@ -161,6 +161,12 @@ void initMaps()
             case UseKeyboardShortcuts_Standalone:
                 r = "useKeyboardShortcutsStandalone";
                 break;
+            case PromptToActivateShortcutsOnAccKeypress:
+                r = "promptToActivateShortcutsOnAccKeypress";
+                break;
+            case PromptToActivateCategoryAndPatchOnKeypress:
+                r = "promptToActivateCategoryAndPatchOnKeypress";
+                break;
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
                 break;

@@ -27,6 +27,8 @@
 #include "SkinSupport.h"
 #include "SkinColors.h"
 
+#include "UserDefaults.h"
+
 #include "overlays/OverlayComponent.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
@@ -698,6 +700,16 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getUseKeyboardShortcuts();
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
+
+    std::unique_ptr<juce::AlertWindow> okcWithToggleAlertWindow;
+    std::unique_ptr<juce::ToggleButton> okcWithToggleToggleButton;
+    std::function<void()> okcWithToggleCallback;
+
+    // Return whether we called the OK action automatically or not
+    bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,
+                                           Surge::Storage::DefaultKey dontAskAgainKey,
+                                           std::function<void()> okCallback,
+                                           std::string ynMessage = "Remember my choice");
 
   private:
     bool scannedForMidiPresets = false;
