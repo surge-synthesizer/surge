@@ -408,11 +408,8 @@ enum AccessibleKeyModifier
 };
 
 inline std::tuple<AccessibleKeyEditAction, AccessibleKeyModifier>
-accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
+accessibleEditActionInternal(const juce::KeyPress &key)
 {
-    if (!Surge::GUI::allowKeyboardEdits(storage))
-        return {None, NoModifier};
-
     if (key.getKeyCode() == juce ::KeyPress::downKey)
     {
         if (key.getModifiers().isShiftDown())
@@ -462,6 +459,21 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     }
 
     return {None, NoModifier};
+}
+
+inline std::tuple<AccessibleKeyEditAction, AccessibleKeyModifier>
+accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
+{
+    if (!Surge::GUI::allowKeyboardEdits(storage))
+        return {None, NoModifier};
+
+    return accessibleEditActionInternal(key);
+}
+
+inline bool isAccessibleKey(const juce::KeyPress &key)
+{
+    auto [a, m] = accessibleEditActionInternal(key);
+    return a != None;
 }
 
 template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::KeyPress &key)

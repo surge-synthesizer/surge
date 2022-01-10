@@ -78,6 +78,7 @@
 #include "RuntimeFont.h"
 
 #include "juce_core/juce_core.h"
+#include "AccessibleHelpers.h"
 
 const int yofs = 10;
 
@@ -5981,6 +5982,15 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
     }
 
+    if (textChar == '7')
+    {
+        promptForOKCancelWithDontAskAgain("Do you want 7",
+                                          "This dialog checks if you want 7 things",
+                                          Surge::Storage::PromptToActivateShortcutsOnAccKeypress,
+                                          []() { std::cout << "OK" << std::endl; });
+        return true;
+    }
+
     if (getUseKeyboardShortcuts())
     {
         // zoom actions
@@ -6021,25 +6031,35 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         if (key.getModifiers().isShiftDown() &&
             (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
-            closeOverlay(SAVE_PATCH);
+            return promptForOKCancelWithDontAskAgain(
+                "Confirm Category Change",
+                "You have used shift left/right to change a category which "
+                "would remove any edits you have on your current patch. Are "
+                "you sure you want to proceed?",
+                Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
+                    closeOverlay(SAVE_PATCH);
 
-            synth->incrementCategory(keyCode == juce::KeyPress::rightKey);
-
-            return true;
+                    synth->incrementCategory(keyCode == juce::KeyPress::rightKey);
+                });
         }
 
         // prev-next patch
         if (key.getModifiers().isCommandDown() &&
             (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
-            closeOverlay(SAVE_PATCH);
+            return promptForOKCancelWithDontAskAgain(
+                "Confirm Patch Change",
+                "You have used shift left/right to change a patch which "
+                "would remove any edits you have on your current patch. Are "
+                "you sure you want to proceed?",
+                Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
+                    closeOverlay(SAVE_PATCH);
 
-            auto insideCategory = Surge::Storage::getUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
+                    auto insideCategory = Surge::Storage::getUserDefaultValue(
+                        &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
 
-            synth->incrementPatch(keyCode == juce::KeyPress::rightKey, insideCategory);
-
-            return true;
+                    synth->incrementPatch(keyCode == juce::KeyPress::rightKey, insideCategory);
+                });
         }
 
         // toggle scene
@@ -6157,7 +6177,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         // open manual
         if (keyCode == juce::KeyPress::F1Key)
         {
-            juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
+            juce::URL("https://surge-synthesizer.github.io/manual-xt/").launchInDefaultBrowser();
 
             return true;
         }
@@ -6184,6 +6204,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+    }
+    else if (Surge::Widgets::isAccessibleKey(key))
+    {
+        promptForOKCancelWithDontAskAgain(
+            "Activate Keybindings",
+            "You used a keybinding which is bound to an accessible edit "
+            "action on a Surge XT control. You have Surge XT configured to not "
+            "use keybindings. Would you like to turn Surge XT keybindings on?"
+            " You can change this setting in the Workflow menu later.",
+            Surge::Storage::DefaultKey::PromptToActivateShortcutsOnAccKeypress,
+            [this]() { toggleUseKeyboardShortcuts(); }, "Don't ask again");
     }
 
     return false;
@@ -6476,4 +6507,74 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
         }
         std::cout << std::endl;
     }
+}
+
+bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &title,
+                                                       const std::string &msg,
+                                                       Surge::Storage::DefaultKey dontAskAgainKey,
+                                                       std::function<void()> okCallback,
+                                                       std::string ynMessage)
+{
+    if (okcWithToggleAlertWindow)
+    {
+        // This is not re-entrant, sorry
+        jassertfalse;
+        return false;
+    }
+
+    enum AgainStates
+    {
+        DUNNO = 1,
+        ALWAYS = 10,
+        NEVER = 100
+    };
+
+    auto bypassed = Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, DUNNO);
+    if (bypassed == NEVER)
+        return false;
+    if (bypassed == ALWAYS)
+    {
+        okCallback();
+        return true;
+    }
+
+    auto &lf = frame->getLookAndFeel();
+
+    okcWithToggleCallback = std::move(okCallback);
+    okcWithToggleAlertWindow.reset(lf.createAlertWindow(title, msg, "OK", "Cancel", "",
+                                                        juce::AlertWindow::NoIcon, 2, nullptr));
+
+    auto cb = std::make_unique<juce::ToggleButton>(ynMessage);
+    cb->setName("");
+    cb->setSize(400, 20);
+    cb->setColour(juce::ToggleButton::textColourId, lf.findColour(juce::AlertWindow::textColourId));
+    cb->setColour(juce::ToggleButton::tickColourId, lf.findColour(juce::AlertWindow::textColourId));
+    cb->setColour(juce::ToggleButton::tickDisabledColourId,
+                  lf.findColour(juce::AlertWindow::textColourId).withAlpha(0.5f));
+    okcWithToggleAlertWindow->addCustomComponent(cb.get());
+    okcWithToggleToggleButton = std::move(cb);
+    okcWithToggleAlertWindow->setAlwaysOnTop(true);
+    okcWithToggleAlertWindow->enterModalState(
+        true, juce::ModalCallbackFunction::create([this, dontAskAgainKey](int isOK) {
+            if (okcWithToggleToggleButton->getToggleState())
+            {
+                if (isOK == 1)
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
+                                                           ALWAYS);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
+                                                           NEVER);
+                }
+            }
+            if (isOK == 1)
+                okcWithToggleCallback();
+            okcWithToggleAlertWindow.reset(nullptr);
+            okcWithToggleToggleButton.reset(nullptr);
+        }),
+        false);
+
+    return false;
 }
