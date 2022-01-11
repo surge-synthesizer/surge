@@ -709,7 +709,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,
                                            Surge::Storage::DefaultKey dontAskAgainKey,
                                            std::function<void()> okCallback,
-                                           std::string ynMessage = "Remember my choice");
+                                           std::string ynMessage = "Don't ask me again");
 
   private:
     bool scannedForMidiPresets = false;
