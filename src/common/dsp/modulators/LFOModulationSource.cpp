@@ -360,7 +360,7 @@ void LFOModulationSource::attack()
     break;
     case lt_formula:
     {
-        Surge::Formula::prepareForEvaluation(fs, formulastate, is_display);
+        Surge::Formula::prepareForEvaluation(storage, fs, formulastate, is_display);
     }
     break;
     }
@@ -885,7 +885,7 @@ void LFOModulationSource::process_block()
         formulastate.isVoice = isVoice;
 
         float tmpout[Surge::Formula::max_formula_outputs] = {0, 0, 0, 0, 0, 0, 0, 0};
-        Surge::Formula::valueAt(unwrappedphase_intpart, phase, fs, &formulastate, tmpout);
+        Surge::Formula::valueAt(unwrappedphase_intpart, phase, storage, fs, &formulastate, tmpout);
 
         if (!formulastate.useEnvelope)
         {

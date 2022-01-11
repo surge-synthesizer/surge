@@ -422,7 +422,8 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
     {
         for (int m = 0; m < n_lfos; ++m)
         {
-            Surge::Formula::removeFunctionsAssociatedWith(&(storage.getPatch().formulamods[sc][m]));
+            Surge::Formula::removeFunctionsAssociatedWith(&storage,
+                                                          &(storage.getPatch().formulamods[sc][m]));
         }
     }
 
