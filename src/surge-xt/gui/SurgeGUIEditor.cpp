@@ -5984,44 +5984,58 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
     }
 
-    if (getUseKeyboardShortcuts())
+    bool triedKey = Surge::Widgets::isAccessibleKey(key);
+    bool shortcutsUsed = getUseKeyboardShortcuts();
+
+    // zoom actions
+    if (key.getModifiers().isShiftDown() && textChar == '/')
     {
-        // zoom actions
-        if (key.getModifiers().isShiftDown())
+        if (shortcutsUsed)
         {
-            if (textChar == '/')
-            {
-                auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                               Surge::Storage::DefaultZoom, 0);
+            auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                           Surge::Storage::DefaultZoom, 0);
 
-                resizeWindow(dzf);
+            resizeWindow(dzf);
 
-                return true;
-            }
+            return true;
         }
-
-        int jog = 0;
-
-        if (textChar == '+')
+        else
         {
-            jog = key.getModifiers().isShiftDown() ? 25 : 10;
+            triedKey = true;
         }
+    }
 
-        if (textChar == '-')
-        {
-            jog = key.getModifiers().isShiftDown() ? -25 : -10;
-        }
+    int jog = 0;
 
-        if (jog != 0)
+    if (textChar == '+')
+    {
+        jog = key.getModifiers().isShiftDown() ? 25 : 10;
+    }
+
+    if (textChar == '-')
+    {
+        jog = key.getModifiers().isShiftDown() ? -25 : -10;
+    }
+
+    if (jog != 0)
+    {
+        if (shortcutsUsed)
         {
             resizeWindow(getZoomFactor() + jog);
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // prev-next category
-        if (key.getModifiers().isShiftDown() &&
-            (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
+    // prev-next category
+    if (key.getModifiers().isShiftDown() &&
+        (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
+    {
+        if (shortcutsUsed)
         {
             std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
 
@@ -6037,10 +6051,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     synth->incrementCategory(keyCode == juce::KeyPress::rightKey);
                 });
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // prev-next patch
-        if (key.getModifiers().isCommandDown() &&
-            (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
+    // prev-next patch
+    if (key.getModifiers().isCommandDown() &&
+        (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
+    {
+        if (shortcutsUsed)
         {
             std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
 
@@ -6059,9 +6080,16 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     synth->incrementPatch(keyCode == juce::KeyPress::rightKey, insideCategory);
                 });
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle scene
-        if (key.getModifiers().isAltDown() && keyCode == (int)'S')
+    // toggle scene
+    if (key.getModifiers().isAltDown() && keyCode == (int)'S')
+    {
+        if (shortcutsUsed)
         {
             // TODO fix scene assumption! If we ever increase number of scenes, we will need
             // individual key combinations for selecting a particular scene
@@ -6070,10 +6098,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // select oscillator
-        if (key.getModifiers().isAltDown() &&
-            (keyCode >= (int)'1' && keyCode <= (int)('1' + n_oscs - 1)))
+    // select oscillator
+    if (key.getModifiers().isAltDown() &&
+        (keyCode >= (int)'1' && keyCode <= (int)('1' + n_oscs - 1)))
+    {
+        if (shortcutsUsed)
         {
             // juce::getTextCharacter() returns ASCII code of the char
             // so subtract the first one we need to get the ordinal number of the osc, 0-based
@@ -6081,26 +6116,47 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // store patch
-        if (key.getModifiers().isCommandDown() && keyCode == (int)'S')
+    // store patch
+    if (key.getModifiers().isCommandDown() && keyCode == (int)'S')
+    {
+        if (shortcutsUsed)
         {
             showOverlay(SurgeGUIEditor::SAVE_PATCH);
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle patch search typeahead
-        if (key.getModifiers().isCommandDown() && keyCode == (int)'F')
+    // toggle patch search typeahead
+    if (key.getModifiers().isCommandDown() && keyCode == (int)'F')
+    {
+        if (shortcutsUsed)
         {
             patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
             patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle tuning editor
-        if (key.getModifiers().isAltDown() && keyCode == (int)'T')
+    // toggle tuning editor
+    if (key.getModifiers().isAltDown() && keyCode == (int)'T')
+    {
+        if (shortcutsUsed)
         {
             toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
 
@@ -6108,10 +6164,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
 #if INCLUDE_PATCH_BROWSER
-        // toggle patch browser
-        if (key.getModifiers().isAltDown() && textChar == 'p')
+    // toggle patch browser
+    if (key.getModifiers().isAltDown() && keyCode == (int)'P')
+    {
+        if (shortcutsUsed)
         {
             toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
 
@@ -6119,10 +6182,17 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 #endif
 
-        // toggle an applicable LFO editor (MSEG, formula...)
-        if (key.getModifiers().isAltDown() && keyCode == (int)'E')
+    // toggle an applicable LFO editor (MSEG, formula...)
+    if (key.getModifiers().isAltDown() && keyCode == (int)'E')
+    {
+        if (shortcutsUsed)
         {
             if (lfoDisplay->isMSEG())
             {
@@ -6136,18 +6206,32 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle setting patch as favorite
-        if (key.getModifiers().isAltDown() && keyCode == (int)'F')
+    // toggle setting patch as favorite
+    if (key.getModifiers().isAltDown() && keyCode == (int)'F')
+    {
+        if (shortcutsUsed)
         {
             setPatchAsFavorite(!isPatchFavorite());
             patchSelector->setIsFavorite(isPatchFavorite());
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle modulation list
-        if (key.getModifiers().isAltDown() && keyCode == (int)'M')
+    // toggle modulation list
+    if (key.getModifiers().isAltDown() && keyCode == (int)'M')
+    {
+        if (shortcutsUsed)
         {
             toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
 
@@ -6155,41 +6239,76 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle debug console
-        if (key.getModifiers().isAltDown() && keyCode == (int)'D')
+    // toggle debug console
+    if (key.getModifiers().isAltDown() && keyCode == (int)'D')
+    {
+        if (shortcutsUsed)
         {
             Surge::Debug::toggleConsole();
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle virtual keyboard
-        if (key.getModifiers().isAltDown() && keyCode == (int)'K')
+    // toggle virtual keyboard
+    if (key.getModifiers().isAltDown() && keyCode == (int)'K')
+    {
+        if (shortcutsUsed)
         {
             toggleVirtualKeyboard();
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // open manual
-        if (keyCode == juce::KeyPress::F1Key)
+    // open manual
+    if (keyCode == juce::KeyPress::F1Key)
+    {
+        if (shortcutsUsed)
         {
             juce::URL("https://surge-synthesizer.github.io/manual-xt/").launchInDefaultBrowser();
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // reload current skin
-        if (keyCode == juce::KeyPress::F5Key)
+    // reload current skin
+    if (keyCode == juce::KeyPress::F5Key)
+    {
+        if (shortcutsUsed)
         {
             refreshSkin();
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
+    }
 
-        // toggle about screen
-        if (keyCode == juce::KeyPress::F12Key)
+    // toggle about screen
+    if (keyCode == juce::KeyPress::F12Key)
+    {
+        if (shortcutsUsed)
         {
             if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
             {
@@ -6202,8 +6321,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             return true;
         }
+        else
+        {
+            triedKey = true;
+        }
     }
-    else if (Surge::Widgets::isAccessibleKey(key))
+
+    if (triedKey)
     {
         promptForOKCancelWithDontAskAgain(
             "Enable Keyboard Shortcuts",
