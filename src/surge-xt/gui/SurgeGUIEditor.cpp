@@ -5970,11 +5970,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         for (auto c : frame->getChildren())
         {
             auto q = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c);
+
             if (q)
             {
                 topOverlay = q;
             }
         }
+
         if (topOverlay)
         {
             topOverlay->onClose();
@@ -5982,21 +5984,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
     }
 
-    if (textChar == '7')
-    {
-        promptForOKCancelWithDontAskAgain("Do you want 7",
-                                          "This dialog checks if you want 7 things",
-                                          Surge::Storage::PromptToActivateShortcutsOnAccKeypress,
-                                          []() { std::cout << "OK" << std::endl; });
-        return true;
-    }
-
     if (getUseKeyboardShortcuts())
     {
         // zoom actions
         if (key.getModifiers().isShiftDown())
         {
-
             if (textChar == '/')
             {
                 auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
@@ -6031,11 +6023,14 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         if (key.getModifiers().isShiftDown() &&
             (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
+            std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
+
             return promptForOKCancelWithDontAskAgain(
                 "Confirm Category Change",
-                "You have used shift left/right to change a category which "
-                "would remove any edits you have on your current patch. Are "
-                "you sure you want to proceed?",
+                fmt::format("You have used {0}+left or {0}+right to select another category,\n"
+                            "which will discard any changes made so far.\n\n"
+                            "Do you want to proceed?",
+                            shiftmac),
                 Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
                     closeOverlay(SAVE_PATCH);
 
@@ -6047,11 +6042,14 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         if (key.getModifiers().isCommandDown() &&
             (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
         {
+            std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
+
             return promptForOKCancelWithDontAskAgain(
                 "Confirm Patch Change",
-                "You have used shift left/right to change a patch which "
-                "would remove any edits you have on your current patch. Are "
-                "you sure you want to proceed?",
+                fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
+                            "which will discard any changes made so far.\n\n"
+                            "Do you want to proceed?",
+                            ctrlcmd),
                 Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
                     closeOverlay(SAVE_PATCH);
 
@@ -6208,13 +6206,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     else if (Surge::Widgets::isAccessibleKey(key))
     {
         promptForOKCancelWithDontAskAgain(
-            "Activate Keybindings",
-            "You used a keybinding which is bound to an accessible edit "
-            "action on a Surge XT control. You have Surge XT configured to not "
-            "use keybindings. Would you like to turn Surge XT keybindings on?"
-            " You can change this setting in the Workflow menu later.",
+            "Enable Keyboard Shortcuts",
+            "You have used a keyboard shortcut that Surge XT has assigned to a certain action,\n"
+            "but the option to use keyboard shortcuts is currently disabled. "
+            "\nWould you like to enable it?\n\n"
+            "You can change this option later in the Workflow menu.",
             Surge::Storage::DefaultKey::PromptToActivateShortcutsOnAccKeypress,
-            [this]() { toggleUseKeyboardShortcuts(); }, "Don't ask again");
+            [this]() { toggleUseKeyboardShortcuts(); });
     }
 
     return false;
@@ -6530,8 +6528,12 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
     };
 
     auto bypassed = Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, DUNNO);
+
     if (bypassed == NEVER)
+    {
         return false;
+    }
+
     if (bypassed == ALWAYS)
     {
         okCallback();
@@ -6545,12 +6547,16 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
                                                         juce::AlertWindow::NoIcon, 2, nullptr));
 
     auto cb = std::make_unique<juce::ToggleButton>(ynMessage);
+
     cb->setName("");
-    cb->setSize(400, 20);
-    cb->setColour(juce::ToggleButton::textColourId, lf.findColour(juce::AlertWindow::textColourId));
-    cb->setColour(juce::ToggleButton::tickColourId, lf.findColour(juce::AlertWindow::textColourId));
+    cb->centreWithSize(400, 20);
+    cb->setColour(juce::ToggleButton::textColourId,
+                  currentSkin->getColor(Colors::Dialog::Label::Text));
+    cb->setColour(juce::ToggleButton::tickColourId,
+                  currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
     cb->setColour(juce::ToggleButton::tickDisabledColourId,
-                  lf.findColour(juce::AlertWindow::textColourId).withAlpha(0.5f));
+                  currentSkin->getColor(Colors::Dialog::Checkbox::Border));
+
     okcWithToggleAlertWindow->addCustomComponent(cb.get());
     okcWithToggleToggleButton = std::move(cb);
     okcWithToggleAlertWindow->setAlwaysOnTop(true);
@@ -6569,8 +6575,12 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
                                                            NEVER);
                 }
             }
+
             if (isOK == 1)
+            {
                 okcWithToggleCallback();
+            }
+
             okcWithToggleAlertWindow.reset(nullptr);
             okcWithToggleToggleButton.reset(nullptr);
         }),
