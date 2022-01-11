@@ -408,15 +408,15 @@ struct formulaObservation
     float phase;
 };
 
-std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dPhase,
-                                           float phaseMax, float deform = 0,
+std::vector<formulaObservation> runFormula(SurgeStorage *storage, FormulaModulatorStorage *fs,
+                                           float dPhase, float phaseMax, float deform = 0,
                                            float releaseAfter = -1)
 {
     auto res = std::vector<formulaObservation>();
     double phase = 0.0;
     int iphase = 0;
     Surge::Formula::EvaluatorState es;
-    Surge::Formula::prepareForEvaluation(fs, es, true);
+    Surge::Formula::prepareForEvaluation(storage, fs, es, true);
     es.deform = deform;
     while (phase + iphase < phaseMax)
     {
@@ -426,7 +426,7 @@ std::vector<formulaObservation> runFormula(FormulaModulatorStorage *fs, float dP
         es.released = release;
 
         float r[Surge::Formula::max_formula_outputs];
-        Surge::Formula::valueAt(iphase, phase, fs, &es, r);
+        Surge::Formula::valueAt(iphase, phase, storage, fs, &es, r);
         res.push_back(formulaObservation(iphase, phase, r[0]));
         for (int i = 0; i < Surge::Formula::max_formula_outputs; ++i)
             res.back().vVec[i] = r[i];
@@ -445,6 +445,7 @@ TEST_CASE("Basic Formula Evaluation", "[formula]")
 {
     SECTION("Identity Modulator")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -452,7 +453,7 @@ function process(modstate)
     modstate["output"] = modstate["phase"]
     return modstate
 end)FN");
-        auto runIt = runFormula(&fs, 0.0321, 5);
+        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(c.fPhase == Approx(c.v));
@@ -461,6 +462,7 @@ end)FN");
 
     SECTION("Saw Modulator")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -468,7 +470,7 @@ function process(modstate)
     modstate["output"] = 2 * modstate["phase"] - 1
     return modstate
 end)FN");
-        auto runIt = runFormula(&fs, 0.0321, 5);
+        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(2 * c.fPhase - 1 == Approx(c.v));
@@ -477,6 +479,7 @@ end)FN");
 
     SECTION("Sin Modulator")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -484,7 +487,7 @@ function process(modstate)
     modstate["output"] = math.sin( modstate["phase"] * 3.14159 * 2 )
     return modstate
 end)FN");
-        auto runIt = runFormula(&fs, 0.0321, 5);
+        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
         {
             REQUIRE(std::sin(c.fPhase * 3.14159 * 2) == Approx(c.v));
@@ -493,6 +496,7 @@ end)FN");
 
     SECTION("Test Deform")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -508,7 +512,7 @@ end)FN");
         {
             float def = id / 10.0;
             float pe = 3 * def + 1;
-            auto runIt = runFormula(&fs, 0.0321, 5, def);
+            auto runIt = runFormula(&storage, &fs, 0.0321, 5, def);
             for (auto c : runIt)
             {
                 auto q = pow(c.fPhase, pe) * 2 - 1;
@@ -519,6 +523,7 @@ end)FN");
 
     SECTION("Vector Output")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -536,7 +541,7 @@ end)FN");
         for (int id = 0; id <= 10; id++)
         {
             float pe = 0;
-            auto runIt = runFormula(&fs, 0.0321, 5, 0.f);
+            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0.f);
             for (auto c : runIt)
             {
                 auto p = c.fPhase;
@@ -554,6 +559,7 @@ TEST_CASE("Init Functions", "[formula]")
 {
     SECTION("Test Init Function")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function init(modstate)
@@ -568,7 +574,7 @@ end)FN");
 
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -582,6 +588,7 @@ TEST_CASE("Clamping", "[formula]")
 {
     SECTION("Test Clamped Function")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function process(modstate)
@@ -591,7 +598,7 @@ end)FN");
 
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -602,6 +609,7 @@ end)FN");
     }
     SECTION("Test Clamped Function")
     {
+        SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
 function init(modstate)
@@ -617,7 +625,7 @@ end)FN");
         int outOfBounds = 0;
         for (int id = 0; id <= 10; id++)
         {
-            auto runIt = runFormula(&fs, 0.0321, 5, 0);
+            auto runIt = runFormula(&storage, &fs, 0.0321, 5, 0);
             REQUIRE(!runIt.empty());
             for (auto c : runIt)
             {
@@ -895,5 +903,46 @@ end)FN");
         REQUIRE(lms);
 
         REQUIRE(lms->formulastate.isFinite);
+    }
+}
+
+TEST_CASE("Two Surges", "[formula]")
+{
+    // this attempts but fails to reproduce 5753 but i left it here anyway
+    SECTION("Two Surges on Tutorial 3")
+    {
+        auto s1 = Surge::Test::surgeOnSine();
+        auto s2 = Surge::Test::surgeOnSine();
+
+        REQUIRE(s1->loadPatchByPath("resources/data/patches_factory/Tutorials/Formula Modulator/03 "
+                                    "The Init Function And State.fxp",
+                                    -1, "Tutorials"));
+        REQUIRE(s2->loadPatchByPath("resources/data/patches_factory/Tutorials/Formula Modulator/03 "
+                                    "The Init Function And State.fxp",
+                                    -1, "Tutorials"));
+
+        for (int i = 0; i < 10; ++i)
+        {
+            s1->process();
+            s2->process();
+        }
+        s1->playNote(0, 60, 127, 0);
+        for (int i = 0; i < 50; ++i)
+        {
+            s1->process();
+            s2->process();
+        }
+        s2->playNote(0, 60, 127, 0);
+        for (int i = 0; i < 50; ++i)
+        {
+            s1->process();
+            s2->process();
+        }
+        s1->releaseNote(0, 60, 127);
+        for (int i = 0; i < 50; ++i)
+        {
+            s1->process();
+            s2->process();
+        }
     }
 }

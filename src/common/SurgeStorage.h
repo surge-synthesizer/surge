@@ -968,6 +968,10 @@ namespace Memory
 {
 struct SurgeMemoryPools;
 }
+namespace Formula
+{
+struct GlobalData;
+}
 } // namespace Surge
 
 class alignas(16) SurgeStorage
@@ -1040,6 +1044,7 @@ class alignas(16) SurgeStorage
     void initializePatchDb(bool forcePatchRescan = false);
 
     std::unique_ptr<SurgePatch> _patch;
+    std::unique_ptr<Surge::Formula::GlobalData> formulaGlobalData;
 
     // SurgePatch &getPatch();
     SurgePatch &getPatch() const;

@@ -27,6 +27,14 @@ namespace Surge
 {
 namespace Formula
 {
+
+struct GlobalData
+{
+    std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
+    std::unordered_map<FormulaModulatorStorage *, std::unordered_set<std::string>> functionsPerFMS;
+    void *audioState{nullptr}, *displayState{nullptr};
+};
+
 static constexpr int max_formula_outputs{max_lfo_indices};
 
 struct EvaluatorState
@@ -69,15 +77,19 @@ struct EvaluatorState
     lua_State *L; // This is assigned by prepareForEvaluation to be one per thread
 };
 
+void setupStorage(SurgeStorage *s);
+
 bool initEvaluatorState(EvaluatorState &s);
 bool cleanEvaluatorState(EvaluatorState &s);
-void removeFunctionsAssociatedWith(FormulaModulatorStorage *fs); // audio thread only please
-bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display);
+void removeFunctionsAssociatedWith(SurgeStorage *,
+                                   FormulaModulatorStorage *fs); // audio thread only please
+bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
+                          bool is_display);
 
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p);
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
 
-void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
+void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs]);
 
 struct DebugRow

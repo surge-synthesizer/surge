@@ -16,6 +16,7 @@
 #include "FormulaModulationHelper.h"
 #include "LuaSupport.h"
 #include "SurgeVoice.h"
+#include "SurgeStorage.h"
 #include <thread>
 #include <functional>
 #include "fmt/core.h"
@@ -25,24 +26,22 @@ namespace Surge
 namespace Formula
 {
 
-std::unordered_set<std::string> knownBadFunctions; // these are functions which cause an error
-std::unordered_map<FormulaModulatorStorage *, std::unordered_set<std::string>> functionsPerFMS;
-lua_State *audioState = nullptr, *displayState = nullptr;
-
-bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool is_display)
+void setupStorage(SurgeStorage *s) { s->formulaGlobalData = std::make_unique<GlobalData>(); }
+bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
+                          bool is_display)
 {
-
+    auto &stateData = *storage->formulaGlobalData;
     bool firstTimeThrough = false;
     if (!is_display)
     {
         static int aid = 1;
-        if (audioState == nullptr)
+        if (stateData.audioState == nullptr)
         {
-            audioState = lua_open();
-            luaL_openlibs(audioState);
+            stateData.audioState = lua_open();
+            luaL_openlibs((lua_State *)(stateData.audioState));
             firstTimeThrough = true;
         }
-        s.L = audioState;
+        s.L = (lua_State *)(stateData.audioState);
         snprintf(s.stateName, TXT_SIZE, "audiostate_%d", aid);
         aid++;
         if (aid < 0)
@@ -51,13 +50,13 @@ bool prepareForEvaluation(FormulaModulatorStorage *fs, EvaluatorState &s, bool i
     else
     {
         static int did = 1;
-        if (displayState == nullptr)
+        if (stateData.displayState == nullptr)
         {
-            displayState = lua_open();
-            luaL_openlibs(displayState);
+            stateData.displayState = lua_open();
+            luaL_openlibs((lua_State *)(stateData.displayState));
             firstTimeThrough = true;
         }
-        s.L = displayState;
+        s.L = (lua_State *)(stateData.displayState);
         snprintf(s.stateName, TXT_SIZE, "dispstate_%d", did);
         did++;
         if (did < 0)
@@ -118,7 +117,7 @@ end
         s.isvalid = lua_isfunction(s.L, -1);
         lua_pop(s.L, 1);
 
-        if (knownBadFunctions.find(s.funcName) != knownBadFunctions.end())
+        if (stateData.knownBadFunctions.find(s.funcName) != stateData.knownBadFunctions.end())
         {
             s.isvalid = false;
         }
@@ -150,8 +149,8 @@ end
             Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
             lua_pop(s.L, 1);
 
-            functionsPerFMS[fs].insert(s.funcName);
-            functionsPerFMS[fs].insert(s.funcNameInit);
+            stateData.functionsPerFMS[fs].insert(s.funcName);
+            stateData.functionsPerFMS[fs].insert(s.funcNameInit);
 
             s.isvalid = true;
         }
@@ -160,7 +159,7 @@ end
             s.adderror("Unable to deteremine 'process' or 'init' function : " + emsg);
             lua_pop(s.L, 1); // process
             lua_pop(s.L, 1); // process
-            knownBadFunctions.insert(s.funcName);
+            stateData.knownBadFunctions.insert(s.funcName);
         }
 
         // this happens here because we did parse it at least. Don't parse again until it is changed
@@ -224,7 +223,7 @@ end
                     s.adderror("Your 'init' function must return a table. This usually means "
                                "that you didnt' end your init function with 'return modstate' "
                                "before the end statement.");
-                    knownBadFunctions.insert(s.funcName);
+                    stateData.knownBadFunctions.insert(s.funcName);
                 }
             }
             else
@@ -233,7 +232,7 @@ end
                 std::ostringstream oss;
                 oss << "Failed to evaluate 'init' function. " << lua_tostring(s.L, -1);
                 s.adderror(oss.str());
-                knownBadFunctions.insert(s.funcName);
+                stateData.knownBadFunctions.insert(s.funcName);
             }
         }
 
@@ -368,13 +367,14 @@ end
     return true;
 }
 
-void removeFunctionsAssociatedWith(FormulaModulatorStorage *fs)
+void removeFunctionsAssociatedWith(SurgeStorage *storage, FormulaModulatorStorage *fs)
 {
+    auto &stateData = *storage->formulaGlobalData;
 
-    auto S = audioState;
+    auto S = stateData.audioState;
     if (!S)
         return;
-    if (functionsPerFMS.find(fs) == functionsPerFMS.end())
+    if (stateData.functionsPerFMS.find(fs) == stateData.functionsPerFMS.end())
         return;
 
 #if 0
@@ -385,7 +385,7 @@ void removeFunctionsAssociatedWith(FormulaModulatorStorage *fs)
     }
 #endif
 
-    functionsPerFMS.erase(fs);
+    stateData.functionsPerFMS.erase(fs);
 }
 
 bool cleanEvaluatorState(EvaluatorState &s)
@@ -407,8 +407,8 @@ bool initEvaluatorState(EvaluatorState &s)
     s.L = nullptr;
     return true;
 }
-void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs, EvaluatorState *s,
-             float output[max_formula_outputs])
+void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
+             FormulaModulatorStorage *fs, EvaluatorState *s, float output[max_formula_outputs])
 {
     s->activeoutputs = 1;
     memset(output, 0, max_formula_outputs * sizeof(float));
@@ -600,11 +600,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, FormulaModulatorStorage *fs,
         }
         else
         {
-            if (knownBadFunctions.find(s->funcName) != knownBadFunctions.end())
+            auto &stateData = *storage->formulaGlobalData;
+
+            if (stateData.knownBadFunctions.find(s->funcName) != stateData.knownBadFunctions.end())
                 s->adderror(
                     "You must define the 'output' field in the returned table as a number or "
                     "float array");
-            knownBadFunctions.insert(s->funcName);
+            stateData.knownBadFunctions.insert(s->funcName);
             s->isvalid = false;
         };
         // pop the result and the function

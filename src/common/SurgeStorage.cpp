@@ -57,6 +57,7 @@
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
 // FIXME
+#include "FormulaModulationHelper.h"
 
 float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
@@ -468,6 +469,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     isToggledToCache = false;
     for (int q = 0; q < 3; ++q)
         togglePriorState[q] = false;
+
+    Surge::Formula::setupStorage(this);
 
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
