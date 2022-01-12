@@ -976,7 +976,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     Surge::GUI::toOSCaseForMenu("Rename Modulator..."), [this, control, lfo_id]() {
                         auto pos = control->asJuceComponent()->getBounds().getTopLeft();
 
-                        openLFORenameDialog(lfo_id, pos);
+                        openLFORenameDialog(lfo_id, pos, control->asJuceComponent());
                     });
 
                 contextMenu.addSeparator();

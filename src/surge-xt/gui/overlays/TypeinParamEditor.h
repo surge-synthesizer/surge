@@ -39,6 +39,9 @@ struct TypeinParamEditor : public juce::Component,
     SurgeGUIEditor *editor{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *e) { editor = e; }
     void grabFocus();
+    juce::Component *returnFocusComp{nullptr};
+    void setReturnFocusTarget(juce::Component *that) { returnFocusComp = that; }
+    void doReturnFocus();
     juce::Rectangle<int> getRequiredSize();
     void setBoundsToAccompany(const juce::Rectangle<int> &controlRect,
                               const juce::Rectangle<int> &parentRect);

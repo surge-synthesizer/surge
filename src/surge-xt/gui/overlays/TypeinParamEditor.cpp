@@ -127,6 +127,11 @@ void TypeinParamEditor::visibilityChanged()
             editor->vkbForward--;
         }
     }
+
+    if (!isVisible())
+    {
+        doReturnFocus();
+    }
 }
 
 void TypeinParamEditor::onSkinChanged()
@@ -176,6 +181,7 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
 
     if (res)
     {
+        doReturnFocus();
         setVisible(false);
     }
     else
@@ -189,8 +195,21 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
     }
 }
 
-void TypeinParamEditor::textEditorEscapeKeyPressed(juce::TextEditor &te) { setVisible(false); }
+void TypeinParamEditor::textEditorEscapeKeyPressed(juce::TextEditor &te)
+{
+    doReturnFocus();
+    setVisible(false);
+}
 
 void TypeinParamEditor::grabFocus() { textEd->grabKeyboardFocus(); }
+
+void TypeinParamEditor::doReturnFocus()
+{
+    if (returnFocusComp)
+    {
+        returnFocusComp->grabKeyboardFocus();
+    }
+    returnFocusComp = nullptr;
+}
 } // namespace Overlays
 } // namespace Surge
