@@ -438,7 +438,7 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             int lfo_id = getCurrentModSource() - ms_lfo1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            sge->openLFORenameDialog(lfo_id, rect.getTopLeft());
+            sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
 
             return;
         }

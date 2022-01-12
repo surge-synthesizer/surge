@@ -161,6 +161,7 @@ void MiniEdit::buttonClicked(juce::Button *button)
         callback(typein->getText().toStdString());
     }
 
+    doReturnFocus();
     setVisible(false);
 }
 
@@ -182,14 +183,33 @@ void MiniEdit::visibilityChanged()
             editor->vkbForward--;
         }
     }
+
+    if (!isVisible())
+    {
+        doReturnFocus();
+    }
 }
 
 void MiniEdit::textEditorReturnKeyPressed(juce::TextEditor &editor)
 {
     callback(typein->getText().toStdString());
+    doReturnFocus();
     setVisible(false);
 }
 
-void MiniEdit::textEditorEscapeKeyPressed(juce::TextEditor &editor) { setVisible(false); }
+void MiniEdit::textEditorEscapeKeyPressed(juce::TextEditor &editor)
+{
+    doReturnFocus();
+    setVisible(false);
+}
+
+void MiniEdit::doReturnFocus()
+{
+    if (returnFocusComp)
+    {
+        returnFocusComp->grabKeyboardFocus();
+    }
+    returnFocusComp = nullptr;
+}
 } // namespace Overlays
 } // namespace Surge

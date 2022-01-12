@@ -3962,6 +3962,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 {
     if (typeinParamEditor->isVisible())
     {
+        typeinParamEditor->setReturnFocusTarget(nullptr);
         typeinParamEditor->setVisible(false);
     }
 
@@ -4063,6 +4064,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setBoundsToAccompany(c->getBounds(), frame->getBounds());
     typeinParamEditor->setVisible(true);
     typeinParamEditor->toFront(true);
+    typeinParamEditor->setReturnFocusTarget(c);
     typeinParamEditor->grabFocus();
 }
 
@@ -4397,7 +4399,8 @@ float SurgeGUIEditor::getModulationF01FromString(long tag, const std::string &s)
 
 void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::string &prompt,
                                        const std::string &title, const juce::Point<int> &iwhere,
-                                       std::function<void(const std::string &)> onOK)
+                                       std::function<void(const std::string &)> onOK,
+                                       juce::Component *returnFocusTo)
 {
     miniEdit->setSkin(currentSkin, bitmapStore);
     miniEdit->setEditor(this);
@@ -4412,6 +4415,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     miniEdit->setVisible(true);
     miniEdit->toFront(true);
+    miniEdit->setFocusReturnTarget(returnFocusTo);
     miniEdit->grabFocus();
 }
 
@@ -4575,10 +4579,12 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
 
                 synth->refresh_editor = true;
             }
-        });
+        },
+        msb);
 }
 
-void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int> where)
+void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int> where,
+                                         juce::Component *c)
 {
     auto msi = modsource_index;
 
@@ -4592,7 +4598,7 @@ void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int
         synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
         fmt::format("Enter a new name for {:s}:",
                     modulatorNameWithIndex(current_scene, modsource, msi, false, false, true)),
-        "Rename Modulator", juce::Point<int>(10, 10), callback);
+        "Rename Modulator", juce::Point<int>(10, 10), callback, c);
 }
 
 void SurgeGUIEditor::resetSmoothing(Modulator::SmoothingMode t)
@@ -5912,7 +5918,11 @@ bool SurgeGUIEditor::isAHiddenSendOrReturn(Parameter *p)
     return false;
 }
 
-void SurgeGUIEditor::hideTypeinParamEditor() { typeinParamEditor->setVisible(false); }
+void SurgeGUIEditor::hideTypeinParamEditor()
+{
+    typeinParamEditor->setReturnFocusTarget(nullptr);
+    typeinParamEditor->setVisible(false);
+}
 
 void SurgeGUIEditor::activateFromCurrentFx()
 {

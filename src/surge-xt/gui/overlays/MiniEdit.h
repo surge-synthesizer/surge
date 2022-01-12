@@ -62,6 +62,10 @@ struct MiniEdit : public juce::Component,
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
     void grabFocus() { typein->grabKeyboardFocus(); }
+
+    juce::Component *returnFocusComp{nullptr};
+    void setFocusReturnTarget(juce::Component *c) { returnFocusComp = c; }
+    void doReturnFocus();
     SurgeGUIEditor *editor{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MiniEdit);
