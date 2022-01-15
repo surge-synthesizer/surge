@@ -408,7 +408,7 @@ bool OscillatorMenu::keyPressed(const juce::KeyPress &key)
     if (action == None)
         return false;
 
-    if (action == OpenMenu)
+    if (action == OpenMenu || action == Return)
     {
         menu.showMenuAsync(juce::PopupMenu::Options());
         return true;
@@ -787,7 +787,7 @@ bool FxMenu::keyPressed(const juce::KeyPress &key)
     if (action == None)
         return false;
 
-    if (action == OpenMenu)
+    if (action == OpenMenu || action == Return)
     {
         menu.showMenuAsync(juce::PopupMenu::Options());
         return true;

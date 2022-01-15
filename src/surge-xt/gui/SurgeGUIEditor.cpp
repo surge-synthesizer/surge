@@ -6337,7 +6337,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
         }
     }
 
-    if (triedKey)
+    if (triedKey && !shortcutsUsed)
     {
         promptForOKCancelWithDontAskAgain(
             "Enable Keyboard Shortcuts",
