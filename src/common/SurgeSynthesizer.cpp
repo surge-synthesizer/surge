@@ -41,8 +41,11 @@ using namespace std;
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
-      halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
+                                                                                  &storage,
+                                                                                  &storage,
+                                                                                  &storage},
+      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
@@ -2048,8 +2051,11 @@ void SurgeSynthesizer::allNotesOff()
     halfbandB.reset();
     halfbandIN.reset();
 
-    hpA.suspend();
-    hpB.suspend();
+    for (int i = 0; i < n_hpBQ; i++)
+    {
+        hpA[i].suspend();
+        hpB[i].suspend();
+    }
 
     for (int i = 0; i < n_fx_slots; i++)
     {
@@ -3962,8 +3968,13 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f;
 
-        hpA.coeff_HP(hpA.calc_omega(freq / 12.0), 0.4);    // var 0.707
-        hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
+        auto slope = storage.getPatch().scene[0].lowcut.deform_type;
+
+        for (int i = 0; i <= slope; i++)
+        {
+            hpA[i].coeff_HP(hpA[i].calc_omega(freq / 12.0), 0.4); // var 0.707
+            hpA[i].process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
+        }
     }
 
     if (storage.getPatch().scene[1].lowcut.deactivated == false)
@@ -3971,8 +3982,13 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f;
 
-        hpB.coeff_HP(hpB.calc_omega(freq / 12.0), 0.4);
-        hpB.process_block(sceneout[1][0], sceneout[1][1]);
+        auto slope = storage.getPatch().scene[1].lowcut.deform_type;
+
+        for (int i = 0; i <= slope; i++)
+        {
+            hpB[i].coeff_HP(hpB[i].calc_omega(freq / 12.0), 0.4); // var 0.707
+            hpB[i].process_block(sceneout[1][0], sceneout[1][1]); // TODO: quadify
+        }
     }
 
     for (int cls = 0; cls < n_scenes; ++cls)

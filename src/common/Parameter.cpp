@@ -361,6 +361,7 @@ bool Parameter::has_deformoptions() const
 {
     switch (ctrltype)
     {
+    case ct_freq_hpf:
     case ct_lfodeform:
     case ct_modern_trimix:
     case ct_alias_mask:
