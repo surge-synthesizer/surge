@@ -187,14 +187,15 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
     everDragged = false;
     everMoved = false;
 
-    if (event.mods.isPopupMenu())
-    {
-        notifyControlModifierClicked(event.mods);
-    }
-    if (labelArea.contains(event.position.toInt()))
+    if (labelArea.contains(event.position.toInt()) && event.mods.isLeftButtonDown())
     {
         auto m = event.mods.withFlags(juce::ModifierKeys::popupMenuClickModifier);
         notifyControlModifierClicked(m);
+    }
+
+    if (event.mods.isPopupMenu())
+    {
+        notifyControlModifierClicked(event.mods);
     }
 }
 
