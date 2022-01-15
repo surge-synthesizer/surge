@@ -4797,6 +4797,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::MultiSwitch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
@@ -4860,6 +4861,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             if (p)
             {
+                hsw->setDeactivated(p->appears_deactivated());
+
                 auto fval = p->get_value_f01();
 
                 if (p->ctrltype == ct_scenemode)
@@ -4898,22 +4901,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_mp_jogwaveshape:
                     cg = cg_FILTER;
                     break;
-
-                    /* keep these up top
-                case tag_mp_category:
-                case tag_mp_patch:
-                case tag_store:
-                    cg = endCG;
-                    addToGlobalControls = true;
-                    break; */
                 case tag_mp_jogfx:
                     cg = cg_FX;
                     break;
-
                 default:
                     cg = endCG;
                     break;
                 }
+
                 if (cg != endCG)
                 {
                     addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg), *hsw);
@@ -4941,9 +4936,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         else
         {
-            std::cout << "Can't get a CHSwitch2 BG" << std::endl;
+            std::cout << "Can't get a MultiSwitch background" << std::endl;
         }
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::Switch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
@@ -4953,6 +4949,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
             hsw->setStorage(&(synth->storage));
+
             if (p)
             {
                 addAndMakeVisibleWithTrackingInCG(p->ctrlgroup, *hsw);
@@ -4994,9 +4991,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             if (paramIndex >= 0)
                 nonmod_param[paramIndex] = hsw.get();
+
             if (p)
             {
                 hsw->setValue(p->get_value_f01());
+                hsw->setDeactivated(p->appears_deactivated());
 
                 // Carry over this filter type special case from the default control path
                 if (p->ctrltype == ct_filtersubtype)
@@ -5032,6 +5031,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 juceSkinComponents[skinCtrl->sessionid].get());
         }
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::LFODisplay)
     {
         if (!p)
@@ -5108,6 +5108,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         addAndMakeVisibleWithTrackingInCG(cg_OSC, *oscMenu);
         return oscMenu.get();
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FxMenu)
     {
         if (!fxMenu)
@@ -5228,6 +5229,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         return nullptr;
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FilterSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
@@ -5325,6 +5327,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::WaveShaperSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
@@ -5358,9 +5361,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(waveshaperSelector.get());
     }
+
     if (skinCtrl->ultimateparentclassname != Surge::GUI::NoneClassName)
-        std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname
+        std::cout << "Unable to make control with UPC " << skinCtrl->ultimateparentclassname
                   << std::endl;
+
     return nullptr;
 }
 

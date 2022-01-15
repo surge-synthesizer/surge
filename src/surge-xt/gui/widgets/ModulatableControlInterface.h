@@ -118,7 +118,7 @@ struct ModulatableControlInterface
     virtual float getModValue() const { return modValue; }
     float modValue{0.f};
 
-    /* Deativation can occur by a function or by a value */
+    /* Deactivation can occur by a function or by a value */
     virtual void setDeactivatedFn(std::function<bool()> f)
     {
         hasDeactivatedFn = true;
