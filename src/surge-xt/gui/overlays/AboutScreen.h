@@ -57,7 +57,7 @@ struct AboutScreen : public juce::Component,
 
     void onSkinChanged() override;
     SurgeImage *logo{nullptr};
-    int logoW{555}, logoH{179};
+    int logoW{666}, logoH{179};
 
     // label, value, url
     std::vector<std::tuple<std::string, std::string, std::string>> lowerLeft, lowerRight;
