@@ -534,18 +534,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     // Assign the dynamic deactivation handlers
     static struct OscAudioInDeact : public ParameterDynamicDeactivationFunction
     {
-        // TODO: Don't forget to add osc phase here once we add it in XT 2.0!
         const bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry;
             auto osc = &(p->storage->getPatch().scene[p->scene - 1].osc[cge]);
-            auto res = osc->type.val.i == ot_audioinput;
 
-            osc[cge].pitch.deactivated = res;
-            osc[cge].octave.deactivated = res;
-            osc[cge].keytrack.deactivated = res;
-            osc[cge].retrigger.deactivated = res;
-            return res;
+            return osc->type.val.i == ot_audioinput;
         }
     } oscAudioInDeact;
 
@@ -588,6 +582,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     for (int sc = 0; sc < n_scenes; ++sc)
     {
+        // TODO: Don't forget to add osc phase here once we add it in XT 2.0!
         for (int o = 0; o < n_oscs; ++o)
         {
             scene[sc].osc[o].pitch.dynamicDeactivation = &oscAudioInDeact;
