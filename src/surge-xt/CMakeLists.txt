@@ -160,21 +160,21 @@ target_sources(${PROJECT_NAME} PRIVATE
   )
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
-  message(FATAL_ERROR "You must build against at least a Juce 6.1 with Accessibility support")
+  message(FATAL_ERROR "You must build against at least JUCE 6.1 with accessibility support!")
 endif()
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_processors/processors/juce_AudioProcessorEditorHostContext.h)
   set(SURGE_JUCE_HOST_CONTEXT TRUE)
-  message(STATUS "Including JUCE VST3 host-side context menu support")
+  message(STATUS "Including JUCE VST3 host-side context menu support...")
 else()
-  message(STATUS "No JUCE VST3 host-side context menu support in this version")
+  message(STATUS "No JUCE VST3 host-side context menu support in this version!")
 endif()
 
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_processors/utilities/juce_VST3ClientExtensions.h)
   set(SURGE_JUCE_VST3_EXTENSIONS TRUE)
-  message(STATUS "Including JUCE VST3 client extensions")
+  message(STATUS "Including JUCE VST3 client extensions...")
 else()
-  message(STATUS "No JUCE VST3 client extensions")
+  message(STATUS "No JUCE VST3 client extensions in this version!")
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
