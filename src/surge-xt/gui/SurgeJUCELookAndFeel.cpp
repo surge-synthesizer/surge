@@ -173,6 +173,9 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
     surgeVersion += " DEBUG";
 #endif
 
+    if (Surge::Build::IsRelease)
+        surgeVersion = "";
+
     if (wt != "Surge XT")
     {
         surgeLabel = "Surge XT -";
@@ -187,7 +190,7 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
 
     // Surge icon is 12 x 14 so draw that in the center
     auto titleCenter = w / 2;
-    auto textMargin = 5;
+    auto textMargin = Surge::Build::IsRelease ? 0 : 5;
     auto titleTextWidth = sw + vw + textMargin;
 
     if (ic)
