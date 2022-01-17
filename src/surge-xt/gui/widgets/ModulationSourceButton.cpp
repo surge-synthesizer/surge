@@ -404,7 +404,8 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             auto ccid = (int)getCurrentModSource() - ms_ctrl1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
+            // See #5774 for wy this is commented out
+            // sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
 
             return;
         }
@@ -438,7 +439,8 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             int lfo_id = getCurrentModSource() - ms_lfo1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
+            // See #5774 for wy this is commented out
+            // sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
 
             return;
         }
