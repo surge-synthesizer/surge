@@ -14,6 +14,9 @@ struct Build
     static const char *ReleaseNumberStr;
     static const char *ReleaseStr;
 
+    static const bool IsRelease; // vs nightly
+    static const bool IsNightly;
+
     static const char *GitHash;
     static const char *GitBranch;
 

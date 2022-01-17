@@ -5,6 +5,7 @@
 */
 #include "version.h"
 
+// clang-format off
 namespace Surge
 {
    const char* Build::MajorVersionStr = "@SURGE_MAJOR_VERSION@";
@@ -15,7 +16,10 @@ namespace Surge
    
    const char* Build::ReleaseNumberStr = "@SURGE_RELEASE_NUMBER@";
    const char* Build::ReleaseStr = "@SURGE_RELEASE_VERSION@";
-   
+
+   const bool Build::IsRelease = @SURGE_BUILD_IS_RELEASE@;
+   const bool Build::IsNightly = ! Build::IsRelease;
+
    const char* Build::BuildNumberStr = "@SURGE_BUILD_HASH@"; // Build number to be sure that each result could identified.
    
    const char* Build::FullVersionStr = "@SURGE_FULL_VERSION@";
@@ -34,4 +38,4 @@ namespace Surge
 
    const char* Build::CMAKE_INSTALL_PREFIX = "@CMAKE_INSTALL_PREFIX@";
 }
-
+// clang-format on
