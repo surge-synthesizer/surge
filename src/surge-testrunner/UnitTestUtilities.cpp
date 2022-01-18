@@ -194,8 +194,20 @@ std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &otp)
         return surge;
 }
 
-std::shared_ptr<SurgeSynthesizer> surgeOnSine() { return surgeOnPatch("Init Sine"); }
-std::shared_ptr<SurgeSynthesizer> surgeOnSaw() { return surgeOnPatch("Init Saw"); }
+std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp)
+{
+    auto surge = Surge::Headless::createSurge(44100);
+
+    auto templatePath = surge->storage.datapath / fs::path{"patches_factory"} /
+                        fs::path{"Templates"} / fs::path{otp + ".fxp"};
+
+    surge->loadPatchByPath(path_to_string(templatePath).c_str(), -1, "Test");
+
+    return surge;
+}
+
+std::shared_ptr<SurgeSynthesizer> surgeOnSine() { return surgeOnTemplate("Init Sine"); }
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw() { return surgeOnTemplate("Init Saw"); }
 
 void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
                          int nC, int startSample, int endSample)

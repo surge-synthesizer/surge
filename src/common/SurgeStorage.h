@@ -984,6 +984,7 @@ class alignas(16) SurgeStorage
     //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
     SurgeStorage(std::string suppliedDataPath = "");
+    static std::string skipPatchLoadDataPathSentinel;
 
     // With XT surgestorage can now keep a cache of errors it reports to the user
     void reportError(const std::string &msg, const std::string &title);

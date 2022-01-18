@@ -72,8 +72,16 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
+std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>";
+
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
+    bool loadWtAndPatch = true;
+    loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel;
+
+    if (suppliedDataPath == skipPatchLoadDataPathSentinel)
+        suppliedDataPath = "";
+
     if (samplerate == 0)
     {
         setSamplerate(48000);
@@ -432,10 +440,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     load_midi_controllers();
 
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
-    bool loadWtAndPatch = true;
-
-    // skip loading during export, it pops up an irrelevant error dialog. Only used by LV2
-    loadWtAndPatch = !skipLoadWtAndPatch;
     if (loadWtAndPatch)
     {
         refresh_wtlist();

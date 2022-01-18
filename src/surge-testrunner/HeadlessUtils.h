@@ -11,7 +11,7 @@ namespace Surge
 namespace Headless
 {
 
-std::shared_ptr<SurgeSynthesizer> createSurge(int sr);
+std::shared_ptr<SurgeSynthesizer> createSurge(int sr, bool loadAllPatches = false);
 
 void writeToStream(const float *data, int nSamples, int nChannels, std::ostream &str);
 
