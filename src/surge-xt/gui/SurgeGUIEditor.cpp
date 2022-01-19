@@ -1730,11 +1730,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
-        Surge::Widgets::ModulatableSlider::kUnInitialized)
+        Surge::Widgets::ModulatableSlider::MoveRateState::kUnInitialized)
+    {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             (Surge::Widgets::ModulatableSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
                 &(synth->storage), Surge::Storage::SliderMoveRateState,
                 (int)Surge::Widgets::ModulatableSlider::kLegacy);
+    }
+
+    if (Surge::Widgets::ModulatableSlider::touchscreenMode ==
+        Surge::Widgets::ModulatableSlider::TouchscreenMode::kUnassigned)
+    {
+        bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                             Surge::Storage::TouchMouseMode, false);
+        Surge::Widgets::ModulatableSlider::touchscreenMode =
+            (touchMode == false) ? Surge::Widgets::ModulatableSlider::TouchscreenMode::kDisabled
+                                 : Surge::Widgets::ModulatableSlider::TouchscreenMode::kEnabled;
+    }
 
     /*
     ** Skin Labels
@@ -3166,6 +3178,10 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &wh
 
     mouseMenu.addItem(Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), true, touchMode,
                       [this, touchMode]() {
+                          Surge::Widgets::ModulatableSlider::touchscreenMode =
+                              (!touchMode == false)
+                                  ? Surge::Widgets::ModulatableSlider::TouchscreenMode::kDisabled
+                                  : Surge::Widgets::ModulatableSlider::TouchscreenMode::kEnabled;
                           Surge::Storage::updateUserDefaultValue(
                               &(this->synth->storage), Surge::Storage::TouchMouseMode, !touchMode);
                       });
