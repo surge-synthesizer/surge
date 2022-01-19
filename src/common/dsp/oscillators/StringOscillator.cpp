@@ -355,8 +355,6 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
             delayLine[t]->write(tone.v < 0 ? lpt[t] : hpt[t]);
         }
     }
-    lp.flush_sample_denormal();
-    hp.flush_sample_denormal();
 
     for (int t = 0; t < 2; ++t)
     {
@@ -652,9 +650,6 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
         output[i] = out;
         outputR[i] = out;
     }
-
-    lp.flush_sample_denormal_aggressive();
-    hp.flush_sample_denormal_aggressive();
 
     if (charFilt.doFilter)
     {
