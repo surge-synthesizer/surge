@@ -129,7 +129,13 @@ void SurgeImageStore::addEntry(int id)
 
     if (auto *h = SurgeImage::createFromPrefix("hover", id))
     {
-        std::string name = fmt::format("hover{0}", id);
+        std::string name = fmt::format("hover{:05d}", id);
+        bitmap_file_registry[name] = h;
+    }
+
+    if (auto *h = SurgeImage::createFromPrefix("hoverOn", id))
+    {
+        std::string name = fmt::format("hoverOn{:05d}", id);
         bitmap_file_registry[name] = h;
     }
 }

@@ -16,10 +16,12 @@
 #include "SurgeImage.h"
 #include "SurgeXTBinary.h"
 
+#include "fmt/core.h"
+
 SurgeImage::SurgeImage(int rid)
 {
     resourceID = rid;
-    std::string fn = "bmp00" + std::to_string(rid) + "_svg";
+    std::string fn = fmt::format("bmp{:05d}_svg", rid);
     int bds;
     auto bd = SurgeXTBinary::getNamedResource(fn.c_str(), bds);
 
@@ -46,7 +48,7 @@ SurgeImage::~SurgeImage() = default;
 
 SurgeImage *SurgeImage::createFromPrefix(const std::string &prefix, int id)
 {
-    std::string fn = prefix + "00" + std::to_string(id) + "_svg";
+    std::string fn = fmt::format("{:s}{:05d}_svg", prefix, id);
     int bds;
     auto bd = SurgeXTBinary::getNamedResource(fn.c_str(), bds);
 

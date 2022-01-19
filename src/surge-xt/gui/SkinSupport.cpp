@@ -145,12 +145,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
             if (name.length() >= ending.length() &&
                 0 == name.compare(name.length() - ending.length(), ending.length(), ending))
             {
-#if WINDOWS
-                char sep = '\\';
-#else
-                char sep = '/';
-#endif
-                auto sp = name.rfind(sep);
+                auto sp = name.rfind(PATH_SEPARATOR);
+
                 if (sp == std::string::npos)
                 {
                 }
@@ -161,7 +157,7 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
                     Entry e;
                     e.rootType = rt;
                     e.root = path;
-                    e.name = lo + sep;
+                    e.name = lo + PATH_SEPARATOR;
                     if (e.name.find("default.surge-skin") != std::string::npos && rt == FACTORY &&
                         defaultSkinEntry.name == "")
                     {
@@ -177,8 +173,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
     {
         auto memSkin = Entry();
         memSkin.rootType = MEMORY;
-        memSkin.name = "In Memory Default";
-        memSkin.displayName = "In Memory Default";
+        memSkin.name = "Default";
+        memSkin.displayName = "Default";
         memSkin.category = "";
         memSkin.root = "";
         availableSkins.push_back(memSkin);
