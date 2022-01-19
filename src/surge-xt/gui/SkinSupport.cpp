@@ -561,8 +561,9 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
                         validKids = false;
                         // for( auto kk : k.second )
                         // std::cout << _D(kk.first) << _D(kk.second) << std::endl;
-                        FIXMEERROR << "Each subchild of a multi-image must contain a zoom-level and "
-                                      "resource";
+                        FIXMEERROR
+                            << "Each subchild of a multi-image must contain a zoom-level and "
+                               "resource";
                         break;
                     }
                     else if (k.second["zoom-level"] == "100")
