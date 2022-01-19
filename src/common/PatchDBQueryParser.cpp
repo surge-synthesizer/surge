@@ -31,7 +31,7 @@ namespace pegtl = tao::TAO_PEGTL_NAMESPACE;
 
 namespace grammar
 {
-// CLang Format wants all these emtpy structs to be braced on newlines so turn it off for now
+// CLang Format wants all these empty structs to be braced on newlines so turn it off for now
 // clang-format off
 struct expression;
 struct value;

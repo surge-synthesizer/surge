@@ -241,7 +241,7 @@ std::string SurgeGUIEditor::tuningToHtml()
 
     if (synth->storage.currentMapping.count > 48)
     {
-        htmls << "Surge only displays inverval matrices for scales lower than 48 in length"
+        htmls << "Surge only displays interval matrices for scales lower than 48 in length"
               << std::endl;
     }
     else

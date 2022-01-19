@@ -58,7 +58,7 @@ bool parseStringDefiningFunction(lua_State *s, const std::string &definition,
  * top of the stack, bar next and hootie third.
  *
  * Return an integer which is the number of the functions which were resolved and
- * the number which were nil. If the function returns 0 errorMessage will be popuplated
+ * the number which were nil. If the function returns 0 errorMessage will be populated
  * with something.
  */
 int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &definition,

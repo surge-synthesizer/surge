@@ -814,7 +814,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 
         /*
         ** std::filesystem has a recursive_directory_iterator, but between the
-        ** hand rolled ipmmlementation on mac, expermiental on windows, and
+        ** hand rolled ipmmlementation on mac, experimental on windows, and
         ** ostensibly standard on linux it isn't consistent enough to warrant
         ** using yet, so build my own recursive directory traversal with a simple
         ** stack
@@ -2419,7 +2419,7 @@ bool isValidUTF8(const std::string &testThis)
     // then it's always of form '110xxxxx10xxxxxx'. Similarly for three and four byte UTF8
     // characters it starts with '1110xxxx' and '11110xxx' followed by '10xxxxxx' one less times as
     // there are bytes. This tool will locate mistakes in the encoding and tell you where they
-    // occured.
+    // occurred.
 
     //    https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
 

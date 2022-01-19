@@ -2553,7 +2553,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             return;
         }
         float mf = modulationDepth;
-        // OK so this is already handed to us extended and this one is wierd so
+        // OK so this is already handed to us extended and this one is weird so
         auto qq = mf;
         if (extend_range)
         {

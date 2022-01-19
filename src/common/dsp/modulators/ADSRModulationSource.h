@@ -281,7 +281,7 @@ class ADSRModulationSource : public ModulationSource
                     /*
                     ** That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up
                     *with
-                    ** lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that
+                    ** lo and hi both pushing us up off sustain. Unfortunately we need to handle that
                     *case
                     ** specially by pushing lo down. These limits are pretty empirical. Git blame to
                     *see

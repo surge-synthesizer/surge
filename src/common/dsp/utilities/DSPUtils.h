@@ -186,7 +186,7 @@ inline float lerp(float a, float b, float x) { return (1 - x) * a + x * b; }
 
 inline void trixpan(
     float &L, float &R,
-    float x) // panning that always lets both channels through unattenuated (seperate hard-panning)
+    float x) // panning that always lets both channels through unattenuated (separate hard-panning)
 {
     if (x < 0.f)
     {

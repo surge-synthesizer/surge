@@ -10,7 +10,7 @@ defining a group of sliders to all have a different handle.
 You could do this by overriding a parameter on a particular control over and over, which we show here, but you
 can also do it by defining a user defined control class which allows you to set a bunch of properties then
 apply that bundle to a control. This is very very loosely similar to CSS in web design, but don't let that
-analogy lead you astray, especially in your optimism for how much we ahve implemented.
+analogy lead you astray, especially in your optimism for how much we have implemented.
 
 [doc]-->
 <surge-skin name="04 Control Classes and User Controls" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
@@ -32,7 +32,7 @@ analogy lead you astray, especially in your optimism for how much we ahve implem
     But if we want to replace a collection of sliders and modify several features we don't want
     to have to repeat all the configuration. Instead we define a user component class. This class has
     a name and a parent class but also advertises properties. Much like CSS these properties cascade
-    so a control can ovveride them, or a user class can have a user class as a parent. Here we take
+    so a control can override them, or a user class can have a user class as a parent. Here we take
     the simplest approach though of just defining a new slider class which we intend to use for the
     LFO H Sliders. We share the parent, CSurgeSlider, and modify the handle_image and the handle_tray
     (backdrop) with a custom image.
@@ -64,7 +64,7 @@ analogy lead you astray, especially in your optimism for how much we ahve implem
     <control ui_identifier="lfo.amplitude" class="lfo-hslider"/>
 
     <!--[doc]
-    And similary we change the prevnext patch button
+    And similarly we change the prevnext patch button
     [doc]-->
     <control ui_identifier="controls.patch.prevnext" class="loud-prev-next"/>
 

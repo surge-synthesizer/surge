@@ -564,7 +564,7 @@ void SurgeGUIEditor::idle()
                 std::ostringstream oss;
 
                 oss << "Loading patch " << synth->patchid_queue
-                    << " has not occured after 200 idle cycles. This means that the audio system"
+                    << " has not occurred after 200 idle cycles. This means that the audio system"
                     << " is delayed while loading many patches in a row. The audio system has to be"
                     << " running in order to load Surge patches. If the audio system is working,"
                        " you can probably ignore this message and continue once Surge catches up.";

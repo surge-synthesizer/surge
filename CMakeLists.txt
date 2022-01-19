@@ -46,7 +46,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   # Any Clang or any GCC
   add_compile_options(
     -Wno-multichar
-    # Targetting Windows with GCC/Clang is experimental
+    # Targeting Windows with GCC/Clang is experimental
     $<$<NOT:$<BOOL:${WIN32}>>:-Werror>
 
     # PE/COFF doesn't support visibility
@@ -54,7 +54,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     # Inlines visibility is only relevant with C++
     $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<COMPILE_LANGUAGE:CXX>>:-fvisibility-inlines-hidden>
 
-    # BP note: If you want to turn on llvm/gcc santize undo this and the link options below
+    # BP note: If you want to turn on llvm/gcc sanitize undo this and the link options below
     # -fsanitize=address -fsanitize=undefined
   )
 

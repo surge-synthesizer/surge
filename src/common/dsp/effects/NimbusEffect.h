@@ -82,7 +82,7 @@ class NimbusEffect : public Effect
     static constexpr int raw_out_sz = BLOCK_SIZE_OS << 3; // power of 2 pls
     float resampled_output[raw_out_sz][2];                // at sr
     size_t resampReadPtr = 0, resampWritePtr = 1;         // see comment in init
-    float stub_input[2];                                  // This is the extra sample we ahve around
+    float stub_input[2];                                  // This is the extra sample we have around
     bool hasStubInput = false;
     int consumed = 0, created = 0;
 };

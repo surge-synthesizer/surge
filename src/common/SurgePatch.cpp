@@ -1460,7 +1460,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                         else
                         {
-                            // Explicity set scene to A. See #2285
+                            // Explicitly set scene to A. See #2285
                             t.source_scene = 0;
                         }
                     }
