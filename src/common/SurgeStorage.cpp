@@ -454,7 +454,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         std::ostringstream oss;
         oss << "Unable to load 'windows.wt' from memory. "
             << "This is a fatal internal software error which should never occur!";
-        reportError(oss.str(), "Surge Resources Loading Error");
+        reportError(oss.str(), "Surge XT Resource Loading Error");
     }
 
     // Tunings Library Support
@@ -877,8 +877,8 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when building patches. " << e.what();
-        reportError(oss.str(), "FileSystem Error");
+        oss << "Experienced filesystem error when building patches. " << e.what();
+        reportError(oss.str(), "Filesystem Error");
     }
 
     /*
@@ -966,16 +966,6 @@ void SurgeStorage::refresh_wtlist()
     wt_list.clear();
 
     refresh_wtlistAddDir(false, "wavetables");
-
-    if (wt_category.size() == 0 || wt_list.size() == 0)
-    {
-        /*
-        std::ostringstream ss;
-        ss << "Surge was unable to load wavetables from '" << datapath
-           << "'. Please reinstall Surge!";
-        reportError(ss.str(), "Surge Installation Error");
-         */
-    }
 
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
@@ -1192,17 +1182,18 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
     if (!wasBuilt)
     {
         std::ostringstream oss;
-        oss << "Wavetable could not be built, which means it has too many samples or frames."
-            << " You provided " << wh.n_tables << " frames of " << wh.n_samples
-            << "samples, while limit is " << max_subtables << " frames and " << max_wtable_size
-            << " samples."
-            << " In some cases, Surge detects this situation inconsistently. Surge is now in a "
-               "potentially "
-            << " inconsistent state. It is recommended to restart Surge and not load the "
-               "problematic wavetable again."
-            << " If you would like, please attach the wavetable which caused this message to a new "
+        oss << "Wavetable could not be built, which means it has too many frames or samples per "
+               "frame.\n"
+            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
+            << "samples per frame, while the limit is " << max_subtables << " frames and "
+            << max_wtable_size << " samples per frame.\n"
+            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
+               "potentially volatile state\n."
+            << "It is recommended to restart Surge and not load "
+               "the problematic wavetable again.\n\n"
+            << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
-            << " https://github.com/surge-synthesizer/surge/";
+            << stringRepository;
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
@@ -1245,17 +1236,18 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     if (!wasBuilt)
     {
         std::ostringstream oss;
-        oss << "Wavetable could not be built, which means it has too many samples or frames."
-            << " You provided " << wh.n_tables << " frames of " << wh.n_samples
-            << "samples, while limit is " << max_subtables << " frames and " << max_wtable_size
-            << " samples."
-            << " In some cases, Surge detects this situation inconsistently. Surge is now in a "
-               "potentially "
-            << " inconsistent state. It is recommended to restart Surge and not load the "
-               "problematic wavetable again."
-            << " If you would like, please attach the wavetable which caused this message to a new "
+        oss << "Wavetable could not be built, which means it has too many frames or samples per "
+               "frame.\n"
+            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
+            << "samples per frame, while the limit is " << max_subtables << " frames and "
+            << max_wtable_size << " samples per frame.\n"
+            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
+               "potentially volatile state\n."
+            << "It is recommended to restart Surge and not load "
+               "the problematic wavetable again.\n\n"
+            << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
-            << " https://github.com/surge-synthesizer/surge/";
+            << stringRepository;
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
@@ -2169,8 +2161,8 @@ void SurgeStorage::rescanUserMidiMappings()
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when loading MIDI settings. " << e.what();
-        reportError(oss.str(), "FileSystem Error");
+        oss << "Experienced filesystem error when loading MIDI settings. " << e.what();
+        reportError(oss.str(), "Filesystem Error");
     }
 }
 

@@ -1160,15 +1160,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     if (revision > ff_revision)
     {
         std::ostringstream oss;
-        oss << "The version of Surge you are running is older than the version with which this "
-               "patch "
-            << "was created. Your version of Surge (" << Surge::Build::FullVersionStr << ") has a "
-            << "streaming revision of " << ff_revision << ", whereas the patch you are loading was "
-            << "created with streaming revision " << revision
-            << ". Features of the patch will not be available in your "
-            << "session. You can always find the latest Surge at "
-               "https://surge-synthesizer.github.io/";
-        storage->reportError(oss.str(), "Surge Patch Version Mismatch");
+        oss << "Surge XT version you are running is older than the version with which this patch "
+            << "was created. Your version of Surge XT (" << Surge::Build::FullVersionStr
+            << ") has a streaming revision of " << ff_revision
+            << ", whereas the patch you are loading was created with streaming revision "
+            << revision << ".\nCertain features of the patch will not be available in your "
+            << "session.\n\n"
+            << "You can always find the latest Surge XT at " << stringWebsite;
+        storage->reportError(oss.str(), "Surge XT Patch Version Mismatch");
     }
 
     TiXmlElement *meta = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));

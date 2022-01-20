@@ -236,7 +236,7 @@ void readDefaultsFile(std::string fn, bool forceRead, SurgeStorage *storage)
             if (strcmp(version, "1") != 0)
             {
                 std::ostringstream oss;
-                oss << "This version of Surge only reads version 1 defaults. You user defaults "
+                oss << "This version of Surge XT reads only version 1 defaults. Your user defaults "
                        "version is "
                     << version << ". Defaults will be ignored!";
                 storage->reportError(oss.str(), "File Version Error");
@@ -345,7 +345,7 @@ bool streamDefaultsFile(SurgeStorage *storage)
     }
 
     dFile << "<?xml version = \"1.0\" encoding = \"UTF-8\" ?>\n"
-          << "<!-- User Defaults for Surge Synthesizer -->\n"
+          << "<!-- User Defaults for Surge XT Synthesizer -->\n"
           << "<defaults version=\"1\">" << std::endl;
 
     for (auto &el : defaultsFileContents)

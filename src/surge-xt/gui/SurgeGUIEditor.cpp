@@ -564,10 +564,11 @@ void SurgeGUIEditor::idle()
                 std::ostringstream oss;
 
                 oss << "Loading patch " << synth->patchid_queue
-                    << " has not occured after 200 idle cycles. This means that the audio system"
-                    << " is delayed while loading many patches in a row. The audio system has to be"
-                    << " running in order to load Surge patches. If the audio system is working,"
-                       " you can probably ignore this message and continue once Surge catches up.";
+                    << " has not occured after 200 idle cycles. This means that the audio engine"
+                    << " is delayed while loading many patches in a row. The audio engine has to be"
+                    << " running in order to load Surge XT patches. If the audio engine is working,"
+                       " you can probably ignore this message and continue once Surge XT catches "
+                       "up.";
                 synth->storage.reportError(oss.str(), "Patch Loading Error");
             }
         }
@@ -2274,7 +2275,7 @@ void SurgeGUIEditor::showMinimumZoomError() const
 {
     std::ostringstream oss;
     oss << "The smallest zoom level possible on your platform is " << minimumZoom
-        << "%. Sorry, you cannot make Surge any smaller!";
+        << "%. Sorry, you cannot make Surge XT any smaller!";
     synth->storage.reportError(oss.str(), "Zoom Level Error");
 }
 
@@ -2282,14 +2283,14 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
 {
 #if !LINUX
     std::ostringstream msg;
-    msg << "Surge adjusts the maximum zoom level in order to prevent the interface becoming larger "
-           "than available screen area. "
-        << "Your screen resolution is " << width << "x" << height << " "
-        << "for which the target zoom level of " << zf << "% would be too large." << std::endl
+    msg << "Surge XT adjusts the maximum zoom level in order to prevent the interface becoming "
+           "larger than available screen area. Your screen resolution is "
+        << width << "x" << height << " for which the target zoom level of " << zf
+        << "% would be too large." << std::endl
         << std::endl;
     if (currentSkin && currentSkin->hasFixedZooms())
     {
-        msg << "Surge chose the largest fitting fixed zoom which is provided by this skin.";
+        msg << "Surge XT chose the largest fitting fixed zoom which is provided by this skin.";
     }
     else
     {
@@ -2351,32 +2352,27 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     settingsMenu.addSeparator();
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Reach the Developers..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/feedback").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}feedback", stringWebsite)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Read the Code..."), []() {
-        juce::URL("https://github.com/surge-synthesizer/surge/").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}surge", stringRepository)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Download Additional Content..."), []() {
-        juce::URL("https://github.com/surge-synthesizer/"
-                  "surge-synthesizer.github.io/wiki/Additional-Content")
-            .launchInDefaultBrowser();
+        juce::URL(fmt::format("{}Additional-Content", stringWebsite)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Library..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-library").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}skin-library", stringWebsite)).launchInDefaultBrowser();
     });
 
-    Surge::GUI::addMenuWithShortcut(
-        settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Manual..."), showShortcutDescription("F1"),
-        []() {
-            juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
-        });
+    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Manual..."),
+                                    showShortcutDescription("F1"),
+                                    []() { juce::URL(stringManual).launchInDefaultBrowser(); });
 
-    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
-    });
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."),
+                         []() { juce::URL(stringWebsite).launchInDefaultBrowser(); });
 
     settingsMenu.addSeparator();
 
@@ -4263,7 +4259,7 @@ std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
     std::string lurl = helpurl;
     if (helpurl[0] == '#')
     {
-        lurl = "https://surge-synthesizer.github.io/manual-xt/" + helpurl;
+        lurl = stringManual + helpurl;
     }
     return lurl;
 }
@@ -6290,7 +6286,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         if (shortcutsUsed)
         {
-            juce::URL("https://surge-synthesizer.github.io/manual-xt/").launchInDefaultBrowser();
+            juce::URL(stringManual).launchInDefaultBrowser();
 
             return true;
         }
