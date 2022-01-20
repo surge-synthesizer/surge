@@ -454,7 +454,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         std::ostringstream oss;
         oss << "Unable to load 'windows.wt' from memory. "
             << "This is a fatal internal software error which should never occur!";
-        reportError(oss.str(), "Surge XT Resource Loading Error");
+        reportError(oss.str(), "Resource Loading Error");
     }
 
     // Tunings Library Support

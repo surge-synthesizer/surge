@@ -1167,7 +1167,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             << revision << ".\nCertain features of the patch will not be available in your "
             << "session.\n\n"
             << "You can always find the latest Surge XT at " << stringWebsite;
-        storage->reportError(oss.str(), "Surge XT Patch Version Mismatch");
+        storage->reportError(oss.str(), "Patch Version Mismatch");
     }
 
     TiXmlElement *meta = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("meta"));
