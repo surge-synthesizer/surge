@@ -387,6 +387,8 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDragLongHold(event);
+
     auto p = mouseDownFloatPosition;
     float distance = event.position.getX() - p.getX();
     if (orientation == ParamConfig::kVertical)
@@ -472,6 +474,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
     valueOnMouseDown = value;
     modValueOnMouseDown = modValue;
     lastDistance = 0.f;
@@ -481,6 +484,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 
 void ModulatableSlider::mouseMove(const juce::MouseEvent &event)
 {
+    mouseMoveLongHold(event);
     enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, event.position);
 }
 
@@ -498,6 +502,8 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
     {
         hideInfowindowSoon();
     }
+
+    mouseUpLongHold(event);
 
     if (!Surge::GUI::showCursor(storage))
     {
