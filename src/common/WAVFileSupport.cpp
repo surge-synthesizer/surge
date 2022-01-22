@@ -154,17 +154,18 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             free(data);
 
             // Do a format check here to bail out
-            if (!((numChannels == 1) &&
-                  (((audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16)) ||
+            if (!((((audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16)) ||
                    ((audioFormat == 3 /* IEEE_FLOAT */) && (bitsPerSample == 32)))))
             {
                 std::string formname = "Unknown (" + std::to_string(audioFormat) + ")";
+
                 if (audioFormat == 1)
                     formname = "PCM";
                 if (audioFormat == 3)
                     formname = "float";
 
                 std::ostringstream oss;
+
                 oss << "Currently, Surge XT only supports 16-bit PCM or 32-bit float mono WAV "
                        "files. You have provided a "
                     << bitsPerSample << "-bit " << formname << " " << numChannels
@@ -323,6 +324,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     bool loopData = hasSMPL || hasCLM || hasSRGE;
     int loopLen =
         hasCLM ? clmLEN : (hasCUE ? cueLEN : (hasSRGE ? srgeLEN : (hasSMPL ? smplLEN : -1)));
+
     if (loopLen == 0)
     {
         std::ostringstream oss;
@@ -349,9 +351,11 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     wh.flags = wtf_is_sample;
 
     int sh = 0;
+
     if (loopData)
     {
         wh.flags = 0;
+
         switch (loopLen)
         {
         case 4096:
@@ -433,37 +437,64 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     int channels = 1;
 
-    if ((audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16) && numChannels == 1)
+    if ((audioFormat == 1 /* WAVE_FORMAT_PCM */) && (bitsPerSample == 16))
     {
         // assert(wh.n_samples * wh.n_tables * 2 <= datasz);
         wh.flags |= wtf_int16;
     }
-    else if ((audioFormat == 3 /* WAVE_FORMAT_IEEE_FLOAT */) && (bitsPerSample == 32) &&
-             numChannels == 1)
+    else if ((audioFormat == 3 /* WAVE_FORMAT_IEEE_FLOAT */) && (bitsPerSample == 32))
     {
         // assert(wh.n_samples * wh.n_tables * 4 <= datasz);
     }
     else
     {
         std::ostringstream oss;
-        oss << "Currently, Surge XT only supports 16-bit PCM or 32-bit float mono .wav files. "
-            << " You have provided a " << bitsPerSample << "-bit" << audioFormat << " "
-            << numChannels << "-channel file.";
+        oss << "Currently, Surge XT only supports 16-bit PCM or 32-bit floating point WAV files. "
+            << " You provided a " << bitsPerSample << "-bit" << audioFormat << " file.";
 
         reportError(oss.str(), uitag);
 
         if (wavdata)
+        {
             free(wavdata);
+        }
+
         return false;
     }
 
     if (wavdata && wt)
     {
-        waveTableDataMutex.lock();
-        wt->BuildWT(wavdata, wh, wh.flags & wtf_is_sample);
-        waveTableDataMutex.unlock();
+        if (numChannels == 1)
+        {
+            waveTableDataMutex.lock();
+            wt->BuildWT(wavdata, wh, wh.flags & wtf_is_sample);
+            waveTableDataMutex.unlock();
+        }
+        else
+        {
+            char *leftChannel;
+            auto memsize = datasamples * bitsPerSample / 8;
+
+            leftChannel = (char *)malloc(memsize * sizeof(char));
+
+            for (size_t i = 0; i < datasamples; ++i)
+            {
+                size_t destAddr = i * bitsPerSample / 8;
+                size_t srcAddr = i * bitsPerSample / 8 * numChannels;
+
+                std::memcpy(leftChannel + destAddr, wavdata + srcAddr, bitsPerSample / 8);
+            }
+
+            waveTableDataMutex.lock();
+            wt->BuildWT(leftChannel, wh, wh.flags & wtf_is_sample);
+            waveTableDataMutex.unlock();
+
+            free(leftChannel);
+        }
+
         free(wavdata);
     }
+
     return true;
 }
 
