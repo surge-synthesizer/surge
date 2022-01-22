@@ -820,6 +820,8 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
         ** stack
         */
         std::vector<fs::path> alldirs;
+        if (userDir)
+            alldirs.push_back(patchpath);
         std::deque<fs::path> workStack;
         workStack.push_back(patchpath);
         while (!workStack.empty())
@@ -848,7 +850,12 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
         for (auto &p : alldirs)
         {
             PatchCategory c;
-            c.name = path_to_string(p).substr(patchpathSubstrLength);
+            auto name = std::string("_Unsorted");
+            auto pn = path_to_string(p);
+            if (pn.size() > patchpathSubstrLength)
+                name = pn.substr(patchpathSubstrLength);
+
+            c.name = name;
             c.internalid = category;
             c.isFactory = !userDir;
 
