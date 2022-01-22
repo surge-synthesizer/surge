@@ -167,6 +167,7 @@ enum deform_type
     type_1,
     type_2,
     type_3,
+    type_4,
 
     n_deform_types,
 };
