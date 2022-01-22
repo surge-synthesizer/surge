@@ -17,13 +17,6 @@
 #include "DSPUtils.h"
 #include <ctime>
 #include "CPUFeatures.h"
-#if MAC || LINUX
-#include <pthread.h>
-#else
-#define NOMINMAX
-#include <windows.h>
-#include <process.h>
-#endif
 
 #include "SurgeParamConfig.h"
 
@@ -3368,15 +3361,8 @@ bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, f
     return false;
 }
 
-#if MAC || LINUX
-void *loadPatchInBackgroundThread(void *sy)
+void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
 {
-#else
-DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
-{
-    void *sy = lpParam;
-#endif
-
     SurgeSynthesizer *synth = (SurgeSynthesizer *)sy;
     std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
     if (synth->patchid_queue >= 0)
@@ -3415,7 +3401,7 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
 
     synth->halt_engine = false;
 
-    return 0;
+    return;
 }
 
 void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
@@ -3694,7 +3680,7 @@ void SurgeSynthesizer::processControl()
 void SurgeSynthesizer::process()
 {
 #if DEBUG_RNG_THREADING
-    storage.audioThreadID = pthread_self();
+    storage.audioThreadID = std::this_thread::get_id();
 #endif
     processRunning = 0;
 
@@ -3718,36 +3704,8 @@ void SurgeSynthesizer::process()
             allNotesOff();
             halt_engine = true;
 
-#if MAC || LINUX
-            pthread_t thread;
-            pthread_attr_t attributes;
-            int ret;
-            sched_param params;
-
-            /* initialized with default attributes */
-            ret = pthread_attr_init(&attributes);
-
-            /* safe to get existing scheduling param */
-            ret = pthread_attr_getschedparam(&attributes, &params);
-
-            /* set the priority; others are unchanged */
-            params.sched_priority = sched_get_priority_min(SCHED_OTHER);
-
-            /* setting the new scheduling param */
-            ret = pthread_attr_setschedparam(&attributes, &params);
-
-            ret = pthread_create(&thread, &attributes, loadPatchInBackgroundThread, this);
-#else
-
-            DWORD dwThreadId;
-            HANDLE hThread = CreateThread(NULL, // default security attributes
-                                          0,    // use default stack size
-                                          loadPatchInBackgroundThread, // thread function
-                                          this,         // argument to thread function
-                                          0,            // use default creation flags
-                                          &dwThreadId); // returns the thread identifier
-            SetThreadPriority(hThread, THREAD_PRIORITY_NORMAL);
-#endif
+            std::thread loadThread(loadPatchInBackgroundThread, this);
+            loadThread.detach();
 
             clear_block(output[0], BLOCK_SIZE_QUAD);
             clear_block(output[1], BLOCK_SIZE_QUAD);
