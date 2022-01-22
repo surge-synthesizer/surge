@@ -96,7 +96,7 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
         /*
          * So what the heck is this you may ask? Well when juce shows the info window on the
          * very first go round, since it is a hierarchy change, juce sends us a zero-distance
-         * mouse moved event. So we need ot make sure, in the case of a start and only a start,
+         * mouse moved event. So we need to make sure, in the case of a start and only a start,
          * that if we get two in a row they are from different places. See #5487
          */
         if (place == SurgeGUIEditor::InfoQAction::START)

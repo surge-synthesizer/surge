@@ -292,7 +292,7 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
     return nullptr;
 }
 
-// overriden here just to make the shortcut text same size as normal menu entry text
+// overridden here just to make the shortcut text same size as normal menu entry text
 void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
                                              const bool isSeparator, const bool isActive,
                                              const bool isHighlighted, const bool isTicked,

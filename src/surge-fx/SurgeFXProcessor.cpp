@@ -292,7 +292,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 output_position = 0;
             }
 
-            if (output_position >= 0 && output_position < BLOCK_SIZE) // that < shoudl never happen
+            if (output_position >= 0 && output_position < BLOCK_SIZE) // that < should never happen
             {
                 outL[smp] = output_buffer[0][output_position];
                 outR[smp] = output_buffer[1][output_position];

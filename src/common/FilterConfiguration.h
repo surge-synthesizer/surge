@@ -44,7 +44,7 @@
  * right choice, but when you curse me for the odd name list, you can come back and read this
  * comment and feel slightly better. Finally, items which split and changed meaning got a new name
  * (so fut_comb is now fut_comb_pos and fut_comb_neg, say), which requires us to go and fix up any
- * code which refered to the old values.
+ * code which referred to the old values.
  */
 
 enum fu_type_sv14

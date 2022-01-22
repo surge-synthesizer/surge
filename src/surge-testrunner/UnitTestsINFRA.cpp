@@ -83,7 +83,7 @@ TEST_CASE("QFU is Aligned", "[infra]")
     }
 }
 
-// A is just a test index to separate the calsses
+// A is just a test index to separate the classes
 template <int A> struct CountAlloc
 {
     CountAlloc()

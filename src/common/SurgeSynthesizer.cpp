@@ -961,7 +961,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
             releaseNotePostHoldCheck(sc, channel, key, velocity);
         else
             holdbuffer[sc].push_back(
-                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to bufffer
+                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to buffer
     }
 }
 
@@ -1029,7 +1029,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                 if ((v->state.key == key) && (v->state.channel == channel))
                 {
-                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overriden
+                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overridden
                     auto priorityMode =
                         storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
@@ -2240,7 +2240,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             if (storage.getPatch().param_ptr[index]->val.i != oldval.i)
             {
                 /*
-                 ** Wish there was a better way to figure out my osc but thsi works
+                 ** Wish there was a better way to figure out my osc but this works
                  */
                 for (auto oi = 0; s >= 0 && s <= 1 && oi < n_oscs; oi++)
                 {

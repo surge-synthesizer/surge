@@ -266,7 +266,7 @@ struct ParameterDynamicDeactivationFunction : public ParameterDynamicBoolFunctio
 
 /*
 ** It used to be parameters were assigned IDs in SurgePatch using an int which we ++ed along the
-** way. If we want to 'add at the end' but 'cluster together' we need a different data strcture
+** way. If we want to 'add at the end' but 'cluster together' we need a different data structure
 ** to allow clusters of parameters, so instead make SurgePatch use a linked list (or multiple lists)
 ** while constructing params and then resolve them all at the end. This little class lets us
 ** do that.
@@ -447,7 +447,7 @@ class Parameter
 
     pdata val{}, val_default{}, val_min{}, val_max{};
     // You might be tempted to use a non-fixed-size member here, like a std::string, but
-    // this class gets pre-c++ memcopied so thats not an option which is why I do this wonky
+    // this class gets pre-c++ memcopied so that's not an option which is why I do this wonky
     // pointer thing and strncpy from a string onto ui_identifier
     ParameterIDCounter::promise_ptr_t id_promise{};
     int id{};

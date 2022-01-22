@@ -1148,7 +1148,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
     if (!Q)
     {
-        // We need to initalize the waveshaper registers
+        // We need to initialize the waveshaper registers
         for (int c = 0; c < 2; ++c)
             initializeWaveshaperRegister(scene->wsunit.type.val.i, FBP.WS[c].R);
     }

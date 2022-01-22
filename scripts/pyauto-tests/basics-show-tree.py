@@ -1,5 +1,5 @@
 # The simplest use of the accessibility API. Grab a surge xt running instance
-# and dump the accesibility heirarchy
+# and dump the accessibility hierarchy
 
 
 import atomacos

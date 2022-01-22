@@ -40,7 +40,7 @@
  * and we want that default to be completely over-rideable in our VSTGUI
  * implementation.
  *
- * And finally, we don't want the core of surge to refernce VSTGUI.
+ * And finally, we don't want the core of surge to reference VSTGUI.
  *
  * So that gets us the following set of collaborations
  *
@@ -77,7 +77,7 @@
  * 2. Have the data (but not the renderer) for the layout information in src/common
  *
  * I chose #2 mostly because #1 is especially tedious since a collection of parameters
- * share a skin identity. For instance, all of the oscilator pitch sliders (of which there
+ * share a skin identity. For instance, all of the oscillator pitch sliders (of which there
  * are 6 as of 1.8.0) are a single point of skin identity. Thus attaching them to skin
  * data models in SurgePatch makes sense.
  *
@@ -111,7 +111,7 @@ struct Component
     /*
      * We could have done something much clevere with templates and per-class enums
      * but decided not to. Instead here is an enum which is the union of all possible
-     * properites that an item can have.
+     * properties that an item can have.
      */
     enum Properties
     {
@@ -123,7 +123,7 @@ struct Component
         BACKGROUND,
         HOVER_IMAGE,
         HOVER_ON_IMAGE,
-        IMAGE, // Note for most components "image" binds to "background" but some have it seprate
+        IMAGE, // Note for most components "image" binds to "background" but some have it separate
 
         ROWS,
         COLUMNS,
@@ -184,7 +184,7 @@ struct Component
     std::shared_ptr<Payload> payload;
 
     /*
-     * To allow aliasing and backwards compatability, a property binds to the skin engine
+     * To allow aliasing and backwards compatibility, a property binds to the skin engine
      * with multiple names for a given class.
      */
     Component &withProperty(Properties p, const std::initializer_list<std::string> &names,

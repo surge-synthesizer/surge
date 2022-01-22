@@ -280,8 +280,8 @@ class alignas(16) SurgeSynthesizer
 
     /*
      * setModulation etc take a modsource scene. This is only needed for global modulations
-     * since for in-scene modulations the paramter implicit in ptag has a scene. But for
-     * LFOs modulating FX, we need to knwo which scene they originate from. See #2285
+     * since for in-scene modulations the parameter implicit in ptag has a scene. But for
+     * LFOs modulating FX, we need to know which scene they originate from. See #2285
      */
     bool setModulation(long ptag, modsources modsource, int modsourceScene, int index, float value);
     float getModulation(long ptag, modsources modsource, int modsourceScene, int index) const;

@@ -193,7 +193,7 @@ def main():
     parser.add_option("-f", "--file", dest="file",
                       help="wt_file being inspected or created", metavar="FILE")
     parser.add_option("-d", "--wav_dir", dest="wav_dir",
-                      help="Directory containing or recieving wav files for wt", metavar="DIR")
+                      help="Directory containing or receiving wav files for wt", metavar="DIR")
     parser.add_option("-n", "--normalize", dest="normalize", default="none", metavar="MODE",
                       help="""(Create only) how to normalize input.
 Modes are 'none' leave input untouched;

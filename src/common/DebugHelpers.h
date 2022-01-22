@@ -1,7 +1,7 @@
 /*
 ** DebugHelpers.h
 **
-** Cotnains debug APIs. Do not use them in production code.
+** Contains debug APIs. Do not use them in production code.
 ** Pull requests with references to these functions will not be merged!
 **
 */

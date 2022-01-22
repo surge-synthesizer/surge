@@ -908,7 +908,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                          100 * cms->get_output(0));
                 contextMenu.addItem(vtxt, [this, bvf, modsource]() {
                     promptForUserValueEntry(nullptr, bvf, modsource,
-                                            0,  // controllers arent per scene
+                                            0,  // controllers aren't per scene
                                             0); // controllers aren't indexed
                 });
 
@@ -1837,7 +1837,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Randomize Initial Drift Phase";
                             break;
                         case ct_twist_aux_mix:
-                            txt = "Pan Main and Auxilliary Signals";
+                            txt = "Pan Main and Auxiliary Signals";
                             break;
                         case ct_countedset_percent_extendable:
                             txt = "Continuous Morph";
@@ -2306,7 +2306,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     ** This code resets you to default if you double-click on control,
                     ** but on the LFO type widget this is undesirable; it means if you accidentally
                     ** Control-click on step sequencer, say, you go back to Sine and lose your
-                    ** edits. So supress it!
+                    ** edits. So suppress it!
                     */
                     break;
                 case ct_freq_audible_with_tunability:
