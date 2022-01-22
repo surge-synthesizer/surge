@@ -92,7 +92,7 @@ function(surge_make_installers)
   elseif(WIN32)
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E tar cvf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip --format=zip ${SURGE_PRODUCT_DIR}
+      COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip ${SURGE_PRODUCT_DIR}
       )
     find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
     if(SURGE_NUGET_EXE)
