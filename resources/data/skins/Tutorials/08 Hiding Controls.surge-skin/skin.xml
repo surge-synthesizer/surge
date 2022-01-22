@@ -8,7 +8,7 @@ entire mixer section. That's not a very useful skin practically, but combined wi
 and resize examples shown in other tutorials, it gives an idea of how to generate 'compact' or
 'player' skins.
 [doc]-->
-<surge-skin name="08 Hiding Controls" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="08 Hiding Controls" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
   </globals>
   <component-classes>

@@ -19,7 +19,7 @@
    Unlike SVG images, which can override by name, PNG images cannot. You need
    to specify them for your controls specifically.
 [doc]-->
-<surge-skin name="06 Using PNG" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="06 Using PNG" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <!--[doc]
         Here we set up a single resolution image which we later apply to the scene switch.
