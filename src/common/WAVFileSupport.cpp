@@ -165,9 +165,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
                     formname = "float";
 
                 std::ostringstream oss;
-                oss << "Currently, Surge only supports 16-bit PCM or 32-bit float mono WAV files. "
-                    << " You provided a " << bitsPerSample << "-bit " << formname << " "
-                    << numChannels << "-channel file.";
+                oss << "Currently, Surge XT only supports 16-bit PCM or 32-bit float mono WAV "
+                       "files. You have provided a "
+                    << bitsPerSample << "-bit " << formname << " " << numChannels
+                    << "-channel file.";
 
                 reportError(oss.str(), uitag);
                 return false;
@@ -325,9 +326,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (loopLen == 0)
     {
         std::ostringstream oss;
-        oss << "Surge cannot understand this particular .wav file. Please consult the Surge Wiki "
-               "for"
-            << " information on .wav file metadata.";
+        oss << "Surge XT cannot understand this particular .wav file. Please consult the Surge XT "
+               "Wiki for information on .wav file metadata.";
 
         reportError(oss.str(), uitag);
 
@@ -402,8 +402,9 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (loopLen != -1 && (sh == 0 || loopCount < 1))
     {
         std::ostringstream oss;
-        oss << "Currently, Surge only supports wavetables with at least a single frame, with up to "
-               "4096 samples per frame in power-of-two increments. You provided a wavetable with "
+        oss << "Currently, Surge XT only supports wavetables with at least a single frame, with up "
+               "to 4096 samples per frame in power-of-two increments. You have provided a "
+               "wavetable with "
             << loopCount << (loopCount == 1 ? " frame" : " frames") << " of " << loopLen
             << " samples. '" << fn << "'";
         reportError(oss.str(), uitag);
@@ -445,9 +446,9 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     else
     {
         std::ostringstream oss;
-        oss << "Currently, Surge only supports 16-bit PCM or 32-bit float mono .wav files. "
-            << " You provided a " << bitsPerSample << "-bit" << audioFormat << " " << numChannels
-            << "-channel file.";
+        oss << "Currently, Surge XT only supports 16-bit PCM or 32-bit float mono .wav files. "
+            << " You have provided a " << bitsPerSample << "-bit" << audioFormat << " "
+            << numChannels << "-channel file.";
 
         reportError(oss.str(), uitag);
 
