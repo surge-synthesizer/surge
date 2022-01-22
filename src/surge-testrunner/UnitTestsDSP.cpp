@@ -64,7 +64,7 @@ TEST_CASE("Simple Single Oscillator is Constant", "[dsp]")
 }
 TEST_CASE("Unison Absolute and Relative", "[osc]")
 {
-    auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(44100, true);
     REQUIRE(surge);
 
     auto assertRelative = [surge](const char *pn) {
@@ -230,7 +230,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
         for (auto sr : srs)
         {
             INFO("Wavetable test at " << sr);
-            auto surge = Surge::Headless::createSurge(sr);
+            auto surge = Surge::Headless::createSurge(sr, true);
 
             assertRelative(surge, "resources/test-data/patches/Wavetable-Sin-Uni2-Relative.fxp");
             assertAbsolute(surge, "resources/test-data/patches/Wavetable-Sin-Uni2-Absolute.fxp");
@@ -245,7 +245,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
         for (auto sr : srs)
         {
             INFO("Window Oscillator test at " << sr);
-            auto surge = Surge::Headless::createSurge(sr);
+            auto surge = Surge::Headless::createSurge(sr, true);
 
             assertRelative(surge, "resources/test-data/patches/Window-Sin-Uni2-Relative.fxp");
             assertAbsolute(surge, "resources/test-data/patches/Window-Sin-Uni2-Absolute.fxp");
@@ -255,7 +255,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
         for (auto sr : srs)
         {
             INFO("Classic Oscillator test at " << sr);
-            auto surge = Surge::Headless::createSurge(sr);
+            auto surge = Surge::Headless::createSurge(sr, true);
 
             assertRelative(surge, "resources/test-data/patches/Classic-Uni2-Relative.fxp");
             assertAbsolute(surge, "resources/test-data/patches/Classic-Uni2-Absolute.fxp");
@@ -265,7 +265,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
         for (auto sr : srs)
         {
             INFO("SH Oscillator test at " << sr);
-            auto surge = Surge::Headless::createSurge(sr);
+            auto surge = Surge::Headless::createSurge(sr, true);
 
             assertRelative(surge, "resources/test-data/patches/SH-Uni2-Relative.fxp");
             assertAbsolute(surge, "resources/test-data/patches/SH-Uni2-Absolute.fxp");
@@ -778,7 +778,7 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
     {
         DYNAMIC_SECTION("Oscillator type " << osc_type_names[i])
         {
-            auto surge = Surge::Headless::createSurge(44100);
+            auto surge = Surge::Headless::createSurge(44100, true);
 
             for (int q = 0; q < BLOCK_SIZE; q++)
             {
