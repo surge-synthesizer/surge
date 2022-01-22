@@ -567,7 +567,8 @@ void SurgeGUIEditor::idle()
                     << " has not occurred after 200 idle cycles. This means that the audio system"
                     << " is delayed while loading many patches in a row. The audio system has to be"
                     << " running in order to load Surge patches. If the audio system is working,"
-                       " you can probably ignore this message and continue once Surge XT catches up.";
+                       " you can probably ignore this message and continue once Surge XT catches "
+                       "up.";
 
                 synth->storage.reportError(oss.str(), "Patch Loading Error");
             }
