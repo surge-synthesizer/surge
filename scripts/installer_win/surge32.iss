@@ -59,18 +59,20 @@ Type: filesandordirs; Name: "{commoncf32}\VST3\{#MyAppPublisher}\plugin.ico"
 Type: filesandordirs; Name: "{commonpf32}\{#MyAppPublisher}\{#MyAppName}.exe"
 Type: filesandordirs; Name: "{group}\{#MyAppName}"
 
-[Components]
-Name: VST3; Description: Surge XT VST3 (32-bit); Types: full compact custom; Flags: checkablealone
-Name: EffectsVST3; Description: Surge XT Effects VST3 (32-bit); Types: full custom; Flags: checkablealone
-Name: SA; Description: Surge XT Standalone (32-bit); Types: full custom; Flags: checkablealone
-Name: EffectsSA; Description: Surge XT Effects Standalone (32-bit); Types: full custom; Flags: checkablealone
-Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
-
 [Types]
 Name: "full"; Description: "Full installation"
 Name: "compact"; Description: "Compact installation"
 Name: "custom"; Description: "Custom installation"; Flags: iscustom
 Name: "minimal"; Description: "Minimal installation"
+
+[Components]
+Name: VST3; Description: {#MyAppName} VST3 (32-bit); Types: full compact custom; Flags: checkablealone
+Name: EffectsVST3; Description: {#MyAppName} Effects VST3 (32-bit); Types: full custom; Flags: checkablealone
+Name: SA; Description: {#MyAppName} Standalone (32-bit); Types: full custom; Flags: checkablealone
+Name: EffectsSA; Description: {#MyAppName} Effects Standalone (32-bit); Types: full custom; Flags: checkablealone
+Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
+Name: Patches; Description: Patches; Types: full compact custom; Flags: checkablealone
+Name: Wavetables; Description: Wavetables; Types: full custom; Flags: checkablealone
 
 [Files]
 Source: {#SURGE_SRC}\resources\data\fx_presets\*; DestDir: {commonappdata}\{#MyAppName}\fx_presets\; Components: Data; Flags: recursesubdirs
