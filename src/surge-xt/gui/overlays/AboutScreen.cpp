@@ -373,8 +373,8 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
-        addLabel("Cutoff Warp and Resonance Warp filters; CHOW, Neuron and Tape effects by Jatin "
-                 "Chowdhury, licensed under GNU GPL v3 license",
+        addLabel("Cutoff Warp, Resonance Warp and Tri-Pole filters; CHOW, Neuron and Tape effects "
+                 "by Jatin Chowdhury, licensed under GNU GPL v3 license",
                  600);
 
         yp += lblvs;
@@ -399,7 +399,7 @@ void AboutScreen::resized()
         auto idxes = {0, 4, 3, 1, 2, 5};
 
         std::vector<std::string> urls = {
-            "https://github.com/surge-synthesizer/surge/",
+            stringRepository,
             "https://www.steinberg.net/en/company/technologies/vst3.html",
             "https://developer.apple.com/documentation/audiounit",
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html",

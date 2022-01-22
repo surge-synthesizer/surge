@@ -1072,7 +1072,7 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
             surge->releaseNote(ch, key, vel);
         else
             surge->playNote(ch, key, vel, 0);
-        for (int i = 0; i < 50; ++i)
+        for (int i = 0; i < 20; ++i)
             surge->process();
         for (auto v : surge->voices[0])
             if (v->state.gate)

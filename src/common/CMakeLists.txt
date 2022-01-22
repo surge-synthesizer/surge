@@ -3,10 +3,8 @@ project(surge-common)
 
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(eurorack)
-surge_add_lib_subdirectory(filesystem)
 surge_add_lib_subdirectory(fmt)
 surge_add_lib_subdirectory(strnatcmp)
-surge_add_lib_subdirectory(tinyxml)
 surge_add_lib_subdirectory(oddsound-mts)
 if(MINGW)
   set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
@@ -15,6 +13,8 @@ surge_add_lib_subdirectory(libsamplerate)
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 surge_add_lib_subdirectory(LuaJitLib)
+
+surge_add_lib_subdirectory(sst/sst-plugininfra)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
@@ -313,17 +313,17 @@ target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cp
 
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}
-PUBLIC
+  PUBLIC
   fmt
   luajit-5.1
   samplerate
   surge::airwindows
   surge::eurorack
-  surge::filesystem
+  sst-plugininfra::filesystem
   surge::oddsound-mts
   surge::sqlite
   surge::strnatcmp
-  surge::tinyxml
+  sst-plugininfra::tinyxml
   surge-common-binary
   tuning-library
   PRIVATE
@@ -331,7 +331,7 @@ PUBLIC
   surge-platform
   surge-juce
   taocpp::pegtl
-PRIVATE
+  PRIVATE
   juce::juce_dsp
   )
 

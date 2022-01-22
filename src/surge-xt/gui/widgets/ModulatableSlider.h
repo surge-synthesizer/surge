@@ -44,7 +44,16 @@ struct ModulatableSlider : public juce::Component,
         kMedium,
         kExact
     };
+
+    enum TouchscreenMode
+    {
+        kUnassigned = 0,
+        kDisabled,
+        kEnabled
+    };
+
     static MoveRateState sliderMoveRateState;
+    static TouchscreenMode touchscreenMode;
 
     /**
      * The slider is 'light' backgrounded (which matters in the classic skin only)

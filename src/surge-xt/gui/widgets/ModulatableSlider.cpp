@@ -28,6 +28,8 @@ namespace Widgets
 
 ModulatableSlider::MoveRateState ModulatableSlider::sliderMoveRateState =
     ModulatableSlider::MoveRateState::kUnInitialized;
+ModulatableSlider::TouchscreenMode ModulatableSlider::touchscreenMode =
+    ModulatableSlider::TouchscreenMode::kUnassigned;
 ModulatableSlider::ModulatableSlider() { setRepaintsOnMouseActivity(true); }
 
 ModulatableSlider::~ModulatableSlider() {}
@@ -409,8 +411,11 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     updateLocationState();
 
     float dMouse = 1.f / range;
+
     if (event.mods.isShiftDown())
         dMouse = dMouse * 0.1;
+
+    float tsMouse = dMouse;
 
     switch (sliderMoveRateState)
     {
@@ -426,6 +431,12 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
     default:
         dMouse *= 0.3 * legacyMoveRate;
         break;
+    }
+
+    // make sure we're in Exact mouse sensitivity mode for touchscreen input
+    if (touchscreenMode == ModulatableSlider::TouchscreenMode::kEnabled)
+    {
+        dMouse = tsMouse;
     }
 
     if (isEditingModulation)

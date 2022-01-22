@@ -576,10 +576,10 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
     {
         auto surge = surgeOnSine();
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         {
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1).margin(0.001));
         }
     }
@@ -589,12 +589,12 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         surge->storage.mapChannelToOctave = true;
         surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         { // Limited range because frequencyForNote starts having trouble measuring high
           // frequencies.
             INFO("key is " << key);
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
     }
@@ -606,10 +606,10 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
         surge->storage.retuneToScale(s);
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         {
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
     }

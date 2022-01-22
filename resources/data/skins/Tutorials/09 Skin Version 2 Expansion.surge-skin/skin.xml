@@ -5,7 +5,7 @@ a skin vor Surge 1.8 or have your skin version set to "1" these features will no
 
 Also: This tutorial is not copmlete as of Feb 15 2021. Work in progress.
 [doc]-->
-<surge-skin name="09 Whats New in Surge 1.9" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="09 Whats New in Surge 1.9" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <image id="wider_filter_bg" resource="SVG/widerFilterBG.svg"/>
     <image id="wider_filter_bg_hover" resource="SVG/widerFilterBGHover.svg"/>

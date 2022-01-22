@@ -1643,7 +1643,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     switch (p->ctrltype)
                     {
+                    case ct_freq_hpf:
+                    {
+                        contextMenu.addSeparator();
 
+                        contextMenu.addSectionHeader("SLOPE");
+
+                        for (int i = 0; i < synth->n_hpBQ; i++)
+                        {
+                            std::string title = fmt::format("{:d} dB/oct", 12 * (i + 1));
+
+                            bool isChecked = p->deform_type == i;
+
+                            contextMenu.addItem(title, true, isChecked,
+                                                [this, p, i]() { p->deform_type = i; });
+                        }
+
+                        break;
+                    }
                     case ct_lfodeform:
                     {
                         auto q = modsource_editor[current_scene];
@@ -1658,8 +1675,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
                             {
-                                char title[32];
-                                sprintf(title, "Type %d", (i + 1));
+                                std::string title = fmt::format("Type {:d}", (i + 1));
 
                                 bool isChecked = p->deform_type == i;
 

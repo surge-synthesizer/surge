@@ -40,8 +40,15 @@ void MultiSwitch::paint(juce::Graphics &g)
     auto y = -valueToOff(value) * heightOfOneImage;
     auto t = juce::AffineTransform().translated(0, y);
 
+    float activationOpacity = 1.0;
+
+    if (isDeactivated)
+    {
+        activationOpacity = 0.5;
+    }
+
     g.reduceClipRegion(getLocalBounds());
-    switchD->draw(g, 1.0, t);
+    switchD->draw(g, activationOpacity, t);
 
     if (isHovered)
     {
@@ -49,14 +56,14 @@ void MultiSwitch::paint(juce::Graphics &g)
 
         if (iv == hoverSelection && hoverOnSwitchD)
         {
-            hoverOnSwitchD->draw(g, 1.0, t);
+            hoverOnSwitchD->draw(g, activationOpacity, t);
         }
         else if (hoverSwitchD)
         {
             auto y2 = hoverSelection + frameOffset;
             auto t2 = juce::AffineTransform().translated(0, -y2 * heightOfOneImage);
 
-            hoverSwitchD->draw(g, 1.0, t2);
+            hoverSwitchD->draw(g, activationOpacity, t2);
         }
     }
 }

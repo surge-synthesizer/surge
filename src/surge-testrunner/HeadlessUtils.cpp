@@ -9,11 +9,12 @@ namespace Surge
 namespace Headless
 {
 static std::unique_ptr<HeadlessPluginLayerProxy> parent = nullptr;
-std::shared_ptr<SurgeSynthesizer> createSurge(int sr)
+std::shared_ptr<SurgeSynthesizer> createSurge(int sr, bool loadAllPatches)
 {
     if (parent.get() == nullptr)
         parent.reset(new HeadlessPluginLayerProxy());
-    auto surge = std::shared_ptr<SurgeSynthesizer>(new SurgeSynthesizer(parent.get()));
+    auto surge = std::shared_ptr<SurgeSynthesizer>(new SurgeSynthesizer(
+        parent.get(), loadAllPatches ? "" : SurgeStorage::skipPatchLoadDataPathSentinel));
     surge->setSamplerate(sr);
     surge->time_data.tempo = 120;
     surge->time_data.ppqPos = 0;

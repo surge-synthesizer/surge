@@ -13,7 +13,7 @@ apply that bundle to a control. This is very very loosely similar to CSS in web 
 analogy lead you astray, especially in your optimism for how much we have implemented.
 
 [doc]-->
-<surge-skin name="04 Control Classes and User Controls" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="04 Control Classes and User Controls" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <defaultimage directory="SVG/"/>
 

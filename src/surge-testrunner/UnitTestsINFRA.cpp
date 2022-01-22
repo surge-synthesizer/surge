@@ -6,6 +6,8 @@
 #include "QuadFilterUnit.h"
 #include "MemoryPool.h"
 
+#include "strnatcmp.h"
+
 #include "catch2/catch2.hpp"
 
 inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
@@ -140,4 +142,56 @@ TEST_CASE("Memory Pool Works", "[infra]")
         REQUIRE(CountAlloc<3>::alloc == 160);
         REQUIRE(CountAlloc<3>::ct == 0);
     }
+}
+
+TEST_CASE("strnatcmp with spaces", "[infra]")
+{
+    SECTION("Basic Compare")
+    {
+        REQUIRE(strnatcmp("foo", "bar") == 1);
+        REQUIRE(strnatcmp("bar", "foo") == -1);
+        REQUIRE(strnatcmp("bar", "bar") == 0);
+    }
+
+    SECTION("Number Compare")
+    {
+        REQUIRE(strnatcmp("1 foo", "2 foo") == -1);
+        REQUIRE(strnatcmp("1 foo", "11 foo") == -1);
+        REQUIRE(strnatcmp("1 foo", "91 foo") == -1);
+        REQUIRE(strnatcmp("01 foo", "91 foo") == -1);
+        REQUIRE(strnatcmp("91 foo", "1 foo") == 1);
+        REQUIRE(strnatcmp("91 foo", "01 foo") == 1);
+        REQUIRE(strnatcmp("91 foo", "001 foo") == 1);
+        REQUIRE(strnatcmp("1 foo", "112 foo") == -1);
+        REQUIRE(strnatcmp("91 foo", "112 foo") == -1);
+        REQUIRE(strnatcmp("112 foo", "91 foo") == 1);
+        REQUIRE(strnatcmp("01 foo", "2 foo") == -1);
+        REQUIRE(strnatcmp("001 foo", "2 foo") == -1);
+        REQUIRE(strnatcmp("001 foo", "002 foo") == -1);
+        // Fix these one day
+        // REQUIRE(strnatcmp("01 foo", "002 foo") == -1);
+        // REQUIRE(strnatcmp("1 foo", "002 foo") == -1);
+        // REQUIRE(strnatcmp("1 foo", "02 foo") == -1);
+    }
+
+    SECTION("Spaces vs Letters")
+    {
+        REQUIRE(strnatcmp("hello", "zebra") == -1);
+        REQUIRE(strnatcmp("hello ", "zebra") == -1);
+        REQUIRE(strnatcmp(" hello", "zebra") == -1);
+        REQUIRE(strnatcmp("hello", " zebra") == -1);
+        REQUIRE(strnatcmp("hello", "zebra ") == -1);
+        REQUIRE(strnatcmp("hello", "z") == -1);
+        REQUIRE(strnatcmp("hello", "z ") == -1);
+        REQUIRE(strnatcmp("hello", " z") == -1);
+        REQUIRE(strnatcmp(" hello", "z") == -1);
+        REQUIRE(strnatcmp("hello ", "z") == -1);
+    }
+
+    SECTION("Central Spaces")
+    {
+        REQUIRE(strnatcmp("Spa Day", "SpaDay") == -1);
+        REQUIRE(strnatcmp("SpaDay", "Spa Day") == 1);
+    }
+    SECTION("Doubled Spaces") { REQUIRE(strnatcmp("Spa  Day", "Spa Day") == 0); }
 }
