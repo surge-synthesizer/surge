@@ -1,4 +1,5 @@
 <param-doc>
+
   <ctrl_group group="0" group_name="cg_GLOBAL" help_url="https://surge-synthesizer.github.io/manual/"/>
   <ctrl_group group="2" group_name="cg_OSC" help_url="#oscillators"/>
   <ctrl_group group="3" group_name="cg_MIX" help_url="#mixer"/>
@@ -16,7 +17,7 @@
   <special id="patch-browser" help_url="#patch-browser"/>
   <special id="wavetables" help_url="#wavetable"/>
   <special id="mseg-editor" help_url="#multi-segment-envelope-generator-mseg"/>
-  <special id="formula-editor" help_url="#formula-editor"/>
+  <special id="formula-editor" help_url="#formula"/>
   <special id="macro-modbutton" help_url="#macros"/>
   <special id="lfo-modbutton" help_url="#lfos"/>
   <special id="internalmod-modbutton" help_url="#internal-modulators"/>
@@ -24,7 +25,7 @@
   <special id="lfo-presets" help_url="#lfo-presets"/>
   <special id="fx-selector" help_url="#effect-unit-selector"/>
   <special id="fx-presets" help_url="#effect-and-preset-picker"/>
-  <special id="waveshaper-preview" help_url="#other-sound-shaping-parameters"/>
+  <special id="waveshaper-preview" help_url="#waveshaper"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>
@@ -33,8 +34,8 @@
   <param id="filter.f2_offset_mode" help_url="#filter-controls"/>
   <param id="filter.feedback" help_url="#filter-controls"/>
   <param id="filter.highpass" help_url="#other-sound-shaping-parameters"/>
-  <param id="filter.waveshaper_drive" help_url="#other-sound-shaping-parameters"/>
-  <param id="filter.waveshaper_type" help_url="#other-sound-shaping-parameters"/>
+  <param id="filter.waveshaper_drive" help_url="#waveshaper"/>
+  <param id="filter.waveshaper_type" help_url="#waveshaper"/>
   <param id="global.active_scene" help_url="#scene-select-and-scene-mode"/>
   <param id="global.character" help_url="#fx-bypass-character-and-global-volume"/>
   <param id="scene.drift" help_url="#other-sound-generation-parameters"/>
@@ -56,6 +57,8 @@
   <param id="global.scene_mode" help_url="#scene-select-and-scene-mode"/>
   <param id="scene.send_fx_1" help_url="#scene-output"/>
   <param id="scene.send_fx_2" help_url="#scene-output"/>
+  <param id="scene.send_fx_3" help_url="#scene-output"/>
+  <param id="scene.send_fx_4" help_url="#scene-output"/>
   <param id="scene.splitpoint" help_url="#scene-select-and-scene-mode"/>
   <param id="scene.velocity_sensitivity" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.volume" help_url="#scene-output"/>
@@ -255,7 +258,7 @@
   <param id="lfo.phase" help_url="#parameters"/>
   <param id="lfo.rate" help_url="#parameters"/>
   <param id="lfo.release" help_url="#lfo-envelope-generator"/>
-  <param id="lfo.shape" help_url="#parameters"/>
+  <param id="lfo.shape" help_url="#lfos"/>
   <param id="lfo.sustain" help_url="#lfo-envelope-generator"/>
   <param id="lfo.trigger_mode" help_url="#parameters"/>
   <param id="lfo.unipolar" help_url="#parameters"/>
@@ -612,18 +615,18 @@
   <param id="fx.param_12" type="24" help_url="#treemonster"/>
 
   <!-- special case FX params for Waveshaper (25) -->
-  <param id="fx.param_1" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_2" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_3" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_4" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_5" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_6" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_7" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_8" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_9" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_10" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_11" type="25" help_url="#waveshaper"/>
-  <param id="fx.param_12" type="25" help_url="#waveshaper"/>
+  <param id="fx.param_1" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_2" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_3" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_4" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_5" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_6" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_7" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_8" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_9" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_10" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_11" type="25" help_url="#waveshaper-1"/>
+  <param id="fx.param_12" type="25" help_url="#waveshaper-1"/>
 
   <!-- special case FX params for Mid-Side Tool (26) -->
   <param id="fx.param_1" type="26" help_url="#mid-side-tool"/>

@@ -14,6 +14,9 @@ struct Build
     static const char *ReleaseNumberStr;
     static const char *ReleaseStr;
 
+    static const bool IsRelease; // vs nightly
+    static const bool IsNightly;
+
     static const char *GitHash;
     static const char *GitBranch;
 
@@ -37,11 +40,13 @@ struct Build
 
 #define SURGE_VST2_IDENTIFIER 'cjs3'
 
-#define stringProductName "Surge"
+#define stringProductName "Surge XT"
+#define stringRepository "https://github.com/surge-synthesizer/"
 #define stringWebsite "https://surge-synthesizer.github.io/"
-#define stringFileDescription "Surge Synth Team Surge"
+#define stringManual "https://surge-synthesizer.github.io/manual-xt/"
+#define stringFileDescription "Surge XT hybrid virtual instrument"
 #define stringCompanyName "Surge Synth Team\0"
-#define stringLegalCopyright "© 2004-2020 Various Authors"
+#define stringLegalCopyright "© 2004-2022 Various Authors"
 #define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
 
 #endif //__version__

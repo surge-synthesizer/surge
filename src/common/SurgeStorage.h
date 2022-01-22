@@ -167,6 +167,7 @@ enum deform_type
     type_1,
     type_2,
     type_3,
+    type_4,
 
     n_deform_types,
 };
@@ -984,6 +985,7 @@ class alignas(16) SurgeStorage
     //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
 
     SurgeStorage(std::string suppliedDataPath = "");
+    static std::string skipPatchLoadDataPathSentinel;
 
     // With XT surgestorage can now keep a cache of errors it reports to the user
     void reportError(const std::string &msg, const std::string &title);
@@ -1405,10 +1407,10 @@ class alignas(16) SurgeStorage
 
 #define DEBUG_RNG_THREADING 0
 #if DEBUG_RNG_THREADING
-    pthread_t audioThreadID = 0;
+    std::thread::id audioThreadID{0};
     inline void runningOnAudioThread()
     {
-        if (audioThreadID && pthread_self() != audioThreadID)
+        if (audioThreadID && std::this_thread::get_id() != audioThreadID)
         {
             std::cout << "BUM CALL ON NON AUDIO THREAD" << std::endl;
         }
