@@ -4498,9 +4498,15 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
     switch (ctrltype)
     {
     case ct_fmratio:
+    {
+        int pos{0};
+        while (pos < s.length() && !std::isdigit(s[pos]) && !(s[pos] == '.' || s[pos] == ','))
+            pos++;
+        auto q = s.substr(pos);
+
         if (absolute)
         {
-            auto dfreq = std::atof(s.c_str());
+            auto dfreq = std::atof(q.c_str());
 
             float bpv = (val.f - 16.0) / 16.0;
             float mul = 69;
@@ -4522,7 +4528,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
              * That is p->get_extended(mf) = v / 31 / 2. So lets get to work
              */
             float mv = 0.f;
-            const char *strip = &(s.c_str()[0]);
+            const char *strip = &(q.c_str()[0]);
             while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
                 ++strip;
 
@@ -4558,6 +4564,13 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             auto res = (qq + ((qq >= -32) ? +1 : -1)) * 16.f / 31.f + 16.f;
             return res / 32;
         }
+
+        auto mv = (float)std::atof(q.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
+
+        if (mv < -1 || mv > 1)
+            valid = false;
+        return mv;
+    }
     default:
     {
         // This works in all the linear cases so we need to handle fewer above than we'd think
