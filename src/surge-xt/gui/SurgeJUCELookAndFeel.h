@@ -38,6 +38,8 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
 
     void onSkinChanged() override;
 
+    void drawPopupMenuBackgroundWithOptions(juce::Graphics &g, int w, int h,
+                                            const juce::PopupMenu::Options &o) override;
     void drawPopupMenuItem(juce::Graphics &g, const juce::Rectangle<int> &area,
                            const bool isSeparator, const bool isActive, const bool isHighlighted,
                            const bool isTicked, const bool hasSubMenu, const juce::String &text,

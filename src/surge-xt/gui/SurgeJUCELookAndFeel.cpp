@@ -378,3 +378,15 @@ void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &
         }
     }
 }
+
+void SurgeJUCELookAndFeel::drawPopupMenuBackgroundWithOptions(juce::Graphics &g, int width,
+                                                              int height,
+                                                              const juce::PopupMenu::Options &o)
+{
+    auto background = findColour(PopupMenu::backgroundColourId);
+
+    g.fillAll(background);
+
+    g.setColour(findColour(PopupMenu::textColourId).withAlpha(0.6f));
+    g.drawRect(0, 0, width, height);
+}
