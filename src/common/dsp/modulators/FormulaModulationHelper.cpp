@@ -585,14 +585,27 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                 {
                     idx = lua_tointeger(s->L, -2);
                 }
-                if (idx < 0 || idx >= max_formula_outputs)
+                if (idx <= 0 || idx > max_formula_outputs)
                 {
+                    std::ostringstream oss;
+                    oss << "Error with vector output. The vector output must be"
+                        << " an array with size up to 8. Your table contained"
+                        << " index " << idx;
+                    if (idx == -1)
+                        oss << " which is not an integer array index.";
+                    if (idx > max_formula_outputs)
+                        oss << " which means your result is too long.";
+                    s->adderror(oss.str());
+                    auto &stateData = *storage->formulaGlobalData;
+                    stateData.knownBadFunctions.insert(s->funcName);
+                    s->isvalid = false;
+
                     idx = 0;
-                    s->adderror("Please index the output array with numbers 1-8");
                 }
 
                 // Remember - LUA is 0 based
-                output[idx - 1] = checkFinite(lua_tonumber(s->L, -1));
+                if (idx > 0)
+                    output[idx - 1] = checkFinite(lua_tonumber(s->L, -1));
                 lua_pop(s->L, 1);
                 len = std::max(len, idx - 1);
             }
