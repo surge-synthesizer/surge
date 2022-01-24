@@ -20,7 +20,7 @@
 #include "version.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
-#include "platform/Paths.h"
+#include "sst/plugininfra/paths.h"
 #include <fmt/core.h>
 
 namespace Surge
@@ -193,8 +193,8 @@ void AboutScreen::populateData()
 
     lowerLeft.emplace_back("", "", "");
 
-    lowerLeft.emplace_back("Executable:", Paths::appPath().u8string(),
-                           Paths::appPath().parent_path().u8string());
+    auto apppath = sst::plugininfra::paths::sharedLibraryBinaryPath();
+    lowerLeft.emplace_back("Executable:", apppath.u8string(), apppath.parent_path().u8string());
     lowerLeft.emplace_back("Factory Data:", storage->datapath.u8string(),
                            storage->datapath.u8string());
     lowerLeft.emplace_back("User Data:", storage->userDataPath.u8string(),
