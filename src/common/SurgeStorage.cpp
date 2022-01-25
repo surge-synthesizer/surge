@@ -24,22 +24,8 @@
 #include "UserDefaults.h"
 #include "SurgeSharedBinary.h"
 #include "DebugHelpers.h"
-#include "platform/Paths.h"
 
-#if MAC
-#include <cstdlib>
-#include <sys/stat.h>
-//#include <MoreFilesX.h>
-//#include <MacErrorHandling.h>
-#include <CoreFoundation/CFBundle.h>
-#include <CoreServices/CoreServices.h>
-#elif LINUX
-#include <stdlib.h>
-#else
-#include <windows.h>
-#include <shellapi.h>
-#include <shlobj.h>
-#endif
+#include "sst/plugininfra/paths.h"
 
 #include <iostream>
 #include <iomanip>
@@ -202,18 +188,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 
-    bool hasSuppliedDataPath = false;
-    if (suppliedDataPath.size() != 0)
-    {
-        hasSuppliedDataPath = true;
-    }
-
-#if MAC || LINUX
-    const auto homePath{Surge::Paths::homePath()};
-#endif
-
-#if MAC
-    char path[1024];
+    bool hasSuppliedDataPath = !suppliedDataPath.empty();
     std::string buildOverrideDataPath;
     if (getOverrideDataHome(buildOverrideDataPath))
     {
@@ -222,166 +197,73 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         suppliedDataPath = buildOverrideDataPath;
     }
 
+    std::string sxt = "Surge XT";
+    std::string sxtlower = "surge-xt";
+
+#if MAC
     if (!hasSuppliedDataPath)
     {
-        FSRef foundRef;
-        OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
-        FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
-        std::string localpath = path;
-        localpath += "/Surge XT/";
+        auto shareddp = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt);
+        auto userdp = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
 
-        err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
-        FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
-        std::string rootpath = path;
-        rootpath += "/Surge XT/";
-
-        datapath = rootpath;
-        if (fs::is_directory(string_to_path(localpath)))
-            datapath = localpath;
+        if (fs::is_directory(userdp))
+            datapath = userdp;
+        else
+            datapath = shareddp;
     }
     else
     {
-        datapath = suppliedDataPath;
+        datapath = fs::path{suppliedDataPath};
     }
 
-    userDataPath = homePath / "Documents/Surge XT";
+    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
-        if (const char *xdgDataPath = getenv("XDG_DATA_HOME"))
-        {
-            datapath = fs::path{xdgDataPath} / "surge-xt";
-        }
-        else if (auto localDataPath{homePath / ".local/share/surge-xt"};
-                 fs::is_directory(localDataPath))
-        {
-            datapath = std::move(localDataPath);
-        }
-        else
-        {
-            datapath = homePath / ".local/share/Surge XT";
-        }
+        auto userlower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, true);
+        auto userreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+        auto globallower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, false);
+        auto globalreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
 
-        /*
-        ** If local directory doesn't exists - we probably came here through an installer -
-        ** check for /usr/share/surge and use /usr/share/Surge as our last guess
-        */
-        if (!fs::is_directory(datapath))
+        bool founddir{false};
+        for (const auto &p : {userreg, userlower, globalreg, globallower})
         {
-            if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX)) /
-                                 "share" / "surge-xt"))
+            if (fs::is_directory(p) && !founddir)
             {
-                datapath =
-                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "surge-xt";
-            }
-            else if (fs::is_directory(string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" /
-                                      "Surge XT"))
-            {
-                datapath =
-                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "Surge XT";
-            }
-            else
-            {
-                std::string systemDataPath = "/usr/share/surge-xt/";
-                if (fs::is_directory(string_to_path(systemDataPath)))
-                    datapath = string_to_path(systemDataPath);
-                else
-                    datapath = string_to_path("/usr/share/Surge XT/");
+                founddir = true;
+                datapath = p;
             }
         }
-
-        std::string buildOverrideDataPath;
-        if (getOverrideDataHome(buildOverrideDataPath))
-        {
-            datapathOverriden = true;
-            datapath = buildOverrideDataPath;
-            static bool warnOver = false;
-            if (!warnOver)
-            {
-                std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
-                std::cout << "         Only use this in build pipelines please!" << std::endl;
-                warnOver = true;
-            }
-        }
+        if (!founddir)
+            datapath = globallower;
     }
     else
     {
         datapath = suppliedDataPath;
     }
 
-    /*
-    ** See the discussion in github issue #930. Basically
-    ** if ~/Documents/Surge XT exists use that
-    ** else if ~/.Surge XT exists use that
-    ** else if ~/.Documents exists, use ~/Documents/Surge XT
-    ** else use ~/.Surge XT
-    ** Compensating for whether your distro makes you a ~/Documents or not
-    */
-
-    if (auto xdgdd = getenv("XDG_DOCUMENTS_DIR"))
-    {
-        auto xdgpath = fs::path{xdgdd} / "Surge XT";
-        userDataPath = std::move(xdgpath);
-    }
-    else if (auto documentsSurge = homePath / "Documents/Surge XT";
-             fs::is_directory(documentsSurge))
-    {
-        userDataPath = std::move(documentsSurge);
-    }
-    else if (auto dotSurge = homePath / ".Surge XT"; fs::is_directory(dotSurge))
-    {
-        userDataPath = std::move(dotSurge);
-    }
-    else if (auto documents = homePath / "Documents"; fs::is_directory(documents))
-    {
-        userDataPath = std::move(documentsSurge);
-    }
-    else
-    {
-        userDataPath = dotSurge;
-    }
-    // std::cout << "Data path is " << datapath << std::endl;
-    // std::cout << "User data path is " << userDataPath << std::endl;
+    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
 
 #elif WINDOWS
-    const auto installPath{Surge::Paths::installPath()};
+    const auto installPath = sst::plugininfra::paths::sharedLibraryBinaryPath().parent_path();
 
-    // First check the portable mode sitting beside me
-    if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
+    if (!hasSuppliedDataPath)
     {
-        datapath = std::move(path);
-    }
-
-    if (datapath.empty())
-    {
-        PWSTR commonAppData;
-        if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
+        // First check the portable mode sitting beside me
+        if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
         {
-            fs::path path(commonAppData);
-            path /= L"Surge XT";
-            if (fs::is_directory(path))
-            {
-                datapath = path_to_string(path);
-            }
+            datapath = std::move(path);
         }
-    }
 
-    if (datapath.empty())
-    {
-        PWSTR localAppData;
-        if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+        if (datapath.empty())
         {
-            fs::path path(localAppData);
-            path /= L"Surge XT";
-            datapath = path_to_string(path);
+            datapath = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt);
         }
-    }
 
-    std::string orPath;
-    if (getOverrideDataHome(orPath))
-    {
-        datapathOverriden = true;
-        datapath = orPath;
+        if (datapath.empty() || !fs::is_directory(datapath))
+        {
+            datapath = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+        }
     }
 
     // Portable - first check for installPath\\SurgeXTUserData
@@ -389,11 +271,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         userDataPath = std::move(path);
     }
-    else if (PWSTR documentsFolder;
-             !SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
+    else
     {
-        userDataPath = fs::path{documentsFolder} / L"Surge XT";
-        // FIXME: Don't leak documentsFolder!
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
     }
 #endif
 
@@ -403,7 +283,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::UserDataPath, "UNSPEC");
     if (userSpecifiedDataPath != "UNSPEC")
     {
-        userDataPath = userSpecifiedDataPath;
+        userDataPath = fs::path{userSpecifiedDataPath};
     }
 
     // append separator if not present
@@ -415,17 +295,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
     createUserDirectory();
-
-    /*
-    const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
-
-    if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
-    {
-        reportError("Cannot find 'configuration.xml' in path '" +
-                                                 datapath + "'. Please reinstall surge.",
-                                             "Surge is not properly installed.");
-    }
-    */
 
     // TIXML requires a newline at end.
     auto cxmlData = std::string(SurgeSharedBinary::configuration_xml,

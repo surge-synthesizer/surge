@@ -32,3 +32,6 @@
 [submodule "libs/sst/sst-plugininfra"]
 	path = libs/sst/sst-plugininfra
 	url = https://github.com/surge-synthesizer/sst-plugininfra
+[submodule "libs/sst/sst-cpputils"]
+	path = libs/sst/sst-cpputils
+	url = https://github.com/surge-synthesizer/sst-cpputils

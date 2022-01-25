@@ -14,6 +14,7 @@ surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 surge_add_lib_subdirectory(LuaJitLib)
 
+surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
@@ -319,11 +320,15 @@ target_link_libraries(${PROJECT_NAME}
   samplerate
   surge::airwindows
   surge::eurorack
+
+  sst-cpputils
+  sst-plugininfra
   sst-plugininfra::filesystem
+  sst-plugininfra::tinyxml
+
   surge::oddsound-mts
   surge::sqlite
   surge::strnatcmp
-  sst-plugininfra::tinyxml
   surge-common-binary
   tuning-library
   PRIVATE
