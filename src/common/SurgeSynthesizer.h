@@ -389,7 +389,16 @@ class alignas(16) SurgeSynthesizer
     bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
     bool fx_reload_mod[n_fx_slots];
-    std::array<std::vector<std::tuple<int, int, int, int, float>>, n_fx_slots> fxmodsync;
+
+    struct FXModSyncItem
+    {
+        int source_id;
+        int source_scene;
+        int source_index;
+        int whichForReal;
+        float depth;
+    };
+    std::array<std::vector<FXModSyncItem>, n_fx_slots> fxmodsync;
     int32_t fx_suspend_bitmask;
 
     // hold pedal stuff
