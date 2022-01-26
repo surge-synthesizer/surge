@@ -35,3 +35,6 @@
 [submodule "libs/sst/sst-cpputils"]
 	path = libs/sst/sst-cpputils
 	url = https://github.com/surge-synthesizer/sst-cpputils
+[submodule "libs/clap-juce-extensions"]
+	path = libs/clap-juce-extensions
+	url = https://github.com/free-audio/clap-juce-extensions
