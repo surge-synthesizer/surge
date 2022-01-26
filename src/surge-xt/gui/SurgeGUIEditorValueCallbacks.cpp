@@ -2520,6 +2520,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             int newindex = cms->getCurrentModIndex();
 
             bool updated = false;
+            bool change_mod_view = true;
             if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK)
             {
                 updated = true;
@@ -2582,6 +2583,15 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 modsource_index = newindex;
                 refresh_mod();
             }
+            else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK_ARROW ||
+                     cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CTRL_CLICK)
+            {
+                change_mod_view = false;
+                mod_editor = true;
+                modsource = newsource;
+                modsource_index = newindex;
+                refresh_mod();
+            }
 
             if (updated && lfoDisplay && lfoDisplay->modsource == modsource)
             {
@@ -2589,7 +2599,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 lfoDisplay->repaint();
             }
 
-            if (isLFO(newsource))
+            if (isLFO(newsource) && change_mod_view)
             {
                 if (modsource_editor[current_scene] != newsource)
                 {
