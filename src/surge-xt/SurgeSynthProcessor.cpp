@@ -477,6 +477,15 @@ void SurgeSynthProcessor::handleNoteOff(juce::MidiKeyboardState *source, int mid
         midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), false));
 }
 
+void SurgeSynthProcessor::processBlockBypassed(juce::AudioBuffer<float> &buffer,
+                                               juce::MidiBuffer &midiMessages)
+{
+    /*
+     * Temporary fix while we resolve #5828
+     */
+    processBlock(buffer, midiMessages);
+}
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
