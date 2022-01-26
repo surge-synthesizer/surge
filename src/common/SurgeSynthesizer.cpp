@@ -2519,9 +2519,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (auto &t : fxmodsync[s])
                         {
-                            setModulation(storage.getPatch().fx[s].p[std::get<3>(t)].id,
-                                          (modsources)std::get<0>(t), std::get<1>(t),
-                                          std::get<2>(t), std::get<4>(t));
+                            setModulation(storage.getPatch().fx[s].p[t.whichForReal].id,
+                                          (modsources)t.source_id, t.source_scene, t.source_index,
+                                          t.depth);
                         }
                         fxmodsync[s].clear();
                         fx_reload_mod[s] = false;
@@ -4402,9 +4402,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             auto depth =
                 getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
                               mv->at(i).source_scene, mv->at(i).source_index);
-            fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, mv->at(i).source_index,
-                                                        mv->at(i).source_scene, whichForReal,
-                                                        depth));
+            fxmodsync[target].push_back({mv->at(i).source_id, mv->at(i).source_scene,
+                                         mv->at(i).source_index, whichForReal, depth});
         }
 
         if (m == FXReorderMode::SWAP)
@@ -4426,9 +4425,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                 auto depth = getModulation(fxsync[target].p[whichForReal].id,
                                            (modsources)mv->at(i).source_id, mv->at(i).source_scene,
                                            mv->at(i).source_index);
-                fxmodsync[source].push_back(
-                    std::make_tuple(mv->at(i).source_id, mv->at(i).source_index,
-                                    mv->at(i).source_scene, whichForReal, depth));
+                fxmodsync[source].push_back({mv->at(i).source_id, mv->at(i).source_scene,
+                                             mv->at(i).source_index, whichForReal, depth});
             }
         }
 
