@@ -62,7 +62,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_audio_processors
 )
 
-clap_juce_extensions_plugin(TARGET surge-fx
-        CLAP_ID "org.surge-synth-team.surge-xt-fx")
+if (CLAP_JUCE_EXTENSIONS_ROOT)
+  clap_juce_extensions_plugin(TARGET surge-fx
+          CLAP_ID "org.surge-synth-team.surge-xt-fx")
+endif()
 
 surge_juce_package(${PROJECT_NAME} "Surge XT Effects")

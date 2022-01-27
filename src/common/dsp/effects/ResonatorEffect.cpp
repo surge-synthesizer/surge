@@ -190,7 +190,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     for (int s = 0; s < BLOCK_SIZE_OS; ++s)
     {
         // preprocess audio in through asymmetric waveshaper
-        // this mimics Polymoog's power supply which only operated on positive rails
+        // this mimicks Polymoog's power supply which only operated on positive rails
         dataOS[0][s] = lookup_waveshape(wst_asym, dataOS[0][s]);
         dataOS[1][s] = lookup_waveshape(wst_asym, dataOS[1][s]);
 

@@ -529,7 +529,7 @@ void LFOModulationSource::process_block()
             }
             else
                 phase =
-                    0; // should never get here but something is already weird with the mod stack
+                    0; // should never get here but something is already wierd with the mod stack
         }
         else
         {
@@ -570,7 +570,7 @@ void LFOModulationSource::process_block()
         case lt_stepseq:
             /*
             ** You might thing we don't need this and technically we don't
-            ** but I wanted to keep it here to retain compatibility with
+            ** but I wanted to keep it here to retain compatability with
             ** versions of trigmask which were streamed in older sessions
             */
             if (ss->trigmask & (UINT64_C(1) << step))
@@ -782,7 +782,7 @@ void LFOModulationSource::process_block()
             if (frate == 0)
             {
                 /*
-                ** Alright so in 0 rate mode we want to scrub through the entire sequence. So
+                ** Alright so in 0 rate mode we want to scrub through tne entire sequence. So
                 */
                 float p16 = phase * n_stepseqsteps;
                 int pstep = ((int)p16) & (n_stepseqsteps - 1);

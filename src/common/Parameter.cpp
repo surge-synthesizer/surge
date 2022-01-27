@@ -361,7 +361,6 @@ bool Parameter::has_deformoptions() const
 {
     switch (ctrltype)
     {
-    case ct_freq_hpf:
     case ct_lfodeform:
     case ct_modern_trimix:
     case ct_alias_mask:
@@ -2554,7 +2553,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             return;
         }
         float mf = modulationDepth;
-        // OK so this is already handed to us extended and this one is weird so
+        // OK so this is already handed to us extended and this one is wierd so
         auto qq = mf;
         if (extend_range)
         {

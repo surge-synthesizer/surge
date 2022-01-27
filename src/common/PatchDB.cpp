@@ -225,7 +225,7 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "11"; // I will rebuild if this is not my version
+    static constexpr const char *schema_version = "11"; // I will rebuild if this is not my verion
 
     // language=SQL
     static constexpr const char *setup_sql = R"SQL(
@@ -356,7 +356,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         if (ec != SQLITE_OK)
         {
             std::ostringstream oss;
-            oss << "An error occurred opening sqlite file '" << dbname << "'. The error was '"
+            oss << "An error occured opening sqlite file '" << dbname << "'. The error was '"
                 << sqlite3_errmsg(dbh) << "'.";
             storage->reportError(oss.str(), "Surge Patch Database Error");
             if (dbh)
@@ -495,7 +495,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
     }
 
-    // FIXME features should be an enum or something
+    // FIXME features shuld be an enum or something
 
     enum FeatureType
     {
@@ -1030,7 +1030,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 if (notifyOnError)
                 {
                     std::ostringstream oss;
-                    oss << "An error occurred opening r/o sqlite file '" << dbname
+                    oss << "An error occured opening r/o sqlite file '" << dbname
                         << "'. The error was '" << sqlite3_errmsg(dbh) << "'.";
                     storage->reportError(oss.str(), "Surge Patch Database Error");
                 }

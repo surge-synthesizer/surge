@@ -13,7 +13,6 @@ include(cmake/lib.cmake)
 
 message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
 add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
-add_subdirectory(../libs/clap-juce-extensions clap-extensions EXCLUDE_FROM_ALL)
 
 add_library(simde INTERFACE)
 target_include_directories(simde INTERFACE ${CMAKE_SOURCE_DIR}/libs/simde)
@@ -46,6 +45,10 @@ target_compile_definitions(surge-juce INTERFACE
   )
 
 set(SURGE_JUCE_FORMATS VST3)
+
+if (CLAP_JUCE_EXTENSIONS_ROOT)
+  add_subdirectory(${CLAP_JUCE_EXTENSIONS_ROOT} clap-extensions)
+endif()
 
 if(NOT SURGE_SKIP_STANDALONE)
   list(APPEND SURGE_JUCE_FORMATS Standalone)

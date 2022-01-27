@@ -25,7 +25,7 @@ namespace Surge
 namespace Widgets
 {
 /*
- * This is a pure play juce component which is referred to as such so doesn't
+ * This is a pure play juce component which is refered to as such so doesn't
  * need any fo the EFVG and Mixin stuff to interact with the value callback mechanism
  */
 struct VerticalLabel : public juce::Component

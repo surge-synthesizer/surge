@@ -269,7 +269,7 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
             speed = speed / 10;
         }
 
-        // This is calibrated to give us reasonable speed on a 0-1 basis from the slider
+        // This is callibrated to give us reasonable speed on a 0-1 basis from the slider
         // but in this widget '1' is the small motion so speed it up some
         speed *= 30;
 
@@ -1452,7 +1452,7 @@ void RadialScaleGraph::mouseWheelMove(const juce::MouseEvent &event,
             speed = speed / 10;
         }
 
-        // This is calibrated to give us reasonable speed on a 0-1 basis from the slider
+        // This is callibrated to give us reasonable speed on a 0-1 basis from the slider
         // but in this widget '1' is the small motion so speed it up some
         auto dr = speed * delta;
 

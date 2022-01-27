@@ -139,7 +139,7 @@ int TapeEffect::group_label_ypos(int id)
 void TapeEffect::init_ctrltypes()
 {
     /*
-     * The actually deactivation status is on gain, so reflect that down
+     * The actualy deactivation status is on gain, so reflet that down
      * to freq and bw using the dynamic deactivation mechanism
      */
     static struct TapeEffectDeact : public ParameterDynamicDeactivationFunction

@@ -159,7 +159,7 @@ pattern would be develop on Mac, do a commit, then test it on Windows and Linux.
 make a one-line change and commit that. Now your change, which is still "one thing", has two commits.
 
 Or perhaps, you develop your code over a week committing regularly and all those intermediate work commits
-aren't ones you want to make visible. Or perhaps you develop, then format as a last step and have changes.
+aren't ones you want to make visibile. Or perhaps you develop, then format as a last step and have changes.
 
 In any case, as maintainers, we would sooner have a small number of git commits in our pull requests.
 
@@ -208,7 +208,7 @@ paul:~/dev/music/surge$ git cherry -v main
 ```
 
 Now at this point you could push your branch (`git push origin update-git-howto`) and the PR would update
-and would have two commits in it. Continuous integration would run its course and voila! But the maintainers would probably
+and would have two commits in it. Continous integration would run its course and voila! But the maintainers would probably
 squash those commits and rewrite your commit message, so you may want to squash down to one commit. Here's how you do it.
 
 First rebase interactively with `git rebase -i main`. You will see an editor which looks like this:

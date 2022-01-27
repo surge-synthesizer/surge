@@ -133,7 +133,7 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
         catch (const fs::filesystem_error &e)
         {
             // This will give us a broken skin but no need to tell the users
-            FIXMEERROR << "Unable to traverse for skins in user directory: " << e.what();
+            FIXMEERROR << "Unable to travese for skins in user directory: " << e.what();
         }
 
         for (auto &p : alldirs)
@@ -561,9 +561,8 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
                         validKids = false;
                         // for( auto kk : k.second )
                         // std::cout << _D(kk.first) << _D(kk.second) << std::endl;
-                        FIXMEERROR
-                            << "Each subchild of a multi-image must contain a zoom-level and "
-                               "resource";
+                        FIXMEERROR << "Each subchild of a multi-image must ontain a zoom-level and "
+                                      "resource";
                         break;
                     }
                     else if (k.second["zoom-level"] == "100")
@@ -937,8 +936,8 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
             }
 
             /*
-             * Per long discussion Feb 20 on discord, the expectation in the skin engine
-             * is that you are overriding defaults *except* parent groups in the XML will reset
+             * Per long discussion Feb 20 on discord, the expetation inthe skin engine
+             * is that you are overriding defaults *except* parent groups in the XML wil lreset
              * your default position to the origin. So if we *don't* specify an x/y and
              * *are* in a user specified group, reset the control default before we apply
              * the XML and offsets
@@ -1289,7 +1288,7 @@ void Surge::GUI::Skin::resolveBaseParentOffsets(Skin::Control::ptr_t c)
 {
     if (c->parentResolved)
         return;
-    // When we enter here, all the objects will have been created by the loop above
+    // When we enter here, all the objects will ahve been created by the loop above
     if (c->allprops.find("base_parent") != c->allprops.end())
     {
         // std::cout << "Control Parent " << _D(c->x) << _D(c->y) << std::endl;

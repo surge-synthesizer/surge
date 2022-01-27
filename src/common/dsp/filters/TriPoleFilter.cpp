@@ -18,7 +18,7 @@
 ** The filter has three output points. For modes and three output
 ** points makes for a total of 12 sub-types.
 **
-** The details of the emulation are derived in a Python notebook here:
+** The details of the emulation are derived in a Pyton notebook here:
 ** https://github.com/surge-synthesizer/surge-python/blob/main/scripts/dsp_simulations/ThreelerAnalysis.ipynb
 */
 

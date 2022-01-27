@@ -83,7 +83,7 @@ class lipol_ps
     void subtract_block(float *src, unsigned int nquads);
     void trixpan_blocks(float *L, float *R, float *dL, float *dR,
                         unsigned int nquads); // panning that always lets both channels through
-                                              // unattenuated (separate hard-panning)
+                                              // unattenuated (seperate hard-panning)
     void multiply_block_to(float *src, float *dst, unsigned int nquads);
     void multiply_2_blocks(float *src1, float *src2, unsigned int nquads);
     void multiply_2_blocks_to(float *src1, float *src2, float *dst1, float *dst2,

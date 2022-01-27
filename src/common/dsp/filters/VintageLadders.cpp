@@ -63,7 +63,7 @@ namespace RK
 ** where k controls the cutoff frequency, r is feedback (<= 4 for stability), and S(x) is a
 *saturation function.
 **
-** Although the code is modified from that location here is the original copyright notice:
+** Although the code is modified from that location here is the originaly copyright notice:
 **
 ** Copyright (c) 2015, Miller Puckette. All rights reserved.
 **
@@ -234,7 +234,7 @@ __m128 process(QuadFilterUnitState *__restrict f, __m128 input)
     ** OK this is a bit of a hack but... these are the Lanczos factors
     ** sinc( x ) sinc (x / 2), only backwards. Really we should do a proper little
     ** FIR around the whole thing, but this at least gives us a reconstruction with
-    ** some aliasing suppression.
+    ** some aliasing supression.
     **
     ** Not entirely valid but...
     **

@@ -80,7 +80,7 @@ void AirWindowsEffect::init_ctrltypes()
     ** can set values, then when we process later, resetCtrlTypes
     ** will take those prior values and assign them as new (and that's
     ** what is called if the value is changed). Also since the load
-    ** will often load to a separate instance and copy the params over
+    ** will often load to a sparate instance and copy the params over
     ** we set the user_data to nullptr here to indicate that
     ** after this inti we need to do something even if the value
     ** of our FX hasn't changed.

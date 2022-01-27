@@ -28,17 +28,17 @@ build-win.ps1 is a powershell script to control builds and do installs. It takes
     -cleanall   Clean builds and remove visual studio files
     -build      Build
     -install    Install vst2 and 3. Will prompt for permissions
-    -bi         build + install
+    -bi         buid + install
     -cb         clean + build
     -cbi        clean + build + install
 
     -w32        Build 32 bit
 
-It does not run premake yet.
+It does not run premake yet. 
 
 You need to onetime do
 
-    Set-ExecutionPolicy -scope CurrentUser RemoteSigned
+    Set-ExecutionPolicy -scope CurrentUser RemoteSigned 
 
 to use this.
 "@

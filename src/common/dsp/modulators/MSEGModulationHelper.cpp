@@ -279,7 +279,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         {
             /* There is a pathological case here where the deform is non-zero but very small
              * where this results in a floating point underflow. That is, if df is e1-7 then
-             * e^df - 1 is basically the last decimal place and you get floating point rounding
+             * e^df - 1 is basically the last decimal place and you get floating point rouding
              * quantization. So treat all deforms less than 1e-4 as zero.
              *
              * This is totally warranted because we work in float space.

@@ -280,8 +280,8 @@ class alignas(16) SurgeSynthesizer
 
     /*
      * setModulation etc take a modsource scene. This is only needed for global modulations
-     * since for in-scene modulations the parameter implicit in ptag has a scene. But for
-     * LFOs modulating FX, we need to know which scene they originate from. See #2285
+     * since for in-scene modulations the paramter implicit in ptag has a scene. But for
+     * LFOs modulating FX, we need to knwo which scene they originate from. See #2285
      */
     bool setModulation(long ptag, modsources modsource, int modsourceScene, int index, float value);
     float getModulation(long ptag, modsources modsource, int modsourceScene, int index) const;
@@ -381,10 +381,7 @@ class alignas(16) SurgeSynthesizer
 
     bool switch_toggled_queued, release_if_latched[n_scenes], release_anyway[n_scenes];
     void setParameterSmoothed(long index, float value);
-
-    static constexpr int n_hpBQ = 4;
-
-    std::array<BiquadFilter, n_hpBQ> hpA, hpB; // TODO: FIX SCENE ASSUMPTION (use std::array)
+    BiquadFilter hpA, hpB; // TODO: FIX SCENE ASSUMPTION (use std::array)
 
     bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init

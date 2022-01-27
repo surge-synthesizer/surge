@@ -860,7 +860,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below with 6ns")
+    SECTION("A lot below witn 6ns")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -900,7 +900,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below with ED3-17")
+    SECTION("A lot below witn ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -1039,7 +1039,7 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
         }
     }
 
-    SECTION("Ignoring if retuned compares with untuned")
+    SECTION("Ignoring in retuned compares with untuned")
     {
         auto surge = surgeOnSine();
         auto surgeTuned = surgeOnSine();

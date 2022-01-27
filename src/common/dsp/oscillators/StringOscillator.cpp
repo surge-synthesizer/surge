@@ -24,7 +24,7 @@
  *
  * At init:
  * - Excite the delay line with an input. In 'chirp' mode this is only pre-play and
- *   in 'continuous' mode it is scaled by the amplitude during play
+ *   in 'continous' mode it is scaled by the amplitude during play
  *
  * At runtime:
  * - run two delay lines seeded the same and take two taps, tap1 and tap2,
@@ -169,7 +169,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     tap[1].startValue(pitchmult2_inv);
     t2level.startValue(0.5 * limit_range(localcopy[id_strbalance].f, -1.f, 1.f) + 0.5);
 
-    // we need a big prefill to support the delay line for FM
+    // we need a big prefill to supprot the delay line for FM
     auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv));
 
     for (int i = 0; i < 2; ++i)

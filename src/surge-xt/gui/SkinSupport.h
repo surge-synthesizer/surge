@@ -27,7 +27,7 @@
 ** Support for rudimentary skinning in Surge
 **
 ** SkinSupport provides a pair of classes, a SkinManager and a SkinDB
-** The SkinManager singleton loads and applies the SkinDB to various places as
+** The SkinManager singleton loads and applys the SkinDB to various places as
 ** appropriate. The SkinDB has all the information you would need
 ** to skin yourself, and answers various queries.
 */
@@ -261,7 +261,7 @@ class Skin
         auto stringNames = c->defaultComponent.payload->propertyNamesMap[pkey];
 
         /*
-        ** Traverse class hierarchy looking for value
+        ** Traverse class heirarchy looking for value
         */
 
         for (auto const &key : stringNames)

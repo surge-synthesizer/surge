@@ -72,7 +72,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 2 -> 3 filter subtypes added: Comb defaults to 1, Legacy Ladder defaults to 3
 // 3 -> 4 Comb+ and Comb- are now combined into one filter type
 //        (type, subtype: +, 0 -> 0 | +, 1 -> 1 | -, 0 -> 2 | -, 1 -> 3)
-// 4 -> 5 Stereo filter configuration has separate pan controls now
+// 4 -> 5 Stereo filter configuration has seperate pan controls now
 // 5 -> 6 (1.2.0 release) filter resonance response changed (same parameters, different sound)
 // 6 -> 7 custom controller state now stored in DAW recall
 // 7 -> 8 larger resonance range (old filters are set to subtype 1)
@@ -167,7 +167,6 @@ enum deform_type
     type_1,
     type_2,
     type_3,
-    type_4,
 
     n_deform_types,
 };
@@ -907,7 +906,7 @@ class SurgePatch
     int currentSynthStreamingRevision;
 
     /*
-     * This parameter exists for the very special reason of maintaining compatibility with
+     * This parameter exists for the very special reason of maintaing compatibility with
      * comb filter tuning for streaming versions which are older than Surge v1.8.
      * Prior to that, the comb filter had a calculation error in the time and was out of tune,
      * but that lead to a unique sound in existing patches. So we introduce this parameter
@@ -992,7 +991,7 @@ class alignas(16) SurgeStorage
     struct ErrorListener
     {
         // This can be called from any thread. Beware. But it is called only
-        // when an error occurs so if you want to be sloppy and just lock that's OK
+        // when an error occurs so if you want to be sloppy and just lock thats OK
         virtual void onSurgeError(const std::string &msg, const std::string &title) = 0;
     };
     std::unordered_set<ErrorListener *> errorListeners;

@@ -48,7 +48,7 @@ class FastDiode : public chowdsp::WDF_SSE::WDFNode
     /** Accepts an incident wave into a WDF diode. */
     inline void incident(__m128 x) noexcept override { a = x; }
 
-    /** Propagates a reflected wave from a WDF diode. */
+    /** Propogates a reflected wave from a WDF diode. */
     inline __m128 reflected() noexcept override
     {
         // See eqn (10) from reference paper
