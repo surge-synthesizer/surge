@@ -256,7 +256,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
-        if (i == nextMidi)
+        while (i == nextMidi)
         {
             applyMidi(*midiIt);
             midiIt++;
