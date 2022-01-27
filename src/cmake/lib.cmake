@@ -97,7 +97,7 @@ function(surge_make_installers)
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
       WORKING_DIRECTORY ${SURGE_PRODUCT_DIR}
-      COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tgz .
+      COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tar.gz .
       )
   elseif(WIN32)
     add_custom_command(TARGET surge-xt-distribution
