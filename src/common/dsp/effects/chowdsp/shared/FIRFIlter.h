@@ -6,7 +6,7 @@ namespace chowdsp
 {
 
 /*
-** Simple class for FIR filtering.
+** Simple class fro FIR filtering.
 ** For the original implementation,
 ** see: https://github.com/jatinchowdhury18/FIRBenchmarks/blob/master/src/InnerProdFIR.h
 */

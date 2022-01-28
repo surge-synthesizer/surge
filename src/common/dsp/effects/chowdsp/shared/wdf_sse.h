@@ -45,7 +45,7 @@ class WDF
      */
     virtual void calcImpedance() = 0;
 
-    /** Sub-classes override this function to propagate
+    /** Sub-classes override this function to propogate
      * an impedance change to the upstream elements in
      * the WDF tree.
      */
@@ -54,7 +54,7 @@ class WDF
     /** Sub-classes override this function to accept an incident wave. */
     virtual void incident(__m128 x) noexcept = 0;
 
-    /** Sub-classes override this function to propagate a reflected wave. */
+    /** Sub-classes override this function to propogate a reflected wave. */
     virtual __m128 reflected() noexcept = 0;
 
     /** Probe the voltage across this circuit element. */
@@ -95,7 +95,7 @@ class WDFNode : public WDF
 
     /** When this function is called from a downstream
      * element in the WDF tree, the impedance is recomputed
-     * and then propagated upstream to the next element in the
+     * and then propogated upstream to the next element in the
      * WDF tree.
      */
     inline void propagateImpedance() override
@@ -141,7 +141,7 @@ class Resistor : public WDFNode
     /** Accepts an incident wave into a WDF resistor. */
     inline void incident(__m128 x) noexcept override { a = x; }
 
-    /** Propagates a reflected wave from a WDF resistor. */
+    /** Propogates a reflected wave from a WDF resistor. */
     inline __m128 reflected() noexcept override
     {
         b = vLoad1(0.0f);
@@ -199,7 +199,7 @@ class Capacitor : public WDFNode
         z = a;
     }
 
-    /** Propagates a reflected wave from a WDF capacitor. */
+    /** Propogates a reflected wave from a WDF capacitor. */
     inline __m128 reflected() noexcept override
     {
         b = vAdd(vMul(b_coef, b), vMul(a_coef, z));
@@ -247,7 +247,7 @@ template <typename PortType> class PolarityInverterT : public WDFNode
         port1->incident(vNeg(x));
     }
 
-    /** Propagates a reflected wave from a WDF inverter. */
+    /** Propogates a reflected wave from a WDF inverter. */
     inline __m128 reflected() noexcept override
     {
         b = vNeg(port1->reflected());
@@ -297,7 +297,7 @@ template <typename Port1Type, typename Port2Type> class WDFParallelT : public WD
         a = x;
     }
 
-    /** Propagates a reflected wave from a WDF parallel adaptor. */
+    /** Propogates a reflected wave from a WDF parallel adaptor. */
     inline __m128 reflected() noexcept override
     {
         b = vAdd(vMul(port1Reflect, port1->reflected()), vMul(port2Reflect, port2->reflected()));
@@ -351,7 +351,7 @@ template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFN
         a = x;
     }
 
-    /** Propagates a reflected wave from a WDF series adaptor. */
+    /** Propogates a reflected wave from a WDF series adaptor. */
     inline __m128 reflected() noexcept override
     {
         b = vNeg(vAdd(port1->reflected(), port2->reflected()));
@@ -391,7 +391,7 @@ class ResistiveVoltageSource : public WDFNode
         propagateImpedance();
     } */
 
-    /** Computes the impedance for a WDF resistive voltage source
+    /** Computes the impedance for a WDF resistive voltage souce
      * Z_Vr = Z_R
      */
     inline void calcImpedance() override
@@ -406,7 +406,7 @@ class ResistiveVoltageSource : public WDFNode
     /** Accepts an incident wave into a WDF resistive voltage source. */
     inline void incident(__m128 x) noexcept override { a = x; }
 
-    /** Propagates a reflected wave from a WDF resistive voltage source. */
+    /** Propogates a reflected wave from a WDF resistive voltage source. */
     inline __m128 reflected() noexcept override
     {
         b = Vs;
@@ -443,7 +443,7 @@ class ResistiveCurrentSource : public WDFNode
         propagateImpedance();
     } */
 
-    /** Computes the impedance for a WDF resistive current source
+    /** Computes the impedance for a WDF resistive current souce
      * Z_Ir = Z_R
      */
     inline void calcImpedance() override
@@ -458,7 +458,7 @@ class ResistiveCurrentSource : public WDFNode
     /** Accepts an incident wave into a WDF resistive current source. */
     inline void incident(__m128 x) noexcept override { a = x; }
 
-    /** Propagates a reflected wave from a WDF resistive current source. */
+    /** Propogates a reflected wave from a WDF resistive current source. */
     inline __m128 reflected() noexcept override
     {
         b = vMul(vLoad1(2.0f), vMul(R, Is));

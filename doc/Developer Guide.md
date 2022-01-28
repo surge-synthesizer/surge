@@ -65,7 +65,7 @@ CI will fail (`linux-codequality` job). Make sure the diffs you submit for mergi
 * `class HaveCamelCaseNames`
 * `void functionsAreCamelCaseWithLowerFirst`
 * We are not using `s_` or `m_` or equivalent notations for members or statics
-* Full namespaces are generally preferred over `using`. We are trying to use
+* Full namespaces are generally prefered over `using`. We are trying to use
 `std::vector` over `vector` in the code.
 * Don't do `using namespace` in header files. Don't `using namespace std` in new code (but it is in some existing code).
 * Use namespaces, not classes to group functions. Check out how we implemented `UserInteractions.h`

@@ -110,9 +110,6 @@ struct MultiSwitch : public juce::Component,
     void updateAccessibleStateOnUserValueChange() override;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
-    bool isDeactivated{false};
-    void setDeactivated(bool b) { isDeactivated = b; }
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitch);
 };
 

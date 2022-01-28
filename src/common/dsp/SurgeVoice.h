@@ -56,7 +56,7 @@ class alignas(16) SurgeVoice
     int age, age_release;
 
     /*
-    ** Given a note0 and an oscillator this returns the appropriate note.
+    ** Given a note0 and an oscilator this returns the appropriate note.
     ** This is a pretty easy calculation in non-absolute mode. Just add.
     ** But in absolute mode you need to find the virtual note which would
     ** map to that frequency shift.

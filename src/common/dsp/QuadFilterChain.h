@@ -78,7 +78,7 @@
  * of registers (storage) and coefficients (inputs) to each filter based on the filter type at
  * the start of every block. Moreover, it provides the derivatives-with-respect-to-sample of
  * those items, such that as the filter goes across the block it can smoothly interpolate the
- * coefficients. These are set up either by direct change (with FromDirect) or individually
+ * coeffiecients. These are set up either by direct change (with FromDirect) or individually
  * based on filters. And of course, this is where a lot of the math goes. The SSE filters need
  * to set up the various polynomial and non-linear coefficients here. But once they have the
  * individual operator, they basically do a "Coefficient += dCoeff" for each block and then evaluate
@@ -92,8 +92,8 @@
  *
  * Finally, the filter types, subtypes and names thereof are enumerated in SurgeStorage.h.
  *
- * There are a few more Surge filter functions - the Allpass BiquadFilter and VectorizedSVFFilter
- * are used by various FX in a different context and they don't follow this architecture. That code
+ * There are a few more Surge fitler functions - the Allpass BiquadFilter and VectorizedSVFFilter
+ * are used by various FX in a different context and they don't follow this architecutre. That code
  * is fairly clear, though.
  */
 
@@ -102,7 +102,7 @@
 
 struct QuadFilterChainState
 {
-    QuadFilterUnitState FU[4];        // 2 filters left and right
+    QuadFilterUnitState FU[4];        // 2 filters left and righ
     QuadFilterWaveshaperState WSS[2]; // 1 shaper left and right
 
     __m128 Gain, FB, Mix1, Mix2, Drive;

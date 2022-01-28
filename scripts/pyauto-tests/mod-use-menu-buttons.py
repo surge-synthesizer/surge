@@ -1,4 +1,4 @@
-# Show that that the modulation menu properly exposes to accessibility
+# Show that that the modulation menu properly exposes to accesibility
 # by dumping the menu, muting it, then dumping it again and unmuting it
 
 import sxttest

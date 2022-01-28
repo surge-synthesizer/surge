@@ -152,7 +152,7 @@ struct ModulatableSlider : public juce::Component,
     float barFM0X{0}, barFM0Y{0}, barFMNX{0}, barFMNY{0};
     float handleX0{0}, handleY0{0};
 
-    // how far logically do we move in tray space for our current state
+    // how far logically do we move in tray space for our curent state
     int trayTypeX{0}, trayTypeY{0};
     // How far do we move in the image to make the handle image be the mod
     float modHandleX{0};

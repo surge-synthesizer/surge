@@ -60,7 +60,7 @@ pushd ./installer-tmp
 # Name of Package
 PACKAGE_NAME=surge-xt
 
-# Date in RFC format for the Changelog
+# Date in RFC formate for the Changelog
 DATE_RFC=`date --rfc-email`
 # Date in Day-of-Week Month Day Year format for the rpm config header.
 DATE_RPM=`date`

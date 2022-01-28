@@ -97,14 +97,14 @@
 **
 ** Once we have committed to convolving an exact but differently aligned impulse stream into
 ** our sample output, though, we have the opportunity to exactly align the time of that
-** impulse convolution with the moment between the samples when the actual impulse occurs.
+** impulse convoultion with the moment between the samples when the actual impulse occurs.
 **
 ** So the convolution has to manage a couple of dimensions of time. When we call ::convolute,
 ** remember, it is because we don't have enough buffer phase space computed for our current block.
 ** So ::convolute is filling a block in the "future" of our current pointer. That means we can
 ** actually use a slightly non-causal filter into the oscstate future. So, mechanically,
 ** we end up implementing:
-**     oscbuffer [i + futurelook] = sum(impulse change) * impulse[i]
+**     oscbuffer [i + futurelook] = sum(impulse chage) * impulse[i]
 **
 ** Surge adds one last wrinkle, which is that impulse function depends on how far between a sample
 ** you are. The peak of the function should happen exactly at the point intra-sample. To do that it
@@ -408,7 +408,7 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
         ** Well the answer is that we want the time to be pushed around in Hz. So it turns out that
         ** 44100 * 2 / ( 440 * 8.175 ) =~ 24.2 and 24.2 / 16 = 1.447 which is almost how much
         *absolute is off. So
-        ** let's set the multiplier here so that the regtests exactly match the display frequency.
+        ** let's set the multiplier here so that the regtests exacty match the display frequency.
         *That is the
         ** frequency desired spread / 0.9443. 0.9443 is empirically determined by running the 2
         *unison voices case

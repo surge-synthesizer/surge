@@ -534,7 +534,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     catch (...)
     {
         storage.reportError(
-            "Exception occurred while creating category folder! Most likely, invalid characters "
+            "Exception occured while creating category folder! Most likely, invalid characters "
             "were used to name the category. Please remove suspicious characters and try again!",
             "Error");
         return;

@@ -10,6 +10,9 @@
 [submodule "libs/eurorack/eurorack"]
 	path = libs/eurorack/eurorack
 	url = https://github.com/surge-synthesizer/eurorack.git
+[submodule "libs/filesystem/ghc-filesystem"]
+	path = libs/filesystem/ghc-filesystem
+	url = https://github.com/gulrak/filesystem.git
 [submodule "libs/oddsound-mts/MTS-ESP"]
 	path = libs/oddsound-mts/MTS-ESP
 	url = https://github.com/ODDSound/MTS-ESP
@@ -29,12 +32,3 @@
 	path = libs/PEGTL
 	url = https://github.com/taocpp/PEGTL.git
 	branch = 2.x
-[submodule "libs/sst/sst-plugininfra"]
-	path = libs/sst/sst-plugininfra
-	url = https://github.com/surge-synthesizer/sst-plugininfra
-[submodule "libs/sst/sst-cpputils"]
-	path = libs/sst/sst-cpputils
-	url = https://github.com/surge-synthesizer/sst-cpputils
-[submodule "libs/clap-juce-extensions"]
-	path = libs/clap-juce-extensions
-	url = https://github.com/free-audio/clap-juce-extensions

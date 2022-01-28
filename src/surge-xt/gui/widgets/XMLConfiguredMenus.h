@@ -72,7 +72,7 @@ struct XMLMenuPopulator
         bool hasColumnBreak{false};
 
         /*
-         * I know this isn't very generalized and I could template it and subclass
+         * I knwo this isn't very generalized and I could template it and subclass
          * and use this for N other controls. But I wont
          */
         Surge::Storage::FxUserPreset::Preset fxPreset;

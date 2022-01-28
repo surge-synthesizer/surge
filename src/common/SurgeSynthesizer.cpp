@@ -34,11 +34,8 @@ using namespace std;
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
-                                                                                  &storage,
-                                                                                  &storage,
-                                                                                  &storage},
-      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
+      halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
@@ -961,7 +958,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
             releaseNotePostHoldCheck(sc, channel, key, velocity);
         else
             holdbuffer[sc].push_back(
-                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to buffer
+                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to bufffer
     }
 }
 
@@ -1029,7 +1026,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                 if ((v->state.key == key) && (v->state.channel == channel))
                 {
-                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overridden
+                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overriden
                     auto priorityMode =
                         storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
@@ -2044,11 +2041,8 @@ void SurgeSynthesizer::allNotesOff()
     halfbandB.reset();
     halfbandIN.reset();
 
-    for (int i = 0; i < n_hpBQ; i++)
-    {
-        hpA[i].suspend();
-        hpB[i].suspend();
-    }
+    hpA.suspend();
+    hpB.suspend();
 
     for (int i = 0; i < n_fx_slots; i++)
     {
@@ -2240,7 +2234,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             if (storage.getPatch().param_ptr[index]->val.i != oldval.i)
             {
                 /*
-                 ** Wish there was a better way to figure out my osc but this works
+                 ** Wish there was a better way to figure out my osc but thsi works
                  */
                 for (auto oi = 0; s >= 0 && s <= 1 && oi < n_oscs; oi++)
                 {
@@ -3926,13 +3920,8 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f;
 
-        auto slope = storage.getPatch().scene[0].lowcut.deform_type;
-
-        for (int i = 0; i <= slope; i++)
-        {
-            hpA[i].coeff_HP(hpA[i].calc_omega(freq / 12.0), 0.4); // var 0.707
-            hpA[i].process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
-        }
+        hpA.coeff_HP(hpA.calc_omega(freq / 12.0), 0.4);    // var 0.707
+        hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
     }
 
     if (storage.getPatch().scene[1].lowcut.deactivated == false)
@@ -3940,13 +3929,8 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f;
 
-        auto slope = storage.getPatch().scene[1].lowcut.deform_type;
-
-        for (int i = 0; i <= slope; i++)
-        {
-            hpB[i].coeff_HP(hpB[i].calc_omega(freq / 12.0), 0.4); // var 0.707
-            hpB[i].process_block(sceneout[1][0], sceneout[1][1]); // TODO: quadify
-        }
+        hpB.coeff_HP(hpB.calc_omega(freq / 12.0), 0.4);
+        hpB.process_block(sceneout[1][0], sceneout[1][1]);
     }
 
     for (int cls = 0; cls < n_scenes; ++cls)

@@ -41,21 +41,14 @@ void Switch::paint(juce::Graphics &g)
         y = -getIntegerValue() * getLocalBounds().getHeight();
     }
 
-    float activationOpacity = 1.0;
-
-    if (isDeactivated)
-    {
-        activationOpacity = 0.35;
-    }
-
     auto t = juce::AffineTransform().translated(0, y);
     g.reduceClipRegion(getLocalBounds());
 
-    switchD->draw(g, activationOpacity, t);
+    switchD->draw(g, 1.0, t);
 
     if (isHovered && hoverSwitchD)
     {
-        hoverSwitchD->draw(g, activationOpacity, t);
+        hoverSwitchD->draw(g, 1.0, t);
     }
 }
 

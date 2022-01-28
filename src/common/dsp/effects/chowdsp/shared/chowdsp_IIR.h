@@ -6,7 +6,7 @@
 namespace chowdsp
 {
 
-/** IIR filter of arbitrary order.
+/** IIR filter of arbirtary order.
  * Uses Transposed Direct Form II:
  * https://ccrma.stanford.edu/~jos/fp/Transposed_Direct_Forms.html
  */
