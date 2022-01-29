@@ -1592,6 +1592,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                           .keytrack_root.val.i;
                             p->set_value_f01(p->value_to_normalized(kr - 69));
                             control->setValue(p->get_value_f01());
+                            auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
+                                control);
+                            if (mci)
+                            {
+                                mci->setQuantitizedDisplayValue(p->get_value_f01());
+                            }
+                            control->asJuceComponent()->repaint();
                         });
                     break;
                 default:
