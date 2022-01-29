@@ -366,8 +366,15 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     switch (olt)
     {
     case MSEG_EDITOR:
-        broadcastMSEGState();
-        // no break on purpose
+        onClose = [this]() {
+            broadcastMSEGState();
+            if (lfoEditSwitch)
+            {
+                lfoEditSwitch->setValue(0.0);
+                lfoEditSwitch->asJuceComponent()->repaint();
+            }
+        };
+        break;
     case FORMULA_EDITOR:
         onClose = [this]() {
             if (lfoEditSwitch)
