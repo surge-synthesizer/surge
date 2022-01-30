@@ -1,17 +1,16 @@
 ---
-name: Bug report
+name: Bug Report
 about: Create a bug report to help us improve
 title: ''
 labels: Bug Report
 assignees: ''
-
 ---
 
 **Bug Description:**
 A clear and concise description of what the bug is.
 
-**Surge Version**
-This information is found on the About screen, which you get to from the bottom right menu
+**Surge XT Version**
+This information is found on the About screen, which you get to from the bottom right menu.
 
 * Version:
 * Plugin Type: [VST2, VST3, AU]
@@ -30,7 +29,7 @@ A clear and concise description of what you expected to happen.
 **Screenshots:**
 If applicable, add screenshots/GIF/videos to help explain your problem.
 
-**Computer Information (please complete the following information):**
+**Computer Information (please complete the following!):**
  - OS: [e.g. Windows 10]
  - Host: [e.g. Bitwig, Logic, Cubase, Reaper]
  - Version: [e.g. 2.4]
