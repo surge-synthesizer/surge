@@ -363,7 +363,7 @@
         <control ui_identifier="mixer.level_prefiltergain" y="38"/>
 
         <!-- Filter -->
-        <control ui_identifier="filter.config" y="88"/>
+        <control ui_identifier="filter.config" y="88" h="53"/>
 
         <control ui_identifier="filter.type_1" x="305" y="191"/>
         <control ui_identifier="filter.subtype_1" x="432" y="194"/>
