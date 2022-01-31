@@ -33,8 +33,6 @@ juce_add_binary_data(surge-common-binary
   )
 
 add_library(${PROJECT_NAME}
-  CPUFeatures.cpp
-  CPUFeatures.h
   DebugHelpers.cpp
   DebugHelpers.h
   FilterConfiguration.h

@@ -16,7 +16,6 @@
 #include "SurgeSynthesizer.h"
 #include "DSPUtils.h"
 #include <ctime>
-#include "CPUFeatures.h"
 
 #include "SurgeParamConfig.h"
 

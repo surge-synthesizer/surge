@@ -13,7 +13,7 @@
 #include "DebugHelpers.h"
 #include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
-#include "CPUFeatures.h"
+#include "sst/plugininfra/cpufeatures.h"
 
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
@@ -200,7 +200,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
-    auto fpuguard = Surge::CPUFeatures::FPUStateGuard();
+    auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
 
     auto playhead = getPlayHead();
     if (playhead)

@@ -17,7 +17,7 @@
 #include <complex>
 
 #include "LanczosResampler.h"
-#include "CPUFeatures.h"
+#include "sst/plugininfra/cpufeatures.h"
 
 using namespace Surge::Test;
 
@@ -1054,29 +1054,5 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
                 REQUIRE(out[q] == Approx(v).margin(0.1));
             }
         }
-    }
-}
-
-TEST_CASE("FTZ", "[dsp]")
-{
-    auto g = Surge::CPUFeatures::FPUStateGuard();
-
-    unsigned char min_float[4] = {0x00, 0x00, 0x80, 0x00};
-    float f_min;
-    memcpy(&f_min, min_float, 4);
-    REQUIRE(f_min != 0.f);
-
-    unsigned char res_float[4];
-    for (int i = 0; i < 100; ++i)
-    {
-        // don't let the compiler optimize me away!
-        auto r = 1.0 / (fabs(rand() % 10) + 1.1); // a number < 1
-        float ftz_float = f_min * r;
-        memcpy(res_float, &ftz_float, 4);
-        for (int i = 0; i < 4; ++i)
-        {
-            REQUIRE(res_float[i] == 0);
-        }
-        REQUIRE(ftz_float == 0.f);
     }
 }

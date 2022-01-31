@@ -16,11 +16,11 @@
 #include "AboutScreen.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
-#include "CPUFeatures.h"
 #include "version.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "sst/plugininfra/paths.h"
+#include "sst/plugininfra/cpufeatures.h"
 #include <fmt/core.h>
 
 namespace Surge
@@ -172,7 +172,7 @@ void AboutScreen::populateData()
 
     std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
     std::string system =
-        platform + " " + bitness + " " + wrapper + " on " + Surge::CPUFeatures::cpuBrand();
+        platform + " " + bitness + " " + wrapper + " on " + sst::plugininfra::cpufeatures::brand();
 
     lowerLeft.clear();
     lowerLeft.emplace_back("Version:", version, "");
