@@ -18,10 +18,10 @@
 #include <algorithm>
 
 /*
- * Sine Oscilator Optimization Strategy
+ * Sine Oscillator Optimization Strategy
  *
  * With Surge 1.9, we undertook a bunch of work to optimize the sine oscillator runtime at high
- * unison count with odd shapes. Basicaly at high unison we were doing large numbers of loops,
+ * unison count with odd shapes. Basically at high unison we were doing large numbers of loops,
  * branches and so forth, and not using any of the advantage you could get by realizing the paralle
  * structure of unison. So we fixed that.
  *
@@ -61,7 +61,7 @@
  * and into the DOCASE switch statement in process_block. Compile, run, test.
  *
  * 2. Then if that works, and you can code up your mode as an SSE function, remove that
- * specialization and instead specialize the mode in teh SSE-named function.
+ * specialization and instead specialize the mode in the SSE-named function.
  *
  * Should all be pretty clear.
  */

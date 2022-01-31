@@ -66,7 +66,7 @@ int main(int argc, char **argv)
                 << "   --non-test --filter-analyzer ft fst    # analyze filter type/subtype for "
                    "response\n"
                 << "\n"
-                << "If you exlude the `--non-test` argument, standard catch2 arguments, below, "
+                << "If you exclude the `--non-test` argument, standard catch2 arguments, below, "
                    "apply\n\n";
         }
 

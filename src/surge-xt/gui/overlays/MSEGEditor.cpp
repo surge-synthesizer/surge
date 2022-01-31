@@ -155,7 +155,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         enum Type
         {
             MOUSABLE_NODE,
-            INACTIVE_NODE, // To keep the array the same size add dummies when you supress controls
+            INACTIVE_NODE, // To keep the array the same size add dummies when you suppress controls
             LOOPMARKER
         } type;
 
@@ -1195,7 +1195,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 v = valpx(v);
                 vdef = valpx(vdef);
                 // Brownian doesn't deform and the second display is confusing since it is
-                // indepdently random
+                // independently random
                 if (es.lastEval >= 0 && es.lastEval <= ms->n_activeSegments - 1 &&
                     ms->segments[es.lastEval].type == MSEGStorage::segment::Type::BROWNIAN)
                     vdef = v;
@@ -1410,9 +1410,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (h.type == hotzone::LOOPMARKER)
             {
                 /*
-                 * OK the loop marker supression is a wee bit complicated
+                 * OK the loop marker suppression is a wee bit complicated
                  * If the end is at 0, it draws over the axis; if the start is at end similar
-                 * so handle the cases differently. Remeber this is because the 'marker'
+                 * so handle the cases differently. Remember this is because the 'marker'
                  * of the start graphic is the left edge |< and the right end is >|
                  */
                 if (h.zoneSubType == hotzone::LOOP_START)

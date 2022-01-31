@@ -46,7 +46,7 @@ of the UI (like those delivered by the host) to be reflected in the UI.
 
 Surge voice allocation and voice stealing code is complicated, supporting multiple polyphony modes
 and MPE, which adds substantial complexity. The core data structure is a list of voices
-which are allocated at startup and configured with an in-place contructor. Each has a reference
+which are allocated at startup and configured with an in-place constructor. Each has a reference
 to state for the channel in which it is playing.
 
 The voice class is in `src/common/dsp/SurgeVoice.h` and contains a `SurgeVoiceState`.
