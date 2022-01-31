@@ -35,7 +35,7 @@ associated oscillator using control groups, use that to look up oscillator mode,
 understand your parameter index, and return the right name.
 
 Similarly, the `lfoPhaseName` handler which is set up for all LFOs in `SurgePatch.cpp`
-creates a static handler and assignes it to all the `start_phase` dynamic
+creates a static handler and assigns it to all the `start_phase` dynamic
 names to swap Phase and Shuffle text labels based on LFO type.
 
 ## Dynamic Activation
@@ -63,7 +63,7 @@ or null if there is no parent.
 
 So basically, a good implementation of `getValue()` is to look up the parent param and
 return its decctivation status, and for `getPrimaryActivationDriver()` to look up the
-parent parameter and return a poitner to it. LPG parameteres in EuroTwist do precisely this.
+parent parameter and return a pointer to it. LPG parameteres in EuroTwist do precisely this.
 
 ### Follow Value Pattern
 

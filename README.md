@@ -4,7 +4,7 @@
 [from our website](https://surge-synthesizer.github.io). Surge Synth Team makes regular releases for all supported
 platforms.**
 
-**Over 2021, after the succesful release of Surge 1.9, the Surge Synth team undertook an effort to rebuild Surge in JUCE
+**Over 2021, after the successful release of Surge 1.9, the Surge Synth team undertook an effort to rebuild Surge in JUCE
 and add a variety of features. This project resulted in the new version of Surge, called 'Surge XT'. The head of this
 repo contains the current version of Surge XT. If you are looking to compile a stable production version of Surge, we
 tag each release, so if you want to compile Surge 1.9, please check out the `release_1.9.0` tag.**
@@ -131,7 +131,7 @@ cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
 On Linux, using a community fork of JUCE, you can build an LV2. Here's how! We assume you have checked out Surge and can
 build.
 
-First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your chosing.
+First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your choosing.
 
 ```
 sudo apt-get install -y lv2-dev

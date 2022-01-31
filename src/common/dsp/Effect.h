@@ -64,7 +64,7 @@ class alignas(16) Effect
     float vu[KNumVuSlots]; // stereo pairs, just use every other when mono
 
     // Most of the fx read the sample rate at sample time but airwindows
-    // keeps a cache so give loaded fx a notice when the sample rate cahnges
+    // keeps a cache so give loaded fx a notice when the sample rate changes
     virtual void sampleRateReset() {}
 
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
@@ -85,7 +85,7 @@ class alignas(16) Effect
     pdata *pd;
     int ringout;
     float *f[n_fx_params];
-    int *pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' woudl be
+    int *pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' would be
                                   // worse!
     bool hasInvalidated{false};
 };

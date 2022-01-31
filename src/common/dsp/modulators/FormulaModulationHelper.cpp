@@ -156,7 +156,7 @@ end
         }
         else
         {
-            s.adderror("Unable to deteremine 'process' or 'init' function : " + emsg);
+            s.adderror("Unable to determine 'process' or 'init' function : " + emsg);
             lua_pop(s.L, 1); // process
             lua_pop(s.L, 1); // process
             stateData.knownBadFunctions.insert(s.funcName);
@@ -221,7 +221,7 @@ end
                 {
                     s.isvalid = false;
                     s.adderror("Your 'init' function must return a table. This usually means "
-                               "that you didnt' end your init function with 'return modstate' "
+                               "that you didn't end your init function with 'return modstate' "
                                "before the end statement.");
                     stateData.knownBadFunctions.insert(s.funcName);
                 }

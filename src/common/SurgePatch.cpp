@@ -531,6 +531,18 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         }
     } lfoPhaseName;
 
+    // Assign the dynamic deactivation handlers
+    static struct OscAudioInDeact : public ParameterDynamicDeactivationFunction
+    {
+        const bool getValue(const Parameter *p) const override
+        {
+            auto cge = p->ctrlgroup_entry;
+            auto osc = &(p->storage->getPatch().scene[p->scene - 1].osc[cge]);
+
+            return osc->type.val.i == ot_audioinput;
+        }
+    } oscAudioInDeact;
+
     static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
     {
         const bool getValue(const Parameter *p) const override
@@ -538,8 +550,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
             auto res = lf->shape.val.i == lt_envelope;
+
             if (!res && p->can_deactivate())
+            {
                 return p->deactivated;
+            }
+
             return res;
         }
     } lfoRatePhaseDeact;
@@ -551,18 +567,30 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
             auto res = lf->delay.deactivated;
+
             return res;
         }
+
         Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
+
             return &(lf->delay);
         }
     } lfoEnvelopeDeact;
 
     for (int sc = 0; sc < n_scenes; ++sc)
     {
+        // TODO: Don't forget to add osc phase here once we add it in XT 2.0!
+        for (int o = 0; o < n_oscs; ++o)
+        {
+            scene[sc].osc[o].pitch.dynamicDeactivation = &oscAudioInDeact;
+            scene[sc].osc[o].octave.dynamicDeactivation = &oscAudioInDeact;
+            scene[sc].osc[o].keytrack.dynamicDeactivation = &oscAudioInDeact;
+            scene[sc].osc[o].retrigger.dynamicDeactivation = &oscAudioInDeact;
+        }
+
         for (int lf = 0; lf < n_lfos; ++lf)
         {
             scene[sc].lfo[lf].start_phase.dynamicName = &lfoPhaseName;
@@ -570,8 +598,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             scene[sc].lfo[lf].rate.dynamicDeactivation = &lfoRatePhaseDeact;
 
             auto *curr = &(scene[sc].lfo[lf].delay), *end = &(scene[sc].lfo[lf].release);
+
             curr->deactivated = false;
             curr++; // we don't want to apply it to delay
+
             while (curr <= end)
             {
                 curr->dynamicDeactivation = &lfoEnvelopeDeact;
@@ -1459,7 +1489,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                         else
                         {
-                            // Explicity set scene to A. See #2285
+                            // Explicitly set scene to A. See #2285
                             t.source_scene = 0;
                         }
                     }

@@ -280,22 +280,18 @@ class ADSRModulationSource : public ModulationSource
 
                     /*
                     ** That + rate * rate in both means at low sustain ( < 1e-3 or so) you end up
-                    *with
-                    ** lo and hi both pushing us up off sustain. Unfortunatley we ned to handle that
-                    *case
-                    ** specially by pushing lo down. These limits are pretty empirical. Git blame to
-                    *see
-                    ** the various issues around here which show the test cases.
+                    ** with lo and hi both pushing us up off sustain. Unfortunately we need to
+                    ** handle that case specially by pushing lo down. These limits are pretty
+                    ** empirical. Git blame to see the various issues around here which show the
+                    ** test cases.
                     */
                     if ((lc[s].f < 1e-3 && phase < 1e-4) || (lc[s].f == 0 && lc[d].f < -7))
                         l_lo = 0;
                     /*
                     ** Similarly if the rate is very high - larger than one - we can push l_lo well
-                    *above the
-                    ** sustain, which can set back a feedback cycle where we bounce onto sustain and
-                    *off again.
-                    ** To understand this, remove this bound and play with
-                    *test-data/patches/ADSR-Self-Oscillate.fxp
+                    ** above the sustain, which can set back a feedback cycle where we bounce onto
+                    ** sustain and off again. To understand this, remove this bound and play with
+                    ** test-data/patches/ADSR-Self-Oscillate.fxp
                     */
                     if (rate > 1.0 && l_lo > lc[s].f)
                         l_lo = lc[s].f;

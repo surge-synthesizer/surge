@@ -107,8 +107,8 @@
  * (u_i - 2 u_i-1 + u i-2 ) / dt^2. *But*, since i am calculating at i, we can either
  * think that that is second-order-accurate-in-dt and lagged by one sample or
  * first order accurate-in-dt and not lagged. It doesn't really matter. I also considered
- * having the candidate phases be +1/0/-1 rather tha 0/-1/-2 but that somehow felt
- * a wee bit like cheating. Anyway, the difference is negligble.
+ * having the candidate phases be +1/0/-1 rather than 0/-1/-2 but that somehow felt
+ * a wee bit like cheating. Anyway, the difference is negligible.
  *
  * Other than that, FM is obivous, sync runs two clocks and resets obviously,
  * and the rest is just mixing and lagging. All pretty obvious.
@@ -254,7 +254,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                 sBuff[s] = sawcub;
 
                 /*
-                 * Remember these ifs are now on tempalte params so won't
+                 * Remember these ifs are now on template params so won't
                  * eject branches
                  */
                 if (subOctave)
