@@ -8,8 +8,8 @@ else()
 endif()
 
 file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
-  ${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/*.svg
-  ${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/icons/*.svg
+  ${CMAKE_SOURCE_DIR}/resources/surge-fx/*.svg
+  ${CMAKE_SOURCE_DIR}/resources/surge-fx/icons/*.svg
 )
 
 juce_add_binary_data(surge-fx-binary
@@ -24,7 +24,7 @@ juce_add_plugin(${PROJECT_NAME}
   PLUGIN_MANUFACTURER_CODE VmbA
   PLUGIN_CODE SFXT
 
-  ICON_BIG "${CMAKE_SOURCE_DIR}/resources/surge_effects_bank/SurgeFXLogo.png"
+  ICON_BIG "${CMAKE_SOURCE_DIR}/resources/surge-fx/SurgeFXLogo.png"
 
   IS_SYNTH FALSE
   NEEDS_MIDI_INPUT FALSE
