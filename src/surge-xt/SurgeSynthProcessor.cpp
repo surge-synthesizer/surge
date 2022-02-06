@@ -13,7 +13,7 @@
 #include "DebugHelpers.h"
 #include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
-#include "CPUFeatures.h"
+#include "sst/plugininfra/cpufeatures.h"
 
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
@@ -200,7 +200,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
-    auto fpuguard = Surge::CPUFeatures::FPUStateGuard();
+    auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
 
     auto playhead = getPlayHead();
     if (playhead)
@@ -256,7 +256,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
-        if (i == nextMidi)
+        while (i == nextMidi)
         {
             applyMidi(*midiIt);
             midiIt++;
@@ -475,6 +475,15 @@ void SurgeSynthProcessor::handleNoteOff(juce::MidiKeyboardState *source, int mid
 {
     if (!isAddingFromMidi)
         midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), false));
+}
+
+void SurgeSynthProcessor::processBlockBypassed(juce::AudioBuffer<float> &buffer,
+                                               juce::MidiBuffer &midiMessages)
+{
+    /*
+     * Temporary fix while we resolve #5828
+     */
+    processBlock(buffer, midiMessages);
 }
 
 //==============================================================================

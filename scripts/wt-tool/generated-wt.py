@@ -59,7 +59,7 @@ def npftoi15bin(fsamples):
 
 def generatewt(filename, genf, res, tables):
     """Given res as a function of npline,int -> npline to generate the nth table,
-       genereate the wt file"""
+       generate the wt file"""
     line = np.linspace(0, 1, res, endpoint=False)
     dat = []
     for i in range(tables):
@@ -76,7 +76,7 @@ def comparewt(fn1, fn2):
     l2 = np.linspace(0, 1, len(d2[0]), endpoint=False)
 
     if(len(d1) != len(d2)):
-        print(" Lenghts don't match", len(d1), " ", len(d2))
+        print(" Lengths don't match", len(d1), " ", len(d2))
         return
 
     for i in range(len(d1)):

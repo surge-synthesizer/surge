@@ -1,26 +1,21 @@
 ---
 name: Release Checklist
 about: Clone this template to make a release checklist for each release
-title: Release Checklist for version A.B.C
+title: Release checklist for Surge XT x.y.z
 labels: 'Release Plan'
 assignees: ''
-
 ---
 
-Release label: A.B.C
-Target Release Date: 
-Milestone
+Release label: XT x.y.z
+Link to milestone:
 
 - [ ] Address all open issues for the milestone
-- [ ] Move the surge-fx pointer and push
-- [ ] Move the surge-rack pointer and update rack
 - [ ] Update the changelog
-- [ ] Update Manual
+- [ ] Update the manual
 - [ ] Create git markers
-  - [ ] create a branch named `release/1.6.3` or whatnot
-  - [ ] sign a tag with `git tag -s release_1.6.3 -m "Create signed tag"`
+  - [ ] create a branch named `release-xt/x.y.z`
+  - [ ] sign a tag with `git tag -s release_1.6.3 -m "Create signed tag"`, probably after running `gpg --output x.sig --sign CMakeLists.txt` to open your GPG sig again
   - [ ] push both the branch and tag to upstream
-- [ ] Update and Announce
+- [ ] Update and announce
    - [ ] Update home-brew [doc](https://github.com/surge-synthesizer/surge/tree/master/doc) 
-   - [ ] Post to KVR thread, Facebook, Slack etc
-   - [ ] Notify sonisto at rune.braager@sonisto.com
+   - [ ] Post to KvR thread, Facebook, Discord, etc.

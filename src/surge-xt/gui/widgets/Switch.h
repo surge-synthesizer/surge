@@ -109,6 +109,9 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
+    bool isDeactivated{false};
+    void setDeactivated(bool b) { isDeactivated = b; }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Switch);
 };
 } // namespace Widgets

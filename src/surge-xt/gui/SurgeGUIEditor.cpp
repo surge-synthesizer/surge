@@ -564,10 +564,12 @@ void SurgeGUIEditor::idle()
                 std::ostringstream oss;
 
                 oss << "Loading patch " << synth->patchid_queue
-                    << " has not occured after 200 idle cycles. This means that the audio system"
+                    << " has not occurred after 200 idle cycles. This means that the audio system"
                     << " is delayed while loading many patches in a row. The audio system has to be"
                     << " running in order to load Surge patches. If the audio system is working,"
-                       " you can probably ignore this message and continue once Surge catches up.";
+                       " you can probably ignore this message and continue once Surge XT catches "
+                       "up.";
+
                 synth->storage.reportError(oss.str(), "Patch Loading Error");
             }
         }
@@ -1730,11 +1732,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
-        Surge::Widgets::ModulatableSlider::kUnInitialized)
+        Surge::Widgets::ModulatableSlider::MoveRateState::kUnInitialized)
+    {
         Surge::Widgets::ModulatableSlider::sliderMoveRateState =
             (Surge::Widgets::ModulatableSlider::MoveRateState)Surge::Storage::getUserDefaultValue(
                 &(synth->storage), Surge::Storage::SliderMoveRateState,
                 (int)Surge::Widgets::ModulatableSlider::kLegacy);
+    }
+
+    if (Surge::Widgets::ModulatableSlider::touchscreenMode ==
+        Surge::Widgets::ModulatableSlider::TouchscreenMode::kUnassigned)
+    {
+        bool touchMode = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                             Surge::Storage::TouchMouseMode, false);
+        Surge::Widgets::ModulatableSlider::touchscreenMode =
+            (touchMode == false) ? Surge::Widgets::ModulatableSlider::TouchscreenMode::kDisabled
+                                 : Surge::Widgets::ModulatableSlider::TouchscreenMode::kEnabled;
+    }
 
     /*
     ** Skin Labels
@@ -2274,7 +2288,7 @@ void SurgeGUIEditor::showMinimumZoomError() const
 {
     std::ostringstream oss;
     oss << "The smallest zoom level possible on your platform is " << minimumZoom
-        << "%. Sorry, you cannot make Surge any smaller!";
+        << "%. Sorry, you cannot make Surge XT any smaller!";
     synth->storage.reportError(oss.str(), "Zoom Level Error");
 }
 
@@ -2282,14 +2296,14 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
 {
 #if !LINUX
     std::ostringstream msg;
-    msg << "Surge adjusts the maximum zoom level in order to prevent the interface becoming larger "
-           "than available screen area. "
-        << "Your screen resolution is " << width << "x" << height << " "
-        << "for which the target zoom level of " << zf << "% would be too large." << std::endl
+    msg << "Surge XT adjusts the maximum zoom level in order to prevent the interface becoming "
+           "larger than available screen area. Your screen resolution is "
+        << width << "x" << height << " for which the target zoom level of " << zf
+        << "% would be too large." << std::endl
         << std::endl;
     if (currentSkin && currentSkin->hasFixedZooms())
     {
-        msg << "Surge chose the largest fitting fixed zoom which is provided by this skin.";
+        msg << "Surge XT chose the largest fitting fixed zoom which is provided by this skin.";
     }
     else
     {
@@ -2351,32 +2365,27 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     settingsMenu.addSeparator();
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Reach the Developers..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/feedback").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}feedback", stringWebsite)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Read the Code..."), []() {
-        juce::URL("https://github.com/surge-synthesizer/surge/").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}surge", stringRepository)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Download Additional Content..."), []() {
-        juce::URL("https://github.com/surge-synthesizer/"
-                  "surge-synthesizer.github.io/wiki/Additional-Content")
-            .launchInDefaultBrowser();
+        juce::URL(fmt::format("{}Additional-Content", stringWebsite)).launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Skin Library..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-library").launchInDefaultBrowser();
+        juce::URL(fmt::format("{}skin-library", stringWebsite)).launchInDefaultBrowser();
     });
 
-    Surge::GUI::addMenuWithShortcut(
-        settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Manual..."), showShortcutDescription("F1"),
-        []() {
-            juce::URL("https://surge-synthesizer.github.io/manual/").launchInDefaultBrowser();
-        });
+    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCaseForMenu("Surge Manual..."),
+                                    showShortcutDescription("F1"),
+                                    []() { juce::URL(stringManual).launchInDefaultBrowser(); });
 
-    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/").launchInDefaultBrowser();
-    });
+    settingsMenu.addItem(Surge::GUI::toOSCaseForMenu("Surge Website..."),
+                         []() { juce::URL(stringWebsite).launchInDefaultBrowser(); });
 
     settingsMenu.addSeparator();
 
@@ -3166,6 +3175,10 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &wh
 
     mouseMenu.addItem(Surge::GUI::toOSCaseForMenu("Touchscreen Mode"), true, touchMode,
                       [this, touchMode]() {
+                          Surge::Widgets::ModulatableSlider::touchscreenMode =
+                              (!touchMode == false)
+                                  ? Surge::Widgets::ModulatableSlider::TouchscreenMode::kDisabled
+                                  : Surge::Widgets::ModulatableSlider::TouchscreenMode::kEnabled;
                           Surge::Storage::updateUserDefaultValue(
                               &(this->synth->storage), Surge::Storage::TouchMouseMode, !touchMode);
                       });
@@ -4263,7 +4276,7 @@ std::string SurgeGUIEditor::fullyResolvedHelpURL(const string &helpurl)
     std::string lurl = helpurl;
     if (helpurl[0] == '#')
     {
-        lurl = "https://surge-synthesizer.github.io/manual-xt/" + helpurl;
+        lurl = stringManual + helpurl;
     }
     return lurl;
 }
@@ -4797,6 +4810,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::MultiSwitch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
@@ -4860,6 +4874,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             if (p)
             {
+                hsw->setDeactivated(p->appears_deactivated());
+
                 auto fval = p->get_value_f01();
 
                 if (p->ctrltype == ct_scenemode)
@@ -4898,22 +4914,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_mp_jogwaveshape:
                     cg = cg_FILTER;
                     break;
-
-                    /* keep these up top
-                case tag_mp_category:
-                case tag_mp_patch:
-                case tag_store:
-                    cg = endCG;
-                    addToGlobalControls = true;
-                    break; */
                 case tag_mp_jogfx:
                     cg = cg_FX;
                     break;
-
                 default:
                     cg = endCG;
                     break;
                 }
+
                 if (cg != endCG)
                 {
                     addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg), *hsw);
@@ -4941,9 +4949,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         else
         {
-            std::cout << "Can't get a CHSwitch2 BG" << std::endl;
+            std::cout << "Can't get a MultiSwitch background" << std::endl;
         }
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::Switch)
     {
         auto rect = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, skinCtrl->w, skinCtrl->h);
@@ -4953,6 +4962,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
             hsw->setStorage(&(synth->storage));
+
             if (p)
             {
                 addAndMakeVisibleWithTrackingInCG(p->ctrlgroup, *hsw);
@@ -4994,9 +5004,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             if (paramIndex >= 0)
                 nonmod_param[paramIndex] = hsw.get();
+
             if (p)
             {
                 hsw->setValue(p->get_value_f01());
+                hsw->setDeactivated(p->appears_deactivated());
 
                 // Carry over this filter type special case from the default control path
                 if (p->ctrltype == ct_filtersubtype)
@@ -5032,6 +5044,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 juceSkinComponents[skinCtrl->sessionid].get());
         }
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::LFODisplay)
     {
         if (!p)
@@ -5108,6 +5121,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         addAndMakeVisibleWithTrackingInCG(cg_OSC, *oscMenu);
         return oscMenu.get();
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FxMenu)
     {
         if (!fxMenu)
@@ -5228,6 +5242,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         return nullptr;
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::FilterSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
@@ -5325,6 +5340,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
             juceSkinComponents[skinCtrl->sessionid].get());
     }
+
     if (skinCtrl->defaultComponent == Surge::Skin::Components::WaveShaperSelector)
     {
         // Obviously exposing this widget as a controllable widget would be better
@@ -5358,9 +5374,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(waveshaperSelector.get());
     }
+
     if (skinCtrl->ultimateparentclassname != Surge::GUI::NoneClassName)
-        std::cout << "Unable to make control with upc " << skinCtrl->ultimateparentclassname
+        std::cout << "Unable to make control with UPC " << skinCtrl->ultimateparentclassname
                   << std::endl;
+
     return nullptr;
 }
 
@@ -6290,7 +6308,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         if (shortcutsUsed)
         {
-            juce::URL("https://surge-synthesizer.github.io/manual-xt/").launchInDefaultBrowser();
+            juce::URL(stringManual).launchInDefaultBrowser();
 
             return true;
         }

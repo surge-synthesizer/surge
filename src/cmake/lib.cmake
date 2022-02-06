@@ -86,13 +86,23 @@ function(surge_make_installers)
 
   if(APPLE)
     run_installer_script(installer_mac/make_installer.sh)
+    add_custom_command(TARGET surge-xt-distribution
+      POST_BUILD
+      WORKING_DIRECTORY ${SURGE_PRODUCT_DIR}
+      COMMAND zip -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-macos-${SXTVER}-pluginsonly.zip .
+      )
   elseif(UNIX)
     run_installer_script(installer_linux/make_deb.sh)
     run_installer_script(installer_linux/make_rpm.sh)
+    add_custom_command(TARGET surge-xt-distribution
+      POST_BUILD
+      WORKING_DIRECTORY ${SURGE_PRODUCT_DIR}
+      COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tar.gz .
+      )
   elseif(WIN32)
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E tar cvf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip --format=zip ${SURGE_PRODUCT_DIR}
+      COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip ${SURGE_PRODUCT_DIR}
       )
     find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
     if(SURGE_NUGET_EXE)

@@ -14,6 +14,19 @@ include(cmake/lib.cmake)
 message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
 add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
 
+if(${CMAKE_VERSION} VERSION_LESS 3.21)
+  message(WARNING "CMake version less than 3.21. Skipping clap builds. Please "
+    "consider using a newer version of CMake")
+  set(SURGE_BUILD_CLAP FALSE)
+else()
+  message(STATUS "CMake version ${CMAKE_VERSION} allows CLAP build")
+  set(SURGE_BUILD_CLAP TRUE)
+endif()
+
+if(SURGE_BUILD_CLAP)
+  add_subdirectory(../libs/clap-juce-extensions clap-extensions EXCLUDE_FROM_ALL)
+endif()
+
 add_library(simde INTERFACE)
 target_include_directories(simde INTERFACE ${CMAKE_SOURCE_DIR}/libs/simde)
 add_library(surge::simde ALIAS simde)
@@ -45,10 +58,6 @@ target_compile_definitions(surge-juce INTERFACE
   )
 
 set(SURGE_JUCE_FORMATS VST3)
-
-if (CLAP_JUCE_EXTENSIONS_ROOT)
-  add_subdirectory(${CLAP_JUCE_EXTENSIONS_ROOT} clap-extensions)
-endif()
 
 if(NOT SURGE_SKIP_STANDALONE)
   list(APPEND SURGE_JUCE_FORMATS Standalone)

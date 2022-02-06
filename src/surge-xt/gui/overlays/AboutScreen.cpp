@@ -16,11 +16,11 @@
 #include "AboutScreen.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
-#include "CPUFeatures.h"
 #include "version.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
-#include "platform/Paths.h"
+#include "sst/plugininfra/paths.h"
+#include "sst/plugininfra/cpufeatures.h"
 #include <fmt/core.h>
 
 namespace Surge
@@ -172,7 +172,7 @@ void AboutScreen::populateData()
 
     std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
     std::string system =
-        platform + " " + bitness + " " + wrapper + " on " + Surge::CPUFeatures::cpuBrand();
+        platform + " " + bitness + " " + wrapper + " on " + sst::plugininfra::cpufeatures::brand();
 
     lowerLeft.clear();
     lowerLeft.emplace_back("Version:", version, "");
@@ -193,8 +193,8 @@ void AboutScreen::populateData()
 
     lowerLeft.emplace_back("", "", "");
 
-    lowerLeft.emplace_back("Executable:", Paths::appPath().u8string(),
-                           Paths::appPath().parent_path().u8string());
+    auto apppath = sst::plugininfra::paths::sharedLibraryBinaryPath();
+    lowerLeft.emplace_back("Executable:", apppath.u8string(), apppath.parent_path().u8string());
     lowerLeft.emplace_back("Factory Data:", storage->datapath.u8string(),
                            storage->datapath.u8string());
     lowerLeft.emplace_back("User Data:", storage->userDataPath.u8string(),
@@ -373,8 +373,8 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
-        addLabel("Cutoff Warp and Resonance Warp filters; CHOW, Neuron and Tape effects by Jatin "
-                 "Chowdhury, licensed under GNU GPL v3 license",
+        addLabel("Cutoff Warp, Resonance Warp and Tri-Pole filters; CHOW, Neuron and Tape effects "
+                 "by Jatin Chowdhury, licensed under GNU GPL v3 license",
                  600);
 
         yp += lblvs;
@@ -399,7 +399,7 @@ void AboutScreen::resized()
         auto idxes = {0, 4, 3, 1, 2, 5};
 
         std::vector<std::string> urls = {
-            "https://github.com/surge-synthesizer/surge/",
+            stringRepository,
             "https://www.steinberg.net/en/company/technologies/vst3.html",
             "https://developer.apple.com/documentation/audiounit",
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html",

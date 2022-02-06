@@ -24,22 +24,8 @@
 #include "UserDefaults.h"
 #include "SurgeSharedBinary.h"
 #include "DebugHelpers.h"
-#include "platform/Paths.h"
 
-#if MAC
-#include <cstdlib>
-#include <sys/stat.h>
-//#include <MoreFilesX.h>
-//#include <MacErrorHandling.h>
-#include <CoreFoundation/CFBundle.h>
-#include <CoreServices/CoreServices.h>
-#elif LINUX
-#include <stdlib.h>
-#else
-#include <windows.h>
-#include <shellapi.h>
-#include <shlobj.h>
-#endif
+#include "sst/plugininfra/paths.h"
 
 #include <iostream>
 #include <iomanip>
@@ -72,8 +58,16 @@ double dsamplerate_os, dsamplerate_os_inv;
 
 using namespace std;
 
+std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>";
+
 SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 {
+    bool loadWtAndPatch = true;
+    loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel;
+
+    if (suppliedDataPath == skipPatchLoadDataPathSentinel)
+        suppliedDataPath = "";
+
     if (samplerate == 0)
     {
         setSamplerate(48000);
@@ -194,18 +188,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 
-    bool hasSuppliedDataPath = false;
-    if (suppliedDataPath.size() != 0)
-    {
-        hasSuppliedDataPath = true;
-    }
-
-#if MAC || LINUX
-    const auto homePath{Surge::Paths::homePath()};
-#endif
-
-#if MAC
-    char path[1024];
+    bool hasSuppliedDataPath = !suppliedDataPath.empty();
     std::string buildOverrideDataPath;
     if (getOverrideDataHome(buildOverrideDataPath))
     {
@@ -214,166 +197,73 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         suppliedDataPath = buildOverrideDataPath;
     }
 
+    std::string sxt = "Surge XT";
+    std::string sxtlower = "surge-xt";
+
+#if MAC
     if (!hasSuppliedDataPath)
     {
-        FSRef foundRef;
-        OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &foundRef);
-        FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
-        std::string localpath = path;
-        localpath += "/Surge XT/";
+        auto shareddp = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt);
+        auto userdp = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
 
-        err = FSFindFolder(kLocalDomain, kApplicationSupportFolderType, false, &foundRef);
-        FSRefMakePath(&foundRef, (UInt8 *)path, 1024);
-        std::string rootpath = path;
-        rootpath += "/Surge XT/";
-
-        datapath = rootpath;
-        if (fs::is_directory(string_to_path(localpath)))
-            datapath = localpath;
+        if (fs::is_directory(userdp))
+            datapath = userdp;
+        else
+            datapath = shareddp;
     }
     else
     {
-        datapath = suppliedDataPath;
+        datapath = fs::path{suppliedDataPath};
     }
 
-    userDataPath = homePath / "Documents/Surge XT";
+    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
-        if (const char *xdgDataPath = getenv("XDG_DATA_HOME"))
-        {
-            datapath = fs::path{xdgDataPath} / "surge-xt";
-        }
-        else if (auto localDataPath{homePath / ".local/share/surge-xt"};
-                 fs::is_directory(localDataPath))
-        {
-            datapath = std::move(localDataPath);
-        }
-        else
-        {
-            datapath = homePath / ".local/share/Surge XT";
-        }
+        auto userlower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, true);
+        auto userreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+        auto globallower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, false);
+        auto globalreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
 
-        /*
-        ** If local directory doesn't exists - we probably came here through an installer -
-        ** check for /usr/share/surge and use /usr/share/Surge as our last guess
-        */
-        if (!fs::is_directory(datapath))
+        bool founddir{false};
+        for (const auto &p : {userreg, userlower, globalreg, globallower})
         {
-            if (fs::is_directory(string_to_path(std::string(Surge::Build::CMAKE_INSTALL_PREFIX)) /
-                                 "share" / "surge-xt"))
+            if (fs::is_directory(p) && !founddir)
             {
-                datapath =
-                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "surge-xt";
-            }
-            else if (fs::is_directory(string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" /
-                                      "Surge XT"))
-            {
-                datapath =
-                    string_to_path(Surge::Build::CMAKE_INSTALL_PREFIX) / "share" / "Surge XT";
-            }
-            else
-            {
-                std::string systemDataPath = "/usr/share/surge-xt/";
-                if (fs::is_directory(string_to_path(systemDataPath)))
-                    datapath = string_to_path(systemDataPath);
-                else
-                    datapath = string_to_path("/usr/share/Surge XT/");
+                founddir = true;
+                datapath = p;
             }
         }
-
-        std::string buildOverrideDataPath;
-        if (getOverrideDataHome(buildOverrideDataPath))
-        {
-            datapathOverriden = true;
-            datapath = buildOverrideDataPath;
-            static bool warnOver = false;
-            if (!warnOver)
-            {
-                std::cout << "WARNING: Surge overriding data path to " << datapath << std::endl;
-                std::cout << "         Only use this in build pipelines please!" << std::endl;
-                warnOver = true;
-            }
-        }
+        if (!founddir)
+            datapath = globallower;
     }
     else
     {
         datapath = suppliedDataPath;
     }
 
-    /*
-    ** See the discussion in github issue #930. Basically
-    ** if ~/Documents/Surge XT exists use that
-    ** else if ~/.Surge XT exists use that
-    ** else if ~/.Documents exists, use ~/Documents/Surge XT
-    ** else use ~/.Surge XT
-    ** Compensating for whether your distro makes you a ~/Documents or not
-    */
-
-    if (auto xdgdd = getenv("XDG_DOCUMENTS_DIR"))
-    {
-        auto xdgpath = fs::path{xdgdd} / "Surge XT";
-        userDataPath = std::move(xdgpath);
-    }
-    else if (auto documentsSurge = homePath / "Documents/Surge XT";
-             fs::is_directory(documentsSurge))
-    {
-        userDataPath = std::move(documentsSurge);
-    }
-    else if (auto dotSurge = homePath / ".Surge XT"; fs::is_directory(dotSurge))
-    {
-        userDataPath = std::move(dotSurge);
-    }
-    else if (auto documents = homePath / "Documents"; fs::is_directory(documents))
-    {
-        userDataPath = std::move(documentsSurge);
-    }
-    else
-    {
-        userDataPath = dotSurge;
-    }
-    // std::cout << "Data path is " << datapath << std::endl;
-    // std::cout << "User data path is " << userDataPath << std::endl;
+    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
 
 #elif WINDOWS
-    const auto installPath{Surge::Paths::installPath()};
+    const auto installPath = sst::plugininfra::paths::sharedLibraryBinaryPath().parent_path();
 
-    // First check the portable mode sitting beside me
-    if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
+    if (!hasSuppliedDataPath)
     {
-        datapath = std::move(path);
-    }
-
-    if (datapath.empty())
-    {
-        PWSTR commonAppData;
-        if (!SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonAppData))
+        // First check the portable mode sitting beside me
+        if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
         {
-            fs::path path(commonAppData);
-            path /= L"Surge XT";
-            if (fs::is_directory(path))
-            {
-                datapath = path_to_string(path);
-            }
+            datapath = std::move(path);
         }
-    }
 
-    if (datapath.empty())
-    {
-        PWSTR localAppData;
-        if (!SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &localAppData))
+        if (datapath.empty())
         {
-            fs::path path(localAppData);
-            path /= L"Surge XT";
-            datapath = path_to_string(path);
+            datapath = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt);
         }
-    }
 
-    std::string orPath;
-    if (getOverrideDataHome(orPath))
-    {
-        datapathOverriden = true;
-        datapath = orPath;
+        if (datapath.empty() || !fs::is_directory(datapath))
+        {
+            datapath = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+        }
     }
 
     // Portable - first check for installPath\\SurgeXTUserData
@@ -381,11 +271,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         userDataPath = std::move(path);
     }
-    else if (PWSTR documentsFolder;
-             !SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &documentsFolder))
+    else
     {
-        userDataPath = fs::path{documentsFolder} / L"Surge XT";
-        // FIXME: Don't leak documentsFolder!
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
     }
 #endif
 
@@ -395,7 +283,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::UserDataPath, "UNSPEC");
     if (userSpecifiedDataPath != "UNSPEC")
     {
-        userDataPath = userSpecifiedDataPath;
+        userDataPath = fs::path{userSpecifiedDataPath};
     }
 
     // append separator if not present
@@ -407,17 +295,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
     createUserDirectory();
-
-    /*
-    const auto snapshotmenupath{string_to_path(datapath + "configuration.xml")};
-
-    if (!snapshotloader.LoadFile(snapshotmenupath)) // load snapshots (& config-stuff)
-    {
-        reportError("Cannot find 'configuration.xml' in path '" +
-                                                 datapath + "'. Please reinstall surge.",
-                                             "Surge is not properly installed.");
-    }
-    */
 
     // TIXML requires a newline at end.
     auto cxmlData = std::string(SurgeSharedBinary::configuration_xml,
@@ -432,10 +309,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     load_midi_controllers();
 
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
-    bool loadWtAndPatch = true;
-
-    // skip loading during export, it pops up an irrelevant error dialog. Only used by LV2
-    loadWtAndPatch = !skipLoadWtAndPatch;
     if (loadWtAndPatch)
     {
         refresh_wtlist();
@@ -454,7 +327,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         std::ostringstream oss;
         oss << "Unable to load 'windows.wt' from memory. "
             << "This is a fatal internal software error which should never occur!";
-        reportError(oss.str(), "Surge Resources Loading Error");
+        reportError(oss.str(), "Resource Loading Error");
     }
 
     // Tunings Library Support
@@ -814,12 +687,14 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 
         /*
         ** std::filesystem has a recursive_directory_iterator, but between the
-        ** hand rolled ipmmlementation on mac, expermiental on windows, and
+        ** hand rolled ipmmlementation on mac, experimental on windows, and
         ** ostensibly standard on linux it isn't consistent enough to warrant
         ** using yet, so build my own recursive directory traversal with a simple
         ** stack
         */
         std::vector<fs::path> alldirs;
+        if (userDir)
+            alldirs.push_back(patchpath);
         std::deque<fs::path> workStack;
         workStack.push_back(patchpath);
         while (!workStack.empty())
@@ -848,7 +723,12 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
         for (auto &p : alldirs)
         {
             PatchCategory c;
-            c.name = path_to_string(p).substr(patchpathSubstrLength);
+            auto name = std::string("_Unsorted");
+            auto pn = path_to_string(p);
+            if (pn.size() > patchpathSubstrLength)
+                name = pn.substr(patchpathSubstrLength);
+
+            c.name = name;
             c.internalid = category;
             c.isFactory = !userDir;
 
@@ -877,8 +757,8 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when building patches. " << e.what();
-        reportError(oss.str(), "FileSystem Error");
+        oss << "Experienced filesystem error when building patches. " << e.what();
+        reportError(oss.str(), "Filesystem Error");
     }
 
     /*
@@ -966,16 +846,6 @@ void SurgeStorage::refresh_wtlist()
     wt_list.clear();
 
     refresh_wtlistAddDir(false, "wavetables");
-
-    if (wt_category.size() == 0 || wt_list.size() == 0)
-    {
-        /*
-        std::ostringstream ss;
-        ss << "Surge was unable to load wavetables from '" << datapath
-           << "'. Please reinstall Surge!";
-        reportError(ss.str(), "Surge Installation Error");
-         */
-    }
 
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
@@ -1192,17 +1062,18 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
     if (!wasBuilt)
     {
         std::ostringstream oss;
-        oss << "Wavetable could not be built, which means it has too many samples or frames."
-            << " You provided " << wh.n_tables << " frames of " << wh.n_samples
-            << "samples, while limit is " << max_subtables << " frames and " << max_wtable_size
-            << " samples."
-            << " In some cases, Surge detects this situation inconsistently. Surge is now in a "
-               "potentially "
-            << " inconsistent state. It is recommended to restart Surge and not load the "
-               "problematic wavetable again."
-            << " If you would like, please attach the wavetable which caused this message to a new "
+        oss << "Wavetable could not be built, which means it has too many frames or samples per "
+               "frame.\n"
+            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
+            << "samples per frame, while the limit is " << max_subtables << " frames and "
+            << max_wtable_size << " samples per frame.\n"
+            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
+               "potentially volatile state\n."
+            << "It is recommended to restart Surge and not load "
+               "the problematic wavetable again.\n\n"
+            << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
-            << " https://github.com/surge-synthesizer/surge/";
+            << stringRepository;
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
@@ -1245,17 +1116,18 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     if (!wasBuilt)
     {
         std::ostringstream oss;
-        oss << "Wavetable could not be built, which means it has too many samples or frames."
-            << " You provided " << wh.n_tables << " frames of " << wh.n_samples
-            << "samples, while limit is " << max_subtables << " frames and " << max_wtable_size
-            << " samples."
-            << " In some cases, Surge detects this situation inconsistently. Surge is now in a "
-               "potentially "
-            << " inconsistent state. It is recommended to restart Surge and not load the "
-               "problematic wavetable again."
-            << " If you would like, please attach the wavetable which caused this message to a new "
+        oss << "Wavetable could not be built, which means it has too many frames or samples per "
+               "frame.\n"
+            << " You have provided " << wh.n_tables << " frames with " << wh.n_samples
+            << "samples per frame, while the limit is " << max_subtables << " frames and "
+            << max_wtable_size << " samples per frame.\n"
+            << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
+               "potentially volatile state\n."
+            << "It is recommended to restart Surge and not load "
+               "the problematic wavetable again.\n\n"
+            << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
-            << " https://github.com/surge-synthesizer/surge/";
+            << stringRepository;
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
@@ -2169,8 +2041,8 @@ void SurgeStorage::rescanUserMidiMappings()
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when loading MIDI settings. " << e.what();
-        reportError(oss.str(), "FileSystem Error");
+        oss << "Experienced filesystem error when loading MIDI settings. " << e.what();
+        reportError(oss.str(), "Filesystem Error");
     }
 }
 
@@ -2419,7 +2291,7 @@ bool isValidUTF8(const std::string &testThis)
     // then it's always of form '110xxxxx10xxxxxx'. Similarly for three and four byte UTF8
     // characters it starts with '1110xxxx' and '11110xxx' followed by '10xxxxxx' one less times as
     // there are bytes. This tool will locate mistakes in the encoding and tell you where they
-    // occured.
+    // occurred.
 
     //    https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
 

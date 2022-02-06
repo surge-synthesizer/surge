@@ -937,8 +937,8 @@ TEST_CASE("Keytrack Morph", "[mod]")
         {
             surge->process();
             /*
-             * FIXME: Make this an assertive test. What we are really checking is is l_shape 3.33
-             * inside the oscillator but there's no easy way to assert that so just leave the test
+             * FIXME: Make this an assertive test. What we are really checking is, is l_shape 3.33
+             * inside the oscillator? But there's no easy way to assert that so just leave the test
              * here as a debugging harness around issue 3046
              */
         }
@@ -1072,7 +1072,7 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
             surge->releaseNote(ch, key, vel);
         else
             surge->playNote(ch, key, vel, 0);
-        for (int i = 0; i < 50; ++i)
+        for (int i = 0; i < 20; ++i)
             surge->process();
         for (auto v : surge->voices[0])
             if (v->state.gate)

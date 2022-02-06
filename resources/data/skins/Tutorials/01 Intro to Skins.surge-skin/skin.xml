@@ -5,7 +5,7 @@
 
  The basic structure of a surge skin is a directory named "Something.surge-skin" which contains at least a single
  file "skin.xml" describing the contents of the skin directory and the desired behaviour of the resulting surge UI.
- We call a ".surge-skin" directory and its contents a "skin", "skin bundle" or "bundle" interchangably.
+ We call a ".surge-skin" directory and its contents a "skin", "skin bundle" or "bundle" interchangeably.
 
  The skin bundle can be placed either in the user's surge documents directory (the location where user patches
  are saved, as shown by the 'show user folder' menu item) or in the Surge central data folder if it is a
@@ -32,7 +32,7 @@
  shared in later tutorials. If you load this skin, you will get a UI with correct layout and functionality but no hover
  images (some built in controls will display hover; more on that later).
 [doc]-->
-<surge-skin name="01 Intro to Skins" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="01 Intro to Skins" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
   </globals>
   <component-classes>

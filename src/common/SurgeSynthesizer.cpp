@@ -16,14 +16,6 @@
 #include "SurgeSynthesizer.h"
 #include "DSPUtils.h"
 #include <ctime>
-#include "CPUFeatures.h"
-#if MAC || LINUX
-#include <pthread.h>
-#else
-#define NOMINMAX
-#include <windows.h>
-#include <process.h>
-#endif
 
 #include "SurgeParamConfig.h"
 
@@ -41,8 +33,11 @@ using namespace std;
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA(&storage), hpB(&storage), _parent(parent), halfbandA(6, true),
-      halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
+                                                                                  &storage,
+                                                                                  &storage,
+                                                                                  &storage},
+      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
@@ -965,7 +960,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
             releaseNotePostHoldCheck(sc, channel, key, velocity);
         else
             holdbuffer[sc].push_back(
-                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to bufffer
+                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to buffer
     }
 }
 
@@ -1033,7 +1028,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
 
                 if ((v->state.key == key) && (v->state.channel == channel))
                 {
-                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overriden
+                    int activateVoiceKey = 60, activateVoiceChannel = 0; // these will be overridden
                     auto priorityMode =
                         storage.getPatch().scene[v->state.scene_id].monoVoicePriorityMode;
 
@@ -2048,8 +2043,11 @@ void SurgeSynthesizer::allNotesOff()
     halfbandB.reset();
     halfbandIN.reset();
 
-    hpA.suspend();
-    hpB.suspend();
+    for (int i = 0; i < n_hpBQ; i++)
+    {
+        hpA[i].suspend();
+        hpB[i].suspend();
+    }
 
     for (int i = 0; i < n_fx_slots; i++)
     {
@@ -2241,7 +2239,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             if (storage.getPatch().param_ptr[index]->val.i != oldval.i)
             {
                 /*
-                 ** Wish there was a better way to figure out my osc but thsi works
+                 ** Wish there was a better way to figure out my osc but this works
                  */
                 for (auto oi = 0; s >= 0 && s <= 1 && oi < n_oscs; oi++)
                 {
@@ -2520,9 +2518,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (auto &t : fxmodsync[s])
                         {
-                            setModulation(storage.getPatch().fx[s].p[std::get<3>(t)].id,
-                                          (modsources)std::get<0>(t), std::get<1>(t),
-                                          std::get<2>(t), std::get<4>(t));
+                            setModulation(storage.getPatch().fx[s].p[t.whichForReal].id,
+                                          (modsources)t.source_id, t.source_scene, t.source_index,
+                                          t.depth);
                         }
                         fxmodsync[s].clear();
                         fx_reload_mod[s] = false;
@@ -3362,15 +3360,8 @@ bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, f
     return false;
 }
 
-#if MAC || LINUX
-void *loadPatchInBackgroundThread(void *sy)
+void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
 {
-#else
-DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
-{
-    void *sy = lpParam;
-#endif
-
     SurgeSynthesizer *synth = (SurgeSynthesizer *)sy;
     std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
     if (synth->patchid_queue >= 0)
@@ -3409,7 +3400,7 @@ DWORD WINAPI loadPatchInBackgroundThread(LPVOID lpParam)
 
     synth->halt_engine = false;
 
-    return 0;
+    return;
 }
 
 void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
@@ -3688,7 +3679,7 @@ void SurgeSynthesizer::processControl()
 void SurgeSynthesizer::process()
 {
 #if DEBUG_RNG_THREADING
-    storage.audioThreadID = pthread_self();
+    storage.audioThreadID = std::this_thread::get_id();
 #endif
     processRunning = 0;
 
@@ -3712,36 +3703,8 @@ void SurgeSynthesizer::process()
             allNotesOff();
             halt_engine = true;
 
-#if MAC || LINUX
-            pthread_t thread;
-            pthread_attr_t attributes;
-            int ret;
-            sched_param params;
-
-            /* initialized with default attributes */
-            ret = pthread_attr_init(&attributes);
-
-            /* safe to get existing scheduling param */
-            ret = pthread_attr_getschedparam(&attributes, &params);
-
-            /* set the priority; others are unchanged */
-            params.sched_priority = sched_get_priority_min(SCHED_OTHER);
-
-            /* setting the new scheduling param */
-            ret = pthread_attr_setschedparam(&attributes, &params);
-
-            ret = pthread_create(&thread, &attributes, loadPatchInBackgroundThread, this);
-#else
-
-            DWORD dwThreadId;
-            HANDLE hThread = CreateThread(NULL, // default security attributes
-                                          0,    // use default stack size
-                                          loadPatchInBackgroundThread, // thread function
-                                          this,         // argument to thread function
-                                          0,            // use default creation flags
-                                          &dwThreadId); // returns the thread identifier
-            SetThreadPriority(hThread, THREAD_PRIORITY_NORMAL);
-#endif
+            std::thread loadThread(loadPatchInBackgroundThread, this);
+            loadThread.detach();
 
             clear_block(output[0], BLOCK_SIZE_QUAD);
             clear_block(output[1], BLOCK_SIZE_QUAD);
@@ -3962,8 +3925,13 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[0][storage.getPatch().scene[0].lowcut.param_id_in_scene].f;
 
-        hpA.coeff_HP(hpA.calc_omega(freq / 12.0), 0.4);    // var 0.707
-        hpA.process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
+        auto slope = storage.getPatch().scene[0].lowcut.deform_type;
+
+        for (int i = 0; i <= slope; i++)
+        {
+            hpA[i].coeff_HP(hpA[i].calc_omega(freq / 12.0), 0.4); // var 0.707
+            hpA[i].process_block(sceneout[0][0], sceneout[0][1]); // TODO: quadify
+        }
     }
 
     if (storage.getPatch().scene[1].lowcut.deactivated == false)
@@ -3971,8 +3939,13 @@ void SurgeSynthesizer::process()
         auto freq =
             storage.getPatch().scenedata[1][storage.getPatch().scene[1].lowcut.param_id_in_scene].f;
 
-        hpB.coeff_HP(hpB.calc_omega(freq / 12.0), 0.4);
-        hpB.process_block(sceneout[1][0], sceneout[1][1]);
+        auto slope = storage.getPatch().scene[1].lowcut.deform_type;
+
+        for (int i = 0; i <= slope; i++)
+        {
+            hpB[i].coeff_HP(hpB[i].calc_omega(freq / 12.0), 0.4); // var 0.707
+            hpB[i].process_block(sceneout[1][0], sceneout[1][1]); // TODO: quadify
+        }
     }
 
     for (int cls = 0; cls < n_scenes; ++cls)
@@ -4428,9 +4401,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             auto depth =
                 getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
                               mv->at(i).source_scene, mv->at(i).source_index);
-            fxmodsync[target].push_back(std::make_tuple(mv->at(i).source_id, mv->at(i).source_index,
-                                                        mv->at(i).source_scene, whichForReal,
-                                                        depth));
+            fxmodsync[target].push_back({mv->at(i).source_id, mv->at(i).source_scene,
+                                         mv->at(i).source_index, whichForReal, depth});
         }
 
         if (m == FXReorderMode::SWAP)
@@ -4452,9 +4424,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                 auto depth = getModulation(fxsync[target].p[whichForReal].id,
                                            (modsources)mv->at(i).source_id, mv->at(i).source_scene,
                                            mv->at(i).source_index);
-                fxmodsync[source].push_back(
-                    std::make_tuple(mv->at(i).source_id, mv->at(i).source_index,
-                                    mv->at(i).source_scene, whichForReal, depth));
+                fxmodsync[source].push_back({mv->at(i).source_id, mv->at(i).source_scene,
+                                             mv->at(i).source_index, whichForReal, depth});
             }
         }
 

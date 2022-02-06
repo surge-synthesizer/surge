@@ -289,7 +289,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
     void paintCell(juce::Graphics &g, int rowNumber, int columnId, int width, int height,
                    bool rowIsSelected) override
     {
-        // FIXME - make sure the codition this is handling is handled everywhere consistently
+        // FIXME - make sure the condition this is handling is handled everywhere consistently
         if (rowNumber >= data.size())
         {
             return;
@@ -317,7 +317,7 @@ class PatchDBSQLTableModel : public juce::TableListBoxModel
 
     void cellDoubleClicked(int rowNumber, int columnId, const juce::MouseEvent &event) override
     {
-        // FIXME - make sure the codition this is handling is handled everywhere consistently
+        // FIXME - make sure the condition this is handling is handled everywhere consistently
         if (rowNumber >= data.size())
         {
             return;

@@ -66,7 +66,7 @@ class WDF
      */
     virtual void calcImpedance() = 0;
 
-    /** Sub-classes override this function to propogate
+    /** Sub-classes override this function to propagate
      * an impedance change to the upstream elements in
      * the WDF tree.
      */
@@ -75,7 +75,7 @@ class WDF
     /** Sub-classes override this function to accept an incident wave. */
     virtual void incident(double x) noexcept = 0;
 
-    /** Sub-classes override this function to propogate a reflected wave. */
+    /** Sub-classes override this function to propagate a reflected wave. */
     virtual double reflected() noexcept = 0;
 
     /** Probe the voltage across this circuit element. */
@@ -116,7 +116,7 @@ class WDFNode : public WDF
 
     /** When this function is called from a downstream
      * element in the WDF tree, the impedance is recomputed
-     * and then propogated upstream to the next element in the
+     * and then propagated upstream to the next element in the
      * WDF tree.
      */
     inline void propagateImpedance() override
@@ -161,7 +161,7 @@ class Resistor : public WDFNode
     /** Accepts an incident wave into a WDF resistor. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF resistor. */
+    /** Propagates a reflected wave from a WDF resistor. */
     inline double reflected() noexcept override
     {
         b = 0.0;
@@ -218,7 +218,7 @@ class Capacitor : public WDFNode
         z = a;
     }
 
-    /** Propogates a reflected wave from a WDF capacitor. */
+    /** Propagates a reflected wave from a WDF capacitor. */
     inline double reflected() noexcept override
     {
         b = b_coef * b + a_coef * z;
@@ -280,7 +280,7 @@ class Inductor : public WDFNode
         z = a;
     }
 
-    /** Propogates a reflected wave from a WDF inductor. */
+    /** Propagates a reflected wave from a WDF inductor. */
     inline double reflected() noexcept override
     {
         b = b_coef * b - a_coef * z;
@@ -313,7 +313,7 @@ class Switch : public WDFNode
     /** Accepts an incident wave into a WDF switch. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF switch. */
+    /** Propagates a reflected wave from a WDF switch. */
     inline double reflected() noexcept override
     {
         b = closed ? -a : a;
@@ -340,7 +340,7 @@ class Open : public WDFNode
     /** Accepts an incident wave into a WDF open. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF open. */
+    /** Propagates a reflected wave from a WDF open. */
     inline double reflected() noexcept override
     {
         b = a;
@@ -364,7 +364,7 @@ class Short : public WDFNode
     /** Accepts an incident wave into a WDF short. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF short. */
+    /** Propagates a reflected wave from a WDF short. */
     inline double reflected() noexcept override
     {
         b = -a;
@@ -402,7 +402,7 @@ class PolarityInverter : public WDFNode
         port1->incident(-x);
     }
 
-    /** Propogates a reflected wave from a WDF inverter. */
+    /** Propagates a reflected wave from a WDF inverter. */
     inline double reflected() noexcept override
     {
         b = -port1->reflected();
@@ -443,7 +443,7 @@ template <typename PortType> class PolarityInverterT : public WDFNode
         port1->incident(-x);
     }
 
-    /** Propogates a reflected wave from a WDF inverter. */
+    /** Propagates a reflected wave from a WDF inverter. */
     inline double reflected() noexcept override
     {
         b = -port1->reflected();
@@ -557,7 +557,7 @@ class WDFParallel : public WDFAdaptor
         a = x;
     }
 
-    /** Propogates a reflected wave from a WDF parallel adaptor. */
+    /** Propagates a reflected wave from a WDF parallel adaptor. */
     inline double reflected() noexcept override
     {
         b = port1Reflect * port1->reflected() + port2Reflect * port2->reflected();
@@ -609,7 +609,7 @@ template <typename Port1Type, typename Port2Type> class WDFParallelT : public WD
         a = x;
     }
 
-    /** Propogates a reflected wave from a WDF parallel adaptor. */
+    /** Propagates a reflected wave from a WDF parallel adaptor. */
     inline double reflected() noexcept override
     {
         b = port1Reflect * port1->reflected() + port2Reflect * port2->reflected();
@@ -655,7 +655,7 @@ class WDFSeries : public WDFAdaptor
         a = x;
     }
 
-    /** Propogates a reflected wave from a WDF series adaptor. */
+    /** Propagates a reflected wave from a WDF series adaptor. */
     inline double reflected() noexcept override
     {
         b = -(port1->reflected() + port2->reflected());
@@ -706,7 +706,7 @@ template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFN
         a = x;
     }
 
-    /** Propogates a reflected wave from a WDF series adaptor. */
+    /** Propagates a reflected wave from a WDF series adaptor. */
     inline double reflected() noexcept override
     {
         b = -(port1->reflected() + port2->reflected());
@@ -744,7 +744,7 @@ class ResistiveVoltageSource : public WDFNode
         propagateImpedance();
     }
 
-    /** Computes the impedance for a WDF resistive voltage souce
+    /** Computes the impedance for a WDF resistive voltage source
      * Z_Vr = Z_R
      */
     inline void calcImpedance() override
@@ -759,7 +759,7 @@ class ResistiveVoltageSource : public WDFNode
     /** Accepts an incident wave into a WDF resistive voltage source. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF resistive voltage source. */
+    /** Propagates a reflected wave from a WDF resistive voltage source. */
     inline double reflected() noexcept override
     {
         b = Vs;
@@ -786,7 +786,7 @@ class IdealVoltageSource : public WDFNode
     /** Accepts an incident wave into a WDF ideal voltage source. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF ideal voltage source. */
+    /** Propagates a reflected wave from a WDF ideal voltage source. */
     inline double reflected() noexcept override
     {
         b = -a + 2.0 * Vs;
@@ -820,7 +820,7 @@ class ResistiveCurrentSource : public WDFNode
         propagateImpedance();
     }
 
-    /** Computes the impedance for a WDF resistive current souce
+    /** Computes the impedance for a WDF resistive current source
      * Z_Ir = Z_R
      */
     inline void calcImpedance() override
@@ -835,7 +835,7 @@ class ResistiveCurrentSource : public WDFNode
     /** Accepts an incident wave into a WDF resistive current source. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF resistive current source. */
+    /** Propagates a reflected wave from a WDF resistive current source. */
     inline double reflected() noexcept override
     {
         b = 2 * R * Is;
@@ -862,7 +862,7 @@ class IdealCurrentSource : public WDFNode
     /** Accepts an incident wave into a WDF ideal current source. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF ideal current source. */
+    /** Propagates a reflected wave from a WDF ideal current source. */
     inline double reflected() noexcept override
     {
         b = 2 * next->R * Is + a;
@@ -896,7 +896,7 @@ class DiodePair : public WDFNode
     /** Accepts an incident wave into a WDF diode pair. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF diode pair. */
+    /** Propagates a reflected wave from a WDF diode pair. */
     inline double reflected() noexcept override
     {
         // See eqn (18) from reference paper
@@ -932,7 +932,7 @@ class Diode : public WDFNode
     /** Accepts an incident wave into a WDF diode. */
     inline void incident(double x) noexcept override { a = x; }
 
-    /** Propogates a reflected wave from a WDF diode. */
+    /** Propagates a reflected wave from a WDF diode. */
     inline double reflected() noexcept override
     {
         // See eqn (10) from reference paper

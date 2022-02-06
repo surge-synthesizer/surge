@@ -69,7 +69,7 @@ std::string SurgeGUIEditor::tuningToHtml()
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge Tuning Information
+        Surge XT Tuning Information
       </div>
       <div style="font-size: 12pt; font-family: Lato; padding: 2pt;">
     )HTML" << synth->storage.currentScale.description
@@ -241,7 +241,7 @@ std::string SurgeGUIEditor::tuningToHtml()
 
     if (synth->storage.currentMapping.count > 48)
     {
-        htmls << "Surge only displays inverval matrices for scales lower than 48 in length"
+        htmls << "Surge XT only displays interval matrices for scales lower than 48 in length"
               << std::endl;
     }
     else
@@ -347,7 +347,7 @@ th {
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge MIDI Mapping
+        Surge XT MIDI Mapping
       </div>
     </div>
 
@@ -457,7 +457,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
        <body style="margin: 0pt; background: #CDCED4;">
                    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
                               <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-                                         Surge Skin Inspector
+                                         Surge XT Skin Inspector
                    </div>
                      </div>
 

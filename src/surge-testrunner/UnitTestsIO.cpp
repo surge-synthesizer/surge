@@ -60,7 +60,7 @@ TEST_CASE("We can read a collection of wavetables", "[io]")
 
 TEST_CASE("All .wt and .wav factory assets load", "[io]")
 {
-    auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(44100, true);
     REQUIRE(surge.get());
     for (auto p : surge->storage.wt_list)
     {
@@ -76,7 +76,7 @@ TEST_CASE("All .wt and .wav factory assets load", "[io]")
 
 TEST_CASE("All Patches are Loadable", "[io]")
 {
-    auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(44100, true);
     REQUIRE(surge.get());
     int i = 0;
     for (auto p : surge->storage.patch_list)
@@ -324,7 +324,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
 
     SECTION("Name Set when Loading Factory")
     {
-        auto surge = Surge::Headless::createSurge(44100);
+        auto surge = Surge::Headless::createSurge(44100, true);
         REQUIRE(surge);
 
         auto patch = &(surge->storage.getPatch());
@@ -358,8 +358,8 @@ TEST_CASE("Stream WaveTable Names", "[io]")
             // if(d) free(d);
         };
 
-        auto surgeS = Surge::Headless::createSurge(44100);
-        auto surgeD = Surge::Headless::createSurge(44100);
+        auto surgeS = Surge::Headless::createSurge(44100, true);
+        auto surgeD = Surge::Headless::createSurge(44100, true);
         REQUIRE(surgeD);
 
         for (int i = 0; i < 50; ++i)

@@ -576,10 +576,10 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
     {
         auto surge = surgeOnSine();
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         {
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1).margin(0.001));
         }
     }
@@ -589,12 +589,12 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         surge->storage.mapChannelToOctave = true;
         surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         { // Limited range because frequencyForNote starts having trouble measuring high
           // frequencies.
             INFO("key is " << key);
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
     }
@@ -606,10 +606,10 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/31edo.scl");
         surge->storage.retuneToScale(s);
         float f1, f2;
-        for (int key = 0; key < 90; key++)
+        for (int key = 30; key < 70; key += 3)
         {
-            f1 = frequencyForNote(surge, key, 2, 0, 0);
-            f2 = frequencyForNote(surge, key, 2, 0, 1);
+            f1 = frequencyForNote(surge, key, 1, 0, 0);
+            f2 = frequencyForNote(surge, key, 1, 0, 1);
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
     }
@@ -860,7 +860,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below witn 6ns")
+    SECTION("A lot below with 6ns")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -900,7 +900,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below witn ED3-17")
+    SECTION("A lot below with ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -1039,7 +1039,7 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
         }
     }
 
-    SECTION("Ignoring in retuned compares with untuned")
+    SECTION("Ignoring if retuned compares with untuned")
     {
         auto surge = surgeOnSine();
         auto surgeTuned = surgeOnSine();

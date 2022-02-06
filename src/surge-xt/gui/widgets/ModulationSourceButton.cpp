@@ -388,6 +388,11 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
         }
     }
 
+    if (event.mods.getCurrentModifiers().isCtrlDown())
+    {
+        mouseMode = CTRL_CLICK;
+    }
+
     mouseDownBounds = getBounds();
     componentDragger.startDraggingComponent(this, event);
 }
@@ -523,7 +528,7 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 
     transientArmed = false;
 
-    if (mouseMode == CLICK || mouseMode == CLICK_ARROW)
+    if (mouseMode == CLICK || mouseMode == CLICK_ARROW || mouseMode == CTRL_CLICK)
     {
         notifyValueChanged();
     }

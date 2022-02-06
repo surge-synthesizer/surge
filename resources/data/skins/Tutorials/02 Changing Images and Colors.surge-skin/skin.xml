@@ -11,7 +11,7 @@ There are a couple of key concepts needed to reskin in this simplest fashion
 1. All of the controls respond either to colors which are defaulted to the classic skin and can be replaced in this file, or
 2. The control has an SVG representation of itself, usually with multiple states
 
-In the first case, Surge has colors with heirarchical names ('lfo.waveform.background', say) which
+In the first case, Surge has colors with hierarchical names ('lfo.waveform.background', say) which
 are queried by our components at runtime. You can find out each of the names available in the
 skin inspector.
 
@@ -28,7 +28,7 @@ feel.
 
 
 [doc]-->
-<surge-skin name="02 Changing Images and Colors" category="Tutorial" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+<surge-skin name="02 Changing Images and Colors" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
   <globals>
     <!--[doc]
     We can pick an arbitrary element and just recolor it with a hex code. Here we recolor the oscillator
@@ -83,7 +83,7 @@ feel.
   </component-classes>
   <controls>
     <!--[doc]
-    The default image 'bmp00113' wil be loaded by the scene browser. The `SLIDER_HORIZ_HANDLE`
+    The default image 'bmp00113' will be loaded by the scene browser. The `SLIDER_HORIZ_HANDLE`
     will be loaded by all the sliders. But we need to pick an item to attach the other
     image to. We do that here by picking a particular control and replacing the
     handle image. This is covered more in Tutorial 04.
