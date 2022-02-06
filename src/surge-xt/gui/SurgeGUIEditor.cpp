@@ -1959,7 +1959,19 @@ bool SurgeGUIEditor::open(void *parent)
 
     bitmapStore.reset(new SurgeImageStore());
     bitmapStore->setupBuiltinBitmaps();
-    currentSkin->reloadSkin(bitmapStore);
+    if (!currentSkin->reloadSkin(bitmapStore))
+    {
+        auto db = Surge::GUI::SkinDB::get();
+
+        std::ostringstream oss;
+        oss << "Unable to load current skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+            << db->getAndResetErrorString();
+
+        auto msg = std::string(oss.str());
+        this->currentSkin = db->defaultSkin(&(this->synth->storage));
+        this->currentSkin->reloadSkin(this->bitmapStore);
+        synth->storage.reportError(msg, "Skin Loading Error");
+    }
 
     reloadFromSkin();
     openOrRecreateEditor();

@@ -68,7 +68,7 @@ std::shared_ptr<Skin> SkinDB::defaultSkin(SurgeStorage *storage)
 
         for (auto e : availableSkins)
         {
-            if (e.name == uds && (e.rootType == st || st == UNKNOWN))
+            if (e.name == uds && (e.rootType == st || st == UNKNOWN) && e.parseable)
                 return getSkin(e);
         }
         return getSkin(defaultSkinEntry);
@@ -197,8 +197,10 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
         if (!doc.LoadFile(string_to_path(x)))
         {
             e.displayName = e.name + " (parse error)";
+            e.parseable = false;
             continue;
         }
+        e.parseable = true;
         TiXmlElement *surgeskin = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-skin"));
         if (!surgeskin)
         {
