@@ -14,7 +14,6 @@ void hardclip_block8(float *x, unsigned int nquads);
 void softclip_block(float *in, unsigned int nquads);
 void tanh7_block(float *x, unsigned int nquads);
 void clear_block(float *in, unsigned int nquads);
-void clear_block_antidenormalnoise(float *in, unsigned int nquads);
 void accumulate_block(float *src, float *dst, unsigned int nquads);
 void copy_block(float *src, float *dst, unsigned int nquads); // copy block (requires aligned data)
 void copy_block_US(float *src, float *dst, unsigned int nquads); // copy block (unaligned source)

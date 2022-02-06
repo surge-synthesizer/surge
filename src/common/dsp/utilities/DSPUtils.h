@@ -38,6 +38,7 @@ class quadr_osc
     {
         dr = cos(w);
         di = sin(w);
+
         // normalize vector
         double n = 1 / sqrt(r * r + i * i);
         r *= n;
@@ -151,20 +152,14 @@ template <class T, bool first_run_checks = true> class lag
     inline void instantize() { v = target_v; }
     inline T getTargetValue() { return target_v; }
     inline void process() { v = v * lpinv + target_v * lp; }
-    // void setBlockSize(int n){ bs_inv = 1/(T)n; }
+
     T v;
     T target_v;
 
   private:
     bool first_run;
-    // T bs_inv;
     T lp, lpinv;
 };
-
-/*inline float db2linear(float db)
-{
-        return powf(10.f,0.05f*db);
-}*/
 
 inline void flush_denormal(double &d)
 {
@@ -172,21 +167,12 @@ inline void flush_denormal(double &d)
         d = 0;
 }
 
-inline void flush_denormal(double &d, float thresh)
-{
-    if (fabs(d) < thresh)
-        d = 0;
-}
-
 inline bool within_range(int lo, int value, int hi) { return ((value >= lo) && (value <= hi)); }
-
-//#define limit_range(x,low,high) (max(low, min(x, high)))
 
 inline float lerp(float a, float b, float x) { return (1 - x) * a + x * b; }
 
-inline void trixpan(
-    float &L, float &R,
-    float x) // panning that always lets both channels through unattenuated (separate hard-panning)
+// panning which always lets both channels through unattenuated (seperate hard-panning)
+inline void trixpan(float &L, float &R, float x)
 {
     if (x < 0.f)
     {
@@ -222,9 +208,9 @@ inline float tanh_fast(float in)
 inline double tanh_faster1(double x)
 {
     const double a = -1 / 3, b = 2 / 15;
-    // return tanh(x);
     double xs = x * x;
     double y = 1 + xs * a + xs * xs * b;
+
     return y * x;
 }
 
@@ -247,12 +233,12 @@ inline float clamp1bp(float in)
 }
 
 // Use custom format (x^3) to represent gain internally, but save as decibel in XML-data
-
 inline float amp_to_linear(float x)
 {
     x = std::max(0.f, x);
     return x * x * x;
 }
+
 inline float linear_to_amp(float x) { return powf(limit_range(x, 0.0000000001f, 1.f), 1.f / 3.f); }
 inline float amp_to_db(float x) { return limit_range((float)(18.f * log2(x)), -192.f, 96.f); }
 inline float db_to_amp(float x) { return limit_range(powf(2.f, x / 18.f), 0.f, 2.f); }
@@ -273,42 +259,35 @@ inline double sinc(double x)
 
 inline double blackman(int i, int n)
 {
-    // if (i>=n) return 0;
     return (0.42 - 0.5 * cos(2 * M_PI * i / (n - 1)) + 0.08 * cos(4 * M_PI * i / (n - 1)));
 }
 
 inline double symmetric_blackman(double i, int n)
 {
-    // if (i>=n) return 0;
     i -= (n / 2);
     return (0.42 - 0.5 * cos(2 * M_PI * i / (n)) + 0.08 * cos(4 * M_PI * i / (n)));
 }
 
 inline double blackman(double i, int n)
 {
-    // if (i>=n) return 0;
     return (0.42 - 0.5 * cos(2 * M_PI * i / (n - 1)) + 0.08 * cos(4 * M_PI * i / (n - 1)));
 }
 
 inline double blackman_harris(int i, int n)
 {
-    // if (i>=n) return 0;
     return (0.35875 - 0.48829 * cos(2 * M_PI * i / (n - 1)) +
             0.14128 * cos(4 * M_PI * i / (n - 1)) - 0.01168 * cos(6 * M_PI * i / (n - 1)));
 }
 
 inline double symmetric_blackman_harris(double i, int n)
 {
-    // if (i>=n) return 0;
     i -= (n / 2);
-    // return (0.42 - 0.5*cos(2*M_PI*i/(n)) + 0.08*cos(4*M_PI*i/(n)));
     return (0.35875 - 0.48829 * cos(2 * M_PI * i / (n)) + 0.14128 * cos(4 * M_PI * i / (n - 1)) -
             0.01168 * cos(6 * M_PI * i / (n)));
 }
 
 inline double blackman_harris(double i, int n)
 {
-    // if (i>=n) return 0;
     return (0.35875 - 0.48829 * cos(2 * M_PI * i / (n - 1)) +
             0.14128 * cos(4 * M_PI * i / (n - 1)) - 0.01168 * cos(6 * M_PI * i / (n - 1)));
 }
@@ -318,7 +297,7 @@ float correlated_noise_mk2(float &lastval, float correlation);
 float drift_noise(float &lastval);
 float correlated_noise_o2(float lastval, float &lastval2, float correlation);
 float correlated_noise_o2mk2(float &lastval, float &lastval2, float correlation);
-// An alternate version where you supply a uniform RNG on -1,1 externally
+// alternative version where you supply a uniform RNG on [-1, 1] externally
 float correlated_noise_o2mk2_suppliedrng(float &lastval, float &lastval2, float correlation,
                                          std::function<float()> &urng);
 

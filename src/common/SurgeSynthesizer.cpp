@@ -3723,10 +3723,10 @@ void SurgeSynthesizer::process()
     }
     else
     {
-        clear_block_antidenormalnoise(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-        clear_block_antidenormalnoise(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        clear_block(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
+        clear_block(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
+        clear_block(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        clear_block(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
     }
 
     // TODO: FIX SCENE ASSUMPTION
@@ -3734,15 +3734,15 @@ void SurgeSynthesizer::process()
     bool play_scene[n_scenes];
 
     {
-        clear_block_antidenormalnoise(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-        clear_block_antidenormalnoise(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+        clear_block(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
+        clear_block(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+        clear_block(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
+        clear_block(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
 
         for (int i = 0; i < n_send_slots; ++i)
         {
-            clear_block_antidenormalnoise(fxsendout[i][0], BLOCK_SIZE_QUAD);
-            clear_block_antidenormalnoise(fxsendout[i][1], BLOCK_SIZE_QUAD);
+            clear_block(fxsendout[i][0], BLOCK_SIZE_QUAD);
+            clear_block(fxsendout[i][1], BLOCK_SIZE_QUAD);
         }
     }
 

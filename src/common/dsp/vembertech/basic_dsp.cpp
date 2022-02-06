@@ -226,17 +226,6 @@ void clear_block(float *in, unsigned int nquads)
     }
 }
 
-void clear_block_antidenormalnoise(float *in, unsigned int nquads)
-{
-    const __m128 smallvalue = _mm_set_ps(1e-15f, 1e-15f, -1e-15f, -1e-15f);
-
-    for (unsigned int i = 0; i < (nquads << 2); i += 8)
-    {
-        _mm_store_ps((float *)&in[i], smallvalue);
-        _mm_store_ps((float *)&in[i + 4], smallvalue);
-    }
-}
-
 void accumulate_block(float *__restrict src, float *__restrict dst,
                       unsigned int nquads) // dst += src
 {
