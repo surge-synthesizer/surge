@@ -10,11 +10,11 @@ endif()
 file(GLOB SURGE_FX_BANK_RESOURCES_GLOB
   ${CMAKE_SOURCE_DIR}/resources/surge-fx/*.svg
   ${CMAKE_SOURCE_DIR}/resources/surge-fx/icons/*.svg
-)
+  )
 
 juce_add_binary_data(surge-fx-binary
   SOURCES ${SURGE_FX_BANK_RESOURCES_GLOB}
-)
+  )
 
 juce_add_plugin(${PROJECT_NAME}
   PRODUCT_NAME ${SURGE_FX_PRODUCT_NAME}
@@ -44,7 +44,7 @@ juce_add_plugin(${PROJECT_NAME}
   LV2_SHARED_LIBRARY_NAME SurgeXT_FX
 
   FORMATS ${SURGE_JUCE_FORMATS}
-)
+  )
 
 target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.cpp
@@ -52,7 +52,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXProcessor.cpp
   SurgeFXProcessor.h
   SurgeLookAndFeel.h
-)
+  )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   surge::surge-common
@@ -60,9 +60,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-juce
   juce::juce_audio_utils
   juce::juce_audio_processors
-)
+  )
 
-clap_juce_extensions_plugin(TARGET surge-fx
-        CLAP_ID "org.surge-synth-team.surge-xt-fx")
+if(SURGE_BUILD_CLAP)
+  clap_juce_extensions_plugin(TARGET surge-fx
+    CLAP_ID "org.surge-synth-team.surge-xt-fx")
+endif()
 
 surge_juce_package(${PROJECT_NAME} "Surge XT Effects")
