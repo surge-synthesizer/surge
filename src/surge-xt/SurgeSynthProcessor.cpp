@@ -209,7 +209,8 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         playhead->getCurrentPosition(cp);
         surge->time_data.tempo = cp.bpm;
 
-        if (cp.isPlaying || cp.isRecording || cp.isLooping)
+        // isRecording should always imply isPlaying but better safe than sorry
+        if (cp.isPlaying || cp.isRecording)
             surge->time_data.ppqPos = cp.ppqPosition;
 
         surge->time_data.timeSigNumerator = cp.timeSigNumerator;
