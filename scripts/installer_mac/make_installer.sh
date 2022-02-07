@@ -70,36 +70,36 @@ build_flavor()
 # try to build VST3 package
 
 if [[ -d $INDIR/$VST3 ]]; then
-    build_flavor "VST3" "$VST3" "com.surge-synth-team.surge-xt.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
+    build_flavor "VST3" "$VST3" "org.surge-synth-team.surge-xt.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
 fi
 
 if [[ -d $INDIR/$FXVST3 ]]; then
-    build_flavor "FXVST3" "$FXVST3" "com.surge-synth-team.surge-xt-fx.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
+    build_flavor "FXVST3" "$FXVST3" "org.surge-synth-team.surge-xt-fx.vst3.pkg" "/Library/Audio/Plug-Ins/VST3"
 fi
 
 if [[ -d $INDIR/$AU ]]; then
-    build_flavor "AU" "$AU" "com.surge-synth-team.surge-xt.component.pkg" "/Library/Audio/Plug-Ins/Components"
+    build_flavor "AU" "$AU" "org.surge-synth-team.surge-xt.component.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
 if [[ -d $INDIR/$FXAU ]]; then
-    build_flavor "FXAU" "$FXAU" "com.surge-synth-team.surge-xt-fx.component.pkg" "/Library/Audio/Plug-Ins/Components"
+    build_flavor "FXAU" "$FXAU" "org.surge-synth-team.surge-xt-fx.component.pkg" "/Library/Audio/Plug-Ins/Components"
 fi
 
 if [[ -d $INDIR/$APP ]]; then
-    build_flavor "APP" "$APP" "com.surge-synth-team.surge-xt.app.pkg" "/tmp/SXT"
+    build_flavor "APP" "$APP" "org.surge-synth-team.surge-xt.app.pkg" "/tmp/SXT"
 fi
 
 if [[ -d $INDIR/$FXAPP ]]; then
-    build_flavor "FXAPP" "$FXAPP" "com.surge-synth-team.surge-xt-fx.app.pkg" "/tmp/SXT"
+    build_flavor "FXAPP" "$FXAPP" "org.surge-synth-team.surge-xt-fx.app.pkg" "/tmp/SXT"
 fi
 
 # Build the resources pagkage
 RSRCS=${SOURCEDIR}/resources/data
 echo --- BUILDING Resources pkg ---
 if [[ ! -z $MAC_INSTALLING_CERT ]]; then
-  pkgbuild --sign "$MAC_INSTALLING_CERT" --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+  pkgbuild --sign "$MAC_INSTALLING_CERT" --root "$RSRCS" --identifier "org.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
 else
-  pkgbuild --root "$RSRCS" --identifier "com.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
+  pkgbuild --root "$RSRCS" --identifier "org.surge-synth-team.surge-xt.resources.pkg" --version $VERSION --scripts ${SOURCEDIR}/scripts/installer_mac/ResourcesPackageScript --install-location "/tmp/SXT/Surge XT" ${TMPDIR}/Surge_XT_Resources.pkg
 fi
 
 echo --- Sub Packages Created ---
@@ -108,35 +108,35 @@ ls -l "${TMPDIR}"
 # create distribution.xml
 
 if [[ -d $INDIR/$VST3 ]]; then
-	VST3_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.vst3.pkg"/>'
-	VST3_CHOICE='<line choice="com.surge-synth-team.surge-xt.vst3.pkg"/>'
-	VST3_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT VST3\"><pkg-ref id=\"com.surge-synth-team.surge-xt.vst3.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_VST3.pkg</pkg-ref>"
+	VST3_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.vst3.pkg"/>'
+	VST3_CHOICE='<line choice="org.surge-synth-team.surge-xt.vst3.pkg"/>'
+	VST3_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT VST3\"><pkg-ref id=\"org.surge-synth-team.surge-xt.vst3.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_VST3.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$AU ]]; then
-	AU_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.component.pkg"/>'
-	AU_CHOICE='<line choice="com.surge-synth-team.surge-xt.component.pkg"/>'
-	AU_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Audio Unit\"><pkg-ref id=\"com.surge-synth-team.surge-xt.component.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_AU.pkg</pkg-ref>"
+	AU_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.component.pkg"/>'
+	AU_CHOICE='<line choice="org.surge-synth-team.surge-xt.component.pkg"/>'
+	AU_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Audio Unit\"><pkg-ref id=\"org.surge-synth-team.surge-xt.component.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_AU.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$APP ]]; then
-	APP_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt.app.pkg"/>'
-	APP_CHOICE='<line choice="com.surge-synth-team.surge-xt.app.pkg"/>'
-	APP_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT App\"><pkg-ref id=\"com.surge-synth-team.surge-xt.app.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_APP.pkg</pkg-ref>"
+	APP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.app.pkg"/>'
+	APP_CHOICE='<line choice="org.surge-synth-team.surge-xt.app.pkg"/>'
+	APP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT App\"><pkg-ref id=\"org.surge-synth-team.surge-xt.app.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_APP.pkg</pkg-ref>"
 fi
 
 if [[ -d $INDIR/$FXVST3 ]]; then
-	FXVST3_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
-	FXVST3_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
-	FXVST3_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank VST3\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXVST3.pkg</pkg-ref>"
+	FXVST3_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
+	FXVST3_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.vst3.pkg"/>'
+	FXVST3_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.vst3.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank VST3\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.vst3.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.vst3.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXVST3.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$FXAU ]]; then
-	FXAU_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.component.pkg"/>'
-	FXAU_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.component.pkg"/>'
-	FXAU_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank Audio Unit\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.component.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAU.pkg</pkg-ref>"
+	FXAU_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.component.pkg"/>'
+	FXAU_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.component.pkg"/>'
+	FXAU_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.component.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank Audio Unit\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.component.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.component.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAU.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$FXAPP ]]; then
-	FXAPP_PKG_REF='<pkg-ref id="com.surge-synth-team.surge-xt-fx.app.pkg"/>'
-	FXAPP_CHOICE='<line choice="com.surge-synth-team.surge-xt-fx.app.pkg"/>'
-	FXAPP_CHOICE_DEF="<choice id=\"com.surge-synth-team.surge-xt-fx.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank App\"><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.app.pkg\"/></choice><pkg-ref id=\"com.surge-synth-team.surge-xt-fx.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAPP.pkg</pkg-ref>"
+	FXAPP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.app.pkg"/>'
+	FXAPP_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.app.pkg"/>'
+	FXAPP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.app.pkg\" visible=\"true\" start_selected=\"true\" title=\"Surge XT Effects Bank App\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.app.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.app.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXAPP.pkg</pkg-ref>"
 fi
 
 cat > $TMPDIR/distribution.xml << XMLEND
@@ -151,7 +151,7 @@ cat > $TMPDIR/distribution.xml << XMLEND
     ${FXVST3_PKG_REF}
     ${FXAU_PKG_REF}
     ${FXAPP_PKG_REF}
-    <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg"/>
+    <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg"/>
     <options require-scripts="false" customize="always" />
     <choices-outline>
         ${VST3_CHOICE}
@@ -160,7 +160,7 @@ cat > $TMPDIR/distribution.xml << XMLEND
         ${FXVST3_CHOICE}
         ${FXAU_CHOICE}
         ${FXAPP_CHOICE}
-        <line choice="com.surge-synth-team.surge-xt.resources.pkg"/>
+        <line choice="org.surge-synth-team.surge-xt.resources.pkg"/>
     </choices-outline>
     ${VST3_CHOICE_DEF}
     ${AU_CHOICE_DEF}
@@ -168,10 +168,10 @@ cat > $TMPDIR/distribution.xml << XMLEND
     ${FXVST3_CHOICE_DEF}
     ${FXAU_CHOICE_DEF}
     ${FXAPP_CHOICE_DEF}
-    <choice id="com.surge-synth-team.surge-xt.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
-        <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg"/>
+    <choice id="org.surge-synth-team.surge-xt.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
+        <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg"/>
     </choice>
-    <pkg-ref id="com.surge-synth-team.surge-xt.resources.pkg" version="${VERSION}" onConclusion="none">Surge_XT_Resources.pkg</pkg-ref>
+    <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg" version="${VERSION}" onConclusion="none">Surge_XT_Resources.pkg</pkg-ref>
 </installer-gui-script>
 XMLEND
 
