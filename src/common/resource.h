@@ -49,6 +49,7 @@
 #define IDB_MODMENU_ICONS 185
 #define IDB_FAVORITE_BUTTON 186
 #define IDB_SEARCH_BUTTON 187
+#define IDB_FAVORITE_MENU_ICON 188
 
 // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding block
 #define IDB_MSEG_NODES 301

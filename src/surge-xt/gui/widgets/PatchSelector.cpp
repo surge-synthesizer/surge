@@ -820,7 +820,17 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
                 amIChecked = true;
             }
 
-            subMenu->addItem(name, true, thisCheck, [this, p]() { this->loadPatch(p); });
+            bool isFav = storage->patch_list[p].isFavorite;
+            auto item = juce::PopupMenu::Item(name).setEnabled(true).setTicked(thisCheck).setAction(
+                [this, p]() { this->loadPatch(p); });
+
+            if (isFav && associatedBitmapStore)
+            {
+                auto img = associatedBitmapStore->getImage(IDB_FAVORITE_MENU_ICON);
+                if (img && img->getDrawableButUseWithCaution())
+                    item.setImage(img->getDrawableButUseWithCaution()->createCopy());
+            }
+            subMenu->addItem(item);
             sub++;
 
             if (sub != 0 && sub % 32 == 0)
