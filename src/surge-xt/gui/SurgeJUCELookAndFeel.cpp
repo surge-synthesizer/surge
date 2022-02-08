@@ -343,20 +343,21 @@ void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &
 
         g.setFont(font);
 
-        auto iconArea = r.removeFromLeft(roundToInt(maxFontHeight)).toFloat();
+        auto iconArea = r.removeFromRight(roundToInt(maxFontHeight)).toFloat();
+        auto tickArea = r.removeFromLeft(roundToInt(maxFontHeight)).toFloat();
 
         if (icon != nullptr)
         {
             icon->drawWithin(g, iconArea.translated(-2, 0),
                              RectanglePlacement::centred | RectanglePlacement::onlyReduceInSize,
                              1.0f);
-            // r.removeFromLeft(roundToInt(maxFontHeight * 0.5f));
         }
-        else if (isTicked)
+
+        if (isTicked)
         {
             auto tick = getTickShape(1.0f);
             g.fillPath(tick, tick.getTransformToScaleToFit(
-                                 iconArea.reduced(iconArea.getWidth() / 5, 0).toFloat(), true));
+                                 tickArea.reduced(tickArea.getWidth() / 5, 0).toFloat(), true));
         }
 
         if (hasSubMenu)
