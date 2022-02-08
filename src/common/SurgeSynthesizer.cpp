@@ -1808,12 +1808,13 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
         if (doAllSoundOff)
         {
-            releaseScene(0);
-            releaseScene(1);
+            approachingAllSoundsOff = true;
+            masterfade = 1.f;
         }
 
         return;
     }
+
     case 123: // all notes off
     {
         bool doAllNotesOff = true;
@@ -3709,6 +3710,18 @@ void SurgeSynthesizer::process()
             clear_block(output[0], BLOCK_SIZE_QUAD);
             clear_block(output[1], BLOCK_SIZE_QUAD);
             return;
+        }
+    }
+    else if (approachingAllSoundsOff)
+    {
+        masterfade = max(0.f, masterfade - 0.125f); // kill over 8 blocks
+        mfade = masterfade * masterfade;
+
+        if (masterfade < 0.0001f)
+        {
+            releaseScene(0);
+            releaseScene(1);
+            approachingAllSoundsOff = false;
         }
     }
 

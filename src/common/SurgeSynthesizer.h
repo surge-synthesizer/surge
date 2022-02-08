@@ -361,6 +361,7 @@ class alignas(16) SurgeSynthesizer
   public:
     int CC0, CC32, PCH, patchid;
     float masterfade = 0;
+    bool approachingAllSoundsOff{false};
     HalfRateFilter halfbandA, halfbandB,
         halfbandIN; // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
     std::list<SurgeVoice *> voices[n_scenes];
