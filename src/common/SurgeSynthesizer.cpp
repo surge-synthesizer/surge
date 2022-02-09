@@ -864,6 +864,19 @@ void SurgeSynthesizer::releaseScene(int s)
         freeVoice(*iter);
     }
     voices[s].clear();
+
+    for (int i = 0; i < n_hpBQ; ++i)
+    {
+        if (s == 0)
+            hpA[i].suspend();
+        else
+            hpB[i].suspend();
+    }
+    if (s == 0)
+        halfbandA.reset();
+    if (s == 1)
+        halfbandB.reset();
+    halfbandIN.reset();
 }
 
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
