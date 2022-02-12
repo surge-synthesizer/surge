@@ -51,7 +51,13 @@ class LFOModulationSource : public ModulationSource
     virtual void process_block() override;
     virtual void completedModulation();
 
-    int get_active_outputs() override { return actout; }
+    int get_active_outputs() override
+    {
+        if (lfo->shape.val.i == lt_formula)
+            return Surge::Formula::max_formula_outputs;
+        else
+            return 3;
+    }
     float get_output(int which) override { return output_multi[which]; }
     float get_output01(int which) override { return output_multi[which]; }
     void set_output(int which, float f) override
@@ -96,7 +102,6 @@ class LFOModulationSource : public ModulationSource
     float phase, target, noise, noised1, env_phase, priorPhase;
     int unwrappedphase_intpart;
     int priorStep = -1;
-    int actout;
     float ratemult;
     float env_releasestart;
     float iout;

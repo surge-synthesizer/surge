@@ -5826,6 +5826,29 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
         {
             return (index == 0 ? " Key" : " Voice");
         }
+
+        if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
+        {
+            auto lf = &(synth->storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
+            if (lf->shape.val.i != lt_formula)
+            {
+                if (index == 0)
+                    return "";
+                if (index == 1)
+                {
+                    if (shortV)
+                        return ".wav";
+                    return " Waveform";
+                }
+                if (index == 2)
+                {
+                    if (shortV)
+                        return ".env";
+                    return " Envelope";
+                }
+            }
+        }
+
         if (shortV)
             return "." + std::to_string(index + 1);
         else

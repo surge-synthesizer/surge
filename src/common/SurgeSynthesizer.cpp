@@ -3079,8 +3079,9 @@ bool SurgeSynthesizer::supportsIndexedModulator(int scene, modsources modsource)
 {
     if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
     {
-        auto lf = &(storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
-        return lf->shape.val.i == lt_formula;
+        return true;
+        // auto lf = &(storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
+        // return lf->shape.val.i == lt_formula;
     }
 
     if (modsource == ms_random_bipolar || modsource == ms_random_unipolar)
@@ -3099,6 +3100,8 @@ int SurgeSynthesizer::getMaxModulationIndex(int scene, modsources modsource) con
         {
             return Surge::Formula::max_formula_outputs;
         }
+        else
+            return 3;
     }
     if (modsource == ms_random_bipolar)
         return 2;

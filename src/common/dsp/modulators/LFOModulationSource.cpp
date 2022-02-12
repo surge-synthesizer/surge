@@ -386,7 +386,6 @@ void LFOModulationSource::process_block()
     {
         initPhaseFromStartPhase();
     }
-    actout = 1;
 
     retrigger_FEG = false;
     retrigger_AEG = false;
@@ -935,6 +934,8 @@ void LFOModulationSource::process_block()
 
     auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
     output_multi[0] = useenvval * magnf * io2;
+    output_multi[1] = io2;
+    output_multi[2] = env_val;
 }
 
 void LFOModulationSource::completedModulation()
