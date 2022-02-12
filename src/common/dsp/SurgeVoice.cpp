@@ -302,6 +302,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     id_fbalance = scene->filter_balance.param_id_in_scene;
     id_feedback = scene->feedback.param_id_in_scene;
 
+    applyModulationToLocalcopy<true>();
+
     ampEGSource.attack();
     filterEGSource.attack();
 
@@ -688,67 +690,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     // same for FX & OSCs
     // also ignore int-parameters
 
-    vector<ModulationRouting>::iterator iter;
-    iter = scene->modulation_voice.begin();
-    while (iter != scene->modulation_voice.end())
-    {
-        int src_id = iter->source_id;
-        int dst_id = iter->destination_id;
-        float depth = iter->depth;
-
-        if (modsources[src_id])
-        {
-            localcopy[dst_id].f +=
-                depth * modsources[src_id]->get_output(iter->source_index) * (1.0 - iter->muted);
-        }
-        iter++;
-    }
-
-    if (mpeEnabled)
-    {
-        // See github issue 1214. This basically compensates for
-        // channel AT being per-voice in MPE mode (since it is per channel)
-        // vs per-scene (since it is per keyboard in non MPE mode).
-        iter = scene->modulation_scene.begin();
-        while (iter != scene->modulation_scene.end())
-        {
-            int src_id = iter->source_id;
-            if (src_id == ms_aftertouch && modsources[src_id])
-            {
-                int dst_id = iter->destination_id;
-                // I don't THINK we need this but am not sure the global params are in my localcopy
-                // span
-                if (dst_id >= 0 && dst_id < n_scene_params)
-                {
-                    float depth = iter->depth;
-                    localcopy[dst_id].f +=
-                        depth * modsources[src_id]->get_output(0) * (1.0 - iter->muted);
-                }
-            }
-            iter++;
-        }
-
-        monoAftertouchSource.set_target(state.voiceChannelState->pressure);
-        timbreSource.set_target(state.voiceChannelState->timbre);
-
-        if (scene->modsource_doprocess[ms_aftertouch])
-        {
-            monoAftertouchSource.process_block();
-        }
-        timbreSource.process_block();
-
-        float bendNormalized = state.voiceChannelState->pitchBend / 8192.f;
-        state.mpePitchBend.set_target(bendNormalized);
-        state.mpePitchBend.process_block();
-    }
-    else
-    {
-        // When not in MPE mode, channel aftertouch is already smoothed at scene level.
-        // Do not smooth it again, force the output to the current value.
-        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure);
-        // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
-    }
-
+    applyModulationToLocalcopy();
     update_portamento();
     if (state.porta_doretrigger)
     {
@@ -1104,6 +1046,73 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         age_release++;
 
     return state.keep_playing;
+}
+
+template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
+{
+    vector<ModulationRouting>::iterator iter;
+    iter = scene->modulation_voice.begin();
+    while (iter != scene->modulation_voice.end())
+    {
+        int src_id = iter->source_id;
+        int dst_id = iter->destination_id;
+        float depth = iter->depth;
+
+        if (noLFOSources && isLFO((::modsources)src_id))
+        {
+        }
+        else if (modsources[src_id])
+        {
+            localcopy[dst_id].f +=
+                depth * modsources[src_id]->get_output(iter->source_index) * (1.0 - iter->muted);
+        }
+        iter++;
+    }
+
+    if (mpeEnabled)
+    {
+        // See github issue 1214. This basically compensates for
+        // channel AT being per-voice in MPE mode (since it is per channel)
+        // vs per-scene (since it is per keyboard in non MPE mode).
+        iter = scene->modulation_scene.begin();
+        while (iter != scene->modulation_scene.end())
+        {
+            int src_id = iter->source_id;
+            if (src_id == ms_aftertouch && modsources[src_id])
+            {
+                int dst_id = iter->destination_id;
+                // I don't THINK we need this but am not sure the global params are in my localcopy
+                // span
+                if (dst_id >= 0 && dst_id < n_scene_params)
+                {
+                    float depth = iter->depth;
+                    localcopy[dst_id].f +=
+                        depth * modsources[src_id]->get_output(0) * (1.0 - iter->muted);
+                }
+            }
+            iter++;
+        }
+
+        monoAftertouchSource.set_target(state.voiceChannelState->pressure);
+        timbreSource.set_target(state.voiceChannelState->timbre);
+
+        if (scene->modsource_doprocess[ms_aftertouch])
+        {
+            monoAftertouchSource.process_block();
+        }
+        timbreSource.process_block();
+
+        float bendNormalized = state.voiceChannelState->pitchBend / 8192.f;
+        state.mpePitchBend.set_target(bendNormalized);
+        state.mpePitchBend.process_block();
+    }
+    else
+    {
+        // When not in MPE mode, channel aftertouch is already smoothed at scene level.
+        // Do not smooth it again, force the output to the current value.
+        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure);
+        // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
+    }
 }
 
 void SurgeVoice::set_path(bool osc1, bool osc2, bool osc3, int FMmode, bool ring12, bool ring23,

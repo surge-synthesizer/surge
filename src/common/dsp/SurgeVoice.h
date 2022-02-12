@@ -138,6 +138,21 @@ class alignas(16) SurgeVoice
 
   private:
     template <bool first> void calc_ctrldata(QuadFilterChainState *, int);
+
+    /*
+     * Some modulations at the voice level were applied to the local
+     * copy used by the voice LFO before the attack began. This meant,
+     * basically, that modulating LFO amplitude with velocity didn't quite
+     * work.
+     *
+     * So change the structure of SurgeVoice to have an applyModulationToLocalcopy
+     * method which either can or cannot skip LFO sources (since it can't apply
+     * the local sources pre-attack) and then call that before the attck in
+     * voice initiation, and again after attack to finish the matrix (via
+     * calc_ctrldata)
+     */
+    template <bool noLFOSources = false> void applyModulationToLocalcopy();
+
     void update_portamento();
     void set_path(bool osc1, bool osc2, bool osc3, int FMmode, bool ring12, bool ring23,
                   bool noise);
