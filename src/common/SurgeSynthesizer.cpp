@@ -1563,8 +1563,8 @@ void SurgeSynthesizer::channelAftertouch(char channel, int value)
 void SurgeSynthesizer::polyAftertouch(char channel, int key, int value)
 {
     float fval = (float)value / 127.f;
-    storage.poly_aftertouch[0][key & 127] = fval;
-    storage.poly_aftertouch[1][key & 127] = fval;
+    storage.poly_aftertouch[0][channel][key & 127] = fval;
+    storage.poly_aftertouch[1][channel][key & 127] = fval;
 }
 
 void SurgeSynthesizer::programChange(char channel, int value)
