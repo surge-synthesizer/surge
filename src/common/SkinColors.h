@@ -184,6 +184,11 @@ extern const Surge::Skin::Color Name, NameHover, NameDeactivated, Value, ValueHo
     ValueDeactivated, FilterValue, FilterValueHover;
 }
 
+namespace PopupMenu
+{
+extern const Surge::Skin::Color Background, HiglightedBackground, Text, HeaderText, HighlightedText;
+}
+
 namespace ModSource
 {
 namespace Unused

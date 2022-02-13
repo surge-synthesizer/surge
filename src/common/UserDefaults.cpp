@@ -200,6 +200,9 @@ void initMaps()
             case ModListValueDisplay:
                 r = "modListValueDisplay";
                 break;
+            case MenuLightness:
+                r = "menuLightness";
+                break;
             case nKeys:
                 break;
             }

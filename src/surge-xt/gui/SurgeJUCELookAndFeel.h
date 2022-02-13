@@ -22,7 +22,7 @@
 class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::SkinConsumingComponent
 {
   public:
-    SurgeJUCELookAndFeel() {}
+    SurgeJUCELookAndFeel(SurgeStorage *s) : storage(s) {}
     void drawLabel(juce::Graphics &graphics, juce::Label &label) override;
     void drawTextEditorOutline(juce::Graphics &graphics, int width, int height,
                                juce::TextEditor &editor) override;
@@ -37,6 +37,7 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                        bool isMouseDown) override;
 
     void onSkinChanged() override;
+    SurgeStorage *storage{nullptr};
 
     juce::Font getPopupMenuFont() override;
     void drawPopupMenuBackgroundWithOptions(juce::Graphics &g, int w, int h,

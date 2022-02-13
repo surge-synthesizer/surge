@@ -64,6 +64,7 @@ namespace Menu
 const Surge::Skin::Color Text("effect.menu.text", 0x000000, 0xFF),
     TextHover("effect.menu.text.hover", 0x000000, 0xFF);
 }
+
 namespace Grid
 {
 const Surge::Skin::Color Border("effect.grid.border", 0x000000, 0xFF);
@@ -231,6 +232,14 @@ const Surge::Skin::Color Name("menu.name", 0x000000, 0xFF), NameHover("menu.name
 const Surge::Skin::Color FilterValue("filtermenu.value", 0xFF9A10),
     FilterValueHover("filtermenu.value.hover", 0xFFFFFF);
 } // namespace Menu
+
+namespace PopupMenu
+{
+const Surge::Skin::Color Background("popupmenu.background", 0x303030),
+    HiglightedBackground("popupmenu.highghtedBackground", 0x606060),
+    Text("popupmenu.text", 0xFFFFFF), HeaderText("popupmenu.headertext", 0xFFFFFF),
+    HighlightedText("popupmenu.highlightedText", 0xEEEEFF);
+}
 
 namespace ModSource
 {

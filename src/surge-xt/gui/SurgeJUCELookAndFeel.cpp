@@ -21,6 +21,7 @@
 #include "version.h"
 
 #include <juce_audio_utils/juce_audio_utils.h>
+#include "UserDefaults.h"
 
 // here and only here we using namespace juce so I can copy and override stuff from v4 easily
 using namespace juce;
@@ -43,8 +44,36 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     setColour(Slider::trackColourId, Colour(128, 128, 128));
     setColour(Slider::backgroundColourId, Colour((uint8)255, 255, 255, 20.f));
     setColour(ComboBox::backgroundColourId, Colour(32, 32, 32));
-    setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
-    setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
+
+    int menuMode = 0;
+    if (storage)
+        menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
+    if (menuMode == 1)
+    {
+        setColour(PopupMenu::backgroundColourId, Colour(255, 255, 255));
+        setColour(PopupMenu::highlightedBackgroundColourId, Colour(220, 220, 230));
+        setColour(PopupMenu::textColourId, juce::Colours::black);
+        setColour(PopupMenu::headerTextColourId, juce::Colours::black);
+        setColour(PopupMenu::highlightedTextColourId, juce::Colour(0, 0, 40));
+    }
+    else if (menuMode == 0) // FIXME = mode 2 is follow skin
+    {
+        setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
+        setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
+        setColour(PopupMenu::textColourId, juce::Colours::white);
+        setColour(PopupMenu::headerTextColourId, juce::Colours::white);
+        setColour(PopupMenu::highlightedTextColourId, juce::Colour(240, 240, 250));
+    }
+    else if (menuMode == 2)
+    {
+        setColour(PopupMenu::backgroundColourId, skin->getColor(Colors::PopupMenu::Background));
+        setColour(PopupMenu::highlightedBackgroundColourId,
+                  skin->getColor(Colors::PopupMenu::HiglightedBackground));
+        setColour(PopupMenu::textColourId, skin->getColor(Colors::PopupMenu::Text));
+        setColour(PopupMenu::headerTextColourId, skin->getColor(Colors::PopupMenu::HeaderText));
+        setColour(PopupMenu::highlightedTextColourId,
+                  skin->getColor(Colors::PopupMenu::HighlightedText));
+    }
 
     setColour(AlertWindow::backgroundColourId, skin->getColor(Colors::Dialog::Background));
     setColour(AlertWindow::outlineColourId, skin->getColor(Colors::Dialog::Border));
@@ -294,8 +323,8 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 
 juce::Font SurgeJUCELookAndFeel::getPopupMenuFont()
 {
-    // return Surge::GUI::getFontManager()->getLatoAtSize(15);
-    return juce::LookAndFeel_V4::getPopupMenuFont();
+    return Surge::GUI::getFontManager()->getLatoAtSize(15);
+    // return juce::LookAndFeel_V4::getPopupMenuFont();
 }
 // overridden here just to make the shortcut text same size as normal menu entry text
 void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
