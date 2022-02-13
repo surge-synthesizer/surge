@@ -3651,6 +3651,19 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     });
 
     skinSubMenu.addSeparator();
+    auto menuMode =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::MenuLightness, 2);
+    auto resetMenuTo = [this](int i) {
+        Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::MenuLightness, i);
+        juceEditor->surgeLF->onSkinChanged();
+    };
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Always Dark Menus"), true, menuMode == 0,
+                        [resetMenuTo]() { resetMenuTo(0); });
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Always Light Menus"), true, menuMode == 1,
+                        [resetMenuTo]() { resetMenuTo(1); });
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Menus From Skin"), true, menuMode == 2,
+                        [resetMenuTo]() { resetMenuTo(2); });
+    skinSubMenu.addSeparator();
 
     if (useDevMenu)
     {

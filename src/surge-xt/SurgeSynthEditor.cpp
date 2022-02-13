@@ -22,7 +22,7 @@
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : juce::AudioProcessorEditor(&p), processor(p)
 {
-    surgeLF = std::make_unique<SurgeJUCELookAndFeel>();
+    surgeLF = std::make_unique<SurgeJUCELookAndFeel>(&(processor.surge->storage));
 
     juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
 
