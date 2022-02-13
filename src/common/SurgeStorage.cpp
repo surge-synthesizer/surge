@@ -183,8 +183,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         modsource_vu[i] = 0.f; // remove?
 
     for (int s = 0; s < n_scenes; s++)
-        for (int cc = 0; cc < 128; cc++)
-            poly_aftertouch[s][cc] = 0.f;
+        for (int c = 0; c < 16; c++)
+            for (int cc = 0; cc < 128; cc++)
+                poly_aftertouch[s][c][cc] = 0.f;
 
     memset(&audio_in[0][0], 0, 2 * BLOCK_SIZE_OS * sizeof(float));
 

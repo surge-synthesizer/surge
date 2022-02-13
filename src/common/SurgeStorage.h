@@ -1064,7 +1064,7 @@ class alignas(16) SurgeStorage
     void write_midi_controllers_to_user_default();
     void save_snapshots();
     int controllers[n_customcontrollers];
-    float poly_aftertouch[2][128]; // TODO: FIX SCENE ASSUMPTION?
+    float poly_aftertouch[2][16][128]; // TODO: FIX SCENE ASSUMPTION?
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);
 
