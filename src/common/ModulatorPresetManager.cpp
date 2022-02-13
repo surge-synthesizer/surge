@@ -19,7 +19,7 @@
 #include "SurgeStorage.h"
 #include "tinyxml/tinyxml.h"
 #include "DebugHelpers.h"
-#include "strnatcmp.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 namespace Surge
 {

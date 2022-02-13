@@ -21,7 +21,7 @@
 #include <cstring>
 #include "resource.h"
 #include "SkinColors.h"
-#include "strnatcmp.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 /*
  * This file implements the innards of the Connector class and the SkinColor class

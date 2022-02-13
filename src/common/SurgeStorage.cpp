@@ -34,7 +34,7 @@
 #include "UserDefaults.h"
 #include "version.h"
 
-#include "strnatcmp.h"
+#include "sst/plugininfra/strnatcmp.h"
 #include "libMTSClient.h"
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"

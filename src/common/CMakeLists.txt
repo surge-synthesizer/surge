@@ -4,7 +4,6 @@ project(surge-common)
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(eurorack)
 surge_add_lib_subdirectory(fmt)
-surge_add_lib_subdirectory(strnatcmp)
 surge_add_lib_subdirectory(oddsound-mts)
 if(MINGW)
   set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
@@ -323,10 +322,10 @@ target_link_libraries(${PROJECT_NAME}
   sst-plugininfra
   sst-plugininfra::filesystem
   sst-plugininfra::tinyxml
+  sst-plugininfra::strnatcmp
 
   surge::oddsound-mts
   surge::sqlite
-  surge::strnatcmp
   surge-common-binary
   tuning-library
   PRIVATE
