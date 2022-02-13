@@ -22,6 +22,7 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "UserDefaults.h"
+#include "sst/plugininfra/misc_platform.h"
 
 // here and only here we using namespace juce so I can copy and override stuff from v4 easily
 using namespace juce;
@@ -50,21 +51,24 @@ void SurgeJUCELookAndFeel::onSkinChanged()
         menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
     if (menuMode == 1)
     {
-        setColour(PopupMenu::backgroundColourId, Colour(255, 255, 255));
-        setColour(PopupMenu::highlightedBackgroundColourId, Colour(220, 220, 230));
-        setColour(PopupMenu::textColourId, juce::Colours::black);
-        setColour(PopupMenu::headerTextColourId, juce::Colours::black);
-        setColour(PopupMenu::highlightedTextColourId, juce::Colour(0, 0, 40));
+        if (sst::plugininfra::misc_platform::isDarkMode())
+        {
+            setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
+            setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
+            setColour(PopupMenu::textColourId, juce::Colours::white);
+            setColour(PopupMenu::headerTextColourId, juce::Colours::white);
+            setColour(PopupMenu::highlightedTextColourId, juce::Colour(240, 240, 250));
+        }
+        else
+        {
+            setColour(PopupMenu::backgroundColourId, Colour(255, 255, 255));
+            setColour(PopupMenu::highlightedBackgroundColourId, Colour(220, 220, 230));
+            setColour(PopupMenu::textColourId, juce::Colours::black);
+            setColour(PopupMenu::headerTextColourId, juce::Colours::black);
+            setColour(PopupMenu::highlightedTextColourId, juce::Colour(0, 0, 40));
+        }
     }
-    else if (menuMode == 0) // FIXME = mode 2 is follow skin
-    {
-        setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
-        setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
-        setColour(PopupMenu::textColourId, juce::Colours::white);
-        setColour(PopupMenu::headerTextColourId, juce::Colours::white);
-        setColour(PopupMenu::highlightedTextColourId, juce::Colour(240, 240, 250));
-    }
-    else if (menuMode == 2)
+    else
     {
         setColour(PopupMenu::backgroundColourId, skin->getColor(Colors::PopupMenu::Background));
         setColour(PopupMenu::highlightedBackgroundColourId,

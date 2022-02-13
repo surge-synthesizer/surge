@@ -6,7 +6,7 @@
 #include "QuadFilterUnit.h"
 #include "MemoryPool.h"
 
-#include "strnatcmp.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 #include "catch2/catch2.hpp"
 
