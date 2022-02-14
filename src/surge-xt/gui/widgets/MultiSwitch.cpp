@@ -68,7 +68,7 @@ void MultiSwitch::paint(juce::Graphics &g)
     }
 }
 
-int MultiSwitch::coordinateToSelection(int x, int y)
+int MultiSwitch::coordinateToSelection(int x, int y) const
 {
     double coefX = (double)getWidth() / (double)columns;
     double coefY = (double)getHeight() / (double)rows;
@@ -87,7 +87,7 @@ int MultiSwitch::coordinateToSelection(int x, int y)
     return 0;
 }
 
-float MultiSwitch::coordinateToValue(int x, int y)
+float MultiSwitch::coordinateToValue(int x, int y) const
 {
     if (rows * columns <= 1)
     {
@@ -95,6 +95,31 @@ float MultiSwitch::coordinateToValue(int x, int y)
     }
 
     return 1.f * coordinateToSelection(x, y) / (rows * columns - 1);
+}
+
+juce::Point<float> MultiSwitch::valueToCoordinate(float val) const
+{
+    if (rows * columns <= 1)
+        return getLocalBounds().getCentre().toFloat();
+
+    auto b = getLocalBounds();
+    if (rows == 1)
+    {
+        auto y = b.getCentreY() * 1.f;
+        auto x = b.getWidth() * (getIntegerValue() + 0.5f) / (columns);
+        return {x, y};
+    }
+    else if (columns == 1)
+    {
+        auto x = b.getCentreX() * 1.f;
+        auto y = b.getHeight() * (getIntegerValue() + 0.5f) / (rows);
+        return {x, y};
+    }
+    else
+    {
+        jassertfalse;
+        return getLocalBounds().getCentre().toFloat();
+    }
 }
 
 void MultiSwitch::mouseDown(const juce::MouseEvent &event)
@@ -189,9 +214,14 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
         }
 
         int sel = coordinateToSelection(event.x, event.y);
-        hoverSelection = sel;
-        setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
-        notifyValueChanged();
+        auto nv = limit_range((float)sel / (rows * columns - 1), 0.f, 1.f);
+        if (getIntegerValueFrom(nv) != getIntegerValue())
+        {
+            hoverSelection = sel;
+
+            setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
+            notifyValueChanged();
+        }
     }
 }
 
@@ -210,9 +240,15 @@ void MultiSwitch::mouseEnter(const juce::MouseEvent &event) { startHover(event.p
 
 void MultiSwitch::startHover(const juce::Point<float> &p)
 {
-    hoverSelection = coordinateToSelection(p.x, p.y);
+    if (everDragged && isMouseDown) // don't change hover state during a drag
+    {
+        hoverSelection = getIntegerValue();
+        isHovered = true;
+        return;
+    }
 
     isHovered = true;
+    hoverSelection = coordinateToSelection(p.x, p.y);
 }
 
 void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }
