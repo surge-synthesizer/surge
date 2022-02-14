@@ -63,5 +63,9 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
         tempoTypeinHighlightId,
         tempoTypeinTextId,
     };
+
+    int lastDark{-1};
+    void updateDarkIfNeeded();
+
 };
 #endif // SURGE_XT_SURGEJUCELOOKANDFEEL_H

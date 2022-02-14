@@ -102,6 +102,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     static int start_paramtag_value;
 
     void idle();
+    int slowIdleCounter{0};
     bool queue_refresh;
     virtual void toggle_mod_editing();
 
