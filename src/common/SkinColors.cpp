@@ -236,9 +236,9 @@ const Surge::Skin::Color FilterValue("filtermenu.value", 0xFF9A10),
 namespace PopupMenu
 {
 const Surge::Skin::Color Background("popupmenu.background", 0x303030),
-    HiglightedBackground("popupmenu.highghtedBackground", 0x606060),
-    Text("popupmenu.text", 0xFFFFFF), HeaderText("popupmenu.headertext", 0xFFFFFF),
-    HighlightedText("popupmenu.highlightedText", 0xEEEEFF);
+    HiglightedBackground("popupmenu.background.highlight", 0x606060),
+    Text("popupmenu.text", 0xFFFFFF), HeaderText("popupmenu.text.header", 0xFFFFFF),
+    HighlightedText("popupmenu.text.highlight", 0xEEEEFF);
 }
 
 namespace ModSource

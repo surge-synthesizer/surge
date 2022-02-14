@@ -47,8 +47,12 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     setColour(ComboBox::backgroundColourId, Colour(32, 32, 32));
 
     int menuMode = 0;
+
     if (storage)
+    {
         menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
+    }
+
     if (menuMode == 1)
     {
         if (sst::plugininfra::misc_platform::isDarkMode())
@@ -61,7 +65,7 @@ void SurgeJUCELookAndFeel::onSkinChanged()
         }
         else
         {
-            setColour(PopupMenu::backgroundColourId, Colour(255, 255, 255));
+            setColour(PopupMenu::backgroundColourId, juce::Colours::white);
             setColour(PopupMenu::highlightedBackgroundColourId, Colour(220, 220, 230));
             setColour(PopupMenu::textColourId, juce::Colours::black);
             setColour(PopupMenu::headerTextColourId, juce::Colours::black);

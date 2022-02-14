@@ -3657,10 +3657,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::MenuLightness, i);
         juceEditor->surgeLF->onSkinChanged();
     };
-    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Menu Follows OS Light/Dark Mode"), true,
-                        menuMode == 1, [resetMenuTo]() { resetMenuTo(1); });
-    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Menus Follows Skin"), true, menuMode == 2,
-                        [resetMenuTo]() { resetMenuTo(2); });
+
     skinSubMenu.addSeparator();
 
     if (useDevMenu)
@@ -3676,6 +3673,13 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
             Surge::GUI::openFileOrFolder(this->synth->storage.userSkinsPath);
         });
     }
+
+    skinSubMenu.addSeparator();
+
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Menu Colors Follow OS Light/Dark Mode"), true,
+                        menuMode == 1, [resetMenuTo]() { resetMenuTo(1); });
+    skinSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Menu Colors Applied from Skin"), true,
+                        menuMode == 2, [resetMenuTo]() { resetMenuTo(2); });
 
     skinSubMenu.addSeparator();
 
@@ -5848,14 +5852,14 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
                 if (index == 1)
                 {
                     if (shortV)
-                        return ".wav";
-                    return " Waveform";
+                        return " Raw";
+                    return " (" + Surge::GUI::toOSCaseForMenu("Raw Waveform") + ")";
                 }
                 if (index == 2)
                 {
                     if (shortV)
-                        return ".env";
-                    return " Envelope";
+                        return " EG";
+                    return Surge::GUI::toOSCaseForMenu(" (EG Only)");
                 }
             }
         }
