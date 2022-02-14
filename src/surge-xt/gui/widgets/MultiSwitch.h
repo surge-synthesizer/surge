@@ -55,12 +55,14 @@ struct MultiSwitch : public juce::Component,
     {
         return (int)(frameOffset + ((v * (float)(rows * columns - 1) + 0.5f)));
     }
-    int coordinateToSelection(int x, int y);
-    float coordinateToValue(int x, int y);
+    int coordinateToSelection(int x, int y) const;
+    float coordinateToValue(int x, int y) const;
+    juce::Point<float> valueToCoordinate(float v) const;
 
     float value{0};
     float getValue() const override { return value; }
     int getIntegerValue() const { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
+    int getIntegerValueFrom(float v) const { return (int)(v * (float)(rows * columns - 1) + 0.5f); }
     void setValue(float f) override { value = f; }
 
     bool draggable{false};
@@ -83,7 +85,7 @@ struct MultiSwitch : public juce::Component,
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         // fixme - probably use the location of the current element
-        startHover(getBounds().getBottomLeft().toFloat());
+        startHover(valueToCoordinate(getValue()));
         repaint();
     }
     void focusLost(juce::Component::FocusChangeType cause) override

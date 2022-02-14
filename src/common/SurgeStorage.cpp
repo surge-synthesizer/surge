@@ -266,6 +266,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             datapath = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
         }
     }
+    else
+    {
+        datapath = suppliedDataPath;
+    }
 
     // Portable - first check for installPath\\SurgeXTUserData
     if (auto path{installPath / L"SurgeXTUserData"}; fs::is_directory(path))
