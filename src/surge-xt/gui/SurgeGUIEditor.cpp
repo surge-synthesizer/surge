@@ -466,6 +466,11 @@ void SurgeGUIEditor::idle()
     if (pause_idle_updates)
         return;
 
+    if (slowIdleCounter++ == 600)
+    {
+        slowIdleCounter = 0;
+        juceEditor->surgeLF->updateDarkIfNeeded();
+    }
     if (needsModUpdate)
     {
         refresh_mod();

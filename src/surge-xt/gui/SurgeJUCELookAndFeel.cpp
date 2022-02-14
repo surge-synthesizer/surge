@@ -57,6 +57,7 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     {
         if (sst::plugininfra::misc_platform::isDarkMode())
         {
+            lastDark = 1;
             setColour(PopupMenu::backgroundColourId, Colour(48, 48, 48));
             setColour(PopupMenu::highlightedBackgroundColourId, Colour(96, 96, 96));
             setColour(PopupMenu::textColourId, juce::Colours::white);
@@ -65,6 +66,7 @@ void SurgeJUCELookAndFeel::onSkinChanged()
         }
         else
         {
+            lastDark = 0;
             setColour(PopupMenu::backgroundColourId, juce::Colours::white);
             setColour(PopupMenu::highlightedBackgroundColourId, Colour(220, 220, 230));
             setColour(PopupMenu::textColourId, juce::Colours::black);
@@ -432,4 +434,23 @@ void SurgeJUCELookAndFeel::drawPopupMenuBackgroundWithOptions(juce::Graphics &g,
 
     g.setColour(findColour(PopupMenu::textColourId).withAlpha(0.6f));
     g.drawRect(0, 0, width, height);
+}
+
+void SurgeJUCELookAndFeel::updateDarkIfNeeded()
+{
+    int menuMode = 0;
+
+    if (storage)
+    {
+        menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
+    }
+
+    if (menuMode == 1)
+    {
+        auto dm = sst::plugininfra::misc_platform::isDarkMode();
+        if ((dm && lastDark == 0) || (!dm && lastDark == 1) || (lastDark < 0))
+        {
+            onSkinChanged();
+        }
+    }
 }
