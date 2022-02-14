@@ -14,8 +14,8 @@ include(cmake/lib.cmake)
 message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
 add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
 
-if(${CMAKE_VERSION} VERSION_LESS 3.21)
-  message(WARNING "CMake version less than 3.21. Skipping clap builds. Please "
+if(${CMAKE_VERSION} VERSION_LESS 3.20)
+  message(WARNING "CMake version less than 3.20. Skipping clap builds. Please "
     "consider using a newer version of CMake")
   set(SURGE_BUILD_CLAP FALSE)
 else()
