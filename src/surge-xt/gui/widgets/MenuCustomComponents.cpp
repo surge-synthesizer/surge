@@ -90,6 +90,7 @@ void MenuTitleHelpComponent::onSkinChanged()
 void MenuTitleHelpComponent::paint(juce::Graphics &g)
 {
     auto r = getLocalBounds().reduced(1);
+
     if (isItemHighlighted())
     {
         g.setColour(findColour(juce::PopupMenu::highlightedBackgroundColourId));
@@ -103,14 +104,24 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
     }
 
     if (centerBold)
+    {
         g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
+    }
     else
     {
         auto ft = getLookAndFeel().getPopupMenuFont();
         ft = ft.withHeight(ft.getHeight() - 1);
         g.setFont(ft);
     }
-    g.setColour(findColour(juce::PopupMenu::headerTextColourId));
+
+    if (isItemHighlighted())
+    {
+        g.setColour(findColour(juce::PopupMenu::highlightedTextColourId));
+    }
+    else
+    {
+        g.setColour(findColour(juce::PopupMenu::headerTextColourId));
+    }
 
     if (centerBold)
     {
@@ -125,16 +136,27 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 
     auto yp = 4 * 20;
     auto xp = 0;
+
     if (isItemHighlighted())
+    {
         xp = 20;
+    }
 
     auto tl = r.getTopLeft();
+
     if (!centerBold)
+    {
         tl = tl.translated(12, 0);
+    }
+
     auto clipBox = juce::Rectangle<int>(tl.x, tl.y, 20, 20);
+
     g.reduceClipRegion(clipBox);
+
     if (icons)
+    {
         icons->drawAt(g, clipBox.getX() - xp, clipBox.getY() - yp, 1.0);
+    }
 }
 
 void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e) { launchHelp(); }
