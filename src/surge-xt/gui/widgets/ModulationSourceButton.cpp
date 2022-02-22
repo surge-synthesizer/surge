@@ -620,18 +620,27 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     toFront(false);
 
     if (mouseMode != DRAG_COMPONENT_HAPPEN)
+    {
         setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+    }
+
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
+
     auto sge = firstListenerOfType<SurgeGUIEditor>();
     auto q = event.position.translated(getBounds().getX(), getBounds().getY());
     auto ota = transientArmed;
+
     if (sge)
     {
-        /* transientArmed = */ sge->modSourceButtonDraggedOver(this, q.toInt());
+        sge->modSourceButtonDraggedOver(this, q.toInt());
     }
+
     if (ota != transientArmed)
+    {
         repaint();
+    }
+
     everDragged = true;
 }
 

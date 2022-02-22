@@ -4475,28 +4475,67 @@ bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSource
         if (tMCI)
         {
             auto ptag = tMCI->getTag() - start_paramtags;
+
             if (this->synth->isValidModulation(ptag, msrc))
+            {
                 return true;
+            }
         }
+
         return false;
     };
+
     auto recC = [isDroppable, msb, pt](juce::Component *p, auto rec) -> juce::Component * {
         for (auto kid : p->getChildren())
         {
             if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
             {
                 if (isDroppable(kid))
+                {
                     return kid;
+                }
 
                 auto q = rec(kid, rec);
+
                 if (q)
+                {
                     return q;
+                }
             }
         }
+
         return nullptr;
     };
+
     target = recC(frame.get(), recC);
+
     auto tMCI = dynamic_cast<Surge::Widgets::ModulatableSlider *>(target);
+
+    // detect if our mouse cursor is on top of an overlay, skip DnD hover over slider if so
+    for (int i = 0; i < SurgeGUIEditor::n_overlay_tags; i++)
+    {
+        auto tag = static_cast<SurgeGUIEditor::OverlayTags>(i);
+        auto olw = getOverlayWrapperIfOpen(tag);
+
+        if (olw && !olw->isTornOut())
+        {
+            juce::Rectangle<int> olrect = olw->getBounds();
+
+            if (olrect.contains(pt))
+            {
+                if (modSourceDragOverTarget)
+                {
+                    modSourceDragOverTarget->setModulationState(priorModulationState);
+                    modSourceDragOverTarget->asJuceComponent()->repaint();
+                }
+
+                modSourceDragOverTarget = nullptr;
+
+                return false;
+            }
+        }
+    }
+
     if (tMCI != modSourceDragOverTarget)
     {
         if (modSourceDragOverTarget)
@@ -4504,6 +4543,7 @@ bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSource
             modSourceDragOverTarget->setModulationState(priorModulationState);
             modSourceDragOverTarget->asJuceComponent()->repaint();
         }
+
         modSourceDragOverTarget = tMCI;
 
         if (tMCI)
@@ -4514,8 +4554,10 @@ bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSource
             tMCI->asJuceComponent()->repaint();
         }
     }
+
     return tMCI != nullptr;
 }
+
 void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceButton *msb,
                                               const juce::Point<int> &pt)
 {
@@ -4526,40 +4568,83 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     auto isDroppable = [msb](juce::Component *c) {
         auto tMSB = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(c);
         auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(c);
+
         if (tMSB && msb->isMeta && tMSB && tMSB->isMeta)
+        {
             return true;
+        }
+
         if (tMCI)
+        {
             return true;
+        }
+
         return false;
     };
+
     auto recC = [isDroppable, msb, pt](juce::Component *p, auto rec) -> juce::Component * {
         for (auto kid : p->getChildren())
         {
             if (kid && kid->isVisible() && kid != msb && kid->getBounds().contains(pt))
             {
                 if (isDroppable(kid))
+                {
                     return kid;
+                }
 
                 auto q = rec(kid, rec);
+
                 if (q)
+                {
                     return q;
+                }
             }
         }
+
         return nullptr;
     };
+
     target = recC(frame.get(), recC);
 
     if (!target)
+    {
         return;
+    }
 
     auto tMSB = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(target);
     auto tMCI = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(target);
+
     if (msb->isMeta && tMSB && tMSB->isMeta)
     {
         swapControllers(msb->getTag(), tMSB->getTag());
     }
     else if (tMCI)
     {
+        // detect if our mouse cursor is on top of an overlay, skip DnD mod assign if so
+        for (int i = 0; i < SurgeGUIEditor::n_overlay_tags; i++)
+        {
+            auto tag = static_cast<SurgeGUIEditor::OverlayTags>(i);
+            auto olw = getOverlayWrapperIfOpen(tag);
+
+            if (olw && !olw->isTornOut())
+            {
+                juce::Rectangle<int> olrect = olw->getBounds();
+
+                if (olrect.contains(pt))
+                {
+                    if (modSourceDragOverTarget)
+                    {
+                        tMCI->setModulationState(priorModulationState);
+                        tMCI->asJuceComponent()->repaint();
+
+                        modSourceDragOverTarget = nullptr;
+                    }
+
+                    return;
+                }
+            }
+        }
+
         if (modSourceDragOverTarget)
         {
             tMCI->setModulationState(priorModulationState);
@@ -4567,10 +4652,12 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
 
             modSourceDragOverTarget = nullptr;
         }
+
         openModTypeinOnDrop(msb->getCurrentModSource(), tMCI,
                             tMCI->asControlValueInterface()->getTag(), msb->getCurrentModIndex());
     }
 }
+
 void SurgeGUIEditor::swapControllers(int t1, int t2)
 {
     synth->swapMetaControllers(t1 - tag_mod_source0 - ms_ctrl1, t2 - tag_mod_source0 - ms_ctrl1);
