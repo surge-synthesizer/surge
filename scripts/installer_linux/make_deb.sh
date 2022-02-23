@@ -29,8 +29,9 @@ PACKAGE_NAME="$SURGE_NAME"
 
 # Cleanup from failed prior runs
 rm -rf ${PACKAGE_NAME} product
-mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
 mkdir -p ${PACKAGE_NAME}/usr/lib/lv2
+mkdir -p ${PACKAGE_NAME}/usr/lib/vst3
+mkdir -p ${PACKAGE_NAME}/usr/lib/clap
 mkdir -p ${PACKAGE_NAME}/usr/bin
 mkdir -p ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc
 mkdir -p ${PACKAGE_NAME}/DEBIAN
@@ -82,6 +83,13 @@ cp -r "${INDIR}/Surge XT Effects" ${PACKAGE_NAME}/usr/bin/
 
 # set permissions on shared libraries
 find ${PACKAGE_NAME}/usr/lib/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
+
+if [[ -f "${INDIR}/Surge XT.clap" ]]; then
+  echo "Installing CLAP components"
+  cp -r "${INDIR}/Surge XT.clap" ${PACKAGE_NAME}/usr/lib/clap/
+  cp -r "${INDIR}/Surge XT Effects.clap" ${PACKAGE_NAME}/usr/lib/clap/
+  find ${PACKAGE_NAME}/usr/lib/clap/ -type f -iname "*.so" -exec chmod 0644 {} +
+fi
 
 if [[ -d "${INDIR}/Surge XT.lv2" ]]; then
   cp -r "${INDIR}/Surge XT.lv2" ${PACKAGE_NAME}/usr/lib/lv2/

@@ -70,6 +70,8 @@ Name: "minimal"; Description: "Minimal installation"
 [Components]
 Name: VST3; Description: {#MyAppName} VST3 (64-bit); Types: full compact custom minimal; Flags: checkablealone
 Name: EffectsVST3; Description: {#MyAppName} Effects VST3 (64-bit); Types: full custom; Flags: checkablealone
+Name: CLAP; Description: {#MyAppName} Clap (64-bit, Clap 0.18); Types: full compact custom minimal; Flags: checkablealone
+Name: EffectsCLAP; Description: {#MyAppName} Effects Clap (64-bit, Clap 0.18); Types: full custom; Flags: checkablealone
 Name: SA; Description: {#MyAppName} Standalone (64-bit); Types: full compact custom; Flags: checkablealone
 Name: EffectsSA; Description: {#MyAppName} Effects Standalone (64-bit); Types: full custom; Flags: checkablealone
 Name: Data; Description: Data Files; Types: full compact custom minimal; Flags: fixed
@@ -95,6 +97,8 @@ Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{fonts}"; Co
 Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName}.vst3\*; DestDir: {commoncf64}\VST3\{#MyAppPublisher}\{#MyAppName}.vst3\; Components: VST3; Flags: ignoreversion recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects.vst3\*; DestDir: {commoncf64}\VST3\{#MyAppPublisher}\{#MyAppName} Effects.vst3\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName}.clap; DestDir: {commoncf64}\Clap\{#MyAppPublisher}\{#MyAppName}.clap; Components: CLAP; Flags: ignoreversion recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects.clap; DestDir: {commoncf64}\Clap\{#MyAppPublisher}\{#MyAppName} Effects.clap; Components: EffectsCLAP; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName}.exe; DestDir: {commonpf64}\{#MyAppPublisher}\{#MyAppName}\; Components: SA; Flags: ignoreversion
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects.exe; DestDir: {commonpf64}\{#MyAppPublisher}\{#MyAppName}\; Components: EffectsSA; Flags: ignoreversion
 
@@ -138,9 +142,12 @@ begin
 
   Result := Result + 'Installation Locations:' + NewLine
   Result := Result + Space + 'Data Files: ' + AppData + '\' + AppName + NewLine
-  
+
   if IsSelected('vst3') or IsSelected('effectsvst3') then
     Result := Result + Space + 'VST3: ' + CF + '\VST3\' + AppPublisher + '\' + NewLine;
+
+  if IsSelected('clap') or IsSelected('effectsclap') then
+    Result := Result + Space + 'Clap: ' + CF + '\Clap\' + AppPublisher + '\' + NewLine;
 
   if IsSelected('sa') or IsSelected('effectssa') then
     Result := Result + Space + 'Standalone: ' + PF + '\' + AppPublisher + '\' + AppName + '\' + NewLine;
