@@ -295,14 +295,18 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
     par->endChangeGesture();
 }
 
+#if LINUX
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
-#if SURGE_JUCE_HOST_CONTEXT
+
     if (auto *c = getHostContext())
         if (auto menuInfo = c->getContextMenuForParameterIndex(par))
             return menuInfo->getEquivalentPopupMenu();
-#endif
 
     return juce::PopupMenu();
 }
@@ -310,14 +314,17 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
     auto par = processor.macrosById[macro];
-#if SURGE_JUCE_HOST_CONTEXT
+
     if (auto *c = getHostContext())
         if (auto menuInfo = c->getContextMenuForParameterIndex(par))
             return menuInfo->getEquivalentPopupMenu();
-#endif
 
     return juce::PopupMenu();
 }
+
+#if LINUX
+#pragma GCC diagnostic pop
+#endif
 
 bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig)
 {
