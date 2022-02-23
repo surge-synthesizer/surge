@@ -4512,28 +4512,17 @@ bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSource
     auto tMCI = dynamic_cast<Surge::Widgets::ModulatableSlider *>(target);
 
     // detect if our mouse cursor is on top of an overlay, skip DnD hover over slider if so
-    for (int i = 0; i < SurgeGUIEditor::n_overlay_tags; i++)
+    if (isPointWithinOverlay(pt))
     {
-        auto tag = static_cast<SurgeGUIEditor::OverlayTags>(i);
-        auto olw = getOverlayWrapperIfOpen(tag);
-
-        if (olw && !olw->isTornOut())
+        if (modSourceDragOverTarget)
         {
-            juce::Rectangle<int> olrect = olw->getBounds();
-
-            if (olrect.contains(pt))
-            {
-                if (modSourceDragOverTarget)
-                {
-                    modSourceDragOverTarget->setModulationState(priorModulationState);
-                    modSourceDragOverTarget->asJuceComponent()->repaint();
-                }
-
-                modSourceDragOverTarget = nullptr;
-
-                return false;
-            }
+            modSourceDragOverTarget->setModulationState(priorModulationState);
+            modSourceDragOverTarget->asJuceComponent()->repaint();
         }
+
+        modSourceDragOverTarget = nullptr;
+
+        return false;
     }
 
     if (tMCI != modSourceDragOverTarget)
@@ -4621,28 +4610,17 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
     else if (tMCI)
     {
         // detect if our mouse cursor is on top of an overlay, skip DnD mod assign if so
-        for (int i = 0; i < SurgeGUIEditor::n_overlay_tags; i++)
+        if (isPointWithinOverlay(pt))
         {
-            auto tag = static_cast<SurgeGUIEditor::OverlayTags>(i);
-            auto olw = getOverlayWrapperIfOpen(tag);
-
-            if (olw && !olw->isTornOut())
+            if (modSourceDragOverTarget)
             {
-                juce::Rectangle<int> olrect = olw->getBounds();
+                tMCI->setModulationState(priorModulationState);
+                tMCI->asJuceComponent()->repaint();
 
-                if (olrect.contains(pt))
-                {
-                    if (modSourceDragOverTarget)
-                    {
-                        tMCI->setModulationState(priorModulationState);
-                        tMCI->asJuceComponent()->repaint();
-
-                        modSourceDragOverTarget = nullptr;
-                    }
-
-                    return;
-                }
+                modSourceDragOverTarget = nullptr;
             }
+
+            return;
         }
 
         if (modSourceDragOverTarget)

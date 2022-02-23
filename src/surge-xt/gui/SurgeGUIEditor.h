@@ -372,6 +372,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         return false;
     }
     bool isAnyOverlayOpenAtAll() { return !juceOverlays.empty(); }
+    bool isPointWithinOverlay(const juce::Point<int> point);
     juce::Component *getOverlayIfOpen(OverlayTags tag);
     template <typename T> T *getOverlayIfOpenAs(OverlayTags tag)
     {
