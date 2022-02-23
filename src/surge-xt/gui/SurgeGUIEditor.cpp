@@ -1505,6 +1505,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
                 if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
                     msejc->setVisible(true);
+
+                if (lfodata->shape.val.i == lt_formula)
+                    setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
+                                                                "Show Formula Editor", "Show");
             }
             break;
         }
@@ -5722,6 +5726,12 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         {
             auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             msejc->setVisible(curr == lt_mseg || curr == lt_formula);
+            if (curr == lt_formula)
+                setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
+                                                            "Show Formula Editor", "Show");
+            else
+                setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
+                                                            "Show MSEG Editor", "Show");
         }
     }
 
