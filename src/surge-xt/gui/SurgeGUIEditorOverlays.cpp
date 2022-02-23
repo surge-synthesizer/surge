@@ -522,7 +522,11 @@ bool SurgeGUIEditor::isPointWithinOverlay(const juce::Point<int> point)
         if (olw && !olw->isTornOut())
         {
             juce::Rectangle<int> olrect = olw->getBounds();
-            return olrect.contains(point);
+
+            if (olrect.contains(point))
+            {
+                return true;
+            }
         }
     }
 
