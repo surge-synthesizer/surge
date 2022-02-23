@@ -512,6 +512,27 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
     }
 }
 
+bool SurgeGUIEditor::isPointWithinOverlay(const juce::Point<int> point)
+{
+    for (int i = 0; i < SurgeGUIEditor::n_overlay_tags; i++)
+    {
+        auto tag = static_cast<SurgeGUIEditor::OverlayTags>(i);
+        auto olw = getOverlayWrapperIfOpen(tag);
+
+        if (olw && !olw->isTornOut())
+        {
+            juce::Rectangle<int> olrect = olw->getBounds();
+
+            if (olrect.contains(point))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool SurgeGUIEditor::overlayConsumesKeyboard(OverlayTags ofType)
 {
     switch (ofType)
