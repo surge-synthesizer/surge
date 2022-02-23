@@ -1504,6 +1504,118 @@ struct SCLKBMDisplay : public juce::Component,
         kbm->setLineNumbersShown(false);
         kbm->setScrollbarThickness(8);
         addAndMakeVisible(*kbm);
+
+        auto teProps = [](const auto &te) {
+            te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+            te->setJustification((juce::Justification::verticallyCentred));
+            te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
+        };
+
+        auto newL = [this](const std::string &s) {
+            auto res = std::make_unique<juce::Label>(s, s);
+            res->setText(s, juce::dontSendNotification);
+            res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            addAndMakeVisible(*res);
+            return res;
+        };
+        evenDivOfL = newL("Divide");
+        evenDivOf = std::make_unique<juce::TextEditor>();
+        teProps(evenDivOf);
+        evenDivOf->setText("2", juce::dontSendNotification);
+        addAndMakeVisible(*evenDivOf);
+
+        evenDivIntoL = newL("into");
+        evenDivInto = std::make_unique<juce::TextEditor>();
+        teProps(evenDivInto);
+        evenDivInto->setText("12", juce::dontSendNotification);
+        addAndMakeVisible(*evenDivInto);
+
+        evenDivStepsL = newL("steps");
+
+        edoGo = std::make_unique<Surge::Widgets::SelfDrawButton>("Generate");
+        edoGo->setStorage(overlay->storage);
+        edoGo->setHeightOfOneImage(13);
+        edoGo->setSkin(skin, associatedBitmapStore);
+        edoGo->onClick = [this]() {
+            // FIXME locale
+            auto txt = evenDivOf->getText();
+
+            try
+            {
+                if (txt.contains("."))
+                {
+                    auto spanct = std::atof(evenDivOf->getText().toRawUTF8());
+                    auto num = std::atoi(evenDivInto->getText().toRawUTF8());
+
+                    this->overlay->onNewSCLKBM(Tunings::evenDivisionOfCentsByM(spanct, num).rawText,
+                                               kbmDocument->getAllContent().toStdString());
+                }
+                else if (txt.contains("/"))
+                {
+                    auto tt = Tunings::toneFromString(txt.toStdString());
+                    auto spanct = tt.cents;
+                    auto num = std::atoi(evenDivInto->getText().toRawUTF8());
+
+                    this->overlay->onNewSCLKBM(
+                        Tunings::evenDivisionOfCentsByM(spanct, num, txt.toStdString()).rawText,
+                        kbmDocument->getAllContent().toStdString());
+                }
+                else
+                {
+                    auto span = std::atoi(evenDivOf->getText().toRawUTF8());
+                    auto num = std::atoi(evenDivInto->getText().toRawUTF8());
+
+                    this->overlay->onNewSCLKBM(Tunings::evenDivisionOfSpanByM(span, num).rawText,
+                                               kbmDocument->getAllContent().toStdString());
+                }
+            }
+            catch (const Tunings::TuningError &e)
+            {
+                overlay->storage->reportError(e.what(), "Tuning Error");
+            }
+        };
+        addAndMakeVisible(*edoGo);
+
+        kbmStartL = newL("Root:");
+        kbmStart = std::make_unique<juce::TextEditor>();
+        teProps(kbmStart);
+        kbmStart->setText("60", juce::dontSendNotification);
+        addAndMakeVisible(*kbmStart);
+
+        kbmConstantL = newL("Constant:");
+        kbmConstant = std::make_unique<juce::TextEditor>();
+        teProps(kbmConstant);
+        kbmConstant->setText("69", juce::dontSendNotification);
+        addAndMakeVisible(*kbmConstant);
+
+        kbmFreqL = newL("Freq:");
+        kbmFreq = std::make_unique<juce::TextEditor>();
+        teProps(kbmFreq);
+        kbmFreq->setText("440", juce::dontSendNotification);
+        addAndMakeVisible(*kbmFreq);
+
+        kbmGo = std::make_unique<Surge::Widgets::SelfDrawButton>("Generate");
+        kbmGo->setStorage(overlay->storage);
+        kbmGo->setHeightOfOneImage(13);
+        kbmGo->setSkin(skin, associatedBitmapStore);
+        kbmGo->onClick = [this]() {
+            // FIXME locale
+            auto start = std::atoi(kbmStart->getText().toRawUTF8());
+            auto constant = std::atoi(kbmConstant->getText().toRawUTF8());
+            auto freq = std::atof(kbmFreq->getText().toRawUTF8());
+
+            try
+            {
+                this->overlay->onNewSCLKBM(
+                    sclDocument->getAllContent().toStdString(),
+                    Tunings::startScaleOnAndTuneNoteTo(start, constant, freq).rawText);
+            }
+            catch (const Tunings::TuningError &e)
+            {
+                overlay->storage->reportError(e.what(), "Tuning Error");
+            }
+        };
+        addAndMakeVisible(*kbmGo);
     }
 
     struct SCLKBMTokeniser : public juce::CodeTokeniser
@@ -1652,10 +1764,46 @@ struct SCLKBMDisplay : public juce::Component,
     {
         auto w = getWidth();
         auto h = getHeight();
-        auto b = juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3);
+        auto b = juce::Rectangle<int>(0, 0, w / 2, h).reduced(3, 3).withTrimmedBottom(20);
 
         scl->setBounds(b);
         kbm->setBounds(b.translated(w / 2, 0));
+
+        auto r = juce::Rectangle<int>(0, h - 20, w, 20);
+
+        auto s = r.withWidth(w / 2).withTrimmedLeft(2);
+        auto nxt = [&s](int p) {
+            auto q = s.withWidth(p);
+            s = s.withTrimmedLeft(p);
+            return q.reduced(0, 2);
+        };
+        evenDivOfL->setBounds(nxt(37));
+        evenDivOf->setBounds(nxt(80));
+        evenDivIntoL->setBounds(nxt(30));
+        evenDivInto->setBounds(nxt(40));
+        evenDivStepsL->setBounds(nxt(30));
+        edoGo->setBounds(nxt(60));
+
+        s = r.withTrimmedLeft(w / 2 + 2);
+        kbmStartL->setBounds(nxt(30));
+        kbmStart->setBounds(nxt(50));
+        kbmConstantL->setBounds(nxt(50));
+        kbmConstant->setBounds(nxt(50));
+        kbmFreqL->setBounds(nxt(30));
+        kbmFreq->setBounds(nxt(50));
+        s = s.translated(3, 0);
+        kbmGo->setBounds(nxt(50));
+
+        auto teProps = [](const auto &te) {
+            te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+            te->setJustification((juce::Justification::verticallyCentred));
+            te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
+        };
+        teProps(evenDivOf);
+        teProps(evenDivInto);
+        teProps(kbmStart);
+        teProps(kbmConstant);
+        teProps(kbmFreq);
     }
 
     void setApplyEnabled(bool b);
@@ -1684,7 +1832,8 @@ struct SCLKBMDisplay : public juce::Component,
                        skin->getColor(clr::Background));
         kbm->setColour(juce::CodeEditorComponent::ColourIds::backgroundColourId,
                        skin->getColor(clr::Background));
-
+        edoGo->setSkin(skin, associatedBitmapStore);
+        kbmGo->setSkin(skin, associatedBitmapStore);
         for (auto t : {scl.get(), kbm.get()})
         {
             auto cs = t->getColourScheme();
@@ -1697,6 +1846,29 @@ struct SCLKBMDisplay : public juce::Component,
 
             t->setColourScheme(cs);
         }
+
+        namespace qclr = Colors::TuningOverlay::RadialGraph;
+
+        for (const auto &r : {evenDivIntoL.get(), evenDivOfL.get(), evenDivStepsL.get(),
+                              kbmStartL.get(), kbmConstantL.get(), kbmFreqL.get()})
+        {
+            r->setColour(juce::Label::textColourId, skin->getColor(qclr::ToneLabelText));
+        }
+
+        for (const auto &r :
+             {evenDivInto.get(), evenDivOf.get(), kbmStart.get(), kbmConstant.get(), kbmFreq.get()})
+        {
+
+            r->setColour(juce::TextEditor::ColourIds::backgroundColourId,
+                         skin->getColor(qclr::ToneLabelBackground));
+            r->setColour(juce::TextEditor::ColourIds::outlineColourId,
+                         skin->getColor(qclr::ToneLabelBorder));
+            r->setColour(juce::TextEditor::ColourIds::focusedOutlineColourId,
+                         skin->getColor(qclr::ToneLabelBorder));
+            r->setColour(juce::TextEditor::ColourIds::textColourId,
+                         skin->getColor(qclr::ToneLabelText));
+            r->applyColourToAllText(skin->getColor(qclr::ToneLabelText), true);
+        }
     }
 
     std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
@@ -1705,6 +1877,14 @@ struct SCLKBMDisplay : public juce::Component,
     std::unique_ptr<juce::CodeEditorComponent> scl;
     std::unique_ptr<juce::CodeEditorComponent> kbm;
     TuningOverlay *overlay{nullptr};
+
+    std::unique_ptr<juce::Label> evenDivOfL, evenDivIntoL, evenDivStepsL;
+    std::unique_ptr<juce::TextEditor> evenDivOf, evenDivInto;
+    std::unique_ptr<Surge::Widgets::SelfDrawButton> edoGo;
+
+    std::unique_ptr<juce::Label> kbmStartL, kbmConstantL, kbmFreqL;
+    std::unique_ptr<juce::TextEditor> kbmStart, kbmConstant, kbmFreq;
+    std::unique_ptr<Surge::Widgets::SelfDrawButton> kbmGo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SCLKBMDisplay);
 };
