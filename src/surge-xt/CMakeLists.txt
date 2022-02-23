@@ -52,7 +52,8 @@ juce_add_plugin(${PROJECT_NAME}
 
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
-    CLAP_ID "org.surge-synth-team.surge-xt")
+    CLAP_ID "org.surge-synth-team.surge-xt"
+    CLAP_FEATURES "instrument" "hybrid" "free and open source")
   target_sources(${PROJECT_NAME}_CLAP PRIVATE plugin_type_extensions/SurgeSynthClapExtensions.cpp)
 endif()
 
