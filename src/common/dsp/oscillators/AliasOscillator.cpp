@@ -98,8 +98,14 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
                                              const bool stereo, const float fmdepthV,
                                              const float crush_bits)
 {
-    const float ud = oscdata->p[ao_unison_detune].get_extended(
+    float ud = oscdata->p[ao_unison_detune].get_extended(
         localcopy[oscdata->p[ao_unison_detune].param_id_in_scene].f);
+    if (oscdata->p[ao_unison_detune].absolute)
+    {
+        float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
+        ud = nSpread;
+        // TODO : Tuning Awareness alas
+    }
 
     if (do_FM)
     {
@@ -255,8 +261,13 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
 
     const bool ramp_unmasked_after_threshold = (bool)oscdata->p[ao_mask].deform_type;
 
-    const uint8_t threshold = (uint8_t)(
-        (float)bit_mask * clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
+    // clang-format off
+    // I don't know why the pipeline behaves differently?
+    const uint8_t threshold =
+        (uint8_t)((float)bit_mask *
+                  clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
+    // clang-format on
+
     const double two32 = 4294967296.0;
 
     // when we're not using the bit crusher we want to avoid these expensive operations.
