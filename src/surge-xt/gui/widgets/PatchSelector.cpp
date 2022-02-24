@@ -225,7 +225,10 @@ void PatchSelector::paint(juce::Graphics &g)
             pbrowser.withLeft(searchRect.getRight()).withRight(favoritesRect.getX()).reduced(4, 0);
 
         g.setFont(Surge::GUI::getFontManager()->patchNameFont);
-        g.drawFittedText(pname, pnRect,
+        auto uname = pname;
+        if (isDirty)
+            uname += "*";
+        g.drawFittedText(uname, pnRect,
                          alignTop ? juce::Justification::centredTop : juce::Justification::centred,
                          1, 0.1);
 

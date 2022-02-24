@@ -602,6 +602,7 @@ void FormulaModulatorEditor::onSkinChanged()
 void FormulaModulatorEditor::applyCode()
 {
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
+    storage->getPatch().isDirty = true;
     editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);

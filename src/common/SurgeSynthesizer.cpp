@@ -2177,6 +2177,7 @@ void SurgeSynthesizer::setParameterSmoothed(long index, float value)
 {
     bool AlreadyExisted;
     ControllerModulationSource *mc = AddControlInterpolator(index, AlreadyExisted);
+    storage.getPatch().isDirty = true;
 
     if (mc)
     {
@@ -2203,10 +2204,19 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
 
     if (index >= 0 && index < storage.getPatch().param_ptr.size())
     {
-        pdata oldval;
+        pdata oldval, newval;
         oldval.i = storage.getPatch().param_ptr[index]->val.i;
 
         storage.getPatch().param_ptr[index]->set_value_f01(value, force_integer);
+
+        {
+            auto p = storage.getPatch().param_ptr[index];
+            if (p->val.i != oldval.i)
+            {
+                storage.getPatch().isDirty = true;
+            }
+        }
+
         if (storage.getPatch().param_ptr[index]->affect_other_parameters)
         {
             storage.getPatch().update_controls();
@@ -2425,6 +2435,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
         if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all ||
             fx_reload[s])
         {
+            storage.getPatch().isDirty = true;
             fx_reload[s] = false;
 
             std::lock_guard<std::mutex> g(fxSpawnMutex);
@@ -2565,6 +2576,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
         {
             // This branch will happen when we change a preset for an FX; or when we turn an fx to
             // OFF
+            storage.getPatch().isDirty = true;
             if (storage.getPatch().fx[s].type.val.i != fxt_off)
                 memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
                        sizeof(Parameter) * n_fx_params);
@@ -2621,6 +2633,7 @@ bool SurgeSynthesizer::loadOscalgos()
             TiXmlElement *e = (TiXmlElement *)storage.getPatch().scene[s].osc[i].queue_xmldata;
             if (e)
             {
+                storage.getPatch().isDirty = true;
                 resend = true;
                 for (int k = 0; k < n_osc_params; k++)
                 {
@@ -3162,7 +3175,7 @@ bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsou
         return false;
     float value = storage.getPatch().param_ptr[ptag]->set_modulation_f01(val);
     int scene = storage.getPatch().param_ptr[ptag]->scene;
-
+    storage.getPatch().isDirty = true;
     vector<ModulationRouting> *modlist;
 
     if (!scene)
@@ -3234,6 +3247,7 @@ float SurgeSynthesizer::getMacroParameter01(long macroNum) const
 
 void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
 {
+    storage.getPatch().isDirty = true;
     ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum])
         ->set_target01(val, true);
 }
@@ -3415,6 +3429,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         }
     }
 
+    synth->storage.getPatch().isDirty = false;
     synth->halt_engine = false;
 
     return;
@@ -4130,6 +4145,7 @@ void SurgeSynthesizer::populateDawExtraState()
     storage.getPatch().dawExtraState.isPopulated = true;
     storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
     storage.getPatch().dawExtraState.mpePitchBendRange = storage.mpePitchBendRange;
+    storage.getPatch().dawExtraState.isDirty = storage.getPatch().isDirty;
 
     storage.getPatch().dawExtraState.hasScale = !storage.isStandardScale;
     if (!storage.isStandardScale)
@@ -4177,6 +4193,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
     mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
     if (storage.getPatch().dawExtraState.mpePitchBendRange > 0)
         storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
+    storage.getPatch().isDirty = storage.getPatch().dawExtraState.isDirty;
 
     storage.monoPedalMode = (MonoPedalMode)storage.getPatch().dawExtraState.monoPedalMode;
     storage.oddsoundRetuneMode =
