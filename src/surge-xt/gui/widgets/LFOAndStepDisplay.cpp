@@ -75,6 +75,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
             q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
             q->onSetValue = [this, i](auto *T, float f) {
                 ss->steps[i] = f;
+                storage->getPatch().isDirty = true;
                 repaint();
                 return;
             };
@@ -96,6 +97,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                     else
                         f = limitpm1(f + delt);
                     ss->steps[step] = f;
+                    storage->getPatch().isDirty = true;
                     repaint();
                 }
             };
@@ -106,6 +108,8 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                     ss->steps[i] = isUnipolar() ? 0.f : -1.f;
                 if (mmd == 0)
                     ss->steps[i] = 0.f;
+
+                storage->getPatch().isDirty = true;
                 repaint();
             };
             stepLayer->addChildComponent(*q);
@@ -204,11 +208,13 @@ LFOAndStepDisplay::LFOAndStepDisplay()
         l0->onGetValue = [this](auto *) { return ss->loop_start; };
         l0->onSetValue = [this](auto *, float f) {
             ss->loop_start = (int)round(f);
+            storage->getPatch().isDirty = true;
             repaint();
         };
         l0->onJogValue = [this](auto *, int dir, bool, bool) {
             auto n = limit_range(ss->loop_start + dir, 0, 15);
             ss->loop_start = n;
+            storage->getPatch().isDirty = true;
             repaint();
         };
         l0->onMinMaxDef = [this](auto *, int mmd) {
@@ -216,6 +222,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                 ss->loop_start = ss->loop_end;
             else
                 ss->loop_start = 0;
+            storage->getPatch().isDirty = true;
             repaint();
         };
         loopEndOverlays[0] = std::move(l0);
@@ -228,11 +235,13 @@ LFOAndStepDisplay::LFOAndStepDisplay()
         l0->onGetValue = [this](auto *) { return ss->loop_end; };
         l0->onSetValue = [this](auto *, float f) {
             ss->loop_end = (int)round(f);
+            storage->getPatch().isDirty = true;
             repaint();
         };
         l0->onJogValue = [this](auto *, int dir, bool, bool) {
             auto n = limit_range(ss->loop_end + dir, 0, 15);
             ss->loop_end = n;
+            storage->getPatch().isDirty = true;
             repaint();
         };
         l0->onMinMaxDef = [this](auto *, int mmd) {
@@ -240,6 +249,7 @@ LFOAndStepDisplay::LFOAndStepDisplay()
                 ss->loop_end = ss->loop_end;
             else
                 ss->loop_end = 15;
+            storage->getPatch().isDirty = true;
             repaint();
         };
         loopEndOverlays[1] = std::move(l0);
@@ -1439,6 +1449,7 @@ void LFOAndStepDisplay::setStepToDefault(const juce::MouseEvent &event)
         if (steprect[i].contains(event.position))
         {
             ss->steps[i] = 0.f;
+            storage->getPatch().isDirty = true;
             repaint();
         }
     }
@@ -1497,6 +1508,7 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
             }
 
             ss->steps[i] = f;
+            storage->getPatch().isDirty = true;
 
             repaint();
         }
@@ -1588,6 +1600,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                            (((ss->trigmask & 0x0000fffe00000000) >> 1) |
                             (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
 
+            storage->getPatch().isDirty = true;
             repaint();
 
             return;
@@ -1611,6 +1624,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                            (((ss->trigmask & 0x00007fff00000000) << 1) |
                             (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
 
+            storage->getPatch().isDirty = true;
             repaint();
 
             return;
@@ -1696,6 +1710,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 ss->trigmask &= maskOff;
                 ss->trigmask |= maskOn;
 
+                storage->getPatch().isDirty = true;
                 repaint();
 
                 return;
@@ -1881,6 +1896,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             if (ss->loop_start != loopStart && loopStart >= 0)
             {
                 ss->loop_start = loopStart;
+                storage->getPatch().isDirty = true;
                 repaint();
             }
         }
@@ -1889,6 +1905,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             if (ss->loop_end != loopStart && loopStart >= 0)
             {
                 ss->loop_end = loopStart;
+                storage->getPatch().isDirty = true;
                 repaint();
             }
         }
@@ -2016,6 +2033,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
             }
 
             ss->steps[s] = fs;
+            storage->getPatch().isDirty = true;
 
             if (s != e)
             {
@@ -2046,6 +2064,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
                     }
 
                     ss->steps[q] = f;
+                    storage->getPatch().isDirty = true;
                 }
             }
 
@@ -2106,7 +2125,7 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
             }
 
             ss->steps[i] = v;
-
+            storage->getPatch().isDirty = true;
             repaint();
         }
     }

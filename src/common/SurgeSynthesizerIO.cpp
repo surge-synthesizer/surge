@@ -201,6 +201,7 @@ void SurgeSynthesizer::loadPatch(int id)
 
     Patch e = storage.patch_list[id];
     loadPatchByPath(path_to_string(e.path).c_str(), e.category, e.name.c_str());
+    storage.getPatch().isDirty = false;
 }
 
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName)
@@ -360,7 +361,9 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     /*
     ** Notify the host display that the patch name has changed
     */
+    storage.getPatch().isDirty = false;
     updateDisplay();
+
     return true;
 }
 
@@ -426,6 +429,8 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
                                                           &(storage.getPatch().formulamods[sc][m]));
         }
     }
+
+    storage.getPatch().isDirty = false;
 
     halt_engine = false;
     patch_loaded = true;
@@ -560,6 +565,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     {
         savePatchToPath(filename);
     }
+    storage.getPatch().isDirty = false;
 }
 
 void SurgeSynthesizer::savePatchToPath(fs::path filename)
@@ -609,6 +615,8 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename)
     }
     refresh_editor = true;
     midiprogramshavechanged = true;
+
+    storage.getPatch().isDirty = false;
 }
 
 unsigned int SurgeSynthesizer::saveRaw(void **data) { return storage.getPatch().save_patch(data); }

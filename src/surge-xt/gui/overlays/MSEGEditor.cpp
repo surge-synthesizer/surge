@@ -2270,10 +2270,28 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // std::cout << "ZOOM by " << amount <<  " AT " << where.x << " " << t << std::endl;
     }
 
-    void zoomToFull() { zoomOutTo(ms->totalDuration); }
+    bool shouldDirty{true};
+    struct SkipDirtyGuard
+    {
+        MSEGCanvas &canvas;
+        bool osd;
+        SkipDirtyGuard(MSEGCanvas &c) : canvas(c)
+        {
+            osd = canvas.shouldDirty;
+            canvas.shouldDirty = false;
+        }
+        ~SkipDirtyGuard() { canvas.shouldDirty = osd; }
+    };
+
+    void zoomToFull()
+    {
+        auto g = SkipDirtyGuard(*this);
+        zoomOutTo(ms->totalDuration);
+    }
 
     void zoomOutTo(float duration)
     {
+        auto g = SkipDirtyGuard(*this);
         ms->axisStart = 0.f;
         ms->axisWidth =
             (ms->editMode == MSEGStorage::EditMode::ENVELOPE) ? std::max(1.0f, duration) : 1.f;
@@ -2633,6 +2651,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (rchz)
             recalcHotZones(mouseDownOrigin); // FIXME
 
+        if (shouldDirty)
+            storage->getPatch().isDirty = true;
         onModelChanged();
     }
 

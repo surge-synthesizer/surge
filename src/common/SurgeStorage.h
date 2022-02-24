@@ -817,6 +817,8 @@ struct DAWExtraStateStorage
 
     int monoPedalMode = 0;
     int oddsoundRetuneMode = 0;
+
+    bool isDirty{false};
 };
 
 struct PatchTuningStorage
@@ -896,6 +898,8 @@ class SurgePatch
         std::string tag;
     };
     std::vector<Tag> tags;
+
+    std::atomic<bool> isDirty{false};
 
     // macro controllers
 #define CUSTOM_CONTROLLER_LABEL_SIZE 20

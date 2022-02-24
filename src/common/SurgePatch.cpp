@@ -2275,6 +2275,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
                 dawExtraState.mpeEnabled = ival;
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("isDirty"));
+            dawExtraState.isDirty = false;
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+                dawExtraState.isDirty = ival;
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpePitchBendRange"));
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
                 dawExtraState.mpePitchBendRange = ival;
@@ -2837,6 +2842,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mppb("mpePitchBendRange");
         mppb.SetAttribute("v", dawExtraState.mpePitchBendRange);
         dawExtraXML.InsertEndChild(mppb);
+
+        TiXmlElement isDi("isDirty");
+        isDi.SetAttribute("v", dawExtraState.isDirty ? 1 : 0);
+        dawExtraXML.InsertEndChild(isDi);
 
         TiXmlElement mpm("monoPedalMode");
         mpm.SetAttribute("v", dawExtraState.monoPedalMode);

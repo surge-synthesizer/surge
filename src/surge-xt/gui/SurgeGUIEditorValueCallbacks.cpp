@@ -3162,8 +3162,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
 bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s)
 {
+    auto v = p->get_value_f01();
     if (p && p->set_value_from_string(s))
     {
+        if (v != p->get_value_f01())
+            synth->storage.getPatch().isDirty = true;
         repushAutomationFor(p);
         synth->refresh_editor = true;
         return true;
@@ -3189,6 +3192,7 @@ bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources m
     {
         synth->setModulation(p->id, ms, modsourceScene, modidx, mv);
         synth->refresh_editor = true;
+        synth->storage.getPatch().isDirty = true;
     }
 
     if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers)
@@ -3214,6 +3218,7 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
         cms->set_output(0, val);
         cms->target[0] = val;
         synth->refresh_editor = true;
+        synth->storage.getPatch().isDirty = true;
         return true;
     }
     return false;

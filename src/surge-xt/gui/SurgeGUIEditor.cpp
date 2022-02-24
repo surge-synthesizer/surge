@@ -642,6 +642,11 @@ void SurgeGUIEditor::idle()
         if (patchSelector)
         {
             patchChanged = patchSelector->sel_id != synth->patchid;
+            if (synth->storage.getPatch().isDirty != patchSelector->isDirty)
+            {
+                patchSelector->isDirty = synth->storage.getPatch().isDirty;
+                patchSelector->repaint();
+            }
         }
 
         if (statusMPE)
@@ -4691,6 +4696,7 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
                     msb->asJuceComponent()->repaint();
                 }
 
+                synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
             }
         },
@@ -4705,6 +4711,7 @@ void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int
     auto callback = [this, lfo_id, msi](const std::string &nv) {
         auto cp = synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
         strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
+        synth->storage.getPatch().isDirty = true;
         synth->refresh_editor = true;
     };
 
@@ -5696,6 +5703,12 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
+    if (prior != curr)
+    {
+        std::cout << "SETTING ISDIRTY IN LFO" << std::endl;
+        synth->storage.getPatch().isDirty = true;
+    }
+
     bool needs_refresh{false};
     // Currently only formula is indexed
     if (prior == lt_formula && curr != lt_formula)

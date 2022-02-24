@@ -942,6 +942,8 @@ void SurgeStorage::perform_queued_wtloads()
         {
             if (patch.scene[sc].osc[o].wt.queue_id != -1)
             {
+                if (patch.scene[sc].osc[o].wt.everBuilt)
+                    patch.isDirty = true;
                 load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
                 patch.scene[sc].osc[o].wt.refresh_display = true;
@@ -967,6 +969,8 @@ void SurgeStorage::perform_queued_wtloads()
                 load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
                 patch.scene[sc].osc[o].wt.refresh_display = true;
+                if (patch.scene[sc].osc[o].wt.everBuilt)
+                    patch.isDirty = true;
             }
         }
     }
