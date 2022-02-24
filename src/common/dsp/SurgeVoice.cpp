@@ -200,7 +200,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     timbreSource = ControllerModulationSource(storage->smoothingMode);
 
     polyAftertouchSource.init(
-        storage->poly_aftertouch[state.scene_id & 1][state.channel & 16][state.key & 127]);
+        storage->poly_aftertouch[state.scene_id & 1][state.channel & 15][state.key & 127]);
     timbreSource.init(state.voiceChannelState->timbre);
     monoAftertouchSource.init(state.voiceChannelState->pressure);
 
@@ -722,7 +722,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     {
         ((ControllerModulationSource *)modsources[ms_polyaftertouch])
             ->set_target(
-                storage->poly_aftertouch[state.scene_id & 1][state.channel & 16][state.key & 127]);
+                storage->poly_aftertouch[state.scene_id & 1][state.channel & 15][state.key & 127]);
         ((ControllerModulationSource *)modsources[ms_polyaftertouch])->process_block();
     }
 

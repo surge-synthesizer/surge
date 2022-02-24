@@ -1514,3 +1514,28 @@ TEST_CASE("Single Key Pedal Voice Count", "[midi]") // #1459
         });
     }
 }
+
+TEST_CASE("Poly AT on Multiple Channels", "[midi]")
+{
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        DYNAMIC_SECTION("Channel " << ch)
+        {
+            auto surge = Surge::Headless::createSurge(44100);
+            surge->storage.smoothingMode = Modulator::SmoothingMode::DIRECT;
+            REQUIRE(surge);
+
+            auto pid = surge->storage.getPatch().scene[0].osc[0].pitch.id;
+            surge->setModulation(pid, ms_polyaftertouch, 0, 0, 0.1);
+            surge->process();
+            surge->playNote(ch, 60, 120, 0);
+            surge->process();
+            surge->polyAftertouch(ch, 60, 64);
+            surge->process();
+            for (auto v : surge->voices[0])
+            {
+                REQUIRE(v->modsources[ms_polyaftertouch]->get_output01(0) == 64.f / 127.f);
+            }
+        }
+    }
+}
