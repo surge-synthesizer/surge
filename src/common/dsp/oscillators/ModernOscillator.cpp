@@ -166,6 +166,13 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     pitchlag.startValue(pitch);
     sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
+    if (oscdata->p[mo_unison_detune].absolute)
+    {
+        float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
+        ud = nSpread;
+        // TODO : Tuning Awareness alas
+    }
+
     for (int u = 0; u < n_unison; ++u)
     {
         auto dval = driftLFO[u].next();
