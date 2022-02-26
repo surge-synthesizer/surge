@@ -2056,26 +2056,36 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
 
     std::string sc = std::string("Scene ") + (char)('A' + whichScene);
 
-    fxGridMenu.addItem(
-        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled"), true,
-        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::BYPASS_HARDCLIP),
-        [this, whichScene]() {
-            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::BYPASS_HARDCLIP;
-        });
+    bool isChecked =
+        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::BYPASS_HARDCLIP);
 
-    fxGridMenu.addItem(
-        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at 0 dBFS"), true,
-        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_0DBFS),
-        [this, whichScene]() {
-            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_0DBFS;
-        });
+    fxGridMenu.addItem(sc + Surge::GUI::toOSCaseForMenu(" Hard Clip Disabled"), true, isChecked,
+                       [this, isChecked, whichScene]() {
+                           synth->storage.sceneHardclipMode[whichScene] =
+                               SurgeStorage::BYPASS_HARDCLIP;
+                           if (!isChecked)
+                               synth->storage.getPatch().isDirty = true;
+                       });
 
-    fxGridMenu.addItem(
-        sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at +18 dBFS"), true,
-        (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_18DBFS),
-        [this, whichScene]() {
-            this->synth->storage.sceneHardclipMode[whichScene] = SurgeStorage::HARDCLIP_TO_18DBFS;
-        });
+    isChecked = (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_0DBFS);
+
+    fxGridMenu.addItem(sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at 0 dBFS"), true, isChecked,
+                       [this, isChecked, whichScene]() {
+                           synth->storage.sceneHardclipMode[whichScene] =
+                               SurgeStorage::HARDCLIP_TO_0DBFS;
+                           if (!isChecked)
+                               synth->storage.getPatch().isDirty = true;
+                       });
+
+    isChecked = (synth->storage.sceneHardclipMode[whichScene] == SurgeStorage::HARDCLIP_TO_18DBFS);
+
+    fxGridMenu.addItem(sc + Surge::GUI::toOSCaseForMenu(" Hard Clip at +18 dBFS"), true, isChecked,
+                       [this, isChecked, whichScene]() {
+                           synth->storage.sceneHardclipMode[whichScene] =
+                               SurgeStorage::HARDCLIP_TO_18DBFS;
+                           if (!isChecked)
+                               synth->storage.getPatch().isDirty = true;
+                       });
 
     fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(c));
 }
@@ -2637,8 +2647,12 @@ juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(const juce::Point<int> &
 
     monoSubMenu.addItem(
         Surge::GUI::toOSCaseForMenu("Sustain Pedal Holds All Notes (No Note Off Retrigger)"), true,
-        isChecked, [this, updateDefaults]() {
+        isChecked, [this, isChecked, updateDefaults]() {
             this->synth->storage.monoPedalMode = HOLD_ALL_NOTES;
+            if (!isChecked)
+            {
+                synth->storage.getPatch().isDirty = true;
+            }
             if (updateDefaults)
             {
                 Surge::Storage::updateUserDefaultValue(
@@ -2649,8 +2663,12 @@ juce::PopupMenu SurgeGUIEditor::makeMonoModeOptionsMenu(const juce::Point<int> &
     isChecked = (mode == RELEASE_IF_OTHERS_HELD);
 
     monoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Sustain Pedal Allows Note Off Retrigger"),
-                        true, isChecked, [this, updateDefaults]() {
+                        true, isChecked, [this, isChecked, updateDefaults]() {
                             this->synth->storage.monoPedalMode = RELEASE_IF_OTHERS_HELD;
+                            if (!isChecked)
+                            {
+                                synth->storage.getPatch().isDirty = true;
+                            }
                             if (updateDefaults)
                             {
                                 Surge::Storage::updateUserDefaultValue(

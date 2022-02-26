@@ -74,6 +74,8 @@ void Switch::mouseDown(const juce::MouseEvent &event)
 
     if (isMultiIntegerValued())
     {
+        storage->getPatch().isDirty = true;
+
         if (event.mods.isShiftDown())
         {
             setValueDirection(-1);
@@ -108,6 +110,7 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
     {
         if (isMultiIntegerValued())
         {
+            storage->getPatch().isDirty = true;
             setValueDirection(mul);
             notifyValueChanged();
         }
