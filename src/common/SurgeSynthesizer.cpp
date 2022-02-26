@@ -3053,6 +3053,7 @@ void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, int modso
     if (r)
     {
         r->muted = mute;
+        storage.getPatch().isDirty = true;
 
         for (auto l : modListeners)
             l->modMuted(ptag, modsource, modsourceScene, index, mute);
@@ -3127,7 +3128,9 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
                                        int index, bool clearEvenIfInvalid)
 {
     if (!isValidModulation(ptag, modsource) && !clearEvenIfInvalid)
+    {
         return;
+    }
 
     int scene = storage.getPatch().param_ptr[ptag]->scene;
 
@@ -3140,14 +3143,22 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
     else
     {
         if (isScenelevel(modsource))
+        {
             modlist = &storage.getPatch().scene[scene - 1].modulation_scene;
+        }
         else
+        {
             modlist = &storage.getPatch().scene[scene - 1].modulation_voice;
+        }
     }
 
     int id = storage.getPatch().param_ptr[ptag]->param_id_in_scene;
+
     if (!scene)
+    {
         id = ptag;
+    }
+
     int n = modlist->size();
 
     for (int i = 0; i < n; i++)
@@ -3159,9 +3170,12 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
             storage.modRoutingMutex.lock();
             modlist->erase(modlist->begin() + i);
             storage.modRoutingMutex.unlock();
+            storage.getPatch().isDirty = true;
 
             for (auto l : modListeners)
+            {
                 l->modCleared(ptag, modsource, modsourceScene, index);
+            }
 
             return;
         }

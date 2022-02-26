@@ -2094,7 +2094,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                        idx, false);
                                         }
                                     }
-                                    synth->storage.getPatch().isDirty = true;
                                 }
                                 break;
                                 case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
@@ -2113,7 +2112,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                       state);
                                         }
                                     }
-                                    synth->storage.getPatch().isDirty = true;
                                 }
                                 break;
                                 }
