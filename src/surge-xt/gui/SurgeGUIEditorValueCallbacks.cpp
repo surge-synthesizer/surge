@@ -491,6 +491,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Oscillator"), [this, a]() {
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
+                    synth->storage.getPatch().isDirty = true;
                     queue_refresh = true;
                 });
             }
@@ -536,6 +537,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->storage.get_clipboard_type() == cp_scene, // enabled
                                 false, [this, a]() {
                                     synth->storage.clipboard_paste(cp_scene, a, -1);
+                                    synth->storage.getPatch().isDirty = true;
                                     queue_refresh = true;
                                 });
 
@@ -937,6 +939,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                       ->get_output01(0);
                         control->setValue(f);
 
+                        synth->storage.getPatch().isDirty = true;
+
                         auto msb = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
 
                         if (msb)
@@ -1009,8 +1013,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     auto res = synth->isValidModulation(p, m);
                                     return res;
                                 });
+
                             if (t & cp_lfo)
+                            {
                                 msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
+                            }
+
+                            synth->storage.getPatch().isDirty = true;
                             queue_refresh = true;
                         });
                 }
@@ -1031,6 +1040,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 auto res = synth->isValidModulation(p, m);
                                 return res;
                             });
+                        synth->storage.getPatch().isDirty = true;
                         queue_refresh = true;
                     });
                 }
@@ -1079,6 +1089,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (p->ctrltype == ct_filtertype || p->ctrltype == ct_wstype)
             {
                 p->deactivated = !p->deactivated;
+                synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
                 return 0;
             }
@@ -1157,21 +1168,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [p, i, this]() {
                                             p->val.f = (float)i;
                                             p->bound_value();
-                                            this->synth->refresh_editor = true;
+                                            synth->storage.getPatch().isDirty = true;
+                                            synth->refresh_editor = true;
                                         });
 
                         tsMenuD.addItem(p->tempoSyncNotationValue(mul * ((float)i + dotlaboff)),
                                         [p, i, dotoff, this]() {
                                             p->val.f = (float)i + dotoff;
                                             p->bound_value();
-                                            this->synth->refresh_editor = true;
+                                            synth->storage.getPatch().isDirty = true;
+                                            synth->refresh_editor = true;
                                         });
 
                         tsMenuT.addItem(p->tempoSyncNotationValue(mul * ((float)i + triplaboff)),
                                         [p, i, tripoff, this]() {
                                             p->val.f = (float)i + tripoff;
                                             p->bound_value();
-                                            this->synth->refresh_editor = true;
+                                            synth->storage.getPatch().isDirty = true;
+                                            synth->refresh_editor = true;
                                         });
                     }
 
@@ -1256,6 +1270,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                         p->val.i = p->val.i * 100;
                                                 }
 
+                                                synth->storage.getPatch().isDirty = true;
                                                 synth->refresh_editor = true;
                                             });
                 }
@@ -1428,6 +1443,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 [this]() {
                                     synth->storage.getPatch().correctlyTuneCombFilter =
                                         !synth->storage.getPatch().correctlyTuneCombFilter;
+                                    synth->storage.getPatch().isDirty = true;
                                 });
                         }
 
@@ -1448,10 +1464,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                  .scene[current_scene]
                                                                  .monoVoicePriorityMode);
                                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(labels[i]), true,
-                                                    isChecked, [this, vals, i]() {
+                                                    isChecked, [this, isChecked, vals, i]() {
                                                         synth->storage.getPatch()
                                                             .scene[current_scene]
                                                             .monoVoicePriorityMode = vals[i];
+                                                        if (!isChecked)
+                                                            synth->storage.getPatch().isDirty =
+                                                                true;
                                                     });
                             }
 
@@ -1469,7 +1488,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         contextMenu.addItem("Enabled", true, !p->deactivated, [this, p]() {
                             p->deactivated = !p->deactivated;
-                            this->synth->refresh_editor = true;
+                            synth->storage.getPatch().isDirty = true;
+                            synth->refresh_editor = true;
                         });
                     }
                 }
@@ -1491,6 +1511,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         Surge::GUI::toOSCaseForMenu("Tempo Sync"), true, (p->temposync),
                         [this, p, control]() {
                             p->temposync = !p->temposync;
+                            synth->storage.getPatch().isDirty = true;
 
                             if (p->temposync)
                             {
@@ -1501,8 +1522,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 p->set_value_f01(control->getValue());
                             }
 
-                            if (this->lfoDisplay)
-                                this->lfoDisplay->repaint();
+                            if (lfoDisplay)
+                                lfoDisplay->repaint();
                             auto *css = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
                                 control);
 
@@ -1559,8 +1580,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         contextMenu.addItem(label, [this, p, setTSTo]() {
                             // There is surely a more efficient way but this is fine
-                            for (auto iter = this->synth->storage.getPatch().param_ptr.begin();
-                                 iter != this->synth->storage.getPatch().param_ptr.end(); iter++)
+                            for (auto iter = synth->storage.getPatch().param_ptr.begin();
+                                 iter != synth->storage.getPatch().param_ptr.end(); iter++)
                             {
                                 Parameter *pl = *iter;
                                 if (pl->ctrlgroup_entry == p->ctrlgroup_entry &&
@@ -1575,7 +1596,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 }
                             }
 
-                            this->synth->refresh_editor = true;
+                            synth->storage.getPatch().isDirty = true;
+                            synth->refresh_editor = true;
                         });
                     }
                 }
@@ -1597,6 +1619,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             if (mci)
                             {
                                 mci->setQuantitizedDisplayValue(p->get_value_f01());
+                                synth->storage.getPatch().isDirty = true;
                             }
                             control->asJuceComponent()->repaint();
                         });
@@ -1662,8 +1685,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             bool isChecked = p->deform_type == i;
 
-                            contextMenu.addItem(title, true, isChecked,
-                                                [this, p, i]() { p->deform_type = i; });
+                            contextMenu.addItem(title, true, isChecked, [this, p, i]() {
+                                p->deform_type = i;
+                                synth->storage.getPatch().isDirty = true;
+                            });
                         }
 
                         break;
@@ -1687,8 +1712,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 bool isChecked = p->deform_type == i;
 
                                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(title), true,
-                                                    isChecked, [this, p, i]() {
+                                                    isChecked, [this, isChecked, p, i]() {
                                                         p->deform_type = i;
+                                                        if (!isChecked)
+                                                        {
+                                                            synth->storage.getPatch().isDirty =
+                                                                true;
+                                                        }
 
                                                         if (frame)
                                                         {
@@ -1717,8 +1747,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             isChecked = ((p->deform_type & 0x0F) == m);
 
                             contextMenu.addItem(mo_multitype_names[m], true, isChecked,
-                                                [p, m, this]() {
+                                                [this, isChecked, p, m]() {
                                                     p->deform_type = (p->deform_type & 0xFFF0) | m;
+                                                    if (!isChecked)
+                                                    {
+                                                        synth->storage.getPatch().isDirty = true;
+                                                    }
                                                     synth->refresh_editor = true;
                                                 });
                         }
@@ -1743,6 +1777,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
 
+                                synth->storage.getPatch().isDirty = true;
                                 synth->refresh_editor = true;
                             });
 
@@ -1764,6 +1799,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
 
+                                synth->storage.getPatch().isDirty = true;
                                 synth->refresh_editor = true;
                             });
 
@@ -1780,6 +1816,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             isChecked, [p, this]() {
                                 p->deform_type = !p->deform_type;
 
+                                synth->storage.getPatch().isDirty = true;
                                 synth->refresh_editor = true;
                             });
 
@@ -1799,7 +1836,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             bool isChecked = p->deform_type == i;
 
                             contextMenu.addItem(tapeHysteresisModes[i].toStdString(), true,
-                                                isChecked, [this, p, i]() { p->deform_type = i; });
+                                                isChecked, [this, isChecked, p, i]() {
+                                                    p->deform_type = i;
+                                                    if (!isChecked)
+                                                    {
+                                                        synth->storage.getPatch().isDirty = true;
+                                                    }
+                                                });
                         }
 
                         contextMenu.addSeparator();
@@ -1860,7 +1903,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(Surge::GUI::toOSCaseForMenu(txt), enable, isChecked,
                                                 [this, p]() {
                                                     p->set_extend_range(!p->extend_range);
-                                                    this->synth->refresh_editor = true;
+                                                    synth->storage.getPatch().isDirty = true;
+                                                    synth->refresh_editor = true;
                                                 });
                         }
                     }
@@ -1872,6 +1916,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     contextMenu.addItem("Absolute", true, isChecked, [this, p]() {
                         p->absolute = !p->absolute;
+                        synth->storage.getPatch().isDirty = true;
 
                         // FIXME : What's a better aprpoach?
                         if (p->ctrltype == ct_fmratio)
@@ -1923,7 +1968,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     contextMenu.addItem(txt, true, isChecked, [this, q]() {
                         q->deactivated = !q->deactivated;
-                        this->synth->refresh_editor = true;
+                        synth->storage.getPatch().isDirty = true;
+                        synth->refresh_editor = true;
                     });
                 }
 
@@ -2002,6 +2048,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     synth->clearModulation(ptag, (modsources)ms, sc,
                                                                            modidx);
                                                     refresh_mod();
+                                                    synth->storage.getPatch().isDirty = true;
                                                     synth->refresh_editor = true;
                                                 }
                                                 break;
@@ -2013,6 +2060,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     synth->muteModulation(ptag, (modsources)ms, sc,
                                                                           modidx, !is);
                                                     refresh_mod();
+                                                    synth->storage.getPatch().isDirty = true;
                                                     synth->refresh_editor = true;
                                                 }
                                                 break;
@@ -2046,6 +2094,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                        idx, false);
                                         }
                                     }
+                                    synth->storage.getPatch().isDirty = true;
                                 }
                                 break;
                                 case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
@@ -2064,6 +2113,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                       state);
                                         }
                                     }
+                                    synth->storage.getPatch().isDirty = true;
                                 }
                                 break;
                                 }
@@ -2205,27 +2255,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                   SurgeStorage::BYPASS_HARDCLIP);
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(sc + " Hard Clip Disabled"), true,
-                                    isChecked, [this]() {
+                                    isChecked, [this, isChecked]() {
                                         synth->storage.sceneHardclipMode[current_scene] =
                                             SurgeStorage::BYPASS_HARDCLIP;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
                                     });
 
                 isChecked = (synth->storage.sceneHardclipMode[current_scene] ==
                              SurgeStorage::HARDCLIP_TO_0DBFS);
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(sc + " Hard Clip at 0 dBFS"), true,
-                                    isChecked, [this]() {
+                                    isChecked, [this, isChecked]() {
                                         synth->storage.sceneHardclipMode[current_scene] =
                                             SurgeStorage::HARDCLIP_TO_0DBFS;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
                                     });
 
                 isChecked = (synth->storage.sceneHardclipMode[current_scene] ==
                              SurgeStorage::HARDCLIP_TO_18DBFS);
 
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu(sc + " Hard Clip at +18 dBFS"),
-                                    true, isChecked, [this]() {
+                                    true, isChecked, [this, isChecked]() {
                                         synth->storage.sceneHardclipMode[current_scene] =
                                             SurgeStorage::HARDCLIP_TO_18DBFS;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
                                     });
             }
 
@@ -2236,21 +2292,32 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 // FIXME - add unified menu here
                 bool isChecked = (synth->storage.hardclipMode == SurgeStorage::BYPASS_HARDCLIP);
 
-                contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu("Global Hard Clip Disabled"), true, isChecked,
-                    [this]() { synth->storage.hardclipMode = SurgeStorage::BYPASS_HARDCLIP; });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Global Hard Clip Disabled"), true,
+                                    isChecked, [this, isChecked]() {
+                                        synth->storage.hardclipMode = SurgeStorage::BYPASS_HARDCLIP;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
+                                    });
 
                 isChecked = (synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_0DBFS);
 
-                contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu("Global Hard Clip at 0 dBFS"), true, isChecked,
-                    [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_0DBFS; });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Global Hard Clip at 0 dBFS"), true,
+                                    isChecked, [this, isChecked]() {
+                                        synth->storage.hardclipMode =
+                                            SurgeStorage::HARDCLIP_TO_0DBFS;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
+                                    });
 
                 isChecked = (synth->storage.hardclipMode == SurgeStorage::HARDCLIP_TO_18DBFS);
 
-                contextMenu.addItem(
-                    Surge::GUI::toOSCaseForMenu("Global Hard Clip at +18 dBFS"), true, isChecked,
-                    [this]() { synth->storage.hardclipMode = SurgeStorage::HARDCLIP_TO_18DBFS; });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Global Hard Clip at +18 dBFS"),
+                                    true, isChecked, [this, isChecked]() {
+                                        synth->storage.hardclipMode =
+                                            SurgeStorage::HARDCLIP_TO_18DBFS;
+                                        if (!isChecked)
+                                            synth->storage.getPatch().isDirty = true;
+                                    });
             }
 
             auto jpm = juceEditor->hostMenuFor(p);
@@ -2300,6 +2367,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     ctrms->setIsModulationBipolar(synth->isBipolarModulation(thisms));
                 }
 
+                synth->storage.getPatch().isDirty = true;
+
                 oscWaveform->repaint();
 
                 return 0;
@@ -2332,8 +2401,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         p->set_value_f01(p->get_default_value_f01());
                         control->setValue(p->get_value_f01());
                     }
+
                     if (bvf)
+                    {
                         bvf->repaint();
+                    }
+
+                    synth->storage.getPatch().isDirty = true;
+
                     return 0;
                 }
                 default:
@@ -2355,6 +2430,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         bvf->repaint();
                     }
+
+                    synth->storage.getPatch().isDirty = true;
 
                     return 0;
                 }
@@ -2381,6 +2458,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     curr++;
                 }
 
+                synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
             }
             else if (p->ctrltype == ct_bool_solo)
@@ -2400,6 +2478,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     curr++;
                 }
 
+                synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
             }
             else

@@ -650,7 +650,10 @@ void FxMenu::populate()
     menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
     if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
     {
-        menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() { this->pasteFX(); });
+        menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() {
+            this->pasteFX();
+            this->storage->getPatch().isDirty = true;
+        });
     }
 
     menu.addSeparator();

@@ -2169,36 +2169,63 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
     {
         contextMenu.addSeparator();
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true,
-                            ms->loopMode == MSEGStorage::ONESHOT, [this, sge]() {
+        bool isChecked = ms->loopMode == MSEGStorage::ONESHOT;
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true, isChecked,
+                            [this, isChecked, sge]() {
+                                if (isChecked)
+                                {
+                                    storage->getPatch().isDirty = true;
+                                }
+
                                 ms->loopMode = MSEGStorage::LoopMode::ONESHOT;
+
                                 if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                 {
                                     sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                     sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                 }
+
                                 repaint();
                             });
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true,
-                            ms->loopMode == MSEGStorage::LOOP, [this, sge]() {
+        isChecked = ms->loopMode == MSEGStorage::LOOP;
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true, isChecked,
+                            [this, isChecked, sge]() {
+                                if (isChecked)
+                                {
+                                    storage->getPatch().isDirty = true;
+                                }
+
                                 ms->loopMode = MSEGStorage::LoopMode::LOOP;
+
                                 if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                 {
                                     sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                     sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                 }
+
                                 repaint();
                             });
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true,
-                            ms->loopMode == MSEGStorage::GATED_LOOP, [this, sge]() {
+        isChecked = ms->loopMode == MSEGStorage::GATED_LOOP;
+
+        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true, isChecked,
+                            [this, isChecked, sge]() {
+                                if (isChecked)
+                                {
+                                    storage->getPatch().isDirty = true;
+                                }
+
                                 ms->loopMode = MSEGStorage::LoopMode::GATED_LOOP;
+
                                 if (sge && sge->isAnyOverlayPresent(SurgeGUIEditor::MSEG_EDITOR))
                                 {
                                     sge->closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                     sge->showOverlay(SurgeGUIEditor::MSEG_EDITOR);
                                 }
+
                                 repaint();
                             });
     }

@@ -224,6 +224,7 @@ void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
 {
     if (!event.mods.isRightButtonDown() && !hasDragged && currentClicked >= 0)
     {
+        storage->getPatch().isDirty = true;
         deactivatedBitmask ^= (1 << currentClicked);
         notifyValueChanged();
     }
@@ -268,6 +269,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
     {
         if (event.mods.isRightButtonDown())
         {
+            storage->getPatch().isDirty = true;
             deactivatedBitmask ^= (1 << currentClicked);
         }
         else
