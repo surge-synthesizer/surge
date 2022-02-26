@@ -491,6 +491,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Oscillator"), [this, a]() {
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
+                    synth->storage.getPatch().isDirty = true;
                     queue_refresh = true;
                 });
             }
@@ -536,6 +537,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->storage.get_clipboard_type() == cp_scene, // enabled
                                 false, [this, a]() {
                                     synth->storage.clipboard_paste(cp_scene, a, -1);
+                                    synth->storage.getPatch().isDirty = true;
                                     queue_refresh = true;
                                 });
 
@@ -1011,8 +1013,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     auto res = synth->isValidModulation(p, m);
                                     return res;
                                 });
+
                             if (t & cp_lfo)
+                            {
                                 msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
+                            }
+
+                            synth->storage.getPatch().isDirty = true;
                             queue_refresh = true;
                         });
                 }
@@ -1033,6 +1040,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 auto res = synth->isValidModulation(p, m);
                                 return res;
                             });
+                        synth->storage.getPatch().isDirty = true;
                         queue_refresh = true;
                     });
                 }
