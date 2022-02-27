@@ -45,6 +45,7 @@ class alignas(16) SurgeVoice
     void release();
     void uber_release();
 
+    void sampleRateReset();
     bool process_block(QuadFilterChainState &, int);
     void GetQFB(); // Get the updated registers from the QuadFB
     void legato(int key, int velocity, char detune);
@@ -180,7 +181,7 @@ class alignas(16) SurgeVoice
             float R[n_waveshaper_registers];
         } WS[2];
     } FBP;
-    sst::filters::FilterCoefficientMaker<> CM[2]; // @TODO: Surge tuning provider
+    sst::filters::FilterCoefficientMaker<SurgeStorage> CM[2];
 
     // data
     int lag_id[8], pitch_id, octave_id, volume_id, pan_id, width_id;

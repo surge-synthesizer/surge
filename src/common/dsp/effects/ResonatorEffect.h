@@ -73,7 +73,7 @@ class ResonatorEffect : public Effect
 
     sst::filters::QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
-    sst::filters::FilterCoefficientMaker<> coeff[3][2]; // @TODO: Surge tuning provider
+    sst::filters::FilterCoefficientMaker<SurgeStorage> coeff[3][2];
     lag<float, true> cutoff[3], resonance[3], bandGain[3];
     // float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
     // float WP[3][2];

@@ -65,7 +65,7 @@ class CombulatorEffect : public Effect
 
     sst::filters::QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
-    sst::filters::FilterCoefficientMaker<> coeff[3][2]; // @TODO: Surge tuning provider
+    sst::filters::FilterCoefficientMaker<SurgeStorage> coeff[3][2];
     BiquadFilter lp, hp;
     lag<float, true> freq[3], feedback, gain[3], pan2, pan3, tone, noisemix;
     float filterDelay[3][2][MAX_FB_COMB_EXTENDED + FIRipol_N];

@@ -168,10 +168,9 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            // @TODO: Surge tuning provider and +69 offset
-            coeff[e][c].MakeCoeffs(cutoff[e].v + 69, resonance[e].v * rescomp[whichModel],
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel],
                                    static_cast<FilterType> (type), static_cast<FilterSubType> (subtype),
-                                   nullptr, false);
+                                   storage, false);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {

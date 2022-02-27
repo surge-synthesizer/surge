@@ -188,10 +188,9 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            // @TODO: Surge tuning provider and +69 offset
-            coeff[e][c].MakeCoeffs(freq[e].v + 69, fbscaled, static_cast<FilterType> (type),
+            coeff[e][c].MakeCoeffs(freq[e].v, fbscaled, static_cast<FilterType> (type),
                                    static_cast<FilterSubType> (subtype | QFUSubtypeMasks::EXTENDED_COMB),
-                                   nullptr, useTuning);
+                                   storage, useTuning);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {
