@@ -159,6 +159,13 @@ inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
+void CombulatorEffect::sampleRateReset()
+{
+    for (int e = 0; e < 3; ++e)
+        for (int c = 0; c < 2; ++c)
+            coeff[e][c].setSampleRateAndBlockSize((float) dsamplerate_os, BLOCK_SIZE_OS);
+}
+
 void CombulatorEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
@@ -192,11 +199,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                                    static_cast<FilterSubType> (subtype | QFUSubtypeMasks::EXTENDED_COMB),
                                    storage, useTuning);
 
-            for (int i = 0; i < n_cm_coeffs; i++)
-            {
-                set1f(qfus[c].C[i], e, coeff[e][c].C[i]);
-                set1f(qfus[c].dC[i], e, coeff[e][c].dC[i]);
-            }
+            coeff[e][c].updateState(qfus[c]);
 
             for (int i = 0; i < n_filter_registers; i++)
             {

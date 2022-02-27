@@ -17,7 +17,6 @@
 #include "Effect.h"
 #include "DSPUtils.h"
 #include <vembertech/lipol.h>
-#include "QuadFilterWaveshaper.h"
 
 class ResonatorEffect : public Effect
 {
@@ -62,6 +61,7 @@ class ResonatorEffect : public Effect
     virtual ~ResonatorEffect();
     virtual const char *get_effectname() override { return "Resonator"; }
     virtual void init() override;
+    virtual void sampleRateReset() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual int get_ringout_decay() override { return -1; }
     virtual void suspend() override;

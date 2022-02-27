@@ -17,7 +17,6 @@
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
-#include "QuadFilterWaveshaper.h"
 
 #include <vembertech/lipol.h>
 
@@ -54,6 +53,7 @@ class CombulatorEffect : public Effect
     virtual ~CombulatorEffect();
     virtual const char *get_effectname() override { return "Combulator"; }
     virtual void init() override;
+    virtual void sampleRateReset() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual int get_ringout_decay() override { return -1; }
     virtual void suspend() override;
