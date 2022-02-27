@@ -550,7 +550,7 @@ TEST_CASE("Patch Version Builder", "[io]")
                 }
             }
 
-            INFO("Patch for filter " << fut_names[ft]);
+            INFO("Patch for filter " << sst::filters::filter_type_names[ft]);
             if (ff_revision == 14)
             {
                 std::ostringstream cand_fn;
@@ -560,68 +560,69 @@ TEST_CASE("Patch Version Builder", "[io]")
             }
             else if (ff_revision > 14)
             {
-                fu_type fft = (fu_type)ft;
+                using sst::filters::FilterType;
+                const auto fft = (FilterType)ft;
                 int fnft = ft;
                 int fnst = st;
                 switch (fft)
                 {
-                case fut_none:
-                case fut_lp12:
-                case fut_lp24:
-                case fut_lpmoog:
-                case fut_hp12:
-                case fut_hp24:
-                case fut_SNH:
-                case fut_vintageladder:
-                case fut_obxd_4pole:
-                case fut_k35_lp:
-                case fut_k35_hp:
-                case fut_diode:
-                case fut_cutoffwarp_lp:
-                case fut_cutoffwarp_hp:
-                case fut_cutoffwarp_n:
-                case fut_cutoffwarp_bp:
-                case n_fu_types:
+                case FilterType::fut_none:
+                case FilterType::fut_lp12:
+                case FilterType::fut_lp24:
+                case FilterType::fut_lpmoog:
+                case FilterType::fut_hp12:
+                case FilterType::fut_hp24:
+                case FilterType::fut_SNH:
+                case FilterType::fut_vintageladder:
+                case FilterType::fut_obxd_4pole:
+                case FilterType::fut_k35_lp:
+                case FilterType::fut_k35_hp:
+                case FilterType::fut_diode:
+                case FilterType::fut_cutoffwarp_lp:
+                case FilterType::fut_cutoffwarp_hp:
+                case FilterType::fut_cutoffwarp_n:
+                case FilterType::fut_cutoffwarp_bp:
+                case FilterType::num_filter_types:
                     // These types were unchanged
                     break;
                     // These are the types which changed 14 -> 15
-                case fut_comb_pos:
+                case FilterType::fut_comb_pos:
                     fnft = fut_14_comb;
                     fnst = st;
                     break;
-                case fut_comb_neg:
+                case FilterType::fut_comb_neg:
                     fnft = fut_14_comb;
                     fnst = st + 2;
                     break;
-                case fut_obxd_2pole_lp:
+                case FilterType::fut_obxd_2pole_lp:
                     fnft = fut_14_obxd_2pole;
                     fnst = st * 4 + 0;
                     break;
-                case fut_obxd_2pole_bp:
+                case FilterType::fut_obxd_2pole_bp:
                     fnft = fut_14_obxd_2pole;
                     fnst = st * 4 + 1;
                     break;
-                case fut_obxd_2pole_hp:
+                case FilterType::fut_obxd_2pole_hp:
                     fnft = fut_14_obxd_2pole;
                     fnst = st * 4 + 2;
                     break;
-                case fut_obxd_2pole_n:
+                case FilterType::fut_obxd_2pole_n:
                     fnft = fut_14_obxd_2pole;
                     fnst = st * 4 + 3;
                     break;
-                case fut_notch12:
+                case FilterType::fut_notch12:
                     fnft = fut_14_notch12;
                     fnst = st;
                     break;
-                case fut_notch24:
+                case FilterType::fut_notch24:
                     fnft = fut_14_notch12;
                     fnst = st + 2;
                     break;
-                case fut_bp12:
+                case FilterType::fut_bp12:
                     fnft = fut_14_bp12;
                     fnst = st;
                     break;
-                case fut_bp24:
+                case FilterType::fut_bp24:
                     fnft = fut_14_bp12;
                     fnst = st + 3;
                     break;

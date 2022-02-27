@@ -1170,7 +1170,7 @@ class alignas(16) SurgeStorage
     }
 
     void note_to_omega(float, float &, float &);
-    void note_to_omega_ignoring_tuning(float, float &, float &, float);
+    void note_to_omega_ignoring_tuning(float, float &, float &, float sampleRate = 0.0f);
 
     /*
      * Tuning Support and Tuning State. Here's how it works
