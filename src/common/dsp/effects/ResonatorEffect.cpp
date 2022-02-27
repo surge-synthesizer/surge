@@ -86,7 +86,7 @@ void ResonatorEffect::sampleRateReset()
 {
     for (int e = 0; e < 3; ++e)
         for (int c = 0; c < 2; ++c)
-            coeff[e][c].setSampleRateAndBlockSize((float) dsamplerate_os, BLOCK_SIZE_OS);
+            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 void ResonatorEffect::process(float *dataL, float *dataR)
@@ -140,7 +140,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     }
     }
 
-    auto filtptr = GetQFPtrFilterUnit(static_cast<FilterType> (type), static_cast<FilterSubType> (subtype));
+    auto filtptr =
+        GetQFPtrFilterUnit(static_cast<FilterType>(type), static_cast<FilterSubType>(subtype));
     float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75}; // prevent self-oscillation
 
     for (int i = 0; i < 3; ++i)
@@ -176,8 +177,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
         for (int c = 0; c < 2; ++c)
         {
             coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel],
-                                   static_cast<FilterType> (type), static_cast<FilterSubType> (subtype),
-                                   storage, false);
+                                   static_cast<FilterType>(type),
+                                   static_cast<FilterSubType>(subtype), storage, false);
 
             coeff[e][c].updateState(qfus[c]);
 

@@ -1876,7 +1876,8 @@ void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
     cosi = (1 - a) * table_note_omega[1][e] + a * table_note_omega[1][(e + 1) & 0x1ff];
 }
 
-void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi, float /*sampleRate*/)
+void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi,
+                                                 float /*sampleRate*/)
 {
     x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
     // x += 256;

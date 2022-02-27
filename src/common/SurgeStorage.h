@@ -1200,7 +1200,8 @@ class alignas(16) SurgeStorage
 
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
 
-    static const double MIDI_0_FREQ; // this value needs to be passed along to FilterCoefficientMaker
+    static const double
+        MIDI_0_FREQ; // this value needs to be passed along to FilterCoefficientMaker
     enum TuningApplicationMode
     {
         RETUNE_ALL = 0, // These values are streamed so don't change them if you add

@@ -3890,8 +3890,10 @@ void SurgeSynthesizer::process()
         }
         else
         {
-            g.FU1ptr = sst::filters::GetQFPtrFilterUnit(static_cast<FilterType> (storage.getPatch().scene[s].filterunit[0].type.val.i),
-                                                        static_cast<FilterSubType> (storage.getPatch().scene[s].filterunit[0].subtype.val.i));
+            g.FU1ptr = sst::filters::GetQFPtrFilterUnit(
+                static_cast<FilterType>(storage.getPatch().scene[s].filterunit[0].type.val.i),
+                static_cast<FilterSubType>(
+                    storage.getPatch().scene[s].filterunit[0].subtype.val.i));
         }
         if (storage.getPatch().scene[s].filterunit[1].type.deactivated)
         {
@@ -3899,8 +3901,10 @@ void SurgeSynthesizer::process()
         }
         else
         {
-            g.FU2ptr = sst::filters::GetQFPtrFilterUnit(static_cast<FilterType> (storage.getPatch().scene[s].filterunit[1].type.val.i),
-                                                        static_cast<FilterSubType> (storage.getPatch().scene[s].filterunit[1].subtype.val.i));
+            g.FU2ptr = sst::filters::GetQFPtrFilterUnit(
+                static_cast<FilterType>(storage.getPatch().scene[s].filterunit[1].type.val.i),
+                static_cast<FilterSubType>(
+                    storage.getPatch().scene[s].filterunit[1].subtype.val.i));
         }
 
         if (storage.getPatch().scene[s].wsunit.type.deactivated)

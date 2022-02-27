@@ -1646,7 +1646,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             for (auto &u : sc.filterunit)
             {
-                if (u.type.val.i == sst::filters::FilterType::fut_SNH) // misc replaced comb_neg in rev 4
+                if (u.type.val.i ==
+                    sst::filters::FilterType::fut_SNH) // misc replaced comb_neg in rev 4
                 {
                     u.type.val.i = fut_14_comb;
                     u.subtype.val.i += 2;
@@ -1697,11 +1698,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             // set lp/hp filters to subtype 1
             for (auto &u : sc.filterunit)
             {
-                if ((u.type.val.i == FilterType::fut_lp12) || (u.type.val.i == FilterType::fut_hp12) ||
-                    (u.type.val.i == FilterType::fut_bp12) || (u.type.val.i == FilterType::fut_lp24) ||
+                if ((u.type.val.i == FilterType::fut_lp12) ||
+                    (u.type.val.i == FilterType::fut_hp12) ||
+                    (u.type.val.i == FilterType::fut_bp12) ||
+                    (u.type.val.i == FilterType::fut_lp24) ||
                     (u.type.val.i == FilterType::fut_hp24))
                 {
-                    u.subtype.val.i = (revision < 6) ? FilterSubType::st_SVF : FilterSubType::st_Rough;
+                    u.subtype.val.i =
+                        (revision < 6) ? FilterSubType::st_SVF : FilterSubType::st_Rough;
                 }
                 else if (u.type.val.i == FilterType::fut_notch12)
                 {

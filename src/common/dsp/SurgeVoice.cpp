@@ -797,8 +797,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
 void SurgeVoice::sampleRateReset()
 {
-    for (auto& cm : CM)
-        cm.setSampleRateAndBlockSize((float) dsamplerate_os, BLOCK_SIZE_OS);
+    for (auto &cm : CM)
+        cm.setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
@@ -1223,20 +1223,20 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
             cutoffB += cutoffA;
 
         CM[0].MakeCoeffs(cutoffA, localcopy[id_resoa].f,
-                         static_cast<FilterType> (scene->filterunit[0].type.val.i),
-                         static_cast<FilterSubType> (scene->filterunit[0].subtype.val.i),
-                         storage, scene->filterunit[0].cutoff.extend_range);
+                         static_cast<FilterType>(scene->filterunit[0].type.val.i),
+                         static_cast<FilterSubType>(scene->filterunit[0].subtype.val.i), storage,
+                         scene->filterunit[0].cutoff.extend_range);
         CM[1].MakeCoeffs(
             cutoffB, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
-            static_cast<FilterType> (scene->filterunit[1].type.val.i),
-            static_cast<FilterSubType> (scene->filterunit[1].subtype.val.i), storage,
+            static_cast<FilterType>(scene->filterunit[1].type.val.i),
+            static_cast<FilterSubType>(scene->filterunit[1].subtype.val.i), storage,
             scene->filterunit[1].cutoff.extend_range);
 
         for (int u = 0; u < n_filterunits_per_scene; u++)
         {
             if (scene->filterunit[u].type.val.i != 0)
             {
-                CM[u].updateState (Q->FU[u]);
+                CM[u].updateState(Q->FU[u]);
                 for (int i = 0; i < n_filter_registers; i++)
                 {
                     set1f(Q->FU[u].R[i], e, FBP.FU[u].R[i]);
@@ -1247,7 +1247,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
                 if (scene->filterblock_configuration.val.i == fc_wide)
                 {
-                    CM[u].updateState (Q->FU[u + 2]);
+                    CM[u].updateState(Q->FU[u + 2]);
                     for (int i = 0; i < n_filter_registers; i++)
                     {
                         set1f(Q->FU[u + 2].R[i], e, FBP.FU[u + 2].R[i]);

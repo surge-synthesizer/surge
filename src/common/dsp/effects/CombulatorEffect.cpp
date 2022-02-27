@@ -163,7 +163,7 @@ void CombulatorEffect::sampleRateReset()
 {
     for (int e = 0; e < 3; ++e)
         for (int c = 0; c < 2; ++c)
-            coeff[e][c].setSampleRateAndBlockSize((float) dsamplerate_os, BLOCK_SIZE_OS);
+            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 void CombulatorEffect::process(float *dataL, float *dataR)
@@ -182,8 +182,9 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     using namespace sst::filters;
     int type = fut_comb_pos, subtype = 1;
 
-    auto filtptr = GetQFPtrFilterUnit(static_cast<FilterType> (type),
-                                      static_cast<FilterSubType> (subtype | QFUSubtypeMasks::EXTENDED_COMB));
+    auto filtptr =
+        GetQFPtrFilterUnit(static_cast<FilterType>(type),
+                           static_cast<FilterSubType>(subtype | QFUSubtypeMasks::EXTENDED_COMB));
 
     auto fbscaled = (feedback.v < 0.f ? -1.f : 1.f) * sqrt(abs(feedback.v));
 
@@ -195,9 +196,10 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(freq[e].v, fbscaled, static_cast<FilterType> (type),
-                                   static_cast<FilterSubType> (subtype | QFUSubtypeMasks::EXTENDED_COMB),
-                                   storage, useTuning);
+            coeff[e][c].MakeCoeffs(
+                freq[e].v, fbscaled, static_cast<FilterType>(type),
+                static_cast<FilterSubType>(subtype | QFUSubtypeMasks::EXTENDED_COMB), storage,
+                useTuning);
 
             coeff[e][c].updateState(qfus[c]);
 
