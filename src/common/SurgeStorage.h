@@ -1359,7 +1359,7 @@ class alignas(16) SurgeStorage
     // Alternately make this unordered and provide a hash
     std::map<std::pair<std::string, int>, std::string> helpURL_paramidentifier_typespecialized;
 
-    int subtypeMemory[n_scenes][n_filterunits_per_scene][n_fu_types];
+    int subtypeMemory[n_scenes][n_filterunits_per_scene][sst::filters::num_filter_types];
     MonoPedalMode monoPedalMode = HOLD_ALL_NOTES;
 
   private:

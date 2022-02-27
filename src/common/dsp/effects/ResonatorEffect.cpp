@@ -22,13 +22,13 @@ ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     gain.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    qfus = new QuadFilterUnitState[2]();
+    qfus = new sst::filters::QuadFilterUnitState[2]();
 
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
         {
-            for (int q = 0; q < n_filter_registers; ++q)
+            for (int q = 0; q < sst::filters::n_filter_registers; ++q)
             {
                 Reg[e][c][q] = 0;
             }
@@ -103,6 +103,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     auto whichModel = *pdata_ival[resonator_mode];
     int type = 0, subtype = 0;
 
+    using namespace sst::filters;
     switch (whichModel)
     {
     case rm_lowpass:
@@ -132,7 +133,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     }
     }
 
-    FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
+    auto filtptr = GetQFPtrFilterUnit(static_cast<FilterType> (type), static_cast<FilterSubType> (subtype));
     float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75}; // prevent self-oscillation
 
     for (int i = 0; i < 3; ++i)
@@ -167,8 +168,10 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype,
-                                   storage, false);
+            // @TODO: Surge tuning provider and +69 offset
+            coeff[e][c].MakeCoeffs(cutoff[e].v + 69, resonance[e].v * rescomp[whichModel],
+                                   static_cast<FilterType> (type), static_cast<FilterSubType> (subtype),
+                                   nullptr, false);
 
             for (int i = 0; i < n_cm_coeffs; i++)
             {

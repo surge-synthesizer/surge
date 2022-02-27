@@ -20,7 +20,6 @@
 #include "ADSRModulationSource.h"
 #include "LFOModulationSource.h"
 #include <vembertech/lipol.h>
-#include "FilterCoefficientMaker.h"
 #include "QuadFilterChain.h"
 #include <array>
 
@@ -169,10 +168,10 @@ class alignas(16) SurgeVoice
     struct
     {
         float Gain, FB, Mix1, Mix2, OutL, OutR, Out2L, Out2R, Drive, wsLPF, FBlineL, FBlineR;
-        float Delay[4][MAX_FB_COMB + FIRipol_N];
+        float Delay[4][sst::filters::utilities::MAX_FB_COMB + sst::filters::utilities::SincTable::FIRipol_N];
         struct
         {
-            float C[n_cm_coeffs], R[n_filter_registers];
+            float C[sst::filters::n_cm_coeffs], R[sst::filters::n_filter_registers];
             unsigned int WP;
             int type, subtype; // used for comparison with the last run
         } FU[4];
@@ -181,7 +180,7 @@ class alignas(16) SurgeVoice
             float R[n_waveshaper_registers];
         } WS[2];
     } FBP;
-    FilterCoefficientMaker CM[2];
+    sst::filters::FilterCoefficientMaker<> CM[2]; // @TODO: Surge tuning provider
 
     // data
     int lag_id[8], pitch_id, octave_id, volume_id, pan_id, width_id;

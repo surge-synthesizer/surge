@@ -73,9 +73,8 @@ add_library(${PROJECT_NAME}
   dsp/Oscillator.h
   dsp/QuadFilterChain.cpp
   dsp/QuadFilterChain.h
-  dsp/QuadFilterUnit.cpp
-  dsp/QuadFilterUnit.h
-  dsp/QuadFilterWaveshapers.cpp
+  dsp/QuadFilterWaveshaper.h
+  dsp/QuadFilterWaveshaper.cpp
   dsp/SurgeVoice.cpp
   dsp/SurgeVoice.h
   dsp/SurgeVoiceState.h
@@ -180,24 +179,8 @@ add_library(${PROJECT_NAME}
   dsp/filters/AllpassFilter.h
   dsp/filters/BiquadFilter.cpp
   dsp/filters/BiquadFilter.h
-  dsp/filters/DiodeLadder.cpp
-  dsp/filters/DiodeLadder.h
-  dsp/filters/FilterCoefficientMaker.cpp
-  dsp/filters/FilterCoefficientMaker.h
-  dsp/filters/K35Filter.cpp
-  dsp/filters/K35Filter.h
-  dsp/filters/NonlinearFeedback.cpp
-  dsp/filters/NonlinearFeedback.h
-  dsp/filters/NonlinearStates.cpp
-  dsp/filters/NonlinearStates.h
-  dsp/filters/OBXDFilter.cpp
-  dsp/filters/OBXDFilter.h
-  dsp/filters/TriPoleFilter.cpp
-  dsp/filters/TriPoleFilter.h
   dsp/filters/VectorizedSVFilter.cpp
   dsp/filters/VectorizedSVFilter.h
-  dsp/filters/VintageLadders.cpp
-  dsp/filters/VintageLadders.h
   dsp/modulators/ADSRModulationSource.h
   dsp/modulators/FormulaModulationHelper.cpp
   dsp/modulators/FormulaModulationHelper.h

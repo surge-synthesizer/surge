@@ -5143,11 +5143,11 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                                         .scene[current_scene]
                                         .filterunit[p->ctrlgroup_entry]
                                         .type.val.i;
-                    auto stc = fut_subcount[filttype];
+                    auto stc = sst::filters::fut_subcount[filttype];
                     hsw->setIsMultiIntegerValued(true);
                     hsw->setIntegerMax(stc);
                     hsw->setIntegerValue(std::min(p->val.i + 1, stc));
-                    if (fut_subcount[filttype] == 0)
+                    if (sst::filters::fut_subcount[filttype] == 0)
                         hsw->setIntegerValue(0);
 
                     if (p->ctrlgroup_entry == 1)
@@ -5393,7 +5393,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if (parm && parm->supportsTotalIndexOrdering())
             hsw->setIntOrdering(parm->totalIndexOrdering());
 
-        hsw->setMinMax(0, n_fu_types - 1);
+        hsw->setMinMax(0, sst::filters::num_filter_types - 1);
         hsw->setLabel(p->get_name());
 
         auto pv = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::BACKGROUND);
@@ -5424,7 +5424,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         if (activeGlyph)
         {
-            for (int i = 0; i < n_fu_types; i++)
+            for (int i = 0; i < sst::filters::num_filter_types; i++)
                 hsw->addGlyphIndexMapEntry(fut_glyph_index[i][0], fut_glyph_index[i][1]);
 
             auto glpc = currentSkin->propertyValue(skinCtrl,

@@ -575,7 +575,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 {
                     if (sm != 0)
                     {
-                        res.emplace_back("FILTER", STRING, 0, fut_names[sm]);
+                        res.emplace_back("FILTER", STRING, 0, sst::filters::filter_type_names[sm]);
                     }
                 }
             }

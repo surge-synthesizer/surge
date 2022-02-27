@@ -1625,13 +1625,13 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 switch (u.type.val.i)
                 {
-                case fut_lpmoog:
+                case sst::filters::FilterType::fut_lpmoog:
                     u.subtype.val.i = 3;
                     break;
                 case fut_14_comb:
                     u.subtype.val.i = 1;
                     break;
-                case fut_SNH: // SNH replaced comb_neg in rev 4
+                case sst::filters::FilterType::fut_SNH: // SNH replaced comb_neg in rev 4
                     u.type.val.i = fut_14_comb;
                     u.subtype.val.i = 3;
                     break;
@@ -1646,7 +1646,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             for (auto &u : sc.filterunit)
             {
-                if (u.type.val.i == fut_SNH) // misc replaced comb_neg in rev 4
+                if (u.type.val.i == sst::filters::FilterType::fut_SNH) // misc replaced comb_neg in rev 4
                 {
                     u.type.val.i = fut_14_comb;
                     u.subtype.val.i += 2;
@@ -1669,16 +1669,19 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     if (revision < 6) // adjust resonance of older patches to match new range
     {
+        using sst::filters::FilterType;
         for (auto &sc : scene)
         {
             for (auto &u : sc.filterunit)
             {
-                if ((u.type.val.i == fut_lp12) || (u.type.val.i == fut_hp12) ||
-                    (u.type.val.i == fut_bp12))
+                if ((u.type.val.i == FilterType::fut_lp12) ||
+                    (u.type.val.i == FilterType::fut_hp12) ||
+                    (u.type.val.i == FilterType::fut_bp12))
                 {
                     u.resonance.val.f = convert_v11_reso_to_v12_2P(u.resonance.val.f);
                 }
-                else if ((u.type.val.i == fut_lp24) || (u.type.val.i == fut_hp24))
+                else if ((u.type.val.i == FilterType::fut_lp24) ||
+                         (u.type.val.i == FilterType::fut_hp24))
                 {
                     u.resonance.val.f = convert_v11_reso_to_v12_4P(u.resonance.val.f);
                 }
@@ -1688,18 +1691,19 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     if (revision < 8)
     {
+        using sst::filters::FilterType, sst::filters::FilterSubType;
         for (auto &sc : scene)
         {
             // set lp/hp filters to subtype 1
             for (auto &u : sc.filterunit)
             {
-                if ((u.type.val.i == fut_lp12) || (u.type.val.i == fut_hp12) ||
-                    (u.type.val.i == fut_bp12) || (u.type.val.i == fut_lp24) ||
-                    (u.type.val.i == fut_hp24))
+                if ((u.type.val.i == FilterType::fut_lp12) || (u.type.val.i == FilterType::fut_hp12) ||
+                    (u.type.val.i == FilterType::fut_bp12) || (u.type.val.i == FilterType::fut_lp24) ||
+                    (u.type.val.i == FilterType::fut_hp24))
                 {
-                    u.subtype.val.i = (revision < 6) ? st_SVF : st_Rough;
+                    u.subtype.val.i = (revision < 6) ? FilterSubType::st_SVF : FilterSubType::st_Rough;
                 }
-                else if (u.type.val.i == fut_notch12)
+                else if (u.type.val.i == FilterType::fut_notch12)
                 {
                     u.subtype.val.i = 1;
                 }
@@ -1735,9 +1739,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             for (int u = 0; u < n_filterunits_per_scene; u++)
             {
                 auto *fu = &(sc.filterunit[u]);
-                fu_type_sv14 futy = (fu_type_sv14)(fu->type.val.i);
+                const auto futy = (fu_type_sv14)(fu->type.val.i);
                 auto subtype = fu->subtype.val.i;
 
+                using sst::filters::FilterType;
                 switch (futy)
                 {
                 case fut_14_none:
@@ -1767,16 +1772,16 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     switch (newtype)
                     {
                     case 0:
-                        fu->type.val.i = fut_obxd_2pole_lp;
+                        fu->type.val.i = FilterType::fut_obxd_2pole_lp;
                         break;
                     case 1:
-                        fu->type.val.i = fut_obxd_2pole_bp;
+                        fu->type.val.i = FilterType::fut_obxd_2pole_bp;
                         break;
                     case 2:
-                        fu->type.val.i = fut_obxd_2pole_hp;
+                        fu->type.val.i = FilterType::fut_obxd_2pole_hp;
                         break;
                     case 3:
-                        fu->type.val.i = fut_obxd_2pole_n;
+                        fu->type.val.i = FilterType::fut_obxd_2pole_n;
                         break;
                     }
                     break;
@@ -1784,24 +1789,24 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 case fut_14_bp12:
                     if (subtype < 3)
                     {
-                        fu->type.val.i = fut_bp12;
+                        fu->type.val.i = FilterType::fut_bp12;
                         fu->subtype.val.i = subtype;
                     }
                     else if (subtype >= 3 && subtype < 6)
                     {
-                        fu->type.val.i = fut_bp24;
+                        fu->type.val.i = FilterType::fut_bp24;
                         fu->subtype.val.i = subtype - 3;
                     }
                     break;
                 case fut_14_notch12:
                     if (subtype < 2)
                     {
-                        fu->type.val.i = fut_notch12;
+                        fu->type.val.i = FilterType::fut_notch12;
                         fu->subtype.val.i = subtype;
                     }
                     else if (subtype >= 2 && subtype < 4)
                     {
-                        fu->type.val.i = fut_notch24;
+                        fu->type.val.i = FilterType::fut_notch24;
                         fu->subtype.val.i = subtype - 2;
                     }
 
@@ -1810,12 +1815,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     // subtypes 1 and 2 become positive, subtypes 3 and 4 become negative
                     if (subtype == 0 || subtype == 1)
                     {
-                        fu->type.val.i = fut_comb_pos;
+                        fu->type.val.i = FilterType::fut_comb_pos;
                         fu->subtype.val.i = subtype;
                     }
                     else if (subtype == 2 || subtype == 3)
                     {
-                        fu->type.val.i = fut_comb_neg;
+                        fu->type.val.i = FilterType::fut_comb_neg;
                         fu->subtype.val.i = subtype - 2;
                     }
                     break;
@@ -1836,7 +1841,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             sc.filterunit[u].subtype.val.i =
                 limit_range(sc.filterunit[u].subtype.val.i, 0,
-                            max(0, fut_subcount[sc.filterunit[u].type.val.i] - 1));
+                            max(0, sst::filters::fut_subcount[sc.filterunit[u].type.val.i] - 1));
             sc.filterunit[u].type.set_user_data(&patchFilterSelectorMapper);
         }
         sc.wsunit.type.set_user_data(&patchWaveshaperSelectorMapper);

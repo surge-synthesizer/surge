@@ -17,7 +17,7 @@
 #include "Effect.h"
 #include "DSPUtils.h"
 #include <vembertech/lipol.h>
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 
 class ResonatorEffect : public Effect
 {
@@ -71,13 +71,13 @@ class ResonatorEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
-    QuadFilterUnitState *qfus = nullptr;
+    sst::filters::QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
-    FilterCoefficientMaker coeff[3][2];
+    sst::filters::FilterCoefficientMaker<> coeff[3][2]; // @TODO: Surge tuning provider
     lag<float, true> cutoff[3], resonance[3], bandGain[3];
     // float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];
     // float WP[3][2];
-    float Reg[3][2][n_filter_registers];
+    float Reg[3][2][sst::filters::n_filter_registers];
 
   private:
     int bi; // block increment (to keep track of events not occurring every n blocks)

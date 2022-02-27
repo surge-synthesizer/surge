@@ -1106,12 +1106,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         auto f1type = synth->storage.getPatch().scene[current_scene].filterunit[0].type.val.i;
         auto f2type = synth->storage.getPatch().scene[current_scene].filterunit[1].type.val.i;
 
-        if (tag == f1subtypetag && (f1type == fut_none || f1type == fut_SNH))
+        if (tag == f1subtypetag &&
+            (f1type == sst::filters::fut_none || f1type == sst::filters::fut_SNH))
         {
             return 1;
         }
 
-        if (tag == f2subtypetag && (f2type == fut_none || f2type == fut_SNH))
+        if (tag == f2subtypetag &&
+            (f2type == sst::filters::fut_none || f2type == sst::filters::fut_SNH))
         {
             return 1;
         }
@@ -1299,12 +1301,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                          .filterunit[p->ctrlgroup_entry]
                                          .type.val.i;
 
-                        if (ftype == fut_comb_pos || ftype == fut_comb_neg)
+                        if (ftype == sst::filters::fut_comb_pos ||
+                            ftype == sst::filters::fut_comb_neg)
                         {
                             isCombOnSubtype = true;
                         }
 
-                        max = fut_subcount[ftype] - 1;
+                        max = sst::filters::fut_subcount[ftype] - 1;
                     }
 
                     auto dm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
@@ -2774,8 +2777,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         int a =
             synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i + valdir;
         int t = synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i;
-        int nn =
-            fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
+        int nn = sst::filters::fut_subcount
+            [synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
         if (a >= nn)
             a = 0;
         if (a < 0)
@@ -3143,7 +3146,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     dynamic_cast<Surge::Widgets::Switch *>(filtersubtype[p->ctrlgroup_entry]);
                 if (subsw)
                 {
-                    int sc = fut_subcount[p->val.i];
+                    int sc = sst::filters::fut_subcount[p->val.i];
 
                     subsw->setIntegerMax(sc);
                 }
@@ -3159,8 +3162,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         int idx = (tag == (f2subtypetag - 1)) ? 1 : 0;
 
         int a = synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i;
-        int nn =
-            fut_subcount[synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
+        int nn = sst::filters::fut_subcount
+            [synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
         if (a >= nn)
             a = 0;
         synth->storage.getPatch().scene[current_scene].filterunit[idx].subtype.val.i = a;

@@ -1131,6 +1131,8 @@ void SurgeVoice::set_path(bool osc1, bool osc2, bool osc3, int FMmode, bool ring
 
 void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ialise)
 {
+    using namespace sst::filters;
+
     fbq = Q;
     fbqi = e;
 
@@ -1214,12 +1216,15 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
         if (scene->f2_cutoff_is_offset.val.b)
             cutoffB += cutoffA;
 
-        CM[0].MakeCoeffs(cutoffA, localcopy[id_resoa].f, scene->filterunit[0].type.val.i,
-                         scene->filterunit[0].subtype.val.i, storage,
-                         scene->filterunit[0].cutoff.extend_range);
+        // @TODO: Surge tuing provider and hacky +69 offset
+        CM[0].MakeCoeffs(cutoffA + 69, localcopy[id_resoa].f,
+                         static_cast<FilterType> (scene->filterunit[0].type.val.i),
+                         static_cast<FilterSubType> (scene->filterunit[0].subtype.val.i),
+                         nullptr, scene->filterunit[0].cutoff.extend_range);
         CM[1].MakeCoeffs(
-            cutoffB, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
-            scene->filterunit[1].type.val.i, scene->filterunit[1].subtype.val.i, storage,
+            cutoffB + 69, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
+            static_cast<FilterType> (scene->filterunit[1].type.val.i),
+            static_cast<FilterSubType> (scene->filterunit[1].subtype.val.i), nullptr,
             scene->filterunit[1].cutoff.extend_range);
 
         for (int u = 0; u < n_filterunits_per_scene; u++)
@@ -1239,30 +1244,6 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
                 Q->FU[u].DB[e] = FBP.Delay[u];
                 Q->FU[u].WP[e] = FBP.FU[u].WP;
-                switch (scene->filterunit[u].type.val.i)
-                {
-                case fut_lpmoog:
-                case fut_diode:
-                case fut_cutoffwarp_lp:
-                case fut_cutoffwarp_hp:
-                case fut_cutoffwarp_n:
-                case fut_cutoffwarp_bp:
-                case fut_cutoffwarp_ap:
-                case fut_resonancewarp_lp:
-                case fut_resonancewarp_hp:
-                case fut_resonancewarp_n:
-                case fut_resonancewarp_bp:
-                case fut_resonancewarp_ap:
-                case fut_tripole:
-                    // subtype is stored in WP[0] for the entire quad.
-                    // this is fine because integer parameters like this are not modulatable, and
-                    // quads are only parallel across voices, so the quad would have identical
-                    // parameters anyway.
-                    Q->FU[u].WP[0] = scene->filterunit[u].subtype.val.i;
-                    break;
-                default: // do nothing
-                    break;
-                }
 
                 if (scene->filterblock_configuration.val.i == fc_wide)
                 {
@@ -1279,27 +1260,6 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
                     Q->FU[u + 2].DB[e] = FBP.Delay[u + 2];
                     Q->FU[u + 2].WP[e] = FBP.FU[u].WP;
-
-                    switch (scene->filterunit[u].type.val.i)
-                    {
-                    case fut_lpmoog:
-                    case fut_diode:
-                    case fut_cutoffwarp_lp:
-                    case fut_cutoffwarp_hp:
-                    case fut_cutoffwarp_n:
-                    case fut_cutoffwarp_bp:
-                    case fut_cutoffwarp_ap:
-                    case fut_resonancewarp_lp:
-                    case fut_resonancewarp_hp:
-                    case fut_resonancewarp_n:
-                    case fut_resonancewarp_bp:
-                    case fut_resonancewarp_ap:
-                    case fut_tripole:
-                        Q->FU[u + 2].WP[0] = scene->filterunit[u].subtype.val.i;
-                        break;
-                    default:
-                        break;
-                    }
                 }
             }
         }
@@ -1308,6 +1268,8 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
 void SurgeVoice::GetQFB()
 {
+    using namespace sst::filters;
+
     for (int u = 0; u < n_filterunits_per_scene; u++)
     {
         if (scene->filterunit[u].type.val.i != 0)
