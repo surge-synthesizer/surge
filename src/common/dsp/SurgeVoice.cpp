@@ -111,7 +111,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *sto
     return res;
 }
 
-SurgeVoice::SurgeVoice() {}
+SurgeVoice::SurgeVoice() { sampleRateReset(); }
 
 SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params, int key,
                        int velocity, int channel, int scene_id, float detune,
@@ -194,6 +194,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
         osctype[i] = -1;
     }
     memset(&FBP, 0, sizeof(FBP));
+    sampleRateReset();
 
     polyAftertouchSource = ControllerModulationSource(storage->smoothingMode);
     monoAftertouchSource = ControllerModulationSource(storage->smoothingMode);
@@ -1236,7 +1237,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
         {
             if (scene->filterunit[u].type.val.i != 0)
             {
-                CM[u].updateState(Q->FU[u]);
+                CM[u].updateState(Q->FU[u], e);
                 for (int i = 0; i < n_filter_registers; i++)
                 {
                     set1f(Q->FU[u].R[i], e, FBP.FU[u].R[i]);
@@ -1247,7 +1248,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
                 if (scene->filterblock_configuration.val.i == fc_wide)
                 {
-                    CM[u].updateState(Q->FU[u + 2]);
+                    CM[u].updateState(Q->FU[u + 2], e);
                     for (int i = 0; i < n_filter_registers; i++)
                     {
                         set1f(Q->FU[u + 2].R[i], e, FBP.FU[u + 2].R[i]);

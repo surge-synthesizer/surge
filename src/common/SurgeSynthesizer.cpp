@@ -2089,10 +2089,8 @@ void SurgeSynthesizer::setSamplerate(float sr)
 
     for (int s = 0; s < n_scenes; s++)
     {
-        auto iter = voices[s].begin();
-        while (iter != voices[s].end())
+        for (auto *v : voices[s])
         {
-            SurgeVoice *v = *iter;
             assert(v);
             v->sampleRateReset();
         }

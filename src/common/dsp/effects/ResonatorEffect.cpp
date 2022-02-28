@@ -40,6 +40,7 @@ ResonatorEffect::~ResonatorEffect() { delete[] qfus; }
 
 void ResonatorEffect::init()
 {
+    sampleRateReset();
     setvars(true);
     bi = 0;
 }
@@ -107,41 +108,37 @@ void ResonatorEffect::process(float *dataL, float *dataR)
      * call CoeffMaker with one fo the known models and subtypes, along with the resonance
      * and the frequency of the particular band.
      */
-    auto whichModel = *pdata_ival[resonator_mode];
-    int type = 0, subtype = 0;
-
     using namespace sst::filters;
+    auto whichModel = *pdata_ival[resonator_mode];
+    FilterType type;
+    FilterSubType subtype = st_Rough;
+
     switch (whichModel)
     {
     case rm_lowpass:
     {
         type = fut_lp12;
-        subtype = st_Rough;
         break;
     }
     case rm_bandpass:
     case rm_bandpass_n:
     {
         type = fut_bp12;
-        subtype = st_Rough;
         break;
     }
     case rm_highpass:
     {
         type = fut_hp12;
-        subtype = st_Rough;
         break;
     }
     default:
     {
         type = fut_none;
-        subtype = 0;
         break;
     }
     }
 
-    auto filtptr =
-        GetQFPtrFilterUnit(static_cast<FilterType>(type), static_cast<FilterSubType>(subtype));
+    auto filtptr = GetQFPtrFilterUnit(type, subtype);
     float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75}; // prevent self-oscillation
 
     for (int i = 0; i < 3; ++i)
@@ -176,11 +173,10 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel],
-                                   static_cast<FilterType>(type),
-                                   static_cast<FilterSubType>(subtype), storage, false);
+            coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype,
+                                   storage, false);
 
-            coeff[e][c].updateState(qfus[c]);
+            coeff[e][c].updateState(qfus[c], e);
 
             for (int i = 0; i < n_filter_registers; i++)
             {

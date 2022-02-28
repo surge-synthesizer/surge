@@ -65,6 +65,7 @@ CombulatorEffect::~CombulatorEffect() { delete[] qfus; }
 
 void CombulatorEffect::init()
 {
+    sampleRateReset();
     setvars(true);
     bi = 0;
     lp.suspend();
@@ -201,7 +202,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                 static_cast<FilterSubType>(subtype | QFUSubtypeMasks::EXTENDED_COMB), storage,
                 useTuning);
 
-            coeff[e][c].updateState(qfus[c]);
+            coeff[e][c].updateState(qfus[c], e);
 
             for (int i = 0; i < n_filter_registers; i++)
             {
