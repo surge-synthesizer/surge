@@ -5953,9 +5953,9 @@ std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index
             return (index == 0 ? " Key" : " Voice");
         }
 
-        if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
+        if (ms >= ms_lfo1 && ms <= ms_slfo6)
         {
-            auto lf = &(synth->storage.getPatch().scene[scene].lfo[modsource - ms_lfo1]);
+            auto lf = &(synth->storage.getPatch().scene[scene].lfo[ms - ms_lfo1]);
             if (lf->shape.val.i != lt_formula)
             {
                 if (index == 0)
