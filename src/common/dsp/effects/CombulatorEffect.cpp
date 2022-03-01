@@ -24,13 +24,13 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     hp.setBlockSize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    qfus = new QuadFilterUnitState[2]();
+    qfus = new sst::filters::QuadFilterUnitState[2]();
 
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
         {
-            for (int q = 0; q < n_filter_registers; ++q)
+            for (int q = 0; q < sst::filters::n_filter_registers; ++q)
             {
                 Reg[e][c][q] = 0;
             }
@@ -65,6 +65,7 @@ CombulatorEffect::~CombulatorEffect() { delete[] qfus; }
 
 void CombulatorEffect::init()
 {
+    sampleRateReset();
     setvars(true);
     bi = 0;
     lp.suspend();
@@ -159,6 +160,13 @@ inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
+void CombulatorEffect::sampleRateReset()
+{
+    for (int e = 0; e < 3; ++e)
+        for (int c = 0; c < 2; ++c)
+            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
+}
+
 void CombulatorEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
@@ -172,9 +180,12 @@ void CombulatorEffect::process(float *dataL, float *dataR)
      * call CoeffMaker with one fo the known models and subtypes, along with the feedback
      * and the frequency of the particular band.
      */
+    using namespace sst::filters;
     int type = fut_comb_pos, subtype = 1;
 
-    FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype | QFUSubtypeMasks::EXTENDED_COMB);
+    auto filtptr =
+        GetQFPtrFilterUnit(static_cast<FilterType>(type),
+                           static_cast<FilterSubType>(subtype | QFUSubtypeMasks::EXTENDED_COMB));
 
     auto fbscaled = (feedback.v < 0.f ? -1.f : 1.f) * sqrt(abs(feedback.v));
 
@@ -186,14 +197,12 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     {
         for (int c = 0; c < 2; ++c)
         {
-            coeff[e][c].MakeCoeffs(freq[e].v, fbscaled, type,
-                                   subtype | QFUSubtypeMasks::EXTENDED_COMB, storage, useTuning);
+            coeff[e][c].MakeCoeffs(
+                freq[e].v, fbscaled, static_cast<FilterType>(type),
+                static_cast<FilterSubType>(subtype | QFUSubtypeMasks::EXTENDED_COMB), storage,
+                useTuning);
 
-            for (int i = 0; i < n_cm_coeffs; i++)
-            {
-                set1f(qfus[c].C[i], e, coeff[e][c].C[i]);
-                set1f(qfus[c].dC[i], e, coeff[e][c].dC[i]);
-            }
+            coeff[e][c].updateState(qfus[c], e);
 
             for (int i = 0; i < n_filter_registers; i++)
             {

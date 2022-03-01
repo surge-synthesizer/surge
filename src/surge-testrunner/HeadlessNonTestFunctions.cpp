@@ -132,7 +132,7 @@ void standardCutoffCurve(int ft, int sft, std::ostream &os)
 
         surge->storage.getPatch().scene[0].osc[0].type.val.i = ot_sine;
 
-        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = fut_none;
+        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = sst::filters::fut_none;
         surge->storage.getPatch().scene[1].filterunit[0].subtype.val.i = 0;
         surge->storage.getPatch().scene[1].osc[0].type.val.i = ot_sine;
 
@@ -303,7 +303,7 @@ void middleCSawIntoFilterVsCutoff(int ft, int sft, std::ostream &os)
         surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = sft;
         surge->storage.getPatch().scene[0].filterunit[0].resonance.val.f = res;
 
-        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = fut_none;
+        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = sst::filters::fut_none;
         surge->storage.getPatch().scene[1].filterunit[0].subtype.val.i = 0;
 
         auto proc = [surge](int n) {
@@ -407,7 +407,7 @@ void middleCSawIntoFilterVsReso(int ft, int sft, std::ostream &os)
         surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = sft;
         surge->storage.getPatch().scene[0].filterunit[0].cutoff.val.f = conote;
 
-        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = fut_none;
+        surge->storage.getPatch().scene[1].filterunit[0].type.val.i = sst::filters::fut_none;
         surge->storage.getPatch().scene[1].filterunit[0].subtype.val.i = 0;
 
         auto proc = [surge](int n) {
@@ -671,14 +671,18 @@ void generateNLFeedbackNorms()
         return ra / nAvg;
     };
 
+    using sst::filters::FilterType;
+
     // Remember if you don't set the normalization to FALSE in NLF.cpp this will be bad
-    auto basecaseRMS = playRMS(setup(genLowpass ? fut_obxd_4pole : fut_hp24, genLowpass ? 3 : 0));
+    auto basecaseRMS = playRMS(
+        setup(genLowpass ? FilterType::fut_obxd_4pole : FilterType::fut_hp24, genLowpass ? 3 : 0));
     std::cout << "// no filter RMS is " << basecaseRMS << std::endl;
 
     std::vector<float> results;
     for (int nlfst = 0; nlfst < 12; nlfst++)
     {
-        auto r = playRMS(setup(genLowpass ? fut_cutoffwarp_lp : fut_cutoffwarp_hp, nlfst));
+        auto r = playRMS(setup(
+            genLowpass ? FilterType::fut_cutoffwarp_lp : FilterType::fut_cutoffwarp_hp, nlfst));
         // auto r = playRMS( setup( fut_cutoffwarp_hp, nlfst));
         std::cout << "// RMS=" << r << " Ratio=" << r / basecaseRMS << std::endl;
         results.push_back(r);

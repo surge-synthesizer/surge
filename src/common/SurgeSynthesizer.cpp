@@ -2086,6 +2086,15 @@ void SurgeSynthesizer::setSamplerate(float sr)
             f->sampleRateReset();
         }
     }
+
+    for (int s = 0; s < n_scenes; s++)
+    {
+        for (auto *v : voices[s])
+        {
+            assert(v);
+            v->sampleRateReset();
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2295,7 +2304,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             {
                 auto subp = storage.getPatch().param_ptr[index];
                 auto filterType = storage.getPatch().param_ptr[index - 1]->val.i;
-                auto maxIVal = fut_subcount[filterType];
+                auto maxIVal = sst::filters::fut_subcount[filterType];
                 if (maxIVal == 0)
                     subp->val.i = 0;
                 else
@@ -3871,6 +3880,7 @@ void SurgeSynthesizer::process()
 
         storage.modRoutingMutex.unlock();
 
+        using sst::filters::FilterType, sst::filters::FilterSubType;
         fbq_global g;
         if (storage.getPatch().scene[s].filterunit[0].type.deactivated)
         {
@@ -3878,8 +3888,10 @@ void SurgeSynthesizer::process()
         }
         else
         {
-            g.FU1ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[0].type.val.i,
-                                          storage.getPatch().scene[s].filterunit[0].subtype.val.i);
+            g.FU1ptr = sst::filters::GetQFPtrFilterUnit(
+                static_cast<FilterType>(storage.getPatch().scene[s].filterunit[0].type.val.i),
+                static_cast<FilterSubType>(
+                    storage.getPatch().scene[s].filterunit[0].subtype.val.i));
         }
         if (storage.getPatch().scene[s].filterunit[1].type.deactivated)
         {
@@ -3887,8 +3899,10 @@ void SurgeSynthesizer::process()
         }
         else
         {
-            g.FU2ptr = GetQFPtrFilterUnit(storage.getPatch().scene[s].filterunit[1].type.val.i,
-                                          storage.getPatch().scene[s].filterunit[1].subtype.val.i);
+            g.FU2ptr = sst::filters::GetQFPtrFilterUnit(
+                static_cast<FilterType>(storage.getPatch().scene[s].filterunit[1].type.val.i),
+                static_cast<FilterSubType>(
+                    storage.getPatch().scene[s].filterunit[1].subtype.val.i));
         }
 
         if (storage.getPatch().scene[s].wsunit.type.deactivated)

@@ -4,7 +4,7 @@
 
 #include "WaveShaperSelector.h"
 #include "RuntimeFont.h"
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 #include "DSPUtils.h"
 #include <iostream>
 #include "AccessibleHelpers.h"

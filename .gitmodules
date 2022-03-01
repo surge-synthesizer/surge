@@ -38,3 +38,6 @@
 [submodule "libs/clap-juce-extensions"]
 	path = libs/clap-juce-extensions
 	url = https://github.com/free-audio/clap-juce-extensions
+[submodule "libs/sst/sst-filters"]
+	path = libs/sst/sst-filters
+	url = https://github.com/surge-synthesizer/sst-filters

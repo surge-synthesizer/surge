@@ -13,7 +13,7 @@
 ** open source in September 2018.
 */
 
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
 #include <random>

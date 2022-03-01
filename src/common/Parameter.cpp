@@ -900,7 +900,7 @@ void Parameter::set_type(int ctrltype)
     case ct_filtertype:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = n_fu_types - 1;
+        val_max.i = sst::filters::num_filter_types - 1;
         val_default.i = 0;
         break;
     case ct_filtersubtype:
@@ -3266,7 +3266,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
             break;
         case ct_filtertype:
-            snprintf(txt, TXT_SIZE, "%s", fut_names[limit_range(i, 0, (int)n_fu_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     sst::filters::filter_type_names[limit_range(
+                         i, 0, (int)sst::filters::num_filter_types - 1)]);
             break;
         case ct_filtersubtype:
         {
@@ -3276,83 +3278,90 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 for (int unit = 0; unit < n_filterunits_per_scene; ++unit)
                     if (id == patch.scene[scene].filterunit[unit].subtype.id)
                     {
+                        using sst::filters::FilterType;
+
                         int type = patch.scene[scene].filterunit[unit].type.val.i;
-                        fu_type fType = (fu_type)type;
-                        if (i >= fut_subcount[type])
+                        const auto fType = (FilterType)type;
+                        if (i >= sst::filters::fut_subcount[type])
                         {
                             snprintf(txt, TXT_SIZE, "None");
                         }
                         else
                             switch (fType)
                             {
-                            case fut_lpmoog:
-                            case fut_diode:
-                                snprintf(txt, TXT_SIZE, "%s", fut_ldr_subtypes[i]);
+                            case FilterType::fut_lpmoog:
+                            case FilterType::fut_diode:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_ldr_subtypes[i]);
                                 break;
-                            case fut_bp12:
-                            case fut_bp24:
-                                snprintf(txt, TXT_SIZE, "%s", fut_bp_subtypes[i]);
+                            case FilterType::fut_bp12:
+                            case FilterType::fut_bp24:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_bp_subtypes[i]);
                                 break;
-                            case fut_notch12:
-                            case fut_notch24:
-                            case fut_apf:
-                                snprintf(txt, TXT_SIZE, "%s", fut_notch_subtypes[i]);
+                            case FilterType::fut_notch12:
+                            case FilterType::fut_notch24:
+                            case FilterType::fut_apf:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_notch_subtypes[i]);
                                 break;
-                            case fut_comb_pos:
-                            case fut_comb_neg:
-                                snprintf(txt, TXT_SIZE, "%s", fut_comb_subtypes[i]);
+                            case FilterType::fut_comb_pos:
+                            case FilterType::fut_comb_neg:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_comb_subtypes[i]);
                                 break;
-                            case fut_vintageladder:
-                                snprintf(txt, TXT_SIZE, "%s", fut_vintageladder_subtypes[i]);
+                            case FilterType::fut_vintageladder:
+                                snprintf(txt, TXT_SIZE, "%s",
+                                         sst::filters::fut_vintageladder_subtypes[i]);
                                 break;
-                            case fut_obxd_2pole_lp:
-                            case fut_obxd_2pole_hp:
-                            case fut_obxd_2pole_n:
-                            case fut_obxd_2pole_bp:
-                                snprintf(txt, TXT_SIZE, "%s", fut_obxd_2p_subtypes[i]);
+                            case FilterType::fut_obxd_2pole_lp:
+                            case FilterType::fut_obxd_2pole_hp:
+                            case FilterType::fut_obxd_2pole_n:
+                            case FilterType::fut_obxd_2pole_bp:
+                                snprintf(txt, TXT_SIZE, "%s",
+                                         sst::filters::fut_obxd_2p_subtypes[i]);
                                 break;
-                            case fut_obxd_4pole:
-                                snprintf(txt, TXT_SIZE, "%s", fut_obxd_4p_subtypes[i]);
+                            case FilterType::fut_obxd_4pole:
+                                snprintf(txt, TXT_SIZE, "%s",
+                                         sst::filters::fut_obxd_4p_subtypes[i]);
                                 break;
-                            case fut_k35_lp:
-                            case fut_k35_hp:
-                                snprintf(txt, TXT_SIZE, "%s", fut_k35_subtypes[i]);
+                            case FilterType::fut_k35_lp:
+                            case FilterType::fut_k35_hp:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_k35_subtypes[i]);
                                 break;
-                            case fut_cutoffwarp_lp:
-                            case fut_cutoffwarp_hp:
-                            case fut_cutoffwarp_n:
-                            case fut_cutoffwarp_bp:
-                            case fut_cutoffwarp_ap:
-                            case fut_resonancewarp_lp:
-                            case fut_resonancewarp_hp:
-                            case fut_resonancewarp_n:
-                            case fut_resonancewarp_bp:
-                            case fut_resonancewarp_ap:
+                            case FilterType::fut_cutoffwarp_lp:
+                            case FilterType::fut_cutoffwarp_hp:
+                            case FilterType::fut_cutoffwarp_n:
+                            case FilterType::fut_cutoffwarp_bp:
+                            case FilterType::fut_cutoffwarp_ap:
+                            case FilterType::fut_resonancewarp_lp:
+                            case FilterType::fut_resonancewarp_hp:
+                            case FilterType::fut_resonancewarp_n:
+                            case FilterType::fut_resonancewarp_bp:
+                            case FilterType::fut_resonancewarp_ap:
                                 // "i & 3" selects the lower two bits that represent the stage
                                 // count.
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // saturator.
-                                snprintf(txt, TXT_SIZE, "%s %s", fut_nlf_subtypes[i & 3],
-                                         fut_nlf_saturators[(i >> 2) & 3]);
+                                snprintf(txt, TXT_SIZE, "%s %s",
+                                         sst::filters::fut_nlf_subtypes[i & 3],
+                                         sst::filters::fut_nlf_saturators[(i >> 2) & 3]);
                                 break;
                             // don't default any more so compiler catches new ones we add
-                            case fut_none:
-                            case fut_lp12:
-                            case fut_lp24:
-                            case fut_hp12:
-                            case fut_hp24:
-                            case fut_SNH:
-                                snprintf(txt, TXT_SIZE, "%s", fut_def_subtypes[i]);
+                            case FilterType::fut_none:
+                            case FilterType::fut_lp12:
+                            case FilterType::fut_lp24:
+                            case FilterType::fut_hp12:
+                            case FilterType::fut_hp24:
+                            case FilterType::fut_SNH:
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_def_subtypes[i]);
                                 break;
-                            case fut_tripole:
+                            case FilterType::fut_tripole:
                                 // "i & 3" selects the lower two bits that represent the filter
                                 // mode.
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // output stage.
-                                snprintf(txt, TXT_SIZE, "%s, %s", fut_tripole_subtypes[i & 3],
-                                         fut_tripole_output_stage[(i >> 2) & 3]);
+                                snprintf(txt, TXT_SIZE, "%s, %s",
+                                         sst::filters::fut_tripole_subtypes[i & 3],
+                                         sst::filters::fut_tripole_output_stage[(i >> 2) & 3]);
                                 break;
-                            case n_fu_types:
+                            case FilterType::num_filter_types:
                                 snprintf(txt, TXT_SIZE, "ERROR");
                                 break;
                             }

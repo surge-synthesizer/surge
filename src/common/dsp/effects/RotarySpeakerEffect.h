@@ -18,7 +18,7 @@
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>

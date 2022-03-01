@@ -3,7 +3,7 @@
 
 #include "HeadlessUtils.h"
 #include "BiquadFilter.h"
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 #include "MemoryPool.h"
 
 #include "sst/plugininfra/strnatcmp.h"
@@ -43,10 +43,10 @@ TEST_CASE("QFU is Aligned", "[infra]")
 {
     SECTION("Single QFU")
     {
-        std::vector<QuadFilterUnitState *> pointers;
+        std::vector<sst::filters::QuadFilterUnitState *> pointers;
         for (int i = 0; i < 5000; ++i)
         {
-            auto *f = new QuadFilterUnitState();
+            auto *f = new sst::filters::QuadFilterUnitState();
             REQUIRE(align_diff(f, 16) == 0);
             pointers.push_back(f);
             if (rand() % 100 > 70 && !pointers.empty())
@@ -64,10 +64,10 @@ TEST_CASE("QFU is Aligned", "[infra]")
     SECTION("QFU Array")
     {
         int nqfus = 5;
-        std::vector<QuadFilterUnitState *> pointers;
+        std::vector<sst::filters::QuadFilterUnitState *> pointers;
         for (int i = 0; i < 5000; ++i)
         {
-            auto *f = new QuadFilterUnitState[nqfus]();
+            auto *f = new sst::filters::QuadFilterUnitState[nqfus]();
             for (int j = 0; j < nqfus; ++j)
             {
                 auto *q = &f[j];
@@ -75,7 +75,7 @@ TEST_CASE("QFU is Aligned", "[infra]")
                 if (j >= 1)
                 {
                     auto *qp = &f[j - 1];
-                    REQUIRE((size_t)q - (size_t)qp == sizeof(QuadFilterUnitState));
+                    REQUIRE((size_t)q - (size_t)qp == sizeof(sst::filters::QuadFilterUnitState));
                 }
             }
             delete[] f;

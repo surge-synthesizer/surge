@@ -17,7 +17,6 @@
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
-#include "QuadFilterUnit.h"
 
 #include <vembertech/lipol.h>
 
@@ -54,6 +53,7 @@ class CombulatorEffect : public Effect
     virtual ~CombulatorEffect();
     virtual const char *get_effectname() override { return "Combulator"; }
     virtual void init() override;
+    virtual void sampleRateReset() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual int get_ringout_decay() override { return -1; }
     virtual void suspend() override;
@@ -63,14 +63,14 @@ class CombulatorEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
-    QuadFilterUnitState *qfus = nullptr;
+    sst::filters::QuadFilterUnitState *qfus = nullptr;
     HalfRateFilter halfbandOUT, halfbandIN;
-    FilterCoefficientMaker coeff[3][2];
+    sst::filters::FilterCoefficientMaker<SurgeStorage> coeff[3][2];
     BiquadFilter lp, hp;
     lag<float, true> freq[3], feedback, gain[3], pan2, pan3, tone, noisemix;
     float filterDelay[3][2][MAX_FB_COMB_EXTENDED + FIRipol_N];
     float WP[3][2];
-    float Reg[3][2][n_filter_registers];
+    float Reg[3][2][sst::filters::n_filter_registers];
 
     static constexpr int PANLAW_SIZE = 4096; // power of 2 please
     float panL[PANLAW_SIZE], panR[PANLAW_SIZE];

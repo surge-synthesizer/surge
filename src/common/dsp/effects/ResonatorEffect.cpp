@@ -22,13 +22,13 @@ ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata
     gain.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    qfus = new QuadFilterUnitState[2]();
+    qfus = new sst::filters::QuadFilterUnitState[2]();
 
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
         {
-            for (int q = 0; q < n_filter_registers; ++q)
+            for (int q = 0; q < sst::filters::n_filter_registers; ++q)
             {
                 Reg[e][c][q] = 0;
             }
@@ -40,6 +40,7 @@ ResonatorEffect::~ResonatorEffect() { delete[] qfus; }
 
 void ResonatorEffect::init()
 {
+    sampleRateReset();
     setvars(true);
     bi = 0;
 }
@@ -82,6 +83,13 @@ inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 
+void ResonatorEffect::sampleRateReset()
+{
+    for (int e = 0; e < 3; ++e)
+        for (int c = 0; c < 2; ++c)
+            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
+}
+
 void ResonatorEffect::process(float *dataL, float *dataR)
 {
     if (bi == 0)
@@ -100,39 +108,37 @@ void ResonatorEffect::process(float *dataL, float *dataR)
      * call CoeffMaker with one fo the known models and subtypes, along with the resonance
      * and the frequency of the particular band.
      */
+    using namespace sst::filters;
     auto whichModel = *pdata_ival[resonator_mode];
-    int type = 0, subtype = 0;
+    FilterType type;
+    FilterSubType subtype = st_Rough;
 
     switch (whichModel)
     {
     case rm_lowpass:
     {
         type = fut_lp12;
-        subtype = st_Rough;
         break;
     }
     case rm_bandpass:
     case rm_bandpass_n:
     {
         type = fut_bp12;
-        subtype = st_Rough;
         break;
     }
     case rm_highpass:
     {
         type = fut_hp12;
-        subtype = st_Rough;
         break;
     }
     default:
     {
         type = fut_none;
-        subtype = 0;
         break;
     }
     }
 
-    FilterUnitQFPtr filtptr = GetQFPtrFilterUnit(type, subtype);
+    auto filtptr = GetQFPtrFilterUnit(type, subtype);
     float rescomp[rm_num_modes] = {0.75, 0.9, 0.9, 0.75}; // prevent self-oscillation
 
     for (int i = 0; i < 3; ++i)
@@ -170,11 +176,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             coeff[e][c].MakeCoeffs(cutoff[e].v, resonance[e].v * rescomp[whichModel], type, subtype,
                                    storage, false);
 
-            for (int i = 0; i < n_cm_coeffs; i++)
-            {
-                set1f(qfus[c].C[i], e, coeff[e][c].C[i]);
-                set1f(qfus[c].dC[i], e, coeff[e][c].dC[i]);
-            }
+            coeff[e][c].updateState(qfus[c], e);
 
             for (int i = 0; i < n_filter_registers; i++)
             {

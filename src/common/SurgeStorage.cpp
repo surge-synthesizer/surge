@@ -149,14 +149,16 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         }
 
     for (int s = 0; s < n_scenes; ++s)
+    {
         for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
-            for (int t = 0; t < n_fu_types; ++t)
+        {
+            for (int t = 0; t < sst::filters::num_filter_types; ++t)
             {
                 switch (t)
                 {
-                case fut_lpmoog:
-                case fut_obxd_4pole:
-                case fut_diode:
+                case sst::filters::fut_lpmoog:
+                case sst::filters::fut_obxd_4pole:
+                case sst::filters::fut_diode:
                     subtypeMemory[s][fu][t] = 3;
                     break;
                 default:
@@ -164,6 +166,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                     break;
                 }
             }
+        }
+    }
 
     init_tables();
     pitch_bend = 0;
@@ -1872,7 +1876,8 @@ void SurgeStorage::note_to_omega(float x, float &sinu, float &cosi)
     cosi = (1 - a) * table_note_omega[1][e] + a * table_note_omega[1][(e + 1) & 0x1ff];
 }
 
-void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi)
+void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &cosi,
+                                                 float /*sampleRate*/)
 {
     x = limit_range(x + 256, 0.f, tuning_table_size - (float)1.e-4);
     // x += 256;
@@ -2270,6 +2275,8 @@ float SurgeStorage::remapKeyInMidiOnlyMode(float res)
     }
     return res;
 }
+
+const double SurgeStorage::MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
 
 namespace Surge
 {

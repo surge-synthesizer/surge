@@ -1249,10 +1249,10 @@ void ModulationSideControls::showAddTargetMenu()
             break;
         case cg_FILTER:
             return std::string("Filter ") + std::to_string(cge + 1) + +" (" +
-                   fut_names[this->editor->synth->storage.getPatch()
-                                 .scene[scene]
-                                 .filterunit[cge]
-                                 .type.val.i] +
+                   sst::filters::filter_type_names[this->editor->synth->storage.getPatch()
+                                                       .scene[scene]
+                                                       .filterunit[cge]
+                                                       .type.val.i] +
                    ")";
             break;
         case 1000:

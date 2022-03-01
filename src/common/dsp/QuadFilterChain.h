@@ -97,13 +97,15 @@
  * is fairly clear, though.
  */
 
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 #pragma once
+
+#include "sst/filters.h"
 
 struct QuadFilterChainState
 {
-    QuadFilterUnitState FU[4];        // 2 filters left and right
-    QuadFilterWaveshaperState WSS[2]; // 1 shaper left and right
+    sst::filters::QuadFilterUnitState FU[4]; // 2 filters left and right
+    QuadFilterWaveshaperState WSS[2];        // 1 shaper left and right
 
     __m128 Gain, FB, Mix1, Mix2, Drive;
     __m128 dGain, dFB, dMix1, dMix2, dDrive;
@@ -125,7 +127,7 @@ void InitQuadFilterChainStateToZero(QuadFilterChainState *Q);
 
 struct fbq_global
 {
-    FilterUnitQFPtr FU1ptr, FU2ptr;
+    sst::filters::FilterUnitQFPtr FU1ptr, FU2ptr;
     WaveshaperQFPtr WSptr;
 };
 

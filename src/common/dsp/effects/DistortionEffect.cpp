@@ -1,6 +1,6 @@
 #include "DistortionEffect.h"
 #include <vembertech/halfratefilter.h>
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 #include "DebugHelpers.h"
 
 // feedback can get tricky with packed SSE

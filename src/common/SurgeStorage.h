@@ -1170,7 +1170,7 @@ class alignas(16) SurgeStorage
     }
 
     void note_to_omega(float, float &, float &);
-    void note_to_omega_ignoring_tuning(float, float &, float &);
+    void note_to_omega_ignoring_tuning(float, float &, float &, float sampleRate = 0.0f);
 
     /*
      * Tuning Support and Tuning State. Here's how it works
@@ -1200,6 +1200,8 @@ class alignas(16) SurgeStorage
 
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
 
+    static const double
+        MIDI_0_FREQ; // this value needs to be passed along to FilterCoefficientMaker
     enum TuningApplicationMode
     {
         RETUNE_ALL = 0, // These values are streamed so don't change them if you add
@@ -1359,7 +1361,7 @@ class alignas(16) SurgeStorage
     // Alternately make this unordered and provide a hash
     std::map<std::pair<std::string, int>, std::string> helpURL_paramidentifier_typespecialized;
 
-    int subtypeMemory[n_scenes][n_filterunits_per_scene][n_fu_types];
+    int subtypeMemory[n_scenes][n_filterunits_per_scene][sst::filters::num_filter_types];
     MonoPedalMode monoPedalMode = HOLD_ALL_NOTES;
 
   private:

@@ -16,11 +16,11 @@ using namespace Surge::Test;
 // These first two are mostly useful targets for valgrind runs
 TEST_CASE("Run Every Filter", "[flt]")
 {
-    for (int fn = 0; fn < n_fu_types; fn++)
+    for (int fn = 0; fn < sst::filters::num_filter_types; fn++)
     {
-        DYNAMIC_SECTION("Test Filter " << fut_names[fn])
+        DYNAMIC_SECTION("Test Filter " << sst::filters::filter_type_names[fn])
         {
-            auto nst = std::max(1, fut_subcount[fn]);
+            auto nst = std::max(1, sst::filters::fut_subcount[fn]);
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);
             for (int fs = 0; fs < nst; ++fs)

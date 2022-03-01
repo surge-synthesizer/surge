@@ -21,7 +21,7 @@
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
-#include "QuadFilterUnit.h"
+#include "QuadFilterWaveshaper.h"
 
 class WaveShaperEffect : public Effect
 {
