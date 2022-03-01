@@ -158,45 +158,65 @@ void LFOModulationSource::attack()
     {
         initPhaseFromStartPhase();
     }
+
     env_state = lfoeg_delay;
 
     env_val = 0.f;
     env_phase = 0;
     ratemult = 1.f;
+
     if (localcopy[idelay].f == lfo->delay.val_min.f)
     {
         env_state = lfoeg_attack;
+
         if (localcopy[iattack].f == lfo->attack.val_min.f)
         {
             env_state = lfoeg_hold;
             env_val = 1.f;
+
             if (localcopy[ihold].f == lfo->hold.val_min.f)
+            {
                 env_state = lfoeg_decay;
+            }
         }
     }
 
     if (is_display)
     {
         phase = lfo->start_phase.val.f;
+
         if (lfo->shape.val.i == lt_stepseq)
+        {
             phase = 0.f;
+        }
+
         step = 0;
         msegEnvelopePhaseAdjustment();
     }
     else
     {
         float phaseslider;
-        if (lfo->shape.val.i == lt_stepseq)
-            phaseslider = 0.f; // Use Phase as shuffle-parameter instead
-        // else if(state) phaseslider = lfo->start_phase.val.f;
-        else
-            phaseslider = localcopy[startphase].f;
 
-        // With modulation the phaseslider can be outside [0,1], as in #1524
+        // Use Phase as shuffle-parameter instead
+        if (lfo->shape.val.i == lt_stepseq)
+        {
+            phaseslider = 0.f;
+        }
+        else
+        {
+            phaseslider = localcopy[startphase].f;
+        }
+
+        // With modulation the phaseslider can be outside [0, 1], as in #1524
         while (phaseslider < 0.f)
+        {
             phaseslider += 1.f;
+        }
+
         while (phaseslider > 1.f)
+        {
             phaseslider -= 1.f;
+        }
 
         switch (lfo->trigmode.val.i)
         {
@@ -389,8 +409,8 @@ void LFOModulationSource::process_block()
 
     retrigger_FEG = false;
     retrigger_AEG = false;
-    int s = lfo->shape.val.i;
 
+    int s = lfo->shape.val.i;
     float frate = 0;
 
     if (!lfo->rate.temposync)
@@ -412,12 +432,17 @@ void LFOModulationSource::process_block()
     }
 
     if (lfo->rate.deactivated)
+    {
         frate = 0.0;
+    }
 
     if (lfo->rate.temposync)
+    {
         frate *= storage->temposyncratio;
+    }
 
     phase += frate * ratemult;
+
     if (frate == 0 && phase == 0 && s == lt_stepseq)
     {
         phase = 0.001; // step forward a smidge
@@ -512,23 +537,26 @@ void LFOModulationSource::process_block()
         if (phase >= 2)
         {
             float ipart;
+
             phase = modf(phase, &ipart);
             unwrappedphase_intpart += ipart;
         }
         else if (phase < 0)
         {
             // -6.02 needs to go to .98
-            //
             int p = (int)phase - 1;
             float np = -p + phase;
+
             if (np >= 0 && np < 1)
             {
                 phase = np;
                 unwrappedphase_intpart += p;
             }
             else
-                phase =
-                    0; // should never get here but something is already weird with the mod stack
+            {
+                // should never get here but something is already weird with the mod stack
+                phase = 0;
+            }
         }
         else
         {
@@ -563,15 +591,12 @@ void LFOModulationSource::process_block()
 
             wf_history[0] = correlated_noise_o2mk2_suppliedrng(
                 target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
-            // target = storage->rand_pm1();
         }
         break;
         case lt_stepseq:
-            /*
-            ** You might thing we don't need this and technically we don't
-            ** but I wanted to keep it here to retain compatibility with
-            ** versions of trigmask which were streamed in older sessions
-            */
+            // you might thing we don't need this and technically we don't
+            // but I wanted to keep it here to retain compatibility with
+            // versions of trigmask which were streamed in older sessions
             if (ss->trigmask & (UINT64_C(1) << step))
             {
                 retrigger_FEG = true;
@@ -597,19 +622,27 @@ void LFOModulationSource::process_block()
             shuffle_id = (shuffle_id + 1) & 1;
 
             if (shuffle_id)
+            {
                 ratemult = 1.f / (1.f - 0.5f * shuffle_val);
+            }
             else
+            {
                 ratemult = 1.f / (1.f + 0.5f * shuffle_val);
+            }
 
             if (ss->loop_end >= ss->loop_start)
             {
                 if (step > ss->loop_end)
+                {
                     step = ss->loop_start;
+                }
             }
             else
             {
                 if (step >= ss->loop_start)
+                {
                     step = ss->loop_end + 1;
+                }
             }
 
             wf_history[3] = wf_history[2];
@@ -622,27 +655,36 @@ void LFOModulationSource::process_block()
     }
 
     float useenvval = env_val;
+
     if (lfo->delay.deactivated)
     {
         useenvval = 1.0; // constant envelope at 1
     }
+
     switch (s)
     {
     case lt_envelope:
+    {
         switch (lfo->deform.deform_type)
         {
         case type_1:
-            iout = (1.f - localcopy[ideform].f) + localcopy[ideform].f * (env_val);
-            break;
+            iout = (1.f - localcopy[ideform].f) + localcopy[ideform].f * env_val;
 
+            break;
         case type_2:
             if (localcopy[ideform].f > 0.f)
+            {
                 iout = pow(env_val, 1.f + (9.0 * localcopy[ideform].f));
+            }
             else
+            {
                 iout = pow(env_val, 1.f / (1.f + (4.0 * fabs(localcopy[ideform].f))));
+            }
 
             if (env_val != 0.f)
+            {
                 iout /= env_val;
+            }
 
             break;
         case type_3:
@@ -658,89 +700,125 @@ void LFOModulationSource::process_block()
                 auto quant = localcopy[ideform].f * 24.f;
 
                 if (quant > 1.f)
+                {
                     iout = (float)(round(env_val * quant) / quant);
+                }
                 else
+                {
                     iout = env_val;
+                }
             }
 
             if (env_val != 0.f)
+            {
                 iout /= env_val;
+            }
 
             break;
         }
-        break;
 
+        break;
+    }
     case lt_sine:
+    {
         switch (lfo->deform.deform_type)
         {
         case type_1:
             iout = bend1(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
+
             break;
         case type_2:
             if (localcopy[ideform].f >= -1 / 4.5)
+            {
                 iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
+            }
             else
+            {
                 iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
                        (1 - ((localcopy[ideform].f + (1 / 4.5)) / 1.6));
+            }
+
             break;
         case type_3:
             iout = (bend3(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
                         (1.f + 0.5 * abs(localcopy[ideform].f)) -
                     (0.06 * localcopy[ideform].f));
+
             break;
         }
-        break;
 
+        break;
+    }
     case lt_tri:
+    {
         switch (lfo->deform.deform_type)
         {
         case type_1:
             iout = bend1(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase));
+
             break;
         case type_2:
             if (localcopy[ideform].f >= -1 / 4.5)
+            {
                 iout = bend2(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase));
+            }
             else
+            {
                 iout = bend2(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase)) /
                        (1 - ((localcopy[ideform].f + (1 / 4.5)) / 1.6));
+            }
+
             break;
         case type_3:
             iout = (bend3(-1.f + 4.f * ((phase > 0.5) ? (1 - phase) : phase)) /
                         (1.f + 0.5 * abs(localcopy[ideform].f)) -
                     (0.06 * localcopy[ideform].f));
+
             break;
         }
-        break;
 
+        break;
+    }
     case lt_ramp:
+    {
         switch (lfo->deform.deform_type)
         {
         case type_1:
             iout = bend1(1.f - 2.f * phase);
+
             break;
         case type_2:
             if (localcopy[ideform].f >= -1 / 4.5)
+            {
                 iout = bend2(1.f - 2.f * phase);
+            }
             else
+            {
                 iout = bend2(1.f - 2.f * phase) / (1 - ((localcopy[ideform].f + (1 / 4.5)) / 1.6));
+            }
+
             break;
         case type_3:;
             iout = (bend3(1.f - 2.f * phase) / (1.f + 0.5 * abs(localcopy[ideform].f)) -
                     (0.06 * localcopy[ideform].f));
+
             break;
         }
-        break;
 
+        break;
+    }
     case lt_square:
-
+    {
         iout = (phase > (0.5f + 0.5f * localcopy[ideform].f)) ? -1.f : 1.f;
-        break;
 
+        break;
+    }
     case lt_snh:
     {
         if (lfo->deform.deform_type == type_2)
         {
             float df = localcopy[ideform].f;
+
             if (df > 0.5f)
             {
                 float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
@@ -755,6 +833,7 @@ void LFOModulationSource::process_block()
             }
             else if (df > -0.5f)
             {
+
                 float cf = max(0.f, min((1.f - phase) / (-2.f * df + 0.00001f), 1.0f));
                 iout = (1.f - cf) * 0 + cf * wf_history[1];
             }
@@ -764,107 +843,115 @@ void LFOModulationSource::process_block()
                 iout = (1.f - cf) * wf_history[1] + cf * 0;
             }
         }
+
         break;
     }
     case lt_noise:
     {
-        // iout = noise*(1-phase) + phase*target;
         iout = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
-    }
-    break;
 
-    case lt_stepseq:
-        // iout = wf_history[0];
-        {
-            // Support 0 rate scrubbing across all 16 steps
-            float calcPhase = phase;
-            if (frate == 0)
-            {
-                /*
-                ** Alright so in 0 rate mode we want to scrub through the entire sequence. So
-                */
-                float p16 = phase * n_stepseqsteps;
-                int pstep = ((int)p16) & (n_stepseqsteps - 1);
-                float sphase = (p16 - pstep);
-
-                // OK so pstep is now between 0 and ns-1. But if that is beyond the end we want to
-                // wrap
-                int last_step = std::max(ss->loop_end, ss->loop_start);
-                int loop_len = std::max(1, abs(ss->loop_end - ss->loop_start) + 1);
-                while (pstep > last_step && pstep >= 0)
-                    pstep -= loop_len;
-                pstep = pstep & (n_stepseqsteps - 1);
-
-                if (pstep != priorStep)
-                {
-                    priorStep = pstep;
-
-                    if (ss->trigmask & (UINT64_C(1) << pstep))
-                    {
-                        retrigger_FEG = true;
-                        retrigger_AEG = true;
-                    }
-                    if (ss->trigmask & (UINT64_C(1) << (16 + pstep)))
-                    {
-                        retrigger_FEG = true;
-                    }
-                    if (ss->trigmask & (UINT64_C(1) << (32 + pstep)))
-                    {
-                        retrigger_AEG = true;
-                    }
-                }
-
-                if (priorPhase != phase)
-                {
-                    priorPhase = phase;
-
-                    /*
-                    ** So we want to load up the wf_history
-                    */
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        wf_history[i] =
-                            ss->steps[(pstep + 1 + n_stepseqsteps - i) & (n_stepseqsteps - 1)];
-                    }
-                }
-
-                calcPhase = sphase;
-            }
-            float df = localcopy[ideform].f;
-            if (df > 0.5f)
-            {
-                float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
-                float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
-                                               wf_history[0], calcPhase);
-                iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
-            }
-            else if (df > -0.0001f)
-            {
-                float cf = max(0.f, min(calcPhase / (2.f * df + 0.00001f), 1.0f));
-                iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
-            }
-            else if (df > -0.5f)
-            {
-                float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
-                iout = (1.f - cf) * 0 + cf * wf_history[1];
-            }
-            else
-            {
-                float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
-                iout = (1.f - cf) * wf_history[1] + cf * 0;
-            }
-        }
         break;
+    }
+    case lt_stepseq:
+    {
+        // support 0 rate scrubbing across all 16 steps
+        float calcPhase = phase;
 
+        if (frate == 0)
+        {
+            // in 0 rate mode we want to scrub through the entire sequence. so:
+            float p16 = phase * n_stepseqsteps;
+            int pstep = ((int)p16) & (n_stepseqsteps - 1);
+            float sphase = (p16 - pstep);
+
+            // pstep is now between 0 and ns-1. But if that is beyond the end we want to wrap
+            int last_step = std::max(ss->loop_end, ss->loop_start);
+            int loop_len = std::max(1, abs(ss->loop_end - ss->loop_start) + 1);
+
+            while (pstep > last_step && pstep >= 0)
+            {
+                pstep -= loop_len;
+            }
+
+            pstep = pstep & (n_stepseqsteps - 1);
+
+            if (pstep != priorStep)
+            {
+                priorStep = pstep;
+
+                if (ss->trigmask & (UINT64_C(1) << pstep))
+                {
+                    retrigger_FEG = true;
+                    retrigger_AEG = true;
+                }
+
+                if (ss->trigmask & (UINT64_C(1) << (16 + pstep)))
+                {
+                    retrigger_FEG = true;
+                }
+
+                if (ss->trigmask & (UINT64_C(1) << (32 + pstep)))
+                {
+                    retrigger_AEG = true;
+                }
+            }
+
+            if (priorPhase != phase)
+            {
+                priorPhase = phase;
+
+                // So we want to load up the wf_history
+                for (int i = 0; i < 4; ++i)
+                {
+                    wf_history[i] =
+                        ss->steps[(pstep + 1 + n_stepseqsteps - i) & (n_stepseqsteps - 1)];
+                }
+            }
+
+            calcPhase = sphase;
+        }
+
+        float df = localcopy[ideform].f;
+
+        if (df > 0.5f)
+        {
+            float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
+            float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
+                                           wf_history[0], calcPhase);
+            iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
+        }
+        else if (df > -0.0001f)
+        {
+            float cf = max(0.f, min(calcPhase / (2.f * df + 0.00001f), 1.0f));
+            iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
+        }
+        else if (df > -0.5f)
+        {
+            float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
+            iout = (1.f - cf) * 0 + cf * wf_history[1];
+        }
+        else
+        {
+            float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
+            iout = (1.f - cf) * wf_history[1] + cf * 0;
+        }
+
+        break;
+    }
     case lt_mseg:
+    {
         msegstate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
 
         iout = Surge::MSEG::valueAt(unwrappedphase_intpart, phase, localcopy[ideform].f, ms,
                                     &msegstate);
+
         retrigger_FEG = msegstate.retrigger_FEG;
         retrigger_AEG = msegstate.retrigger_AEG;
+
         break;
+    }
     case lt_formula:
+    {
         formulastate.released = (env_state == lfoeg_release || env_state == lfoeg_msegrelease);
 
         formulastate.del = lfo->delay.value_to_normalized(localcopy[idelay].f);
@@ -890,6 +977,7 @@ void LFOModulationSource::process_block()
         {
             useenvval = 1.0;
         }
+
         retrigger_AEG = formulastate.retrigger_AEG;
         retrigger_FEG = formulastate.retrigger_FEG;
 
@@ -901,20 +989,24 @@ void LFOModulationSource::process_block()
             storage->reportError(em, "Formula Evaluator Error");
             std::cout << "ERROR: " << em << std::endl;
         }
-        /*
-         * Since I'm (right now) the only vector valued modulator just do a little
-         * chute and ladder dance here on the output and return
-         */
+
+        // Since I'm (right now) the only vector valued modulator just do a little
+        // chute and ladder dance here on the output and return
         auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
         auto uni = lfo->unipolar.val.b;
+
         for (auto i = 0; i < formulastate.activeoutputs; ++i)
         {
             if (uni)
+            {
                 tmpout[i] = 0.5f + 0.5f * tmpout[i];
+            }
+
             output_multi[i] = useenvval * magnf * tmpout[i];
         }
+
         return;
-        break;
+    }
     };
 
     float io2 = iout;
@@ -933,9 +1025,15 @@ void LFOModulationSource::process_block()
     }
 
     auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
+
     output_multi[0] = useenvval * magnf * io2;
     output_multi[1] = io2;
     output_multi[2] = env_val;
+
+    if (s == lt_envelope)
+    {
+        output_multi[1] *= useenvval;
+    }
 }
 
 void LFOModulationSource::completedModulation()
