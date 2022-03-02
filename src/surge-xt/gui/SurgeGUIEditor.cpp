@@ -3430,15 +3430,6 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 {
     auto wfMenu = juce::PopupMenu();
 
-    if (synth->hostProgram.find("Fruit") == 0) // only show this option for FL Studio
-    {
-        wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Activate Individual Scene Outputs"), true,
-                       (synth->activateExtraOutputs),
-                       [this]() { synth->activateExtraOutputs = !synth->activateExtraOutputs; });
-
-        wfMenu.addSeparator();
-    }
-
     bool tabPosMem = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::RememberTabPositionsPerScene, false);
 
@@ -6597,8 +6588,6 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
     des->editor.current_fx = current_fx;
     des->editor.modsource = modsource;
 
-    des->editor.activateExtraOutputs = synth->activateExtraOutputs;
-
     for (int i = 0; i < n_scenes; ++i)
     {
         des->editor.current_osc[i] = current_osc[i];
@@ -6653,8 +6642,6 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
         current_scene = des->editor.current_scene;
         current_fx = des->editor.current_fx;
         modsource = des->editor.modsource;
-
-        synth->activateExtraOutputs = des->editor.activateExtraOutputs;
 
         activateFromCurrentFx();
 

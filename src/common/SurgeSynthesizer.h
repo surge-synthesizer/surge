@@ -422,7 +422,6 @@ class alignas(16) SurgeSynthesizer
     std::string hostProgram = "Unknown Host";
     std::string juceWrapperType = "Unknown Wrapper Type";
     bool activateExtraOutputs = true;
-    void setupActivateExtraOutputs();
 
     void changeModulatorSmoothing(Modulator::SmoothingMode m);
 
