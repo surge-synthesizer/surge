@@ -504,39 +504,31 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
         if (tag == tag_scene_select)
         {
-            auto where =
-                frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-            auto r = control->asJuceComponent()->getBounds();
-            // Assume vertical alignment of the scene buttons
-            int a = limit_range((int)((2 * (where.y - r.getY())) / r.getHeight()), 0, n_scenes);
-
-            if (auto aschsw = dynamic_cast<Surge::Widgets::MultiSwitch *>(control))
-            {
-                if (aschsw->getColumns() == n_scenes)
-                {
-                    // We are horizontal due to skins or whatever so
-                    a = limit_range((int)((2 * (where.x - r.getX())) / r.getWidth()), 0, n_scenes);
-                }
-            }
-
             auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("scene-select");
             auto lurl = hu;
+
             if (lurl != "")
+            {
                 lurl = fullyResolvedHelpURL(hu);
+            }
+
             auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                fmt::format("Scene {:c}", 'A' + a), lurl);
+                fmt::format("Scene {:c}", 'A' + current_scene), lurl);
             tcomp->setSkin(currentSkin, bitmapStore);
+
             contextMenu.addCustomItem(-1, std::move(tcomp));
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Scene"),
-                                [this, a]() { synth->storage.clipboard_copy(cp_scene, a, -1); });
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Scene"), [this]() {
+                synth->storage.clipboard_copy(cp_scene, current_scene, -1);
+            });
+
             contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Scene"),
                                 synth->storage.get_clipboard_type() == cp_scene, // enabled
-                                false, [this, a]() {
-                                    synth->storage.clipboard_paste(cp_scene, a, -1);
+                                false, [this]() {
+                                    synth->storage.clipboard_paste(cp_scene, current_scene, -1);
                                     synth->storage.getPatch().isDirty = true;
                                     queue_refresh = true;
                                 });
