@@ -4300,12 +4300,8 @@ void SurgeSynthesizer::loadFromDawExtraState()
 
 void SurgeSynthesizer::setupActivateExtraOutputs()
 {
-    bool defval = true;
-    if (hostProgram.find("Fruit") == 0) // FruityLoops default off
-        defval = false;
-
-    activateExtraOutputs = Surge::Storage::getUserDefaultValue(
-        &(storage), Surge::Storage::ActivateExtraOutputs, defval ? 1 : 0);
+    // default off for FL Studio
+    activateExtraOutputs = (hostProgram.find("Fruit") == 0) ? true : false;
 }
 
 void SurgeSynthesizer::swapMetaControllers(int c1, int c2)

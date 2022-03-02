@@ -71,9 +71,6 @@ void initMaps()
             case UseODDMTS:
                 r = "useODDMTS";
                 break;
-            case ActivateExtraOutputs:
-                r = "activateExtraOutputs";
-                break;
             case MonoPedalMode:
                 r = "monoPedalMode";
                 break;

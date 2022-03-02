@@ -759,10 +759,12 @@ struct DAWExtraStateStorage
         int current_scene = 0;
         int current_fx = 0;
         int current_osc[n_scenes] = {0};
-        modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
         bool isMSEGOpen = false;
-
         bool msegStateIsPopulated = false;
+        modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};
+
+        bool activateExtraOutputs = true;
+
         struct
         {
             int timeEditMode = 0;
