@@ -72,6 +72,7 @@ void initMaps()
                 r = "useODDMTS";
                 break;
             case ActivateExtraOutputs:
+                // not used anymore, see GitHub issue #5657
                 r = "activateExtraOutputs";
                 break;
             case MonoPedalMode:
