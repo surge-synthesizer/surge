@@ -4298,12 +4298,6 @@ void SurgeSynthesizer::loadFromDawExtraState()
     }
 }
 
-void SurgeSynthesizer::setupActivateExtraOutputs()
-{
-    // default off for FL Studio
-    activateExtraOutputs = (hostProgram.find("Fruit") == 0) ? true : false;
-}
-
 void SurgeSynthesizer::swapMetaControllers(int c1, int c2)
 {
     char nt[CUSTOM_CONTROLLER_LABEL_SIZE + 4];
