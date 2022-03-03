@@ -1182,9 +1182,7 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
         int order = wt_list[id].order;
 
         if (nextPrev)
-            order = (order >= (n - 1))
-                        ? 0
-                        : order + 1; // see comment in jogPatch for that >= vs ==
+            order = (order >= (n - 1)) ? 0 : order + 1; // see comment in jogPatch for that >= vs ==
         else
             order = (order <= 0) ? n - 1 : order - 1;
 
