@@ -167,8 +167,28 @@ void DelayEffect::process(float *dataL, float *dataR)
         _mm_store_ss(&tbufferR[k], R);
     }
 
-    softclip_block(tbufferL, BLOCK_SIZE_QUAD);
-    softclip_block(tbufferR, BLOCK_SIZE_QUAD);
+    switch (fxdata->p[dly_feedback].deform_type)
+    {
+    case dly_clipping_soft:
+        softclip_block(tbufferL, BLOCK_SIZE_QUAD);
+        softclip_block(tbufferR, BLOCK_SIZE_QUAD);
+        break;
+    case dly_clipping_tanh:
+        tanh7_block(tbufferL, BLOCK_SIZE_QUAD);
+        tanh7_block(tbufferR, BLOCK_SIZE_QUAD);
+        break;
+    case dly_clipping_hard:
+        hardclip_block(tbufferL, BLOCK_SIZE_QUAD);
+        hardclip_block(tbufferR, BLOCK_SIZE_QUAD);
+        break;
+    case dly_clipping_hard18:
+        hardclip_block8(tbufferL, BLOCK_SIZE_QUAD);
+        hardclip_block8(tbufferR, BLOCK_SIZE_QUAD);
+        break;
+    case dly_clipping_off:
+    default:
+        break;
+    }
 
     if (!fxdata->p[dly_highcut].deactivated)
     {
@@ -266,7 +286,8 @@ void DelayEffect::init_ctrltypes()
     fxdata->p[dly_time_right].set_name("Right");
     fxdata->p[dly_time_right].set_type(ct_envtime_linkable_delay);
     fxdata->p[dly_feedback].set_name("Feedback");
-    fxdata->p[dly_feedback].set_type(ct_percent);
+    fxdata->p[dly_feedback].set_type(ct_dly_fb_clippingmodes);
+    fxdata->p[dly_feedback].deform_type = 1;
     fxdata->p[dly_crossfeed].set_name("Crossfeed");
     fxdata->p[dly_crossfeed].set_type(ct_percent);
     fxdata->p[dly_lowcut].set_name("Low Cut");
@@ -307,6 +328,7 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_time_right].val.f = -2.f;
     fxdata->p[dly_time_right].deactivated = false;
     fxdata->p[dly_feedback].val.f = 0.0f;
+    fxdata->p[dly_feedback].deform_type = 1;
     fxdata->p[dly_crossfeed].val.f = 0.0f;
 
     fxdata->p[dly_lowcut].val.f = -24.f;
@@ -330,5 +352,10 @@ void DelayEffect::handleStreamingMismatches(int streamingRevision,
         fxdata->p[dly_lowcut].deactivated = false;
         fxdata->p[dly_highcut].deactivated = false;
         fxdata->p[dly_time_right].deactivated = false;
+    }
+
+    if (streamingRevision <= 17)
+    {
+        fxdata->p[dly_feedback].deform_type = 1;
     }
 }

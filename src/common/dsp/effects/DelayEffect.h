@@ -61,6 +61,17 @@ class DelayEffect : public Effect
         dly_width,
     };
 
+    enum delay_clipping_modes
+    {
+        dly_clipping_off,
+        dly_clipping_soft,
+        dly_clipping_tanh,
+        dly_clipping_hard,
+        dly_clipping_hard18,
+
+        num_dly_clipping_modes,
+    };
+
   private:
     lag<float, true> timeL, timeR;
     bool inithadtempo;
