@@ -399,6 +399,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         synth->processThreadunsafeOperations();
     }
 
+    void loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory = false);
+
     void openMacroRenameDialog(const int ccid, const juce::Point<int> where,
                                Surge::Widgets::ModulationSourceButton *msb);
     void openLFORenameDialog(const int lfo_id, const juce::Point<int> where, juce::Component *r);
@@ -707,6 +709,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<juce::AlertWindow> okcWithToggleAlertWindow;
     std::unique_ptr<juce::ToggleButton> okcWithToggleToggleButton;
     std::function<void()> okcWithToggleCallback;
+
+    enum AskAgainStates
+    {
+        DUNNO = 1,
+        ALWAYS = 10,
+        NEVER = 100
+    };
 
     // Return whether we called the OK action automatically or not
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,

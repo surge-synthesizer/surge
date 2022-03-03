@@ -3462,6 +3462,18 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                 &(this->synth->storage), Surge::Storage::PatchJogWraparound, !patchJogWrap);
         });
 
+    int patchDirtyCheck = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, DUNNO);
+
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Confirm Patch Loading if Unsaved Changes Exist"),
+                   true, (patchDirtyCheck != ALWAYS), [this, patchDirtyCheck]() {
+                       int newVal = (patchDirtyCheck != ALWAYS) ? ALWAYS : DUNNO;
+
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch,
+                           newVal);
+                   });
+
     wfMenu.addSeparator();
 
     bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
@@ -6227,7 +6239,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
                     closeOverlay(SAVE_PATCH);
 
-                    synth->incrementCategory(keyCode == juce::KeyPress::rightKey);
+                    loadPatchWithDirtyCheck(keyCode == juce::KeyPress::rightKey, true);
                 });
         }
         else
@@ -6256,7 +6268,8 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     auto insideCategory = Surge::Storage::getUserDefaultValue(
                         &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
 
-                    synth->incrementPatch(keyCode == juce::KeyPress::rightKey, insideCategory);
+                    loadPatchWithDirtyCheck(keyCode == juce::KeyPress::rightKey, false,
+                                            insideCategory);
                 });
         }
         else
@@ -6824,13 +6837,6 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
         return false;
     }
 
-    enum AgainStates
-    {
-        DUNNO = 1,
-        ALWAYS = 10,
-        NEVER = 100
-    };
-
     auto bypassed = Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, DUNNO);
 
     if (bypassed == NEVER)
@@ -6891,4 +6897,28 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
         false);
 
     return false;
+}
+
+void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory)
+{
+    if (synth->storage.getPatch().isDirty)
+    {
+        promptForOKCancelWithDontAskAgain(
+            "Confirm Patch Loading",
+            fmt::format("The currently loaded patch has unsaved changes.\n"
+                        "Loading a new patch will discard any such changes.\n\n"
+                        "Do you want to proceed?"),
+            Surge::Storage::PromptToLoadOverDirtyPatch,
+            [this, increment, isCategory, insideCategory]() {
+                closeOverlay(SAVE_PATCH);
+
+                synth->jogPatchOrCategory(increment, isCategory, insideCategory);
+            });
+    }
+    else
+    {
+        closeOverlay(SAVE_PATCH);
+
+        synth->jogPatchOrCategory(increment, isCategory, insideCategory);
+    }
 }

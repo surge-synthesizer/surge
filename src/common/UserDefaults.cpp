@@ -168,6 +168,9 @@ void initMaps()
             case PromptToActivateCategoryAndPatchOnKeypress:
                 r = "promptToActivateCategoryAndPatchOnKeypress";
                 break;
+            case PromptToLoadOverDirtyPatch:
+                r = "promptToLoadOverDirtyPatch";
+                break;
             case InfoWindowPopupOnIdle:
                 r = "infoWindowPopupOnIdle";
                 break;
