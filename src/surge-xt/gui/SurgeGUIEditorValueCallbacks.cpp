@@ -2842,10 +2842,20 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         closeOverlay(SAVE_PATCH);
 
-        if (control->getValue() > 0.5f)
-            synth->incrementCategory(true);
-        else
-            synth->incrementCategory(false);
+        loadPatchWithDirtyCheck((control->getValue() > 0.5f), true);
+
+        return;
+    }
+    break;
+    case tag_mp_patch:
+    {
+        closeOverlay(SAVE_PATCH);
+
+        auto insideCategory = Surge::Storage::getUserDefaultValue(
+            &(synth->storage), Surge::Storage::PatchJogWraparound, 1);
+
+        loadPatchWithDirtyCheck((control->getValue() > 0.5f), false, insideCategory);
+
         return;
     }
     break;
@@ -2869,20 +2879,6 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             else
                 closeOverlay(WAVESHAPER_ANALYZER);
         }
-    }
-    break;
-    case tag_mp_patch:
-    {
-        closeOverlay(SAVE_PATCH);
-
-        auto insideCategory = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
-
-        if (control->getValue() > 0.5f)
-            synth->incrementPatch(true, insideCategory);
-        else
-            synth->incrementPatch(false, insideCategory);
-        return;
     }
     break;
     case tag_mp_jogfx:

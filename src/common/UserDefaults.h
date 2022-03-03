@@ -69,8 +69,10 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
 
     UseKeyboardShortcuts_Plugin,
     UseKeyboardShortcuts_Standalone,
+
     PromptToActivateShortcutsOnAccKeypress,
     PromptToActivateCategoryAndPatchOnKeypress,
+    PromptToLoadOverDirtyPatch,
 
     TuningOverlayLocation,
     ModlistOverlayLocation,

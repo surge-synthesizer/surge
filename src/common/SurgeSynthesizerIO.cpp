@@ -48,7 +48,7 @@ struct fxChunkSetCustom
     // char chunk[8]; // variable
 };
 
-void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
+void SurgeSynthesizer::jogPatch(bool increment, bool insideCategory)
 {
     // Don't increment if we still have an outstanding load
     if (patchid_queue >= 0)
@@ -102,16 +102,16 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
             }
         }
 
-        int np = nextPrev == true ? 1 : -1;
+        int np = increment == true ? 1 : -1;
         int numPatches = patchesInCategory.size();
 
         do
         {
-            if (nextPrev)
+            if (increment)
             {
                 if (!insideCategory && order >= p - 1)
                 {
-                    incrementCategory(nextPrev);
+                    jogCategory(increment);
                     category = current_category_id;
                 }
                 order = (order >= p - 1) ? 0 : order + 1;
@@ -120,7 +120,7 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
             {
                 if (!insideCategory && order <= 0)
                 {
-                    incrementCategory(nextPrev);
+                    jogCategory(increment);
                     category = current_category_id;
                 }
                 order = (order <= 0) ? p - 1 : order - 1;
@@ -133,7 +133,7 @@ void SurgeSynthesizer::incrementPatch(bool nextPrev, bool insideCategory)
     return;
 }
 
-void SurgeSynthesizer::incrementCategory(bool nextPrev)
+void SurgeSynthesizer::jogCategory(bool increment)
 {
     int c = storage.patch_category.size();
 
@@ -151,7 +151,7 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
         int orderOrig = order;
         do
         {
-            if (nextPrev)
+            if (increment)
                 order = (order >= (c - 1)) ? 0 : order + 1;
             else
                 order = (order <= 0) ? c - 1 : order - 1;
@@ -172,6 +172,18 @@ void SurgeSynthesizer::incrementCategory(bool nextPrev)
             processThreadunsafeOperations();
             return;
         }
+    }
+}
+
+void SurgeSynthesizer::jogPatchOrCategory(bool increment, bool isCategory, bool insideCategory)
+{
+    if (isCategory)
+    {
+        jogCategory(increment);
+    }
+    else
+    {
+        jogPatch(increment, insideCategory);
     }
 }
 

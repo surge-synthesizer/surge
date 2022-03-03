@@ -1172,7 +1172,7 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
     if (!n)
         return -1;
 
-    // See comment in SurgeSynthesizerIO::incrementPatch and #319
+    // See comment in SurgeSynthesizerIO::jogPatch and #319
     if (id < 0 || id > n - 1)
     {
         return wtOrdering[0];
@@ -1182,9 +1182,7 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
         int order = wt_list[id].order;
 
         if (nextPrev)
-            order = (order >= (n - 1))
-                        ? 0
-                        : order + 1; // see comment in incrementPatch for that >= vs ==
+            order = (order >= (n - 1)) ? 0 : order + 1; // see comment in jogPatch for that >= vs ==
         else
             order = (order <= 0) ? n - 1 : order - 1;
 

@@ -327,9 +327,12 @@ class alignas(16) SurgeSynthesizer
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
     bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name);
-    void incrementPatch(bool nextPrev, bool insideCategory = true);
-    void incrementCategory(bool nextPrev);
     void selectRandomPatch();
+
+    // if increment is true, we go to next patch, else go to previous patch
+    void jogCategory(bool increment);
+    void jogPatch(bool increment, bool insideCategory = true);
+    void jogPatchOrCategory(bool increment, bool isCategory, bool insideCategory = true);
 
     void swapMetaControllers(int ct1, int ct2);
 
