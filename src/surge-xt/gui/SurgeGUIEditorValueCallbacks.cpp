@@ -1821,8 +1821,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
 
-                        juce::StringArray tapeHysteresisModes{"Normal", "Medium", "High",
-                                                              "Very High"};
+                        std::vector<std::string> tapeHysteresisModes = {"Normal", "Medium", "High",
+                                                                        "Very High"};
 
                         contextMenu.addSectionHeader("PRECISION");
 
@@ -1830,7 +1830,33 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             bool isChecked = p->deform_type == i;
 
-                            contextMenu.addItem(tapeHysteresisModes[i].toStdString(), true,
+                            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(tapeHysteresisModes[i]),
+                                                true, isChecked, [this, isChecked, p, i]() {
+                                                    p->deform_type = i;
+                                                    if (!isChecked)
+                                                    {
+                                                        synth->storage.getPatch().isDirty = true;
+                                                    }
+                                                });
+                        }
+
+                        break;
+                    }
+                    case ct_dly_fb_clippingmodes:
+                    {
+                        contextMenu.addSeparator();
+
+                        std::vector<std::string> fbClipModes = {
+                            "Disabled (DANGER!)", "Soft Clip (cubic)", "Soft Clip (tanh)",
+                            "Hard Clip at 0 dBFS", "Hard Clip at +18 dBFS"};
+
+                        contextMenu.addSectionHeader("LIMITING");
+
+                        for (int i = 0; i < fbClipModes.size(); ++i)
+                        {
+                            bool isChecked = p->deform_type == i;
+
+                            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(fbClipModes[i]), true,
                                                 isChecked, [this, isChecked, p, i]() {
                                                     p->deform_type = i;
                                                     if (!isChecked)
@@ -2120,8 +2146,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                // see if we have any modulators that are unassigned, then create "Add Modulation
-                // from..." menu
+                // see if we have any modulators that are unassigned, then create "Add
+                // Modulation from..." menu
                 if (n_ms != n_modsources)
                 {
                     auto addModSub = juce::PopupMenu();
@@ -2373,7 +2399,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 case ct_lfotype:
                     /*
                     ** This code resets you to default if you double-click on control,
-                    ** but on the LFO type widget this is undesirable; it means if you accidentally
+                    ** but on the LFO type widget this is undesirable; it means if you
+                    *accidentally
                     ** Control-click on step sequencer, say, you go back to Sine and lose your
                     ** edits. So suppress it!
                     */

@@ -366,6 +366,7 @@ bool Parameter::has_deformoptions() const
     case ct_modern_trimix:
     case ct_alias_mask:
     case ct_tape_drive:
+    case ct_dly_fb_clippingmodes:
         return true;
     default:
         break;
@@ -961,6 +962,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_percent:
     case ct_percent_deactivatable:
+    case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
         val_min.f = 0;
         val_max.f = 1;
@@ -1300,6 +1302,7 @@ void Parameter::set_type(int ctrltype)
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_dly_fb_clippingmodes:
     case ct_percent_deactivatable:
     case ct_percent_oscdrift:
     case ct_percent200:
@@ -1622,6 +1625,7 @@ void Parameter::bound_value(bool force_integer)
         {
         case ct_percent:
         case ct_percent_deactivatable:
+        case ct_dly_fb_clippingmodes:
         case ct_percent_oscdrift:
         case ct_percent200:
         case ct_percent_bipolar:
@@ -3868,6 +3872,7 @@ bool Parameter::can_setvalue_from_string() const
     {
     case ct_percent:
     case ct_percent_deactivatable:
+    case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
