@@ -412,6 +412,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::vector<DAWExtraStateStorage::EditorState::OverlayState> overlaysForNextIdle;
 
+    std::deque<std::pair<std::string, int>> accAnnounceStrings;
+    void enqueueAccessibleAnnouncement(const std::string &s)
+    {
+        accAnnounceStrings.push_back({s, 3});
+    }
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
 
@@ -477,6 +482,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
+    bool firstTimePatchLoad{true};
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
