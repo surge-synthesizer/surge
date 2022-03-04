@@ -477,6 +477,23 @@ void SurgeGUIEditor::idle()
         needsModUpdate = false;
     }
 
+    if (!accAnnounceStrings.empty())
+    {
+        auto h = frame->getAccessibilityHandler();
+        if (h)
+        {
+            auto &nm = accAnnounceStrings.front();
+            if (nm.second == 0)
+            {
+                h->postAnnouncement(nm.first,
+                                    juce::AccessibilityHandler::AnnouncementPriority::high);
+            }
+        }
+        accAnnounceStrings.front().second--;
+        if (accAnnounceStrings.front().second < 0)
+            accAnnounceStrings.pop_front();
+    }
+
     if (errorItemCount)
     {
         std::vector<std::pair<std::string, std::string>> cp;
@@ -680,6 +697,18 @@ void SurgeGUIEditor::idle()
             }
         }
 
+        if (patchChanged)
+        {
+            if (!firstTimePatchLoad)
+            {
+                std::ostringstream oss;
+                oss << "Surge XT loaded patch " << synth->storage.getPatch().name
+                    << " from Category " << synth->storage.getPatch().category << " by "
+                    << synth->storage.getPatch().author;
+                enqueueAccessibleAnnouncement(oss.str());
+            }
+            firstTimePatchLoad = false;
+        }
         if (queue_refresh || synth->refresh_editor || patchChanged)
         {
             queue_refresh = false;
