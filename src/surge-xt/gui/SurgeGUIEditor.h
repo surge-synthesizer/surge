@@ -472,13 +472,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     std::shared_ptr<SurgeImageStore> bitmapStore = nullptr;
+    // made public so that EffectChooser can get to it!
+    std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
 
   private:
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
-    std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
     std::unique_ptr<Surge::Widgets::WaveShaperSelector> waveshaperSelector;
     std::unique_ptr<Surge::Widgets::Switch> waveshaperAnalysis;
 

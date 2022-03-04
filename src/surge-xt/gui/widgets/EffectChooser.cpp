@@ -16,7 +16,9 @@
 
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeJUCEHelpers.h"
 #include "SurgeImage.h"
+#include "XMLConfiguredMenus.h"
 #include "AccessibleHelpers.h"
 
 namespace Surge
@@ -255,9 +257,23 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
         if (r.contains(event.getPosition()))
         {
             auto sge = firstListenerOfType<SurgeGUIEditor>();
+
             if (sge)
             {
                 sge->effectSettingsBackgroundClick(i, this);
+            }
+        }
+    }
+
+    if (currentClicked >= 0)
+    {
+        if (event.mods.isRightButtonDown())
+        {
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            if (sge && sge->fxMenu)
+            {
+                sge->fxMenu->menu.showMenuAsync(juce::PopupMenu::Options());
             }
         }
     }
@@ -267,15 +283,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
 {
     if (!hasDragged && currentClicked >= 0)
     {
-        if (event.mods.isRightButtonDown())
-        {
-            storage->getPatch().isDirty = true;
-            deactivatedBitmask ^= (1 << currentClicked);
-        }
-        else
-        {
-            currentEffect = currentClicked;
-        }
+        currentEffect = currentClicked;
         notifyValueChanged();
     }
 
