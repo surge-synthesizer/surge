@@ -245,9 +245,12 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
     for (int i = 0; i < n_fx_slots; ++i)
     {
         auto r = getEffectRectangle(i);
+
         if (r.contains(event.getPosition()))
         {
             currentClicked = i;
+            currentEffect = currentClicked;
+            notifyValueChanged();
         }
     }
 
@@ -281,12 +284,6 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
 
 void EffectChooser::mouseUp(const juce::MouseEvent &event)
 {
-    if (!hasDragged && currentClicked >= 0)
-    {
-        currentEffect = currentClicked;
-        notifyValueChanged();
-    }
-
     if (hasDragged)
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
