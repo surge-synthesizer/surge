@@ -31,6 +31,7 @@ namespace Widgets
 {
 struct ModulatableSlider : public juce::Component,
                            public WidgetBaseMixin<ModulatableSlider>,
+                           public LongHoldMixin<ModulatableSlider>,
                            public ModulatableControlInterface
 {
     ModulatableSlider();

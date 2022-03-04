@@ -38,6 +38,12 @@ bool showCursor(SurgeStorage *storage)
     return sc || tm;
 };
 
+bool isTouchMode(SurgeStorage *storage)
+{
+    bool tm = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::TouchMouseMode, false);
+    return tm;
+}
+
 /*
  * We kinda want to know if we are standalone here, but don't have reference to the processor
  * but that's a constant for a process (you can't mix standalone and not) so make it a static
