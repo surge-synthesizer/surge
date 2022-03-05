@@ -86,6 +86,7 @@ namespace Widgets
 {
 extern const Surge::Skin::FontDesc NumberField, EffectLabel;
 extern const Surge::Skin::FontDesc TabButtonFont;
+extern const Surge::Skin::FontDesc ModButtonFont;
 } // namespace Widgets
 namespace PatchStore
 {
@@ -95,10 +96,13 @@ namespace LuaEditor
 {
 extern const Surge::Skin::FontDesc Code;
 }
-namespace WaveshaperAnalysis
+namespace Waveshaper
+{
+namespace Preview
 {
 extern const Surge::Skin::FontDesc Title, DriveAmount, DriveLabel;
 }
+} // namespace Waveshaper
 
 } // namespace Fonts
 #endif // SURGE_XT_SKINFONTS_H

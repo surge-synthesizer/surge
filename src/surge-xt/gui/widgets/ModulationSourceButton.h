@@ -141,6 +141,14 @@ struct ModulationSourceButton : public juce::Component,
             repaint();
     }
 
+    juce::Font font;
+
+    void setFont(const juce::Font &f)
+    {
+        font = f;
+        repaint();
+    }
+
     bool isHovered{false};
 
     void mouseEnter(const juce::MouseEvent &event) override;

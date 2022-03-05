@@ -116,13 +116,13 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(2) << sliderDb;
 
-        g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveAmount));
+        g.setFont(skin->getFont(Fonts::Waveshaper::Preview::DriveAmount));
         g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
         g.drawText(oss.str(), tx, juce::Justification::centred);
 
         tx = tx.translated(0, 12);
 
-        g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::DriveLabel));
+        g.setFont(skin->getFont(Fonts::Waveshaper::Preview::DriveLabel));
         g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
         g.drawText("Drive (dB)", tx, juce::Justification::centred);
     }
@@ -132,7 +132,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     title << "Current: " << wst_names[wstype];
 
     g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
-    g.setFont(skin->getFont(Fonts::WaveshaperAnalysis::Title));
+    g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
     g.drawText(title.str(), txtr, juce::Justification::centred);
 }
 
