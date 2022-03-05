@@ -1193,53 +1193,70 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
 void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 {
     bool includemod = false, includeall = false;
+    int cgroup = -1;
+    int cgroup_e = -1;
+    int id = -1;
+
     if (type & cp_oscmod)
     {
         type = cp_osc;
         includemod = true;
     }
-    int cgroup = -1;
-    int cgroup_e = -1;
-    int id = -1;
 
     clipboard_type = type;
+
     if (type & cp_osc)
     {
-        cgroup = 2;
+        cgroup = cg_OSC;
         cgroup_e = entry;
         id = getPatch().scene[scene].osc[entry].type.id; // first parameter id
+
         if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
         {
             clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
             strncpy(clipboard_wt_names[0],
                     getPatch().scene[scene].osc[entry].wavetable_display_name, 256);
         }
+
         memcpy(&clipboard_extraconfig[0], &getPatch().scene[scene].osc[entry].extraConfig,
                sizeof(OscillatorStorage::ExtraConfigurationData));
     }
+
     if (type & cp_lfo)
     {
-        cgroup = 6;
+        cgroup = cg_LFO;
         cgroup_e = entry + ms_lfo1;
         id = getPatch().scene[scene].lfo[entry].shape.id;
+
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
+        {
             memcpy(&clipboard_stepsequences[0], &getPatch().stepsequences[scene][entry],
                    sizeof(StepSequencerStorage));
+        }
+
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
+        {
             clipboard_msegs[0] = getPatch().msegs[scene][entry];
+        }
+
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
+        {
             clipboard_formulae[0] = getPatch().formulamods[scene][entry];
+        }
+
         for (int idx = 0; idx < max_lfo_indices; ++idx)
         {
             strncpy(clipboard_modulator_names[0][idx], getPatch().LFOBankLabel[scene][entry][idx],
                     CUSTOM_CONTROLLER_LABEL_SIZE);
         }
     }
+
     if (type & cp_scene)
     {
         includemod = true;
         includeall = true;
         id = getPatch().scene[scene].octave.id;
+
         for (int i = 0; i < n_lfos; i++)
         {
             memcpy(&clipboard_stepsequences[i], &getPatch().stepsequences[scene][i],
@@ -1253,6 +1270,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                         CUSTOM_CONTROLLER_LABEL_SIZE);
             }
         }
+
         for (int i = 0; i < n_oscs; i++)
         {
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
@@ -1261,10 +1279,12 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             memcpy(&clipboard_extraconfig[i], &getPatch().scene[scene].osc[i].extraConfig,
                    sizeof(OscillatorStorage::ExtraConfigurationData));
         }
+
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
     }
 
     modRoutingMutex.lock();
+
     {
         clipboard_p.clear();
         clipboard_modulation_scene.clear();
@@ -1274,9 +1294,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         std::set<int> used_entries;
 
         int n = getPatch().param_ptr.size();
+
         for (int i = 0; i < n; i++)
         {
             Parameter p = *getPatch().param_ptr[i];
+
             if (((p.ctrlgroup == cgroup) || (cgroup < 0)) &&
                 ((p.ctrlgroup_entry == cgroup_e) || (cgroup_e < 0)) && (p.scene == (scene + 1)))
             {
@@ -1289,8 +1311,12 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         if (includemod)
         {
             int idoffset = 0;
+
             if (!includeall)
+            {
                 idoffset = -id + n_global_params;
+            }
+
             n = getPatch().scene[scene].modulation_voice.size();
             for (int i = 0; i < n; i++)
             {
@@ -1300,9 +1326,13 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 m.depth = getPatch().scene[scene].modulation_voice[i].depth;
                 m.destination_id =
                     getPatch().scene[scene].modulation_voice[i].destination_id + idoffset;
+
                 if (includeall || (used_entries.find(m.destination_id) != used_entries.end()))
+                {
                     clipboard_modulation_voice.push_back(m);
+                }
             }
+
             n = getPatch().scene[scene].modulation_scene.size();
             for (int i = 0; i < n; i++)
             {
@@ -1312,8 +1342,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 m.depth = getPatch().scene[scene].modulation_scene[i].depth;
                 m.destination_id =
                     getPatch().scene[scene].modulation_scene[i].destination_id + idoffset;
+
                 if (includeall || (used_entries.find(m.destination_id) != used_entries.end()))
+                {
                     clipboard_modulation_scene.push_back(m);
+                }
             }
         }
 
@@ -1323,11 +1356,15 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             {
                 ms = (modsources)(entry + ms_lfo1);
             }
+
             n = getPatch().scene[scene].modulation_voice.size();
             for (int i = 0; i < n; i++)
             {
                 if (getPatch().scene[scene].modulation_voice[i].source_id != ms)
+                {
                     continue;
+                }
+
                 ModulationRouting m;
                 m.source_id = getPatch().scene[scene].modulation_voice[i].source_id;
                 m.source_index = getPatch().scene[scene].modulation_voice[i].source_index;
@@ -1335,11 +1372,15 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 m.destination_id = getPatch().scene[scene].modulation_voice[i].destination_id;
                 clipboard_modulation_voice.push_back(m);
             }
+
             n = getPatch().scene[scene].modulation_scene.size();
             for (int i = 0; i < n; i++)
             {
                 if (getPatch().scene[scene].modulation_scene[i].source_id != ms)
+                {
                     continue;
+                }
+
                 ModulationRouting m;
                 m.source_id = getPatch().scene[scene].modulation_scene[i].source_id;
                 m.source_index = getPatch().scene[scene].modulation_scene[i].source_index;
@@ -1347,12 +1388,16 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 m.destination_id = getPatch().scene[scene].modulation_scene[i].destination_id;
                 clipboard_modulation_scene.push_back(m);
             }
+
             n = getPatch().modulation_global.size();
             for (int i = 0; i < n; i++)
             {
                 if (getPatch().modulation_global[i].source_id != ms ||
                     getPatch().modulation_global[i].source_scene != scene)
+                {
                     continue;
+                }
+
                 ModulationRouting m;
                 m.source_id = getPatch().modulation_global[i].source_id;
                 m.source_index = getPatch().modulation_global[i].source_index;
@@ -1363,6 +1408,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             }
         }
     }
+
     modRoutingMutex.unlock();
 }
 
@@ -1372,7 +1418,9 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
     assert(scene < n_scenes);
 
     if (!(type & clipboard_type))
+    {
         return;
+    }
 
     int cgroup = -1;
     int cgroup_e = -1;
@@ -1386,7 +1434,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
     if (type & cp_osc)
     {
-        cgroup = 2;
+        cgroup = cg_OSC;
         cgroup_e = entry;
         id = getPatch().scene[scene].osc[entry].type.id; // first parameter id
         getPatch().scene[scene].osc[entry].type.val.i = clipboard_p[0].val.i;
@@ -1396,12 +1444,14 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         memcpy(&getPatch().scene[scene].osc[entry].extraConfig, &clipboard_extraconfig[0],
                sizeof(OscillatorStorage::ExtraConfigurationData));
     }
+
     if (type & cp_lfo)
     {
-        cgroup = 6;
+        cgroup = cg_LFO;
         cgroup_e = entry + ms_lfo1;
         id = getPatch().scene[scene].lfo[entry].shape.id;
     }
+
     if (type & cp_scene)
     {
         id = getPatch().scene[scene].octave.id;
@@ -1440,6 +1490,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
     }
 
     modRoutingMutex.lock();
+
     {
         for (int i = start; i < n; i++)
         {
@@ -1478,6 +1529,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                     clipboard_modulation_voice[i].destination_id + id - n_global_params;
                 getPatch().scene[scene].modulation_voice.push_back(m);
             }
+
             n = clipboard_modulation_scene.size();
             for (int i = 0; i < n; i++)
             {
@@ -1491,15 +1543,24 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 getPatch().scene[scene].modulation_scene.push_back(m);
             }
         }
+
         if (type & cp_lfo)
         {
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
+            {
                 memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
                        sizeof(StepSequencerStorage));
+            }
+
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
+            {
                 getPatch().msegs[scene][entry] = clipboard_msegs[0];
+            }
+
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_formula)
+            {
                 getPatch().formulamods[scene][entry] = clipboard_formulae[0];
+            }
 
             for (int idx = 0; idx < max_lfo_indices; ++idx)
             {
@@ -1507,12 +1568,14 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                         clipboard_modulator_names[0][idx], CUSTOM_CONTROLLER_LABEL_SIZE);
             }
         }
+
         if (type & cp_modulator_target)
         {
             if (entry >= 0)
             {
                 ms = (modsources)(entry + ms_lfo1);
             }
+
             // copy modroutings
             n = clipboard_modulation_voice.size();
             for (int i = 0; i < n; i++)
@@ -1523,6 +1586,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.source_scene = scene;
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
+
                 if (isValid(m.destination_id + getPatch().scene_start[scene],
                             (modsources)m.source_id))
                 {
@@ -1536,6 +1600,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                     }
                 }
             }
+
             n = clipboard_modulation_scene.size();
             for (int i = 0; i < n; i++)
             {
@@ -1545,6 +1610,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.source_scene = scene;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
+
                 if (isValid(m.destination_id + getPatch().scene_start[scene],
                             (modsources)m.source_id))
                 {
@@ -1558,6 +1624,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                     }
                 }
             }
+
             n = clipboard_modulation_global.size();
             for (int i = 0; i < n; i++)
             {
@@ -1567,10 +1634,14 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
                 m.depth = clipboard_modulation_global[i].depth;
                 m.destination_id = clipboard_modulation_global[i].destination_id;
+
                 if (isValid(m.destination_id, (modsources)m.source_id))
+                {
                     getPatch().modulation_global.push_back(m);
+                }
             }
         }
+
         if (type & cp_scene)
         {
             getPatch().scene[scene].modulation_voice.clear();
@@ -1587,6 +1658,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
                 getPatch().scene[scene].modulation_voice.push_back(m);
             }
+
             n = clipboard_modulation_scene.size();
             for (int i = 0; i < n; i++)
             {

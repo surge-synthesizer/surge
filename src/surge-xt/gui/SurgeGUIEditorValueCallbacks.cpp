@@ -998,6 +998,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     synth->storage.get_clipboard_type() & cp_modulator_target)
                 {
                     auto t = synth->storage.get_clipboard_type();
+
                     contextMenu.addItem(
                         Surge::GUI::toOSCaseForMenu("Paste"), [this, sc, t, lfo_id]() {
                             synth->storage.clipboard_paste(
