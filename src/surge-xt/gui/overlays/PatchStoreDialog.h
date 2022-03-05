@@ -56,6 +56,7 @@ struct PatchStoreDialog : public OverlayComponent,
     void setCategory(const std::string &c) { catEd->setText(c, juce::dontSendNotification); }
     void setComment(const std::string &c) { commentEd->setText(c, juce::dontSendNotification); }
     void setTags(const std::vector<SurgePatch::Tag> &t);
+    void setStoreTuningInPatch(const bool value);
 
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
