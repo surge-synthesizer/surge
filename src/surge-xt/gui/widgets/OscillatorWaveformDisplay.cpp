@@ -62,15 +62,35 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             oscdata->wt.queue_id = id;
     };
     menuOverlays[2] = std::move(ol);
+
+    ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
+        this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
+        juce::AccessibilityRole::button);
+    addChildComponent(*ol);
+    ol->onPress = [this](OscillatorWaveformDisplay *d) {
+        if (customEditor)
+        {
+            dismissCustomEditor();
+            d->customEditorAccOverlay->setDescription("Open Custom Editor");
+            d->customEditorAccOverlay->setTitle("Open Custom Editor");
+        }
+        else
+        {
+            showCustomEditor();
+            d->customEditorAccOverlay->setDescription("Open Custom Editor");
+            d->customEditorAccOverlay->setTitle("Open Custom Editor");
+        }
+    };
+    customEditorAccOverlay = std::move(ol);
 }
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
 
 void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 {
+    bool skipEntireOscillator{false};
     if (supportsCustomEditor() && customEditor)
     {
-        drawEditorBox(g, "CLOSE");
-        return;
+        skipEntireOscillator = true;
     }
 
     if (!supportsCustomEditor() && customEditor)
@@ -80,121 +100,123 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
 
-    auto osc = setupOscillator();
-    if (!osc)
-        return;
-
-    int totalSamples = (1 << 4) * (int)getWidth();
-    int averagingWindow = 4; // < and Mult of BlockSizeOS
-
-    float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
-    if (!storage->isStandardTuning)
+    if (!skipEntireOscillator)
     {
-        // OK so in this case we need to find a better version of the note which gets us
-        // that pitch. Only way is to search really.
-        auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
-        int bracket = -1;
-        for (int i = 0; i < 128; ++i)
+        auto osc = setupOscillator();
+        if (!osc)
+            return;
+
+        int totalSamples = (1 << 4) * (int)getWidth();
+        int averagingWindow = 4; // < and Mult of BlockSizeOS
+
+        float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
+        if (!storage->isStandardTuning)
         {
-            if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
+            // OK so in this case we need to find a better version of the note which gets us
+            // that pitch. Only way is to search really.
+            auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
+            int bracket = -1;
+            for (int i = 0; i < 128; ++i)
             {
-                bracket = i;
-                break;
+                if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
+                {
+                    bracket = i;
+                    break;
+                }
             }
+            if (bracket >= 0)
+            {
+                float f1 = storage->note_to_pitch(bracket);
+                float f2 = storage->note_to_pitch(bracket + 1);
+                float frac = (pit - f1) / (f2 - f1);
+                disp_pitch_rs = bracket + frac;
+            }
+            // That's a strange non-monotonic tuning. Oh well.
         }
-        if (bracket >= 0)
-        {
-            float f1 = storage->note_to_pitch(bracket);
-            float f2 = storage->note_to_pitch(bracket + 1);
-            float frac = (pit - f1) / (f2 - f1);
-            disp_pitch_rs = bracket + frac;
-        }
-        // That's a strange non-monotonic tuning. Oh well.
-    }
 
-    bool use_display = osc->allow_display();
+        bool use_display = osc->allow_display();
 
-    if (use_display)
-        osc->init(disp_pitch_rs, true, true);
-
-    int block_pos = BLOCK_SIZE_OS;
-    juce::Path wavePath;
-    for (int i = 0; i < totalSamples; i += averagingWindow)
-    {
-        if (use_display && block_pos >= BLOCK_SIZE_OS)
-        {
-            // Lock it even if we aren't wavetable. It's fine.
-            storage->waveTableDataMutex.lock();
-            osc->process_block(disp_pitch_rs);
-            block_pos = 0;
-            storage->waveTableDataMutex.unlock();
-        }
-        float val = 0.f;
         if (use_display)
+            osc->init(disp_pitch_rs, true, true);
+
+        int block_pos = BLOCK_SIZE_OS;
+        juce::Path wavePath;
+        for (int i = 0; i < totalSamples; i += averagingWindow)
         {
-            for (int j = 0; j < averagingWindow; ++j)
+            if (use_display && block_pos >= BLOCK_SIZE_OS)
             {
-                val += osc->output[block_pos];
-                block_pos++;
+                // Lock it even if we aren't wavetable. It's fine.
+                storage->waveTableDataMutex.lock();
+                osc->process_block(disp_pitch_rs);
+                block_pos = 0;
+                storage->waveTableDataMutex.unlock();
             }
-            val = val / averagingWindow;
-        }
-        float xc = 1.f * i / totalSamples;
+            float val = 0.f;
+            if (use_display)
+            {
+                for (int j = 0; j < averagingWindow; ++j)
+                {
+                    val += osc->output[block_pos];
+                    block_pos++;
+                }
+                val = val / averagingWindow;
+            }
+            float xc = 1.f * i / totalSamples;
 
-        if (i == 0)
-        {
-            wavePath.startNewSubPath(xc, val);
+            if (i == 0)
+            {
+                wavePath.startNewSubPath(xc, val);
+            }
+            else
+            {
+                wavePath.lineTo(xc, val);
+            }
         }
-        else
+
+        osc->~Oscillator();
+        osc = nullptr;
+
+        auto yMargin = 2 * usesWT;
+        auto h = getHeight() - usesWT * wtbheight - 2 * yMargin;
+        auto xMargin = 2;
+        auto w = getWidth() - 2 * xMargin;
+        auto downScale = 0.235;
+        auto tf = juce::AffineTransform()
+                      .scaled(w, -(1 - downScale) * h / 2)
+                      .translated(xMargin, h / 2 + yMargin);
+
+        // Draw the lines
+        auto tfLine = [tf](float x0, float y0, float x1, float y1) -> juce::Line<float> {
+            auto p0 = juce::Point<float>(x0, y0).transformedBy(tf);
+            auto p1 = juce::Point<float>(x1, y1).transformedBy(tf);
+            return juce::Line<float>(p0, p1);
+        };
+
+        g.setColour(skin->getColor(Colors::Osc::Display::Bounds));
+        g.drawLine(tfLine(0, -1, 1, -1));
+        g.drawLine(tfLine(0, 1, 1, 1));
+
+        g.setColour(juce::Colours::green);
+        g.setColour(skin->getColor(Colors::Osc::Display::Center));
+        g.drawLine(tfLine(0, 0, 1, 0));
+
+        g.setColour(skin->getColor(Colors::Osc::Display::Dots));
+        int nxd = 21, nyd = 13;
+        for (int xd = 0; xd < nxd; ++xd)
         {
-            wavePath.lineTo(xc, val);
+            float normx = 1.f * xd / (nxd - 1);
+            for (int yd = 0; yd < nyd; ++yd)
+            {
+                float normy = 2.f * yd / (nyd - 1) - 1;
+
+                auto p = juce::Point<float>(normx, normy).transformedBy(tf);
+                g.fillEllipse(p.x - 0.5, p.y - 0.5, 1, 1);
+            }
         }
+
+        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+        g.strokePath(wavePath, juce::PathStrokeType(1.3), tf);
     }
-
-    osc->~Oscillator();
-    osc = nullptr;
-
-    auto yMargin = 2 * usesWT;
-    auto h = getHeight() - usesWT * wtbheight - 2 * yMargin;
-    auto xMargin = 2;
-    auto w = getWidth() - 2 * xMargin;
-    auto downScale = 0.235;
-    auto tf = juce::AffineTransform()
-                  .scaled(w, -(1 - downScale) * h / 2)
-                  .translated(xMargin, h / 2 + yMargin);
-
-    // Draw the lines
-    auto tfLine = [tf](float x0, float y0, float x1, float y1) -> juce::Line<float> {
-        auto p0 = juce::Point<float>(x0, y0).transformedBy(tf);
-        auto p1 = juce::Point<float>(x1, y1).transformedBy(tf);
-        return juce::Line<float>(p0, p1);
-    };
-
-    g.setColour(skin->getColor(Colors::Osc::Display::Bounds));
-    g.drawLine(tfLine(0, -1, 1, -1));
-    g.drawLine(tfLine(0, 1, 1, 1));
-
-    g.setColour(juce::Colours::green);
-    g.setColour(skin->getColor(Colors::Osc::Display::Center));
-    g.drawLine(tfLine(0, 0, 1, 0));
-
-    g.setColour(skin->getColor(Colors::Osc::Display::Dots));
-    int nxd = 21, nyd = 13;
-    for (int xd = 0; xd < nxd; ++xd)
-    {
-        float normx = 1.f * xd / (nxd - 1);
-        for (int yd = 0; yd < nyd; ++yd)
-        {
-            float normy = 2.f * yd / (nyd - 1) - 1;
-
-            auto p = juce::Point<float>(normx, normy).transformedBy(tf);
-            g.fillEllipse(p.x - 0.5, p.y - 0.5, 1, 1);
-        }
-    }
-
-    g.setColour(skin->getColor(Colors::Osc::Display::Wave));
-    g.strokePath(wavePath, juce::PathStrokeType(1.3), tf);
-
     if (usesWT)
     {
         /*
@@ -219,7 +241,11 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         auto fgframeHov = skin->getColor(Colors::Osc::Filename::FrameHover);
         auto fgtextHov = skin->getColor(Colors::Osc::Filename::TextHover);
 
-        auto wtr = getLocalBounds().withTop(getHeight() - wtbheight).withTrimmedBottom(1).toFloat();
+        auto wtr = getLocalBounds()
+                       .withTop(getHeight() - wtbheight)
+                       .withTrimmedBottom(1)
+                       .withTrimmedRight(wt3DControlWidth)
+                       .toFloat();
         g.setColour(juce::Colours::orange);
         g.fillRect(wtr);
 
@@ -265,7 +291,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     if (supportsCustomEditor())
     {
-        drawEditorBox(g, "EDIT");
+        drawEditorBox(g, customEditorActionLabel(customEditor == nullptr));
     }
 }
 
@@ -299,13 +325,16 @@ std::string OscillatorWaveformDisplay::getCurrentWavetableName()
 
 void OscillatorWaveformDisplay::resized()
 {
-    auto wtr = getLocalBounds().withTop(getHeight() - wtbheight).withTrimmedBottom(1).toFloat();
+    auto wtrO = getLocalBounds().withTop(getHeight() - wtbheight).withTrimmedBottom(1).toFloat();
+    auto wtr = wtrO.withTrimmedRight(wt3DControlWidth);
+    auto wtl = wtrO.withTrimmedLeft(wtr.getWidth() - wt3DControlWidth);
     leftJog = wtr.withRight(wtbheight);
     menuOverlays[1]->setBounds(leftJog.toNearestInt());
     rightJog = wtr.withLeft(wtr.getWidth() - wtbheight);
     menuOverlays[2]->setBounds(rightJog.toNearestInt());
     waveTableName = wtr.withTrimmedRight(wtbheight).withTrimmedLeft(wtbheight);
     menuOverlays[0]->setBounds(waveTableName.toNearestInt());
+    customEditorAccOverlay->setBounds(wtl.toNearestInt());
 }
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
@@ -671,6 +700,39 @@ void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
     }
 }
 
+std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOpen) const
+{
+    if (oscdata->type.val.i == ot_alias &&
+        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
+    {
+        if (isActionToOpen)
+            return "EDIT";
+        else
+            return "CLOSE";
+    }
+
+    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    {
+        if (isActionToOpen)
+            return "3D";
+        else
+            return "Wv";
+    }
+
+    return "";
+}
+
+bool OscillatorWaveformDisplay::isCustomEditAccessible() const
+{
+    // The WT display is purely visual so it doesn't have screen reader support
+    if (oscdata->type.val.i == ot_alias &&
+        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
+    {
+        return true;
+    }
+    return false;
+}
+
 bool OscillatorWaveformDisplay::supportsCustomEditor()
 {
     if (oscdata->type.val.i == ot_alias &&
@@ -678,19 +740,154 @@ bool OscillatorWaveformDisplay::supportsCustomEditor()
     {
         return true;
     }
-
+    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    {
+        return true;
+    }
     return false;
 }
+
+struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
+{
+    OscillatorStorage *oscdata;
+    SurgeStorage *storage;
+
+    WaveTable3DEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc) {}
+
+    void paint(juce::Graphics &g) override
+    {
+        // ToDo: Skin Colors etc... although currentSkin will be available by now
+        g.fillAll(juce::Colours::black);
+        auto &wt = oscdata->wt;
+
+        // Figuring out position is a bit gross. Window and WT have em in  same slot but
+        // if it out anyway
+        auto pos = -1.f;
+        if (oscdata->type.val.i == ot_wavetable)
+        {
+            pos = oscdata->p[0].val.f;
+        }
+        else if (oscdata->type.val.i == ot_window)
+        {
+            pos = oscdata->p[0].val.f;
+        }
+
+        auto tpos = pos * wt.n_tables;
+
+        // OK so now go backwards through the tables but also tilt and raise for the 3D effect
+        auto smp = wt.size;
+        auto smpinv = 1.0 / smp;
+
+        auto w = getWidth();
+        auto h = getHeight();
+
+        // Now we have a sort of skew back and offset as we go. The skew is sort of a rotation
+        // and the depth is sort of how flattened it is. Finally the hCompress augments height.
+        auto skewPct = 0.2;
+        auto depthPct = 0.5;
+        auto hCompress = 0.8;
+
+        for (int t = wt.n_tables - 1; t >= 0; t--)
+        {
+            auto tb = wt.TableF32WeakPointers[0][t];
+
+            float tpct = 1.0 * t / (wt.n_tables - 1);
+            float x0 = tpct * skewPct * w;
+            auto lw = w * (1.0 - skewPct);
+
+            float y0 = (1.0 - tpct) * depthPct * h;
+            auto hw = h * depthPct * hCompress;
+
+            juce::Path p;
+            p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
+            for (int s = 1; s < smp; ++s)
+            {
+                auto x = x0 + s * smpinv * lw;
+                p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+            }
+            g.setColour(juce::Colour(0xFF, 0x90, 0x00).darker(tpct * 0.4));
+            if (abs(t - tpos) < 1)
+                g.setColour(juce::Colours::yellow);
+            g.strokePath(p, juce::PathStrokeType(1));
+        }
+
+        // Here is a crude 3D picture
+
+        g.setColour(juce::Colours::white);
+        g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(8));
+        std::ostringstream oss;
+        oss << wt.n_tables << "tb " << wt.size << "smp "
+            << (((wt.flags & wtf_int16) || (wt.flags & wtf_int16_is_16)) ? "i16" : "f32");
+        g.drawText(oss.str(), getLocalBounds().reduced(1), juce::Justification::topLeft);
+    }
+};
 
 struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
 {
     juce::Colour b = juce::Colours::pink;
-    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc) {}
+    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc)
+    {
+        for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
+        {
+            std::string sn = "Harmonic " + std::to_string(i + 1);
+            auto q = std::make_unique<OverlayAsAccessibleSlider<AliasAdditiveEditor>>(this, sn);
+            q->onGetValue = [this, i](auto *T) {
+                auto v = limitpm1(oscdata->extraConfig.data[i]);
+                return v;
+            };
+            q->onSetValue = [this, i](auto *T, float f) {
+                oscdata->extraConfig.data[i] = limitpm1(f);
+                storage->getPatch().isDirty = true;
+                repaint();
+            };
+            q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
+                auto v = limitpm1(oscdata->extraConfig.data[i]);
+                auto fac = 0.05;
+                if (isShift)
+                    fac = 0.01;
+                oscdata->extraConfig.data[i] = limitpm1(v + fac * dir);
+                storage->getPatch().isDirty = true;
+                repaint();
+            };
+            q->onMinMaxDef = [this, i](auto *t, int mmd) {
+                auto val = 0.f;
+                if (mmd == 1)
+                    val = 1;
+                if (mmd == -1)
+                    val = -1;
+                oscdata->extraConfig.data[i] = limitpm1(val);
+                storage->getPatch().isDirty = true;
+                repaint();
+            };
+            addAndMakeVisible(*q);
+            sliderAccOverlays[i] = std::move(q);
+        }
+        setAccessible(true);
+        setTitle("Alias Additive Editor");
+        setDescription("Alias Additive Editor");
+        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    }
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
 
     std::array<juce::Rectangle<float>, AliasOscillator::n_additive_partials> sliders;
+    std::array<std::unique_ptr<OverlayAsAccessibleSlider<AliasAdditiveEditor>>,
+               AliasOscillator::n_additive_partials>
+        sliderAccOverlays;
 
+    void resized() override
+    {
+        auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
+        float halfHeight = getHeight() / 2.f;
+
+        for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
+        {
+            auto p = juce::Rectangle<float>(i * w, 0, w, getHeight());
+
+            sliders[i] = p;
+            sliderAccOverlays[i]->setBounds(p.toNearestInt());
+        }
+    }
     void paint(juce::Graphics &g) override
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
@@ -700,11 +897,8 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
             auto v = limitpm1(oscdata->extraConfig.data[i]);
-            auto p = juce::Rectangle<float>(i * w, 0, w, getHeight());
-
-            sliders[i] = p;
-
-            auto bar = p;
+            auto p = sliders[i];
+            auto bar = sliders[i];
 
             if (v < 0)
             {
@@ -975,12 +1169,21 @@ void OscillatorWaveformDisplay::showCustomEditor()
         customEditor = std::move(ed);
     }
 
+    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    {
+        auto ed = std::make_unique<WaveTable3DEditor>(storage, oscdata);
+        ed->setSkin(skin, associatedBitmapStore);
+        customEditor = std::move(ed);
+    }
     if (customEditor)
     {
         auto b = getLocalBounds().withTrimmedBottom(wtbheight);
         customEditor->setBounds(b);
         addAndMakeVisible(*customEditor);
         repaint();
+
+        customEditorAccOverlay->setTitle("Close Custom Editor");
+        customEditorAccOverlay->setDescription("Close Custom Editor");
     }
 }
 
@@ -989,6 +1192,9 @@ void OscillatorWaveformDisplay::dismissCustomEditor()
     if (customEditor)
         removeChildComponent(customEditor.get());
     customEditor.reset(nullptr);
+
+    customEditorAccOverlay->setTitle("Open Custom Editor");
+    customEditorAccOverlay->setDescription("Open Custom Editor");
     repaint();
 }
 
@@ -999,6 +1205,19 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
                           .withRight(60)
                           .withTrimmedBottom(1)
                           .toFloat();
+    int fontsize = 9;
+
+    if (oscdata->type.val.i == ot_window || oscdata->type.val.i == ot_wavetable)
+    {
+        auto wtr = getLocalBounds()
+                       .withTop(getHeight() - wtbheight)
+                       .withTrimmedBottom(1)
+                       .withTrimmedLeft(getWidth() - wt3DControlWidth)
+                       .toFloat();
+
+        customEditorBox = wtr;
+        fontsize = 8;
+    }
 
     juce::Colour bg, outline, txt;
     if (isCustomEditorHovered)
@@ -1018,7 +1237,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
     g.setColour(outline);
     g.drawRect(customEditorBox);
     g.setColour(txt);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(fontsize));
     g.drawText(s, customEditorBox, juce::Justification::centred);
 }
 
@@ -1033,16 +1252,26 @@ void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
 
 void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 {
-    bool vis = false;
+    bool visWT = false;
     if (uses_wavetabledata(oscdata->type.val.i))
     {
-        vis = true;
+        visWT = true;
     }
+
+    auto visCC = isCustomEditAccessible();
+
+    auto vis = visWT || visCC;
     setAccessible(vis);
     for (const auto &ao : menuOverlays)
     {
-        ao->setVisible(vis);
+        ao->setVisible(visWT);
     }
+    if (customEditor)
+    {
+        dismissCustomEditor();
+    }
+
+    customEditorAccOverlay->setVisible(visCC);
 }
 
 std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
