@@ -702,8 +702,8 @@ void SurgeGUIEditor::idle()
             if (!firstTimePatchLoad)
             {
                 std::ostringstream oss;
-                oss << "Surge XT loaded patch " << synth->storage.getPatch().name
-                    << " from Category " << synth->storage.getPatch().category << " by "
+                oss << synth->storage.getPatch().name << " from category "
+                    << synth->storage.getPatch().category << " by "
                     << synth->storage.getPatch().author;
                 enqueueAccessibleAnnouncement(oss.str());
             }

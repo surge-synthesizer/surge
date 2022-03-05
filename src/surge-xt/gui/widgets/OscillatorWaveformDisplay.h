@@ -91,9 +91,13 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void showCustomEditor();
     void dismissCustomEditor();
     void drawEditorBox(juce::Graphics &g, const std::string &s);
+    bool isCustomEditAccessible() const;
+    std::string customEditorActionLabel(bool isActionToOpen) const;
+    static constexpr int wt3DControlWidth = 20;
     std::unique_ptr<juce::Component> customEditor;
 
     std::array<std::unique_ptr<juce::Component>, 3> menuOverlays;
+    std::unique_ptr<juce::Component> customEditorAccOverlay;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
     int lastWavetableId{-1};
 
