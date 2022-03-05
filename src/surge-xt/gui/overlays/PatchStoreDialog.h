@@ -63,8 +63,8 @@ struct PatchStoreDialog : public OverlayComponent,
     std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, tagEd, commentEd;
     std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, tagEdL, commentEdL;
     std::unique_ptr<Widgets::SurgeTextButton> okButton, okOverButton, cancelButton;
-    std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
+    std::unique_ptr<juce::ToggleButton> storeTuningButton;
 
     bool isRename{false};
     void setIsRename(bool b);

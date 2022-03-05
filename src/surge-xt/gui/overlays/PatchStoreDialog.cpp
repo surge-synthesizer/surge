@@ -192,13 +192,15 @@ PatchStoreDialog::PatchStoreDialog()
     okOverButton->addListener(this);
     addAndMakeVisible(*okOverButton);
 
+    auto stbTitle = "Store Tuning in Patch";
+
+    storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu(stbTitle));
+
     storeTuningButton = std::make_unique<juce::ToggleButton>();
     storeTuningButton->setButtonText("");
-    storeTuningButton->setTitle("Store Tuning in Patch");
-    storeTuningButton->setDescription("Store Tuning in Patch");
+    storeTuningButton->setTitle(stbTitle);
+    storeTuningButton->setDescription(stbTitle);
     addAndMakeVisible(*storeTuningButton);
-
-    storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu("Store Tuning in Patch"));
 }
 
 PatchStoreDialog::~PatchStoreDialog() = default;
@@ -362,7 +364,10 @@ void PatchStoreDialog::resized()
 
     cl = cl.translated(0, h);
     commentEdL->setBounds(cl);
-    cl = cl.translated(0, commH);
+    cl = cl.translated(0, commH)
+             .withY(okButton->getY() - 1)
+             .withWidth(h + buttonWidth * 2.5)
+             .withHeight(okButton->getHeight() + 2);
 
     if (!editor || editor->synth->storage.isStandardTuning)
     {
@@ -371,12 +376,9 @@ void PatchStoreDialog::resized()
     }
     else
     {
-        cl = cl.withWidth(getWidth() - 6 * margin - 3 * buttonWidth).translated(0, margin2 * 3);
+        auto lb = cl.withX(cl.withWidth(h).getRight() - margin).withWidth(buttonWidth * 2.5);
 
-        auto fb = cl.withWidth(h);
-        auto lb = cl.withX(fb.getRight() - margin2);
-
-        storeTuningButton->setBounds(fb);
+        storeTuningButton->setBounds(cl);
         storeTuningLabel->setBounds(lb);
     }
 }
