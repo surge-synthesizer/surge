@@ -193,10 +193,9 @@ PatchStoreDialog::PatchStoreDialog()
     addAndMakeVisible(*okOverButton);
 
     storeTuningButton = std::make_unique<juce::ToggleButton>();
-    storeTuningButton->setToggleState(false, juce::dontSendNotification);
     storeTuningButton->setButtonText("");
-    storeTuningButton->setTitle("Store Patch In Tuning");
-    storeTuningButton->setDescription("Store Patch In Tuning");
+    storeTuningButton->setTitle("Store Tuning in Patch");
+    storeTuningButton->setDescription("Store Tuning in Patch");
     addAndMakeVisible(*storeTuningButton);
 
     storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu("Store Tuning in Patch"));
@@ -208,6 +207,11 @@ void PatchStoreDialog::setStorage(SurgeStorage *s)
 {
     storage = s;
     categoryProvider->storage = s;
+}
+
+void PatchStoreDialog::setStoreTuningInPatch(const bool value)
+{
+    storeTuningButton->setToggleState(value, juce::dontSendNotification);
 }
 
 void PatchStoreDialog::paint(juce::Graphics &g)
