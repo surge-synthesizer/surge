@@ -166,13 +166,11 @@ void ModulationSourceButton::paint(juce::Graphics &g)
     g.setColour(FillCol);
     g.fillRect(fillRect);
 
-    auto btnFont = Surge::GUI::getFontManager()->getLatoAtSize(8, juce::Font::bold);
-
     if (!isMeta)
     {
         // modbutton name settings
         g.setColour(FontCol);
-        g.setFont(btnFont);
+        g.setFont(font);
 
         // modbutton name
         g.drawText(getCurrentModLabel(), getLocalBounds(), juce::Justification::centred);
@@ -187,7 +185,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         auto topRect = getLocalBounds().withHeight(splitHeight);
 
         g.setColour(FontCol);
-        g.setFont(btnFont);
+        g.setFont(font);
         g.drawText(getCurrentModLabel(), topRect, juce::Justification::centred);
 
         // macro slider area

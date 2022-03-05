@@ -1288,25 +1288,33 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         if (e.isPrimary)
         {
+            int state = 0;
             auto r = positionForModulationGrid(ms);
 
-            int state = 0;
-
             if (ms == modsource)
+            {
                 state = mod_editor ? 2 : 1;
+            }
+
             if (ms == modsource_editor[current_scene])
+            {
                 state |= 4;
+            }
 
             if (!gui_modsrc[ms])
             {
                 gui_modsrc[ms] = std::make_unique<Surge::Widgets::ModulationSourceButton>();
             }
+
+            // would be nice if this had worked, alas...
+            // auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
+            // gui_modsrc[ms]->setFont(ff);
+
             gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
             gui_modsrc[ms]->addListener(this);
             gui_modsrc[ms]->setSkin(currentSkin, bitmapStore);
             gui_modsrc[ms]->setStorage(&(synth->storage));
-
             gui_modsrc[ms]->update_rt_vals(false, 0, synth->isModsourceUsed(ms));
 
             setupAlternates(ms);
@@ -1326,16 +1334,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
 
             addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *gui_modsrc[ms]);
+
             if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
             }
         }
     }
+
     auto moRect = positionForModOverview();
+
     if (!modOverviewLauncher)
+    {
         modOverviewLauncher =
             std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(this);
+    }
+
     modOverviewLauncher->setBounds(moRect);
     modOverviewLauncher->setSkin(currentSkin);
     addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *modOverviewLauncher);
@@ -4910,8 +4924,27 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         // TODO: Pull the default font size from some central location at a later date
         hs->setFont(Surge::GUI::getFontManager()->displayFont);
 
-        hs->setFontSize(std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str()));
+        auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
+        auto fs = std::atoi(
+            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());
+
+        if (fs < 1)
+        {
+            fs = 9;
+        }
+
+        if (ff.size() > 0)
+        {
+            if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
+            {
+                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(fs));
+                hs->setFontSize(fs);
+            }
+        }
+        else
+        {
+            hs->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fs));
+        }
 
         hs->setTextHOffset(std::atoi(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_HOFFSET, "0")
@@ -4923,19 +4956,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         hs->setDeactivated(false);
         hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
-
-        auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
-        auto fs = std::atoi(
-            currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_SIZE, "9").c_str());
-        if (ff.size() > 0)
-        {
-            if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
-                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(fs));
-        }
-        else if (fs > 0)
-        {
-            hs->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fs));
-        }
 
         if (p->valtype == vt_int || p->valtype == vt_bool)
         {

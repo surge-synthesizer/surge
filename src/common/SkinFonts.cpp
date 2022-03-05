@@ -29,6 +29,7 @@ namespace Widgets
 const FontDesc NumberField("fonts.widgets.numberfield", System::Display),
     EffectLabel("fonts.widgets.effectlabel", System::Display);
 const FontDesc TabButtonFont("fonts.widgets.tabbutton", System::Display);
+const FontDesc ModButtonFont("fonts.widgets.modbutton", 8, FontDesc::FontStyleFlags::bold);
 
 } // namespace Widgets
 namespace PatchStore
@@ -40,13 +41,15 @@ namespace LuaEditor
 const FontDesc Code("fonts.luaeditor.code", FontDesc::MONO, 9);
 }
 
-namespace WaveshaperAnalysis
+namespace Waveshaper
 {
-const FontDesc Title("fonts.waveshaper.analysis.title", 9, FontDesc::FontStyleFlags::bold),
-    DriveAmount("fonts.waveshaper.analysis.drive_amount", 9),
-    DriveLabel("fonts.waveshaper.analysis.drive_label", 7);
+namespace Preview
+{
+const FontDesc Title("fonts.waveshaper.preview.title", 9, FontDesc::FontStyleFlags::bold),
+    DriveAmount("fonts.waveshaper.preview.driveamount", 9),
+    DriveLabel("fonts.waveshaper.preview.drivelabel", 7);
 }
-
+} // namespace Waveshaper
 } // namespace Fonts
 
 /*
