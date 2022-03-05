@@ -2033,14 +2033,17 @@ struct TuningControlArea : public juce::Component,
                     "SCL Save Error");
                 break;
             }
-            fileChooser = std::make_unique<juce::FileChooser>("Save SCL");
+            fileChooser = std::make_unique<juce::FileChooser>("Save SCL", juce::File(), "*.scl");
             fileChooser->launchAsync(
                 juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
                     juce::FileBrowserComponent::warnAboutOverwriting,
                 [this](const juce::FileChooser &c) {
                     auto result = c.getResults();
+
                     if (result.isEmpty() || result.size() > 1)
+                    {
                         return;
+                    }
 
                     auto fsp = fs::path{result[0].getFullPathName().toStdString()};
                     fsp = fsp.replace_extension(".scl");
