@@ -630,7 +630,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
             if (id >= 0)
             {
             }
-                oscdata->wt.queue_id = id;
+            oscdata->wt.queue_id = id;
         }
         else if (waveTableName.contains(event.position))
         {
