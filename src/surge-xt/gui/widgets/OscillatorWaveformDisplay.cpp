@@ -744,8 +744,12 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 {
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
+    OscillatorWaveformDisplay *parent;
 
-    WaveTable3DEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc) {}
+    WaveTable3DEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc)
+        : parent(pD), storage(s), oscdata(osc)
+    {
+    }
 
     void paint(juce::Graphics &g) override
     {
@@ -858,13 +862,13 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         g.strokePath(p, juce::PathStrokeType(0.75));
     }
 
-    /*     void mouseDown(const juce::MouseEvent &event) override
-        {
-            if (customEditorBox.contains(event.position))
-            {
-                this->setVisible(false);
-            }
-        } */
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        juce::Timer::callAfterDelay(1, [that = juce::Component::SafePointer(parent)] {
+            if (that)
+                that->dismissCustomEditor();
+        });
+    }
 };
 
 struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
@@ -1226,7 +1230,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
 
     if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
     {
-        auto ed = std::make_unique<WaveTable3DEditor>(storage, oscdata);
+        auto ed = std::make_unique<WaveTable3DEditor>(this, storage, oscdata);
         ed->setSkin(skin, associatedBitmapStore);
         customEditor = std::move(ed);
     }
