@@ -119,6 +119,13 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             sge->enqueueFutureInfowindow(t, asT()->getBounds(), place);
     }
 
+    void enqueueAccessibleAnnouncement(const std::string &s)
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->enqueueAccessibleAnnouncement(s);
+    }
+
     void showInfowindow(bool isEditingModulation)
     {
         auto l = asT()->getBounds();
