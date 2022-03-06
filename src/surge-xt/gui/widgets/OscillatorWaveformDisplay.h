@@ -73,7 +73,6 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     juce::Rectangle<float> leftJog, rightJog, waveTableName;
 
     void mouseDown(const juce::MouseEvent &event) override;
-    void mouseUp(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
 

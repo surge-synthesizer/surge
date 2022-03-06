@@ -1307,8 +1307,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
 
             // would be nice if this had worked, alas...
-            // auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
-            // gui_modsrc[ms]->setFont(ff);
+            auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
+            gui_modsrc[ms]->setFont(ff);
 
             gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
