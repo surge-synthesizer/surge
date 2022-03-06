@@ -2811,7 +2811,12 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 csc->setIntegerValue(0);
             else
                 csc->setIntegerValue(a + 1);
+
+            auto h = csc->getAccessibilityHandler();
+            if (h)
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         }
+
         if (bvf)
             bvf->repaint();
         synth->switch_toggled_queued = true;
@@ -3187,6 +3192,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             ((Surge::Widgets::Switch *)filtersubtype[idx])->setIntegerValue(0);
         else
             ((Surge::Widgets::Switch *)filtersubtype[idx])->setIntegerValue(a + 1);
+
+        auto h = ((Surge::Widgets::Switch *)filtersubtype[idx])->getAccessibilityHandler();
+        if (h)
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
 
         filtersubtype[idx]->repaint();
     }

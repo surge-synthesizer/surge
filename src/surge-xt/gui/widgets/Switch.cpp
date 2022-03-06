@@ -140,6 +140,19 @@ bool Switch::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
+    if (action == Return && !isMultiIntegerValued())
+    {
+        auto nv = 1.f;
+        if (value > 0.5)
+            nv = 0;
+        value = nv;
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+        return true;
+    }
+
     if (action != Increase && action != Decrease)
         return false;
 

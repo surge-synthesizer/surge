@@ -88,6 +88,7 @@ struct ModulationSideControls : public juce::Component,
             w->setWantsKeyboardFocus(true);
             w->setTitle(acctitle);
             w->setDescription(acctitle);
+            w->setStorage(&(editor->synth->storage));
             addAndMakeVisible(*w);
             return w;
         };
@@ -172,6 +173,21 @@ struct ModulationSideControls : public juce::Component,
     }
 
     void valueChanged(GUI::IComponentTagValue *c) override;
+    int32_t controlModifierClicked(GUI::IComponentTagValue *p, const juce::ModifierKeys &mods,
+                                   bool isDoubleClickEvent) override
+    {
+        auto tag = p->getTag();
+
+        switch (tag)
+        {
+        case tag_filter_by:
+        case tag_add_source:
+        case tag_add_target:
+            valueChanged(p);
+            return true;
+        }
+        return true;
+    }
 
     modsources add_ms;
     int add_ms_idx, add_ms_sc;
@@ -348,19 +364,26 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         void resetValuesFromDatum()
         {
+            std::string accPostfix = datum.sname + " to " + datum.pname;
+
             surgeLikeSlider->setValue((datum.moddepth01 + 1) * 0.5);
             surgeLikeSlider->setQuantitizedDisplayValue((datum.moddepth01 + 1) * 0.5);
             surgeLikeSlider->setIsModulationBipolar(datum.isBipolar);
+            surgeLikeSlider->setTitle("Depth " + accPostfix);
+            surgeLikeSlider->setDescription("Depth " + accPostfix);
 
             muteButton->offset = 2;
-            muteButton->setTitle("Mute");
-            muteButton->setDescription("Mute");
+            muteButton->setTitle("Mute " + accPostfix);
+            muteButton->setDescription("Mute " + accPostfix);
             if (datum.isMuted)
             {
-                muteButton->setTitle("UnMute");
-                muteButton->setDescription("UnMute");
+                muteButton->setTitle("UnMute " + accPostfix);
+                muteButton->setDescription("UnMute " + accPostfix);
                 muteButton->offset = 3;
             }
+
+            clearButton->setTitle("Clear " + accPostfix);
+            clearButton->setDescription("Clear " + accPostfix);
 
             auto t = std::string("Source: ") + datum.sname + (" to  Target: ") + datum.pname;
             setTitle(t);

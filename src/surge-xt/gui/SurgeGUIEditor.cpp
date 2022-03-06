@@ -5774,7 +5774,6 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
     if (prior != curr)
     {
-        std::cout << "SETTING ISDIRTY IN LFO" << std::endl;
         synth->storage.getPatch().isDirty = true;
     }
 

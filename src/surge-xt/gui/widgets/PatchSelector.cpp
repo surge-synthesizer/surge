@@ -338,6 +338,10 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
             if (sge)
             {
                 sge->setPatchAsFavorite(isFavorite);
+                std::ostringstream oss;
+                oss << pname << (isFavorite ? " added to " : " removed from ")
+                    << "favorite patches.";
+                sge->enqueueAccessibleAnnouncement(oss.str());
                 repaint();
             }
         }

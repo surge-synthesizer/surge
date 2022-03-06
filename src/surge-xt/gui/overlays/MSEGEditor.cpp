@@ -3210,6 +3210,7 @@ void MSEGControlRegion::rebuild()
 
         hSnapButton = std::make_unique<Surge::Widgets::Switch>();
         hSnapButton->setSkin(skin, associatedBitmapStore);
+        hSnapButton->setStorage(storage);
         hSnapButton->addListener(this);
         hSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
         hSnapButton->setTag(tag_horizontal_snap);
@@ -3244,6 +3245,7 @@ void MSEGControlRegion::rebuild()
 
         vSnapButton = std::make_unique<Surge::Widgets::Switch>();
         vSnapButton->setSkin(skin, associatedBitmapStore);
+        vSnapButton->setStorage(storage);
         vSnapButton->addListener(this);
         vSnapButton->setBounds(xpos, ypos - 1, btnWidth, buttonHeight);
         vSnapButton->setTag(tag_vertical_snap);

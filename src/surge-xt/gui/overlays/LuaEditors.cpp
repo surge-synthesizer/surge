@@ -209,6 +209,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         lfoDebugger->attack();
 
         stepLfoDebugger();
+
+        if (editor && editor->editor)
+            editor->editor->enqueueAccessibleAnnouncement("Reset Debugger");
     }
 
     void stepLfoDebugger()
@@ -225,6 +228,9 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             debugTable->updateContent();
             debugTable->repaint();
         }
+
+        if (editor && editor->editor)
+            editor->editor->enqueueAccessibleAnnouncement("Stepped Debugger");
     }
 
     std::unique_ptr<juce::TableListBox> debugTable;

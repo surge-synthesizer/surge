@@ -67,194 +67,213 @@ LFOAndStepDisplay::LFOAndStepDisplay()
 
     stepLayer = std::make_unique<OverlayAsAccessibleContainer>("Step Sequencer");
     addChildComponent(*stepLayer);
+
+    auto b0 = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(
+        this, "Rotate Sequence Right", juce::AccessibilityRole::button);
+    b0->onPress = [this](auto *p) { shiftRight(); };
+    b0->onReturnKey = [this](auto *p) {
+        shiftRight();
+        return false;
+    };
+    stepLayer->addChildComponent(*b0);
+    stepJogOverlays[0] = std::move(b0);
+    auto b1 = std::make_unique<OverlayAsAccessibleButton<LFOAndStepDisplay>>(
+        this, "Rotate Sequence Left", juce::AccessibilityRole::button);
+    b1->onPress = [this](auto *p) { shiftLeft(); };
+    b1->onReturnKey = [this](auto *p) {
+        shiftLeft();
+        return false;
+    };
+    stepLayer->addChildComponent(*b1);
+    stepJogOverlays[1] = std::move(b1);
+
     for (int i = 0; i < n_stepseqsteps; ++i)
     {
-        {
-            std::string sn = "Step Value " + std::to_string(i + 1);
-            auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
-            q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
-            q->onSetValue = [this, i](auto *T, float f) {
-                ss->steps[i] = f;
-                storage->getPatch().isDirty = true;
-                repaint();
-                return;
-            };
-            q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
-                int step = i;
-                if (step >= 0)
-                {
-                    auto f = ss->steps[step];
-                    auto delt = 0.05;
-                    if (isShift)
-                        delt = 0.01;
-                    if (isControl)
-                        delt = (isUnipolar() ? 1.0 : 0.5) / 12.0;
-                    if (dir < 0)
-                        delt *= -1;
-
-                    if (isUnipolar())
-                        f = limit01(f + delt);
-                    else
-                        f = limitpm1(f + delt);
-                    ss->steps[step] = f;
-                    storage->getPatch().isDirty = true;
-                    repaint();
-                }
-            };
-            q->onMinMaxDef = [this, i](auto *t, int mmd) {
-                if (mmd == 1)
-                    ss->steps[i] = 1.f;
-                if (mmd == -1)
-                    ss->steps[i] = isUnipolar() ? 0.f : -1.f;
-                if (mmd == 0)
-                    ss->steps[i] = 0.f;
-
-                storage->getPatch().isDirty = true;
-                repaint();
-            };
-            stepLayer->addChildComponent(*q);
-            stepSliderOverlays[i] = std::move(q);
-        }
-        {
-            std::string sn = "Trigger Envelopes " + std::to_string(i + 1);
-            auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
-            q->min = 0;
-            q->max = 3;
-            q->step = 1;
-
-            q->onGetValue = [this, i](auto *) {
-                uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
-                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
-                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
-
-                if (maski)
-                    return 1.f;
-                if (maski16)
-                    return 2.f;
-                if (maski32)
-                    return 3.f;
-                return 0.f;
-            };
-            q->onSetValue = [this, i](auto *, float f) {
-                int q = round(f);
-                uint64_t b1 = (UINT64_C(1) << i);
-                uint64_t b2 = (UINT64_C(1) << (i + 16));
-                uint64_t b3 = (UINT64_C(1) << (i + 32));
-                uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
-                uint64_t maskOn = 0;
-
-                if (q == 0)
-                {
-                    maskOff = maskOff & ~b1 & ~b2 & ~b3;
-                }
-                if (q == 1)
-                {
-                    maskOff = maskOff & ~b2 & ~b3;
-                    maskOn = b1;
-                }
-                if (q == 2)
-                {
-                    maskOff = maskOff & ~b1 & ~b3;
-                    maskOn = b2;
-                }
-                if (q == 3)
-                {
-                    maskOff = maskOff & ~b1 & ~b2;
-                    maskOn = b3;
-                }
-                ss->trigmask &= maskOff;
-                ss->trigmask |= maskOn;
-                repaint();
-            };
-
-            q->onJogValue = [this, i](auto *, int dir, auto, auto) {
-                auto s = dynamic_cast<OverlayAsAccessibleSlider<LFOAndStepDisplay> *>(
-                    stepTriggerOverlays[i].get());
-                if (s)
-                {
-                    auto v = s->onGetValue(this);
-                    v = v + dir;
-                    if (v < 0)
-                        v = 3;
-                    if (v > 3)
-                        v = 0;
-                    s->onSetValue(this, v);
-                }
-            };
-
-            q->onValueToString = [](auto *, float v) {
-                auto q = (int)round(v);
-                switch (q)
-                {
-                case 1:
-                    return "Trigger FEG + AEG";
-                case 2:
-                    return "Trigger FEG";
-                case 3:
-                    return "Trigger AEG";
-                }
-                return "No Triggers";
-            };
-
-            stepLayer->addChildComponent(*q);
-            stepTriggerOverlays[i] = std::move(q);
-        }
-
-        auto l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(
-            this, "Loop Start Point");
-        l0->min = 0;
-        l0->max = 16;
-        l0->step = 1;
-        l0->onGetValue = [this](auto *) { return ss->loop_start; };
-        l0->onSetValue = [this](auto *, float f) {
-            ss->loop_start = (int)round(f);
+        std::string sn = "Step Value " + std::to_string(i + 1);
+        auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
+        q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
+        q->onSetValue = [this, i](auto *T, float f) {
+            ss->steps[i] = f;
             storage->getPatch().isDirty = true;
             repaint();
+            return;
         };
-        l0->onJogValue = [this](auto *, int dir, bool, bool) {
-            auto n = limit_range(ss->loop_start + dir, 0, 15);
-            ss->loop_start = n;
-            storage->getPatch().isDirty = true;
-            repaint();
+        q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
+            int step = i;
+            if (step >= 0)
+            {
+                auto f = ss->steps[step];
+                auto delt = 0.05;
+                if (isShift)
+                    delt = 0.01;
+                if (isControl)
+                    delt = (isUnipolar() ? 1.0 : 0.5) / 12.0;
+                if (dir < 0)
+                    delt *= -1;
+
+                if (isUnipolar())
+                    f = limit01(f + delt);
+                else
+                    f = limitpm1(f + delt);
+                ss->steps[step] = f;
+                storage->getPatch().isDirty = true;
+                repaint();
+            }
         };
-        l0->onMinMaxDef = [this](auto *, int mmd) {
+        q->onMinMaxDef = [this, i](auto *t, int mmd) {
             if (mmd == 1)
-                ss->loop_start = ss->loop_end;
-            else
-                ss->loop_start = 0;
-            storage->getPatch().isDirty = true;
-            repaint();
-        };
-        loopEndOverlays[0] = std::move(l0);
-        stepLayer->addChildComponent(*loopEndOverlays[0]);
-
-        l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop End Point");
-        l0->min = 0;
-        l0->max = 16;
-        l0->step = 1;
-        l0->onGetValue = [this](auto *) { return ss->loop_end; };
-        l0->onSetValue = [this](auto *, float f) {
-            ss->loop_end = (int)round(f);
-            storage->getPatch().isDirty = true;
-            repaint();
-        };
-        l0->onJogValue = [this](auto *, int dir, bool, bool) {
-            auto n = limit_range(ss->loop_end + dir, 0, 15);
-            ss->loop_end = n;
-            storage->getPatch().isDirty = true;
-            repaint();
-        };
-        l0->onMinMaxDef = [this](auto *, int mmd) {
+                ss->steps[i] = 1.f;
             if (mmd == -1)
-                ss->loop_end = ss->loop_end;
-            else
-                ss->loop_end = 15;
+                ss->steps[i] = isUnipolar() ? 0.f : -1.f;
+            if (mmd == 0)
+                ss->steps[i] = 0.f;
+
             storage->getPatch().isDirty = true;
             repaint();
         };
-        loopEndOverlays[1] = std::move(l0);
-        stepLayer->addChildComponent(*loopEndOverlays[1]);
+        stepLayer->addChildComponent(*q);
+        stepSliderOverlays[i] = std::move(q);
     }
+    for (int i = 0; i < n_stepseqsteps; ++i)
+    {
+        std::string sn = "Trigger Envelopes " + std::to_string(i + 1);
+        auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
+        q->min = 0;
+        q->max = 3;
+        q->step = 1;
+
+        q->onGetValue = [this, i](auto *) {
+            uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
+            uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
+            uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+
+            if (maski)
+                return 1.f;
+            if (maski16)
+                return 2.f;
+            if (maski32)
+                return 3.f;
+            return 0.f;
+        };
+        q->onSetValue = [this, i](auto *, float f) {
+            int q = round(f);
+            uint64_t b1 = (UINT64_C(1) << i);
+            uint64_t b2 = (UINT64_C(1) << (i + 16));
+            uint64_t b3 = (UINT64_C(1) << (i + 32));
+            uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
+            uint64_t maskOn = 0;
+
+            if (q == 0)
+            {
+                maskOff = maskOff & ~b1 & ~b2 & ~b3;
+            }
+            if (q == 1)
+            {
+                maskOff = maskOff & ~b2 & ~b3;
+                maskOn = b1;
+            }
+            if (q == 2)
+            {
+                maskOff = maskOff & ~b1 & ~b3;
+                maskOn = b2;
+            }
+            if (q == 3)
+            {
+                maskOff = maskOff & ~b1 & ~b2;
+                maskOn = b3;
+            }
+            ss->trigmask &= maskOff;
+            ss->trigmask |= maskOn;
+            repaint();
+        };
+
+        q->onJogValue = [this, i](auto *, int dir, auto, auto) {
+            auto s = dynamic_cast<OverlayAsAccessibleSlider<LFOAndStepDisplay> *>(
+                stepTriggerOverlays[i].get());
+            if (s)
+            {
+                auto v = s->onGetValue(this);
+                v = v + dir;
+                if (v < 0)
+                    v = 3;
+                if (v > 3)
+                    v = 0;
+                s->onSetValue(this, v);
+            }
+        };
+
+        q->onValueToString = [](auto *, float v) {
+            auto q = (int)round(v);
+            switch (q)
+            {
+            case 1:
+                return "Trigger FEG + AEG";
+            case 2:
+                return "Trigger FEG";
+            case 3:
+                return "Trigger AEG";
+            }
+            return "No Triggers";
+        };
+
+        stepLayer->addChildComponent(*q);
+        stepTriggerOverlays[i] = std::move(q);
+    }
+
+    auto l0 =
+        std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop Start Point");
+    l0->min = 0;
+    l0->max = 16;
+    l0->step = 1;
+    l0->onGetValue = [this](auto *) { return ss->loop_start; };
+    l0->onSetValue = [this](auto *, float f) {
+        ss->loop_start = (int)round(f);
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    l0->onJogValue = [this](auto *, int dir, bool, bool) {
+        auto n = limit_range(ss->loop_start + dir, 0, 15);
+        ss->loop_start = n;
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    l0->onMinMaxDef = [this](auto *, int mmd) {
+        if (mmd == 1)
+            ss->loop_start = ss->loop_end;
+        else
+            ss->loop_start = 0;
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    loopEndOverlays[0] = std::move(l0);
+    stepLayer->addChildComponent(*loopEndOverlays[0]);
+
+    l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop End Point");
+    l0->min = 0;
+    l0->max = 16;
+    l0->step = 1;
+    l0->onGetValue = [this](auto *) { return ss->loop_end; };
+    l0->onSetValue = [this](auto *, float f) {
+        ss->loop_end = (int)round(f);
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    l0->onJogValue = [this](auto *, int dir, bool, bool) {
+        auto n = limit_range(ss->loop_end + dir, 0, 15);
+        ss->loop_end = n;
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    l0->onMinMaxDef = [this](auto *, int mmd) {
+        if (mmd == -1)
+            ss->loop_end = ss->loop_end;
+        else
+            ss->loop_end = 15;
+        storage->getPatch().isDirty = true;
+        repaint();
+    };
+    loopEndOverlays[1] = std::move(l0);
+    stepLayer->addChildComponent(*loopEndOverlays[1]);
 }
 
 void LFOAndStepDisplay::resized()
@@ -280,6 +299,8 @@ void LFOAndStepDisplay::resized()
         shaperect[i] = juce::Rectangle<int>(xp, yp, 25, 15);
         typeAccOverlays[i]->setBounds(shaperect[i]);
     }
+    stepJogOverlays[0]->setBounds(ss_shift_right.toNearestInt());
+    stepJogOverlays[1]->setBounds(ss_shift_left.toNearestInt());
     loopEndOverlays[0]->setBounds(left_panel.getX(), waveform_display.getHeight() - 10, 10, 10);
     loopEndOverlays[1]->setBounds(left_panel.getX() + 10, waveform_display.getHeight() - 10, 10,
                                   10);
@@ -1584,49 +1605,13 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 
         if (ss_shift_left.contains(event.position))
         {
-            float t = ss->steps[0];
-
-            for (int i = 0; i < (n_stepseqsteps - 1); i++)
-            {
-                ss->steps[i] = ss->steps[i + 1];
-                assert((i >= 0) && (i < n_stepseqsteps));
-            }
-
-            ss->steps[n_stepseqsteps - 1] = t;
-            ss->trigmask = (((ss->trigmask & 0x000000000000fffe) >> 1) |
-                            (((ss->trigmask & 1) << 15) & 0xffff)) |
-                           (((ss->trigmask & 0x00000000fffe0000) >> 1) |
-                            (((ss->trigmask & 0x10000) << 15) & 0xffff0000)) |
-                           (((ss->trigmask & 0x0000fffe00000000) >> 1) |
-                            (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
-
-            storage->getPatch().isDirty = true;
-            repaint();
-
+            shiftLeft();
             return;
         }
 
         if (ss_shift_right.contains(event.position))
         {
-            float t = ss->steps[n_stepseqsteps - 1];
-
-            for (int i = (n_stepseqsteps - 2); i >= 0; i--)
-            {
-                ss->steps[i + 1] = ss->steps[i];
-                assert((i >= 0) && (i < n_stepseqsteps));
-            }
-
-            ss->steps[0] = t;
-            ss->trigmask = (((ss->trigmask & 0x0000000000007fff) << 1) |
-                            (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff)) |
-                           (((ss->trigmask & 0x000000007fff0000) << 1) |
-                            (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000)) |
-                           (((ss->trigmask & 0x00007fff00000000) << 1) |
-                            (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
-
-            storage->getPatch().isDirty = true;
-            repaint();
-
+            shiftRight();
             return;
         }
 
@@ -1717,6 +1702,50 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
             }
         }
     }
+}
+
+void LFOAndStepDisplay::shiftLeft()
+{
+    float t = ss->steps[0];
+
+    for (int i = 0; i < (n_stepseqsteps - 1); i++)
+    {
+        ss->steps[i] = ss->steps[i + 1];
+        assert((i >= 0) && (i < n_stepseqsteps));
+    }
+
+    ss->steps[n_stepseqsteps - 1] = t;
+    ss->trigmask =
+        (((ss->trigmask & 0x000000000000fffe) >> 1) | (((ss->trigmask & 1) << 15) & 0xffff)) |
+        (((ss->trigmask & 0x00000000fffe0000) >> 1) |
+         (((ss->trigmask & 0x10000) << 15) & 0xffff0000)) |
+        (((ss->trigmask & 0x0000fffe00000000) >> 1) |
+         (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
+
+    storage->getPatch().isDirty = true;
+    repaint();
+}
+
+void LFOAndStepDisplay::shiftRight()
+{
+    float t = ss->steps[n_stepseqsteps - 1];
+
+    for (int i = (n_stepseqsteps - 2); i >= 0; i--)
+    {
+        ss->steps[i + 1] = ss->steps[i];
+        assert((i >= 0) && (i < n_stepseqsteps));
+    }
+
+    ss->steps[0] = t;
+    ss->trigmask = (((ss->trigmask & 0x0000000000007fff) << 1) |
+                    (((ss->trigmask & 0x0000000000008000) >> 15) & 0xffff)) |
+                   (((ss->trigmask & 0x000000007fff0000) << 1) |
+                    (((ss->trigmask & 0x0000000080000000) >> 15) & 0xffff0000)) |
+                   (((ss->trigmask & 0x00007fff00000000) << 1) |
+                    (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
+
+    storage->getPatch().isDirty = true;
+    repaint();
 }
 
 void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
@@ -2297,6 +2326,10 @@ void LFOAndStepDisplay::setupAccessibility()
             s->setVisible(showStepSliders);
 
     for (const auto &s : loopEndOverlays)
+        if (s)
+            s->setVisible(showStepSliders);
+
+    for (const auto &s : stepJogOverlays)
         if (s)
             s->setVisible(showStepSliders);
 
