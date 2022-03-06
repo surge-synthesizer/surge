@@ -337,7 +337,8 @@ float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
 
 std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessibilityHandler()
 {
-    return std::make_unique<DiscreteAH<MenuForDiscreteParams>>(this);
+    return std::make_unique<DiscreteAH<MenuForDiscreteParams, juce::AccessibilityRole::comboBox>>(
+        this);
 }
 
 bool MenuForDiscreteParams::keyPressed(const juce::KeyPress &key)

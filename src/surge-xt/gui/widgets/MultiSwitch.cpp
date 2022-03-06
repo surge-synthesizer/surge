@@ -297,7 +297,10 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
-    if (action != Increase && action != Decrease)
+    bool doit =
+        action != Increase || action != Decrease || (rows * columns == 1 && action == Return);
+
+    if (!doit)
         return false;
 
     int dir = 1;
@@ -308,7 +311,14 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
 
     auto iv = limit_range(getIntegerValue() + dir, 0, rows * columns - 1);
 
-    setValue(1.f * iv / (rows * columns - 1));
+    if (rows * columns == 1)
+    {
+        setValue(0);
+    }
+    else
+    {
+        setValue(1.f * iv / (rows * columns - 1));
+    }
     notifyBeginEdit();
     notifyValueChanged();
     notifyEndEdit();

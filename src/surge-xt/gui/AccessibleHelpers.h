@@ -464,6 +464,7 @@ accessibleEditActionInternal(const juce::KeyPress &key)
 inline std::tuple<AccessibleKeyEditAction, AccessibleKeyModifier>
 accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
 {
+    jassert(storage);
     if (!Surge::GUI::allowKeyboardEdits(storage))
         return {None, NoModifier};
 
@@ -516,6 +517,7 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
 
 template <typename T> bool OverlayAsAccessibleButton<T>::keyPressed(const juce::KeyPress &key)
 {
+    jassert(under->storage);
     if (!under->storage)
         return false;
 
