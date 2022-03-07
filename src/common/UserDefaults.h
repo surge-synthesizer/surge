@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <filesystem/import.h>
+#include "sst/plugininfra/userdefaults.h"
 
 /*
 ** Surge has a variety of settings which users can update and save across
@@ -90,6 +91,10 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
 
     nKeys
 };
+
+std::string defaultKeyToString(DefaultKey k);
+typedef sst::plugininfra::defaults::Provider<DefaultKey, DefaultKey::nKeys> UserDefaultsProvider;
+
 /**
  * getUserDefaultValue
  *

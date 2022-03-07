@@ -1050,6 +1050,8 @@ class alignas(16) SurgeStorage
     bool patchDBInitialized{false};
     void initializePatchDb(bool forcePatchRescan = false);
 
+    std::unique_ptr<Surge::Storage::UserDefaultsProvider> userDefaultsProvider;
+
     std::unique_ptr<SurgePatch> _patch;
     std::unique_ptr<Surge::Formula::GlobalData> formulaGlobalData;
 

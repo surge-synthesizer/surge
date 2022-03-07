@@ -288,6 +288,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
 
     userDefaultFilePath = userDataPath;
 
+    userDefaultsProvider = std::make_unique<Surge::Storage::UserDefaultsProvider>(
+        userDataPath, "SurgeXT", Surge::Storage::defaultKeyToString,
+        [this](auto &a, auto &b) { reportError(a, b); });
+
     std::string userSpecifiedDataPath =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::UserDataPath, "UNSPEC");
     if (userSpecifiedDataPath != "UNSPEC")
