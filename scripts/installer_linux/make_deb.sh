@@ -74,6 +74,7 @@ gzip -9 -n ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
 
 cp ${SOURCEDIR}/LICENSE ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/copyright
 cp -r ${SOURCEDIR}/resources/data/* ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/
+cp -r ${SOURCEDIR}/scripts/installer_linux/assets/* ${PACKAGE_NAME}/usr/share
 
 # Copy the VST3 bundle
 cp -r "${INDIR}/Surge XT.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
