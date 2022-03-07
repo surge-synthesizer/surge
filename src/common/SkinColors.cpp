@@ -340,7 +340,9 @@ namespace Display
 {
 const Surge::Skin::Color Bounds("osc.line.bounds", 0x464646), Center("osc.line.center", 0x5A5A5A),
     AnimatedWave("osc.waveform.animated", 0xFFFFFF), Wave("osc.waveform", 0xFF9000),
-    Dots("osc.waveform.dots", 0x404040);
+    WaveCurrent3D("osc.waveform3d.current", 0xFF9000, 0xFF),
+    WaveStart3D("osc.waveform3d.gradient.start", 0xA06010),
+    WaveEnd3D("osc.waveform3d.gradient.end", 0xA06010), Dots("osc.waveform.dots", 0x404040);
 }
 namespace Filename
 {

@@ -6,13 +6,11 @@
 #include "sst/plugininfra/userdefaults.h"
 
 /*
-** Surge has a variety of settings which users can update and save across
-** sessions. These two functions give a vector to a persisted key-value
-** pair store which we can use in our application logic. Our reference
-** to SurgeStorage allows us to find paths in which we can load or
-** persist this information.
+** Surge has a variety of settings which users can update and save across sessions.
+** These two functions give a vector to a persisted key-value pair store which we can
+** use in our application logic. Our reference to SurgeStorage allows us to find paths
+** in which we can load or persist this information.
 */
-
 class SurgeStorage;
 
 namespace Surge
@@ -20,7 +18,8 @@ namespace Surge
 namespace Storage
 {
 
-enum DefaultKey // streamed as strings so feel free to change the order to whatever you want
+// streamed as strings so feel free to change the order to whatever you want
+enum DefaultKey
 {
     HighPrecisionReadouts,
     SmoothingMode,
@@ -35,6 +34,7 @@ enum DefaultKey // streamed as strings so feel free to change the order to whate
     ShowCursorWhileEditing,
     TouchMouseMode,
     ShowGhostedLFOWaveReference,
+    Use3DWavetableView,
     DefaultSkin,
     DefaultSkinRootType,
     DefaultZoom,
