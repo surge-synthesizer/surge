@@ -423,10 +423,10 @@ TEST_CASE("Load Patches with Embedded KBM", "[io]")
     {
         {
             auto surge = Surge::Headless::createSurge(44100);
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideTuningOnPatchLoad] = {true,
-                                                                                           ""};
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideMappingOnPatchLoad] = {true,
-                                                                                            ""};
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideTuningOnPatchLoad, true);
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideMappingOnPatchLoad, true);
             surge->loadPatchByPath("resources/test-data/patches/HasKBM.fxp", -1, "Test");
             REQUIRE(!surge->storage.isStandardScale);
             REQUIRE(!surge->storage.isStandardMapping);
@@ -434,10 +434,10 @@ TEST_CASE("Load Patches with Embedded KBM", "[io]")
 
         {
             auto surge = Surge::Headless::createSurge(44100);
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideTuningOnPatchLoad] = {true,
-                                                                                           ""};
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideMappingOnPatchLoad] = {true,
-                                                                                            ""};
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideTuningOnPatchLoad, true);
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideMappingOnPatchLoad, true);
             surge->loadPatchByPath("resources/test-data/patches/HasSCL.fxp", -1, "Test");
             REQUIRE(!surge->storage.isStandardScale);
             REQUIRE(surge->storage.isStandardMapping);
@@ -445,10 +445,10 @@ TEST_CASE("Load Patches with Embedded KBM", "[io]")
 
         {
             auto surge = Surge::Headless::createSurge(44100);
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideTuningOnPatchLoad] = {true,
-                                                                                           ""};
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideMappingOnPatchLoad] = {true,
-                                                                                            ""};
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideTuningOnPatchLoad, true);
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideMappingOnPatchLoad, true);
             surge->loadPatchByPath("resources/test-data/patches/HasSCLandKBM.fxp", -1, "Test");
             REQUIRE(!surge->storage.isStandardTuning);
             REQUIRE(!surge->storage.isStandardMapping);
@@ -456,10 +456,10 @@ TEST_CASE("Load Patches with Embedded KBM", "[io]")
 
         {
             auto surge = Surge::Headless::createSurge(44100);
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideTuningOnPatchLoad] = {true,
-                                                                                           ""};
-            surge->storage.userPrefOverrides[Surge::Storage::OverrideMappingOnPatchLoad] = {true,
-                                                                                            ""};
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideTuningOnPatchLoad, true);
+            surge->storage.userDefaultsProvider->addOverride(
+                Surge::Storage::OverrideMappingOnPatchLoad, true);
             surge->loadPatchByPath("resources/test-data/patches/HasSCL_165Vintage.fxp", -1, "Test");
             REQUIRE(!surge->storage.isStandardTuning);
             REQUIRE(surge->storage.isStandardMapping);
