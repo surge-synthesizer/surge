@@ -26,6 +26,7 @@
   <special id="fx-selector" help_url="#effect-unit-selector"/>
   <special id="fx-presets" help_url="#effect-and-preset-picker"/>
   <special id="waveshaper-preview" help_url="#waveshaper"/>
+  <special id="alias-shape" help_url="#shape"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>

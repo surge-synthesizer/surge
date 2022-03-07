@@ -81,6 +81,8 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void populateMenu(juce::PopupMenu &m, int selectedItem);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
     void showWavetableMenu();
+    void createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold = false,
+                           bool add2D3Dswitch = false);
 
     bool isCustomEditorHovered{false}, isJogRHovered{false}, isJogLHovered{false},
         isWtNameHovered{false};
@@ -88,7 +90,8 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     juce::Rectangle<float> customEditorBox;
     bool supportsCustomEditor();
     void showCustomEditor();
-    void dismissCustomEditor();
+    void hideCustomEditor();
+    void toggleCustomEditor();
     void drawEditorBox(juce::Graphics &g, const std::string &s);
     bool isCustomEditAccessible() const;
     std::string customEditorActionLabel(bool isActionToOpen) const;
