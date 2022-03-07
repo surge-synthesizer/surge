@@ -24,6 +24,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
 #include "UserDefaults.h"
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -36,12 +37,15 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
 
     auto ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, "Wavetable: (Unknown)", juce::AccessibilityRole::button);
+
     addChildComponent(*ol);
+
     ol->onPress = [this](OscillatorWaveformDisplay *d) { showWavetableMenu(); };
     ol->onMenuKey = [this](OscillatorWaveformDisplay *d) {
         showWavetableMenu();
         return true;
     };
+
     menuOverlays[0] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
@@ -51,27 +55,34 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
         if (id >= 0)
             oscdata->wt.queue_id = id;
     };
+
     addChildComponent(*ol);
+
     menuOverlays[1] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, "Wavetable: Prev", juce::AccessibilityRole::button);
+
     addChildComponent(*ol);
+
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
         if (id >= 0)
             oscdata->wt.queue_id = id;
     };
+
     menuOverlays[2] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
         juce::AccessibilityRole::button);
+
     addChildComponent(*ol);
+
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         if (customEditor)
         {
-            dismissCustomEditor();
+            hideCustomEditor();
             d->customEditorAccOverlay->setDescription("Close Custom Editor");
             d->customEditorAccOverlay->setTitle("Close Custom Editor");
         }
@@ -82,8 +93,10 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             d->customEditorAccOverlay->setTitle("Open Custom Editor");
         }
     };
+
     customEditorAccOverlay = std::move(ol);
 }
+
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
 
 void OscillatorWaveformDisplay::paint(juce::Graphics &g)
@@ -97,7 +110,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     if (!supportsCustomEditor() && customEditor)
     {
-        dismissCustomEditor();
+        hideCustomEditor();
     }
 
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
@@ -127,6 +140,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
                 if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
                 {
                     bracket = i;
+
                     break;
                 }
             }
@@ -269,6 +283,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         auto fgtextHov = skin->getColor(Colors::Osc::Filename::TextHover);
 
         auto wtr = getLocalBounds().withTop(getHeight() - wtbheight).withTrimmedBottom(1).toFloat();
+
         g.setColour(juce::Colours::orange);
         g.fillRect(wtr);
 
@@ -277,28 +292,33 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         waveTableName = wtr.withTrimmedLeft(wtbheight).withTrimmedRight(wtbheight);
 
         float triO = 2;
+
         g.setColour(isJogLHovered ? fgcolHov : fgcol);
         g.fillRect(leftJog);
         g.setColour(isJogLHovered ? fgframeHov : fgframe);
         g.drawRect(leftJog);
         g.setColour(isJogLHovered ? fgtextHov : fgtext);
+
         auto triL = juce::Path();
+
         triL.addTriangle(leftJog.getTopRight().translated(-triO, triO),
                          leftJog.getBottomRight().translated(-triO, -triO),
                          leftJog.getCentre().withX(leftJog.getX() + triO));
-        g.fillPath(triL);
 
+        g.fillPath(triL);
         g.setColour(isJogRHovered ? fgcolHov : fgcol);
         g.fillRect(rightJog);
         g.setColour(isJogRHovered ? fgframeHov : fgframe);
         g.drawRect(rightJog);
         g.setColour(isJogRHovered ? fgtextHov : fgtext);
+
         auto triR = juce::Path();
+
         triR.addTriangle(rightJog.getTopLeft().translated(triO, triO),
                          rightJog.getBottomLeft().translated(triO, -triO),
                          rightJog.getCentre().withX(rightJog.getX() + rightJog.getWidth() - triO));
-        g.fillPath(triR);
 
+        g.fillPath(triR);
         g.setColour(isWtNameHovered ? fgcolHov : fgcol);
         g.fillRect(waveTableName);
         g.setColour(isWtNameHovered ? fgframeHov : fgframe);
@@ -323,8 +343,8 @@ std::string OscillatorWaveformDisplay::getCurrentWavetableName()
     storage->waveTableDataMutex.lock();
 
     char wttxt[256];
-
     int wtid = oscdata->wt.current_id;
+
     if (oscdata->wavetable_display_name[0] != '\0')
     {
         strncpy(wttxt, oscdata->wavetable_display_name, 256);
@@ -341,6 +361,7 @@ std::string OscillatorWaveformDisplay::getCurrentWavetableName()
     {
         strncpy(wttxt, "(Patch Wavetable)", 256);
     }
+
     storage->waveTableDataMutex.unlock();
 
     return wttxt;
@@ -365,10 +386,14 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
     auto *currOsc = &oscdata->type;
     auto *endOsc = &oscdata->retrigger;
     bool oscInvalid = false;
+
     while (currOsc <= endOsc && !oscInvalid)
     {
         if (currOsc->id == id)
+        {
             oscInvalid = true;
+        }
+
         currOsc++;
     }
 
@@ -381,18 +406,21 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
 ::Oscillator *OscillatorWaveformDisplay::setupOscillator()
 {
     tp[oscdata->pitch.param_id_in_scene].f = 0;
+
     for (int i = 0; i < n_osc_params; i++)
+    {
         tp[oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
+    }
+
     return spawn_osc(oscdata->type.val.i, storage, oscdata, tp, oscbuffer);
 }
 
 void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem)
 {
+    bool addUserLabel = false;
     int idx = 0;
 
     contextMenu.addSectionHeader("FACTORY WAVETABLES");
-
-    bool addUserLabel = false;
 
     for (auto c : storage->wtCategoryOrdering)
     {
@@ -431,11 +459,11 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     /*
     We've decided to postpone this feature until after XT 1.0
     contextMenu.addSeparator();
+
     auto owts = [this]() {
         if (sge)
             sge->showOverlay(SurgeGUIEditor::WAVETABLESCRIPTING_EDITOR);
     };
-
 
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Script Editor..."), owts);
      */
@@ -443,6 +471,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     contextMenu.addSeparator();
 
     auto refresh = [this]() { this->storage->refresh_wtlist(); };
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List"), refresh);
 
     auto rnaction = [this]() {
@@ -470,10 +499,10 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     auto exportAction = [this]() {
         int oscNum = this->oscInScene;
         int scene = this->scene;
-
         std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
                                "_scene" + (scene == 0 ? "A" : "B");
         auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
+
         if (!fn.empty())
         {
             std::string message = "Wavetable was successfully exported to\n" + fn + "!";
@@ -481,19 +510,48 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                                                    message);
         }
     };
+
     contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Export Wavetable to File..."), exportAction);
 
+    contextMenu.addSeparator();
+
+    createWTMenuItems(contextMenu);
+}
+
+void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold,
+                                                  bool add2D3Dswitch)
+{
     if (sge)
     {
         auto hu = sge->helpURLForSpecial("wavetables");
+
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            contextMenu.addSeparator();
             auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Wavetables", lurl);
+
             tc->setSkin(skin, associatedBitmapStore);
-            tc->setCenterBold(false);
+            tc->setCenterBold(centerBold);
+
             contextMenu.addCustomItem(-1, std::move(tc));
+        }
+
+        if (add2D3Dswitch)
+        {
+            contextMenu.addSeparator();
+
+            auto action = [this]() {
+                toggleCustomEditor();
+
+                if (!customEditor)
+                {
+                    Surge::Storage::updateUserDefaultValue(
+                        storage, Surge::Storage::Use3DWavetableView, false);
+                }
+            };
+            auto text = fmt::format("{} Wavetable Display", (customEditor) ? "2D" : "3D");
+
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(text), action);
         }
     }
 }
@@ -512,6 +570,7 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         if (storage->wt_list[p].category == categoryId)
         {
             sprintf(name, "%s", storage->wt_list[p].name.c_str());
+
             auto action = [this, p]() { this->loadWavetable(p); };
             bool checked = false;
 
@@ -591,23 +650,33 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
 void OscillatorWaveformDisplay::loadWavetableFromFile()
 {
     auto wtPath = storage->userWavetablesPath;
+
     wtPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastWavetablePath, wtPath);
 
     if (!sge)
+    {
         return;
+    }
+
     sge->fileChooser = std::make_unique<juce::FileChooser>("Select Wavetable to Load",
                                                            juce::File(path_to_string(wtPath)));
     sge->fileChooser->launchAsync(
         juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
         [this, wtPath](const juce::FileChooser &c) {
             auto ress = c.getResults();
+
             if (ress.size() != 1)
+            {
                 return;
+            }
 
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
+
             strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
+
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
             if (dir != wtPath)
             {
                 Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastWavetablePath,
@@ -623,7 +692,9 @@ void OscillatorWaveformDisplay::showWavetableMenu()
     {
         int id = oscdata->wt.current_id;
         juce::PopupMenu menu;
+
         populateMenu(menu, id);
+
         menu.showMenuAsync(juce::PopupMenu::Options());
     }
 }
@@ -633,6 +704,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     if (event.mods.isMiddleButtonDown() && sge)
     {
         sge->frame->mouseDown(event);
+
         return;
     }
 
@@ -641,43 +713,65 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     if (usesWT)
     {
         int id = oscdata->wt.current_id;
+        bool openMenu = false;
 
         if (leftJog.contains(event.position))
         {
-            id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
-
-            if (id >= 0)
+            if (!event.mods.isPopupMenu())
             {
-                oscdata->wt.queue_id = id;
+                id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
+
+                if (id >= 0)
+                {
+                    oscdata->wt.queue_id = id;
+                }
+            }
+            else
+            {
+                openMenu = true;
             }
         }
         else if (rightJog.contains(event.position))
         {
-            id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
-
-            if (id >= 0)
+            if (!event.mods.isPopupMenu())
             {
+                id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
+
+                if (id >= 0)
+                {
+                    oscdata->wt.queue_id = id;
+                }
             }
-            oscdata->wt.queue_id = id;
+            else
+            {
+                openMenu = true;
+            }
         }
-        else if (waveTableName.contains(event.position))
+
+        if (waveTableName.contains(event.position) || openMenu)
         {
             juce::PopupMenu menu;
+
             populateMenu(menu, id);
+
             menu.showMenuAsync(juce::PopupMenu::Options());
         }
     }
 
     if (supportsCustomEditor() && customEditorBox.contains(event.position))
     {
-        if (customEditor)
+        if (event.mods.isPopupMenu())
         {
-            dismissCustomEditor();
+            auto contextMenu = juce::PopupMenu();
+
+            createWTMenuItems(contextMenu, true, true);
+
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+
+            return;
         }
-        else
-        {
-            showCustomEditor();
-        }
+
+        toggleCustomEditor();
     }
 }
 
@@ -699,6 +793,7 @@ void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
     }
 
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
+
     if (usesWT)
     {
         auto nwt = waveTableName.contains(event.position);
@@ -710,11 +805,13 @@ void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
             isWtNameHovered = nwt;
             repaint();
         }
+
         if (njl != isJogLHovered)
         {
             isJogLHovered = njl;
             repaint();
         }
+
         if (nrj != isJogRHovered)
         {
             isJogRHovered = nrj;
@@ -734,10 +831,7 @@ std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOp
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
     {
-        if (isActionToOpen)
-            return "EDIT";
-        else
-            return "CLOSE";
+        return isActionToOpen ? "EDIT" : "CLOSE";
     }
 
     return "";
@@ -751,6 +845,7 @@ bool OscillatorWaveformDisplay::isCustomEditAccessible() const
     {
         return true;
     }
+
     return false;
 }
 
@@ -761,10 +856,12 @@ bool OscillatorWaveformDisplay::supportsCustomEditor()
     {
         return true;
     }
+
     if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
     {
         return true;
     }
+
     return false;
 }
 
@@ -875,6 +972,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         auto hw = h * depthPct * hCompress;
 
         juce::Path p;
+
         p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
 
         for (int s = 1; s < smp; s = s + thinsmp)
@@ -889,10 +987,21 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
     void mouseDown(const juce::MouseEvent &event) override
     {
+        if (event.mods.isPopupMenu())
+        {
+            auto contextMenu = juce::PopupMenu();
+
+            parent->createWTMenuItems(contextMenu, true, true);
+
+            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+
+            return;
+        }
+
         juce::Timer::callAfterDelay(1, [that = juce::Component::SafePointer(parent)] {
             if (that)
             {
-                that->dismissCustomEditor();
+                that->hideCustomEditor();
                 Surge::Storage::updateUserDefaultValue(that->storage,
                                                        Surge::Storage::Use3DWavetableView, false);
             }
@@ -902,49 +1011,67 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
 struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
 {
-    juce::Colour b = juce::Colours::pink;
     AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc) : storage(s), oscdata(osc)
     {
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
             std::string sn = "Harmonic " + std::to_string(i + 1);
             auto q = std::make_unique<OverlayAsAccessibleSlider<AliasAdditiveEditor>>(this, sn);
+
             q->onGetValue = [this, i](auto *T) {
                 auto v = limitpm1(oscdata->extraConfig.data[i]);
                 return v;
             };
+
             q->onSetValue = [this, i](auto *T, float f) {
                 oscdata->extraConfig.data[i] = limitpm1(f);
                 storage->getPatch().isDirty = true;
                 repaint();
             };
+
             q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
                 auto v = limitpm1(oscdata->extraConfig.data[i]);
                 auto fac = 0.05;
+
                 if (isShift)
+                {
                     fac = 0.01;
+                }
+
                 oscdata->extraConfig.data[i] = limitpm1(v + fac * dir);
                 storage->getPatch().isDirty = true;
                 repaint();
             };
+
             q->onMinMaxDef = [this, i](auto *t, int mmd) {
                 auto val = 0.f;
+
                 if (mmd == 1)
+                {
                     val = 1;
+                }
+
                 if (mmd == -1)
+                {
                     val = -1;
+                }
+
                 oscdata->extraConfig.data[i] = limitpm1(val);
                 storage->getPatch().isDirty = true;
                 repaint();
             };
+
             addAndMakeVisible(*q);
+
             sliderAccOverlays[i] = std::move(q);
         }
+
         setAccessible(true);
         setTitle("Alias Additive Editor");
         setDescription("Alias Additive Editor");
         setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
     }
+
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
 
@@ -966,10 +1093,10 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
             sliderAccOverlays[i]->setBounds(p.toNearestInt());
         }
     }
+
     void paint(juce::Graphics &g) override
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
-
         float halfHeight = getHeight() / 2.f;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
@@ -1003,10 +1130,15 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
             auto contextMenu = juce::PopupMenu();
 
             {
+                auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "alias-shape");
+                auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
                 auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                    "Alias Osc Additive Options", "");
+                    "Alias Additive Options", hurl);
+
                 tc->setSkin(skin, associatedBitmapStore);
+
                 contextMenu.addCustomItem(-1, std::move(tc));
+
                 contextMenu.addSeparator();
             }
 
@@ -1019,6 +1151,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
                     repaint();
                 };
+
                 contextMenu.addItem("Sine", action);
             }
 
@@ -1027,12 +1160,16 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                     for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                     {
                         oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+
                         if (qq % 4 == 2)
+                        {
                             oscdata->extraConfig.data[qq] *= -1.f;
+                        }
                     }
 
                     repaint();
                 };
+
                 contextMenu.addItem("Triangle", action);
             }
 
@@ -1045,6 +1182,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
                     repaint();
                 };
+
                 contextMenu.addItem("Sawtooth", action);
             }
 
@@ -1057,6 +1195,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
                     repaint();
                 };
+
                 contextMenu.addItem("Square", action);
             }
 
@@ -1069,6 +1208,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
                     repaint();
                 };
+
                 contextMenu.addItem("Random", action);
             }
 
@@ -1086,6 +1226,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
 
                     repaint();
                 };
+
                 contextMenu.addItem("Absolute", action);
             }
 
@@ -1095,9 +1236,11 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                     {
                         oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
                     }
+
+                    repaint();
                 };
+
                 contextMenu.addItem("Invert", action);
-                repaint();
             }
 
             {
@@ -1113,12 +1256,15 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                     {
                         oscdata->extraConfig.data[15 - qq] = pdata[qq];
                     }
+
                     repaint();
                 };
+
                 contextMenu.addItem("Reverse", action);
             }
 
             contextMenu.showMenuAsync(juce::PopupMenu::Options());
+
             return;
         }
 
@@ -1234,6 +1380,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
         if (draggedSlider >= 0)
         {
             auto d = oscdata->extraConfig.data[draggedSlider] + delta;
+
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
             repaint();
         }
@@ -1244,7 +1391,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
 {
     if (customEditor)
     {
-        dismissCustomEditor();
+        hideCustomEditor();
     }
 
     if (oscdata->type.val.i == ot_alias &&
@@ -1276,7 +1423,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
     }
 }
 
-void OscillatorWaveformDisplay::dismissCustomEditor()
+void OscillatorWaveformDisplay::hideCustomEditor()
 {
     if (customEditor)
     {
@@ -1289,6 +1436,18 @@ void OscillatorWaveformDisplay::dismissCustomEditor()
     customEditorAccOverlay->setDescription("Open Custom Editor");
 
     repaint();
+}
+
+void OscillatorWaveformDisplay::toggleCustomEditor()
+{
+    if (customEditor)
+    {
+        hideCustomEditor();
+    }
+    else
+    {
+        showCustomEditor();
+    }
 }
 
 void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::string &s)
@@ -1372,7 +1531,7 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 
     if (customEditor)
     {
-        dismissCustomEditor();
+        hideCustomEditor();
     }
 
     customEditorAccOverlay->setVisible(visCC);
