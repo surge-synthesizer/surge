@@ -1023,8 +1023,10 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             for (int i = 0; i < mt; ++i)
             {
+                bool noi = i > 0 ? matrix->notesOn[i - 1] : false;
                 for (int j = 0; j < mt; ++j)
                 {
+                    bool noj = j > 0 ? matrix->notesOn[j - 1] : false;
                     bool isHovered = false;
                     if ((i == hoverI && j == hoverJ) || (i == 0 && j == hoverJ) ||
                         (i == hoverI && j == 0))
@@ -1104,6 +1106,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             auto c1 = skin->getColor(clr::HeatmapPosFar);
                             auto c2 = skin->getColor(clr::HeatmapPosNear);
                             g.setColour(c1.interpolatedWith(c2, b));
+                        }
+
+                        if (noi && noj)
+                        {
+                            g.setColour(skin->getColor(clr::NoteLabelBackgroundPlayed));
                         }
                         g.fillRect(bx);
 
