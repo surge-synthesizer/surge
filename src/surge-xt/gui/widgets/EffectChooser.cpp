@@ -26,6 +26,16 @@ namespace Surge
 namespace Widgets
 {
 
+std::array<int, n_fx_slots> displayOrder{
+    fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+
+    fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+
+    fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+
+    fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4,
+};
+
 EffectChooser::EffectChooser()
 {
     setRepaintsOnMouseActivity(true);
@@ -35,14 +45,16 @@ EffectChooser::EffectChooser()
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fxTypes[i] = fxt_off;
-        auto q = std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[i]);
-        q->setBounds(getEffectRectangle(i));
-        q->onPress = [this, i](auto *t) {
-            this->currentEffect = i;
+        auto mapi = displayOrder[i];
+        auto q =
+            std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[mapi]);
+        q->setBounds(getEffectRectangle(mapi));
+        q->onPress = [this, mapi](auto *t) {
+            this->currentEffect = mapi;
             this->notifyValueChanged();
         };
-        q->onReturnKey = [this, i](auto *t) {
-            this->currentEffect = i;
+        q->onReturnKey = [this, mapi](auto *t) {
+            this->currentEffect = mapi;
             this->notifyValueChanged();
             return true;
         };
@@ -139,7 +151,7 @@ void EffectChooser::resized()
     int i = 0;
     for (const auto &q : slotAccOverlays)
     {
-        q->setBounds(getEffectRectangle(i));
+        q->setBounds(getEffectRectangle(displayOrder[i]));
         i++;
     }
 }
