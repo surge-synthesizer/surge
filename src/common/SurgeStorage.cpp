@@ -1495,6 +1495,22 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
     modRoutingMutex.lock();
 
+    auto pushBackOrOverride = [this](std::vector<ModulationRouting> &modvec,
+                                     const ModulationRouting &m) {
+        bool wasDup = false;
+        for (auto &mt : modvec)
+        {
+            if (mt.destination_id == m.destination_id && mt.source_id == m.source_id &&
+                mt.source_scene == m.source_scene && mt.source_index == m.source_index)
+            {
+                mt.depth = m.depth;
+                wasDup = true;
+            }
+        }
+        if (!wasDup)
+            modvec.push_back(m);
+    };
+
     {
         for (int i = start; i < n; i++)
         {
@@ -1531,7 +1547,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.source_scene = scene;
                 m.destination_id =
                     clipboard_modulation_voice[i].destination_id + id - n_global_params;
-                getPatch().scene[scene].modulation_voice.push_back(m);
+                pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
             }
 
             n = clipboard_modulation_scene.size();
@@ -1544,7 +1560,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.source_scene = scene;
                 m.destination_id =
                     clipboard_modulation_scene[i].destination_id + id - n_global_params;
-                getPatch().scene[scene].modulation_scene.push_back(m);
+                pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
             }
         }
 
@@ -1596,11 +1612,11 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 {
                     if (isScenelevel((modsources)m.source_id))
                     {
-                        getPatch().scene[scene].modulation_scene.push_back(m);
+                        pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
                     }
                     else
                     {
-                        getPatch().scene[scene].modulation_voice.push_back(m);
+                        pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
                     }
                 }
             }
@@ -1620,11 +1636,11 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 {
                     if (isScenelevel((modsources)m.source_id))
                     {
-                        getPatch().scene[scene].modulation_scene.push_back(m);
+                        pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
                     }
                     else
                     {
-                        getPatch().scene[scene].modulation_voice.push_back(m);
+                        pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
                     }
                 }
             }
@@ -1641,7 +1657,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
                 if (isValid(m.destination_id, (modsources)m.source_id))
                 {
-                    getPatch().modulation_global.push_back(m);
+                    pushBackOrOverride(getPatch().modulation_global, m);
                 }
             }
         }
@@ -1660,7 +1676,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.source_index = clipboard_modulation_voice[i].source_index;
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
-                getPatch().scene[scene].modulation_voice.push_back(m);
+                pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
             }
 
             n = clipboard_modulation_scene.size();
@@ -1671,7 +1687,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.source_index = clipboard_modulation_scene[i].source_index;
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
-                getPatch().scene[scene].modulation_scene.push_back(m);
+                pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
             }
         }
     }
