@@ -23,6 +23,7 @@
 #include "AliasOscillator.h"
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
+#include "UserDefaults.h"
 
 namespace Surge
 {
@@ -34,7 +35,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     setFocusContainerType(FocusContainerType::focusContainer);
 
     auto ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "Wavetable: (Unknown Name)", juce::AccessibilityRole::button);
+        this, "Wavetable: (Unknown)", juce::AccessibilityRole::button);
     addChildComponent(*ol);
     ol->onPress = [this](OscillatorWaveformDisplay *d) { showWavetableMenu(); };
     ol->onMenuKey = [this](OscillatorWaveformDisplay *d) {
@@ -71,8 +72,8 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
         if (customEditor)
         {
             dismissCustomEditor();
-            d->customEditorAccOverlay->setDescription("Open Custom Editor");
-            d->customEditorAccOverlay->setTitle("Open Custom Editor");
+            d->customEditorAccOverlay->setDescription("Close Custom Editor");
+            d->customEditorAccOverlay->setTitle("Close Custom Editor");
         }
         else
         {
@@ -104,19 +105,23 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     if (!skipEntireOscillator)
     {
         auto osc = setupOscillator();
+
         if (!osc)
+        {
             return;
+        }
 
         int totalSamples = (1 << 4) * (int)getWidth();
         int averagingWindow = 4; // < and Mult of BlockSizeOS
-
         float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
+
         if (!storage->isStandardTuning)
         {
             // OK so in this case we need to find a better version of the note which gets us
             // that pitch. Only way is to search really.
             auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
             int bracket = -1;
+
             for (int i = 0; i < 128; ++i)
             {
                 if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
@@ -125,23 +130,29 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
                     break;
                 }
             }
+
             if (bracket >= 0)
             {
                 float f1 = storage->note_to_pitch(bracket);
                 float f2 = storage->note_to_pitch(bracket + 1);
                 float frac = (pit - f1) / (f2 - f1);
+
                 disp_pitch_rs = bracket + frac;
             }
+
             // That's a strange non-monotonic tuning. Oh well.
         }
 
         bool use_display = osc->allow_display();
 
         if (use_display)
+        {
             osc->init(disp_pitch_rs, true, true);
+        }
 
         int block_pos = BLOCK_SIZE_OS;
         juce::Path wavePath;
+
         for (int i = 0; i < totalSamples; i += averagingWindow)
         {
             if (use_display && block_pos >= BLOCK_SIZE_OS)
@@ -152,7 +163,9 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
                 block_pos = 0;
                 storage->waveTableDataMutex.unlock();
             }
+
             float val = 0.f;
+
             if (use_display)
             {
                 for (int j = 0; j < averagingWindow; ++j)
@@ -160,8 +173,10 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
                     val += osc->output[block_pos];
                     block_pos++;
                 }
+
                 val = val / averagingWindow;
             }
+
             float xc = 1.f * i / totalSamples;
 
             if (i == 0)
@@ -197,12 +212,13 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         g.drawLine(tfLine(0, -1, 1, -1));
         g.drawLine(tfLine(0, 1, 1, 1));
 
-        g.setColour(juce::Colours::green);
         g.setColour(skin->getColor(Colors::Osc::Display::Center));
         g.drawLine(tfLine(0, 0, 1, 0));
 
         g.setColour(skin->getColor(Colors::Osc::Display::Dots));
+
         int nxd = 21, nyd = 13;
+
         for (int xd = 0; xd < nxd; ++xd)
         {
             float normx = 1.f * xd / (nxd - 1);
@@ -221,18 +237,29 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     if (usesWT)
     {
+        bool is3D =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::Use3DWavetableView, false);
+
+        if (is3D)
+        {
+            showCustomEditor();
+        }
+
         // It's a bit unsatisfactory to put this here but we don't really get notified
         // once the wavetable change is done other than through repaint
         if (oscdata->wt.current_id != lastWavetableId)
         {
             auto nd = std::string("Wavetable: ") + getCurrentWavetableName();
+
             menuOverlays[0]->setTitle(nd);
             menuOverlays[0]->setDescription(nd);
+
             if (auto ah = menuOverlays[0]->getAccessibilityHandler())
             {
                 ah->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
             }
         }
+
         auto fgcol = skin->getColor(Colors::Osc::Filename::Background);
         auto fgframe = skin->getColor(Colors::Osc::Filename::Frame);
         auto fgtext = skin->getColor(Colors::Osc::Filename::Text);
@@ -591,6 +618,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
 void OscillatorWaveformDisplay::showWavetableMenu()
 {
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
+
     if (usesWT)
     {
         int id = oscdata->wt.current_id;
@@ -753,9 +781,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
     void paint(juce::Graphics &g) override
     {
-        // TODO: skin colors etc... although currentSkin will be available by now
-        // g.fillAll(juce::Colours::black);
-
         auto &wt = oscdata->wt;
         auto pos = -1.f;
 
@@ -781,7 +806,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
         // Now we have a sort of skew back and offset as we go. The skew is sort of a rotation
         // and the depth is sort of how flattened it is. Finally the hCompress augments height.
-        auto skewPct = 0.7;
+        auto skewPct = 0.5;
         auto depthPct = 0.6;
         auto hCompress = 0.6;
 
@@ -789,7 +814,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         int thintbl = 1;
         int nt = wt.n_tables;
 
-        while (nt > 20)
+        while (nt > 16)
         {
             thintbl <<= 1;
             nt >>= 1;
@@ -826,9 +851,10 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
                 p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
             }
 
-            g.setColour(juce::Colour(0xFF, 0x90, 0x00));
-            g.setOpacity(0.9 - abs(0.5 - tpct * tpct));
-            g.strokePath(p, juce::PathStrokeType(0.7));
+            g.setColour(skin->getColor(Colors::Osc::Display::WaveStart3D)
+                            .interpolatedWith(skin->getColor(Colors::Osc::Display::WaveEnd3D), tpct)
+                            .withMultipliedAlpha(1.0 - abs(0.25 - (tpct * tpct * 0.5))));
+            g.strokePath(p, juce::PathStrokeType(0.75));
         }
 
         // draw just the selected frame
@@ -857,16 +883,19 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
         }
 
-        g.setColour(juce::Colours::yellow);
-        g.setOpacity(1.f);
-        g.strokePath(p, juce::PathStrokeType(0.75));
+        g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
+        g.strokePath(p, juce::PathStrokeType(0.85));
     }
 
     void mouseDown(const juce::MouseEvent &event) override
     {
         juce::Timer::callAfterDelay(1, [that = juce::Component::SafePointer(parent)] {
             if (that)
+            {
                 that->dismissCustomEditor();
+                Surge::Storage::updateUserDefaultValue(that->storage,
+                                                       Surge::Storage::Use3DWavetableView, false);
+            }
         });
     }
 };
@@ -1171,9 +1200,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override
     {
-        /*
-         * If I choose based on horiz/vert it only works on trackpads, so just add
-         */
+        // If I choose based on horiz/vert it only works on trackpads, so just add
         float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
 
         if (delta == 0)
@@ -1233,6 +1260,8 @@ void OscillatorWaveformDisplay::showCustomEditor()
         auto ed = std::make_unique<WaveTable3DEditor>(this, storage, oscdata);
         ed->setSkin(skin, associatedBitmapStore);
         customEditor = std::move(ed);
+
+        Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::Use3DWavetableView, true);
     }
 
     if (customEditor)
