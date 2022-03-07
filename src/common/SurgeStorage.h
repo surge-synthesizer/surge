@@ -1050,6 +1050,8 @@ class alignas(16) SurgeStorage
     bool patchDBInitialized{false};
     void initializePatchDb(bool forcePatchRescan = false);
 
+    std::unique_ptr<Surge::Storage::UserDefaultsProvider> userDefaultsProvider;
+
     std::unique_ptr<SurgePatch> _patch;
     std::unique_ptr<Surge::Formula::GlobalData> formulaGlobalData;
 
@@ -1343,12 +1345,6 @@ class alignas(16) SurgeStorage
         res += " @ " + std::to_string(k.tuningFrequency) + "Hz";
         return res;
     }
-
-    /*
-     * Other users of surge may want to force clients to override user prefs.
-     * Really we just use this to force the FX bank to 2 decimals for now. But...
-     */
-    std::unordered_map<Surge::Storage::DefaultKey, std::pair<int, std::string>> userPrefOverrides;
 
     Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
     Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::LEGACY;

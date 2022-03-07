@@ -24,7 +24,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     effectNum = fxt_off;
     storage.reset(new SurgeStorage());
-    storage->userPrefOverrides[Surge::Storage::HighPrecisionReadouts] = std::make_pair(0, "");
+    storage->userDefaultsProvider->addOverride(Surge::Storage::HighPrecisionReadouts, false);
 
     fxstorage = &(storage->getPatch().fx[0]);
     audio_thread_surge_effect.reset();
