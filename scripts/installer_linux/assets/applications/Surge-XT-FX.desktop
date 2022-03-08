@@ -1,0 +1,14 @@
+[Desktop Entry]
+Categories=AudioVideo;Audio;
+Comment=Surge XT Effects
+Exec="/usr/bin/Surge XT Effects"
+GenericName=Surge XT Effects
+Icon=surge-xt-fx
+MimeType=
+Name=Surge XT Effects
+NoDisplay=false
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
