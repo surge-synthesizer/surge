@@ -127,6 +127,8 @@ struct PatchSelector : public juce::Component,
     void showClassicMenu(bool singleCategory = false);
     bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader,
                                 bool addToSubmenu = true);
+    void exportFavorites();
+    void importFavorites();
     void openPatchBrowser();
 
     void paint(juce::Graphics &g) override;

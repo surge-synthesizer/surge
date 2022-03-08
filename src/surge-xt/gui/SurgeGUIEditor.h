@@ -528,6 +528,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool isPatchFavorite();
     bool isPatchUser();
 
+    void setSpecificPatchAsFavorite(int patchid, bool b);
+
     /*
      * Modulation Client API
      */

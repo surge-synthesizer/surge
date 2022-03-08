@@ -746,6 +746,12 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
                             [this, f]() { this->loadPatch(f.first); });
         }
 
+        subMenu.addSeparator();
+        subMenu.addItem(Surge::GUI::toOSCaseForMenu("Export favorites to..."),
+                        [this]() { exportFavorites(); });
+        subMenu.addItem(Surge::GUI::toOSCaseForMenu("Load favorites from..."),
+                        [this]() { importFavorites(); });
+
         p.addSubMenu("Favorites", subMenu);
     }
     else
@@ -755,9 +761,131 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
             p.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
                       [this, f]() { this->loadPatch(f.first); });
         }
+        p.addSeparator();
+        p.addItem(Surge::GUI::toOSCaseForMenu("Export favorites to..."),
+                  [this]() { exportFavorites(); });
+        p.addItem(Surge::GUI::toOSCaseForMenu("Load favorites from..."),
+                  [this]() { importFavorites(); });
     }
 
     return true;
+}
+
+void PatchSelector::exportFavorites()
+{
+    auto favoritesCallback = [this](const juce::FileChooser &c) {
+        auto isSubDir = [](auto p, auto root) {
+            while (p != fs::path() && p != p.parent_path())
+            {
+                if (p == root)
+                {
+                    return true;
+                }
+                p = p.parent_path();
+            }
+            return false;
+        };
+
+        auto result = c.getResults();
+
+        if (result.isEmpty() || result.size() > 1)
+        {
+            return;
+        }
+
+        auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+        fsp = fsp.replace_extension(".surgefav");
+
+        std::ofstream ofs(fsp);
+
+        for (auto p : storage->patch_list)
+        {
+            if (p.isFavorite)
+            {
+                auto q = p.path;
+                if (isSubDir(q, storage->datapath))
+                {
+                    q = q.lexically_relative(storage->datapath);
+                    ofs << "FACTORY:" << q.u8string() << std::endl;
+                }
+                else if (isSubDir(q, storage->userPatchesPath))
+                {
+                    q = q.lexically_relative(storage->userPatchesPath);
+                    ofs << "USER:" << q.u8string() << std::endl;
+                }
+            }
+        }
+        ofs.close();
+    };
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (!sge)
+        return;
+    sge->fileChooser =
+        std::make_unique<juce::FileChooser>("Export Favorites", juce::File(), "*.surgefav");
+    sge->fileChooser->launchAsync(juce::FileBrowserComponent::saveMode |
+                                      juce::FileBrowserComponent::canSelectFiles |
+                                      juce::FileBrowserComponent::warnAboutOverwriting,
+                                  favoritesCallback);
+}
+
+void PatchSelector::importFavorites()
+{
+    auto importCallback = [this](const juce::FileChooser &c) {
+        auto result = c.getResults();
+
+        if (result.isEmpty() || result.size() > 1)
+        {
+            return;
+        }
+
+        auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+        fsp = fsp.replace_extension(".surgefav");
+
+        std::ifstream ifs(fsp);
+
+        std::set<fs::path> imports;
+
+        for (std::string line; getline(ifs, line);)
+        {
+            if (line.find("FACTORY:") == 0)
+            {
+                auto q = storage->datapath / fs::path(line.substr(std::string("FACTORY:").size()));
+                imports.insert(q);
+            }
+            else if (line.find("USER:") == 0)
+            {
+                auto q =
+                    storage->userPatchesPath / fs::path(line.substr(std::string("USER:").size()));
+                imports.insert(q);
+            }
+        }
+
+        int i = 0;
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (!sge)
+            return;
+        bool refresh = false;
+        for (auto p : storage->patch_list)
+        {
+            if (!p.isFavorite && imports.find(p.path) != imports.end())
+            {
+                sge->setSpecificPatchAsFavorite(i, true);
+                refresh = true;
+            }
+            i++;
+        }
+
+        if (refresh)
+            sge->queue_refresh = true;
+
+        ifs.close();
+    };
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (!sge)
+        return;
+    sge->fileChooser =
+        std::make_unique<juce::FileChooser>("Import Favorites", juce::File(), "*.surgefav");
+    sge->fileChooser->launchAsync(juce::FileBrowserComponent::canSelectFiles, importCallback);
 }
 
 bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &contextMenu,
