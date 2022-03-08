@@ -342,7 +342,10 @@ const Surge::Skin::Color Bounds("osc.line.bounds", 0x464646), Center("osc.line.c
     AnimatedWave("osc.waveform.animated", 0xFFFFFF), Wave("osc.waveform", 0xFF9000),
     WaveCurrent3D("osc.waveform3d.current", 0xFF9000, 0xFF),
     WaveStart3D("osc.waveform3d.gradient.start", 0xA06010),
-    WaveEnd3D("osc.waveform3d.gradient.end", 0xA06010), Dots("osc.waveform.dots", 0x404040);
+    WaveEnd3D("osc.waveform3d.gradient.end", 0xA06010),
+    WaveFillStart3D("osc.waveform3d.fill.gradient.start", 0xEB6E00, 0x32),
+    WaveFillEnd3D("osc.waveform3d.fill.gradient.end", 0xFF5A00, 0x32),
+    Dots("osc.waveform.dots", 0x404040);
 }
 namespace Filename
 {

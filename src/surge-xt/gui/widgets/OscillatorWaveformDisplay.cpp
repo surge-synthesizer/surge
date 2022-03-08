@@ -916,7 +916,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         // and the depth is sort of how flattened it is. Finally the hCompress augments height.
         auto skewPct = 0.4;
         auto depthPct = 0.6;
-        auto hCompress = 0.5;
+        auto hCompress = 0.55;
 
         // draw just the selected frame
         auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
@@ -935,7 +935,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         int thinsmp = 1;
         int s = smp;
 
-        while (s > 256)
+        while (s > 128)
         {
             thinsmp <<= 1;
             s >>= 1;
@@ -956,8 +956,11 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
             // draw the wavetable frames
             std::vector<int> ts;
+
             for (int t = wt.n_tables - 1; t >= 0; t = t - thintbl)
+            {
                 ts.push_back(t);
+            }
 
             if (ts.back() != 0)
             {
@@ -967,24 +970,27 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             for (auto t : ts)
             {
                 auto tb = wt.TableF32WeakPointers[0][t];
-
                 float tpct = 1.0 * t / std::max((int)(wt.n_tables - 1), 1);
-                if (wt.n_tables == 1)
-                    tpct = 0.5;
                 float x0 = tpct * skewPct * wxf;
-                auto lw = wxf * (1.0 - skewPct);
-
                 float y0 = (1.0 - tpct) * depthPct * hxf;
+                auto lw = wxf * (1.0 - skewPct);
                 auto hw = hxf * depthPct * hCompress;
 
                 juce::Path p;
                 juce::Path ribbon;
+
                 p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
                 ribbon.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
+
+                if (wt.n_tables == 1)
+                {
+                    tpct = 0.f;
+                }
 
                 for (int s = 1; s < smp; s = s + thinsmp)
                 {
                     auto x = x0 + s * smpinv * lw;
+
                     p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
                     ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
                 }
@@ -992,20 +998,22 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
                 if (t > 0)
                 {
                     nt = std::max(t - thintbl, 0);
-
                     tpct = 1.0 * nt / (wt.n_tables - 1);
-                    x0 = tpct * skewPct * wxf;
-                    lw = w * (1.0 - skewPct);
-
-                    y0 = (1.0 - tpct) * depthPct * hxf;
                     tb = wt.TableF32WeakPointers[0][nt];
+                    x0 = tpct * skewPct * wxf;
+                    y0 = (1.0 - tpct) * depthPct * hxf;
+                    lw = w * (1.0 - skewPct);
 
                     for (int s = smp - 1; s >= 0; s = s - thinsmp)
                     {
                         auto x = x0 + s * smpinv * lw;
+
                         ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
                     }
-                    g.setColour(juce::Colour(255 - 30 * tpct, 90 + 20 * tpct, 0).withAlpha(0.2f));
+
+                    g.setColour(skin->getColor(Colors::Osc::Display::WaveFillStart3D)
+                                    .interpolatedWith(
+                                        skin->getColor(Colors::Osc::Display::WaveFillEnd3D), tpct));
                     g.fillPath(ribbon);
                 }
 
@@ -1019,27 +1027,29 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
         g.drawImage(*backingImage, getLocalBounds().toFloat(),
                     juce::RectanglePlacement::fillDestination);
-        // Put this in the loop to get it positioned properly but occluded
-        // if ((sel <= t && sel > t - thintbl) || (t == 0 && sel < thintbl))
+
+        // draw currently selected frame
         {
             auto tb = wt.TableF32WeakPointers[0][sel];
-
             float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
-            if (wt.n_tables == 1)
-                tpct = 0.5;
             float x0 = tpct * skewPct * w;
-            auto lw = w * (1.0 - skewPct);
-
             float y0 = (1.0 - tpct) * depthPct * h;
+            auto lw = w * (1.0 - skewPct);
             auto hw = h * depthPct * hCompress;
 
             juce::Path psel;
 
             psel.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
 
+            if (wt.n_tables == 1)
+            {
+                tpct = 0.f;
+            }
+
             for (int s = 1; s < smp; s = s + thinsmp)
             {
                 auto x = x0 + s * smpinv * lw;
+
                 psel.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
             }
 
