@@ -6611,15 +6611,18 @@ std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutD
     }
 }
 
-void SurgeGUIEditor::setPatchAsFavorite(bool b)
+void SurgeGUIEditor::setPatchAsFavorite(bool b) { setSpecificPatchAsFavorite(synth->patchid, b); }
+
+void SurgeGUIEditor::setSpecificPatchAsFavorite(int patchid, bool b)
 {
-    if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
+    if (patchid >= 0 && patchid < synth->storage.patch_list.size())
     {
-        synth->storage.patch_list[synth->patchid].isFavorite = b;
-        synth->storage.patchDB->setUserFavorite(
-            synth->storage.patch_list[synth->patchid].path.u8string(), b);
+        synth->storage.patch_list[patchid].isFavorite = b;
+        synth->storage.patchDB->setUserFavorite(synth->storage.patch_list[patchid].path.u8string(),
+                                                b);
     }
 }
+
 bool SurgeGUIEditor::isPatchFavorite()
 {
     if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
