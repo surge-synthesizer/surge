@@ -52,8 +52,11 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
         this, "Wavetable: Next", juce::AccessibilityRole::button);
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
+
         if (id >= 0)
+        {
             oscdata->wt.queue_id = id;
+        }
     };
 
     addChildComponent(*ol);
@@ -67,8 +70,11 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
 
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
+
         if (id >= 0)
+        {
             oscdata->wt.queue_id = id;
+        }
     };
 
     menuOverlays[2] = std::move(ol);
@@ -215,7 +221,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
                       .scaled(w, -(1 - downScale) * h / 2)
                       .translated(xMargin, h / 2 + yMargin);
 
-        // Draw the lines
+        // draw the lines
         auto tfLine = [tf](float x0, float y0, float x1, float y1) -> juce::Line<float> {
             auto p0 = juce::Point<float>(x0, y0).transformedBy(tf);
             auto p1 = juce::Point<float>(x1, y1).transformedBy(tf);
@@ -229,6 +235,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         g.setColour(skin->getColor(Colors::Osc::Display::Center));
         g.drawLine(tfLine(0, 0, 1, 0));
 
+        // draw the dots
         g.setColour(skin->getColor(Colors::Osc::Display::Dots));
 
         int nxd = 21, nyd = 13;
@@ -236,29 +243,23 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         for (int xd = 0; xd < nxd; ++xd)
         {
             float normx = 1.f * xd / (nxd - 1);
+
             for (int yd = 0; yd < nyd; ++yd)
             {
                 float normy = 2.f * yd / (nyd - 1) - 1;
-
                 auto p = juce::Point<float>(normx, normy).transformedBy(tf);
+
                 g.fillEllipse(p.x - 0.5, p.y - 0.5, 1, 1);
             }
         }
 
+        // draw the waveform
         g.setColour(skin->getColor(Colors::Osc::Display::Wave));
         g.strokePath(wavePath, juce::PathStrokeType(1.3), tf);
     }
 
     if (usesWT)
     {
-        bool is3D =
-            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::Use3DWavetableView, false);
-
-        if (is3D && !customEditor)
-        {
-            showCustomEditor();
-        }
-
         // It's a bit unsatisfactory to put this here but we don't really get notified
         // once the wavetable change is done other than through repaint
         if (oscdata->wt.current_id != lastWavetableId)
@@ -272,10 +273,13 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             {
                 ah->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
             }
+
             if (customEditor)
             {
-                showCustomEditor(); // this rebuilds it for us
+                // super unsatisfactory. TODO: fix later!
+                showCustomEditor();
             }
+
             lastWavetableId = oscdata->wt.current_id;
         }
 
@@ -329,11 +333,10 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         g.setColour(isWtNameHovered ? fgframeHov : fgframe);
         g.drawRect(waveTableName);
 
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
-
         auto wtn = getCurrentWavetableName();
 
         g.setColour(isWtNameHovered ? fgtextHov : fgtext);
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
         g.drawText(wtn.c_str(), waveTableName, juce::Justification::centred);
     }
 
@@ -689,6 +692,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
             }
         });
 }
+
 void OscillatorWaveformDisplay::showWavetableMenu()
 {
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
@@ -844,7 +848,7 @@ std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOp
 
 bool OscillatorWaveformDisplay::isCustomEditAccessible() const
 {
-    // The WT display is purely visual so it doesn't have screen reader support
+    // WT display is purely visual so it doesn't have screen reader support
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
     {
@@ -888,7 +892,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
     void paint(juce::Graphics &g) override
     {
         auto wtlockguard = std::lock_guard<std::mutex>(parent->storage->waveTableDataMutex);
-
         auto &wt = oscdata->wt;
         auto pos = -1.f;
 
@@ -908,7 +911,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         // OK so now go backwards through the tables but also tilt and raise for the 3D effect
         auto smp = wt.size;
         auto smpinv = 1.0 / smp;
-
         auto w = getWidth();
         auto h = getHeight();
 
@@ -917,9 +919,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         auto skewPct = 0.4;
         auto depthPct = 0.6;
         auto hCompress = 0.55;
-
-        // draw just the selected frame
-        auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
 
         // calculate thinning factor for frame drawing
         int thintbl = 1;
@@ -971,6 +970,12 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             {
                 auto tb = wt.TableF32WeakPointers[0][t];
                 float tpct = 1.0 * t / std::max((int)(wt.n_tables - 1), 1);
+
+                if (wt.n_tables == 1)
+                {
+                    tpct = 0.f;
+                }
+
                 float x0 = tpct * skewPct * wxf;
                 float y0 = (1.0 - tpct) * depthPct * hxf;
                 auto lw = wxf * (1.0 - skewPct);
@@ -981,11 +986,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
                 p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
                 ribbon.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-
-                if (wt.n_tables == 1)
-                {
-                    tpct = 0.f;
-                }
 
                 for (int s = 1; s < smp; s = s + thinsmp)
                 {
@@ -1030,8 +1030,15 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
         // draw currently selected frame
         {
+            auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
             auto tb = wt.TableF32WeakPointers[0][sel];
             float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
+
+            if (wt.n_tables == 1)
+            {
+                tpct = 0.f;
+            }
+
             float x0 = tpct * skewPct * w;
             float y0 = (1.0 - tpct) * depthPct * h;
             auto lw = w * (1.0 - skewPct);
@@ -1040,11 +1047,6 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             juce::Path psel;
 
             psel.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-
-            if (wt.n_tables == 1)
-            {
-                tpct = 0.f;
-            }
 
             for (int s = 1; s < smp; s = s + thinsmp)
             {
@@ -1602,9 +1604,26 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
         ao->setVisible(visWT);
     }
 
-    if (customEditor)
+    if (visWT)
     {
-        hideCustomEditor();
+        bool is3D =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::Use3DWavetableView, false);
+
+        if (is3D)
+        {
+            showCustomEditor();
+        }
+        else
+        {
+            hideCustomEditor();
+        }
+    }
+    else
+    {
+        if (customEditor)
+        {
+            hideCustomEditor();
+        }
     }
 
     customEditorAccOverlay->setVisible(visCC);
