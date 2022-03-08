@@ -254,7 +254,7 @@ namespace Osc
 namespace Display
 {
 extern const Surge::Skin::Color Bounds, Center, AnimatedWave, WaveCurrent3D, WaveStart3D, WaveEnd3D,
-    Wave, Dots;
+    WaveFillStart3D, WaveFillEnd3D, Wave, Dots;
 }
 namespace Filename
 {
