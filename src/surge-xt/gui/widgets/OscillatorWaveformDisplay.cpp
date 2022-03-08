@@ -254,7 +254,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         bool is3D =
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::Use3DWavetableView, false);
 
-        if (is3D)
+        if (is3D && !customEditor)
         {
             showCustomEditor();
         }
@@ -272,6 +272,11 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             {
                 ah->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
             }
+            if (customEditor)
+            {
+                showCustomEditor(); // this rebuilds it for us
+            }
+            lastWavetableId = oscdata->wt.current_id;
         }
 
         auto fgcol = skin->getColor(Colors::Osc::Filename::Background);
@@ -871,13 +876,19 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
     SurgeStorage *storage;
     OscillatorWaveformDisplay *parent;
 
+    std::unique_ptr<juce::Image> backingImage;
+
     WaveTable3DEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc)
         : parent(pD), storage(s), oscdata(osc)
     {
     }
 
+    void resized() override { backingImage = nullptr; }
+
     void paint(juce::Graphics &g) override
     {
+        auto wtlockguard = std::lock_guard<std::mutex>(parent->storage->waveTableDataMutex);
+
         auto &wt = oscdata->wt;
         auto pos = -1.f;
 
@@ -907,6 +918,9 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
         auto depthPct = 0.6;
         auto hCompress = 0.5;
 
+        // draw just the selected frame
+        auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
+
         // calculate thinning factor for frame drawing
         int thintbl = 1;
         int nt = wt.n_tables;
@@ -927,24 +941,90 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             s >>= 1;
         }
 
-        // draw the wavetable frames
-        std::vector<int> ts;
-        for (int t = wt.n_tables - 1; t >= 0; t = t - thintbl)
-            ts.push_back(t);
+        static constexpr float backingScale = 2.f;
 
-        if (ts.back() != 0)
+        auto wxf = w;
+        auto hxf = h;
+
+        if (!backingImage)
         {
-            ts.push_back(0);
+            backingImage =
+                std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, wxf, hxf, true);
+
+            // shadow on purpose
+            auto g = juce::Graphics(*backingImage);
+
+            // draw the wavetable frames
+            std::vector<int> ts;
+            for (int t = wt.n_tables - 1; t >= 0; t = t - thintbl)
+                ts.push_back(t);
+
+            if (ts.back() != 0)
+            {
+                ts.push_back(0);
+            }
+
+            for (auto t : ts)
+            {
+                auto tb = wt.TableF32WeakPointers[0][t];
+
+                float tpct = 1.0 * t / std::max((int)(wt.n_tables - 1), 1);
+                if (wt.n_tables == 1)
+                    tpct = 0.5;
+                float x0 = tpct * skewPct * wxf;
+                auto lw = wxf * (1.0 - skewPct);
+
+                float y0 = (1.0 - tpct) * depthPct * hxf;
+                auto hw = hxf * depthPct * hCompress;
+
+                juce::Path p;
+                juce::Path ribbon;
+                p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
+                ribbon.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
+
+                for (int s = 1; s < smp; s = s + thinsmp)
+                {
+                    auto x = x0 + s * smpinv * lw;
+                    p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+                    ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+                }
+
+                if (t > 0)
+                {
+                    nt = std::max(t - thintbl, 0);
+
+                    tpct = 1.0 * nt / (wt.n_tables - 1);
+                    x0 = tpct * skewPct * wxf;
+                    lw = w * (1.0 - skewPct);
+
+                    y0 = (1.0 - tpct) * depthPct * hxf;
+                    tb = wt.TableF32WeakPointers[0][nt];
+
+                    for (int s = smp - 1; s >= 0; s = s - thinsmp)
+                    {
+                        auto x = x0 + s * smpinv * lw;
+                        ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+                    }
+                    g.setColour(juce::Colour(255 - 30 * tpct, 90 + 20 * tpct, 0).withAlpha(0.2f));
+                    g.fillPath(ribbon);
+                }
+
+                g.setColour(
+                    skin->getColor(Colors::Osc::Display::WaveStart3D)
+                        .interpolatedWith(skin->getColor(Colors::Osc::Display::WaveEnd3D), tpct)
+                        .withMultipliedAlpha(1.0 - abs(0.25 - (tpct * tpct * 0.5))));
+                g.strokePath(p, juce::PathStrokeType(0.75));
+            }
         }
 
-        // draw just the selected frame
-        auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
-
-        for (auto t : ts)
+        g.drawImage(*backingImage, getLocalBounds().toFloat(),
+                    juce::RectanglePlacement::fillDestination);
+        // Put this in the loop to get it positioned properly but occluded
+        // if ((sel <= t && sel > t - thintbl) || (t == 0 && sel < thintbl))
         {
-            auto tb = wt.TableF32WeakPointers[0][t];
+            auto tb = wt.TableF32WeakPointers[0][sel];
 
-            float tpct = 1.0 * t / std::max((int)(wt.n_tables - 1), 1);
+            float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
             if (wt.n_tables == 1)
                 tpct = 0.5;
             float x0 = tpct * skewPct * w;
@@ -953,69 +1033,18 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             float y0 = (1.0 - tpct) * depthPct * h;
             auto hw = h * depthPct * hCompress;
 
-            juce::Path p;
-            juce::Path ribbon;
-            p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-            ribbon.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
+            juce::Path psel;
+
+            psel.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
 
             for (int s = 1; s < smp; s = s + thinsmp)
             {
                 auto x = x0 + s * smpinv * lw;
-                p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+                psel.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
             }
 
-            if (t > 0)
-            {
-                nt = std::max(t - thintbl, 0);
-
-                tpct = 1.0 * nt / (wt.n_tables - 1);
-                x0 = tpct * skewPct * w;
-                lw = w * (1.0 - skewPct);
-
-                y0 = (1.0 - tpct) * depthPct * h;
-                tb = wt.TableF32WeakPointers[0][nt];
-
-                for (int s = smp - 1; s >= 0; s = s - thinsmp)
-                {
-                    auto x = x0 + s * smpinv * lw;
-                    ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                }
-                g.setColour(juce::Colour(255 - 30 * tpct, 90 + 20 * tpct, 0).withAlpha(0.2f));
-                g.fillPath(ribbon);
-            }
-
-            g.setColour(skin->getColor(Colors::Osc::Display::WaveStart3D)
-                            .interpolatedWith(skin->getColor(Colors::Osc::Display::WaveEnd3D), tpct)
-                            .withMultipliedAlpha(1.0 - abs(0.25 - (tpct * tpct * 0.5))));
-            g.strokePath(p, juce::PathStrokeType(0.75));
-
-            if ((sel <= t && sel > t - thintbl) || (t == 0 && sel < thintbl))
-            {
-                auto tb = wt.TableF32WeakPointers[0][sel];
-
-                float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
-                if (wt.n_tables == 1)
-                    tpct = 0.5;
-                float x0 = tpct * skewPct * w;
-                auto lw = w * (1.0 - skewPct);
-
-                float y0 = (1.0 - tpct) * depthPct * h;
-                auto hw = h * depthPct * hCompress;
-
-                juce::Path psel;
-
-                psel.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-
-                for (int s = 1; s < smp; s = s + thinsmp)
-                {
-                    auto x = x0 + s * smpinv * lw;
-                    psel.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                }
-
-                g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
-                g.strokePath(psel, juce::PathStrokeType(0.85));
-            }
+            g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
+            g.strokePath(psel, juce::PathStrokeType(0.85));
         }
     }
 
