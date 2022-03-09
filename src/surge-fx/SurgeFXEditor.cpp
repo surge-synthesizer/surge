@@ -253,16 +253,15 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(28);
-    fxNameLabel->setColour(juce::Label::textColourId,
-                           surgeLookFeel->findColour(SurgeLookAndFeel::blue));
+    fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisibleRecordOrder(fxNameLabel.get());
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
 
-    setTitle("Surge FX");
-    setDescription("Surge FX");
+    setTitle("Surge XT Effects");
+    setDescription("Surge XT Effects");
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -307,12 +306,6 @@ void SurgefxAudioProcessorEditor::resetLabels()
     }
 
     int row = 0, col = 0;
-
-    std::string nm = fx_type_names[processor.getEffectType()];
-
-    fxNameLabel->setText(juce::String("Surge FX: " + nm), juce::dontSendNotification);
-    setTitle(fxNameLabel->getText());
-    setDescription(fxNameLabel->getText());
 
     if (auto h = getAccessibilityHandler())
     {
