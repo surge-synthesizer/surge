@@ -19,9 +19,6 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         orange,
         orangeMedium,
         orangeDark,
-        blue,
-        black,
-        white,
 
         knobEdge,
         knobBg,
@@ -51,11 +48,27 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
     {
         juce::Colour surgeGrayBg = juce::Colour(205, 206, 212);
         juce::Colour surgeOrange = juce::Colour(255, 144, 0);
-        juce::Colour surgeBlue = juce::Colour(18, 52, 99);
-        juce::Colour white = juce::Colour(255, 255, 255);
-        juce::Colour black = juce::Colour(0, 0, 0);
+        juce::Colour white = juce::Colours::white;
+        juce::Colour black = juce::Colours::black;
         juce::Colour surgeOrangeDark = juce::Colour(101, 50, 3);
         juce::Colour surgeOrangeMedium = juce::Colour(227, 112, 8);
+        juce::Colour fxStandaloneGray1 = juce::Colour(32, 32, 32);
+        juce::Colour fxStandaloneGray2 = juce::Colour(48, 48, 48);
+        juce::Colour fxStandaloneGray3 = juce::Colour(128, 128, 128);
+        juce::Colour fxStandaloneGray4 = juce::Colour(212, 212, 212);
+
+        // TODO: Why don't these work?!
+        setColour(juce::DocumentWindow::backgroundColourId, fxStandaloneGray2);
+        setColour(juce::ComboBox::backgroundColourId, fxStandaloneGray1);
+        setColour(juce::TextButton::buttonColourId, fxStandaloneGray1);
+        setColour(juce::TextEditor::backgroundColourId, fxStandaloneGray1);
+        setColour(juce::ListBox::backgroundColourId, fxStandaloneGray1);
+        setColour(juce::ListBox::backgroundColourId, fxStandaloneGray1);
+        setColour(juce::ScrollBar::thumbColourId, fxStandaloneGray4);
+        setColour(juce::ScrollBar::trackColourId, fxStandaloneGray3);
+        setColour(juce::Slider::thumbColourId, fxStandaloneGray4);
+        setColour(juce::Slider::trackColourId, fxStandaloneGray3);
+        setColour(juce::Slider::backgroundColourId, juce::Colour((juce::uint8)255, 255, 255, 20.f));
 
         setColour(SurgeColourIds::componentBgStart,
                   surgeGrayBg.interpolatedWith(surgeOrangeMedium, 0.1));
@@ -63,20 +76,17 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         setColour(SurgeColourIds::orange, surgeOrange);
         setColour(SurgeColourIds::orangeDark, surgeOrangeDark);
         setColour(SurgeColourIds::orangeMedium, surgeOrangeMedium);
-        setColour(SurgeColourIds::blue, surgeBlue);
-        setColour(SurgeColourIds::black, black);
-        setColour(SurgeColourIds::white, white);
 
         setColour(SurgeColourIds::knobHandle, white);
         setColour(SurgeColourIds::knobBg, surgeOrange);
-        setColour(SurgeColourIds::knobEdge, surgeBlue);
+        setColour(SurgeColourIds::knobEdge, black);
 
         auto disableOpacity = 0.666;
         setColour(SurgeColourIds::knobHandleDisable,
-                  surgeBlue.interpolatedWith(surgeGrayBg, disableOpacity));
+                  black.interpolatedWith(surgeGrayBg, disableOpacity));
         setColour(SurgeColourIds::knobBgDisable,
                   surgeOrange.interpolatedWith(surgeGrayBg, disableOpacity));
-        setColour(SurgeColourIds::knobEdgeDisable, surgeBlue);
+        setColour(SurgeColourIds::knobEdgeDisable, black);
 
         setColour(SurgeColourIds::fxButtonTextUnselected, white);
         setColour(SurgeColourIds::fxButtonTextSelected, black);
@@ -88,8 +98,8 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         setColour(SurgeColourIds::paramDisabledEdge, juce::Colour(150, 150, 150));
         setColour(SurgeColourIds::paramDisplay, white);
 
-        surgeLogo = juce::Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlue_svg,
-                                                        BinaryData::SurgeLogoOnlyBlue_svgSize);
+        surgeLogo = juce::Drawable::createFromImageData(BinaryData::SurgeLogoOnlyBlack_svg,
+                                                        BinaryData::SurgeLogoOnlyBlack_svgSize);
     }
 
     virtual void drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height,
@@ -156,11 +166,11 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
             col = findColour(SurgeColourIds::orangeDark);
         }
 
-        auto edge = button.findColour(SurgeColourIds::black);
+        auto edge = juce::Colours::black;
 
         if (shouldDrawButtonAsHighlighted)
         {
-            edge = findColour(SurgeColourIds::white);
+            edge = juce::Colours::white;
             edgeThickness = 2.f;
         }
 
@@ -214,12 +224,9 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         surgeLogo->drawWithin(g, logoBound,
                               juce::RectanglePlacement::xMid | juce::RectanglePlacement::yMid, 1.0);
 
-        g.setColour(findColour(SurgeColourIds::blue));
-        g.setFont(28);
-        // g.drawSingleLineText("SurgeEffectsBank", orangeHeight, h - 12,
-        // juce::Justification::left);
-
+        g.setColour(juce::Colours::black);
         g.drawLine(0, h - orangeHeight, w, h - orangeHeight);
+
         // text
         g.setFont(12);
         g.drawSingleLineText(Surge::Build::FullVersionStr, w - 3, h - 26.f,
