@@ -28,7 +28,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     if (wrapperType == wrapperType_Undefined && is_clap)
-        wrapperTypeString = "Clap";
+        wrapperTypeString = std::string("Clap.v") + std::to_string(clap_version_major) + "." +
+                            std::to_string(clap_version_minor);
 #endif
 
     std::cout << "SurgeXT " << wrapperTypeString << "\n"

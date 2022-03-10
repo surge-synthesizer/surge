@@ -70,8 +70,8 @@ Name: "minimal"; Description: "Minimal installation"
 [Components]
 Name: VST3; Description: {#MyAppName} VST3 (64-bit); Types: full compact custom minimal; Flags: checkablealone
 Name: EffectsVST3; Description: {#MyAppName} Effects VST3 (64-bit); Types: full custom; Flags: checkablealone
-Name: CLAP; Description: {#MyAppName} Clap (64-bit, Clap 0.18); Types: full compact custom minimal; Flags: checkablealone
-Name: EffectsCLAP; Description: {#MyAppName} Effects Clap (64-bit, Clap 0.18); Types: full custom; Flags: checkablealone
+Name: CLAP; Description: {#MyAppName} Clap (64-bit, Clap 0.21); Types: full compact custom minimal; Flags: checkablealone
+Name: EffectsCLAP; Description: {#MyAppName} Effects Clap (64-bit, Clap 0.21); Types: full custom; Flags: checkablealone
 Name: SA; Description: {#MyAppName} Standalone (64-bit); Types: full compact custom; Flags: checkablealone
 Name: EffectsSA; Description: {#MyAppName} Effects Standalone (64-bit); Types: full custom; Flags: checkablealone
 Name: Data; Description: Data Files; Types: full compact custom minimal; Flags: fixed
