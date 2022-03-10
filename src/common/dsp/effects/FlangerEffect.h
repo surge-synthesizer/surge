@@ -113,7 +113,7 @@ class FlangerEffect : public Effect
     lipol<float, true> lfoval[2][COMBS_PER_CHANNEL], delaybase[2][COMBS_PER_CHANNEL];
     lipol<float, true> depth, mix;
     lipol<float, true> voices, voice_detune, voice_chord;
-    lipol<float, true> feedback, fb_lf_damping;
+    lipol<float, true> feedback, fb_hf_damping;
     lag<float> vzeropitch;
     float lfosandhtarget[2][COMBS_PER_CHANNEL];
     float vweights[2][COMBS_PER_CHANNEL];

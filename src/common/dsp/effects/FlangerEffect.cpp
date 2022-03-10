@@ -256,7 +256,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         fbv = sqrt(fbv);
 
     feedback.newValue(feedbackScale * fbv);
-    fb_lf_damping.newValue(0.4 * *f[fl_damping]);
+    fb_hf_damping.newValue(0.4 * *f[fl_damping]);
     float combs alignas(16)[2][BLOCK_SIZE];
 
     // Obviously when we implement stereo spread this will be different
@@ -336,7 +336,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
             fbr = 1.5 * fbr - 0.5 * fbr * fbr * fbr;
 
             // and now we have clipped, apply the damping. FIXME - move to one mul form
-            float df = limit_range(fb_lf_damping.v, 0.01f, 0.99f);
+            float df = limit_range(fb_hf_damping.v, 0.01f, 0.99f);
             lpaL = lpaL * (1.0 - df) + fbl * df;
             fbl = fbl - lpaL;
 
@@ -391,7 +391,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         depth.process();
         mix.process();
         feedback.process();
-        fb_lf_damping.process();
+        fb_hf_damping.process();
         voices.process();
     }
 
@@ -481,7 +481,7 @@ void FlangerEffect::init_ctrltypes()
     fxdata->p[fl_feedback].set_name("Feedback");
     fxdata->p[fl_feedback].set_type(ct_percent);
 
-    fxdata->p[fl_damping].set_name("LF Damping");
+    fxdata->p[fl_damping].set_name("HF Damping");
     fxdata->p[fl_damping].set_type(ct_percent);
 
     fxdata->p[fl_width].set_name("Width");

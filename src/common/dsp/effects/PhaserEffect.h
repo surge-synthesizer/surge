@@ -58,19 +58,20 @@ class PhaserEffect : public Effect
         ph_stages,
         ph_spread,
         ph_mod_wave,
+        ph_tone,
 
         ph_num_params,
     };
 
   private:
-    lipol<float, true> feedback;
+    lipol<float, true> feedback, tone;
     static const int max_stages = 16;
     static const int default_stages = 4;
     int n_stages = default_stages;
     int n_bq_units = default_stages << 1;
     int n_bq_units_initialised = 0;
     float dL, dR;
-    BiquadFilter *biquad[max_stages * 2];
+    BiquadFilter *biquad[max_stages * 2], lp, hp;
     int bi; // block increment (to keep track of events not occurring every n blocks)
     void init_stages();
 

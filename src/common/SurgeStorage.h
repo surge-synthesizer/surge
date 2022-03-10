@@ -98,6 +98,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                           added two additional FX slots to all FX chains
 //                           added new Conditioner parameter (Side Low Cut)
 // 17 -> 18 (XT 1.1 release) added clipping options to Delay Feedback parameter (via deform)
+//                           added Tone parameter to Phaser effect
 
 const int ff_revision = 18;
 

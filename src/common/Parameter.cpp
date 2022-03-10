@@ -328,6 +328,7 @@ bool Parameter::can_deactivate() const
     switch (ctrltype)
     {
     case ct_percent_deactivatable:
+    case ct_percent_bipolar_deactivatable:
     case ct_freq_hpf:
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
@@ -1009,6 +1010,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_modern_trimix:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:
@@ -1303,6 +1305,7 @@ void Parameter::set_type(int ctrltype)
     {
     case ct_percent:
     case ct_dly_fb_clippingmodes:
+    case ct_percent_bipolar_deactivatable:
     case ct_percent_deactivatable:
     case ct_percent_oscdrift:
     case ct_percent200:
@@ -1624,6 +1627,7 @@ void Parameter::bound_value(bool force_integer)
         switch (ctrltype)
         {
         case ct_percent:
+        case ct_percent_bipolar_deactivatable:
         case ct_percent_deactivatable:
         case ct_dly_fb_clippingmodes:
         case ct_percent_oscdrift:
@@ -1884,6 +1888,7 @@ bool Parameter::supportsDynamicName() const
     case ct_lfophaseshuffle:
     case ct_percent:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
     case ct_percent_deactivatable:
@@ -3876,6 +3881,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:

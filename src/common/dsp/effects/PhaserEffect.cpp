@@ -5,7 +5,7 @@ using namespace vt_dsp;
 float bend(float x, float b) { return (1.f + b) * x - b * x * x * x; }
 
 PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), lp(storage), hp(storage)
 {
     for (int i = 0; i < n_bq_units; i++)
     {
@@ -14,7 +14,10 @@ PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
 
     n_bq_units_initialised = n_bq_units;
     feedback.setBlockSize(BLOCK_SIZE * slowrate);
+    tone.setBlockSize(BLOCK_SIZE);
     width.set_blocksize(BLOCK_SIZE);
+    lp.setBlockSize(BLOCK_SIZE);
+    hp.setBlockSize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
     bi = 0;
 }
@@ -39,7 +42,15 @@ void PhaserEffect::init()
     clear_block(L, BLOCK_SIZE_QUAD);
     clear_block(R, BLOCK_SIZE_QUAD);
 
+    lp.suspend();
+    hp.suspend();
+
+    lp.coeff_instantize();
+    hp.coeff_instantize();
+
     mix.set_target(1.f);
+
+    tone.instantize();
     width.instantize();
     mix.instantize();
 }
@@ -125,7 +136,29 @@ void PhaserEffect::setvars()
     }
 
     feedback.newValue(0.95f * *f[ph_feedback]);
+    tone.newValue(clamp1bp(*f[ph_tone]));
     width.set_target_smoothed(db_to_linear(*f[ph_width]));
+
+    // lowpass range is from MIDI note 136 down to 57 (~21.1 kHz down to 220 Hz)
+    // highpass range is from MIDI note 34 to 136(~61 Hz to ~21.1 kHz)
+    float clo = -12, cmid = 67, chi = -33;
+    float hpCutoff = chi;
+    float lpCutoff = cmid;
+
+    if (tone.v > 0)
+    {
+        // OK so cool scale the hp cutoff
+        auto tv = tone.v;
+        hpCutoff = tv * (cmid - chi) + chi;
+    }
+    else
+    {
+        auto tv = -tone.v;
+        lpCutoff = tv * (clo - cmid) + cmid;
+    }
+
+    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f), 0.707);
+    hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f), 0.707);
 }
 
 void PhaserEffect::process(float *dataL, float *dataR)
@@ -140,6 +173,8 @@ void PhaserEffect::process(float *dataL, float *dataR)
     for (int i = 0; i < BLOCK_SIZE; i++)
     {
         feedback.process();
+        tone.process();
+
         dL = dataL[i] + dL * feedback.v;
         dR = dataR[i] + dR * feedback.v;
         dL = limit_range(dL, -32.f, 32.f);
@@ -153,6 +188,12 @@ void PhaserEffect::process(float *dataL, float *dataR)
 
         L[i] = dL;
         R[i] = dR;
+    }
+
+    if (!fxdata->p[ph_tone].deactivated)
+    {
+        lp.process_block(L, R);
+        hp.process_block(L, R);
     }
 
     // scale width
@@ -176,6 +217,8 @@ const char *PhaserEffect::group_label(int id)
     case 1:
         return "Stages";
     case 2:
+        return "Filter";
+    case 3:
         return "Output";
     }
     return 0;
@@ -190,6 +233,8 @@ int PhaserEffect::group_label_ypos(int id)
         return 11;
     case 2:
         return 23;
+    case 3:
+        return 27;
     }
     return 0;
 }
@@ -214,17 +259,6 @@ void PhaserEffect::init_ctrltypes()
 
     Effect::init_ctrltypes();
 
-    fxdata->p[ph_stages].set_name("Count");
-    fxdata->p[ph_stages].set_type(ct_phaser_stages);
-    fxdata->p[ph_center].set_name("Center");
-    fxdata->p[ph_center].set_type(ct_percent_bipolar);
-    fxdata->p[ph_spread].set_name("Spread");
-    fxdata->p[ph_spread].set_type(ct_percent);
-    fxdata->p[ph_sharpness].set_name("Sharpness");
-    fxdata->p[ph_sharpness].set_type(ct_percent_bipolar);
-    fxdata->p[ph_feedback].set_name("Feedback");
-    fxdata->p[ph_feedback].set_type(ct_percent_bipolar);
-
     fxdata->p[ph_mod_wave].set_name("Waveform");
     fxdata->p[ph_mod_wave].set_type(ct_fxlfowave);
     fxdata->p[ph_mod_rate].set_name("Rate");
@@ -233,6 +267,20 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_mod_depth].set_type(ct_percent);
     fxdata->p[ph_stereo].set_name("Stereo");
     fxdata->p[ph_stereo].set_type(ct_percent);
+
+    fxdata->p[ph_stages].set_name("Count");
+    fxdata->p[ph_stages].set_type(ct_phaser_stages);
+    fxdata->p[ph_spread].set_name("Spread");
+    fxdata->p[ph_spread].set_type(ct_percent);
+    fxdata->p[ph_center].set_name("Center");
+    fxdata->p[ph_center].set_type(ct_percent_bipolar);
+    fxdata->p[ph_sharpness].set_name("Sharpness");
+    fxdata->p[ph_sharpness].set_type(ct_percent_bipolar);
+    fxdata->p[ph_feedback].set_name("Feedback");
+    fxdata->p[ph_feedback].set_type(ct_percent_bipolar);
+
+    fxdata->p[ph_tone].set_name("Tone");
+    fxdata->p[ph_tone].set_type(ct_percent_bipolar_deactivatable);
 
     fxdata->p[ph_width].set_name("Width");
     fxdata->p[ph_width].set_type(ct_decibel_narrow);
@@ -250,19 +298,23 @@ void PhaserEffect::init_ctrltypes()
     fxdata->p[ph_sharpness].posy_offset = 13;
     fxdata->p[ph_feedback].posy_offset = 17;
 
-    fxdata->p[ph_width].posy_offset = 9;
-    fxdata->p[ph_mix].posy_offset = 13;
+    fxdata->p[ph_tone].posy_offset = 1;
+
+    fxdata->p[ph_width].posy_offset = 13;
+    fxdata->p[ph_mix].posy_offset = 17;
 
     fxdata->p[ph_spread].dynamicDeactivation = &phGroupDeact;
 }
 
 void PhaserEffect::init_default_values()
 {
-    fxdata->p[ph_mod_rate].deactivated = false;
     fxdata->p[ph_stages].val.i = 4;
     fxdata->p[ph_width].val.f = 0.f;
     fxdata->p[ph_spread].val.f = 0.f;
     fxdata->p[ph_mod_wave].val.i = 1;
+    fxdata->p[ph_tone].val.f = 0.f;
+    fxdata->p[ph_tone].deactivated = false;
+    fxdata->p[ph_mod_rate].deactivated = false;
 }
 
 void PhaserEffect::handleStreamingMismatches(int streamingRevision,
@@ -278,6 +330,12 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision,
     {
         fxdata->p[ph_mod_wave].val.i = 1;
         fxdata->p[ph_mod_rate].deactivated = false;
+    }
+
+    if (streamingRevision <= 17)
+    {
+        fxdata->p[ph_tone].val.f = 0.f;
+        fxdata->p[ph_tone].deactivated = true;
     }
 }
 

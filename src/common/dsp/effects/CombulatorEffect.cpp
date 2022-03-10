@@ -343,10 +343,14 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 
-    lp.process_block(L, R);
-    hp.process_block(L, R);
+    if (!fxdata->p[combulator_tone].deactivated)
+    {
+        lp.process_block(L, R);
+        hp.process_block(L, R);
+    }
 
     auto cm = clamp01(*f[combulator_mix]);
+
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
@@ -405,7 +409,7 @@ void CombulatorEffect::init_ctrltypes()
     fxdata->p[combulator_feedback].set_type(ct_percent_bipolar);
     fxdata->p[combulator_feedback].posy_offset = 3;
     fxdata->p[combulator_tone].set_name("Tone");
-    fxdata->p[combulator_tone].set_type(ct_percent_bipolar);
+    fxdata->p[combulator_tone].set_type(ct_percent_bipolar_deactivatable);
     fxdata->p[combulator_tone].posy_offset = 3;
 
     fxdata->p[combulator_gain1].set_name("Comb 1");
@@ -446,5 +450,15 @@ void CombulatorEffect::init_default_values()
     fxdata->p[combulator_pan2].val.f = 0.25f;
     fxdata->p[combulator_pan3].val.f = -0.25f;
     fxdata->p[combulator_tone].val.f = 0;
+    fxdata->p[combulator_tone].deactivated = false;
     fxdata->p[combulator_mix].val.f = 1.0f;
+}
+
+void CombulatorEffect::handleStreamingMismatches(int streamingRevision,
+                                                 int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 17)
+    {
+        fxdata->p[combulator_tone].deactivated = false;
+    }
 }

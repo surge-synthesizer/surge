@@ -43,6 +43,7 @@ enum ctrltypes
     ct_percent_deactivatable,
     ct_dly_fb_clippingmodes,
     ct_percent_bipolar,
+    ct_percent_bipolar_deactivatable,
     ct_percent_bipolar_stereo,    // bipolar with special text strings at -100% +100% and 0%
     ct_percent_bipolar_stringbal, // bipolar with special text strings
     ct_percent_bipolar_w_dynamic_unipolar_formatting,
