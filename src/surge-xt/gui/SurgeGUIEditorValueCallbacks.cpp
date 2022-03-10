@@ -462,7 +462,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto where =
                 frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
 
-            int a = limit_range((int)((3 * (where.x - r.getX())) / r.getWidth()), 0, 2);
+            int a = current_osc[current_scene];
+            // int a = limit_range((int)((3 * (where.x - r.getX())) / r.getWidth()), 0, 2);
+
+            std::string oscname = "Osc " + std::to_string(a + 1);
 
             auto contextMenu = juce::PopupMenu();
             auto hu = helpURLForSpecial("osc-select");
@@ -478,22 +481,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy Oscillator"), [this, a]() {
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Copy from " + oscname), [this, a]() {
                 synth->storage.clipboard_copy(cp_osc, current_scene, a);
             });
 
             contextMenu.addItem(
-                Surge::GUI::toOSCaseForMenu("Copy Oscillator with Modulation"),
+                Surge::GUI::toOSCaseForMenu("Copy from " + oscname + " with Modulation"),
                 [this, a]() { synth->storage.clipboard_copy(cp_oscmod, current_scene, a); });
 
             if (synth->storage.get_clipboard_type() == cp_osc)
             {
-                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste Oscillator"), [this, a]() {
-                    synth->clear_osc_modulation(current_scene, a);
-                    synth->storage.clipboard_paste(cp_osc, current_scene, a);
-                    synth->storage.getPatch().isDirty = true;
-                    queue_refresh = true;
-                });
+                contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Paste to " + oscname),
+                                    [this, a]() {
+                                        synth->clear_osc_modulation(current_scene, a);
+                                        synth->storage.clipboard_paste(cp_osc, current_scene, a);
+                                        synth->storage.getPatch().isDirty = true;
+                                        queue_refresh = true;
+                                    });
             }
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
