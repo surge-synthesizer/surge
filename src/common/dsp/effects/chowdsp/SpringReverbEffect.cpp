@@ -74,7 +74,7 @@ void SpringReverbEffect::init_ctrltypes()
     fxdata->p[spring_reverb_reflections].val_default.f = 1.0f;
     fxdata->p[spring_reverb_reflections].posy_offset = 1;
 
-    fxdata->p[spring_reverb_damping].set_name("Damping");
+    fxdata->p[spring_reverb_damping].set_name("HF Damping");
     fxdata->p[spring_reverb_damping].set_type(ct_percent);
     fxdata->p[spring_reverb_damping].val_default.f = 0.5f;
     fxdata->p[spring_reverb_damping].posy_offset = 1;
