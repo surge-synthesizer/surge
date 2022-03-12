@@ -85,12 +85,12 @@ Source: {#SURGE_SRC}\resources\data\patches_factory\*; DestDir: {commonappdata}\
 Source: {#SURGE_SRC}\resources\data\patches_3rdparty\*; DestDir: {commonappdata}\{#MyAppName}\patches_3rdparty\; Components: Patches; Flags: recursesubdirs
 Source: {#SURGE_SRC}\resources\data\wavetables\*; DestDir: {commonappdata}\{#MyAppName}\wavetables\; Components: Wavetables; Flags: recursesubdirs
 Source: {#SURGE_SRC}\resources\data\wavetables_3rdparty\*; DestDir: {commonappdata}\{#MyAppName}\wavetables_3rdparty\; Components: Wavetables; Flags: recursesubdirs
-Source: {#SURGE_SRC}\resources\fonts\FiraMono-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Fira Mono"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\IndieFlower.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Indie Flower"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: onlyifdoesntexist uninsneveruninstall
-Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{fonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\FiraMono-Regular.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Fira Mono"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\IndieFlower.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Indie Flower"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} (32-bit).vst3\*; DestDir: {commoncf32}\VST3\{#MyAppPublisher}\{#MyAppName} (32-bit).vst3\; Components: VST3; Flags: ignoreversion recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\{#MyAppPublisher}\{#MyAppName} Effects (32-bit).vst3\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} (32-bit).exe; DestDir: {commonpf32}\{#MyAppPublisher}\{#MyAppName}\; Components: SA; Flags: ignoreversion
@@ -101,7 +101,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Icons]
 Name: "{group}\{#MyAppPublisher}\{#MyAppName}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{group}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName}"; Filename: "{commonpf64}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName} (32-bit).exe"; WorkingDir: "{commonpf64}\{#MyAppPublisher}\{#MyAppName}"
+Name: "{group}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName}"; Filename: "{commonpf32}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName} (32-bit).exe"; WorkingDir: "{commonpf32}\{#MyAppPublisher}\{#MyAppName}"; Flags: createonlyiffileexists
+Name: "{group}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName} Effects"; Filename: "{commonpf32}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName} Effects (32-bit).exe"; WorkingDir: "{commonpf32}\{#MyAppPublisher}\{#MyAppName}"; Flags: createonlyiffileexists
 
 [Run]
 Filename: "{cmd}"; \
