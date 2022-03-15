@@ -1030,8 +1030,8 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
         // draw currently selected frame
         {
-            auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
-            auto tb = wt.TableF32WeakPointers[0][sel];
+            auto sel = std::clamp(tpos, 0.f, (wt.n_tables - 1.f));
+            auto tb = wt.TableF32WeakPointers[0][(int)std::floor(sel)];
             float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
 
             if (wt.n_tables == 1)
@@ -1057,6 +1057,104 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
             g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
             g.strokePath(psel, juce::PathStrokeType(0.85));
+
+            {
+                auto osc = parent->setupOscillator();
+
+                if (!osc)
+                {
+                    return;
+                }
+
+                int totalSamples = (1 << 4) * (int)getWidth();
+                int averagingWindow = 4; // < and Mult of BlockSizeOS
+                float disp_pitch_rs = 29.014725;
+
+                if (!storage->isStandardTuning)
+                {
+                    // OK so in this case we need to find a better version of the note which gets us
+                    // that pitch. Only way is to search really.
+                    auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
+                    int bracket = -1;
+
+                    for (int i = 0; i < 128; ++i)
+                    {
+                        if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
+                        {
+                            bracket = i;
+
+                            break;
+                        }
+                    }
+
+                    if (bracket >= 0)
+                    {
+                        float f1 = storage->note_to_pitch(bracket);
+                        float f2 = storage->note_to_pitch(bracket + 1);
+                        float frac = (pit - f1) / (f2 - f1);
+
+                        disp_pitch_rs = bracket + frac;
+                    }
+
+                    // That's a strange non-monotonic tuning. Oh well.
+                }
+
+                bool use_display = osc->allow_display();
+
+                if (use_display)
+                {
+                    osc->init(disp_pitch_rs, true, true);
+                }
+
+                int block_pos = BLOCK_SIZE_OS;
+                juce::Path wavePath;
+
+                for (int i = 0; i < totalSamples; i += averagingWindow)
+                {
+                    if (use_display && block_pos >= BLOCK_SIZE_OS)
+                    {
+                        // Lock it even if we aren't wavetable. It's fine.
+                        // storage->waveTableDataMutex.lock();
+                        osc->process_block(disp_pitch_rs);
+                        block_pos = 0;
+                        // storage->waveTableDataMutex.unlock();
+                    }
+
+                    float val = 0.f;
+
+                    if (use_display)
+                    {
+                        for (int j = 0; j < averagingWindow; ++j)
+                        {
+                            val += osc->output[block_pos];
+                            block_pos++;
+                        }
+
+                        val = val / averagingWindow;
+                    }
+
+                    float xc = 1.f * i / totalSamples;
+
+                    if (i == 0)
+                    {
+                        wavePath.startNewSubPath(xc, val);
+                    }
+                    else
+                    {
+                        wavePath.lineTo(xc, val);
+                    }
+                }
+
+                osc->~Oscillator();
+                osc = nullptr;
+
+                auto tf = juce::AffineTransform()
+                              .scaled(w * 0.5975, h * -0.18)
+                              .translated(x0, y0 + (0.5 * hw));
+
+                g.setColour(juce::Colours::white);
+                g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
+            }
         }
     }
 
