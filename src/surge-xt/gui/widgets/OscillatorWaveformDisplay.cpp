@@ -1122,17 +1122,19 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
                     block_pos++;
                 }
 
-                float xc = 1.f * i / totalSamples;
+                if (i >= 4)
+                {
+                    float xc = 1.f * (i - 4) / totalSamples;
 
-                wavePath.lineTo(xc, val);
+                    wavePath.lineTo(xc, val);
+                }
             }
 
             osc->~Oscillator();
             osc = nullptr;
 
-            auto tf = juce::AffineTransform()
-                          .scaled(w * 0.5975, h * -0.17)
-                          .translated(x0, y0 + (0.5 * hw));
+            auto tf =
+                juce::AffineTransform().scaled(w * 0.63, h * -0.17).translated(x0, y0 + (0.5 * hw));
 
             g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
             g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
