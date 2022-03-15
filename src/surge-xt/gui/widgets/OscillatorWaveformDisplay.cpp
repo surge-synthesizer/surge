@@ -557,9 +557,20 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
                         storage, Surge::Storage::Use3DWavetableView, false);
                 }
             };
+
             auto text = fmt::format("{} Wavetable Display", (customEditor) ? "2D" : "3D");
 
             contextMenu.addItem(Surge::GUI::toOSCaseForMenu(text), action);
+
+            contextMenu.addSeparator();
+
+            contextMenu.addSectionHeader("INFO");
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(
+                                    fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
+                                false, false, nullptr);
+            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(
+                                    fmt::format("Frame Length: {} samples", oscdata->wt.size)),
+                                false, false, nullptr);
         }
     }
 }
@@ -1030,8 +1041,8 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
         // draw currently selected frame
         {
-            auto sel = std::clamp((int)floor(tpos), 0, (int)(wt.n_tables - 1));
-            auto tb = wt.TableF32WeakPointers[0][sel];
+            auto sel = std::clamp(tpos, 0.f, (wt.n_tables - 1.f));
+            auto tb = wt.TableF32WeakPointers[0][(int)std::floor(sel)];
             float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
 
             if (wt.n_tables == 1)
@@ -1044,19 +1055,89 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             auto lw = w * (1.0 - skewPct);
             auto hw = h * depthPct * hCompress;
 
-            juce::Path psel;
+            auto osc = parent->setupOscillator();
 
-            psel.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-
-            for (int s = 1; s < smp; s = s + thinsmp)
+            if (!osc)
             {
-                auto x = x0 + s * smpinv * lw;
-
-                psel.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
+                return;
             }
 
+            int totalSamples = getWidth();
+            float disp_pitch_rs = 29.014725 * 2.6666666;
+
+            if (!storage->isStandardTuning)
+            {
+                // OK so in this case we need to find a better version of the note which gets us
+                // that pitch. Only way is to search really.
+                auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
+                int bracket = -1;
+
+                for (int i = 0; i < 128; ++i)
+                {
+                    if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
+                    {
+                        bracket = i;
+
+                        break;
+                    }
+                }
+
+                if (bracket >= 0)
+                {
+                    float f1 = storage->note_to_pitch(bracket);
+                    float f2 = storage->note_to_pitch(bracket + 1);
+                    float frac = (pit - f1) / (f2 - f1);
+
+                    disp_pitch_rs = bracket + frac;
+                }
+
+                // That's a strange non-monotonic tuning. Oh well.
+            }
+
+            bool use_display = osc->allow_display();
+
+            if (use_display)
+            {
+                osc->init(disp_pitch_rs, true, true);
+            }
+
+            int block_pos = BLOCK_SIZE_OS;
+            juce::Path wavePath;
+
+            wavePath.startNewSubPath(0.f, 0.f);
+
+            for (int i = 0; i < totalSamples; i++)
+            {
+                if (use_display && block_pos >= BLOCK_SIZE_OS)
+                {
+                    osc->process_block(disp_pitch_rs);
+                    block_pos = 0;
+                }
+
+                float val = 0.f;
+
+                if (use_display)
+                {
+                    val = osc->output[block_pos];
+                    block_pos++;
+                }
+
+                if (i >= 4)
+                {
+                    float xc = 1.f * (i - 4) / totalSamples;
+
+                    wavePath.lineTo(xc, val);
+                }
+            }
+
+            osc->~Oscillator();
+            osc = nullptr;
+
+            auto tf =
+                juce::AffineTransform().scaled(w * 0.63, h * -0.17).translated(x0, y0 + (0.5 * hw));
+
             g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
-            g.strokePath(psel, juce::PathStrokeType(0.85));
+            g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
         }
     }
 
