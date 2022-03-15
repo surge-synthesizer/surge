@@ -1063,7 +1063,9 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             }
 
             int totalSamples = getWidth();
-            float disp_pitch_rs = 29.014725 * 2.6666666;
+            // empirically set up... don't ask!
+            float disp_pitch_rs =
+                12.f * std::log2f((700.f * (samplerate / 48000.f)) / 440.f) + 69.f;
 
             if (!storage->isStandardTuning)
             {
@@ -1134,7 +1136,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             osc = nullptr;
 
             auto tf =
-                juce::AffineTransform().scaled(w * 0.63, h * -0.17).translated(x0, y0 + (0.5 * hw));
+                juce::AffineTransform().scaled(w * 0.61, h * -0.17).translated(x0, y0 + (0.5 * hw));
 
             g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
             g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
