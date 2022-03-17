@@ -2697,10 +2697,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CLICK_ARROW ||
                      cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::CTRL_CLICK)
             {
-                change_mod_view = false;
-                mod_editor = true;
-                modsource = newsource;
-                modsource_index = newindex;
+                change_mod_view = true;
                 refresh_mod();
             }
 
