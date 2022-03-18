@@ -2218,7 +2218,6 @@ juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component 
     }
 }
 
-
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
                                   Surge::GUI::IComponentTagValue *launchFrom)
 {

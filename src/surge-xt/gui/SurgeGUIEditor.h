@@ -263,7 +263,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu::Options popupMenuOptions(const juce::Point<int> &where);
     juce::PopupMenu::Options popupMenuOptions(const juce::Component *c = nullptr,
                                               bool useComponentBounds = true);
-   
+
     void showHTML(const std::string &s);
 
     void toggleMPE();
