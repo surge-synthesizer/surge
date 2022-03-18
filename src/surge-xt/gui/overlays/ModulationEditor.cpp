@@ -44,8 +44,9 @@ struct ModulationSideControls : public juce::Component,
     };
 
     ModulationEditor *editor{nullptr};
-    ModulationSideControls(ModulationEditor *e) : editor(e)
+    ModulationSideControls(ModulationEditor *e, SurgeGUIEditor *sge) : editor(e)
     {
+        this->sge = sge;
         setAccessible(true);
         setTitle("Controls");
         setDescription("Controls");
@@ -218,6 +219,7 @@ struct ModulationSideControls : public juce::Component,
     std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
         dispW;
+    SurgeGUIEditor *sge;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
@@ -1002,7 +1004,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
         }
 
-        men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(filterW.get()));
+        men.showMenuAsync(sge->popupMenuOptions());
     }
     break;
     case tag_add_source:
@@ -1172,7 +1174,7 @@ void ModulationSideControls::showAddSourceMenu()
     men.addSubMenu("Envelopes", addEGBSub);
     men.addSubMenu("MIDI", addMIDIBSub);
 
-    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addSourceW.get()));
+    men.showMenuAsync(sge->popupMenuOptions());
 }
 
 void ModulationSideControls::showAddTargetMenu()
@@ -1378,7 +1380,7 @@ void ModulationSideControls::showAddTargetMenu()
         si++;
     }
 
-    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
+    men.showMenuAsync(sge->popupMenuOptions());
 }
 
 void ModulationSideControls::doAdd()
@@ -1413,7 +1415,7 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
 
     synth->addModulationAPIListener(this);
 
-    sideControls = std::make_unique<ModulationSideControls>(this);
+    sideControls = std::make_unique<ModulationSideControls>(this, ed);
 
     addAndMakeVisible(*sideControls);
 }

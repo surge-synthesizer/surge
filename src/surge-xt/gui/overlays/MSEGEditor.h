@@ -21,8 +21,11 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "OverlayComponent.h"
 
+class SurgeGUIEditor;
+
 namespace Surge
 {
+
 namespace Overlays
 {
 struct MSEGControlRegion;
@@ -43,7 +46,8 @@ struct MSEGEditor : public OverlayComponent,
         int timeEditMode = 0;
     };
     MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b);
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b,
+               SurgeGUIEditor *ed);
     ~MSEGEditor();
     void forceRefresh() override;
 

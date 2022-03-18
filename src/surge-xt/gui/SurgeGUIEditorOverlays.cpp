@@ -187,7 +187,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto ms = &synth->storage.getPatch().msegs[current_scene][lfo_id];
         auto mse = std::make_unique<Surge::Overlays::MSEGEditor>(
             &(synth->storage), lfodata, ms, &msegEditState[current_scene][lfo_id], currentSkin,
-            bitmapStore);
+            bitmapStore, this);
 
         mse->onModelChanged = [this]() {
             if (lfoDisplayRepaintCountdown == 0)

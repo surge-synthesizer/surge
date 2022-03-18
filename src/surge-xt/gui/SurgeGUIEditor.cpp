@@ -2130,7 +2130,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
                                synth->storage.getPatch().isDirty = true;
                        });
 
-    fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(c));
+    fxGridMenu.showMenuAsync(popupMenuOptions(c), Surge::GUI::makeEndHoverCallback(c));
 }
 
 void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
@@ -2190,9 +2190,10 @@ void SurgeGUIEditor::toggleMPE()
     }
 }
 
-juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<int> &where)
+juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Point<int> &where)
 {
     auto o = juce::PopupMenu::Options();
+    o = o.withTargetComponent(juceEditor);
     if (where.x > 0 && where.y > 0)
     {
         auto r = juce::Rectangle<int>().withWidth(1).withHeight(1).withPosition(
@@ -2202,25 +2203,40 @@ juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<in
     return o;
 }
 
+juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component *c,
+                                                          bool useComponentBounds)
+{
+    if (!c || !useComponentBounds)
+    {
+        auto where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
+        return popupMenuOptions(where);
+    }
+    else
+    {
+        auto where = c->getBounds().getBottomLeft();
+        return popupMenuOptions(where);
+    }
+}
+
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
                                   Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeZoomMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
+    m.showMenuAsync(popupMenuOptions(where), Surge::GUI::makeEndHoverCallback(launchFrom));
 }
 
 void SurgeGUIEditor::showMPEMenu(const juce::Point<int> &where,
                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeMpeMenu(where, true);
-    m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
+    m.showMenuAsync(popupMenuOptions(where), Surge::GUI::makeEndHoverCallback(launchFrom));
 }
 
 void SurgeGUIEditor::showLfoMenu(const juce::Point<int> &where,
                                  Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto m = makeLfoMenu(where);
-    m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
+    m.showMenuAsync(popupMenuOptions(where), Surge::GUI::makeEndHoverCallback(launchFrom));
 }
 
 void SurgeGUIEditor::toggleTuning()
@@ -2241,7 +2257,7 @@ void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
 {
     auto m = makeTuningMenu(where, true);
 
-    m.showMenuAsync(optionsForPosition(where), Surge::GUI::makeEndHoverCallback(launchFrom));
+    m.showMenuAsync(popupMenuOptions(where), Surge::GUI::makeEndHoverCallback(launchFrom));
 }
 
 void SurgeGUIEditor::scaleFileDropped(const string &fn)
@@ -2471,7 +2487,7 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     Surge::GUI::addMenuWithShortcut(settingsMenu, "About Surge", showShortcutDescription("F12"),
                                     [this]() { this->showAboutScreen(); });
 
-    settingsMenu.showMenuAsync(optionsForPosition(where),
+    settingsMenu.showMenuAsync(popupMenuOptions(where),
                                Surge::GUI::makeEndHoverCallback(launchFrom));
 }
 
@@ -5236,7 +5252,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if ((lfo_id >= 0) && (lfo_id < n_lfos))
         {
             if (!lfoDisplay)
-                lfoDisplay = std::make_unique<Surge::Widgets::LFOAndStepDisplay>();
+                lfoDisplay = std::make_unique<Surge::Widgets::LFOAndStepDisplay>(this);
             lfoDisplay->setBounds(skinCtrl->getRect());
             lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
             lfoDisplay->setTag(p->id + start_paramtags);

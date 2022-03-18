@@ -452,15 +452,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         if (tag == tag_settingsmenu)
         {
             useDevMenu = true;
-            showSettingsMenu(juce::Point<int>{}, control);
+            auto where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
+            showSettingsMenu(where, control);
             return 1;
         }
 
         if (tag == tag_osc_select)
         {
             auto r = control->asJuceComponent()->getBounds();
-            auto where =
-                frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
 
             int a = current_osc[current_scene];
             // int a = limit_range((int)((3 * (where.x - r.getX())) / r.getWidth()), 0, 2);
@@ -500,8 +499,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     });
             }
 
-            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -537,8 +535,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     queue_refresh = true;
                                 });
 
-            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -568,8 +565,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
-        juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
-        contextMenu.showMenuAsync(optionsForPosition(cwhere),
+        contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
 
         return 1;
@@ -1063,7 +1059,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -2358,7 +2354,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -2563,8 +2559,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_lfo_menu)
     {
         control->setValue(0);
-        juce::Point<int> where{};
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showLfoMenu(where, control);
         return;
     }
@@ -2918,9 +2913,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_settingsmenu:
     {
-        juce::Point<int> menuPoint;
+        juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getTopLeft();
         useDevMenu = false;
-        showSettingsMenu(menuPoint, control);
+        showSettingsMenu(cwhere, control);
     }
     break;
     case tag_osc_select:

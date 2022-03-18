@@ -324,7 +324,9 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
             if (haveFavs)
             {
-                menu.showMenuAsync(juce::PopupMenu::Options(),
+                auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+                menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
                                    Surge::GUI::makeEndHoverCallback(this));
             }
 
@@ -700,7 +702,7 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     if (sge)
     {
-        o = sge->optionsForPosition(getBounds().getBottomLeft());
+        o = sge->popupMenuOptions(getBounds().getBottomLeft());
     }
 
     contextMenu.showMenuAsync(o);

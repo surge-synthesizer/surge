@@ -47,7 +47,7 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
-LFOAndStepDisplay::LFOAndStepDisplay()
+LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
 {
     setTitle("LFO Type And Display");
     setAccessible(true);
@@ -2259,7 +2259,7 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
                             });
     }
 
-    contextMenu.showMenuAsync(juce::PopupMenu::Options());
+    contextMenu.showMenuAsync(guiEditor->popupMenuOptions());
 }
 
 void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
