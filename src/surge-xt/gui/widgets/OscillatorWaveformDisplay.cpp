@@ -704,9 +704,8 @@ void OscillatorWaveformDisplay::showWavetableMenu()
 
         populateMenu(menu, id);
 
-        auto where =
-            sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
-        menu.showMenuAsync(sge->optionsForPosition(where));
+        auto where = sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+        menu.showMenuAsync(sge->popupMenuOptions(where));
     }
 }
 
@@ -766,8 +765,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
             populateMenu(menu, id);
 
             auto where =
-                sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
-            menu.showMenuAsync(sge->optionsForPosition(where));
+                sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+            menu.showMenuAsync(sge->popupMenuOptions(where));
         }
     }
 
@@ -779,9 +778,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
             createWTMenuItems(contextMenu, true, true);
 
-            auto where =
-                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-            contextMenu.showMenuAsync(sge->optionsForPosition(where));
+            contextMenu.showMenuAsync(sge->popupMenuOptions());
 
             return;
         }
@@ -1076,9 +1073,7 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
             parent->createWTMenuItems(contextMenu, true, true);
 
-            auto where =
-                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-            contextMenu.showMenuAsync(sge->optionsForPosition(where));
+            contextMenu.showMenuAsync(sge->popupMenuOptions());
 
             return;
         }
@@ -1350,9 +1345,7 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                 contextMenu.addItem("Reverse", action);
             }
 
-            auto where =
-                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-            contextMenu.showMenuAsync(sge->optionsForPosition(where));
+            contextMenu.showMenuAsync(sge->popupMenuOptions());
 
             return;
         }

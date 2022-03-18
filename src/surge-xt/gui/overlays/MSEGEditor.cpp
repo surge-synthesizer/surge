@@ -67,7 +67,7 @@ struct MSEGControlRegion : public juce::Component,
 {
     MSEGControlRegion(MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms,
                       MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-                      std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *ed)
+                      std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *sge)
         : juce::Component("MSEG Control Region")
     {
         setSkin(skin, b);
@@ -76,7 +76,7 @@ struct MSEGControlRegion : public juce::Component,
         this->lfodata = lfos;
         this->canvas = c;
         this->storage = storage;
-        this->guiEditor = ed;
+        this->sge = sge;
         setAccessible(true);
         setTitle("Controls");
         setDescription("Controls");
@@ -116,13 +116,14 @@ struct MSEGControlRegion : public juce::Component,
     MSEGCanvas *canvas = nullptr;
     LFOStorage *lfodata = nullptr;
     SurgeStorage *storage = nullptr;
-    SurgeGUIEditor *guiEditor = nullptr;
+    SurgeGUIEditor *sge = nullptr;
 };
 
 struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     MSEGCanvas(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds,
-               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *ed)
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b,
+               SurgeGUIEditor *sge)
         : juce::Component("MSEG Canvas")
     {
         setSkin(skin, b);
@@ -130,7 +131,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         this->ms = ms;
         this->eds = eds;
         this->lfodata = lfodata;
-        this->guiEditor = ed;
+        this->sge = sge;
         Surge::MSEG::rebuildCache(ms);
         handleDrawable = b->getImage(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
@@ -2638,9 +2639,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
-            auto where = guiEditor->frame.get()->getLocalPoint(
-                nullptr, juce::Desktop::getInstance().getMousePosition());
-            contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
+            contextMenu.showMenuAsync(sge->popupMenuOptions());
         }
     }
 
@@ -2766,7 +2765,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     SurgeStorage *storage = nullptr;
     float loopDragTime = -1, loopDragEnd = -1;
     bool loopDragIsStart = false;
-    SurgeGUIEditor *guiEditor;
+    SurgeGUIEditor *sge;
 
     SurgeImage *handleDrawable{nullptr};
 };
@@ -3042,9 +3041,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                                 showTypein);
         }
 
-        auto where = guiEditor->frame.get()->getLocalPoint(
-            nullptr, juce::Desktop::getInstance().getMousePosition());
-        contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
+        contextMenu.showMenuAsync(sge->popupMenuOptions());
     }
     return 1;
 }
@@ -3287,7 +3284,7 @@ void MSEGControlRegion::rebuild()
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
                        Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp,
-                       SurgeGUIEditor *ed)
+                       SurgeGUIEditor *sge)
     : OverlayComponent("MSEG Editor")
 {
     // Leave these in for now
@@ -3297,9 +3294,9 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
     }
     setSkin(skin, bmp);
 
-    canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp, ed);
+    canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp, sge);
     controls =
-        std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp, ed);
+        std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp, sge);
 
     canvas->controlregion = controls.get();
     controls->canvas = canvas.get();

@@ -44,8 +44,9 @@ struct ModulationSideControls : public juce::Component,
     };
 
     ModulationEditor *editor{nullptr};
-    ModulationSideControls(ModulationEditor *e, SurgeGUIEditor *ed) : editor(e), guiEditor(ed)
+    ModulationSideControls(ModulationEditor *e, SurgeGUIEditor *sge) : editor(e)
     {
+        this->sge = sge;
         setAccessible(true);
         setTitle("Controls");
         setDescription("Controls");
@@ -218,7 +219,7 @@ struct ModulationSideControls : public juce::Component,
     std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
         dispW;
-    SurgeGUIEditor *guiEditor;
+    SurgeGUIEditor *sge;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
@@ -1003,9 +1004,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
         }
 
-        auto where = guiEditor->frame.get()->getLocalPoint(
-            nullptr, juce::Desktop::getInstance().getMousePosition());
-        men.showMenuAsync(guiEditor->optionsForPosition(where));
+        men.showMenuAsync(sge->popupMenuOptions());
     }
     break;
     case tag_add_source:
@@ -1175,9 +1174,7 @@ void ModulationSideControls::showAddSourceMenu()
     men.addSubMenu("Envelopes", addEGBSub);
     men.addSubMenu("MIDI", addMIDIBSub);
 
-    auto where = guiEditor->frame.get()->getLocalPoint(
-        nullptr, juce::Desktop::getInstance().getMousePosition());
-    men.showMenuAsync(guiEditor->optionsForPosition(where));
+    men.showMenuAsync(sge->popupMenuOptions());
 }
 
 void ModulationSideControls::showAddTargetMenu()
@@ -1383,9 +1380,7 @@ void ModulationSideControls::showAddTargetMenu()
         si++;
     }
 
-    auto where = guiEditor->frame.get()->getLocalPoint(
-        nullptr, juce::Desktop::getInstance().getMousePosition());
-    men.showMenuAsync(guiEditor->optionsForPosition(where));
+    men.showMenuAsync(sge->popupMenuOptions());
 }
 
 void ModulationSideControls::doAdd()

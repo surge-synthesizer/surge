@@ -372,10 +372,9 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    juce::Point<int> cwhere = getBounds().getBottomLeft();
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    menu.showMenuAsync(sge->optionsForPosition(cwhere),
+    menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
                            that->isHovered = false;
                            that->repaint();
@@ -413,7 +412,9 @@ bool OscillatorMenu::keyPressed(const juce::KeyPress &key)
 
     if (action == OpenMenu || action == Return)
     {
-        menu.showMenuAsync(juce::PopupMenu::Options());
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        menu.showMenuAsync(sge->popupMenuOptions());
         return true;
     }
 
@@ -514,10 +515,9 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    juce::Point<int> cwhere = getBounds().getBottomLeft();
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    menu.showMenuAsync(sge->optionsForPosition(cwhere),
+    menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
                            that->isHovered = false;
                            that->repaint();
@@ -798,7 +798,9 @@ bool FxMenu::keyPressed(const juce::KeyPress &key)
 
     if (action == OpenMenu || action == Return)
     {
-        menu.showMenuAsync(juce::PopupMenu::Options());
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        menu.showMenuAsync(sge->popupMenuOptions(this));
         return true;
     }
 

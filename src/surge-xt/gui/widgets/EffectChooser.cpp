@@ -290,8 +290,8 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
             {
                 auto c = localPointToGlobal(getEffectRectangle(currentClicked).getBottomLeft());
 
-                auto where = sge->frame.get()->getLocalPoint(nullptr, c);
-                sge->fxMenu->menu.showMenuAsync(sge->optionsForPosition(where));
+                auto where = sge->frame->getLocalPoint(nullptr, c);
+                sge->fxMenu->menu.showMenuAsync(sge->popupMenuOptions(where));
             }
         }
     }

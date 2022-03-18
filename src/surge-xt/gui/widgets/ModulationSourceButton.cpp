@@ -350,7 +350,8 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 
         mouseMode = HAMBURGER;
 
-        menu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(this));
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        menu.showMenuAsync(sge->popupMenuOptions(this), Surge::GUI::makeEndHoverCallback(this));
         return;
     }
 
