@@ -2130,7 +2130,8 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
                                synth->storage.getPatch().isDirty = true;
                        });
 
-    fxGridMenu.showMenuAsync(juce::PopupMenu::Options(), Surge::GUI::makeEndHoverCallback(c));
+    juce::Point<int> cwhere = c->asJuceComponent()->getBounds().getBottomLeft();
+    fxGridMenu.showMenuAsync(optionsForPosition(cwhere), Surge::GUI::makeEndHoverCallback(c));
 }
 
 void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
@@ -2193,6 +2194,7 @@ void SurgeGUIEditor::toggleMPE()
 juce::PopupMenu::Options SurgeGUIEditor::optionsForPosition(const juce::Point<int> &where)
 {
     auto o = juce::PopupMenu::Options();
+    o = o.withTargetComponent(juceEditor);
     if (where.x > 0 && where.y > 0)
     {
         auto r = juce::Rectangle<int>().withWidth(1).withHeight(1).withPosition(
@@ -5236,7 +5238,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         if ((lfo_id >= 0) && (lfo_id < n_lfos))
         {
             if (!lfoDisplay)
-                lfoDisplay = std::make_unique<Surge::Widgets::LFOAndStepDisplay>();
+                lfoDisplay = std::make_unique<Surge::Widgets::LFOAndStepDisplay>(this);
             lfoDisplay->setBounds(skinCtrl->getRect());
             lfoDisplay->setSkin(currentSkin, bitmapStore, skinCtrl);
             lfoDisplay->setTag(p->id + start_paramtags);

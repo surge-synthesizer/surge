@@ -44,7 +44,7 @@ struct ModulationSideControls : public juce::Component,
     };
 
     ModulationEditor *editor{nullptr};
-    ModulationSideControls(ModulationEditor *e) : editor(e)
+    ModulationSideControls(ModulationEditor *e, SurgeGUIEditor *ed) : editor(e), guiEditor(ed)
     {
         setAccessible(true);
         setTitle("Controls");
@@ -218,6 +218,7 @@ struct ModulationSideControls : public juce::Component,
     std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
         dispW;
+    SurgeGUIEditor *guiEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
 };
@@ -1002,7 +1003,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
         }
 
-        men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(filterW.get()));
+        auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+        men.showMenuAsync(guiEditor->optionsForPosition(where));
     }
     break;
     case tag_add_source:
@@ -1172,7 +1174,8 @@ void ModulationSideControls::showAddSourceMenu()
     men.addSubMenu("Envelopes", addEGBSub);
     men.addSubMenu("MIDI", addMIDIBSub);
 
-    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addSourceW.get()));
+    auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+    men.showMenuAsync(guiEditor->optionsForPosition(where));
 }
 
 void ModulationSideControls::showAddTargetMenu()
@@ -1378,7 +1381,8 @@ void ModulationSideControls::showAddTargetMenu()
         si++;
     }
 
-    men.showMenuAsync(juce::PopupMenu::Options(), GUI::makeEndHoverCallback(addTargetW.get()));
+    auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+    men.showMenuAsync(guiEditor->optionsForPosition(where));
 }
 
 void ModulationSideControls::doAdd()
@@ -1413,7 +1417,7 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
 
     synth->addModulationAPIListener(this);
 
-    sideControls = std::make_unique<ModulationSideControls>(this);
+    sideControls = std::make_unique<ModulationSideControls>(this, ed);
 
     addAndMakeVisible(*sideControls);
 }

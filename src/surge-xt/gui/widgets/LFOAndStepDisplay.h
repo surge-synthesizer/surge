@@ -27,7 +27,7 @@ namespace Widgets
 {
 struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAndStepDisplay>
 {
-    LFOAndStepDisplay();
+    LFOAndStepDisplay(SurgeGUIEditor *e);
     void paint(juce::Graphics &g) override;
     void paintWaveform(juce::Graphics &g);
     void paintStepSeq(juce::Graphics &g);
@@ -179,6 +179,8 @@ struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAnd
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepSliderOverlays;
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepTriggerOverlays;
     std::array<std::unique_ptr<juce::Component>, 2> loopEndOverlays;
+
+    SurgeGUIEditor *guiEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LFOAndStepDisplay);
 };

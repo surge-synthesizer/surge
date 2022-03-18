@@ -452,7 +452,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         if (tag == tag_settingsmenu)
         {
             useDevMenu = true;
-            showSettingsMenu(juce::Point<int>{}, control);
+            auto where = frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            showSettingsMenu(where, control);
             return 1;
         }
 
@@ -1063,8 +1064,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                      Surge::GUI::makeEndHoverCallback(control));
+            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                        Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
 
@@ -2358,8 +2360,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options(),
-                                      Surge::GUI::makeEndHoverCallback(control));
+            juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
+            contextMenu.showMenuAsync(optionsForPosition(cwhere),
+                                        Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
         // reset to default value
@@ -2563,8 +2566,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_lfo_menu)
     {
         control->setValue(0);
-        juce::Point<int> where{};
-
+        juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
         showLfoMenu(where, control);
         return;
     }
@@ -2921,9 +2923,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_settingsmenu:
     {
-        juce::Point<int> menuPoint;
+        juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getTopLeft();
         useDevMenu = false;
-        showSettingsMenu(menuPoint, control);
+        showSettingsMenu(cwhere, control);
     }
     break;
     case tag_osc_select:

@@ -372,7 +372,10 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    menu.showMenuAsync(juce::PopupMenu::Options(),
+    juce::Point<int> cwhere = getBounds().getBottomLeft();
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    menu.showMenuAsync(sge->optionsForPosition(cwhere),
                        Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
                            that->isHovered = false;
                            that->repaint();
@@ -511,7 +514,10 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
-    menu.showMenuAsync(juce::PopupMenu::Options(),
+    juce::Point<int> cwhere = getBounds().getBottomLeft();
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    menu.showMenuAsync(sge->optionsForPosition(cwhere),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
                            that->isHovered = false;
                            that->repaint();

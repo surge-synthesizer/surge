@@ -67,7 +67,7 @@ struct MSEGControlRegion : public juce::Component,
 {
     MSEGControlRegion(MSEGCanvas *c, SurgeStorage *storage, LFOStorage *lfos, MSEGStorage *ms,
                       MSEGEditor::State *eds, Surge::GUI::Skin::ptr_t skin,
-                      std::shared_ptr<SurgeImageStore> b)
+                      std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *ed)
         : juce::Component("MSEG Control Region")
     {
         setSkin(skin, b);
@@ -76,6 +76,7 @@ struct MSEGControlRegion : public juce::Component,
         this->lfodata = lfos;
         this->canvas = c;
         this->storage = storage;
+        this->guiEditor = ed;
         setAccessible(true);
         setTitle("Controls");
         setDescription("Controls");
@@ -115,12 +116,13 @@ struct MSEGControlRegion : public juce::Component,
     MSEGCanvas *canvas = nullptr;
     LFOStorage *lfodata = nullptr;
     SurgeStorage *storage = nullptr;
+    SurgeGUIEditor *guiEditor = nullptr;
 };
 
 struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     MSEGCanvas(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, MSEGEditor::State *eds,
-               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b)
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *ed)
         : juce::Component("MSEG Canvas")
     {
         setSkin(skin, b);
@@ -128,6 +130,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         this->ms = ms;
         this->eds = eds;
         this->lfodata = lfodata;
+        this->guiEditor = ed;
         Surge::MSEG::rebuildCache(ms);
         handleDrawable = b->getImage(IDB_MSEG_NODES);
         timeEditMode = (MSEGCanvas::TimeEdit)eds->timeEditMode;
@@ -2635,7 +2638,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
-            contextMenu.showMenuAsync(juce::PopupMenu::Options());
+            auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
         }
     }
 
@@ -2761,6 +2765,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     SurgeStorage *storage = nullptr;
     float loopDragTime = -1, loopDragEnd = -1;
     bool loopDragIsStart = false;
+    SurgeGUIEditor *guiEditor;
 
     SurgeImage *handleDrawable{nullptr};
 };
@@ -3036,7 +3041,8 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                                 showTypein);
         }
 
-        contextMenu.showMenuAsync(juce::PopupMenu::Options());
+        auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+        contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
     }
     return 1;
 }
@@ -3278,7 +3284,7 @@ void MSEGControlRegion::rebuild()
 }
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp)
+                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp, SurgeGUIEditor *ed)
     : OverlayComponent("MSEG Editor")
 {
     // Leave these in for now
@@ -3288,8 +3294,8 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
     }
     setSkin(skin, bmp);
 
-    canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp);
-    controls = std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp);
+    canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp, ed);
+    controls = std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp, ed);
 
     canvas->controlregion = controls.get();
     controls->canvas = canvas.get();
