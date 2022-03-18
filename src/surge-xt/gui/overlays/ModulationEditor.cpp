@@ -1003,7 +1003,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
         }
 
-        auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+        auto where = guiEditor->frame.get()->getLocalPoint(
+            nullptr, juce::Desktop::getInstance().getMousePosition());
         men.showMenuAsync(guiEditor->optionsForPosition(where));
     }
     break;
@@ -1174,7 +1175,8 @@ void ModulationSideControls::showAddSourceMenu()
     men.addSubMenu("Envelopes", addEGBSub);
     men.addSubMenu("MIDI", addMIDIBSub);
 
-    auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+    auto where = guiEditor->frame.get()->getLocalPoint(
+        nullptr, juce::Desktop::getInstance().getMousePosition());
     men.showMenuAsync(guiEditor->optionsForPosition(where));
 }
 
@@ -1381,7 +1383,8 @@ void ModulationSideControls::showAddTargetMenu()
         si++;
     }
 
-    auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+    auto where = guiEditor->frame.get()->getLocalPoint(
+        nullptr, juce::Desktop::getInstance().getMousePosition());
     men.showMenuAsync(guiEditor->optionsForPosition(where));
 }
 

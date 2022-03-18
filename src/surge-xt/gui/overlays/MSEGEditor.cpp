@@ -2638,7 +2638,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             typeTo(Surge::GUI::toOSCaseForMenu("Brownian Bridge"),
                    MSEGStorage::segment::Type::BROWNIAN);
 
-            auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto where = guiEditor->frame.get()->getLocalPoint(
+                nullptr, juce::Desktop::getInstance().getMousePosition());
             contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
         }
     }
@@ -3041,7 +3042,8 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                                 showTypein);
         }
 
-        auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+        auto where = guiEditor->frame.get()->getLocalPoint(
+            nullptr, juce::Desktop::getInstance().getMousePosition());
         contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
     }
     return 1;
@@ -3284,7 +3286,8 @@ void MSEGControlRegion::rebuild()
 }
 
 MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp, SurgeGUIEditor *ed)
+                       Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> bmp,
+                       SurgeGUIEditor *ed)
     : OverlayComponent("MSEG Editor")
 {
     // Leave these in for now
@@ -3295,7 +3298,8 @@ MSEGEditor::MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *
     setSkin(skin, bmp);
 
     canvas = std::make_unique<MSEGCanvas>(storage, lfodata, ms, eds, skin, bmp, ed);
-    controls = std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp, ed);
+    controls =
+        std::make_unique<MSEGControlRegion>(nullptr, storage, lfodata, ms, eds, skin, bmp, ed);
 
     canvas->controlregion = controls.get();
     controls->canvas = canvas.get();

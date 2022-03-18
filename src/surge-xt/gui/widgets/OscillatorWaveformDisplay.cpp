@@ -704,7 +704,8 @@ void OscillatorWaveformDisplay::showWavetableMenu()
 
         populateMenu(menu, id);
 
-        auto where = sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+        auto where =
+            sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
         menu.showMenuAsync(sge->optionsForPosition(where));
     }
 }
@@ -764,7 +765,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
             populateMenu(menu, id);
 
-            auto where = sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+            auto where =
+                sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
             menu.showMenuAsync(sge->optionsForPosition(where));
         }
     }
@@ -777,7 +779,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
             createWTMenuItems(contextMenu, true, true);
 
-            auto where = sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto where =
+                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
             contextMenu.showMenuAsync(sge->optionsForPosition(where));
 
             return;
@@ -886,7 +889,8 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
     std::unique_ptr<juce::Image> backingImage;
 
-    WaveTable3DEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed)
+    WaveTable3DEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc,
+                      SurgeGUIEditor *ed)
         : parent(pD), storage(s), oscdata(osc), sge(ed)
     {
     }
@@ -1072,7 +1076,8 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
             parent->createWTMenuItems(contextMenu, true, true);
 
-            auto where = sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto where =
+                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
             contextMenu.showMenuAsync(sge->optionsForPosition(where));
 
             return;
@@ -1091,7 +1096,8 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
 struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
 {
-    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed) : storage(s), oscdata(osc), sge(ed)
+    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed)
+        : storage(s), oscdata(osc), sge(ed)
     {
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
@@ -1344,7 +1350,8 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
                 contextMenu.addItem("Reverse", action);
             }
 
-            auto where = sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto where =
+                sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
             contextMenu.showMenuAsync(sge->optionsForPosition(where));
 
             return;

@@ -452,7 +452,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         if (tag == tag_settingsmenu)
         {
             useDevMenu = true;
-            auto where = frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+            auto where =
+                frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
             showSettingsMenu(where, control);
             return 1;
         }
@@ -1066,7 +1067,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
             contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                        Surge::GUI::makeEndHoverCallback(control));
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
 
@@ -2362,7 +2363,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             juce::Point<int> cwhere = control->asJuceComponent()->getBounds().getBottomLeft();
             contextMenu.showMenuAsync(optionsForPosition(cwhere),
-                                        Surge::GUI::makeEndHoverCallback(control));
+                                      Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
         // reset to default value

@@ -2259,7 +2259,8 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
                             });
     }
 
-    auto where = guiEditor->frame.get()->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
+    auto where = guiEditor->frame.get()->getLocalPoint(
+        nullptr, juce::Desktop::getInstance().getMousePosition());
     contextMenu.showMenuAsync(guiEditor->optionsForPosition(where));
 }
 

@@ -46,7 +46,8 @@ struct MSEGEditor : public OverlayComponent,
         int timeEditMode = 0;
     };
     MSEGEditor(SurgeStorage *storage, LFOStorage *lfodata, MSEGStorage *ms, State *eds,
-               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b, SurgeGUIEditor *ed);
+               Surge::GUI::Skin::ptr_t skin, std::shared_ptr<SurgeImageStore> b,
+               SurgeGUIEditor *ed);
     ~MSEGEditor();
     void forceRefresh() override;
 
