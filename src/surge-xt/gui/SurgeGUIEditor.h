@@ -261,9 +261,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showLfoMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
 
     juce::PopupMenu::Options popupMenuOptions(const juce::Point<int> &where);
-    juce::PopupMenu::Options popupMenuOptions(const juce::Component *c);
-    juce::PopupMenu::Options popupMenuOptions();
-
+    juce::PopupMenu::Options popupMenuOptions(const juce::Component *c = nullptr,
+                                              bool useComponentBounds = true);
+   
     void showHTML(const std::string &s);
 
     void toggleMPE();

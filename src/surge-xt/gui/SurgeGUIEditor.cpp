@@ -2203,17 +2203,21 @@ juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Point<int>
     return o;
 }
 
-juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component *c)
+juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component *c,
+                                                          bool useComponentBounds)
 {
-    auto where = c->getBounds().getBottomLeft();
-    return popupMenuOptions(where);
+    if (!c || !useComponentBounds)
+    {
+        auto where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
+        return popupMenuOptions(where);
+    }
+    else
+    {
+        auto where = c->getBounds().getBottomLeft();
+        return popupMenuOptions(where);
+    }
 }
 
-juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions()
-{
-    auto where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
-    return popupMenuOptions(where);
-}
 
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,
                                   Surge::GUI::IComponentTagValue *launchFrom)

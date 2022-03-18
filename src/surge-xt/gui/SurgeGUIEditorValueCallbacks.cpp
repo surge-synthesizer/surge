@@ -499,7 +499,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     });
             }
 
-            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent()),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -535,7 +535,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     queue_refresh = true;
                                 });
 
-            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent()),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -565,7 +565,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
-        contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent()),
+        contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
 
         return 1;
@@ -1059,7 +1059,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent()),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
@@ -2354,7 +2354,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent()),
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
             return 1;
         }
