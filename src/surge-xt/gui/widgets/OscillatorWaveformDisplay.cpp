@@ -704,9 +704,7 @@ void OscillatorWaveformDisplay::showWavetableMenu()
 
         populateMenu(menu, id);
 
-        // auto where = sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
         auto where = sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
-        // auto where = menuOverlays[0]->getBounds().getBottomLeft();
         menu.showMenuAsync(sge->optionsForPosition(where));
     }
 }
@@ -766,8 +764,6 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
             populateMenu(menu, id);
 
-            // auto where = sge->frame->getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-            // auto where = menuOverlays[0]->getBounds().getBottomLeft();
             auto where = sge->frame.get()->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
             menu.showMenuAsync(sge->optionsForPosition(where));
         }
