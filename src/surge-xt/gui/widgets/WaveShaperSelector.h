@@ -18,7 +18,9 @@ namespace Surge
 {
 namespace Widgets
 {
-struct WaveShaperSelector : public juce::Component, public WidgetBaseMixin<WaveShaperSelector>
+struct WaveShaperSelector : public juce::Component,
+                            public WidgetBaseMixin<WaveShaperSelector>,
+                            public LongHoldMixin<WaveShaperSelector>
 {
     WaveShaperSelector();
     ~WaveShaperSelector();

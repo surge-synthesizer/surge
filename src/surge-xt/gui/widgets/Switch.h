@@ -38,7 +38,7 @@ namespace Widgets
  *
  * The rough contract is:
  */
-struct Switch : public juce::Component, public WidgetBaseMixin<Switch>
+struct Switch : public juce::Component, public WidgetBaseMixin<Switch>, public LongHoldMixin<Switch>
 {
     Switch();
     ~Switch();

@@ -72,6 +72,8 @@ void Switch::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
+
     if (isMultiIntegerValued())
     {
         storage->getPatch().isDirty = true;

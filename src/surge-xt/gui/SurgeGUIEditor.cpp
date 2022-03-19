@@ -2206,16 +2206,21 @@ juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Point<int>
 juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component *c,
                                                           bool useComponentBounds)
 {
+    juce::Point<int> where;
+
     if (!c || !useComponentBounds)
     {
-        auto where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
-        return popupMenuOptions(where);
+        where = frame->getLocalPoint(nullptr, juce::Desktop::getMousePosition());
     }
     else
     {
-        auto where = c->getBounds().getBottomLeft();
-        return popupMenuOptions(where);
+        where = c->getBounds().getBottomLeft();
     }
+
+    if (Surge::GUI::isTouchMode(&(synth->storage)))
+        where = c->getBounds().getBottomLeft();
+
+    return popupMenuOptions(where);
 }
 
 void SurgeGUIEditor::showZoomMenu(const juce::Point<int> &where,

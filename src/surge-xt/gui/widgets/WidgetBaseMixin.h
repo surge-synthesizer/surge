@@ -238,13 +238,13 @@ template <typename T> struct LongHoldMixin
     }
     virtual void mouseMoveLongHold(const juce::MouseEvent &e)
     {
-        if (e.position.getDistanceFrom(startingHoldPosition) > 4)
+        if (e.position.getDistanceFrom(startingHoldPosition) > 8)
             if (timer && timer->isTimerRunning())
                 timer->stopTimer();
     }
     virtual void mouseDragLongHold(const juce::MouseEvent &e)
     {
-        if (e.position.getDistanceFrom(startingHoldPosition) > 1)
+        if (e.position.getDistanceFrom(startingHoldPosition) > 8)
             if (timer && timer->isTimerRunning())
                 timer->stopTimer();
     }

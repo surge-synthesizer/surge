@@ -1574,6 +1574,8 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
         }
     }
 
+    mouseDownLongHold(event);
+
     if (waveform_display.contains(event.position.toInt()) && sge)
     {
         if (isMSEG() || isFormula())
@@ -1778,6 +1780,8 @@ void LFOAndStepDisplay::enterExitWaveform(bool isInWF)
 
 void LFOAndStepDisplay::mouseMove(const juce::MouseEvent &event)
 {
+    mouseMoveLongHold(event);
+
     int nextHover = -1;
 
     for (int i = 0; i < n_lfo_types; ++i)
@@ -1885,6 +1889,8 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
     {
         return;
     }
+
+    mouseDragLongHold(event);
 
     if (dragMode != NONE && event.getDistanceFromDragStart() > 0)
     {
@@ -1997,6 +2003,8 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 
 void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     if (event.mouseWasDraggedSinceMouseDown())
     {
         if (!Surge::GUI::showCursor(storage))

@@ -29,7 +29,9 @@ namespace Surge
 {
 namespace Widgets
 {
-struct NumberField : public juce::Component, public WidgetBaseMixin<NumberField>
+struct NumberField : public juce::Component,
+                     public WidgetBaseMixin<NumberField>,
+                     public LongHoldMixin<NumberField>
 {
     NumberField() : juce::Component(), WidgetBaseMixin<NumberField>() {}
 

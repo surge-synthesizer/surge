@@ -187,6 +187,8 @@ void MenuForDiscreteParams::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
+
     if (glyphMode && glyphPosition.contains(event.position))
     {
         mouseDownOrigin = event.position.toInt();
@@ -203,17 +205,21 @@ void MenuForDiscreteParams::mouseDown(const juce::MouseEvent &event)
     notifyControlModifierClicked(event.mods, true);
 }
 
-void MenuForDiscreteParams::mouseDrag(const juce::MouseEvent &e)
+void MenuForDiscreteParams::mouseDrag(const juce::MouseEvent &event)
 {
-    if (supressMainFrameMouseEvent(e))
+    if (supressMainFrameMouseEvent(event))
     {
         return;
     }
 
-    auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
+    mouseDragLongHold(event);
+
+    auto d = event.getDistanceFromDragStartX() - event.getDistanceFromDragStartY();
+
     if (fabs(d - lastDragDistance) > 10)
     {
         int inc = 1;
+
         if (d - lastDragDistance < 0)
         {
             inc = -1;
@@ -226,16 +232,18 @@ void MenuForDiscreteParams::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
-void MenuForDiscreteParams::mouseDoubleClick(const juce::MouseEvent &e)
+void MenuForDiscreteParams::mouseDoubleClick(const juce::MouseEvent &event)
 {
-    if (glyphMode && glyphPosition.contains(e.position))
+    if (glyphMode && glyphPosition.contains(event.position))
     {
-        notifyControlModifierDoubleClicked(e.mods.allKeyboardModifiers);
+        notifyControlModifierDoubleClicked(event.mods.allKeyboardModifiers);
     }
 }
 
-void MenuForDiscreteParams::mouseUp(const juce::MouseEvent &e)
+void MenuForDiscreteParams::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     if (isDraggingGlyph && !Surge::GUI::showCursor(storage))
     {
         juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
@@ -246,7 +254,7 @@ void MenuForDiscreteParams::mouseUp(const juce::MouseEvent &e)
     isDraggingGlyph = false;
 }
 
-void MenuForDiscreteParams::mouseWheelMove(const juce::MouseEvent &e,
+void MenuForDiscreteParams::mouseWheelMove(const juce::MouseEvent &event,
                                            const juce::MouseWheelDetails &w)
 {
     int dir = wheelAccumulationHelper.accumulate(w, false, true);

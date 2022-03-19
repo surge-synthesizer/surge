@@ -251,6 +251,8 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
+
     hasDragged = false;
     currentClicked = -1;
 
@@ -302,6 +304,7 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
     if (hasDragged)
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
+
         for (int i = 0; i < n_fx_slots; ++i)
         {
             auto r = getEffectRectangle(i);
@@ -334,6 +337,8 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
         hasDragged = false;
         repaint();
     }
+
+    mouseUpLongHold(event);
 }
 
 void EffectChooser::mouseDrag(const juce::MouseEvent &event)
@@ -342,6 +347,8 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
     {
         return;
     }
+
+    mouseDragLongHold(event);
 
     if (event.getDistanceFromDragStart() > 3 && event.mods.isLeftButtonDown())
     {
@@ -361,6 +368,8 @@ void EffectChooser::mouseDrag(const juce::MouseEvent &event)
 
 void EffectChooser::mouseMove(const juce::MouseEvent &event)
 {
+    mouseMoveLongHold(event);
+
     int nextHover = -1;
     int nextSceneHover = -1;
 

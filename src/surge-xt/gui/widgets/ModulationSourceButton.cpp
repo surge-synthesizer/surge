@@ -342,6 +342,8 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
     everDragged = false;
     mouseDownLocation = event.position;
 
+    mouseDownLongHold(event);
+
     if (needsHamburger() && hamburgerHome.contains(event.position.toInt()))
     {
         auto menu = juce::PopupMenu();
@@ -523,6 +525,8 @@ void ModulationSourceButton::onSkinChanged()
 
 void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
     transientArmed = false;
@@ -581,7 +585,11 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     auto distance = event.position.getX() - mouseDownLocation.getX();
 
     if (mouseMode == PREDRAG_VALUE && distance == 0)
+    {
         return;
+    }
+
+    mouseDragLongHold(event);
 
     if (mouseMode == PREDRAG_VALUE)
     {

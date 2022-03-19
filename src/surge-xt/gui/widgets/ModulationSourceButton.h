@@ -31,7 +31,8 @@ namespace Surge
 namespace Widgets
 {
 struct ModulationSourceButton : public juce::Component,
-                                public WidgetBaseMixin<ModulationSourceButton>
+                                public WidgetBaseMixin<ModulationSourceButton>,
+                                public LongHoldMixin<ModulationSourceButton>
 {
     ModulationSourceButton();
 

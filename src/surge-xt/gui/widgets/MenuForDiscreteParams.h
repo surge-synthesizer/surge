@@ -39,6 +39,7 @@ namespace Widgets
  */
 struct MenuForDiscreteParams : public juce::Component,
                                public WidgetBaseMixin<MenuForDiscreteParams>,
+                               public LongHoldMixin<MenuForDiscreteParams>,
                                public ModulatableControlInterface
 
 {

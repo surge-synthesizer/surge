@@ -135,6 +135,8 @@ void NumberField::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
+
     mouseMode = DRAG;
 
     if (!Surge::GUI::showCursor(storage))
@@ -153,6 +155,8 @@ void NumberField::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDragLongHold(event);
+
     float d = -event.getDistanceFromDragStartY();
     float dD = d - lastDistanceChecked;
     float thresh = 10;
@@ -169,6 +173,8 @@ void NumberField::mouseDrag(const juce::MouseEvent &event)
 }
 void NumberField::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     if (mouseMode == DRAG)
     {
         if (!Surge::GUI::showCursor(storage))
@@ -180,6 +186,7 @@ void NumberField::mouseUp(const juce::MouseEvent &event)
     }
     mouseMode = NONE;
 }
+
 void NumberField::mouseDoubleClick(const juce::MouseEvent &event)
 {
     if (supressMainFrameMouseEvent(event))
@@ -190,6 +197,7 @@ void NumberField::mouseDoubleClick(const juce::MouseEvent &event)
     notifyControlModifierDoubleClicked(event.mods);
     repaint();
 }
+
 void NumberField::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {
