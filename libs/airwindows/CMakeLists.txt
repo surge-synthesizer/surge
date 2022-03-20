@@ -28,6 +28,9 @@ add_library(${PROJECT_NAME}
   src/ButterComp2.cpp
   src/ButterComp2.h
   src/ButterComp2Proc.cpp
+  src/Cabs.cpp
+  src/Cabs.h
+  src/CabsProc.cpp
   src/Capacitor.cpp
   src/Capacitor.h
   src/CapacitorProc.cpp
