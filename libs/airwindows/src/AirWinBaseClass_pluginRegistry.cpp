@@ -189,7 +189,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
 
-    reg.emplace_back(create<Cabs::Cabs>, id++, 288, gnSaturation, "Cabs");
+    reg.emplace_back(create<Cabs::Cabs>, id++, 410, gnFilter, "Cabs");
 
     return reg;
 }
