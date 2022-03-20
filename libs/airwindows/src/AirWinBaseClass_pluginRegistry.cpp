@@ -7,6 +7,7 @@
 #include "BrightAmbience2.h"
 #include "BussColors4.h"
 #include "ButterComp2.h"
+#include "Cabs.h"
 #include "Capacitor.h"
 #include "Chamber.h"
 #include "Cojones.h"
@@ -187,6 +188,8 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<MackEQ::MackEQ>, id++, 430, gnFilter, "MackEQ");
 
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
+
+    reg.emplace_back(create<Cabs::Cabs>, id++, 288, gnSaturation, "Cabs");
 
     return reg;
 }

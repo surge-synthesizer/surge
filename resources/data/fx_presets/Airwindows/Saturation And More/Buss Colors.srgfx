@@ -7,6 +7,10 @@
 </single-fx>
 
 <single-fx streaming_version="15">
+    <snapshot type="14" name="Cabs" p0="39" p1="1" p2="0.50" p3="0.50" p4="0.50" p5="0.50" p6="0.50" />
+</single-fx>
+
+<single-fx streaming_version="15">
     <snapshot type="14" name="Density" p0="29" p1="0.2" p2="0" p3="1" p4="1" />
 </single-fx>
 
