@@ -31,7 +31,9 @@ namespace Surge
 {
 namespace Widgets
 {
-struct EffectChooser : public juce::Component, public WidgetBaseMixin<EffectChooser>
+struct EffectChooser : public juce::Component,
+                       public WidgetBaseMixin<EffectChooser>,
+                       public LongHoldMixin<EffectChooser>
 {
     EffectChooser();
     ~EffectChooser();

@@ -149,6 +149,7 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
         juce::Timer::callAfterDelay(250, [this]() { this->setCursorToArrow(); });
     }
 
+    mouseDownLongHold(event);
     setValue(coordinateToValue(event.x, event.y));
     notifyValueChanged();
 
@@ -161,6 +162,8 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 void MultiSwitch::mouseMove(const juce::MouseEvent &event)
 {
     int ohs = hoverSelection;
+
+    mouseMoveLongHold(event);
 
     hoverSelection = coordinateToSelection(event.x, event.y);
 
@@ -199,6 +202,8 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDragLongHold(event);
+
     if (draggable)
     {
         if (!everDragged)
@@ -227,6 +232,7 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
 
 void MultiSwitch::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
     isMouseDown = false;
     setMouseCursor(juce::MouseCursor::NormalCursor);
 

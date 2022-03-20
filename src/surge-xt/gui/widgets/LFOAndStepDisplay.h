@@ -25,7 +25,9 @@ namespace Surge
 {
 namespace Widgets
 {
-struct LFOAndStepDisplay : public juce::Component, public WidgetBaseMixin<LFOAndStepDisplay>
+struct LFOAndStepDisplay : public juce::Component,
+                           public WidgetBaseMixin<LFOAndStepDisplay>,
+                           public LongHoldMixin<LFOAndStepDisplay>
 {
     LFOAndStepDisplay(SurgeGUIEditor *e);
     void paint(juce::Graphics &g) override;

@@ -35,6 +35,7 @@ namespace Widgets
  */
 struct MultiSwitch : public juce::Component,
                      public WidgetBaseMixin<MultiSwitch>,
+                     public LongHoldMixin<MultiSwitch>,
                      public Surge::Widgets::HasAccessibleSubComponentForFocus
 {
     MultiSwitch();

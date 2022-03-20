@@ -176,12 +176,15 @@ void WaveShaperSelector::mouseDoubleClick(const juce::MouseEvent &event)
         notifyControlModifierDoubleClicked(event.mods.allKeyboardModifiers);
     }
 }
+
 void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
 {
     if (forwardedMainFrameMouseDowns(event))
     {
         return;
     }
+
+    mouseDownLongHold(event);
 
     lastDragDistance = 0;
     everDragged = false;
@@ -199,14 +202,17 @@ void WaveShaperSelector::mouseDown(const juce::MouseEvent &event)
     }
 }
 
-void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
+void WaveShaperSelector::mouseDrag(const juce::MouseEvent &event)
 {
-    if (supressMainFrameMouseEvent(e))
+    if (supressMainFrameMouseEvent(event))
     {
         return;
     }
 
-    auto d = e.getDistanceFromDragStartX() - e.getDistanceFromDragStartY();
+    mouseDragLongHold(event);
+
+    auto d = event.getDistanceFromDragStartX() - event.getDistanceFromDragStartY();
+
     if (fabs(d - lastDragDistance) > 0)
     {
         if (!everMoved)
@@ -217,8 +223,10 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
                     true);
             }
         }
+
         everMoved = true;
     }
+
     if (fabs(d - lastDragDistance) > 10)
     {
         if (!everDragged)
@@ -226,7 +234,9 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
             notifyBeginEdit();
             everDragged = true;
         }
+
         int inc = 1;
+
         if (d - lastDragDistance < 0)
         {
             inc = -1;
@@ -239,29 +249,37 @@ void WaveShaperSelector::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
-void WaveShaperSelector::mouseUp(const juce::MouseEvent &e)
+void WaveShaperSelector::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     if (everMoved)
     {
         if (!Surge::GUI::showCursor(storage))
         {
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
-            auto p = e.mouseDownPosition;
+
+            auto p = event.mouseDownPosition;
             p = localPointToGlobal(p);
+
             juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
         }
     }
+
     if (everDragged)
     {
         notifyEndEdit();
     }
+
     everDragged = false;
     everMoved = false;
 }
 
-void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &w)
+void WaveShaperSelector::mouseWheelMove(const juce::MouseEvent &event,
+                                        const juce::MouseWheelDetails &w)
 {
     int dir = wheelAccumulationHelper.accumulate(w, false, true);
+
     if (dir != 0)
     {
         notifyBeginEdit();
