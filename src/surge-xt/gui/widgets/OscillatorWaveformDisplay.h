@@ -33,7 +33,12 @@ namespace Surge
 {
 namespace Widgets
 {
-struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
+struct OscillatorWaveformDisplay;
+template <> void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold();
+
+struct OscillatorWaveformDisplay : public juce::Component,
+                                   public Surge::GUI::SkinConsumingComponent,
+                                   public Surge::Widgets::LongHoldMixin<OscillatorWaveformDisplay>
 {
     OscillatorWaveformDisplay();
     ~OscillatorWaveformDisplay();
@@ -105,6 +110,12 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };
+
+template <> inline void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold()
+{
+    std::cout << "onLongHold for OscillatorWaveformDisplay" << std::endl;
+}
+
 } // namespace Widgets
 } // namespace Surge
 
