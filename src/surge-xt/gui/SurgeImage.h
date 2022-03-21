@@ -17,11 +17,14 @@ class SurgeImage
   public:
     SurgeImage(int resourceId);
     SurgeImage(const std::string &fname);
+    SurgeImage(std::unique_ptr<juce::Drawable> &in);
     ~SurgeImage();
 
     void addPNGForZoomLevel(const std::string &fname, int zoomLevel);
     void resolvePNGForZoomLevel(int zoomLevel);
     void setPhysicalZoomFactor(int zoomFactor);
+
+    static SurgeImage *createFromBinaryWithPrefix(const std::string &prefix, int id);
 
     int resourceID = -1;
     std::string fname;

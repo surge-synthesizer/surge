@@ -3667,15 +3667,19 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
                 if (entry.rootType == Surge::GUI::FACTORY)
                 {
-                    dname += "factory";
+                    dname += "FACTORY";
                 }
                 else if (entry.rootType == Surge::GUI::USER)
                 {
-                    dname += "user";
+                    dname += "USER";
+                }
+                else if (entry.rootType == Surge::GUI::MEMORY)
+                {
+                    dname += "INTERNAL";
                 }
                 else
                 {
-                    dname += "other";
+                    dname += "UNKNOWN";
                 }
 
                 dname += PATH_SEPARATOR + entry.name + ")";

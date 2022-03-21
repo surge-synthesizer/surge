@@ -300,8 +300,18 @@ void ModulatableSlider::onSkinChanged()
             skin->hoverImageIdForResource(IDB_SLIDER_HORIZ_HANDLE, GUI::Skin::HOVER));
         pTempoSyncHandle =
             associatedBitmapStore->getImageByStringID("TEMPOSYNC_HORIZONTAL_OVERLAY");
+        if (!pTempoSyncHandle && skin->useInMemorySkin)
+        {
+            pTempoSyncHandle = associatedBitmapStore->getImageByStringID(
+                skin->hoverImageIdForResource(IDB_SLIDER_HORIZ_HANDLE, GUI::Skin::TEMPOSYNC));
+        }
         pTempoSyncHoverHandle =
             associatedBitmapStore->getImageByStringID("TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY");
+        if (!pTempoSyncHoverHandle && skin->useInMemorySkin)
+        {
+            pTempoSyncHoverHandle = associatedBitmapStore->getImageByStringID(
+                skin->hoverImageIdForResource(IDB_SLIDER_HORIZ_HANDLE, GUI::Skin::HOVER_TEMPOSYNC));
+        }
     }
     else
     {
@@ -311,8 +321,19 @@ void ModulatableSlider::onSkinChanged()
             skin->hoverImageIdForResource(IDB_SLIDER_VERT_HANDLE, GUI::Skin::HOVER));
 
         pTempoSyncHandle = associatedBitmapStore->getImageByStringID("TEMPOSYNC_VERTICAL_OVERLAY");
+        if (!pTempoSyncHandle && skin->useInMemorySkin)
+        {
+            pTempoSyncHandle = associatedBitmapStore->getImageByStringID(
+                skin->hoverImageIdForResource(IDB_SLIDER_VERT_HANDLE, GUI::Skin::TEMPOSYNC));
+        }
+
         pTempoSyncHoverHandle =
             associatedBitmapStore->getImageByStringID("TEMPOSYNC_VERTICAL_HOVER_OVERLAY");
+        if (!pTempoSyncHoverHandle && skin->useInMemorySkin)
+        {
+            pTempoSyncHoverHandle = associatedBitmapStore->getImageByStringID(
+                skin->hoverImageIdForResource(IDB_SLIDER_VERT_HANDLE, GUI::Skin::HOVER_TEMPOSYNC));
+        }
     }
 
     if (skinControl.get())

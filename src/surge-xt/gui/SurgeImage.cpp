@@ -16,12 +16,15 @@
 #include "SurgeImage.h"
 #include "SurgeXTBinary.h"
 
+#include "fmt/core.h"
+
 SurgeImage::SurgeImage(int rid)
 {
     resourceID = rid;
-    std::string fn = "bmp00" + std::to_string(rid) + "_svg";
+    std::string fn = fmt::format("bmp{:05d}_svg", rid);
     int bds;
     auto bd = SurgeXTBinary::getNamedResource(fn.c_str(), bds);
+
     if (bd)
     {
         drawable = juce::Drawable::createFromImageData(bd, bds);
@@ -36,16 +39,38 @@ SurgeImage::SurgeImage(const std::string &fname)
     currentDrawable = drawable.get();
 }
 
+SurgeImage::SurgeImage(std::unique_ptr<juce::Drawable> &in)
+    : drawable(std::move(in)), currentDrawable(drawable.get())
+{
+}
+
 SurgeImage::~SurgeImage() = default;
+
+SurgeImage *SurgeImage::createFromBinaryWithPrefix(const std::string &prefix, int id)
+{
+    std::string fn = fmt::format("{:s}{:05d}_svg", prefix, id);
+    int bds;
+    auto bd = SurgeXTBinary::getNamedResource(fn.c_str(), bds);
+
+    if (bd)
+    {
+        auto q = juce::Drawable::createFromImageData(bd, bds);
+        return new SurgeImage(q);
+    }
+
+    return nullptr;
+}
 
 void SurgeImage::setPhysicalZoomFactor(int zoomFactor)
 {
     resolvePNGForZoomLevel(zoomFactor);
     currentPhysicalZoomFactor = zoomFactor;
+
     if (pngZooms.size() > 0)
     {
         currentDrawable = drawable.get();
         adjustForScale = false;
+
         for (auto &p : pngZooms)
         {
             if (p.first <= currentPhysicalZoomFactor && p.second.second)
@@ -70,9 +95,13 @@ void SurgeImage::addPNGForZoomLevel(const std::string &fname, int zoomLevel)
 void SurgeImage::resolvePNGForZoomLevel(int zoomLevel)
 {
     if (pngZooms.find(zoomLevel) == pngZooms.end())
+    {
         return;
+    }
     if (pngZooms[zoomLevel].second)
+    {
         return;
+    }
 
     pngZooms[zoomLevel].second =
         std::move(std::make_unique<SurgeImage>(pngZooms[zoomLevel].first.c_str()));
@@ -83,9 +112,11 @@ juce::Drawable *SurgeImage::internalDrawableResolved() const { return currentDra
 juce::AffineTransform SurgeImage::scaleAdjustmentTransform() const
 {
     auto res = juce::AffineTransform();
+
     if (adjustForScale)
     {
         res = res.scaled(100.0 / resolvedZoomFactor);
     }
+
     return res;
 }

@@ -1,6 +1,8 @@
 #include "SurgeImageStore.h"
-
 #include "SurgeImage.h"
+
+#include "fmt/core.h"
+
 #include <iostream>
 #include <cassert>
 
@@ -124,6 +126,19 @@ void SurgeImageStore::addEntry(int id)
     SurgeImage *bitmap = new SurgeImage(id);
 
     bitmap_registry[id] = bitmap;
+
+    auto checkAndAdd = [this, id](const std::string &pfx) {
+        if (auto *h = SurgeImage::createFromBinaryWithPrefix(pfx, id))
+        {
+            std::string name = fmt::format("DEFAULT/{}{:05d}.svg", pfx, id);
+            bitmap_stringid_registry[name] = h;
+        }
+    };
+
+    checkAndAdd("hover");
+    checkAndAdd("hoverOn");
+    checkAndAdd("bmpTS");
+    checkAndAdd("hoverTS");
 }
 
 SurgeImage *SurgeImageStore::getImage(int id) { return bitmap_registry.at(id); }

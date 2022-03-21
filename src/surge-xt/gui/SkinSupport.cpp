@@ -145,12 +145,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
             if (name.length() >= ending.length() &&
                 0 == name.compare(name.length() - ending.length(), ending.length(), ending))
             {
-#if WINDOWS
-                char sep = '\\';
-#else
-                char sep = '/';
-#endif
-                auto sp = name.rfind(sep);
+                auto sp = name.rfind(PATH_SEPARATOR);
+
                 if (sp == std::string::npos)
                 {
                 }
@@ -161,7 +157,7 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
                     Entry e;
                     e.rootType = rt;
                     e.root = path;
-                    e.name = lo + sep;
+                    e.name = lo + PATH_SEPARATOR;
                     if (e.name.find("default.surge-skin") != std::string::npos && rt == FACTORY &&
                         defaultSkinEntry.name == "")
                     {
@@ -177,8 +173,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
     {
         auto memSkin = Entry();
         memSkin.rootType = MEMORY;
-        memSkin.name = "In Memory Default";
-        memSkin.displayName = "In Memory Default";
+        memSkin.name = "Default";
+        memSkin.displayName = "Default";
         memSkin.category = "";
         memSkin.root = "";
         availableSkins.push_back(memSkin);
@@ -196,8 +192,15 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
 
         if (!doc.LoadFile(string_to_path(x)))
         {
-            e.displayName = e.name + " (parse error)";
-            e.parseable = false;
+            if (e.rootType == MEMORY)
+            {
+                // e.displayName += " (in memory)";
+            }
+            else
+            {
+                e.displayName = e.name + " (parse error)";
+                e.parseable = false;
+            }
             continue;
         }
         e.parseable = true;
@@ -1203,6 +1206,12 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
             case HOVER_OVER_ON:
                 sid << defaultImageIDPrefix << "hoverOn" << ftr;
                 break;
+            case TEMPOSYNC:
+                sid << defaultImageIDPrefix << "bmpTS" << ftr;
+                break;
+            case HOVER_TEMPOSYNC:
+                sid << defaultImageIDPrefix << "hoverTS" << ftr;
+                break;
             }
             auto bmp = bitmapStore->getImageByStringID(sid.str());
             if (bmp)
@@ -1219,6 +1228,13 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
             break;
         case HOVER_OVER_ON:
             sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0')
+                << b->resourceID << ".svg";
+            break;
+        case TEMPOSYNC:
+            sid << defaultImageIDPrefix << "bmpTS" << std::setw(5) << std::setfill('0')
+                << b->resourceID << ".svg";
+        case HOVER_TEMPOSYNC:
+            sid << defaultImageIDPrefix << "hoverTS" << std::setw(5) << std::setfill('0')
                 << b->resourceID << ".svg";
             break;
         }
@@ -1241,6 +1257,14 @@ std::string Surge::GUI::Skin::hoverImageIdForResource(const int resource, HoverT
         break;
     case HOVER_OVER_ON:
         sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    case TEMPOSYNC:
+        sid << defaultImageIDPrefix << "bmpTS" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    case HOVER_TEMPOSYNC:
+        sid << defaultImageIDPrefix << "hoverTS" << std::setw(5) << std::setfill('0') << resource
             << ".svg";
         break;
     }
