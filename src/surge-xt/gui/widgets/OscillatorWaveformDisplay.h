@@ -78,6 +78,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     juce::Rectangle<float> leftJog, rightJog, waveTableName;
 
     void mouseDown(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
@@ -113,6 +114,11 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
 template <> inline void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold()
 {
+    auto contextMenu = juce::PopupMenu();
+
+    asT()->createWTMenuItems(contextMenu, true, true);
+
+    contextMenu.showMenuAsync(asT()->sge->popupMenuOptions());
     std::cout << "onLongHold for OscillatorWaveformDisplay" << std::endl;
 }
 

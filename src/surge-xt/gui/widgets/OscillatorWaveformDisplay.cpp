@@ -729,6 +729,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
         return;
     }
 
+    mouseDownLongHold(event);
+
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
 
     if (usesWT)
@@ -800,6 +802,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
 void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
 {
+    mouseMoveLongHold(event);
+
     if (supportsCustomEditor())
     {
         auto q = customEditorBox.contains(event.position);
@@ -848,6 +852,8 @@ void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
         isWtNameHovered = false;
     }
 }
+
+void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event) { mouseUpLongHold(event); }
 
 std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOpen) const
 {
@@ -1183,6 +1189,11 @@ struct WaveTable3DEditor : public juce::Component,
 
 template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold()
 {
+    auto contextMenu = juce::PopupMenu();
+
+    asT()->parent->createWTMenuItems(contextMenu, true, true);
+
+    contextMenu.showMenuAsync(asT()->sge->popupMenuOptions());
     std::cout << "onLongHold for WaveTable3DEditor" << std::endl;
 }
 
@@ -1583,7 +1594,7 @@ struct AliasAdditiveEditor : public juce::Component,
 
 template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold()
 {
-    // asT->createOptionsMenu();
+    asT()->createOptionsMenu();
     std::cout << "onLongHold for AliasAdditiveEditor" << std::endl;
 }
 
