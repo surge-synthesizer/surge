@@ -1,14 +1,10 @@
-<surge-skin name="Default" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
-  <globals>
-    <image id="TEMPOSYNC_HORIZONTAL_OVERLAY" resource="bmpTS00153.svg"/>
-    <image id="TEMPOSYNC_HORIZONTAL_HOVER_OVERLAY" resource="hoverTS00153.svg"/>
-    <image id="TEMPOSYNC_VERTICAL_OVERLAY" resource="bmpTS00157.svg"/>
-    <image id="TEMPOSYNC_VERTICAL_HOVER_OVERLAY" resource="hoverTS00157.svg"/>
-  </globals>
+<surge-skin name="Surge Classic" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
+    <globals>
+    </globals>
 
-  <component-classes>
-  </component-classes>
+    <component-classes>
+    </component-classes>
 
-  <controls>
-  </controls>
+    <controls>
+    </controls>
 </surge-skin>

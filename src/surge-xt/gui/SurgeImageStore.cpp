@@ -127,17 +127,18 @@ void SurgeImageStore::addEntry(int id)
 
     bitmap_registry[id] = bitmap;
 
-    if (auto *h = SurgeImage::createFromPrefix("hover", id))
-    {
-        std::string name = fmt::format("hover{:05d}", id);
-        bitmap_file_registry[name] = h;
-    }
+    auto checkAndAdd = [this, id](const std::string &pfx) {
+        if (auto *h = SurgeImage::createFromBinaryWithPrefix(pfx, id))
+        {
+            std::string name = fmt::format("DEFAULT/{}{:05d}.svg", pfx, id);
+            bitmap_stringid_registry[name] = h;
+        }
+    };
 
-    if (auto *h = SurgeImage::createFromPrefix("hoverOn", id))
-    {
-        std::string name = fmt::format("hoverOn{:05d}", id);
-        bitmap_file_registry[name] = h;
-    }
+    checkAndAdd("hover");
+    checkAndAdd("hoverOn");
+    checkAndAdd("bmpTS");
+    checkAndAdd("hoverTS");
 }
 
 SurgeImage *SurgeImageStore::getImage(int id) { return bitmap_registry.at(id); }

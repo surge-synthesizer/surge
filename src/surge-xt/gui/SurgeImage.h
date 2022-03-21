@@ -24,7 +24,7 @@ class SurgeImage
     void resolvePNGForZoomLevel(int zoomLevel);
     void setPhysicalZoomFactor(int zoomFactor);
 
-    static SurgeImage *createFromPrefix(const std::string &prefix, int id);
+    static SurgeImage *createFromBinaryWithPrefix(const std::string &prefix, int id);
 
     int resourceID = -1;
     std::string fname;

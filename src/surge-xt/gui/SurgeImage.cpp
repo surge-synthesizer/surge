@@ -46,7 +46,7 @@ SurgeImage::SurgeImage(std::unique_ptr<juce::Drawable> &in)
 
 SurgeImage::~SurgeImage() = default;
 
-SurgeImage *SurgeImage::createFromPrefix(const std::string &prefix, int id)
+SurgeImage *SurgeImage::createFromBinaryWithPrefix(const std::string &prefix, int id)
 {
     std::string fn = fmt::format("{:s}{:05d}_svg", prefix, id);
     int bds;

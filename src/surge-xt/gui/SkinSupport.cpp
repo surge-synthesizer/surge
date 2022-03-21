@@ -192,8 +192,15 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
 
         if (!doc.LoadFile(string_to_path(x)))
         {
-            e.displayName = e.name + " (parse error)";
-            e.parseable = false;
+            if (e.rootType == MEMORY)
+            {
+                // e.displayName += " (in memory)";
+            }
+            else
+            {
+                e.displayName = e.name + " (parse error)";
+                e.parseable = false;
+            }
             continue;
         }
         e.parseable = true;
@@ -1199,6 +1206,12 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
             case HOVER_OVER_ON:
                 sid << defaultImageIDPrefix << "hoverOn" << ftr;
                 break;
+            case TEMPOSYNC:
+                sid << defaultImageIDPrefix << "bmpTS" << ftr;
+                break;
+            case HOVER_TEMPOSYNC:
+                sid << defaultImageIDPrefix << "hoverTS" << ftr;
+                break;
             }
             auto bmp = bitmapStore->getImageByStringID(sid.str());
             if (bmp)
@@ -1215,6 +1228,13 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
             break;
         case HOVER_OVER_ON:
             sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0')
+                << b->resourceID << ".svg";
+            break;
+        case TEMPOSYNC:
+            sid << defaultImageIDPrefix << "bmpTS" << std::setw(5) << std::setfill('0')
+                << b->resourceID << ".svg";
+        case HOVER_TEMPOSYNC:
+            sid << defaultImageIDPrefix << "hoverTS" << std::setw(5) << std::setfill('0')
                 << b->resourceID << ".svg";
             break;
         }
@@ -1237,6 +1257,14 @@ std::string Surge::GUI::Skin::hoverImageIdForResource(const int resource, HoverT
         break;
     case HOVER_OVER_ON:
         sid << defaultImageIDPrefix << "hoverOn" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    case TEMPOSYNC:
+        sid << defaultImageIDPrefix << "bmpTS" << std::setw(5) << std::setfill('0') << resource
+            << ".svg";
+        break;
+    case HOVER_TEMPOSYNC:
+        sid << defaultImageIDPrefix << "hoverTS" << std::setw(5) << std::setfill('0') << resource
             << ".svg";
         break;
     }

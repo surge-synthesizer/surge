@@ -310,6 +310,8 @@ class Skin
     {
         HOVER,
         HOVER_OVER_ON,
+        TEMPOSYNC,
+        HOVER_TEMPOSYNC
     } HoverType;
 
     std::string hoverImageIdForResource(const int resource, HoverType t);
