@@ -23,6 +23,7 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeJUCEHelpers.h"
 #include "AccessibleHelpers.h"
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -410,7 +411,7 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             auto ccid = (int)getCurrentModSource() - ms_ctrl1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            // See #5774 for wy this is commented out
+            // See #5774 for why this is commented out
             // sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
 
             return;
@@ -445,7 +446,7 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
             int lfo_id = getCurrentModSource() - ms_lfo1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            // See #5774 for wy this is commented out
+            // See #5774 for why this is commented out
             // sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
 
             return;
@@ -734,6 +735,25 @@ void ModulationOverviewLaunchButton::buttonClicked(Button *button)
 {
     editor->toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
     repaint();
+}
+
+void ModulationOverviewLaunchButton::mouseDown(const juce::MouseEvent &event)
+{
+    if (event.mods.isPopupMenu())
+    {
+        juce::PopupMenu contextMenu;
+
+        auto msurl = editor->helpURLForSpecial("mod-list");
+        auto hurl = editor->fullyResolvedHelpURL(msurl);
+
+        editor->addHelpHeaderTo("Modulation List", hurl, contextMenu);
+
+        contextMenu.showMenuAsync(editor->popupMenuOptions(this, false));
+    }
+    else
+    {
+        juce::Button::mouseDown(event);
+    }
 }
 
 void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
