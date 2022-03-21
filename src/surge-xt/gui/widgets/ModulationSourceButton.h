@@ -228,6 +228,7 @@ struct ModulationSourceButton : public juce::Component,
 struct ModulationOverviewLaunchButton : public juce::Button,
                                         juce::Button::Listener,
                                         Surge::GUI::SkinConsumingComponent
+
 {
     ModulationOverviewLaunchButton(SurgeGUIEditor *ed)
         : juce::Button("Open Modulation Overview"), editor(ed)
@@ -239,6 +240,8 @@ struct ModulationOverviewLaunchButton : public juce::Button,
                      bool shouldDrawButtonAsDown) override;
 
     void buttonClicked(Button *button) override;
+
+    void mouseDown(const juce::MouseEvent &event) override;
 
     SurgeGUIEditor *editor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationOverviewLaunchButton);

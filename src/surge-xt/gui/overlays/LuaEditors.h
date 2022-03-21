@@ -92,6 +92,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
+    SurgeGUIEditor *editor{nullptr};
     int lfo_id, scene;
 
     void onSkinChanged() override;

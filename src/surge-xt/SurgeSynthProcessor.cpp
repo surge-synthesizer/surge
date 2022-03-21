@@ -372,7 +372,7 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
     else if (m.isProgramChange())
     {
         // apparently this is not enough to actually execute SurgeSynthesizer::programChange
-        // for whatever reason!
+        // in VST3 case
         surge->programChange(ch, m.getProgramChangeNumber());
     }
     else

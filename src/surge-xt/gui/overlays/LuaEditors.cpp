@@ -21,6 +21,7 @@
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/MenuCustomComponents.h"
 
 namespace Surge
 {
@@ -130,11 +131,13 @@ void CodeEditorContainerWithApply::codeDocumentTextInserted(const juce::String &
     applyButton->setEnabled(true);
     setApplyEnabled(true);
 }
+
 void CodeEditorContainerWithApply::codeDocumentTextDeleted(int startIndex, int endIndex)
 {
     applyButton->setEnabled(true);
     setApplyEnabled(true);
 }
+
 bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::Component *o)
 {
     if (key.getKeyCode() == juce::KeyPress::returnKey && key.getModifiers().isCommandDown())
@@ -249,6 +252,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             else
                 g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::Row));
         }
+
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
         {
@@ -295,6 +299,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     std::unique_ptr<juce::Label> dPhaseLabel;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
+
     void onSkinChanged() override { debugTableDataModel->setSkin(skin, associatedBitmapStore); }
 
     void setOpen(bool b)
@@ -337,7 +342,9 @@ struct FormulaControlArea : public juce::Component,
     };
 
     FormulaModulatorEditor *overlay{nullptr};
-    FormulaControlArea(FormulaModulatorEditor *ol) : overlay(ol)
+    SurgeGUIEditor *editor{nullptr};
+
+    FormulaControlArea(FormulaModulatorEditor *ol, SurgeGUIEditor *ed) : overlay(ol), editor(ed)
     {
         setAccessible(true);
         setTitle("Controls");
@@ -467,9 +474,40 @@ struct FormulaControlArea : public juce::Component,
         return res;
     }
 
+    int32_t controlModifierClicked(GUI::IComponentTagValue *c, const juce::ModifierKeys &mods,
+                                   bool isDoubleClickEvent) override
+    {
+        auto tag = (tags)(c->getTag());
+
+        switch (tag)
+        {
+        case tag_select_tab:
+        case tag_code_apply:
+        case tag_debugger_show:
+        case tag_debugger_init:
+        case tag_debugger_step:
+        {
+            juce::PopupMenu contextMenu;
+
+            auto msurl = editor->helpURLForSpecial("formula-editor");
+            auto hurl = editor->fullyResolvedHelpURL(msurl);
+
+            editor->addHelpHeaderTo("Formula Editor", hurl, contextMenu);
+
+            contextMenu.showMenuAsync(editor->popupMenuOptions(this, false));
+        }
+        break;
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
     void valueChanged(GUI::IComponentTagValue *c) override
     {
         auto tag = (tags)(c->getTag());
+
         switch (tag)
         {
         case tag_select_tab:
@@ -544,7 +582,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
                                                FormulaModulatorStorage *fs, int lid, int scene,
                                                Surge::GUI::Skin::ptr_t skin)
     : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), scene(scene), formulastorage(fs),
-      lfo_id(lid)
+      lfo_id(lid), editor(ed)
 {
     mainEditor->setScrollbarThickness(8);
     mainEditor->setTitle("LUA Modulator Code");
@@ -563,7 +601,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay->setDescription("LUA Prelude Code");
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
-    controlArea = std::make_unique<FormulaControlArea>(this);
+    controlArea = std::make_unique<FormulaControlArea>(this, editor);
     addAndMakeVisible(*controlArea);
     addAndMakeVisible(*mainEditor);
     addChildComponent(*preludeDisplay);
