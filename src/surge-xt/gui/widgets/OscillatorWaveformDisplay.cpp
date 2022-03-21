@@ -526,6 +526,15 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     createWTMenuItems(contextMenu);
 }
 
+void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = true)
+{
+    auto contextMenu = juce::PopupMenu();
+
+    createWTMenuItems(contextMenu, true, true);
+
+    contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+}
+
 void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold,
                                                   bool add2D3Dswitch)
 {
@@ -716,6 +725,7 @@ void OscillatorWaveformDisplay::showWavetableMenu()
         populateMenu(menu, id);
 
         auto where = sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+
         menu.showMenuAsync(sge->popupMenuOptions(where));
     }
 }
@@ -787,12 +797,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     {
         if (event.mods.isPopupMenu())
         {
-            auto contextMenu = juce::PopupMenu();
-
-            createWTMenuItems(contextMenu, true, true);
-
-            contextMenu.showMenuAsync(sge->popupMenuOptions());
-
+            createWTMenu(false);
             return;
         }
 
@@ -1165,12 +1170,7 @@ struct WaveTable3DEditor : public juce::Component,
 
         if (event.mods.isPopupMenu())
         {
-            auto contextMenu = juce::PopupMenu();
-
-            parent->createWTMenuItems(contextMenu, true, true);
-
-            contextMenu.showMenuAsync(sge->popupMenuOptions());
-
+            parent->createWTMenu(false);
             return;
         }
 
@@ -1187,15 +1187,7 @@ struct WaveTable3DEditor : public juce::Component,
     void mouseUp(const juce::MouseEvent &event) override { mouseUpLongHold(event); }
 };
 
-template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold()
-{
-    auto contextMenu = juce::PopupMenu();
-
-    asT()->parent->createWTMenuItems(contextMenu, true, true);
-
-    contextMenu.showMenuAsync(asT()->sge->popupMenuOptions());
-    std::cout << "onLongHold for WaveTable3DEditor" << std::endl;
-}
+template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold() { asT()->parent->createWTMenu(); }
 
 struct AliasAdditiveEditor;
 template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold();
@@ -1318,7 +1310,7 @@ struct AliasAdditiveEditor : public juce::Component,
         g.drawLine(0.f, halfHeight, getWidth(), halfHeight);
     }
 
-    void createOptionsMenu()
+    void createOptionsMenu(const bool useComponentBounds = true)
     {
         auto contextMenu = juce::PopupMenu();
 
@@ -1456,7 +1448,7 @@ struct AliasAdditiveEditor : public juce::Component,
             contextMenu.addItem("Reverse", action);
         }
 
-        contextMenu.showMenuAsync(sge->popupMenuOptions());
+        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
     }
 
     void mouseDown(const juce::MouseEvent &event) override
@@ -1465,7 +1457,7 @@ struct AliasAdditiveEditor : public juce::Component,
 
         if (event.mods.isPopupMenu())
         {
-            createOptionsMenu();
+            createOptionsMenu(false);
             return;
         }
 
@@ -1592,11 +1584,7 @@ struct AliasAdditiveEditor : public juce::Component,
     }
 };
 
-template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold()
-{
-    asT()->createOptionsMenu();
-    std::cout << "onLongHold for AliasAdditiveEditor" << std::endl;
-}
+template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold() { asT()->createOptionsMenu(); }
 
 void OscillatorWaveformDisplay::showCustomEditor()
 {

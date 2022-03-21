@@ -87,6 +87,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void populateMenu(juce::PopupMenu &m, int selectedItem);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
     void showWavetableMenu();
+    void createWTMenu(const bool useComponentBounds);
     void createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold = false,
                            bool add2D3Dswitch = false);
 
@@ -114,12 +115,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
 template <> inline void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold()
 {
-    auto contextMenu = juce::PopupMenu();
-
-    asT()->createWTMenuItems(contextMenu, true, true);
-
-    contextMenu.showMenuAsync(asT()->sge->popupMenuOptions());
-    std::cout << "onLongHold for OscillatorWaveformDisplay" << std::endl;
+    asT()->createWTMenu(true);
 }
 
 } // namespace Widgets
