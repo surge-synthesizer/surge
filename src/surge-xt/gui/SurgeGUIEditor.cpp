@@ -2217,7 +2217,7 @@ juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Component 
         where = c->getBounds().getBottomLeft();
     }
 
-    if (Surge::GUI::isTouchMode(&(synth->storage)))
+    if (c && Surge::GUI::isTouchMode(&(synth->storage)))
         where = c->getBounds().getBottomLeft();
 
     return popupMenuOptions(where);

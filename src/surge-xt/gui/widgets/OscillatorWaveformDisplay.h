@@ -33,7 +33,12 @@ namespace Surge
 {
 namespace Widgets
 {
-struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
+struct OscillatorWaveformDisplay;
+template <> void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold();
+
+struct OscillatorWaveformDisplay : public juce::Component,
+                                   public Surge::GUI::SkinConsumingComponent,
+                                   public Surge::Widgets::LongHoldMixin<OscillatorWaveformDisplay>
 {
     OscillatorWaveformDisplay();
     ~OscillatorWaveformDisplay();
@@ -73,6 +78,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     juce::Rectangle<float> leftJog, rightJog, waveTableName;
 
     void mouseDown(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
@@ -81,6 +87,7 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
     void populateMenu(juce::PopupMenu &m, int selectedItem);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
     void showWavetableMenu();
+    void createWTMenu(const bool useComponentBounds);
     void createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold = false,
                            bool add2D3Dswitch = false);
 
@@ -105,6 +112,12 @@ struct OscillatorWaveformDisplay : public juce::Component, public Surge::GUI::Sk
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };
+
+template <> inline void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold()
+{
+    asT()->createWTMenu(true);
+}
+
 } // namespace Widgets
 } // namespace Surge
 

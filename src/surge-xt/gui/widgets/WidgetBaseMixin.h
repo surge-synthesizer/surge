@@ -197,18 +197,27 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
 template <typename T> struct LongHoldMixin
 {
     LongHoldMixin() {}
+
     virtual ~LongHoldMixin()
     {
         if (timer && timer->isTimerRunning())
+        {
             timer->stopTimer();
+        }
     }
+
     inline T *asT() { return static_cast<T *>(this); }
 
     static constexpr uint32_t holdDelayTimeInMS = 1000;
+    static constexpr uint32_t fingerMovementTolerancePx = 8;
+
     void onLongHoldWrapper()
     {
         if (timer)
+        {
             timer->stopTimer();
+        }
+
         onLongHold();
     }
 
@@ -225,33 +234,53 @@ template <typename T> struct LongHoldMixin
     }
 
     juce::Point<float> startingHoldPosition;
+
     virtual void mouseDownLongHold(const juce::MouseEvent &e)
     {
         if (!shouldLongHold())
+        {
             return;
+        }
 
         startingHoldPosition = e.position.toFloat();
+
         if (timer && timer->isTimerRunning())
+        {
             timer->stopTimer();
+        }
+
         timer = std::make_unique<LHCB>(this);
-        timer->startTimer(holdDelayTimeInMS); // ms
+        timer->startTimer(holdDelayTimeInMS);
     }
+
     virtual void mouseMoveLongHold(const juce::MouseEvent &e)
     {
-        if (e.position.getDistanceFrom(startingHoldPosition) > 8)
+        if (e.position.getDistanceFrom(startingHoldPosition) > fingerMovementTolerancePx)
+        {
             if (timer && timer->isTimerRunning())
+            {
                 timer->stopTimer();
+            }
+        }
     }
+
     virtual void mouseDragLongHold(const juce::MouseEvent &e)
     {
-        if (e.position.getDistanceFrom(startingHoldPosition) > 8)
+        if (e.position.getDistanceFrom(startingHoldPosition) > fingerMovementTolerancePx)
+        {
             if (timer && timer->isTimerRunning())
+            {
                 timer->stopTimer();
+            }
+        }
     }
+
     virtual void mouseUpLongHold(const juce::MouseEvent &e)
     {
         if (timer && timer->isTimerRunning())
+        {
             timer->stopTimer();
+        }
     }
 
     struct LHCB : public juce::Timer
@@ -260,6 +289,7 @@ template <typename T> struct LongHoldMixin
         LHCB(LongHoldMixin<T> *t) : that(t) {}
         void timerCallback() override { that->onLongHoldWrapper(); }
     };
+
     std::unique_ptr<juce::Timer> timer;
 };
 } // namespace Widgets

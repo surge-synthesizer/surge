@@ -526,6 +526,15 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     createWTMenuItems(contextMenu);
 }
 
+void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = true)
+{
+    auto contextMenu = juce::PopupMenu();
+
+    createWTMenuItems(contextMenu, true, true);
+
+    contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+}
+
 void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold,
                                                   bool add2D3Dswitch)
 {
@@ -716,6 +725,7 @@ void OscillatorWaveformDisplay::showWavetableMenu()
         populateMenu(menu, id);
 
         auto where = sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
+
         menu.showMenuAsync(sge->popupMenuOptions(where));
     }
 }
@@ -728,6 +738,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
         return;
     }
+
+    mouseDownLongHold(event);
 
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
 
@@ -785,12 +797,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     {
         if (event.mods.isPopupMenu())
         {
-            auto contextMenu = juce::PopupMenu();
-
-            createWTMenuItems(contextMenu, true, true);
-
-            contextMenu.showMenuAsync(sge->popupMenuOptions());
-
+            createWTMenu(false);
             return;
         }
 
@@ -800,6 +807,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
 void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
 {
+    mouseMoveLongHold(event);
+
     if (supportsCustomEditor())
     {
         auto q = customEditorBox.contains(event.position);
@@ -849,6 +858,8 @@ void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
     }
 }
 
+void OscillatorWaveformDisplay::mouseUp(const juce::MouseEvent &event) { mouseUpLongHold(event); }
+
 std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOpen) const
 {
     if (oscdata->type.val.i == ot_alias &&
@@ -888,7 +899,12 @@ bool OscillatorWaveformDisplay::supportsCustomEditor()
     return false;
 }
 
-struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
+struct WaveTable3DEditor;
+template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold();
+
+struct WaveTable3DEditor : public juce::Component,
+                           public Surge::GUI::SkinConsumingComponent,
+                           public LongHoldMixin<WaveTable3DEditor>
 {
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
@@ -1150,14 +1166,11 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
 
     void mouseDown(const juce::MouseEvent &event) override
     {
+        mouseDownLongHold(event);
+
         if (event.mods.isPopupMenu())
         {
-            auto contextMenu = juce::PopupMenu();
-
-            parent->createWTMenuItems(contextMenu, true, true);
-
-            contextMenu.showMenuAsync(sge->popupMenuOptions());
-
+            parent->createWTMenu(false);
             return;
         }
 
@@ -1170,9 +1183,18 @@ struct WaveTable3DEditor : public juce::Component, Surge::GUI::SkinConsumingComp
             }
         });
     }
+
+    void mouseUp(const juce::MouseEvent &event) override { mouseUpLongHold(event); }
 };
 
-struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingComponent
+template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold() { asT()->parent->createWTMenu(); }
+
+struct AliasAdditiveEditor;
+template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold();
+
+struct AliasAdditiveEditor : public juce::Component,
+                             public Surge::GUI::SkinConsumingComponent,
+                             public LongHoldMixin<AliasAdditiveEditor>
 {
     AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed)
         : storage(s), oscdata(osc), sge(ed)
@@ -1288,148 +1310,154 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
         g.drawLine(0.f, halfHeight, getWidth(), halfHeight);
     }
 
-    void mouseDown(const juce::MouseEvent &event) override
+    void createOptionsMenu(const bool useComponentBounds = true)
     {
-        if (event.mods.isPopupMenu())
+        auto contextMenu = juce::PopupMenu();
+
         {
-            auto contextMenu = juce::PopupMenu();
+            auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "alias-shape");
+            auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+            auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+                "Alias Additive Options", hurl);
 
-            {
-                auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "alias-shape");
-                auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
-                auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                    "Alias Additive Options", hurl);
+            tc->setSkin(skin, associatedBitmapStore);
 
-                tc->setSkin(skin, associatedBitmapStore);
-
-                contextMenu.addCustomItem(-1, std::move(tc));
-
-                contextMenu.addSeparator();
-            }
-
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
-                    }
-
-                    repaint();
-                };
-
-                contextMenu.addItem("Sine", action);
-            }
-
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
-
-                        if (qq % 4 == 2)
-                        {
-                            oscdata->extraConfig.data[qq] *= -1.f;
-                        }
-                    }
-
-                    repaint();
-                };
-
-                contextMenu.addItem("Triangle", action);
-            }
-
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
-                    }
-
-                    repaint();
-                };
-
-                contextMenu.addItem("Sawtooth", action);
-            }
-
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
-                    }
-
-                    repaint();
-                };
-
-                contextMenu.addItem("Square", action);
-            }
-
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[qq] = storage->rand_pm1();
-                    }
-
-                    repaint();
-                };
-
-                contextMenu.addItem("Random", action);
-            }
+            contextMenu.addCustomItem(-1, std::move(tc));
 
             contextMenu.addSeparator();
+        }
 
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
+                }
+
+                repaint();
+            };
+
+            contextMenu.addItem("Sine", action);
+        }
+
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+
+                    if (qq % 4 == 2)
                     {
-                        if (oscdata->extraConfig.data[qq] < 0)
-                        {
-                            oscdata->extraConfig.data[qq] *= -1;
-                        }
+                        oscdata->extraConfig.data[qq] *= -1.f;
                     }
+                }
 
-                    repaint();
-                };
+                repaint();
+            };
 
-                contextMenu.addItem("Absolute", action);
-            }
+            contextMenu.addItem("Triangle", action);
+        }
 
-            {
-                auto action = [this]() {
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
+                }
+
+                repaint();
+            };
+
+            contextMenu.addItem("Sawtooth", action);
+        }
+
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
+                }
+
+                repaint();
+            };
+
+            contextMenu.addItem("Square", action);
+        }
+
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = storage->rand_pm1();
+                }
+
+                repaint();
+            };
+
+            contextMenu.addItem("Random", action);
+        }
+
+        contextMenu.addSeparator();
+
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    if (oscdata->extraConfig.data[qq] < 0)
                     {
-                        oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
+                        oscdata->extraConfig.data[qq] *= -1;
                     }
+                }
 
-                    repaint();
-                };
+                repaint();
+            };
 
-                contextMenu.addItem("Invert", action);
-            }
+            contextMenu.addItem("Absolute", action);
+        }
 
-            {
-                auto action = [this]() {
-                    float pdata[AliasOscillator::n_additive_partials];
+        {
+            auto action = [this]() {
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
+                }
 
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        pdata[qq] = oscdata->extraConfig.data[qq];
-                    }
+                repaint();
+            };
 
-                    for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                    {
-                        oscdata->extraConfig.data[15 - qq] = pdata[qq];
-                    }
+            contextMenu.addItem("Invert", action);
+        }
 
-                    repaint();
-                };
+        {
+            auto action = [this]() {
+                float pdata[AliasOscillator::n_additive_partials];
 
-                contextMenu.addItem("Reverse", action);
-            }
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    pdata[qq] = oscdata->extraConfig.data[qq];
+                }
 
-            contextMenu.showMenuAsync(sge->popupMenuOptions());
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[15 - qq] = pdata[qq];
+                }
 
+                repaint();
+            };
+
+            contextMenu.addItem("Reverse", action);
+        }
+
+        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+    }
+
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        mouseDownLongHold(event);
+
+        if (event.mods.isPopupMenu())
+        {
+            createOptionsMenu(false);
             return;
         }
 
@@ -1455,6 +1483,8 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
             }
         }
     }
+
+    void mouseUp(const juce::MouseEvent &event) override { mouseUpLongHold(event); }
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
@@ -1487,6 +1517,8 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
         {
             return;
         }
+
+        mouseDragLongHold(event);
 
         int draggedSlider = -1;
 
@@ -1551,6 +1583,8 @@ struct AliasAdditiveEditor : public juce::Component, Surge::GUI::SkinConsumingCo
         }
     }
 };
+
+template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold() { asT()->createOptionsMenu(); }
 
 void OscillatorWaveformDisplay::showCustomEditor()
 {
