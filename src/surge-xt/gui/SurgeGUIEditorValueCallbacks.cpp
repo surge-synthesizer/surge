@@ -404,8 +404,47 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     }
 
     // In these cases just move along with success. RMB does nothing on these switches
-    if (tag == tag_mp_jogfx || tag == tag_mp_category || tag == tag_mp_patch || tag == tag_store)
+    if (tag == tag_mp_jogwaveshape || tag == tag_mp_jogfx || tag == tag_mp_category ||
+        tag == tag_mp_patch || tag == tag_store)
     {
+        juce::PopupMenu contextMenu;
+        std::string hu;
+        std::string txt;
+
+        switch (tag)
+        {
+        case tag_mp_patch:
+            hu = helpURLForSpecial("patch-navigation");
+            txt = "Patch Navigation";
+            break;
+        case tag_mp_category:
+            hu = helpURLForSpecial("patch-navigation");
+            txt = "Category Navigation";
+            break;
+        case tag_mp_jogfx:
+            hu = helpURLForSpecial("fx-presets");
+            txt = "FX Preset Navigation";
+            break;
+        case tag_mp_jogwaveshape:
+            hu = helpURLForSpecial("waveshaper");
+            txt = "Waveshaper Navigation";
+            break;
+        case tag_store:
+            hu = helpURLForSpecial("save-dialog");
+            txt = "Patch Save";
+            break;
+        default:
+            break;
+        }
+
+        auto tcomp =
+            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(txt, fullyResolvedHelpURL(hu));
+        tcomp->setSkin(currentSkin, bitmapStore);
+        contextMenu.addCustomItem(-1, std::move(tcomp));
+
+        contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
+                                  Surge::GUI::makeEndHoverCallback(control));
+
         return 1;
     }
 
@@ -553,14 +592,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     if (tag == tag_analyzewaveshape)
     {
         auto contextMenu = juce::PopupMenu();
-        auto hu = helpURLForSpecial("waveshaper-preview");
+        auto hu = helpURLForSpecial("waveshaper");
         auto lurl = hu;
 
         if (lurl != "")
             lurl = fullyResolvedHelpURL(hu);
 
-        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-            Surge::GUI::toOSCaseForMenu("Waveshaper Analysis"), lurl);
+        auto tcomp =
+            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Waveshaper Analysis", lurl);
 
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));

@@ -15,6 +15,8 @@
   <special id="tun-menu" help_url="#tuning-options"/>
   <special id="zoom-menu" help_url="#zoom"/>
   <special id="patch-browser" help_url="#patch-browser"/>
+  <special id="patch-navigation" help_url="#navigating-through-presets"/>
+  <special id="save-dialog" help_url="#the-save-dialog"/>
   <special id="wavetables" help_url="#wavetable"/>
   <special id="mseg-editor" help_url="#multi-segment-envelope-generator-mseg"/>
   <special id="formula-editor" help_url="#formula"/>
