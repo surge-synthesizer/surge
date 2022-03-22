@@ -6241,6 +6241,8 @@ void SurgeGUIEditor::setupKeymapManager()
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::leftKey});
     keyMapManager->addBinding(Surge::GUI::NEXT_CATEGORY,
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::rightKey});
+
+    keyMapManager->unstreamFromXML();
 }
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
