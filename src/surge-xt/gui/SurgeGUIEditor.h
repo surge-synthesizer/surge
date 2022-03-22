@@ -82,6 +82,9 @@ struct PatchStoreDialog;
 } // namespace Overlays
 } // namespace Surge
 
+#include "sst/plugininfra/keybindings.h"
+#include "SurgeGUIEditorKeyboardActions.h"
+
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                        public SurgeStorage::ErrorListener,
                        public juce::KeyListener,
@@ -128,6 +131,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
   public:
+    typedef sst::jucepluginfra::KeyMapManager<Surge::GUI::KeyboardActions, Surge::GUI::n_kbdActions,
+                                              juce::KeyPress>
+        keymap_t;
+    std::unique_ptr<keymap_t> keyMapManager;
+
+    void setupKeymapManager();
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
     std::string showShortcutDescription(const std::string &shortcutDesc,
                                         const std::string &shortcutDescMac);

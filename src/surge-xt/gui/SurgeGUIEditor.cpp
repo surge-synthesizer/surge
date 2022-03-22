@@ -416,6 +416,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     synth->addModulationAPIListener(this);
 
     juce::Desktop::getInstance().addFocusChangeListener(this);
+
+    setupKeymapManager();
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -6202,11 +6204,52 @@ void SurgeGUIEditor::activateFromCurrentFx()
     }
 }
 
+void SurgeGUIEditor::setupKeymapManager()
+{
+    keyMapManager =
+        std::make_unique<keymap_t>(synth->storage.userDataPath, "SurgeXT",
+                                   Surge::GUI::keyboardActionName, [](auto a, auto b) {});
+    keyMapManager->addBinding(Surge::GUI::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
+    keyMapManager->addBinding(Surge::GUI::OSC_2, {keymap_t::Modifiers::ALT, (int)'2'});
+    keyMapManager->addBinding(Surge::GUI::OSC_3, {keymap_t::Modifiers::ALT, (int)'3'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
+    keyMapManager->addBinding(Surge::GUI::SAVE_PATCH, {keymap_t::Modifiers::COMMAND, (int)'S'});
+    keyMapManager->addBinding(Surge::GUI::FIND_PATCH, {keymap_t::Modifiers::COMMAND, (int)'F'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_LFO_EDITOR, {keymap_t::Modifiers::ALT, (int)'E'});
+    keyMapManager->addBinding(Surge::GUI::FAVORITE_PATCH, {keymap_t::Modifiers::ALT, (int)'F'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_MODLIST, {keymap_t::Modifiers::ALT, (int)'M'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
+                              {keymap_t::Modifiers::ALT, (int)'D'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
+                              {keymap_t::Modifiers::ALT, (int)'K'});
+    keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
+    keyMapManager->addBinding(Surge::GUI::REFRESH_SKIN, {juce::KeyPress::F5Key});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
+
+    keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t ::Modifiers::SHIFT, '/'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t ::Modifiers::NONE, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_25, {keymap_t ::Modifiers::SHIFT, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t ::Modifiers::NONE, '-'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t ::Modifiers::SHIFT, '-'});
+
+    keyMapManager->addBinding(Surge::GUI::PREV_PATCH,
+                              {keymap_t::Modifiers::COMMAND, juce::KeyPress::leftKey});
+    keyMapManager->addBinding(Surge::GUI::NEXT_PATCH,
+                              {keymap_t::Modifiers::COMMAND, juce::KeyPress::rightKey});
+    keyMapManager->addBinding(Surge::GUI::PREV_CATEGORY,
+                              {keymap_t::Modifiers::SHIFT, juce::KeyPress::leftKey});
+    keyMapManager->addBinding(Surge::GUI::NEXT_CATEGORY,
+                              {keymap_t::Modifiers::SHIFT, juce::KeyPress::rightKey});
+}
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
     auto textChar = key.getTextCharacter();
     auto keyCode = key.getKeyCode();
 
+    /*
+     * We treat escape and tab separately outside the key manager
+     */
     if (textChar == juce::KeyPress::tabKey)
     {
         auto tk = Surge::Storage::getUserDefaultValue(
@@ -6251,344 +6294,155 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     bool triedKey = Surge::Widgets::isAccessibleKey(key);
     bool shortcutsUsed = getUseKeyboardShortcuts();
 
-    // zoom actions
-    if (key.getModifiers().isShiftDown() && textChar == '/')
+    auto mapMatch = keyMapManager->matches(key);
+    if (mapMatch.has_value())
     {
+        triedKey = true;
         if (shortcutsUsed)
         {
-            auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                           Surge::Storage::DefaultZoom, 0);
+            auto action = *mapMatch;
 
-            resizeWindow(dzf);
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    int jog = 0;
-
-    if (textChar == '+')
-    {
-        jog = key.getModifiers().isShiftDown() ? 25 : 10;
-    }
-
-    if (textChar == '-')
-    {
-        jog = key.getModifiers().isShiftDown() ? -25 : -10;
-    }
-
-    if (jog != 0)
-    {
-        if (shortcutsUsed)
-        {
-            resizeWindow(getZoomFactor() + jog);
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // prev-next category
-    if (key.getModifiers().isShiftDown() &&
-        (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
-    {
-        if (shortcutsUsed)
-        {
-            std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
-
-            return promptForOKCancelWithDontAskAgain(
-                "Confirm Category Change",
-                fmt::format("You have used {0}+left or {0}+right to select another category,\n"
-                            "which will discard any changes made so far.\n\n"
-                            "Do you want to proceed?",
-                            shiftmac),
-                Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
-                    closeOverlay(SAVE_PATCH);
-
-                    loadPatchWithDirtyCheck(keyCode == juce::KeyPress::rightKey, true);
-                });
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // prev-next patch
-    if (key.getModifiers().isCommandDown() &&
-        (keyCode == juce::KeyPress::leftKey || keyCode == juce::KeyPress::rightKey))
-    {
-        if (shortcutsUsed)
-        {
-            std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
-
-            return promptForOKCancelWithDontAskAgain(
-                "Confirm Patch Change",
-                fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
-                            "which will discard any changes made so far.\n\n"
-                            "Do you want to proceed?",
-                            ctrlcmd),
-                Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, keyCode]() {
-                    closeOverlay(SAVE_PATCH);
-
-                    auto insideCategory = Surge::Storage::getUserDefaultValue(
-                        &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
-
-                    loadPatchWithDirtyCheck(keyCode == juce::KeyPress::rightKey, false,
-                                            insideCategory);
-                });
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle scene
-    if (key.getModifiers().isAltDown() && keyCode == (int)'S')
-    {
-        if (shortcutsUsed)
-        {
-            // TODO fix scene assumption! If we ever increase number of scenes, we will need
-            // individual key combinations for selecting a particular scene
-            // for now though, a simple toggle will do
-            changeSelectedScene(1 - current_scene);
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // select oscillator
-    if (key.getModifiers().isAltDown() &&
-        (keyCode >= (int)'1' && keyCode <= (int)('1' + n_oscs - 1)))
-    {
-        if (shortcutsUsed)
-        {
-            // juce::getTextCharacter() returns ASCII code of the char
-            // so subtract the first one we need to get the ordinal number of the osc, 0-based
-            changeSelectedOsc(keyCode - (int)'1');
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // store patch
-    if (key.getModifiers().isCommandDown() && keyCode == (int)'S')
-    {
-        if (shortcutsUsed)
-        {
-            showOverlay(SurgeGUIEditor::SAVE_PATCH);
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle patch search typeahead
-    if (key.getModifiers().isCommandDown() && keyCode == (int)'F')
-    {
-        if (shortcutsUsed)
-        {
-            patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
-            patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle tuning editor
-    if (key.getModifiers().isAltDown() && keyCode == (int)'T')
-    {
-        if (shortcutsUsed)
-        {
-            toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
-
-            frame->repaint();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-#if INCLUDE_PATCH_BROWSER
-    // toggle patch browser
-    if (key.getModifiers().isAltDown() && keyCode == (int)'P')
-    {
-        if (shortcutsUsed)
-        {
-            toggleOverlay(SurgeGUIEditor::PATCH_BROWSER);
-
-            frame->repaint();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-#endif
-
-    // toggle an applicable LFO editor (MSEG, formula...)
-    if (key.getModifiers().isAltDown() && keyCode == (int)'E')
-    {
-        if (shortcutsUsed)
-        {
-            if (lfoDisplay->isMSEG())
+            switch (action)
             {
-                toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
+            case Surge::GUI::OSC_1:
+                changeSelectedOsc(0);
+                return true;
+            case Surge::GUI::OSC_2:
+                changeSelectedOsc(1);
+                return true;
+            case Surge::GUI::OSC_3:
+                changeSelectedOsc(2);
+                return true;
+            case Surge::GUI::TOGGLE_SCENE:
+            {
+                auto s = current_scene + 1;
+                if (s >= n_scenes)
+                    s = 0;
+                changeSelectedScene(s);
+                return true;
+            }
+            case Surge::GUI::SAVE_PATCH:
+                showOverlay(SurgeGUIEditor::SAVE_PATCH);
+                return true;
+            case Surge::GUI::FIND_PATCH:
+                patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
+                patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
+                return true;
+            case Surge::GUI::SHOW_TUNING_EDITOR:
+                toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
+                frame->repaint();
+                return true;
+            case Surge::GUI::SHOW_LFO_EDITOR:
+                if (lfoDisplay->isMSEG())
+                {
+                    toggleOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                }
+
+                if (lfoDisplay->isFormula())
+                {
+                    toggleOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+                }
+
+                return true;
+            case Surge::GUI::FAVORITE_PATCH:
+                setPatchAsFavorite(!isPatchFavorite());
+                patchSelector->setIsFavorite(isPatchFavorite());
+                return true;
+            case Surge::GUI::SHOW_MODLIST:
+                toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
+                frame->repaint();
+                return true;
+            case Surge::GUI::TOGGLE_DEBUG_CONSOLE: // Windows only
+                Surge::Debug::toggleConsole();
+                return true;
+            case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
+                toggleVirtualKeyboard();
+                return true;
+            case Surge::GUI::OPEN_MANUAL:
+                juce::URL(stringManual).launchInDefaultBrowser();
+                return true;
+            case Surge::GUI::REFRESH_SKIN:
+                refreshSkin();
+                return true;
+            case Surge::GUI::TOGGLE_ABOUT:
+                if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
+                {
+                    hideAboutScreen();
+                }
+                else
+                {
+                    showAboutScreen();
+                }
+                return true;
+
+            case Surge::GUI::ZOOM_TO_DEFAULT:
+            {
+                auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                               Surge::Storage::DefaultZoom, 0);
+                resizeWindow(dzf);
+                return true;
+            }
+            case Surge::GUI::ZOOM_MINUS_10:
+            case Surge::GUI::ZOOM_MINUS_25:
+            case Surge::GUI::ZOOM_PLUS_10:
+            case Surge::GUI::ZOOM_PLUS_25:
+            {
+                auto zl =
+                    (action == Surge::GUI::ZOOM_MINUS_10 || action == Surge::GUI::ZOOM_PLUS_10)
+                        ? 10
+                        : 25;
+                auto di =
+                    (action == Surge::GUI::ZOOM_MINUS_10 || action == Surge::GUI::ZOOM_MINUS_25)
+                        ? -1
+                        : 1;
+                auto jog = zl * di;
+                resizeWindow(getZoomFactor() + jog);
+                return true;
             }
 
-            if (lfoDisplay->isFormula())
+            case Surge::GUI::PREV_PATCH:
+            case Surge::GUI::NEXT_PATCH:
             {
-                toggleOverlay(SurgeGUIEditor::FORMULA_EDITOR);
+                std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
+
+                return promptForOKCancelWithDontAskAgain(
+                    "Confirm Patch Change",
+                    fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
+                                "which will discard any changes made so far.\n\n"
+                                "Do you want to proceed?",
+                                ctrlcmd),
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                        closeOverlay(SAVE_PATCH);
+
+                        auto insideCategory = Surge::Storage::getUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
+
+                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_PATCH, false,
+                                                insideCategory);
+                    });
             }
 
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle setting patch as favorite
-    if (key.getModifiers().isAltDown() && keyCode == (int)'F')
-    {
-        if (shortcutsUsed)
-        {
-            setPatchAsFavorite(!isPatchFavorite());
-            patchSelector->setIsFavorite(isPatchFavorite());
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle modulation list
-    if (key.getModifiers().isAltDown() && keyCode == (int)'M')
-    {
-        if (shortcutsUsed)
-        {
-            toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
-
-            frame->repaint();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle debug console
-    if (key.getModifiers().isAltDown() && keyCode == (int)'D')
-    {
-        if (shortcutsUsed)
-        {
-            Surge::Debug::toggleConsole();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle virtual keyboard
-    if (key.getModifiers().isAltDown() && keyCode == (int)'K')
-    {
-        if (shortcutsUsed)
-        {
-            toggleVirtualKeyboard();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // open manual
-    if (keyCode == juce::KeyPress::F1Key)
-    {
-        if (shortcutsUsed)
-        {
-            juce::URL(stringManual).launchInDefaultBrowser();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // reload current skin
-    if (keyCode == juce::KeyPress::F5Key)
-    {
-        if (shortcutsUsed)
-        {
-            refreshSkin();
-
-            return true;
-        }
-        else
-        {
-            triedKey = true;
-        }
-    }
-
-    // toggle about screen
-    if (keyCode == juce::KeyPress::F12Key)
-    {
-        if (shortcutsUsed)
-        {
-            if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
+            case Surge::GUI::PREV_CATEGORY:
+            case Surge::GUI::NEXT_CATEGORY:
             {
-                this->hideAboutScreen();
-            }
-            else
-            {
-                this->showAboutScreen();
-            }
+                std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
 
-            return true;
-        }
-        else
-        {
-            triedKey = true;
+                return promptForOKCancelWithDontAskAgain(
+                    "Confirm Category Change",
+                    fmt::format("You have used {0}+left or {0}+right to select another category,\n"
+                                "which will discard any changes made so far.\n\n"
+                                "Do you want to proceed?",
+                                shiftmac),
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                        closeOverlay(SAVE_PATCH);
+
+                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_CATEGORY, true);
+                    });
+            }
+            case Surge::GUI::n_kbdActions:
+                // ERROR CONDITION;
+                break;
+            }
         }
     }
 
