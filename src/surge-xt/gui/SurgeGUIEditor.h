@@ -83,6 +83,24 @@ struct PatchStoreDialog;
 } // namespace Surge
 
 #include "sst/plugininfra/keybindings.h"
+namespace sst
+{
+namespace plugininfra
+{
+template <> inline std::string keyCodeToString<juce::KeyPress>(int keyCode)
+{
+    auto k = juce::KeyPress(keyCode);
+    return k.getTextDescription().toStdString(); // according to the doc this is stable
+}
+
+template <> inline int keyCodeFromString<juce::KeyPress>(const std::string &s)
+{
+    auto k = juce::KeyPress::createFromDescription(s);
+    return k.getKeyCode();
+}
+} // namespace plugininfra
+} // namespace sst
+
 #include "SurgeGUIEditorKeyboardActions.h"
 
 class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
@@ -131,8 +149,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
   public:
-    typedef sst::jucepluginfra::KeyMapManager<Surge::GUI::KeyboardActions, Surge::GUI::n_kbdActions,
-                                              juce::KeyPress>
+    typedef sst::plugininfra::KeyMapManager<Surge::GUI::KeyboardActions, Surge::GUI::n_kbdActions,
+                                            juce::KeyPress>
         keymap_t;
     std::unique_ptr<keymap_t> keyMapManager;
 
