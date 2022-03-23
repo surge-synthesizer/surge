@@ -624,7 +624,15 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
         return;
     }
 
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     getParentComponent()->toFront(false);
+
+    if (sge)
+    {
+        sge->frontNonModalOverlays();
+    }
+
     toFront(false);
 
     if (mouseMode != DRAG_COMPONENT_HAPPEN)
@@ -635,7 +643,6 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
     mouseMode = DRAG_COMPONENT_HAPPEN;
     componentDragger.dragComponent(this, event, nullptr);
 
-    auto sge = firstListenerOfType<SurgeGUIEditor>();
     auto q = event.position.translated(getBounds().getX(), getBounds().getY());
     auto ota = transientArmed;
 

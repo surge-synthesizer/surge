@@ -399,6 +399,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
     std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
     void rezoomOverlays();
+    void frontNonModalOverlays();
 
     void dismissEditorOfType(OverlayTags ofType);
     bool isAnyOverlayPresent(OverlayTags tag)

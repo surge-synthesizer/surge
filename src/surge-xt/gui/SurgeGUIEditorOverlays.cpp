@@ -617,6 +617,27 @@ void SurgeGUIEditor::rezoomOverlays()
     }
 }
 
+void SurgeGUIEditor::frontNonModalOverlays()
+{
+    std::vector<juce::Component *> frontthese;
+
+    for (auto c : frame->getChildren())
+    {
+        if (auto ol = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c))
+        {
+            if (!ol->getIsModal())
+            {
+                frontthese.push_back(c);
+            }
+        }
+    }
+
+    for (auto f : frontthese)
+    {
+        f->toFront(true);
+    }
+}
+
 void SurgeGUIEditor::refreshAndMorphOverlayWithOpenClose(OverlayTags tag, OverlayTags newTag)
 {
     if (!isAnyOverlayPresent(tag))
