@@ -3555,7 +3555,8 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Keyboard Shortcuts"), true, kbShortcuts,
                    [this]() { toggleUseKeyboardShortcuts(); });
-
+    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Keyboard Shortcuts..."), true, false,
+                   [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -6206,9 +6207,12 @@ void SurgeGUIEditor::activateFromCurrentFx()
 
 void SurgeGUIEditor::setupKeymapManager()
 {
-    keyMapManager =
-        std::make_unique<keymap_t>(synth->storage.userDataPath, "SurgeXT",
-                                   Surge::GUI::keyboardActionName, [](auto a, auto b) {});
+    if (!keyMapManager)
+        keyMapManager =
+            std::make_unique<keymap_t>(synth->storage.userDataPath, "SurgeXT",
+                                       Surge::GUI::keyboardActionName, [](auto a, auto b) {});
+
+    keyMapManager->clearBindings();
     keyMapManager->addBinding(Surge::GUI::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
     keyMapManager->addBinding(Surge::GUI::OSC_2, {keymap_t::Modifiers::ALT, (int)'2'});
     keyMapManager->addBinding(Surge::GUI::OSC_3, {keymap_t::Modifiers::ALT, (int)'3'});

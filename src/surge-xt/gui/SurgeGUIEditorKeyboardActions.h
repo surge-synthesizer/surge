@@ -24,15 +24,20 @@ namespace GUI
 {
 enum KeyboardActions
 {
-    OSC_1,
-    OSC_2,
-    OSC_3,
-
-    TOGGLE_SCENE,
-
     SAVE_PATCH,
     FIND_PATCH,
     FAVORITE_PATCH,
+
+    PREV_PATCH,
+    NEXT_PATCH,
+    PREV_CATEGORY,
+    NEXT_CATEGORY,
+
+    ZOOM_TO_DEFAULT,
+    ZOOM_PLUS_10,
+    ZOOM_PLUS_25,
+    ZOOM_MINUS_10,
+    ZOOM_MINUS_25,
 
     SHOW_TUNING_EDITOR,
     SHOW_LFO_EDITOR,
@@ -42,19 +47,12 @@ enum KeyboardActions
 
     OPEN_MANUAL,
     REFRESH_SKIN,
-
     TOGGLE_ABOUT,
 
-    ZOOM_TO_DEFAULT,
-    ZOOM_PLUS_10,
-    ZOOM_PLUS_25,
-    ZOOM_MINUS_10,
-    ZOOM_MINUS_25,
-
-    PREV_CATEGORY,
-    NEXT_CATEGORY,
-    PREV_PATCH,
-    NEXT_PATCH,
+    OSC_1,
+    OSC_2,
+    OSC_3,
+    TOGGLE_SCENE,
 
     n_kbdActions
 };
@@ -122,6 +120,66 @@ inline std::string keyboardActionName(KeyboardActions a)
     }
 
     return "ERROR";
+}
+
+// This is the user-facing stringification of an action.
+inline std::string keyboardActionDescription(KeyboardActions a)
+{
+    switch (a)
+    {
+    case SAVE_PATCH:
+        return "Open Save Patch Dialog";
+    case FIND_PATCH:
+        return "Find Patch via Search";
+    case FAVORITE_PATCH:
+        return "Toggle Patch Favorite";
+    case PREV_PATCH:
+        return "Previous Patch";
+    case NEXT_PATCH:
+        return "Next Patch";
+    case PREV_CATEGORY:
+        return "Previous Patch Category";
+    case NEXT_CATEGORY:
+        return "Next Patch Category";
+    case ZOOM_TO_DEFAULT:
+        return "Zoom to Default Zoom";
+    case ZOOM_PLUS_10:
+        return "Zoom up by 10pts";
+    case ZOOM_PLUS_25:
+        return "Zoom up by 25pts";
+    case ZOOM_MINUS_10:
+        return "Zoom down by 10pts";
+    case ZOOM_MINUS_25:
+        return "Zoom down by 25pts";
+    case SHOW_TUNING_EDITOR:
+        return "Open Tuning Editor";
+    case SHOW_LFO_EDITOR:
+        return "Open LFO Editor (MSEG, Formula)";
+    case SHOW_MODLIST:
+        return "Open Modulation List Editor";
+    case TOGGLE_DEBUG_CONSOLE:
+        return "Toggle Debug Console (windows only)";
+    case TOGGLE_VIRTUAL_KEYBOARD:
+        return "Toggle Virtual Keyboard";
+    case OPEN_MANUAL:
+        return "Open Manual";
+    case REFRESH_SKIN:
+        return "Refresh Skin";
+    case TOGGLE_ABOUT:
+        return "About";
+    case OSC_1:
+        return "Select Oscillator 1";
+    case OSC_2:
+        return "Select Oscillator 2";
+    case OSC_3:
+        return "Select Oscillator 3";
+    case TOGGLE_SCENE:
+        return "Toggle Scene";
+    case n_kbdActions:
+        return "<ERROR>";
+    };
+
+    return "<ERROR>";
 }
 
 } // namespace GUI

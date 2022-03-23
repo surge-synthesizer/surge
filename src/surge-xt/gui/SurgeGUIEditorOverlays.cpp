@@ -22,6 +22,7 @@
 #include "overlays/TuningOverlays.h"
 #include "overlays/WaveShaperAnalysis.h"
 #include "overlays/OverlayWrapper.h"
+#include "overlays/KeyBindingsOverlay.h"
 #include "widgets/MainFrame.h"
 #include "widgets/WaveShaperSelector.h"
 #include "UserDefaults.h"
@@ -341,6 +342,17 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         return me;
     }
     break;
+    case KEYBINDINGS_EDITOR:
+    {
+        auto kb = std::make_unique<Surge::Overlays::KeyBindingsOverlay>(&(synth->storage), this);
+        auto posRect =
+            juce::Rectangle<int>(0, 0, 500, 500).withCentre(frame->getBounds().getCentre());
+
+        kb->setSkin(currentSkin, bitmapStore);
+        kb->setEnclosingParentPosition(posRect);
+        kb->setEnclosingParentTitle("Edit Keybindings");
+        return kb;
+    }
     default:
         break;
     }
@@ -392,6 +404,9 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
         onClose = [this]() { this->synth->refresh_editor = true; };
         break;
     case SAVE_PATCH:
+        isModal = true;
+        break;
+    case KEYBINDINGS_EDITOR:
         isModal = true;
         break;
     default:
