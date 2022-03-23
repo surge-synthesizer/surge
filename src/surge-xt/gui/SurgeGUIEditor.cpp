@@ -555,7 +555,8 @@ void SurgeGUIEditor::idle()
 
             frame->repaint();
         }
-        if (synth->learn_param < 0 && synth->learn_custom < 0 && midiLearnOverlay != nullptr)
+        if (synth->learn_param_from_cc < 0 && synth->learn_macro_from_cc < 0 &&
+            synth->learn_param_from_note < 0 && midiLearnOverlay != nullptr)
         {
             hideMidiLearnOverlay();
         }
@@ -1323,7 +1324,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
             {
-                // std::cout << synth->learn_custom << std::endl;
+                // std::cout << synth->learn_macro_from_cc << std::endl;
                 gui_modsrc[ms]->setCurrentModLabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
                 gui_modsrc[ms]->setIsMeta(true);
@@ -1337,7 +1338,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *gui_modsrc[ms]);
 
-            if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_custom == ms - ms_ctrl1)
+            if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_macro_from_cc == ms - ms_ctrl1)
             {
                 showMidiLearnOverlay(r);
             }
@@ -1728,7 +1729,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                        style | conn.payload->controlStyleFlags);
 
                 uiidToSliderLabel[p->ui_identifier] = p->get_name();
-                if (p->id == synth->learn_param)
+
+                if (p->id == synth->learn_param_from_cc || p->id == synth->learn_param_from_note)
                 {
                     showMidiLearnOverlay(
                         param[p->id]->asControlValueInterface()->asJuceComponent()->getBounds());

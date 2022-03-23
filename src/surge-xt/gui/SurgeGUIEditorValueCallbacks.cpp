@@ -63,104 +63,131 @@ std::string decodeControllerID(int id)
     return out;
 }
 
-void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, bool isForMacro,
-                                                int idx, Surge::GUI::IComponentTagValue *control)
+void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
+                                                const LearnMode learn_mode, const int idx,
+                                                Surge::GUI::IComponentTagValue *control)
 {
     long tag;
     int ptag;
     Parameter *p;
 
-    if (!isForMacro)
+    if (learn_mode != macro_cc)
     {
         tag = control->getTag();
         ptag = tag - start_paramtags;
         p = synth->storage.getPatch().param_ptr[ptag];
     }
 
-    // construct submenus for explicit controller mapping
-    auto midiSub = juce::PopupMenu();
-
-    for (int subs = 0; subs < 7; ++subs)
+    if (learn_mode != param_note)
     {
-        auto currentSub = juce::PopupMenu();
-        bool isSubChecked = false;
+        // construct submenus for explicit controller mapping
+        auto midiSub = juce::PopupMenu();
 
-        for (int item = 0; item < 20; ++item)
+        for (int subs = 0; subs < 7; ++subs)
         {
-            int mc = (subs * 20) + item;
-            bool isChecked = false;
-            bool isEnabled = true;
+            auto currentSub = juce::PopupMenu();
+            bool isSubChecked = false;
 
-            // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-            if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
-                mc == 123)
+            for (int item = 0; item < 20; ++item)
             {
-                isEnabled = false;
-            }
+                int mc = (subs * 20) + item;
+                bool isChecked = false;
+                bool isEnabled = true;
 
-            // we don't have any more CCs to cover, so break the loop
-            if (mc > 127)
-            {
-                break;
-            }
-
-            std::string name = fmt::format("CC {:d} ({:s}) {:s}", mc, midicc_names[mc],
-                                           (!isEnabled ? "- RESERVED" : ""));
-
-            if (isForMacro)
-            {
-                if (synth->storage.controllers[idx] == mc)
+                // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
+                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
+                    (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
+                    mc == 123)
                 {
-                    isChecked = true;
-                    isSubChecked = true;
+                    isEnabled = false;
                 }
 
-                currentSub.addItem(name, isEnabled, isChecked,
-                                   [this, idx, mc]() { synth->storage.controllers[idx] = mc; });
-            }
-            else
-            {
-                if ((ptag < n_global_params && p->midictrl == mc) ||
-                    (ptag > n_global_params &&
-                     synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
+                // we don't have any more CCs to cover, so break the loop
+                if (mc > 127)
                 {
-                    isChecked = true;
-                    isSubChecked = true;
+                    break;
                 }
 
-                currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
-                    if (ptag < n_global_params)
+                std::string name = fmt::format("CC {:d} ({:s}) {:s}", mc, midicc_names[mc],
+                                               (!isEnabled ? "- RESERVED" : ""));
+
+                switch (learn_mode)
+                {
+                case macro_cc:
+                {
+                    if (synth->storage.controllers[idx] == mc)
                     {
-                        p->midictrl = mc;
+                        isChecked = true;
+                        isSubChecked = true;
                     }
-                    else
-                    {
-                        int a = ptag;
 
-                        if (ptag >= (n_global_params + n_scene_params))
+                    currentSub.addItem(name, isEnabled, isChecked,
+                                       [this, idx, mc]() { synth->storage.controllers[idx] = mc; });
+                    break;
+                }
+                case param_cc:
+                {
+                    if ((ptag < n_global_params && p->midictrl == mc) ||
+                        (ptag > n_global_params &&
+                         synth->storage.getPatch().param_ptr[ptag]->midictrl == mc))
+                    {
+                        isChecked = true;
+                        isSubChecked = true;
+                    }
+
+                    currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
+                        if (ptag < n_global_params)
                         {
-                            a -= ptag;
+                            p->midictrl = mc;
                         }
+                        else
+                        {
+                            int a = ptag;
 
-                        synth->storage.getPatch().param_ptr[a]->midictrl = mc;
-                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
-                    }
-                });
+                            if (ptag >= (n_global_params + n_scene_params))
+                            {
+                                a -= ptag;
+                            }
+
+                            synth->storage.getPatch().param_ptr[a]->midictrl = mc;
+                            synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
+                        }
+                    });
+
+                    break;
+                }
+                default:
+                    break;
+                }
             }
+
+            std::string name =
+                fmt::format("{:d} ... {:d}", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
+
+            midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
         }
 
-        std::string name =
-            fmt::format("{:d} ... {:d}", (20 * subs), std::min((20 * subs) + 20, 128) - 1);
-
-        midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
+        parentMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign to MIDI CC"), midiSub);
     }
-
-    parentMenu.addSubMenu(Surge::GUI::toOSCaseForMenu("Assign to MIDI CC"), midiSub);
 
     bool cancellearn = false;
 
-    auto query = (isForMacro ? synth->learn_custom : synth->learn_param);
+    int query;
+
+    switch (learn_mode)
+    {
+    case macro_cc:
+        query = synth->learn_macro_from_cc;
+        break;
+    case param_cc:
+        query = synth->learn_param_from_cc;
+        break;
+    case param_note:
+        query = synth->learn_param_from_note;
+        break;
+    default:
+        break;
+    }
 
     if (query > -1 && query == idx)
     {
@@ -179,36 +206,50 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
     }
 
     parentMenu.addItem(Surge::GUI::toOSCaseForMenu(learntxt),
-                       [this, p, cancellearn, control, idx, isForMacro] {
+                       [this, p, cancellearn, control, idx, learn_mode] {
                            if (cancellearn)
                            {
                                hideMidiLearnOverlay();
 
-                               if (isForMacro)
+                               switch (learn_mode)
                                {
-                                   synth->learn_custom = -1;
-                               }
-                               else
-                               {
-                                   synth->learn_param = -1;
+                               case macro_cc:
+                                   synth->learn_macro_from_cc = -1;
+                                   break;
+                               case param_cc:
+                                   synth->learn_param_from_cc = -1;
+                                   break;
+                               case param_note:
+                                   synth->learn_param_from_note = -1;
+                                   break;
+                               default:
+                                   break;
                                }
                            }
                            else
                            {
                                showMidiLearnOverlay(control->asJuceComponent()->getBounds());
 
-                               if (isForMacro)
+                               switch (learn_mode)
                                {
-                                   synth->learn_custom = idx;
-                               }
-                               else
-                               {
-                                   synth->learn_param = idx;
+                               case macro_cc:
+                                   synth->learn_macro_from_cc = idx;
+                                   break;
+                               case param_cc:
+                                   synth->learn_param_from_cc = idx;
+                                   break;
+                               case param_note:
+                                   synth->learn_param_from_note = idx;
+                                   break;
+                               default:
+                                   break;
                                }
                            }
                        });
 
-    if (isForMacro)
+    switch (learn_mode)
+    {
+    case macro_cc:
     {
         if (synth->storage.controllers[idx] >= 0)
         {
@@ -219,8 +260,10 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
                                    midicc_names[synth->storage.controllers[idx]] + ")",
                                [this, idx]() { synth->storage.controllers[idx] = -1; });
         }
+
+        break;
     }
-    else
+    case param_cc:
     {
         if (p->midictrl >= 0)
         {
@@ -248,6 +291,12 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, boo
                     }
                 });
         }
+
+        break;
+    }
+    case param_note:
+    default:
+        break;
     }
 }
 
@@ -927,7 +976,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 ccid = modsource - ms_ctrl1;
 
-                createMIDILearnMenuEntries(contextMenu, true, ccid, control);
+                createMIDILearnMenuEntries(contextMenu, macro_cc, ccid, control);
 
                 auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                                 .scene[current_scene]
@@ -1284,12 +1333,31 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
             else if (p->valtype == vt_int)
             {
+
                 if (p->can_setvalue_from_string())
                 {
-                    contextMenu.addItem(
-                        txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
 
-                    contextMenu.addSeparator();
+                    if (p->ctrltype == ct_midikey_or_channel)
+                    {
+                        auto sc_mode = synth->storage.getPatch().scenemode.val.i;
+
+                        if (sc_mode == sm_split || sc_mode == sm_chsplit)
+                        {
+                            contextMenu.addItem(
+                                txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
+
+                            contextMenu.addSeparator();
+
+                            createMIDILearnMenuEntries(contextMenu, param_note, p->id, control);
+                        }
+                    }
+                    else
+                    {
+                        contextMenu.addItem(
+                            txt2, [this, p, bvf]() { this->promptForUserValueEntry(p, bvf); });
+
+                        contextMenu.addSeparator();
+                    }
 
                     if (p->can_extend_range())
                         contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Extend Range"), true,
@@ -1530,9 +1598,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 }
             }
 
-            bool cancellearn = false;
-
-            // Modulation and Learn semantics only apply to vt_float types in Surge right now
             if (p->valtype == vt_float)
             {
                 if (p->can_temposync())
@@ -2056,6 +2121,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         }
                     }
                 }
+
                 if (n_ms)
                 {
                     contextMenu.addSeparator();
@@ -2186,8 +2252,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                // see if we have any modulators that are unassigned, then create "Add
-                // Modulation from..." menu
+                // see if we have any modulators that are unassigned,
+                // then create "Add Modulation from..." menu
                 if (n_ms != n_modsources)
                 {
                     auto addModSub = juce::PopupMenu();
@@ -2299,7 +2365,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                createMIDILearnMenuEntries(contextMenu, false, p->id, control);
+                createMIDILearnMenuEntries(contextMenu, param_cc, p->id, control);
 
             } // end vt_float if statement
 
@@ -3097,30 +3163,35 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             else
             {
                 auto val = control->getValue();
+
                 if (p->ctrltype == ct_scenemode)
                 {
 
-                    /*
-                    ** See the comment in the constructor of ct_scenemode above
-                    */
+                    // See the comment in the constructor of ct_scenemode above
                     auto cs2 = dynamic_cast<Surge::Widgets::MultiSwitch *>(control);
                     auto im = 0;
+
                     if (cs2)
                     {
                         im = cs2->getIntegerValue();
+
                         if (im == 3)
+                        {
                             im = 2;
+                        }
                         else if (im == 2)
+                        {
                             im = 3;
+                        }
+
                         val = Parameter::intScaledToFloat(im, n_scene_modes - 1);
                     }
 
-                    /*
-                    ** Now I also need to toggle the split key state
-                    */
+                    // Now I also need to toggle the split key state
                     if (splitpointControl)
                     {
                         int cm = splitpointControl->getControlMode();
+
                         if (im == sm_chsplit && cm != Surge::Skin::Parameters::MIDICHANNEL_FROM_127)
                         {
                             splitpointControl->setControlMode(
@@ -3135,6 +3206,12 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         else if ((im == sm_single || im == sm_dual) &&
                                  cm != Surge::Skin::Parameters::NONE)
                         {
+                            // drop out of MIDI learn mode if active
+                            if (synth->learn_param_from_note > -1)
+                            {
+                                synth->learn_param_from_note = -1;
+                            }
+
                             splitpointControl->setControlMode(Surge::Skin::Parameters::NONE);
                             splitpointControl->repaint();
                         }
@@ -3144,6 +3221,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 bool force_integer = juce::ModifierKeys::currentModifiers.isCommandDown();
                 SurgeSynthesizer::ID ptagid;
                 synth->fromSynthSideId(ptag, ptagid);
+
                 if (synth->setParameter01(ptagid, val, false, force_integer))
                 {
                     queue_refresh = true;

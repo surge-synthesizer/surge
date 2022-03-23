@@ -211,8 +211,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         vu_peak[i] = 0.f;
     }
 
-    learn_param = -1;
-    learn_custom = -1;
+    learn_param_from_cc = -1;
+    learn_macro_from_cc = -1;
+    learn_param_from_note = -1;
 
     for (int i = 0; i < 16; i++)
     {
@@ -343,6 +344,28 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         {
             return;
         }
+    }
+
+    if (learn_param_from_note >= 0 &&
+        storage.getPatch().param_ptr[learn_param_from_note]->ctrltype == ct_midikey_or_channel)
+    {
+        const auto sm = storage.getPatch().scenemode.val.i;
+
+        if (sm == scene_mode::sm_split)
+        {
+            storage.getPatch().param_ptr[learn_param_from_note]->val.i = key;
+            refresh_editor = true;
+        }
+
+        if (sm == scene_mode::sm_chsplit)
+        {
+            storage.getPatch().param_ptr[learn_param_from_note]->val.i = channel * 8;
+            refresh_editor = true;
+        }
+
+        learn_param_from_note = -1;
+
+        return;
     }
 
     midiNoteEvents++;
@@ -1900,28 +1923,28 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         }
     }
 
-    if (learn_param >= 0)
+    if (learn_param_from_cc >= 0)
     {
-        if (learn_param < n_global_params)
+        if (learn_param_from_cc < n_global_params)
         {
-            storage.getPatch().param_ptr[learn_param]->midictrl = cc_encoded;
+            storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
         }
         else
         {
-            int a = learn_param;
-            if (learn_param >= (n_global_params + n_scene_params))
+            int a = learn_param_from_cc;
+            if (learn_param_from_cc >= (n_global_params + n_scene_params))
                 a -= n_scene_params;
 
             storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
             storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
         }
-        learn_param = -1;
+        learn_param_from_cc = -1;
     }
 
-    if ((learn_custom >= 0) && (learn_custom < n_customcontrollers))
+    if ((learn_macro_from_cc >= 0) && (learn_macro_from_cc < n_customcontrollers))
     {
-        storage.controllers[learn_custom] = cc_encoded;
-        learn_custom = -1;
+        storage.controllers[learn_macro_from_cc] = cc_encoded;
+        learn_macro_from_cc = -1;
     }
 
     // if(storage.getPatch().scene_active.val.i == 1)
@@ -1942,7 +1965,9 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             refresh_ctrl_queue_value[j] = fval;
         }
     }
+
     int a = n_global_params + storage.getPatch().scene_active.val.i * n_scene_params;
+
     for (int i = a; i < (a + n_scene_params); i++)
     {
         if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)

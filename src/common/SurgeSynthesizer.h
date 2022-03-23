@@ -345,7 +345,7 @@ class alignas(16) SurgeSynthesizer
     std::atomic<int>
         polydisplay; // updated in audio thread, read from ui, so have assignments be atomic
     bool refresh_editor, patch_loaded;
-    int learn_param, learn_custom;
+    int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;
     int refresh_ctrl_queue[8];
     int refresh_parameter_queue[8];
     bool refresh_overflow = false;

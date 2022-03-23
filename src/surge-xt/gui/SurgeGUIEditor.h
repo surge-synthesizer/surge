@@ -174,8 +174,15 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void controlBeginEdit(Surge::GUI::IComponentTagValue *control) override;
     void controlEndEdit(Surge::GUI::IComponentTagValue *control) override;
 
-    void createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, bool isForMacro, int ccid,
-                                    Surge::GUI::IComponentTagValue *control);
+    enum LearnMode
+    {
+        param_cc = 0,
+        macro_cc,
+        param_note
+    };
+
+    void createMIDILearnMenuEntries(juce::PopupMenu &parentMenu, const LearnMode learn_mode,
+                                    const int ccid, Surge::GUI::IComponentTagValue *control);
 
     void changeSelectedOsc(int value);
     void changeSelectedScene(int value);
