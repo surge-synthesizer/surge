@@ -99,6 +99,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/AboutScreen.h
   gui/overlays/CoveringMessageOverlay.cpp
   gui/overlays/CoveringMessageOverlay.h
+  gui/overlays/KeyBindingsOverlay.h
+  gui/overlays/KeyBindingsOverlay.cpp
   gui/overlays/LuaEditors.cpp
   gui/overlays/LuaEditors.h
   gui/overlays/MSEGEditor.cpp
