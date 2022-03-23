@@ -255,9 +255,20 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     if (!hasSuppliedDataPath)
     {
         // First check the portable mode sitting beside me
-        if (auto path{installPath / L"SurgeXTData"}; fs::is_directory(path))
+        auto cp{installPath};
+
+        while (datapath.empty() && cp.has_parent_path() && cp != cp.parent_path())
         {
-            datapath = std::move(path);
+            auto portable = cp / L"SurgeXTData";
+
+            std::cout << portable << endl;
+
+            if (fs::is_directory(portable))
+            {
+                datapath = std::move(portable);
+            }
+
+            cp = cp.parent_path();
         }
 
         if (datapath.empty())
@@ -276,11 +287,23 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     }
 
     // Portable - first check for installPath\\SurgeXTUserData
-    if (auto path{installPath / L"SurgeXTUserData"}; fs::is_directory(path))
+    auto cp{installPath};
+
+    while (userDataPath.empty() && cp.has_parent_path() && cp != cp.parent_path())
     {
-        userDataPath = std::move(path);
+        auto portable = cp / L"SurgeXTUserData";
+
+        std::cout << portable << endl;
+
+        if (fs::is_directory(portable))
+        {
+            userDataPath = std::move(portable);
+        }
+
+        cp = cp.parent_path();
     }
-    else
+
+    if (userDataPath.empty())
     {
         userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
     }
