@@ -38,8 +38,12 @@
   get_target_property(fxn surge-fx JUCE_PRODUCT_NAME)
   get_target_property(xtn surge-xt JUCE_PRODUCT_NAME)
 
-  create_pluginval_target(surge-xt-pluginval-vst3 surge-xt_VST3 "${xtn}.vst3")
-  create_pluginval_target(surge-fx-pluginval-vst3 surge-fx_VST3 "${fxn}.vst3")
+  if(TARGET surge-xt_VST3)
+    create_pluginval_target(surge-xt-pluginval-vst3 surge-xt_VST3 "${xtn}.vst3")
+  endif()
+  if(TARGET surge-fx_VST3)
+    create_pluginval_target(surge-fx-pluginval-vst3 surge-fx_VST3 "${fxn}.vst3")
+  endif()
 
   if(APPLE)
     create_pluginval_target(surge-xt-pluginval-au surge-xt_AU "${xtn}.component")
