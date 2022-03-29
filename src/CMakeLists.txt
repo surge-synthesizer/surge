@@ -27,6 +27,12 @@ if(SURGE_BUILD_CLAP)
   add_subdirectory(../libs/clap-juce-extensions clap-extensions EXCLUDE_FROM_ALL)
 endif()
 
+if(SURGE_SKIP_STANDALONE OR SURGE_SKIP_ALSA)
+  set(SURGE_USE_ALSA FALSE)
+else()
+  set(SURGE_USE_ALSA TRUE)
+endif()
+
 add_library(simde INTERFACE)
 target_include_directories(simde INTERFACE ${CMAKE_SOURCE_DIR}/libs/simde)
 add_library(surge::simde ALIAS simde)
@@ -48,7 +54,7 @@ target_compile_definitions(surge-juce INTERFACE
 
   JUCE_COREGRAPHICS_DRAW_ASYNC=1
 
-  JUCE_ALSA=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
+  JUCE_ALSA=$<IF:$<BOOL:${SURGE_USE_ALSA}>,1,0>
   JUCE_JACK=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
 
   JUCE_WASAPI=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
@@ -57,7 +63,9 @@ target_compile_definitions(surge-juce INTERFACE
   JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
   )
 
-set(SURGE_JUCE_FORMATS VST3)
+if(NOT SURGE_SKIP_VST3)
+  list(APPEND SURGE_JUCE_FORMATS VST3)
+endif()
 
 if(NOT SURGE_SKIP_STANDALONE)
   list(APPEND SURGE_JUCE_FORMATS Standalone)
