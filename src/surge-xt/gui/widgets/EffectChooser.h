@@ -31,6 +31,10 @@ namespace Surge
 {
 namespace Widgets
 {
+struct EffectChooser;
+
+template <> void LongHoldMixin<EffectChooser>::onLongHold();
+
 struct EffectChooser : public juce::Component,
                        public WidgetBaseMixin<EffectChooser>,
                        public LongHoldMixin<EffectChooser>
@@ -121,11 +125,16 @@ struct EffectChooser : public juce::Component,
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
+    void createFXMenu();
+
     std::array<std::unique_ptr<juce::Component>, n_fx_slots> slotAccOverlays;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectChooser);
 };
+
+template <> inline void LongHoldMixin<EffectChooser>::onLongHold() { asT()->createFXMenu(); }
+
 } // namespace Widgets
 } // namespace Surge
 
