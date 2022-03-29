@@ -286,21 +286,28 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
     {
         if (event.mods.isRightButtonDown())
         {
-            auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-            if (sge && sge->fxMenu)
-            {
-                auto c = localPointToGlobal(getEffectRectangle(currentClicked).getBottomLeft());
-
-                auto where = sge->frame->getLocalPoint(nullptr, c);
-                sge->fxMenu->menu.showMenuAsync(sge->popupMenuOptions(where));
-            }
+            createFXMenu();
         }
+    }
+}
+
+void EffectChooser::createFXMenu()
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge && sge->fxMenu)
+    {
+        auto c = localPointToGlobal(getEffectRectangle(currentClicked).getBottomLeft());
+
+        auto where = sge->frame->getLocalPoint(nullptr, c);
+        sge->fxMenu->menu.showMenuAsync(sge->popupMenuOptions(where));
     }
 }
 
 void EffectChooser::mouseUp(const juce::MouseEvent &event)
 {
+    mouseUpLongHold(event);
+
     if (hasDragged)
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
@@ -337,8 +344,6 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
         hasDragged = false;
         repaint();
     }
-
-    mouseUpLongHold(event);
 }
 
 void EffectChooser::mouseDrag(const juce::MouseEvent &event)
