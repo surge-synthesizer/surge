@@ -228,10 +228,21 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     midiR rec;
     while (midiFromGUI.pop(rec))
     {
-        if (rec.on)
-            surge->playNote(rec.ch, rec.note, rec.vel, 0);
-        else
-            surge->releaseNote(rec.ch, rec.note, rec.vel);
+        if (rec.type == midiR::NOTE)
+        {
+            if (rec.on)
+                surge->playNote(rec.ch, rec.note, rec.vel, 0);
+            else
+                surge->releaseNote(rec.ch, rec.note, rec.vel);
+        }
+        if (rec.type == midiR::PITCHWHEEL)
+        {
+            surge->pitchBend(rec.ch, rec.cval);
+        }
+        if (rec.type == midiR::MODWHEEL)
+        {
+            surge->channelController(rec.ch, 1, rec.cval);
+        }
     }
 
     // Make sure we have a main output
