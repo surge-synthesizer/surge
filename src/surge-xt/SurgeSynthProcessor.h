@@ -184,10 +184,18 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     std::atomic<float> standaloneTempo{120};
     struct midiR
     {
-        midiR() {}
-        midiR(int c, int n, int v, bool o) : ch(c), note(n), vel(v), on(o) {}
+        enum Type
+        {
+            NOTE,
+            MODWHEEL,
+            PITCHWHEEL,
+        } type{NOTE};
         int ch{0}, note{0}, vel{0};
         bool on{false};
+        int cval{0};
+        midiR() {}
+        midiR(int c, int n, int v, bool o) : type(NOTE), ch(c), note(n), vel(v), on(o) {}
+        midiR(Type type, int cval) : type(type), cval(cval) {}
     };
     LockFreeStack<midiR, 4096> midiFromGUI;
     bool isAddingFromMidi{false};
