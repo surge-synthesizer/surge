@@ -95,6 +95,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/SurgeJUCEHelpers.h
   gui/SurgeJUCELookAndFeel.cpp
   gui/SurgeJUCELookAndFeel.h
+  gui/UndoManager.cpp
   gui/overlays/AboutScreen.cpp
   gui/overlays/AboutScreen.h
   gui/overlays/CoveringMessageOverlay.cpp

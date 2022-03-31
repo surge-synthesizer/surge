@@ -418,6 +418,11 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     juce::Desktop::getInstance().addFocusChangeListener(this);
 
     setupKeymapManager();
+
+    if (!juceEditor->processor.undoManager)
+        juceEditor->processor.undoManager =
+            std::make_unique<Surge::GUI::UndoManager>(this, this->synth);
+    juceEditor->processor.undoManager->resetEditor(this);
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -2143,6 +2148,20 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
     int ptag = tag - start_paramtags;
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
+        if (mod_editor)
+        {
+            auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+            if (mci)
+            {
+                undoManager()->pushModulationChange(ptag, modsource, current_scene, modsource_index,
+                                                    mci->modValue);
+            }
+        }
+        else
+        {
+            undoManager()->pushParameterChange(ptag,
+                                               synth->storage.getPatch().param_ptr[ptag]->val);
+        }
         juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
     else if (tag_mod_source0 + ms_ctrl1 <= tag &&
@@ -2177,6 +2196,30 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     }
 }
 
+const std::unique_ptr<Surge::GUI::UndoManager> &SurgeGUIEditor::undoManager()
+{
+    return juceEditor->processor.undoManager;
+}
+
+void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
+{
+    auto p = synth->storage.getPatch().param_ptr[paramId];
+    auto id = synth->idForParameter(p);
+    juceEditor->beginParameterEdit(p);
+    p->val = val;
+    synth->sendParameterAutomation(id, synth->getParameter01(id));
+    juceEditor->endParameterEdit(p);
+    synth->refresh_editor = true;
+}
+
+void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene, int idx,
+                                           float val)
+{
+    auto p = synth->storage.getPatch().param_ptr[paramId];
+    // FIXME scene and index
+    synth->setModulation(p->id, ms, scene, idx, val);
+    synth->refresh_editor = true;
+}
 //------------------------------------------------------------------------------------------------
 
 long SurgeGUIEditor::applyParameterOffset(long id) { return id - start_paramtags; }
@@ -2421,6 +2464,8 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
                                       Surge::GUI::IComponentTagValue *launchFrom)
 {
     auto settingsMenu = juce::PopupMenu();
+
+    // settingsMenu.addItem("HACK DUMP", [this]() { undoManager()->dumpStack(); });
 
     auto zoomMenu = makeZoomMenu(where, false);
     settingsMenu.addSubMenu("Zoom", zoomMenu);
@@ -5942,6 +5987,7 @@ void SurgeGUIEditor::broadcastMSEGState()
 void SurgeGUIEditor::repushAutomationFor(Parameter *p)
 {
     auto id = synth->idForParameter(p);
+
     synth->sendParameterAutomation(id, synth->getParameter01(id));
 }
 
@@ -6215,6 +6261,7 @@ void SurgeGUIEditor::setupKeymapManager()
                                        Surge::GUI::keyboardActionName, [](auto a, auto b) {});
 
     keyMapManager->clearBindings();
+    keyMapManager->addBinding(Surge::GUI::UNDO, {keymap_t::Modifiers::CONTROL, (int)'Z'});
     keyMapManager->addBinding(Surge::GUI::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
     keyMapManager->addBinding(Surge::GUI::OSC_2, {keymap_t::Modifiers::ALT, (int)'2'});
     keyMapManager->addBinding(Surge::GUI::OSC_3, {keymap_t::Modifiers::ALT, (int)'3'});
@@ -6312,6 +6359,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
             switch (action)
             {
+            case Surge::GUI::UNDO:
+                undoManager()->undo();
+                return true;
             case Surge::GUI::OSC_1:
                 changeSelectedOsc(0);
                 return true;

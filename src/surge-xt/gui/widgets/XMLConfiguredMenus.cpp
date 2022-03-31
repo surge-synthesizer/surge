@@ -360,6 +360,7 @@ void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     {
         auto sc = sge->current_scene;
         sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
+        sge->undoManager()->pushOscillator(sc, sge->current_osc[sc]);
     }
     osc->queue_type = type;
     osc->queue_xmldata = e;
@@ -538,6 +539,11 @@ void FxMenu::mouseExit(const juce::MouseEvent &event)
 
 void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (sge)
+    {
+        sge->undoManager()->pushFX(current_fx);
+    }
     if (type > -1)
     {
         fxbuffer->type.val.i = type;
@@ -716,6 +722,12 @@ void FxMenu::saveFX()
 
 void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 {
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (sge)
+    {
+        sge->undoManager()->pushFX(current_fx);
+    }
+
     this->storage->fxUserPreset->loadPresetOnto(p, storage, fxbuffer);
 
     selectedIdx = -1;

@@ -42,6 +42,7 @@
 #include <atomic>
 #include <cstdarg>
 #include <bitset>
+#include "UndoManager.h"
 
 class SurgeSynthEditor;
 
@@ -469,6 +470,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     bool canDropTarget(const std::string &fname); // these come as const char* from vstgui
     bool onDrop(const std::string &fname);
+
+    const std::unique_ptr<Surge::GUI::UndoManager> &undoManager();
+    void setParamFromUndo(int paramId, pdata val);
+    void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);

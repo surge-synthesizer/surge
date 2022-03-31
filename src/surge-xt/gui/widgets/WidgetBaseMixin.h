@@ -87,6 +87,13 @@ struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
             t->controlEndEdit(this);
     }
 
+    void notifyValueChangedWithBeginEnd()
+    {
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+    }
+
     virtual void updateAccessibleStateOnUserValueChange() {}
 
     juce::Point<float> enqueueStartPosition{-18.f, -18.f};

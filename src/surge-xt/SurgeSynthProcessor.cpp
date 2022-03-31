@@ -15,6 +15,11 @@
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
 
+/*
+ * This is a bit odd but - this is an editor concept with the lifetime of the processor
+ */
+#include "gui/UndoManager.h"
+
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
     : juce::AudioProcessor(BusesProperties()
@@ -429,7 +434,9 @@ void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, 
 {
     auto spar = paramsByID[id];
     if (spar)
+    {
         spar->setValueNotifyingHost(f);
+    }
 }
 
 void SurgeSynthProcessor::surgeMacroUpdated(const long id, float f)
