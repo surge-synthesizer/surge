@@ -70,7 +70,7 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
 
     if (scene > 0 && scene <= n_scenes)
     {
-        snprintf(txt, TXT_SIZE, "%c_%s", 'a' + scene, prefix);
+        snprintf(txt, TXT_SIZE, "%c_%s", 'a' + scene - 1, prefix);
     }
     else
     {
@@ -106,7 +106,7 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
         }
         else
         {
-            if (a > 6)
+            if (a > n_lfos_voice)
                 snprintf(prefix, PREFIX_SIZE, "Scene LFO %i", a - 6);
             else
                 snprintf(prefix, PREFIX_SIZE, "LFO %i", a);
