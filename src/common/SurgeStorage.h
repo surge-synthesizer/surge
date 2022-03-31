@@ -279,6 +279,11 @@ const char fxslot_names[n_fx_slots][NAMECHARS] = {
     "Send FX 3",     "Send FX 4",     "Global FX 3",   "Global FX 4",
 };
 
+const char fxslot_shortnames[n_fx_slots][8] = {
+    "FX A1", "FX A2", "FX B1", "FX B2", "FX S1", "FX S2", "FX G1", "FX G2",
+    "FX A3", "FX A4", "FX B3", "FX B4", "FX S3", "FX S4", "FX G3", "FX G4",
+};
+
 enum fx_type
 {
     fxt_off = 0,

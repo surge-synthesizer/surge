@@ -43,7 +43,9 @@ Parameter::~Parameter() = default;
 void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scene)
 {
 #define PREFIX_SIZE 16
+
     char prefix[PREFIX_SIZE];
+
     switch (ctrlgroup)
     {
     case cg_OSC:
@@ -55,7 +57,7 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
     case cg_ENV:
         snprintf(prefix, PREFIX_SIZE, "env%i_", ctrlgroup_entry + 1);
         break;
-    /*case 6:
+    /*case cg_LFO:
             snprintf(prefix, PREFIX_SIZE, "ms%i_",ctrlgroup_entry+1);
             break;*/
     case cg_FX:
@@ -65,12 +67,15 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
         prefix[0] = '\0';
         break;
     };
-    if (scene == 2)
-        snprintf(txt, TXT_SIZE, "b_%s", prefix);
-    else if (scene == 1)
-        snprintf(txt, TXT_SIZE, "a_%s", prefix);
+
+    if (scene > 0 && scene <= n_scenes)
+    {
+        snprintf(txt, TXT_SIZE, "%c_%s", 'a' + scene, prefix);
+    }
     else
+    {
         snprintf(txt, TXT_SIZE, "%s", prefix);
+    }
 }
 
 void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup,
@@ -109,59 +114,13 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
     }
     break;
     case cg_FX:
-        switch (ctrlgroup_entry)
+        if (ctrlgroup_entry >= 0 && ctrlgroup_entry < n_fx_slots)
         {
-        case 0:
-            snprintf(prefix, PREFIX_SIZE, "FX A1");
-            break;
-        case 1:
-            snprintf(prefix, PREFIX_SIZE, "FX A2");
-            break;
-        case 2:
-            snprintf(prefix, PREFIX_SIZE, "FX B1");
-            break;
-        case 3:
-            snprintf(prefix, PREFIX_SIZE, "FX B2");
-            break;
-        case 4:
-            snprintf(prefix, PREFIX_SIZE, "FX S1");
-            break;
-        case 5:
-            snprintf(prefix, PREFIX_SIZE, "FX S2");
-            break;
-        case 6:
-            snprintf(prefix, PREFIX_SIZE, "FX M1");
-            break;
-        case 7:
-            snprintf(prefix, PREFIX_SIZE, "FX M2");
-            break;
-        case 8:
-            snprintf(prefix, PREFIX_SIZE, "FX A3");
-            break;
-        case 9:
-            snprintf(prefix, PREFIX_SIZE, "FX A4");
-            break;
-        case 10:
-            snprintf(prefix, PREFIX_SIZE, "FX B3");
-            break;
-        case 11:
-            snprintf(prefix, PREFIX_SIZE, "FX B4");
-            break;
-        case 12:
-            snprintf(prefix, PREFIX_SIZE, "FX S3");
-            break;
-        case 13:
-            snprintf(prefix, PREFIX_SIZE, "FX S4");
-            break;
-        case 14:
-            snprintf(prefix, PREFIX_SIZE, "FX M3");
-            break;
-        case 15:
-            snprintf(prefix, PREFIX_SIZE, "FX M4");
-            break;
-        default:
-            snprintf(prefix, PREFIX_SIZE, "FXERR");
-            break;
+            snprintf(prefix, PREFIX_SIZE, "%s", fxslot_shortnames[ctrlgroup_entry]);
+        }
+        else
+        {
+            snprintf(prefix, PREFIX_SIZE, "N/A");
         }
         break;
     default:
