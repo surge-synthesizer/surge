@@ -2154,8 +2154,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
                                         synth->isBipolarModulation(ms), Parameter::Menu);
 
-                                    std::string srctxt = modulatorNameWithIndex(
-                                        current_scene, ms, modidx, true, showScene);
+                                    std::string srctxt =
+                                        modulatorNameWithIndex(sc, ms, modidx, true, showScene);
 
                                     auto comp =
                                         std::make_unique<Surge::Widgets::ModMenuCustomComponent>(

@@ -261,8 +261,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         {
             auto portable = cp / L"SurgeXTData";
 
-            std::cout << portable << endl;
-
             if (fs::is_directory(portable))
             {
                 datapath = std::move(portable);
@@ -292,8 +290,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     while (userDataPath.empty() && cp.has_parent_path() && cp != cp.parent_path())
     {
         auto portable = cp / L"SurgeXTUserData";
-
-        std::cout << portable << endl;
 
         if (fs::is_directory(portable))
         {
