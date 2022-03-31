@@ -147,6 +147,12 @@
         <color id="dialog.checkbox.border" value="lightgray"/>
         <color id="dialog.checkbox.tick" value="lightgray"/>
 
+        <color id="vkb.key.mouse_over" value="surgebluetrans"/>
+        <color id="vkb.key.pressed" value="surgeblue"/>
+        <color id="vkb.wheel.background" value="bggray"/>
+        <color id="vkb.wheel.border" value="bordergray"/>
+        <color id="vkb.wheel.value" value="surgeblue"/>
+
         <color id="effect.label.separator" value="#5E5E5E"/>
         <color id="effect.label.text" value="lightgray"/>
         <color id="effect.label.presetname" value="lightgray"/>
