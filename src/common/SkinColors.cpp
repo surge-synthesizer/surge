@@ -452,6 +452,12 @@ namespace VirtualKeyboard
 {
 const Surge::Skin::Color Text("vkb.text", 0x000000, 0xFF), Shadow("vkb.shadow", 0x40000000);
 
+namespace Wheel
+{
+const Surge::Skin::Color Background("vkb.wheel.background", 0xFFFFFF),
+    Border("vkb.wheel.border", 0x979797), Value("vkb.wheel.value", 0xFF9000);
+}
+
 namespace Key
 {
 const Surge::Skin::Color Black("vkb.key.black", 0x000000, 0xFF), White("vkb.key.white", 0xFFFFFF),

@@ -62,6 +62,10 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
         tempoTypeinBorderId,
         tempoTypeinHighlightId,
         tempoTypeinTextId,
+
+        wheelBgId,
+        wheelBorderId,
+        wheelValueId,
     };
 
     int lastDark{-1};

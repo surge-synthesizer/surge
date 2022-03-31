@@ -27,34 +27,27 @@ struct VKeyboardWheel : public juce::Component
     int value{0};
     void paint(juce::Graphics &g) override
     {
-        auto wheelSz = getLocalBounds().reduced(1, 2);
-        g.setColour(juce::Colour(15, 15, 15));
+        auto wheelSz = getLocalBounds().reduced(2, 3);
+
+        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
         g.fillRect(wheelSz);
-        g.setColour(juce::Colour(80, 80, 80));
-        g.drawRect(wheelSz);
+        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId));
+        g.drawRect(wheelSz.expanded(1, 1));
 
         float p = 1.0 * value / range;
+
         if (!unipolar)
+        {
             p = 1.0 * (value + range) / (2 * range);
+        }
 
         // y direction is flipped
         p = 1 - p;
 
-        int nTicks = 10;
-        float shift = 1.0 * p / nTicks;
+        float cp = wheelSz.getY() + p * (wheelSz.getHeight() - 4);
+        auto r = wheelSz.withHeight(2).translated(0, cp - 2).reduced(1, 0);
 
-        for (int i = 0; i < nTicks; ++i)
-        {
-            int lev = 150 - (i + p) * 50.0 / (nTicks);
-            g.setColour(juce::Colour(lev, lev, lev));
-            float yp = (i + p * nTicks - floor(p * nTicks)) * wheelSz.getHeight() / nTicks +
-                       wheelSz.getY();
-            g.drawLine(wheelSz.getX(), yp, wheelSz.getRight(), yp);
-        }
-
-        float cp = wheelSz.getY() + p * wheelSz.getHeight();
-        auto r = wheelSz.withHeight(3).translated(0, cp - 3);
-        g.setColour(juce::Colours::yellow);
+        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
         g.fillRect(r);
     }
 
@@ -281,27 +274,26 @@ void SurgeSynthEditor::resized()
         auto y = adapter->getWindowSizeY();
         auto x = addTempo ? 50 : 0;
         auto wheels = 32;
+        auto margin = 6;
         int tempoHeight = 14, typeinHeight = 18, yOffset = -2;
         int tempoBlockHeight = tempoHeight + typeinHeight;
         int tempoBlockYPos = ((extraYSpaceForVirtualKeyboard - tempoBlockHeight) / 2) + yOffset;
 
         auto xf = juce::AffineTransform().scaled(applyZoomFactor);
-        auto r = juce::Rectangle<int>(x + wheels, y, adapter->getWindowSizeX() - x - wheels,
+        auto r = juce::Rectangle<int>(x + wheels + margin, y,
+                                      adapter->getWindowSizeX() - x - wheels - margin,
                                       extraYSpaceForVirtualKeyboard);
-        // std::cout << "B4 " << r.toString() << std::endl;
-        // r = r.transformedBy(xf);
-        // std::cout << "AT " << r.toString() << std::endl;
         keyboard->setBounds(r);
-        keyboard->setTransform(xf); // juce::AffineTransform().scaled(1.05));
+        keyboard->setTransform(xf);
         keyboard->setVisible(true);
 
         auto pmr = juce::Rectangle<int>(x, y, wheels / 2, extraYSpaceForVirtualKeyboard);
         pitchwheel->setBounds(pmr);
-        pitchwheel->setTransform(xf); // juce::AffineTransform().scaled(1.05));
+        pitchwheel->setTransform(xf);
         pitchwheel->setVisible(true);
-        pmr = pmr.translated(wheels / 2, 0);
+        pmr = pmr.translated((wheels / 2) + margin / 3, 0);
         modwheel->setBounds(pmr);
-        modwheel->setTransform(xf); // juce::AffineTransform().scaled(1.05));
+        modwheel->setTransform(xf);
         modwheel->setVisible(true);
 
         if (addTempo)

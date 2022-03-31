@@ -369,6 +369,11 @@ namespace VirtualKeyboard
 {
 extern const Surge::Skin::Color Text, Shadow;
 
+namespace Wheel
+{
+extern const Surge::Skin::Color Background, Border, Value;
+}
+
 namespace Key
 {
 extern const Surge::Skin::Color Black, White, Separator, MouseOver, Pressed;

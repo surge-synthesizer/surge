@@ -30,8 +30,6 @@ using namespace juce;
 void SurgeJUCELookAndFeel::onSkinChanged()
 {
     setColour(topWindowBorderId, skin->getColor(Colors::Dialog::Titlebar::Background));
-    setColour(tempoTypeinTextId, Colours::black);
-    setColour(tempoTypeinHighlightId, Colours::red);
 
     setColour(DocumentWindow::backgroundColourId, Colour(48, 48, 48));
     setColour(TextButton::buttonColourId, Colour(32, 32, 32));
@@ -101,6 +99,13 @@ void SurgeJUCELookAndFeel::onSkinChanged()
               skin->getColor(Colors::Dialog::Entry::Focus));
     setColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoTypeinTextId,
               skin->getColor(Colors::Dialog::Entry::Text));
+
+    setColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId,
+              skin->getColor(Colors::VirtualKeyboard::Wheel::Background));
+    setColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId,
+              skin->getColor(Colors::VirtualKeyboard::Wheel::Border));
+    setColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId,
+              skin->getColor(Colors::VirtualKeyboard::Wheel::Value));
 
     setColour(MidiKeyboardComponent::textLabelColourId,
               skin->getColor(Colors::VirtualKeyboard::Text));
