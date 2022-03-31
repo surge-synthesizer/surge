@@ -107,7 +107,7 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
         else
         {
             if (a > n_lfos_voice)
-                snprintf(prefix, PREFIX_SIZE, "Scene LFO %i", a - 6);
+                snprintf(prefix, PREFIX_SIZE, "Scene LFO %i", a - n_lfos_voice);
             else
                 snprintf(prefix, PREFIX_SIZE, "LFO %i", a);
         }
