@@ -24,6 +24,8 @@ namespace GUI
 {
 enum KeyboardActions
 {
+    UNDO,
+
     SAVE_PATCH,
     FIND_PATCH,
     FAVORITE_PATCH,
@@ -61,6 +63,9 @@ inline std::string keyboardActionName(KeyboardActions a)
 {
     switch (a)
     {
+    case UNDO:
+        return "UNDO";
+
     case OSC_1:
         return "OSC_1";
 
@@ -127,6 +132,8 @@ inline std::string keyboardActionDescription(KeyboardActions a)
 {
     switch (a)
     {
+    case UNDO:
+        return "Undo changes";
     case SAVE_PATCH:
         return "Open Save Patch Dialog";
     case FIND_PATCH:

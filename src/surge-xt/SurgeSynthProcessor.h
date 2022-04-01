@@ -26,6 +26,14 @@
 #include <execinfo.h>
 #endif
 
+namespace Surge
+{
+namespace GUI
+{
+struct UndoManager;
+}
+} // namespace Surge
+
 //==============================================================================
 /**
  */
@@ -247,5 +255,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     int checkNamesEvery = 0;
 
+  public:
+    std::unique_ptr<Surge::GUI::UndoManager> undoManager;
+
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)
 };

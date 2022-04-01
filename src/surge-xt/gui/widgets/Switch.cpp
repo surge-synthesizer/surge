@@ -87,7 +87,7 @@ void Switch::mouseDown(const juce::MouseEvent &event)
             setValueDirection(1);
         }
 
-        notifyValueChanged();
+        notifyValueChangedWithBeginEnd();
     }
     else
     {
@@ -95,7 +95,7 @@ void Switch::mouseDown(const juce::MouseEvent &event)
         {
             value = (value > 0.5) ? 0 : 1;
 
-            notifyValueChanged();
+            notifyValueChangedWithBeginEnd();
         }
     }
 }
@@ -114,7 +114,7 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
         {
             storage->getPatch().isDirty = true;
             setValueDirection(mul);
-            notifyValueChanged();
+            notifyValueChangedWithBeginEnd();
         }
         else
         {
@@ -123,7 +123,7 @@ void Switch::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWhee
 
             if (ov != value)
             {
-                notifyValueChanged();
+                notifyValueChangedWithBeginEnd();
             }
         }
     }
@@ -219,7 +219,7 @@ struct SwitchAH : public juce::AccessibilityHandler
         if (mswitch->isMultiIntegerValued())
         {
             mswitch->setValueDirection(1);
-            mswitch->notifyValueChanged();
+            mswitch->notifyValueChangedWithBeginEnd();
         }
         else
         {
@@ -227,7 +227,7 @@ struct SwitchAH : public juce::AccessibilityHandler
             {
                 auto value = (mswitch->getValue() > 0.5) ? 0 : 1;
                 mswitch->setValue(value);
-                mswitch->notifyValueChanged();
+                mswitch->notifyValueChangedWithBeginEnd();
             }
         }
     }

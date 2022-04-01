@@ -151,7 +151,7 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 
     mouseDownLongHold(event);
     setValue(coordinateToValue(event.x, event.y));
-    notifyValueChanged();
+    notifyValueChangedWithBeginEnd();
 
     if (isHovered)
     {

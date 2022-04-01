@@ -1498,6 +1498,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 addTo->addItem(displaytxt, true, isChecked, [this, p, i, tag]() {
                                     float ef =
                                         Parameter::intScaledToFloat(i, p->val_max.i, p->val_min.i);
+                                    undoManager()->pushParameterChange(p->id, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
 
@@ -1505,7 +1506,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     {
                                         updateWaveshaperOverlay();
                                     }
-                                    repushAutomationFor(p);
+                                    broadcastPluginAutomationChangeFor(p);
                                     synth->refresh_editor = true;
                                 });
                             }
@@ -1526,13 +1527,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             std::string displaytxt = txt;
 
-                            contextMenu.addItem(displaytxt, true, (i == p->val.i),
-                                                [this, ef, p, i]() {
-                                                    synth->setParameter01(synth->idForParameter(p),
-                                                                          ef, false, false);
-                                                    repushAutomationFor(p);
-                                                    synth->refresh_editor = true;
-                                                });
+                            contextMenu.addItem(
+                                displaytxt, true, (i == p->val.i), [this, ef, p, i]() {
+                                    undoManager()->pushParameterChange(p->id, p->val);
+                                    synth->setParameter01(synth->idForParameter(p), ef, false,
+                                                          false);
+                                    broadcastPluginAutomationChangeFor(p);
+                                    synth->refresh_editor = true;
+                                });
                         }
 
                         if (isCombOnSubtype)
