@@ -2864,7 +2864,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         Surge::GUI::addMenuWithShortcut(tuningSubMenu,
                                         Surge::GUI::toOSCaseForMenu(openname + "Tuning Editor..."),
-                                        showShortcutDescription("Alt+T", "⌥T"),
+                                        showShortcutDescription("Alt + T", u8"\U00002325T"),
                                         [this]() { this->toggleOverlay(TUNING_EDITOR); });
 
         tuningSubMenu.addSeparator();
@@ -3615,8 +3615,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Use Keyboard Shortcuts"), true, kbShortcuts,
                    [this]() { toggleUseKeyboardShortcuts(); });
-    wfMenu.addItem(Surge::GUI::toOSCaseForMenu("Edit Keyboard Shortcuts..."), true, false,
-                   [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
+    Surge::GUI::addMenuWithShortcut(wfMenu,
+                                    Surge::GUI::toOSCaseForMenu("Edit Keyboard Shortcuts..."),
+                                    showShortcutDescription("Alt + B", u8"\U00002325B"), true,
+                                    false, [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
+
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -6282,35 +6285,16 @@ void SurgeGUIEditor::activateFromCurrentFx()
 void SurgeGUIEditor::setupKeymapManager()
 {
     if (!keyMapManager)
+    {
         keyMapManager =
             std::make_unique<keymap_t>(synth->storage.userDataPath, "SurgeXT",
                                        Surge::GUI::keyboardActionName, [](auto a, auto b) {});
+    }
 
     keyMapManager->clearBindings();
-    keyMapManager->addBinding(Surge::GUI::UNDO, {keymap_t::Modifiers::CONTROL, (int)'Z'});
-    keyMapManager->addBinding(Surge::GUI::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
-    keyMapManager->addBinding(Surge::GUI::OSC_2, {keymap_t::Modifiers::ALT, (int)'2'});
-    keyMapManager->addBinding(Surge::GUI::OSC_3, {keymap_t::Modifiers::ALT, (int)'3'});
-    keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
-    keyMapManager->addBinding(Surge::GUI::SAVE_PATCH, {keymap_t::Modifiers::COMMAND, (int)'S'});
-    keyMapManager->addBinding(Surge::GUI::FIND_PATCH, {keymap_t::Modifiers::COMMAND, (int)'F'});
-    keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
-    keyMapManager->addBinding(Surge::GUI::SHOW_LFO_EDITOR, {keymap_t::Modifiers::ALT, (int)'E'});
-    keyMapManager->addBinding(Surge::GUI::FAVORITE_PATCH, {keymap_t::Modifiers::ALT, (int)'F'});
-    keyMapManager->addBinding(Surge::GUI::SHOW_MODLIST, {keymap_t::Modifiers::ALT, (int)'M'});
-    keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
-                              {keymap_t::Modifiers::ALT, (int)'D'});
-    keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
-                              {keymap_t::Modifiers::ALT, (int)'K'});
-    keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
-    keyMapManager->addBinding(Surge::GUI::REFRESH_SKIN, {juce::KeyPress::F5Key});
-    keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
 
-    keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t ::Modifiers::SHIFT, '/'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t ::Modifiers::NONE, '+'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_25, {keymap_t ::Modifiers::SHIFT, '+'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t ::Modifiers::NONE, '-'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t ::Modifiers::SHIFT, '-'});
+    keyMapManager->addBinding(Surge::GUI::UNDO, {keymap_t::Modifiers::COMMAND, (int)'Z'});
+    keyMapManager->addBinding(Surge::GUI::REDO, {keymap_t::Modifiers::COMMAND, (int)'Y'});
 
     keyMapManager->addBinding(Surge::GUI::PREV_PATCH,
                               {keymap_t::Modifiers::COMMAND, juce::KeyPress::leftKey});
@@ -6320,17 +6304,50 @@ void SurgeGUIEditor::setupKeymapManager()
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::leftKey});
     keyMapManager->addBinding(Surge::GUI::NEXT_CATEGORY,
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::rightKey});
+    keyMapManager->addBinding(Surge::GUI::FAVORITE_PATCH, {keymap_t::Modifiers::ALT, (int)'F'});
+    keyMapManager->addBinding(Surge::GUI::FIND_PATCH, {keymap_t::Modifiers::COMMAND, (int)'F'});
+    keyMapManager->addBinding(Surge::GUI::SAVE_PATCH, {keymap_t::Modifiers::COMMAND, (int)'S'});
+
+    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
+    keyMapManager->addBinding(Surge::GUI::OSC_1, {keymap_t::Modifiers::ALT, (int)'1'});
+    keyMapManager->addBinding(Surge::GUI::OSC_2, {keymap_t::Modifiers::ALT, (int)'2'});
+    keyMapManager->addBinding(Surge::GUI::OSC_3, {keymap_t::Modifiers::ALT, (int)'3'});
+
+    // TODO: FIX SCENE ASSUMPTION
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
+
+#if WINDOWS
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
+                              {keymap_t::Modifiers::ALT, (int)'D'});
+#endif
+    keyMapManager->addBinding(Surge::GUI::SHOW_KEYBINDINGS_EDITOR,
+                              {keymap_t::Modifiers::ALT, (int)'B'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_LFO_EDITOR, {keymap_t::Modifiers::ALT, (int)'E'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_MODLIST, {keymap_t::Modifiers::ALT, (int)'M'});
+    keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
+                              {keymap_t::Modifiers::ALT, (int)'K'});
+
+    keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t ::Modifiers::SHIFT, '/'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t ::Modifiers::NONE, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_25, {keymap_t ::Modifiers::SHIFT, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t ::Modifiers::NONE, '-'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t ::Modifiers::SHIFT, '-'});
+
+    keyMapManager->addBinding(Surge::GUI::REFRESH_SKIN, {juce::KeyPress::F5Key});
+
+    keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
 
     keyMapManager->unstreamFromXML();
 }
+
 bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
     auto textChar = key.getTextCharacter();
     auto keyCode = key.getKeyCode();
 
-    /*
-     * We treat escape and tab separately outside the key manager
-     */
+    // We treat Escape and Tab separately outside of the key manager
     if (textChar == juce::KeyPress::tabKey)
     {
         auto tk = Surge::Storage::getUserDefaultValue(
@@ -6374,11 +6391,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
     bool triedKey = Surge::Widgets::isAccessibleKey(key);
     bool shortcutsUsed = getUseKeyboardShortcuts();
-
     auto mapMatch = keyMapManager->matches(key);
+
     if (mapMatch.has_value())
     {
         triedKey = true;
+
         if (shortcutsUsed)
         {
             auto action = *mapMatch;
@@ -6388,6 +6406,10 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::UNDO:
                 undoManager()->undo();
                 return true;
+            case Surge::GUI::REDO:
+                undoManager()->redo();
+                return true;
+            // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
             case Surge::GUI::OSC_1:
                 changeSelectedOsc(0);
                 return true;
@@ -6397,6 +6419,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::OSC_3:
                 changeSelectedOsc(2);
                 return true;
+            // TODO: FIX SCENE ASSUMPTION
             case Surge::GUI::TOGGLE_SCENE:
             {
                 auto s = current_scene + 1;
@@ -6411,6 +6434,10 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::FIND_PATCH:
                 patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
                 patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
+                return true;
+            case Surge::GUI::SHOW_KEYBINDINGS_EDITOR:
+                toggleOverlay(SurgeGUIEditor::KEYBINDINGS_EDITOR);
+                frame->repaint();
                 return true;
             case Surge::GUI::SHOW_TUNING_EDITOR:
                 toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
@@ -6436,9 +6463,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
                 frame->repaint();
                 return true;
-            case Surge::GUI::TOGGLE_DEBUG_CONSOLE: // Windows only
+#if WINDOWS
+            case Surge::GUI::TOGGLE_DEBUG_CONSOLE:
                 Surge::Debug::toggleConsole();
                 return true;
+#endif
             case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
                 toggleVirtualKeyboard();
                 return true;

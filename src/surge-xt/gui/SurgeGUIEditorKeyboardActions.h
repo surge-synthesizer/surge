@@ -17,6 +17,7 @@
 #define SURGE_SURGEGUIEDITORKEYBOARDACTIONS_H
 
 #include <string>
+#include "SurgeGUIUtils.h"
 
 namespace Surge
 {
@@ -25,6 +26,7 @@ namespace GUI
 enum KeyboardActions
 {
     UNDO,
+    REDO,
 
     SAVE_PATCH,
     FIND_PATCH,
@@ -35,26 +37,33 @@ enum KeyboardActions
     PREV_CATEGORY,
     NEXT_CATEGORY,
 
+    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
+    OSC_1,
+    OSC_2,
+    OSC_3,
+
+    // TODO: FIX SCENE ASSUMPTION
+    TOGGLE_SCENE,
+
+#if WINDOWS
+    TOGGLE_DEBUG_CONSOLE,
+#endif
+    SHOW_KEYBINDINGS_EDITOR,
+    SHOW_LFO_EDITOR,
+    SHOW_MODLIST,
+    SHOW_TUNING_EDITOR,
+    TOGGLE_VIRTUAL_KEYBOARD,
+
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
     ZOOM_PLUS_25,
     ZOOM_MINUS_10,
     ZOOM_MINUS_25,
 
-    SHOW_TUNING_EDITOR,
-    SHOW_LFO_EDITOR,
-    SHOW_MODLIST,
-    TOGGLE_DEBUG_CONSOLE, // Windows only
-    TOGGLE_VIRTUAL_KEYBOARD,
+    REFRESH_SKIN,
 
     OPEN_MANUAL,
-    REFRESH_SKIN,
     TOGGLE_ABOUT,
-
-    OSC_1,
-    OSC_2,
-    OSC_3,
-    TOGGLE_SCENE,
 
     n_kbdActions
 };
@@ -65,17 +74,21 @@ inline std::string keyboardActionName(KeyboardActions a)
     {
     case UNDO:
         return "UNDO";
+    case REDO:
+        return "REDO";
 
+    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     case OSC_1:
         return "OSC_1";
-
     case OSC_2:
         return "OSC_2";
     case OSC_3:
         return "OSC_3";
 
+    // TODO: FIX SCENE ASSUMPTION
     case TOGGLE_SCENE:
         return "TOGGLE_SCENE";
+
     case SAVE_PATCH:
         return "SAVE_PATCH";
     case FIND_PATCH:
@@ -83,14 +96,18 @@ inline std::string keyboardActionName(KeyboardActions a)
     case FAVORITE_PATCH:
         return "FAVORITE_PATCH";
 
+    case SHOW_KEYBINDINGS_EDITOR:
+        return "SHOW_KEYBINDINGS_EDITOR";
     case SHOW_TUNING_EDITOR:
         return "SHOW_TUNING_EDITOR";
     case SHOW_LFO_EDITOR:
         return "SHOW_LFO_EDITOR";
     case SHOW_MODLIST:
         return "SHOW_MODLIST";
-    case TOGGLE_DEBUG_CONSOLE: // Windows only
+#if WINDOWS
+    case TOGGLE_DEBUG_CONSOLE:
         return "TOGGLE_DEBUG_CONSOLE";
+#endif
     case TOGGLE_VIRTUAL_KEYBOARD:
         return "TOGGLE_VIRTUAL_KEYBOARD";
 
@@ -130,63 +147,103 @@ inline std::string keyboardActionName(KeyboardActions a)
 // This is the user-facing stringification of an action.
 inline std::string keyboardActionDescription(KeyboardActions a)
 {
+    std::string desc;
+    bool skipOSCase = false;
+
     switch (a)
     {
     case UNDO:
-        return "Undo changes";
+        desc = "Undo";
+        break;
+    case REDO:
+        desc = "Redo (WIP!)";
+        break;
     case SAVE_PATCH:
-        return "Open Save Patch Dialog";
+        desc = "Save Patch";
+        break;
     case FIND_PATCH:
-        return "Find Patch via Search";
+        desc = "Find Patch";
+        break;
     case FAVORITE_PATCH:
-        return "Toggle Patch Favorite";
+        desc = "Mark Patch as Favorite";
+        break;
     case PREV_PATCH:
-        return "Previous Patch";
+        desc = "Previous Patch";
+        break;
     case NEXT_PATCH:
-        return "Next Patch";
+        desc = "Next Patch";
+        break;
     case PREV_CATEGORY:
-        return "Previous Patch Category";
+        desc = "Previous Category";
+        break;
     case NEXT_CATEGORY:
-        return "Next Patch Category";
+        desc = "Next Category";
+        break;
     case ZOOM_TO_DEFAULT:
-        return "Zoom to Default Zoom";
+        desc = "Zoom to Default";
+        break;
     case ZOOM_PLUS_10:
-        return "Zoom up by 10pts";
+        desc = "Zoom +10%";
+        break;
     case ZOOM_PLUS_25:
-        return "Zoom up by 25pts";
+        desc = "Zoom +25%";
+        break;
     case ZOOM_MINUS_10:
-        return "Zoom down by 10pts";
+        desc = "Zoom -10%";
+        break;
     case ZOOM_MINUS_25:
-        return "Zoom down by 25pts";
+        desc = "Zoom -25%";
+        break;
+    case SHOW_KEYBINDINGS_EDITOR:
+        desc = "Keyboard Shortcut Editor";
+        break;
     case SHOW_TUNING_EDITOR:
-        return "Open Tuning Editor";
+        desc = "Tuning Editor";
+        break;
     case SHOW_LFO_EDITOR:
-        return "Open LFO Editor (MSEG, Formula)";
+        desc = "LFO Editor (MSEG or Formula)";
+        break;
     case SHOW_MODLIST:
-        return "Open Modulation List Editor";
+        desc = "Modulation List";
+        break;
+#if WINDOWS
     case TOGGLE_DEBUG_CONSOLE:
-        return "Toggle Debug Console (windows only)";
+        desc = "Debug Console";
+        break;
+#endif
     case TOGGLE_VIRTUAL_KEYBOARD:
-        return "Toggle Virtual Keyboard";
+        desc = "Virtual Keyboard";
+        break;
     case OPEN_MANUAL:
-        return "Open Manual";
+        desc = "Open Manual";
+        break;
     case REFRESH_SKIN:
-        return "Refresh Skin";
+        desc = "Refresh Skin";
+        break;
     case TOGGLE_ABOUT:
-        return "About";
+        desc = "About Surge XT";
+        skipOSCase = true;
+        break;
+    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     case OSC_1:
-        return "Select Oscillator 1";
+        desc = "Select Oscillator 1";
+        break;
     case OSC_2:
-        return "Select Oscillator 2";
+        desc = "Select Oscillator 2";
+        break;
     case OSC_3:
-        return "Select Oscillator 3";
+        desc = "Select Oscillator 3";
+        break;
     case TOGGLE_SCENE:
-        return "Toggle Scene";
-    case n_kbdActions:
-        return "<ERROR>";
+        // TODO: FIX SCENE ASSUMPTION
+        desc = "Toggle Scene A/B";
+        break;
+    default:
+        desc = "<Unknown Action>";
+        break;
     };
 
-    return "<ERROR>";
+    return skipOSCase ? desc : Surge::GUI::toOSCaseForMenu(desc);
 }
 
 } // namespace GUI

@@ -252,6 +252,9 @@ struct UndoManagerImpl
         return false;
     }
 
+    // TODO: implement redo
+    bool redo() { return false; }
+
     void dumpStack()
     {
         for (const auto &q : undoStack)
@@ -285,6 +288,8 @@ void UndoManager::pushOscillator(int scene, int oscnum) { impl->pushOscillator(s
 void UndoManager::pushFX(int fxslot) { impl->pushFX(fxslot); }
 
 bool UndoManager::undo() { return impl->undo(); }
+
+bool UndoManager::redo() { return impl->redo(); }
 
 void UndoManager::dumpStack() { impl->dumpStack(); }
 

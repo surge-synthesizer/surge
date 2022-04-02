@@ -41,6 +41,7 @@ struct UndoManager
     void pushOscillator(int scene, int oscnum);
     void pushFX(int fxslot);
     bool undo();
+    bool redo();
     void dumpStack();
 };
 } // namespace GUI
