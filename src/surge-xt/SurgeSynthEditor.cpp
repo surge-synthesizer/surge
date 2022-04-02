@@ -173,7 +173,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
 
     auto rg = BlockRezoom(this);
     setSize(BASE_WINDOW_SIZE_X, BASE_WINDOW_SIZE_Y + yExtra);
-    setResizable(true, false); // For now
+    // add the bottom right corner resizer only for VST2
+    setResizable(true, processor.wrapperType == juce::AudioProcessor::wrapperType_VST);
 
     adapter->open(nullptr);
 

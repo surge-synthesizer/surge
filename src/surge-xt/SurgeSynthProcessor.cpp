@@ -451,33 +451,33 @@ std::string SurgeSynthProcessor::paramClumpName(int clumpid)
     switch (clumpid)
     {
     case 1:
-        return "Macro Parameters";
+        return "Macros";
     case 2:
-        return "Global and FX";
+        return "Global & FX";
     case 3:
-        return "Scene A Common";
+        return "A Common";
     case 4:
-        return "Scene A Osc";
+        return "A Oscillators";
     case 5:
-        return "Scene A Osc Mixer";
+        return "A Mixer";
     case 6:
-        return "Scene A Filters";
+        return "A Filters";
     case 7:
-        return "Scene A Envelopes";
+        return "A Envelopes";
     case 8:
-        return "Scene A LFOs";
+        return "A LFOs";
     case 9:
-        return "Scene B Common";
+        return "B Common";
     case 10:
-        return "Scene B Osc";
+        return "B Oscillators";
     case 11:
-        return "Scene B Osc Mixer";
+        return "B Mixer";
     case 12:
-        return "Scene B Filters";
+        return "B Filters";
     case 13:
-        return "Scene B Envelopes";
+        return "B Envelopes";
     case 14:
-        return "Scene B LFOs";
+        return "B LFOs";
     }
     return "";
 }
