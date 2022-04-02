@@ -1468,6 +1468,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_settingsmenu);
+            mainMenu = q->asJuceComponent();
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Main Menu", "Open");
             break;
         }
@@ -2578,16 +2579,17 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     addHelpHeaderTo("LFO Presets", hurl, lfoSubMenu);
     lfoSubMenu.addSeparator();
 
-    lfoSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Save " + what + " Preset As..."),
-                       [this, currentLfoId, what]() {
-                           promptForMiniEdit(
-                               "", "Enter the preset name:", what + " Preset Name",
-                               juce::Point<int>{}, [this, currentLfoId](const std::string &s) {
-                                   this->synth->storage.modulatorPreset->savePresetToUser(
-                                       string_to_path(s), &(this->synth->storage), current_scene,
-                                       currentLfoId);
-                               });
-                       });
+    lfoSubMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Save " + what + " Preset As..."),
+        [this, currentLfoId, what]() {
+            promptForMiniEdit(
+                "", "Enter the preset name:", what + " Preset Name", juce::Point<int>{},
+                [this, currentLfoId](const std::string &s) {
+                    this->synth->storage.modulatorPreset->savePresetToUser(
+                        string_to_path(s), &(this->synth->storage), current_scene, currentLfoId);
+                },
+                lfoMenuButton);
+        });
 
     auto presetCategories = this->synth->storage.modulatorPreset->getPresets(&(synth->storage));
     if (!presetCategories.empty())
@@ -2709,11 +2711,13 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss.str().c_str()), [this, where]() {
         // FIXME! This won't work on Linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-        promptForMiniEdit(c, "Enter a new value:", "MPE Pitch Bend Range", where,
-                          [this](const std::string &c) {
-                              int newVal = ::atoi(c.c_str());
-                              this->synth->storage.mpePitchBendRange = newVal;
-                          });
+        promptForMiniEdit(
+            c, "Enter a new value:", "MPE Pitch Bend Range", where,
+            [this](const std::string &c) {
+                int newVal = ::atoi(c.c_str());
+                this->synth->storage.mpePitchBendRange = newVal;
+            },
+            mpeStatus);
     });
 
     std::ostringstream oss2;
@@ -2724,14 +2728,15 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     mpeSubMenu.addItem(Surge::GUI::toOSCaseForMenu(oss2.str().c_str()), [this, where]() {
         // FIXME! This won't work on linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
-        promptForMiniEdit(c, "Enter a default value:", "Default MPE Pitch Bend Range", where,
-                          [this](const std::string &s) {
-                              int newVal = ::atoi(s.c_str());
-                              Surge::Storage::updateUserDefaultValue(
-                                  &(this->synth->storage), Surge::Storage::MPEPitchBendRange,
-                                  newVal);
-                              this->synth->storage.mpePitchBendRange = newVal;
-                          });
+        promptForMiniEdit(
+            c, "Enter a default value:", "Default MPE Pitch Bend Range", where,
+            [this](const std::string &s) {
+                int newVal = ::atoi(s.c_str());
+                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                       Surge::Storage::MPEPitchBendRange, newVal);
+                this->synth->storage.mpePitchBendRange = newVal;
+            },
+            mpeStatus);
     });
 
     auto smoothMenu = makeSmoothMenu(where, Surge::Storage::PitchSmoothingMode,
@@ -3040,21 +3045,23 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             [this, middle_A, where]() {
                 char c[256];
                 snprintf(c, 256, "440.0");
-                promptForMiniEdit(c, fmt::format("Enter a new frequency for {:s}:", middle_A),
-                                  fmt::format("Remap {:s} Frequency", middle_A), where,
-                                  [this](const std::string &s) {
-                                      float freq = ::atof(s.c_str());
-                                      auto kb = Tunings::tuneA69To(freq);
-                                      kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
+                promptForMiniEdit(
+                    c, fmt::format("Enter a new frequency for {:s}:", middle_A),
+                    fmt::format("Remap {:s} Frequency", middle_A), where,
+                    [this](const std::string &s) {
+                        float freq = ::atof(s.c_str());
+                        auto kb = Tunings::tuneA69To(freq);
+                        kb.name = fmt::format("Note 69 Retuned 440 to {:.2f}", freq);
 
-                                      if (!this->synth->storage.remapToKeyboard(kb))
-                                      {
-                                          synth->storage.reportError("This .kbm file is not valid!",
-                                                                     "File Format Error");
-                                          return;
-                                      }
-                                      tuningChanged();
-                                  });
+                        if (!this->synth->storage.remapToKeyboard(kb))
+                        {
+                            synth->storage.reportError("This .kbm file is not valid!",
+                                                       "File Format Error");
+                            return;
+                        }
+                        tuningChanged();
+                    },
+                    tuneStatus);
             });
 
         tuningSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Use MIDI Channel for Octave Shift"),
@@ -3242,18 +3249,20 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
     if (!isFixed)
     {
-        zoomSubMenu.addItem(
-            Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."), [this, where]() {
-                char c[256];
-                snprintf(c, 256, "%d", (int)zoomFactor);
-                promptForMiniEdit(c, "Enter a new value:", "Set Default Zoom Level", where,
-                                  [this](const std::string &s) {
-                                      int newVal = ::atoi(s.c_str());
-                                      Surge::Storage::updateUserDefaultValue(
-                                          &(synth->storage), Surge::Storage::DefaultZoom, newVal);
-                                      resizeWindow(newVal);
-                                  });
-            });
+        zoomSubMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Zoom Level to..."),
+                            [this, where]() {
+                                char c[256];
+                                snprintf(c, 256, "%d", (int)zoomFactor);
+                                promptForMiniEdit(
+                                    c, "Enter a new value:", "Set Default Zoom Level", where,
+                                    [this](const std::string &s) {
+                                        int newVal = ::atoi(s.c_str());
+                                        Surge::Storage::updateUserDefaultValue(
+                                            &(synth->storage), Surge::Storage::DefaultZoom, newVal);
+                                        resizeWindow(newVal);
+                                    },
+                                    zoomStatus);
+                            });
     }
 
     return zoomSubMenu;
@@ -3347,35 +3356,39 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 {
     auto patchDefMenu = juce::PopupMenu();
 
-    patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Patch Author..."), [this,
-                                                                                      where]() {
-        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::DefaultPatchAuthor, "");
-        char txt[256];
-        txt[0] = 0;
-        if (Surge::Storage::isValidUTF8(s))
-            strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter a default text:", "Set Default Patch Author", where,
-                          [this](const std::string &s) {
-                              Surge::Storage::updateUserDefaultValue(
-                                  &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, s);
-                          });
-    });
+    patchDefMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Set Default Patch Author..."), [this, where]() {
+            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::DefaultPatchAuthor, "");
+            char txt[256];
+            txt[0] = 0;
+            if (Surge::Storage::isValidUTF8(s))
+                strxcpy(txt, s.c_str(), 256);
+            promptForMiniEdit(
+                txt, "Enter a default text:", "Set Default Patch Author", where,
+                [this](const std::string &s) {
+                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::DefaultPatchAuthor, s);
+                },
+                mainMenu);
+        });
 
-    patchDefMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Default Patch Comment..."), [this,
-                                                                                       where]() {
-        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::DefaultPatchComment, "");
-        char txt[256];
-        txt[0] = 0;
-        if (Surge::Storage::isValidUTF8(s))
-            strxcpy(txt, s.c_str(), 256);
-        promptForMiniEdit(txt, "Enter a default text:", "Set Default Patch Comment", where,
-                          [this](const std::string &s) {
-                              Surge::Storage::updateUserDefaultValue(
-                                  &(this->synth->storage), Surge::Storage::DefaultPatchComment, s);
-                          });
-    });
+    patchDefMenu.addItem(
+        Surge::GUI::toOSCaseForMenu("Set Default Patch Comment..."), [this, where]() {
+            string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::DefaultPatchComment, "");
+            char txt[256];
+            txt[0] = 0;
+            if (Surge::Storage::isValidUTF8(s))
+                strxcpy(txt, s.c_str(), 256);
+            promptForMiniEdit(
+                txt, "Enter a default text:", "Set Default Patch Comment", where,
+                [this](const std::string &s) {
+                    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                           Surge::Storage::DefaultPatchComment, s);
+                },
+                mainMenu);
+        });
 
     patchDefMenu.addSeparator();
 
@@ -3769,11 +3782,13 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
             Surge::GUI::toOSCaseForMenu("Change Layout Grid Resolution..."), [this, pxres]() {
                 this->promptForMiniEdit(
                     std::to_string(pxres), "Enter a new value:", "Layout Grid Resolution",
-                    juce::Point<int>{400, 400}, [this](const std::string &s) {
+                    juce::Point<int>{400, 400},
+                    [this](const std::string &s) {
                         Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
                                                                Surge::Storage::LayoutGridResolution,
                                                                std::atoi(s.c_str()));
-                    });
+                    },
+                    mainMenu);
             });
 
         skinSubMenu.addSeparator();
@@ -3964,7 +3979,8 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         msn[0] = 0;
         promptForMiniEdit(
             msn, "Enter the preset name:", "Save MIDI Mapping", where,
-            [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); });
+            [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); },
+            mainMenu);
     });
 
     midiSubMenu.addItem(
@@ -5224,13 +5240,23 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 switch (tag)
                 {
                 case tag_status_mpe:
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
+                    mpeStatus = hsw.get();
+                    break;
                 case tag_status_zoom:
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
+                    zoomStatus = hsw.get();
+                    break;
                 case tag_status_tune:
                     addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
+                    tuneStatus = hsw.get();
                     break;
                 case tag_mseg_edit:
+                    addAndMakeVisibleWithTrackingInCG(cg_LFO, *hsw);
+                    break;
                 case tag_lfo_menu:
                     addAndMakeVisibleWithTrackingInCG(cg_LFO, *hsw);
+                    lfoMenuButton = hsw.get();
                     break;
                 case tag_analyzewaveshape:
                     addAndMakeVisibleWithTrackingInCG(cg_FILTER, *hsw);

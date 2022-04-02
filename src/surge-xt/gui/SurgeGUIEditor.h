@@ -622,7 +622,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void promptForMiniEdit(const std::string &value, const std::string &prompt,
                            const std::string &title, const juce::Point<int> &where,
                            std::function<void(const std::string &)> onOK,
-                           juce::Component *returnFocusTo = nullptr);
+                           juce::Component *returnFocusTo /* can be nullptr */);
+
+    /*
+     * Weak pointers to some logical items for focus return
+     */
+    juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
+        *mainMenu{nullptr}, *lfoMenuButton{nullptr};
 
     /*
      * This is the JUCE component management
