@@ -331,7 +331,7 @@ void SurgeSynthEditor::resized()
     if (zfn != 1.0 && rezoomGuard == 0)
     {
         auto br = BlockRezoom(this);
-        adapter->setZoomFactor(round(adapter->getZoomFactor() * zfn), true);
+        adapter->setZoomFactor(round(adapter->getZoomFactor() * zfn), false);
     }
 }
 
