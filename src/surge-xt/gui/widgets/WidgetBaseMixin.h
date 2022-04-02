@@ -237,7 +237,9 @@ template <typename T> struct LongHoldMixin
     bool shouldLongHold()
     {
         // return true;
-        return GUI::isTouchMode(asT()->storage);
+        if (asT()->storage)
+            return GUI::isTouchMode(asT()->storage);
+        return false;
     }
 
     juce::Point<float> startingHoldPosition;
