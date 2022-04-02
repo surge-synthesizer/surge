@@ -255,6 +255,12 @@ void SurgeSynthEditor::resized()
     auto wR = 1.0 * w / adapter->getWindowSizeX();
     auto hR = 1.0 * h / adapter->getWindowSizeY();
 
+    auto ar =
+        1.f * adapter->getWindowSizeX() /
+        (adapter->getWindowSizeY() + (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0));
+    if (getConstrainer())
+        getConstrainer()->setFixedAspectRatio(ar);
+
     auto zfn = std::min(wR, hR);
     if (wR < 1 && hR < 1)
         zfn = std::max(wR, hR);
