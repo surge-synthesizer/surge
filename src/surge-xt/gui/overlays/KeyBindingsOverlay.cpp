@@ -30,13 +30,13 @@ struct KeyBindingsListRow : public juce::Component
     KeyBindingsListRow(Surge::GUI::KeyboardActions a, SurgeGUIEditor *ed) : action(a), editor(ed)
     {
         active = std::make_unique<juce::ToggleButton>();
-        active->setToggleState(editor->keyMapManager->bindings[action].active,
-                               juce::dontSendNotification);
         active->setButtonText("");
         active->onStateChange = [this]() {
             editor->keyMapManager->bindings[action].active = active->getToggleState();
         };
         active->setAccessible(true);
+        active->setToggleState(editor->keyMapManager->bindings[action].active,
+                               juce::dontSendNotification);
         active->setTitle(std::string("Toggle ") + Surge::GUI::keyboardActionDescription(action));
         active->setDescription(std::string("Toggle ") +
                                Surge::GUI::keyboardActionDescription(action));
@@ -47,6 +47,30 @@ struct KeyBindingsListRow : public juce::Component
         name->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
         name->setAccessible(true);
         addAndMakeVisible(*name);
+
+        std::string desc = "";
+        keyDesc = std::make_unique<juce::Label>("keyDesc", desc);
+        keyDesc->setColour(juce::Label::textColourId, juce::Colours::white);
+        // TODO FIXME: Font should be juce::LNF_v4::getPopupMenuFont(), just for Mac symbols!
+        keyDesc->setFont(10.0);
+        keyDesc->setJustificationType(juce::Justification::right);
+        keyDesc->setAccessible(true);
+        addAndMakeVisible(*keyDesc);
+
+        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+
+        resetValues();
+    }
+
+    void resetValues()
+    {
+        active->setToggleState(editor->keyMapManager->bindings[action].active,
+                               juce::dontSendNotification);
+        active->setTitle(std::string("Toggle ") + Surge::GUI::keyboardActionDescription(action));
+        active->setDescription(std::string("Toggle ") +
+                               Surge::GUI::keyboardActionDescription(action));
+
+        name->setText(Surge::GUI::keyboardActionDescription(action), juce::dontSendNotification);
 
         const auto &binding = editor->keyMapManager->bindings[action];
         auto flags = juce::ModifierKeys::noModifiers;
@@ -86,16 +110,14 @@ struct KeyBindingsListRow : public juce::Component
 #else
         desc[0] = std::toupper(desc[0]);
 #endif
+        keyDesc->setText(desc, juce::dontSendNotification);
+    }
 
-        keyDesc = std::make_unique<juce::Label>("keyDesc", desc);
-        keyDesc->setColour(juce::Label::textColourId, juce::Colours::white);
-        // TODO FIXME: Font should be juce::LNF_v4::getPopupMenuFont(), just for Mac symbols!
-        keyDesc->setFont(10.0);
-        keyDesc->setJustificationType(juce::Justification::right);
-        keyDesc->setAccessible(true);
-        addAndMakeVisible(*keyDesc);
-
-        setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    void setAction(Surge::GUI::KeyboardActions a)
+    {
+        action = a;
+        resetValues();
+        repaint();
     }
 
     void resized()
@@ -144,6 +166,8 @@ struct KeyBindingsListBoxModel : public juce::ListBoxModel
 
             rc = new KeyBindingsListRow((Surge::GUI::KeyboardActions)rowNumber, editor);
         }
+
+        rc->setAction((Surge::GUI::KeyboardActions)rowNumber);
 
         return rc;
     }
