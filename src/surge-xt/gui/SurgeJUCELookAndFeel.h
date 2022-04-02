@@ -48,6 +48,8 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                            const juce::String &shortcutKeyText, const juce::Drawable *icon,
                            const juce::Colour *const textColourToUse) override;
 
+    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override{};
+
     enum SurgeColourIds
     {
         componentBgStart = 0x3700001,
