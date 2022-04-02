@@ -424,6 +424,7 @@ void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &
 
         if (shortcutKeyText.isNotEmpty())
         {
+            g.setFont(juce::LookAndFeel_V4::getPopupMenuFont().withHeight(13));
             g.drawText(shortcutKeyText, r, Justification::centredRight, true);
         }
     }

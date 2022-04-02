@@ -350,7 +350,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         kb->setSkin(currentSkin, bitmapStore);
         kb->setEnclosingParentPosition(posRect);
-        kb->setEnclosingParentTitle("Edit Keybindings");
+        kb->setEnclosingParentTitle("Keyboard Shortcut Editor");
         return kb;
     }
     default:
@@ -362,15 +362,18 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
                                  std::function<void(Surge::Overlays::OverlayComponent *)> setup)
 {
     auto ol = createOverlay(olt);
+
     if (!ol)
     {
         juceOverlays.erase(olt);
         return;
     }
+
     // copy these before the std::move below
     auto t = ol->getEnclosingParentTitle();
     auto r = ol->getEnclosingParentPosition();
     auto c = ol->getHasIndependentClose();
+
     setup(ol.get());
 
     std::function<void()> onClose = []() {};
