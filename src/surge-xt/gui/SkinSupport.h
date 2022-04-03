@@ -420,7 +420,8 @@ class SkinDB : public juce::DeletedAtShutdown
 
         bool matchesSkin(const Skin::ptr_t s) const
         {
-            return s.get() && s->root == root && s->name == name;
+            return s.get() && ((s->root == root && s->name == name) ||
+                               (rootType == MEMORY && s->displayName == MemorySkinName));
         }
     };
 
