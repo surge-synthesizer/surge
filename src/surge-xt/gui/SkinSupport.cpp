@@ -173,8 +173,8 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
     {
         auto memSkin = Entry();
         memSkin.rootType = MEMORY;
-        memSkin.name = "Default";
-        memSkin.displayName = "Default";
+        memSkin.name = MemorySkinName;
+        memSkin.displayName = MemorySkinName;
         memSkin.category = "";
         memSkin.root = "";
         availableSkins.push_back(memSkin);
