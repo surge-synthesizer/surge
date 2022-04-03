@@ -49,6 +49,9 @@ void loadTypefacesFromPath(const fs::path &p,
                            std::unordered_map<std::string, juce::Typeface::Ptr> &result);
 
 extern const std::string NoneClassName;
+
+static constexpr char MemorySkinName[] = "Surge Classic";
+
 class SkinDB;
 
 enum RootType

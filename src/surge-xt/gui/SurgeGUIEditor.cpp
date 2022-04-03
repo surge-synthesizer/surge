@@ -3751,7 +3751,9 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                 dname += PATH_SEPARATOR + entry.name + ")";
             }
 
-            auto checked = entry.matchesSkin(currentSkin);
+            auto checked = entry.matchesSkin(currentSkin) ||
+                           (entry.rootType == Surge::GUI::MEMORY &&
+                            currentSkin->displayName == Surge::GUI::MemorySkinName);
 
             addToThis->addItem(dname, true, checked, [this, entry]() {
                 setupSkinFromEntry(entry);
