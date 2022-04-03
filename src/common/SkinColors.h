@@ -214,7 +214,7 @@ extern const Surge::Skin::Color Background, Border, BorderHover, Text, TextHover
 }
 namespace Macro
 {
-extern const Surge::Skin::Color Background, Fill, CurrentValue;
+extern const Surge::Skin::Color Background, Border, Fill, CurrentValue;
 }
 } // namespace ModSource
 

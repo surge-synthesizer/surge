@@ -206,7 +206,7 @@ void ModulationSourceButton::paint(juce::Graphics &g)
         g.fillRect(valRect);
 
         // macro slider frame
-        g.setColour(skin->getColor(Colors::ModSource::Used::Background));
+        g.setColour(skin->getColor(Colors::ModSource::Macro::Border));
         g.drawRect(bottomRect);
 
         if (isBipolar)
