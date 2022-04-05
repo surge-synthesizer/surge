@@ -28,8 +28,25 @@ struct IComponentTagValue
     virtual float getValue() const = 0;
     virtual void setValue(float) = 0;
 
-    virtual void startHover(const juce::Point<float> &) {}
-    virtual void endHover() {}
+    int hoverCount{0};
+    virtual int incrementHover()
+    {
+        hoverCount++;
+        return hoverCount;
+    }
+    virtual int decrementHover()
+    {
+        hoverCount--;
+        return hoverCount;
+    }
+    virtual void forceEndHover()
+    {
+        hoverCount = 1;
+        endHover();
+    }
+
+    virtual void startHover(const juce::Point<float> &) { incrementHover(); }
+    virtual void endHover() { decrementHover(); }
 
     juce::Component *asJuceComponent()
     {
