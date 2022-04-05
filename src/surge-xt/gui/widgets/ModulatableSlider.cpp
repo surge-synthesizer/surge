@@ -378,6 +378,9 @@ void ModulatableSlider::onSkinChanged()
 void ModulatableSlider::mouseEnter(const juce::MouseEvent &event) { startHover(event.position); }
 void ModulatableSlider::startHover(const juce::Point<float> &p)
 {
+    if (incrementHover() > 1)
+        return;
+
     enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::START, p);
     isHovered = true;
     auto sge = firstListenerOfType<SurgeGUIEditor>();
@@ -391,6 +394,9 @@ void ModulatableSlider::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
 void ModulatableSlider::endHover()
 {
+    if (decrementHover() != 0)
+        return;
+
     enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::LEAVE);
     isHovered = false;
     auto sge = firstListenerOfType<SurgeGUIEditor>();
