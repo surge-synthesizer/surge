@@ -543,9 +543,9 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Initialize Patch"), initAction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Initialize Patch"), initAction);
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Set Current Patch as Default"), [this]() {
+    contextMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this]() {
         Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
                                                storage->patch_list[current_patch].name);
 
@@ -569,11 +569,11 @@ void PatchSelector::showClassicMenu(bool single_category)
     if (sge)
     {
         Surge::GUI::addMenuWithShortcut(
-            contextMenu, Surge::GUI::toOSCaseForMenu("Save Patch"),
+            contextMenu, Surge::GUI::toOSCase("Save Patch"),
             sge->showShortcutDescription("Ctrl + S", u8"\U00002318S"),
             [this, sge]() { sge->showOverlay(SurgeGUIEditor::SAVE_PATCH); });
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Patch from File..."), [this, sge]() {
+        contextMenu.addItem(Surge::GUI::toOSCase("Load Patch from File..."), [this, sge]() {
             auto patchPath = storage->userPatchesPath;
 
             patchPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastPatchPath,
@@ -609,7 +609,7 @@ void PatchSelector::showClassicMenu(bool single_category)
 
         if (isUser)
         {
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Rename Patch"), [this, sge]() {
+            contextMenu.addItem(Surge::GUI::toOSCase("Rename Patch"), [this, sge]() {
                 sge->showOverlay(
                     SurgeGUIEditor::SAVE_PATCH, [this](Overlays::OverlayComponent *co) {
                         auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
@@ -626,7 +626,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                     });
             });
 
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Delete Patch"), [this, initAction]() {
+            contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this, initAction]() {
                 auto cb = juce::ModalCallbackFunction::create([this, initAction](int okcs) {
                     if (okcs)
                     {
@@ -650,27 +650,27 @@ void PatchSelector::showClassicMenu(bool single_category)
 
 #if INCLUDE_PATCH_BROWSER
         Surge::GUI::addMenuWithShortcut(
-            contextMenu, Surge::GUI::toOSCaseForMenu("Patch Database..."),
+            contextMenu, Surge::GUI::toOSCase("Patch Database..."),
             sge->showShortcutDescription("Alt + P", u8"\U00002325P"),
             [this, sge]() { sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER); });
 #endif
     }
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Patch Browser"),
+    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Patch Browser"),
                         [this]() { this->storage->refresh_patchlist(); });
 
     contextMenu.addSeparator();
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open User Patches Folder..."),
+    contextMenu.addItem(Surge::GUI::toOSCase("Open User Patches Folder..."),
                         [this]() { Surge::GUI::openFileOrFolder(this->storage->userPatchesPath); });
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Open Factory Patches Folder..."), [this]() {
+    contextMenu.addItem(Surge::GUI::toOSCase("Open Factory Patches Folder..."), [this]() {
         Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_factory");
     });
 
-    contextMenu.addItem(
-        Surge::GUI::toOSCaseForMenu("Open Third Party Patches Folder..."),
-        [this]() { Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_3rdparty"); });
+    contextMenu.addItem(Surge::GUI::toOSCase("Open Third Party Patches Folder..."), [this]() {
+        Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_3rdparty");
+    });
 
     contextMenu.addSeparator();
 
@@ -749,9 +749,9 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
         }
 
         subMenu.addSeparator();
-        subMenu.addItem(Surge::GUI::toOSCaseForMenu("Export favorites to..."),
+        subMenu.addItem(Surge::GUI::toOSCase("Export favorites to..."),
                         [this]() { exportFavorites(); });
-        subMenu.addItem(Surge::GUI::toOSCaseForMenu("Load favorites from..."),
+        subMenu.addItem(Surge::GUI::toOSCase("Load favorites from..."),
                         [this]() { importFavorites(); });
 
         p.addSubMenu("Favorites", subMenu);
@@ -764,10 +764,8 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
                       [this, f]() { this->loadPatch(f.first); });
         }
         p.addSeparator();
-        p.addItem(Surge::GUI::toOSCaseForMenu("Export favorites to..."),
-                  [this]() { exportFavorites(); });
-        p.addItem(Surge::GUI::toOSCaseForMenu("Load favorites from..."),
-                  [this]() { importFavorites(); });
+        p.addItem(Surge::GUI::toOSCase("Export favorites to..."), [this]() { exportFavorites(); });
+        p.addItem(Surge::GUI::toOSCase("Load favorites from..."), [this]() { importFavorites(); });
     }
 
     return true;

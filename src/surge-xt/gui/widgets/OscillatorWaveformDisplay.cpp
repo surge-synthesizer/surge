@@ -473,14 +473,14 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             sge->showOverlay(SurgeGUIEditor::WAVETABLESCRIPTING_EDITOR);
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Wavetable Script Editor..."), owts);
+    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
      */
 
     contextMenu.addSeparator();
 
     auto refresh = [this]() { this->storage->refresh_wtlist(); };
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Refresh Wavetable List"), refresh);
+    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable List"), refresh);
 
     auto rnaction = [this]() {
         char c[256];
@@ -498,12 +498,12 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Change Wavetable Display Name..."), rnaction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Change Wavetable Display Name..."), rnaction);
 
     contextMenu.addSeparator();
 
     auto action = [this]() { this->loadWavetableFromFile(); };
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Load Wavetable from File..."), action);
+    contextMenu.addItem(Surge::GUI::toOSCase("Load Wavetable from File..."), action);
 
     auto exportAction = [this]() {
         int oscNum = this->oscInScene;
@@ -520,7 +520,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Export Wavetable to File..."), exportAction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Export Wavetable to File..."), exportAction);
 
     contextMenu.addSeparator();
 
@@ -570,17 +570,17 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
 
             auto text = fmt::format("{} Wavetable Display", (customEditor) ? "2D" : "3D");
 
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(text), action);
+            contextMenu.addItem(Surge::GUI::toOSCase(text), action);
 
             contextMenu.addSeparator();
 
             contextMenu.addSectionHeader("INFO");
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(
-                                    fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
-                                false, false, nullptr);
-            contextMenu.addItem(Surge::GUI::toOSCaseForMenu(
-                                    fmt::format("Frame Length: {} samples", oscdata->wt.size)),
-                                false, false, nullptr);
+            contextMenu.addItem(
+                Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
+                false, false, nullptr);
+            contextMenu.addItem(
+                Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
+                false, false, nullptr);
         }
     }
 }

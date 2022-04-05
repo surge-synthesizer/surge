@@ -14,15 +14,24 @@ namespace Surge
 namespace GUI
 {
 
-std::string toOSCaseForMenu(const std::string &imenuName)
+/*
+ * Used to convert letter case for menu entries
+ * Input string should be macOS style (Menu Entry is Like This)
+ * Output is string in Windows style (Menu entry is like this), or unmodified if we're on Mac
+ */
+std::string toOSCase(const std::string &imenuName)
 {
 #if WINDOWS
     auto menuName = imenuName;
+
     for (auto i = 1; i < menuName.length() - 1; ++i)
+    {
         if (!(isupper(menuName[i]) && (isupper(menuName[i + 1]) || !isalpha(menuName[i + 1]))))
         {
             menuName[i] = std::tolower(menuName[i]);
         }
+    }
+
     return menuName;
 #else
     return imenuName;
@@ -45,9 +54,9 @@ bool isTouchMode(SurgeStorage *storage)
 }
 
 /*
- * We kinda want to know if we are standalone here, but don't have reference to the processor
- * but that's a constant for a process (you can't mix standalone and not) so make it a static
- * and explicitly grab this symbol in the SGE startup path
+ * We want to know if we are standalone here, but we don't have a reference to the processor
+ * Since that is a constant for a process (you can't mix standalone and not), make it a static
+ * and explicitly grab this symbol in the SurgeGUIEditor startup path
  */
 static bool isStandalone{false};
 void setIsStandalone(bool b) { isStandalone = b; }
@@ -72,8 +81,10 @@ bool allowKeyboardEdits(SurgeStorage *storage)
     return res;
 }
 
-// Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
-// intersect, the intersection point may be stored in the floats i_x and i_y.
+/*
+ * Returns true if the two lines (p0-p1 and p2-p3) intersect.
+ * In addition, if the lines intersect, the intersection point may be stored to floats i_x and i_y.
+ */
 bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y,
                            float p3_x, float p3_y, float *i_x, float *i_y)
 {
@@ -106,7 +117,7 @@ void openFileOrFolder(const std::string &f)
 
     if (path.isDirectory())
     {
-        // See this for why we branch out linux here
+        // See this for why we branch out Linux here
         // https://forum.juce.com/t/linux-spaces-in-path-startasprocess-and-process-opendocument/47296
 #if LINUX
         if (vfork() == 0)

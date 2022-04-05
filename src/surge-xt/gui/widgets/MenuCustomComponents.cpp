@@ -362,7 +362,7 @@ std::unique_ptr<juce::AccessibilityHandler> ModMenuCustomComponent::createAccess
 // bit of a hack - the menus mean something different so do a cb on a cb
 ModMenuForAllComponent::ModMenuForAllComponent(std::function<void(AllAction)> cb)
     : allCB(cb),
-      ModMenuCustomComponent(Surge::GUI::toOSCaseForMenu("Apply to All"), "", [this](OpType op) {
+      ModMenuCustomComponent(Surge::GUI::toOSCase("Apply to All"), "", [this](OpType op) {
           switch (op)
           {
           case ModMenuCustomComponent::CLEAR:

@@ -2193,14 +2193,14 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
     std::string openname = (sge->isAnyOverlayPresent(tag)) ? "Close " : "Open ";
 
-    Surge::GUI::addMenuWithShortcut(
-        contextMenu, Surge::GUI::toOSCaseForMenu(openname + olname + "..."),
-        sge->showShortcutDescription("Alt+E", "⌥E"), [this, sge, tag]() {
-            if (sge)
-            {
-                sge->toggleOverlay(tag);
-            }
-        });
+    Surge::GUI::addMenuWithShortcut(contextMenu, Surge::GUI::toOSCase(openname + olname + "..."),
+                                    sge->showShortcutDescription("Alt+E", "⌥E"),
+                                    [this, sge, tag]() {
+                                        if (sge)
+                                        {
+                                            sge->toggleOverlay(tag);
+                                        }
+                                    });
 
     if (isMSEG())
     {
@@ -2208,7 +2208,7 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
         bool isChecked = ms->loopMode == MSEGStorage::ONESHOT;
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("No Looping"), true, isChecked,
+        contextMenu.addItem(Surge::GUI::toOSCase("No Looping"), true, isChecked,
                             [this, isChecked, sge]() {
                                 if (isChecked)
                                 {
@@ -2228,7 +2228,7 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
         isChecked = ms->loopMode == MSEGStorage::LOOP;
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Always"), true, isChecked,
+        contextMenu.addItem(Surge::GUI::toOSCase("Loop Always"), true, isChecked,
                             [this, isChecked, sge]() {
                                 if (isChecked)
                                 {
@@ -2248,7 +2248,7 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
         isChecked = ms->loopMode == MSEGStorage::GATED_LOOP;
 
-        contextMenu.addItem(Surge::GUI::toOSCaseForMenu("Loop Until Release"), true, isChecked,
+        contextMenu.addItem(Surge::GUI::toOSCase("Loop Until Release"), true, isChecked,
                             [this, isChecked, sge]() {
                                 if (isChecked)
                                 {
