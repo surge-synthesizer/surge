@@ -2,13 +2,17 @@
 With surge XT, you can include TTF files in your .skin and use them for various controls.
 Put them in the skin/fonts directory and theywill be available!
 [doc]-->
-<surge-skin name="10 Adding Fonts" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
-  <globals>
-  </globals>
-  <component-classes>
-  </component-classes>
-  <controls>
-    <control ui_identifier="osc.param_1" font_family="UglyTypist" font_size="13"/>
-    <control ui_identifier="osc.param_2" font_family="Mrs Beasley"/>
-  </controls>
+<surge-skin name="10 Adding Fonts" category="Tutorials" author="Surge Synth Team"
+            authorURL="https://surge-synth-team.org/" version="2">
+    <globals>
+        <!-- There are global elements for fonts. This is still a work in progress as of surge xt 1.1 but we are slowly adding them as
+             we approach surge 2.0. For now the modbutton font works this way -->
+        <font id="fonts.widgets.modbutton" family="PlayfairDisplay" size="8"/>
+    </globals>
+    <component-classes>
+    </component-classes>
+    <controls>
+        <control ui_identifier="osc.param_1" font_family="UglyTypist" font_size="13"/>
+        <control ui_identifier="osc.param_2" font_family="Mrs Beasley"/>
+    </controls>
 </surge-skin>
