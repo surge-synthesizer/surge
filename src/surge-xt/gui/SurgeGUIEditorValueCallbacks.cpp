@@ -631,8 +631,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     {
         if (lfoDisplay->isMSEG() || lfoDisplay->isFormula())
         {
-            auto tag = lfoDisplay->isMSEG() ? MSEG_EDITOR : FORMULA_EDITOR;
-            lfoDisplay->showLFODisplayPopupMenu(tag);
+            std::string olname = lfoDisplay->isMSEG() ? "MSEG Editor" : "Formula Editor";
+            std::string helpname = lfoDisplay->isMSEG() ? "mseg-editor" : "formula-editor";
+
+            auto msurl = SurgeGUIEditor::helpURLForSpecial(&(synth->storage), helpname);
+            auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+            auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(olname, hurl);
+            hmen->setSkin(currentSkin, bitmapStore);
+            auto contextMenu = juce::PopupMenu();
+            contextMenu.addCustomItem(-1, std::move(hmen));
+            contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
+                                      Surge::GUI::makeEndHoverCallback(control));
         }
     }
 

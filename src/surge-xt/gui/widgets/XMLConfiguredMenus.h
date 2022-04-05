@@ -156,6 +156,9 @@ struct OscillatorMenu : public juce::Component,
     }
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHovered = false;
         repaint();
     }

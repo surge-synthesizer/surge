@@ -1752,9 +1752,6 @@ void LFOAndStepDisplay::shiftRight()
 
 void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
 {
-    lfoTypeHover = -1;
-    stepSeqShiftHover = -1;
-
     if (overWaveform)
     {
         enterExitWaveform(false);
