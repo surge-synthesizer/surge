@@ -3038,7 +3038,8 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                                 showTypein);
         }
 
-        contextMenu.showMenuAsync(sge->popupMenuOptions());
+        contextMenu.showMenuAsync(sge->popupMenuOptions(),
+                                  Surge::GUI::makeEndHoverCallback(pControl));
     }
     return 1;
 }

@@ -494,7 +494,8 @@ struct FormulaControlArea : public juce::Component,
 
             editor->addHelpHeaderTo("Formula Editor", hurl, contextMenu);
 
-            contextMenu.showMenuAsync(editor->popupMenuOptions(this, false));
+            contextMenu.showMenuAsync(editor->popupMenuOptions(this, false),
+                                      Surge::GUI::makeEndHoverCallback(c));
         }
         break;
         default:
