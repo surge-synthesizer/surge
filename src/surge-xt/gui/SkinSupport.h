@@ -196,6 +196,13 @@ class Skin
     juce::Font getFont(const Surge::Skin::FontDesc &d);
 
   private:
+    struct FontOverride
+    {
+        std::string family{"Comic Sans"};
+        int size{9};
+    };
+    std::unordered_map<std::string, FontOverride> fontOverrides;
+
     juce::Colour
     getColor(const Surge::Skin::Color &id, const juce::Colour &def,
              std::unordered_set<std::string> noLoops = std::unordered_set<std::string>()) const

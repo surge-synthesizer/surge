@@ -634,6 +634,21 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
                 colors[id] = ColorStore(val, ColorStore::UNRESOLVED_ALIAS);
             }
         }
+        if (g.first == "font")
+        {
+            auto p = g.second.props;
+            auto fo = FontOverride();
+            if (p.find("family") != p.end())
+                fo.family = p["family"];
+            if (p.find("size") != p.end())
+                fo.size = std::atoi(p["size"].c_str());
+            if (p.find("id") != p.end())
+                fontOverrides[p["id"]] = fo;
+            else
+            {
+                FIXMEERROR << "Font without ID ignored ";
+            }
+        }
 
         if (g.first == "background" && g.second.props.find("image") != g.second.props.end())
         {
@@ -1083,6 +1098,14 @@ juce::Font Skin::getFont(const Surge::Skin::FontDesc &d)
     jassert((int)Surge::Skin::FontDesc::plain == juce::Font::FontStyleFlags::plain);
     jassert((int)Surge::Skin::FontDesc::italic == juce::Font::FontStyleFlags::italic);
     jassert((int)Surge::Skin::FontDesc::bold == juce::Font::FontStyleFlags::bold);
+
+    if (fontOverrides.find(d.id) != fontOverrides.end())
+    {
+        auto fo = fontOverrides[d.id];
+        if (typeFaces.find(fo.family) != typeFaces.end())
+            return juce::Font(typeFaces[fo.family]).withPointHeight(fo.size);
+        return juce::Font(fo.family, fo.size, juce::Font::FontStyleFlags::plain);
+    }
 
     if (d.hasParent)
     {
