@@ -204,6 +204,7 @@
         <color id="filtermenu.value.hover" value="white"/>
 
         <color id="patchbrowser.text" value="lightgray"/>
+        <color id="patchbrowser.text.hover" value="#D4D4D4"/>
 
         <color id="patchbrowser.tooltip.border" value="bordergray"/>
         <color id="patchbrowser.tooltip.background" value="darkergray"/>

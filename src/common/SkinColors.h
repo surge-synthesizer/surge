@@ -286,7 +286,7 @@ extern const Surge::Skin::Color Background;
 
 namespace PatchBrowser
 {
-extern const Surge::Skin::Color Text;
+extern const Surge::Skin::Color Text, TextHover;
 
 namespace CommentTooltip
 {
@@ -303,15 +303,15 @@ namespace Scene
 {
 namespace PitchBendRange
 {
-extern const Surge::Skin::Color Text, HoverText;
+extern const Surge::Skin::Color Text, TextHover;
 }
 namespace SplitPoint
 {
-extern const Surge::Skin::Color Text, HoverText;
+extern const Surge::Skin::Color Text, TextHover;
 }
 namespace KeytrackRoot
 {
-extern const Surge::Skin::Color Text, HoverText;
+extern const Surge::Skin::Color Text, TextHover;
 }
 } // namespace Scene
 
@@ -398,7 +398,7 @@ extern const Surge::Skin::Color ActiveTabBackground, InactiveTabBackground, Bord
 namespace TextMultiSwitch
 {
 extern const Surge::Skin::Color Background, Border, Separator, DeactivatedText, Text, OnText,
-    OnFill, HoverText, HoverOnText, HoverFill, HoverOnFill, HoverOnBorder, UnpressedHighlight;
+    OnFill, TextHover, HoverOnText, HoverFill, HoverOnFill, HoverOnBorder, UnpressedHighlight;
 }
 } // namespace JuceWidgets
 } // namespace Colors

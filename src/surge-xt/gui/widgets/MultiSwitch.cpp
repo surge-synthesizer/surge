@@ -613,7 +613,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
                 {
                     g.setColour(skin->getColor(clr::HoverFill));
                     g.fillRoundedRectangle(fc.toFloat(), cornerIn);
-                    fg = skin->getColor(clr::HoverText);
+                    fg = skin->getColor(clr::TextHover);
                 }
             }
 

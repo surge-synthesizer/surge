@@ -1,5 +1,6 @@
 <surge-skin name="Surge Classic" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
     <globals>
+        <color id="patchbrowser.text.hover" value="#393B45"/>
     </globals>
 
     <component-classes>

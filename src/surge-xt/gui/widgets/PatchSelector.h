@@ -111,12 +111,17 @@ struct PatchSelector : public juce::Component,
 
     void resized() override;
     void mouseDown(const juce::MouseEvent &event) override;
-    bool favoritesHover{false}, searchHover{false};
+    bool favoritesHover{false}, searchHover{false}, browserHover{false}, stuckHover{false};
     void mouseMove(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
+
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
+        browserHover = false;
         favoritesHover = false;
         searchHover = false;
         tooltipCountdown = -1;

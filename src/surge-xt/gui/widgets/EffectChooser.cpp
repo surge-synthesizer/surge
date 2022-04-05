@@ -236,7 +236,7 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
 
 void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
 {
-    if (!event.mods.isRightButtonDown() && !hasDragged && currentClicked >= 0)
+    if (!event.mods.isPopupMenu() && !hasDragged && currentClicked >= 0)
     {
         storage->getPatch().isDirty = true;
         deactivatedBitmask ^= (1 << currentClicked);
@@ -284,7 +284,7 @@ void EffectChooser::mouseDown(const juce::MouseEvent &event)
 
     if (currentClicked >= 0)
     {
-        if (event.mods.isRightButtonDown())
+        if (event.mods.isPopupMenu())
         {
             createFXMenu();
         }
