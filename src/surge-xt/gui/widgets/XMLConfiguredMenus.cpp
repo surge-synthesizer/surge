@@ -608,7 +608,7 @@ void FxMenu::populate()
     menu.addColumnBreak();
     menu.addSectionHeader("FUNCTIONS");
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Clear Current FX Unit"), [this]() {
+    menu.addItem(Surge::GUI::toOSCase("Clear Current FX Unit"), [this]() {
         loadSnapshot(fxt_off, nullptr, 0);
         if (getControlListener())
         {
@@ -621,22 +621,22 @@ void FxMenu::populate()
     {
         auto initSubmenu = juce::PopupMenu();
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Scene A Insert FX Chain"), true,
-                            false, [this, sge]() { sge->enqueueFXChainClear(0); });
+        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Scene A Insert FX Chain"), true, false,
+                            [this, sge]() { sge->enqueueFXChainClear(0); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Scene B Insert FX Chain"), true,
-                            false, [this, sge]() { sge->enqueueFXChainClear(1); });
+        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Scene B Insert FX Chain"), true, false,
+                            [this, sge]() { sge->enqueueFXChainClear(1); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Send FX Chain"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Send FX Chain"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(2); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear Global FX Chain"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Global FX Chain"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(3); });
 
-        initSubmenu.addItem(Surge::GUI::toOSCaseForMenu("Clear All FX Chains"), true, false,
+        initSubmenu.addItem(Surge::GUI::toOSCase("Clear All FX Chains"), true, false,
                             [this, sge]() { sge->enqueueFXChainClear(-1); });
 
-        menu.addSubMenu(Surge::GUI::toOSCaseForMenu("Clear Chains"), initSubmenu);
+        menu.addSubMenu(Surge::GUI::toOSCase("Clear Chains"), initSubmenu);
     }
 
     menu.addSeparator();
@@ -650,19 +650,18 @@ void FxMenu::populate()
         }
     };
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Refresh FX Preset List"), rsA);
+    menu.addItem(Surge::GUI::toOSCase("Refresh FX Preset List"), rsA);
     if (fx->type.val.i != fxt_off)
     {
-        menu.addItem(Surge::GUI::toOSCaseForMenu("Save FX Preset As..."),
-                     [this]() { this->saveFX(); });
+        menu.addItem(Surge::GUI::toOSCase("Save FX Preset As..."), [this]() { this->saveFX(); });
     }
 
     menu.addSeparator();
 
-    menu.addItem(Surge::GUI::toOSCaseForMenu("Copy FX Preset"), [this]() { this->copyFX(); });
+    menu.addItem(Surge::GUI::toOSCase("Copy FX Preset"), [this]() { this->copyFX(); });
     if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
     {
-        menu.addItem(Surge::GUI::toOSCaseForMenu("Paste FX Preset"), [this]() {
+        menu.addItem(Surge::GUI::toOSCase("Paste FX Preset"), [this]() {
             this->pasteFX();
             this->storage->getPatch().isDirty = true;
         });

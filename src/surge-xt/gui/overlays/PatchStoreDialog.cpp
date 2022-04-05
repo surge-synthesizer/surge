@@ -194,7 +194,7 @@ PatchStoreDialog::PatchStoreDialog()
 
     auto stbTitle = "Store Tuning in Patch";
 
-    storeTuningLabel = makeL(Surge::GUI::toOSCaseForMenu(stbTitle));
+    storeTuningLabel = makeL(Surge::GUI::toOSCase(stbTitle));
 
     storeTuningButton = std::make_unique<juce::ToggleButton>();
     storeTuningButton->setButtonText("");

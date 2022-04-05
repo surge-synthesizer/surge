@@ -243,7 +243,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
     };
 
-    return skipOSCase ? desc : Surge::GUI::toOSCaseForMenu(desc);
+    return skipOSCase ? desc : Surge::GUI::toOSCase(desc);
 }
 
 } // namespace GUI

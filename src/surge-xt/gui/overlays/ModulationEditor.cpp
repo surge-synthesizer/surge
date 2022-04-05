@@ -975,7 +975,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         {
             men.addSeparator();
 
-            men.addItem(Surge::GUI::toOSCaseForMenu("Clear Filter"), [this]() {
+            men.addItem(Surge::GUI::toOSCase("Clear Filter"), [this]() {
                 editor->modContents->clearFilters();
                 filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
                 filterW->setLabels({"-"});
