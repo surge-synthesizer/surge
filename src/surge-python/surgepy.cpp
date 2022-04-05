@@ -102,6 +102,8 @@ struct SurgePyModRouting
 {
     SurgePyModSource source;
     SurgePyNamedParam dest;
+    int source_scene;
+    int source_index;
     float depth;
     float normalizedDepth;
 };
@@ -598,25 +600,27 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                                   (const float *)(&output[0][0]));
     }
 
-    void setModulationPy(const SurgePyNamedParam &to, SurgePyModSource const &from, float amt)
+    void setModulationPy(const SurgePyNamedParam &to, SurgePyModSource const &from, float amt,
+                         int scene, int index)
     {
-        // FIXME - 4871
-        setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), amt, 0, 0);
+        setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene, index,
+                      amt);
     }
-    float getModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
+    float getModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from, int scene,
+                          int index)
     {
-        // FIXME - 4871
-        return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), 0, 0);
+        return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene,
+                             index);
     }
     bool isValidModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
     {
         return isValidModulation(to.getID().getSynthSideId(), (modsources)from.getModSource());
     }
-    bool isActiveModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
+    bool isActiveModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from, int scene,
+                              int index)
     {
-        // FIXME - 4871
-        return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), 0,
-                                  0);
+        return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(),
+                                  scene, index);
     }
     bool isBipolarModulationPy(const SurgePyModSource &from)
     {
@@ -739,8 +743,10 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             r.source = SurgePyModSource((modsources)gm.source_id);
             r.dest = surgePyNamedParamById(gm.destination_id);
             r.depth = gm.depth;
-            // FIXME 4871
-            r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id, 0, 0);
+            r.source_scene = gm.source_scene;
+            r.source_index = gm.source_index;
+            r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id,
+                                              gm.source_scene, gm.source_index);
             gmr.append(r);
         }
 
@@ -759,10 +765,11 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
                 r.depth = gm.depth;
-                // FIXME 4871
+                r.source_scene = gm.source_scene;
+                r.source_index = gm.source_index;
                 r.normalizedDepth =
                     getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
-                                  (modsources)gm.source_id, 0, 0);
+                                  (modsources)gm.source_id, r.source_scene, r.source_index);
                 sms.append(r);
             }
             ts["scene"] = sms;
@@ -776,10 +783,11 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
                 r.depth = gm.depth;
-                // FIXME 4871
+                r.source_scene = gm.source_scene;
+                r.source_index = gm.source_index;
                 r.normalizedDepth =
                     getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
-                                  (modsources)gm.source_id, 0, 0);
+                                  (modsources)gm.source_id, gm.source_scene, gm.source_index);
                 smv.append(r);
             }
             ts["voice"] = smv;
@@ -910,16 +918,18 @@ PYBIND11_MODULE(surgepy, m)
              py::arg("modId"))
         .def("setModulation", &SurgeSynthesizerWithPythonExtensions::setModulationPy,
              "Set a modulation to a given depth", py::arg("targetParameter"),
-             py::arg("modulationSource"), py::arg("depth"))
+             py::arg("modulationSource"), py::arg("depth"), py::arg("scene") = 0,
+             py::arg("index") = 0)
         .def("getModulation", &SurgeSynthesizerWithPythonExtensions::getModulationPy,
              "Get the modulation depth from a source to a parameter.", py::arg("targetParameter"),
-             py::arg("modulationSource"))
+             py::arg("modulationSource"), py::arg("scene") = 0, py::arg("index") = 0)
         .def("isValidModulation", &SurgeSynthesizerWithPythonExtensions::isValidModulationPy,
              "Is it possible to modulate between target and source?", py::arg("targetParameter"),
              py::arg("modulationSource"))
         .def("isActiveModulation", &SurgeSynthesizerWithPythonExtensions::isActiveModulationPy,
              "Is there an established modulation between target and source?",
-             py::arg("targetParameter"), py::arg("modulationSource"))
+             py::arg("targetParameter"), py::arg("modulationSource"), py::arg("scene") = 0,
+             py::arg("index") = 0)
         .def("isBipolarModulation", &SurgeSynthesizerWithPythonExtensions::isBipolarModulationPy,
              "Is the given modulation source bipolar?", py::arg("modulationSource"))
 
@@ -983,6 +993,8 @@ PYBIND11_MODULE(surgepy, m)
     py::class_<SurgePyModRouting>(m, "SurgeModRouting")
         .def("getSource", [](const SurgePyModRouting &r) { return r.source; })
         .def("getDest", [](const SurgePyModRouting &r) { return r.dest; })
+        .def("getSourceScene", [](const SurgePyModRouting &r) { return r.source_scene; })
+        .def("getSourceIndex", [](const SurgePyModRouting &r) { return r.source_index; })
         .def("getDepth", [](const SurgePyModRouting &r) { return r.depth; })
         .def("getNormalizedDepth", [](const SurgePyModRouting &r) { return r.normalizedDepth; })
         .def("__repr__", [](const SurgePyModRouting &r) {
