@@ -375,8 +375,10 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+    stuckHoverOn();
     menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<OscillatorMenu>(this, [](auto *that, int) {
+                           that->stuckHoverOff();
                            that->isHovered = false;
                            that->repaint();
                        }));
@@ -392,17 +394,9 @@ void OscillatorMenu::mouseWheelMove(const juce::MouseEvent &event,
         jogBy(-dir);
     }
 }
-void OscillatorMenu::mouseEnter(const juce::MouseEvent &event)
-{
-    isHovered = true;
-    repaint();
-}
+void OscillatorMenu::mouseEnter(const juce::MouseEvent &event) { startHover(event.position); }
 
-void OscillatorMenu::mouseExit(const juce::MouseEvent &event)
-{
-    isHovered = false;
-    repaint();
-}
+void OscillatorMenu::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
 bool OscillatorMenu::keyPressed(const juce::KeyPress &key)
 {
@@ -518,24 +512,18 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+    stuckHoverOn();
     menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
+                           that->stuckHoverOff();
                            that->isHovered = false;
                            that->repaint();
                        }));
 }
 
-void FxMenu::mouseEnter(const juce::MouseEvent &event)
-{
-    isHovered = true;
-    repaint();
-}
+void FxMenu::mouseEnter(const juce::MouseEvent &event) { startHover(event.position); }
 
-void FxMenu::mouseExit(const juce::MouseEvent &event)
-{
-    isHovered = false;
-    repaint();
-}
+void FxMenu::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
 void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {

@@ -113,6 +113,9 @@ struct LFOAndStepDisplay : public juce::Component,
 
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         lfoTypeHover = -1;
         stepSeqShiftHover = -1;
         repaint();
