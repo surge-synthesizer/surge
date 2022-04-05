@@ -385,7 +385,8 @@ const Surge::Skin::Color Background("editor.overlay.background", 0xCC000000);
 
 namespace PatchBrowser
 {
-const Surge::Skin::Color Text("patchbrowser.text", 0x000000, 0xFF);
+const Surge::Skin::Color Text("patchbrowser.text", 0x000000, 0xFF),
+    TextHover("patchbrowser.text.hover", 0x000000, 0x00);
 
 namespace CommentTooltip
 {
@@ -488,7 +489,7 @@ const Surge::Skin::Color Background("multiswitch.background", 0xE3E3E3),
     Border("multiswitch.border", 0x979797), Separator("multiswitch.separator", 0x979797),
     DeactivatedText("multiswitch.text.deactivated", 0x979797),
     Text("multiswitch.text", 0x000000, 0xFF), OnText("multiswitch.on.text", 0x000000, 0xFF),
-    HoverText("multiswitch.hover.text", 0x000000, 0xFF),
+    TextHover("multiswitch.hover.text", 0x000000, 0xFF),
     HoverOnText("multiswitch.hoveron.text", 0xFF9300),
     HoverFill("multiswitch.hover.fill", 0xF1BB72),
     HoverOnFill("multiswitch.hoveron.fill", 0x804900), OnFill("multiswitch.on.fill", 0xFF9A10),

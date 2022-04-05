@@ -158,7 +158,7 @@ void PatchSelector::paint(juce::Graphics &g)
         auth = auth.translated(0, -1);
     }
 
-#if DEBUG_PATCH_AREAS
+#if 0
     g.setColour(juce::Colours::red);
     g.drawRect(pbrowser);
     g.drawRect(cat);
@@ -182,9 +182,6 @@ void PatchSelector::paint(juce::Graphics &g)
         int yShift = 13 * ((searchHover ? 1 : 0));
         img->drawAt(g, searchRect.getX(), searchRect.getY() - yShift, 1.0);
     }
-
-    // patch browser text color
-    g.setColour(skin->getColor(Colors::PatchBrowser::Text));
 
     // patch name
     if (!isTypeaheadSearchOn)
@@ -225,14 +222,26 @@ void PatchSelector::paint(juce::Graphics &g)
             pbrowser.withLeft(searchRect.getRight()).withRight(favoritesRect.getX()).reduced(4, 0);
 
         g.setFont(Surge::GUI::getFontManager()->patchNameFont);
+
         auto uname = pname;
+
         if (isDirty)
+        {
             uname += "*";
+        }
+
+        juce::Colour tc = skin->getColor(Colors::PatchBrowser::TextHover);
+
+        if (!browserHover || tc == juce::Colours::transparentBlack)
+        {
+            tc = skin->getColor(Colors::PatchBrowser::Text);
+        }
+
+        g.setColour(tc);
+
         g.drawFittedText(uname, pnRect,
                          alignTop ? juce::Justification::centredTop : juce::Justification::centred,
                          1, 0.1);
-
-        g.setColour(skin->getColor(Colors::PatchBrowser::Text));
 
         // category/author name
         g.setFont(Surge::GUI::getFontManager()->displayFont);
@@ -248,6 +257,7 @@ void PatchSelector::paint(juce::Graphics &g)
 void PatchSelector::resized()
 {
     auto fsize = 15;
+
     favoritesRect = getLocalBounds()
                         .withTrimmedBottom(getHeight() - fsize)
                         .withTrimmedLeft(getWidth() - fsize)
@@ -260,11 +270,15 @@ void PatchSelector::resized()
                      .translated(2, 1);
 
     auto tad = getLocalBounds().reduced(fsize + 4, 0).translated(0, -2);
+
     typeAhead->setBounds(tad);
 }
 
 void PatchSelector::mouseEnter(const juce::MouseEvent &)
 {
+    browserHover = true;
+    repaint();
+
     if (tooltipCountdown < 0)
     {
         tooltipCountdown = 5;
@@ -275,25 +289,42 @@ void PatchSelector::mouseEnter(const juce::MouseEvent &)
 void PatchSelector::mouseMove(const juce::MouseEvent &e)
 {
     if (tooltipCountdown >= 0)
+    {
         tooltipCountdown = 5;
+    }
+
     // todo : apply mouse tolerance here
     if (tooltipShowing && e.position.getDistanceFrom(tooltipMouseLocation.toFloat()) > 1)
+    {
         toggleCommentTooltip(false);
+    }
     else
+    {
         tooltipMouseLocation = e.position;
+    }
 
     auto pfh = favoritesHover;
     favoritesHover = false;
+
     if (favoritesRect.contains(e.position.toInt()))
     {
+        browserHover = false;
         favoritesHover = true;
     }
 
     auto psh = searchHover;
     searchHover = false;
+
     if (searchRect.contains(e.position.toInt()))
     {
+        browserHover = false;
         searchHover = true;
+    }
+
+    if (!favoritesHover && !searchHover && !browserHover)
+    {
+        browserHover = true;
+        repaint();
     }
 
     if (favoritesHover != pfh || searchHover != psh)
@@ -301,6 +332,7 @@ void PatchSelector::mouseMove(const juce::MouseEvent &e)
         repaint();
     }
 }
+
 void PatchSelector::mouseDown(const juce::MouseEvent &e)
 {
     if (e.mods.isMiddleButtonDown())
@@ -326,8 +358,12 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
             {
                 auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+                stuckHover = true;
                 menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
-                                   Surge::GUI::makeEndHoverCallback(this));
+                                   [this](int) {
+                                       stuckHover = false;
+                                       endHover();
+                                   });
             }
 
             return;
@@ -359,11 +395,11 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         return;
     }
 
-    // if RMB is down, only show the current category
-    bool single_category = e.mods.isRightButtonDown() || e.mods.isCommandDown();
     tooltipCountdown = -1;
     toggleCommentTooltip(false);
-    showClassicMenu(single_category);
+
+    stuckHover = true;
+    showClassicMenu(e.mods.isPopupMenu());
 }
 
 void PatchSelector::shouldTooltip()
@@ -705,7 +741,10 @@ void PatchSelector::showClassicMenu(bool single_category)
         o = sge->popupMenuOptions(getBounds().getBottomLeft());
     }
 
-    contextMenu.showMenuAsync(o);
+    contextMenu.showMenuAsync(o, [this](int) {
+        stuckHover = false;
+        endHover();
+    });
 }
 
 bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak,

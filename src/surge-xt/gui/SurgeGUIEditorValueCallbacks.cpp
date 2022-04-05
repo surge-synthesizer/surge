@@ -534,7 +534,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
-    if (button.isRightButtonDown() || button.isPopupMenu())
+    if (button.isPopupMenu())
     {
         if (tag == tag_settingsmenu)
         {
@@ -672,7 +672,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         auto *cms = dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
         modsources modsource = cms->getCurrentModSource();
 
-        if (button.isRightButtonDown() || button.isPopupMenu())
+        if (button.isPopupMenu())
         {
             juce::PopupMenu contextMenu;
             std::string hu;
@@ -1201,7 +1201,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         }
 
         // all the RMB context menus
-        if (button.isRightButtonDown() || button.isPopupMenu())
+        if (button.isPopupMenu())
         {
             juce::Point<int> menuRect{};
 
