@@ -246,9 +246,6 @@ void MultiSwitch::mouseEnter(const juce::MouseEvent &event) { startHover(event.p
 
 void MultiSwitch::startHover(const juce::Point<float> &p)
 {
-    if (incrementHover() > 1)
-        return;
-
     if (everDragged && isMouseDown) // don't change hover state during a drag
     {
         hoverSelection = getIntegerValue();
@@ -264,7 +261,7 @@ void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }
 
 void MultiSwitch::endHover()
 {
-    if (decrementHover() != 0)
+    if (stuckHover)
         return;
 
     isHovered = false;

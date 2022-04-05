@@ -72,6 +72,9 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>, public L
     void mouseExit(const juce::MouseEvent &event) override;
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHovered = false;
         repaint();
     }
