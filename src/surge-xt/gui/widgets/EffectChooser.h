@@ -73,6 +73,9 @@ struct EffectChooser : public juce::Component,
     void mouseExit(const juce::MouseEvent &event) override { isHovered = false; }
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHovered = false;
         repaint();
     }

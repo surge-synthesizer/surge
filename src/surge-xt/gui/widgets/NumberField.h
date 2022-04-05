@@ -101,15 +101,13 @@ struct NumberField : public juce::Component,
     bool isHover{false};
     void mouseEnter(const juce::MouseEvent &event) override
     {
-        isHover = true;
+        startHover(event.position);
         setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
-        repaint();
     }
     void mouseExit(const juce::MouseEvent &event) override
     {
-        isHover = false;
+        endHover();
         setMouseCursor(juce::MouseCursor::NormalCursor);
-        repaint();
     }
     void startHover(const juce::Point<float> &p) override
     {
@@ -118,6 +116,9 @@ struct NumberField : public juce::Component,
     }
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHover = false;
         repaint();
     }

@@ -239,6 +239,9 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     }
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHovered = false;
         repaint();
     }

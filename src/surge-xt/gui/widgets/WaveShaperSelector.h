@@ -72,6 +72,9 @@ struct WaveShaperSelector : public juce::Component,
 
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isWaveHovered = false;
         isLabelHovered = false;
 

@@ -125,6 +125,9 @@ struct MenuForDiscreteParams : public juce::Component,
     }
     void endHover() override
     {
+        if (stuckHover)
+            return;
+
         isHovered = false;
 
         if (glyphMode)
