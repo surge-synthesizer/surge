@@ -1081,22 +1081,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     auto t = synth->storage.get_clipboard_type();
 
-                    contextMenu.addItem(
-                        Surge::GUI::toOSCase("Paste"), [this, sc, t, lfo_id]() {
-                            synth->storage.clipboard_paste(
-                                t, sc, lfo_id, ms_original, [this](int p, modsources m) {
-                                    auto res = synth->isValidModulation(p, m);
-                                    return res;
-                                });
+                    contextMenu.addItem(Surge::GUI::toOSCase("Paste"), [this, sc, t, lfo_id]() {
+                        synth->storage.clipboard_paste(
+                            t, sc, lfo_id, ms_original, [this](int p, modsources m) {
+                                auto res = synth->isValidModulation(p, m);
+                                return res;
+                            });
 
-                            if (t & cp_lfo)
-                            {
-                                msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
-                            }
+                        if (t & cp_lfo)
+                        {
+                            msegEditState[sc][lfo_id] = mostRecentCopiedMSEGState;
+                        }
 
-                            synth->storage.getPatch().isDirty = true;
-                            queue_refresh = true;
-                        });
+                        synth->storage.getPatch().isDirty = true;
+                        queue_refresh = true;
+                    });
                 }
             }
             else
