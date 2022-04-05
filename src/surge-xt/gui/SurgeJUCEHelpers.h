@@ -49,7 +49,7 @@ inline std::function<void(int)> makeEndHoverCallback(Surge::GUI::IComponentTagVa
     if (!that)
         return [](int) {};
 
-    that->incrementHover();
+    that->stuckHoverOn();
 
     return
         [safethat = juce::Component::SafePointer<juce::Component>(that->asJuceComponent())](int x) {
@@ -57,7 +57,10 @@ inline std::function<void(int)> makeEndHoverCallback(Surge::GUI::IComponentTagVa
             {
                 auto igtv = dynamic_cast<Surge::GUI::IComponentTagValue *>(safethat.getComponent());
                 if (igtv)
-                    igtv->forceEndHover();
+                {
+                    igtv->stuckHoverOff();
+                    igtv->endHover();
+                }
             }
         };
 }

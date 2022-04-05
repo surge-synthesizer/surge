@@ -470,6 +470,9 @@ void ModulationSourceButton::startHover(const juce::Point<float> &f)
 
 void ModulationSourceButton::endHover()
 {
+    if (stuckHover)
+        return;
+
     bool oh = isHovered;
     isHovered = false;
 
