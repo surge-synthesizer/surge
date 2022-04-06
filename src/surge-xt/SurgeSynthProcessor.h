@@ -54,9 +54,6 @@ struct SurgeParamToJuceInfo
     }
 };
 
-/*
- * Obviously buckets of work to do here
- */
 struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
@@ -67,7 +64,6 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
         setValueNotifyingHost(getValue());
     }
 
-    // Oh this is all incorrect of course
     juce::String getName(int i) const override
     {
         juce::String res = SurgeParamToJuceInfo::getParameterName(s, p);
@@ -126,7 +122,6 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
         setValueNotifyingHost(getValue());
     }
 
-    // Oh this is all incorrect of course
     juce::String getName(int i) const override
     {
         juce::String res = "C" + std::to_string(macroNum) + ": ";
@@ -147,11 +142,44 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
         if (f != getValue())
             s->setMacroParameter01(macroNum, f);
     }
+    juce::String getText(float normalisedValue, int i) const override
+    {
+        return std::to_string(s->getMacroParameter01(macroNum));
+    }
 
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
     SurgeSynthesizer *s;
     long macroNum;
+};
+
+struct SurgeBypassParameter : public juce::RangedAudioParameter
+{
+    explicit SurgeBypassParameter()
+        : value(0.f), range(0.f, 1.f, 0.01f), juce::RangedAudioParameter("surgext_bypass",
+                                                                         "Bypass Surge XT", "")
+    {
+        setValueNotifyingHost(getValue());
+    }
+
+    juce::String getName(int i) const override { return "Bypass Surge XT"; }
+    float value{0.f};
+    float getValue() const override { return value; }
+    float getValueForText(const juce::String &text) const override
+    {
+        auto tf = std::atof(text.toRawUTF8());
+        return std::max(std::min(tf, 1.0), 0.0);
+    }
+    float getDefaultValue() const override { return 0.0; }
+    void setValue(float f) override { value = f; }
+    juce::String getText(float normalisedValue, int i) const override
+    {
+        return (value > 0.5 ? "Bypassed" : "Active");
+    }
+    bool isAutomatable() const override { return false; }
+
+    const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
+    juce::NormalisableRange<float> range;
 };
 
 class SurgeSynthProcessor : public juce::AudioProcessor,
@@ -180,9 +208,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool canRemoveBusValue = false;
     bool canRemoveBus(bool isInput) const override { return canRemoveBusValue; }
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
-    void processBlockBypassed(juce::AudioBuffer<float> &buffer,
-                              juce::MidiBuffer &midiMessages) override;
-    bool priorCalLWasProcessBlockNotBypassed{true};
+    bool priorCallWasProcessBlockNotBypassed{true};
     int bypassCountdown{-1};
 
     void applyMidi(const juce::MidiMessageMetadata &);
@@ -240,6 +266,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     std::unique_ptr<SurgeSynthesizer> surge;
     std::unordered_map<SurgeSynthesizer::ID, SurgeParamToJuceParamAdapter *> paramsByID;
     std::vector<SurgeMacroToJuceParamAdapter *> macrosById;
+
+    SurgeBypassParameter *bypassParameter{nullptr};
+    juce::AudioProcessorParameter *getBypassParameter() const override;
 
     std::string paramClumpName(int clumpid);
     juce::MidiKeyboardState midiKeyboardState;

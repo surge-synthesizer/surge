@@ -81,6 +81,11 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         }
         parent->addChild(std::move(subg));
     }
+
+    auto vb = std::make_unique<SurgeBypassParameter>();
+    bypassParameter = vb.get();
+    parent->addChild(std::move(vb));
+
     addParameterGroup(std::move(parent));
 
     presetOrderToPatchList.clear();
@@ -205,8 +210,42 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
-    priorCalLWasProcessBlockNotBypassed = true;
     auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
+
+    priorCallWasProcessBlockNotBypassed = true;
+
+    // Make sure we have a main output
+    auto mb = getBus(false, 0);
+    if (mb->getNumberOfChannels() != 2 || !mb->isEnabled())
+    {
+        // We have to have a stereo output
+        return;
+    }
+
+    if (bypassParameter->getValue() > 0.5)
+    {
+        if (priorCallWasProcessBlockNotBypassed)
+        {
+            surge->allNotesOff();
+            bypassCountdown = 8; // let us fade out by doing a halted process
+        }
+        if (bypassCountdown == 0)
+        {
+            return;
+        }
+        bypassCountdown--;
+        surge->audio_processing_active = false;
+        priorCallWasProcessBlockNotBypassed = false;
+        midiMessages.clear(); // but don't send notes. We are all notes off
+    }
+
+    if (!surge->audio_processing_active)
+    {
+        // I am just becoming active. There may be lingering notes from when I was
+        // deactivated so
+        surge->allNotesOff();
+    }
+    surge->audio_processing_active = true;
 
     auto playhead = getPlayHead();
     if (playhead)
@@ -251,14 +290,6 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         }
     }
 
-    // Make sure we have a main output
-    auto mb = getBus(false, 0);
-    if (mb->getNumberOfChannels() != 2 || !mb->isEnabled())
-    {
-        // We have to have a stereo output
-        return;
-    }
-    surge->audio_processing_active = true;
     auto mainOutput = getBusBuffer(buffer, false, 0);
 
     auto mainInput = getBusBuffer(buffer, true, 0);
@@ -497,23 +528,9 @@ void SurgeSynthProcessor::handleNoteOff(juce::MidiKeyboardState *source, int mid
         midiFromGUI.push(midiR(midiChannel - 1, midiNoteNumber, (int)(127.f * velocity), false));
 }
 
-void SurgeSynthProcessor::processBlockBypassed(juce::AudioBuffer<float> &buffer,
-                                               juce::MidiBuffer &midiMessages)
+juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 {
-    if (priorCalLWasProcessBlockNotBypassed)
-    {
-        surge->allNotesOff();
-        surge->halt_engine = true;
-        bypassCountdown = 8; // let us fade out by doing a halted process
-    }
-    if (bypassCountdown >= 0)
-    {
-        midiMessages.clear(); // but don't send notes. We are all notes off
-        processBlock(buffer, midiMessages);
-        bypassCountdown--;
-    }
-    surge->audio_processing_active = false;
-    priorCalLWasProcessBlockNotBypassed = false;
+    return bypassParameter;
 }
 
 //==============================================================================
