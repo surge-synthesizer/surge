@@ -343,6 +343,17 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
     everDragged = false;
     mouseDownLocation = event.position;
 
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (sge && sge->getSelectedModsource() != this->getCurrentModSource())
+    {
+        newlySelected = 2;
+    }
+    else
+    {
+        if (newlySelected > 0)
+            newlySelected--;
+    }
+
     mouseDownLongHold(event);
 
     if (needsHamburger() && hamburgerHome.contains(event.position.toInt()))
@@ -406,13 +417,12 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         auto topRect = getLocalBounds().withHeight(splitHeight);
 
         // rename macro on double-click
-        if (topRect.contains(event.position.toInt()))
+        if (topRect.contains(event.position.toInt()) && !newlySelected)
         {
             auto ccid = (int)getCurrentModSource() - ms_ctrl1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-            // See #5774 for why this is commented out
-            // sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
+            sge->openMacroRenameDialog(ccid, topRect.getTopLeft(), this);
 
             return;
         }
@@ -441,13 +451,13 @@ void ModulationSourceButton::mouseDoubleClick(const juce::MouseEvent &event)
         auto rect = getLocalBounds();
 
         // rename LFO on double-click
-        if (isLFO() && rect.contains(event.position.toInt()))
+        if (isLFO() && rect.contains(event.position.toInt()) && !newlySelected)
         {
             int lfo_id = getCurrentModSource() - ms_lfo1;
             auto sge = firstListenerOfType<SurgeGUIEditor>();
 
             // See #5774 for why this is commented out
-            // sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
+            sge->openLFORenameDialog(lfo_id, rect.getTopLeft(), this);
 
             return;
         }
