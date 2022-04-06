@@ -21,7 +21,7 @@ namespace Surge
 {
 namespace Overlays
 {
-WaveShaperAnalysis::WaveShaperAnalysis(SurgeStorage *s)
+WaveShaperAnalysis::WaveShaperAnalysis(SurgeGUIEditor *e, SurgeStorage *s) : editor(e), storage(s)
 {
     tryitSlider = std::make_unique<Surge::Widgets::ModulatableSlider>();
     tryitSlider->setOrientation(Surge::ParamConfig::kVertical);
@@ -32,14 +32,45 @@ WaveShaperAnalysis::WaveShaperAnalysis(SurgeStorage *s)
     tryitSlider->setStorage(s);
     tryitSlider->addListener(this);
     addAndMakeVisible(*tryitSlider);
+
+    linkButton = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Link");
+    linkButton->setStorage(storage);
+    linkButton->setToggleState(true);
+    linkButton->onToggle = [this]() { linkToggled(); };
+    addAndMakeVisible(*linkButton);
+    linkToggled();
 }
 
-void WaveShaperAnalysis::onSkinChanged() { tryitSlider->setSkin(skin, associatedBitmapStore); }
-void WaveShaperAnalysis::resized() { tryitSlider->setBounds(8, 25, 22, 84); }
+void WaveShaperAnalysis::onSkinChanged()
+{
+    tryitSlider->setSkin(skin, associatedBitmapStore);
+    linkButton->setSkin(skin, associatedBitmapStore);
+}
+void WaveShaperAnalysis::resized()
+{
+    linkButton->setBounds(2, 2, 22 + 8, 15);
+    tryitSlider->setBounds(8, 25, 22, 84);
+}
+
+void WaveShaperAnalysis::linkToggled()
+{
+    linked = linkButton->getToggleState();
+    if (linked)
+    {
+        tryitSlider->setDeactivated(true);
+    }
+    else
+    {
+        tryitSlider->setDeactivated(false);
+    }
+    tryitSlider->repaint();
+    recalcFromSlider();
+    repaint();
+}
 
 void WaveShaperAnalysis::paint(juce::Graphics &g)
 {
-    if (sliderDrivenCurve.empty())
+    if (sliderDrivenCurve.empty() || lastDbValue != getDbValue())
     {
         recalcFromSlider();
     }
@@ -110,11 +141,11 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     g.drawRect(re);
 
     {
-        auto ypos = tryitSlider->getBounds().getBottom() + 2.f;
+        auto ypos = tryitSlider->getBounds().getBottom() + 0.f;
         auto tx = juce::Rectangle<float>{0, ypos, 40 - 4, 12.f};
 
         std::ostringstream oss;
-        oss << std::fixed << std::setprecision(2) << sliderDb;
+        oss << std::fixed << std::setprecision(2) << getDbValue();
 
         g.setFont(skin->getFont(Fonts::Waveshaper::Preview::DriveAmount));
         g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
@@ -140,6 +171,7 @@ void WaveShaperAnalysis::valueChanged(Surge::GUI::IComponentTagValue *p)
 {
     recalcFromSlider();
     tryitSlider->setQuantitizedDisplayValue(tryitSlider->getValue());
+
     repaint();
 }
 
@@ -158,6 +190,7 @@ int32_t WaveShaperAnalysis::controlModifierClicked(Surge::GUI::IComponentTagValu
 
 void WaveShaperAnalysis::recalcFromSlider()
 {
+    lastDbValue = getDbValue();
     sliderDrivenCurve.clear();
 
     QuadFilterWaveshaperState wss;
@@ -175,7 +208,7 @@ void WaveShaperAnalysis::recalcFromSlider()
 
     auto wsop = GetQFPtrWaveshaper(wstype);
 
-    sliderDb = tryitSlider->getValue() * 96 - 48;
+    auto sliderDb = getDbValue();
 
     auto amp = powf(2.f, sliderDb / 18.f);
     auto d1 = _mm_set1_ps(amp);
@@ -203,6 +236,23 @@ void WaveShaperAnalysis::setWSType(int w)
 {
     wstype = w;
     recalcFromSlider();
+}
+
+float WaveShaperAnalysis::getDbValue()
+{
+    float sliderDb = 0.f;
+    if (!linked)
+    {
+        sliderDb = tryitSlider->getValue() * 96 - 48;
+    }
+    else
+    {
+        auto cs = editor->current_scene;
+        auto &p = editor->getPatch().scene[cs].wsunit.drive;
+        auto f = p.get_extended(p.val.f);
+        sliderDb = f;
+    }
+    return sliderDb;
 }
 
 } // namespace Overlays

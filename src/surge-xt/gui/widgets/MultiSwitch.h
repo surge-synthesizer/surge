@@ -131,6 +131,14 @@ struct MultiSwitchSelfDraw : public MultiSwitch
         repaint();
     }
 
+    virtual bool isCellOn(int r, int c)
+    {
+        auto idx = r * columns + c;
+        auto solo = (rows * columns == 1);
+        auto isOn = idx == getIntegerValue() && !solo;
+        return isOn;
+    }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchSelfDraw);
 };
 
@@ -154,6 +162,55 @@ struct SelfDrawButton : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Lis
         repaint();
     }
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfDrawButton);
+};
+
+struct SelfDrawToggleButton : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Listener
+{
+    SelfDrawToggleButton(const std::string &lab) : MultiSwitchSelfDraw(), label(lab)
+    {
+        setLabels({label});
+        addListener(this);
+        setRows(1);
+        setColumns(1);
+        setDraggable(false);
+        setValue(0);
+    }
+    std::string label;
+    std::function<void()> onToggle = []() {};
+    bool isToggled{false};
+    void valueChanged(IComponentTagValue *p) override
+    {
+        if (isToggled)
+        {
+            setValue(0);
+            isToggled = false;
+        }
+        else
+        {
+            setValue(1);
+            isToggled = true;
+        }
+
+        onToggle();
+        repaint();
+    }
+    void setToggleState(bool b)
+    {
+        if (b)
+        {
+            setValue(1);
+            isToggled = true;
+        }
+        else
+        {
+            setValue(0);
+            isToggled = false;
+        }
+    }
+    bool getToggleState() { return getValue() > 0.5; }
+
+    bool isCellOn(int, int) override { return getToggleState(); }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfDrawToggleButton);
 };
 
 } // namespace Widgets

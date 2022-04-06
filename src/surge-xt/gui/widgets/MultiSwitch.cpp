@@ -573,7 +573,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
             if (royalMode)
                 fc = rc;
 
-            auto isOn = idx == getIntegerValue() && !solo;
+            auto isOn = isCellOn(r, c);
             auto isHo = isHovered && hoverSelection == idx;
             auto isEn = isEnabled();
 
