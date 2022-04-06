@@ -475,7 +475,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     const std::unique_ptr<Surge::GUI::UndoManager> &undoManager();
     void setParamFromUndo(int paramId, pdata val);
+    void pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which);
     void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val);
+    void pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
+                                  Surge::GUI::UndoManager::Target which);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
@@ -599,10 +602,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Overlays::AboutScreen> aboutScreen;
 
     std::unique_ptr<juce::Drawable> midiLearnOverlay;
-
-#if BUILD_IS_DEBUG
-    std::unique_ptr<juce::Label> debugLabel;
-#endif
 
     std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
     bool setParameterFromString(Parameter *p, const std::string &s);

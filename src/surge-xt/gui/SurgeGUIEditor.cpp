@@ -1019,21 +1019,6 @@ void SurgeGUIEditor::idle()
         }
     }
 
-#if BUILD_IS_DEBUG
-    if (debugLabel)
-    {
-        /*
-         * We can do debuggy stuff here to get an indea about internal state on the screen
-         */
-
-        /*
-          auto t = std::to_string( synth->storage.songpos );
-          debugLabel->setText(t.c_str());
-          debugLabel->invalid();
-          */
-    }
-#endif
-
     if (scanJuceSkinComponents)
     {
         std::vector<Surge::GUI::Skin::Control::sessionid_t> toRemove;
@@ -1883,30 +1868,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
         }
     }
-#if BUILD_IS_DEBUG
-    /*
-     * This code is here JUST because baconpaul keeps developing surge and then swapping
-     * to make music and wondering why LPX is stuttering. Please don't remove it!
-     *
-     * UPDATE: Might as well keep a reference to the object though so we can touch it in idle
-     */
-    auto dl = std::string("Debug ") + Surge::Build::BuildTime + " " + Surge::Build::GitBranch;
-    if (!debugLabel)
-    {
-        debugLabel = std::make_unique<juce::Label>("debugLabel");
-    }
-    debugLabel->setBounds(310, 39, 195, 15);
-    debugLabel->setText(dl, juce::dontSendNotification);
-    debugLabel->setColour(juce::Label::backgroundColourId,
-                          juce::Colours::red.withAlpha((float)0.8));
-    debugLabel->setColour(juce::Label::textColourId, juce::Colours::white);
-    debugLabel->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
-    debugLabel->setJustificationType(juce::Justification::centred);
-    debugLabel->setAccessible(false);
-
-    addAndMakeVisibleWithTracking(frame.get(), *debugLabel);
-
-#endif
 
     for (const auto &el : juceOverlays)
     {
@@ -2213,6 +2174,13 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
     synth->refresh_editor = true;
 }
 
+void SurgeGUIEditor::pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which)
+{
+    auto p = synth->storage.getPatch().param_ptr[paramId];
+    auto id = synth->idForParameter(p);
+    undoManager()->pushParameterChange(paramId, p->val, which);
+}
+
 void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene, int idx,
                                            float val)
 {
@@ -2220,6 +2188,13 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
     // FIXME scene and index
     synth->setModulation(p->id, ms, scene, idx, val);
     synth->refresh_editor = true;
+}
+
+void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
+                                              Surge::GUI::UndoManager::Target which)
+{
+    undoManager()->pushModulationChange(paramId, ms, scene, idx,
+                                        synth->getModulation(paramId, ms, scene, idx), which);
 }
 //------------------------------------------------------------------------------------------------
 
@@ -2503,6 +2478,10 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);
 
     settingsMenu.addSeparator();
+
+#if BUILD_IS_DEBUG
+    useDevMenu = true;
+#endif
 
     if (useDevMenu)
     {
@@ -4112,6 +4091,9 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
         frame->debugFocus = debugFocus;
         frame->repaint();
     });
+
+    devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack To stdout"), true, false,
+                       [this]() { undoManager()->dumpStack(); });
 
 #ifdef INSTRUMENT_UI
     devSubMenu.addItem(Surge::GUI::toOSCase("Show UI Instrumentation..."),

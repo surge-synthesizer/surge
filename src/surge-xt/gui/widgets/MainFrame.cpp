@@ -19,6 +19,8 @@
 #include "AccessibleHelpers.h"
 #include "MultiSwitch.h"
 #include "SurgeGUIEditorTags.h"
+#include <version.h>
+#include "RuntimeFont.h"
 
 namespace Surge
 {
@@ -31,6 +33,27 @@ MainFrame::MainFrame()
     setDescription("Surge XT");
     setTitle("Main Frame");
 }
+
+void MainFrame::paint(juce::Graphics &g)
+{
+    if (bg)
+        bg->draw(g, 1.0);
+
+#if BUILD_IS_DEBUG
+    auto r = getLocalBounds().withTrimmedLeft(getWidth() - 150).withTrimmedTop(getHeight() - 45);
+    g.setColour(juce::Colours::red.withAlpha(0.7f));
+    g.fillRect(r);
+    r = r.withTrimmedTop(1);
+    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.setColour(juce::Colours::white);
+    g.drawText(Surge::Build::FullVersionStr, r, juce::Justification::centredTop);
+    r = r.withTrimmedTop(14);
+    g.drawText(std::string(Surge::Build::BuildDate) + " " + Surge::Build::BuildTime, r,
+               juce::Justification::centredTop);
+    g.drawText("DEBUG", r.reduced(2), juce::Justification::bottomLeft);
+#endif
+}
+
 void MainFrame::mouseDown(const juce::MouseEvent &event)
 {
     if (!editor)
